@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/Pokemon-card-tracker/static/css/main.3af46991.css",
+    "main.js": "/Pokemon-card-tracker/static/js/main.2c88ab8e.js",
+    "index.html": "/Pokemon-card-tracker/index.html",
+    "main.3af46991.css.map": "/Pokemon-card-tracker/static/css/main.3af46991.css.map",
+    "main.2c88ab8e.js.map": "/Pokemon-card-tracker/static/js/main.2c88ab8e.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.3af46991.css",
+    "static/js/main.2c88ab8e.js"
+  ]
+}
