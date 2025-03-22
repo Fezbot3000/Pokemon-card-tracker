@@ -1,13 +1,13 @@
 {
   "files": {
     "main.css": "/Pokemon-card-tracker/static/css/main.52f4c593.css",
-    "main.js": "/Pokemon-card-tracker/static/js/main.cd557cee.js",
+    "main.js": "/Pokemon-card-tracker/static/js/main.6002f10c.js",
     "index.html": "/Pokemon-card-tracker/index.html",
     "main.52f4c593.css.map": "/Pokemon-card-tracker/static/css/main.52f4c593.css.map",
-    "main.cd557cee.js.map": "/Pokemon-card-tracker/static/js/main.cd557cee.js.map"
+    "main.6002f10c.js.map": "/Pokemon-card-tracker/static/js/main.6002f10c.js.map"
   },
   "entrypoints": [
     "static/css/main.52f4c593.css",
-    "static/js/main.cd557cee.js"
+    "static/js/main.6002f10c.js"
   ]
 }
