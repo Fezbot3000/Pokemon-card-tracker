@@ -22,8 +22,10 @@ const Header = ({
   const [newCollectionName, setNewCollectionName] = useState('');
   const [isRenaming, setIsRenaming] = useState(false);
   const [toast, setToast] = useState(null);
-  const { isDark, toggleTheme } = useTheme();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { isDarkMode, toggleTheme } = useTheme();
   const dropdownRef = useRef(null);
+  const newCollectionInputRef = useRef(null);
 
   // Clear toast after 3 seconds
   useEffect(() => {
@@ -530,6 +532,12 @@ To import this backup:
     input.click();
   };
 
+  const handleNewCollectionKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      handleCreateCollection();
+    }
+  };
+
   return (
     <>
       {/* Toast notification */}
@@ -542,52 +550,60 @@ To import this backup:
         </div>
       )}
     
-      <header className="sticky top-[44px] z-40 flex justify-between items-center px-6 py-4 bg-white border-b border-gray-200">
+      <header className="sticky top-[44px] z-40 flex justify-between items-center px-6 py-4 bg-white dark:bg-[#0B0F19] border-b border-gray-200 dark:border-gray-700/50">
         <div className="flex items-center gap-4">
-          <span className="text-primary text-xl material-icons">lock</span>
+          <span className="text-[#4F46E5] text-xl material-icons">lock</span>
           <div className="relative" ref={dropdownRef}>
             <button 
               type="button"
-              className="flex items-center gap-2 px-3 py-2 rounded-xl cursor-pointer hover:bg-gray-50 transition-all duration-200"
+              className="flex items-center gap-2 px-3 py-2 rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-[#252B3B] transition-all duration-200"
               onClick={(e) => {
                 e.stopPropagation();
                 toggleDropdown();
               }}
             >
-              <h1 className="text-lg font-medium text-gray-800 select-none">{selectedCollection}</h1>
-              <span className="material-icons text-gray-600">expand_more</span>
+              <h1 className="text-lg font-medium text-gray-800 dark:text-gray-200 select-none">{selectedCollection}</h1>
+              <span className="material-icons text-gray-600 dark:text-gray-400">expand_more</span>
             </button>
 
             {isDropdownOpen && (
-              <div className="absolute left-0 top-full mt-1 w-64 bg-white rounded-xl shadow-lg border border-gray-200 py-1 z-[100]">
+              <div className="dropdown-menu bg-white dark:bg-[#1B2131] rounded-xl shadow-lg border border-gray-200 dark:border-gray-700/50 overflow-hidden py-1">
+                <button
+                  className="dropdown-item text-gray-700 dark:text-gray-200"
+                  onClick={() => {
+                    onCollectionChange('All Cards');
+                    setIsDropdownOpen(false);
+                  }}
+                >
+                  {selectedCollection === 'All Cards' && (
+                    <span className="material-icons text-[#4F46E5] text-sm">check</span>
+                  )}
+                  <span>All Cards</span>
+                </button>
+                
+                <div className="h-px bg-gray-200 dark:bg-gray-700 my-1"></div>
+                
                 {collections.map(collection => (
                   <button
                     key={collection}
-                    type="button"
-                    className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-2 bg-white"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleCollectionSelect(collection);
+                    className="dropdown-item text-gray-700 dark:text-gray-200"
+                    onClick={() => {
+                      onCollectionChange(collection);
+                      setIsDropdownOpen(false);
                     }}
                   >
                     {collection === selectedCollection && (
-                      <span className="material-icons text-primary text-sm">check</span>
+                      <span className="material-icons text-[#4F46E5] text-sm">check</span>
                     )}
-                    <span className={collection === selectedCollection ? 'font-medium text-gray-900' : 'text-gray-600'}>
-                      {collection}
-                    </span>
+                    <span>{collection}</span>
                   </button>
                 ))}
                 
-                <div className="h-px bg-gray-200 my-1"></div>
+                <div className="h-px bg-gray-200 dark:bg-gray-700 my-1"></div>
                 
                 <button
-                  type="button"
-                  className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-2 text-primary bg-white"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleAddNewCollection(e);
-                  }}
+                  className="dropdown-item text-[#4F46E5]"
+                  onClick={handleAddNewCollection}
                 >
                   <span className="material-icons text-sm">add</span>
                   <span>New Collection</span>
@@ -596,7 +612,7 @@ To import this backup:
             )}
           </div>
           
-          <div className="flex items-center gap-3">
+          <div className="header-nav">
             <button 
               type="button"
               className="btn btn-primary flex items-center gap-2"
@@ -616,7 +632,17 @@ To import this backup:
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="header-buttons">
+          <button 
+            type="button"
+            className="btn btn-secondary flex items-center gap-2"
+            onClick={toggleTheme}
+          >
+            <span className="material-icons">
+              {isDarkMode ? 'light_mode' : 'dark_mode'}
+            </span>
+            {isDarkMode ? 'Light Mode' : 'Dark Mode'}
+          </button>
           <button 
             type="button"
             className="btn btn-secondary flex items-center gap-2"
@@ -634,17 +660,98 @@ To import this backup:
             Add Card
           </button>
         </div>
+
+        <button
+          type="button"
+          className="mobile-menu-button"
+          onClick={() => setIsMobileMenuOpen(true)}
+        >
+          <span className="material-icons">menu</span>
+        </button>
       </header>
+
+      {/* Mobile Menu */}
+      <div className={`mobile-menu ${isMobileMenuOpen ? '' : 'hidden'}`}>
+        <div className="mobile-menu-header">
+          <h2 className="text-xl font-medium text-gray-800 dark:text-gray-200">Menu</h2>
+          <button
+            type="button"
+            className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-[#252B3B]"
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            <span className="material-icons">close</span>
+          </button>
+        </div>
+
+        <div className="mobile-menu-content">
+          <button 
+            className="mobile-menu-item"
+            onClick={() => {
+              onImportClick('price');
+              setIsMobileMenuOpen(false);
+            }}
+          >
+            <span className="material-icons">update</span>
+            Update Prices
+          </button>
+          
+          <button 
+            className="mobile-menu-item"
+            onClick={() => {
+              onImportClick('baseData');
+              setIsMobileMenuOpen(false);
+            }}
+          >
+            <span className="material-icons">upload_file</span>
+            Import Base Data
+          </button>
+          
+          <button 
+            className="mobile-menu-item"
+            onClick={() => {
+              toggleTheme();
+              setIsMobileMenuOpen(false);
+            }}
+          >
+            <span className="material-icons">
+              {isDarkMode ? 'light_mode' : 'dark_mode'}
+            </span>
+            {isDarkMode ? 'Light Mode' : 'Dark Mode'}
+          </button>
+          
+          <button 
+            className="mobile-menu-item"
+            onClick={() => {
+              toggleSettings();
+              setIsMobileMenuOpen(false);
+            }}
+          >
+            <span className="material-icons">settings</span>
+            Settings
+          </button>
+          
+          <button 
+            className="mobile-menu-item"
+            onClick={() => {
+              onAddCard();
+              setIsMobileMenuOpen(false);
+            }}
+          >
+            <span className="material-icons">add</span>
+            Add Card
+          </button>
+        </div>
+      </div>
 
       {/* Settings Modal */}
       {isSettingsOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]">
-          <div className="bg-white rounded-2xl w-full max-w-lg">
-            <div className="flex justify-between items-center p-6 border-b border-gray-200">
-              <h2 className="text-2xl font-semibold">Settings</h2>
+          <div className="bg-white dark:bg-[#1B2131] rounded-2xl w-full max-w-lg">
+            <div className="flex justify-between items-center p-6 border-b border-gray-200 dark:border-gray-700/50">
+              <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200">Settings</h2>
               <button 
                 type="button"
-                className="text-2xl text-gray-400 hover:text-gray-600" 
+                className="text-2xl text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300" 
                 onClick={toggleSettings}
               >
                 ×
@@ -653,28 +760,28 @@ To import this backup:
             
             <div className="p-6 space-y-8">
               <div>
-                <h3 className="text-lg mb-4">Collection Settings</h3>
+                <h3 className="text-lg mb-4 text-gray-800 dark:text-gray-200">Collection Settings</h3>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-gray-500 mb-2">Collection Name:</label>
+                    <label className="block text-gray-500 dark:text-gray-400 mb-2">Collection Name:</label>
                     {isRenaming ? (
                       <div className="flex gap-2">
                         <input
                           type="text"
                           value={newCollectionName}
                           onChange={(e) => setNewCollectionName(e.target.value)}
-                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+                          className="flex-1 px-3 py-2 bg-white dark:bg-[#252B3B] border border-gray-300 dark:border-gray-700/50 rounded-lg text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
                         />
                         <button 
                           type="button"
-                          className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+                          className="px-4 py-2 bg-[#4F46E5] text-white rounded-lg hover:bg-[#4F46E5]/90 transition-colors"
                           onClick={handleRenameCollection}
                         >
                           Save
                         </button>
                         <button 
                           type="button"
-                          className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                          className="px-4 py-2 bg-gray-200 dark:bg-[#252B3B] text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-[#323B4B] transition-colors"
                           onClick={() => setIsRenaming(false)}
                         >
                           Cancel
@@ -682,10 +789,10 @@ To import this backup:
                       </div>
                     ) : (
                       <div className="flex items-center gap-4">
-                        <span className="text-gray-700">{selectedCollection}</span>
+                        <span className="text-gray-700 dark:text-gray-200">{selectedCollection}</span>
                         <button 
                           type="button"
-                          className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                          className="px-4 py-2 bg-gray-100 dark:bg-[#252B3B] text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-200 dark:hover:bg-[#323B4B] transition-colors"
                           onClick={startRenaming}
                         >
                           Rename
@@ -696,12 +803,12 @@ To import this backup:
 
                   {/* Data Import/Export section */}
                   <div>
-                    <h4 className="text-gray-600 mb-2 font-medium">Data Management</h4>
-                    <p className="text-sm text-gray-500 mb-3">These buttons work globally across all collections.</p>
+                    <h4 className="text-gray-600 dark:text-gray-300 mb-2 font-medium">Data Management</h4>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">These buttons work globally across all collections.</p>
                     <div className="flex flex-wrap gap-2">
                       <button 
                         type="button"
-                        className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors flex items-center gap-2"
+                        className="px-4 py-2 bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/30 transition-colors flex items-center gap-2"
                         onClick={handleExportData}
                       >
                         <span className="material-icons text-base">download</span>
@@ -709,7 +816,7 @@ To import this backup:
                       </button>
                       <button 
                         type="button"
-                        className="px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors flex items-center gap-2"
+                        className="px-4 py-2 bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400 rounded-lg hover:bg-green-200 dark:hover:bg-green-900/30 transition-colors flex items-center gap-2"
                         onClick={handleImportCollection}
                       >
                         <span className="material-icons text-base">upload</span>
@@ -720,14 +827,14 @@ To import this backup:
                 </div>
               </div>
 
-              <div className="border-t pt-6">
-                <h3 className="text-red-600 font-medium mb-2">Danger Zone</h3>
-                <p className="text-sm text-gray-500 mb-4">
+              <div className="border-t border-gray-200 dark:border-gray-700/50 pt-6">
+                <h3 className="text-red-600 dark:text-red-500 font-medium mb-2">Danger Zone</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
                   Once you delete a collection, there is no going back. Please be certain.
                 </p>
                 <button 
                   type="button"
-                  className="px-4 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors"
+                  className="px-4 py-2 bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/30 transition-colors"
                   onClick={handleDeleteCollection}
                 >
                   Delete Collection
@@ -740,114 +847,44 @@ To import this backup:
 
       {/* New Collection Modal */}
       {isNewCollectionModalOpen && (
-        <div 
-          style={{
-            position: 'fixed',
-            inset: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 70
-          }}
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              setIsNewCollectionModalOpen(false);
-            }
-          }}
-        >
+        <div className="modal" onClick={() => setIsNewCollectionModalOpen(false)}>
           <div 
-            style={{
-              background: 'white',
-              borderRadius: '16px',
-              width: '100%',
-              maxWidth: '32rem',
-              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
-            }}
+            className="modal-content"
             onClick={e => e.stopPropagation()}
           >
-            <div style={{ 
-              display: 'flex', 
-              justifyContent: 'space-between', 
-              alignItems: 'center',
-              padding: '24px',
-              borderBottom: '1px solid #e5e7eb'
-            }}>
-              <h2 style={{ fontSize: '24px', fontWeight: 600, color: '#1F2937' }}>New Collection</h2>
+            <div className="modal-header">
+              <h2 className="modal-title">New Collection</h2>
               <button 
-                type="button"
-                style={{ 
-                  fontSize: '24px',
-                  color: '#9CA3AF',
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer'
-                }}
+                className="modal-close"
                 onClick={() => setIsNewCollectionModalOpen(false)}
               >
                 ×
               </button>
             </div>
             
-            <div style={{ padding: '24px' }}>
-              <div style={{ marginBottom: '24px' }}>
-                <label 
-                  htmlFor="collectionName" 
-                  style={{ 
-                    display: 'block',
-                    marginBottom: '8px',
-                    color: '#6B7280'
-                  }}
-                >
-                  Collection Name:
-                </label>
-                <input
-                  id="collectionName"
-                  type="text"
-                  value={newCollectionName}
-                  onChange={(e) => setNewCollectionName(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '8px 12px',
-                    border: '1px solid #D1D5DB',
-                    borderRadius: '8px',
-                    outline: 'none'
-                  }}
-                  placeholder="Enter collection name"
-                  autoFocus
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      handleCreateCollection();
-                    }
-                  }}
-                />
-              </div>
+            <div className="modal-body">
+              <label className="modal-label">
+                Collection Name:
+              </label>
+              <input
+                ref={newCollectionInputRef}
+                type="text"
+                value={newCollectionName}
+                onChange={(e) => setNewCollectionName(e.target.value)}
+                onKeyDown={handleNewCollectionKeyDown}
+                className="modal-input"
+                placeholder="Enter collection name"
+              />
               
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+              <div className="modal-footer">
                 <button 
-                  type="button"
-                  style={{
-                    padding: '8px 16px',
-                    background: '#F3F4F6',
-                    color: '#374151',
-                    borderRadius: '8px',
-                    border: 'none',
-                    cursor: 'pointer'
-                  }}
+                  className="modal-btn-cancel"
                   onClick={() => setIsNewCollectionModalOpen(false)}
                 >
                   Cancel
                 </button>
                 <button 
-                  type="button"
-                  style={{
-                    padding: '8px 16px',
-                    background: '#4318FF',
-                    color: 'white',
-                    borderRadius: '8px',
-                    border: 'none',
-                    cursor: 'pointer'
-                  }}
+                  className="modal-btn-create"
                   onClick={handleCreateCollection}
                 >
                   Create
@@ -857,6 +894,13 @@ To import this backup:
           </div>
         </div>
       )}
+
+      <div className="collection-info">
+        <span className="material-icons">view_list</span>
+        Total Cards: {selectedCollection === 'All Cards' 
+          ? Object.values(collections).flat().length 
+          : (collectionData ? collectionData.length : 0)}
+      </div>
     </>
   );
 };

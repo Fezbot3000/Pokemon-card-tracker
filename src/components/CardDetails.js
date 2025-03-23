@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { formatCurrency, formatValue } from '../utils/formatters';
 import { db } from '../services/db';
+import { useTheme } from '../contexts/ThemeContext';
 
 const CardDetails = ({ card, onClose, onUpdate, onDelete, exchangeRate }) => {
   const [editedCard, setEditedCard] = useState({
@@ -18,6 +19,7 @@ const CardDetails = ({ card, onClose, onUpdate, onDelete, exchangeRate }) => {
   const [saveMessage, setSaveMessage] = useState(null);
   const fileInputRef = useRef(null);
   const messageTimeoutRef = useRef(null);
+  const { isDarkMode } = useTheme();
 
   useEffect(() => {
     const handleEscapeKey = (event) => {
@@ -106,15 +108,22 @@ const CardDetails = ({ card, onClose, onUpdate, onDelete, exchangeRate }) => {
   const handleNumberInputChange = (e) => {
     const { name, value } = e.target;
     const numValue = value === '' ? 0 : parseFloat(value);
-    setEditedCard(prev => ({
-      ...prev,
-      [name]: numValue,
-      potentialProfit: name === 'currentValueAUD' ? 
-        numValue - prev.investmentAUD : 
-        name === 'investmentAUD' ? 
-        prev.currentValueAUD - numValue : 
-        prev.potentialProfit
-    }));
+    setEditedCard(prev => {
+      if (name === 'investmentAUD') {
+        return {
+          ...prev,
+          investmentAUD: numValue,
+          potentialProfit: prev.currentValueAUD - numValue
+        };
+      } else if (name === 'currentValueAUD') {
+        return {
+          ...prev,
+          currentValueAUD: numValue,
+          potentialProfit: numValue - prev.investmentAUD
+        };
+      }
+      return { ...prev, [name]: numValue };
+    });
     setHasUnsavedChanges(true);
   };
 
@@ -163,100 +172,71 @@ const CardDetails = ({ card, onClose, onUpdate, onDelete, exchangeRate }) => {
     setHasUnsavedChanges(true);
   };
 
-  const profit = (editedCard.currentValueAUD || 0) - (editedCard.investmentAUD || 0);
+  const profit = editedCard.currentValueAUD - editedCard.investmentAUD;
   const profitPercentage = editedCard.investmentAUD ? (profit / editedCard.investmentAUD * 100) : 0;
 
   return (
-    <div className="fixed inset-0 bg-gray-50 z-50 overflow-y-auto">
-      <div className="sticky top-0 z-10 flex justify-between items-center px-8 py-4 bg-white border-b border-gray-200">
+    <div className="fixed inset-0 bg-white dark:bg-[#0B0F19] z-50 overflow-y-auto">
+      <div className="sticky top-0 z-10 flex justify-between items-center p-4 bg-white dark:bg-[#0B0F19] border-b border-gray-200 dark:border-gray-700">
         <button 
-          className="text-3xl text-gray-600 hover:text-primary transition-colors" 
           onClick={handleClose}
+          className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
         >
-          ×
+          <span className="material-icons">close</span>
         </button>
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            {saveMessage && (
-              <div 
-                className={`px-4 py-2 rounded-md text-sm ${
-                  saveMessage.type === 'error' 
-                    ? 'bg-red-100 text-red-600' 
-                    : 'bg-primary/10 text-primary'
-                }`}
-              >
-                {saveMessage.text}
-              </div>
-            )}
-            <button 
-              className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
-              onClick={handleSave}
-            >
-              Save Changes
-            </button>
-          </div>
+        
+        <div className="flex items-center gap-2">
           <button 
-            className="p-2 text-gray-600 hover:text-red-600 transition-colors" 
+            onClick={handleSave}
+            className="btn btn-primary"
+          >
+            Save Changes
+          </button>
+          
+          <button 
             onClick={handleDelete}
+            className="text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 p-2"
           >
             <span className="material-icons">delete</span>
           </button>
-          <div className="relative">
-            <button 
-              className="p-2 text-gray-600 hover:text-primary transition-colors"
-              onClick={handleEditMenuToggle}
-            >
-              <span className="material-icons">more_vert</span>
-            </button>
-            {isEditMenuOpen && (
-              <div className="absolute top-full right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg min-w-[200px] z-50">
-                <button 
-                  className="w-full px-4 py-2 text-left hover:bg-gray-100 transition-colors"
-                  onClick={() => handleFieldEdit('player')}
-                >
-                  Edit Player Name
-                </button>
-                <button 
-                  className="w-full px-4 py-2 text-left hover:bg-gray-100 transition-colors"
-                  onClick={() => handleFieldEdit('number')}
-                >
-                  Edit Card Number
-                </button>
-                <button 
-                  className="w-full px-4 py-2 text-left hover:bg-gray-100 transition-colors"
-                  onClick={() => handleFieldEdit('year')}
-                >
-                  Edit Year
-                </button>
-                <button 
-                  className="w-full px-4 py-2 text-left hover:bg-gray-100 transition-colors"
-                  onClick={() => handleFieldEdit('notes')}
-                >
-                  Edit Notes
-                </button>
-              </div>
-            )}
-          </div>
+          
+          <button className="text-gray-500 dark:text-gray-400 p-2">
+            <span className="material-icons">more_vert</span>
+          </button>
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto p-8">
+      <div className="max-w-4xl mx-auto p-6">
+        {/* Financial Summary Box */}
+        <div className="mb-8 bg-white dark:bg-[#1B2131] rounded-xl p-4 border border-gray-200 dark:border-gray-700/50">
+          <div className="flex justify-between items-center">
+            <div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">Profit/Loss</div>
+              <div className={`text-xl font-medium ${profit >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                {profit >= 0 ? '+' : ''}{formatValue(profit, '$')}
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="text-sm text-gray-600 dark:text-gray-400">Return</div>
+              <div className={`text-xl font-medium ${profit >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                {profit >= 0 ? '+' : ''}{profitPercentage.toFixed(1)}%
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div>
             <div 
-              className={`
-                relative aspect-[3/4] rounded-lg overflow-hidden
-                ${cardImage ? 'bg-gray-50' : 'bg-white'}
-                border-2 border-dashed border-gray-300 hover:border-primary transition-colors
-                cursor-pointer
-              `}
-              onClick={() => document.getElementById('card-image').click()}
+              className="relative aspect-[3/4] rounded-lg overflow-hidden bg-transparent border-2 border-dashed border-gray-700/50 hover:border-primary transition-colors cursor-pointer"
+              onClick={() => fileInputRef.current?.click()}
+              style={{ minHeight: '400px' }}
             >
               <input
+                ref={fileInputRef}
                 type="file"
-                id="card-image"
-                className="hidden"
                 accept="image/*"
+                className="hidden"
                 onChange={handleImageChange}
               />
               {cardImage ? (
@@ -268,7 +248,7 @@ const CardDetails = ({ card, onClose, onUpdate, onDelete, exchangeRate }) => {
               ) : (
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="text-center">
-                    <span className="material-icons text-4xl text-gray-400">add_photo_alternate</span>
+                    <span className="material-icons text-4xl text-gray-600">add_photo_alternate</span>
                     <p className="text-sm text-gray-400 mt-2">Click to add image</p>
                   </div>
                 </div>
@@ -278,76 +258,76 @@ const CardDetails = ({ card, onClose, onUpdate, onDelete, exchangeRate }) => {
 
           <div className="space-y-6">
             <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">Card Details</h2>
+              <h2 className="text-2xl font-semibold mb-6 text-gray-800 dark:text-gray-200">Card Details</h2>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm text-gray-500 mb-1">Player</label>
+                  <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Player</label>
                   <input
                     type="text"
                     name="player"
                     value={editedCard.player || ''}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+                    className="input"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-500 mb-1">Card Name</label>
+                  <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Card Name</label>
                   <input
                     type="text"
                     name="card"
                     value={editedCard.card || ''}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+                    className="input"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-500 mb-1">Set</label>
+                  <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Set</label>
                   <input
                     type="text"
                     name="set"
                     value={editedCard.set || ''}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+                    className="input"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-500 mb-1">Year</label>
+                  <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Year</label>
                   <input
                     type="text"
                     name="year"
                     value={editedCard.year || ''}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+                    className="input"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-500 mb-1">Category</label>
+                  <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Category</label>
                   <input
                     type="text"
                     name="category"
                     value={editedCard.category || ''}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+                    className="input"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-500 mb-1">Condition</label>
+                  <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Condition</label>
                   <input
                     type="text"
                     name="condition"
                     value={editedCard.condition || ''}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+                    className="input"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-500 mb-1">Serial Number</label>
+                  <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Serial Number</label>
                   <input
                     type="text"
                     name="slabSerial"
                     value={editedCard.slabSerial}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
+                    className="input"
                     disabled
                   />
                 </div>
@@ -355,46 +335,27 @@ const CardDetails = ({ card, onClose, onUpdate, onDelete, exchangeRate }) => {
             </div>
 
             <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">Financial Details</h2>
+              <h2 className="text-2xl font-semibold mb-6 text-gray-800 dark:text-gray-200">Financial Details</h2>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm text-gray-500 mb-1">Investment (AUD)</label>
+                  <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Investment (AUD)</label>
                   <input
                     type="number"
                     name="investmentAUD"
                     value={editedCard.investmentAUD}
                     onChange={handleNumberInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
-                    step="0.01"
+                    className="input"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-500 mb-1">Current Value (AUD)</label>
+                  <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Current Value (AUD)</label>
                   <input
                     type="number"
                     name="currentValueAUD"
                     value={editedCard.currentValueAUD}
                     onChange={handleNumberInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
-                    step="0.01"
+                    className="input"
                   />
-                </div>
-              </div>
-
-              <div className="mt-4 p-4 bg-white border border-gray-200 rounded-lg">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <h3 className="text-sm text-gray-500">Profit/Loss</h3>
-                    <div className={`text-xl font-bold ${profit >= 0 ? 'text-primary' : 'text-red-600'}`}>
-                      {profit >= 0 ? '+' : ''}{formatValue(profit, 'currency')}
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <h3 className="text-sm text-gray-500">Return</h3>
-                    <div className={`text-xl font-bold ${profit >= 0 ? 'text-primary' : 'text-red-600'}`}>
-                      {profit >= 0 ? '+' : ''}{profitPercentage.toFixed(1)}%
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>
