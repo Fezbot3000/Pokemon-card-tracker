@@ -29,14 +29,14 @@ export const parseCSVFile = (file) => {
 /**
  * Process imported data, merging with existing data and updating values
  * @param {Array} importedData - Data imported from CSV
- * @param {Array} existingCards - Existing card data
+ * @param {Array} existingCards - Existing card data for the current collection
  * @param {number} exchangeRate - Current USD to AUD exchange rate
  * @param {string} importMode - Mode of import: 'priceUpdate' or 'baseData'
  * @returns {Array} Processed card data
  */
 export const processImportedData = (importedData, existingCards, exchangeRate, importMode = 'priceUpdate') => {
   // Convert a deep copy to avoid mutations
-  const existingCardsCopy = JSON.parse(JSON.stringify(existingCards));
+  const existingCardsCopy = JSON.parse(JSON.stringify(existingCards || []));
   const existingCardsMap = new Map();
   
   // Create a map of existing cards using Slab Serial # as key
@@ -97,7 +97,6 @@ export const processImportedData = (importedData, existingCards, exchangeRate, i
           condition: importedCard['Condition'] || existingCard.condition,
           currentValueUSD: importedCard['Current Value'] || existingCard.currentValueUSD,
           currentValueAUD: currentValueAUD,
-          // Important: Update and convert the investment value from USD to AUD
           investmentAUD: investmentAUD,
           population: importedCard['Population'] || existingCard.population,
           potentialProfit: calculateProfit(currentValueAUD, investmentAUD),

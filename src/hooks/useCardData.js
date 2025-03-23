@@ -57,15 +57,10 @@ const useCardData = () => {
         throw new Error(validation.error);
       }
       
-      // Process the imported data
-      const processedCards = processImportedData(parsedData, cards, exchangeRate, importMode);
-      
-      // Update the cards state
-      setCards(processedCards);
-      
       return {
         success: true,
-        message: `Imported ${parsedData.length} cards successfully.`
+        message: `Imported ${parsedData.length} cards successfully.`,
+        data: parsedData
       };
     } catch (error) {
       setError(error.message);
