@@ -74,9 +74,8 @@ const useCardData = () => {
   };
   
   // Select a card to view details
-  const selectCard = (cardId) => {
-    const card = cards.find(c => c.slabSerial === cardId);
-    setSelectedCard(card || null);
+  const selectCard = (card) => {
+    setSelectedCard(card);
   };
   
   // Clear selected card
@@ -145,7 +144,9 @@ const useCardData = () => {
     updateCard,
     addCard,
     deleteCard,
-    updateExchangeRate
+    updateExchangeRate,
+    setSelectedCard,
+    setError
   };
 };
 
