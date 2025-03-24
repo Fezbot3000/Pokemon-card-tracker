@@ -100,16 +100,15 @@ const StatCard = memo(({ label, value, isProfit = false }) => {
   );
 });
 
-const CardList = ({ cards, exchangeRate, onCardClick, onDeleteCards, onUpdateCard }) => {
+const CardList = ({ cards, exchangeRate, onCardClick, onDeleteCards, onUpdateCard, onAddCard }) => {
   const [filter, setFilter] = useState('');
-  const [sortField, setSortField] = useState(() => {
-    const saved = localStorage.getItem('cardListSortField');
-    return saved || 'currentValueAUD';
-  });
-  const [sortDirection, setSortDirection] = useState(() => {
-    const saved = localStorage.getItem('cardListSortDirection');
-    return saved || 'desc';
-  });
+  const [sortField, setSortField] = useState(
+    localStorage.getItem('cardListSortField') || 'currentValueAUD'
+  );
+  const [sortDirection, setSortDirection] = useState(
+    localStorage.getItem('cardListSortDirection') || 'desc'
+  );
+  const [showSortDropdown, setShowSortDropdown] = useState(false);
   const [displayMetric, setDisplayMetric] = useState(() => {
     const saved = localStorage.getItem('cardListDisplayMetric');
     return saved || 'currentValueAUD';
@@ -124,15 +123,19 @@ const CardList = ({ cards, exchangeRate, onCardClick, onDeleteCards, onUpdateCar
 
   const valueDropdownRef = useRef(null);
   const metricDropdownRef = useRef(null);
+  const sortDropdownRef = useRef(null);
 
   // Handle click outside dropdowns
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (valueDropdownRef.current && !valueDropdownRef.current.contains(event.target)) {
-        setIsValueDropdownOpen(false);
+      if (sortDropdownRef.current && !sortDropdownRef.current.contains(event.target)) {
+        setShowSortDropdown(false);
       }
       if (metricDropdownRef.current && !metricDropdownRef.current.contains(event.target)) {
         setIsMetricDropdownOpen(false);
+      }
+      if (valueDropdownRef.current && !valueDropdownRef.current.contains(event.target)) {
+        setIsValueDropdownOpen(false);
       }
     };
 
@@ -145,11 +148,8 @@ const CardList = ({ cards, exchangeRate, onCardClick, onDeleteCards, onUpdateCar
   // Save preferences to localStorage when they change
   useEffect(() => {
     localStorage.setItem('cardListSortField', sortField);
-  }, [sortField]);
-
-  useEffect(() => {
     localStorage.setItem('cardListSortDirection', sortDirection);
-  }, [sortDirection]);
+  }, [sortField, sortDirection]);
 
   useEffect(() => {
     localStorage.setItem('cardListDisplayMetric', displayMetric);
@@ -188,13 +188,20 @@ const CardList = ({ cards, exchangeRate, onCardClick, onDeleteCards, onUpdateCar
     setSelectedCards(new Set());
   }, [cards]);
 
+  // Sort options
   const sortOptions = [
-    { value: 'currentValueAUD', label: 'Current Value' },
-    { value: 'investmentAUD', label: 'Investment' },
-    { value: 'potentialProfit', label: 'Profit' },
-    { value: 'datePurchased', label: 'Purchase Date' },
-    { value: 'player', label: 'Player Name' }
+    { field: 'currentValueAUD', label: 'Current Value' },
+    { field: 'investmentAUD', label: 'Investment' },
+    { field: 'potentialProfit', label: 'Profit' },
+    { field: 'datePurchased', label: 'Purchase Date' },
+    { field: 'player', label: 'Player Name' }
   ];
+
+  // Get label for sort field
+  const getSortFieldLabel = (field) => {
+    const option = sortOptions.find(opt => opt.field === field);
+    return option ? option.label : 'Current Value';
+  };
 
   const metricOptions = [
     { value: 'currentValueAUD', label: 'Current Value' },
@@ -206,18 +213,47 @@ const CardList = ({ cards, exchangeRate, onCardClick, onDeleteCards, onUpdateCar
     { value: 'set', label: 'Set' }
   ];
 
-  const handleSort = (field) => {
-    if (field === sortField) {
-      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortField(field);
-      setSortDirection('desc');
-    }
+  // Toggle sort direction
+  const toggleSortDirection = () => {
+    setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+  };
+  
+  // Sort dropdown toggle
+  const toggleSortDropdown = () => {
+    // Close other dropdowns
+    setIsMetricDropdownOpen(false);
     setIsValueDropdownOpen(false);
+    // Toggle sort dropdown
+    setShowSortDropdown(!showSortDropdown);
+  };
+  
+  // Metric dropdown toggle
+  const toggleMetricDropdown = () => {
+    // Close other dropdowns
+    setShowSortDropdown(false);
+    setIsValueDropdownOpen(false);
+    // Toggle metric dropdown
+    setIsMetricDropdownOpen(!isMetricDropdownOpen);
+  };
+  
+  // Value dropdown toggle
+  const toggleValueDropdown = () => {
+    // Close other dropdowns
+    setShowSortDropdown(false);
+    setIsMetricDropdownOpen(false);
+    // Toggle value dropdown
+    setIsValueDropdownOpen(!isValueDropdownOpen);
   };
 
-  const toggleSortDirection = () => {
-    setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+  // Handle sort field change
+  const handleSortChange = (field) => {
+    if (field === sortField) {
+      toggleSortDirection();
+    } else {
+      setSortField(field);
+      setSortDirection('desc');  // Default to descending for new sort fields
+    }
+    setShowSortDropdown(false); // Close the dropdown after selection
   };
 
   const handleSelectCard = (e, cardId) => {
@@ -284,30 +320,47 @@ const CardList = ({ cards, exchangeRate, onCardClick, onDeleteCards, onUpdateCar
     }
   };
 
-  // Memoized filtered and sorted cards
+  // Get filtered and sorted cards
   const filteredCards = useMemo(() => {
-    return cards
-      .filter(card => {
-        const searchString = filter.toLowerCase();
-        return (
-          card.player?.toLowerCase().includes(searchString) ||
-          card.set?.toLowerCase().includes(searchString) ||
-          card.slabSerial?.toString().toLowerCase().includes(searchString)
-        );
-      })
-      .sort((a, b) => {
-        let aValue = a[sortField];
-        let bValue = b[sortField];
-        
-        if (sortField === 'datePurchased') {
-          aValue = new Date(aValue);
-          bValue = new Date(bValue);
-        }
-        
-        if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
-        if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
-        return 0;
-      });
+    // Filter cards by search term
+    const filtered = filter
+      ? cards.filter(card => {
+          const searchTerm = filter.toLowerCase();
+          return (
+            (card.card && card.card.toLowerCase().includes(searchTerm)) ||
+            (card.player && card.player.toLowerCase().includes(searchTerm)) ||
+            (card.set && card.set.toLowerCase().includes(searchTerm)) ||
+            (card.slabSerial && card.slabSerial.toLowerCase().includes(searchTerm))
+          );
+        })
+      : cards;
+
+    // Sort cards
+    return [...filtered].sort((a, b) => {
+      let valueA = a[sortField];
+      let valueB = b[sortField];
+      
+      // Handle undefined or null values
+      if (valueA === undefined || valueA === null) valueA = '';
+      if (valueB === undefined || valueB === null) valueB = '';
+
+      // Sort by date if the field is datePurchased
+      if (sortField === 'datePurchased') {
+        const dateA = valueA ? new Date(valueA) : new Date(0);
+        const dateB = valueB ? new Date(valueB) : new Date(0);
+        return sortDirection === 'asc' ? dateA - dateB : dateB - dateA;
+      }
+      
+      // Sort by string if the field contains string values
+      if (typeof valueA === 'string' || typeof valueB === 'string') {
+        const strA = String(valueA).toLowerCase();
+        const strB = String(valueB).toLowerCase();
+        return sortDirection === 'asc' ? strA.localeCompare(strB) : strB.localeCompare(strA);
+      }
+      
+      // Sort by number for everything else
+      return sortDirection === 'asc' ? valueA - valueB : valueB - valueA;
+    });
   }, [cards, filter, sortField, sortDirection]);
 
   // Memoized totals
@@ -357,43 +410,47 @@ const CardList = ({ cards, exchangeRate, onCardClick, onDeleteCards, onUpdateCar
         />
         
         <div className="controls-container">
-          <div className="sort-container" ref={valueDropdownRef}>
+          <div className="sort-container" ref={sortDropdownRef}>
             <button
-              onClick={() => setIsValueDropdownOpen(!isValueDropdownOpen)}
               className="sort-button"
+              onClick={toggleSortDropdown}
             >
-              <div className="flex items-center gap-2">
+              <div>
                 <span className="material-icons">sort</span>
-                <span>Sort by {sortOptions.find(opt => opt.value === sortField)?.label || 'Current Value'}</span>
+                <span>Sort by {getSortFieldLabel(sortField)} {sortDirection === 'asc' ? '(Asc)' : '(Desc)'}</span>
               </div>
               <span className="material-icons">
-                {isValueDropdownOpen ? 'expand_less' : 'expand_more'}
+                {showSortDropdown ? 'keyboard_arrow_up' : 'keyboard_arrow_down'}
               </span>
             </button>
             
-            {isValueDropdownOpen && (
+            {showSortDropdown && (
               <div className="sort-dropdown">
-                {sortOptions.map((option) => (
+                {sortOptions.map(option => (
                   <div
-                    key={option.value}
-                    className={`sort-option ${option.value === sortField ? 'active' : ''}`}
-                    onClick={() => handleSort(option.value)}
+                    key={option.field}
+                    className={`sort-option ${sortField === option.field ? 'active' : ''}`}
+                    onClick={() => handleSortChange(option.field)}
                   >
-                    {option.value === sortField && (
-                      <span className="material-icons">check</span>
+                    <span>{option.label}</span>
+                    {sortField === option.field && (
+                      <span className="material-icons">
+                        {sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward'}
+                      </span>
                     )}
-                    {option.label}
                   </div>
                 ))}
+                
                 <div className="sort-option-divider"></div>
-                <div
+                
+                <div 
                   className="sort-option"
                   onClick={toggleSortDirection}
                 >
+                  <span>Change Order: {sortDirection === 'asc' ? 'Ascending' : 'Descending'}</span>
                   <span className="material-icons">
-                    {sortDirection === 'desc' ? 'arrow_downward' : 'arrow_upward'}
+                    {sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward'}
                   </span>
-                  Sort {sortDirection === 'desc' ? 'Descending' : 'Ascending'}
                 </div>
               </div>
             )}
@@ -401,7 +458,7 @@ const CardList = ({ cards, exchangeRate, onCardClick, onDeleteCards, onUpdateCar
           
           <div className="view-container" ref={metricDropdownRef}>
             <button
-              onClick={() => setIsMetricDropdownOpen(!isMetricDropdownOpen)}
+              onClick={toggleMetricDropdown}
               className="view-button"
             >
               <div className="flex items-center gap-2">
@@ -434,16 +491,24 @@ const CardList = ({ cards, exchangeRate, onCardClick, onDeleteCards, onUpdateCar
             )}
           </div>
           
-          {/* Delete button that appears when cards are selected */}
-          {selectedCards.size > 0 && (
+          <div className="controls-right">
+            {selectedCards.size > 0 && (
+              <button
+                onClick={handleDeleteSelected}
+                className="delete-button"
+              >
+                <span className="material-icons mr-2">delete</span>
+                Delete ({selectedCards.size})
+              </button>
+            )}
             <button
-              onClick={handleDeleteSelected}
-              className="delete-button"
+              onClick={onAddCard}
+              className="btn btn-primary w-[160px]"
             >
-              <span className="material-icons mr-2">delete</span>
-              Delete ({selectedCards.size})
+              <span className="material-icons mr-2">add</span>
+              Add Card
             </button>
-          )}
+          </div>
         </div>
       </div>
 

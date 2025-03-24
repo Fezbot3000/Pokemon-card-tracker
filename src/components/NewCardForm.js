@@ -11,11 +11,14 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5 }) => {
     category: '',
     condition: '',
     slabSerial: '',
-    investmentUSD: 0,
-    currentValueUSD: 0,
-    investmentAUD: 0,
-    currentValueAUD: 0
+    investmentUSD: '',
+    currentValueUSD: '',
+    investmentAUD: '',
+    currentValueAUD: ''
   });
+
+  // Add state for input currency
+  const [inputCurrency, setInputCurrency] = useState('AUD'); // Default to AUD
 
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
@@ -47,23 +50,47 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5 }) => {
 
   const handleNumberInputChange = (e) => {
     const { name, value } = e.target;
-    const numValue = value === '' ? 0 : parseFloat(value);
+    // Allow empty input (will be treated as 0)
+    const numValue = value === '' ? '' : parseFloat(value);
+    
     setFormData(prev => {
-      if (name === 'investmentUSD') {
-        return {
-          ...prev,
-          investmentUSD: numValue,
-          investmentAUD: numValue * (exchangeRate || 1.5)
-        };
-      } else if (name === 'currentValueUSD') {
-        return {
-          ...prev,
-          currentValueUSD: numValue,
-          currentValueAUD: numValue * (exchangeRate || 1.5)
-        };
+      if (inputCurrency === 'AUD') {
+        // User is entering values in AUD
+        if (name === 'investmentAUD') {
+          return {
+            ...prev,
+            investmentAUD: numValue,
+            investmentUSD: numValue !== '' ? (numValue / exchangeRate).toFixed(2) : ''
+          };
+        } else if (name === 'currentValueAUD') {
+          return {
+            ...prev,
+            currentValueAUD: numValue,
+            currentValueUSD: numValue !== '' ? (numValue / exchangeRate).toFixed(2) : ''
+          };
+        }
+      } else {
+        // User is entering values in USD
+        if (name === 'investmentUSD') {
+          return {
+            ...prev,
+            investmentUSD: numValue,
+            investmentAUD: numValue !== '' ? (numValue * exchangeRate).toFixed(2) : ''
+          };
+        } else if (name === 'currentValueUSD') {
+          return {
+            ...prev,
+            currentValueUSD: numValue,
+            currentValueAUD: numValue !== '' ? (numValue * exchangeRate).toFixed(2) : ''
+          };
+        }
       }
       return { ...prev, [name]: numValue };
     });
+  };
+
+  const handleCurrencyToggle = () => {
+    setInputCurrency(prev => prev === 'AUD' ? 'USD' : 'AUD');
   };
 
   const handleImageChange = (e) => {
@@ -85,12 +112,19 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5 }) => {
       return;
     }
     
-    // Calculate potential profit
-    const potentialProfit = formData.currentValueAUD - formData.investmentAUD;
+    // Calculate potential profit using AUD values (always stored in AUD internally)
+    const investmentAUD = parseFloat(formData.investmentAUD) || 0;
+    const currentValueAUD = parseFloat(formData.currentValueAUD) || 0;
+    const potentialProfit = currentValueAUD - investmentAUD;
     
     try {
       await onSubmit({
         ...formData,
+        // Ensure numbers are stored as numbers, not strings
+        investmentAUD: investmentAUD,
+        currentValueAUD: currentValueAUD,
+        investmentUSD: parseFloat(formData.investmentUSD) || 0,
+        currentValueUSD: parseFloat(formData.currentValueUSD) || 0,
         potentialProfit
       }, imageFile);
       onClose();
@@ -235,35 +269,91 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5 }) => {
 
             <h2 className="text-2xl font-semibold mb-6 text-gray-800 dark:text-gray-200">Financial Details</h2>
             
+            {/* Currency Toggle */}
+            <div className="mb-4 flex items-center justify-end">
+              <span className="text-sm text-gray-600 dark:text-gray-400 mr-2">Input Currency:</span>
+              <button 
+                onClick={handleCurrencyToggle}
+                className={`px-3 py-1 rounded-lg transition-colors ${
+                  isDarkMode 
+                    ? 'bg-[#252B3B] hover:bg-[#323B4B]' 
+                    : 'bg-gray-100 hover:bg-gray-200'
+                }`}
+              >
+                <span className={`font-medium ${inputCurrency === 'AUD' ? 'text-primary' : 'text-gray-500 dark:text-gray-400'}`}>
+                  AUD
+                </span>
+                <span className="mx-2 text-gray-500 dark:text-gray-400">/</span>
+                <span className={`font-medium ${inputCurrency === 'USD' ? 'text-primary' : 'text-gray-500 dark:text-gray-400'}`}>
+                  USD
+                </span>
+              </button>
+            </div>
+            
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Investment (USD)</label>
-                <input
-                  type="number"
-                  name="investmentUSD"
-                  value={formData.investmentUSD}
-                  onChange={handleNumberInputChange}
-                  className="input"
-                  placeholder="0"
-                />
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                  AUD: ${formatValue(formData.investmentAUD, 'currency', false)}
-                </p>
-              </div>
-              <div>
-                <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Current Value (USD)</label>
-                <input
-                  type="number"
-                  name="currentValueUSD"
-                  value={formData.currentValueUSD}
-                  onChange={handleNumberInputChange}
-                  className="input"
-                  placeholder="0"
-                />
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                  AUD: ${formatValue(formData.currentValueAUD, 'currency', false)}
-                </p>
-              </div>
+              {inputCurrency === 'AUD' ? (
+                <>
+                  <div>
+                    <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Investment (AUD)</label>
+                    <input
+                      type="number"
+                      name="investmentAUD"
+                      value={formData.investmentAUD}
+                      onChange={handleNumberInputChange}
+                      className="input"
+                      placeholder="0"
+                    />
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                      USD: ${formatValue(formData.investmentUSD, 'currency', false)}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Current Value (AUD)</label>
+                    <input
+                      type="number"
+                      name="currentValueAUD"
+                      value={formData.currentValueAUD}
+                      onChange={handleNumberInputChange}
+                      className="input"
+                      placeholder="0"
+                    />
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                      USD: ${formatValue(formData.currentValueUSD, 'currency', false)}
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div>
+                    <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Investment (USD)</label>
+                    <input
+                      type="number"
+                      name="investmentUSD"
+                      value={formData.investmentUSD}
+                      onChange={handleNumberInputChange}
+                      className="input"
+                      placeholder="0"
+                    />
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                      AUD: ${formatValue(formData.investmentAUD, 'currency', false)}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Current Value (USD)</label>
+                    <input
+                      type="number"
+                      name="currentValueUSD"
+                      value={formData.currentValueUSD}
+                      onChange={handleNumberInputChange}
+                      className="input"
+                      placeholder="0"
+                    />
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                      AUD: ${formatValue(formData.currentValueAUD, 'currency', false)}
+                    </p>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>

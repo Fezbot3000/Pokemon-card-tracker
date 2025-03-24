@@ -120,9 +120,22 @@ function AppContent() {
         
         const savedCollections = await db.getCollections();
         
+        // Get saved collection from localStorage
+        const savedSelectedCollection = localStorage.getItem('selectedCollection');
+        
         if (Object.keys(savedCollections).length > 0) {
           setCollections(savedCollections);
-          if (!savedCollections[selectedCollection]) {
+          
+          // Handle both regular collections and "All Cards" special case
+          if (savedSelectedCollection) {
+            if (savedSelectedCollection === 'All Cards' || savedCollections[savedSelectedCollection]) {
+              setSelectedCollection(savedSelectedCollection);
+            } else {
+              // Fall back to first collection if saved one doesn't exist
+              setSelectedCollection(Object.keys(savedCollections)[0]);
+            }
+          } else if (!savedCollections[selectedCollection]) {
+            // Fall back if current selection doesn't exist
             setSelectedCollection(Object.keys(savedCollections)[0]);
           }
         } else {
@@ -378,22 +391,79 @@ To import this backup:
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#0B0F19]">
       <Header
-        onAddCard={() => setShowNewCardForm(true)}
         selectedCollection={selectedCollection}
         collections={Object.keys(collections)}
         onCollectionChange={handleCollectionChange}
         onImportClick={handleImportClick}
-        collectionData={collectionData}
-        exchangeRate={exchangeRate}
         onSettingsClick={() => setShowSettings(true)}
+        onAddCollection={(name) => {
+          // Create new collection
+          const newCollections = {
+            ...collections,
+            [name]: []
+          };
+          db.saveCollections(newCollections).then(() => {
+            setCollections(newCollections);
+            setSelectedCollection(name);
+            localStorage.setItem('selectedCollection', name);
+          });
+        }}
+        onRenameCollection={(oldName, newName) => {
+          const newCollections = { ...collections };
+          newCollections[newName] = newCollections[oldName];
+          delete newCollections[oldName];
+          
+          db.saveCollections(newCollections).then(() => {
+            setCollections(newCollections);
+            setSelectedCollection(newName);
+            localStorage.setItem('selectedCollection', newName);
+          });
+        }}
+        onDeleteCollection={async (name) => {
+          try {
+            // Get current collections
+            const currentCollections = { ...collections };
+            
+            // Check if collection exists
+            if (!currentCollections[name]) {
+              throw new Error(`Collection "${name}" does not exist`);
+            }
+            
+            // Check if it's the last collection
+            if (Object.keys(currentCollections).length <= 1) {
+              throw new Error("Cannot delete the last collection");
+            }
+            
+            // Remove the collection
+            delete currentCollections[name];
+            
+            // Save updated collections to database
+            await db.saveCollections(currentCollections);
+            
+            // Update state
+            setCollections(currentCollections);
+            
+            // Switch to another collection if the deleted one was selected
+            if (selectedCollection === name) {
+              const newSelection = Object.keys(currentCollections)[0];
+              setSelectedCollection(newSelection);
+              localStorage.setItem('selectedCollection', newSelection);
+            }
+          } catch (error) {
+            console.error("Error deleting collection:", error);
+            alert(`Failed to delete collection: ${error.message}`);
+          }
+        }}
         refreshCollections={() => {
           // Refresh collections data from the database
           db.getCollections().then(savedCollections => {
             if (Object.keys(savedCollections).length > 0) {
               setCollections(savedCollections);
-              // If current collection no longer exists, switch to the first available
-              if (!savedCollections[selectedCollection]) {
-                setSelectedCollection(Object.keys(savedCollections)[0]);
+              // Only switch collection if current isn't "All Cards" and doesn't exist
+              if (selectedCollection !== 'All Cards' && !savedCollections[selectedCollection]) {
+                const newCollection = Object.keys(savedCollections)[0];
+                setSelectedCollection(newCollection);
+                localStorage.setItem('selectedCollection', newCollection);
               }
             }
           });
@@ -407,6 +477,7 @@ To import this backup:
           onCardClick={selectCard}
           onDeleteCards={deleteCard}
           onUpdateCard={handleCardUpdate}
+          onAddCard={() => setShowNewCardForm(true)}
         />
       </main>
 

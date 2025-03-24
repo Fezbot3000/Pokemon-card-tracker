@@ -73,13 +73,28 @@
     @apply hidden lg:flex items-center gap-2 xl:gap-3;
   }
 
-  /* Header action buttons */
-  .header-actions {
-    @apply flex items-center gap-2 ml-auto;
+  /* Header Buttons */
+  .header-buttons {
+    @apply hidden sm:flex items-center gap-3 ml-auto;
   }
 
-  .header-action-buttons {
-    @apply hidden sm:flex items-center gap-2 ml-auto;
+  .header-buttons .btn {
+    @apply min-w-[40px] h-[40px] flex items-center justify-center;
+  }
+
+  /* Button Styles */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2
+           rounded-xl font-medium transition-colors text-sm whitespace-nowrap;
+  }
+
+  .btn span.material-icons {
+    @apply inline-block text-xl flex-shrink-0;
+  }
+
+  /* Only show text on desktop */
+  .btn span:not(.material-icons) {
+    @apply hidden xl:inline;
   }
 
   /* Mobile menu */
@@ -110,7 +125,11 @@
 
   /* Mobile menu button */
   .mobile-menu-button {
-    @apply block sm:hidden;
+    @apply block sm:hidden ml-4 p-2;
+  }
+
+  .mobile-menu-button .material-icons {
+    @apply inline-block text-xl;
   }
 
   /* Total Cards Counter */
@@ -128,7 +147,11 @@
 
   /* Collection Selector */
   .collection-selector {
-    @apply flex items-center gap-2 relative max-w-[200px] lg:max-w-none;
+    @apply flex items-center gap-2 relative max-w-[200px];
+  }
+
+  .collection-selector .material-icons {
+    @apply inline-block flex-shrink-0;
   }
 
   .collection-name {
@@ -145,6 +168,7 @@
     @apply text-primary text-2xl;
   }
 
+  /* Collection Dropdown */
   .collection-dropdown {
     @apply absolute top-full left-0 mt-2 w-64 
            bg-white dark:bg-[#1B2131] rounded-xl shadow-lg 
@@ -157,21 +181,15 @@
            text-gray-900 dark:text-gray-200;
   }
 
+  .collection-item.text-primary {
+    @apply text-[#4318FF];
+  }
+
+  .collection-divider {
+    @apply h-px bg-gray-200 dark:bg-gray-700/50 my-1 mx-4;
+  }
+
   /* Button Styles */
-  .btn {
-    @apply inline-flex items-center justify-center gap-1.5 px-3 py-2 
-           rounded-xl font-medium transition-colors text-sm whitespace-nowrap;
-  }
-
-  .btn span.material-icons {
-    @apply text-xl;
-  }
-
-  /* Hide button text on tablet, show on desktop */
-  .btn span:not(.material-icons) {
-    @apply hidden xl:inline;
-  }
-
   .btn-primary {
     @apply bg-primary text-white hover:bg-primary/90;
   }
@@ -568,11 +586,32 @@
     .delete-button {
       @apply w-[160px];
     }
+
+    /* Tablet view: Show icons, hide text */
+    .btn span.material-icons {
+      @apply inline-block;
+    }
+    
+    .btn span:not(.material-icons) {
+      @apply hidden;
+    }
+    
+    /* Hide burger menu on tablet and above */
+    .mobile-menu-button {
+      @apply hidden;
+    }
   }
 
   @screen lg {
     .sort-container, .view-container {
       @apply max-w-[280px];
+    }
+  }
+
+  @screen xl {
+    /* Desktop view: Show icons and text */
+    .btn span:not(.material-icons) {
+      @apply inline;
     }
   }
 

@@ -2,28 +2,27 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { db } from '../services/db';  // Use the correct db service
 import JSZip from 'jszip';
+import CollectionSelector from './CollectionSelector';
 
 const Header = ({ 
-  onAddCard, 
   selectedCollection, 
   collections, 
   onCollectionChange, 
+  onImportClick,
+  onSettingsClick,
+  refreshCollections,
   onAddCollection,
   onRenameCollection,
-  onImportClick,
-  onDeleteCollection,
-  collectionData,
-  exchangeRate,
-  refreshCollections
+  onDeleteCollection
 }) => {
+  const { isDarkMode, toggleTheme } = useTheme();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isNewCollectionModalOpen, setIsNewCollectionModalOpen] = useState(false);
   const [newCollectionName, setNewCollectionName] = useState('');
   const [isRenaming, setIsRenaming] = useState(false);
   const [toast, setToast] = useState(null);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { isDarkMode, toggleTheme } = useTheme();
   const dropdownRef = useRef(null);
   const newCollectionInputRef = useRef(null);
 
@@ -116,11 +115,7 @@ const Header = ({
   };
 
   const toggleSettings = () => {
-    setIsSettingsOpen(!isSettingsOpen);
-    if (!isSettingsOpen) {
-      setNewCollectionName(selectedCollection);
-      setIsRenaming(false);
-    }
+    onSettingsClick();
   };
 
   const handleCollectionSelect = (collection) => {
@@ -401,6 +396,17 @@ To import this backup:
     }
   };
 
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+    
+    // Add/remove class to prevent body scrolling when menu is open
+    if (!isMobileMenuOpen) {
+      document.body.classList.add('mobile-menu-open');
+    } else {
+      document.body.classList.remove('mobile-menu-open');
+    }
+  };
+
   return (
     <>
       {/* Toast notification */}
@@ -416,181 +422,114 @@ To import this backup:
       <header className="app-header">
         <div className="header-content">
           <div className="header-left">
-            <div className="collection-selector" ref={dropdownRef}>
-              <button 
-                type="button"
-                className="collection-name"
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              >
-                <span className="collection-lock material-icons">lock</span>
-                <span>{selectedCollection}</span>
-                <span className="material-icons text-gray-500 dark:text-gray-400">expand_more</span>
-              </button>
-
-              {isDropdownOpen && (
-                <div className="collection-dropdown">
-                  {collections.map(collection => (
-                    <div
-                      key={collection}
-                      className="collection-item"
-                      onClick={() => {
-                        onCollectionChange(collection);
-                        setIsDropdownOpen(false);
-                      }}
-                    >
-                      <span className="truncate">{collection}</span>
-                      {collection === selectedCollection && (
-                        <span className="material-icons text-primary flex-shrink-0">check</span>
-                      )}
-                    </div>
-                  ))}
-                  <div className="h-px bg-gray-200 dark:bg-gray-700/50 my-1"></div>
-                  <div
-                    className="collection-item text-primary"
-                    onClick={handleAddNewCollection}
-                  >
-                    <span>New Collection</span>
-                    <span className="material-icons">add</span>
-                  </div>
-                </div>
-              )}
-            </div>
+            <CollectionSelector
+              collections={collections}
+              selectedCollection={selectedCollection}
+              onCollectionChange={onCollectionChange}
+              onAddCollection={handleAddNewCollection}
+            />
           </div>
 
-          <div className="header-center">
-            <button 
-              type="button"
-              className="btn btn-primary"
+          {/* Desktop buttons */}
+          <div className="header-buttons">
+            <button
+              className="btn btn-secondary"
               onClick={() => onImportClick('price')}
+              aria-label="Update Prices"
             >
-              <span className="material-icons">update</span>
-              <span className="hidden xl:inline">Update Prices</span>
+              <span className="material-icons">sync</span>
+              <span>Update Prices</span>
             </button>
-            <button 
-              type="button"
+            <button
               className="btn btn-secondary"
               onClick={() => onImportClick('baseData')}
+              aria-label="Import Base Data"
             >
-              <span className="material-icons">upload_file</span>
-              <span className="hidden xl:inline">Import Base Data</span>
+              <span className="material-icons">file_download</span>
+              <span>Import Base Data</span>
             </button>
-          </div>
-
-          <div className="header-right">
-            <button 
-              type="button"
+            <button
               className="btn btn-secondary"
               onClick={toggleTheme}
+              aria-label={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
             >
               <span className="material-icons">
                 {isDarkMode ? 'light_mode' : 'dark_mode'}
               </span>
-              <span className="hidden xl:inline">
-                {isDarkMode ? 'Light Mode' : 'Dark Mode'}
-              </span>
+              <span>{isDarkMode ? 'Light Mode' : 'Dark Mode'}</span>
             </button>
-            <button 
-              type="button"
+            <button
               className="btn btn-secondary"
               onClick={toggleSettings}
+              aria-label="Settings"
             >
               <span className="material-icons">settings</span>
-              <span className="hidden xl:inline">Settings</span>
-            </button>
-            <button 
-              type="button"
-              className="btn btn-primary"
-              onClick={onAddCard}
-            >
-              <span className="material-icons">add</span>
-              <span className="hidden xl:inline">Add Card</span>
+              <span>Settings</span>
             </button>
           </div>
 
+          {/* Mobile menu button */}
           <button
-            type="button"
             className="mobile-menu-button"
-            onClick={() => setIsMobileMenuOpen(true)}
+            onClick={toggleMobileMenu}
+            aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
           >
-            <span className="material-icons">menu</span>
+            <span className="material-icons">
+              {isMobileMenuOpen ? 'close' : 'menu'}
+            </span>
           </button>
         </div>
+
+        {/* Mobile menu */}
+        {isMobileMenuOpen && (
+          <div className="mobile-menu">
+            <div className="mobile-menu-content">
+              <button
+                className="mobile-menu-item"
+                onClick={() => {
+                  onImportClick('price');
+                  toggleMobileMenu();
+                }}
+              >
+                <span className="material-icons">sync</span>
+                <span>Update Prices</span>
+              </button>
+              <button
+                className="mobile-menu-item"
+                onClick={() => {
+                  onImportClick('baseData');
+                  toggleMobileMenu();
+                }}
+              >
+                <span className="material-icons">file_download</span>
+                <span>Import Base Data</span>
+              </button>
+              <button
+                className="mobile-menu-item"
+                onClick={() => {
+                  toggleTheme();
+                  toggleMobileMenu();
+                }}
+              >
+                <span className="material-icons">
+                  {isDarkMode ? 'light_mode' : 'dark_mode'}
+                </span>
+                <span>{isDarkMode ? 'Light Mode' : 'Dark Mode'}</span>
+              </button>
+              <button
+                className="mobile-menu-item"
+                onClick={() => {
+                  toggleSettings();
+                  toggleMobileMenu();
+                }}
+              >
+                <span className="material-icons">settings</span>
+                <span>Settings</span>
+              </button>
+            </div>
+          </div>
+        )}
       </header>
-
-      {/* Mobile Menu */}
-      {isMobileMenuOpen && (
-        <div className="mobile-menu">
-          <div className="mobile-menu-header">
-            <h2 className="text-xl font-medium text-gray-800 dark:text-gray-200">Menu</h2>
-            <button
-              type="button"
-              className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-[#252B3B]"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              <span className="material-icons">close</span>
-            </button>
-          </div>
-
-          <div className="mobile-menu-content">
-            <button 
-              className="mobile-menu-item"
-              onClick={() => {
-                onImportClick('price');
-                setIsMobileMenuOpen(false);
-              }}
-            >
-              <span className="material-icons">update</span>
-              Update Prices
-            </button>
-            
-            <button 
-              className="mobile-menu-item"
-              onClick={() => {
-                onImportClick('baseData');
-                setIsMobileMenuOpen(false);
-              }}
-            >
-              <span className="material-icons">upload_file</span>
-              Import Base Data
-            </button>
-            
-            <button 
-              className="mobile-menu-item"
-              onClick={() => {
-                toggleTheme();
-                setIsMobileMenuOpen(false);
-              }}
-            >
-              <span className="material-icons">
-                {isDarkMode ? 'light_mode' : 'dark_mode'}
-              </span>
-              {isDarkMode ? 'Light Mode' : 'Dark Mode'}
-            </button>
-            
-            <button 
-              className="mobile-menu-item"
-              onClick={() => {
-                toggleSettings();
-                setIsMobileMenuOpen(false);
-              }}
-            >
-              <span className="material-icons">settings</span>
-              Settings
-            </button>
-            
-            <button 
-              className="mobile-menu-item"
-              onClick={() => {
-                onAddCard();
-                setIsMobileMenuOpen(false);
-              }}
-            >
-              <span className="material-icons">add</span>
-              Add Card
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Settings Modal */}
       {isSettingsOpen && (
