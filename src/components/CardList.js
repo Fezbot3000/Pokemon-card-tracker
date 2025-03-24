@@ -5,15 +5,17 @@ import { formatCurrency } from '../utils/currencyAPI';
 import { useTheme } from '../contexts/ThemeContext';
 
 // Extracted Card component for better performance
-const Card = memo(({ card, cardImage, onCardClick, isSelected, onSelect, displayMetric }) => {
+const Card = memo(({ card, cardImage, onCardClick, isSelected, onSelect, displayMetric, onUpdateCard }) => {
   const { isDarkMode } = useTheme();
+  const [isEditing, setIsEditing] = useState(false);
+  const [editValue, setEditValue] = useState('');
   
   const getDisplayValue = () => {
     switch (displayMetric) {
       case 'currentValueAUD':
         return { label: 'Current Value', value: formatCurrency(card.currentValueAUD), isProfit: false };
       case 'investmentAUD':
-        return { label: 'Investment', value: formatCurrency(card.investmentAUD), isProfit: false };
+        return { label: 'Investment', value: formatCurrency(card.investmentAUD), isProfit: false, isEditable: true };
       case 'potentialProfit':
         const profit = card.currentValueAUD - card.investmentAUD;
         return { label: 'Profit', value: formatCurrency(profit), isProfit: true, profitValue: profit };
@@ -27,7 +29,41 @@ const Card = memo(({ card, cardImage, onCardClick, isSelected, onSelect, display
   };
 
   const displayData = getDisplayValue();
-  
+
+  const handleEditStart = (e) => {
+    e.stopPropagation();
+    if (displayData.isEditable) {
+      setEditValue(card.investmentAUD.toFixed(2));
+      setIsEditing(true);
+    }
+  };
+
+  const handleEditChange = (e) => {
+    setEditValue(e.target.value);
+  };
+
+  const handleEditSave = (e) => {
+    e.stopPropagation();
+    const newValue = parseFloat(editValue);
+    if (!isNaN(newValue) && newValue >= 0) {
+      const updatedCard = {
+        ...card,
+        investmentAUD: Number(newValue.toFixed(2)),
+        potentialProfit: Number((card.currentValueAUD - newValue).toFixed(2))
+      };
+      onUpdateCard(updatedCard);
+    }
+    setIsEditing(false);
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      handleEditSave(e);
+    } else if (e.key === 'Escape') {
+      setIsEditing(false);
+    }
+  };
+
   return (
     <div 
       className={`relative p-4 rounded-xl border transition-all duration-200 cursor-pointer
@@ -71,8 +107,27 @@ const Card = memo(({ card, cardImage, onCardClick, isSelected, onSelect, display
             : isDarkMode 
               ? 'text-gray-200' 
               : 'text-gray-800'
-        }`}>
-          {displayData.value}
+        }`} onClick={handleEditStart}>
+          {isEditing && displayData.isEditable ? (
+            <div className="flex items-center justify-center gap-2" onClick={e => e.stopPropagation()}>
+              <input
+                type="number"
+                value={editValue}
+                onChange={handleEditChange}
+                onKeyDown={handleKeyDown}
+                className="w-32 px-2 py-1 text-center bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                autoFocus
+              />
+              <button
+                onClick={handleEditSave}
+                className="text-sm bg-primary text-white px-2 py-1 rounded hover:bg-primary/90"
+              >
+                Save
+              </button>
+            </div>
+          ) : (
+            displayData.value
+          )}
         </div>
         
         {/* Label - shown below the value */}
@@ -577,6 +632,7 @@ const CardList = ({ cards, exchangeRate, onCardClick, onDeleteCards, onUpdateCar
             isSelected={selectedCards.has(card.slabSerial)}
             onSelect={handleSelectCard}
             displayMetric={displayMetric}
+            onUpdateCard={onUpdateCard}
           />
         ))}
       </div>

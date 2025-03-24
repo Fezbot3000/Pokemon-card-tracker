@@ -126,8 +126,8 @@ const useCardData = () => {
     setCards(prevCards => 
       prevCards.map(card => ({
         ...card,
-        currentValueAUD: (card.currentValueUSD || 0) * newRate,
-        potentialProfit: (card.currentValueUSD || 0) * newRate - (card.investmentAUD || 0)
+        currentValueAUD: Number(((card.currentValueUSD || 0) * newRate).toFixed(2)),
+        potentialProfit: Number(((card.currentValueUSD || 0) * newRate - (card.investmentAUD || 0)).toFixed(2))
       }))
     );
   };

@@ -8,7 +8,7 @@ const formatCurrency = (value) => {
     currency: 'AUD',
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
-  }).format(numValue);
+  }).format(numValue).replace('A$', '$');
 };
 
 const ProfitChangeModal = ({ isOpen, onClose, oldProfit, newProfit }) => {

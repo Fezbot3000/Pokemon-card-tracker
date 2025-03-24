@@ -52,10 +52,10 @@ const CardImage = memo(({ imageUrl, loadingState, onRetry }) => {
 const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchangeRate }) => {
   const [editedCard, setEditedCard] = useState({
     ...card,
-    investmentUSD: typeof card.investmentUSD === 'number' ? card.investmentUSD : 0,
-    currentValueUSD: typeof card.currentValueUSD === 'number' ? card.currentValueUSD : 0,
-    investmentAUD: typeof card.investmentAUD === 'number' ? card.investmentAUD : 0,
-    currentValueAUD: typeof card.currentValueAUD === 'number' ? card.currentValueAUD : 0
+    investmentUSD: typeof card.investmentUSD === 'number' ? Number(card.investmentUSD.toFixed(2)) : 0,
+    currentValueUSD: typeof card.currentValueUSD === 'number' ? Number(card.currentValueUSD.toFixed(2)) : 0,
+    investmentAUD: typeof card.investmentAUD === 'number' ? Number(card.investmentAUD.toFixed(2)) : 0,
+    currentValueAUD: typeof card.currentValueAUD === 'number' ? Number(card.currentValueAUD.toFixed(2)) : 0
   });
   const [isEditing, setIsEditing] = useState(false);
   const [isEditMenuOpen, setIsEditMenuOpen] = useState(false);
@@ -67,6 +67,9 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
   const fileInputRef = useRef(null);
   const messageTimeoutRef = useRef(null);
   const { isDarkMode } = useTheme();
+
+  // Add ref for the modal content
+  const modalContentRef = useRef(null);
 
   // Use onUpdateCard if available, otherwise fall back to onUpdate for backward compatibility
   const updateCard = onUpdateCard || onUpdate;
@@ -112,6 +115,19 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
     };
   }, [card.slabSerial]);
 
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (modalContentRef.current && !modalContentRef.current.contains(event.target)) {
+        handleClose();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   const loadCardImage = async () => {
     setImageLoadingState('loading');
     try {
@@ -131,20 +147,7 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
   };
 
   const handleClose = () => {
-    // Only show warning if there are actual changes
-    const hasChanges = Object.keys(editedCard).some(key => {
-      // Skip comparing functions, undefined values, and cardImage
-      if (typeof editedCard[key] === 'function' || editedCard[key] === undefined) {
-        return false;
-      }
-      // For numbers, compare with a small epsilon to handle floating point precision
-      if (typeof editedCard[key] === 'number') {
-        return Math.abs(editedCard[key] - (card[key] || 0)) > 0.001;
-      }
-      return editedCard[key] !== (card[key] || '');
-    });
-
-    if (hasChanges) {
+    if (hasUnsavedChanges && isEditing) {
       if (window.confirm('You have unsaved changes. Are you sure you want to close?')) {
         onClose();
       }
@@ -164,19 +167,19 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
 
   const handleNumberInputChange = (e) => {
     const { name, value } = e.target;
-    const numValue = value === '' ? 0 : parseFloat(value);
+    const numValue = value === '' ? 0 : Number(parseFloat(value).toFixed(2));
     setEditedCard(prev => {
       if (name === 'investmentAUD') {
         return {
           ...prev,
           investmentAUD: numValue,
-          potentialProfit: prev.currentValueAUD - numValue
+          potentialProfit: Number((prev.currentValueAUD - numValue).toFixed(2))
         };
       } else if (name === 'currentValueAUD') {
         return {
           ...prev,
           currentValueAUD: numValue,
-          potentialProfit: numValue - prev.investmentAUD
+          potentialProfit: Number((numValue - prev.investmentAUD).toFixed(2))
         };
       }
       return { ...prev, [name]: numValue };
@@ -202,19 +205,28 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
         // Create a unique timestamp for this update
         const timestamp = new Date().toISOString();
         
-        // Notify parent component that image has been updated
-        // This will trigger a refresh of the card images in the main view
-        updateCard({
-          ...card,
-          hasImage: true,
-          imageUpdatedAt: timestamp
-        });
-        
-        // Show success message
-        setSaveMessage({
-          text: 'Image uploaded successfully',
-          type: 'success'
-        });
+        try {
+          // Notify parent component that image has been updated
+          // This will trigger a refresh of the card images in the main view
+          await updateCard({
+            ...card,
+            hasImage: true,
+            imageUpdatedAt: timestamp
+          });
+          
+          // Show success message
+          setSaveMessage({
+            text: 'Image uploaded successfully',
+            type: 'success'
+          });
+        } catch (updateError) {
+          console.error('Error updating card after image upload:', updateError);
+          // Still show success for the image upload since it was saved in the database
+          setSaveMessage({
+            text: 'Image saved, but there was a problem updating the card',
+            type: 'warning'
+          });
+        }
         
         // Clear message after 3 seconds
         setTimeout(() => setSaveMessage(null), 3000);
@@ -224,7 +236,7 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
         
         // Show error message
         setSaveMessage({
-          text: 'Failed to upload image',
+          text: `Failed to upload image: ${error.message || 'Unknown error'}`,
           type: 'error'
         });
         
@@ -306,10 +318,10 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
     // Reset the edited card to the original card data
     setEditedCard({
       ...card,
-      investmentUSD: typeof card.investmentUSD === 'number' ? card.investmentUSD : 0,
-      currentValueUSD: typeof card.currentValueUSD === 'number' ? card.currentValueUSD : 0,
-      investmentAUD: typeof card.investmentAUD === 'number' ? card.investmentAUD : 0,
-      currentValueAUD: typeof card.currentValueAUD === 'number' ? card.currentValueAUD : 0
+      investmentUSD: typeof card.investmentUSD === 'number' ? Number(card.investmentUSD.toFixed(2)) : 0,
+      currentValueUSD: typeof card.currentValueUSD === 'number' ? Number(card.currentValueUSD.toFixed(2)) : 0,
+      investmentAUD: typeof card.investmentAUD === 'number' ? Number(card.investmentAUD.toFixed(2)) : 0,
+      currentValueAUD: typeof card.currentValueAUD === 'number' ? Number(card.currentValueAUD.toFixed(2)) : 0
     });
     setIsEditing(false);
     setEditingField(null);
@@ -334,9 +346,12 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
 
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute inset-y-0 right-0 max-w-full flex sm:pl-10">
-          <div className={`w-screen transform transition-all ease-in-out duration-500 ${
-            isDarkMode ? 'bg-[#0B0F19]' : 'bg-white'
-          } sm:max-w-md`}>
+          <div 
+            ref={modalContentRef}
+            className={`w-screen transform transition-all ease-in-out duration-500 ${
+              isDarkMode ? 'bg-[#0B0F19]' : 'bg-white'
+            } sm:max-w-md`}
+          >
             <div className="h-full flex flex-col bg-white dark:bg-[#0B0F19] shadow-xl">
               {/* Header - Made sticky */}
               <div className="sticky top-0 z-10 px-4 sm:px-6 flex justify-between items-start py-4 bg-white dark:bg-[#0B0F19] border-b border-gray-200 dark:border-gray-700">
@@ -367,6 +382,45 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
                       <div 
                         className="image-upload-container"
                         onClick={() => fileInputRef.current?.click()}
+                        onDragOver={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          e.currentTarget.classList.add('dragover-active');
+                        }}
+                        onDragLeave={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          e.currentTarget.classList.remove('dragover-active');
+                        }}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          e.currentTarget.classList.remove('dragover-active');
+                          
+                          const files = e.dataTransfer.files;
+                          if (files.length > 0) {
+                            const file = files[0];
+                            if (file.type.startsWith('image/')) {
+                              // Manually update the file input value and trigger the change handler
+                              if (fileInputRef.current) {
+                                // Create a DataTransfer to programmatically set the file
+                                const dataTransfer = new DataTransfer();
+                                dataTransfer.items.add(file);
+                                fileInputRef.current.files = dataTransfer.files;
+                                
+                                // Trigger the change handler manually
+                                handleImageChange({ target: { files: dataTransfer.files } });
+                              }
+                            } else {
+                              // Show error for non-image files
+                              setSaveMessage({
+                                text: 'Only image files are allowed',
+                                type: 'error'
+                              });
+                              setTimeout(() => setSaveMessage(null), 3000);
+                            }
+                          }
+                        }}
                       >
                         <input
                           ref={fileInputRef}
@@ -378,6 +432,7 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
                         <div className="absolute inset-0 flex flex-col items-center justify-center">
                           <span className="material-icons text-2xl text-gray-400 mb-1">add_photo_alternate</span>
                           <p className="text-xs text-gray-500 dark:text-gray-400">Upload image</p>
+                          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">or drag and drop</p>
                         </div>
                       </div>
                     </div>
@@ -475,9 +530,10 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
                             <input
                               type="number"
                               name="investmentAUD"
-                              value={editedCard.investmentAUD}
+                              value={editedCard.investmentAUD.toFixed(2)}
                               onChange={handleNumberInputChange}
                               className="input"
+                              step="0.01"
                             />
                           </div>
                           <div>
@@ -485,9 +541,10 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
                             <input
                               type="number"
                               name="currentValueAUD"
-                              value={editedCard.currentValueAUD}
+                              value={editedCard.currentValueAUD.toFixed(2)}
                               onChange={handleNumberInputChange}
                               className="input"
+                              step="0.01"
                             />
                           </div>
                         </div>

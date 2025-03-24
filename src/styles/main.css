@@ -459,7 +459,18 @@
   .image-upload-container {
     @apply relative aspect-[3/4] max-h-64 max-w-xs w-full
            bg-transparent border-2 border-dashed border-gray-300 dark:border-gray-700/50 
-           hover:border-primary transition-colors cursor-pointer rounded-lg overflow-hidden;
+           transition-colors cursor-pointer rounded-lg overflow-hidden;
+  }
+
+  /* Use regular CSS for hover state since Tailwind has a circular dependency */
+  .image-upload-container:hover {
+    border-color: #4318FF; /* Primary color */
+  }
+
+  /* Use a more specific class name to avoid the circular dependency */
+  .image-upload-container.dragover-active {
+    @apply border-solid bg-[#4318FF]/5;
+    border-color: #4318FF; /* Primary color */
   }
 
   .card-stats {

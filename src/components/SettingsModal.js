@@ -15,6 +15,7 @@ const SettingsModal = ({
   const { isDarkMode } = useTheme();
   const [isRenaming, setIsRenaming] = useState(false);
   const [newCollectionName, setNewCollectionName] = useState('');
+  const [isExporting, setIsExporting] = useState(false);
 
   const handleRenameConfirm = () => {
     if (newCollectionName && newCollectionName !== selectedCollection) {
@@ -26,6 +27,15 @@ const SettingsModal = ({
   const handleStartRenaming = () => {
     setNewCollectionName(selectedCollection);
     setIsRenaming(true);
+  };
+
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      await onExportData();
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const handleDeleteCollection = () => {
@@ -116,11 +126,23 @@ const SettingsModal = ({
               </p>
               <div className="flex gap-4">
                 <button
-                  onClick={onExportData}
-                  className="flex items-center justify-center gap-2 px-6 py-4 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/10 dark:text-blue-400 dark:hover:bg-blue-900/20 flex-1"
+                  onClick={handleExport}
+                  disabled={isExporting}
+                  className={`flex items-center justify-center gap-2 px-6 py-4 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/10 dark:text-blue-400 dark:hover:bg-blue-900/20 flex-1 ${
+                    isExporting ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
                 >
-                  <span className="material-icons">download</span>
-                  Export All Data
+                  {isExporting ? (
+                    <>
+                      <span className="material-icons animate-spin">sync</span>
+                      Exporting...
+                    </>
+                  ) : (
+                    <>
+                      <span className="material-icons">download</span>
+                      Export All Data
+                    </>
+                  )}
                 </button>
                 
                 <button

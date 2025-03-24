@@ -73,22 +73,62 @@ function AppContent() {
   }, [addCard]);
 
   const handleCardUpdate = useCallback(async (updatedCard) => {
-    // Update the card in the current collection
-    const updatedCollections = {
-      ...collections,
-      [selectedCollection]: collections[selectedCollection].map(card =>
-        card.slabSerial === updatedCard.slabSerial ? updatedCard : card
-      )
-    };
-
-    // Save to database
-    await db.saveCollections(updatedCollections);
-
-    // Update state
-    setCollections(updatedCollections);
-
-    // Also update the card in the useCardData hook's state
-    updateCard(updatedCard);
+    // Handle the special case of "All Cards" view
+    if (selectedCollection === 'All Cards') {
+      // Find which collection this card actually belongs to
+      let cardCollection = null;
+      let cardFound = false;
+      
+      // Look through all collections to find the card
+      for (const [collName, cards] of Object.entries(collections)) {
+        if (Array.isArray(cards)) {
+          const cardIndex = cards.findIndex(c => c.slabSerial === updatedCard.slabSerial);
+          if (cardIndex !== -1) {
+            cardCollection = collName;
+            cardFound = true;
+            break;
+          }
+        }
+      }
+      
+      if (cardFound && cardCollection) {
+        // Update the card in its original collection
+        const updatedCollections = {
+          ...collections,
+          [cardCollection]: collections[cardCollection].map(card =>
+            card.slabSerial === updatedCard.slabSerial ? updatedCard : card
+          )
+        };
+        
+        // Save to database
+        await db.saveCollections(updatedCollections);
+        
+        // Update state
+        setCollections(updatedCollections);
+        
+        // Also update the card in the useCardData hook's state
+        updateCard(updatedCard);
+      } else {
+        console.warn('Could not find the card in any collection');
+      }
+    } else {
+      // Normal case - we're updating a card in the current collection
+      const updatedCollections = {
+        ...collections,
+        [selectedCollection]: collections[selectedCollection].map(card =>
+          card.slabSerial === updatedCard.slabSerial ? updatedCard : card
+        )
+      };
+      
+      // Save to database
+      await db.saveCollections(updatedCollections);
+      
+      // Update state
+      setCollections(updatedCollections);
+      
+      // Also update the card in the useCardData hook's state
+      updateCard(updatedCard);
+    }
   }, [collections, selectedCollection, updateCard]);
 
   // Calculate total profit for a collection
@@ -197,72 +237,73 @@ function AppContent() {
 
   // Function to export all collection data as a ZIP file
   const handleExportData = async () => {
-    try {
-      // Create a new ZIP file
-      const zip = new JSZip();
-      
-      // Get ALL collections data
-      const allCollections = await db.getCollections();
-      
-      // Create a data folder in the ZIP
-      const dataFolder = zip.folder("data");
-      
-      // Add collections data as JSON - include ALL collections
-      const collectionsData = {
-        version: '1.0',
-        exportDate: new Date().toISOString(),
-        collections: allCollections,
-        settings: {
-          defaultCollection: selectedCollection
-        }
-      };
-
-      // Add collections.json to the data folder
-      dataFolder.file("collections.json", JSON.stringify(collectionsData, null, 2));
-      
-      // Create an images folder in the ZIP
-      const imagesFolder = zip.folder("images");
-      
-      // Process ALL images from ALL collections
-      const imagePromises = [];
-      
-      // Loop through all collections
-      for (const [collectionName, cards] of Object.entries(allCollections)) {
-        if (!Array.isArray(cards)) continue;
-        
-        for (const card of cards) {
-          // Get image from database using slabSerial as ID
-          const promise = (async () => {
-            try {
-              const imageBlob = await db.getImage(card.slabSerial);
-              
-              if (!imageBlob) return;
-              
-              // Add image to ZIP with slab serial as filename
-              const extension = imageBlob.type.split('/')[1] || 'jpg';
-              const filename = `${card.slabSerial}.${extension}`;
-              await imagesFolder.file(filename, imageBlob);
-              
-              // Update card with image path
-              card.imagePath = `images/${filename}`;
-            } catch (error) {
-              // Silent fail for individual images
-              console.error(`Failed to export image for card ${card.slabSerial}:`, error);
-            }
-          })();
-          imagePromises.push(promise);
-        }
-      }
-      
+    return new Promise(async (resolve, reject) => {
       try {
-        // Wait for all images to be processed
-        await Promise.all(imagePromises);
+        // Create a new ZIP file
+        const zip = new JSZip();
         
-        // Update collections data with image paths
+        // Get ALL collections data
+        const allCollections = await db.getCollections();
+        
+        // Create a data folder in the ZIP
+        const dataFolder = zip.folder("data");
+        
+        // Add collections data as JSON - include ALL collections
+        const collectionsData = {
+          version: '1.0',
+          exportDate: new Date().toISOString(),
+          collections: allCollections,
+          settings: {
+            defaultCollection: selectedCollection
+          }
+        };
+
+        // Add collections.json to the data folder
         dataFolder.file("collections.json", JSON.stringify(collectionsData, null, 2));
         
-        // Add a README file
-        const readme = `Pokemon Card Tracker Backup
+        // Create an images folder in the ZIP
+        const imagesFolder = zip.folder("images");
+        
+        // Process ALL images from ALL collections
+        const imagePromises = [];
+        
+        // Loop through all collections
+        for (const [collectionName, cards] of Object.entries(allCollections)) {
+          if (!Array.isArray(cards)) continue;
+          
+          for (const card of cards) {
+            // Get image from database using slabSerial as ID
+            const promise = (async () => {
+              try {
+                const imageBlob = await db.getImage(card.slabSerial);
+                
+                if (!imageBlob) return;
+                
+                // Add image to ZIP with slab serial as filename
+                const extension = imageBlob.type.split('/')[1] || 'jpg';
+                const filename = `${card.slabSerial}.${extension}`;
+                await imagesFolder.file(filename, imageBlob);
+                
+                // Update card with image path
+                card.imagePath = `images/${filename}`;
+              } catch (error) {
+                // Silent fail for individual images
+                console.error(`Failed to export image for card ${card.slabSerial}:`, error);
+              }
+            })();
+            imagePromises.push(promise);
+          }
+        }
+        
+        try {
+          // Wait for all images to be processed
+          await Promise.all(imagePromises);
+          
+          // Update collections data with image paths
+          dataFolder.file("collections.json", JSON.stringify(collectionsData, null, 2));
+          
+          // Add a README file
+          const readme = `Pokemon Card Tracker Backup
 Created: ${new Date().toISOString()}
 
 This ZIP file contains:
@@ -273,40 +314,42 @@ To import this backup:
 1. Use the "Import Backup" button in the app settings
 2. Select this ZIP file
 3. All your collections and images will be restored`;
-        
-        zip.file("README.txt", readme);
-        
-        // Generate the ZIP file with compression
-        const content = await zip.generateAsync({
-          type: "blob",
-          compression: "DEFLATE",
-          compressionOptions: {
-            level: 9
-          }
-        });
-        
-        // Create download link for ZIP file
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(content);
-        const timestamp = new Date().toISOString().split('T')[0];
-        link.download = `pokemon-card-tracker-backup-${timestamp}.zip`;
-        document.body.appendChild(link);
-        link.click();
-        
-        // Clean up
-        setTimeout(() => {
-          URL.revokeObjectURL(link.href);
-          document.body.removeChild(link);
-        }, 100);
-        
+          
+          zip.file("README.txt", readme);
+          
+          // Generate the ZIP file with compression
+          const content = await zip.generateAsync({
+            type: "blob",
+            compression: "DEFLATE",
+            compressionOptions: {
+              level: 9
+            }
+          });
+          
+          // Create download link for ZIP file
+          const link = document.createElement('a');
+          link.href = URL.createObjectURL(content);
+          const timestamp = new Date().toISOString().split('T')[0];
+          link.download = `pokemon-card-tracker-backup-${timestamp}.zip`;
+          document.body.appendChild(link);
+          link.click();
+          
+          // Clean up
+          setTimeout(() => {
+            URL.revokeObjectURL(link.href);
+            document.body.removeChild(link);
+          }, 100);
+
+          resolve();
+        } catch (error) {
+          console.error("Export error:", error);
+          reject(error);
+        }
       } catch (error) {
         console.error("Export error:", error);
-        alert(`Error exporting data: ${error.message}`);
+        reject(error);
       }
-    } catch (error) {
-      console.error("Export error:", error);
-      alert(`Error exporting data: ${error.message}`);
-    }
+    });
   };
 
   // Function to handle collection import (backup file)

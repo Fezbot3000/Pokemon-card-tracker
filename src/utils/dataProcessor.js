@@ -63,24 +63,24 @@ export const processImportedData = (importedData, existingCards, exchangeRate, i
         return {
           ...existingCard,
           currentValueUSD: importedCard['Current Value'] || existingCard.currentValueUSD,
-          currentValueAUD: convertUsdToAud(importedCard['Current Value'] || existingCard.currentValueUSD, exchangeRate),
+          currentValueAUD: Number(convertUsdToAud(importedCard['Current Value'] || existingCard.currentValueUSD, exchangeRate).toFixed(2)),
           potentialProfit: calculateProfit(
-            convertUsdToAud(importedCard['Current Value'] || existingCard.currentValueUSD, exchangeRate),
+            Number(convertUsdToAud(importedCard['Current Value'] || existingCard.currentValueUSD, exchangeRate).toFixed(2)),
             existingCard.investmentAUD || 0
           ),
         };
       } else {
         // Convert Investment from USD to AUD
-        const investmentAUD = convertUsdToAud(
+        const investmentAUD = Number(convertUsdToAud(
           importedCard['Investment'] !== undefined ? importedCard['Investment'] : existingCard.investmentAUD,
           exchangeRate
-        );
+        ).toFixed(2));
         
         // Convert Current Value from USD to AUD
-        const currentValueAUD = convertUsdToAud(
+        const currentValueAUD = Number(convertUsdToAud(
           importedCard['Current Value'] || existingCard.currentValueUSD,
           exchangeRate
-        );
+        ).toFixed(2));
         
         // Full base data update including investment
         return {
@@ -105,11 +105,11 @@ export const processImportedData = (importedData, existingCards, exchangeRate, i
     } else {
       // For new cards
       // Convert Current Value from USD to AUD
-      const currentValueAUD = convertUsdToAud(importedCard['Current Value'] || 0, exchangeRate);
+      const currentValueAUD = Number(convertUsdToAud(importedCard['Current Value'] || 0, exchangeRate).toFixed(2));
       
       // Convert Investment from USD to AUD if in baseData mode
       const investmentAUD = importMode === 'baseData' && importedCard['Investment'] !== undefined ? 
-        convertUsdToAud(importedCard['Investment'], exchangeRate) : 0;
+        Number(convertUsdToAud(importedCard['Investment'], exchangeRate).toFixed(2)) : 0;
       
       return {
         id: slabSerial,
@@ -153,7 +153,7 @@ export const processImportedData = (importedData, existingCards, exchangeRate, i
  * @returns {number} Calculated profit
  */
 const calculateProfit = (currentValue, investment) => {
-  return currentValue - investment;
+  return Number((currentValue - investment).toFixed(2));
 };
 
 /**
@@ -194,10 +194,10 @@ export const validateCSVStructure = (data, importMode = 'priceUpdate') => {
  * @returns {Object} Financial metrics
  */
 export const calculateCardMetrics = (cards) => {
-  const totalInvestment = cards.reduce((sum, card) => sum + (card.investmentAUD || 0), 0);
-  const totalValue = cards.reduce((sum, card) => sum + (card.currentValueAUD || 0), 0);
-  const totalProfit = totalValue - totalInvestment;
-  const profitPercentage = totalInvestment > 0 ? (totalProfit / totalInvestment * 100) : 0;
+  const totalInvestment = Number(cards.reduce((sum, card) => sum + (card.investmentAUD || 0), 0).toFixed(2));
+  const totalValue = Number(cards.reduce((sum, card) => sum + (card.currentValueAUD || 0), 0).toFixed(2));
+  const totalProfit = Number((totalValue - totalInvestment).toFixed(2));
+  const profitPercentage = Number((totalInvestment > 0 ? (totalProfit / totalInvestment * 100) : 0).toFixed(2));
   
   // Count cards with profit vs loss
   const profitableCards = cards.filter(card => 
