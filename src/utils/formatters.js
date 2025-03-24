@@ -5,7 +5,13 @@ export function formatCurrency(value) {
 export function formatValue(value) {
   if (value === null || value === undefined) return 'N/A';
   if (typeof value === 'number') {
-    return value.toLocaleString();
+    // Format as currency with dollar sign
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'AUD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(value);
   }
   return String(value);
 }

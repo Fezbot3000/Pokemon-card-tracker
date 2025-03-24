@@ -492,7 +492,7 @@ const CardList = ({ cards, exchangeRate, onCardClick, onDeleteCards, onUpdateCar
           </div>
           
           <div className="controls-right">
-            {selectedCards.size > 0 && (
+            {selectedCards.size > 0 ? (
               <button
                 onClick={handleDeleteSelected}
                 className="delete-button"
@@ -500,7 +500,7 @@ const CardList = ({ cards, exchangeRate, onCardClick, onDeleteCards, onUpdateCar
                 <span className="material-icons mr-2">delete</span>
                 Delete ({selectedCards.size})
               </button>
-            )}
+            ) : null}
             <button
               onClick={onAddCard}
               className="btn btn-primary w-[160px]"
