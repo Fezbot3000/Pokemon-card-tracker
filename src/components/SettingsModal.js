@@ -2,7 +2,16 @@ import React, { useState } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { db } from '../services/db';
 
-const SettingsModal = ({ isOpen, onClose, selectedCollection, onRenameCollection, onImportCollection, onExportData, onDeleteCollection }) => {
+const SettingsModal = ({ 
+  isOpen, 
+  onClose, 
+  selectedCollection, 
+  onRenameCollection, 
+  onDeleteCollection,
+  refreshCollections,
+  onExportData,
+  onImportCollection
+}) => {
   const { isDarkMode } = useTheme();
   const [isRenaming, setIsRenaming] = useState(false);
   const [newCollectionName, setNewCollectionName] = useState('');
@@ -21,7 +30,14 @@ const SettingsModal = ({ isOpen, onClose, selectedCollection, onRenameCollection
 
   const handleDeleteCollection = () => {
     if (window.confirm(`Are you sure you want to delete the collection "${selectedCollection}"? This action cannot be undone.`)) {
-      onDeleteCollection(selectedCollection);
+      try {
+        onDeleteCollection(selectedCollection);
+        // Close modal after successful deletion
+        onClose();
+      } catch (error) {
+        console.error("Error deleting collection:", error);
+        alert(`Failed to delete collection: ${error.message}`);
+      }
     }
   };
 

@@ -1,7 +1,104 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo, memo } from 'react';
 import { db } from '../services/db';
 import { formatValue } from '../utils/formatters';
+import { formatCurrency } from '../utils/currencyAPI';
 import { useTheme } from '../contexts/ThemeContext';
+
+// Extracted Card component for better performance
+const Card = memo(({ card, cardImage, onCardClick, isSelected, onSelect, displayMetric }) => {
+  const { isDarkMode } = useTheme();
+  
+  const getDisplayValue = () => {
+    switch (displayMetric) {
+      case 'currentValueAUD':
+        return { label: 'Current Value', value: formatCurrency(card.currentValueAUD), isProfit: false };
+      case 'investmentAUD':
+        return { label: 'Investment', value: formatCurrency(card.investmentAUD), isProfit: false };
+      case 'potentialProfit':
+        const profit = card.currentValueAUD - card.investmentAUD;
+        return { label: 'Profit', value: formatCurrency(profit), isProfit: true, profitValue: profit };
+      case 'datePurchased':
+        return { label: 'Purchase Date', value: card.datePurchased || 'N/A', isProfit: false };
+      case 'player':
+        return { label: 'Player', value: card.player || 'N/A', isProfit: false };
+      default:
+        return { label: 'Current Value', value: formatCurrency(card.currentValueAUD), isProfit: false };
+    }
+  };
+
+  const displayData = getDisplayValue();
+  
+  return (
+    <div 
+      className={`relative p-4 rounded-xl border transition-all duration-200 cursor-pointer
+        ${isDarkMode ? 'bg-[#1B2131] border-gray-700/50 hover:bg-[#252B3B]' : 'bg-white border-gray-200 hover:bg-gray-50'}
+        ${isSelected ? 'ring-2 ring-primary' : ''}`}
+      onClick={() => onCardClick(card)}
+    >
+      {/* Selection checkbox */}
+      <div className="absolute top-2 right-2 z-10" onClick={(e) => e.stopPropagation()}>
+        <input
+          type="checkbox"
+          checked={isSelected}
+          onChange={(e) => onSelect(e, card.slabSerial)}
+          className="w-4 h-4 accent-primary"
+        />
+      </div>
+
+      {/* Card image */}
+      <div className="aspect-[2/3] mb-4 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800">
+        {cardImage ? (
+          <img 
+            src={cardImage} 
+            alt={`${card.player} - ${card.card}`}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <span className="material-icons text-4xl text-gray-400">image</span>
+          </div>
+        )}
+      </div>
+
+      {/* Card details */}
+      <div className="space-y-2">
+        <h3 className={`font-medium line-clamp-2 ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+          {card.card}
+        </h3>
+        <div className="flex justify-between items-center">
+          <span className={`text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+            {displayData.label}:
+          </span>
+          <span className={`text-sm ${
+            displayData.isProfit 
+              ? displayData.profitValue >= 0 
+                ? 'text-green-500' 
+                : 'text-red-500'
+              : isDarkMode 
+                ? 'text-gray-200' 
+                : 'text-gray-800'
+          }`}>
+            {displayData.value}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+});
+
+// Replace FinancialSummary component with individual stat cards
+const StatCard = memo(({ label, value, isProfit = false }) => {
+  return (
+    <div className="stat-card">
+      <div className="stat-label">
+        {label}
+      </div>
+      <div className={`stat-value ${isProfit && value >= 0 ? 'profit-value' : isProfit && value < 0 ? 'loss-value' : ''}`}>
+        {formatValue(value)}
+      </div>
+    </div>
+  );
+});
 
 const CardList = ({ cards, exchangeRate, onCardClick, onDeleteCards, onUpdateCard }) => {
   const [filter, setFilter] = useState('');
@@ -124,7 +221,11 @@ const CardList = ({ cards, exchangeRate, onCardClick, onDeleteCards, onUpdateCar
   };
 
   const handleSelectCard = (e, cardId) => {
-    e.stopPropagation();
+    // If e exists, stop propagation to prevent triggering the card click
+    if (e) {
+      e.stopPropagation();
+    }
+    
     setSelectedCards(prev => {
       const newSet = new Set(prev);
       if (newSet.has(cardId)) {
@@ -183,232 +284,216 @@ const CardList = ({ cards, exchangeRate, onCardClick, onDeleteCards, onUpdateCar
     }
   };
 
-  // Filter and sort cards
-  const filteredCards = cards
-    .filter(card => {
-      const searchString = filter.toLowerCase();
-      return (
-        card.player?.toLowerCase().includes(searchString) ||
-        card.set?.toLowerCase().includes(searchString) ||
-        card.slabSerial?.toString().toLowerCase().includes(searchString)
-      );
-    })
-    .sort((a, b) => {
-      let aValue = a[sortField];
-      let bValue = b[sortField];
-      
-      if (sortField === 'datePurchased') {
-        aValue = new Date(aValue);
-        bValue = new Date(bValue);
-      }
-      
-      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
-      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
-      return 0;
-    });
+  // Memoized filtered and sorted cards
+  const filteredCards = useMemo(() => {
+    return cards
+      .filter(card => {
+        const searchString = filter.toLowerCase();
+        return (
+          card.player?.toLowerCase().includes(searchString) ||
+          card.set?.toLowerCase().includes(searchString) ||
+          card.slabSerial?.toString().toLowerCase().includes(searchString)
+        );
+      })
+      .sort((a, b) => {
+        let aValue = a[sortField];
+        let bValue = b[sortField];
+        
+        if (sortField === 'datePurchased') {
+          aValue = new Date(aValue);
+          bValue = new Date(bValue);
+        }
+        
+        if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+        if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+        return 0;
+      });
+  }, [cards, filter, sortField, sortDirection]);
 
-  // Calculate totals
-  const totalInvestment = filteredCards.reduce((sum, card) => sum + card.investmentAUD, 0);
-  const totalValue = filteredCards.reduce((sum, card) => sum + card.currentValueAUD, 0);
-  const totalProfit = totalValue - totalInvestment;
+  // Memoized totals
+  const totals = useMemo(() => {
+    const totalInvestment = filteredCards.reduce((sum, card) => sum + (card.investmentAUD || 0), 0);
+    const totalValue = filteredCards.reduce((sum, card) => sum + (card.currentValueAUD || 0), 0);
+    return {
+      totalInvestment,
+      totalValue,
+      totalProfit: totalValue - totalInvestment
+    };
+  }, [filteredCards]);
 
   return (
-    <div className="space-y-6">
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="summary-card">
-          <div className="summary-label">TOTAL INVESTMENT</div>
-          <div className="summary-value">
-            ${totalInvestment.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
-          </div>
-        </div>
-        
-        <div className="summary-card">
-          <div className="summary-label">TOTAL VALUE</div>
-          <div className="summary-value">
-            ${totalValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
-          </div>
-        </div>
-        
-        <div className="summary-card">
-          <div className="summary-label">TOTAL PROFIT</div>
-          <div className={`text-2xl font-semibold ${totalProfit >= 0 ? 'text-success' : 'text-error'}`}>
-            {totalProfit >= 0 ? '+' : ''}{formatValue(totalProfit, 'currency')}
-          </div>
-        </div>
+    <div className="space-y-4">
+      {/* Total Cards Counter */}
+      <div className="total-cards-counter">
+        <span className="material-icons total-cards-icon">view_module</span>
+        <span className="total-cards-text">Total Cards: {filteredCards.length}</span>
       </div>
-
-      {/* Search and Controls */}
-      <div className="search-controls">
-        <div className="search-input-wrapper">
-          <input
-            type="text"
-            placeholder="Search by name, set, or serial number..."
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-            className="search-input"
-          />
-        </div>
+      
+      {/* Financial Summary */}
+      <div className="stats-section">
+        <StatCard 
+          label="Total Investment" 
+          value={totals.totalInvestment} 
+        />
+        <StatCard 
+          label="Total Value" 
+          value={totals.totalValue} 
+        />
+        <StatCard 
+          label="Total Profit" 
+          value={totals.totalProfit} 
+          isProfit={true}
+        />
+      </div>
+      
+      {/* Filters and controls */}
+      <div className="filter-section">
+        <input
+          type="text"
+          placeholder="Search by name, set, or serial number..."
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          className="search-input"
+        />
         
-        <div className="sort-controls">
-          <div className="relative w-full sm:w-auto" ref={valueDropdownRef}>
+        <div className="controls-container">
+          <div className="sort-container" ref={valueDropdownRef}>
             <button
               onClick={() => setIsValueDropdownOpen(!isValueDropdownOpen)}
-              className="sort-btn"
+              className="sort-button"
             >
-              <div className="sort-btn-content">
+              <div className="flex items-center gap-2">
                 <span className="material-icons">sort</span>
-                <span>Sort by {sortOptions.find(o => o.value === sortField)?.label}</span>
+                <span>Sort by {sortOptions.find(opt => opt.value === sortField)?.label || 'Current Value'}</span>
               </div>
-              <span className="material-icons">{isValueDropdownOpen ? 'expand_less' : 'expand_more'}</span>
+              <span className="material-icons">
+                {isValueDropdownOpen ? 'expand_less' : 'expand_more'}
+              </span>
             </button>
             
             {isValueDropdownOpen && (
-              <div className="filter-dropdown">
-                {sortOptions.map(option => (
-                  <button
+              <div className="sort-dropdown">
+                {sortOptions.map((option) => (
+                  <div
                     key={option.value}
-                    className="filter-item"
+                    className={`sort-option ${option.value === sortField ? 'active' : ''}`}
                     onClick={() => handleSort(option.value)}
                   >
                     {option.value === sortField && (
-                      <span className="material-icons text-sm text-primary">check</span>
+                      <span className="material-icons">check</span>
                     )}
                     {option.label}
-                  </button>
+                  </div>
                 ))}
-                <div className="border-t border-gray-700 mt-1 pt-1">
-                  <button 
-                    className="filter-item"
-                    onClick={toggleSortDirection}
-                  >
-                    <span className="material-icons text-sm">
-                      {sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward'}
-                    </span>
-                    {sortDirection === 'asc' ? 'Sort Ascending' : 'Sort Descending'}
-                  </button>
+                <div className="sort-option-divider"></div>
+                <div
+                  className="sort-option"
+                  onClick={toggleSortDirection}
+                >
+                  <span className="material-icons">
+                    {sortDirection === 'desc' ? 'arrow_downward' : 'arrow_upward'}
+                  </span>
+                  Sort {sortDirection === 'desc' ? 'Descending' : 'Ascending'}
                 </div>
               </div>
             )}
           </div>
           
-          <div className="relative w-full sm:w-auto" ref={metricDropdownRef}>
+          <div className="view-container" ref={metricDropdownRef}>
             <button
               onClick={() => setIsMetricDropdownOpen(!isMetricDropdownOpen)}
-              className="sort-btn"
+              className="view-button"
             >
-              <div className="sort-btn-content">
+              <div className="flex items-center gap-2">
                 <span className="material-icons">visibility</span>
-                <span>View {displayMetric === 'currentValueAUD' 
-                  ? 'Current Value' 
-                  : displayMetric === 'investmentAUD' 
-                    ? 'Investment' 
-                    : 'Profit'}</span>
+                <span>View {metricOptions.find(opt => opt.value === displayMetric)?.label || 'Current Value'}</span>
               </div>
-              <span className="material-icons">{isMetricDropdownOpen ? 'expand_less' : 'expand_more'}</span>
+              <span className="material-icons">
+                {isMetricDropdownOpen ? 'expand_less' : 'expand_more'}
+              </span>
             </button>
             
             {isMetricDropdownOpen && (
               <div className="view-dropdown">
-                <button 
-                  className="view-option border-b border-gray-700"
-                  onClick={() => {
-                    setDisplayMetric('currentValueAUD');
-                    setIsMetricDropdownOpen(false);
-                  }}
-                >
-                  Current Value
-                </button>
-                <button 
-                  className="view-option border-b border-gray-700"
-                  onClick={() => {
-                    setDisplayMetric('investmentAUD');
-                    setIsMetricDropdownOpen(false);
-                  }}
-                >
-                  Investment
-                </button>
-                <button 
-                  className="view-option"
-                  onClick={() => {
-                    setDisplayMetric('potentialProfit');
-                    setIsMetricDropdownOpen(false);
-                  }}
-                >
-                  Profit
-                </button>
+                {metricOptions.map((option) => (
+                  <div
+                    key={option.value}
+                    className={`sort-option ${option.value === displayMetric ? 'active' : ''}`}
+                    onClick={() => {
+                      setDisplayMetric(option.value);
+                      setIsMetricDropdownOpen(false);
+                    }}
+                  >
+                    {option.value === displayMetric && (
+                      <span className="material-icons">check</span>
+                    )}
+                    {option.label}
+                  </div>
+                ))}
               </div>
             )}
           </div>
-
+          
+          {/* Delete button that appears when cards are selected */}
           {selectedCards.size > 0 && (
             <button
               onClick={handleDeleteSelected}
-              className="btn btn-danger w-full sm:w-auto"
+              className="delete-button"
             >
+              <span className="material-icons mr-2">delete</span>
               Delete ({selectedCards.size})
             </button>
           )}
         </div>
       </div>
 
-      {/* Card List */}
-      {filteredCards.length === 0 ? (
-        <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-          No cards found. Try adjusting your search filter.
-        </div>
-      ) : (
-        <div>
-          {filteredCards.map(card => (
-            <div 
-              key={card.slabSerial} 
-              className="card-item"
-              onClick={() => onCardClick(card.slabSerial)}
-            >
-              <div className="card-item-left">
-                <input
-                  type="checkbox"
-                  checked={selectedCards.has(card.slabSerial)}
-                  onChange={e => handleSelectCard(e, card.slabSerial)}
-                  onClick={e => e.stopPropagation()}
-                  className="w-5 h-5 rounded border-gray-300 text-primary focus:ring-primary"
-                />
-                
-                <div className="card-image">
-                  {cardImages[card.slabSerial] ? (
-                    <img src={cardImages[card.slabSerial]} alt={card.card} className="object-contain h-full w-full" />
-                  ) : (
-                    <div className="text-4xl text-gray-300 dark:text-gray-600">🃏</div>
-                  )}
-                </div>
-                
-                <div className="card-info">
-                  <div className="card-subtitle">Pokemon Game</div>
-                  <div className="card-title">{card.card}</div>
-                  <div className="card-subtitle">Serial: {card.slabSerial}</div>
-                </div>
-              </div>
-
-              <div className="card-item-right">
-                <div className="card-value-group">
-                  <div className="card-investment">Investment</div>
-                  <div className="card-value">${formatValue(card.investmentAUD, 'currency', false)}</div>
-                </div>
-                
-                <div className="card-value-group">
-                  <div className="card-investment">Current Value</div>
-                  <div className="card-value">${formatValue(card.currentValueAUD, 'currency', false)}</div>
-                  <div className={`card-profit ${card.potentialProfit >= 0 ? 'positive' : 'negative'}`}>
-                    {card.potentialProfit >= 0 ? '+' : ''}{formatValue(card.potentialProfit, 'currency', false)}
-                  </div>
-                </div>
-              </div>
+      {/* Card grid */}
+      <div className="card-grid">
+        {filteredCards.map(card => (
+          <Card
+            key={card.slabSerial}
+            card={card}
+            cardImage={cardImages[card.slabSerial]}
+            onCardClick={onCardClick}
+            isSelected={selectedCards.has(card.slabSerial)}
+            onSelect={handleSelectCard}
+            displayMetric={displayMetric}
+          />
+        ))}
+      </div>
+      
+      {/* Editing investment modal */}
+      {editingInvestment && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-[#1B2131] p-4 rounded-xl w-96">
+            <h3 className="text-lg font-medium mb-4 text-gray-900 dark:text-white">Edit Investment</h3>
+            <input
+              type="number"
+              value={editValue}
+              onChange={handleInvestmentChange}
+              onKeyDown={(e) => handleInvestmentKeyDown(e, editingInvestment)}
+              className="search-input mb-4"
+              autoFocus
+            />
+            <div className="flex justify-end gap-2">
+              <button 
+                className="btn btn-secondary"
+                onClick={() => setEditingInvestment(null)}
+              >
+                Cancel
+              </button>
+              <button 
+                className="btn btn-primary"
+                onClick={(e) => handleInvestmentSave(e, editingInvestment)}
+              >
+                Save
+              </button>
             </div>
-          ))}
+          </div>
         </div>
       )}
     </div>
   );
 };
 
-export default CardList;
+export default memo(CardList);

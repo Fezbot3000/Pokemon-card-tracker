@@ -2,378 +2,368 @@
 @tailwind components;
 @tailwind utilities;
 
+@import './shared.css';
+
+/* Material Icons */
 @layer base {
-  html {
-    @apply antialiased h-full;
+  .material-icons {
+    font-family: 'Material Icons';
+    font-weight: normal;
+    font-style: normal;
+    font-size: 24px;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    display: inline-block;
+    white-space: nowrap;
+    word-wrap: normal;
+    direction: ltr;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: 'liga';
   }
-  
+
+  /* Default light theme */
   body {
-    @apply bg-gray-50 text-gray-800 font-sans min-h-screen overflow-y-auto;
+    @apply bg-white text-gray-900;
   }
-  
+
+  /* Dark theme */
   html.dark body {
-    @apply bg-[#0B0F19] text-gray-200;
+    @apply bg-[#0B0F19] text-white;
+  }
+
+  /* Ensure proper font loading */
+  @font-face {
+    font-family: 'Material Icons';
+    font-style: normal;
+    font-weight: 400;
+    src: url(https://fonts.gstatic.com/s/materialicons/v140/flUhRq6tzZclQEJ-Vdg-IuiaDsNc.woff2) format('woff2');
   }
 }
 
+/* Custom styles that are specific to this app */
+:root {
+  --primary: #4318FF;
+  --error: #FF3B3B;
+  --success: #05CD99;
+}
+
+/* App-specific components */
 @layer components {
-  /* Buttons */
-  .btn {
-    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-200 font-medium text-sm;
-  }
-  
-  .btn-primary {
-    @apply bg-[#4F46E5] text-white hover:bg-[#4F46E5]/90;
-  }
-  
-  .btn-secondary {
-    @apply bg-white text-gray-700 hover:bg-gray-50 border border-gray-200;
-  }
-  
-  .btn-danger {
-    @apply bg-red-100 text-red-600 hover:bg-red-200;
-  }
-
-  /* Dark mode overrides */
-  html.dark {
-    .btn-secondary {
-      @apply bg-[#1B2131] text-gray-200 hover:bg-[#252B3B] border-gray-700/50;
-    }
-
-    .btn-danger {
-      @apply bg-red-900/20 text-red-400 hover:bg-red-900/30;
-    }
-
-    .search-input {
-      @apply bg-[#1B2131] border-gray-700/50 text-gray-200 placeholder-gray-400;
-    }
-
-    .sort-btn {
-      @apply bg-[#252B3B] text-white border-gray-700/50 hover:bg-[#323B4B];
-    }
-
-    .view-dropdown {
-      @apply bg-[#1B2131] border-gray-700/50;
-    }
-
-    .view-option {
-      @apply text-gray-200 hover:bg-[#252B3B];
-    }
-
-    .input, .search-input {
-      @apply bg-[#0B0F19] border-gray-700/50 text-gray-200 focus:ring-primary/40;
-    }
-
-    .app-header {
-      @apply bg-[#0B0F19] border-gray-700/50;
-    }
-
-    .collection-info {
-      @apply text-gray-400;
-    }
-
-    .summary-card {
-      @apply bg-[#1B2131] border-gray-700/50;
-    }
-
-    .summary-label {
-      @apply text-gray-400;
-    }
-
-    .summary-value {
-      @apply text-gray-200;
-    }
-
-    .card-item {
-      @apply bg-[#1B2131] border-gray-700/50;
-    }
-
-    .card-image {
-      @apply bg-[#252B3B];
-    }
-
-    .card-title {
-      @apply text-gray-200;
-    }
-
-    .card-subtitle {
-      @apply text-gray-400;
-    }
-
-    .card-investment {
-      @apply text-gray-400;
-    }
-
-    .card-value {
-      @apply text-gray-200;
-    }
-  }
-
-  /* Search Controls */
-  .search-controls {
-    @apply flex flex-col w-full gap-4;
-  }
-
-  .search-input-wrapper {
-    @apply w-full;
-  }
-
-  .search-input {
-    @apply w-full px-4 py-3 rounded-xl bg-white border border-gray-200 text-gray-800 placeholder-gray-500;
-  }
-
-  .controls-wrapper {
-    @apply flex flex-col sm:flex-row w-full gap-4;
-  }
-
-  .sort-controls {
-    @apply flex flex-col sm:flex-row w-full sm:w-auto gap-4;
-  }
-
-  /* Sort Button */
-  .sort-btn {
-    @apply flex items-center justify-between gap-2 rounded-xl py-3 px-6 bg-white text-gray-800 border border-gray-200 transition-all duration-200 font-medium hover:bg-gray-50 w-full sm:w-auto;
-  }
-
-  .sort-btn-content {
-    @apply flex items-center gap-2;
-  }
-
-  /* View Dropdown */
-  .view-dropdown {
-    @apply absolute right-0 top-full mt-1 w-full sm:w-48 bg-white rounded-xl shadow-lg overflow-hidden z-[100] border border-gray-200;
-  }
-  
-  .view-option {
-    @apply py-3 px-4 text-gray-800 text-base font-normal hover:bg-gray-50 w-full text-left transition-colors border-0;
-  }
-
-  .view-option.active {
-    @apply bg-gray-50 text-gray-900 font-medium;
-  }
-
-  /* Inputs */
-  .input, .search-input {
-    @apply w-full px-4 py-2.5 rounded-xl bg-white border border-gray-200 text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary;
-  }
-
-  /* App Layout */
-  .app {
-    @apply max-w-7xl mx-auto px-6 py-4;
-  }
-
-  /* Header */
+  /* Header Styles */
   .app-header {
-    @apply sticky top-0 z-40 flex justify-between items-center px-6 py-4 bg-white border-b border-gray-200;
+    @apply sticky top-0 z-50 bg-white dark:bg-[#0B0F19] border-b border-gray-200 dark:border-gray-700/50;
   }
 
-  /* Collection Info */
-  .collection-info {
-    @apply flex items-center gap-2 text-sm text-gray-500 mt-2 mb-6;
+  .header-content {
+    @apply flex items-center justify-between py-3 px-4 lg:px-6 relative;
   }
 
-  /* Summary Cards */
-  .summary-cards {
-    @apply grid grid-cols-1 md:grid-cols-3 gap-6 mb-8;
+  .header-left {
+    @apply flex items-center flex-shrink-0;
   }
 
-  .summary-card {
-    @apply bg-white rounded-2xl p-6 border border-gray-200;
+  .header-center {
+    @apply hidden lg:flex items-center gap-2 xl:gap-3 justify-center flex-grow px-4;
   }
 
-  .summary-label {
-    @apply text-sm text-gray-500 font-medium mb-2;
+  .header-right {
+    @apply hidden lg:flex items-center gap-2 xl:gap-3;
   }
 
-  .summary-value {
-    @apply text-2xl font-semibold text-gray-800;
+  /* Header action buttons */
+  .header-actions {
+    @apply flex items-center gap-2 ml-auto;
+  }
+
+  .header-action-buttons {
+    @apply hidden sm:flex items-center gap-2 ml-auto;
+  }
+
+  /* Mobile menu */
+  .mobile-menu {
+    @apply fixed inset-x-0 top-[64px] bg-white dark:bg-[#1B2131] 
+           border-t border-gray-200 dark:border-gray-700/50
+           shadow-lg z-50;
+  }
+
+  .mobile-menu-header {
+    @apply flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700/50;
+  }
+
+  .mobile-menu-content {
+    @apply p-6 space-y-4;
+  }
+
+  .mobile-menu-item {
+    @apply flex items-center gap-3 w-full px-4 py-3
+           text-gray-700 dark:text-gray-200
+           hover:bg-gray-50 dark:hover:bg-[#252B3B]
+           transition-colors;
+  }
+
+  .mobile-menu-item .material-icons {
+    @apply text-gray-500 dark:text-gray-400;
+  }
+
+  /* Mobile menu button */
+  .mobile-menu-button {
+    @apply block sm:hidden;
+  }
+
+  /* Total Cards Counter */
+  .total-cards-counter {
+    @apply flex items-center gap-2 border-b border-gray-200 dark:border-gray-700/50 px-6 py-2;
+  }
+  
+  .total-cards-icon {
+    @apply text-gray-600 dark:text-gray-400;
+  }
+  
+  .total-cards-text {
+    @apply text-gray-700 dark:text-gray-200 font-medium text-base;
+  }
+
+  /* Collection Selector */
+  .collection-selector {
+    @apply flex items-center gap-2 relative max-w-[200px] lg:max-w-none;
+  }
+
+  .collection-name {
+    @apply flex items-center gap-1.5 xl:gap-2 text-gray-900 dark:text-white font-medium 
+           hover:bg-gray-100 dark:hover:bg-[#252B3B] px-2 xl:px-3 py-2 rounded-xl transition-colors
+           truncate;
+  }
+
+  .collection-name span:not(.material-icons) {
+    @apply truncate;
+  }
+
+  .collection-lock {
+    @apply text-primary text-2xl;
+  }
+
+  .collection-dropdown {
+    @apply absolute top-full left-0 mt-2 w-64 
+           bg-white dark:bg-[#1B2131] rounded-xl shadow-lg 
+           border border-gray-200 dark:border-gray-700/50 py-2 z-50;
+  }
+
+  .collection-item {
+    @apply flex items-center justify-between px-4 py-2 
+           hover:bg-gray-50 dark:hover:bg-[#252B3B] cursor-pointer 
+           text-gray-900 dark:text-gray-200;
+  }
+
+  /* Button Styles */
+  .btn {
+    @apply inline-flex items-center justify-center gap-1.5 px-3 py-2 
+           rounded-xl font-medium transition-colors text-sm whitespace-nowrap;
+  }
+
+  .btn span.material-icons {
+    @apply text-xl;
+  }
+
+  /* Hide button text on tablet, show on desktop */
+  .btn span:not(.material-icons) {
+    @apply hidden xl:inline;
+  }
+
+  .btn-primary {
+    @apply bg-primary text-white hover:bg-primary/90;
+  }
+
+  .btn-secondary {
+    @apply bg-gray-100 dark:bg-[#1B2131] text-gray-900 dark:text-white 
+           hover:bg-gray-200 dark:hover:bg-[#252B3B] 
+           border border-gray-200 dark:border-gray-700/50;
+  }
+
+  .btn-danger {
+    @apply bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400 
+           hover:bg-red-200 dark:hover:bg-red-900/30 
+           border border-red-200 dark:border-red-900/30;
+  }
+
+  /* Delete button */
+  .delete-button {
+    @apply w-full px-4 py-3 rounded-xl
+           bg-red-600 dark:bg-red-800
+           text-white font-medium
+           hover:bg-red-700 dark:hover:bg-red-700
+           transition-colors flex items-center justify-center;
+  }
+
+  /* Stats Section */
+  .stats-section {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 xl:gap-4 px-4 xl:px-6 py-3;
+  }
+
+  .stat-card {
+    @apply p-4 rounded-xl bg-white dark:bg-[#1B2131] 
+           border border-gray-200 dark:border-gray-700/50
+           transition-all duration-200;
+  }
+
+  .stat-label {
+    @apply text-sm uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-2;
+  }
+
+  .stat-value {
+    @apply text-2xl font-medium text-gray-900 dark:text-white;
   }
 
   .profit-value {
-    @apply text-success;
+    @apply text-[#05CD99];
   }
 
-  .profit-value.negative {
-    @apply text-error;
+  .loss-value {
+    @apply text-red-500;
   }
 
-  /* Cards */
-  .card-item {
-    @apply flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-white border border-gray-200 rounded-2xl hover:shadow-sm transition-all cursor-pointer mb-4;
+  /* Search and Filter Section */
+  .search-input {
+    @apply w-full px-4 py-2.5 
+           bg-white dark:bg-[#1B2131] 
+           border border-gray-200 dark:border-gray-700/50 
+           rounded-xl text-gray-900 dark:text-gray-100 
+           placeholder-gray-500 dark:placeholder-gray-400
+           focus:ring-2 focus:ring-primary/20 focus:border-primary 
+           transition-colors;
   }
 
-  .card-item-left {
-    @apply flex items-center gap-4 w-full sm:w-auto mb-4 sm:mb-0;
+  .filter-section {
+    @apply flex flex-col gap-1.5 px-4 xl:px-6 py-2;
   }
 
-  .card-item-right {
-    @apply flex flex-row sm:flex-row items-center sm:items-end justify-between sm:justify-end w-full sm:w-auto gap-4 sm:gap-8 mt-2 sm:mt-0 pl-9 sm:pl-0;
+  /* Sort and View Controls */
+  .controls-container {
+    @apply flex flex-col sm:flex-row gap-2 w-full mt-1;
+  }
+
+  .sort-container, .view-container {
+    @apply relative flex-1;
+  }
+
+  .sort-button, .view-button {
+    @apply flex items-center justify-between w-full px-4 py-2.5 rounded-xl 
+           bg-white dark:bg-[#1B2131] 
+           border border-gray-200 dark:border-gray-700/50
+           text-gray-900 dark:text-white text-sm
+           hover:bg-gray-50 dark:hover:bg-[#252B3B] transition-colors;
+  }
+
+  .sort-button > div, .view-button > div {
+    @apply flex items-center gap-2;
+  }
+
+  .sort-button .material-icons, 
+  .view-button .material-icons {
+    @apply text-gray-500 dark:text-gray-400;
+  }
+
+  .sort-dropdown, .view-dropdown {
+    @apply absolute top-full left-0 right-0 mt-2 w-full
+           bg-white dark:bg-[#1B2131] rounded-xl shadow-lg 
+           border border-gray-200 dark:border-gray-700/50 
+           py-2 z-50;
+  }
+
+  .sort-option {
+    @apply flex items-center gap-2 px-4 py-2
+           text-gray-900 dark:text-white text-sm
+           hover:bg-gray-50 dark:hover:bg-[#252B3B] cursor-pointer;
+  }
+
+  .sort-option .material-icons {
+    @apply text-primary;
+  }
+
+  .sort-option.active {
+    @apply bg-gray-50 dark:bg-[#252B3B];
+  }
+
+  /* Column Headers */
+  .column-headers {
+    @apply flex items-center gap-6 px-6 py-3 
+           text-sm font-medium text-gray-400;
+  }
+
+  .column-header {
+    @apply flex items-center gap-1.5 cursor-pointer hover:text-white transition-colors;
+  }
+
+  .column-header.active {
+    @apply text-white;
+  }
+
+  /* Card Grid */
+  .card-grid {
+    @apply grid grid-cols-1 sm:grid-cols-4 
+           gap-3 xl:gap-4 px-4 xl:px-6 mt-3;
+  }
+
+  /* Card Styles */
+  .card {
+    @apply bg-white dark:bg-[#1B2131] rounded-xl 
+           border border-gray-200 dark:border-gray-700/50 
+           overflow-hidden transition-all duration-200
+           hover:bg-gray-50 dark:hover:bg-[#252B3B]
+           w-full;
   }
 
   .card-image {
-    @apply w-16 h-24 bg-gray-100 rounded-xl overflow-hidden flex items-center justify-center flex-shrink-0;
+    @apply aspect-[2/3] relative overflow-hidden;
   }
 
-  .card-info {
-    @apply flex flex-col flex-1 sm:flex-initial;
+  .card-image img {
+    @apply w-full h-full object-cover;
   }
 
-  .card-title {
-    @apply text-base text-gray-800 font-medium;
+  .card-content {
+    @apply p-4;
   }
 
-  .card-subtitle {
-    @apply text-sm text-gray-500;
+  /* Filter Section */
+  .filter-section {
+    @apply px-6 py-4 space-y-4;
   }
 
-  .card-investment {
-    @apply text-sm text-gray-500;
+  .dropdown-button {
+    @apply btn-secondary flex items-center justify-between w-48;
   }
 
-  .card-value {
-    @apply text-base text-gray-800 font-medium;
+  .dropdown-icon {
+    @apply material-icons text-lg ml-2;
   }
 
-  .card-profit {
-    @apply text-sm font-medium;
+  /* Card Styles */
+  .card-light {
+    @apply card bg-white border-gray-200 hover:bg-gray-50;
   }
 
-  .card-profit.positive {
-    @apply text-emerald-500;
+  .card-dark {
+    @apply card bg-[#1B2131] border-gray-700/50 hover:bg-[#252B3B];
   }
 
-  .card-profit.negative {
-    @apply text-red-500;
-  }
-
-  .card-value-group {
-    @apply flex flex-col items-end;
-  }
-
-  /* Dropdowns */
-  .dropdown-menu, .filter-dropdown {
-    @apply absolute mt-1 bg-white rounded-xl shadow-lg border border-gray-200 py-1 z-[100] overflow-hidden;
-  }
-
-  .dropdown-menu {
-    @apply left-0 top-full w-64;
-  }
-
-  .filter-dropdown {
-    @apply right-0 w-48;
-  }
-
-  .dropdown-item, .filter-item {
-    @apply w-full px-4 py-2.5 text-left hover:bg-gray-50 text-gray-700 flex items-center gap-2 text-base font-normal transition-colors;
-  }
-
-  .dropdown-item.active {
-    @apply bg-gray-50 text-gray-900 font-medium;
-  }
-
-  /* Card Details */
-  .card-details {
-    @apply flex flex-col gap-6 p-6 bg-white;
-  }
-
-  .card-details-section {
-    @apply mb-8;
-  }
-
-  .card-details-header {
-    @apply flex justify-between items-center mb-6;
-  }
-
-  .card-details-title {
-    @apply text-2xl font-semibold text-gray-800;
-  }
-
-  .card-details-label {
-    @apply block text-sm text-gray-600 mb-2;
-  }
-
-  .card-details-value {
-    @apply w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-800;
-  }
-
-  .card-details-input {
-    @apply w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-800;
-  }
-
-  /* Financial Details Box */
-  .financial-details {
-    @apply bg-white rounded-xl p-6 border border-gray-200;
-  }
-
-  .financial-details-header {
-    @apply text-xl font-semibold text-gray-800 mb-4;
-  }
-
-  .financial-details-grid {
-    @apply grid grid-cols-2 gap-4;
-  }
-
-  .financial-details-item {
-    @apply bg-gray-50 rounded-lg p-4;
-  }
-
-  .financial-details-label {
-    @apply text-sm text-gray-600 mb-1;
-  }
-
-  .financial-details-value {
-    @apply text-lg font-medium text-gray-800;
-  }
-
-  /* Profit/Loss Box */
-  .profit-loss-box {
-    @apply flex justify-between items-center p-4 bg-white rounded-xl border border-gray-200;
-  }
-
-  .profit-loss-label {
-    @apply text-sm text-gray-600;
-  }
-
-  .profit-loss-value {
-    @apply text-xl font-medium;
-  }
-
-  .profit-loss-value.positive {
-    @apply text-emerald-500;
-  }
-
-  .profit-loss-value.negative {
-    @apply text-red-500;
-  }
-
-  /* Return Value */
-  .return-value {
-    @apply text-xl font-medium;
-  }
-
-  .return-value.positive {
-    @apply text-emerald-500;
-  }
-
-  .return-value.negative {
-    @apply text-red-500;
-  }
-
-  /* Modals */
+  /* Modal Styles */
   .modal {
-    @apply fixed inset-0 bg-black/50 flex items-center justify-center z-[60];
+    @apply fixed inset-0 z-50 flex items-center justify-center bg-black/50;
   }
 
   .modal-content {
-    @apply bg-white dark:bg-[#1B2131] rounded-2xl w-full max-w-lg;
+    @apply bg-white dark:bg-[#1B2131] rounded-xl w-full max-w-md mx-4 overflow-hidden;
   }
 
   .modal-header {
-    @apply flex justify-between items-center p-6 border-b border-gray-200 dark:border-gray-700/50;
+    @apply flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700/50;
   }
 
   .modal-title {
-    @apply text-2xl font-semibold text-gray-800 dark:text-gray-200;
+    @apply text-xl font-medium text-gray-800 dark:text-gray-200;
   }
 
   .modal-close {
@@ -381,131 +371,264 @@
   }
 
   .modal-body {
-    @apply p-6 space-y-6;
+    @apply p-6;
   }
 
   .modal-label {
-    @apply block text-gray-700 dark:text-gray-300 text-xl mb-3;
+    @apply block text-gray-700 dark:text-gray-300 mb-2;
   }
 
   .modal-input {
-    @apply w-full px-4 py-3 bg-white dark:bg-[#252B3B] border border-gray-300 dark:border-gray-700/50 rounded-xl text-gray-800 dark:text-gray-200 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors;
+    @apply w-full px-4 py-2 rounded-xl 
+           border border-gray-200 dark:border-gray-700/50 
+           bg-white dark:bg-[#252B3B]
+           text-gray-900 dark:text-white
+           focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary
+           placeholder-gray-500 dark:placeholder-gray-400;
   }
 
   .modal-footer {
-    @apply flex justify-end gap-3;
+    @apply flex justify-end gap-2 mt-6;
   }
 
   .modal-btn-cancel {
-    @apply px-6 py-3 bg-gray-100 dark:bg-[#252B3B] text-gray-700 dark:text-gray-200 rounded-xl hover:bg-gray-200 dark:hover:bg-[#323B4B] transition-colors;
+    @apply px-4 py-2 rounded-lg
+           bg-gray-100 dark:bg-[#252B3B] 
+           text-gray-700 dark:text-gray-300
+           hover:bg-gray-200 dark:hover:bg-[#323B4B]
+           transition-colors;
   }
 
   .modal-btn-create {
-    @apply px-6 py-3 bg-[#4F46E5] text-white rounded-xl hover:bg-[#4F46E5]/90 transition-colors;
+    @apply px-4 py-2 rounded-lg
+           bg-primary text-white
+           hover:bg-primary/90
+           transition-colors;
   }
 
-  /* Import Zone */
-  .import-zone {
-    @apply border-2 border-dashed border-gray-300 rounded-xl p-8 text-center;
+  /* Dropdown Styles */
+  .dropdown {
+    @apply absolute right-0 mt-2 w-48 rounded-xl shadow-lg;
   }
 
-  html.dark .import-zone {
-    @apply border-gray-700/50;
+  .dropdown-item {
+    @apply flex items-center px-4 py-2 text-sm cursor-pointer transition-all duration-200;
   }
 
-  /* Text Styles */
-  .text-label {
-    @apply text-gray-500;
+  /* Collection Styles */
+  .collection-header {
+    @apply sticky top-0 z-40 bg-white dark:bg-[#0B0F19] border-b border-gray-200 dark:border-gray-700/50;
   }
 
-  html.dark .text-label {
-    @apply text-gray-400;
+  .collection-title {
+    @apply text-lg font-medium text-gray-800 dark:text-gray-200 select-none;
   }
 
-  .text-value {
-    @apply text-gray-800;
+  /* Card specific styles */
+  .card-image-container {
+    @apply aspect-[2/3] mb-4 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800;
   }
 
-  html.dark .text-value {
-    @apply text-gray-200;
+  .card-stats {
+    @apply grid grid-cols-2 gap-4 mb-6;
   }
 
-  /* Settings Modal */
-  html.dark .settings-modal {
-    @apply bg-[#1B2131];
+  .card-stat {
+    @apply p-4 rounded-xl bg-white dark:bg-[#1B2131] border border-gray-200 dark:border-gray-700/50;
   }
 
-  html.dark .settings-modal h2,
-  html.dark .settings-modal h3 {
-    @apply text-gray-200;
+  .card-stat-label {
+    @apply text-sm text-gray-600 dark:text-gray-400 mb-1;
   }
 
-  html.dark .settings-modal label {
-    @apply text-gray-400;
+  .card-stat-value {
+    @apply text-lg font-medium text-gray-900 dark:text-white;
   }
 
-  html.dark .settings-modal input {
-    @apply bg-[#252B3B] border-gray-700/50 text-gray-200;
+  /* Form specific styles */
+  .form-group {
+    @apply mb-4;
   }
 
-  html.dark .settings-modal button.btn-secondary {
-    @apply bg-[#252B3B] text-gray-200 border-gray-700/50 hover:bg-[#323B4B];
+  .form-label {
+    @apply block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1;
   }
 
-  /* Mobile Navigation */
-  .mobile-menu-button {
-    @apply hidden;
+  .form-hint {
+    @apply mt-1 text-xs text-gray-500 dark:text-gray-400;
   }
 
-  .mobile-menu {
-    @apply fixed inset-0 z-50 bg-white transform transition-transform duration-300 ease-in-out;
+  /* Loading states */
+  .loading-overlay {
+    @apply fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50;
   }
 
-  html.dark .mobile-menu {
-    @apply bg-[#0B0F19];
+  .loading-spinner {
+    @apply animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent;
   }
 
-  .mobile-menu.hidden {
-    @apply translate-x-full;
+  /* Loading States */
+  .skeleton {
+    @apply animate-pulse bg-gray-200 dark:bg-gray-700 rounded;
   }
 
-  .mobile-menu-header {
-    @apply flex items-center justify-between p-6 border-b border-gray-700/50;
+  /* Toast Notifications */
+  .toast {
+    @apply fixed top-4 right-4 z-[100] px-6 py-3 rounded-lg shadow-lg;
   }
 
-  .mobile-menu-content {
-    @apply flex flex-col gap-4 p-6;
+  .toast-success {
+    @apply toast bg-green-500 text-white;
   }
 
-  .mobile-menu-item {
-    @apply flex items-center gap-3 px-4 py-3 rounded-xl text-gray-800 hover:bg-gray-50 transition-colors text-base;
+  .toast-error {
+    @apply toast bg-red-500 text-white;
   }
 
-  html.dark .mobile-menu-item {
-    @apply text-gray-200 hover:bg-[#252B3B];
+  /* Grid Layouts */
+  .summary-grid {
+    @apply grid grid-cols-1 md:grid-cols-3 gap-6;
   }
 
-  /* Header Navigation */
-  .header-nav {
-    @apply flex items-center gap-4;
+  /* Typography */
+  .heading-1 {
+    @apply text-2xl font-semibold text-gray-900 dark:text-white;
   }
 
-  .header-buttons {
-    @apply flex items-center gap-4;
+  .heading-2 {
+    @apply text-xl font-medium text-gray-800 dark:text-gray-200;
   }
 
-  /* Mobile Breakpoint */
-  @media (max-width: 639px) {
-    .mobile-menu-button {
-      @apply block;
+  .text-body {
+    @apply text-sm text-gray-600 dark:text-gray-400;
+  }
+
+  /* Icons */
+  .icon {
+    @apply text-xl;
+  }
+
+  .icon-sm {
+    @apply text-base;
+  }
+
+  .icon-lg {
+    @apply text-2xl;
+  }
+
+  /* Input styles */
+  .input {
+    @apply w-full px-3 py-2 bg-white dark:bg-[#1B2131] border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100;
+  }
+
+  .input:disabled {
+    @apply bg-transparent border-transparent text-gray-700 dark:text-gray-300 cursor-default;
+  }
+
+  .input:not(:disabled) {
+    @apply bg-white dark:bg-[#1B2131] border border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-primary/20 focus:border-primary dark:focus:border-primary transition-colors;
+  }
+
+  /* Make number inputs look consistent */
+  .input[type="number"],
+  .search-input[type="number"] {
+    @apply [appearance:textfield];
+  }
+
+  .input[type="number"]::-webkit-outer-spin-button,
+  .input[type="number"]::-webkit-inner-spin-button,
+  .search-input[type="number"]::-webkit-outer-spin-button,
+  .search-input[type="number"]::-webkit-inner-spin-button {
+    @apply appearance-none;
+    margin: 0;
+  }
+
+  /* Responsive padding for main content */
+  .app-content {
+    @apply px-4 sm:px-6;
+  }
+
+  /* Ensure dropdowns don't overflow on mobile */
+  .sort-dropdown,
+  .view-dropdown,
+  .collection-dropdown {
+    @apply max-h-[80vh] overflow-y-auto;
+    max-width: calc(100vw - 2rem);
+  }
+
+  @screen sm {
+    .controls-container {
+      @apply flex flex-row items-center gap-2;
     }
 
-    .header-nav {
-      @apply hidden;
+    .sort-container, .view-container {
+      @apply flex-1 basis-[calc(50%-80px)];
     }
 
-    .header-buttons {
-      @apply hidden;
+    .delete-button {
+      @apply w-[160px];
     }
   }
+
+  @screen lg {
+    .sort-container, .view-container {
+      @apply max-w-[280px];
+    }
+  }
+
+  /* Ensure main content doesn't scroll when mobile menu is open */
+  .mobile-menu-open {
+    @apply overflow-hidden;
+  }
+
+  .sort-option-divider {
+    height: 1px;
+    margin: 8px 0;
+    background-color: rgb(229 231 235);
+  }
+
+  .dark .sort-option-divider {
+    background-color: rgb(75 85 99);
+  }
+}
+
+@layer utilities {
+  /* Transitions */
+  .fade-enter {
+    opacity: 0;
+  }
+
+  .fade-enter-active {
+    opacity: 1;
+    transition: opacity 200ms ease-in;
+  }
+
+  .fade-exit {
+    opacity: 1;
+  }
+
+  .fade-exit-active {
+    opacity: 0;
+    transition: opacity 200ms ease-in;
+  }
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none;
+  }
+  
+  .print-only {
+    display: block;
+  }
+  
+  body {
+    background: white;
+  }
+}
+
+/* Dark mode overrides */
+html.dark {
+  color-scheme: dark;
 }

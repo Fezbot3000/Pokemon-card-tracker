@@ -5,13 +5,13 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        primary: '#4F46E5',
+        primary: '#4318FF',
         success: '#05CD99',
         error: '#FF0000',
         dark: {
           bg: '#0B0F19',
           card: '#1B2131',
-          input: '#252B3B'
+          hover: '#252B3B'
         }
       },
       fontFamily: {
