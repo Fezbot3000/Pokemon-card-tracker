@@ -4,6 +4,7 @@ import CardList from './components/CardList';
 import CardDetails from './components/CardDetails';
 import NewCardForm from './components/NewCardForm';
 import ImportModal from './components/ImportModal';
+import ProfitChangeModal from './components/ProfitChangeModal';
 import useCardData from './hooks/useCardData';
 import { processImportedData } from './utils/dataProcessor';
 import { db } from './services/db';
@@ -39,6 +40,8 @@ function AppContent() {
   const [collections, setCollections] = useState({ 'Default Collection': [] });
   const [isLoading, setIsLoading] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
+  const [showProfitChangeModal, setShowProfitChangeModal] = useState(false);
+  const [profitChangeData, setProfitChangeData] = useState({ oldProfit: 0, newProfit: 0 });
   
   const {
     cards,
@@ -88,18 +91,50 @@ function AppContent() {
     updateCard(updatedCard);
   }, [collections, selectedCollection, updateCard]);
 
+  // Calculate total profit for a collection
+  const calculateTotalProfit = useCallback((cards) => {
+    return cards.reduce((total, card) => {
+      const currentValue = parseFloat(card.currentValueAUD) || 0;
+      const purchasePrice = parseFloat(card.investmentAUD) || 0;
+      return total + (currentValue - purchasePrice);
+    }, 0);
+  }, []);
+
   const handleImportData = useCallback(async (file) => {
-    const result = await importCsvData(file, importMode);
-    if (result.success) {
-      const processedData = await processImportedData(result.data, collections[selectedCollection], exchangeRate, importMode);
-      // Update collections with new data
-      setCollections(prev => ({
-        ...prev,
-        [selectedCollection]: processedData
-      }));
+    try {
+      // Calculate current total profit before update
+      const currentCards = collections[selectedCollection] || [];
+      const oldProfit = calculateTotalProfit(currentCards);
+
+      const result = await importCsvData(file, importMode);
+      if (result.success) {
+        const processedData = await processImportedData(result.data, currentCards, exchangeRate, importMode);
+        
+        // Update collections with new data
+        const updatedCollections = {
+          ...collections,
+          [selectedCollection]: processedData
+        };
+        
+        // Save to database to persist changes
+        await db.saveCollections(updatedCollections);
+        
+        // Update state
+        setCollections(updatedCollections);
+
+        // Calculate new profit after update
+        const newProfit = calculateTotalProfit(processedData);
+
+        // Show the profit change modal
+        setProfitChangeData({ oldProfit, newProfit });
+        setShowProfitChangeModal(true);
+      }
+      setImportModalOpen(false);
+    } catch (error) {
+      console.error('Error updating prices:', error);
+      alert('Error updating prices: ' + error.message);
     }
-    setImportModalOpen(false);
-  }, [importCsvData, importMode, selectedCollection, collections, exchangeRate]);
+  }, [importCsvData, importMode, selectedCollection, collections, exchangeRate, calculateTotalProfit]);
 
   const handleCollectionChange = useCallback((collection) => {
     setSelectedCollection(collection);
@@ -547,11 +582,10 @@ To import this backup:
               
               // Switch to another collection if the deleted one was selected
               if (selectedCollection === name) {
-                setSelectedCollection(Object.keys(currentCollections)[0]);
+                const newSelection = Object.keys(currentCollections)[0];
+                setSelectedCollection(newSelection);
+                localStorage.setItem('selectedCollection', newSelection);
               }
-              
-              // Close settings modal
-              setShowSettings(false);
             } catch (error) {
               console.error("Error deleting collection:", error);
               alert(`Failed to delete collection: ${error.message}`);
@@ -567,6 +601,16 @@ To import this backup:
           }}
           onExportData={handleExportData}
           onImportCollection={handleImportCollection}
+        />
+      )}
+
+      {/* Profit Change Modal */}
+      {showProfitChangeModal && (
+        <ProfitChangeModal
+          isOpen={showProfitChangeModal}
+          onClose={() => setShowProfitChangeModal(false)}
+          oldProfit={profitChangeData.oldProfit}
+          newProfit={profitChangeData.newProfit}
         />
       )}
     </div>

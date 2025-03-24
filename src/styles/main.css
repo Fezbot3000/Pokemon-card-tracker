@@ -629,6 +629,53 @@
   .dark .sort-option-divider {
     background-color: rgb(75 85 99);
   }
+
+  /* Profit Change Modal */
+  .profit-change-modal {
+    @apply fixed inset-0 z-50 flex items-center justify-center bg-black/50;
+  }
+
+  .profit-change-content {
+    @apply bg-white dark:bg-[#1B2131] rounded-xl w-full max-w-md mx-4 p-6;
+  }
+
+  .profit-change-header {
+    @apply text-xl font-medium text-gray-800 dark:text-gray-200 mb-4;
+  }
+
+  .profit-change-body {
+    @apply space-y-4;
+  }
+
+  .profit-stat {
+    @apply flex flex-col p-4 rounded-xl
+           bg-gray-50 dark:bg-[#252B3B]
+           border border-gray-200 dark:border-gray-700/50;
+  }
+
+  .profit-label {
+    @apply text-sm text-gray-600 dark:text-gray-400;
+  }
+
+  .profit-value {
+    @apply text-xl font-medium mt-1;
+  }
+
+  .profit-value.positive {
+    @apply text-[#05CD99];
+  }
+
+  .profit-value.negative {
+    @apply text-red-500;
+  }
+
+  .profit-change-footer {
+    @apply flex justify-end mt-6;
+  }
+
+  .profit-change-close {
+    @apply btn btn-primary px-6;
+  }
 }
 
 @layer utilities {
