@@ -49,7 +49,7 @@ const CardImage = memo(({ imageUrl, loadingState, onRetry }) => {
   );
 });
 
-const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchangeRate }) => {
+const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchangeRate, onViewChange }) => {
   const [editedCard, setEditedCard] = useState({
     ...card,
     investmentUSD: typeof card.investmentUSD === 'number' ? Number(card.investmentUSD.toFixed(2)) : 0,
@@ -64,8 +64,16 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
   const [imageLoadingState, setImageLoadingState] = useState('loading');
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [saveMessage, setSaveMessage] = useState(null);
+  const [showSoldModal, setShowSoldModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [soldDetails, setSoldDetails] = useState({
+    price: '',
+    buyer: '',
+    date: new Date().toISOString().split('T')[0]
+  });
   const fileInputRef = useRef(null);
   const messageTimeoutRef = useRef(null);
+  const soldModalRef = useRef(null);  // Add ref for sold modal
   const { isDarkMode } = useTheme();
 
   // Add ref for the modal content
@@ -114,19 +122,6 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
       }
     };
   }, [card.slabSerial]);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (modalContentRef.current && !modalContentRef.current.contains(event.target)) {
-        handleClose();
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
 
   const loadCardImage = async () => {
     setImageLoadingState('loading');
@@ -295,8 +290,38 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
   };
 
   const handleDelete = () => {
-    if (window.confirm('Are you sure you want to delete this card? This action cannot be undone.')) {
-      onDelete(card.slabSerial);
+    setShowDeleteModal(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    try {
+      await onDelete(card.slabSerial);
+      onClose();
+      
+      // Create and show toast notification
+      const toast = document.createElement('div');
+      toast.className = 'fixed top-4 right-4 z-[100] px-6 py-3 rounded-lg shadow-lg bg-green-500 text-white transition-opacity duration-300';
+      toast.textContent = 'Card deleted successfully';
+      document.body.appendChild(toast);
+
+      // Remove toast after 3 seconds
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => document.body.removeChild(toast), 300);
+      }, 3000);
+    } catch (error) {
+      console.error('Error deleting card:', error);
+      const toast = document.createElement('div');
+      toast.className = 'fixed top-4 right-4 z-[100] px-6 py-3 rounded-lg shadow-lg bg-red-500 text-white transition-opacity duration-300';
+      toast.textContent = 'Failed to delete card';
+      document.body.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => document.body.removeChild(toast), 300);
+      }, 3000);
+    } finally {
+      setShowDeleteModal(false);
     }
   };
 
@@ -331,6 +356,74 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
   const profit = editedCard.currentValueAUD - editedCard.investmentAUD;
   const profitPercentage = editedCard.investmentAUD ? (profit / editedCard.investmentAUD * 100) : 0;
 
+  const handleSoldDetailsChange = (e) => {
+    const { name, value } = e.target;
+    setSoldDetails(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleMarkAsSold = async () => {
+    try {
+      // Convert sold price to number
+      const soldPriceAUD = parseFloat(soldDetails.price) || 0;
+
+      // Create sold card record without an ID (it will be auto-generated)
+      const soldCard = {
+        slabSerial: editedCard.slabSerial,
+        serialNumber: editedCard.slabSerial,
+        player: editedCard.player,
+        card: editedCard.card,
+        set: editedCard.set,
+        year: editedCard.year,
+        category: editedCard.category,
+        condition: editedCard.condition,
+        investmentAUD: editedCard.investmentAUD,
+        soldPriceAUD,
+        buyer: soldDetails.buyer,
+        dateSold: new Date(soldDetails.date).toISOString(),
+        profit: soldPriceAUD - editedCard.investmentAUD
+      };
+
+      // Add to sold cards database
+      await db.addSoldCard(soldCard);
+
+      // Delete from current collection and cards state
+      const deleteResult = await onDelete(editedCard.slabSerial);
+      
+      if (!deleteResult) {
+        throw new Error('Failed to delete card from collection');
+      }
+
+      // Close sold modal and card details
+      setShowSoldModal(false);
+      onClose();
+
+      // Navigate to sold page
+      onViewChange('sold');
+
+      // Create and show toast notification
+      const toast = document.createElement('div');
+      toast.className = 'fixed top-4 right-4 z-[100] px-6 py-3 rounded-lg shadow-lg bg-green-500 text-white transition-opacity duration-300';
+      toast.textContent = 'Card marked as sold successfully!';
+      document.body.appendChild(toast);
+
+      // Remove toast after 3 seconds
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => document.body.removeChild(toast), 300);
+      }, 3000);
+
+    } catch (error) {
+      console.error('Error marking card as sold:', error);
+      setSaveMessage({
+        text: 'Failed to mark card as sold',
+        type: 'error'
+      });
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 overflow-hidden bg-black bg-opacity-50">
       {/* Toast Message */}
@@ -341,6 +434,105 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
           'bg-gray-700 text-white'
         }`}>
           {saveMessage.text}
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-50">
+          <div className="w-full max-w-md mx-4 p-6 rounded-xl shadow-lg bg-[#1B2131]">
+            <h3 className="text-xl font-semibold mb-4 text-gray-200">Delete Card</h3>
+            <p className="text-gray-400 mb-6">
+              Are you sure you want to delete this card? This action cannot be undone.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                className="px-4 py-2 text-gray-400 hover:text-gray-200"
+                onClick={() => setShowDeleteModal(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                onClick={handleDeleteConfirm}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Sold Modal */}
+      {showSoldModal && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-50" onClick={(e) => {
+          if (e.target === e.currentTarget) {
+            setShowSoldModal(false);
+          }
+        }}>
+          <div 
+            ref={soldModalRef}
+            className={`w-full max-w-md mx-4 p-6 rounded-xl shadow-lg ${isDarkMode ? 'bg-[#1B2131]' : 'bg-white'}`}
+          >
+            <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200">Mark Card as Sold</h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Sold Price (AUD)</label>
+                <input
+                  type="number"
+                  name="price"
+                  value={soldDetails.price}
+                  onChange={handleSoldDetailsChange}
+                  className="input"
+                  placeholder="0.00"
+                  step="0.01"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Buyer</label>
+                <input
+                  type="text"
+                  name="buyer"
+                  value={soldDetails.buyer}
+                  onChange={handleSoldDetailsChange}
+                  className="input"
+                  placeholder="Enter buyer name"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Date Sold</label>
+                <input
+                  type="date"
+                  name="date"
+                  value={soldDetails.date}
+                  onChange={handleSoldDetailsChange}
+                  className="input"
+                />
+              </div>
+
+              <div className="text-sm text-gray-500 dark:text-gray-400">
+                Profit: {formatCurrency(parseFloat(soldDetails.price || 0) - editedCard.investmentAUD)}
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+                onClick={() => setShowSoldModal(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90"
+                onClick={handleMarkAsSold}
+              >
+                Confirm Sale
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -575,6 +767,14 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
                   ) : null}
                   
                   <div className="flex items-center gap-2 ml-auto">
+                    <button
+                      className="btn btn-secondary"
+                      onClick={() => setShowSoldModal(true)}
+                    >
+                      <span className="material-icons">sell</span>
+                      <span>Mark as Sold</span>
+                    </button>
+                    
                     <button 
                       onClick={handleDelete}
                       className="text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 p-2"

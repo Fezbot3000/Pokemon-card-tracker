@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo, memo, useCallback } from 'react';
 import { db } from '../services/db';
-import { formatValue } from '../utils/formatters';
-import { formatCurrency } from '../utils/currencyAPI';
+import { formatValue, formatCurrency } from '../utils/formatters';
 import { useTheme } from '../contexts/ThemeContext';
 
 // Extracted Card component for better performance
@@ -9,7 +8,6 @@ const Card = memo(({ card, cardImage, onCardClick, isSelected, onSelect, display
   const { isDarkMode } = useTheme();
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState('');
-  
   const getDisplayValue = () => {
     switch (displayMetric) {
       case 'currentValueAUD':
@@ -163,7 +161,7 @@ const StatCard = memo(({ label, value, isProfit = false }) => {
   );
 });
 
-const CardList = ({ cards, exchangeRate, onCardClick, onDeleteCards, onUpdateCard, onAddCard }) => {
+const CardList = ({ cards, exchangeRate, onCardClick, onDeleteCards, onUpdateCard, onAddCard, onViewChange }) => {
   const [filter, setFilter] = useState('');
   const [sortField, setSortField] = useState(
     localStorage.getItem('cardListSortField') || 'currentValueAUD'
@@ -182,6 +180,13 @@ const CardList = ({ cards, exchangeRate, onCardClick, onDeleteCards, onUpdateCar
   const [cardImages, setCardImages] = useState({});
   const [editingInvestment, setEditingInvestment] = useState(null);
   const [editValue, setEditValue] = useState('');
+  const [showBulkSoldModal, setShowBulkSoldModal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [bulkSoldDetails, setBulkSoldDetails] = useState({
+    buyer: '',
+    date: new Date().toISOString().split('T')[0],
+    cards: []
+  });
   const { isDarkMode } = useTheme();
 
   const valueDropdownRef = useRef(null);
@@ -483,6 +488,118 @@ const CardList = ({ cards, exchangeRate, onCardClick, onDeleteCards, onUpdateCar
     };
   }, [filteredCards]);
 
+  // Add loading overlay component
+  const LoadingOverlay = () => (
+    <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[100]">
+      <div className="bg-white dark:bg-[#1B2131] p-6 rounded-lg shadow-lg text-center max-w-md">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mx-auto mb-4"></div>
+        <p className="text-gray-700 dark:text-gray-300">Processing sale...</p>
+        <p className="text-gray-500 dark:text-gray-400 text-sm mt-2">This may take a few moments</p>
+      </div>
+    </div>
+  );
+
+  const handleBulkMarkAsSold = async () => {
+    setIsSubmitting(true);
+    const startTime = Date.now();
+    
+    try {
+      // Create sold card records
+      const soldCards = bulkSoldDetails.cards.map(cardDetail => ({
+        slabSerial: cardDetail.slabSerial,
+        serialNumber: cardDetail.slabSerial,
+        player: cardDetail.player,
+        card: cardDetail.card,
+        set: cardDetail.set,
+        year: cardDetail.year,
+        category: cardDetail.category,
+        condition: cardDetail.condition,
+        investmentAUD: cardDetail.investmentAUD,
+        soldPriceAUD: parseFloat(cardDetail.soldPrice) || 0,
+        buyer: bulkSoldDetails.buyer,
+        dateSold: new Date(bulkSoldDetails.date).toISOString(),
+        profit: (parseFloat(cardDetail.soldPrice) || 0) - cardDetail.investmentAUD
+      }));
+
+      // Add all cards to sold cards database
+      for (const soldCard of soldCards) {
+        await db.addSoldCard(soldCard);
+      }
+
+      // Delete all cards from current collection
+      await onDeleteCards(Array.from(selectedCards));
+      
+      // Ensure minimum loading time
+      const elapsedTime = Date.now() - startTime;
+      const minimumLoadingTime = 2000;
+      if (elapsedTime < minimumLoadingTime) {
+        await new Promise(resolve => setTimeout(resolve, minimumLoadingTime - elapsedTime));
+      }
+      
+      // Clear selected cards
+      setSelectedCards(new Set());
+      
+      // Close modal
+      setShowBulkSoldModal(false);
+
+      // Show success toast
+      const toast = document.createElement('div');
+      toast.className = 'fixed top-4 right-4 z-[100] px-6 py-3 rounded-lg shadow-lg bg-green-500 text-white transition-opacity duration-300';
+      toast.textContent = `${soldCards.length} cards marked as sold successfully!`;
+      document.body.appendChild(toast);
+
+      // Remove toast after 3 seconds
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => document.body.removeChild(toast), 300);
+      }, 3000);
+
+      // Navigate to sold page
+      onViewChange('sold');
+
+    } catch (error) {
+      // Ensure minimum loading time even on error
+      const elapsedTime = Date.now() - startTime;
+      const minimumLoadingTime = 2000;
+      if (elapsedTime < minimumLoadingTime) {
+        await new Promise(resolve => setTimeout(resolve, minimumLoadingTime - elapsedTime));
+      }
+      
+      console.error('Error marking cards as sold:', error);
+      
+      // Show error toast
+      const toast = document.createElement('div');
+      toast.className = 'fixed top-4 right-4 z-[100] px-6 py-3 rounded-lg shadow-lg bg-red-500 text-white transition-opacity duration-300';
+      toast.textContent = 'Error marking cards as sold';
+      document.body.appendChild(toast);
+
+      // Remove toast after 3 seconds
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => document.body.removeChild(toast), 300);
+      }, 3000);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleBulkSoldModalOpen = () => {
+    // Initialize the bulkSoldDetails with selected cards
+    const selectedCardsList = Array.from(selectedCards).map(slabSerial => 
+      cards.find(card => card.slabSerial === slabSerial)
+    ).filter(Boolean);
+
+    setBulkSoldDetails(prev => ({
+      ...prev,
+      cards: selectedCardsList.map(card => ({
+        ...card,
+        soldPrice: ''
+      }))
+    }));
+    
+    setShowBulkSoldModal(true);
+  };
+
   return (
     <div className="space-y-4">
       {/* Total Cards Counter */}
@@ -601,15 +718,25 @@ const CardList = ({ cards, exchangeRate, onCardClick, onDeleteCards, onUpdateCar
           </div>
           
           <div className="controls-right">
-            <button
-              onClick={handleDeleteSelected}
-              className="delete-button"
-              disabled={selectedCards.size === 0}
-              style={{ opacity: selectedCards.size === 0 ? 0.5 : 1 }}
-            >
-              <span className="material-icons mr-2">delete</span>
-              Delete {selectedCards.size > 0 ? `(${selectedCards.size})` : ''}
-            </button>
+            {selectedCards.size > 0 && (
+              <>
+                <button
+                  onClick={handleBulkSoldModalOpen}
+                  className="btn btn-secondary"
+                >
+                  <span className="material-icons mr-2">sell</span>
+                  Mark as Sold ({selectedCards.size})
+                </button>
+                <button
+                  onClick={handleDeleteSelected}
+                  className="delete-button"
+                  style={{ opacity: selectedCards.size === 0 ? 0.5 : 1 }}
+                >
+                  <span className="material-icons mr-2">delete</span>
+                  Delete ({selectedCards.size})
+                </button>
+              </>
+            )}
             <button
               onClick={onAddCard}
               className="btn btn-primary"
@@ -667,6 +794,172 @@ const CardList = ({ cards, exchangeRate, onCardClick, onDeleteCards, onUpdateCar
           </div>
         </div>
       )}
+
+      {/* Bulk Sold Modal */}
+      {showBulkSoldModal && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-50" onClick={(e) => {
+          if (e.target === e.currentTarget && !isSubmitting) {
+            setShowBulkSoldModal(false);
+          }
+        }}>
+          <div className={`w-full max-w-4xl mx-4 p-6 rounded-xl shadow-lg ${isDarkMode ? 'bg-[#1B2131]' : 'bg-white'}`}>
+            <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200">Mark Cards as Sold</h3>
+            
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">
+                    Buyer<span className="text-red-500 ml-1">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={bulkSoldDetails.buyer}
+                    onChange={(e) => setBulkSoldDetails(prev => ({ ...prev, buyer: e.target.value }))}
+                    className={`input w-full ${!bulkSoldDetails.buyer.trim() ? 'border-red-500 dark:border-red-500' : ''}`}
+                    placeholder="Enter buyer name"
+                  />
+                  {!bulkSoldDetails.buyer.trim() && (
+                    <div className="text-red-500 text-xs mt-1">Please enter the buyer's name</div>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Date Sold</label>
+                  <input
+                    type="date"
+                    value={bulkSoldDetails.date}
+                    onChange={(e) => setBulkSoldDetails(prev => ({ ...prev, date: e.target.value }))}
+                    className="input w-full"
+                  />
+                </div>
+              </div>
+
+              <div className="mt-4">
+                <h4 className="text-lg font-medium mb-2 text-gray-800 dark:text-gray-200">Selected Cards</h4>
+                <div className="space-y-2 max-h-96 overflow-y-auto">
+                  {Array.from(selectedCards).map(slabSerial => {
+                    const card = cards.find(c => c.slabSerial === slabSerial);
+                    if (!card) return null;
+
+                    const cardDetail = bulkSoldDetails.cards.find(c => c.slabSerial === slabSerial) || {
+                      ...card,
+                      soldPrice: ''
+                    };
+
+                    const isSoldPriceValid = cardDetail.soldPrice !== '' && !isNaN(parseFloat(cardDetail.soldPrice)) && parseFloat(cardDetail.soldPrice) >= 0;
+
+                    return (
+                      <div key={slabSerial} className="flex items-center gap-4 p-4 rounded-lg bg-gray-50 dark:bg-gray-800">
+                        <div className="flex-1">
+                          <div className="font-medium text-gray-800 dark:text-gray-200">{card.card}</div>
+                          <div className="text-sm text-gray-500 dark:text-gray-400">
+                            Investment: {formatCurrency(card.investmentAUD)}
+                          </div>
+                        </div>
+                        <div className="w-48">
+                          <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">
+                            Sold Price (AUD)<span className="text-red-500 ml-1">*</span>
+                          </label>
+                          <input
+                            type="number"
+                            value={cardDetail.soldPrice}
+                            onChange={(e) => {
+                              const newCards = bulkSoldDetails.cards.filter(c => c.slabSerial !== slabSerial);
+                              newCards.push({
+                                ...cardDetail,
+                                soldPrice: e.target.value
+                              });
+                              setBulkSoldDetails(prev => ({
+                                ...prev,
+                                cards: newCards
+                              }));
+                            }}
+                            className={`input w-full ${!isSoldPriceValid ? 'border-red-500 dark:border-red-500' : ''}`}
+                            placeholder="0.00"
+                            step="0.01"
+                          />
+                          {!isSoldPriceValid && (
+                            <div className="text-red-500 text-xs mt-1">Please enter a valid price</div>
+                          )}
+                        </div>
+                        <div className="w-32 text-right">
+                          <div className="text-sm text-gray-600 dark:text-gray-400">Profit</div>
+                          <div className={`font-medium ${
+                            parseFloat(cardDetail.soldPrice || 0) - card.investmentAUD >= 0
+                              ? 'text-green-500'
+                              : 'text-red-500'
+                          }`}>
+                            {formatCurrency(parseFloat(cardDetail.soldPrice || 0) - card.investmentAUD)}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Add Summary Section */}
+            <div className="mt-6 p-4 rounded-lg bg-gray-50 dark:bg-gray-800">
+              <div className="flex justify-between items-center">
+                <div className="space-y-2">
+                  <div className="text-sm text-gray-600 dark:text-gray-400">Total Sale Price</div>
+                  <div className="text-xl font-medium text-gray-800 dark:text-gray-200">
+                    {formatCurrency(bulkSoldDetails.cards.reduce((sum, card) => sum + (parseFloat(card.soldPrice) || 0), 0))}
+                  </div>
+                </div>
+                <div className="space-y-2 text-right">
+                  <div className="text-sm text-gray-600 dark:text-gray-400">Total Profit</div>
+                  <div className={`text-xl font-medium ${
+                    bulkSoldDetails.cards.reduce((sum, card) => {
+                      const cardData = cards.find(c => c.slabSerial === card.slabSerial);
+                      return sum + ((parseFloat(card.soldPrice) || 0) - (cardData?.investmentAUD || 0));
+                    }, 0) >= 0 ? 'text-green-500' : 'text-red-500'
+                  }`}>
+                    {formatCurrency(bulkSoldDetails.cards.reduce((sum, card) => {
+                      const cardData = cards.find(c => c.slabSerial === card.slabSerial);
+                      return sum + ((parseFloat(card.soldPrice) || 0) - (cardData?.investmentAUD || 0));
+                    }, 0))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+                onClick={() => setShowBulkSoldModal(false)}
+                disabled={isSubmitting}
+              >
+                Cancel
+              </button>
+              <button
+                className={`px-4 py-2 text-white rounded-lg ${
+                  !bulkSoldDetails.buyer.trim() || 
+                  !bulkSoldDetails.cards.every(card => card.soldPrice !== '' && !isNaN(parseFloat(card.soldPrice)) && parseFloat(card.soldPrice) >= 0)
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : 'bg-primary hover:bg-primary/90'
+                }`}
+                onClick={handleBulkMarkAsSold}
+                disabled={isSubmitting || 
+                  !bulkSoldDetails.buyer.trim() || 
+                  !bulkSoldDetails.cards.every(card => card.soldPrice !== '' && !isNaN(parseFloat(card.soldPrice)) && parseFloat(card.soldPrice) >= 0)
+                }
+              >
+                {!bulkSoldDetails.buyer.trim() ? (
+                  "Please enter buyer's name"
+                ) : !bulkSoldDetails.cards.every(card => card.soldPrice !== '' && !isNaN(parseFloat(card.soldPrice)) && parseFloat(card.soldPrice) >= 0) ? (
+                  "Please enter all sold prices"
+                ) : (
+                  "Confirm Sale"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Loading Overlay */}
+      {isSubmitting && <LoadingOverlay />}
     </div>
   );
 };

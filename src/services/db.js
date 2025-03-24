@@ -2,6 +2,7 @@ const DB_NAME = 'PokemonCardDB';
 const DB_VERSION = 1;
 const COLLECTIONS_STORE = 'collections';
 const IMAGES_STORE = 'images';
+const SOLD_CARDS_STORE = 'soldCards';
 
 class DatabaseService {
   constructor() {
@@ -33,6 +34,15 @@ class DatabaseService {
         // Create images store
         if (!db.objectStoreNames.contains(IMAGES_STORE)) {
           db.createObjectStore(IMAGES_STORE, { keyPath: 'id' });
+        }
+
+        // Create sold cards store if it doesn't exist
+        if (!db.objectStoreNames.contains(SOLD_CARDS_STORE)) {
+          const soldCardsStore = db.createObjectStore(SOLD_CARDS_STORE, { 
+            keyPath: 'slabSerial'  // Use slabSerial as the unique identifier
+          });
+          soldCardsStore.createIndex('dateSold', 'dateSold', { unique: false });
+          soldCardsStore.createIndex('buyer', 'buyer', { unique: false });
         }
       };
     });
@@ -172,6 +182,11 @@ class DatabaseService {
           const imagesStore = imagesTransaction.objectStore(IMAGES_STORE);
           const clearImagesRequest = imagesStore.clear();
           
+          // Clear sold cards store
+          const soldCardsTransaction = this.db.transaction([SOLD_CARDS_STORE], 'readwrite');
+          const soldCardsStore = soldCardsTransaction.objectStore(SOLD_CARDS_STORE);
+          const clearSoldCardsRequest = soldCardsStore.clear();
+          
           // Wait for transactions to complete
           collectionsTransaction.oncomplete = () => {
             console.log("Collections cleared");
@@ -181,10 +196,15 @@ class DatabaseService {
             console.log("Images cleared");
           };
           
-          // When both are done
+          soldCardsTransaction.oncomplete = () => {
+            console.log("Sold cards cleared");
+          };
+          
+          // When all are done
           Promise.all([
             new Promise(r => { clearCollectionsRequest.onsuccess = r; }),
-            new Promise(r => { clearImagesRequest.onsuccess = r; })
+            new Promise(r => { clearImagesRequest.onsuccess = r; }),
+            new Promise(r => { clearSoldCardsRequest.onsuccess = r; })
           ]).then(() => {
             console.log("All data reset successfully");
             resolve(true);
@@ -201,6 +221,71 @@ class DatabaseService {
       console.error("Error resetting application data:", error);
       return false;
     }
+  };
+
+  // Function to clear all sold cards
+  clearSoldCards = async () => {
+    await this.ensureDB();
+    return new Promise((resolve, reject) => {
+      const transaction = this.db.transaction([SOLD_CARDS_STORE], 'readwrite');
+      const store = transaction.objectStore(SOLD_CARDS_STORE);
+      const request = store.clear();
+
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject('Error clearing sold cards');
+    });
+  };
+
+  // Function to get all sold cards
+  getSoldCards = async () => {
+    await this.ensureDB();
+    return new Promise((resolve, reject) => {
+      const transaction = this.db.transaction([SOLD_CARDS_STORE], 'readonly');
+      const store = transaction.objectStore(SOLD_CARDS_STORE);
+      const request = store.getAll();
+
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject('Error getting sold cards');
+    });
+  };
+
+  // Function to add a sold card
+  addSoldCard = async (card) => {
+    await this.ensureDB();
+    return new Promise((resolve, reject) => {
+      try {
+        const transaction = this.db.transaction([SOLD_CARDS_STORE], 'readwrite');
+        const store = transaction.objectStore(SOLD_CARDS_STORE);
+
+        // Append timestamp to slabSerial to ensure uniqueness
+        const timestamp = new Date().getTime();
+        const uniqueCard = {
+          ...card,
+          slabSerial: `${card.slabSerial}_${timestamp}`,
+          originalSlabSerial: card.slabSerial // Keep the original serial number
+        };
+
+        const request = store.add(uniqueCard);
+
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject('Error adding sold card');
+      } catch (error) {
+        reject(error);
+      }
+    });
+  };
+
+  // Function to delete a sold card
+  deleteSoldCard = async (id) => {
+    await this.ensureDB();
+    return new Promise((resolve, reject) => {
+      const transaction = this.db.transaction([SOLD_CARDS_STORE], 'readwrite');
+      const store = transaction.objectStore(SOLD_CARDS_STORE);
+      const request = store.delete(id);
+
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject('Error deleting sold card');
+    });
   };
 }
 

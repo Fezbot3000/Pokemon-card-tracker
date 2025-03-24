@@ -9,6 +9,7 @@
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.2.0",
     "@testing-library/user-event": "^13.5.0",
+    "jspdf": "^3.0.1",
     "jszip": "^3.10.1",
     "papaparse": "^5.5.2",
     "react": "^19.0.0",

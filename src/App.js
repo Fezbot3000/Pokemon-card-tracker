@@ -42,6 +42,7 @@ function AppContent() {
   const [showSettings, setShowSettings] = useState(false);
   const [showProfitChangeModal, setShowProfitChangeModal] = useState(false);
   const [profitChangeData, setProfitChangeData] = useState({ oldProfit: 0, newProfit: 0 });
+  const [currentView, setCurrentView] = useState('collection'); // 'collection' or 'sold'
   
   const {
     cards,
@@ -53,7 +54,7 @@ function AppContent() {
     selectCard,
     clearSelectedCard,
     updateCard,
-    deleteCard,
+    deleteCard: deleteCardFromState,
     addCard
   } = useCardData();
 
@@ -242,32 +243,35 @@ function AppContent() {
         // Create a new ZIP file
         const zip = new JSZip();
         
-        // Get ALL collections data
-        const allCollections = await db.getCollections();
-        
         // Create a data folder in the ZIP
         const dataFolder = zip.folder("data");
         
-        // Add collections data as JSON - include ALL collections
-        const collectionsData = {
+        // Get ALL collections data
+        const allCollections = await db.getCollections();
+        // Get ALL sold cards data
+        const soldCards = await db.getSoldCards();
+        
+        // Add collections data as JSON - include ALL collections and sold cards
+        const exportData = {
           version: '1.0',
           exportDate: new Date().toISOString(),
           collections: allCollections,
+          soldCards: soldCards,
           settings: {
             defaultCollection: selectedCollection
           }
         };
 
         // Add collections.json to the data folder
-        dataFolder.file("collections.json", JSON.stringify(collectionsData, null, 2));
+        dataFolder.file("collections.json", JSON.stringify(exportData, null, 2));
         
         // Create an images folder in the ZIP
         const imagesFolder = zip.folder("images");
         
-        // Process ALL images from ALL collections
+        // Process ALL images from ALL collections and sold cards
         const imagePromises = [];
         
-        // Loop through all collections
+        // Process collection cards
         for (const [collectionName, cards] of Object.entries(allCollections)) {
           if (!Array.isArray(cards)) continue;
           
@@ -287,33 +291,56 @@ function AppContent() {
                 // Update card with image path
                 card.imagePath = `images/${filename}`;
               } catch (error) {
-                // Silent fail for individual images
                 console.error(`Failed to export image for card ${card.slabSerial}:`, error);
               }
             })();
             imagePromises.push(promise);
           }
         }
+
+        // Process sold cards images
+        for (const card of soldCards) {
+          const promise = (async () => {
+            try {
+              const imageBlob = await db.getImage(card.slabSerial);
+              
+              if (!imageBlob) return;
+              
+              // Add image to ZIP with slab serial as filename
+              const extension = imageBlob.type.split('/')[1] || 'jpg';
+              const filename = `${card.slabSerial}.${extension}`;
+              await imagesFolder.file(filename, imageBlob);
+              
+              // Update card with image path
+              card.imagePath = `images/${filename}`;
+            } catch (error) {
+              console.error(`Failed to export image for sold card ${card.slabSerial}:`, error);
+            }
+          })();
+          imagePromises.push(promise);
+        }
         
         try {
           // Wait for all images to be processed
           await Promise.all(imagePromises);
           
-          // Update collections data with image paths
-          dataFolder.file("collections.json", JSON.stringify(collectionsData, null, 2));
+          // Update export data with image paths
+          exportData.collections = allCollections;
+          exportData.soldCards = soldCards;
+          dataFolder.file("collections.json", JSON.stringify(exportData, null, 2));
           
           // Add a README file
           const readme = `Pokemon Card Tracker Backup
 Created: ${new Date().toISOString()}
 
 This ZIP file contains:
-- /data/collections.json: All collections and card data
+- /data/collections.json: All collections, sold cards, and settings data
 - /images/: All card images referenced in collections.json
 
 To import this backup:
 1. Use the "Import Backup" button in the app settings
 2. Select this ZIP file
-3. All your collections and images will be restored`;
+3. All your collections, sold cards, and images will be restored`;
           
           zip.file("README.txt", readme);
           
@@ -354,31 +381,58 @@ To import this backup:
 
   // Function to handle collection import (backup file)
   const handleImportCollection = () => {
-    // Create a file input element
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.zip,.json';
-    
-    input.onchange = async (e) => {
+    // Create a custom modal for file selection
+    const modalEl = document.createElement('div');
+    modalEl.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100]';
+    modalEl.innerHTML = `
+      <div class="bg-white dark:bg-[#1B2131] p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-xl font-semibold text-gray-800 dark:text-gray-200">Import Backup</h3>
+          <button class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200" id="close-import-modal">
+            <span class="material-icons">close</span>
+          </button>
+        </div>
+        <div class="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg p-8 flex flex-col items-center justify-center mb-4 hover:border-primary dark:hover:border-primary transition-colors cursor-pointer" id="drop-zone">
+          <span class="material-icons text-gray-400 dark:text-gray-600 text-5xl mb-4">upload_file</span>
+          <p class="text-gray-800 dark:text-gray-200 text-lg mb-2">Drop your backup file here</p>
+          <p class="text-gray-500 dark:text-gray-400 text-sm">or click to select a file</p>
+        </div>
+        <input type="file" accept=".zip,.json" class="hidden" id="backup-file-input">
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-4">
+          Supported formats: .zip (recommended)
+        </p>
+      </div>
+    `;
+    document.body.appendChild(modalEl);
+
+    // Get references to elements
+    const fileInput = modalEl.querySelector('#backup-file-input');
+    const dropZone = modalEl.querySelector('#drop-zone');
+    const closeButton = modalEl.querySelector('#close-import-modal');
+
+    // Handle file selection
+    const handleFile = async (file) => {
+      if (!file) return;
+      
+      // Remove the file selection modal
+      document.body.removeChild(modalEl);
+      
+      // Create a loading overlay
+      const loadingEl = document.createElement('div');
+      loadingEl.className = 'fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[100]';
+      loadingEl.innerHTML = `
+        <div class="bg-white dark:bg-[#1B2131] p-6 rounded-lg shadow-lg text-center max-w-md">
+          <div class="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mx-auto mb-4"></div>
+          <p class="text-gray-700 dark:text-gray-300">Importing backup...</p>
+          <p class="text-gray-500 dark:text-gray-400 text-sm mt-2">This may take a few moments</p>
+        </div>
+      `;
+      document.body.appendChild(loadingEl);
+      
+      // Record start time for minimum loading duration
+      const startTime = Date.now();
+      
       try {
-        const file = e.target.files[0];
-        if (!file) return;
-        
-        // Create a loading overlay
-        const loadingEl = document.createElement('div');
-        loadingEl.className = 'fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[100]';
-        loadingEl.innerHTML = `
-          <div class="bg-white dark:bg-[#1B2131] p-6 rounded-lg shadow-lg text-center max-w-md">
-            <div class="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mx-auto mb-4"></div>
-            <p class="text-gray-700 dark:text-gray-300">Importing backup...</p>
-            <p class="text-gray-500 dark:text-gray-400 text-sm mt-2">This may take a few moments</p>
-          </div>
-        `;
-        document.body.appendChild(loadingEl);
-        
-        // Record start time for minimum loading duration
-        const startTime = Date.now();
-        
         if (file.name.endsWith('.zip')) {
           // Process ZIP file
           const zip = new JSZip();
@@ -442,25 +496,126 @@ To import this backup:
           // Remove loading overlay
           document.body.removeChild(loadingEl);
           
-          // Show success message
-          alert('Backup imported successfully!');
+          // Create and show toast notification
+          const toast = document.createElement('div');
+          toast.className = 'fixed top-4 right-4 z-[100] px-6 py-3 rounded-lg shadow-lg bg-green-500 text-white transition-opacity duration-300';
+          toast.textContent = 'Backup imported successfully!';
+          document.body.appendChild(toast);
+
+          // Close settings modal
+          setShowSettings(false);
+
+          // Remove toast after 3 seconds
+          setTimeout(() => {
+            toast.style.opacity = '0';
+            setTimeout(() => document.body.removeChild(toast), 300);
+          }, 3000);
         } else {
           throw new Error("Unsupported file format. Please upload a .zip backup file.");
         }
       } catch (error) {
         console.error("Import error:", error);
         // Remove loading overlay if it exists
-        const loadingEl = document.querySelector('.fixed.inset-0.bg-black.bg-opacity-70');
-        if (loadingEl) {
-          document.body.removeChild(loadingEl);
-        }
-        alert(`Error importing backup: ${error.message}`);
+        document.body.removeChild(loadingEl);
+        
+        // Show error toast
+        const toast = document.createElement('div');
+        toast.className = 'fixed top-4 right-4 z-[100] px-6 py-3 rounded-lg shadow-lg bg-red-500 text-white transition-opacity duration-300';
+        toast.textContent = `Error importing backup: ${error.message}`;
+        document.body.appendChild(toast);
+
+        // Remove toast after 3 seconds
+        setTimeout(() => {
+          toast.style.opacity = '0';
+          setTimeout(() => document.body.removeChild(toast), 300);
+        }, 3000);
       }
     };
-    
-    // Trigger file selection
-    input.click();
+
+    // Set up event listeners
+    fileInput.addEventListener('change', (e) => {
+      handleFile(e.target.files[0]);
+    });
+
+    dropZone.addEventListener('click', () => {
+      fileInput.click();
+    });
+
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dropZone.classList.add('border-primary', 'dark:border-primary', 'bg-primary/5', 'dark:bg-primary/10');
+    });
+
+    dropZone.addEventListener('dragleave', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dropZone.classList.remove('border-primary', 'dark:border-primary', 'bg-primary/5', 'dark:bg-primary/10');
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dropZone.classList.remove('border-primary', 'dark:border-primary', 'bg-primary/5', 'dark:bg-primary/10');
+      
+      const file = e.dataTransfer.files[0];
+      handleFile(file);
+    });
+
+    // Close modal when clicking close button or outside
+    closeButton.addEventListener('click', () => {
+      document.body.removeChild(modalEl);
+    });
+
+    modalEl.addEventListener('click', (e) => {
+      if (e.target === modalEl) {
+        document.body.removeChild(modalEl);
+      }
+    });
   };
+
+  // Handle deleting cards from both collections and state
+  const handleDeleteCard = useCallback(async (slabSerialOrSerials) => {
+    try {
+      const serialsToDelete = Array.isArray(slabSerialOrSerials) 
+        ? slabSerialOrSerials 
+        : [slabSerialOrSerials];
+
+      // Create a copy of the current collections
+      const updatedCollections = { ...collections };
+
+      // Remove the cards from their respective collections
+      Object.keys(updatedCollections).forEach(collectionName => {
+        if (Array.isArray(updatedCollections[collectionName])) {
+          updatedCollections[collectionName] = updatedCollections[collectionName]
+            .filter(card => !serialsToDelete.includes(card.slabSerial));
+        }
+      });
+
+      // Save the updated collections to the database
+      await db.saveCollections(updatedCollections);
+
+      // Update the collections state
+      setCollections(updatedCollections);
+
+      // Delete from cards state
+      serialsToDelete.forEach(serial => deleteCardFromState(serial));
+
+      // Delete the card images
+      for (const serial of serialsToDelete) {
+        try {
+          await db.deleteImage(serial);
+        } catch (error) {
+          console.error(`Error deleting image for card ${serial}:`, error);
+        }
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error deleting card(s):', error);
+      return false;
+    }
+  }, [collections, deleteCardFromState]);
 
   if (isLoading) {
     return <LoadingSkeleton />;
@@ -474,6 +629,8 @@ To import this backup:
         onCollectionChange={handleCollectionChange}
         onImportClick={handleImportClick}
         onSettingsClick={() => setShowSettings(true)}
+        onViewChange={(view) => setCurrentView(view)}
+        currentView={currentView}
         onAddCollection={(name) => {
           // Create new collection
           const newCollections = {
@@ -549,17 +706,21 @@ To import this backup:
       />
 
       <main className="max-w-7xl mx-auto px-6 py-4">
-        <CardList
-          cards={collectionData}
-          exchangeRate={exchangeRate}
-          onCardClick={(card) => {
-            // When a card is clicked from the list, provide the card to selectCard
-            selectCard(card);
-          }}
-          onDeleteCards={deleteCard}
-          onUpdateCard={handleCardUpdate}
-          onAddCard={() => setShowNewCardForm(true)}
-        />
+        {currentView === 'collection' ? (
+          <CardList
+            cards={collectionData}
+            exchangeRate={exchangeRate}
+            onCardClick={(card) => {
+              selectCard(card);
+            }}
+            onDeleteCards={handleDeleteCard}
+            onUpdateCard={handleCardUpdate}
+            onAddCard={() => setShowNewCardForm(true)}
+            onViewChange={setCurrentView}
+          />
+        ) : (
+          <SoldItems />
+        )}
       </main>
 
       {showNewCardForm && (
@@ -576,8 +737,9 @@ To import this backup:
           onClose={clearSelectedCard}
           onUpdate={handleCardUpdate}
           onUpdateCard={handleCardUpdate}
-          onDelete={deleteCard}
+          onDelete={handleDeleteCard}
           exchangeRate={exchangeRate}
+          onViewChange={(view) => setCurrentView(view)}
         />
       )}
 

@@ -13,7 +13,9 @@ const Header = ({
   refreshCollections,
   onAddCollection,
   onRenameCollection,
-  onDeleteCollection
+  onDeleteCollection,
+  onViewChange,
+  currentView
 }) => {
   const { isDarkMode, toggleTheme } = useTheme();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -422,32 +424,50 @@ To import this backup:
       <header className="app-header">
         <div className="header-content">
           <div className="header-left">
-            <CollectionSelector
-              collections={collections}
-              selectedCollection={selectedCollection}
-              onCollectionChange={onCollectionChange}
-              onAddCollection={handleAddNewCollection}
-            />
+            {currentView === 'collection' && (
+              <CollectionSelector
+                collections={collections}
+                selectedCollection={selectedCollection}
+                onCollectionChange={onCollectionChange}
+                onAddCollection={handleAddNewCollection}
+              />
+            )}
           </div>
 
           {/* Desktop buttons */}
           <div className="header-buttons">
+            {currentView === 'collection' ? (
+              <>
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => onImportClick('price')}
+                  aria-label="Update Prices"
+                >
+                  <span className="material-icons">sync</span>
+                  <span>Update Prices</span>
+                </button>
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => onImportClick('baseData')}
+                  aria-label="Import Base Data"
+                >
+                  <span className="material-icons">file_download</span>
+                  <span>Import Base Data</span>
+                </button>
+              </>
+            ) : null}
+
             <button
               className="btn btn-secondary"
-              onClick={() => onImportClick('price')}
-              aria-label="Update Prices"
+              onClick={() => onViewChange(currentView === 'collection' ? 'sold' : 'collection')}
+              aria-label={currentView === 'collection' ? "View Sold Cards" : "View Collection"}
             >
-              <span className="material-icons">sync</span>
-              <span>Update Prices</span>
+              <span className="material-icons">
+                {currentView === 'collection' ? 'sell' : 'grid_view'}
+              </span>
+              <span>{currentView === 'collection' ? 'Sold Cards' : 'Collection'}</span>
             </button>
-            <button
-              className="btn btn-secondary"
-              onClick={() => onImportClick('baseData')}
-              aria-label="Import Base Data"
-            >
-              <span className="material-icons">file_download</span>
-              <span>Import Base Data</span>
-            </button>
+
             <button
               className="btn btn-secondary"
               onClick={toggleTheme}
@@ -458,6 +478,7 @@ To import this backup:
               </span>
               <span>{isDarkMode ? 'Light Mode' : 'Dark Mode'}</span>
             </button>
+
             <button
               className="btn btn-secondary"
               onClick={toggleSettings}

@@ -1,3 +1,5 @@
+import { formatCurrency } from './formatters';
+
 // Simple currency conversion utility
 // In a production app, you would use a real API like https://exchangeratesapi.io/
 
@@ -31,17 +33,4 @@ export const convertUsdToAud = (usdAmount, exchangeRate) => {
   return usdAmount * exchangeRate;
 };
 
-/**
- * Format currency for display
- * @param {number} amount - Amount to format
- * @param {string} currency - Currency code (USD, AUD)
- * @returns {string} Formatted currency string
- */
-export const formatCurrency = (amount, currency = 'AUD') => {
-  return new Intl.NumberFormat('en-AU', {
-    style: 'currency',
-    currency: currency,
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  }).format(amount);
-};
+export { formatCurrency };
