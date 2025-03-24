@@ -112,7 +112,17 @@ class DatabaseService {
       const store = transaction.objectStore(IMAGES_STORE);
       const request = store.get(cardId);
 
-      request.onsuccess = () => resolve(request.result?.blob || null);
+      request.onsuccess = () => {
+        const result = request.result?.blob || null;
+        if (result) {
+          // Create a new blob with the same content but different object identity
+          // This prevents browser caching when the same image is retrieved again
+          const newBlob = result.slice(0, result.size, result.type);
+          resolve(newBlob);
+        } else {
+          resolve(null);
+        }
+      };
       request.onerror = () => reject('Error fetching image');
     });
   }

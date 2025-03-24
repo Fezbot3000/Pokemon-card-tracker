@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo, memo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, memo, useCallback } from 'react';
 import { db } from '../services/db';
 import { formatValue } from '../utils/formatters';
 import { formatCurrency } from '../utils/currencyAPI';
@@ -60,27 +60,30 @@ const Card = memo(({ card, cardImage, onCardClick, isSelected, onSelect, display
         )}
       </div>
 
-      {/* Card details */}
-      <div className="space-y-2">
-        <h3 className={`font-medium line-clamp-2 ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+      {/* Card details - restructured layout */}
+      <div className="space-y-2 text-center">
+        {/* Value amount - now centered and larger */}
+        <div className={`text-2xl font-medium ${
+          displayData.isProfit 
+            ? displayData.profitValue >= 0 
+              ? 'text-green-500' 
+              : 'text-red-500'
+            : isDarkMode 
+              ? 'text-gray-200' 
+              : 'text-gray-800'
+        }`}>
+          {displayData.value}
+        </div>
+        
+        {/* Label - shown below the value */}
+        <div className={`text-xs font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+          {displayData.label}
+        </div>
+        
+        {/* Card name - now below the value */}
+        <h3 className={`font-medium line-clamp-2 mt-2 ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>
           {card.card}
         </h3>
-        <div className="flex justify-between items-center">
-          <span className={`text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-            {displayData.label}:
-          </span>
-          <span className={`text-sm ${
-            displayData.isProfit 
-              ? displayData.profitValue >= 0 
-                ? 'text-green-500' 
-                : 'text-red-500'
-              : isDarkMode 
-                ? 'text-gray-200' 
-                : 'text-gray-800'
-          }`}>
-            {displayData.value}
-          </span>
-        </div>
       </div>
     </div>
   );
@@ -88,12 +91,17 @@ const Card = memo(({ card, cardImage, onCardClick, isSelected, onSelect, display
 
 // Replace FinancialSummary component with individual stat cards
 const StatCard = memo(({ label, value, isProfit = false }) => {
+  // Determine color class based on profit status
+  const colorClass = isProfit
+    ? value >= 0 ? 'text-green-500 dark:text-green-400' : 'text-red-500 dark:text-red-400'
+    : 'text-gray-900 dark:text-white';
+    
   return (
     <div className="stat-card">
       <div className="stat-label">
         {label}
       </div>
-      <div className={`stat-value ${isProfit && value >= 0 ? 'profit-value' : isProfit && value < 0 ? 'loss-value' : ''}`}>
+      <div className={`text-2xl font-medium ${colorClass}`}>
         {formatValue(value)}
       </div>
     </div>
@@ -155,12 +163,23 @@ const CardList = ({ cards, exchangeRate, onCardClick, onDeleteCards, onUpdateCar
     localStorage.setItem('cardListDisplayMetric', displayMetric);
   }, [displayMetric]);
 
+  // Reset selected cards when the cards prop changes
+  useEffect(() => {
+    setSelectedCards(new Set());
+  }, [cards]);
+
   // Load card images
   useEffect(() => {
     const loadCardImages = async () => {
+      // Clear previous object URLs to prevent memory leaks
+      Object.values(cardImages).forEach(url => {
+        URL.revokeObjectURL(url);
+      });
+      
       const images = {};
       for (const card of cards) {
         try {
+          // Add a timestamp parameter to force refresh when the card has an imageUpdatedAt flag
           const imageBlob = await db.getImage(card.slabSerial);
           if (imageBlob) {
             const imageUrl = URL.createObjectURL(imageBlob);
@@ -183,10 +202,45 @@ const CardList = ({ cards, exchangeRate, onCardClick, onDeleteCards, onUpdateCar
     };
   }, [cards]);
 
-  // Reset selected cards when the cards prop changes
-  useEffect(() => {
-    setSelectedCards(new Set());
-  }, [cards]);
+  // Function to refresh a single card's image
+  const refreshCardImage = async (cardId) => {
+    try {
+      // Revoke the old object URL if it exists
+      if (cardImages[cardId]) {
+        URL.revokeObjectURL(cardImages[cardId]);
+      }
+      
+      // Load the updated image
+      const imageBlob = await db.getImage(cardId);
+      if (imageBlob) {
+        const imageUrl = URL.createObjectURL(imageBlob);
+        setCardImages(prev => ({
+          ...prev,
+          [cardId]: imageUrl
+        }));
+      } else {
+        // Remove the image if it no longer exists
+        setCardImages(prev => {
+          const newImages = { ...prev };
+          delete newImages[cardId];
+          return newImages;
+        });
+      }
+    } catch (error) {
+      console.error('Error refreshing card image:', cardId, error);
+    }
+  };
+
+  // Wrap the onUpdateCard function to handle image refreshing
+  const handleCardUpdate = useCallback(async (updatedCard) => {
+    // If the card has an updated image, refresh it immediately
+    if (updatedCard.imageUpdatedAt) {
+      await refreshCardImage(updatedCard.slabSerial);
+    }
+    
+    // Call the original onUpdateCard function
+    onUpdateCard(updatedCard);
+  }, [onUpdateCard, refreshCardImage]);
 
   // Sort options
   const sortOptions = [
@@ -307,7 +361,7 @@ const CardList = ({ cards, exchangeRate, onCardClick, onDeleteCards, onUpdateCar
         investmentAUD: newValue,
         potentialProfit: card.currentValueAUD - newValue
       };
-      onUpdateCard(updatedCard); // Use the onUpdateCard prop instead of onCardClick
+      handleCardUpdate(updatedCard);
     }
     setEditingInvestment(null);
   };

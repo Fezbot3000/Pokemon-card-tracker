@@ -509,7 +509,10 @@ To import this backup:
         <CardList
           cards={collectionData}
           exchangeRate={exchangeRate}
-          onCardClick={selectCard}
+          onCardClick={(card) => {
+            // When a card is clicked from the list, provide the card to selectCard
+            selectCard(card);
+          }}
           onDeleteCards={deleteCard}
           onUpdateCard={handleCardUpdate}
           onAddCard={() => setShowNewCardForm(true)}
@@ -529,6 +532,7 @@ To import this backup:
           card={selectedCard}
           onClose={clearSelectedCard}
           onUpdate={handleCardUpdate}
+          onUpdateCard={handleCardUpdate}
           onDelete={deleteCard}
           exchangeRate={exchangeRate}
         />

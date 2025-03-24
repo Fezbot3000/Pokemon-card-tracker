@@ -9,7 +9,7 @@ const CardImage = memo(({ imageUrl, loadingState, onRetry }) => {
   
   if (loadingState === 'loading') {
     return (
-      <div className="animate-pulse bg-gray-200 dark:bg-gray-700 rounded-xl aspect-[2/3] flex items-center justify-center">
+      <div className="card-image-display animate-pulse bg-gray-200 dark:bg-gray-700 rounded-lg flex items-center justify-center">
         <span className="material-icons text-4xl text-gray-400">hourglass_empty</span>
       </div>
     );
@@ -17,7 +17,7 @@ const CardImage = memo(({ imageUrl, loadingState, onRetry }) => {
   
   if (loadingState === 'error') {
     return (
-      <div className="bg-gray-100 dark:bg-gray-800 rounded-xl aspect-[2/3] flex flex-col items-center justify-center p-4">
+      <div className="card-image-display bg-gray-100 dark:bg-gray-800 rounded-lg flex flex-col items-center justify-center p-4">
         <span className="material-icons text-4xl text-red-500 mb-2">error_outline</span>
         <p className="text-sm text-gray-500 dark:text-gray-400 text-center mb-2">Failed to load image</p>
         <button
@@ -32,23 +32,24 @@ const CardImage = memo(({ imageUrl, loadingState, onRetry }) => {
   
   if (!imageUrl) {
     return (
-      <div className="bg-gray-100 dark:bg-gray-800 rounded-xl aspect-[2/3] flex items-center justify-center">
+      <div className="card-image-display bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center">
         <span className="material-icons text-4xl text-gray-400">image</span>
       </div>
     );
   }
   
   return (
-    <img
-      src={imageUrl}
-      alt="Card"
-      className="w-full h-full object-contain rounded-xl"
-      onError={onRetry}
-    />
+    <div className="card-image-display rounded-lg overflow-hidden">
+      <img
+        src={imageUrl}
+        alt="Card"
+        className="w-full h-full object-contain"
+      />
+    </div>
   );
 });
 
-const CardDetails = ({ card, onClose, onUpdate, onDelete, exchangeRate }) => {
+const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchangeRate }) => {
   const [editedCard, setEditedCard] = useState({
     ...card,
     investmentUSD: typeof card.investmentUSD === 'number' ? card.investmentUSD : 0,
@@ -66,6 +67,9 @@ const CardDetails = ({ card, onClose, onUpdate, onDelete, exchangeRate }) => {
   const fileInputRef = useRef(null);
   const messageTimeoutRef = useRef(null);
   const { isDarkMode } = useTheme();
+
+  // Use onUpdateCard if available, otherwise fall back to onUpdate for backward compatibility
+  const updateCard = onUpdateCard || onUpdate;
 
   useEffect(() => {
     const handleEscapeKey = (event) => {
@@ -184,11 +188,48 @@ const CardDetails = ({ card, onClose, onUpdate, onDelete, exchangeRate }) => {
     const file = e.target.files[0];
     if (file) {
       try {
+        // Show loading state
+        setImageLoadingState('loading');
+        
+        // Save image to database
         await db.saveImage(card.slabSerial, file);
+        
+        // Create URL for local display
         const imageUrl = URL.createObjectURL(file);
         setCardImage(imageUrl);
+        setImageLoadingState('loaded');
+        
+        // Create a unique timestamp for this update
+        const timestamp = new Date().toISOString();
+        
+        // Notify parent component that image has been updated
+        // This will trigger a refresh of the card images in the main view
+        updateCard({
+          ...card,
+          hasImage: true,
+          imageUpdatedAt: timestamp
+        });
+        
+        // Show success message
+        setSaveMessage({
+          text: 'Image uploaded successfully',
+          type: 'success'
+        });
+        
+        // Clear message after 3 seconds
+        setTimeout(() => setSaveMessage(null), 3000);
       } catch (error) {
         console.error('Error saving image:', error);
+        setImageLoadingState('error');
+        
+        // Show error message
+        setSaveMessage({
+          text: 'Failed to upload image',
+          type: 'error'
+        });
+        
+        // Clear message after 3 seconds
+        setTimeout(() => setSaveMessage(null), 3000);
       }
     }
   };
@@ -208,30 +249,37 @@ const CardDetails = ({ card, onClose, onUpdate, onDelete, exchangeRate }) => {
   };
 
   const handleSave = async () => {
-    // Check if any changes were made
-    if (!hasCardBeenEdited()) {
-      setSaveMessage({
-        type: 'info',
-        text: 'No changes were made'
-      });
-      setTimeout(() => setSaveMessage(null), 3000);
-      return;
-    }
-
     try {
-      await onUpdate(editedCard);
-      setSaveMessage({
-        type: 'success',
-        text: 'Changes saved successfully'
-      });
+      // Save to the database
+      await db.saveCard(editedCard);
+      
+      // Update the parent component
+      updateCard(editedCard);
+      
+      // Exit edit mode
       setIsEditing(false);
-    } catch (error) {
+      setHasUnsavedChanges(false);
+      
+      // Show success message
       setSaveMessage({
-        type: 'error',
-        text: 'Failed to save changes'
+        text: 'Card updated successfully',
+        type: 'success'
       });
+      
+      // Clear message after 3 seconds
+      setTimeout(() => setSaveMessage(null), 3000);
+    } catch (error) {
+      console.error('Error saving card:', error);
+      
+      // Show error message
+      setSaveMessage({
+        text: 'Failed to update card',
+        type: 'error'
+      });
+      
+      // Clear message after 3 seconds
+      setTimeout(() => setSaveMessage(null), 3000);
     }
-    setTimeout(() => setSaveMessage(null), 3000);
   };
 
   const handleDelete = () => {
@@ -285,10 +333,10 @@ const CardDetails = ({ card, onClose, onUpdate, onDelete, exchangeRate }) => {
       )}
 
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute inset-y-0 right-0 pl-10 max-w-full flex">
-          <div className={`w-screen max-w-md transform transition-all ease-in-out duration-500 ${
+        <div className="absolute inset-y-0 right-0 max-w-full flex sm:pl-10">
+          <div className={`w-screen transform transition-all ease-in-out duration-500 ${
             isDarkMode ? 'bg-[#0B0F19]' : 'bg-white'
-          }`}>
+          } sm:max-w-md`}>
             <div className="h-full flex flex-col bg-white dark:bg-[#0B0F19] shadow-xl">
               {/* Header - Made sticky */}
               <div className="sticky top-0 z-10 px-4 sm:px-6 flex justify-between items-start py-4 bg-white dark:bg-[#0B0F19] border-b border-gray-200 dark:border-gray-700">
@@ -309,17 +357,15 @@ const CardDetails = ({ card, onClose, onUpdate, onDelete, exchangeRate }) => {
                   {/* Card Image and Details Grid */}
                   <div className="grid grid-cols-1 gap-8">
                     {/* Card Image Section */}
-                    <div className="space-y-6">
-                      <div className="mb-6">
-                        <CardImage
-                          imageUrl={cardImage}
-                          loadingState={imageLoadingState}
-                          onRetry={loadCardImage}
-                        />
-                      </div>
+                    <div className="flex flex-row items-center justify-between gap-4">
+                      <CardImage
+                        imageUrl={cardImage}
+                        loadingState={imageLoadingState}
+                        onRetry={loadCardImage}
+                      />
 
                       <div 
-                        className="relative aspect-[3/4] rounded-lg overflow-hidden bg-transparent border-2 border-dashed border-gray-700/50 hover:border-primary transition-colors cursor-pointer"
+                        className="image-upload-container"
                         onClick={() => fileInputRef.current?.click()}
                       >
                         <input
@@ -330,8 +376,8 @@ const CardDetails = ({ card, onClose, onUpdate, onDelete, exchangeRate }) => {
                           onChange={handleImageChange}
                         />
                         <div className="absolute inset-0 flex flex-col items-center justify-center">
-                          <span className="material-icons text-4xl text-gray-400 mb-2">add_photo_alternate</span>
-                          <p className="text-sm text-gray-500 dark:text-gray-400">Click to upload a new image</p>
+                          <span className="material-icons text-2xl text-gray-400 mb-1">add_photo_alternate</span>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">Upload image</p>
                         </div>
                       </div>
                     </div>
