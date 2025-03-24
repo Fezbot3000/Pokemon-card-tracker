@@ -492,18 +492,18 @@ const CardList = ({ cards, exchangeRate, onCardClick, onDeleteCards, onUpdateCar
           </div>
           
           <div className="controls-right">
-            {selectedCards.size > 0 ? (
-              <button
-                onClick={handleDeleteSelected}
-                className="delete-button"
-              >
-                <span className="material-icons mr-2">delete</span>
-                Delete ({selectedCards.size})
-              </button>
-            ) : null}
+            <button
+              onClick={handleDeleteSelected}
+              className="delete-button"
+              disabled={selectedCards.size === 0}
+              style={{ opacity: selectedCards.size === 0 ? 0.5 : 1 }}
+            >
+              <span className="material-icons mr-2">delete</span>
+              Delete {selectedCards.size > 0 ? `(${selectedCards.size})` : ''}
+            </button>
             <button
               onClick={onAddCard}
-              className="btn btn-primary w-[160px]"
+              className="btn btn-primary"
             >
               <span className="material-icons mr-2">add</span>
               Add Card

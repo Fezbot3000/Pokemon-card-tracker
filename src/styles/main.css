@@ -259,7 +259,7 @@
 
   /* Sort and View Controls */
   .controls-container {
-    @apply flex flex-col gap-2 w-full mt-1;
+    @apply flex flex-col sm:flex-row gap-2 w-full mt-1;
   }
 
   .sort-container, .view-container {
@@ -267,7 +267,7 @@
   }
 
   .controls-right {
-    @apply flex items-center gap-2 sm:ml-auto mt-2 sm:mt-0 justify-end;
+    @apply flex items-center gap-2 ml-auto justify-end;
   }
 
   .sort-button, .view-button {
@@ -580,14 +580,18 @@
 
   @screen sm {
     .controls-container {
-      @apply flex-row items-center;
+      @apply flex flex-row items-center gap-2;
     }
 
     .sort-container, .view-container {
-      @apply flex-1 basis-[calc(50%-80px)];
+      @apply flex-1 basis-[calc(50%-160px)];
     }
 
-    .delete-button {
+    .controls-right {
+      @apply flex items-center gap-2 ml-auto;
+    }
+
+    .delete-button, .btn-primary {
       @apply w-[160px];
     }
 
