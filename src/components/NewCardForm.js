@@ -300,8 +300,9 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5 }) => {
                       name="investmentAUD"
                       value={formData.investmentAUD}
                       onChange={handleNumberInputChange}
-                      className="input"
+                      className="input [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       placeholder="0"
+                      step="any"
                     />
                     <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                       USD: ${formatValue(formData.investmentUSD, 'currency', false)}

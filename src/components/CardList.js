@@ -873,9 +873,9 @@ const CardList = ({ cards, exchangeRate, onCardClick, onDeleteCards, onUpdateCar
                                 cards: newCards
                               }));
                             }}
-                            className={`input w-full ${!isSoldPriceValid ? 'border-red-500 dark:border-red-500' : ''}`}
+                            className={`input w-full [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${!isSoldPriceValid ? 'border-red-500 dark:border-red-500' : ''}`}
                             placeholder="0.00"
-                            step="0.01"
+                            step="any"
                           />
                           {!isSoldPriceValid && (
                             <div className="text-red-500 text-xs mt-1">Please enter a valid price</div>

@@ -720,23 +720,45 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
                           <div>
                             <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Investment (AUD)</label>
                             <input
-                              type="number"
+                              type="text"
                               name="investmentAUD"
-                              value={editedCard.investmentAUD.toFixed(2)}
-                              onChange={handleNumberInputChange}
-                              className="input"
-                              step="0.01"
+                              value={editedCard.investmentAUD}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                // Allow empty input or valid numbers
+                                if (value === '' || (!isNaN(value) && parseFloat(value) >= 0)) {
+                                  handleNumberInputChange({
+                                    target: {
+                                      name: 'investmentAUD',
+                                      value: value === '' ? 0 : parseFloat(value)
+                                    }
+                                  });
+                                }
+                              }}
+                              className="input [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                              placeholder="0.00"
                             />
                           </div>
                           <div>
                             <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Current Value (AUD)</label>
                             <input
-                              type="number"
+                              type="text"
                               name="currentValueAUD"
-                              value={editedCard.currentValueAUD.toFixed(2)}
-                              onChange={handleNumberInputChange}
-                              className="input"
-                              step="0.01"
+                              value={editedCard.currentValueAUD}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                // Allow empty input or valid numbers
+                                if (value === '' || (!isNaN(value) && parseFloat(value) >= 0)) {
+                                  handleNumberInputChange({
+                                    target: {
+                                      name: 'currentValueAUD',
+                                      value: value === '' ? 0 : parseFloat(value)
+                                    }
+                                  });
+                                }
+                              }}
+                              className="input [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                              placeholder="0.00"
                             />
                           </div>
                         </div>
