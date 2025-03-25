@@ -233,11 +233,15 @@ function AppContent({ user }) {
     showToast
   ]);
 
-  const handleCollectionChange = useCallback(async (collection) => {
+  const handleCollectionChange = useCallback((collection) => {
+    // Skip if already on this collection
+    if (collection === selectedCollection) return;
+    
+    // Update the selected collection immediately without loading state
     setSelectedCollection(collection);
     localStorage.setItem('selectedCollection', collection);
     clearSelectedCard();
-  }, [clearSelectedCard]);
+  }, [clearSelectedCard, selectedCollection]);
 
   const handleAddCollection = useCallback(async (newName) => {
     if (newName && !collections[newName]) {
@@ -294,7 +298,6 @@ function AppContent({ user }) {
   const loadCollections = useCallback(async () => {
     try {
       setIsLoading(true);
-      const startTime = Date.now();
       
       // Get collections from cardService
       const savedCollections = await cardService.getCollections(user.uid);
@@ -324,11 +327,8 @@ function AppContent({ user }) {
         await cardService.saveCollection(user.uid, 'Default Collection', []);
       }
       
-      const elapsedTime = Date.now() - startTime;
-      const minimumLoadingTime = 3000; // 3 seconds
-      if (elapsedTime < minimumLoadingTime) {
-        await new Promise(resolve => setTimeout(resolve, minimumLoadingTime - elapsedTime));
-      }
+      // Remove artificial delay but keep small delay for UI consistency
+      await new Promise(resolve => setTimeout(resolve, 300));
     } catch (error) {
       console.error('Error loading collections:', error);
     } finally {
