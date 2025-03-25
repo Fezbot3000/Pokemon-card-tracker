@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, memo } from 'react';
 import { formatCurrency, formatValue } from '../utils/formatters';
 import { db } from '../services/db';
 import { useTheme } from '../contexts/ThemeContext';
+import { showToast } from '../utils/toast';
 
 // Image loading states component
 const CardImage = memo(({ imageUrl, loadingState, onRetry }) => {
@@ -318,30 +319,13 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
       // Close the modal
       onClose();
       
-      // Show success toast
-      const toast = document.createElement('div');
-      toast.className = 'fixed top-4 right-4 z-[100] px-6 py-3 rounded-lg shadow-lg bg-green-500 text-white transition-opacity duration-300';
-      toast.textContent = 'Card deleted successfully';
-      document.body.appendChild(toast);
-
-      // Remove toast after 3 seconds
-      setTimeout(() => {
-        toast.style.opacity = '0';
-        setTimeout(() => document.body.removeChild(toast), 300);
-      }, 3000);
+      // Show success toast - positioned lower and to the right with high z-index
+      showToast('Card deleted successfully');
     } catch (error) {
       console.error('Error deleting card:', error);
       
-      // Show error toast
-      const toast = document.createElement('div');
-      toast.className = 'fixed top-4 right-4 z-[100] px-6 py-3 rounded-lg shadow-lg bg-red-500 text-white transition-opacity duration-300';
-      toast.textContent = 'Failed to delete card: ' + (error.message || 'Unknown error');
-      document.body.appendChild(toast);
-
-      setTimeout(() => {
-        toast.style.opacity = '0';
-        setTimeout(() => document.body.removeChild(toast), 300);
-      }, 3000);
+      // Show error toast - also positioned lower with high z-index
+      showToast('Failed to delete card: ' + (error.message || 'Unknown error'), 'error');
     } finally {
       setShowDeleteModal(false);
     }
@@ -425,7 +409,7 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 md:p-4">
       {/* Toast Message */}
       {saveMessage && (
-        <div className={`fixed top-4 right-4 z-[100] px-6 py-3 rounded-lg shadow-lg transition-opacity duration-300 ${
+        <div className={`fixed right-4 bottom-20 z-[9999] px-6 py-3 rounded-lg shadow-lg transition-all duration-300 ${
           saveMessage.type === 'success' ? 'bg-green-500 text-white' : 
           saveMessage.type === 'error' ? 'bg-red-500 text-white' :
           'bg-gray-700 text-white'

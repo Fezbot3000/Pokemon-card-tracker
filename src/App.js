@@ -22,6 +22,7 @@ import LoadingSkeleton from './components/LoadingSkeleton';
 import { formatCurrency } from './utils/formatters';
 import { getUsdToAudRate } from './utils/currencyAPI';
 import CollectionSelector from './components/CollectionSelector';
+import { showToast } from './utils/toast';
 
 function AppContent({ user }) {
   const [cards, setCards] = useState([]);
@@ -70,8 +71,13 @@ function AppContent({ user }) {
     return collections[selectedCollection] || [];
   }, [collections, selectedCollection]);
 
-  // Toast notification function
-  const showToast = useCallback((message, type = 'info') => {
+  // Replace the internal showToast function with the imported one
+  // but still handle setting the toast state for the centralized toast in the UI
+  const displayToast = useCallback((message, type = 'info') => {
+    // Use the imported showToast for consistent styling
+    showToast(message, type);
+    
+    // Also set the toast state for the centralized toast in the UI (optional)
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
   }, []);
@@ -214,10 +220,10 @@ function AppContent({ user }) {
       const message = importMode === 'baseData'
         ? `Successfully imported ${cardCount > 0 ? cardCount + ' new cards' : 'base data'}`
         : 'Successfully updated card prices';
-      showToast(message, 'success');
+      displayToast(message, 'success');
     } catch (error) {
       console.error('Import error:', error);
-      showToast(error.message || 'Failed to import data', 'error');
+      displayToast(error.message || 'Failed to import data', 'error');
     } finally {
       setLoading(false);
     }
@@ -230,7 +236,7 @@ function AppContent({ user }) {
     calculateTotalProfit,
     user,
     cardService,
-    showToast
+    displayToast
   ]);
 
   const handleCollectionChange = useCallback((collection) => {
@@ -371,7 +377,7 @@ function AppContent({ user }) {
               // Show a toast if we synced images
               if (result.synced > 0) {
                 const toast = document.createElement('div');
-                toast.className = 'fixed top-4 right-4 z-[100] px-6 py-3 rounded-lg shadow-lg bg-green-500 text-white transition-opacity duration-300';
+                toast.className = 'fixed right-4 bottom-20 z-[9999] px-6 py-3 rounded-lg shadow-lg bg-green-500 text-white transition-all duration-300 toast-notification';
                 toast.textContent = `Image sync complete: ${result.synced} images loaded`;
                 document.body.appendChild(toast);
                 
@@ -587,7 +593,7 @@ To import this backup:
       // Create a persistent toast for status updates
       const createStatusToast = (initialMessage, type = 'info') => {
         const toast = document.createElement('div');
-        toast.className = `fixed top-4 right-4 z-[100] px-6 py-3 rounded-lg shadow-lg transition-opacity duration-300 ${
+        toast.className = `fixed right-4 bottom-4 z-[100] px-6 py-3 rounded-lg shadow-lg transition-opacity duration-300 ${
           type === 'success' ? 'bg-green-500' :
           type === 'error' ? 'bg-red-500' :
           type === 'warning' ? 'bg-yellow-500' :
@@ -607,7 +613,7 @@ To import this backup:
 
       // Update toast content
       const updateToast = (toast, message, details = '', type = 'info') => {
-        toast.className = `fixed top-4 right-4 z-[100] px-6 py-3 rounded-lg shadow-lg transition-opacity duration-300 ${
+        toast.className = `fixed right-4 bottom-4 z-[100] px-6 py-3 rounded-lg shadow-lg transition-opacity duration-300 ${
           type === 'success' ? 'bg-green-500' :
           type === 'error' ? 'bg-red-500' :
           type === 'warning' ? 'bg-yellow-500' :
@@ -1041,24 +1047,21 @@ To import this backup:
     try {
       // Validate required fields
       if (!bulkSoldDetails.buyer) {
-        showToast('Please enter buyer name', 'error');
+        displayToast('Please enter buyer name', 'error');
         return;
       }
 
       // Validate each card has a valid sold price
       const allCardsValid = bulkSoldDetails.cards.length === selectedCardsForSale.length && 
-                            bulkSoldDetails.cards.every(c => parseFloat(c.soldPrice) > 0);
+                          bulkSoldDetails.cards.every(c => parseFloat(c.soldPrice) > 0);
       
       if (!allCardsValid) {
-        showToast('Please enter a valid price for all cards', 'error');
+        displayToast('Please enter a valid price for all cards', 'error');
         return;
       }
 
-      // Show loading indicator or toast
-      const loadingToast = document.createElement('div');
-      loadingToast.className = 'fixed top-4 right-4 z-[100] px-6 py-3 rounded-lg shadow-lg bg-blue-500 text-white transition-opacity duration-300';
-      loadingToast.textContent = `Processing sales...`;
-      document.body.appendChild(loadingToast);
+      // Show loading indicator or toast with a longer duration
+      const loadingToastElement = showToast('Processing sales...', 'info', 30000);
       
       // Process each card sale one by one
       const successfulSales = [];
@@ -1145,7 +1148,7 @@ To import this backup:
       }
 
       // Remove loading indicator
-      document.body.removeChild(loadingToast);
+      document.body.removeChild(loadingToastElement);
       
       // Close modal and reset state
       setShowBulkSoldModal(false);
@@ -1160,11 +1163,11 @@ To import this backup:
 
       // Show appropriate status message
       if (successfulSales.length === bulkSoldDetails.cards.length) {
-        showToast(`Successfully sold ${successfulSales.length} card(s)`, 'success');
+        displayToast(`Successfully sold ${successfulSales.length} card(s)`, 'success');
       } else if (successfulSales.length > 0) {
-        showToast(`Partially successful: ${successfulSales.length} of ${bulkSoldDetails.cards.length} cards sold`, 'warning');
+        displayToast(`Partially successful: ${successfulSales.length} of ${bulkSoldDetails.cards.length} cards sold`, 'warning');
       } else {
-        showToast('No cards were sold successfully', 'error');
+        displayToast('No cards were sold successfully', 'error');
       }
       
       // Switch to sold view if any sales were successful
@@ -1173,7 +1176,7 @@ To import this backup:
       }
     } catch (error) {
       console.error('Error processing sales:', error);
-      showToast('Failed to process sales: ' + (error.message || 'Unknown error'), 'error');
+      displayToast('Failed to process sales: ' + (error.message || 'Unknown error'), 'error');
     }
   };
 
@@ -1201,16 +1204,7 @@ To import this backup:
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#0B0F19]">
-      {/* Toast notification */}
-      {toast && (
-        <div className={`fixed top-4 right-4 z-[100] px-6 py-3 rounded-lg shadow-lg transition-opacity duration-300 ${
-          toast.type === 'success' ? 'bg-green-500 text-white' : 
-          toast.type === 'error' ? 'bg-red-500 text-white' :
-          'bg-gray-700 text-white'
-        }`}>
-          {toast.message}
-        </div>
-      )}
+      {/* Toast notification is now handled by the toast utility */}
 
       <header className="app-header">
         <Header

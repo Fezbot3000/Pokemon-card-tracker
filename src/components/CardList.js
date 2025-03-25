@@ -3,6 +3,7 @@ import { db } from '../services/db';
 import { formatValue, formatCurrency } from '../utils/formatters';
 import { useTheme } from '../contexts/ThemeContext';
 import { cardService } from '../services/cardService';
+import { showToast } from '../utils/toast';
 
 // Extracted Card component for better performance
 const Card = memo(({ card, onCardClick, onCheckboxClick, isSelected }) => {
@@ -359,10 +360,24 @@ const CardList = ({
     setShowDeleteConfirmation(true);
   };
 
-  const confirmDelete = () => {
-    onDeleteCards(Array.from(selectedCards));
-    setSelectedCards(new Set());
-    setShowDeleteConfirmation(false);
+  const confirmDelete = async () => {
+    try {
+      // Get the number of cards being deleted for the message
+      const numCards = selectedCards.size;
+      
+      // Delete the selected cards
+      await onDeleteCards(Array.from(selectedCards));
+      
+      // Clear the selected cards set and close the confirmation dialog
+      setSelectedCards(new Set());
+      setShowDeleteConfirmation(false);
+      
+      // Show success toast
+      showToast(`Successfully deleted ${numCards} card${numCards !== 1 ? 's' : ''}.`, 'success');
+    } catch (error) {
+      console.error("Error deleting cards:", error);
+      showToast(`Failed to delete cards: ${error.message || 'Unknown error'}`, 'error');
+    }
   };
 
   const handleInvestmentEdit = (e, card) => {
@@ -544,23 +559,13 @@ const CardList = ({
       });
 
       // Show appropriate toast message
-      const toast = document.createElement('div');
       if (successfulSales.length === soldCards.length) {
-        toast.className = 'fixed top-4 right-4 z-[100] px-6 py-3 rounded-lg shadow-lg bg-green-500 text-white transition-opacity duration-300';
-        toast.textContent = `${soldCards.length} cards marked as sold successfully!`;
+        showToast(`${soldCards.length} cards marked as sold successfully!`, 'success');
       } else if (successfulSales.length > 0) {
-        toast.className = 'fixed top-4 right-4 z-[100] px-6 py-3 rounded-lg shadow-lg bg-yellow-500 text-white transition-opacity duration-300';
-        toast.textContent = `${successfulSales.length} of ${soldCards.length} cards marked as sold successfully. Some cards encountered errors.`;
+        showToast(`${successfulSales.length} of ${soldCards.length} cards marked as sold successfully. Some cards encountered errors.`, 'warning');
       } else {
-        toast.className = 'fixed top-4 right-4 z-[100] px-6 py-3 rounded-lg shadow-lg bg-red-500 text-white transition-opacity duration-300';
-        toast.textContent = `Failed to mark any cards as sold.`;
+        showToast(`Failed to mark any cards as sold.`, 'error');
       }
-      
-      document.body.appendChild(toast);
-      setTimeout(() => {
-        toast.style.opacity = '0';
-        setTimeout(() => document.body.removeChild(toast), 300);
-      }, 3000);
 
       // If there were any errors, log them to console
       if (errors.length > 0) {
@@ -575,15 +580,7 @@ const CardList = ({
       console.error('Error marking cards as sold:', error);
       
       // Show error toast
-      const toast = document.createElement('div');
-      toast.className = 'fixed top-4 right-4 z-[100] px-6 py-3 rounded-lg shadow-lg bg-red-500 text-white transition-opacity duration-300';
-      toast.textContent = `Error: ${error.message || 'Failed to mark cards as sold'}`;
-      document.body.appendChild(toast);
-      
-      setTimeout(() => {
-        toast.style.opacity = '0';
-        setTimeout(() => document.body.removeChild(toast), 300);
-      }, 3000);
+      showToast(`Error: ${error.message || 'Failed to mark cards as sold'}`, 'error');
     } finally {
       setIsSubmitting(false);
     }

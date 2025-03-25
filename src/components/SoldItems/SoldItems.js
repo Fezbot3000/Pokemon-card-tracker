@@ -3,6 +3,7 @@ import { useTheme } from '../../contexts/ThemeContext';
 import { db } from '../../services/db';
 import { formatCurrency } from '../../utils/formatters';
 import jsPDF from 'jspdf';
+import { showToast } from '../../utils/toast';
 
 const SoldItems = () => {
   const { isDarkMode } = useTheme();
@@ -127,20 +128,6 @@ const SoldItems = () => {
 
     loadSoldCards();
   }, []);
-
-  const showToast = (message, type = 'success') => {
-    const toast = document.createElement('div');
-    toast.className = `fixed top-4 right-4 z-[100] px-6 py-3 rounded-lg shadow-lg transition-opacity duration-300 ${
-      type === 'success' ? 'bg-green-500' : 'bg-red-500'
-    } text-white`;
-    toast.textContent = message;
-    document.body.appendChild(toast);
-
-    setTimeout(() => {
-      toast.style.opacity = '0';
-      setTimeout(() => document.body.removeChild(toast), 300);
-    }, 3000);
-  };
 
   const handleDeleteClick = (transaction) => {
     setCardToDelete(transaction);
@@ -290,7 +277,7 @@ const SoldItems = () => {
     const fileName = `invoice-${transaction.buyer}-${new Date(transaction.dateSold).toISOString().split('T')[0]}.pdf`;
     doc.save(fileName);
     
-    showToast('Invoice downloaded successfully');
+    showToast('Invoice downloaded successfully', 'success');
   };
 
   if (isLoading) {
