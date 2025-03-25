@@ -412,8 +412,10 @@ To import this backup:
     <div className="app-header">
       <div className="header-content">
         <div className="header-left">
-          <img src="/icon-192x192.png" alt="Logo" className="w-8 h-8 rounded-lg mr-3" />
-          <h1 className="text-2xl font-bold text-white">Pokemon Card Tracker</h1>
+          <div className="flex items-center">
+            <img src="/favicon-192x192.png" alt="Logo" className="w-8 h-8 rounded-lg mr-3" />
+            <h1 className="text-xl font-semibold text-gray-900 dark:text-white">Pokemon Card Tracker</h1>
+          </div>
         </div>
 
         <div className="header-center">
