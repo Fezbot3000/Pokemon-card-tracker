@@ -82,7 +82,15 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-50">
       <div className="w-full max-w-2xl mx-4 p-6 rounded-xl shadow-lg bg-[#0B0F19]">
-        <h2 className="text-xl font-semibold mb-4 text-white">{mode === 'baseData' ? 'Import Base Data' : 'Update Card Prices'}</h2>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold text-white">{mode === 'baseData' ? 'Import Base Data' : 'Update Card Prices'}</h2>
+          <button 
+            onClick={onClose}
+            className="text-gray-400 hover:text-white transition-colors"
+          >
+            <span className="material-icons">close</span>
+          </button>
+        </div>
         
         <div 
           className={`border-2 border-dashed ${dragActive ? 'border-primary bg-primary/5' : 'border-blue-500/50'} rounded-lg p-8 flex flex-col items-center justify-center cursor-pointer hover:border-primary hover:bg-primary/5 transition-colors`}
@@ -113,10 +121,10 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading 
         {/* Show loading indicator only when actually loading */}
         {loading && (
           <div className="mt-4 flex justify-center">
-            <button className="btn btn-secondary flex items-center gap-2">
+            <div className="flex items-center gap-2 px-4 py-2 bg-[#252a3a] rounded-md">
               <span className="animate-spin rounded-full h-4 w-4 border-2 border-primary border-t-transparent"></span>
-              Processing...
-            </button>
+              <span className="text-white">Processing...</span>
+            </div>
           </div>
         )}
         
@@ -167,7 +175,7 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading 
 
         <div className="flex justify-end mt-6">
           <button
-            className="btn btn-secondary mr-3"
+            className="btn btn-secondary"
             onClick={onClose}
           >
             Cancel

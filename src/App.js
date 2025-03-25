@@ -20,6 +20,7 @@ import AuthPage from './components/auth/AuthPage';
 import { cardService } from './services/cardService';
 import LoadingSkeleton from './components/LoadingSkeleton';
 import { formatCurrency } from './utils/formatters';
+import { getUsdToAudRate } from './utils/currencyAPI';
 import CollectionSelector from './components/CollectionSelector';
 
 function AppContent({ user }) {
@@ -35,7 +36,7 @@ function AppContent({ user }) {
   const [showProfitChangeModal, setShowProfitChangeModal] = useState(false);
   const [profitChangeData, setProfitChangeData] = useState({ oldProfit: 0, newProfit: 0 });
   const [currentView, setCurrentView] = useState('collection'); // 'collection' or 'sold'
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [exchangeRate, setExchangeRate] = useState(1);
   const [toast, setToast] = useState(null);
@@ -170,7 +171,7 @@ function AppContent({ user }) {
 
   const handleImportData = useCallback(async (file) => {
     try {
-      // Show loading state
+      // Show loading state immediately when starting to process a file
       setLoading(true);
 
       // Calculate current total profit before update
@@ -285,6 +286,7 @@ function AppContent({ user }) {
 
   const handleImportClick = (mode) => {
     setImportMode(mode === 'baseData' ? 'baseData' : 'priceUpdate');
+    setLoading(false);
     setImportModalOpen(true);
   };
 
@@ -1267,7 +1269,10 @@ To import this backup:
       {importModalOpen && (
         <ImportModal
           isOpen={importModalOpen}
-          onClose={() => setImportModalOpen(false)}
+          onClose={() => {
+            setImportModalOpen(false);
+            setLoading(false);
+          }}
           onImport={handleImportData}
           mode={importMode}
           loading={loading}
