@@ -134,7 +134,17 @@ const StatCard = memo(({ label, value, isProfit = false }) => {
   );
 });
 
-const CardList = ({ cards, exchangeRate, onCardClick, onDeleteCards, onUpdateCard, onAddCard, onViewChange, user }) => {
+const CardList = ({ 
+  cards, 
+  exchangeRate, 
+  onCardClick, 
+  onDeleteCards, 
+  onUpdateCard, 
+  onAddCard, 
+  onViewChange, 
+  user,
+  collectionSelector
+}) => {
   const [filter, setFilter] = useState('');
   const [sortField, setSortField] = useState(
     localStorage.getItem('cardListSortField') || 'currentValueAUD'
@@ -628,9 +638,13 @@ const CardList = ({ cards, exchangeRate, onCardClick, onDeleteCards, onUpdateCar
   return (
     <div className="space-y-4">
       {/* Total Cards Counter */}
-      <div className="flex items-center gap-2 px-4 py-2">
-        <span className="material-icons text-gray-600 dark:text-gray-400">view_module</span>
-        <span className="text-gray-700 dark:text-gray-200 font-medium">Total Cards: {filteredCards.length}</span>
+      <div className="flex items-center justify-between px-4 py-2">
+        <div className="flex items-center gap-2">
+          <span className="material-icons text-gray-600 dark:text-gray-400">view_module</span>
+          <span className="text-gray-700 dark:text-gray-200 font-medium">Total Cards: {filteredCards.length}</span>
+        </div>
+        {/* Collection selector will be injected here from App.js */}
+        {collectionSelector}
       </div>
       
       {/* Financial Summary */}

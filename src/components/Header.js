@@ -417,14 +417,7 @@ To import this backup:
         </div>
 
         <div className="header-center">
-          {selectedCollection && (
-            <CollectionSelector
-              collections={collections}
-              selectedCollection={selectedCollection}
-              onCollectionChange={onCollectionChange}
-              onAddCollection={handleAddNewCollection}
-            />
-          )}
+          {/* Removed collection selector from here */}
         </div>
 
         <div className="header-right">

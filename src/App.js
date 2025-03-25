@@ -20,6 +20,7 @@ import AuthPage from './components/auth/AuthPage';
 import { cardService } from './services/cardService';
 import LoadingSkeleton from './components/LoadingSkeleton';
 import { formatCurrency } from './utils/formatters';
+import CollectionSelector from './components/CollectionSelector';
 
 function AppContent({ user }) {
   const [cards, setCards] = useState([]);
@@ -1180,6 +1181,18 @@ To import this backup:
     console.log("Mobile menu toggled");
   }, []);
 
+  // Add this right before the return statement
+  const collectionSelectorComponent = useMemo(() => {
+    return (
+      <CollectionSelector
+        collections={Object.keys(collections)}
+        selectedCollection={selectedCollection}
+        onCollectionChange={handleCollectionChange}
+        onAddCollection={handleAddCollection}
+      />
+    );
+  }, [collections, selectedCollection, handleCollectionChange, handleAddCollection]);
+
   if (isLoading) {
     return <LoadingSkeleton />;
   }
@@ -1199,7 +1212,7 @@ To import this backup:
 
       <header className="app-header">
         <Header
-          selectedCollection={selectedCollection}
+          selectedCollection={null}
           collections={Object.keys(collections)}
           onCollectionChange={handleCollectionChange}
           onImportClick={handleImportClick}
@@ -1223,6 +1236,7 @@ To import this backup:
             onAddCard={() => setShowNewCardForm(true)}
             onViewChange={handleViewChange}
             user={user}
+            collectionSelector={collectionSelectorComponent}
           />
         ) : (
           <SoldItems />

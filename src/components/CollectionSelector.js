@@ -21,7 +21,7 @@ const CollectionSelector = ({ collections, selectedCollection, onCollectionChang
   return (
     <div className="relative" ref={dropdownRef}>
       <button
-        className="flex items-center space-x-2 px-4 py-2 text-white bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors"
+        className="flex items-center space-x-2 px-4 py-2 bg-[#1B2131] border border-gray-700/50 text-white rounded-lg hover:bg-[#252B3B] transition-colors"
         onClick={() => setIsOpen(!isOpen)}
       >
         <span>{selectedCollection}</span>
@@ -31,13 +31,13 @@ const CollectionSelector = ({ collections, selectedCollection, onCollectionChang
       </button>
       
       {isOpen && (
-        <div className="absolute z-50 mt-2 w-56 bg-white dark:bg-gray-700 rounded-lg shadow-lg py-1 right-0">
+        <div className="absolute z-50 mt-2 w-56 bg-[#1B2131] rounded-lg shadow-lg py-1 right-0 border border-gray-700/50">
           {/* All Cards option */}
           <button
             className={`w-full text-left px-4 py-2 flex items-center justify-between
                        ${selectedCollection === 'All Cards' 
-                         ? 'text-primary bg-gray-100 dark:bg-gray-600' 
-                         : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600'}`}
+                         ? 'text-primary bg-[#252B3B]' 
+                         : 'text-gray-200 hover:bg-[#252B3B]'}`}
             onClick={() => {
               onCollectionChange('All Cards');
               setIsOpen(false);
@@ -49,7 +49,7 @@ const CollectionSelector = ({ collections, selectedCollection, onCollectionChang
             )}
           </button>
           
-          <div className="border-t border-gray-200 dark:border-gray-600 my-1"></div>
+          <div className="border-t border-gray-700/50 my-1"></div>
           
           {/* Collections list */}
           {collections
@@ -59,8 +59,8 @@ const CollectionSelector = ({ collections, selectedCollection, onCollectionChang
                 key={collection}
                 className={`w-full text-left px-4 py-2 flex items-center justify-between
                            ${selectedCollection === collection 
-                             ? 'text-primary bg-gray-100 dark:bg-gray-600' 
-                             : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600'}`}
+                             ? 'text-primary bg-[#252B3B]' 
+                             : 'text-gray-200 hover:bg-[#252B3B]'}`}
                 onClick={() => {
                   onCollectionChange(collection);
                   setIsOpen(false);
@@ -73,11 +73,11 @@ const CollectionSelector = ({ collections, selectedCollection, onCollectionChang
               </button>
             ))}
             
-          <div className="border-t border-gray-200 dark:border-gray-600 my-1"></div>
+          <div className="border-t border-gray-700/50 my-1"></div>
           
           {/* Add Collection option */}
           <button
-            className="w-full text-left px-4 py-2 flex items-center justify-between text-primary hover:bg-gray-100 dark:hover:bg-gray-600"
+            className="w-full text-left px-4 py-2 flex items-center justify-between text-primary hover:bg-[#252B3B]"
             onClick={(e) => {
               e.stopPropagation();
               onAddCollection();
