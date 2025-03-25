@@ -421,26 +421,23 @@ To import this backup:
         </div>
 
         <div className="header-right">
-          {selectedCollection && (
-            <>
-              <button
-                onClick={() => onImportClick('baseData')}
-                className="btn btn-secondary flex items-center gap-2"
-                title="Import Base Data"
-              >
-                <span className="material-icons">upload_file</span>
-                <span className="hidden xl:inline">Import Base Data</span>
-              </button>
-              <button
-                onClick={() => onImportClick('priceUpdate')}
-                className="btn btn-secondary flex items-center gap-2"
-                title="Update Prices"
-              >
-                <span className="material-icons">update</span>
-                <span className="hidden xl:inline">Update Prices</span>
-              </button>
-            </>
-          )}
+          <button
+            onClick={() => onImportClick('baseData')}
+            className="btn btn-secondary flex items-center gap-2"
+            title="Import Base Data"
+          >
+            <span className="material-icons">upload_file</span>
+            <span className="hidden xl:inline">Import Base Data</span>
+          </button>
+          
+          <button
+            onClick={() => onImportClick('priceUpdate')}
+            className="btn btn-secondary flex items-center gap-2"
+            title="Update Prices"
+          >
+            <span className="material-icons">update</span>
+            <span className="hidden xl:inline">Update Prices</span>
+          </button>
 
           <button
             onClick={() => onViewChange(currentView === 'collection' ? 'sold' : 'collection')}

@@ -1212,7 +1212,7 @@ To import this backup:
 
       <header className="app-header">
         <Header
-          selectedCollection={null}
+          selectedCollection={selectedCollection}
           collections={Object.keys(collections)}
           onCollectionChange={handleCollectionChange}
           onImportClick={handleImportClick}
