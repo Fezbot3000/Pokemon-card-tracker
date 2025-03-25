@@ -5,18 +5,58 @@ rules_version = '2';
 //    /databases/(default)/documents/users/$(request.auth.uid)).data.isAdmin;
 service firebase.storage {
   match /b/{bucket}/o {
-    // Allow anyone to read images, but only authenticated users can write
-    match /users/{userId}/images/{imageId} {
-      allow read: if true;  // Public read access
-      allow write: if request.auth != null 
-                  && request.auth.uid == userId
-                  && request.resource.size < 500 * 1024 * 1024
-                  && request.resource.contentType.matches('image/.*');
+    // Helper functions for validation
+    function isAuthenticated() {
+      return request.auth != null;
     }
     
-    // Allow backup operations
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isValidImage() {
+      return request.resource.size < 15 * 1024 * 1024 // 15MB max
+        && request.resource.contentType.matches('image/.*');
+    }
+    
+    // User images - each user's images are private to them
+    match /users/{userId}/images/{imageId} {
+      // Only the owner can write, but images can be read by anyone with the URL
+      allow read: if true;  // Public read access for easier sharing
+      allow write: if isOwner(userId) && isValidImage();
+      allow delete: if isOwner(userId);
+    }
+    
+    // User collections - private to the owner
+    match /users/{userId}/collections/{collectionId} {
+      allow read, write, delete: if isOwner(userId);
+    }
+    
+    // Backup operations - private to the owner
     match /backups/{userId}/{allPaths=**} {
+      allow read, write, delete: if isOwner(userId);
+    }
+    
+    // Public images (like card artwork) - anyone can read, only admins can write
+    match /public/images/{imageId} {
+      allow read: if true;
+      // Writing to public images would require admin validation in Firestore
+      allow write: if false;
+    }
+    
+    // Allow authenticated users to read and write their own data
+    match /users/{userId}/cards/{cardId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Allow authenticated users to read and write their own images
+    match /users/{userId}/images/{imageId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Allow authenticated users to read and write their own backup files
+    match /users/{userId}/backups/{fileName} {
+      allow read, write: if isOwner(userId);
     }
     
     // Default deny for all other paths

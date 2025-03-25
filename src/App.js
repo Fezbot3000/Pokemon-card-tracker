@@ -23,16 +23,23 @@ import { formatCurrency } from './utils/formatters';
 import { getUsdToAudRate } from './utils/currencyAPI';
 import CollectionSelector from './components/CollectionSelector';
 import { showToast } from './utils/toast';
+import { dataService } from './services/dataService';
+import { databaseService } from './services/databaseService';
 
-function AppContent({ user }) {
+function AppContent({ user, collections, setCollections, isLoading, setIsLoading }) {
   const [cards, setCards] = useState([]);
   const [selectedCard, setSelectedCard] = useState(null);
   const [showNewCardForm, setShowNewCardForm] = useState(false);
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [importMode, setImportMode] = useState('priceUpdate');
-  const [selectedCollection, setSelectedCollection] = useState('Default Collection');
-  const [collections, setCollections] = useState({ 'Default Collection': [] });
-  const [isLoading, setIsLoading] = useState(true);
+  const [selectedCollection, setSelectedCollection] = useState(() => {
+    // Get selected collection from localStorage or use first collection or default
+    const savedCollection = localStorage.getItem('selectedCollection');
+    if (savedCollection && (savedCollection === 'All Cards' || collections[savedCollection])) {
+      return savedCollection;
+    }
+    return Object.keys(collections).length > 0 ? Object.keys(collections)[0] : 'Default Collection';
+  });
   const [showSettings, setShowSettings] = useState(false);
   const [showProfitChangeModal, setShowProfitChangeModal] = useState(false);
   const [profitChangeData, setProfitChangeData] = useState({ oldProfit: 0, newProfit: 0 });
@@ -135,7 +142,7 @@ function AppContent({ user }) {
           };
           
           // Save to database
-          await cardService.saveCollection(user.uid, cardCollection, updatedCollections[cardCollection]);
+          await dataService.saveCollection(cardCollection, updatedCollections[cardCollection]);
           
           // Update state
           setCollections(updatedCollections);
@@ -153,7 +160,7 @@ function AppContent({ user }) {
         };
         
         // Save to database
-        await cardService.saveCollection(user.uid, selectedCollection, updatedCollections[selectedCollection]);
+        await dataService.saveCollection(selectedCollection, updatedCollections[selectedCollection]);
         
         // Update state
         setCollections(updatedCollections);
@@ -197,7 +204,7 @@ function AppContent({ user }) {
       }
 
       // Save to database first to ensure persistence
-      await cardService.saveCollection(user.uid, selectedCollection, processedData);
+      await dataService.saveCollection(selectedCollection, processedData);
 
       // Update local state only after successful save
       setCollections(prev => ({
@@ -234,8 +241,6 @@ function AppContent({ user }) {
     collections,
     exchangeRate,
     calculateTotalProfit,
-    user,
-    cardService,
     displayToast
   ]);
 
@@ -252,7 +257,7 @@ function AppContent({ user }) {
   const handleAddCollection = useCallback(async (newName) => {
     if (newName && !collections[newName]) {
       try {
-        await cardService.saveCollection(user.uid, newName, []);
+        await dataService.saveCollection(newName, []);
         const newCollections = {
           ...collections,
           [newName]: []
@@ -268,7 +273,7 @@ function AppContent({ user }) {
   const handleRenameCollection = useCallback(async (oldName, newName) => {
     if (newName && !collections[newName]) {
       try {
-        await cardService.renameCollection(user.uid, oldName, newName);
+        await dataService.renameCollection(oldName, newName);
         const newCollections = { ...collections };
         newCollections[newName] = newCollections[oldName];
         delete newCollections[oldName];
@@ -283,7 +288,7 @@ function AppContent({ user }) {
   const handleDeleteCollection = useCallback(async (name) => {
     if (collections[name] && Object.keys(collections).length > 1) {
       try {
-        await cardService.deleteCollection(user.uid, name);
+        await dataService.deleteCollection(name);
         const newCollections = { ...collections };
         delete newCollections[name];
         setCollections(newCollections);
@@ -302,11 +307,13 @@ function AppContent({ user }) {
 
   // Load collections function
   const loadCollections = useCallback(async () => {
+    if (!user) return;
+
     try {
       setIsLoading(true);
       
-      // Get collections from cardService
-      const savedCollections = await cardService.getCollections(user.uid);
+      // Get collections directly from dataService
+      const savedCollections = await dataService.getCollections();
       
       // Get saved collection from localStorage
       const savedSelectedCollection = localStorage.getItem('selectedCollection');
@@ -330,7 +337,7 @@ function AppContent({ user }) {
         const defaultCollections = { 'Default Collection': [] };
         setCollections(defaultCollections);
         setSelectedCollection('Default Collection');
-        await cardService.saveCollection(user.uid, 'Default Collection', []);
+        await dataService.saveCollection('Default Collection', []);
       }
       
       // Remove artificial delay but keep small delay for UI consistency
@@ -340,7 +347,7 @@ function AppContent({ user }) {
     } finally {
       setIsLoading(false);
     }
-  }, [user, selectedCollection]);
+  }, [user, selectedCollection, setIsLoading, setCollections, setSelectedCollection]);
 
   // Load collections on mount
   useEffect(() => {
@@ -369,7 +376,7 @@ function AppContent({ user }) {
           console.log('Starting automatic image sync...');
           
           // Don't await this - let it run in the background
-          db.syncImagesFromStorage(user.uid)
+          dataService.db.syncImagesFromStorage(user.uid)
             .then(result => {
               console.log(`Automatic image sync complete: ${result.synced} of ${result.total} images synchronized`);
               localStorage.setItem('lastImageSync', currentTime.toString());
@@ -572,11 +579,49 @@ To import this backup:
         </div>
         <input type="file" accept=".zip,.json" class="hidden" id="backup-file-input">
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-4">
-          Supported formats: .zip (recommended)
+          Supported formats: .zip (recommended), .json
         </p>
       </div>
     `;
     document.body.appendChild(modalEl);
+
+    // Create toast functions
+    const createStatusToast = (message, type = 'info') => {
+      const toast = document.createElement('div');
+      toast.className = `fixed right-4 bottom-4 z-[100] px-6 py-3 rounded-lg shadow-lg transition-opacity duration-300 ${
+        type === 'success' ? 'bg-green-500' :
+        type === 'error' ? 'bg-red-500' :
+        type === 'warning' ? 'bg-yellow-500' :
+        'bg-blue-500'
+      } text-white`;
+      toast.innerHTML = `
+        <div class="flex items-start">
+          <div class="flex-grow">
+            <div class="font-semibold status-message">${message}</div>
+            <div class="text-sm mt-1 progress-details"></div>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(toast);
+      return toast;
+    };
+
+    const updateToast = (toast, message, details = '', type = 'info') => {
+      if (!toast) return;
+      
+      toast.className = `fixed right-4 bottom-4 z-[100] px-6 py-3 rounded-lg shadow-lg transition-opacity duration-300 ${
+        type === 'success' ? 'bg-green-500' :
+        type === 'error' ? 'bg-red-500' :
+        type === 'warning' ? 'bg-yellow-500' :
+        'bg-blue-500'
+      } text-white`;
+      
+      const messageEl = toast.querySelector('.status-message');
+      const detailsEl = toast.querySelector('.progress-details');
+      
+      if (messageEl) messageEl.textContent = message;
+      if (detailsEl) detailsEl.textContent = details;
+    };
 
     // Get references to elements
     const fileInput = modalEl.querySelector('#backup-file-input');
@@ -591,255 +636,230 @@ To import this backup:
       document.body.removeChild(modalEl);
       
       // Create a persistent toast for status updates
-      const createStatusToast = (initialMessage, type = 'info') => {
-        const toast = document.createElement('div');
-        toast.className = `fixed right-4 bottom-4 z-[100] px-6 py-3 rounded-lg shadow-lg transition-opacity duration-300 ${
-          type === 'success' ? 'bg-green-500' :
-          type === 'error' ? 'bg-red-500' :
-          type === 'warning' ? 'bg-yellow-500' :
-          'bg-blue-500'
-        } text-white`;
-        toast.innerHTML = `
-          <div class="flex items-start">
-            <div class="flex-grow">
-              <div class="font-semibold status-message">${initialMessage}</div>
-              <div class="text-sm mt-1 progress-details"></div>
-            </div>
-          </div>
-        `;
-        document.body.appendChild(toast);
-        return toast;
-      };
-
-      // Update toast content
-      const updateToast = (toast, message, details = '', type = 'info') => {
-        toast.className = `fixed right-4 bottom-4 z-[100] px-6 py-3 rounded-lg shadow-lg transition-opacity duration-300 ${
-          type === 'success' ? 'bg-green-500' :
-          type === 'error' ? 'bg-red-500' :
-          type === 'warning' ? 'bg-yellow-500' :
-          'bg-blue-500'
-        } text-white`;
-        toast.querySelector('.status-message').textContent = message;
-        toast.querySelector('.progress-details').textContent = details;
-      };
-
-      // Create initial status toast
       const statusToast = createStatusToast('Starting backup import...', 'info');
       
       try {
+        let collectionsData;
+        let imageFiles = [];
+        
         if (file.name.endsWith('.zip')) {
           // Process ZIP file
+          updateToast(statusToast, 'Reading ZIP file...', 'This may take a moment');
           const zip = new JSZip();
           const zipContent = await zip.loadAsync(file);
           
-          // Check if collections.json exists
-          const collectionsFile = zipContent.file("data/collections.json");
+          // Try both possible paths for collections.json
+          let collectionsFile = zipContent.file("data/collections.json") || zipContent.file("collections.json");
           if (!collectionsFile) {
             throw new Error("Invalid backup file: missing collections.json");
           }
           
           // Load collections data
+          updateToast(statusToast, 'Loading collection data...', 'Processing JSON file');
           const collectionsJson = await collectionsFile.async("string");
-          const collectionsData = JSON.parse(collectionsJson);
+          const parsedData = JSON.parse(collectionsJson);
           
-          // Validate format
-          if (!collectionsData.collections) {
-            throw new Error("Invalid backup format");
+          // Handle different backup formats
+          if (parsedData.version) {
+            collectionsData = parsedData.collections;
+          } else if (parsedData.collections) {
+            collectionsData = parsedData.collections;
+          } else {
+            collectionsData = parsedData;
           }
 
-          updateToast(statusToast, 'Importing to local database...', 'This will make your data available immediately');
+          // Process images from the ZIP
+          updateToast(statusToast, 'Processing images...', 'This may take a moment');
           
-          // First quickly save everything to IndexedDB
-          try {
-            // Save collections to IndexedDB
-            await db.saveCollections(collectionsData.collections);
-            
-            // Extract and save images to IndexedDB
-            const imagePromises = [];
-            const storageUploadQueue = [];
-
-            zipContent.folder("images")?.forEach((relativePath, file) => {
+          // Check both possible image paths (images/ and data/images/)
+          const imagesFolder = zipContent.folder("images");
+          const dataImagesFolder = zipContent.folder("data/images");
+          
+          // Combined image entries from both possible locations
+          const imageEntries = [];
+          
+          if (imagesFolder) {
+            imagesFolder.forEach((relativePath, file) => {
               if (!file.dir) {
-                const promise = (async () => {
-                  try {
-                    const content = await file.async("blob");
-                    const fileName = relativePath.split("/").pop();
-                    const serialNumber = fileName.split(".")[0];
-                    
-                    if (serialNumber) {
-                      // Save to IndexedDB
-                      await db.saveImage(serialNumber, content);
-                      
-                      // Queue for later Firebase upload
-                      storageUploadQueue.push({
-                        serialNumber,
-                        content,
-                        retries: 3
-                      });
-                    }
-                  } catch (error) {
-                    console.error(`Failed to save image ${relativePath} to IndexedDB:`, error);
-                  }
-                })();
-                imagePromises.push(promise);
+                imageEntries.push({ relativePath, file });
               }
             });
-
-            // Wait for all IndexedDB saves
-            await Promise.all(imagePromises);
-
-            // Update UI immediately since local data is ready
-            const savedCollections = await db.getCollections();
-            setCollections(savedCollections);
-            
-            // Switch to first collection if needed
-            if (Object.keys(savedCollections).length > 0 && 
-                !savedCollections[selectedCollection]) {
-              setSelectedCollection(Object.keys(savedCollections)[0]);
-            }
-
-            // Show success for local import
-            updateToast(
-              statusToast,
-              'Backup imported successfully!',
-              `• Collections: ${Object.keys(collectionsData.collections).length}\n• Total cards: ${Object.values(collectionsData.collections).flat().length}\n• Starting cloud sync...`,
-              'success'
-            );
-
-            // Close settings modal
-            setShowSettings(false);
-
-            // Start background sync to Firebase
-            let successCount = 0;
-            let failureCount = 0;
-            let lastTokenRefresh = 0;
-            const TOKEN_REFRESH_INTERVAL = 45 * 60 * 1000; // 45 minutes in milliseconds
-
-            // Function to refresh token if needed
-            const refreshTokenIfNeeded = async () => {
-              const now = Date.now();
-              if (now - lastTokenRefresh >= TOKEN_REFRESH_INTERVAL) {
-                const currentUser = auth.currentUser;
-                if (currentUser) {
-                  try {
-                    await currentUser.getIdToken(true);
-                    lastTokenRefresh = now;
-                    return true;
-                  } catch (error) {
-                    console.error('Failed to refresh token:', error);
-                    return false;
-                  }
-                }
+          }
+          
+          if (dataImagesFolder) {
+            dataImagesFolder.forEach((relativePath, file) => {
+              if (!file.dir) {
+                imageEntries.push({ relativePath: `data/images/${relativePath}`, file });
               }
-              return false;
-            };
+            });
+          }
 
-            // Start syncing collections to Firebase
-            updateToast(statusToast, 'Syncing to cloud...', 'Uploading collections...');
-            
-            for (const [collectionName, cards] of Object.entries(collectionsData.collections)) {
+          console.log(`Found ${imageEntries.length} images in backup`);
+          updateToast(statusToast, 'Processing images...', `Found ${imageEntries.length} images`);
+
+          // Process images in smaller batches
+          const BATCH_SIZE = 2;
+          for (let i = 0; i < imageEntries.length; i += BATCH_SIZE) {
+            const batch = imageEntries.slice(i, Math.min(i + BATCH_SIZE, imageEntries.length));
+            const batchPromises = batch.map(async ({ relativePath, file }) => {
               try {
-                await refreshTokenIfNeeded();
-                await cardService.saveCollection(user.uid, collectionName, cards);
-                console.log(`Synced collection: ${collectionName}`);
-              } catch (error) {
-                console.error(`Failed to sync collection ${collectionName}:`, error);
-                // Continue with other collections even if one fails
-              }
-            }
-
-            // Process Firebase Storage uploads in batches
-            if (storageUploadQueue.length > 0) {
-              updateToast(statusToast, 'Syncing to cloud...', 'Uploading images...');
-              
-              const BATCH_SIZE = 3;
-              for (let i = 0; i < storageUploadQueue.length; i += BATCH_SIZE) {
-                const batch = storageUploadQueue.slice(i, i + BATCH_SIZE);
+                console.log(`Processing image: ${relativePath}`);
+                const content = await file.async("blob");
+                const fileName = relativePath.split("/").pop();
+                const serialNumber = fileName.split(".")[0];
                 
-                // Update progress
-                updateToast(
-                  statusToast,
-                  'Syncing to cloud...',
-                  `Uploading images... (${i}/${storageUploadQueue.length})`
-                );
-                
-                await Promise.all(batch.map(async (item) => {
-                  try {
-                    await refreshTokenIfNeeded();
-                    await cardService.uploadImageToStorage(user.uid, item.serialNumber, item.content);
-                    successCount++;
-                  } catch (error) {
-                    console.warn(`Firebase Storage upload failed for ${item.serialNumber}:`, error);
-                    failureCount++;
+                if (serialNumber) {
+                  // Determine the MIME type based on the file extension or default to image/jpeg
+                  const ext = fileName.split('.').pop().toLowerCase();
+                  const mimeType = ext === 'png' ? 'image/png' : 
+                                  ext === 'gif' ? 'image/gif' :
+                                  ext === 'webp' ? 'image/webp' : 'image/jpeg';
                     
-                    // Only retry once per image
-                    if (item.retries > 0 && 
-                        (error.code === 'storage/unauthorized' || 
-                         error.message?.includes('unauthorized') || 
-                         error.message?.includes('permission'))) {
-                      try {
-                        await refreshTokenIfNeeded();
-                        await cardService.uploadImageToStorage(user.uid, item.serialNumber, item.content);
-                        successCount++;
-                        failureCount--;
-                      } catch (retryError) {
-                        console.error(`Retry failed for ${item.serialNumber}:`, retryError);
-                      }
-                    }
-                  }
-                }));
-                
-                // Small delay between batches
-                if (i + BATCH_SIZE < storageUploadQueue.length) {
-                  await new Promise(resolve => setTimeout(resolve, 300));
+                  imageFiles.push({
+                    serialNumber,
+                    content: new Blob([content], { type: mimeType })
+                  });
+                  console.log(`Image processed for ${serialNumber}, size: ${content.size} bytes, type: ${mimeType}`);
                 }
+              } catch (error) {
+                console.error(`Failed to process image ${relativePath}:`, error);
               }
+            });
+            
+            await Promise.all(batchPromises);
+            updateToast(statusToast, 'Processing images...', `${i + batch.length} of ${imageEntries.length} images processed`);
+            
+            // Add a small delay between batches
+            if (i + BATCH_SIZE < imageEntries.length) {
+              await new Promise(resolve => setTimeout(resolve, 100));
             }
+          }
+        } else if (file.name.endsWith('.json')) {
+          // Process JSON file directly
+          const reader = new FileReader();
+          const parsedData = await new Promise((resolve, reject) => {
+            reader.onload = (e) => {
+              try {
+                resolve(JSON.parse(e.target.result));
+              } catch (error) {
+                reject(new Error("Invalid JSON format"));
+              }
+            };
+            reader.onerror = () => reject(new Error("Error reading file"));
+            reader.readAsText(file);
+          });
 
-            // Final status update
-            if (failureCount > 0) {
-              updateToast(
-                statusToast,
-                'Backup imported with some issues',
-                `• Collections: ${Object.keys(collectionsData.collections).length}\n• Images: ${successCount} uploaded, ${failureCount} failed\n\nYour data is available locally, and partially synced to cloud.`,
-                'warning'
-              );
-            } else {
-              updateToast(
-                statusToast,
-                'Backup imported and fully synced!',
-                `• Collections: ${Object.keys(collectionsData.collections).length}\n• Images: ${successCount} uploaded successfully`,
-                'success'
-              );
-            }
-
-            // Remove toast after 8 seconds
-            setTimeout(() => {
-              statusToast.style.opacity = '0';
-              setTimeout(() => document.body.removeChild(statusToast), 300);
-            }, 8000);
-
-          } catch (error) {
-            console.error('Error during import:', error);
-            updateToast(
-              statusToast,
-              'Error during import',
-              error.message,
-              'error'
-            );
+          // Handle different JSON formats
+          if (parsedData.version) {
+            collectionsData = parsedData.collections;
+          } else if (parsedData.collections) {
+            collectionsData = parsedData.collections;
+          } else {
+            collectionsData = parsedData;
           }
         } else {
-          throw new Error("Unsupported file format. Please upload a .zip backup file.");
+          throw new Error("Unsupported file format. Please upload a .zip or .json backup file.");
         }
+          
+        // Validate format and handle empty collections
+        if (!collectionsData) {
+          throw new Error("No collection data found in backup file");
+        }
+
+        // Convert to collections format if needed
+        const collections = Array.isArray(collectionsData) 
+          ? { 'Default Collection': collectionsData }
+          : collectionsData;
+
+        // Save collections first
+        updateToast(statusToast, 'Saving collections...', 'Storing your data locally');
+        await databaseService.saveCollections(collections, false);
+
+        // Then save images with smaller batch size
+        if (imageFiles.length > 0) {
+          updateToast(statusToast, 'Saving images...', `0 of ${imageFiles.length} images saved`);
+          
+          // Process with even smaller batches for stability
+          const SAVE_BATCH_SIZE = 1;
+          for (let i = 0; i < imageFiles.length; i += SAVE_BATCH_SIZE) {
+            // Process one image at a time
+            const batch = imageFiles.slice(i, i + SAVE_BATCH_SIZE);
+            
+            for (const imageFile of batch) {
+              try {
+                console.log(`Saving image for card ${imageFile.serialNumber}, size: ${imageFile.content.size} bytes, type: ${imageFile.content.type}`);
+                
+                // Save locally without queueing for sync yet
+                await databaseService.saveImage(imageFile.serialNumber, imageFile.content, false);
+                
+                // Brief delay between image saves
+                await new Promise(resolve => setTimeout(resolve, 50));
+                
+                // Update progress
+                updateToast(statusToast, 'Saving images...', `${i + 1} of ${imageFiles.length} images saved locally`);
+              } catch (error) {
+                console.error(`Failed to save image for ${imageFile.serialNumber}:`, error);
+              }
+            }
+          }
+        }
+
+        // Once everything is saved locally, trigger collection sync
+        updateToast(statusToast, 'Syncing with cloud...', 'Uploading collections to Firebase');
+        await databaseService.saveCollections(collections, true);
+        
+        // Then sync images one by one
+        if (imageFiles.length > 0) {
+          updateToast(statusToast, 'Syncing images with cloud...', `0 of ${imageFiles.length} images uploaded`);
+          
+          for (let i = 0; i < imageFiles.length; i++) {
+            try {
+              const imageFile = imageFiles[i];
+              console.log(`Syncing image for ${imageFile.serialNumber} to Firebase`);
+              
+              // Now queue for Firebase sync
+              await databaseService.saveImage(imageFile.serialNumber, imageFile.content, true);
+              
+              // Brief delay between image syncs
+              await new Promise(resolve => setTimeout(resolve, 100));
+              
+              // Update progress
+              updateToast(statusToast, 'Syncing images with cloud...', `${i + 1} of ${imageFiles.length} images uploaded`);
+            } catch (error) {
+              console.error(`Failed to sync image #${i + 1} to Firebase:`, error);
+            }
+          }
+        }
+        
+        // Update UI state
+        setCollections(collections);
+        
+        // Switch to first collection if needed
+        if (Object.keys(collections).length > 0) {
+          const firstCollection = Object.keys(collections)[0];
+          setSelectedCollection(firstCollection);
+          localStorage.setItem('selectedCollection', firstCollection);
+        }
+
+        // Show success message
+        updateToast(
+          statusToast,
+          'Backup imported successfully!',
+          `Collections: ${Object.keys(collections).length}, Images: ${imageFiles.length}`,
+          'success'
+        );
+
+        // Close settings modal
+        setShowSettings(false);
+
+        // Force a UI refresh after a short delay to ensure everything is saved
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
+
       } catch (error) {
         console.error("Import error:", error);
         updateToast(statusToast, 'Import failed', error.message, 'error');
-        
-        // Remove error toast after 5 seconds
-        setTimeout(() => {
-          statusToast.style.opacity = '0';
-          setTimeout(() => document.body.removeChild(statusToast), 300);
-        }, 5000);
       }
     };
 
@@ -1455,15 +1475,111 @@ To import this backup:
 export default function App() {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+  const [collections, setCollections] = useState({ 'Default Collection': [] });
+  const [dbError, setDbError] = useState(null);
 
+  // Initialize database and load collections
+  const initializeData = useCallback(async (user) => {
+    if (!user) return;
+    
+    setIsLoading(true);
+    try {
+      console.log('Initializing database...');
+      
+      // First initialize the database with retries
+      let dbInitialized = false;
+      let retryCount = 0;
+      const maxRetries = 3;
+      
+      while (!dbInitialized && retryCount < maxRetries) {
+        try {
+          await databaseService.initDatabase();
+          console.log('Database initialized successfully');
+          dbInitialized = true;
+        } catch (error) {
+          console.error(`Failed to initialize database (attempt ${retryCount + 1}):`, error);
+          retryCount++;
+          if (retryCount < maxRetries) {
+            // Wait before retrying
+            await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+          }
+        }
+      }
+      
+      if (!dbInitialized) {
+        throw new Error('Failed to initialize database after multiple attempts');
+      }
+      
+      console.log('Loading collections...');
+      try {
+        // First try to get collections from IndexedDB
+        let fetchedCollections = await dataService.getCollections();
+        
+        // If no collections in IndexedDB, try Firebase
+        if (!fetchedCollections || Object.keys(fetchedCollections).length === 0) {
+          console.log('No collections in IndexedDB, checking Firebase...');
+          try {
+            fetchedCollections = await dataService.initialize();
+          } catch (firebaseError) {
+            console.error('Error fetching from Firebase:', firebaseError);
+            // Continue with empty collections
+            fetchedCollections = {};
+          }
+        }
+        
+        console.log('Collections loaded:', fetchedCollections);
+        
+        if (!fetchedCollections || Object.keys(fetchedCollections).length === 0) {
+          console.log('No collections found, creating default collection');
+          const defaultCollections = { 'Default Collection': [] };
+          setCollections(defaultCollections);
+          await dataService.saveCollection('Default Collection', []);
+        } else {
+          setCollections(fetchedCollections);
+        }
+        setDbError(null);
+      } catch (error) {
+        console.error('Error loading collections:', error);
+        setDbError('Error loading collections. Your data will be available when the connection is restored.');
+        // Set default collection to allow app to function
+        setCollections({ 'Default Collection': [] });
+      }
+    } catch (error) {
+      console.error('Error initializing data:', error);
+      setDbError('Error initializing data. Please refresh the page and try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  // Handle auth state changes
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    let mounted = true;
+    
+    const unsubscribe = auth.onAuthStateChanged(async (user) => {
+      console.log('Auth state changed:', user ? 'logged in' : 'logged out');
+      
+      if (!mounted) return;
+      
       setUser(user);
       setAuthLoading(false);
+      
+      if (user) {
+        await initializeData(user);
+      } else {
+        // Clear data on logout
+        setCollections({ 'Default Collection': [] });
+        setIsLoading(false);
+        setDbError(null);
+      }
     });
-    
-    return () => unsubscribe();
-  }, []);
+
+    return () => {
+      mounted = false;
+      unsubscribe();
+    };
+  }, [initializeData]);
 
   if (authLoading) {
     return <LoadingSkeleton />;
@@ -1476,7 +1592,24 @@ export default function App() {
   return (
     <ThemeProvider>
       <ErrorBoundary>
-        <AppContent user={user} />
+        {dbError && (
+          <div className="fixed top-0 left-0 right-0 bg-red-500 text-white p-2 text-center z-50">
+            {dbError}
+            <button 
+              className="ml-4 px-2 py-1 bg-white text-red-500 rounded hover:bg-red-100 text-sm"
+              onClick={() => initializeData(user)}
+            >
+              Retry
+            </button>
+          </div>
+        )}
+        <AppContent 
+          user={user} 
+          collections={collections}
+          setCollections={setCollections}
+          isLoading={isLoading}
+          setIsLoading={setIsLoading}
+        />
       </ErrorBoundary>
     </ThemeProvider>
   );

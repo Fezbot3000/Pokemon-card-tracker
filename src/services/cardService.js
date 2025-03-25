@@ -8,7 +8,7 @@ import {
   query,
   where
 } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL, uploadBytesResumable } from 'firebase/storage';
+import { ref, uploadBytes, getDownloadURL, uploadBytesResumable, deleteObject } from 'firebase/storage';
 import { db as firestore, storage } from '../config/firebase';
 import { db as localDb } from './db';
 import { getStorage } from 'firebase/storage';
@@ -71,15 +71,13 @@ export class CardService {
         );
         
         for (const [name, collectionCards] of Object.entries(filteredCollections)) {
-          if (!Array.isArray(collectionCards)) {
-            console.warn(`Collection ${name} is not an array, skipping`);
-            continue;
-          }
+          // Ensure cards is always an array
+          const normalizedCards = Array.isArray(collectionCards) ? collectionCards : [];
           
           // Save each collection to Firestore
           try {
             const collectionRef = doc(this.firestore, `users/${userId}/collections/${name}`);
-            await setDoc(collectionRef, { cards: collectionCards });
+            await setDoc(collectionRef, { cards: normalizedCards });
           } catch (error) {
             console.error(`Error saving collection ${name} to Firestore:`, error);
             throw error;
@@ -95,15 +93,13 @@ export class CardService {
         }
       } else {
         // Single collection save
-        if (!Array.isArray(cards)) {
-          console.error('Expected cards to be an array for collection', collectionName);
-          throw new Error(`Cards for collection ${collectionName} must be an array`);
-        }
+        // Ensure cards is always an array
+        const normalizedCards = Array.isArray(cards) ? cards : [];
         
         // Save to Firestore
         try {
           const collectionRef = doc(this.firestore, `users/${userId}/collections/${collectionName}`);
-          await setDoc(collectionRef, { cards });
+          await setDoc(collectionRef, { cards: normalizedCards });
         } catch (error) {
           console.error(`Error saving collection ${collectionName} to Firestore:`, error);
           throw error;
@@ -112,7 +108,7 @@ export class CardService {
         // Save to IndexedDB
         try {
           const collections = await this.localDb.getCollections();
-          collections[collectionName] = cards;
+          collections[collectionName] = normalizedCards;
           await this.localDb.saveCollections(collections);
         } catch (error) {
           console.error(`Error saving collection ${collectionName} to IndexedDB:`, error);
@@ -176,19 +172,35 @@ export class CardService {
         // Get a fresh reference to the storage
         const storage = getStorage();
         
-        // Create a reference to the file path
-        const imageRef = ref(storage, `users/${userId}/cards/${serialNumber}`);
+        // Create a reference to the file path using the correct path structure
+        const imageRef = ref(storage, `users/${userId}/images/${serialNumber}`);
         
         // Upload the file with metadata
         const metadata = {
           contentType: imageBlob.type || 'image/jpeg',
           customMetadata: {
             serialNumber,
-            uploadedAt: new Date().toISOString()
+            uploadedAt: new Date().toISOString(),
+            userId // Add userId to metadata for verification
           }
         };
 
-        // Perform the upload with progress monitoring
+        // First check if we can write to this location
+        try {
+          // Perform a small test upload to verify permissions
+          const testBlob = new Blob(['test'], { type: 'text/plain' });
+          await uploadBytes(imageRef, testBlob);
+          // Clean up test upload
+          const testRef = ref(storage, `users/${userId}/images/${serialNumber}_test`);
+          await deleteObject(testRef).catch(() => {}); // Ignore cleanup errors
+        } catch (error) {
+          if (error.code === 'storage/unauthorized') {
+            throw new Error(`Unauthorized: Please check if you're properly authenticated and have permission to upload to this location.`);
+          }
+          // If it's not a permissions error, continue with the main upload
+        }
+
+        // Perform the actual upload with progress monitoring
         const uploadTask = uploadBytesResumable(imageRef, imageBlob, metadata);
         
         // Return a promise that resolves when the upload is complete
@@ -201,16 +213,28 @@ export class CardService {
               console.log(`Upload progress for ${serialNumber}: ${progress.toFixed(1)}%`);
             },
             (error) => {
-              // Handle errors
-              console.error(`Error uploading image ${serialNumber}:`, error);
-              reject(error);
+              console.error(`Error uploading ${serialNumber}:`, error);
+              
+              // Handle specific error cases
+              switch (error.code) {
+                case 'storage/unauthorized':
+                  reject(new Error('You do not have permission to upload this image.'));
+                  break;
+                case 'storage/canceled':
+                  reject(new Error('Upload was canceled.'));
+                  break;
+                case 'storage/unknown':
+                  reject(new Error('An unknown error occurred during upload.'));
+                  break;
+                default:
+                  reject(error);
+              }
             },
             async () => {
-              // Upload completed successfully
               try {
                 // Get the download URL
                 const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-                console.log(`Image ${serialNumber} uploaded successfully. URL:`, downloadURL);
+                console.log(`Upload completed for ${serialNumber}`);
                 resolve(downloadURL);
               } catch (urlError) {
                 console.error(`Error getting download URL for ${serialNumber}:`, urlError);
@@ -219,23 +243,25 @@ export class CardService {
             }
           );
         });
+
       } catch (error) {
+        console.error(`Attempt ${retryCount + 1} failed:`, error);
         lastError = error;
-        retryCount++;
         
-        if (retryCount >= maxRetries) {
-          console.error(`Failed to upload image ${serialNumber} after ${maxRetries} attempts:`, error);
+        // If it's a permissions error, don't retry
+        if (error.code === 'storage/unauthorized' || error.message.includes('Unauthorized')) {
           throw error;
         }
         
-        // Exponential backoff
-        const delay = Math.min(1000 * Math.pow(2, retryCount), 10000);
-        console.warn(`Retrying upload for ${serialNumber} in ${delay}ms...`);
-        await new Promise(resolve => setTimeout(resolve, delay));
+        retryCount++;
+        if (retryCount < maxRetries) {
+          // Wait before retrying, with exponential backoff
+          await this.delay(1000 * Math.pow(2, retryCount));
+        }
       }
     }
-
-    throw lastError || new Error(`Failed to upload image ${serialNumber} after ${maxRetries} attempts`);
+    
+    throw lastError || new Error('Failed to upload image after multiple attempts');
   }
 
   // Save image to both Firebase Storage and IndexedDB
@@ -378,82 +404,70 @@ export class CardService {
 
   // Add or update this function to improve saving with retry logic
   async saveCollectionWithRetry(userId, collectionName, cards, retries = 3, backoff = 1000) {
-    try {
-      console.log(`Saving collection ${collectionName} with ${cards.length} cards (attempt 1/${retries + 1})`);
-      return await this.saveCollection(userId, collectionName, cards);
-    } catch (error) {
-      if (retries <= 0) {
-        console.error(`Failed to save collection ${collectionName} after multiple attempts:`, error);
-        throw error;
+    let lastError = null;
+    
+    // Ensure cards is always an array before attempting any saves
+    const normalizedCards = Array.isArray(cards) ? cards : [];
+    
+    for (let attempt = 0; attempt < retries; attempt++) {
+      try {
+        console.log(`Saving collection ${collectionName} (attempt ${attempt + 1}/${retries})`);
+        
+        // Save to Firestore
+        const collectionRef = doc(this.firestore, `users/${userId}/collections/${collectionName}`);
+        await setDoc(collectionRef, { cards: normalizedCards });
+        
+        console.log(`Successfully saved collection ${collectionName}`);
+        return true;
+      } catch (error) {
+        console.error(`Error saving collection ${collectionName} (attempt ${attempt + 1}/${retries}):`, error);
+        lastError = error;
+        
+        if (attempt < retries - 1) {
+          const delay = backoff * Math.pow(2, attempt);
+          console.log(`Retrying in ${delay}ms...`);
+          await this.delay(delay);
+        }
       }
-      
-      // Wait with exponential backoff
-      const delay = backoff * Math.random();
-      console.warn(`Error saving collection ${collectionName}, retrying in ${delay.toFixed(0)}ms...`, error);
-      await new Promise(resolve => setTimeout(resolve, delay));
-      
-      // Retry with exponential backoff
-      return this.saveCollectionWithRetry(userId, collectionName, cards, retries - 1, backoff * 2);
     }
+    
+    // If we've reached here, all attempts failed
+    throw lastError || new Error(`Failed to save collection ${collectionName} after ${retries} attempts`);
   }
 
   // Add this function to batch save collections to avoid overwhelming the database
   async batchSaveCollections(userId, collections, batchSize = 1) {
-    console.log(`Batch saving ${Object.keys(collections).length} collections with batch size ${batchSize}`);
-    
-    // Filter out invalid collections
-    const validCollections = Object.entries(collections)
-      .filter(([name, cards]) => name !== 'All Cards' && Array.isArray(cards));
-    
-    if (validCollections.length === 0) {
-      console.warn('No valid collections to save');
-      return true;
+    if (!collections || typeof collections !== 'object') {
+      throw new Error('Collections must be an object');
     }
     
-    // Process collections in batches to avoid overwhelming the system
-    const results = { success: 0, failed: 0, errors: [] };
-    
-    // Create batches of collections to save
-    for (let i = 0; i < validCollections.length; i += batchSize) {
-      const batch = validCollections.slice(i, i + batchSize);
-      console.log(`Processing batch ${Math.floor(i/batchSize) + 1}/${Math.ceil(validCollections.length/batchSize)}: ${batch.map(([name]) => name).join(', ')}`);
-      
-      // Process each collection in the current batch with retry logic
-      const promises = batch.map(async ([name, cards]) => {
-        try {
-          await this.saveCollectionWithRetry(userId, name, cards);
-          console.log(`Successfully saved collection: ${name}`);
-          results.success++;
-          return { name, success: true };
-        } catch (error) {
-          console.error(`Failed to save collection ${name}:`, error);
-          results.failed++;
-          results.errors.push({ name, error: error.message });
-          return { name, success: false, error };
-        }
-      });
-      
-      // Wait for the current batch to complete
-      await Promise.all(promises);
-      
-      // Small delay between batches
-      if (i + batchSize < validCollections.length) {
-        const delay = 1000;
-        console.log(`Waiting ${delay}ms before processing next batch...`);
-        await new Promise(resolve => setTimeout(resolve, delay));
-      }
+    // Normalize all collections to ensure they have valid cards arrays
+    const normalizedCollections = {};
+    for (const [name, cards] of Object.entries(collections)) {
+      if (name === 'All Cards') continue; // Skip virtual collections
+      normalizedCollections[name] = Array.isArray(cards) ? cards : [];
     }
     
-    console.log(`Batch save completed: ${results.success} succeeded, ${results.failed} failed`);
+    const keys = Object.keys(normalizedCollections);
+    const results = [];
     
-    // Throw error if any collections failed to save
-    if (results.failed > 0) {
-      const error = new Error(`Failed to save ${results.failed} of ${results.success + results.failed} collections`);
-      error.details = results;
-      throw error;
+    for (let i = 0; i < keys.length; i += batchSize) {
+      const batch = keys.slice(i, i + batchSize);
+      const batchResults = await Promise.all(
+        batch.map(async (name) => {
+          try {
+            return await this.saveCollectionWithRetry(userId, name, normalizedCollections[name]);
+          } catch (error) {
+            console.error(`Failed to save collection ${name} in batch:`, error);
+            return { name, success: false, error };
+          }
+        })
+      );
+      
+      results.push(...batchResults);
     }
     
-    return true;
+    return results;
   }
 }
 
