@@ -1,6 +1,6 @@
 import { getStorage, ref as storageRef, getDownloadURL } from 'firebase/storage';
 
-const DB_NAME = 'PokemonCardDB';
+const DB_NAME = 'pokemon-card-tracker';
 const DB_VERSION = 2;
 const COLLECTIONS_STORE = 'collections';
 const IMAGES_STORE = 'images';
@@ -127,35 +127,67 @@ class DatabaseService {
 
   async saveImage(cardId, imageBlob) {
     await this.ensureDB();
+    console.log(`db.js: Saving image for card ID: ${cardId}, size: ${imageBlob.size} bytes, type: ${imageBlob.type}`);
+    
     return new Promise((resolve, reject) => {
-      const transaction = this.db.transaction([IMAGES_STORE], 'readwrite');
-      const store = transaction.objectStore(IMAGES_STORE);
-      const request = store.put({ id: cardId, blob: imageBlob });
+      try {
+        const transaction = this.db.transaction([IMAGES_STORE], 'readwrite');
+        const store = transaction.objectStore(IMAGES_STORE);
+        // Store the blob under the 'content' property to match what we check for first in getImage
+        const request = store.put({ id: cardId, content: imageBlob });
 
-      request.onsuccess = () => resolve();
-      request.onerror = () => reject('Error saving image');
+        request.onsuccess = () => {
+          console.log(`db.js: Successfully saved image for ${cardId}`);
+          resolve();
+        };
+        
+        request.onerror = (event) => {
+          console.error(`db.js: Error saving image for ${cardId}:`, event.target.error);
+          reject('Error saving image');
+        };
+      } catch (error) {
+        console.error(`db.js: Exception in saveImage for ${cardId}:`, error);
+        reject(error);
+      }
     });
   }
 
   async getImage(cardId) {
     await this.ensureDB();
+    console.log(`db.js: Trying to get image for card ID: ${cardId}`);
+    
     return new Promise((resolve, reject) => {
-      const transaction = this.db.transaction([IMAGES_STORE], 'readonly');
-      const store = transaction.objectStore(IMAGES_STORE);
-      const request = store.get(cardId);
+      try {
+        const transaction = this.db.transaction([IMAGES_STORE], 'readonly');
+        const store = transaction.objectStore(IMAGES_STORE);
+        const request = store.get(cardId);
 
-      request.onsuccess = () => {
-        const result = request.result?.blob || null;
-        if (result) {
-          // Create a new blob with the same content but different object identity
-          // This prevents browser caching when the same image is retrieved again
-          const newBlob = result.slice(0, result.size, result.type);
-          resolve(newBlob);
-        } else {
-          resolve(null);
-        }
-      };
-      request.onerror = () => reject('Error fetching image');
+        request.onsuccess = () => {
+          // Log the raw result to see what we're getting
+          console.log(`db.js: Raw result for image ${cardId}:`, request.result);
+          
+          // Check for both content (new format) and blob (old format) properties
+          const result = request.result?.content || request.result?.blob || null;
+          if (result) {
+            console.log(`db.js: Found image for ${cardId} with type: ${result.type}, size: ${result.size} bytes`);
+            // Create a new blob with the same content but different object identity
+            // This prevents browser caching when the same image is retrieved again
+            const newBlob = result.slice(0, result.size, result.type);
+            resolve(newBlob);
+          } else {
+            console.log(`db.js: No image content found for ${cardId}`);
+            resolve(null);
+          }
+        };
+        
+        request.onerror = (event) => {
+          console.error(`db.js: Error fetching image for ${cardId}:`, event.target.error);
+          reject('Error fetching image');
+        };
+      } catch (error) {
+        console.error(`db.js: Exception in getImage for ${cardId}:`, error);
+        reject(error);
+      }
     });
   }
 
@@ -573,6 +605,45 @@ class DatabaseService {
         };
       } catch (error) {
         console.error("Exception in getAllImages:", error);
+        reject(error);
+      }
+    });
+  }
+
+  // Debug function to log all images in the database
+  debugLogAllImages = async () => {
+    await this.ensureDB();
+    console.log(`db.js: Trying to list all images in the database...`);
+    
+    return new Promise((resolve, reject) => {
+      try {
+        const transaction = this.db.transaction([IMAGES_STORE], 'readonly');
+        const store = transaction.objectStore(IMAGES_STORE);
+        const request = store.getAll();
+
+        request.onsuccess = () => {
+          const images = request.result || [];
+          console.log(`db.js: Found ${images.length} images in the database:`);
+          
+          if (images.length > 0) {
+            // Log details about each image
+            images.forEach((image, index) => {
+              const blob = image.blob;
+              console.log(`Image ${index + 1}/${images.length}: ID = ${image.id}, size = ${blob ? blob.size : 'unknown'} bytes, type = ${blob ? blob.type : 'unknown'}`);
+            });
+          } else {
+            console.log('No images found in the database.');
+          }
+          
+          resolve(images.length);
+        };
+        
+        request.onerror = (event) => {
+          console.error(`db.js: Error listing images:`, event.target.error);
+          reject('Error listing images');
+        };
+      } catch (error) {
+        console.error(`db.js: Exception in debugLogAllImages:`, error);
         reject(error);
       }
     });

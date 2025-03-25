@@ -14,13 +14,17 @@ const Card = memo(({ card, onCardClick, onCheckboxClick, isSelected }) => {
     const loadImage = async () => {
       try {
         setImageLoading(true);
+        console.log(`Attempting to load image for card: ${card.slabSerial}`);
         const imageBlob = await db.getImage(card.slabSerial);
         if (imageBlob) {
+          console.log(`Found image for card ${card.slabSerial}, size: ${imageBlob.size} bytes, type: ${imageBlob.type}`);
           const url = URL.createObjectURL(imageBlob);
           setImageUrl(url);
+        } else {
+          console.log(`No image found for card ${card.slabSerial}`);
         }
       } catch (error) {
-        console.error('Error loading image:', error);
+        console.error(`Error loading image for card ${card.slabSerial}:`, error);
       } finally {
         setImageLoading(false);
       }

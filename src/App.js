@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, lazy, Suspense } from 'react';
 import Header from './components/Header';
 import CardList from './components/CardList';
 import CardDetails from './components/CardDetails';
@@ -342,12 +342,30 @@ function AppContent({ user }) {
     }
   }, [user, selectedCollection]);
 
-  // Load collections on mount
+  // Effect to load card data
   useEffect(() => {
-    if (user) {
-      loadCollections();
+    // Debug: Check if there are any images in the database
+    try {
+      db.debugLogAllImages().then(count => {
+        console.log(`App initialization found ${count} images in the database`);
+      }).catch(error => {
+        console.error("Error checking for images:", error);
+      });
+    } catch (error) {
+      console.error("Exception checking for images:", error);
     }
-  }, [user, loadCollections]);
+    
+    // Rest of the code...
+    const loadCollections = async () => {
+      try {
+        // ...existing code...
+      } catch (error) {
+        // ...existing code...
+      }
+    };
+
+    loadCollections();
+  }, [user]);
 
   // Add automatic image sync when collections first load
   useEffect(() => {
