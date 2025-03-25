@@ -380,26 +380,53 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
   const handleDragOver = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    const dropZone = e.currentTarget;
-    dropZone.classList.add('border-primary', 'dark:border-primary', 'bg-primary/5');
+    e.currentTarget.classList.add('border-primary', 'bg-primary/5');
   };
 
   const handleDragLeave = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    const dropZone = e.currentTarget;
-    dropZone.classList.remove('border-primary', 'dark:border-primary', 'bg-primary/5');
+    e.currentTarget.classList.remove('border-primary', 'bg-primary/5');
   };
 
   const handleDrop = async (e) => {
     e.preventDefault();
     e.stopPropagation();
-    const dropZone = e.currentTarget;
-    dropZone.classList.remove('border-primary', 'dark:border-primary', 'bg-primary/5');
-
+    e.currentTarget.classList.remove('border-primary', 'bg-primary/5');
+    
     const file = e.dataTransfer.files[0];
     if (file && file.type.startsWith('image/')) {
-      await handleImageChange({ target: { files: [file] } });
+      try {
+        setImageLoadingState('loading');
+        await db.saveImage(card.slabSerial, file);
+        const imageUrl = URL.createObjectURL(file);
+        setCardImage(imageUrl);
+        setImageLoadingState('loaded');
+        
+        const timestamp = new Date().toISOString();
+        await updateCard({
+          ...card,
+          hasImage: true,
+          imageUpdatedAt: timestamp
+        });
+        
+        setSaveMessage({
+          text: 'Image uploaded successfully',
+          type: 'success'
+        });
+      } catch (error) {
+        console.error('Error saving dropped image:', error);
+        setImageLoadingState('error');
+        setSaveMessage({
+          text: `Failed to upload image: ${error.message || 'Unknown error'}`,
+          type: 'error'
+        });
+      }
+    } else {
+      setSaveMessage({
+        text: 'Please drop a valid image file',
+        type: 'error'
+      });
     }
   };
 
@@ -410,8 +437,8 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
       {/* Toast Message */}
       {saveMessage && (
         <div className={`fixed right-4 bottom-20 z-[9999] px-6 py-3 rounded-lg shadow-lg transition-all duration-300 ${
-          saveMessage.type === 'success' ? 'bg-green-500 text-white' : 
-          saveMessage.type === 'error' ? 'bg-red-500 text-white' :
+          saveMessage.type === 'success' ? 'bg-green-600 dark:bg-green-500 text-white' : 
+          saveMessage.type === 'error' ? 'bg-red-600 dark:bg-red-500 text-white' :
           'bg-gray-700 text-white'
         }`}>
           {saveMessage.text}
@@ -420,15 +447,15 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
 
       <div 
         ref={modalContentRef}
-        className={`w-full h-full md:h-auto md:max-h-[90vh] md:max-w-4xl md:rounded-xl shadow-lg ${isDarkMode ? 'bg-[#1B2131]' : 'bg-white'} flex flex-col overflow-hidden`}
+        className={`w-full h-full md:h-auto md:max-h-[90vh] md:max-w-4xl md:rounded-xl shadow-lg bg-white dark:bg-[#1B2131] flex flex-col overflow-hidden border border-gray-200 dark:border-gray-700/50`}
       >
         {/* Fixed Header */}
         <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 sticky top-0 bg-inherit z-10">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-medium text-gray-800 dark:text-gray-200">Card Details</h2>
+            <h2 className="text-xl font-medium text-gray-900 dark:text-gray-200">Card Details</h2>
             <button
               onClick={handleClose}
-              className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200"
             >
               <span className="material-icons">close</span>
             </button>
@@ -437,21 +464,31 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
 
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Image Section */}
-            <div className="space-y-3">
-              <div 
-                className="image-upload-container border-2 border-dashed border-blue-500/50 dark:border-blue-500/30 rounded-lg flex items-center justify-center h-[300px] w-full overflow-hidden cursor-pointer hover:border-primary hover:bg-primary/5 transition-all"
-                onClick={() => fileInputRef.current?.click()}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-              >
-                <CardImage
-                  imageUrl={cardImage}
-                  loadingState={imageLoadingState}
-                  onRetry={loadCardImage}
-                />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Left Column - Image */}
+            <div>
+              <div>
+                <div 
+                  className="aspect-[2/3] relative rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800 cursor-pointer border-2 border-dashed border-gray-300 dark:border-gray-700 hover:border-primary dark:hover:border-primary transition-colors"
+                  onClick={() => fileInputRef.current?.click()}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                >
+                  {cardImage ? (
+                    <img
+                      src={cardImage}
+                      alt={`${card.player} ${card.card}`}
+                      className="w-full h-full object-contain"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center">
+                      <span className="material-icons text-6xl text-gray-400 mb-2">image</span>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">Drag & drop an image here</p>
+                      <p className="text-sm text-gray-400 dark:text-gray-500">or click to upload</p>
+                    </div>
+                  )}
+                </div>
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -460,137 +497,99 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
                   onChange={handleImageChange}
                 />
               </div>
-
-              {/* Image Actions */}
-              <div className="flex items-center justify-between py-2">
-                <div></div> {/* Empty div for spacing */}
-                <div className="flex items-center gap-2">
+              <div className="mt-4 flex gap-2">
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex-1 btn btn-secondary text-gray-700 dark:text-gray-200"
+                >
+                  <span className="material-icons mr-2">upload</span>
+                  Upload Image
+                </button>
+                {cardImage && (
                   <button
-                    onClick={() => fileInputRef.current?.click()}
-                    className="flex items-center justify-center bg-[#1e2436] hover:bg-[#2a3045] text-white px-3 py-2 rounded-md transition-colors"
+                    onClick={handleDelete}
+                    className="btn btn-secondary text-red-600 dark:text-red-500 hover:text-red-700 dark:hover:text-red-400"
                   >
-                    <span className="material-icons text-sm mr-1">file_upload</span>
-                    Upload Image
+                    <span className="material-icons">delete</span>
                   </button>
-                  <button
-                    onClick={handleMarkAsSold}
-                    className="flex items-center justify-center bg-[#1e2436] hover:bg-[#2a3045] text-white px-3 py-2 rounded-md transition-colors"
-                  >
-                    <span className="material-icons text-sm mr-1">sell</span>
-                    Mark as Sold
-                  </button>
-                </div>
+                )}
               </div>
             </div>
 
-            {/* Right Column - Card Details */}
+            {/* Right Column - Details */}
             <div className="space-y-6">
-              {/* Card Info Section */}
-              <div className="card-info">
-                <h2 className="text-xl font-semibold mb-6">Card Information</h2>
-                
-                <div className="grid grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <div>
-                      <label className="text-sm text-gray-500 dark:text-gray-400">Player Name</label>
-                      <input
-                        type="text"
-                        name="player"
-                        value={editedCard.player || ''}
-                        onChange={handleInputChange}
-                        className="input"
-                        placeholder="Player Name"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="text-sm text-gray-500 dark:text-gray-400">Card Type</label>
-                      <input
-                        type="text"
-                        name="card"
-                        value={editedCard.card || ''}
-                        onChange={handleInputChange}
-                        className="input"
-                        placeholder="Card Type"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="text-sm text-gray-500 dark:text-gray-400">Set</label>
-                      <input
-                        type="text"
-                        name="set"
-                        value={editedCard.set || ''}
-                        onChange={handleInputChange}
-                        className="input"
-                        placeholder="Set"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="text-sm text-gray-500 dark:text-gray-400">Year</label>
-                      <input
-                        type="text"
-                        name="year"
-                        value={editedCard.year || ''}
-                        onChange={handleInputChange}
-                        className="input"
-                        placeholder="Year"
-                      />
-                    </div>
+              {/* Card Information */}
+              <div>
+                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-200 mb-4">Card Information</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Player Name</label>
+                    <input
+                      type="text"
+                      value={editedCard.player || ''}
+                      onChange={(e) => handleInputChange('player', e.target.value)}
+                      className="input w-full"
+                    />
                   </div>
-                  
-                  <div className="space-y-4">
-                    <div>
-                      <label className="text-sm text-gray-500 dark:text-gray-400">Condition</label>
-                      <input
-                        type="text"
-                        name="condition"
-                        value={editedCard.condition || ''}
-                        onChange={handleInputChange}
-                        className="input"
-                        placeholder="Condition"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="text-sm text-gray-500 dark:text-gray-400">Slab Serial</label>
-                      <input
-                        type="text"
-                        name="slabSerial"
-                        value={editedCard.slabSerial || ''}
-                        onChange={handleInputChange}
-                        className="input"
-                        placeholder="Slab Serial"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="text-sm text-gray-500 dark:text-gray-400">Date Purchased</label>
-                      <input
-                        type="date"
-                        name="datePurchased"
-                        value={editedCard.datePurchased ? new Date(editedCard.datePurchased).toISOString().split('T')[0] : ''}
-                        onChange={handleInputChange}
-                        className="input"
-                      />
-                    </div>
+                  <div>
+                    <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Card Type</label>
+                    <input
+                      type="text"
+                      value={editedCard.card || ''}
+                      onChange={(e) => handleInputChange('card', e.target.value)}
+                      className="input w-full"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Set</label>
+                    <input
+                      type="text"
+                      value={editedCard.set || ''}
+                      onChange={(e) => handleInputChange('set', e.target.value)}
+                      className="input w-full"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Year</label>
+                    <input
+                      type="text"
+                      value={editedCard.year || ''}
+                      onChange={(e) => handleInputChange('year', e.target.value)}
+                      className="input w-full"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Condition</label>
+                    <input
+                      type="text"
+                      value={editedCard.condition || ''}
+                      onChange={(e) => handleInputChange('condition', e.target.value)}
+                      className="input w-full"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Slab Serial</label>
+                    <input
+                      type="text"
+                      value={editedCard.slabSerial || ''}
+                      onChange={(e) => handleInputChange('slabSerial', e.target.value)}
+                      className="input w-full"
+                    />
                   </div>
                 </div>
               </div>
 
-              {/* Investment Section */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium text-gray-800 dark:text-gray-200">Investment Details</h3>
-                <div className="grid grid-cols-1 gap-4">
+              {/* Investment Details */}
+              <div>
+                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-200 mb-4">Investment Details</h3>
+                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Investment (AUD)</label>
                     <input
                       type="number"
-                      name="investmentAUD"
                       value={editedCard.investmentAUD || ''}
-                      onChange={handleNumberInputChange}
-                      className="input"
+                      onChange={(e) => handleInputChange('investmentAUD', e.target.value)}
+                      className="input w-full"
                       step="0.01"
                     />
                   </div>
@@ -598,18 +597,19 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
                     <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Current Value (AUD)</label>
                     <input
                       type="number"
-                      name="currentValueAUD"
                       value={editedCard.currentValueAUD || ''}
-                      onChange={handleNumberInputChange}
-                      className="input"
+                      onChange={(e) => handleInputChange('currentValueAUD', e.target.value)}
+                      className="input w-full"
                       step="0.01"
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Potential Profit</label>
-                    <div className={`text-lg font-medium ${profit >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                      {formatCurrency(profit)}
-                    </div>
+                </div>
+                <div className="mt-4">
+                  <div className="text-sm text-gray-600 dark:text-gray-400">Potential Profit</div>
+                  <div className={`text-lg font-medium ${
+                    editedCard.potentialProfit >= 0 ? 'text-green-600 dark:text-green-500' : 'text-red-600 dark:text-red-500'
+                  }`}>
+                    {formatCurrency(editedCard.potentialProfit)}
                   </div>
                 </div>
               </div>
@@ -618,26 +618,25 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
         </div>
 
         {/* Fixed Footer */}
-        <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 sticky bottom-0 bg-inherit">
+        <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 sticky bottom-0 bg-inherit z-10">
           <div className="flex justify-between items-center">
-            <button 
+            <button
               onClick={handleDelete}
-              className="text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 p-2"
+              className="btn btn-secondary text-red-600 dark:text-red-500 hover:text-red-700 dark:hover:text-red-400"
             >
-              <span className="material-icons">delete</span>
+              <span className="material-icons mr-2">delete</span>
+              Delete Card
             </button>
-
-            <div className="flex gap-2">
-              <button 
-                onClick={handleCancel}
-                className="btn btn-secondary"
+            <div className="flex gap-3">
+              <button
+                onClick={handleClose}
+                className="btn btn-secondary text-gray-700 dark:text-gray-200"
               >
                 Cancel
               </button>
-              <button 
+              <button
                 onClick={handleSave}
-                className={`btn btn-primary ${!hasCardBeenEdited() ? 'opacity-50 cursor-not-allowed' : ''}`}
-                disabled={!hasCardBeenEdited()}
+                className="btn btn-primary"
               >
                 Save Changes
               </button>

@@ -310,24 +310,24 @@ const SoldItems = () => {
       <div className="space-y-4">
         {/* Metrics Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="p-4 rounded-lg bg-white dark:bg-[#1B2131] shadow-sm">
+          <div className="p-4 rounded-lg bg-white dark:bg-[#1B2131] border border-gray-200 dark:border-gray-700/50 shadow-sm">
             <h3 className="text-sm text-gray-600 dark:text-gray-400">Total Cards Sold</h3>
             <p className="text-2xl font-semibold text-gray-900 dark:text-white">{metrics.totalSold}</p>
           </div>
-          <div className="p-4 rounded-lg bg-white dark:bg-[#1B2131] shadow-sm">
+          <div className="p-4 rounded-lg bg-white dark:bg-[#1B2131] border border-gray-200 dark:border-gray-700/50 shadow-sm">
             <h3 className="text-sm text-gray-600 dark:text-gray-400">Total Profit</h3>
-            <p className="text-2xl font-semibold text-green-500">{formatCurrency(metrics.totalProfit)}</p>
+            <p className="text-2xl font-semibold text-green-600 dark:text-green-500">{formatCurrency(metrics.totalProfit)}</p>
           </div>
-          <div className="p-4 rounded-lg bg-white dark:bg-[#1B2131] shadow-sm">
+          <div className="p-4 rounded-lg bg-white dark:bg-[#1B2131] border border-gray-200 dark:border-gray-700/50 shadow-sm">
             <h3 className="text-sm text-gray-600 dark:text-gray-400">Average Profit per Card</h3>
-            <p className="text-2xl font-semibold text-green-500">{formatCurrency(metrics.averageProfit)}</p>
+            <p className="text-2xl font-semibold text-green-600 dark:text-green-500">{formatCurrency(metrics.averageProfit)}</p>
           </div>
-          <div className="p-4 rounded-lg bg-white dark:bg-[#1B2131] shadow-sm">
+          <div className="p-4 rounded-lg bg-white dark:bg-[#1B2131] border border-gray-200 dark:border-gray-700/50 shadow-sm">
             <h3 className="text-sm text-gray-600 dark:text-gray-400">Best Sale</h3>
             {metrics.bestSale && (
               <>
                 <p className="text-lg font-semibold text-gray-900 dark:text-white">{metrics.bestSale.player} {metrics.bestSale.card}</p>
-                <p className="text-2xl font-semibold text-green-500">{formatCurrency(metrics.bestSale.profit)}</p>
+                <p className="text-2xl font-semibold text-green-600 dark:text-green-500">{formatCurrency(metrics.bestSale.profit)}</p>
               </>
             )}
           </div>
@@ -335,39 +335,37 @@ const SoldItems = () => {
 
         {/* Financial Year Accordions */}
         {groupedByFinancialYear.map((fyGroup) => (
-          <div key={fyGroup.year} className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+          <div key={fyGroup.year} className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white dark:bg-[#1B2131]">
             {/* Financial Year Header */}
             <button
               onClick={() => toggleAccordion(fyGroup.year)}
-              className={`w-full px-6 py-4 flex items-center justify-between ${
-                isDarkMode ? 'bg-[#1B2131] hover:bg-[#242B3D]' : 'bg-white hover:bg-gray-50'
-              }`}
+              className={`w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-[#242B3D] transition-colors`}
             >
               <div className="flex items-center gap-4">
                 <span className={`material-icons transform transition-transform ${
                   openAccordions[fyGroup.year] ? 'rotate-180' : ''
-                }`}>
+                } text-gray-600 dark:text-gray-400`}>
                   expand_more
                 </span>
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                     Financial Year {fyGroup.year}
                   </h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
                     {fyGroup.transactions.length} transaction{fyGroup.transactions.length !== 1 ? 's' : ''}
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-8">
                 <div className="text-right">
-                  <div className="text-sm text-gray-500 dark:text-gray-400">Total Sales</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">Total Sales</div>
                   <div className="font-medium text-gray-900 dark:text-white">
                     {formatCurrency(fyGroup.totalSold)}
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-sm text-gray-500 dark:text-gray-400">Total Profit</div>
-                  <div className={`font-medium ${fyGroup.totalProfit >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">Total Profit</div>
+                  <div className={`font-medium ${fyGroup.totalProfit >= 0 ? 'text-green-600 dark:text-green-500' : 'text-red-600 dark:text-red-500'}`}>
                     {formatCurrency(fyGroup.totalProfit)}
                   </div>
                 </div>

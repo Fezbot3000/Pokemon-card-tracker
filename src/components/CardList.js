@@ -53,7 +53,7 @@ const Card = memo(({ card, onCardClick, onCheckboxClick, isSelected }) => {
     <div 
       className={`relative rounded-lg overflow-hidden cursor-pointer transition-all duration-200 ${
         isSelected ? 'ring-2 ring-primary' : ''
-      }`}
+      } bg-white dark:bg-[#1B2131] border border-gray-200 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-[#252B3B]`}
       onClick={handleClick}
       role="button"
       tabIndex={0}
@@ -65,7 +65,7 @@ const Card = memo(({ card, onCardClick, onCheckboxClick, isSelected }) => {
         <div className={`w-5 h-5 rounded border ${
           isSelected 
             ? 'bg-primary border-primary' 
-            : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'
+            : 'border-gray-400 dark:border-gray-600 bg-white dark:bg-gray-800'
         } flex items-center justify-center transition-colors duration-200`}>
           {isSelected && (
             <span className="material-icons text-white text-sm">check</span>
@@ -94,19 +94,19 @@ const Card = memo(({ card, onCardClick, onCheckboxClick, isSelected }) => {
 
       <div className="p-3 bg-white dark:bg-[#1B2131]">
         <h3 className="font-medium text-gray-900 dark:text-white truncate">{card.player}</h3>
-        <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{card.card}</p>
+        <p className="text-sm text-gray-600 dark:text-gray-400 truncate">{card.card}</p>
         <div className="mt-2 space-y-1">
           <div className="flex justify-between text-sm">
-            <span className="text-gray-500 dark:text-gray-400">Investment</span>
+            <span className="text-gray-600 dark:text-gray-400">Investment</span>
             <span className="font-medium text-gray-900 dark:text-white">{formatCurrency(card.investmentAUD)}</span>
           </div>
           <div className="flex justify-between text-sm">
-            <span className="text-gray-500 dark:text-gray-400">Value</span>
+            <span className="text-gray-600 dark:text-gray-400">Value</span>
             <span className="font-medium text-gray-900 dark:text-white">{formatCurrency(card.currentValueAUD)}</span>
           </div>
           <div className="flex justify-between text-sm">
-            <span className="text-gray-500 dark:text-gray-400">Profit</span>
-            <span className={`font-medium ${card.potentialProfit >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+            <span className="text-gray-600 dark:text-gray-400">Profit</span>
+            <span className={`font-medium ${card.potentialProfit >= 0 ? 'text-green-600 dark:text-green-500' : 'text-red-600 dark:text-red-500'}`}>
               {formatCurrency(card.potentialProfit)}
             </span>
           </div>
@@ -676,27 +676,27 @@ const CardList = ({
           <div className="flex items-center gap-4">
             <div className="relative" ref={sortDropdownRef}>
               <button
-                className="flex items-center justify-between gap-2 px-4 py-2 w-48 rounded-lg bg-[#1B2131] border border-gray-700/50 text-gray-200 hover:bg-[#252B3B] transition-colors duration-200"
+                className="flex items-center justify-between gap-2 px-4 py-2 w-48 rounded-lg bg-white dark:bg-[#1B2131] border border-gray-200 dark:border-gray-700/50 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-[#252B3B] transition-colors duration-200"
                 onClick={toggleSortDropdown}
               >
                 <div className="flex items-center gap-2">
-                  <span className="material-icons text-gray-400">sort</span>
+                  <span className="material-icons text-gray-500 dark:text-gray-400">sort</span>
                   <span className="text-sm">Sort by {getSortFieldLabel(sortField)}</span>
                 </div>
-                <span className="material-icons text-gray-400">
+                <span className="material-icons text-gray-500 dark:text-gray-400">
                   {showSortDropdown ? 'expand_less' : 'expand_more'}
                 </span>
               </button>
               
               {showSortDropdown && (
-                <div className="absolute top-full left-0 mt-2 w-48 bg-[#1B2131] rounded-lg shadow-lg border border-gray-700/50 py-1 z-50">
+                <div className="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-[#1B2131] rounded-lg shadow-lg border border-gray-200 dark:border-gray-700/50 py-1 z-50">
                   {sortOptions.map(option => (
                     <button
                       key={option.field}
                       className={`w-full text-left px-4 py-2 flex items-center justify-between text-sm ${
                         sortField === option.field 
-                          ? 'bg-[#252B3B] text-white' 
-                          : 'text-gray-200 hover:bg-[#252B3B] transition-colors duration-200'
+                          ? 'bg-gray-100 dark:bg-[#252B3B] text-gray-900 dark:text-white' 
+                          : 'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-[#252B3B] transition-colors duration-200'
                       }`}
                       onClick={() => handleSortChange(option.field)}
                     >
