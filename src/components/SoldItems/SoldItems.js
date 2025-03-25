@@ -152,8 +152,16 @@ const SoldItems = () => {
 
     try {
       // Delete all cards in the transaction
-      const promises = cardToDelete.cards.map(card => db.deleteSoldCard(card.id));
-      await Promise.all(promises);
+      const deletePromises = cardToDelete.cards.map(card => {
+        if (!card.id) {
+          console.error('Card missing ID:', card);
+          return Promise.reject(new Error('Card missing ID'));
+        }
+        return db.deleteSoldCard(card.id);
+      });
+
+      // Wait for all deletions to complete
+      await Promise.all(deletePromises);
       
       // Update local state by removing all cards from this transaction
       const updatedCards = soldCards.filter(card => 
@@ -168,7 +176,7 @@ const SoldItems = () => {
       showToast('Transaction deleted successfully');
     } catch (error) {
       console.error('Error deleting transaction:', error);
-      showToast('Failed to delete transaction', 'error');
+      showToast(error.message || 'Failed to delete transaction', 'error');
     } finally {
       setShowDeleteModal(false);
       setCardToDelete(null);

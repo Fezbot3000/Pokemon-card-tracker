@@ -2,141 +2,114 @@ import React, { useState, useEffect, useRef, useMemo, memo, useCallback } from '
 import { db } from '../services/db';
 import { formatValue, formatCurrency } from '../utils/formatters';
 import { useTheme } from '../contexts/ThemeContext';
+import { cardService } from '../services/cardService';
 
 // Extracted Card component for better performance
-const Card = memo(({ card, cardImage, onCardClick, isSelected, onSelect, displayMetric, onUpdateCard }) => {
-  const { isDarkMode } = useTheme();
-  const [isEditing, setIsEditing] = useState(false);
-  const [editValue, setEditValue] = useState('');
-  const getDisplayValue = () => {
-    switch (displayMetric) {
-      case 'currentValueAUD':
-        return { label: 'Current Value', value: formatCurrency(card.currentValueAUD), isProfit: false };
-      case 'investmentAUD':
-        return { label: 'Investment', value: formatCurrency(card.investmentAUD), isProfit: false, isEditable: true };
-      case 'potentialProfit':
-        const profit = card.currentValueAUD - card.investmentAUD;
-        return { label: 'Profit', value: formatCurrency(profit), isProfit: true, profitValue: profit };
-      case 'datePurchased':
-        return { label: 'Purchase Date', value: card.datePurchased || 'N/A', isProfit: false };
-      case 'player':
-        return { label: 'Player', value: card.player || 'N/A', isProfit: false };
-      default:
-        return { label: 'Current Value', value: formatCurrency(card.currentValueAUD), isProfit: false };
-    }
-  };
+const Card = memo(({ card, onCardClick, onCheckboxClick, isSelected }) => {
+  const [imageUrl, setImageUrl] = useState(null);
+  const [imageLoading, setImageLoading] = useState(true);
 
-  const displayData = getDisplayValue();
+  useEffect(() => {
+    const loadImage = async () => {
+      try {
+        setImageLoading(true);
+        const imageBlob = await db.getImage(card.slabSerial);
+        if (imageBlob) {
+          const url = URL.createObjectURL(imageBlob);
+          setImageUrl(url);
+        }
+      } catch (error) {
+        console.error('Error loading image:', error);
+      } finally {
+        setImageLoading(false);
+      }
+    };
 
-  const handleEditStart = (e) => {
+    loadImage();
+
+    // Cleanup
+    return () => {
+      if (imageUrl) {
+        URL.revokeObjectURL(imageUrl);
+      }
+    };
+  }, [card.slabSerial, card.imageUpdatedAt]);
+
+  const handleClick = (e) => {
+    // Stop event propagation to prevent both checkbox and card click from firing
     e.stopPropagation();
-    if (displayData.isEditable) {
-      setEditValue(card.investmentAUD.toFixed(2));
-      setIsEditing(true);
+    if (!e.target.closest('.checkbox-container')) {
+      onCardClick(card);
     }
   };
 
-  const handleEditChange = (e) => {
-    setEditValue(e.target.value);
-  };
-
-  const handleEditSave = (e) => {
+  const handleCheckboxClick = (e) => {
     e.stopPropagation();
-    const newValue = parseFloat(editValue);
-    if (!isNaN(newValue) && newValue >= 0) {
-      const updatedCard = {
-        ...card,
-        investmentAUD: Number(newValue.toFixed(2)),
-        potentialProfit: Number((card.currentValueAUD - newValue).toFixed(2))
-      };
-      onUpdateCard(updatedCard);
-    }
-    setIsEditing(false);
-  };
-
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter') {
-      handleEditSave(e);
-    } else if (e.key === 'Escape') {
-      setIsEditing(false);
-    }
+    onCheckboxClick(card.slabSerial);
   };
 
   return (
     <div 
-      className={`relative p-4 rounded-xl border transition-all duration-200 cursor-pointer
-        ${isDarkMode ? 'bg-[#1B2131] border-gray-700/50 hover:bg-[#252B3B]' : 'bg-white border-gray-200 hover:bg-gray-50'}
-        ${isSelected ? 'ring-2 ring-primary' : ''}`}
-      onClick={() => onCardClick(card)}
+      className={`relative rounded-lg overflow-hidden cursor-pointer transition-all duration-200 ${
+        isSelected ? 'ring-2 ring-primary' : ''
+      }`}
+      onClick={handleClick}
+      role="button"
+      tabIndex={0}
     >
-      {/* Selection checkbox */}
-      <div className="absolute top-2 right-2 z-10" onClick={(e) => e.stopPropagation()}>
-        <input
-          type="checkbox"
-          checked={isSelected}
-          onChange={(e) => onSelect(e, card.slabSerial)}
-          className="w-4 h-4 accent-primary"
-        />
+      <div 
+        className="absolute top-2 right-2 z-10 checkbox-container"
+        onClick={handleCheckboxClick}
+      >
+        <div className={`w-5 h-5 rounded border ${
+          isSelected 
+            ? 'bg-primary border-primary' 
+            : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'
+        } flex items-center justify-center transition-colors duration-200`}>
+          {isSelected && (
+            <span className="material-icons text-white text-sm">check</span>
+          )}
+        </div>
       </div>
 
-      {/* Card image */}
-      <div className="aspect-[2/3] mb-4 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800">
-        {cardImage ? (
-          <img 
-            src={cardImage} 
-            alt={`${card.player} - ${card.card}`}
+      <div className="aspect-[2/3] relative">
+        {imageLoading ? (
+          <div className="w-full h-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+            <span className="material-icons text-4xl text-gray-400 animate-pulse">hourglass_empty</span>
+          </div>
+        ) : imageUrl ? (
+          <img
+            src={imageUrl}
+            alt={`${card.player} ${card.card}`}
             className="w-full h-full object-cover"
+            loading="lazy"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center">
+          <div className="w-full h-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
             <span className="material-icons text-4xl text-gray-400">image</span>
           </div>
         )}
       </div>
 
-      {/* Card details - restructured layout */}
-      <div className="space-y-2 text-center">
-        {/* Value amount - now centered and larger */}
-        <div className={`text-2xl font-medium ${
-          displayData.isProfit 
-            ? displayData.profitValue >= 0 
-              ? 'text-green-500' 
-              : 'text-red-500'
-            : isDarkMode 
-              ? 'text-gray-200' 
-              : 'text-gray-800'
-        }`} onClick={handleEditStart}>
-          {isEditing && displayData.isEditable ? (
-            <div className="flex items-center justify-center gap-2" onClick={e => e.stopPropagation()}>
-              <input
-                type="number"
-                value={editValue}
-                onChange={handleEditChange}
-                onKeyDown={handleKeyDown}
-                className="w-32 px-2 py-1 text-center bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                autoFocus
-              />
-              <button
-                onClick={handleEditSave}
-                className="text-sm bg-primary text-white px-2 py-1 rounded hover:bg-primary/90"
-              >
-                Save
-              </button>
-            </div>
-          ) : (
-            displayData.value
-          )}
+      <div className="p-3 bg-white dark:bg-[#1B2131]">
+        <h3 className="font-medium text-gray-900 dark:text-white truncate">{card.player}</h3>
+        <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{card.card}</p>
+        <div className="mt-2 space-y-1">
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-500 dark:text-gray-400">Investment</span>
+            <span className="font-medium text-gray-900 dark:text-white">{formatCurrency(card.investmentAUD)}</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-500 dark:text-gray-400">Value</span>
+            <span className="font-medium text-gray-900 dark:text-white">{formatCurrency(card.currentValueAUD)}</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-500 dark:text-gray-400">Profit</span>
+            <span className={`font-medium ${card.potentialProfit >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+              {formatCurrency(card.potentialProfit)}
+            </span>
+          </div>
         </div>
-        
-        {/* Label - shown below the value */}
-        <div className={`text-xs font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-          {displayData.label}
-        </div>
-        
-        {/* Card name - now below the value */}
-        <h3 className={`font-medium line-clamp-2 mt-2 ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>
-          {card.card}
-        </h3>
       </div>
     </div>
   );
@@ -161,7 +134,7 @@ const StatCard = memo(({ label, value, isProfit = false }) => {
   );
 });
 
-const CardList = ({ cards, exchangeRate, onCardClick, onDeleteCards, onUpdateCard, onAddCard, onViewChange }) => {
+const CardList = ({ cards, exchangeRate, onCardClick, onDeleteCards, onUpdateCard, onAddCard, onViewChange, user }) => {
   const [filter, setFilter] = useState('');
   const [sortField, setSortField] = useState(
     localStorage.getItem('cardListSortField') || 'currentValueAUD'
@@ -187,11 +160,17 @@ const CardList = ({ cards, exchangeRate, onCardClick, onDeleteCards, onUpdateCar
     date: new Date().toISOString().split('T')[0],
     cards: []
   });
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const { isDarkMode } = useTheme();
 
   const valueDropdownRef = useRef(null);
   const metricDropdownRef = useRef(null);
   const sortDropdownRef = useRef(null);
+
+  // Add debugging useEffect
+  useEffect(() => {
+    console.log('CardList received onDeleteCards:', typeof onDeleteCards);
+  }, [onDeleteCards]);
 
   // Handle click outside dropdowns
   useEffect(() => {
@@ -317,16 +296,6 @@ const CardList = ({ cards, exchangeRate, onCardClick, onDeleteCards, onUpdateCar
     return option ? option.label : 'Current Value';
   };
 
-  const metricOptions = [
-    { value: 'currentValueAUD', label: 'Current Value' },
-    { value: 'investmentAUD', label: 'Investment' },
-    { value: 'potentialProfit', label: 'Profit' },
-    { value: 'datePurchased', label: 'Purchase Date' },
-    { value: 'player', label: 'Player Name' },
-    { value: 'condition', label: 'Condition' },
-    { value: 'set', label: 'Set' }
-  ];
-
   // Toggle sort direction
   const toggleSortDirection = () => {
     setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
@@ -334,29 +303,7 @@ const CardList = ({ cards, exchangeRate, onCardClick, onDeleteCards, onUpdateCar
   
   // Sort dropdown toggle
   const toggleSortDropdown = () => {
-    // Close other dropdowns
-    setIsMetricDropdownOpen(false);
-    setIsValueDropdownOpen(false);
-    // Toggle sort dropdown
     setShowSortDropdown(!showSortDropdown);
-  };
-  
-  // Metric dropdown toggle
-  const toggleMetricDropdown = () => {
-    // Close other dropdowns
-    setShowSortDropdown(false);
-    setIsValueDropdownOpen(false);
-    // Toggle metric dropdown
-    setIsMetricDropdownOpen(!isMetricDropdownOpen);
-  };
-  
-  // Value dropdown toggle
-  const toggleValueDropdown = () => {
-    // Close other dropdowns
-    setShowSortDropdown(false);
-    setIsMetricDropdownOpen(false);
-    // Toggle value dropdown
-    setIsValueDropdownOpen(!isValueDropdownOpen);
   };
 
   // Handle sort field change
@@ -370,36 +317,42 @@ const CardList = ({ cards, exchangeRate, onCardClick, onDeleteCards, onUpdateCar
     setShowSortDropdown(false); // Close the dropdown after selection
   };
 
-  const handleSelectCard = (e, cardId) => {
-    // If e exists, stop propagation to prevent triggering the card click
-    if (e) {
-      e.stopPropagation();
-    }
-    
+  const handleSelectCard = (cardId) => {
+    console.log("Handling card selection for:", cardId);
     setSelectedCards(prev => {
       const newSet = new Set(prev);
       if (newSet.has(cardId)) {
+        console.log("Removing card from selection:", cardId);
         newSet.delete(cardId);
       } else {
+        console.log("Adding card to selection:", cardId);
         newSet.add(cardId);
       }
       return newSet;
     });
   };
 
-  const handleSelectAll = (e) => {
-    if (selectedCards.size === filteredCards.length) {
-      setSelectedCards(new Set());
-    } else {
-      setSelectedCards(new Set(filteredCards.map(card => card.slabSerial)));
-    }
+  const handleSelectAll = () => {
+    console.log("Handling select all");
+    setSelectedCards(prev => {
+      if (prev.size === filteredCards.length) {
+        console.log("Deselecting all cards");
+        return new Set();
+      } else {
+        console.log("Selecting all cards");
+        return new Set(filteredCards.map(card => card.slabSerial));
+      }
+    });
   };
 
   const handleDeleteSelected = () => {
-    if (window.confirm(`Are you sure you want to delete ${selectedCards.size} cards?`)) {
-      onDeleteCards(Array.from(selectedCards));
-      setSelectedCards(new Set());
-    }
+    setShowDeleteConfirmation(true);
+  };
+
+  const confirmDelete = () => {
+    onDeleteCards(Array.from(selectedCards));
+    setSelectedCards(new Set());
+    setShowDeleteConfirmation(false);
   };
 
   const handleInvestmentEdit = (e, card) => {
@@ -521,13 +474,46 @@ const CardList = ({ cards, exchangeRate, onCardClick, onDeleteCards, onUpdateCar
         profit: (parseFloat(cardDetail.soldPrice) || 0) - cardDetail.investmentAUD
       }));
 
-      // Add all cards to sold cards database
+      // Add cards to sold cards database one by one to handle potential errors
+      const successfulSales = [];
+      const errors = [];
+      const serialsToDelete = [];
+      
       for (const soldCard of soldCards) {
-        await db.addSoldCard(soldCard);
+        try {
+          // First add to sold cards database
+          const soldCardId = await db.addSoldCard(soldCard);
+          console.log(`Successfully added sold card ${soldCardId}`);
+          successfulSales.push(soldCard);
+          serialsToDelete.push(soldCard.slabSerial);
+        } catch (cardError) {
+          console.error(`Error processing sale for card ${soldCard.slabSerial}:`, cardError);
+          errors.push({ card: soldCard, error: cardError });
+        }
       }
 
-      // Delete all cards from current collection
-      await onDeleteCards(Array.from(selectedCards));
+      // Delete all successfully sold cards from current collection at once
+      if (serialsToDelete.length > 0) {
+        try {
+          console.log('Attempting to delete cards:', serialsToDelete);
+          if (typeof onDeleteCards !== 'function') {
+            throw new Error('onDeleteCards is not a function');
+          }
+          await onDeleteCards(serialsToDelete);
+          console.log('Successfully deleted cards from collection');
+        } catch (deleteError) {
+          console.error('Error deleting cards from collection:', deleteError);
+          // If deletion fails, try to rollback the sold cards
+          for (const soldCard of successfulSales) {
+            try {
+              await db.deleteSoldCard(soldCard.id);
+            } catch (rollbackError) {
+              console.error(`Error rolling back sold card ${soldCard.id}:`, rollbackError);
+            }
+          }
+          throw new Error('Failed to delete cards from collection');
+        }
+      }
       
       // Ensure minimum loading time
       const elapsedTime = Date.now() - startTime;
@@ -541,39 +527,49 @@ const CardList = ({ cards, exchangeRate, onCardClick, onDeleteCards, onUpdateCar
       
       // Close modal
       setShowBulkSoldModal(false);
+      setBulkSoldDetails({
+        buyer: '',
+        date: new Date().toISOString().split('T')[0],
+        cards: []
+      });
 
-      // Show success toast
+      // Show appropriate toast message
       const toast = document.createElement('div');
-      toast.className = 'fixed top-4 right-4 z-[100] px-6 py-3 rounded-lg shadow-lg bg-green-500 text-white transition-opacity duration-300';
-      toast.textContent = `${soldCards.length} cards marked as sold successfully!`;
+      if (successfulSales.length === soldCards.length) {
+        toast.className = 'fixed top-4 right-4 z-[100] px-6 py-3 rounded-lg shadow-lg bg-green-500 text-white transition-opacity duration-300';
+        toast.textContent = `${soldCards.length} cards marked as sold successfully!`;
+      } else if (successfulSales.length > 0) {
+        toast.className = 'fixed top-4 right-4 z-[100] px-6 py-3 rounded-lg shadow-lg bg-yellow-500 text-white transition-opacity duration-300';
+        toast.textContent = `${successfulSales.length} of ${soldCards.length} cards marked as sold successfully. Some cards encountered errors.`;
+      } else {
+        toast.className = 'fixed top-4 right-4 z-[100] px-6 py-3 rounded-lg shadow-lg bg-red-500 text-white transition-opacity duration-300';
+        toast.textContent = `Failed to mark any cards as sold.`;
+      }
+      
       document.body.appendChild(toast);
-
-      // Remove toast after 3 seconds
       setTimeout(() => {
         toast.style.opacity = '0';
         setTimeout(() => document.body.removeChild(toast), 300);
       }, 3000);
 
-      // Navigate to sold page
-      onViewChange('sold');
-
-    } catch (error) {
-      // Ensure minimum loading time even on error
-      const elapsedTime = Date.now() - startTime;
-      const minimumLoadingTime = 2000;
-      if (elapsedTime < minimumLoadingTime) {
-        await new Promise(resolve => setTimeout(resolve, minimumLoadingTime - elapsedTime));
+      // If there were any errors, log them to console
+      if (errors.length > 0) {
+        console.error('Errors occurred while processing sales:', errors);
       }
-      
+
+      // Switch to sold view if any sales were successful
+      if (successfulSales.length > 0 && typeof onViewChange === 'function') {
+        onViewChange('sold');
+      }
+    } catch (error) {
       console.error('Error marking cards as sold:', error);
       
       // Show error toast
       const toast = document.createElement('div');
       toast.className = 'fixed top-4 right-4 z-[100] px-6 py-3 rounded-lg shadow-lg bg-red-500 text-white transition-opacity duration-300';
-      toast.textContent = 'Error marking cards as sold';
+      toast.textContent = `Error: ${error.message || 'Failed to mark cards as sold'}`;
       document.body.appendChild(toast);
-
-      // Remove toast after 3 seconds
+      
       setTimeout(() => {
         toast.style.opacity = '0';
         setTimeout(() => document.body.removeChild(toast), 300);
@@ -600,166 +596,152 @@ const CardList = ({ cards, exchangeRate, onCardClick, onDeleteCards, onUpdateCar
     setShowBulkSoldModal(true);
   };
 
+  const loadCardImage = useCallback(async (card) => {
+    if (!card.imagePath) return;
+    
+    const cardId = card.id || card.imagePath.split('/').pop().split('.')[0];
+    try {
+      const image = await cardService.getImage(user.uid, cardId);
+      if (image) {
+        const imageUrl = URL.createObjectURL(image);
+        setCardImages(prev => ({ ...prev, [card.id]: imageUrl }));
+      }
+    } catch (error) {
+      console.error('Error loading card image:', error);
+    }
+  }, [user]);
+
+  // Add debugging log
+  useEffect(() => {
+    console.log('CardList component received props:', {
+      hasCards: Array.isArray(cards) && cards.length > 0,
+      hasExchangeRate: exchangeRate !== undefined,
+      hasCardClickHandler: typeof onCardClick === 'function',
+      hasDeleteCardsHandler: typeof onDeleteCards === 'function',
+      hasUpdateCardHandler: typeof onUpdateCard === 'function',
+      hasAddCardHandler: typeof onAddCard === 'function',
+      hasViewChangeHandler: typeof onViewChange === 'function',
+      hasUser: user !== undefined,
+    });
+  }, [cards, exchangeRate, onCardClick, onDeleteCards, onUpdateCard, onAddCard, onViewChange, user]);
+
   return (
     <div className="space-y-4">
       {/* Total Cards Counter */}
-      <div className="total-cards-counter">
-        <span className="material-icons total-cards-icon">view_module</span>
-        <span className="total-cards-text">Total Cards: {filteredCards.length}</span>
+      <div className="flex items-center gap-2 px-4 py-2">
+        <span className="material-icons text-gray-600 dark:text-gray-400">view_module</span>
+        <span className="text-gray-700 dark:text-gray-200 font-medium">Total Cards: {filteredCards.length}</span>
       </div>
       
       {/* Financial Summary */}
-      <div className="stats-section">
-        <StatCard 
-          label="Total Investment" 
-          value={totals.totalInvestment} 
-        />
-        <StatCard 
-          label="Total Value" 
-          value={totals.totalValue} 
-        />
-        <StatCard 
-          label="Total Profit" 
-          value={totals.totalProfit} 
-          isProfit={true}
-        />
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 px-4">
+        <div className="p-4 rounded-lg bg-white dark:bg-[#1B2131] border border-gray-200 dark:border-gray-700/50">
+          <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">Total Investment</div>
+          <div className="text-xl font-medium text-gray-900 dark:text-white">{formatCurrency(totals.totalInvestment)}</div>
+        </div>
+        <div className="p-4 rounded-lg bg-white dark:bg-[#1B2131] border border-gray-200 dark:border-gray-700/50">
+          <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">Total Value</div>
+          <div className="text-xl font-medium text-gray-900 dark:text-white">{formatCurrency(totals.totalValue)}</div>
+        </div>
+        <div className="p-4 rounded-lg bg-white dark:bg-[#1B2131] border border-gray-200 dark:border-gray-700/50">
+          <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">Total Profit</div>
+          <div className={`text-xl font-medium ${totals.totalProfit >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+            {formatCurrency(totals.totalProfit)}
+          </div>
+        </div>
       </div>
       
       {/* Filters and controls */}
-      <div className="filter-section">
+      <div className="px-4 space-y-4">
         <input
           type="text"
           placeholder="Search by name, set, or serial number..."
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
-          className="search-input"
+          className="w-full px-4 py-2 rounded-lg bg-white dark:bg-[#1B2131] border border-gray-200 dark:border-gray-700/50 text-gray-900 dark:text-white placeholder-gray-500"
         />
         
-        <div className="controls-container">
-          <div className="sort-container" ref={sortDropdownRef}>
-            <button
-              className="sort-button"
-              onClick={toggleSortDropdown}
-            >
-              <div>
-                <span className="material-icons">sort</span>
-                <span>Sort by {getSortFieldLabel(sortField)} {sortDirection === 'asc' ? '(Asc)' : '(Desc)'}</span>
-              </div>
-              <span className="material-icons">
-                {showSortDropdown ? 'keyboard_arrow_up' : 'keyboard_arrow_down'}
-              </span>
-            </button>
-            
-            {showSortDropdown && (
-              <div className="sort-dropdown">
-                {sortOptions.map(option => (
-                  <div
-                    key={option.field}
-                    className={`sort-option ${sortField === option.field ? 'active' : ''}`}
-                    onClick={() => handleSortChange(option.field)}
-                  >
-                    <span>{option.label}</span>
-                    {sortField === option.field && (
-                      <span className="material-icons">
-                        {sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward'}
-                      </span>
-                    )}
-                  </div>
-                ))}
-                
-                <div className="sort-option-divider"></div>
-                
-                <div 
-                  className="sort-option"
-                  onClick={toggleSortDirection}
-                >
-                  <span>Change Order: {sortDirection === 'asc' ? 'Ascending' : 'Descending'}</span>
-                  <span className="material-icons">
-                    {sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward'}
-                  </span>
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="relative" ref={sortDropdownRef}>
+              <button
+                className="flex items-center justify-between gap-2 px-4 py-2 w-48 rounded-lg bg-[#1B2131] border border-gray-700/50 text-gray-200 hover:bg-[#252B3B] transition-colors duration-200"
+                onClick={toggleSortDropdown}
+              >
+                <div className="flex items-center gap-2">
+                  <span className="material-icons text-gray-400">sort</span>
+                  <span className="text-sm">Sort by {getSortFieldLabel(sortField)}</span>
                 </div>
-              </div>
-            )}
+                <span className="material-icons text-gray-400">
+                  {showSortDropdown ? 'expand_less' : 'expand_more'}
+                </span>
+              </button>
+              
+              {showSortDropdown && (
+                <div className="absolute top-full left-0 mt-2 w-48 bg-[#1B2131] rounded-lg shadow-lg border border-gray-700/50 py-1 z-50">
+                  {sortOptions.map(option => (
+                    <button
+                      key={option.field}
+                      className={`w-full text-left px-4 py-2 flex items-center justify-between text-sm ${
+                        sortField === option.field 
+                          ? 'bg-[#252B3B] text-white' 
+                          : 'text-gray-200 hover:bg-[#252B3B] transition-colors duration-200'
+                      }`}
+                      onClick={() => handleSortChange(option.field)}
+                    >
+                      <span>{option.label}</span>
+                      {sortField === option.field && (
+                        <span className="material-icons text-sm">
+                          {sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward'}
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
           
-          <div className="view-container" ref={metricDropdownRef}>
-            <button
-              onClick={toggleMetricDropdown}
-              className="view-button"
-            >
-              <div className="flex items-center gap-2">
-                <span className="material-icons">visibility</span>
-                <span>View {metricOptions.find(opt => opt.value === displayMetric)?.label || 'Current Value'}</span>
-              </div>
-              <span className="material-icons">
-                {isMetricDropdownOpen ? 'expand_less' : 'expand_more'}
-              </span>
-            </button>
-            
-            {isMetricDropdownOpen && (
-              <div className="view-dropdown">
-                {metricOptions.map((option) => (
-                  <div
-                    key={option.value}
-                    className={`sort-option ${option.value === displayMetric ? 'active' : ''}`}
-                    onClick={() => {
-                      setDisplayMetric(option.value);
-                      setIsMetricDropdownOpen(false);
-                    }}
-                  >
-                    {option.value === displayMetric && (
-                      <span className="material-icons">check</span>
-                    )}
-                    {option.label}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-          
-          <div className="controls-right">
+          <div className="flex items-center gap-3">
             {selectedCards.size > 0 && (
               <>
                 <button
                   onClick={handleBulkSoldModalOpen}
-                  className="btn btn-secondary"
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white dark:bg-[#1B2131] border border-gray-200 dark:border-gray-700/50 text-gray-700 dark:text-gray-200"
                 >
-                  <span className="material-icons mr-2">sell</span>
-                  Mark as Sold ({selectedCards.size})
+                  <span className="material-icons">sell</span>
+                  <span>Mark as Sold ({selectedCards.size})</span>
                 </button>
                 <button
                   onClick={handleDeleteSelected}
-                  className="delete-button"
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600"
                   style={{ opacity: selectedCards.size === 0 ? 0.5 : 1 }}
                 >
-                  <span className="material-icons mr-2">delete</span>
-                  Delete ({selectedCards.size})
+                  <span className="material-icons">delete</span>
+                  <span>Delete ({selectedCards.size})</span>
                 </button>
               </>
             )}
             <button
               onClick={onAddCard}
-              className="btn btn-primary"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary/90"
             >
-              <span className="material-icons mr-2">add</span>
-              Add Card
+              <span className="material-icons">add</span>
+              <span>Add Card</span>
             </button>
           </div>
         </div>
       </div>
 
       {/* Card grid */}
-      <div className="card-grid">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 px-4">
         {filteredCards.map(card => (
           <Card
             key={card.slabSerial}
             card={card}
-            cardImage={cardImages[card.slabSerial]}
             onCardClick={onCardClick}
+            onCheckboxClick={handleSelectCard}
             isSelected={selectedCards.has(card.slabSerial)}
-            onSelect={handleSelectCard}
-            displayMetric={displayMetric}
-            onUpdateCard={onUpdateCard}
           />
         ))}
       </div>
@@ -952,6 +934,38 @@ const CardList = ({ cards, exchangeRate, onCardClick, onDeleteCards, onUpdateCar
                 ) : (
                   "Confirm Sale"
                 )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirmation && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]" onClick={(e) => {
+          if (e.target === e.currentTarget) {
+            setShowDeleteConfirmation(false);
+          }
+        }}>
+          <div className={`w-full max-w-md mx-4 p-6 rounded-xl shadow-lg ${isDarkMode ? 'bg-[#1B2131]' : 'bg-white'}`}>
+            <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200">
+              Delete Cards
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              Are you sure you want to delete {selectedCards.size} card{selectedCards.size !== 1 ? 's' : ''}? This action cannot be undone.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+                onClick={() => setShowDeleteConfirmation(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                onClick={confirmDelete}
+              >
+                Delete
               </button>
             </div>
           </div>

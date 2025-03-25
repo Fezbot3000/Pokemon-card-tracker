@@ -75,7 +75,8 @@ const FilterSection = ({
           )}
         </div>
 
-        <div className="view-container">
+        {/* Comment out the dropdown button */}
+        {/* <div className="view-container">
           <button 
             className="view-button"
             onClick={() => setIsViewOpen(!isViewOpen)}
@@ -106,7 +107,7 @@ const FilterSection = ({
               ))}
             </div>
           )}
-        </div>
+        </div> */}
       </div>
 
       <div className="column-headers">

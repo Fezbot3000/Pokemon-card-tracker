@@ -19,22 +19,25 @@ const CollectionSelector = ({ collections, selectedCollection, onCollectionChang
   }, []);
   
   return (
-    <div className="collection-selector" ref={dropdownRef}>
+    <div className="relative" ref={dropdownRef}>
       <button
-        className="collection-name"
+        className="flex items-center space-x-2 px-4 py-2 text-white bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors"
         onClick={() => setIsOpen(!isOpen)}
-        aria-label="Select collection"
       >
-        <span className="material-icons">lock</span>
         <span>{selectedCollection}</span>
-        <span className="material-icons">{isOpen ? 'keyboard_arrow_up' : 'keyboard_arrow_down'}</span>
+        <span className="material-icons text-xl">
+          {isOpen ? 'expand_less' : 'expand_more'}
+        </span>
       </button>
       
       {isOpen && (
-        <div className="collection-dropdown">
+        <div className="absolute z-50 mt-2 w-56 bg-white dark:bg-gray-700 rounded-lg shadow-lg py-1 right-0">
           {/* All Cards option */}
-          <div 
-            className={`collection-item ${selectedCollection === 'All Cards' ? 'text-primary' : ''}`}
+          <button
+            className={`w-full text-left px-4 py-2 flex items-center justify-between
+                       ${selectedCollection === 'All Cards' 
+                         ? 'text-primary bg-gray-100 dark:bg-gray-600' 
+                         : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600'}`}
             onClick={() => {
               onCollectionChange('All Cards');
               setIsOpen(false);
@@ -42,20 +45,22 @@ const CollectionSelector = ({ collections, selectedCollection, onCollectionChang
           >
             <span>All Cards</span>
             {selectedCollection === 'All Cards' && (
-              <span className="material-icons">check</span>
+              <span className="material-icons text-primary">check</span>
             )}
-          </div>
+          </button>
           
-          {/* Divider between All Cards and collections */}
-          <div className="collection-divider"></div>
+          <div className="border-t border-gray-200 dark:border-gray-600 my-1"></div>
           
           {/* Collections list */}
           {collections
             .filter(collection => collection !== 'All Cards')
             .map(collection => (
-              <div 
+              <button
                 key={collection}
-                className={`collection-item ${selectedCollection === collection ? 'text-primary' : ''}`}
+                className={`w-full text-left px-4 py-2 flex items-center justify-between
+                           ${selectedCollection === collection 
+                             ? 'text-primary bg-gray-100 dark:bg-gray-600' 
+                             : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600'}`}
                 onClick={() => {
                   onCollectionChange(collection);
                   setIsOpen(false);
@@ -63,17 +68,16 @@ const CollectionSelector = ({ collections, selectedCollection, onCollectionChang
               >
                 <span>{collection}</span>
                 {selectedCollection === collection && (
-                  <span className="material-icons">check</span>
+                  <span className="material-icons text-primary">check</span>
                 )}
-              </div>
+              </button>
             ))}
             
-          {/* Divider before Add Collection */}
-          <div className="collection-divider"></div>
+          <div className="border-t border-gray-200 dark:border-gray-600 my-1"></div>
           
           {/* Add Collection option */}
-          <div 
-            className="collection-item text-primary"
+          <button
+            className="w-full text-left px-4 py-2 flex items-center justify-between text-primary hover:bg-gray-100 dark:hover:bg-gray-600"
             onClick={(e) => {
               e.stopPropagation();
               onAddCollection();
@@ -82,7 +86,7 @@ const CollectionSelector = ({ collections, selectedCollection, onCollectionChang
           >
             <span>New Collection</span>
             <span className="material-icons">add</span>
-          </div>
+          </button>
         </div>
       )}
     </div>

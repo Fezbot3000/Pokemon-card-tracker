@@ -54,11 +54,11 @@
 @layer components {
   /* Header Styles */
   .app-header {
-    @apply sticky top-0 z-50 bg-white dark:bg-[#0B0F19] border-b border-gray-200 dark:border-gray-700/50;
+    @apply sticky top-0 z-50 bg-white dark:bg-[#0B0F19] border-b border-gray-200 dark:border-gray-700/50 shadow-lg;
   }
 
   .header-content {
-    @apply flex items-center justify-between py-3 px-4 lg:px-6 relative;
+    @apply max-w-[1920px] mx-auto flex items-center justify-between py-4 px-4 sm:px-6 lg:px-8;
   }
 
   .header-left {
@@ -66,11 +66,11 @@
   }
 
   .header-center {
-    @apply hidden lg:flex items-center gap-2 xl:gap-3 justify-center flex-grow px-4;
+    @apply flex-1 flex items-center justify-center px-4;
   }
 
   .header-right {
-    @apply hidden lg:flex items-center gap-2 xl:gap-3;
+    @apply hidden sm:flex items-center gap-3;
   }
 
   /* Header Buttons */
@@ -84,7 +84,7 @@
 
   /* Button Styles */
   .btn {
-    @apply px-4 py-3 rounded-xl transition-all duration-200 font-medium text-sm flex items-center justify-center h-12;
+    @apply inline-flex items-center justify-center px-4 py-2 rounded-xl font-medium text-sm transition-colors;
   }
 
   .btn span.material-icons {
@@ -98,9 +98,7 @@
 
   /* Mobile menu */
   .mobile-menu {
-    @apply fixed inset-x-0 top-[64px] bg-white dark:bg-[#1B2131] 
-           border-t border-gray-200 dark:border-gray-700/50
-           shadow-lg z-50;
+    @apply fixed inset-x-0 top-16 bg-[#1B2131] border-b border-gray-700/50 shadow-lg sm:hidden;
   }
 
   .mobile-menu-header {
@@ -108,14 +106,12 @@
   }
 
   .mobile-menu-content {
-    @apply p-6 space-y-4;
+    @apply py-2 px-4 space-y-2;
   }
 
   .mobile-menu-item {
-    @apply flex items-center gap-3 w-full px-4 py-3
-           text-gray-700 dark:text-gray-200
-           hover:bg-gray-50 dark:hover:bg-[#252B3B]
-           transition-colors;
+    @apply flex items-center w-full px-4 py-2 rounded-lg
+           text-gray-200 hover:bg-[#252B3B];
   }
 
   .mobile-menu-item .material-icons {
@@ -124,7 +120,7 @@
 
   /* Mobile menu button */
   .mobile-menu-button {
-    @apply block sm:hidden ml-4 p-2;
+    @apply sm:hidden p-2 text-gray-400 hover:text-gray-200;
   }
 
   .mobile-menu-button .material-icons {
@@ -146,21 +142,20 @@
 
   /* Collection Selector */
   .collection-selector {
-    @apply flex items-center gap-2 relative max-w-[300px];
-  }
-
-  .collection-selector .material-icons {
-    @apply inline-block flex-shrink-0;
+    @apply relative inline-flex items-center gap-2 px-4 py-2 rounded-xl
+           bg-white dark:bg-[#1B2131] text-gray-900 dark:text-white
+           border border-gray-200 dark:border-gray-700/50
+           hover:bg-gray-50 dark:hover:bg-[#252B3B] cursor-pointer;
   }
 
   .collection-name {
     @apply flex items-center gap-1.5 xl:gap-2 text-gray-900 dark:text-white font-medium 
            hover:bg-gray-100 dark:hover:bg-[#252B3B] px-2 xl:px-3 py-2 rounded-xl transition-colors
-           truncate w-full;
+           max-w-[200px] sm:max-w-[300px];
   }
 
   .collection-name span:not(.material-icons) {
-    @apply truncate flex-1;
+    @apply truncate;
   }
 
   .collection-lock {
@@ -169,58 +164,54 @@
 
   /* Collection Dropdown */
   .collection-dropdown {
-    @apply absolute top-full left-0 mt-2 w-[300px]
-           bg-white dark:bg-[#1B2131] rounded-xl shadow-lg 
-           border border-gray-200 dark:border-gray-700/50 py-2 z-50;
+    @apply absolute z-50 mt-2 w-56 bg-white dark:bg-[#1B2131] rounded-xl shadow-lg py-1 right-0
+           border border-gray-200 dark:border-gray-700/50;
   }
 
   .collection-item {
-    @apply flex items-center justify-between px-4 py-2 
-           hover:bg-gray-50 dark:hover:bg-[#252B3B] cursor-pointer 
-           text-gray-900 dark:text-gray-200;
+    @apply w-full text-left px-4 py-2 flex items-center justify-between truncate;
   }
 
-  .collection-item.text-primary {
-    @apply text-[#4318FF];
+  .collection-item-active {
+    @apply text-primary bg-gray-50 dark:bg-[#252B3B];
+  }
+
+  .collection-item-default {
+    @apply text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-[#252B3B];
   }
 
   .collection-divider {
-    @apply h-px bg-gray-200 dark:bg-gray-700/50 my-1 mx-4;
+    @apply border-t border-gray-200 dark:border-gray-600 my-1;
   }
 
   /* Button Styles */
   .btn-primary {
-    @apply bg-[#4318FF] text-white hover:bg-[#4318FF]/90;
+    @apply bg-primary text-white hover:bg-primary/90;
   }
 
   .btn-secondary {
-    @apply bg-white text-gray-700 hover:bg-gray-50 border border-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700 dark:border-gray-700;
+    @apply bg-gray-100 dark:bg-[#1B2131] text-gray-700 dark:text-gray-200 
+           hover:bg-gray-200 dark:hover:bg-[#252B3B]
+           border border-gray-200 dark:border-gray-700/50;
   }
 
   .btn-danger {
-    @apply bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400 
-           hover:bg-red-200 dark:hover:bg-red-900/30 
-           border border-red-200 dark:border-red-900/30;
+    @apply bg-red-500 text-white hover:bg-red-600;
   }
 
   /* Delete button */
   .delete-button {
-    @apply w-full px-4 py-3 rounded-xl h-12
-           bg-red-600 dark:bg-red-800
-           text-white font-medium
-           hover:bg-red-700 dark:hover:bg-red-700
-           transition-colors flex items-center justify-center;
+    @apply btn btn-danger flex items-center gap-2;
   }
 
   /* Stats Section */
   .stats-section {
-    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 xl:gap-4 px-2 sm:px-4 xl:px-6 py-3;
+    @apply grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6;
   }
 
   .stat-card {
     @apply p-4 rounded-xl bg-white dark:bg-[#1B2131] 
-           border border-gray-200 dark:border-gray-700/50
-           transition-all duration-200;
+           border border-gray-200 dark:border-gray-700/50;
   }
 
   .stat-label {
@@ -242,13 +233,11 @@
 
   /* Search and Filter Section */
   .search-input {
-    @apply w-full px-4 py-3 h-12
-           bg-white dark:bg-[#1B2131] 
-           border border-gray-200 dark:border-gray-700/50 
-           rounded-xl text-gray-900 dark:text-gray-100 
-           placeholder-gray-500 dark:placeholder-gray-400
-           focus:ring-2 focus:ring-primary/20 focus:border-primary 
-           transition-colors;
+    @apply w-full px-4 py-2 rounded-xl
+           bg-white dark:bg-[#1B2131]
+           border border-gray-200 dark:border-gray-700/50
+           text-gray-900 dark:text-white
+           placeholder-gray-500 dark:placeholder-gray-400;
   }
 
   .filter-section {
@@ -257,43 +246,34 @@
 
   /* Sort and View Controls */
   .controls-container {
-    @apply flex flex-col sm:flex-row gap-2 w-full mt-1;
+    @apply flex flex-wrap items-center justify-between gap-4 mt-4;
   }
 
   .sort-container, .view-container {
-    @apply relative flex-1;
-  }
-
-  .controls-right {
-    @apply flex flex-row items-center gap-2 mt-2 w-full;
+    @apply relative;
   }
 
   .sort-button, .view-button {
-    @apply flex items-center justify-between w-full px-4 py-3 h-12 rounded-xl 
-           bg-white dark:bg-[#1B2131] 
+    @apply flex items-center justify-between gap-2 px-4 py-2 w-48
+           rounded-xl bg-white dark:bg-[#1B2131]
            border border-gray-200 dark:border-gray-700/50
-           text-gray-900 dark:text-white text-sm
-           hover:bg-gray-50 dark:hover:bg-[#252B3B] transition-colors;
+           text-gray-700 dark:text-gray-200
+           hover:bg-gray-50 dark:hover:bg-[#252B3B];
   }
 
-  .sort-button > div, .view-button > div {
-    @apply flex items-center gap-2;
-  }
-
-  .sort-button .material-icons, 
-  .view-button .material-icons {
-    @apply text-gray-500 dark:text-gray-400;
+  .controls-right {
+    @apply flex items-center gap-3;
   }
 
   .sort-dropdown, .view-dropdown {
-    @apply absolute top-full left-0 right-0 mt-2 w-full
+    @apply absolute top-full left-0 right-0 mt-2 w-48
            bg-white dark:bg-[#1B2131] rounded-xl shadow-lg 
            border border-gray-200 dark:border-gray-700/50 
            py-2 z-50;
   }
 
   .sort-option {
-    @apply flex items-center gap-2 px-4 py-2
+    @apply flex items-center justify-between gap-2 px-4 py-2
            text-gray-900 dark:text-white text-sm
            hover:bg-gray-50 dark:hover:bg-[#252B3B] cursor-pointer;
   }
@@ -322,29 +302,69 @@
 
   /* Card Grid */
   .card-grid {
-    @apply grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 
-           gap-3 xl:gap-4 px-2 sm:px-4 xl:px-6 mt-3;
+    @apply grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6
+           gap-4 sm:gap-6 p-4 sm:p-6;
   }
 
   /* Card Styles */
-  .card {
-    @apply bg-white dark:bg-[#1B2131] rounded-xl 
-           border border-gray-200 dark:border-gray-700/50 
-           overflow-hidden transition-all duration-200
-           hover:bg-gray-50 dark:hover:bg-[#252B3B]
-           w-full;
+  .card-item {
+    @apply relative rounded-lg overflow-hidden cursor-pointer transition-all duration-200
+           bg-white dark:bg-[#1B2131] border border-gray-200 dark:border-gray-700/50;
+  }
+
+  .card-item:hover {
+    @apply transform shadow-md bg-gray-50 dark:bg-[#252B3B];
   }
 
   .card-image {
     @apply aspect-[2/3] relative overflow-hidden;
   }
 
-  .card-image img {
-    @apply w-full h-full object-cover;
+  .card-content {
+    @apply p-3;
   }
 
-  .card-content {
-    @apply p-4;
+  .card-title {
+    @apply text-sm font-medium text-gray-800 dark:text-gray-200 truncate;
+  }
+
+  .card-subtitle {
+    @apply text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5;
+  }
+
+  .card-metrics {
+    @apply mt-2 space-y-1;
+  }
+
+  .card-metric {
+    @apply flex items-center justify-between text-xs;
+  }
+
+  .metric-label {
+    @apply text-gray-500 dark:text-gray-400;
+  }
+
+  .metric-value {
+    @apply text-gray-800 dark:text-gray-200 font-medium;
+  }
+
+  .metric-value.profit {
+    @apply text-green-500 dark:text-green-400;
+  }
+
+  .metric-value.loss {
+    @apply text-red-500 dark:text-red-400;
+  }
+
+  /* Checkbox Styles */
+  .checkbox-container {
+    @apply absolute top-2 right-2 z-10;
+  }
+
+  .checkbox-input {
+    @apply h-4 w-4 rounded border-gray-300 dark:border-gray-600
+           text-primary focus:ring-primary/20
+           bg-white dark:bg-[#1B2131];
   }
 
   /* Filter Section */
@@ -370,16 +390,24 @@
   }
 
   /* Modal Styles */
-  .modal {
-    @apply fixed inset-0 z-50 flex items-center justify-center bg-black/50;
+  .modal-overlay {
+    @apply fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50;
   }
 
   .modal-content {
-    @apply bg-white dark:bg-[#1B2131] rounded-xl w-full max-w-md mx-4 overflow-hidden;
+    @apply w-full max-w-4xl mx-4 rounded-xl shadow-lg overflow-hidden;
   }
 
   .modal-header {
-    @apply flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700/50;
+    @apply px-6 py-4 border-b border-gray-200 dark:border-gray-700;
+  }
+
+  .modal-body {
+    @apply p-6;
+  }
+
+  .modal-footer {
+    @apply px-6 py-4 border-t border-gray-200 dark:border-gray-700;
   }
 
   .modal-title {
@@ -388,10 +416,6 @@
 
   .modal-close {
     @apply text-2xl text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300;
-  }
-
-  .modal-body {
-    @apply p-6;
   }
 
   .modal-label {
@@ -405,10 +429,6 @@
            text-gray-900 dark:text-white
            focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary
            placeholder-gray-500 dark:placeholder-gray-400;
-  }
-
-  .modal-footer {
-    @apply flex justify-end gap-2 mt-6;
   }
 
   .modal-btn-cancel {
@@ -428,11 +448,8 @@
 
   /* Dropdown Styles */
   .dropdown {
-    @apply absolute right-0 mt-2 w-48 rounded-xl shadow-lg;
-  }
-
-  .dropdown-item {
-    @apply flex items-center px-4 py-2 text-sm cursor-pointer transition-all duration-200;
+    @apply max-h-[80vh] overflow-y-auto;
+    max-width: calc(100vw - 2rem);
   }
 
   /* Collection Styles */
@@ -451,8 +468,7 @@
 
   /* Card image and upload container styles */
   .card-image-display {
-    @apply relative aspect-[3/4] max-h-64 max-w-xs w-full 
-           bg-transparent overflow-hidden;
+    @apply w-full aspect-[2/3] bg-gray-100 dark:bg-[#1B2131] rounded-lg overflow-hidden;
   }
 
   /* Upload image area styles */
@@ -513,20 +529,32 @@
 
   /* Loading States */
   .skeleton {
-    @apply animate-pulse bg-gray-200 dark:bg-gray-700 rounded;
+    @apply bg-gray-200 dark:bg-gray-700 animate-pulse rounded;
+  }
+
+  .skeleton-text {
+    @apply h-4 w-3/4 bg-gray-200 dark:bg-gray-700 animate-pulse rounded;
+  }
+
+  .skeleton-image {
+    @apply aspect-[2/3] bg-gray-200 dark:bg-gray-700 animate-pulse rounded-lg;
   }
 
   /* Toast Notifications */
   .toast {
-    @apply fixed top-4 right-4 z-[100] px-6 py-3 rounded-lg shadow-lg;
+    @apply fixed top-4 right-4 z-[100] px-6 py-3 rounded-lg shadow-lg transition-opacity duration-300;
   }
 
   .toast-success {
-    @apply toast bg-green-500 text-white;
+    @apply bg-green-500 text-white;
   }
 
   .toast-error {
-    @apply toast bg-red-500 text-white;
+    @apply bg-red-500 text-white;
+  }
+
+  .toast-warning {
+    @apply bg-yellow-500 text-white;
   }
 
   /* Grid Layouts */
@@ -562,7 +590,13 @@
 
   /* Input styles */
   .input {
-    @apply w-full px-3 py-2 bg-white dark:bg-[#1B2131] border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100;
+    @apply w-full px-3 py-2 rounded-lg
+           bg-white dark:bg-[#1B2131]
+           border border-gray-200 dark:border-gray-700/50
+           text-gray-900 dark:text-white
+           placeholder-gray-500 dark:placeholder-gray-400
+           focus:outline-none focus:ring-2 focus:ring-primary/20
+           disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   .input:disabled {
@@ -590,59 +624,6 @@
   /* Responsive padding for main content */
   .app-content {
     @apply px-2 sm:px-6;
-  }
-
-  /* Ensure dropdowns don't overflow on mobile */
-  .sort-dropdown,
-  .view-dropdown,
-  .collection-dropdown {
-    @apply max-h-[80vh] overflow-y-auto;
-    max-width: calc(100vw - 2rem);
-  }
-
-  @screen sm {
-    .controls-container {
-      @apply flex flex-row items-center gap-2;
-    }
-
-    .sort-container, .view-container {
-      @apply flex-1 basis-[calc(50%-160px)];
-    }
-
-    .controls-right {
-      @apply flex-row items-center gap-2 ml-auto w-auto mt-0;
-    }
-
-    .delete-button, .btn-primary {
-      @apply w-[160px];
-    }
-
-    /* Tablet view: Show icons, hide text */
-    .btn span.material-icons {
-      @apply inline-block;
-    }
-    
-    .btn span:not(.material-icons) {
-      @apply hidden;
-    }
-    
-    /* Hide burger menu on tablet and above */
-    .mobile-menu-button {
-      @apply hidden;
-    }
-  }
-
-  @screen lg {
-    .sort-container, .view-container {
-      @apply max-w-[280px];
-    }
-  }
-
-  @screen xl {
-    /* Desktop view: Show icons and text */
-    .btn span:not(.material-icons) {
-      @apply inline;
-    }
   }
 
   /* Ensure main content doesn't scroll when mobile menu is open */
@@ -706,6 +687,34 @@
 
   .profit-change-close {
     @apply btn btn-primary px-6;
+  }
+
+  /* Auth page background */
+  .auth-background {
+    background-color: #166534; /* Fallback color */
+    background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5));
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+
+  /* Responsive Adjustments */
+  @media (max-width: 640px) {
+    .controls-container {
+      @apply flex-col;
+    }
+
+    .sort-container, .view-container {
+      @apply w-full;
+    }
+
+    .sort-button, .view-button {
+      @apply w-full;
+    }
+
+    .controls-right {
+      @apply w-full grid grid-cols-2 gap-3;
+    }
   }
 }
 

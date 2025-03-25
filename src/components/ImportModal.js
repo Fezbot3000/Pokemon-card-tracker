@@ -3,6 +3,7 @@ import { useTheme } from '../contexts/ThemeContext';
 
 const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading }) => {
   const [dragActive, setDragActive] = useState(false);
+  const [error, setError] = useState(null);
   const fileInputRef = useRef(null);
   const { isDarkMode } = useTheme();
 
@@ -16,20 +17,51 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading 
     }
   };
 
+  const validateFile = (file) => {
+    if (!file) {
+      throw new Error('No file selected');
+    }
+    
+    if (!file.name.toLowerCase().endsWith('.csv')) {
+      throw new Error('Please upload a CSV file');
+    }
+    
+    if (file.size > 10 * 1024 * 1024) { // 10MB limit
+      throw new Error('File size too large. Maximum size is 10MB');
+    }
+  };
+
+  const handleFile = async (file) => {
+    try {
+      setError(null);
+      validateFile(file);
+      await onImport(file);
+    } catch (err) {
+      setError(err.message);
+      console.error('Import error:', err);
+    }
+  };
+
   const handleDrop = (e) => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
     
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      onImport(e.dataTransfer.files[0]);
+      handleFile(e.dataTransfer.files[0]);
     }
   };
 
   const handleChange = (e) => {
     e.preventDefault();
     if (e.target.files && e.target.files[0]) {
-      onImport(e.target.files[0]);
+      handleFile(e.target.files[0]);
+    }
+  };
+
+  const handleButtonClick = () => {
+    if (!loading) {
+      fileInputRef.current?.click();
     }
   };
 
@@ -54,6 +86,7 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading 
           className={`
             border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg p-8 flex flex-col items-center justify-center
             ${dragActive ? 'border-primary dark:border-primary bg-primary/5 dark:bg-primary/10' : ''}
+            ${error ? 'border-red-500 dark:border-red-500' : ''}
           `}
           onDragEnter={handleDrag}
           onDragLeave={handleDrag}
@@ -66,12 +99,27 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading 
             <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">or click to select a file</p>
           </div>
           
+          {error && (
+            <div className="text-red-500 dark:text-red-400 text-sm mb-4">
+              {error}
+            </div>
+          )}
+          
           <button
-            className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90"
-            onClick={() => fileInputRef.current?.click()}
+            className={`px-6 py-2 bg-primary text-white rounded-lg transition-all duration-200 ${
+              loading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-primary/90'
+            }`}
+            onClick={handleButtonClick}
             disabled={loading}
           >
-            {loading ? 'Processing...' : 'Select File'}
+            {loading ? (
+              <div className="flex items-center gap-2">
+                <span className="material-icons animate-spin">sync</span>
+                Processing...
+              </div>
+            ) : (
+              'Select File'
+            )}
           </button>
           
           <input
@@ -85,7 +133,7 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading 
 
         <div className="mt-10">
           <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">
-            Price Update Instructions
+            {mode === 'baseData' ? 'Base Data Import' : 'Price Update'} Instructions
           </h2>
           
           <p className="text-gray-600 dark:text-gray-400 mb-4">

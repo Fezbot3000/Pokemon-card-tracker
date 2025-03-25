@@ -75,11 +75,23 @@ const useCardData = () => {
   
   // Select a card to view details
   const selectCard = (card) => {
-    setSelectedCard(card);
+    console.log("selectCard called with:", card);
+    if (!card) {
+      console.error("Attempted to select a null/undefined card");
+      return;
+    }
+    
+    // Create a deep copy to ensure state changes
+    const cardCopy = JSON.parse(JSON.stringify(card));
+    console.log("Setting selected card to:", cardCopy);
+    
+    // Set the selected card
+    setSelectedCard(cardCopy);
   };
   
   // Clear selected card
   const clearSelectedCard = () => {
+    console.log("Clearing selected card");
     setSelectedCard(null);
   };
   

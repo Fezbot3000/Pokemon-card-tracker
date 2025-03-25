@@ -28,9 +28,13 @@ export const ThemeProvider = ({ children }) => {
     toggleTheme,
     colors: {
       background: isDarkMode ? '#0B0F19' : '#ffffff',
-      text: isDarkMode ? '#ffffff' : '#000000',
+      card: isDarkMode ? '#1B2131' : '#ffffff',
+      cardHover: isDarkMode ? '#252B3B' : '#f9fafb',
+      text: isDarkMode ? '#ffffff' : '#111827',
+      textSecondary: isDarkMode ? '#9CA3AF' : '#4B5563',
+      textTertiary: isDarkMode ? '#6B7280' : '#6B7280',
+      border: isDarkMode ? 'rgba(75, 85, 99, 0.5)' : '#e5e7eb',
       primary: '#4318FF',
-      secondary: '#6c757d',
     },
   };
 
