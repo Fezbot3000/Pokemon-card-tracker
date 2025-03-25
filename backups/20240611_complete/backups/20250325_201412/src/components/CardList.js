@@ -11,127 +11,107 @@ const CardActionsContext = React.createContext(null);
 // Extracted Card component for better performance
 const Card = memo(({ card, onCardClick, onCheckboxClick, isSelected }) => {
   const [imageUrl, setImageUrl] = useState(null);
-  const [imageLoaded, setImageLoaded] = useState(false);
-  const [imageError, setImageError] = useState(false);
+  const [imageLoading, setImageLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
+  const maxAttempts = 2;
   const imageUrlRef = useRef(null);
-  const mountedRef = useRef(true);
-  const cardId = card.slabSerial;
   
   // Access card actions context for refresh functionality
   const cardActions = React.useContext(CardActionsContext);
 
-  // Clean up image URL when component unmounts
   useEffect(() => {
-    return () => {
-      if (imageUrlRef.current) {
-        URL.revokeObjectURL(imageUrlRef.current);
-      }
-    };
-  }, []);
+    let isMounted = true;
+    let timeoutId = null;
 
-  // Load image on mount
-  useEffect(() => {
-    mountedRef.current = true;
-    
-    // Function to load image
     const loadImage = async () => {
+      if (!isMounted) return;
+      
       try {
-        // Try to get from IndexedDB first
-        const imageBlob = await db.getImage(cardId);
+        setImageLoading(true);
+        // Try to load from IndexedDB first
+        const imageBlob = await db.getImage(card.slabSerial);
         
-        if (imageBlob && mountedRef.current) {
-          // Create object URL from blob
-          if (imageUrlRef.current) {
-            URL.revokeObjectURL(imageUrlRef.current);
+        if (imageBlob && isMounted) {
+          // Only create and set new URL if we don't already have one
+          if (!imageUrlRef.current) {
+            const url = URL.createObjectURL(imageBlob);
+            imageUrlRef.current = url;
+            setImageUrl(url);
           }
-          const url = URL.createObjectURL(imageBlob);
-          imageUrlRef.current = url;
-          setImageUrl(url);
-        } else if (cardActions?.refreshImage && mountedRef.current) {
-          // Try to fetch from Firebase
-          const success = await cardActions.refreshImage(cardId);
-          if (success && mountedRef.current) {
-            // Try to get from IndexedDB again
-            const refreshedBlob = await db.getImage(cardId);
-            if (refreshedBlob) {
-              if (imageUrlRef.current) {
-                URL.revokeObjectURL(imageUrlRef.current);
+          setLoadAttempt(0); // Reset attempts counter on success
+        } else if (loadAttempt < maxAttempts && cardActions?.refreshImage && isMounted) {
+          // Add delay between attempts
+          timeoutId = setTimeout(async () => {
+            console.log(`Auto-fetching image for card ${card.slabSerial} (attempt ${loadAttempt + 1}/${maxAttempts})`);
+            setLoadAttempt(prev => prev + 1);
+            
+            try {
+              const success = await cardActions.refreshImage(card.slabSerial);
+              if (!success && loadAttempt + 1 >= maxAttempts && isMounted) {
+                console.log(`Failed to load image for card ${card.slabSerial} after ${maxAttempts} attempts`);
               }
-              const url = URL.createObjectURL(refreshedBlob);
-              imageUrlRef.current = url;
-              setImageUrl(url);
+            } catch (fetchError) {
+              console.error('Error fetching image from cloud:', fetchError);
             }
-          }
+          }, 1000 * loadAttempt); // Exponential backoff
         }
       } catch (error) {
-        console.error(`Error loading image for ${cardId}:`, error);
-        if (mountedRef.current) {
-          setImageError(true);
+        console.error('Error loading image:', error);
+      } finally {
+        if (isMounted) {
+          setImageLoading(false);
         }
       }
     };
-    
-    // Simple staggered loading with static delay
-    const delay = Math.min(card.index * 100, 3000);
-    const timerId = setTimeout(loadImage, delay);
-    
+
+    loadImage();
+
+    // Cleanup
     return () => {
-      mountedRef.current = false;
-      clearTimeout(timerId);
+      isMounted = false;
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      // Only revoke URL when component is unmounting and we have a URL to revoke
+      if (imageUrlRef.current) {
+        URL.revokeObjectURL(imageUrlRef.current);
+        imageUrlRef.current = null;
+      }
     };
-  }, [cardId, card.index, cardActions]);
+  }, [card.slabSerial, card.imageUpdatedAt, loadAttempt, cardActions, maxAttempts]);
 
-  // Handle image load complete
-  const handleImageLoad = () => {
-    setImageLoaded(true);
-  };
-
-  // Handle image load failure
-  const handleImageError = () => {
-    setImageError(true);
-  };
-
-  // Handle click on card
   const handleClick = (e) => {
+    // Stop event propagation to prevent both checkbox and card click from firing
+    e.stopPropagation();
     if (!e.target.closest('.checkbox-container') && !e.target.closest('.refresh-image-btn')) {
       onCardClick(card);
     }
   };
 
-  // Handle checkbox click
   const handleCheckboxClick = (e) => {
     e.stopPropagation();
     onCheckboxClick(card.slabSerial);
   };
-
-  // Handle refresh image click
+  
   const handleRefreshImage = async (e) => {
     e.stopPropagation();
+    if (refreshing) return;
     
     try {
-      setImageError(false);
-      
+      setRefreshing(true);
+      // Use the refreshImage function from context
       if (cardActions?.refreshImage) {
-        // Force refresh from cloud
-        const success = await cardActions.refreshImage(cardId, true);
-        
-        if (success && mountedRef.current) {
-          const imageBlob = await db.getImage(cardId);
-          if (imageBlob) {
-            if (imageUrlRef.current) {
-              URL.revokeObjectURL(imageUrlRef.current);
-            }
-            const url = URL.createObjectURL(imageBlob);
-            imageUrlRef.current = url;
-            setImageUrl(url);
-          }
+        const success = await cardActions.refreshImage(card.slabSerial);
+        if (!success) {
+          console.warn(`Manual refresh failed for card ${card.slabSerial}`);
         }
       }
     } catch (error) {
-      console.error(`Error refreshing image:`, error);
-      if (mountedRef.current) {
-        setImageError(true);
-      }
+      console.error('Error refreshing image:', error);
+    } finally {
+      setRefreshing(false);
+      setLoadAttempt(0); // Reset attempt counter after manual refresh
     }
   };
 
@@ -144,7 +124,6 @@ const Card = memo(({ card, onCardClick, onCheckboxClick, isSelected }) => {
       role="button"
       tabIndex={0}
     >
-      {/* Checkbox */}
       <div 
         className="absolute top-2 right-2 z-10 checkbox-container"
         onClick={handleCheckboxClick}
@@ -160,61 +139,58 @@ const Card = memo(({ card, onCardClick, onCheckboxClick, isSelected }) => {
         </div>
       </div>
       
-      {/* Refresh button */}
+      {/* Add refresh image button */}
       <div 
         className="absolute top-2 left-2 z-10 refresh-image-btn"
         onClick={handleRefreshImage}
         title="Refresh image from cloud"
       >
-        <div className="w-7 h-7 rounded-full bg-black/40 hover:bg-black/60 flex items-center justify-center transition-colors duration-200">
-          <span className="material-icons text-white text-sm">refresh</span>
+        <div className={`w-7 h-7 rounded-full bg-black/40 hover:bg-black/60 flex items-center justify-center transition-colors duration-200 ${refreshing ? 'animate-spin' : ''}`}>
+          <span className="material-icons text-white text-sm">
+            {refreshing ? 'hourglass_empty' : 'refresh'}
+          </span>
         </div>
       </div>
 
-      {/* Card image area */}
       <div className="aspect-[2/3] relative">
-        {/* Loading state or error state */}
-        {(!imageUrl || !imageLoaded) && !imageError && (
-          <div className="w-full h-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center absolute inset-0 z-10">
+        {imageLoading ? (
+          <div className="w-full h-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
             <span className="material-icons text-4xl text-gray-400 animate-pulse">hourglass_empty</span>
           </div>
-        )}
-        
-        {/* Error state */}
-        {imageError && (
-          <div className="w-full h-full bg-gray-100 dark:bg-gray-800 flex flex-col items-center justify-center absolute inset-0 z-10">
-            <span className="material-icons text-4xl text-red-400">broken_image</span>
-            <span className="text-xs text-gray-400 mt-2">Image not available</span>
-          </div>
-        )}
-        
-        {/* Actual image - hidden until loaded */}
-        {imageUrl && (
+        ) : imageUrl ? (
           <img
             src={imageUrl}
             alt={`${card.player} ${card.card}`}
-            className={`w-full h-full object-cover transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
-            onLoad={handleImageLoad}
-            onError={handleImageError}
+            className="w-full h-full object-cover"
+            loading="lazy"
           />
+        ) : (
+          <div className="w-full h-full bg-gray-100 dark:bg-gray-800 flex flex-col items-center justify-center">
+            <span className="material-icons text-4xl text-gray-400">image</span>
+            {loadAttempt >= maxAttempts && (
+              <span className="text-xs text-gray-400 mt-2">Image not available</span>
+            )}
+          </div>
         )}
       </div>
 
-      {/* Card info */}
-      <div className="p-3">
-        <div className="flex justify-between items-start mb-2">
-          <div className="flex-1">
-            <h3 className="font-medium text-gray-900 dark:text-white line-clamp-1">{card.player}</h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-1">{card.card}</p>
+      <div className="p-3 bg-white dark:bg-[#1B2131]">
+        <h3 className="font-medium text-gray-900 dark:text-white truncate">{card.player}</h3>
+        <p className="text-sm text-gray-600 dark:text-gray-400 truncate">{card.card}</p>
+        <div className="mt-2 space-y-1">
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-600 dark:text-gray-400">Investment</span>
+            <span className="font-medium text-gray-900 dark:text-white">{formatCurrency(card.investmentAUD)}</span>
           </div>
-        </div>
-        
-        <div className="flex justify-between items-center text-sm">
-          <div className="text-gray-500 dark:text-gray-400">
-            {card.slabSerial}
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-600 dark:text-gray-400">Value</span>
+            <span className="font-medium text-gray-900 dark:text-white">{formatCurrency(card.currentValueAUD)}</span>
           </div>
-          <div className="font-medium text-gray-900 dark:text-white">
-            {formatCurrency(card.value)}
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-600 dark:text-gray-400">Profit</span>
+            <span className={`font-medium ${card.potentialProfit >= 0 ? 'text-green-600 dark:text-green-500' : 'text-red-600 dark:text-red-500'}`}>
+              {formatCurrency(card.potentialProfit)}
+            </span>
           </div>
         </div>
       </div>
@@ -709,14 +685,14 @@ const CardList = ({
     setShowBulkSoldModal(true);
   };
 
-  // Simplify the loadCardImage function
-  const loadCardImage = useCallback(async (cardId, forceReload = false) => {
+  // Add a function to load a specific card image from the cloud
+  const loadCardImage = useCallback(async (cardId) => {
     if (!user || !cardId) return false;
     
     try {
       // First check if the image already exists in IndexedDB
       const existingImage = await db.getImage(cardId);
-      if (existingImage && existingImage.size > 0 && !forceReload) {
+      if (existingImage && existingImage.size > 0) {
         // Update the displayed image
         if (cardImages[cardId]) {
           URL.revokeObjectURL(cardImages[cardId]);
@@ -731,84 +707,70 @@ const CardList = ({
         return true;
       }
       
-      // Not in IndexedDB or forced reload, try to get from Firebase Storage
-      const imageBlob = await cardService.getImage(user.uid, cardId);
+      // Image not in IndexedDB, try to get from Firebase Storage
+      console.log(`Fetching image for card ${cardId} from cloud storage...`);
       
-      if (!imageBlob) {
-        // Image doesn't exist, mark it as missing
-        if (db.markImageAsMissing) {
-          db.markImageAsMissing(cardId);
+      // Implement retry logic
+      let attempts = 0;
+      const maxAttempts = 2;
+      let success = false;
+      let error = null;
+      
+      while (attempts < maxAttempts && !success) {
+        try {
+          // Attempt to get the image from Firebase Storage
+          const imageBlob = await cardService.getImage(user.uid, cardId);
+          
+          if (!imageBlob || imageBlob.size === 0) {
+            throw new Error('Empty image blob received from Firebase Storage');
+          }
+          
+          // Save to IndexedDB for future use
+          await db.saveImage(cardId, imageBlob);
+          
+          // Update the displayed image
+          if (cardImages[cardId]) {
+            URL.revokeObjectURL(cardImages[cardId]);
+          }
+          
+          const imageUrl = URL.createObjectURL(imageBlob);
+          setCardImages(prev => ({
+            ...prev,
+            [cardId]: imageUrl
+          }));
+          
+          console.log(`Successfully loaded image for card ${cardId} from cloud`);
+          success = true;
+          return true;
+        } catch (err) {
+          error = err;
+          attempts++;
+          
+          if (attempts < maxAttempts) {
+            console.log(`Retrying image fetch for card ${cardId}, attempt ${attempts + 1}/${maxAttempts}`);
+            // Add an exponential backoff
+            await new Promise(resolve => setTimeout(resolve, 500 * Math.pow(2, attempts)));
+          }
         }
-        return false;
       }
       
-      // Save to IndexedDB
-      await db.saveImage(cardId, imageBlob);
-      
-      // Update the displayed image
-      if (cardImages[cardId]) {
-        URL.revokeObjectURL(cardImages[cardId]);
+      if (!success) {
+        console.error(`Failed to load image for card ${cardId} after ${maxAttempts} attempts:`, error);
       }
       
-      const imageUrl = URL.createObjectURL(imageBlob);
-      setCardImages(prev => ({
-        ...prev,
-        [cardId]: imageUrl
-      }));
-      
-      return true;
+      return success;
     } catch (error) {
-      console.error(`Error loading image for ${cardId}:`, error);
-      
-      // Mark as missing if it's a not-found error
-      if (error.code === 'storage/object-not-found') {
-        if (db.markImageAsMissing) {
-          db.markImageAsMissing(cardId);
-        }
-      }
-      
+      console.error('Error loading card image from cloud:', error);
       return false;
     }
   }, [user, cardImages]);
 
   // Create a context value with card functions for child components
   const cardActionsContext = useMemo(() => ({
-    refreshImage: async (cardId, forceReload = false) => {
-      try {
-        if (!user) return false;
-        
-        // If forceReload, try to get from Firebase directly
-        if (forceReload) {
-          const imageBlob = await cardService.getImage(user.uid, cardId);
-          if (imageBlob) {
-            await db.saveImage(cardId, imageBlob);
-            return true;
-          }
-          return false;
-        }
-        
-        // Otherwise, check IndexedDB first
-        const existingImage = await db.getImage(cardId);
-        if (existingImage && existingImage.size > 0) {
-          return true;
-        }
-        
-        // If not in IndexedDB, try to get from Firebase
-        const imageBlob = await cardService.getImage(user.uid, cardId);
-        if (imageBlob) {
-          await db.saveImage(cardId, imageBlob);
-          return true;
-        }
-        
-        return false;
-      } catch (error) {
-        console.error(`Error refreshing image for ${cardId}:`, error);
-        return false;
-      }
-    },
+    refreshImage: (cardId) => loadCardImage(cardId),
     selectCard: handleSelectCard,
     isSelected: (cardId) => selectedCards.has(cardId)
-  }), [user, handleSelectCard, selectedCards]);
+  }), [loadCardImage, handleSelectCard, selectedCards]);
 
   // Add debugging log
   useEffect(() => {

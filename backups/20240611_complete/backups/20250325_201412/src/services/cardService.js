@@ -8,7 +8,7 @@ import {
   query,
   where
 } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL, uploadBytesResumable, getMetadata } from 'firebase/storage';
+import { ref, uploadBytes, getDownloadURL, uploadBytesResumable } from 'firebase/storage';
 import { db as firestore, storage } from '../config/firebase';
 import { db as localDb } from './db';
 import { getStorage } from 'firebase/storage';
@@ -21,7 +21,6 @@ export class CardService {
     this.firestore = firestore;
     this.storage = storage;
     this.localDb = localDb;
-    this.missingImageCacheKey = 'missingImages';
   }
 
   // Helper function to delay execution
@@ -159,118 +158,84 @@ export class CardService {
     }
   }
 
-  // Simplified image exists check
-  async checkImageExists(userId, cardId) {
-    try {
-      // Check if this image is known to be missing
-      const missing = JSON.parse(localStorage.getItem(this.missingImageCacheKey) || '[]');
-      if (missing.includes(cardId)) {
-        return false;
-      }
-      
-      const imageRef = ref(this.storage, `users/${userId}/cards/${cardId}`);
-      await getMetadata(imageRef);
-      return true;
-    } catch (error) {
-      if (error.code === 'storage/object-not-found') {
-        this.addToMissingCache(cardId);
-        return false;
-      }
-      throw error;
+  // Improved uploadImageToStorage method with better error handling
+  async uploadImageToStorage(userId, serialNumber, imageBlob) {
+    if (!userId || !serialNumber || !imageBlob) {
+      throw new Error('Missing required parameters for image upload');
     }
-  }
-  
-  // Add a cardId to missing image cache
-  addToMissingCache(cardId) {
-    const missing = JSON.parse(localStorage.getItem(this.missingImageCacheKey) || '[]');
-    if (!missing.includes(cardId)) {
-      missing.push(cardId);
-      localStorage.setItem(this.missingImageCacheKey, JSON.stringify(missing));
-    }
-  }
-  
-  // Clear the missing image cache
-  clearMissingImageCache() {
-    localStorage.removeItem(this.missingImageCacheKey);
-  }
 
-  // Most basic implementation of getting an image - less failure points
-  async getImage(userId, cardId) {
-    // If no user or cardId, fail early
-    if (!userId || !cardId) return null;
-    
-    try {
-      // Get image reference
-      const imageRef = ref(this.storage, `users/${userId}/cards/${cardId}`);
-      
-      // Try to get download URL
+    // Implement a retry mechanism with exponential backoff
+    const maxRetries = 3;
+    let retryCount = 0;
+    let lastError = null;
+
+    while (retryCount < maxRetries) {
       try {
-        const url = await getDownloadURL(imageRef);
+        console.log(`Uploading image ${serialNumber} to Firebase Storage (attempt ${retryCount + 1}/${maxRetries})`);
         
-        // Fetch the image
-        const response = await fetch(url);
-        if (!response.ok) {
-          console.error(`HTTP error ${response.status} for image ${cardId}`);
-          return null;
-        }
+        // Get a fresh reference to the storage
+        const storage = getStorage();
         
-        // Get blob
-        const blob = await response.blob();
-        if (!blob || blob.size === 0) {
-          console.error(`Empty blob for image ${cardId}`);
-          return null;
-        }
+        // Create a reference to the file path
+        const imageRef = ref(storage, `users/${userId}/cards/${serialNumber}`);
         
-        return blob;
+        // Upload the file with metadata
+        const metadata = {
+          contentType: imageBlob.type || 'image/jpeg',
+          customMetadata: {
+            serialNumber,
+            uploadedAt: new Date().toISOString()
+          }
+        };
+
+        // Perform the upload with progress monitoring
+        const uploadTask = uploadBytesResumable(imageRef, imageBlob, metadata);
+        
+        // Return a promise that resolves when the upload is complete
+        return new Promise((resolve, reject) => {
+          uploadTask.on(
+            'state_changed',
+            (snapshot) => {
+              // Track upload progress if needed
+              const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+              console.log(`Upload progress for ${serialNumber}: ${progress.toFixed(1)}%`);
+            },
+            (error) => {
+              // Handle errors
+              console.error(`Error uploading image ${serialNumber}:`, error);
+              reject(error);
+            },
+            async () => {
+              // Upload completed successfully
+              try {
+                // Get the download URL
+                const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+                console.log(`Image ${serialNumber} uploaded successfully. URL:`, downloadURL);
+                resolve(downloadURL);
+              } catch (urlError) {
+                console.error(`Error getting download URL for ${serialNumber}:`, urlError);
+                reject(urlError);
+              }
+            }
+          );
+        });
       } catch (error) {
-        // Most likely 404 error - image doesn't exist
-        if (error.code === 'storage/object-not-found') {
-          console.error(`Image not found in Firebase: ${cardId}`);
-        } else {
-          console.error(`Error getting image URL: ${error.message}`);
+        lastError = error;
+        retryCount++;
+        
+        if (retryCount >= maxRetries) {
+          console.error(`Failed to upload image ${serialNumber} after ${maxRetries} attempts:`, error);
+          throw error;
         }
-        return null;
+        
+        // Exponential backoff
+        const delay = Math.min(1000 * Math.pow(2, retryCount), 10000);
+        console.warn(`Retrying upload for ${serialNumber} in ${delay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
       }
-    } catch (error) {
-      console.error(`Error in getImage for ${cardId}:`, error);
-      return null;
     }
-  }
 
-  // Simplified image refresh
-  async refreshImage(userId, cardId) {
-    try {
-      // Get the image from Firebase
-      const imageBlob = await this.getImage(userId, cardId);
-      
-      // If image was found in Firebase, save to IndexedDB
-      if (imageBlob) {
-        await this.localDb.saveImage(cardId, imageBlob);
-        return true;
-      }
-      
-      return false;
-    } catch (error) {
-      console.error(`Error refreshing image for ${cardId}:`, error);
-      return false;
-    }
-  }
-
-  // Simplified image upload
-  async uploadImageToStorage(userId, cardId, imageBlob) {
-    try {
-      const imageRef = ref(this.storage, `users/${userId}/cards/${cardId}`);
-      const snapshot = await uploadBytes(imageRef, imageBlob);
-      const downloadUrl = await getDownloadURL(snapshot.ref);
-      
-      // Save to IndexedDB
-      await this.localDb.saveImage(cardId, imageBlob);
-      
-      return downloadUrl;
-    } catch (error) {
-      console.error(`Error uploading image for ${cardId}:`, error);
-      throw error;
-    }
+    throw lastError || new Error(`Failed to upload image ${serialNumber} after ${maxRetries} attempts`);
   }
 
   // Save image to both Firebase Storage and IndexedDB
@@ -293,32 +258,46 @@ export class CardService {
     }
   }
 
-  async checkImageSync(userId, cardIds) {
-    const missingImages = [];
-    const storage = getStorage();
-    
-    for (const cardId of cardIds) {
+  // Get image from IndexedDB or Firebase Storage
+  async getImage(userId, cardId) {
+    try {
+      // Try IndexedDB first for offline/cached access
+      const localImage = await this.localDb.getImage(cardId);
+      if (localImage) {
+        return localImage;
+      }
+
+      // If not in IndexedDB, load directly from Firebase Storage
       try {
-        // Check IndexedDB first
-        const localImage = await this.localDb.getImage(cardId);
-        if (!localImage || localImage.size === 0) {
-          // Check Firebase Storage
-          const imageRef = ref(storage, `users/${userId}/cards/${cardId}`);
-          try {
-            await getMetadata(imageRef);
-            missingImages.push(cardId);
-          } catch (error) {
-            if (error.code === 'storage/object-not-found') {
-              console.log(`Image not found in Firebase Storage for card ${cardId}`);
-            }
-          }
+        // Get the download URL 
+        const storageRef = ref(this.storage, `users/${userId}/cards/${cardId}`);
+        const url = await getDownloadURL(storageRef);
+        
+        // Simple direct fetch - should work with public read rules
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error: ${response.status}`);
+        }
+        
+        const blob = await response.blob();
+        
+        // Cache in IndexedDB for future
+        if (blob.size > 0) {
+          await this.localDb.saveImage(cardId, blob).catch(e => 
+            console.log('Non-critical IndexedDB save error:', e));
+          return blob;
+        } else {
+          throw new Error('Empty image');
         }
       } catch (error) {
-        console.error(`Error checking sync status for card ${cardId}:`, error);
+        console.log('Error loading image, using placeholder:', error);
+        return this.createPlaceholderImage();
       }
+    } catch (error) {
+      console.error('Error in getImage:', error);
+      return this.createPlaceholderImage();
     }
-    
-    return missingImages;
   }
 
   // Create a placeholder image
@@ -475,80 +454,6 @@ export class CardService {
     }
     
     return true;
-  }
-
-  // Upload image to Firebase Storage
-  async uploadImage(userId, cardId, imageFile) {
-    try {
-      const imageRef = ref(this.storage, `users/${userId}/cards/${cardId}`);
-      const snapshot = await uploadBytes(imageRef, imageFile);
-      
-      // Image was uploaded successfully, remove from missing cache
-      this.clearMissingCache();
-      
-      // Also update in db if possible
-      if (localDb.markImageAsSynced) {
-        localDb.markImageAsSynced(cardId);
-      }
-      if (localDb.isImageMissing && localDb.markImageAsMissing) {
-        if (localDb.isImageMissing(cardId)) {
-          // Remove from missing images list
-          localDb.missingImages.delete(cardId);
-        }
-      }
-      
-      return await getDownloadURL(snapshot.ref);
-    } catch (error) {
-      throw new Error(`Error uploading image: ${error.message}`);
-    }
-  }
-
-  // Check batch of images for sync
-  async checkImagesForSync(userId, cardIds) {
-    // Return early if no cards to check
-    if (!cardIds || cardIds.length === 0) {
-      return { missingImages: [], existingImages: [] };
-    }
-    
-    const missingImages = [];
-    const existingImages = [];
-    
-    // Process in batches to avoid flooding Firebase
-    const BATCH_SIZE = 5;
-    
-    for (let i = 0; i < cardIds.length; i += BATCH_SIZE) {
-      const batch = cardIds.slice(i, i + BATCH_SIZE);
-      
-      // Run checks in parallel with a small batch
-      await Promise.all(batch.map(async (cardId) => {
-        try {
-          // First check if image is known missing or in IndexedDB
-          if (this.checkImageExists(userId, cardId)) {
-            existingImages.push(cardId);
-            return;
-          }
-          
-          // Not in local DB, check Firebase
-          const exists = await this.checkImageExists(userId, cardId);
-          if (exists) {
-            existingImages.push(cardId);
-          } else {
-            missingImages.push(cardId);
-          }
-        } catch (error) {
-          console.error(`Error checking image for card ${cardId}:`, error);
-          // Assume missing if there's an error
-          missingImages.push(cardId);
-        }
-      }));
-      
-      // Small delay between batches
-      if (i + BATCH_SIZE < cardIds.length) {
-        await new Promise(resolve => setTimeout(resolve, 500));
-      }
-    }
-    
-    return { missingImages, existingImages };
   }
 }
 

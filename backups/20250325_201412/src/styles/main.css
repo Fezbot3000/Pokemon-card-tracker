@@ -1,0 +1,798 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import './shared.css';
+
+/* Material Icons */
+@layer base {
+  .material-icons {
+    font-family: 'Material Icons';
+    font-weight: normal;
+    font-style: normal;
+    font-size: 24px;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    display: inline-block;
+    white-space: nowrap;
+    word-wrap: normal;
+    direction: ltr;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: 'liga';
+  }
+
+  /* Default light theme */
+  body {
+    @apply bg-white text-gray-900;
+  }
+
+  /* Dark theme */
+  html.dark body {
+    @apply bg-[#0B0F19] text-white;
+  }
+
+  /* Ensure proper font loading */
+  @font-face {
+    font-family: 'Material Icons';
+    font-style: normal;
+    font-weight: 400;
+    src: url(https://fonts.gstatic.com/s/materialicons/v140/flUhRq6tzZclQEJ-Vdg-IuiaDsNc.woff2) format('woff2');
+  }
+}
+
+/* Custom styles that are specific to this app */
+:root {
+  --primary: #4318FF;
+  --error: #FF3B3B;
+  --success: #05CD99;
+}
+
+/* App-specific components */
+@layer components {
+  /* Header Styles */
+  .app-header {
+    @apply sticky top-0 z-50 bg-white dark:bg-[#0B0F19] border-b border-gray-200 dark:border-gray-700/50 shadow-lg;
+  }
+
+  .header-content {
+    @apply max-w-[1920px] mx-auto flex items-center justify-between py-4 px-4 sm:px-6 lg:px-8;
+  }
+
+  .header-left {
+    @apply flex items-center flex-shrink-0;
+  }
+
+  .header-center {
+    @apply flex-1 flex items-center justify-center px-4;
+  }
+
+  .header-right {
+    @apply hidden sm:flex items-center gap-3;
+  }
+
+  /* Header Buttons */
+  .header-buttons {
+    @apply hidden sm:flex items-center gap-3 ml-auto;
+  }
+
+  .header-buttons .btn {
+    @apply min-w-[40px] h-[40px] flex items-center justify-center;
+  }
+
+  /* Button Styles */
+  .btn {
+    @apply inline-flex items-center justify-center px-4 py-2 rounded-xl font-medium text-sm transition-colors;
+  }
+
+  .btn span.material-icons {
+    @apply inline-block text-xl flex-shrink-0;
+  }
+
+  /* Only show text on desktop */
+  .btn span:not(.material-icons) {
+    @apply hidden xl:inline;
+  }
+
+  /* Mobile menu */
+  .mobile-menu {
+    @apply fixed inset-x-0 top-16 bg-[#1B2131] border-b border-gray-700/50 shadow-lg sm:hidden;
+  }
+
+  .mobile-menu-header {
+    @apply flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700/50;
+  }
+
+  .mobile-menu-content {
+    @apply py-2 px-4 space-y-2;
+  }
+
+  .mobile-menu-item {
+    @apply flex items-center w-full px-4 py-2 rounded-lg
+           text-gray-200 hover:bg-[#252B3B];
+  }
+
+  .mobile-menu-item .material-icons {
+    @apply text-gray-500 dark:text-gray-400;
+  }
+
+  /* Mobile menu button */
+  .mobile-menu-button {
+    @apply sm:hidden p-2 text-gray-400 hover:text-gray-200;
+  }
+
+  .mobile-menu-button .material-icons {
+    @apply inline-block text-xl;
+  }
+
+  /* Total Cards Counter */
+  .total-cards-counter {
+    @apply flex items-center gap-2 px-2 sm:px-4 xl:px-6 py-2;
+  }
+  
+  .total-cards-icon {
+    @apply text-gray-600 dark:text-gray-400;
+  }
+  
+  .total-cards-text {
+    @apply text-gray-700 dark:text-gray-200 font-medium text-base;
+  }
+
+  /* Collection Selector */
+  .collection-selector {
+    @apply relative inline-flex items-center gap-2 px-4 py-2 rounded-xl
+           bg-white dark:bg-[#1B2131] text-gray-900 dark:text-white
+           border border-gray-200 dark:border-gray-700/50
+           hover:bg-gray-50 dark:hover:bg-[#252B3B] cursor-pointer;
+  }
+
+  .collection-name {
+    @apply flex items-center gap-1.5 xl:gap-2 text-gray-900 dark:text-white font-medium 
+           hover:bg-gray-100 dark:hover:bg-[#252B3B] px-2 xl:px-3 py-2 rounded-xl transition-colors
+           max-w-[200px] sm:max-w-[300px];
+  }
+
+  .collection-name span:not(.material-icons) {
+    @apply truncate;
+  }
+
+  .collection-lock {
+    @apply text-primary text-2xl;
+  }
+
+  /* Collection Dropdown */
+  .collection-dropdown {
+    @apply absolute z-50 mt-2 w-56 bg-white dark:bg-[#1B2131] rounded-xl shadow-lg py-1 right-0
+           border border-gray-200 dark:border-gray-700/50;
+  }
+
+  .collection-item {
+    @apply w-full text-left px-4 py-2 flex items-center justify-between truncate;
+  }
+
+  .collection-item-active {
+    @apply text-primary bg-gray-50 dark:bg-[#252B3B];
+  }
+
+  .collection-item-default {
+    @apply text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-[#252B3B];
+  }
+
+  .collection-divider {
+    @apply border-t border-gray-200 dark:border-gray-600 my-1;
+  }
+
+  /* Button Styles */
+  .btn-primary {
+    @apply bg-primary text-white hover:bg-primary/90;
+  }
+
+  .btn-secondary {
+    @apply bg-gray-100 dark:bg-[#1B2131] text-gray-700 dark:text-gray-200 
+           hover:bg-gray-200 dark:hover:bg-[#252B3B]
+           border border-gray-200 dark:border-gray-700/50;
+  }
+
+  .btn-danger {
+    @apply bg-red-500 text-white hover:bg-red-600;
+  }
+
+  /* Delete button */
+  .delete-button {
+    @apply btn btn-danger flex items-center gap-2;
+  }
+
+  /* Stats Section */
+  .stats-section {
+    @apply grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6;
+  }
+
+  .stat-card {
+    @apply p-4 rounded-xl bg-white dark:bg-[#1B2131] 
+           border border-gray-200 dark:border-gray-700/50;
+  }
+
+  .stat-label {
+    @apply text-sm uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-2;
+  }
+
+  .stat-value {
+    @apply text-2xl font-medium text-gray-900 dark:text-white;
+  }
+
+  /* This ensures the profit value is colored but keeps the same font size */
+  .stat-value.profit-value {
+    @apply text-green-500 dark:text-green-400;
+  }
+
+  .stat-value.loss-value {
+    @apply text-red-500 dark:text-red-400;
+  }
+
+  /* Search and Filter Section */
+  .search-input {
+    @apply w-full px-4 py-2 rounded-xl
+           bg-white dark:bg-[#1B2131]
+           border border-gray-200 dark:border-gray-700/50
+           text-gray-900 dark:text-white
+           placeholder-gray-500 dark:placeholder-gray-400;
+  }
+
+  .filter-section {
+    @apply flex flex-col gap-1.5 px-2 sm:px-4 xl:px-6 py-2;
+  }
+
+  /* Sort and View Controls */
+  .controls-container {
+    @apply flex flex-wrap items-center justify-between gap-4 mt-4;
+  }
+
+  .sort-container, .view-container {
+    @apply relative;
+  }
+
+  .sort-button, .view-button {
+    @apply flex items-center justify-between gap-2 px-4 py-2 w-48
+           rounded-xl bg-white dark:bg-[#1B2131]
+           border border-gray-200 dark:border-gray-700/50
+           text-gray-700 dark:text-gray-200
+           hover:bg-gray-50 dark:hover:bg-[#252B3B];
+  }
+
+  .controls-right {
+    @apply flex items-center gap-3;
+  }
+
+  .sort-dropdown, .view-dropdown {
+    @apply absolute top-full left-0 right-0 mt-2 w-48
+           bg-white dark:bg-[#1B2131] rounded-xl shadow-lg 
+           border border-gray-200 dark:border-gray-700/50 
+           py-2 z-50;
+  }
+
+  .sort-option {
+    @apply flex items-center justify-between gap-2 px-4 py-2
+           text-gray-900 dark:text-white text-sm
+           hover:bg-gray-50 dark:hover:bg-[#252B3B] cursor-pointer;
+  }
+
+  .sort-option .material-icons {
+    @apply text-primary;
+  }
+
+  .sort-option.active {
+    @apply bg-gray-50 dark:bg-[#252B3B];
+  }
+
+  /* Column Headers */
+  .column-headers {
+    @apply flex items-center gap-6 px-6 py-3 
+           text-sm font-medium text-gray-400;
+  }
+
+  .column-header {
+    @apply flex items-center gap-1.5 cursor-pointer hover:text-white transition-colors;
+  }
+
+  .column-header.active {
+    @apply text-white;
+  }
+
+  /* Card Grid */
+  .card-grid {
+    @apply grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6
+           gap-4 sm:gap-6 p-4 sm:p-6;
+  }
+
+  /* Card Styles */
+  .card-item {
+    @apply relative rounded-lg overflow-hidden cursor-pointer transition-all duration-200
+           bg-white dark:bg-[#1B2131] border border-gray-200 dark:border-gray-700/50;
+  }
+
+  .card-item:hover {
+    @apply transform shadow-md bg-gray-50 dark:bg-[#252B3B];
+  }
+
+  .card-image {
+    @apply aspect-[2/3] relative overflow-hidden;
+  }
+
+  .card-content {
+    @apply p-3;
+  }
+
+  .card-title {
+    @apply text-sm font-medium text-gray-800 dark:text-gray-200 truncate;
+  }
+
+  .card-subtitle {
+    @apply text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5;
+  }
+
+  .card-metrics {
+    @apply mt-2 space-y-1;
+  }
+
+  .card-metric {
+    @apply flex items-center justify-between text-xs;
+  }
+
+  .metric-label {
+    @apply text-gray-500 dark:text-gray-400;
+  }
+
+  .metric-value {
+    @apply text-gray-800 dark:text-gray-200 font-medium;
+  }
+
+  .metric-value.profit {
+    @apply text-green-500 dark:text-green-400;
+  }
+
+  .metric-value.loss {
+    @apply text-red-500 dark:text-red-400;
+  }
+
+  /* Checkbox Styles */
+  .checkbox-container {
+    @apply absolute top-2 right-2 z-10;
+  }
+
+  .checkbox-input {
+    @apply h-4 w-4 rounded border-gray-300 dark:border-gray-600
+           text-primary focus:ring-primary/20
+           bg-white dark:bg-[#1B2131];
+  }
+
+  /* Filter Section */
+  .filter-section {
+    @apply px-6 py-4 space-y-4;
+  }
+
+  .dropdown-button {
+    @apply btn-secondary flex items-center justify-between w-48;
+  }
+
+  .dropdown-icon {
+    @apply material-icons text-lg ml-2;
+  }
+
+  /* Card Styles */
+  .card-light {
+    @apply card bg-white border-gray-200 hover:bg-gray-50;
+  }
+
+  .card-dark {
+    @apply card bg-[#1B2131] border-gray-700/50 hover:bg-[#252B3B];
+  }
+
+  /* Modal Styles */
+  .modal-overlay {
+    @apply fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50;
+  }
+
+  .modal-content {
+    @apply w-full max-w-4xl mx-4 rounded-xl shadow-lg overflow-hidden;
+  }
+
+  .modal-header {
+    @apply px-6 py-4 border-b border-gray-200 dark:border-gray-700;
+  }
+
+  .modal-body {
+    @apply p-6;
+  }
+
+  .modal-footer {
+    @apply px-6 py-4 border-t border-gray-200 dark:border-gray-700;
+  }
+
+  .modal-title {
+    @apply text-xl font-medium text-gray-800 dark:text-gray-200;
+  }
+
+  .modal-close {
+    @apply text-2xl text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300;
+  }
+
+  .modal-label {
+    @apply block text-gray-700 dark:text-gray-300 mb-2;
+  }
+
+  .modal-input {
+    @apply w-full px-4 py-2 rounded-xl 
+           border border-gray-200 dark:border-gray-700/50 
+           bg-white dark:bg-[#252B3B]
+           text-gray-900 dark:text-white
+           focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary
+           placeholder-gray-500 dark:placeholder-gray-400;
+  }
+
+  .modal-btn-cancel {
+    @apply px-4 py-2 rounded-lg
+           bg-gray-100 dark:bg-[#252B3B] 
+           text-gray-700 dark:text-gray-300
+           hover:bg-gray-200 dark:hover:bg-[#323B4B]
+           transition-colors;
+  }
+
+  .modal-btn-create {
+    @apply px-4 py-2 rounded-lg
+           bg-primary text-white
+           hover:bg-primary/90
+           transition-colors;
+  }
+
+  /* Dropdown Styles */
+  .dropdown {
+    @apply max-h-[80vh] overflow-y-auto;
+    max-width: calc(100vw - 2rem);
+  }
+
+  /* Collection Styles */
+  .collection-header {
+    @apply sticky top-0 z-40 bg-white dark:bg-[#0B0F19] border-b border-gray-200 dark:border-gray-700/50;
+  }
+
+  .collection-title {
+    @apply text-lg font-medium text-gray-800 dark:text-gray-200 select-none;
+  }
+
+  /* Card specific styles */
+  .card-image-container {
+    @apply aspect-[2/3] mb-4 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800;
+  }
+
+  /* Card image and upload container styles */
+  .card-image-display {
+    @apply w-full aspect-[2/3] bg-gray-100 dark:bg-[#1B2131] rounded-lg overflow-hidden;
+  }
+
+  /* Upload image area styles */
+  .image-upload-container {
+    @apply relative aspect-[3/4] max-h-64 max-w-xs w-full
+           bg-transparent border-2 border-dashed border-gray-300 dark:border-gray-700/50 
+           transition-colors cursor-pointer rounded-lg overflow-hidden;
+  }
+
+  /* Use regular CSS for hover state since Tailwind has a circular dependency */
+  .image-upload-container:hover {
+    border-color: #4318FF; /* Primary color */
+  }
+
+  /* Use a more specific class name to avoid the circular dependency */
+  .image-upload-container.dragover-active {
+    @apply border-solid bg-[#4318FF]/5;
+    border-color: #4318FF; /* Primary color */
+  }
+
+  .card-stats {
+    @apply grid grid-cols-2 gap-4 mb-6;
+  }
+
+  .card-stat {
+    @apply p-4 rounded-xl bg-white dark:bg-[#1B2131] border border-gray-200 dark:border-gray-700/50;
+  }
+
+  .card-stat-label {
+    @apply text-sm text-gray-600 dark:text-gray-400 mb-1;
+  }
+
+  .card-stat-value {
+    @apply text-lg font-medium text-gray-900 dark:text-white;
+  }
+
+  /* Form specific styles */
+  .form-group {
+    @apply mb-4;
+  }
+
+  .form-label {
+    @apply block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1;
+  }
+
+  .form-hint {
+    @apply mt-1 text-xs text-gray-500 dark:text-gray-400;
+  }
+
+  /* Loading states */
+  .loading-overlay {
+    @apply fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50;
+  }
+
+  .loading-spinner {
+    @apply animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent;
+  }
+
+  /* Loading States */
+  .skeleton {
+    @apply bg-gray-200 dark:bg-gray-700 animate-pulse rounded;
+  }
+
+  .skeleton-text {
+    @apply h-4 w-3/4 bg-gray-200 dark:bg-gray-700 animate-pulse rounded;
+  }
+
+  .skeleton-image {
+    @apply aspect-[2/3] bg-gray-200 dark:bg-gray-700 animate-pulse rounded-lg;
+  }
+
+  /* Toast Notifications */
+  .toast {
+    @apply fixed top-4 right-4 z-[100] px-6 py-3 rounded-lg shadow-lg transition-opacity duration-300;
+  }
+
+  .toast-success {
+    @apply bg-green-500 text-white;
+  }
+
+  .toast-error {
+    @apply bg-red-500 text-white;
+  }
+
+  .toast-warning {
+    @apply bg-yellow-500 text-white;
+  }
+
+  /* Grid Layouts */
+  .summary-grid {
+    @apply grid grid-cols-1 md:grid-cols-3 gap-6;
+  }
+
+  /* Typography */
+  .heading-1 {
+    @apply text-2xl font-semibold text-gray-900 dark:text-white;
+  }
+
+  .heading-2 {
+    @apply text-xl font-medium text-gray-800 dark:text-gray-200;
+  }
+
+  .text-body {
+    @apply text-sm text-gray-600 dark:text-gray-400;
+  }
+
+  /* Icons */
+  .icon {
+    @apply text-xl;
+  }
+
+  .icon-sm {
+    @apply text-base;
+  }
+
+  .icon-lg {
+    @apply text-2xl;
+  }
+
+  /* Input styles */
+  .input {
+    @apply w-full px-3 py-2 rounded-lg
+           bg-white dark:bg-[#1B2131]
+           border border-gray-200 dark:border-gray-700/50
+           text-gray-900 dark:text-white
+           placeholder-gray-500 dark:placeholder-gray-400
+           focus:outline-none focus:ring-2 focus:ring-primary/20
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .input:disabled {
+    @apply bg-transparent border-transparent text-gray-700 dark:text-gray-300 cursor-default;
+  }
+
+  .input:not(:disabled) {
+    @apply bg-white dark:bg-[#1B2131] border border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-primary/20 focus:border-primary dark:focus:border-primary transition-colors;
+  }
+
+  /* Make number inputs look consistent */
+  .input[type="number"],
+  .search-input[type="number"] {
+    @apply [appearance:textfield];
+  }
+
+  .input[type="number"]::-webkit-outer-spin-button,
+  .input[type="number"]::-webkit-inner-spin-button,
+  .search-input[type="number"]::-webkit-outer-spin-button,
+  .search-input[type="number"]::-webkit-inner-spin-button {
+    @apply appearance-none;
+    margin: 0;
+  }
+
+  /* Responsive padding for main content */
+  .app-content {
+    @apply px-2 sm:px-6;
+  }
+
+  /* Ensure main content doesn't scroll when mobile menu is open */
+  .mobile-menu-open {
+    @apply overflow-hidden;
+  }
+
+  .sort-option-divider {
+    height: 1px;
+    margin: 8px 0;
+    background-color: rgb(229 231 235);
+  }
+
+  .dark .sort-option-divider {
+    background-color: rgb(75 85 99);
+  }
+
+  /* Profit Change Modal */
+  .profit-change-modal {
+    @apply fixed inset-0 z-50 flex items-center justify-center bg-black/50;
+  }
+
+  .profit-change-content {
+    @apply bg-white dark:bg-[#1B2131] rounded-xl w-full max-w-md mx-4 p-6;
+  }
+
+  .profit-change-header {
+    @apply text-xl font-medium text-gray-800 dark:text-gray-200 mb-4;
+  }
+
+  .profit-change-body {
+    @apply space-y-4;
+  }
+
+  .profit-stat {
+    @apply flex flex-col p-4 rounded-xl
+           bg-gray-50 dark:bg-[#252B3B]
+           border border-gray-200 dark:border-gray-700/50;
+  }
+
+  .profit-label {
+    @apply text-sm text-gray-600 dark:text-gray-400;
+  }
+
+  .profit-value {
+    @apply text-xl font-medium mt-1;
+  }
+
+  /* Profit change modal values - these are separate from the main stats */
+  .profit-value.positive {
+    @apply text-green-500 dark:text-green-400;
+  }
+
+  .profit-value.negative {
+    @apply text-red-500 dark:text-red-400;
+  }
+
+  .profit-change-footer {
+    @apply flex justify-end mt-6;
+  }
+
+  .profit-change-close {
+    @apply btn btn-primary px-6;
+  }
+
+  /* Auth page background */
+  .auth-background {
+    background-color: #166534; /* Fallback color */
+    background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5));
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+
+  /* Responsive Adjustments */
+  @media (max-width: 640px) {
+    .controls-container {
+      @apply flex-col;
+    }
+
+    .sort-container, .view-container {
+      @apply w-full;
+    }
+
+    .sort-button, .view-button {
+      @apply w-full;
+    }
+
+    .controls-right {
+      @apply w-full grid grid-cols-2 gap-3;
+    }
+  }
+}
+
+@layer utilities {
+  /* Transitions */
+  .fade-enter {
+    opacity: 0;
+  }
+
+  .fade-enter-active {
+    opacity: 1;
+    transition: opacity 200ms ease-in;
+  }
+
+  .fade-exit {
+    opacity: 1;
+  }
+
+  .fade-exit-active {
+    opacity: 0;
+    transition: opacity 200ms ease-in;
+  }
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none;
+  }
+  
+  .print-only {
+    display: block;
+  }
+  
+  body {
+    background: white;
+  }
+}
+
+/* Dark mode overrides */
+html.dark {
+  color-scheme: dark;
+}
+
+/* App container */
+.app {
+  @apply max-w-none sm:max-w-7xl mx-auto px-2 sm:px-6;
+}
+
+/* Optimized for mobile */
+@media (max-width: 640px) {
+  .app-content,
+  .filter-section,
+  .stats-section,
+  .card-grid,
+  .total-cards-counter {
+    @apply px-2;
+  }
+
+  .search-input,
+  .sort-button,
+  .view-button,
+  .delete-button,
+  .stat-card {
+    @apply w-full;
+  }
+
+  .controls-right {
+    @apply grid grid-cols-2 gap-2;
+  }
+
+  .controls-right .delete-button,
+  .controls-right .btn-primary {
+    @apply w-full;
+  }
+
+  .sort-button,
+  .view-button {
+    @apply h-12;
+  }
+}
