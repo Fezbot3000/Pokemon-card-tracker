@@ -17,6 +17,18 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading 
     }
   };
 
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+  };
+
   const validateFile = (file) => {
     if (!file) {
       throw new Error('No file selected');
@@ -68,84 +80,56 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-white dark:bg-[#0B0F19] z-50">
-      <div className="sticky top-0 z-10 flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
-        <h1 className="text-xl font-semibold text-gray-800 dark:text-white">
-          {mode === 'baseData' ? 'Import Base Data' : 'Update Card Prices'}
-        </h1>
-        <button 
-          onClick={onClose}
-          className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-        >
-          <span className="material-icons">close</span>
-        </button>
-      </div>
-
-      <div className="max-w-4xl mx-auto p-6">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-50">
+      <div className="w-full max-w-2xl mx-4 p-6 rounded-xl shadow-lg bg-[#0B0F19]">
+        <h2 className="text-xl font-semibold mb-4 text-white">{mode === 'baseData' ? 'Import Base Data' : 'Update Card Prices'}</h2>
+        
         <div 
-          className={`
-            border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg p-8 flex flex-col items-center justify-center
-            ${dragActive ? 'border-primary dark:border-primary bg-primary/5 dark:bg-primary/10' : ''}
-            ${error ? 'border-red-500 dark:border-red-500' : ''}
-          `}
-          onDragEnter={handleDrag}
-          onDragLeave={handleDrag}
-          onDragOver={handleDrag}
+          className={`border-2 border-dashed ${dragActive ? 'border-primary bg-primary/5' : 'border-blue-500/50'} rounded-lg p-8 flex flex-col items-center justify-center cursor-pointer hover:border-primary hover:bg-primary/5 transition-colors`}
+          onClick={() => fileInputRef.current?.click()}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
           onDrop={handleDrop}
         >
-          <div className="text-center mb-4">
-            <span className="material-icons text-gray-400 dark:text-gray-600 text-5xl mb-4">description</span>
-            <p className="text-gray-800 dark:text-gray-200 text-lg mb-2">Drop your CSV file here</p>
-            <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">or click to select a file</p>
-          </div>
-          
-          {error && (
-            <div className="text-red-500 dark:text-red-400 text-sm mb-4">
-              {error}
-            </div>
-          )}
-          
-          <button
-            className={`px-6 py-2 bg-primary text-white rounded-lg transition-all duration-200 ${
-              loading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-primary/90'
-            }`}
-            onClick={handleButtonClick}
-            disabled={loading}
-          >
-            {loading ? (
-              <div className="flex items-center gap-2">
-                <span className="material-icons animate-spin">sync</span>
-                Processing...
-              </div>
-            ) : (
-              'Select File'
-            )}
-          </button>
-          
+          <span className="material-icons text-gray-400 dark:text-gray-600 text-5xl mb-4">description</span>
+          <p className="text-lg font-medium text-white mb-1">Drop your CSV file here</p>
+          <p className="text-sm text-gray-400 dark:text-gray-500">or click to select a file</p>
           <input
             ref={fileInputRef}
             type="file"
-            className="hidden"
             accept=".csv"
+            className="hidden"
             onChange={handleChange}
           />
         </div>
 
-        <div className="mt-10">
-          <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">
-            {mode === 'baseData' ? 'Base Data Import' : 'Price Update'} Instructions
-          </h2>
+        {/* Show error message if any */}
+        {error && (
+          <div className="mt-4 p-3 bg-red-500/20 border border-red-500/30 rounded-lg">
+            <p className="text-red-400 text-sm">{error}</p>
+          </div>
+        )}
+
+        {/* Show loading indicator only when actually loading */}
+        {loading && (
+          <div className="mt-4 flex justify-center">
+            <button className="btn btn-secondary flex items-center gap-2">
+              <span className="animate-spin rounded-full h-4 w-4 border-2 border-primary border-t-transparent"></span>
+              Processing...
+            </button>
+          </div>
+        )}
+        
+        <div className="mt-8">
+          <h3 className="text-lg font-medium mb-4 text-white">
+            {mode === 'baseData' ? 'Base Data Import Instructions' : 'Price Update Instructions'}
+          </h3>
           
-          <p className="text-gray-600 dark:text-gray-400 mb-4">
-            Your CSV file should include the following columns:
-          </p>
-          
-          <ul className="list-disc list-inside space-y-2 text-gray-600 dark:text-gray-400 mb-8 pl-4">
-            <li>Slab Serial # - Unique identifier for each card</li>
-            {mode === 'priceUpdate' ? (
-              <li>Current Value - Current value in USD (will be converted to AUD)</li>
-            ) : (
-              <>
+          {mode === 'baseData' ? (
+            <>
+              <p className="text-gray-300 mb-4">Your CSV file should include the following columns:</p>
+              <ul className="list-disc pl-6 space-y-2 text-gray-400">
+                <li>Slab Serial # - Unique identifier for each card</li>
                 <li>Investment - Investment amount in USD</li>
                 <li>Current Value - Current value in USD</li>
                 <li>Card - Card name</li>
@@ -154,17 +138,40 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading 
                 <li>Set - Card set</li>
                 <li>Category - Card category</li>
                 <li>Condition - Card condition</li>
-              </>
-            )}
-          </ul>
-          
-          <div className="bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 p-4 rounded-md">
-            {mode === 'priceUpdate' ? (
-              "Important: This import will ONLY update the current values and optional card details. Investment values will not be modified to preserve your cost basis data."
-            ) : (
-              "Note: All USD values will be converted to AUD using the current exchange rate. For price updates only, use the \"Update Prices\" option instead."
-            )}
-          </div>
+              </ul>
+              
+              <div className="mt-6 p-4 bg-purple-900/30 border border-purple-500/50 rounded-lg">
+                <p className="text-purple-200 text-sm">
+                  <strong>Note:</strong> All USD values will be converted to AUD using the current exchange rate. For price updates only, use
+                  the "Update Prices" option instead.
+                </p>
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="text-gray-300 mb-4">Your CSV file should include the following columns:</p>
+              <ul className="list-disc pl-6 space-y-2 text-gray-400">
+                <li>Slab Serial # - Unique identifier for each card</li>
+                <li>Current Value - Current value in USD (will be converted to AUD)</li>
+              </ul>
+              
+              <div className="mt-6 p-4 bg-purple-900/30 border border-purple-500/50 rounded-lg">
+                <p className="text-purple-200 text-sm">
+                  <strong>Important:</strong> This import will ONLY update the current values and optional card details. Investment values will
+                  not be modified to preserve your cost basis data.
+                </p>
+              </div>
+            </>
+          )}
+        </div>
+
+        <div className="flex justify-end mt-6">
+          <button
+            className="btn btn-secondary mr-3"
+            onClick={onClose}
+          >
+            Cancel
+          </button>
         </div>
       </div>
     </div>
