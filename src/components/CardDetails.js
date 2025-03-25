@@ -304,18 +304,15 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
 
   const handleDeleteConfirm = async () => {
     try {
-      // Delete the card image first
+      // Try to delete the card image
       try {
         await db.deleteImage(card.slabSerial);
       } catch (error) {
         console.error('Error deleting card image:', error);
         // Continue with card deletion even if image deletion fails
       }
-
-      // Delete the card from the database
-      await db.deleteCard(card.slabSerial);
       
-      // Call the onDelete callback
+      // Call the onDelete callback directly - this handles the actual collection update
       await onDelete(card.slabSerial);
       
       // Close the modal

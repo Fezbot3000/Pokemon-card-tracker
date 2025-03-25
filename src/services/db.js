@@ -171,6 +171,17 @@ class DatabaseService {
     });
   }
 
+  // Function to delete a card (used only for removing the image, not from collections)
+  async deleteCard(cardId) {
+    // This function just deletes the card's image since collections are managed separately
+    try {
+      return await this.deleteImage(cardId);
+    } catch (error) {
+      console.error('Error in deleteCard:', error);
+      throw new Error('Failed to delete card');
+    }
+  }
+
   async ensureDB() {
     if (!this.db) {
       await this.initDatabase();
