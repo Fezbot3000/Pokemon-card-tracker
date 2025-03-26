@@ -14,6 +14,7 @@ import './styles/main.css';
 import SoldItems from './components/SoldItems/SoldItems';
 import SettingsModal from './components/SettingsModal';
 import JSZip from 'jszip';
+import { Toaster, toast } from 'react-hot-toast';
 
 // Loading Skeleton component
 const LoadingSkeleton = () => (
@@ -42,6 +43,7 @@ function AppContent() {
   const [showSettings, setShowSettings] = useState(false);
   const [showProfitChangeModal, setShowProfitChangeModal] = useState(false);
   const [profitChangeData, setProfitChangeData] = useState({ oldProfit: 0, newProfit: 0 });
+  const [currentView, setCurrentView] = useState('cards'); // 'cards' or 'sold'
   
   const {
     cards,
@@ -172,13 +174,14 @@ function AppContent() {
       setImportModalOpen(false);
     } catch (error) {
       console.error('Error updating prices:', error);
-      alert('Error updating prices: ' + error.message);
+      toast.error('Error updating prices: ' + error.message);
     }
   }, [importCsvData, importMode, selectedCollection, collections, exchangeRate, calculateTotalProfit]);
 
   const handleCollectionChange = useCallback((collection) => {
     setSelectedCollection(collection);
     clearSelectedCard();
+    localStorage.setItem('selectedCollection', collection);
   }, [clearSelectedCard]);
 
   const handleImportClick = (mode) => {
@@ -426,11 +429,9 @@ To import this backup:
           const savedCollections = await db.getCollections();
           setCollections(savedCollections);
           
-          // Switch to first collection if needed
-          if (Object.keys(savedCollections).length > 0 && 
-              !savedCollections[selectedCollection]) {
-            setSelectedCollection(Object.keys(savedCollections)[0]);
-          }
+          // Switch to "All Cards" view after successful import
+          setSelectedCollection('All Cards');
+          localStorage.setItem('selectedCollection', 'All Cards');
           
           // Ensure minimum loading time for better UX
           const elapsedTime = Date.now() - startTime;
@@ -442,8 +443,11 @@ To import this backup:
           // Remove loading overlay
           document.body.removeChild(loadingEl);
           
-          // Show success message
-          alert('Backup imported successfully!');
+          // Show success toast
+          toast.success('Backup imported successfully!');
+          
+          // Close settings modal
+          setShowSettings(false);
         } else {
           throw new Error("Unsupported file format. Please upload a .zip backup file.");
         }
@@ -454,13 +458,30 @@ To import this backup:
         if (loadingEl) {
           document.body.removeChild(loadingEl);
         }
-        alert(`Error importing backup: ${error.message}`);
+        toast.error(`Error importing backup: ${error.message}`);
       }
     };
     
     // Trigger file selection
     input.click();
   };
+
+  const onDeleteCards = useCallback(async (cardIds) => {
+    try {
+      // Delete images from IndexedDB
+      for (const cardId of cardIds) {
+        await db.deleteImage(cardId);
+      }
+
+      // Delete cards from the useCardData hook's state
+      cardIds.forEach(cardId => {
+        deleteCard(cardId);
+      });
+    } catch (error) {
+      console.error('Error deleting cards:', error);
+      toast.error('Failed to delete cards');
+    }
+  }, [deleteCard]);
 
   if (isLoading) {
     return <LoadingSkeleton />;
@@ -470,10 +491,12 @@ To import this backup:
     <div className="min-h-screen bg-gray-50 dark:bg-[#0B0F19]">
       <Header
         selectedCollection={selectedCollection}
-        collections={Object.keys(collections)}
+        collections={['All Cards', ...Object.keys(collections)]}
         onCollectionChange={handleCollectionChange}
         onImportClick={handleImportClick}
         onSettingsClick={() => setShowSettings(true)}
+        currentView={currentView}
+        onViewChange={setCurrentView}
         onAddCollection={(name) => {
           // Create new collection
           const newCollections = {
@@ -529,7 +552,7 @@ To import this backup:
             }
           } catch (error) {
             console.error("Error deleting collection:", error);
-            alert(`Failed to delete collection: ${error.message}`);
+            toast.error(`Failed to delete collection: ${error.message}`);
           }
         }}
         refreshCollections={() => {
@@ -549,17 +572,23 @@ To import this backup:
       />
 
       <main className="max-w-7xl mx-auto px-6 py-4">
-        <CardList
-          cards={collectionData}
-          exchangeRate={exchangeRate}
-          onCardClick={(card) => {
-            // When a card is clicked from the list, provide the card to selectCard
-            selectCard(card);
-          }}
-          onDeleteCards={deleteCard}
-          onUpdateCard={handleCardUpdate}
-          onAddCard={() => setShowNewCardForm(true)}
-        />
+        {currentView === 'cards' ? (
+          <CardList
+            cards={collectionData}
+            exchangeRate={exchangeRate}
+            onCardClick={(card) => {
+              selectCard(card);
+            }}
+            onDeleteCards={onDeleteCards}
+            onUpdateCard={handleCardUpdate}
+            onAddCard={() => setShowNewCardForm(true)}
+            selectedCollection={selectedCollection}
+            collections={collections}
+            setCollections={setCollections}
+          />
+        ) : (
+          <SoldItems />
+        )}
       </main>
 
       {showNewCardForm && (
@@ -635,7 +664,7 @@ To import this backup:
               }
             } catch (error) {
               console.error("Error deleting collection:", error);
-              alert(`Failed to delete collection: ${error.message}`);
+              toast.error(`Failed to delete collection: ${error.message}`);
             }
           }}
           refreshCollections={() => {
@@ -666,11 +695,12 @@ To import this backup:
 
 function App() {
   return (
-    <ErrorBoundary>
-      <ThemeProvider>
+    <ThemeProvider>
+      <div className="min-h-screen bg-gray-50 dark:bg-[#111827]">
+        <Toaster position="bottom-center" />
         <AppContent />
-      </ThemeProvider>
-    </ErrorBoundary>
+      </div>
+    </ThemeProvider>
   );
 }
 

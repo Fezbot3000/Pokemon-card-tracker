@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, memo } from 'react';
 import { formatCurrency, formatValue } from '../utils/formatters';
 import { db } from '../services/db';
 import { useTheme } from '../contexts/ThemeContext';
+import { toast } from 'react-hot-toast';
 
 // Image loading states component
 const CardImage = memo(({ imageUrl, loadingState, onRetry }) => {
@@ -57,9 +58,6 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
     investmentAUD: typeof card.investmentAUD === 'number' ? Number(card.investmentAUD.toFixed(2)) : 0,
     currentValueAUD: typeof card.currentValueAUD === 'number' ? Number(card.currentValueAUD.toFixed(2)) : 0
   });
-  const [isEditing, setIsEditing] = useState(false);
-  const [isEditMenuOpen, setIsEditMenuOpen] = useState(false);
-  const [editingField, setEditingField] = useState(null);
   const [cardImage, setCardImage] = useState(null);
   const [imageLoadingState, setImageLoadingState] = useState('loading');
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -147,7 +145,7 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
   };
 
   const handleClose = () => {
-    if (hasUnsavedChanges && isEditing) {
+    if (hasUnsavedChanges) {
       if (window.confirm('You have unsaved changes. Are you sure you want to close?')) {
         onClose();
       }
@@ -167,24 +165,30 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
 
   const handleNumberInputChange = (e) => {
     const { name, value } = e.target;
-    const numValue = value === '' ? 0 : Number(parseFloat(value).toFixed(2));
-    setEditedCard(prev => {
-      if (name === 'investmentAUD') {
-        return {
+    
+    // Allow empty input or numbers with up to 2 decimal places
+    if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+      const numValue = value === '' ? '' : parseFloat(value);
+      
+      setEditedCard(prev => {
+        const updates = {
           ...prev,
-          investmentAUD: numValue,
-          potentialProfit: Number((prev.currentValueAUD - numValue).toFixed(2))
+          [name]: value === '' ? '' : numValue
         };
-      } else if (name === 'currentValueAUD') {
-        return {
-          ...prev,
-          currentValueAUD: numValue,
-          potentialProfit: Number((numValue - prev.investmentAUD).toFixed(2))
-        };
-      }
-      return { ...prev, [name]: numValue };
-    });
-    setHasUnsavedChanges(true);
+
+        // Calculate USD values based on AUD
+        if (name === 'investmentAUD') {
+          updates.investmentUSD = value === '' ? '' : Number((numValue / exchangeRate).toFixed(2));
+          updates.potentialProfit = Number((prev.currentValueAUD || 0) - (numValue || 0)).toFixed(2);
+        } else if (name === 'currentValueAUD') {
+          updates.currentValueUSD = value === '' ? '' : Number((numValue / exchangeRate).toFixed(2));
+          updates.potentialProfit = Number((numValue || 0) - (prev.investmentAUD || 0)).toFixed(2);
+        }
+
+        return updates;
+      });
+      setHasUnsavedChanges(true);
+    }
   };
 
   const handleImageChange = async (e) => {
@@ -215,33 +219,18 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
           });
           
           // Show success message
-          setSaveMessage({
-            text: 'Image uploaded successfully',
-            type: 'success'
-          });
+          toast.success('Image uploaded successfully');
         } catch (updateError) {
           console.error('Error updating card after image upload:', updateError);
           // Still show success for the image upload since it was saved in the database
-          setSaveMessage({
-            text: 'Image saved, but there was a problem updating the card',
-            type: 'warning'
-          });
+          toast.success('Image saved, but there was a problem updating the card');
         }
-        
-        // Clear message after 3 seconds
-        setTimeout(() => setSaveMessage(null), 3000);
       } catch (error) {
         console.error('Error saving image:', error);
         setImageLoadingState('error');
         
         // Show error message
-        setSaveMessage({
-          text: `Failed to upload image: ${error.message || 'Unknown error'}`,
-          type: 'error'
-        });
-        
-        // Clear message after 3 seconds
-        setTimeout(() => setSaveMessage(null), 3000);
+        toast.error(`Failed to upload image: ${error.message || 'Unknown error'}`);
       }
     }
   };
@@ -262,35 +251,34 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
 
   const handleSave = async () => {
     try {
-      // Save to the database
-      await db.saveCard(editedCard);
+      // Check if there are any changes
+      if (!hasCardBeenEdited()) {
+        toast.info('No changes to save');
+        return;
+      }
+
+      // Format the card data before saving
+      const cardToSave = {
+        ...card, // Start with original card data
+        ...editedCard, // Override with edited values
+        investmentAUD: Number(editedCard.investmentAUD || 0),
+        currentValueAUD: Number(editedCard.currentValueAUD || 0),
+        investmentUSD: Number(editedCard.investmentUSD || 0),
+        currentValueUSD: Number(editedCard.currentValueUSD || 0),
+        potentialProfit: Number((Number(editedCard.currentValueAUD || 0) - Number(editedCard.investmentAUD || 0)).toFixed(2))
+      };
+
+      // Update the parent component first (this will handle the database save)
+      await updateCard(cardToSave);
       
-      // Update the parent component
-      updateCard(editedCard);
-      
-      // Exit edit mode
-      setIsEditing(false);
+      // Reset unsaved changes flag
       setHasUnsavedChanges(false);
       
       // Show success message
-      setSaveMessage({
-        text: 'Card updated successfully',
-        type: 'success'
-      });
-      
-      // Clear message after 3 seconds
-      setTimeout(() => setSaveMessage(null), 3000);
+      toast.success('Card updated successfully');
     } catch (error) {
       console.error('Error saving card:', error);
-      
-      // Show error message
-      setSaveMessage({
-        text: 'Failed to update card',
-        type: 'error'
-      });
-      
-      // Clear message after 3 seconds
-      setTimeout(() => setSaveMessage(null), 3000);
+      toast.error('Failed to update card: ' + (error.message || 'Unknown error'));
     }
   };
 
@@ -300,50 +288,11 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
     }
   };
 
-  const handleEditMenuToggle = () => {
-    setIsEditMenuOpen(!isEditMenuOpen);
-  };
-
-  const handleFieldEdit = (field) => {
-    if (field === 'details') {
-      setIsEditing(true);
-    } else {
-      setEditingField(field);
-    }
-    setIsEditMenuOpen(false);
-    setHasUnsavedChanges(true);
-  };
-
-  const handleCancel = () => {
-    // Reset the edited card to the original card data
-    setEditedCard({
-      ...card,
-      investmentUSD: typeof card.investmentUSD === 'number' ? Number(card.investmentUSD.toFixed(2)) : 0,
-      currentValueUSD: typeof card.currentValueUSD === 'number' ? Number(card.currentValueUSD.toFixed(2)) : 0,
-      investmentAUD: typeof card.investmentAUD === 'number' ? Number(card.investmentAUD.toFixed(2)) : 0,
-      currentValueAUD: typeof card.currentValueAUD === 'number' ? Number(card.currentValueAUD.toFixed(2)) : 0
-    });
-    setIsEditing(false);
-    setEditingField(null);
-    setHasUnsavedChanges(false);
-  };
-
   const profit = editedCard.currentValueAUD - editedCard.investmentAUD;
   const profitPercentage = editedCard.investmentAUD ? (profit / editedCard.investmentAUD * 100) : 0;
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden bg-black bg-opacity-50">
-      {/* Toast Message */}
-      {saveMessage && (
-        <div className={`toast ${
-          saveMessage.type === 'success' ? 'toast-success' : 
-          saveMessage.type === 'error' ? 'toast-error' :
-          'bg-gray-700 text-white'
-        }`}>
-          {saveMessage.text}
-        </div>
-      )}
-
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute inset-y-0 right-0 max-w-full flex sm:pl-10">
           <div 
@@ -353,7 +302,7 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
             } sm:max-w-md`}
           >
             <div className="h-full flex flex-col bg-white dark:bg-[#0B0F19] shadow-xl">
-              {/* Header - Made sticky */}
+              {/* Header */}
               <div className="sticky top-0 z-10 px-4 sm:px-6 flex justify-between items-start py-4 bg-white dark:bg-[#0B0F19] border-b border-gray-200 dark:border-gray-700">
                 <h2 className={`text-2xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                   Card Details
@@ -366,7 +315,7 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
                 </button>
               </div>
 
-              {/* Content - Added padding and made scrollable */}
+              {/* Content */}
               <div className="flex-1 overflow-y-auto">
                 <div className="px-4 sm:px-6 py-6">
                   {/* Card Image and Details Grid */}
@@ -401,23 +350,9 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
                           if (files.length > 0) {
                             const file = files[0];
                             if (file.type.startsWith('image/')) {
-                              // Manually update the file input value and trigger the change handler
-                              if (fileInputRef.current) {
-                                // Create a DataTransfer to programmatically set the file
-                                const dataTransfer = new DataTransfer();
-                                dataTransfer.items.add(file);
-                                fileInputRef.current.files = dataTransfer.files;
-                                
-                                // Trigger the change handler manually
-                                handleImageChange({ target: { files: dataTransfer.files } });
-                              }
+                              handleImageChange({ target: { files: [file] } });
                             } else {
-                              // Show error for non-image files
-                              setSaveMessage({
-                                text: 'Only image files are allowed',
-                                type: 'error'
-                              });
-                              setTimeout(() => setSaveMessage(null), 3000);
+                              toast.error('Only image files are allowed');
                             }
                           }
                         }}
@@ -450,7 +385,6 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
                               value={editedCard.player || ''}
                               onChange={handleInputChange}
                               className="input"
-                              disabled={!isEditing}
                             />
                           </div>
                           <div>
@@ -461,7 +395,6 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
                               value={editedCard.card || ''}
                               onChange={handleInputChange}
                               className="input"
-                              disabled={!isEditing}
                             />
                           </div>
                           <div>
@@ -472,7 +405,6 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
                               value={editedCard.set || ''}
                               onChange={handleInputChange}
                               className="input"
-                              disabled={!isEditing}
                             />
                           </div>
                           <div>
@@ -483,7 +415,6 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
                               value={editedCard.year || ''}
                               onChange={handleInputChange}
                               className="input"
-                              disabled={!isEditing}
                             />
                           </div>
                           <div>
@@ -494,7 +425,6 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
                               value={editedCard.category || ''}
                               onChange={handleInputChange}
                               className="input"
-                              disabled={!isEditing}
                             />
                           </div>
                           <div>
@@ -505,7 +435,6 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
                               value={editedCard.condition || ''}
                               onChange={handleInputChange}
                               className="input"
-                              disabled={!isEditing}
                             />
                           </div>
                           <div>
@@ -528,23 +457,29 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
                           <div>
                             <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Investment (AUD)</label>
                             <input
-                              type="number"
+                              type="text"
                               name="investmentAUD"
-                              value={editedCard.investmentAUD.toFixed(2)}
+                              value={editedCard.investmentAUD === '' ? '' : editedCard.investmentAUD === 0 ? '' : editedCard.investmentAUD}
                               onChange={handleNumberInputChange}
-                              className="input"
-                              step="0.01"
+                              className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600
+                                       bg-white dark:bg-[#1B2131] text-gray-900 dark:text-white
+                                       focus:outline-none focus:ring-2 focus:ring-primary/20"
+                              style={{ appearance: 'textfield' }}
+                              placeholder="0.00"
                             />
                           </div>
                           <div>
                             <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Current Value (AUD)</label>
                             <input
-                              type="number"
+                              type="text"
                               name="currentValueAUD"
-                              value={editedCard.currentValueAUD.toFixed(2)}
+                              value={editedCard.currentValueAUD === '' ? '' : editedCard.currentValueAUD === 0 ? '' : editedCard.currentValueAUD}
                               onChange={handleNumberInputChange}
-                              className="input"
-                              step="0.01"
+                              className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600
+                                       bg-white dark:bg-[#1B2131] text-gray-900 dark:text-white
+                                       focus:outline-none focus:ring-2 focus:ring-primary/20"
+                              style={{ appearance: 'textfield' }}
+                              placeholder="0.00"
                             />
                           </div>
                         </div>
@@ -557,68 +492,22 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
               {/* Footer */}
               <div className="px-4 sm:px-6 py-4 bg-white dark:bg-[#1B2131] border-t border-gray-200 dark:border-gray-700">
                 <div className="flex justify-between items-center">
-                  {isEditing ? (
-                    <div className="flex gap-2">
-                      <button 
-                        onClick={handleCancel}
-                        className="btn btn-secondary"
-                      >
-                        Cancel
-                      </button>
-                      <button 
-                        onClick={handleSave}
-                        className="btn btn-primary"
-                      >
-                        Save Changes
-                      </button>
-                    </div>
-                  ) : null}
-                  
-                  <div className="flex items-center gap-2 ml-auto">
+                  <div className="flex gap-2">
                     <button 
-                      onClick={handleDelete}
-                      className="text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 p-2"
+                      onClick={handleSave}
+                      className={`btn btn-primary ${hasUnsavedChanges ? '' : 'opacity-50 cursor-not-allowed'}`}
+                      disabled={!hasUnsavedChanges}
                     >
-                      <span className="material-icons">delete</span>
+                      Save Changes
                     </button>
-                    
-                    <div className="relative">
-                      <button 
-                        onClick={handleEditMenuToggle}
-                        className="text-gray-500 dark:text-gray-400 p-2 hover:text-gray-700 dark:hover:text-gray-200"
-                      >
-                        <span className="material-icons">more_vert</span>
-                      </button>
-                      
-                      {isEditMenuOpen && (
-                        <div className="absolute bottom-full right-0 mb-2 w-48 rounded-md shadow-lg bg-white dark:bg-[#1B2131] ring-1 ring-black ring-opacity-5">
-                          <div className="py-1" role="menu" aria-orientation="vertical">
-                            <button
-                              onClick={() => handleFieldEdit('details')}
-                              className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
-                              role="menuitem"
-                            >
-                              Edit Card Details
-                            </button>
-                            <button
-                              onClick={() => handleFieldEdit('investment')}
-                              className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
-                              role="menuitem"
-                            >
-                              Edit Investment
-                            </button>
-                            <button
-                              onClick={() => handleFieldEdit('value')}
-                              className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
-                              role="menuitem"
-                            >
-                              Edit Current Value
-                            </button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
                   </div>
+                  
+                  <button 
+                    onClick={handleDelete}
+                    className="text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 p-2"
+                  >
+                    <span className="material-icons">delete</span>
+                  </button>
                 </div>
               </div>
             </div>

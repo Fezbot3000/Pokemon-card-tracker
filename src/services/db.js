@@ -2,6 +2,7 @@ const DB_NAME = 'PokemonCardDB';
 const DB_VERSION = 1;
 const COLLECTIONS_STORE = 'collections';
 const IMAGES_STORE = 'images';
+const PROFILE_STORE = 'profile';
 
 class DatabaseService {
   constructor() {
@@ -33,6 +34,11 @@ class DatabaseService {
         // Create images store
         if (!db.objectStoreNames.contains(IMAGES_STORE)) {
           db.createObjectStore(IMAGES_STORE, { keyPath: 'id' });
+        }
+
+        // Create profile store
+        if (!db.objectStoreNames.contains(PROFILE_STORE)) {
+          db.createObjectStore(PROFILE_STORE, { keyPath: 'id' });
         }
       };
     });
@@ -136,6 +142,33 @@ class DatabaseService {
 
       request.onsuccess = () => resolve();
       request.onerror = () => reject('Error deleting image');
+    });
+  }
+
+  async getProfile() {
+    await this.ensureDB();
+    return new Promise((resolve, reject) => {
+      const transaction = this.db.transaction([PROFILE_STORE], 'readonly');
+      const store = transaction.objectStore(PROFILE_STORE);
+      const request = store.get('user');
+
+      request.onsuccess = () => {
+        resolve(request.result?.data || null);
+      };
+
+      request.onerror = () => reject('Error fetching profile');
+    });
+  }
+
+  async saveProfile(profileData) {
+    await this.ensureDB();
+    return new Promise((resolve, reject) => {
+      const transaction = this.db.transaction([PROFILE_STORE], 'readwrite');
+      const store = transaction.objectStore(PROFILE_STORE);
+      const request = store.put({ id: 'user', data: profileData });
+
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject('Error saving profile');
     });
   }
 

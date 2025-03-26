@@ -3,6 +3,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { db } from '../services/db';  // Use the correct db service
 import JSZip from 'jszip';
 import CollectionSelector from './CollectionSelector';
+import { toast } from 'react-hot-toast';
 
 const Header = ({ 
   selectedCollection, 
@@ -10,6 +11,8 @@ const Header = ({
   onCollectionChange, 
   onImportClick,
   onSettingsClick,
+  currentView,
+  onViewChange,
   refreshCollections,
   onAddCollection,
   onRenameCollection,
@@ -22,19 +25,8 @@ const Header = ({
   const [isNewCollectionModalOpen, setIsNewCollectionModalOpen] = useState(false);
   const [newCollectionName, setNewCollectionName] = useState('');
   const [isRenaming, setIsRenaming] = useState(false);
-  const [toast, setToast] = useState(null);
   const dropdownRef = useRef(null);
   const newCollectionInputRef = useRef(null);
-
-  // Clear toast after 3 seconds
-  useEffect(() => {
-    if (toast) {
-      const timer = setTimeout(() => {
-        setToast(null);
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [toast]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -119,8 +111,10 @@ const Header = ({
   };
 
   const handleCollectionSelect = (collection) => {
-    onCollectionChange(collection);
-    setIsDropdownOpen(false);
+    if (typeof onCollectionChange === 'function') {
+      onCollectionChange(collection);
+      setIsDropdownOpen(false);
+    }
   };
 
   const handleAddNewCollection = (e) => {
@@ -137,12 +131,14 @@ const Header = ({
       onAddCollection(newCollectionName.trim());
       setNewCollectionName('');
       setIsNewCollectionModalOpen(false);
+      toast.success('Collection created successfully!');
     }
   };
 
   const handleRenameCollection = () => {
     if (newCollectionName && newCollectionName !== selectedCollection) {
       onRenameCollection(selectedCollection, newCollectionName);
+      toast.success('Collection renamed successfully!');
     }
     setIsRenaming(false);
   };
@@ -151,19 +147,15 @@ const Header = ({
     if (collections.length > 1) {
       onDeleteCollection(selectedCollection);
       setIsSettingsOpen(false);
+      toast.success('Collection deleted successfully!');
     } else {
-      alert('Cannot delete the last collection');
+      toast.error('Cannot delete the last collection');
     }
   };
 
   const startRenaming = () => {
     setNewCollectionName(selectedCollection);
     setIsRenaming(true);
-  };
-
-  // Function to show a toast notification
-  const showToast = (message, type = 'success') => {
-    setToast({ message, type });
   };
 
   const handleExportData = async () => {
@@ -272,12 +264,12 @@ To import this backup:
         }, 100);
 
         // Show success toast
-        showToast('Backup exported successfully!');
+        toast.success('Backup exported successfully!');
       } catch (error) {
-        showToast('Error creating backup. Please try again.', 'error');
+        toast.error('Error creating backup. Please try again.');
       }
     } catch (error) {
-      showToast('Error exporting data. Please try again.', 'error');
+      toast.error('Error exporting data. Please try again.');
     }
   };
 
@@ -366,7 +358,7 @@ To import this backup:
             document.body.removeChild(loadingEl);
             
             // Show success toast
-            showToast('Backup imported successfully!');
+            toast.success('Backup imported successfully!');
             
             // Close settings modal
             setIsSettingsOpen(false);
@@ -375,7 +367,7 @@ To import this backup:
             // Remove loading message
             document.body.removeChild(loadingEl);
             
-            showToast(`Error importing backup: ${error.message}`, 'error');
+            toast.error(`Error importing backup: ${error.message}`);
           }
         } else {
           // Handle JSON files or other formats here
@@ -383,7 +375,7 @@ To import this backup:
         }
       } catch (error) {
         console.error("Import error:", error);
-        showToast(`Error importing file: ${error.message}`, 'error');
+        toast.error(`Error importing file: ${error.message}`);
       }
     };
     
@@ -409,126 +401,80 @@ To import this backup:
 
   return (
     <>
-      {/* Toast notification */}
-      {toast && (
-        <div 
-          className={`fixed top-4 right-4 z-[100] px-6 py-3 rounded-lg shadow-lg
-                     ${toast.type === 'error' ? 'bg-red-500 text-white' : 'bg-green-500 text-white'}`}
-        >
-          {toast.message}
-        </div>
-      )}
-    
-      <header className="app-header">
-        <div className="header-content">
-          <div className="header-left">
-            <CollectionSelector
-              collections={collections}
-              selectedCollection={selectedCollection}
-              onCollectionChange={onCollectionChange}
-              onAddCollection={handleAddNewCollection}
-            />
-          </div>
-
-          {/* Desktop buttons */}
-          <div className="header-buttons">
-            <button
-              className="btn btn-secondary"
-              onClick={() => onImportClick('price')}
-              aria-label="Update Prices"
-            >
-              <span className="material-icons">sync</span>
-              <span>Update Prices</span>
-            </button>
-            <button
-              className="btn btn-secondary"
-              onClick={() => onImportClick('baseData')}
-              aria-label="Import Base Data"
-            >
-              <span className="material-icons">file_download</span>
-              <span>Import Base Data</span>
-            </button>
-            <button
-              className="btn btn-secondary"
-              onClick={toggleTheme}
-              aria-label={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
-            >
-              <span className="material-icons">
-                {isDarkMode ? 'light_mode' : 'dark_mode'}
-              </span>
-              <span>{isDarkMode ? 'Light Mode' : 'Dark Mode'}</span>
-            </button>
-            <button
-              className="btn btn-secondary"
-              onClick={toggleSettings}
-              aria-label="Settings"
-            >
-              <span className="material-icons">settings</span>
-              <span>Settings</span>
-            </button>
-          </div>
-
-          {/* Mobile menu button */}
-          <button
-            className="mobile-menu-button"
-            onClick={toggleMobileMenu}
-            aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
-          >
-            <span className="material-icons">
-              {isMobileMenuOpen ? 'close' : 'menu'}
-            </span>
-          </button>
-        </div>
-
-        {/* Mobile menu */}
-        {isMobileMenuOpen && (
-          <div className="mobile-menu">
-            <div className="mobile-menu-content">
+      <header className="bg-white dark:bg-[#1B2131] shadow-sm">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <CollectionSelector
+                collections={collections}
+                selectedCollection={selectedCollection}
+                onCollectionChange={handleCollectionSelect}
+                onAddCollection={handleAddNewCollection}
+              />
+              
+              {/* View switcher */}
+              <div className="hidden lg:flex items-center space-x-2">
+                <button
+                  className={`px-4 py-2 rounded-lg transition-colors ${
+                    currentView === 'cards'
+                      ? 'bg-primary text-white'
+                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+                  }`}
+                  onClick={() => onViewChange('cards')}
+                >
+                  Cards
+                </button>
+                <button
+                  className={`px-4 py-2 rounded-lg transition-colors ${
+                    currentView === 'sold'
+                      ? 'bg-primary text-white'
+                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+                  }`}
+                  onClick={() => onViewChange('sold')}
+                >
+                  Sold Items
+                </button>
+              </div>
+            </div>
+            
+            {/* Right side actions */}
+            <div className="flex items-center space-x-2">
               <button
-                className="mobile-menu-item"
-                onClick={() => {
-                  onImportClick('price');
-                  toggleMobileMenu();
-                }}
+                onClick={() => onImportClick('priceUpdate')}
+                className="hidden lg:flex items-center space-x-1 px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
               >
-                <span className="material-icons">sync</span>
+                <span className="material-icons">update</span>
                 <span>Update Prices</span>
               </button>
+              
               <button
-                className="mobile-menu-item"
-                onClick={() => {
-                  onImportClick('baseData');
-                  toggleMobileMenu();
-                }}
+                onClick={() => onImportClick('baseData')}
+                className="hidden lg:flex items-center space-x-1 px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
               >
-                <span className="material-icons">file_download</span>
+                <span className="material-icons">upload_file</span>
                 <span>Import Base Data</span>
               </button>
+              
               <button
-                className="mobile-menu-item"
-                onClick={() => {
-                  toggleTheme();
-                  toggleMobileMenu();
-                }}
+                onClick={toggleTheme}
+                className="p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                aria-label="Toggle theme"
               >
                 <span className="material-icons">
                   {isDarkMode ? 'light_mode' : 'dark_mode'}
                 </span>
-                <span>{isDarkMode ? 'Light Mode' : 'Dark Mode'}</span>
               </button>
+              
               <button
-                className="mobile-menu-item"
-                onClick={() => {
-                  toggleSettings();
-                  toggleMobileMenu();
-                }}
+                onClick={toggleSettings}
+                className="p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                aria-label="Settings"
               >
                 <span className="material-icons">settings</span>
-                <span>Settings</span>
               </button>
             </div>
           </div>
-        )}
+        </div>
       </header>
 
       {/* Settings Modal */}

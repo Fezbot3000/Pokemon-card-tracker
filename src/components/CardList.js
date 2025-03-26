@@ -3,6 +3,9 @@ import { db } from '../services/db';
 import { formatValue } from '../utils/formatters';
 import { formatCurrency } from '../utils/currencyAPI';
 import { useTheme } from '../contexts/ThemeContext';
+import SaleModal from './SaleModal';
+import ConfirmDialog from './ConfirmDialog';
+import { toast } from 'react-hot-toast';
 
 // Extracted Card component for better performance
 const Card = memo(({ card, cardImage, onCardClick, isSelected, onSelect, displayMetric, onUpdateCard }) => {
@@ -66,79 +69,81 @@ const Card = memo(({ card, cardImage, onCardClick, isSelected, onSelect, display
 
   return (
     <div 
-      className={`relative p-4 rounded-xl border transition-all duration-200 cursor-pointer
-        ${isDarkMode ? 'bg-[#1B2131] border-gray-700/50 hover:bg-[#252B3B]' : 'bg-white border-gray-200 hover:bg-gray-50'}
-        ${isSelected ? 'ring-2 ring-primary' : ''}`}
+      className={`group relative bg-white dark:bg-[#1B2131] rounded-xl shadow-sm
+                  border border-gray-200 dark:border-gray-700/50 overflow-hidden
+                  transition-all duration-200 hover:shadow-md
+                  ${isSelected ? 'ring-2 ring-primary' : ''}`}
       onClick={() => onCardClick(card)}
     >
       {/* Selection checkbox */}
-      <div className="absolute top-2 right-2 z-10" onClick={(e) => e.stopPropagation()}>
+      <div className="absolute top-2 right-2 z-10">
         <input
           type="checkbox"
           checked={isSelected}
-          onChange={(e) => onSelect(e, card.slabSerial)}
-          className="w-4 h-4 accent-primary"
+          onChange={(e) => {
+            e.stopPropagation();
+            onSelect(e, card.slabSerial);
+          }}
+          className="w-6 h-6 cursor-pointer"
+          onClick={(e) => e.stopPropagation()}
         />
       </div>
 
       {/* Card image */}
-      <div className="aspect-[2/3] mb-4 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800">
+      <div className="aspect-[2/3] bg-gray-100 dark:bg-gray-800">
         {cardImage ? (
           <img 
             src={cardImage} 
             alt={`${card.player} - ${card.card}`}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-contain"
+            loading="lazy"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
-            <span className="material-icons text-4xl text-gray-400">image</span>
+            <span className="material-icons text-4xl text-gray-400 dark:text-gray-600">image</span>
           </div>
         )}
       </div>
 
-      {/* Card details - restructured layout */}
-      <div className="space-y-2 text-center">
-        {/* Value amount - now centered and larger */}
-        <div className={`text-2xl font-medium ${
-          displayData.isProfit 
-            ? displayData.profitValue >= 0 
-              ? 'text-green-500' 
-              : 'text-red-500'
-            : isDarkMode 
-              ? 'text-gray-200' 
-              : 'text-gray-800'
-        }`} onClick={handleEditStart}>
-          {isEditing && displayData.isEditable ? (
-            <div className="flex items-center justify-center gap-2" onClick={e => e.stopPropagation()}>
-              <input
-                type="number"
-                value={editValue}
-                onChange={handleEditChange}
-                onKeyDown={handleKeyDown}
-                className="w-32 px-2 py-1 text-center bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                autoFocus
-              />
-              <button
-                onClick={handleEditSave}
-                className="text-sm bg-primary text-white px-2 py-1 rounded hover:bg-primary/90"
-              >
-                Save
-              </button>
-            </div>
-          ) : (
-            displayData.value
-          )}
-        </div>
-        
-        {/* Label - shown below the value */}
-        <div className={`text-xs font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-          {displayData.label}
-        </div>
-        
-        {/* Card name - now below the value */}
-        <h3 className={`font-medium line-clamp-2 mt-2 ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+      {/* Card details */}
+      <div className="p-4">
+        {/* Card name */}
+        <h3 className="font-medium text-gray-900 dark:text-white mb-2 line-clamp-2">
           {card.card}
         </h3>
+
+        {/* Player name */}
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+          {card.player || 'Unknown Player'}
+        </p>
+
+        {/* Stats grid */}
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <div className="text-sm text-gray-500 dark:text-gray-400">Investment</div>
+            <div className="font-medium text-gray-900 dark:text-white">
+              {formatCurrency(card.investmentAUD)}
+            </div>
+          </div>
+          <div>
+            <div className="text-sm text-gray-500 dark:text-gray-400">Current Value</div>
+            <div className="font-medium text-gray-900 dark:text-white">
+              {formatCurrency(card.currentValueAUD)}
+            </div>
+          </div>
+          <div>
+            <div className="text-sm text-gray-500 dark:text-gray-400">Profit</div>
+            <div className={`font-medium ${(card.currentValueAUD - card.investmentAUD) >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+              {formatCurrency(card.currentValueAUD - card.investmentAUD)}
+            </div>
+          </div>
+          <div>
+            <div className="text-sm text-gray-500 dark:text-gray-400">Purchase Date</div>
+            <div className="font-medium text-gray-900 dark:text-white">
+              {card.datePurchased || 'N/A'}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -163,7 +168,17 @@ const StatCard = memo(({ label, value, isProfit = false }) => {
   );
 });
 
-const CardList = ({ cards, exchangeRate, onCardClick, onDeleteCards, onUpdateCard, onAddCard }) => {
+const CardList = ({ 
+  cards, 
+  exchangeRate, 
+  onCardClick, 
+  onDeleteCards, 
+  onUpdateCard, 
+  onAddCard,
+  selectedCollection,
+  collections,
+  setCollections
+}) => {
   const [filter, setFilter] = useState('');
   const [sortField, setSortField] = useState(
     localStorage.getItem('cardListSortField') || 'currentValueAUD'
@@ -183,6 +198,11 @@ const CardList = ({ cards, exchangeRate, onCardClick, onDeleteCards, onUpdateCar
   const [editingInvestment, setEditingInvestment] = useState(null);
   const [editValue, setEditValue] = useState('');
   const { isDarkMode } = useTheme();
+  const [showSaleModal, setShowSaleModal] = useState(false);
+  const [selectedCardsForSale, setSelectedCardsForSale] = useState([]);
+  const [buyer, setBuyer] = useState('');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [cardsToDelete, setCardsToDelete] = useState([]);
 
   const valueDropdownRef = useRef(null);
   const metricDropdownRef = useRef(null);
@@ -306,54 +326,6 @@ const CardList = ({ cards, exchangeRate, onCardClick, onDeleteCards, onUpdateCar
     { field: 'player', label: 'Player Name' }
   ];
 
-  // Get label for sort field
-  const getSortFieldLabel = (field) => {
-    const option = sortOptions.find(opt => opt.field === field);
-    return option ? option.label : 'Current Value';
-  };
-
-  const metricOptions = [
-    { value: 'currentValueAUD', label: 'Current Value' },
-    { value: 'investmentAUD', label: 'Investment' },
-    { value: 'potentialProfit', label: 'Profit' },
-    { value: 'datePurchased', label: 'Purchase Date' },
-    { value: 'player', label: 'Player Name' },
-    { value: 'condition', label: 'Condition' },
-    { value: 'set', label: 'Set' }
-  ];
-
-  // Toggle sort direction
-  const toggleSortDirection = () => {
-    setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-  };
-  
-  // Sort dropdown toggle
-  const toggleSortDropdown = () => {
-    // Close other dropdowns
-    setIsMetricDropdownOpen(false);
-    setIsValueDropdownOpen(false);
-    // Toggle sort dropdown
-    setShowSortDropdown(!showSortDropdown);
-  };
-  
-  // Metric dropdown toggle
-  const toggleMetricDropdown = () => {
-    // Close other dropdowns
-    setShowSortDropdown(false);
-    setIsValueDropdownOpen(false);
-    // Toggle metric dropdown
-    setIsMetricDropdownOpen(!isMetricDropdownOpen);
-  };
-  
-  // Value dropdown toggle
-  const toggleValueDropdown = () => {
-    // Close other dropdowns
-    setShowSortDropdown(false);
-    setIsMetricDropdownOpen(false);
-    // Toggle value dropdown
-    setIsValueDropdownOpen(!isValueDropdownOpen);
-  };
-
   // Handle sort field change
   const handleSortChange = (field) => {
     if (field === sortField) {
@@ -362,7 +334,6 @@ const CardList = ({ cards, exchangeRate, onCardClick, onDeleteCards, onUpdateCar
       setSortField(field);
       setSortDirection('desc');  // Default to descending for new sort fields
     }
-    setShowSortDropdown(false); // Close the dropdown after selection
   };
 
   const handleSelectCard = (e, cardId) => {
@@ -387,13 +358,6 @@ const CardList = ({ cards, exchangeRate, onCardClick, onDeleteCards, onUpdateCar
       setSelectedCards(new Set());
     } else {
       setSelectedCards(new Set(filteredCards.map(card => card.slabSerial)));
-    }
-  };
-
-  const handleDeleteSelected = () => {
-    if (window.confirm(`Are you sure you want to delete ${selectedCards.size} cards?`)) {
-      onDeleteCards(Array.from(selectedCards));
-      setSelectedCards(new Set());
     }
   };
 
@@ -472,157 +436,271 @@ const CardList = ({ cards, exchangeRate, onCardClick, onDeleteCards, onUpdateCar
     });
   }, [cards, filter, sortField, sortDirection]);
 
-  // Memoized totals
+  // Calculate totals
   const totals = useMemo(() => {
-    const totalInvestment = filteredCards.reduce((sum, card) => sum + (card.investmentAUD || 0), 0);
-    const totalValue = filteredCards.reduce((sum, card) => sum + (card.currentValueAUD || 0), 0);
-    return {
-      totalInvestment,
-      totalValue,
-      totalProfit: totalValue - totalInvestment
-    };
-  }, [filteredCards]);
+    return cards.reduce((acc, card) => {
+      acc.investment += parseFloat(card.investmentAUD) || 0;
+      acc.value += parseFloat(card.currentValueAUD) || 0;
+      acc.profit += (parseFloat(card.currentValueAUD) || 0) - (parseFloat(card.investmentAUD) || 0);
+      return acc;
+    }, { investment: 0, value: 0, profit: 0 });
+  }, [cards]);
+
+  // Reset state when collection changes
+  useEffect(() => {
+    setSelectedCards(new Set());
+    setSelectedCardsForSale([]);
+    setShowSaleModal(false);
+    setBuyer('');
+    setFilter('');
+  }, [selectedCollection]);
+
+  const handleMarkAsSold = () => {
+    if (selectedCards.size === 0) {
+      toast.error('Please select at least one card to mark as sold');
+      return;
+    }
+    // Get the full card data for selected cards
+    const selectedCardData = cards.filter(card => selectedCards.has(card.slabSerial));
+    setSelectedCardsForSale(selectedCardData);
+    setShowSaleModal(true);
+  };
+
+  // Function to generate a unique invoice ID
+  const generateInvoiceId = () => {
+    // Get existing sold cards
+    const existingSoldCards = JSON.parse(localStorage.getItem('soldCards') || '[]');
+    
+    // Get the highest invoice number
+    let highestNumber = 0;
+    existingSoldCards.forEach(card => {
+      if (card.invoiceId) {
+        const match = card.invoiceId.match(/INV-(\d+)/);
+        if (match) {
+          const num = parseInt(match[1], 10);
+          if (num > highestNumber) {
+            highestNumber = num;
+          }
+        }
+      }
+    });
+    
+    // Generate next invoice number
+    const nextNumber = highestNumber + 1;
+    
+    // Format with leading zeros (e.g., INV-0001)
+    return `INV-${String(nextNumber).padStart(4, '0')}`;
+  };
+
+  const handleSaleConfirm = async ({ buyer, dateSold, soldPrices, totalSalePrice, totalProfit }) => {
+    // Generate a new invoice ID for this transaction
+    const invoiceId = generateInvoiceId();
+    
+    const selectedCardsData = selectedCardsForSale.map(card => ({
+      ...card,
+      finalValueAUD: parseFloat(soldPrices[card.slabSerial]),
+      finalProfitAUD: parseFloat(soldPrices[card.slabSerial]) - card.investmentAUD,
+      dateSold,
+      buyer,
+      invoiceId // Add the invoice ID to each card
+    }));
+
+    // Get existing sold cards
+    const existingSoldCards = JSON.parse(localStorage.getItem('soldCards') || '[]');
+
+    // Add the new invoice to sold cards
+    localStorage.setItem('soldCards', JSON.stringify([...existingSoldCards, ...selectedCardsData]));
+
+    // Remove cards from all collections
+    const updatedCollections = { ...collections };
+    const cardIds = selectedCardsData.map(card => card.slabSerial);
+    
+    // Remove from each collection
+    Object.keys(updatedCollections).forEach(collectionName => {
+      if (Array.isArray(updatedCollections[collectionName])) {
+        updatedCollections[collectionName] = updatedCollections[collectionName].filter(
+          card => !cardIds.includes(card.slabSerial)
+        );
+      }
+    });
+
+    // Save updated collections
+    await db.saveCollections(updatedCollections);
+    setCollections(updatedCollections);
+
+    // Clear selection and close modal
+    setSelectedCards(new Set());
+    setShowSaleModal(false);
+    setSelectedCardsForSale([]);
+
+    // Show success message using react-hot-toast only
+    toast.success(`${selectedCardsData.length} card${selectedCardsData.length > 1 ? 's' : ''} marked as sold`);
+  };
+
+  // Toggle sort direction
+  const toggleSortDirection = () => {
+    setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+  };
+  
+  // Sort dropdown toggle
+  const toggleSortDropdown = () => {
+    // Close other dropdowns
+    setIsMetricDropdownOpen(false);
+    setIsValueDropdownOpen(false);
+    // Toggle sort dropdown
+    setShowSortDropdown(!showSortDropdown);
+  };
+  
+  // Metric dropdown toggle
+  const toggleMetricDropdown = () => {
+    // Close other dropdowns
+    setShowSortDropdown(false);
+    setIsValueDropdownOpen(false);
+    // Toggle metric dropdown
+    setIsMetricDropdownOpen(!isMetricDropdownOpen);
+  };
+  
+  // Value dropdown toggle
+  const toggleValueDropdown = () => {
+    // Close other dropdowns
+    setShowSortDropdown(false);
+    setIsMetricDropdownOpen(false);
+    // Toggle value dropdown
+    setIsValueDropdownOpen(!isValueDropdownOpen);
+  };
+
+  const handleDeleteClick = () => {
+    const selectedCardsArray = Array.from(selectedCards);
+    setCardsToDelete(selectedCardsArray);
+    setShowDeleteConfirm(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    try {
+      // Create a copy of the collections
+      const updatedCollections = { ...collections };
+
+      // Remove the cards from all collections
+      Object.keys(updatedCollections).forEach(collectionName => {
+        if (Array.isArray(updatedCollections[collectionName])) {
+          updatedCollections[collectionName] = updatedCollections[collectionName].filter(
+            card => !cardsToDelete.includes(card.slabSerial)
+          );
+        }
+      });
+
+      // Save to database
+      await db.saveCollections(updatedCollections);
+      
+      // Update state
+      setCollections(updatedCollections);
+
+      // Call the original onDeleteCards function
+      onDeleteCards(cardsToDelete);
+      
+      // Clear selection
+      setSelectedCards(new Set());
+      setShowDeleteConfirm(false);
+      setCardsToDelete([]);
+      
+      // Show success message
+      toast.success(`${cardsToDelete.length} card${cardsToDelete.length > 1 ? 's' : ''} deleted`);
+    } catch (error) {
+      console.error('Error deleting cards:', error);
+      toast.error('Failed to delete cards');
+    }
+  };
 
   return (
-    <div className="space-y-4">
-      {/* Total Cards Counter */}
-      <div className="total-cards-counter">
-        <span className="material-icons total-cards-icon">view_module</span>
-        <span className="total-cards-text">Total Cards: {filteredCards.length}</span>
+    <div className="space-y-6">
+      {/* Stats Section */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-white dark:bg-[#1B2131] p-6 rounded-xl shadow-sm">
+          <div className="text-sm text-gray-500 dark:text-gray-400">TOTAL INVESTMENT</div>
+          <div className="text-2xl font-semibold mt-1">{formatCurrency(totals.investment)}</div>
+        </div>
+        <div className="bg-white dark:bg-[#1B2131] p-6 rounded-xl shadow-sm">
+          <div className="text-sm text-gray-500 dark:text-gray-400">TOTAL VALUE</div>
+          <div className="text-2xl font-semibold mt-1">{formatCurrency(totals.value)}</div>
+        </div>
+        <div className="bg-white dark:bg-[#1B2131] p-6 rounded-xl shadow-sm">
+          <div className="text-sm text-gray-500 dark:text-gray-400">TOTAL PROFIT</div>
+          <div className={`text-2xl font-semibold mt-1 ${totals.profit >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+            {formatCurrency(totals.profit)}
+          </div>
+        </div>
       </div>
-      
-      {/* Financial Summary */}
-      <div className="stats-section">
-        <StatCard 
-          label="Total Investment" 
-          value={totals.totalInvestment} 
-        />
-        <StatCard 
-          label="Total Value" 
-          value={totals.totalValue} 
-        />
-        <StatCard 
-          label="Total Profit" 
-          value={totals.totalProfit} 
-          isProfit={true}
-        />
-      </div>
-      
-      {/* Filters and controls */}
-      <div className="filter-section">
-        <input
-          type="text"
-          placeholder="Search by name, set, or serial number..."
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-          className="search-input"
-        />
-        
-        <div className="controls-container">
-          <div className="sort-container" ref={sortDropdownRef}>
+
+      {/* Controls Section */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="flex-1 w-full sm:w-auto">
+          <input
+            type="text"
+            placeholder="Search by name, set, or serial number..."
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            className="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700/50 
+                     bg-white dark:bg-[#1B2131] text-gray-900 dark:text-white
+                     focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+          />
+        </div>
+
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          {/* Sort Dropdown */}
+          <div className="relative flex-1 sm:flex-none">
             <button
-              className="sort-button"
-              onClick={toggleSortDropdown}
+              onClick={() => setShowSortDropdown(!showSortDropdown)}
+              className="w-full sm:w-auto px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700/50
+                       bg-white dark:bg-[#1B2131] text-gray-700 dark:text-gray-300
+                       hover:bg-gray-50 dark:hover:bg-[#252B3B] transition-colors
+                       flex items-center justify-between gap-2"
             >
-              <div>
-                <span className="material-icons">sort</span>
-                <span>Sort by {getSortFieldLabel(sortField)} {sortDirection === 'asc' ? '(Asc)' : '(Desc)'}</span>
-              </div>
-              <span className="material-icons">
+              <span>Sort by {sortField === 'currentValueAUD' ? 'Current Value' : 
+                     sortField === 'investmentAUD' ? 'Investment' : 
+                     sortField === 'potentialProfit' ? 'Profit' : 
+                     sortField.replace(/([A-Z])/g, ' $1').toLowerCase()}</span>
+              <span className="material-icons text-lg">
                 {showSortDropdown ? 'keyboard_arrow_up' : 'keyboard_arrow_down'}
               </span>
             </button>
-            
+            {/* Sort options dropdown */}
             {showSortDropdown && (
-              <div className="sort-dropdown">
+              <div className="absolute right-0 mt-2 w-48 rounded-lg shadow-lg
+                            bg-white dark:bg-[#1B2131] border border-gray-200 dark:border-gray-700/50
+                            z-10 py-1">
                 {sortOptions.map(option => (
                   <div
                     key={option.field}
-                    className={`sort-option ${sortField === option.field ? 'active' : ''}`}
+                    className="px-4 py-2 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-800 
+                             cursor-pointer text-gray-700 dark:text-gray-300"
                     onClick={() => handleSortChange(option.field)}
                   >
                     <span>{option.label}</span>
                     {sortField === option.field && (
-                      <span className="material-icons">
+                      <span className="material-icons text-gray-400">
                         {sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward'}
                       </span>
                     )}
                   </div>
                 ))}
-                
-                <div className="sort-option-divider"></div>
-                
-                <div 
-                  className="sort-option"
-                  onClick={toggleSortDirection}
-                >
-                  <span>Change Order: {sortDirection === 'asc' ? 'Ascending' : 'Descending'}</span>
-                  <span className="material-icons">
-                    {sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward'}
-                  </span>
-                </div>
               </div>
             )}
           </div>
-          
-          <div className="view-container" ref={metricDropdownRef}>
-            <button
-              onClick={toggleMetricDropdown}
-              className="view-button"
-            >
-              <div className="flex items-center gap-2">
-                <span className="material-icons">visibility</span>
-                <span>View {metricOptions.find(opt => opt.value === displayMetric)?.label || 'Current Value'}</span>
-              </div>
-              <span className="material-icons">
-                {isMetricDropdownOpen ? 'expand_less' : 'expand_more'}
-              </span>
-            </button>
-            
-            {isMetricDropdownOpen && (
-              <div className="view-dropdown">
-                {metricOptions.map((option) => (
-                  <div
-                    key={option.value}
-                    className={`sort-option ${option.value === displayMetric ? 'active' : ''}`}
-                    onClick={() => {
-                      setDisplayMetric(option.value);
-                      setIsMetricDropdownOpen(false);
-                    }}
-                  >
-                    {option.value === displayMetric && (
-                      <span className="material-icons">check</span>
-                    )}
-                    {option.label}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-          
-          <div className="controls-right">
-            <button
-              onClick={handleDeleteSelected}
-              className="delete-button"
-              disabled={selectedCards.size === 0}
-              style={{ opacity: selectedCards.size === 0 ? 0.5 : 1 }}
-            >
-              <span className="material-icons mr-2">delete</span>
-              Delete {selectedCards.size > 0 ? `(${selectedCards.size})` : ''}
-            </button>
-            <button
-              onClick={onAddCard}
-              className="btn btn-primary"
-            >
-              <span className="material-icons mr-2">add</span>
-              Add Card
-            </button>
-          </div>
+
+          {/* Add Card Button */}
+          <button
+            onClick={onAddCard}
+            className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary/90
+                     transition-colors flex items-center gap-2"
+          >
+            <span className="material-icons text-lg">add</span>
+            <span>Add Card</span>
+          </button>
         </div>
       </div>
 
-      {/* Card grid */}
-      <div className="card-grid">
+      {/* Cards Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {filteredCards.map(card => (
           <Card
             key={card.slabSerial}
@@ -636,39 +714,63 @@ const CardList = ({ cards, exchangeRate, onCardClick, onDeleteCards, onUpdateCar
           />
         ))}
       </div>
-      
-      {/* Editing investment modal */}
-      {editingInvestment && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-[#1B2131] p-4 rounded-xl w-96">
-            <h3 className="text-lg font-medium mb-4 text-gray-900 dark:text-white">Edit Investment</h3>
-            <input
-              type="number"
-              value={editValue}
-              onChange={handleInvestmentChange}
-              onKeyDown={(e) => handleInvestmentKeyDown(e, editingInvestment)}
-              className="search-input mb-4"
-              autoFocus
-            />
-            <div className="flex justify-end gap-2">
-              <button 
-                className="btn btn-secondary"
-                onClick={() => setEditingInvestment(null)}
-              >
-                Cancel
-              </button>
-              <button 
-                className="btn btn-primary"
-                onClick={(e) => handleInvestmentSave(e, editingInvestment)}
-              >
-                Save
-              </button>
-            </div>
-          </div>
+
+      {/* Selected Cards Actions */}
+      {selectedCards.size > 0 && (
+        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 
+                      flex items-center gap-2 px-4 py-2 rounded-lg shadow-lg
+                      bg-white dark:bg-[#1B2131] border border-gray-200 dark:border-gray-700/50">
+          <span className="text-sm text-gray-600 dark:text-gray-400">
+            {selectedCards.size} card{selectedCards.size > 1 ? 's' : ''} selected
+          </span>
+          <button
+            onClick={handleMarkAsSold}
+            className="px-3 py-1.5 rounded-lg bg-green-500 text-white text-sm
+                     hover:bg-green-600 transition-colors"
+          >
+            Mark as Sold
+          </button>
+          <button
+            onClick={handleDeleteClick}
+            className="px-3 py-1.5 rounded-lg bg-red-500 text-white text-sm
+                     hover:bg-red-600 transition-colors"
+          >
+            Delete
+          </button>
+          <button
+            onClick={() => setSelectedCards(new Set())}
+            className="px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 
+                     text-gray-700 dark:text-gray-300 text-sm
+                     hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+          >
+            Clear Selection
+          </button>
         </div>
       )}
+
+      <SaleModal
+        isOpen={showSaleModal}
+        onClose={() => {
+          setShowSaleModal(false);
+          setSelectedCardsForSale([]);
+          setSelectedCards(new Set());
+        }}
+        selectedCards={selectedCardsForSale}
+        onConfirm={handleSaleConfirm}
+      />
+
+      <ConfirmDialog
+        isOpen={showDeleteConfirm}
+        onClose={() => {
+          setShowDeleteConfirm(false);
+          setCardsToDelete([]);
+        }}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Cards"
+        message={`Are you sure you want to delete ${cardsToDelete.length} card${cardsToDelete.length > 1 ? 's' : ''}? This action cannot be undone.`}
+      />
     </div>
   );
 };
 
-export default memo(CardList);
+export default CardList;
