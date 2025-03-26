@@ -702,30 +702,33 @@ const CardList = ({
 
             {/* Sort and Add Card */}
             <div className="flex items-center gap-2 w-full sm:w-auto">
-              <div className="relative flex-1 sm:flex-initial sm:w-[208px]">
+              <div className="relative flex-1 sm:flex-initial sm:w-[140px]" ref={sortDropdownRef}>
                 <button
                   onClick={() => setShowSortDropdown(!showSortDropdown)}
-                  className="h-12 w-full px-4 py-2 rounded-xl bg-white dark:bg-[#1B2131] text-gray-700 dark:text-white
-                           flex items-center justify-between whitespace-nowrap shadow-[0_2px_8px_rgba(0,0,0,0.04)]"
+                  className="h-12 w-full px-3 py-2 rounded-xl bg-white dark:bg-[#1B2131] text-gray-700 dark:text-white
+                           flex items-center justify-between shadow-[0_2px_8px_rgba(0,0,0,0.04)]"
                 >
-                  <span className="truncate">Sort by {getSortFieldLabel(sortField)}</span>
-                  <span className="material-icons text-gray-600 dark:text-gray-300 ml-2 flex-shrink-0">
+                  <span className="truncate text-sm">Sort: {getSortFieldLabel(sortField)}</span>
+                  <span className="material-icons text-gray-600 dark:text-gray-300 ml-1 flex-shrink-0 text-xl">
                     {showSortDropdown ? 'expand_less' : 'expand_more'}
                   </span>
                 </button>
                 {showSortDropdown && (
-                  <div className="absolute right-0 mt-2 w-full rounded-lg shadow-lg
+                  <div className="absolute right-0 mt-2 w-[160px] rounded-lg shadow-lg
                                 bg-white dark:bg-[#1B2131] z-50 py-1">
                     {sortOptions.map(option => (
                       <div
                         key={option.field}
-                        className="px-4 py-2 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-[#252B3B] 
-                                 cursor-pointer text-gray-700 dark:text-gray-300"
-                        onClick={() => handleSortChange(option.field)}
+                        className="px-3 py-2 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-[#252B3B] 
+                                 cursor-pointer text-gray-700 dark:text-gray-300 text-sm"
+                        onClick={() => {
+                          handleSortChange(option.field);
+                          setShowSortDropdown(false);
+                        }}
                       >
-                        <span>{option.label}</span>
+                        <span className="truncate mr-2">{option.label}</span>
                         {sortField === option.field && (
-                          <span className="material-icons text-gray-600 dark:text-gray-300">
+                          <span className="material-icons text-gray-600 dark:text-gray-300 text-xl flex-shrink-0">
                             {sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward'}
                           </span>
                         )}

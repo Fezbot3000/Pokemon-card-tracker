@@ -1,7 +1,11 @@
 import React, { useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 function Home() {
+  const { currentUser } = useAuth();
+  const navigate = useNavigate();
+
   // Add page-no-padding class to body when component mounts
   useEffect(() => {
     document.body.classList.add('page-no-padding');
@@ -11,6 +15,13 @@ function Home() {
       document.body.classList.remove('page-no-padding');
     };
   }, []);
+
+  // Auto-navigate to dashboard if user is logged in
+  useEffect(() => {
+    if (currentUser && window.location.pathname === '/') {
+      navigate('/dashboard');
+    }
+  }, [currentUser, navigate]);
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-red-500 to-green-500 text-gray-900 dark:text-white page-no-padding">
@@ -24,27 +35,32 @@ function Home() {
             Get real-time values and insights for your investments.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link 
-              to="/dashboard" 
-              className="btn bg-white text-gray-900 hover:bg-gray-50 text-lg px-8 py-4 inline-flex items-center gap-2 rounded-xl shadow-lg transition-all duration-200 hover:shadow-xl"
-            >
-              <span className="material-icons">dashboard</span>
-              Open Dashboard
-            </Link>
-            <Link 
-              to="/login" 
-              className="btn bg-blue-600 text-white hover:bg-blue-700 text-lg px-8 py-4 inline-flex items-center gap-2 rounded-xl shadow-lg transition-all duration-200 hover:shadow-xl"
-            >
-              <span className="material-icons">login</span>
-              Login / Sign Up
-            </Link>
-            <Link 
-              to="/pricing" 
-              className="btn bg-green-600 text-white hover:bg-green-700 text-lg px-8 py-4 inline-flex items-center gap-2 rounded-xl shadow-lg transition-all duration-200 hover:shadow-xl"
-            >
-              <span className="material-icons">sell</span>
-              View Pricing
-            </Link>
+            {currentUser ? (
+              <Link 
+                to="/dashboard" 
+                className="btn bg-white text-gray-900 hover:bg-gray-50 text-lg px-8 py-4 inline-flex items-center gap-2 rounded-xl shadow-lg transition-all duration-200 hover:shadow-xl"
+              >
+                <span className="material-icons">dashboard</span>
+                Open Dashboard
+              </Link>
+            ) : (
+              <>
+                <Link 
+                  to="/login" 
+                  className="btn bg-blue-600 text-white hover:bg-blue-700 text-lg px-8 py-4 inline-flex items-center gap-2 rounded-xl shadow-lg transition-all duration-200 hover:shadow-xl"
+                >
+                  <span className="material-icons">login</span>
+                  Login / Sign Up
+                </Link>
+                <Link 
+                  to="/pricing" 
+                  className="btn bg-green-600 text-white hover:bg-green-700 text-lg px-8 py-4 inline-flex items-center gap-2 rounded-xl shadow-lg transition-all duration-200 hover:shadow-xl"
+                >
+                  <span className="material-icons">sell</span>
+                  View Pricing
+                </Link>
+              </>
+            )}
           </div>
         </div>
 

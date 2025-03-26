@@ -1,10 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { db } from '../services/db';  // Use the correct db service
+import { useAuth } from '../contexts/AuthContext'; // Import auth context
 import JSZip from 'jszip';
 import CollectionSelector from './CollectionSelector';
 import { toast } from 'react-hot-toast';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const Header = ({ 
   selectedCollection, 
@@ -21,24 +22,36 @@ const Header = ({
   className = ''
 }) => {
   const { isDarkMode, toggleTheme } = useTheme();
+  const { currentUser } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isNewCollectionModalOpen, setIsNewCollectionModalOpen] = useState(false);
   const [newCollectionName, setNewCollectionName] = useState('');
   const dropdownRef = useRef(null);
+  const newCollectionModalRef = useRef(null);
   const newCollectionInputRef = useRef(null);
+  const navigate = useNavigate();
 
-  // Close dropdown when clicking outside
+  // Close dropdowns and modals when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
+      // Handle collection dropdown
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsDropdownOpen(false);
+      }
+      
+      // Handle new collection modal
+      if (newCollectionModalRef.current && 
+          !newCollectionModalRef.current.contains(event.target) && 
+          isNewCollectionModalOpen) {
+        setIsNewCollectionModalOpen(false);
+        setNewCollectionName('');
       }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  }, [isNewCollectionModalOpen]);
 
   // Handle mobile menu close on resize
   useEffect(() => {
@@ -76,10 +89,6 @@ const Header = ({
 
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
-  };
-
-  const toggleSettings = () => {
-    onSettingsClick();
   };
 
   const handleCollectionSelect = (collection) => {
@@ -127,7 +136,7 @@ const Header = ({
               <Link to="/" className="flex-shrink-0">
                 <img src="/favicon-192x192.png" alt="Pokemon Card Tracker" className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl object-contain" />
               </Link>
-              <div className="relative min-w-0 flex-shrink">
+              <div className="relative min-w-0 flex-shrink" ref={dropdownRef}>
                 <button
                   onClick={toggleDropdown}
                   className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 rounded-lg text-gray-700 dark:text-gray-200 
@@ -173,7 +182,7 @@ const Header = ({
             </div>
             
             {/* View switcher - Desktop Only */}
-            <div className="hidden lg:flex items-center space-x-2">
+            <div className="hidden xl:flex items-center space-x-2">
               <button
                 className={`px-4 py-2 rounded-lg transition-colors ${
                   currentView === 'cards'
@@ -199,7 +208,7 @@ const Header = ({
             {/* Right side actions */}
             <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
               {/* Desktop Actions - keep theme and settings only on desktop */}
-              <div className="hidden lg:flex items-center space-x-2">
+              <div className="hidden xl:flex items-center space-x-2">
                 <button
                   onClick={() => onImportClick('priceUpdate')}
                   className="flex items-center space-x-1 px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
@@ -216,7 +225,7 @@ const Header = ({
                   <span>Import Base Data</span>
                 </button>
 
-                {/* Theme and Settings buttons only on desktop */}
+                {/* Theme and Settings buttons */}
                 <button
                   onClick={toggleTheme}
                   className="w-10 h-10 flex items-center justify-center rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800/50"
@@ -228,7 +237,7 @@ const Header = ({
                 </button>
                 
                 <button
-                  onClick={toggleSettings}
+                  onClick={onSettingsClick}
                   className="w-10 h-10 flex items-center justify-center rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800/50"
                   aria-label="Settings"
                 >
@@ -236,10 +245,10 @@ const Header = ({
                 </button>
               </div>
 
-              {/* Mobile menu button */}
+              {/* Mobile/Tablet menu button */}
               <button
                 onClick={toggleMobileMenu}
-                className="lg:hidden w-10 h-10 flex items-center justify-center rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800/50"
+                className="xl:hidden w-10 h-10 flex items-center justify-center rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800/50"
                 aria-label="Menu"
               >
                 <span className="material-icons">menu</span>
@@ -248,104 +257,115 @@ const Header = ({
           </div>
         </div>
 
-        {/* Mobile Menu */}
+        {/* Mobile/Tablet menu - full page */}
         {isMobileMenuOpen && (
-          <div className="lg:hidden">
-            <div className="bg-gray-50/50 dark:bg-[#1B2131]/50">
-              <div className="px-6 py-4 space-y-4">
-                {/* Theme and Settings buttons moved to mobile menu */}
-                <div className="flex flex-col space-y-2">
-                  <h3 className="text-sm font-medium text-gray-600 dark:text-gray-300">Theme & Settings</h3>
+          <div className="fixed inset-0 flex z-50 xl:hidden">
+            <div 
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity" 
+              aria-hidden="true"
+              onClick={toggleMobileMenu}
+            />
+            
+            <div 
+              className="relative flex-1 flex flex-col w-full bg-white dark:bg-[#1B2131] shadow-xl overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="sticky top-0 z-10 px-6 py-4 border-b border-gray-200 dark:border-gray-700/50 flex items-center justify-between bg-white dark:bg-[#1B2131]">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Menu</h2>
+                <button 
+                  onClick={toggleMobileMenu}
+                  className="w-10 h-10 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800/50 transition-colors"
+                >
+                  <span className="material-icons">close</span>
+                </button>
+              </div>
+              
+              <div className="overflow-y-auto flex-1 px-6 py-4 space-y-6">
+                {/* View Switcher for mobile */}
+                <div>
+                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">View</h3>
                   <div className="space-y-2">
                     <button
-                      onClick={() => {
-                        toggleTheme();
-                        setIsMobileMenuOpen(false);
-                      }}
-                      className="w-full flex items-center space-x-2 px-4 py-2 text-gray-600 dark:text-gray-300 bg-white/50 dark:bg-gray-800/50 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition-colors"
-                    >
-                      <span className="material-icons">{isDarkMode ? 'light_mode' : 'dark_mode'}</span>
-                      <span>{isDarkMode ? 'Light Mode' : 'Dark Mode'}</span>
-                    </button>
-                    <button
-                      onClick={() => {
-                        toggleSettings();
-                        setIsMobileMenuOpen(false);
-                      }}
-                      className="w-full flex items-center space-x-2 px-4 py-2 text-gray-600 dark:text-gray-300 bg-white/50 dark:bg-gray-800/50 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition-colors"
-                    >
-                      <span className="material-icons">settings</span>
-                      <span>Settings</span>
-                    </button>
-                    <Link 
-                      to="/login"
-                      onClick={() => {
-                        setIsMobileMenuOpen(false);
-                      }}
-                      className="w-full flex items-center space-x-2 px-4 py-2 text-red-600 dark:text-red-400 bg-white/50 dark:bg-gray-800/50 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition-colors"
-                    >
-                      <span className="material-icons">logout</span>
-                      <span>Log Out</span>
-                    </Link>
-                  </div>
-                </div>
-
-                {/* View Switcher */}
-                <div className="flex flex-col space-y-2">
-                  <h3 className="text-sm font-medium text-gray-600 dark:text-gray-300">View</h3>
-                  <div className="flex space-x-2">
-                    <button
-                      className={`flex-1 px-4 py-2 rounded-lg transition-colors ${
-                        currentView === 'cards'
-                          ? 'bg-primary text-white'
-                          : 'text-gray-600 dark:text-gray-300 bg-white/50 dark:bg-gray-800/50'
-                      }`}
                       onClick={() => {
                         onViewChange('cards');
                         setIsMobileMenuOpen(false);
                       }}
+                      className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-colors ${
+                        currentView === 'cards'
+                          ? 'bg-primary text-white'
+                          : 'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800/50'
+                      }`}
                     >
-                      Cards
+                      <span className="material-icons">grid_view</span>
+                      <span className="font-medium">Cards</span>
                     </button>
                     <button
-                      className={`flex-1 px-4 py-2 rounded-lg transition-colors ${
-                        currentView === 'sold'
-                          ? 'bg-primary text-white'
-                          : 'text-gray-600 dark:text-gray-300 bg-white/50 dark:bg-gray-800/50'
-                      }`}
                       onClick={() => {
                         onViewChange('sold');
                         setIsMobileMenuOpen(false);
                       }}
+                      className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-colors ${
+                        currentView === 'sold'
+                          ? 'bg-primary text-white'
+                          : 'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800/50'
+                      }`}
                     >
-                      Sold Items
+                      <span className="material-icons">sell</span>
+                      <span className="font-medium">Sold Items</span>
                     </button>
                   </div>
                 </div>
-
+                
                 {/* Import Actions */}
-                <div className="flex flex-col space-y-2">
-                  <h3 className="text-sm font-medium text-gray-600 dark:text-gray-300">Actions</h3>
+                <div>
+                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Actions</h3>
                   <div className="space-y-2">
                     <button
                       onClick={() => {
                         onImportClick('priceUpdate');
                         setIsMobileMenuOpen(false);
                       }}
-                      className="w-full flex items-center space-x-2 px-4 py-2 text-gray-600 dark:text-gray-300 bg-white/50 dark:bg-gray-800/50 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition-colors"
+                      className="w-full flex items-center space-x-3 px-4 py-3 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-xl transition-colors"
                     >
                       <span className="material-icons">update</span>
-                      <span>Update Prices</span>
+                      <span className="font-medium">Update Prices</span>
                     </button>
                     <button
                       onClick={() => {
                         onImportClick('baseData');
                         setIsMobileMenuOpen(false);
                       }}
-                      className="w-full flex items-center space-x-2 px-4 py-2 text-gray-600 dark:text-gray-300 bg-white/50 dark:bg-gray-800/50 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition-colors"
+                      className="w-full flex items-center space-x-3 px-4 py-3 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-xl transition-colors"
                     >
                       <span className="material-icons">upload_file</span>
-                      <span>Import Base Data</span>
+                      <span className="font-medium">Import Base Data</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Theme & Settings */}
+                <div>
+                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Theme & Settings</h3>
+                  <div className="space-y-2">
+                    <button
+                      onClick={() => {
+                        toggleTheme();
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className="w-full flex items-center space-x-3 px-4 py-3 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-xl transition-colors"
+                    >
+                      <span className="material-icons">{isDarkMode ? 'light_mode' : 'dark_mode'}</span>
+                      <span className="font-medium">{isDarkMode ? 'Light Mode' : 'Dark Mode'}</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        onSettingsClick();
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className="w-full flex items-center space-x-3 px-4 py-3 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-xl transition-colors"
+                    >
+                      <span className="material-icons">settings</span>
+                      <span className="font-medium">Settings</span>
                     </button>
                   </div>
                 </div>
@@ -358,7 +378,7 @@ const Header = ({
       {/* New Collection Modal */}
       {isNewCollectionModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white dark:bg-[#1B2131] rounded-xl w-full max-w-md mx-4">
+          <div ref={newCollectionModalRef} className="bg-white dark:bg-[#1B2131] rounded-xl w-full max-w-md mx-4">
             <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700/50">
               <h2 className="text-xl font-medium text-gray-800 dark:text-gray-200">New Collection</h2>
               <button 

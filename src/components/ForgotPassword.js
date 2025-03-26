@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 function ForgotPassword() {
   const [email, setEmail] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const { resetPassword } = useAuth();
 
   // Add page-no-padding class to body when component mounts
   useEffect(() => {
@@ -17,7 +19,7 @@ function ForgotPassword() {
     };
   }, []);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     
@@ -33,11 +35,14 @@ function ForgotPassword() {
 
     setIsLoading(true);
     
-    // Simulate API call for password reset
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      await resetPassword(email);
       setIsSubmitted(true);
-    }, 1500);
+    } catch (error) {
+      setError(error.message || 'Failed to reset password');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

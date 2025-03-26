@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Header from './components/Header';
 import CardList from './components/CardList';
 import CardDetails from './components/CardDetails';
@@ -14,12 +14,27 @@ import useCardData from './hooks/useCardData';
 import { processImportedData } from './utils/dataProcessor';
 import { db } from './services/db';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import PrivateRoute from './components/PrivateRoute';
 import ErrorBoundary from './components/ErrorBoundary';
 import './styles/main.css';
 import SoldItems from './components/SoldItems/SoldItems';
 import SettingsModal from './components/SettingsModal';
 import JSZip from 'jszip';
 import { Toaster, toast } from 'react-hot-toast';
+
+// Public route component to redirect authenticated users to dashboard
+function PublicRoute({ children }) {
+  const { currentUser } = useAuth();
+  const location = useLocation();
+
+  if (currentUser) {
+    // Redirect to dashboard if user is already logged in
+    return <Navigate to="/dashboard" state={{ from: location }} replace />;
+  }
+
+  return children;
+}
 
 function AppContent() {
   const [showNewCardForm, setShowNewCardForm] = useState(false);
@@ -782,20 +797,51 @@ To import this backup:
 
 function App() {
   return (
-    <ThemeProvider>
-      <ErrorBoundary>
-        <Router>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/dashboard" element={<AppContent />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/pricing" element={<Pricing />} />
-          </Routes>
-          <Toaster position="bottom-right" />
-        </Router>
-      </ErrorBoundary>
-    </ThemeProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <ThemeProvider>
+          <Router>
+            <Toaster position="bottom-right" />
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route 
+                path="/login" 
+                element={
+                  <PublicRoute>
+                    <Login />
+                  </PublicRoute>
+                } 
+              />
+              <Route 
+                path="/forgot-password" 
+                element={
+                  <PublicRoute>
+                    <ForgotPassword />
+                  </PublicRoute>
+                } 
+              />
+              <Route 
+                path="/pricing" 
+                element={
+                  <PublicRoute>
+                    <Pricing />
+                  </PublicRoute>
+                } 
+              />
+              <Route 
+                path="/dashboard" 
+                element={
+                  <PrivateRoute>
+                    <AppContent />
+                  </PrivateRoute>
+                } 
+              />
+              <Route path="*" element={<Navigate to="/" />} />
+            </Routes>
+          </Router>
+        </ThemeProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
 

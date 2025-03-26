@@ -1,0 +1,51 @@
+// These rules should be applied in your Firebase Console > Firestore Database > Rules
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+    
+    function isAdmin() {
+      return request.auth.token.admin == true;
+    }
+    
+    function isValidUser() {
+      return request.auth.token.email_verified || request.auth.token.firebase.sign_in_provider != 'password';
+    }
+    
+    // User profiles - less restrictive during development
+    match /users/{userId} {
+      // Allow read/write for authenticated users during development
+      // For production, use: allow read, write: if isSignedIn() && isOwner(userId);
+      allow read, write: if true;
+      
+      // Sub-collections
+      match /private/{document=**} {
+        allow read, write: if true;
+      }
+    }
+    
+    // Collection data - less restrictive during development
+    match /collections/{collectionId} {
+      // For development - allow all access
+      allow read, write: if true;
+    }
+    
+    // Public data that any authenticated user can read
+    match /public/{document=**} {
+      allow read, write: if true;
+    }
+    
+    // Allow all access during development
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+} 
