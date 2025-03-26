@@ -148,7 +148,7 @@ const SoldItems = () => {
   return (
     <div className="space-y-6">
       {/* Stats Section */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-white dark:bg-[#1B2131] p-6 rounded-xl shadow-sm">
           <div className="text-sm text-gray-700 dark:text-gray-400">TOTAL INVESTMENT</div>
           <div className="text-2xl font-semibold mt-1">{formatCurrency(totals.totalInvestment)}</div>
@@ -161,6 +161,13 @@ const SoldItems = () => {
           <div className="text-sm text-gray-700 dark:text-gray-400">TOTAL PROFIT</div>
           <div className={`text-2xl font-semibold mt-1 ${totals.totalProfit >= 0 ? 'text-green-600 dark:text-green-500' : 'text-red-600 dark:text-red-500'}`}>
             {formatCurrency(totals.totalProfit)}
+          </div>
+        </div>
+        <div className="bg-white dark:bg-[#1B2131] p-6 rounded-xl shadow-sm">
+          <div className="text-sm text-gray-700 dark:text-gray-400">TOTAL SOLD CARDS</div>
+          <div className="text-2xl font-semibold mt-1 flex items-center">
+            <span className="material-icons mr-2 text-gray-400">style</span>
+            {filteredCards.length}
           </div>
         </div>
       </div>
@@ -253,7 +260,7 @@ const SoldItems = () => {
               </div>
 
               {/* Invoice Cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-6">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4 p-6">
                 {invoice.cards.map(card => (
                   <div
                     key={`${card.slabSerial}-${card.dateSold}`}

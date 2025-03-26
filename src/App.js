@@ -16,23 +16,6 @@ import SettingsModal from './components/SettingsModal';
 import JSZip from 'jszip';
 import { Toaster, toast } from 'react-hot-toast';
 
-// Loading Skeleton component
-const LoadingSkeleton = () => (
-  <div className="max-w-7xl mx-auto px-6 py-4 space-y-8">
-    <div className="skeleton h-16 w-full rounded-xl" />
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      {[1, 2, 3].map(i => (
-        <div key={i} className="skeleton h-32 rounded-xl" />
-      ))}
-    </div>
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-      {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
-        <div key={i} className="skeleton h-64 rounded-xl" />
-      ))}
-    </div>
-  </div>
-);
-
 function AppContent() {
   const [showNewCardForm, setShowNewCardForm] = useState(false);
   const [importModalOpen, setImportModalOpen] = useState(false);
@@ -42,7 +25,10 @@ function AppContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
   const [showProfitChangeModal, setShowProfitChangeModal] = useState(false);
-  const [profitChangeData, setProfitChangeData] = useState({ oldProfit: 0, newProfit: 0 });
+  const [profitChangeData, setProfitChangeData] = useState({
+    oldProfit: 0,
+    newProfit: 0
+  });
   const [currentView, setCurrentView] = useState('cards'); // 'cards' or 'sold'
   
   const {
@@ -62,17 +48,60 @@ function AppContent() {
   // Memoized collection data
   const collectionData = useMemo(() => {
     if (selectedCollection === 'All Cards') {
-      // Combine cards from all collections
-      return Object.values(collections).flat();
+      // Combine cards from all collections, filtering out any non-array values
+      return Object.values(collections)
+        .filter(Array.isArray)
+        .flat()
+        .filter(Boolean);
     }
     return collections[selectedCollection] || [];
   }, [collections, selectedCollection]);
 
   // Memoized callbacks
-  const handleAddCard = useCallback(async (cardData) => {
-    await addCard(cardData);
-    setShowNewCardForm(false);
-  }, [addCard]);
+  const handleAddCard = useCallback(async (cardData, imageFile, targetCollection) => {
+    try {
+      // Check if a card with this serial number already exists in any collection
+      const allCards = Object.values(collections).flat();
+      const existingCard = allCards.find(card => card.slabSerial === cardData.slabSerial);
+      
+      if (existingCard) {
+        throw new Error('A card with this serial number already exists');
+      }
+
+      // Save the image if provided
+      if (imageFile) {
+        await db.saveImage(cardData.slabSerial, imageFile);
+      }
+
+      // Add card to the target collection
+      const updatedCollections = {
+        ...collections,
+        [targetCollection]: [
+          ...(collections[targetCollection] || []),
+          cardData
+        ]
+      };
+
+      // Save to database first
+      await db.saveCollections(updatedCollections);
+
+      // Update collections state
+      setCollections(updatedCollections);
+      
+      // Add to useCardData state
+      await addCard(cardData);
+
+      // Close the form
+      setShowNewCardForm(false);
+
+      // Show success message
+      toast.success('Card added successfully');
+    } catch (error) {
+      console.error('Error adding card:', error);
+      toast.error('Error adding card: ' + error.message);
+      throw error; // Re-throw to be handled by the form
+    }
+  }, [collections, addCard]);
 
   const handleCardUpdate = useCallback(async (updatedCard) => {
     // Handle the special case of "All Cards" view
@@ -146,7 +175,11 @@ function AppContent() {
     try {
       // Calculate current total profit before update
       const currentCards = collections[selectedCollection] || [];
-      const oldProfit = calculateTotalProfit(currentCards);
+      const previousProfit = currentCards.reduce((total, card) => {
+        const currentValue = parseFloat(card.currentValueAUD) || 0;
+        const purchasePrice = parseFloat(card.investmentAUD) || 0;
+        return total + (currentValue - purchasePrice);
+      }, 0);
 
       const result = await importCsvData(file, importMode);
       if (result.success) {
@@ -165,18 +198,28 @@ function AppContent() {
         setCollections(updatedCollections);
 
         // Calculate new profit after update
-        const newProfit = calculateTotalProfit(processedData);
+        const newProfit = processedData.reduce((total, card) => {
+          const currentValue = parseFloat(card.currentValueAUD) || 0;
+          const purchasePrice = parseFloat(card.investmentAUD) || 0;
+          return total + (currentValue - purchasePrice);
+        }, 0);
 
         // Show the profit change modal
-        setProfitChangeData({ oldProfit, newProfit });
+        setProfitChangeData({
+          oldProfit: previousProfit,
+          newProfit: newProfit
+        });
         setShowProfitChangeModal(true);
+
+        // Show success message
+        toast.success('Prices updated successfully');
       }
       setImportModalOpen(false);
     } catch (error) {
       console.error('Error updating prices:', error);
       toast.error('Error updating prices: ' + error.message);
     }
-  }, [importCsvData, importMode, selectedCollection, collections, exchangeRate, calculateTotalProfit]);
+  }, [importCsvData, importMode, selectedCollection, collections, exchangeRate]);
 
   const handleCollectionChange = useCallback((collection) => {
     setSelectedCollection(collection);
@@ -185,6 +228,10 @@ function AppContent() {
   }, [clearSelectedCard]);
 
   const handleImportClick = (mode) => {
+    if (mode === 'priceUpdate' && selectedCollection === 'All Cards') {
+      toast.error('Please select a specific collection to update prices');
+      return;
+    }
     setImportMode(mode === 'baseData' ? 'baseData' : 'priceUpdate');
     setImportModalOpen(true);
   };
@@ -194,8 +241,6 @@ function AppContent() {
     const loadCollections = async () => {
       try {
         setIsLoading(true);
-        const startTime = Date.now();
-        
         const savedCollections = await db.getCollections();
         
         // Get saved collection from localStorage
@@ -222,12 +267,6 @@ function AppContent() {
           setSelectedCollection('Default Collection');
           await db.saveCollections(defaultCollections);
         }
-        
-        const elapsedTime = Date.now() - startTime;
-        const minimumLoadingTime = 3000; // 3 seconds
-        if (elapsedTime < minimumLoadingTime) {
-          await new Promise(resolve => setTimeout(resolve, minimumLoadingTime - elapsedTime));
-        }
       } catch (error) {
         console.error('Error loading collections:', error);
       } finally {
@@ -248,6 +287,12 @@ function AppContent() {
         // Get ALL collections data
         const allCollections = await db.getCollections();
         
+        // Get profile data
+        const profileData = await db.getProfile();
+        
+        // Get sold cards data
+        const soldCardsData = JSON.parse(localStorage.getItem('soldCards') || '[]');
+        
         // Create a data folder in the ZIP
         const dataFolder = zip.folder("data");
         
@@ -258,7 +303,9 @@ function AppContent() {
           collections: allCollections,
           settings: {
             defaultCollection: selectedCollection
-          }
+          },
+          profile: profileData,
+          soldCards: soldCardsData
         };
 
         // Add collections.json to the data folder
@@ -267,15 +314,14 @@ function AppContent() {
         // Create an images folder in the ZIP
         const imagesFolder = zip.folder("images");
         
-        // Process ALL images from ALL collections
+        // Process ALL images from ALL collections and sold cards
         const imagePromises = [];
         
-        // Loop through all collections
+        // Process collection cards
         for (const [collectionName, cards] of Object.entries(allCollections)) {
           if (!Array.isArray(cards)) continue;
           
           for (const card of cards) {
-            // Get image from database using slabSerial as ID
             const promise = (async () => {
               try {
                 const imageBlob = await db.getImage(card.slabSerial);
@@ -297,6 +343,29 @@ function AppContent() {
             imagePromises.push(promise);
           }
         }
+
+        // Process sold cards images
+        for (const soldCard of soldCardsData) {
+          const promise = (async () => {
+            try {
+              const imageBlob = await db.getImage(soldCard.slabSerial);
+              
+              if (!imageBlob) return;
+              
+              // Add image to ZIP with slab serial as filename
+              const extension = imageBlob.type.split('/')[1] || 'jpg';
+              const filename = `${soldCard.slabSerial}.${extension}`;
+              await imagesFolder.file(filename, imageBlob);
+              
+              // Update card with image path
+              soldCard.imagePath = `images/${filename}`;
+            } catch (error) {
+              // Silent fail for individual images
+              console.error(`Failed to export image for sold card ${soldCard.slabSerial}:`, error);
+            }
+          })();
+          imagePromises.push(promise);
+        }
         
         try {
           // Wait for all images to be processed
@@ -310,13 +379,13 @@ function AppContent() {
 Created: ${new Date().toISOString()}
 
 This ZIP file contains:
-- /data/collections.json: All collections and card data
+- /data/collections.json: All collections, card data, profile data, and sold items
 - /images/: All card images referenced in collections.json
 
 To import this backup:
 1. Use the "Import Backup" button in the app settings
 2. Select this ZIP file
-3. All your collections and images will be restored`;
+3. All your collections, profile, sold items and images will be restored`;
           
           zip.file("README.txt", readme);
           
@@ -425,6 +494,16 @@ To import this backup:
           // Save collections data
           await db.saveCollections(collectionsData.collections);
           
+          // Save profile data if it exists
+          if (collectionsData.profile) {
+            await db.saveProfile(collectionsData.profile);
+          }
+          
+          // Save sold cards data if it exists
+          if (collectionsData.soldCards) {
+            localStorage.setItem('soldCards', JSON.stringify(collectionsData.soldCards));
+          }
+          
           // Refresh collections
           const savedCollections = await db.getCollections();
           setCollections(savedCollections);
@@ -484,14 +563,14 @@ To import this backup:
   }, [deleteCard]);
 
   if (isLoading) {
-    return <LoadingSkeleton />;
+    return null;
   }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#0B0F19]">
       <Header
         selectedCollection={selectedCollection}
-        collections={['All Cards', ...Object.keys(collections)]}
+        collections={Object.keys(collections)}
         onCollectionChange={handleCollectionChange}
         onImportClick={handleImportClick}
         onSettingsClick={() => setShowSettings(true)}
@@ -593,9 +672,11 @@ To import this backup:
 
       {showNewCardForm && (
         <NewCardForm
-          onSubmit={handleAddCard}
+          onSubmit={(cardData, imageFile, targetCollection) => handleAddCard(cardData, imageFile, targetCollection)}
           onClose={() => setShowNewCardForm(false)}
           exchangeRate={exchangeRate}
+          collections={collections}
+          selectedCollection={selectedCollection}
         />
       )}
 
@@ -625,6 +706,7 @@ To import this backup:
           isOpen={showSettings}
           onClose={() => setShowSettings(false)}
           selectedCollection={selectedCollection}
+          collections={Object.keys(collections)}
           onRenameCollection={(oldName, newName) => {
             const newCollections = { ...collections };
             newCollections[newName] = newCollections[oldName];
@@ -685,8 +767,10 @@ To import this backup:
         <ProfitChangeModal
           isOpen={showProfitChangeModal}
           onClose={() => setShowProfitChangeModal(false)}
-          oldProfit={profitChangeData.oldProfit}
-          newProfit={profitChangeData.newProfit}
+          profitChangeData={{
+            previousProfit: profitChangeData.oldProfit,
+            newProfit: profitChangeData.newProfit
+          }}
         />
       )}
     </div>

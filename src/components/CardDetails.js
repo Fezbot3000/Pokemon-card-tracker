@@ -6,25 +6,21 @@ import { toast } from 'react-hot-toast';
 
 // Image loading states component
 const CardImage = memo(({ imageUrl, loadingState, onRetry }) => {
-  const { isDarkMode } = useTheme();
-  
   if (loadingState === 'loading') {
     return (
-      <div className="card-image-display animate-pulse bg-gray-200 dark:bg-gray-700 rounded-lg flex items-center justify-center">
-        <span className="material-icons text-4xl text-gray-400">hourglass_empty</span>
+      <div className="card-image-display loading">
+        <span className="material-icons animate-spin">hourglass_empty</span>
+        <span className="text-sm text-gray-500 dark:text-gray-400">Loading image...</span>
       </div>
     );
   }
   
   if (loadingState === 'error') {
     return (
-      <div className="card-image-display bg-gray-100 dark:bg-gray-800 rounded-lg flex flex-col items-center justify-center p-4">
-        <span className="material-icons text-4xl text-red-500 mb-2">error_outline</span>
-        <p className="text-sm text-gray-500 dark:text-gray-400 text-center mb-2">Failed to load image</p>
-        <button
-          onClick={onRetry}
-          className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
-        >
+      <div className="card-image-display error">
+        <span className="material-icons">error_outline</span>
+        <span className="text-sm text-gray-500 dark:text-gray-400">Failed to load image</span>
+        <button onClick={onRetry}>
           Retry
         </button>
       </div>
@@ -33,14 +29,21 @@ const CardImage = memo(({ imageUrl, loadingState, onRetry }) => {
   
   if (!imageUrl) {
     return (
-      <div className="card-image-display bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center">
-        <span className="material-icons text-4xl text-gray-400">image</span>
+      <div className="card-image-display">
+        <div className="flex flex-col items-center justify-center h-full">
+          <span className="material-icons text-4xl text-gray-400 dark:text-gray-500 mb-2">
+            image
+          </span>
+          <span className="text-sm text-gray-500 dark:text-gray-400">
+            No image available
+          </span>
+        </div>
       </div>
     );
   }
   
   return (
-    <div className="card-image-display rounded-lg overflow-hidden">
+    <div className="card-image-display">
       <img
         src={imageUrl}
         alt="Card"
@@ -51,6 +54,7 @@ const CardImage = memo(({ imageUrl, loadingState, onRetry }) => {
 });
 
 const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchangeRate }) => {
+  const [isOpen, setIsOpen] = useState(false);
   const [editedCard, setEditedCard] = useState({
     ...card,
     investmentUSD: typeof card.investmentUSD === 'number' ? Number(card.investmentUSD.toFixed(2)) : 0,
@@ -72,6 +76,15 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
   // Use onUpdateCard if available, otherwise fall back to onUpdate for backward compatibility
   const updateCard = onUpdateCard || onUpdate;
 
+  // Effect to trigger open animation on mount
+  useEffect(() => {
+    // Small delay to ensure DOM is ready
+    const timer = setTimeout(() => {
+      setIsOpen(true);
+    }, 50);
+    return () => clearTimeout(timer);
+  }, []);
+
   useEffect(() => {
     const handleEscapeKey = (event) => {
       if (event.key === 'Escape') {
@@ -80,13 +93,10 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
     };
 
     document.addEventListener('keydown', handleEscapeKey);
-
-    // Prevent scrolling on the body when modal is open
     document.body.style.overflow = 'hidden';
 
     return () => {
       document.removeEventListener('keydown', handleEscapeKey);
-      // Re-enable scrolling when modal is closed
       document.body.style.overflow = 'auto';
     };
   }, []);
@@ -145,13 +155,19 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
   };
 
   const handleClose = () => {
-    if (hasUnsavedChanges) {
-      if (window.confirm('You have unsaved changes. Are you sure you want to close?')) {
+    setIsOpen(false);
+    // Wait for the close animation to finish
+    setTimeout(() => {
+      if (hasUnsavedChanges) {
+        if (window.confirm('You have unsaved changes. Are you sure you want to close?')) {
+          onClose();
+        } else {
+          setIsOpen(true);
+        }
+      } else {
         onClose();
       }
-    } else {
-      onClose();
-    }
+    }, 300);
   };
 
   const handleInputChange = (e) => {
@@ -292,229 +308,214 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
   const profitPercentage = editedCard.investmentAUD ? (profit / editedCard.investmentAUD * 100) : 0;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden bg-black bg-opacity-50">
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute inset-y-0 right-0 max-w-full flex sm:pl-10">
-          <div 
-            ref={modalContentRef}
-            className={`w-screen transform transition-all ease-in-out duration-500 ${
-              isDarkMode ? 'bg-[#0B0F19]' : 'bg-white'
-            } sm:max-w-md`}
+    <>
+      <div 
+        className={`card-details-overlay ${isOpen ? 'open' : ''}`}
+        onClick={handleClose}
+      />
+      
+      <div 
+        className={`card-details ${isOpen ? 'open' : ''}`}
+        onClick={(e) => e.stopPropagation()}
+        ref={modalContentRef}
+      >
+        {/* Header */}
+        <div className="card-details-header">
+          <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">Card Details</h2>
+          <button
+            onClick={handleClose}
+            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
           >
-            <div className="h-full flex flex-col bg-white dark:bg-[#0B0F19] shadow-xl">
-              {/* Header */}
-              <div className="sticky top-0 z-10 px-4 sm:px-6 flex justify-between items-start py-4 bg-white dark:bg-[#0B0F19] border-b border-gray-200 dark:border-gray-700">
-                <h2 className={`text-2xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                  Card Details
-                </h2>
-                <button
-                  onClick={handleClose}
-                  className="rounded-md text-gray-400 hover:text-gray-500 focus:outline-none"
-                >
-                  <span className="material-icons">close</span>
-                </button>
-              </div>
+            <span className="material-icons">close</span>
+          </button>
+        </div>
 
-              {/* Content */}
-              <div className="flex-1 overflow-y-auto">
-                <div className="px-4 sm:px-6 py-6">
-                  {/* Card Image and Details Grid */}
-                  <div className="grid grid-cols-1 gap-8">
-                    {/* Card Image Section */}
-                    <div className="flex flex-row items-center justify-between gap-4">
-                      <CardImage
-                        imageUrl={cardImage}
-                        loadingState={imageLoadingState}
-                        onRetry={loadCardImage}
-                      />
-
-                      <div 
-                        className="image-upload-container"
-                        onClick={() => fileInputRef.current?.click()}
-                        onDragOver={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          e.currentTarget.classList.add('dragover-active');
-                        }}
-                        onDragLeave={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          e.currentTarget.classList.remove('dragover-active');
-                        }}
-                        onDrop={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          e.currentTarget.classList.remove('dragover-active');
-                          
-                          const files = e.dataTransfer.files;
-                          if (files.length > 0) {
-                            const file = files[0];
-                            if (file.type.startsWith('image/')) {
-                              handleImageChange({ target: { files: [file] } });
-                            } else {
-                              toast.error('Only image files are allowed');
-                            }
-                          }
-                        }}
-                      >
-                        <input
-                          ref={fileInputRef}
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={handleImageChange}
-                        />
-                        <div className="absolute inset-0 flex flex-col items-center justify-center">
-                          <span className="material-icons text-2xl text-gray-400 mb-1">add_photo_alternate</span>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">Upload image</p>
-                          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">or drag and drop</p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Card Details Section */}
-                    <div className="space-y-6">
-                      <div>
-                        <h2 className="text-2xl font-semibold mb-6 text-gray-800 dark:text-gray-200">Card Details</h2>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Player</label>
-                            <input
-                              type="text"
-                              name="player"
-                              value={editedCard.player || ''}
-                              onChange={handleInputChange}
-                              className="input"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Card Name</label>
-                            <input
-                              type="text"
-                              name="card"
-                              value={editedCard.card || ''}
-                              onChange={handleInputChange}
-                              className="input"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Set</label>
-                            <input
-                              type="text"
-                              name="set"
-                              value={editedCard.set || ''}
-                              onChange={handleInputChange}
-                              className="input"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Year</label>
-                            <input
-                              type="text"
-                              name="year"
-                              value={editedCard.year || ''}
-                              onChange={handleInputChange}
-                              className="input"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Category</label>
-                            <input
-                              type="text"
-                              name="category"
-                              value={editedCard.category || ''}
-                              onChange={handleInputChange}
-                              className="input"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Condition</label>
-                            <input
-                              type="text"
-                              name="condition"
-                              value={editedCard.condition || ''}
-                              onChange={handleInputChange}
-                              className="input"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Serial Number</label>
-                            <input
-                              type="text"
-                              name="slabSerial"
-                              value={editedCard.slabSerial}
-                              onChange={handleInputChange}
-                              className="input"
-                              disabled
-                            />
-                          </div>
-                        </div>
-                      </div>
-
-                      <div>
-                        <h2 className="text-2xl font-semibold mb-6 text-gray-800 dark:text-gray-200">Financial Details</h2>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Investment (AUD)</label>
-                            <input
-                              type="text"
-                              name="investmentAUD"
-                              value={editedCard.investmentAUD === '' ? '' : editedCard.investmentAUD === 0 ? '' : editedCard.investmentAUD}
-                              onChange={handleNumberInputChange}
-                              className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600
-                                       bg-white dark:bg-[#1B2131] text-gray-900 dark:text-white
-                                       focus:outline-none focus:ring-2 focus:ring-primary/20"
-                              style={{ appearance: 'textfield' }}
-                              placeholder="0.00"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Current Value (AUD)</label>
-                            <input
-                              type="text"
-                              name="currentValueAUD"
-                              value={editedCard.currentValueAUD === '' ? '' : editedCard.currentValueAUD === 0 ? '' : editedCard.currentValueAUD}
-                              onChange={handleNumberInputChange}
-                              className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600
-                                       bg-white dark:bg-[#1B2131] text-gray-900 dark:text-white
-                                       focus:outline-none focus:ring-2 focus:ring-primary/20"
-                              style={{ appearance: 'textfield' }}
-                              placeholder="0.00"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Footer */}
-              <div className="px-4 sm:px-6 py-4 bg-white dark:bg-[#1B2131] border-t border-gray-200 dark:border-gray-700">
-                <div className="flex justify-between items-center">
-                  <div className="flex gap-2">
-                    <button 
-                      onClick={handleSave}
-                      className={`btn btn-primary ${hasUnsavedChanges ? '' : 'opacity-50 cursor-not-allowed'}`}
-                      disabled={!hasUnsavedChanges}
-                    >
-                      Save Changes
-                    </button>
-                  </div>
-                  
-                  <button 
-                    onClick={handleDelete}
-                    className="text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 p-2"
-                  >
-                    <span className="material-icons">delete</span>
-                  </button>
-                </div>
+        {/* Scrollable Content */}
+        <div className="card-details-content">
+          {/* Image upload section */}
+          <div className="mb-6">
+            <div className="image-upload-container">
+              <CardImage
+                imageUrl={cardImage}
+                loadingState={imageLoadingState}
+                onRetry={loadCardImage}
+              />
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="absolute inset-0 opacity-0 cursor-pointer z-10"
+              />
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-50 opacity-0 hover:opacity-100 transition-opacity">
+                <span className="material-icons text-white text-4xl mb-2">
+                  upload
+                </span>
+                <span className="text-white text-sm">
+                  Click or drag to upload image
+                </span>
               </div>
             </div>
           </div>
+
+          {/* Card Details Form */}
+          <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
+            <div>
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Card Information</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Player
+                  </label>
+                  <input
+                    type="text"
+                    name="player"
+                    value={editedCard.player || ''}
+                    onChange={handleInputChange}
+                    className="input"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Card Name
+                  </label>
+                  <input
+                    type="text"
+                    name="card"
+                    value={editedCard.card || ''}
+                    onChange={handleInputChange}
+                    className="input"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Set
+                </label>
+                <input
+                  type="text"
+                  name="set"
+                  value={editedCard.set || ''}
+                  onChange={handleInputChange}
+                  className="input"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Year
+                </label>
+                <input
+                  type="text"
+                  name="year"
+                  value={editedCard.year || ''}
+                  onChange={handleInputChange}
+                  className="input"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Category
+                </label>
+                <input
+                  type="text"
+                  name="category"
+                  value={editedCard.category || ''}
+                  onChange={handleInputChange}
+                  className="input"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Condition
+                </label>
+                <input
+                  type="text"
+                  name="condition"
+                  value={editedCard.condition || ''}
+                  onChange={handleInputChange}
+                  className="input"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Serial Number
+              </label>
+              <input
+                type="text"
+                name="slabSerial"
+                value={editedCard.slabSerial}
+                onChange={handleInputChange}
+                className="input"
+              />
+            </div>
+
+            <div>
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Financial Details</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Investment (AUD)
+                  </label>
+                  <input
+                    type="text"
+                    name="investmentAUD"
+                    value={editedCard.investmentAUD === '' ? '' : editedCard.investmentAUD === 0 ? '' : editedCard.investmentAUD}
+                    onChange={handleNumberInputChange}
+                    className="input"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Current Value (AUD)
+                  </label>
+                  <input
+                    type="text"
+                    name="currentValueAUD"
+                    value={editedCard.currentValueAUD === '' ? '' : editedCard.currentValueAUD === 0 ? '' : editedCard.currentValueAUD}
+                    onChange={handleNumberInputChange}
+                    className="input"
+                  />
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        {/* Footer with Actions */}
+        <div className="card-details-footer">
+          <button
+            type="button"
+            onClick={handleClose}
+            className="px-4 py-2 rounded-lg border border-gray-300 
+                     text-sm font-medium text-gray-700 bg-white 
+                     hover:bg-gray-50 focus:outline-none focus:ring-2 
+                     focus:ring-offset-2 focus:ring-primary 
+                     dark:bg-gray-700 dark:border-gray-600 
+                     dark:text-white dark:hover:bg-gray-600"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={handleSave}
+            className="px-4 py-2 rounded-lg border border-transparent 
+                     text-sm font-medium text-white bg-primary 
+                     hover:bg-primary/90 focus:outline-none focus:ring-2 
+                     focus:ring-offset-2 focus:ring-primary"
+          >
+            Save Changes
+          </button>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

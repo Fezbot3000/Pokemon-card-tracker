@@ -46,104 +46,92 @@ export const processImportedData = (importedData, existingCards, exchangeRate, i
     }
   });
   
-  // Process each imported card
+  if (importMode === 'priceUpdate') {
+    // For price updates, only update existing cards
+    return existingCardsCopy.map(card => {
+      const importedCard = importedData.find(ic => 
+        ic['Slab Serial #']?.toString() === card.slabSerial?.toString()
+      );
+
+      if (importedCard) {
+        const newValueUSD = parseFloat(importedCard['Current Value']) || 0;
+        const newValueAUD = Number((newValueUSD * exchangeRate).toFixed(2));
+        
+        return {
+          ...card,
+          currentValueUSD: newValueUSD,
+          currentValueAUD: newValueAUD,
+          potentialProfit: Number((newValueAUD - (card.investmentAUD || 0)).toFixed(2))
+        };
+      }
+      return card;
+    });
+  }
+
+  // For base data import, process each imported card
   const processedCards = importedData.map(importedCard => {
-    // Use Slab Serial # as unique identifier
     const slabSerial = importedCard['Slab Serial #']?.toString();
-    
-    if (!slabSerial) return null; // Skip cards without serial numbers
-    
-    // Check if card already exists in our data
+    if (!slabSerial) return null;
+
     const existingCard = existingCardsMap.get(slabSerial);
     
     if (existingCard) {
-      // Update existing card based on import mode
-      if (importMode === 'priceUpdate') {
-        // Only update price information
-        return {
-          ...existingCard,
-          currentValueUSD: importedCard['Current Value'] || existingCard.currentValueUSD,
-          currentValueAUD: Number(convertUsdToAud(importedCard['Current Value'] || existingCard.currentValueUSD, exchangeRate).toFixed(2)),
-          potentialProfit: calculateProfit(
-            Number(convertUsdToAud(importedCard['Current Value'] || existingCard.currentValueUSD, exchangeRate).toFixed(2)),
-            existingCard.investmentAUD || 0
-          ),
-        };
-      } else {
-        // Convert Investment from USD to AUD
-        const investmentAUD = Number(convertUsdToAud(
-          importedCard['Investment'] !== undefined ? importedCard['Investment'] : existingCard.investmentAUD,
-          exchangeRate
-        ).toFixed(2));
-        
-        // Convert Current Value from USD to AUD
-        const currentValueAUD = Number(convertUsdToAud(
-          importedCard['Current Value'] || existingCard.currentValueUSD,
-          exchangeRate
-        ).toFixed(2));
-        
-        // Full base data update including investment
-        return {
-          ...existingCard,
-          datePurchased: importedCard['Date Purchased'] || existingCard.datePurchased,
-          quantity: importedCard['Quantity'] || existingCard.quantity,
-          card: importedCard['Card'] || existingCard.card,
-          player: importedCard['Player'] || existingCard.player,
-          year: importedCard['Year'] || existingCard.year,
-          set: importedCard['Set'] || existingCard.set,
-          variation: importedCard['Variation'] || existingCard.variation,
-          number: importedCard['Number'] || existingCard.number,
-          category: importedCard['Category'] || existingCard.category,
-          condition: importedCard['Condition'] || existingCard.condition,
-          currentValueUSD: importedCard['Current Value'] || existingCard.currentValueUSD,
-          currentValueAUD: currentValueAUD,
-          investmentAUD: investmentAUD,
-          population: importedCard['Population'] || existingCard.population,
-          potentialProfit: calculateProfit(currentValueAUD, investmentAUD),
-        };
-      }
-    } else {
-      // For new cards
-      // Convert Current Value from USD to AUD
-      const currentValueAUD = Number(convertUsdToAud(importedCard['Current Value'] || 0, exchangeRate).toFixed(2));
+      // Convert values from USD to AUD
+      const currentValueAUD = Number(convertUsdToAud(
+        importedCard['Current Value'] || existingCard.currentValueUSD,
+        exchangeRate
+      ).toFixed(2));
       
-      // Convert Investment from USD to AUD if in baseData mode
-      const investmentAUD = importMode === 'baseData' && importedCard['Investment'] !== undefined ? 
-        Number(convertUsdToAud(importedCard['Investment'], exchangeRate).toFixed(2)) : 0;
-      
+      const investmentAUD = Number(convertUsdToAud(
+        importedCard['Investment'] !== undefined ? importedCard['Investment'] : existingCard.investmentAUD,
+        exchangeRate
+      ).toFixed(2));
+
       return {
-        id: slabSerial,
-        slabSerial: slabSerial,
-        datePurchased: importedCard['Date Purchased'] || 'Unknown',
-        card: importedCard['Card'] || 'Unknown Card',
-        player: importedCard['Player'] || '',
-        year: importedCard['Year'] || '',
-        set: importedCard['Set'] || '',
-        variation: importedCard['Variation'] || '',
-        number: importedCard['Number'] || '',
-        category: importedCard['Category'] || '',
-        condition: importedCard['Condition'] || '',
-        quantity: importedCard['Quantity'] || 1,
-        investmentAUD: investmentAUD,
-        currentValueUSD: importedCard['Current Value'] || 0,
-        currentValueAUD: currentValueAUD,
-        potentialProfit: calculateProfit(currentValueAUD, investmentAUD),
-        population: importedCard['Population'] || 0,
+        ...existingCard,
+        datePurchased: importedCard['Date Purchased'] || existingCard.datePurchased,
+        card: importedCard['Card'] || existingCard.card,
+        player: importedCard['Player'] || existingCard.player,
+        year: importedCard['Year'] || existingCard.year,
+        set: importedCard['Set'] || existingCard.set,
+        variation: importedCard['Variation'] || existingCard.variation,
+        number: importedCard['Number'] || existingCard.number,
+        category: importedCard['Category'] || existingCard.category,
+        condition: importedCard['Condition'] || existingCard.condition,
+        currentValueUSD: importedCard['Current Value'] || existingCard.currentValueUSD,
+        currentValueAUD,
+        investmentAUD,
+        population: importedCard['Population'] || existingCard.population,
+        potentialProfit: Number((currentValueAUD - investmentAUD).toFixed(2))
       };
     }
-  }).filter(Boolean); // Remove null entries
-  
-  // Merge existing cards that weren't in the import with the processed cards
-  const mergedCards = [...processedCards];
-  
-  // Add any existing cards that weren't in the import
-  existingCardsCopy.forEach(card => {
-    if (card.slabSerial && !processedCards.some(pc => pc.slabSerial === card.slabSerial)) {
-      mergedCards.push(card);
-    }
-  });
-  
-  return mergedCards;
+
+    // For new cards in base data import
+    const currentValueAUD = Number(convertUsdToAud(importedCard['Current Value'] || 0, exchangeRate).toFixed(2));
+    const investmentAUD = Number(convertUsdToAud(importedCard['Investment'] || 0, exchangeRate).toFixed(2));
+
+    return {
+      id: slabSerial,
+      slabSerial: slabSerial,
+      datePurchased: importedCard['Date Purchased'] || 'Unknown',
+      card: importedCard['Card'] || 'Unknown Card',
+      player: importedCard['Player'] || '',
+      year: importedCard['Year'] || '',
+      set: importedCard['Set'] || '',
+      variation: importedCard['Variation'] || '',
+      number: importedCard['Number'] || '',
+      category: importedCard['Category'] || '',
+      condition: importedCard['Condition'] || '',
+      currentValueUSD: importedCard['Current Value'] || 0,
+      currentValueAUD,
+      investmentAUD,
+      potentialProfit: Number((currentValueAUD - investmentAUD).toFixed(2)),
+      population: importedCard['Population'] || 0
+    };
+  }).filter(Boolean);
+
+  // For base data import, merge with existing cards
+  return [...processedCards];
 };
 
 /**

@@ -13,6 +13,11 @@ const Card = memo(({ card, cardImage, onCardClick, isSelected, onSelect, display
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState('');
   
+  const handleCardClick = (e) => {
+    e.stopPropagation();
+    onCardClick(card);
+  };
+
   const getDisplayValue = () => {
     switch (displayMetric) {
       case 'currentValueAUD':
@@ -71,9 +76,9 @@ const Card = memo(({ card, cardImage, onCardClick, isSelected, onSelect, display
     <div 
       className={`group relative bg-white dark:bg-[#1B2131] rounded-xl shadow-sm
                   border border-gray-200 dark:border-gray-700/50 overflow-hidden
-                  transition-all duration-200 hover:shadow-md
+                  transition-all duration-200 hover:shadow-md cursor-pointer
                   ${isSelected ? 'ring-2 ring-primary' : ''}`}
-      onClick={() => onCardClick(card)}
+      onClick={handleCardClick}
     >
       {/* Selection checkbox */}
       <div className="absolute top-2 right-2 z-10">
@@ -120,26 +125,26 @@ const Card = memo(({ card, cardImage, onCardClick, isSelected, onSelect, display
         {/* Stats grid */}
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <div className="text-sm text-gray-500 dark:text-gray-400">Investment</div>
-            <div className="font-medium text-gray-900 dark:text-white">
+            <div className="text-sm text-gray-500 dark:text-gray-400 text-right">Investment</div>
+            <div className="font-medium text-gray-900 dark:text-white text-right">
               {formatCurrency(card.investmentAUD)}
             </div>
           </div>
           <div>
-            <div className="text-sm text-gray-500 dark:text-gray-400">Current Value</div>
-            <div className="font-medium text-gray-900 dark:text-white">
+            <div className="text-sm text-gray-500 dark:text-gray-400 text-right">Current Value</div>
+            <div className="font-medium text-gray-900 dark:text-white text-right">
               {formatCurrency(card.currentValueAUD)}
             </div>
           </div>
           <div>
-            <div className="text-sm text-gray-500 dark:text-gray-400">Profit</div>
-            <div className={`font-medium ${(card.currentValueAUD - card.investmentAUD) >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+            <div className="text-sm text-gray-500 dark:text-gray-400 text-right">Profit</div>
+            <div className={`font-medium text-right ${(card.currentValueAUD - card.investmentAUD) >= 0 ? 'text-green-500' : 'text-red-500'}`}>
               {formatCurrency(card.currentValueAUD - card.investmentAUD)}
             </div>
           </div>
           <div>
-            <div className="text-sm text-gray-500 dark:text-gray-400">Purchase Date</div>
-            <div className="font-medium text-gray-900 dark:text-white">
+            <div className="text-sm text-gray-500 dark:text-gray-400 text-right">Purchase Date</div>
+            <div className="font-medium text-gray-900 dark:text-white text-right">
               {card.datePurchased || 'N/A'}
             </div>
           </div>
@@ -186,6 +191,7 @@ const CardList = ({
   const [sortDirection, setSortDirection] = useState(
     localStorage.getItem('cardListSortDirection') || 'desc'
   );
+  const [viewMode, setViewMode] = useState(localStorage.getItem('cardListViewMode') || 'grid');
   const [showSortDropdown, setShowSortDropdown] = useState(false);
   const [displayMetric, setDisplayMetric] = useState(() => {
     const saved = localStorage.getItem('cardListDisplayMetric');
@@ -237,6 +243,11 @@ const CardList = ({
   useEffect(() => {
     localStorage.setItem('cardListDisplayMetric', displayMetric);
   }, [displayMetric]);
+
+  // Save view mode preference
+  useEffect(() => {
+    localStorage.setItem('cardListViewMode', viewMode);
+  }, [viewMode]);
 
   // Reset selected cards when the cards prop changes
   useEffect(() => {
@@ -325,6 +336,12 @@ const CardList = ({
     { field: 'datePurchased', label: 'Purchase Date' },
     { field: 'player', label: 'Player Name' }
   ];
+
+  // Function to get the label for a sort field
+  const getSortFieldLabel = (field) => {
+    const option = sortOptions.find(opt => opt.field === field);
+    return option ? option.label : field;
+  };
 
   // Handle sort field change
   const handleSortChange = (field) => {
@@ -614,7 +631,7 @@ const CardList = ({
   return (
     <div className="space-y-6">
       {/* Stats Section */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-white dark:bg-[#1B2131] p-6 rounded-xl shadow-sm">
           <div className="text-sm text-gray-500 dark:text-gray-400">TOTAL INVESTMENT</div>
           <div className="text-2xl font-semibold mt-1">{formatCurrency(totals.investment)}</div>
@@ -629,45 +646,72 @@ const CardList = ({
             {formatCurrency(totals.profit)}
           </div>
         </div>
+        <div className="bg-white dark:bg-[#1B2131] p-6 rounded-xl shadow-sm">
+          <div className="text-sm text-gray-500 dark:text-gray-400">TOTAL CARDS</div>
+          <div className="text-2xl font-semibold mt-1 flex items-center">
+            <span className="material-icons mr-2 text-gray-400">style</span>
+            {filteredCards.length}
+          </div>
+        </div>
       </div>
 
       {/* Controls Section */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div className="flex-1 w-full sm:w-auto">
-          <input
-            type="text"
-            placeholder="Search by name, set, or serial number..."
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-            className="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700/50 
-                     bg-white dark:bg-[#1B2131] text-gray-900 dark:text-white
-                     focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-          />
+          <div className="flex items-center gap-4">
+            <input
+              type="text"
+              placeholder="Search by name, set, or serial number..."
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              className="w-full h-12 px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700/50 
+                       bg-white dark:bg-[#1B2131] text-gray-900 dark:text-white
+                       focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+            />
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`h-12 w-12 flex items-center justify-center rounded-lg transition-colors ${
+                  viewMode === 'grid'
+                    ? 'bg-primary text-white'
+                    : 'bg-white dark:bg-[#1B2131] text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#252B3B]'
+                }`}
+                title="Grid View"
+              >
+                <span className="material-icons">grid_view</span>
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`h-12 w-12 flex items-center justify-center rounded-lg transition-colors ${
+                  viewMode === 'list'
+                    ? 'bg-primary text-white'
+                    : 'bg-white dark:bg-[#1B2131] text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#252B3B]'
+                }`}
+                title="List View"
+              >
+                <span className="material-icons">view_list</span>
+              </button>
+            </div>
+          </div>
         </div>
 
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          {/* Sort Dropdown */}
-          <div className="relative flex-1 sm:flex-none">
+        <div className="flex items-center gap-2">
+          <div className="relative">
             <button
               onClick={() => setShowSortDropdown(!showSortDropdown)}
-              className="w-full sm:w-auto px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700/50
-                       bg-white dark:bg-[#1B2131] text-gray-700 dark:text-gray-300
-                       hover:bg-gray-50 dark:hover:bg-[#252B3B] transition-colors
-                       flex items-center justify-between gap-2"
+              className="h-12 px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700/50
+                       bg-white dark:bg-[#1B2131] text-gray-900 dark:text-white
+                       flex items-center gap-2"
             >
-              <span>Sort by {sortField === 'currentValueAUD' ? 'Current Value' : 
-                     sortField === 'investmentAUD' ? 'Investment' : 
-                     sortField === 'potentialProfit' ? 'Profit' : 
-                     sortField.replace(/([A-Z])/g, ' $1').toLowerCase()}</span>
-              <span className="material-icons text-lg">
-                {showSortDropdown ? 'keyboard_arrow_up' : 'keyboard_arrow_down'}
+              <span>Sort by {getSortFieldLabel(sortField)}</span>
+              <span className="material-icons text-gray-500">
+                {showSortDropdown ? 'expand_less' : 'expand_more'}
               </span>
             </button>
-            {/* Sort options dropdown */}
             {showSortDropdown && (
               <div className="absolute right-0 mt-2 w-48 rounded-lg shadow-lg
                             bg-white dark:bg-[#1B2131] border border-gray-200 dark:border-gray-700/50
-                            z-10 py-1">
+                            z-50 py-1">
                 {sortOptions.map(option => (
                   <div
                     key={option.field}
@@ -686,65 +730,140 @@ const CardList = ({
               </div>
             )}
           </div>
-
-          {/* Add Card Button */}
           <button
             onClick={onAddCard}
-            className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary/90
-                     transition-colors flex items-center gap-2"
+            className="h-12 px-4 py-2 bg-primary text-white rounded-xl hover:bg-primary/90 transition-colors flex items-center gap-2"
           >
-            <span className="material-icons text-lg">add</span>
-            <span>Add Card</span>
+            <span className="material-icons">add</span>
+            Add Card
           </button>
         </div>
       </div>
 
-      {/* Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {filteredCards.map(card => (
-          <Card
-            key={card.slabSerial}
-            card={card}
-            cardImage={cardImages[card.slabSerial]}
-            onCardClick={onCardClick}
-            isSelected={selectedCards.has(card.slabSerial)}
-            onSelect={handleSelectCard}
-            displayMetric={displayMetric}
-            onUpdateCard={onUpdateCard}
-          />
-        ))}
-      </div>
+      {/* Cards Display */}
+      {filteredCards.length === 0 ? (
+        <div className="text-center py-12">
+          <span className="material-icons text-5xl mb-4 text-gray-400">search_off</span>
+          <h3 className="text-xl font-medium mb-2">No cards found</h3>
+          <p className="text-gray-600">Try adjusting your search or filters</p>
+        </div>
+      ) : viewMode === 'grid' ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {filteredCards.map(card => (
+            <Card
+              key={card.slabSerial}
+              card={card}
+              cardImage={cardImages[card.slabSerial]}
+              onCardClick={onCardClick}
+              isSelected={selectedCards.has(card.slabSerial)}
+              onSelect={handleSelectCard}
+              displayMetric={displayMetric}
+              onUpdateCard={onUpdateCard}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {filteredCards.map(card => (
+            <div
+              key={card.slabSerial}
+              onClick={() => onCardClick(card)}
+              className="bg-white dark:bg-[#1B2131] rounded-xl border border-gray-200 dark:border-gray-700/50 overflow-hidden cursor-pointer hover:bg-gray-50 dark:hover:bg-[#252B3B] transition-colors"
+            >
+              <div className="flex items-center p-4">
+                <div className="flex-shrink-0 w-20 h-28 mr-4">
+                  {cardImages[card.slabSerial] ? (
+                    <img
+                      src={cardImages[card.slabSerial]}
+                      alt={`${card.player} - ${card.card}`}
+                      className="w-full h-full object-contain"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                      <span className="material-icons text-gray-400">image</span>
+                    </div>
+                  )}
+                </div>
+                <div className="flex-grow min-w-0">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="min-w-0 max-w-[400px]">
+                      <h3 className="text-lg font-medium text-gray-900 dark:text-white truncate">{card.card}</h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 truncate">{card.player}</p>
+                      <div className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                        Purchase Date: {card.datePurchased || 'N/A'}
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-8">
+                      <div className="w-32">
+                        <div className="text-sm text-gray-600 dark:text-gray-400 text-right">Investment</div>
+                        <div className="font-medium text-gray-900 dark:text-white text-right">
+                          {formatCurrency(card.investmentAUD)}
+                        </div>
+                      </div>
+                      <div className="w-32">
+                        <div className="text-sm text-gray-600 dark:text-gray-400 text-right">Current Value</div>
+                        <div className="font-medium text-gray-900 dark:text-white text-right">
+                          {formatCurrency(card.currentValueAUD)}
+                        </div>
+                      </div>
+                      <div className="w-32">
+                        <div className="text-sm text-gray-600 dark:text-gray-400 text-right">Profit</div>
+                        <div className={`font-medium text-right ${(card.currentValueAUD - card.investmentAUD) >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                          {formatCurrency(card.currentValueAUD - card.investmentAUD)}
+                        </div>
+                      </div>
+                      <div onClick={e => e.stopPropagation()} className="ml-4 flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={selectedCards.has(card.slabSerial)}
+                          onChange={(e) => handleSelectCard(e, card.slabSerial)}
+                          className="w-6 h-6 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Selected Cards Actions */}
       {selectedCards.size > 0 && (
         <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 
-                      flex items-center gap-2 px-4 py-2 rounded-lg shadow-lg
-                      bg-white dark:bg-[#1B2131] border border-gray-200 dark:border-gray-700/50">
+                      flex flex-col items-center gap-2 px-6 py-3 rounded-lg shadow-lg
+                      bg-white dark:bg-[#1B2131] border border-gray-200 dark:border-gray-700/50 z-50">
           <span className="text-sm text-gray-600 dark:text-gray-400">
             {selectedCards.size} card{selectedCards.size > 1 ? 's' : ''} selected
           </span>
-          <button
-            onClick={handleMarkAsSold}
-            className="px-3 py-1.5 rounded-lg bg-green-500 text-white text-sm
-                     hover:bg-green-600 transition-colors"
-          >
-            Mark as Sold
-          </button>
-          <button
-            onClick={handleDeleteClick}
-            className="px-3 py-1.5 rounded-lg bg-red-500 text-white text-sm
-                     hover:bg-red-600 transition-colors"
-          >
-            Delete
-          </button>
-          <button
-            onClick={() => setSelectedCards(new Set())}
-            className="px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 
-                     text-gray-700 dark:text-gray-300 text-sm
-                     hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-          >
-            Clear Selection
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleMarkAsSold}
+              className="px-4 py-2 rounded-lg bg-green-500 text-white
+                       hover:bg-green-600 transition-colors flex items-center gap-2 whitespace-nowrap"
+            >
+              <span className="material-icons text-base">sell</span>
+              <span>Sell</span>
+            </button>
+            <button
+              onClick={handleDeleteClick}
+              className="px-4 py-2 rounded-lg bg-red-500 text-white
+                       hover:bg-red-600 transition-colors flex items-center gap-2"
+            >
+              <span className="material-icons text-base">delete</span>
+              <span>Delete</span>
+            </button>
+            <button
+              onClick={() => setSelectedCards(new Set())}
+              className="px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 
+                       text-gray-700 dark:text-gray-300
+                       hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
+            >
+              <span className="material-icons text-base">close</span>
+              <span>Clear</span>
+            </button>
+          </div>
         </div>
       )}
 

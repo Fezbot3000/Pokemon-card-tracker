@@ -4,6 +4,38 @@
 
 @import './shared.css';
 
+/* Prevent scrollbar layout shift */
+html {
+  scrollbar-gutter: stable;
+}
+
+/* Customize scrollbar for modern browsers */
+::-webkit-scrollbar {
+  @apply w-2;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 dark:bg-gray-700 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-400 dark:bg-gray-600;
+}
+
+/* Hide scrollbar for card details panel while preserving functionality */
+.card-details {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.card-details::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
+}
+
 /* Material Icons */
 @layer base {
   .material-icons {
@@ -62,7 +94,7 @@
   }
 
   .header-left {
-    @apply flex items-center flex-shrink-0;
+    @apply flex items-center gap-4;
   }
 
   .header-center {
@@ -100,7 +132,7 @@
   .mobile-menu {
     @apply fixed inset-x-0 top-[64px] bg-white dark:bg-[#1B2131] 
            border-t border-gray-200 dark:border-gray-700/50
-           shadow-lg z-50;
+           shadow-lg z-50 overflow-y-auto max-h-[calc(100vh-64px)];
   }
 
   .mobile-menu-header {
@@ -109,6 +141,46 @@
 
   .mobile-menu-content {
     @apply p-6 space-y-4;
+  }
+
+  .mobile-menu-section {
+    @apply space-y-2;
+  }
+
+  .mobile-menu-section-title {
+    @apply text-sm font-medium text-gray-500 dark:text-gray-400;
+  }
+
+  .mobile-menu-button {
+    @apply w-full flex items-center space-x-2 px-4 py-2 
+           text-gray-600 dark:text-gray-300 
+           bg-gray-100 dark:bg-gray-800 
+           rounded-lg 
+           hover:bg-gray-200 dark:hover:bg-gray-700 
+           transition-colors;
+  }
+
+  .mobile-menu-button.active {
+    @apply bg-primary text-white;
+  }
+
+  /* Prevent body scroll when mobile menu is open */
+  .mobile-menu-open {
+    @apply overflow-hidden;
+  }
+
+  /* Hide desktop elements on mobile */
+  @media (max-width: 1023px) {
+    .desktop-only {
+      @apply hidden;
+    }
+  }
+
+  /* Hide mobile elements on desktop */
+  @media (min-width: 1024px) {
+    .mobile-only {
+      @apply hidden;
+    }
   }
 
   .mobile-menu-item {
@@ -153,39 +225,53 @@
     @apply inline-block flex-shrink-0;
   }
 
-  .collection-name {
-    @apply flex items-center gap-1.5 xl:gap-2 text-gray-900 dark:text-white font-medium 
-           hover:bg-gray-100 dark:hover:bg-[#252B3B] px-2 xl:px-3 py-2 rounded-xl transition-colors
-           truncate w-full;
-  }
-
-  .collection-name span:not(.material-icons) {
-    @apply truncate flex-1;
-  }
-
-  .collection-lock {
-    @apply text-primary text-2xl;
-  }
-
   /* Collection Dropdown */
   .collection-dropdown {
     @apply absolute top-full left-0 mt-2 w-[300px]
-           bg-white dark:bg-[#1B2131] rounded-xl shadow-lg 
-           border border-gray-200 dark:border-gray-700/50 py-2 z-50;
+           bg-white dark:bg-[#1B2131] 
+           rounded-xl shadow-lg 
+           border border-gray-200 dark:border-gray-700/50 
+           py-2 z-[150];
   }
 
   .collection-item {
-    @apply flex items-center justify-between px-4 py-2 
-           hover:bg-gray-50 dark:hover:bg-[#252B3B] cursor-pointer 
-           text-gray-900 dark:text-gray-200;
+    @apply flex items-center justify-between w-full px-4 py-2 
+           text-gray-900 dark:text-gray-100
+           hover:bg-gray-50 dark:hover:bg-[#252B3B] 
+           cursor-pointer transition-colors;
+  }
+
+  .collection-item span {
+    @apply text-gray-900 dark:text-gray-100;
+  }
+
+  .collection-item .material-icons {
+    @apply text-gray-500 dark:text-gray-300;
   }
 
   .collection-item.text-primary {
-    @apply text-[#4318FF];
+    @apply text-[#4318FF] dark:text-[#6B4EFF];
+  }
+
+  .collection-item.text-primary span {
+    @apply text-[#4318FF] dark:text-[#6B4EFF];
   }
 
   .collection-divider {
     @apply h-px bg-gray-200 dark:bg-gray-700/50 my-1 mx-4;
+  }
+
+  /* Collection Name Button */
+  .collection-name {
+    @apply flex items-center gap-1.5 xl:gap-2 
+           text-gray-900 dark:text-gray-100 font-medium 
+           hover:bg-gray-50 dark:hover:bg-[#252B3B] 
+           px-2 xl:px-3 py-2 rounded-xl transition-colors
+           truncate w-full;
+  }
+
+  .collection-name span:not(.material-icons) {
+    @apply truncate flex-1 text-gray-900 dark:text-gray-100;
   }
 
   /* Button Styles */
@@ -243,12 +329,12 @@
   /* Search and Filter Section */
   .search-input {
     @apply w-full px-4 py-3 h-12
-           bg-white dark:bg-[#1B2131] 
-           border border-gray-200 dark:border-gray-700/50 
-           rounded-xl text-gray-900 dark:text-gray-100 
+           bg-white dark:bg-[#1B2131]
+           border border-gray-200 dark:border-gray-700/50
+           rounded-xl
+           text-gray-900 dark:text-white
            placeholder-gray-500 dark:placeholder-gray-400
-           focus:ring-2 focus:ring-primary/20 focus:border-primary 
-           transition-colors;
+           focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent;
   }
 
   .filter-section {
@@ -272,8 +358,9 @@
     @apply flex items-center justify-between w-full px-4 py-3 h-12 rounded-xl 
            bg-white dark:bg-[#1B2131] 
            border border-gray-200 dark:border-gray-700/50
-           text-gray-900 dark:text-white text-sm
-           hover:bg-gray-50 dark:hover:bg-[#252B3B] transition-colors;
+           text-gray-900 dark:text-gray-100 text-sm
+           hover:bg-gray-50 dark:hover:bg-[#252B3B] transition-colors
+           relative z-[55];
   }
 
   .sort-button > div, .view-button > div {
@@ -282,19 +369,19 @@
 
   .sort-button .material-icons, 
   .view-button .material-icons {
-    @apply text-gray-500 dark:text-gray-400;
+    @apply text-gray-500 dark:text-gray-300;
   }
 
   .sort-dropdown, .view-dropdown {
     @apply absolute top-full left-0 right-0 mt-2 w-full
            bg-white dark:bg-[#1B2131] rounded-xl shadow-lg 
            border border-gray-200 dark:border-gray-700/50 
-           py-2 z-50;
+           py-2 z-[60];
   }
 
   .sort-option {
     @apply flex items-center gap-2 px-4 py-2
-           text-gray-900 dark:text-white text-sm
+           text-gray-900 dark:text-gray-100 text-sm
            hover:bg-gray-50 dark:hover:bg-[#252B3B] cursor-pointer;
   }
 
@@ -332,7 +419,7 @@
            border border-gray-200 dark:border-gray-700/50 
            overflow-hidden transition-all duration-200
            hover:bg-gray-50 dark:hover:bg-[#252B3B]
-           w-full;
+           w-full relative z-[50];
   }
 
   .card-image {
@@ -451,26 +538,56 @@
 
   /* Card image and upload container styles */
   .card-image-display {
-    @apply relative aspect-[3/4] max-h-64 max-w-xs w-full 
-           bg-transparent overflow-hidden;
+    @apply w-full h-full object-contain bg-transparent;
+  }
+
+  .card-image-display img {
+    @apply w-full h-full object-contain;
   }
 
   /* Upload image area styles */
   .image-upload-container {
-    @apply relative aspect-[3/4] max-h-64 max-w-xs w-full
-           bg-transparent border-2 border-dashed border-gray-300 dark:border-gray-700/50 
-           transition-colors cursor-pointer rounded-lg overflow-hidden;
+    @apply relative aspect-[2/3] w-full
+           bg-gray-100 dark:bg-gray-800 
+           border-2 border-dashed border-gray-300 dark:border-gray-700 
+           rounded-lg overflow-hidden
+           transition-all duration-200
+           cursor-pointer;
   }
 
-  /* Use regular CSS for hover state since Tailwind has a circular dependency */
   .image-upload-container:hover {
-    border-color: #4318FF; /* Primary color */
+    @apply border-primary;
   }
 
-  /* Use a more specific class name to avoid the circular dependency */
-  .image-upload-container.dragover-active {
-    @apply border-solid bg-[#4318FF]/5;
-    border-color: #4318FF; /* Primary color */
+  .image-upload-container.dragover {
+    @apply border-primary bg-primary/5 border-solid;
+  }
+
+  /* Loading and error states for card image */
+  .card-image-display.loading,
+  .card-image-display.error {
+    @apply flex flex-col items-center justify-center p-4 text-center;
+  }
+
+  .card-image-display.loading .material-icons,
+  .card-image-display.error .material-icons {
+    @apply text-4xl mb-2;
+  }
+
+  .card-image-display.loading .material-icons {
+    @apply text-gray-400 dark:text-gray-500;
+  }
+
+  .card-image-display.error .material-icons {
+    @apply text-red-500;
+  }
+
+  .card-image-display.error button {
+    @apply px-4 py-2 mt-2 
+           bg-primary text-white 
+           rounded-lg 
+           hover:bg-primary/90 
+           transition-colors;
   }
 
   .card-stats {
@@ -491,15 +608,19 @@
 
   /* Form specific styles */
   .form-group {
-    @apply mb-4;
+    @apply space-y-1;
   }
 
   .form-label {
-    @apply block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1;
+    @apply block text-sm font-medium text-gray-700 dark:text-gray-200;
   }
 
   .form-hint {
-    @apply mt-1 text-xs text-gray-500 dark:text-gray-400;
+    @apply mt-1 text-sm text-gray-500 dark:text-gray-300;
+  }
+
+  .form-error {
+    @apply mt-1 text-sm text-red-500 dark:text-red-400;
   }
 
   /* Loading states */
@@ -562,15 +683,29 @@
 
   /* Input styles */
   .input {
-    @apply w-full px-3 py-2 bg-white dark:bg-[#1B2131] border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100;
+    @apply w-full px-4 py-2 rounded-lg
+           bg-white dark:bg-[#1B2131]
+           border border-gray-200 dark:border-gray-700/50
+           text-gray-900 dark:text-gray-100
+           focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary
+           transition-colors;
   }
 
   .input:disabled {
-    @apply bg-transparent border-transparent text-gray-700 dark:text-gray-300 cursor-default;
+    @apply bg-gray-50 dark:bg-gray-800
+           border-gray-200 dark:border-gray-700
+           text-gray-500 dark:text-gray-300
+           cursor-not-allowed;
   }
 
-  .input:not(:disabled) {
-    @apply bg-white dark:bg-[#1B2131] border border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-primary/20 focus:border-primary dark:focus:border-primary transition-colors;
+  .input:read-only {
+    @apply bg-gray-50 dark:bg-gray-800
+           border-gray-200 dark:border-gray-700
+           cursor-default;
+  }
+
+  .input::placeholder {
+    @apply text-gray-400 dark:text-gray-400;
   }
 
   /* Make number inputs look consistent */
@@ -706,6 +841,72 @@
 
   .profit-change-close {
     @apply btn btn-primary px-6;
+  }
+
+  /* Sort dropdown button and Add Card button */
+  .sort-button, .btn-primary {
+    @apply h-12;
+  }
+
+  /* Card Details Panel */
+  .card-details {
+    @apply fixed inset-y-0 right-0 w-full sm:w-[480px] bg-white dark:bg-[#1B2131]
+           shadow-2xl border-l border-gray-200 dark:border-gray-700/50
+           transform transition-transform duration-300 ease-in-out z-[100]
+           flex flex-col;
+    transform: translateX(100%);
+  }
+
+  .card-details.open {
+    transform: translateX(0);
+  }
+
+  /* Card Details Header */
+  .card-details-header {
+    @apply sticky top-0 bg-white dark:bg-[#1B2131] 
+           border-b border-gray-200 dark:border-gray-700/50
+           px-6 py-4 flex justify-between items-center z-10;
+  }
+
+  /* Card Details Content */
+  .card-details-content {
+    @apply flex-1 overflow-y-auto px-6 py-4;
+  }
+
+  /* Card Details Footer */
+  .card-details-footer {
+    @apply sticky bottom-0 bg-white dark:bg-[#1B2131] 
+           border-t border-gray-200 dark:border-gray-700/50
+           px-6 py-4 flex justify-end gap-3 z-10;
+  }
+
+  /* Card Details Overlay */
+  .card-details-overlay {
+    @apply fixed inset-0 bg-black/50 z-[99] transition-opacity duration-300;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .card-details-overlay.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  @media (max-width: 640px) {
+    .card-details {
+      max-width: 100%;
+    }
+  }
+
+  /* Dark mode adjustments */
+  .dark .card-details {
+    background: #1B2131;
+    box-shadow: -4px 0 16px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Card checkbox styles */
+  .card input[type="checkbox"] {
+    @apply z-[45];
   }
 }
 

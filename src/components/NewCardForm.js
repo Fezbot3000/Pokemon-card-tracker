@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { formatValue } from '../utils/formatters';
 import { useTheme } from '../contexts/ThemeContext';
+import { toast } from 'react-hot-toast';
 
-const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5 }) => {
+const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, selectedCollection }) => {
   const [formData, setFormData] = useState({
     player: '',
     card: '',
@@ -17,6 +18,10 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5 }) => {
     currentValueAUD: ''
   });
 
+  // Add state for selected collection
+  const [targetCollection, setTargetCollection] = useState(selectedCollection);
+  const [showCollectionDropdown, setShowCollectionDropdown] = useState(false);
+
   // Add state for input currency
   const [inputCurrency, setInputCurrency] = useState('AUD'); // Default to AUD
 
@@ -25,6 +30,9 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5 }) => {
   const [error, setError] = useState(null);
   const fileInputRef = useRef(null);
   const { isDarkMode } = useTheme();
+
+  const [isDragging, setIsDragging] = useState(false);
+  const dropZoneRef = useRef(null);
 
   useEffect(() => {
     const handleEscapeKey = (event) => {
@@ -94,12 +102,61 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5 }) => {
   };
 
   const handleImageChange = (e) => {
-    const file = e.target.files[0];
+    const file = e.target.files?.[0];
     if (file) {
+      if (!file.type.startsWith('image/')) {
+        toast.error('Please upload an image file');
+        return;
+      }
       setImageFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result);
+      };
+      reader.onerror = () => {
+        toast.error('Error reading file');
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleDragEnter = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.target === dropZoneRef.current) {
+      setIsDragging(false);
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        toast.error('Please drop an image file');
+        return;
+      }
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.onerror = () => {
+        toast.error('Error reading file');
       };
       reader.readAsDataURL(file);
     }
@@ -109,6 +166,11 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5 }) => {
     e.preventDefault();
     if (!formData.slabSerial) {
       setError('Serial number is required');
+      return;
+    }
+
+    if (!targetCollection || targetCollection === 'All Cards') {
+      toast.error('Please select a valid collection');
       return;
     }
     
@@ -126,7 +188,7 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5 }) => {
         investmentUSD: parseFloat(formData.investmentUSD) || 0,
         currentValueUSD: parseFloat(formData.currentValueUSD) || 0,
         potentialProfit
-      }, imageFile);
+      }, imageFile, targetCollection);
       onClose();
     } catch (error) {
       setError(error.message);
@@ -162,15 +224,38 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5 }) => {
       <div className="max-w-4xl mx-auto p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Image Upload */}
-          <div className="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg p-4 flex items-center justify-center cursor-pointer hover:border-primary dark:hover:border-primary relative"
-               onClick={() => fileInputRef.current?.click()}
-               style={{ minHeight: '400px' }}>
+          <div 
+            ref={dropZoneRef}
+            className={`border-2 border-dashed rounded-lg p-4 flex flex-col items-center justify-center cursor-pointer relative transition-colors
+                       ${isDragging 
+                         ? 'border-primary bg-primary/5' 
+                         : 'border-gray-300 dark:border-gray-700 hover:border-primary dark:hover:border-primary'}`}
+            onClick={() => fileInputRef.current?.click()}
+            onDragEnter={handleDragEnter}
+            onDragLeave={handleDragLeave}
+            onDragOver={handleDragOver}
+            onDrop={handleDrop}
+            style={{ minHeight: '400px' }}
+          >
             {imagePreview ? (
-              <img src={imagePreview} alt="Card preview" className="max-h-full max-w-full object-contain" />
+              <div className="relative w-full h-full flex items-center justify-center">
+                <img src={imagePreview} alt="Card preview" className="max-h-full max-w-full object-contain" />
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setImageFile(null);
+                    setImagePreview(null);
+                  }}
+                  className="absolute top-2 right-2 p-1 rounded-full bg-gray-800/50 hover:bg-gray-800/75 text-white"
+                >
+                  <span className="material-icons text-sm">close</span>
+                </button>
+              </div>
             ) : (
               <div className="text-center">
                 <span className="material-icons text-gray-400 dark:text-gray-600 text-6xl mb-2">add_photo_alternate</span>
-                <p className="text-gray-500 dark:text-gray-400">Click to add image</p>
+                <p className="text-gray-500 dark:text-gray-400 mb-2">Drag and drop an image here</p>
+                <p className="text-gray-400 dark:text-gray-500">or click to browse</p>
               </div>
             )}
             <input
@@ -186,6 +271,51 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5 }) => {
           <div>
             <h2 className="text-2xl font-semibold mb-6 text-gray-800 dark:text-gray-200">Card Details</h2>
             
+            {/* Collection Selector */}
+            <div className="mb-6">
+              <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Collection</label>
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setShowCollectionDropdown(!showCollectionDropdown)}
+                  className="w-full px-4 py-2 text-left rounded-xl border border-gray-200 dark:border-gray-700/50
+                           bg-white dark:bg-[#1B2131] text-gray-900 dark:text-white
+                           focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent
+                           flex items-center justify-between"
+                >
+                  <span>{targetCollection}</span>
+                  <span className="material-icons">
+                    {showCollectionDropdown ? 'keyboard_arrow_up' : 'keyboard_arrow_down'}
+                  </span>
+                </button>
+
+                {showCollectionDropdown && (
+                  <div className="absolute z-10 w-full mt-1 bg-white dark:bg-[#1B2131] rounded-xl shadow-lg 
+                                border border-gray-200 dark:border-gray-700/50 py-1 max-h-60 overflow-auto">
+                    {Object.keys(collections)
+                      .filter(name => name !== 'All Cards')
+                      .map(collectionName => (
+                        <button
+                          key={collectionName}
+                          type="button"
+                          className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-800
+                                   text-gray-900 dark:text-white flex items-center justify-between"
+                          onClick={() => {
+                            setTargetCollection(collectionName);
+                            setShowCollectionDropdown(false);
+                          }}
+                        >
+                          <span>{collectionName}</span>
+                          {targetCollection === collectionName && (
+                            <span className="material-icons text-primary text-lg">check</span>
+                          )}
+                        </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
             <div className="grid grid-cols-2 gap-4 mb-6">
               <div>
                 <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Player</label>

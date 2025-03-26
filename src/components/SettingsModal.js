@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { db } from '../services/db';
 import Profile from './Profile';
@@ -8,7 +8,8 @@ import { toast } from 'react-hot-toast';
 const SettingsModal = ({ 
   isOpen, 
   onClose, 
-  selectedCollection, 
+  selectedCollection,
+  collections = [],
   onRenameCollection, 
   onDeleteCollection,
   refreshCollections,
@@ -21,6 +22,21 @@ const SettingsModal = ({
   const [isExporting, setIsExporting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [activeTab, setActiveTab] = useState('general');
+  const [collectionToDelete, setCollectionToDelete] = useState('');
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  // Click outside handler for dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleRenameConfirm = () => {
     if (newCollectionName && newCollectionName !== selectedCollection) {
@@ -48,16 +64,31 @@ const SettingsModal = ({
   };
 
   const handleDeleteCollection = () => {
+    if (!collectionToDelete) {
+      toast.error('Please select a collection to delete');
+      return;
+    }
+
+    if (collections.length <= 1) {
+      toast.error('Cannot delete the last collection');
+      return;
+    }
+
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = () => {
     try {
-      onDeleteCollection(selectedCollection);
+      onDeleteCollection(collectionToDelete);
       toast.success('Collection deleted successfully!');
+      setCollectionToDelete('');
+      setShowDeleteConfirm(false);
       // Close modal after successful deletion
       onClose();
     } catch (error) {
       console.error("Error deleting collection:", error);
       toast.error(`Failed to delete collection: ${error.message}`);
     }
-    setShowDeleteConfirm(false);
   };
 
   const handleResetData = async () => {
@@ -305,18 +336,90 @@ const SettingsModal = ({
                   </div>
                 </div>
 
-                {/* Reset Data */}
-                <div>
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white">Reset Data</h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                    Clear all data and reset the application to its initial state
-                  </p>
-                  <button
-                    onClick={handleResetData}
-                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-                  >
-                    Reset All Data
-                  </button>
+                {/* Danger Zone */}
+                <div className="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700/50">
+                  <h3 className="text-lg font-medium text-red-600 dark:text-red-500">Danger Zone</h3>
+                  <div className="mt-4 space-y-4">
+                    {/* Delete Collection */}
+                    <div className="rounded-lg border border-red-200 dark:border-red-900/50 p-4">
+                      <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100">Delete Collection</h4>
+                      <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                        Once you delete a collection, there is no going back. Please be certain.
+                      </p>
+                      <div className="mt-3">
+                        <div className="relative" ref={dropdownRef}>
+                          <button
+                            type="button"
+                            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                            className="w-full px-4 py-2 rounded-lg
+                                     bg-[#252B3B] dark:bg-[#252B3B]
+                                     border border-gray-700/50 dark:border-gray-700/50
+                                     text-gray-200 dark:text-gray-200
+                                     focus:outline-none focus:ring-2 focus:ring-red-500/20
+                                     cursor-pointer flex items-center justify-between"
+                          >
+                            <span className={collectionToDelete ? 'text-gray-200' : 'text-gray-400'}>
+                              {collectionToDelete || 'Select a collection'}
+                            </span>
+                            <span className="material-icons text-gray-400">
+                              expand_more
+                            </span>
+                          </button>
+                          
+                          {isDropdownOpen && (
+                            <div className="absolute z-[100] w-full mt-1 bg-[#252B3B] border border-gray-700/50 rounded-lg shadow-lg max-h-60 overflow-auto">
+                              {collections
+                                .filter(collection => collection !== 'All Cards')
+                                .map((collection) => (
+                                  <div
+                                    key={collection}
+                                    className="px-4 py-2 cursor-pointer text-gray-200 hover:bg-[#323B4B] first:rounded-t-lg last:rounded-b-lg"
+                                    onClick={() => {
+                                      setCollectionToDelete(collection);
+                                      setIsDropdownOpen(false);
+                                    }}
+                                  >
+                                    {collection}
+                                  </div>
+                                ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="mt-3">
+                        <button 
+                          onClick={handleDeleteCollection}
+                          disabled={!collectionToDelete || collections.length <= 1}
+                          className="w-full px-4 py-2 bg-red-100 dark:bg-red-900/20 
+                                   text-red-600 dark:text-red-400 rounded-lg 
+                                   hover:bg-red-200 dark:hover:bg-red-900/30 
+                                   transition-colors disabled:opacity-50 
+                                   disabled:cursor-not-allowed"
+                        >
+                          Delete Collection
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Reset Data */}
+                    <div className="rounded-lg border border-red-200 dark:border-red-900/50 p-4">
+                      <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100">Reset Application</h4>
+                      <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                        This will permanently delete all your collections, cards, and settings. This action cannot be undone.
+                      </p>
+                      <div className="mt-3">
+                        <button
+                          onClick={handleResetData}
+                          className="w-full px-4 py-2 bg-red-200 dark:bg-red-900/30 
+                                   text-red-700 dark:text-red-400 rounded-lg 
+                                   hover:bg-red-300 dark:hover:bg-red-900/40 
+                                   transition-colors font-medium"
+                        >
+                          Reset All Data
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -325,6 +428,42 @@ const SettingsModal = ({
           )}
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[70]">
+          <div className="bg-white dark:bg-[#1B2131] rounded-xl w-full max-w-md mx-4 p-6">
+            <h3 className="text-xl font-medium text-gray-900 dark:text-gray-100 mb-4">
+              Confirm Delete
+            </h3>
+            <p className="text-gray-600 dark:text-gray-300 mb-6">
+              Are you sure you want to delete the collection "{collectionToDelete}"? 
+              This action cannot be undone.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                className="px-4 py-2 rounded-lg
+                         bg-gray-100 dark:bg-[#252B3B] 
+                         text-gray-700 dark:text-gray-300
+                         hover:bg-gray-200 dark:hover:bg-[#323B4B]
+                         transition-colors"
+                onClick={() => setShowDeleteConfirm(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className="px-4 py-2 rounded-lg
+                         bg-red-600 text-white
+                         hover:bg-red-700
+                         transition-colors"
+                onClick={confirmDelete}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

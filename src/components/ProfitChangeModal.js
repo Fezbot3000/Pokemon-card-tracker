@@ -1,57 +1,53 @@
 import React from 'react';
+import { formatCurrency } from '../utils/currencyAPI';
 
-const formatCurrency = (value) => {
-  // Ensure value is a number and round to 2 decimal places
-  const numValue = parseFloat(value) || 0;
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'AUD',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  }).format(numValue).replace('A$', '$');
-};
-
-const ProfitChangeModal = ({ isOpen, onClose, oldProfit, newProfit }) => {
+const ProfitChangeModal = ({ isOpen, onClose, profitChangeData, oldProfit, newProfit }) => {
   if (!isOpen) return null;
 
-  // Ensure values are numbers
-  const oldProfitNum = parseFloat(oldProfit) || 0;
-  const newProfitNum = parseFloat(newProfit) || 0;
-  const profitDifference = newProfitNum - oldProfitNum;
-  const isPositive = profitDifference >= 0;
+  // Handle both data structures (direct props and profitChangeData object)
+  const previousProfit = profitChangeData?.previousProfit ?? profitChangeData?.oldProfit ?? oldProfit ?? 0;
+  const currentProfit = profitChangeData?.newProfit ?? newProfit ?? 0;
+  const difference = currentProfit - previousProfit;
 
   return (
-    <div className="profit-change-modal">
-      <div className="profit-change-content">
-        <h2 className="profit-change-header">Profit Change Summary</h2>
-        
-        <div className="profit-change-body">
-          <div className="profit-stat">
-            <span className="profit-label">Previous Profit</span>
-            <span className={`profit-value ${oldProfitNum >= 0 ? 'positive' : 'negative'}`}>
-              {formatCurrency(oldProfitNum)}
-            </span>
-          </div>
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="bg-white dark:bg-[#1B2131] rounded-xl shadow-lg max-w-md w-full mx-4">
+        <div className="p-6">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+            Profit Change Summary
+          </h2>
           
-          <div className="profit-stat">
-            <span className="profit-label">New Profit</span>
-            <span className={`profit-value ${newProfitNum >= 0 ? 'positive' : 'negative'}`}>
-              {formatCurrency(newProfitNum)}
-            </span>
+          <div className="space-y-4">
+            <div>
+              <div className="text-sm text-gray-500 dark:text-gray-400">Previous Profit</div>
+              <div className="text-lg font-medium text-gray-900 dark:text-white">
+                {formatCurrency(previousProfit)}
+              </div>
+            </div>
+            
+            <div>
+              <div className="text-sm text-gray-500 dark:text-gray-400">New Profit</div>
+              <div className="text-lg font-medium text-gray-900 dark:text-white">
+                {formatCurrency(currentProfit)}
+              </div>
+            </div>
+            
+            <div>
+              <div className="text-sm text-gray-500 dark:text-gray-400">Difference</div>
+              <div className={`text-lg font-medium ${difference >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                {difference >= 0 ? '+' : ''}{formatCurrency(difference)}
+              </div>
+            </div>
           </div>
-          
-          <div className="profit-stat">
-            <span className="profit-label">Difference</span>
-            <span className={`profit-value ${isPositive ? 'positive' : 'negative'}`}>
-              {isPositive ? '+' : ''}{formatCurrency(profitDifference)}
-            </span>
-          </div>
-        </div>
 
-        <div className="profit-change-footer">
-          <button className="profit-change-close" onClick={onClose}>
-            Close
-          </button>
+          <div className="mt-6 flex justify-end">
+            <button
+              onClick={onClose}
+              className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+            >
+              Close
+            </button>
+          </div>
         </div>
       </div>
     </div>

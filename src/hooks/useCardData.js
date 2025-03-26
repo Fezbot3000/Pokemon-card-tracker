@@ -99,13 +99,14 @@ const useCardData = () => {
   
   // Add a new card
   const addCard = (newCard) => {
-    // Generate a temporary ID if none provided
-    const cardWithId = {
-      ...newCard,
-      slabSerial: newCard.slabSerial || `temp-${Date.now()}`
-    };
-    
-    setCards(prevCards => [...prevCards, cardWithId]);
+    // Check if card already exists
+    const existingCard = cards.find(card => card.slabSerial === newCard.slabSerial);
+    if (existingCard) {
+      throw new Error('Card already exists in the database');
+    }
+
+    // Add the new card
+    setCards(prevCards => [...prevCards, newCard]);
   };
   
   // Delete a card
