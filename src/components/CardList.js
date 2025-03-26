@@ -661,83 +661,87 @@ const CardList = ({
 
       {/* Controls Section */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div className="w-full sm:flex-1">
-          <div className="flex items-center gap-4">
-            <input
-              type="text"
-              placeholder="Search by name, set, or serial number..."
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-              className="w-full h-12 px-4 py-3 rounded-xl bg-white dark:bg-[#1B2131] text-gray-900 dark:text-white
-                       focus:outline-none focus:ring-2 focus:ring-primary shadow-[0_2px_8px_rgba(0,0,0,0.04)]
-                       placeholder-gray-500 dark:placeholder-gray-400"
-            />
-            <div className="flex items-center gap-2">
+        {/* Search and View Mode */}
+        <div className="w-full">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1 flex items-center gap-4">
+              <input
+                type="text"
+                placeholder="Search by name, set, or serial number..."
+                value={filter}
+                onChange={(e) => setFilter(e.target.value)}
+                className="w-full h-12 px-4 py-3 rounded-xl bg-white dark:bg-[#1B2131] text-gray-900 dark:text-white
+                         focus:outline-none focus:ring-2 focus:ring-primary shadow-[0_2px_8px_rgba(0,0,0,0.04)]
+                         placeholder-gray-500 dark:placeholder-gray-400"
+              />
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <button
+                  onClick={() => setViewMode('grid')}
+                  className={`h-12 w-12 flex items-center justify-center rounded-lg transition-colors ${
+                    viewMode === 'grid'
+                      ? 'bg-primary text-white shadow-[0_2px_8px_rgba(0,0,0,0.08)]'
+                      : 'bg-white dark:bg-[#1B2131] text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#252B3B] shadow-[0_2px_8px_rgba(0,0,0,0.04)]'
+                  }`}
+                  title="Grid View"
+                >
+                  <span className="material-icons">grid_view</span>
+                </button>
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={`h-12 w-12 flex items-center justify-center rounded-lg transition-colors ${
+                    viewMode === 'list'
+                      ? 'bg-primary text-white shadow-[0_2px_8px_rgba(0,0,0,0.08)]'
+                      : 'bg-white dark:bg-[#1B2131] text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#252B3B] shadow-[0_2px_8px_rgba(0,0,0,0.04)]'
+                  }`}
+                  title="List View"
+                >
+                  <span className="material-icons">view_list</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Sort and Add Card */}
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <div className="relative flex-1 sm:flex-initial sm:w-[208px]">
+                <button
+                  onClick={() => setShowSortDropdown(!showSortDropdown)}
+                  className="h-12 w-full px-4 py-2 rounded-xl bg-white dark:bg-[#1B2131] text-gray-700 dark:text-white
+                           flex items-center justify-between whitespace-nowrap shadow-[0_2px_8px_rgba(0,0,0,0.04)]"
+                >
+                  <span className="truncate">Sort by {getSortFieldLabel(sortField)}</span>
+                  <span className="material-icons text-gray-600 dark:text-gray-300 ml-2 flex-shrink-0">
+                    {showSortDropdown ? 'expand_less' : 'expand_more'}
+                  </span>
+                </button>
+                {showSortDropdown && (
+                  <div className="absolute right-0 mt-2 w-full rounded-lg shadow-lg
+                                bg-white dark:bg-[#1B2131] z-50 py-1">
+                    {sortOptions.map(option => (
+                      <div
+                        key={option.field}
+                        className="px-4 py-2 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-[#252B3B] 
+                                 cursor-pointer text-gray-700 dark:text-gray-300"
+                        onClick={() => handleSortChange(option.field)}
+                      >
+                        <span>{option.label}</span>
+                        {sortField === option.field && (
+                          <span className="material-icons text-gray-600 dark:text-gray-300">
+                            {sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward'}
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
               <button
-                onClick={() => setViewMode('grid')}
-                className={`h-12 w-12 flex items-center justify-center rounded-lg transition-colors ${
-                  viewMode === 'grid'
-                    ? 'bg-primary text-white shadow-[0_2px_8px_rgba(0,0,0,0.08)]'
-                    : 'bg-white dark:bg-[#1B2131] text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#252B3B] shadow-[0_2px_8px_rgba(0,0,0,0.04)]'
-                }`}
-                title="Grid View"
+                onClick={onAddCard}
+                className="h-12 px-4 py-2 bg-primary text-white rounded-xl hover:bg-primary/90 transition-colors whitespace-nowrap flex-shrink-0 shadow-[0_2px_8px_rgba(0,0,0,0.08)]"
               >
-                <span className="material-icons">grid_view</span>
-              </button>
-              <button
-                onClick={() => setViewMode('list')}
-                className={`h-12 w-12 flex items-center justify-center rounded-lg transition-colors ${
-                  viewMode === 'list'
-                    ? 'bg-primary text-white shadow-[0_2px_8px_rgba(0,0,0,0.08)]'
-                    : 'bg-white dark:bg-[#1B2131] text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#252B3B] shadow-[0_2px_8px_rgba(0,0,0,0.04)]'
-                }`}
-                title="List View"
-              >
-                <span className="material-icons">view_list</span>
+                Add Card
               </button>
             </div>
           </div>
-        </div>
-
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <div className="relative flex-1 sm:w-[208px]">
-            <button
-              onClick={() => setShowSortDropdown(!showSortDropdown)}
-              className="h-12 w-full px-4 py-2 rounded-xl bg-white dark:bg-[#1B2131] text-gray-700 dark:text-white
-                       flex items-center justify-between whitespace-nowrap shadow-[0_2px_8px_rgba(0,0,0,0.04)]"
-            >
-              <span className="truncate">Sort by {getSortFieldLabel(sortField)}</span>
-              <span className="material-icons text-gray-600 dark:text-gray-300 ml-2 flex-shrink-0">
-                {showSortDropdown ? 'expand_less' : 'expand_more'}
-              </span>
-            </button>
-            {showSortDropdown && (
-              <div className="absolute right-0 mt-2 w-full rounded-lg shadow-lg
-                            bg-white dark:bg-[#1B2131] z-50 py-1">
-                {sortOptions.map(option => (
-                  <div
-                    key={option.field}
-                    className="px-4 py-2 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-[#252B3B] 
-                             cursor-pointer text-gray-700 dark:text-gray-300"
-                    onClick={() => handleSortChange(option.field)}
-                  >
-                    <span>{option.label}</span>
-                    {sortField === option.field && (
-                      <span className="material-icons text-gray-600 dark:text-gray-300">
-                        {sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward'}
-                      </span>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-          <button
-            onClick={onAddCard}
-            className="h-12 px-4 py-2 bg-primary text-white rounded-xl hover:bg-primary/90 transition-colors whitespace-nowrap flex-shrink-0 shadow-[0_2px_8px_rgba(0,0,0,0.08)]"
-          >
-            Add Card
-          </button>
         </div>
       </div>
 

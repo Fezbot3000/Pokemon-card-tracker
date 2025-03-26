@@ -194,9 +194,6 @@ const Header = ({
               >
                 Sold Items
               </button>
-              <Link to="/pricing" className="px-4 py-2 rounded-lg transition-colors text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">
-                Pricing
-              </Link>
             </div>
             
             {/* Right side actions */}
@@ -280,6 +277,16 @@ const Header = ({
                       <span className="material-icons">settings</span>
                       <span>Settings</span>
                     </button>
+                    <Link 
+                      to="/login"
+                      onClick={() => {
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className="w-full flex items-center space-x-2 px-4 py-2 text-red-600 dark:text-red-400 bg-white/50 dark:bg-gray-800/50 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition-colors"
+                    >
+                      <span className="material-icons">logout</span>
+                      <span>Log Out</span>
+                    </Link>
                   </div>
                 </div>
 
@@ -340,16 +347,6 @@ const Header = ({
                       <span className="material-icons">upload_file</span>
                       <span>Import Base Data</span>
                     </button>
-                    <Link
-                      to="/pricing"
-                      onClick={() => {
-                        setIsMobileMenuOpen(false);
-                      }}
-                      className="w-full flex items-center space-x-2 px-4 py-2 text-gray-600 dark:text-gray-300 bg-white/50 dark:bg-gray-800/50 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition-colors"
-                    >
-                      <span className="material-icons">sell</span>
-                      <span>Pricing Plans</span>
-                    </Link>
                   </div>
                 </div>
               </div>
