@@ -4,6 +4,7 @@ import { db } from '../services/db';  // Use the correct db service
 import JSZip from 'jszip';
 import CollectionSelector from './CollectionSelector';
 import { toast } from 'react-hot-toast';
+import { Link } from 'react-router-dom';
 
 const Header = ({ 
   selectedCollection, 
@@ -16,7 +17,8 @@ const Header = ({
   refreshCollections,
   onAddCollection,
   onRenameCollection,
-  onDeleteCollection
+  onDeleteCollection,
+  className = ''
 }) => {
   const { isDarkMode, toggleTheme } = useTheme();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -64,6 +66,14 @@ const Header = ({
     };
   }, [isMobileMenuOpen]);
 
+  // Remove page-no-padding class when Header is mounted
+  useEffect(() => {
+    document.body.classList.remove('page-no-padding');
+    return () => {
+      // No need to add it back when unmounting
+    };
+  }, []);
+
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
   };
@@ -109,33 +119,31 @@ const Header = ({
 
   return (
     <>
-      <header className="bg-white dark:bg-[#1B2131] shadow-sm">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              {/* Logo */}
-              <img 
-                src="/favicon-192x192.png" 
-                alt="Pokemon Card Tracker" 
-                className="w-10 h-10 mr-4 rounded-xl"
-              />
-              
-              {/* Collections Dropdown */}
-              <div className="collection-selector">
+      <header className="fixed top-0 left-0 right-0 w-full z-40 bg-white dark:bg-[#1B2131] shadow-md border-b border-gray-200 dark:border-gray-700/50" style={{position: 'fixed'}}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            {/* Logo and Collection Dropdown */}
+            <div className="flex items-center gap-2 sm:gap-4 flex-shrink min-w-0 max-w-[45%] sm:max-w-[60%] md:max-w-[70%]">
+              <Link to="/" className="flex-shrink-0">
+                <img src="/favicon-192x192.png" alt="Pokemon Card Tracker" className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl object-contain" />
+              </Link>
+              <div className="relative min-w-0 flex-shrink">
                 <button
                   onClick={toggleDropdown}
-                  className="collection-name"
+                  className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 rounded-lg text-gray-700 dark:text-gray-200 
+                           hover:bg-white dark:hover:bg-[#252B3B] transition-colors whitespace-nowrap"
                 >
-                  <span>{selectedCollection || 'All Cards'}</span>
-                  <span className="material-icons">
+                  <span className="text-sm font-medium truncate max-w-[120px] sm:max-w-[180px] md:max-w-[250px]">{selectedCollection}</span>
+                  <span className="material-icons text-gray-600 dark:text-gray-300 flex-shrink-0">
                     {isDropdownOpen ? 'expand_less' : 'expand_more'}
                   </span>
                 </button>
 
                 {isDropdownOpen && (
-                  <div className="collection-dropdown">
+                  <div className="absolute top-full left-0 mt-1 w-56 bg-white dark:bg-[#1B2131] rounded-lg shadow-[0_4px_12px_rgba(0,0,0,0.08)] py-1 z-50">
                     <div 
-                      className="collection-item"
+                      className="px-4 py-2 hover:bg-gray-50 dark:hover:bg-[#252B3B] cursor-pointer
+                               text-gray-700 dark:text-gray-200"
                       onClick={() => handleCollectionSelect('All Cards')}
                     >
                       All Cards
@@ -143,15 +151,17 @@ const Header = ({
                     {collections.map((collection) => (
                       <div
                         key={collection}
-                        className="collection-item"
+                        className="px-4 py-2 hover:bg-gray-50 dark:hover:bg-[#252B3B] cursor-pointer
+                                 text-gray-700 dark:text-gray-200 truncate"
                         onClick={() => handleCollectionSelect(collection)}
                       >
                         {collection}
                       </div>
                     ))}
-                    <div className="collection-divider" />
+                    <div className="h-px bg-gray-100 dark:bg-gray-800 my-1" />
                     <div 
-                      className="collection-item text-primary"
+                      className="px-4 py-2 hover:bg-gray-50 dark:hover:bg-[#252B3B] cursor-pointer
+                               text-primary flex items-center justify-between"
                       onClick={handleAddNewCollection}
                     >
                       <span>New Collection</span>
@@ -184,11 +194,14 @@ const Header = ({
               >
                 Sold Items
               </button>
+              <Link to="/pricing" className="px-4 py-2 rounded-lg transition-colors text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">
+                Pricing
+              </Link>
             </div>
             
             {/* Right side actions */}
-            <div className="flex items-center space-x-2">
-              {/* Desktop Actions */}
+            <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
+              {/* Desktop Actions - keep theme and settings only on desktop */}
               <div className="hidden lg:flex items-center space-x-2">
                 <button
                   onClick={() => onImportClick('priceUpdate')}
@@ -205,36 +218,34 @@ const Header = ({
                   <span className="material-icons">upload_file</span>
                   <span>Import Base Data</span>
                 </button>
-              </div>
 
-              {/* Theme and Settings buttons always visible */}
-              <button
-                onClick={toggleTheme}
-                className="p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-                aria-label="Toggle theme"
-              >
-                <span className="material-icons">
-                  {isDarkMode ? 'light_mode' : 'dark_mode'}
-                </span>
-              </button>
-              
-              <button
-                onClick={toggleSettings}
-                className="p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-                aria-label="Settings"
-              >
-                <span className="material-icons">settings</span>
-              </button>
+                {/* Theme and Settings buttons only on desktop */}
+                <button
+                  onClick={toggleTheme}
+                  className="w-10 h-10 flex items-center justify-center rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800/50"
+                  aria-label="Toggle theme"
+                >
+                  <span className="material-icons">
+                    {isDarkMode ? 'light_mode' : 'dark_mode'}
+                  </span>
+                </button>
+                
+                <button
+                  onClick={toggleSettings}
+                  className="w-10 h-10 flex items-center justify-center rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800/50"
+                  aria-label="Settings"
+                >
+                  <span className="material-icons">settings</span>
+                </button>
+              </div>
 
               {/* Mobile menu button */}
               <button
                 onClick={toggleMobileMenu}
-                className="lg:hidden p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                className="lg:hidden w-10 h-10 flex items-center justify-center rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800/50"
                 aria-label="Menu"
               >
-                <span className="material-icons">
-                  {isMobileMenuOpen ? 'close' : 'menu'}
-                </span>
+                <span className="material-icons">menu</span>
               </button>
             </div>
           </div>
@@ -243,17 +254,44 @@ const Header = ({
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
           <div className="lg:hidden">
-            <div className="border-t border-gray-200 dark:border-gray-700/50">
+            <div className="bg-gray-50/50 dark:bg-[#1B2131]/50">
               <div className="px-6 py-4 space-y-4">
+                {/* Theme and Settings buttons moved to mobile menu */}
+                <div className="flex flex-col space-y-2">
+                  <h3 className="text-sm font-medium text-gray-600 dark:text-gray-300">Theme & Settings</h3>
+                  <div className="space-y-2">
+                    <button
+                      onClick={() => {
+                        toggleTheme();
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className="w-full flex items-center space-x-2 px-4 py-2 text-gray-600 dark:text-gray-300 bg-white/50 dark:bg-gray-800/50 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition-colors"
+                    >
+                      <span className="material-icons">{isDarkMode ? 'light_mode' : 'dark_mode'}</span>
+                      <span>{isDarkMode ? 'Light Mode' : 'Dark Mode'}</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        toggleSettings();
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className="w-full flex items-center space-x-2 px-4 py-2 text-gray-600 dark:text-gray-300 bg-white/50 dark:bg-gray-800/50 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition-colors"
+                    >
+                      <span className="material-icons">settings</span>
+                      <span>Settings</span>
+                    </button>
+                  </div>
+                </div>
+
                 {/* View Switcher */}
                 <div className="flex flex-col space-y-2">
-                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">View</h3>
+                  <h3 className="text-sm font-medium text-gray-600 dark:text-gray-300">View</h3>
                   <div className="flex space-x-2">
                     <button
                       className={`flex-1 px-4 py-2 rounded-lg transition-colors ${
                         currentView === 'cards'
                           ? 'bg-primary text-white'
-                          : 'text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800'
+                          : 'text-gray-600 dark:text-gray-300 bg-white/50 dark:bg-gray-800/50'
                       }`}
                       onClick={() => {
                         onViewChange('cards');
@@ -266,7 +304,7 @@ const Header = ({
                       className={`flex-1 px-4 py-2 rounded-lg transition-colors ${
                         currentView === 'sold'
                           ? 'bg-primary text-white'
-                          : 'text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800'
+                          : 'text-gray-600 dark:text-gray-300 bg-white/50 dark:bg-gray-800/50'
                       }`}
                       onClick={() => {
                         onViewChange('sold');
@@ -280,14 +318,14 @@ const Header = ({
 
                 {/* Import Actions */}
                 <div className="flex flex-col space-y-2">
-                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Actions</h3>
+                  <h3 className="text-sm font-medium text-gray-600 dark:text-gray-300">Actions</h3>
                   <div className="space-y-2">
                     <button
                       onClick={() => {
                         onImportClick('priceUpdate');
                         setIsMobileMenuOpen(false);
                       }}
-                      className="w-full flex items-center space-x-2 px-4 py-2 text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                      className="w-full flex items-center space-x-2 px-4 py-2 text-gray-600 dark:text-gray-300 bg-white/50 dark:bg-gray-800/50 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition-colors"
                     >
                       <span className="material-icons">update</span>
                       <span>Update Prices</span>
@@ -297,11 +335,21 @@ const Header = ({
                         onImportClick('baseData');
                         setIsMobileMenuOpen(false);
                       }}
-                      className="w-full flex items-center space-x-2 px-4 py-2 text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                      className="w-full flex items-center space-x-2 px-4 py-2 text-gray-600 dark:text-gray-300 bg-white/50 dark:bg-gray-800/50 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition-colors"
                     >
                       <span className="material-icons">upload_file</span>
                       <span>Import Base Data</span>
                     </button>
+                    <Link
+                      to="/pricing"
+                      onClick={() => {
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className="w-full flex items-center space-x-2 px-4 py-2 text-gray-600 dark:text-gray-300 bg-white/50 dark:bg-gray-800/50 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition-colors"
+                    >
+                      <span className="material-icons">sell</span>
+                      <span>Pricing Plans</span>
+                    </Link>
                   </div>
                 </div>
               </div>

@@ -1,3 +1,5 @@
+@import url('https://cdn.fontshare.com/fonts/satoshi/css/satoshi.css');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -7,11 +9,18 @@
 /* Prevent scrollbar layout shift */
 html {
   scrollbar-gutter: stable;
+  font-family: 'Satoshi', -apple-system, BlinkMacSystemFont, system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  @apply overflow-x-hidden text-base font-normal;
+  overscroll-behavior-y: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  letter-spacing: -0.01em;
 }
 
 /* Customize scrollbar for modern browsers */
 ::-webkit-scrollbar {
-  @apply w-2;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
@@ -58,7 +67,18 @@ html {
 
   /* Default light theme */
   body {
-    @apply bg-white text-gray-900;
+    @apply bg-gray-50 dark:bg-[#111319] text-gray-900 dark:text-white overflow-x-hidden;
+    overscroll-behavior-y: none;
+  }
+
+  /* Add padding only to dashboard pages */
+  .dashboard-page {
+    @apply pt-16;
+  }
+
+  /* Full-screen pages with no padding top */
+  .page-no-padding {
+    @apply pt-0;
   }
 
   /* Dark theme */
@@ -72,6 +92,168 @@ html {
     font-style: normal;
     font-weight: 400;
     src: url(https://fonts.gstatic.com/s/materialicons/v140/flUhRq6tzZclQEJ-Vdg-IuiaDsNc.woff2) format('woff2');
+  }
+
+  /* Adjust font weights for better rendering */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-medium tracking-tight;
+    letter-spacing: -0.03em;
+  }
+
+  .text-2xl {
+    letter-spacing: -0.03em;
+  }
+
+  .font-medium {
+    @apply tracking-tight;
+  }
+
+  /* Typography Scale */
+  h1 {
+    @apply text-2xl font-semibold tracking-tight;
+  }
+
+  h2 {
+    @apply text-xl font-semibold tracking-tight;
+  }
+
+  h3 {
+    @apply text-lg font-semibold tracking-tight;
+  }
+
+  h4 {
+    @apply text-base font-medium;
+  }
+
+  p {
+    @apply text-base;
+  }
+
+  small {
+    @apply text-sm font-medium;
+  }
+
+  .text-label {
+    @apply text-sm font-medium;
+  }
+
+  .text-caption {
+    @apply text-xs font-normal;
+  }
+
+  /* Stats values */
+  .stat-value {
+    @apply text-2xl font-semibold;
+  }
+
+  .stat-label {
+    @apply text-sm font-medium uppercase tracking-normal text-gray-700 dark:text-gray-300;
+  }
+
+  /* Card title and content */
+  .card-title {
+    @apply text-base font-semibold;
+  }
+
+  .card-content {
+    @apply text-base;
+  }
+
+  /* Button text */
+  .btn {
+    @apply text-base font-medium;
+  }
+
+  /* Form elements */
+  .form-label {
+    @apply text-sm font-medium;
+  }
+
+  .form-input {
+    @apply text-base;
+  }
+
+  .form-hint {
+    @apply text-sm font-medium text-gray-600 dark:text-gray-400;
+  }
+
+  /* Navigation and menus */
+  .nav-item {
+    @apply text-base font-medium;
+  }
+
+  .menu-item {
+    @apply text-base font-medium;
+  }
+
+  .dropdown-item {
+    @apply text-base font-medium;
+  }
+
+  /* Modal elements */
+  .modal-title {
+    @apply text-xl font-semibold;
+  }
+
+  .modal-content {
+    @apply text-base;
+  }
+
+  /* Card Stats */
+  .card-stat-label {
+    @apply text-sm font-medium text-gray-700 dark:text-gray-300;
+  }
+
+  .card-stat-value {
+    @apply text-lg font-semibold text-gray-900 dark:text-white;
+  }
+
+  /* Search Input */
+  .search-input {
+    @apply text-base font-normal placeholder:text-gray-500 dark:placeholder:text-gray-400;
+  }
+
+  /* Collection Name */
+  .collection-name {
+    @apply text-base font-medium;
+  }
+
+  /* Sort and Filter Labels */
+  .sort-button, 
+  .filter-button {
+    @apply text-base font-medium;
+  }
+
+  /* Card Details */
+  .card-details-title {
+    @apply text-xl font-semibold;
+  }
+
+  .card-details-subtitle {
+    @apply text-base font-medium text-gray-700 dark:text-gray-300;
+  }
+
+  /* Stats Section */
+  .stats-section {
+    .stat-card {
+      .stat-label {
+        @apply text-sm font-medium text-gray-700 dark:text-gray-300 mb-1;
+      }
+      .stat-value {
+        @apply text-2xl font-semibold;
+      }
+    }
+  }
+
+  /* Profit/Loss Values */
+  .profit-value {
+    @apply font-semibold;
+    &.positive {
+      @apply text-green-600 dark:text-green-500;
+    }
+    &.negative {
+      @apply text-red-600 dark:text-red-500;
+    }
   }
 }
 
@@ -407,31 +589,94 @@ html {
     @apply text-white;
   }
 
-  /* Card Grid */
+  /* Card Grid - Simplified */
   .card-grid {
-    @apply grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 
-           gap-3 xl:gap-4 px-2 sm:px-4 xl:px-6 mt-3;
+    @apply grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 
+           gap-2 sm:gap-6 p-2 sm:p-4;
   }
 
-  /* Card Styles */
+  /* Base Card - Single source of truth */
   .card {
-    @apply bg-white dark:bg-[#1B2131] rounded-xl 
-           border border-gray-200 dark:border-gray-700/50 
-           overflow-hidden transition-all duration-200
-           hover:bg-gray-50 dark:hover:bg-[#252B3B]
-           w-full relative z-[50];
+    @apply bg-white dark:bg-[#1B2131] 
+           border border-gray-200 dark:border-gray-700/50
+           rounded-[16px] sm:rounded-[24px]
+           overflow-hidden
+           flex flex-col
+           transition-all duration-200;
   }
 
+  /* Image Container */
   .card-image {
-    @apply aspect-[2/3] relative overflow-hidden;
+    @apply w-full p-2 sm:p-4;
   }
 
+  /* Image itself */
   .card-image img {
-    @apply w-full h-full object-cover;
+    @apply w-full h-auto
+           rounded-xl sm:rounded-[16px]
+           aspect-[3/4.2]
+           bg-gray-50 dark:bg-gray-800/50
+           object-contain;
   }
 
+  /* Content Area */
   .card-content {
-    @apply p-4;
+    @apply px-3 sm:px-6 pb-3 sm:pb-6 flex flex-col gap-2 sm:gap-4;
+  }
+
+  /* Card Title Area */
+  .card-header {
+    @apply space-y-0.5 sm:space-y-1 text-center;
+  }
+
+  .card-title {
+    @apply text-sm sm:text-lg font-semibold text-gray-900 dark:text-white;
+  }
+
+  .card-subtitle {
+    @apply text-xs sm:text-base text-gray-600 dark:text-gray-400;
+  }
+
+  /* Stats Area */
+  .card-stats {
+    @apply grid grid-cols-2 gap-2 sm:gap-4;
+  }
+
+  .card-stat {
+    @apply flex flex-col;
+  }
+
+  .card-stat-label {
+    @apply text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400;
+  }
+
+  .card-stat-value {
+    @apply text-sm sm:text-lg font-semibold text-gray-900 dark:text-white;
+  }
+
+  /* Profit Section */
+  .profit-section {
+    @apply mt-1 sm:mt-2 flex items-center justify-between;
+  }
+
+  .profit-value {
+    @apply text-sm sm:text-lg font-semibold;
+    &.positive {
+      @apply text-green-600 dark:text-green-500;
+    }
+    &.negative {
+      @apply text-red-600 dark:text-red-500;
+    }
+  }
+
+  /* Loading State */
+  .card-image-loading {
+    @apply animate-pulse bg-gray-200 dark:bg-gray-700 rounded-[24px];
+  }
+
+  /* Selection State */
+  .card.selected {
+    @apply ring-2 ring-primary ring-offset-2 dark:ring-offset-[#1B2131];
   }
 
   /* Filter Section */
@@ -609,10 +854,6 @@ html {
   /* Form specific styles */
   .form-group {
     @apply space-y-1;
-  }
-
-  .form-label {
-    @apply block text-sm font-medium text-gray-700 dark:text-gray-200;
   }
 
   .form-hint {
@@ -908,6 +1149,88 @@ html {
   .card input[type="checkbox"] {
     @apply z-[45];
   }
+
+  /* Ensure no text wrapping in buttons and dropdowns */
+  button, 
+  .dropdown-button,
+  .sort-button {
+    @apply whitespace-nowrap;
+  }
+
+  /* Header styles */
+  .header {
+    @apply fixed top-0 left-0 right-0 w-full z-50;
+  }
+
+  /* Settings Modal */
+  .settings-modal {
+    @apply fixed inset-0 z-50 bg-black/50;
+  }
+
+  .settings-modal-content {
+    @apply fixed inset-y-0 right-0 w-full sm:max-w-md 
+           bg-white dark:bg-[#1B2131] shadow-xl
+           transform transition-transform duration-200 ease-in-out;
+  }
+
+  .settings-header {
+    @apply sticky top-0 z-10 bg-white dark:bg-[#1B2131] 
+           border-b border-gray-200 dark:border-gray-700/50 
+           px-6 py-4;
+  }
+
+  /* Logo styles */
+  .logo-container {
+    @apply flex-shrink-0;
+  }
+
+  .logo-image {
+    @apply w-10 h-10 rounded-xl object-contain;
+  }
+
+  /* Collection dropdown */
+  .collection-button {
+    @apply flex items-center gap-2 px-3 py-2 rounded-lg 
+           text-gray-700 dark:text-gray-200 
+           hover:bg-white dark:hover:bg-[#252B3B] 
+           transition-colors whitespace-nowrap;
+  }
+
+  /* Sort dropdown */
+  .sort-dropdown-button {
+    @apply h-12 w-full px-4 py-2 rounded-xl 
+           bg-white dark:bg-[#1B2131] 
+           text-gray-700 dark:text-white
+           flex items-center justify-between 
+           whitespace-nowrap shadow-[0_2px_8px_rgba(0,0,0,0.04)];
+  }
+
+  /* Mobile optimizations */
+  @screen sm {
+    .settings-modal-content {
+      @apply max-w-md;
+    }
+  }
+
+  @media (max-width: 639px) {
+    .collection-name {
+      @apply max-w-[150px] truncate text-sm;
+    }
+    
+    .sort-button, 
+    .view-button,
+    .dropdown-button {
+      @apply text-sm;
+    }
+    
+    .stat-value {
+      @apply text-sm;
+    }
+    
+    .stat-label {
+      @apply text-xs;
+    }
+  }
 }
 
 @layer utilities {
@@ -986,5 +1309,21 @@ html.dark {
   .sort-button,
   .view-button {
     @apply h-12;
+  }
+}
+
+/* Additional header styles */
+.header {
+  @apply sticky top-0 z-50;
+}
+
+/* Ensure collection name truncates properly */
+.collection-name {
+  @apply truncate max-w-[150px] sm:max-w-[200px] md:max-w-[300px];
+}
+
+@media (max-width: 639px) {
+  .collection-name {
+    @apply max-w-[150px] truncate text-sm;
   }
 }

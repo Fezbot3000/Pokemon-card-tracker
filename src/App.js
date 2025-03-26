@@ -1,10 +1,15 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Header from './components/Header';
 import CardList from './components/CardList';
 import CardDetails from './components/CardDetails';
 import NewCardForm from './components/NewCardForm';
 import ImportModal from './components/ImportModal';
 import ProfitChangeModal from './components/ProfitChangeModal';
+import Home from './components/Home';
+import Login from './components/Login';
+import ForgotPassword from './components/ForgotPassword';
+import Pricing from './components/Pricing';
 import useCardData from './hooks/useCardData';
 import { processImportedData } from './utils/dataProcessor';
 import { db } from './services/db';
@@ -567,73 +572,16 @@ To import this backup:
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#0B0F19]">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#111827] dashboard-page">
       <Header
+        className="header"
         selectedCollection={selectedCollection}
         collections={Object.keys(collections)}
-        onCollectionChange={handleCollectionChange}
+        onCollectionChange={setSelectedCollection}
         onImportClick={handleImportClick}
         onSettingsClick={() => setShowSettings(true)}
         currentView={currentView}
         onViewChange={setCurrentView}
-        onAddCollection={(name) => {
-          // Create new collection
-          const newCollections = {
-            ...collections,
-            [name]: []
-          };
-          db.saveCollections(newCollections).then(() => {
-            setCollections(newCollections);
-            setSelectedCollection(name);
-            localStorage.setItem('selectedCollection', name);
-          });
-        }}
-        onRenameCollection={(oldName, newName) => {
-          const newCollections = { ...collections };
-          newCollections[newName] = newCollections[oldName];
-          delete newCollections[oldName];
-          
-          db.saveCollections(newCollections).then(() => {
-            setCollections(newCollections);
-            setSelectedCollection(newName);
-            localStorage.setItem('selectedCollection', newName);
-          });
-        }}
-        onDeleteCollection={async (name) => {
-          try {
-            // Get current collections
-            const currentCollections = { ...collections };
-            
-            // Check if collection exists
-            if (!currentCollections[name]) {
-              throw new Error(`Collection "${name}" does not exist`);
-            }
-            
-            // Check if it's the last collection
-            if (Object.keys(currentCollections).length <= 1) {
-              throw new Error("Cannot delete the last collection");
-            }
-            
-            // Remove the collection
-            delete currentCollections[name];
-            
-            // Save updated collections to database
-            await db.saveCollections(currentCollections);
-            
-            // Update state
-            setCollections(currentCollections);
-            
-            // Switch to another collection if the deleted one was selected
-            if (selectedCollection === name) {
-              const newSelection = Object.keys(currentCollections)[0];
-              setSelectedCollection(newSelection);
-              localStorage.setItem('selectedCollection', newSelection);
-            }
-          } catch (error) {
-            console.error("Error deleting collection:", error);
-            toast.error(`Failed to delete collection: ${error.message}`);
-          }
-        }}
         refreshCollections={() => {
           // Refresh collections data from the database
           db.getCollections().then(savedCollections => {
@@ -648,9 +596,64 @@ To import this backup:
             }
           });
         }}
+        onAddCollection={(name) => {
+          // Create new collection
+          const newCollections = {
+            ...collections,
+            [name]: []
+          };
+          db.saveCollections(newCollections).then(() => {
+            setCollections(newCollections);
+            setSelectedCollection(name);
+            localStorage.setItem('selectedCollection', name);
+          });
+        }}
+        onRenameCollection={(oldName, newName) => {
+          if (oldName && newName && oldName !== newName) {
+            // Create new collection
+            const newCollections = {
+              ...collections
+            };
+            // Copy cards to the new collection
+            newCollections[newName] = [...(collections[oldName] || [])];
+            // Remove old collection
+            delete newCollections[oldName];
+            
+            // Save to database
+            db.saveCollections(newCollections).then(() => {
+              setCollections(newCollections);
+              // Update selected collection if it was renamed
+              if (selectedCollection === oldName) {
+                setSelectedCollection(newName);
+                localStorage.setItem('selectedCollection', newName);
+              }
+            });
+          }
+        }}
+        onDeleteCollection={(name) => {
+          // Only allow deleting non-default collections
+          if (name !== 'Default Collection' && collections[name]) {
+            const newCollections = {
+              ...collections
+            };
+            // Remove the collection
+            delete newCollections[name];
+            
+            // Save to database
+            db.saveCollections(newCollections).then(() => {
+              setCollections(newCollections);
+              // Update selected collection if it was deleted
+              if (selectedCollection === name) {
+                // Select first available collection
+                const newSelectedCollection = Object.keys(newCollections)[0] || 'Default Collection';
+                setSelectedCollection(newSelectedCollection);
+                localStorage.setItem('selectedCollection', newSelectedCollection);
+              }
+            });
+          }
+        }}
       />
-
-      <main className="max-w-7xl mx-auto px-6 py-4">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         {currentView === 'cards' ? (
           <CardList
             cards={collectionData}
@@ -780,10 +783,18 @@ To import this backup:
 function App() {
   return (
     <ThemeProvider>
-      <div className="min-h-screen bg-gray-50 dark:bg-[#111827]">
-        <Toaster position="bottom-center" />
-        <AppContent />
-      </div>
+      <ErrorBoundary>
+        <Router>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/dashboard" element={<AppContent />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/pricing" element={<Pricing />} />
+          </Routes>
+          <Toaster position="bottom-right" />
+        </Router>
+      </ErrorBoundary>
     </ThemeProvider>
   );
 }

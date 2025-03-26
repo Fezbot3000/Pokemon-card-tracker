@@ -148,25 +148,29 @@ const SoldItems = () => {
   return (
     <div className="space-y-6">
       {/* Stats Section */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white dark:bg-[#1B2131] p-6 rounded-xl shadow-sm">
-          <div className="text-sm text-gray-700 dark:text-gray-400">TOTAL INVESTMENT</div>
-          <div className="text-2xl font-semibold mt-1">{formatCurrency(totals.totalInvestment)}</div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="bg-white dark:bg-[#1B2131] rounded-xl p-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+          <div className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">TOTAL INVESTMENT</div>
+          <div className="text-2xl text-gray-900 dark:text-white font-semibold">
+            {formatCurrency(totals.totalInvestment)}
+          </div>
         </div>
-        <div className="bg-white dark:bg-[#1B2131] p-6 rounded-xl shadow-sm">
-          <div className="text-sm text-gray-700 dark:text-gray-400">TOTAL SALE VALUE</div>
-          <div className="text-2xl font-semibold mt-1">{formatCurrency(totals.totalValue)}</div>
+        <div className="bg-white dark:bg-[#1B2131] rounded-xl p-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+          <div className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">TOTAL SALE VALUE</div>
+          <div className="text-2xl text-gray-900 dark:text-white font-semibold">
+            {formatCurrency(totals.totalValue)}
+          </div>
         </div>
-        <div className="bg-white dark:bg-[#1B2131] p-6 rounded-xl shadow-sm">
-          <div className="text-sm text-gray-700 dark:text-gray-400">TOTAL PROFIT</div>
-          <div className={`text-2xl font-semibold mt-1 ${totals.totalProfit >= 0 ? 'text-green-600 dark:text-green-500' : 'text-red-600 dark:text-red-500'}`}>
+        <div className="bg-white dark:bg-[#1B2131] rounded-xl p-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+          <div className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">TOTAL PROFIT</div>
+          <div className={`text-2xl font-semibold ${totals.totalProfit >= 0 ? 'text-green-500' : 'text-red-500'}`}>
             {formatCurrency(totals.totalProfit)}
           </div>
         </div>
-        <div className="bg-white dark:bg-[#1B2131] p-6 rounded-xl shadow-sm">
-          <div className="text-sm text-gray-700 dark:text-gray-400">TOTAL SOLD CARDS</div>
-          <div className="text-2xl font-semibold mt-1 flex items-center">
-            <span className="material-icons mr-2 text-gray-400">style</span>
+        <div className="bg-white dark:bg-[#1B2131] rounded-xl p-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+          <div className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">TOTAL SOLD CARDS</div>
+          <div className="text-2xl text-gray-900 dark:text-white font-semibold flex items-center gap-2">
+            <span className="material-icons text-gray-600 dark:text-gray-300">style</span>
             {filteredCards.length}
           </div>
         </div>
@@ -180,9 +184,9 @@ const SoldItems = () => {
             placeholder="Search by name, player, serial number, or buyer..."
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
-            className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700/50 
-                     bg-white dark:bg-[#1B2131] text-gray-900 dark:text-white
-                     focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+            className="w-full h-12 px-4 py-3 rounded-xl bg-white dark:bg-[#1B2131] text-gray-900 dark:text-white
+                     focus:outline-none focus:ring-2 focus:ring-primary shadow-[0_2px_8px_rgba(0,0,0,0.04)]
+                     placeholder-gray-500 dark:placeholder-gray-400"
           />
         </div>
       </div>

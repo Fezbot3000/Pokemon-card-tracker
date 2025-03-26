@@ -4,6 +4,7 @@ import { db } from '../services/db';
 import Profile from './Profile';
 import JSZip from 'jszip';
 import { toast } from 'react-hot-toast';
+import { XMarkIcon, SunIcon, MoonIcon } from '@heroicons/react/24/outline';
 
 const SettingsModal = ({ 
   isOpen, 
@@ -249,183 +250,185 @@ const SettingsModal = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="flex min-h-screen items-center justify-center px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-        {/* Background overlay */}
-        <div 
-          className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" 
-          onClick={onClose}
-        />
-
-        {/* Modal panel */}
-        <div className="inline-block align-bottom bg-white dark:bg-[#1B2131] rounded-xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
-          {/* Close button */}
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 text-gray-400 hover:text-gray-500 dark:text-gray-500 dark:hover:text-gray-400 transition-colors"
-          >
-            <span className="material-icons">close</span>
-          </button>
-
-          <div className="flex border-b border-gray-200 dark:border-gray-700/50">
+    <div className="settings-modal">
+      <div className="settings-modal-content">
+        <div className="settings-header">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Settings</h2>
             <button
-              className={`px-6 py-3 text-sm font-medium transition-colors
-                ${activeTab === 'general' 
-                  ? 'text-primary border-b-2 border-primary' 
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'}`}
-              onClick={() => setActiveTab('general')}
+              onClick={onClose}
+              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-[#252B3B] transition-colors"
             >
-              General
-            </button>
-            <button
-              className={`px-6 py-3 text-sm font-medium transition-colors
-                ${activeTab === 'profile' 
-                  ? 'text-primary border-b-2 border-primary' 
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'}`}
-              onClick={() => setActiveTab('profile')}
-            >
-              Profile
+              <XMarkIcon className="h-5 w-5 text-gray-500 dark:text-gray-400" />
             </button>
           </div>
-
-          {activeTab === 'general' ? (
-            <div className="p-6">
-              <div className="space-y-6">
-                {/* Theme Toggle */}
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-lg font-medium text-gray-900 dark:text-white">Dark Mode</h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Toggle between light and dark themes</p>
+        </div>
+        
+        <div className="p-6 space-y-6 overflow-y-auto h-[calc(100vh-4rem)]">
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+                Theme
+              </label>
+              <div className="flex items-center gap-4">
+                {/* Theme options */}
+                <button
+                  onClick={() => toggleTheme()}
+                  className={`flex-1 p-3 rounded-xl border ${
+                    isDarkMode ? 'border-blue-500 bg-blue-50 dark:bg-blue-500/10' : 'border-gray-200 dark:border-gray-700'
+                  }`}
+                >
+                  <div className="flex items-center justify-center gap-2">
+                    <SunIcon className="h-5 w-5 text-gray-700 dark:text-gray-200" />
+                    <span className="font-medium text-gray-700 dark:text-gray-200">Light</span>
                   </div>
-                  <button
-                    onClick={toggleTheme}
-                    className="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-                    style={{ backgroundColor: isDarkMode ? '#22c55e' : '#e5e7eb' }}
-                  >
-                    <span
-                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                        isDarkMode ? 'translate-x-5' : 'translate-x-0'
-                      }`}
-                    />
-                  </button>
-                </div>
+                </button>
+                <button
+                  onClick={() => toggleTheme()}
+                  className={`flex-1 p-3 rounded-xl border ${
+                    isDarkMode ? 'border-blue-500 bg-blue-50 dark:bg-blue-500/10' : 'border-gray-200 dark:border-gray-700'
+                  }`}
+                >
+                  <div className="flex items-center justify-center gap-2">
+                    <MoonIcon className="h-5 w-5 text-gray-700 dark:text-gray-200" />
+                    <span className="font-medium text-gray-700 dark:text-gray-200">Dark</span>
+                  </div>
+                </button>
+              </div>
+            </div>
 
-                {/* Export/Import Data */}
-                <div>
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white">Export/Import Data</h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                    Export your data to a file or import data from a backup
+            {/* Export/Import Data */}
+            <div>
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white">Export/Import Data</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                Export your data to a file or import data from a backup
+              </p>
+              <div className="flex gap-4">
+                <button
+                  onClick={handleExport}
+                  disabled={isExporting}
+                  className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
+                >
+                  {isExporting ? 'Exporting...' : 'Export Data'}
+                </button>
+                <label className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors cursor-pointer">
+                  Import Data
+                  <input
+                    type="file"
+                    accept=".zip,.json"
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+            </div>
+            
+            {/* Logout */}
+            <div className="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700/50">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white">Account</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                Sign out from your account
+              </p>
+              <div>
+                <button
+                  onClick={() => {
+                    window.location.href = '/';
+                    onClose();
+                  }}
+                  className="px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
+                >
+                  <span className="material-icons text-gray-600 dark:text-gray-400">logout</span>
+                  Logout
+                </button>
+              </div>
+            </div>
+
+            {/* Danger Zone */}
+            <div className="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700/50">
+              <h3 className="text-lg font-medium text-red-600 dark:text-red-500">Danger Zone</h3>
+              <div className="mt-4 space-y-4">
+                {/* Delete Collection */}
+                <div className="rounded-lg border border-red-200 dark:border-red-900/50 p-4">
+                  <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100">Delete Collection</h4>
+                  <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    Once you delete a collection, there is no going back. Please be certain.
                   </p>
-                  <div className="flex gap-4">
-                    <button
-                      onClick={handleExport}
-                      disabled={isExporting}
-                      className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
+                  <div className="mt-3">
+                    <div className="relative" ref={dropdownRef}>
+                      <button
+                        type="button"
+                        onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                        className="w-full px-4 py-2 rounded-lg
+                                 bg-[#252B3B] dark:bg-[#252B3B]
+                                 border border-gray-700/50 dark:border-gray-700/50
+                                 text-gray-200 dark:text-gray-200
+                                 focus:outline-none focus:ring-2 focus:ring-red-500/20
+                                 cursor-pointer flex items-center justify-between"
+                      >
+                        <span className={collectionToDelete ? 'text-gray-200' : 'text-gray-400'}>
+                          {collectionToDelete || 'Select a collection'}
+                        </span>
+                        <span className="material-icons text-gray-400">
+                          expand_more
+                        </span>
+                      </button>
+                      
+                      {isDropdownOpen && (
+                        <div className="absolute z-[100] w-full mt-1 bg-[#252B3B] border border-gray-700/50 rounded-lg shadow-lg max-h-60 overflow-auto">
+                          {collections
+                            .filter(collection => collection !== 'All Cards')
+                            .map((collection) => (
+                              <div
+                                key={collection}
+                                className="px-4 py-2 cursor-pointer text-gray-200 hover:bg-[#323B4B] first:rounded-t-lg last:rounded-b-lg"
+                                onClick={() => {
+                                  setCollectionToDelete(collection);
+                                  setIsDropdownOpen(false);
+                                }}
+                              >
+                                {collection}
+                              </div>
+                            ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="mt-3">
+                    <button 
+                      onClick={handleDeleteCollection}
+                      disabled={!collectionToDelete || collections.length <= 1}
+                      className="w-full px-4 py-2 bg-red-100 dark:bg-red-900/20 
+                               text-red-600 dark:text-red-400 rounded-lg 
+                               hover:bg-red-200 dark:hover:bg-red-900/30 
+                               transition-colors disabled:opacity-50 
+                               disabled:cursor-not-allowed"
                     >
-                      {isExporting ? 'Exporting...' : 'Export Data'}
+                      Delete Collection
                     </button>
-                    <label className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors cursor-pointer">
-                      Import Data
-                      <input
-                        type="file"
-                        accept=".zip,.json"
-                        onChange={handleFileChange}
-                        className="hidden"
-                      />
-                    </label>
                   </div>
                 </div>
 
-                {/* Danger Zone */}
-                <div className="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700/50">
-                  <h3 className="text-lg font-medium text-red-600 dark:text-red-500">Danger Zone</h3>
-                  <div className="mt-4 space-y-4">
-                    {/* Delete Collection */}
-                    <div className="rounded-lg border border-red-200 dark:border-red-900/50 p-4">
-                      <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100">Delete Collection</h4>
-                      <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                        Once you delete a collection, there is no going back. Please be certain.
-                      </p>
-                      <div className="mt-3">
-                        <div className="relative" ref={dropdownRef}>
-                          <button
-                            type="button"
-                            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                            className="w-full px-4 py-2 rounded-lg
-                                     bg-[#252B3B] dark:bg-[#252B3B]
-                                     border border-gray-700/50 dark:border-gray-700/50
-                                     text-gray-200 dark:text-gray-200
-                                     focus:outline-none focus:ring-2 focus:ring-red-500/20
-                                     cursor-pointer flex items-center justify-between"
-                          >
-                            <span className={collectionToDelete ? 'text-gray-200' : 'text-gray-400'}>
-                              {collectionToDelete || 'Select a collection'}
-                            </span>
-                            <span className="material-icons text-gray-400">
-                              expand_more
-                            </span>
-                          </button>
-                          
-                          {isDropdownOpen && (
-                            <div className="absolute z-[100] w-full mt-1 bg-[#252B3B] border border-gray-700/50 rounded-lg shadow-lg max-h-60 overflow-auto">
-                              {collections
-                                .filter(collection => collection !== 'All Cards')
-                                .map((collection) => (
-                                  <div
-                                    key={collection}
-                                    className="px-4 py-2 cursor-pointer text-gray-200 hover:bg-[#323B4B] first:rounded-t-lg last:rounded-b-lg"
-                                    onClick={() => {
-                                      setCollectionToDelete(collection);
-                                      setIsDropdownOpen(false);
-                                    }}
-                                  >
-                                    {collection}
-                                  </div>
-                                ))}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      <div className="mt-3">
-                        <button 
-                          onClick={handleDeleteCollection}
-                          disabled={!collectionToDelete || collections.length <= 1}
-                          className="w-full px-4 py-2 bg-red-100 dark:bg-red-900/20 
-                                   text-red-600 dark:text-red-400 rounded-lg 
-                                   hover:bg-red-200 dark:hover:bg-red-900/30 
-                                   transition-colors disabled:opacity-50 
-                                   disabled:cursor-not-allowed"
-                        >
-                          Delete Collection
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Reset Data */}
-                    <div className="rounded-lg border border-red-200 dark:border-red-900/50 p-4">
-                      <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100">Reset Application</h4>
-                      <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                        This will permanently delete all your collections, cards, and settings. This action cannot be undone.
-                      </p>
-                      <div className="mt-3">
-                        <button
-                          onClick={handleResetData}
-                          className="w-full px-4 py-2 bg-red-200 dark:bg-red-900/30 
-                                   text-red-700 dark:text-red-400 rounded-lg 
-                                   hover:bg-red-300 dark:hover:bg-red-900/40 
-                                   transition-colors font-medium"
-                        >
-                          Reset All Data
-                        </button>
-                      </div>
-                    </div>
+                {/* Reset Data */}
+                <div className="rounded-lg border border-red-200 dark:border-red-900/50 p-4">
+                  <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100">Reset Application</h4>
+                  <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    This will permanently delete all your collections, cards, and settings. This action cannot be undone.
+                  </p>
+                  <div className="mt-3">
+                    <button
+                      onClick={handleResetData}
+                      className="w-full px-4 py-2 bg-red-200 dark:bg-red-900/30 
+                               text-red-700 dark:text-red-400 rounded-lg 
+                               hover:bg-red-300 dark:hover:bg-red-900/40 
+                               transition-colors font-medium"
+                    >
+                      Reset All Data
+                    </button>
                   </div>
                 </div>
               </div>
             </div>
-          ) : (
-            <Profile onClose={onClose} />
-          )}
+          </div>
         </div>
       </div>
 
