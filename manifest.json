@@ -1,6 +1,6 @@
 {
-  "short_name": "Pokemon Cards",
-  "name": "Pokemon Card Tracker",
+  "short_name": "MCT",
+  "name": "My Card Tracker",
   "icons": [
     {
       "src": "favicon.ico",
