@@ -9,10 +9,11 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   getRedirectResult,
-  OAuthProvider
+  OAuthProvider,
+  connectAuthEmulator
 } from 'firebase/auth';
 import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
-import { auth, db, googleProvider } from '../config/firebase';
+import { auth, db, googleProvider } from '../firebase'; // Use the simplified firebase.js file
 import { toast } from 'react-hot-toast';
 
 const AuthContext = createContext();
@@ -38,14 +39,15 @@ const handleFirebaseError = (error) => {
     'auth/account-exists-with-different-credential': 'An account already exists with the same email address',
     'auth/invalid-credential': 'Invalid credentials. Please try again',
     'auth/user-disabled': 'This account has been disabled',
-    'auth/api-key-not-valid': 'Firebase API key is invalid or not properly formatted',
+    'auth/api-key-not-valid': 'Firebase API key is invalid or not properly formatted. Check your environment variables.',
+    'auth/api-key-not-valid-please-pass-a-valid-api-key': 'Firebase API key is invalid. Check your environment variables and API key restrictions.',
     'auth/network-request-failed': 'Network error. Please check your connection'
   };
   
   // Special detailed error for API key issue
   if (error.code === 'auth/api-key-not-valid-please-pass-a-valid-api-key') {
     console.error("API Key Error Details:", error);
-    return `API Key Error: The Firebase API key is not valid. Please check your configuration.`;
+    return `API Key Error: The Firebase API key is not valid or restricted. Please check your configuration and API key restrictions.`;
   }
   
   // Get specific message or use generic one
@@ -60,6 +62,14 @@ export function AuthProvider({ children }) {
   // Clear any error when component unmounts or when dependencies change
   useEffect(() => {
     return () => setError(null);
+  }, []);
+
+  // Connect to Auth emulator in development if needed
+  useEffect(() => {
+    // Uncomment this when testing locally with Firebase emulators
+    // if (process.env.NODE_ENV === 'development') {
+    //   connectAuthEmulator(auth, 'http://localhost:9099');
+    // }
   }, []);
 
   // Set up the auth state listener
@@ -134,16 +144,20 @@ export function AuthProvider({ children }) {
   const signUp = async ({ email, password, displayName }) => {
     try {
       setError(null);
+      console.log("Starting sign up process...");
       
       // Create auth user
       const { user } = await createUserWithEmailAndPassword(auth, email, password);
+      console.log("User created successfully:", user.uid);
       
       // Update profile with display name
       await updateProfile(user, { displayName });
+      console.log("Profile updated with display name:", displayName);
       
       // Try to create user document, but don't fail if it errors
       try {
         await createUserDocument(user);
+        console.log("User document created in Firestore");
       } catch (docError) {
         console.error("Failed to create user document, but auth succeeded:", docError);
         // Continue with auth success even if document creation fails
@@ -152,6 +166,7 @@ export function AuthProvider({ children }) {
       toast.success('Account created successfully!');
       return user;
     } catch (err) {
+      console.error("Sign up error:", err);
       const errorMessage = handleFirebaseError(err);
       setError(errorMessage);
       toast.error(errorMessage);
@@ -163,13 +178,16 @@ export function AuthProvider({ children }) {
   const signIn = async ({ email, password, remember = false }) => {
     try {
       setError(null);
+      console.log("Starting sign in process...");
       
       // We've removed setPersistence for simplicity
       // Just sign in directly
       const { user } = await signInWithEmailAndPassword(auth, email, password);
+      console.log("Sign in successful for:", user.email);
       toast.success('Signed in successfully!');
       return user;
     } catch (err) {
+      console.error("Sign in error:", err);
       const errorMessage = handleFirebaseError(err);
       setError(errorMessage);
       toast.error(errorMessage);
@@ -190,6 +208,7 @@ export function AuthProvider({ children }) {
       // Try to create user document but don't fail if it errors
       try {
         await createUserDocument(result.user);
+        console.log("User document created after Google sign-in");
       } catch (docError) {
         console.error("Failed to create user document after Google sign-in:", docError);
       }
@@ -207,18 +226,21 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // Apple Sign In
+  // Apple Sign In  
   const signInWithApple = async () => {
     try {
       setError(null);
+      console.log("Starting Apple sign-in process...");
       const provider = new OAuthProvider('apple.com');
       
       // Use popup for Apple sign-in
       const result = await signInWithPopup(auth, provider);
+      console.log("Apple sign-in successful:", result.user?.email);
       
       // Try to create user document but don't fail if it errors
       try {
         await createUserDocument(result.user);
+        console.log("User document created after Apple sign-in");
       } catch (docError) {
         console.error("Failed to create user document after Apple sign-in:", docError);
       }
@@ -226,6 +248,7 @@ export function AuthProvider({ children }) {
       toast.success('Signed in with Apple successfully!');
       return result.user;
     } catch (err) {
+      console.error("Apple sign-in error:", err);
       if (err.code !== 'auth/popup-closed-by-user') {
         const errorMessage = handleFirebaseError(err);
         setError(errorMessage);

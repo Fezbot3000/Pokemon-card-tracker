@@ -24,9 +24,23 @@ const SaleModal = ({ isOpen, onClose, selectedCards, onConfirm }) => {
       setSoldPrices(initialPrices);
       setErrors({});
       setIsInitialized(true);
+      
+      // Prevent background scrolling when modal is open, but maintain width
+      document.body.style.overflow = 'hidden';
+      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
     } else if (!isOpen) {
       setIsInitialized(false);
+      // Restore scrolling
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
     }
+    
+    // Cleanup on unmount
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+    };
   }, [isOpen, selectedCards]);
 
   const totalInvestment = selectedCards.reduce((sum, card) => sum + (parseFloat(card.investmentAUD) || 0), 0);
@@ -85,6 +99,10 @@ const SaleModal = ({ isOpen, onClose, selectedCards, onConfirm }) => {
     setErrors({});
     setIsInitialized(false);
     
+    // Restore scrolling and reset padding
+    document.body.style.overflow = '';
+    document.body.style.paddingRight = '';
+    
     // Call the onClose prop to notify parent component
     onClose();
   };
@@ -92,140 +110,152 @@ const SaleModal = ({ isOpen, onClose, selectedCards, onConfirm }) => {
   if (!isOpen || !isInitialized) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white dark:bg-[#1B2131] rounded-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-        <div className="p-6">
-          <h2 className="text-2xl font-semibold mb-6 text-gray-900 dark:text-white">
-            Mark Cards as Sold
-          </h2>
-
-          {/* Buyer and Date */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-800 dark:text-gray-300 mb-1">
-                Buyer <span className="text-red-600 dark:text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={buyer}
-                onChange={(e) => setBuyer(e.target.value)}
-                placeholder="Enter buyer name"
-                className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700
-                         bg-white dark:bg-[#1B2131] text-gray-900 dark:text-white
-                         focus:ring-2 focus:ring-primary/20 focus:border-primary"
-              />
-              {errors.buyer && (
-                <p className="text-red-600 dark:text-red-500 text-sm mt-1">{errors.buyer}</p>
-              )}
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-800 dark:text-gray-300 mb-1">
-                Date Sold
-              </label>
-              <input
-                type="date"
-                value={dateSold}
-                onChange={(e) => setDateSold(e.target.value)}
-                className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700
-                         bg-white dark:bg-[#1B2131] text-gray-900 dark:text-white
-                         focus:ring-2 focus:ring-primary/20 focus:border-primary"
-              />
-            </div>
+    <div className="fixed inset-0 bg-white dark:bg-[#0B0F19] z-50 flex flex-col">
+      {/* Header */}
+      <div className="sticky top-0 z-10 flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0B0F19]">
+        <h1 className="text-xl font-semibold text-gray-800 dark:text-white">
+          Mark Cards as Sold
+        </h1>
+        
+        <button
+          onClick={handleClose}
+          className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+        >
+          <span className="material-icons">close</span>
+        </button>
+      </div>
+      
+      {/* Body - Scrollable */}
+      <div className="flex-1 overflow-y-auto p-4">
+        {/* Buyer and Date */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4 md:mb-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-800 dark:text-gray-300 mb-1">
+              Buyer <span className="text-red-600 dark:text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={buyer}
+              onChange={(e) => setBuyer(e.target.value)}
+              placeholder="Enter buyer name"
+              className="w-full px-3 py-2 h-10 text-sm rounded-lg border border-gray-300 dark:border-gray-700
+                     bg-white dark:bg-[#1B2131] text-gray-900 dark:text-white
+                     focus:ring-2 focus:ring-primary/20 focus:border-primary"
+              autoComplete="off"
+            />
+            {errors.buyer && (
+              <p className="text-red-600 dark:text-red-500 text-xs mt-1">{errors.buyer}</p>
+            )}
           </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-800 dark:text-gray-300 mb-1">
+              Date Sold
+            </label>
+            <input
+              type="date"
+              value={dateSold}
+              onChange={(e) => setDateSold(e.target.value)}
+              className="w-full px-3 py-2 h-10 text-sm rounded-lg border border-gray-300 dark:border-gray-700
+                     bg-white dark:bg-[#1B2131] text-gray-900 dark:text-white
+                     focus:ring-2 focus:ring-primary/20 focus:border-primary"
+            />
+          </div>
+        </div>
 
-          {/* Selected Cards */}
-          <div className="space-y-4 mb-6">
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-              Selected Cards
-            </h3>
-            {selectedCards.map(card => {
-              const soldPrice = parseFloat(soldPrices[card.slabSerial] || '0');
-              const investment = parseFloat(card.investmentAUD) || 0;
-              const profit = soldPrice - investment;
+        {/* Selected Cards */}
+        <div className="space-y-3 mb-4">
+          <h3 className="text-base font-medium text-gray-900 dark:text-white mb-2">
+            Selected Cards
+          </h3>
+          {selectedCards.map(card => {
+            const soldPrice = parseFloat(soldPrices[card.slabSerial] || '0');
+            const investment = parseFloat(card.investmentAUD) || 0;
+            const profit = soldPrice - investment;
 
-              return (
-                <div 
-                  key={card.slabSerial}
-                  className="bg-gray-100 dark:bg-[#151821] rounded-lg p-4 border border-gray-300 dark:border-transparent"
-                >
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div>
-                      <h4 className="font-medium text-gray-900 dark:text-white">
-                        {card.card}
-                      </h4>
-                      <p className="text-sm text-gray-700 dark:text-gray-400">
-                        Investment: {formatCurrency(investment)}
-                      </p>
-                    </div>
-                    <div className="sm:w-48">
-                      <label className="block text-sm font-medium text-gray-800 dark:text-gray-300 mb-1">
-                        Sold Price (AUD) <span className="text-red-600 dark:text-red-500">*</span>
-                      </label>
-                      <input
-                        type="number"
-                        value={soldPrices[card.slabSerial]}
-                        onChange={(e) => handlePriceChange(card.slabSerial, e.target.value)}
-                        step="0.01"
-                        min="0"
-                        className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700
-                                 bg-white dark:bg-[#1B2131] text-gray-900 dark:text-white
-                                 focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                      />
-                      {errors[card.slabSerial] && (
-                        <p className="text-red-600 dark:text-red-500 text-sm mt-1">{errors[card.slabSerial]}</p>
-                      )}
-                      <div className="text-sm mt-1">
-                        Profit: {' '}
-                        <span className={profit >= 0 ? 'text-green-600 dark:text-green-500' : 'text-red-600 dark:text-red-500'}>
-                          {formatCurrency(profit)}
-                        </span>
-                      </div>
+            return (
+              <div 
+                key={card.slabSerial}
+                className="bg-gray-100 dark:bg-[#151821] rounded-lg p-3 border border-gray-300 dark:border-transparent"
+              >
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex-1">
+                    <h4 className="font-medium text-sm text-gray-900 dark:text-white">
+                      {card.card}
+                    </h4>
+                    <p className="text-xs text-gray-700 dark:text-gray-400">
+                      Investment: {formatCurrency(investment)}
+                    </p>
+                  </div>
+                  <div className="w-full sm:w-40">
+                    <label className="block text-xs font-medium text-gray-800 dark:text-gray-300 mb-1">
+                      Sold Price (AUD) <span className="text-red-600 dark:text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      inputMode="numeric"
+                      value={soldPrices[card.slabSerial]}
+                      onChange={(e) => handlePriceChange(card.slabSerial, e.target.value)}
+                      step="0.01"
+                      min="0"
+                      className="w-full px-3 py-2 h-10 text-sm rounded-lg border border-gray-300 dark:border-gray-700
+                               bg-white dark:bg-[#1B2131] text-gray-900 dark:text-white
+                               focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                      autoComplete="off"
+                    />
+                    {errors[card.slabSerial] && (
+                      <p className="text-red-600 dark:text-red-500 text-xs mt-1">{errors[card.slabSerial]}</p>
+                    )}
+                    <div className="text-xs mt-1">
+                      Profit: {' '}
+                      <span className={profit >= 0 ? 'text-green-600 dark:text-green-500' : 'text-red-600 dark:text-red-500'}>
+                        {formatCurrency(profit)}
+                      </span>
                     </div>
                   </div>
                 </div>
-              );
-            })}
-          </div>
+              </div>
+            );
+          })}
+        </div>
 
-          {/* Totals */}
-          <div className="border-t border-gray-300 dark:border-gray-700 pt-4 mb-6">
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <span className="text-gray-700 dark:text-gray-400">Total Sale Price:</span>
-                <span className="float-right font-medium text-gray-900 dark:text-white">
-                  {formatCurrency(totalSalePrice)}
-                </span>
-              </div>
-              <div>
-                <span className="text-gray-700 dark:text-gray-400">Total Profit:</span>
-                <span className={`float-right font-medium ${
-                  totalProfit >= 0 ? 'text-green-600 dark:text-green-500' : 'text-red-600 dark:text-red-500'
-                }`}>
-                  {formatCurrency(totalProfit)}
-                </span>
-              </div>
+        {/* Totals */}
+        <div className="border-t border-gray-300 dark:border-gray-700 pt-3 mb-20">
+          <div className="grid grid-cols-2 gap-3 text-sm">
+            <div>
+              <span className="text-gray-700 dark:text-gray-400 text-xs md:text-sm">Total Sale Price:</span>
+              <span className="float-right font-medium text-gray-900 dark:text-white text-xs md:text-sm">
+                {formatCurrency(totalSalePrice)}
+              </span>
+            </div>
+            <div>
+              <span className="text-gray-700 dark:text-gray-400 text-xs md:text-sm">Total Profit:</span>
+              <span className={`float-right font-medium text-xs md:text-sm ${
+                totalProfit >= 0 ? 'text-green-600 dark:text-green-500' : 'text-red-600 dark:text-red-500'
+              }`}>
+                {formatCurrency(totalProfit)}
+              </span>
             </div>
           </div>
-
-          {/* Actions */}
-          <div className="flex justify-end gap-3">
-            <button
-              onClick={handleClose}
-              className="px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-800 
-                       text-gray-800 dark:text-gray-300 hover:bg-gray-300 
-                       dark:hover:bg-gray-700 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleSubmit}
-              className="px-4 py-2 rounded-lg bg-primary text-white 
-                       hover:bg-primary/90 transition-colors"
-            >
-              Confirm Sale
-            </button>
-          </div>
         </div>
+      </div>
+      
+      {/* Fixed footer with actions */}
+      <div className="fixed bottom-0 left-0 right-0 flex justify-between items-center p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0B0F19] z-10">
+        <button
+          onClick={handleClose}
+          className="h-10 px-4 rounded-lg bg-gray-200 dark:bg-gray-800 
+                   text-gray-800 dark:text-gray-300 text-sm hover:bg-gray-300 
+                   dark:hover:bg-gray-700 transition-colors"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={handleSubmit}
+          className="h-10 px-4 rounded-lg bg-primary text-white text-sm
+                   hover:bg-primary/90 transition-colors"
+        >
+          Confirm Sale
+        </button>
       </div>
     </div>
   );

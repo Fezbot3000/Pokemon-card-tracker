@@ -1,6 +1,8 @@
 // Simple currency conversion utility
 // In a production app, you would use a real API like https://exchangeratesapi.io/
 
+import { formatCompactNumber } from './formatters';
+
 /**
  * Get the current USD to AUD exchange rate
  * @returns {Promise<number>} The exchange rate
@@ -32,16 +34,25 @@ export const convertUsdToAud = (usdAmount, exchangeRate) => {
 };
 
 /**
- * Format currency for display
- * @param {number} amount - Amount to format
- * @param {string} currency - Currency code (USD, AUD)
+ * Format a number as currency
+ * @param {number} amount - The amount to format
+ * @param {boolean} useCompact - Whether to use compact format for large numbers
+ * @param {string} prefix - Optional prefix for negative numbers
  * @returns {string} Formatted currency string
  */
-export const formatCurrency = (amount, currency = 'AUD') => {
-  return new Intl.NumberFormat('en-AU', {
-    style: 'currency',
-    currency: currency,
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  }).format(amount);
+export const formatCurrency = (amount, useCompact = false, prefix = '') => {
+  if (amount === null || amount === undefined) return '$0.00';
+  
+  const numAmount = parseFloat(amount);
+  if (isNaN(numAmount)) return '$0.00';
+  
+  // Use compact formatting for large numbers if requested
+  if (useCompact && Math.abs(numAmount) >= 1000) {
+    const compactValue = formatCompactNumber(Math.abs(numAmount), true);
+    return numAmount < 0 ? `-$${compactValue}` : `$${compactValue}`;
+  }
+  
+  // Standard formatting
+  const formattedNumber = Math.abs(numAmount).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return numAmount < 0 ? `-$${formattedNumber}` : `$${formattedNumber}`;
 };

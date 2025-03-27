@@ -23,7 +23,7 @@ const Card = memo(({ card, cardImage, onCardClick, isSelected, onSelect, display
       case 'currentValueAUD':
         return { label: 'Current Value', value: formatCurrency(card.currentValueAUD), isProfit: false };
       case 'investmentAUD':
-        return { label: 'Investment', value: formatCurrency(card.investmentAUD), isProfit: false, isEditable: true };
+        return { label: 'Paid', value: formatCurrency(card.investmentAUD), isProfit: false, isEditable: true };
       case 'potentialProfit':
         const profit = card.currentValueAUD - card.investmentAUD;
         return { label: 'Profit', value: formatCurrency(profit), isProfit: true, profitValue: profit };
@@ -74,14 +74,13 @@ const Card = memo(({ card, cardImage, onCardClick, isSelected, onSelect, display
 
   return (
     <div 
-      className={`group relative bg-white dark:bg-[#1B2131] rounded-xl shadow-sm
-                  border border-gray-200 dark:border-gray-700/50 overflow-hidden
-                  transition-all duration-200 hover:shadow-md cursor-pointer
+      className={`group relative bg-white dark:bg-[#1B2131] rounded-lg shadow-sm
+                  overflow-hidden transition-all duration-200 hover:shadow-md cursor-pointer
                   ${isSelected ? 'ring-2 ring-primary' : ''}`}
       onClick={handleCardClick}
     >
       {/* Selection checkbox */}
-      <div className="absolute top-3 right-3 z-10 flex items-center justify-center w-8 h-8">
+      <div className="absolute top-2 right-2 z-30 transition-opacity">
         <input
           type="checkbox"
           checked={isSelected}
@@ -89,27 +88,28 @@ const Card = memo(({ card, cardImage, onCardClick, isSelected, onSelect, display
             e.stopPropagation();
             onSelect(e, card.slabSerial);
           }}
-          className="w-5 h-5 sm:w-6 sm:h-6 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+          className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer bg-white dark:bg-transparent"
           aria-label={`Select ${card.card}`}
           onClick={(e) => e.stopPropagation()}
         />
       </div>
 
       {/* Card image */}
-      <div className="card-image">
-        <div className="relative aspect-[3/4.2] rounded-2xl overflow-hidden flex items-center justify-center">
+      <div className="card-image bg-transparent">
+        <div className="relative aspect-[3/4.2] sm:aspect-[3/4.2] overflow-hidden flex items-center justify-center bg-transparent border-0">
           {cardImage ? (
             <img
               src={cardImage} 
               alt={`${card.player} - ${card.card}`}
-              className="w-full h-full object-contain"
+              className="w-full h-full object-contain bg-transparent border-0"
               loading="lazy"
               style={{
-                borderRadius: '0.5rem'
+                borderRadius: '0',
+                background: 'transparent'
               }}
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center">
+            <div className="w-full h-full flex items-center justify-center bg-transparent">
               <span className="material-icons text-4xl text-gray-400 dark:text-gray-600">image</span>
             </div>
           )}
@@ -117,35 +117,35 @@ const Card = memo(({ card, cardImage, onCardClick, isSelected, onSelect, display
       </div>
 
       {/* Card details with center alignment */}
-      <div className="px-3 sm:px-6 pb-3 sm:pb-6 text-center">
+      <div className="px-3 sm:px-4 pb-3 sm:pb-4 text-center">
         {/* Card name */}
-        <h3 className="font-semibold text-gray-900 dark:text-white mb-1 text-sm sm:text-lg truncate">
+        <h3 className="font-medium text-gray-900 dark:text-white mb-0.5 sm:mb-1 text-sm sm:text-base truncate">
           {card.card}
         </h3>
 
         {/* Player name */}
-        <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-2 sm:mb-4 truncate">
+        <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-2 sm:mb-3 truncate">
           {card.player || 'Unknown Player'}
         </p>
 
-        {/* Stats - Stacked vertically with improved typography */}
-        <div className="flex flex-col gap-2 sm:gap-3">
-          <div>
-            <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-0.5 sm:mb-1">Investment</div>
-            <div className="text-sm sm:text-xl font-semibold text-gray-900 dark:text-white">
-              {formatCurrency(card.investmentAUD)}
+        {/* Stats - Same layout for both mobile and desktop */}
+        <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
+          <div className="bg-gray-50 dark:bg-[#252B3B] rounded-lg p-2 text-center">
+            <div className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Paid</div>
+            <div className="text-sm font-medium text-gray-900 dark:text-white">
+              {formatCurrency(card.investmentAUD, true)}
             </div>
           </div>
-          <div>
-            <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-0.5 sm:mb-1">Current Value</div>
-            <div className="text-sm sm:text-xl font-semibold text-gray-900 dark:text-white">
-              {formatCurrency(card.currentValueAUD)}
+          <div className="bg-gray-50 dark:bg-[#252B3B] rounded-lg p-2 text-center">
+            <div className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Value</div>
+            <div className="text-sm font-medium text-gray-900 dark:text-white">
+              {formatCurrency(card.currentValueAUD, true)}
             </div>
           </div>
-          <div>
-            <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-0.5 sm:mb-1">Profit</div>
-            <div className={`text-sm sm:text-xl font-semibold ${(card.currentValueAUD - card.investmentAUD) >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-              {formatCurrency(card.currentValueAUD - card.investmentAUD)}
+          <div className="bg-gray-50 dark:bg-[#252B3B] rounded-lg p-2 col-span-2 text-center">
+            <div className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Profit</div>
+            <div className={`text-sm font-medium ${(card.currentValueAUD - card.investmentAUD) >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+              {formatCurrency(card.currentValueAUD - card.investmentAUD, true)}
             </div>
           </div>
         </div>
@@ -331,7 +331,7 @@ const CardList = ({
   // Sort options
   const sortOptions = [
     { field: 'currentValueAUD', label: 'Current Value' },
-    { field: 'investmentAUD', label: 'Investment' },
+    { field: 'investmentAUD', label: 'Paid' },
     { field: 'potentialProfit', label: 'Profit' },
     { field: 'datePurchased', label: 'Purchase Date' },
     { field: 'player', label: 'Player Name' }
@@ -629,98 +629,98 @@ const CardList = ({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Stats Section */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white dark:bg-[#1B2131] rounded-xl p-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
-          <div className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">TOTAL INVESTMENT</div>
-          <div className="text-2xl text-gray-900 dark:text-white font-semibold">
-            {formatCurrency(totals.investment)}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-3 mb-3 sm:mb-4">
+        <div className="bg-white dark:bg-[#1B2131] rounded-lg p-1.5 sm:p-3 shadow-sm flex flex-col">
+          <div className="text-xs font-medium text-gray-600 dark:text-gray-300">PAID</div>
+          <div className="text-xl sm:text-3xl text-gray-900 dark:text-white font-medium text-center">
+            {formatCurrency(totals.investment, true)}
           </div>
         </div>
-        <div className="bg-white dark:bg-[#1B2131] rounded-xl p-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
-          <div className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">TOTAL VALUE</div>
-          <div className="text-2xl text-gray-900 dark:text-white font-semibold">
-            {formatCurrency(totals.value)}
+        <div className="bg-white dark:bg-[#1B2131] rounded-lg p-1.5 sm:p-3 shadow-sm flex flex-col">
+          <div className="text-xs font-medium text-gray-600 dark:text-gray-300">VALUE</div>
+          <div className="text-xl sm:text-3xl text-gray-900 dark:text-white font-medium text-center">
+            {formatCurrency(totals.value, true)}
           </div>
         </div>
-        <div className="bg-white dark:bg-[#1B2131] rounded-xl p-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
-          <div className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">TOTAL PROFIT</div>
-          <div className={`text-2xl font-semibold ${totals.profit >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-            {formatCurrency(totals.profit)}
+        <div className="bg-white dark:bg-[#1B2131] rounded-lg p-1.5 sm:p-3 shadow-sm flex flex-col">
+          <div className="text-xs font-medium text-gray-600 dark:text-gray-300">PROFIT</div>
+          <div className={`text-xl sm:text-3xl font-medium text-center ${totals.profit >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+            {formatCurrency(totals.profit, true)}
           </div>
         </div>
-        <div className="bg-white dark:bg-[#1B2131] rounded-xl p-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
-          <div className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">TOTAL CARDS</div>
-          <div className="text-2xl text-gray-900 dark:text-white font-semibold flex items-center gap-2">
-            <span className="material-icons text-gray-600 dark:text-gray-300">style</span>
+        <div className="bg-white dark:bg-[#1B2131] rounded-lg p-1.5 sm:p-3 shadow-sm flex flex-col">
+          <div className="text-xs font-medium text-gray-600 dark:text-gray-300">CARDS</div>
+          <div className="text-xl sm:text-3xl text-gray-900 dark:text-white font-medium flex items-center justify-center gap-0.5 sm:gap-1">
+            <span className="material-icons text-xs sm:text-sm text-gray-600 dark:text-gray-300">style</span>
             {filteredCards.length}
           </div>
         </div>
       </div>
 
       {/* Controls Section */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
         {/* Search and View Mode */}
         <div className="w-full">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1 flex items-center gap-4">
+          <div className="flex flex-col sm:flex-row gap-2">
+            <div className="flex-1 flex items-center gap-2">
               <input
                 type="text"
                 placeholder="Search by name, set, or serial number..."
                 value={filter}
                 onChange={(e) => setFilter(e.target.value)}
-                className="w-full h-12 px-4 py-3 rounded-xl bg-white dark:bg-[#1B2131] text-gray-900 dark:text-white
-                         focus:outline-none focus:ring-2 focus:ring-primary shadow-[0_2px_8px_rgba(0,0,0,0.04)]
-                         placeholder-gray-500 dark:placeholder-gray-400"
+                className="w-full h-10 sm:h-11 px-3 py-2 rounded-lg bg-white dark:bg-[#1B2131] text-gray-900 dark:text-white
+                         focus:outline-none focus:ring-2 focus:ring-primary shadow-sm
+                         placeholder-gray-500 dark:placeholder-gray-400 text-xs sm:text-sm"
               />
-              <div className="flex items-center gap-2 flex-shrink-0">
+              <div className="flex items-center gap-1 flex-shrink-0">
                 <button
                   onClick={() => setViewMode('grid')}
-                  className={`h-12 w-12 flex items-center justify-center rounded-lg transition-colors ${
+                  className={`h-10 w-10 flex items-center justify-center rounded-lg transition-colors ${
                     viewMode === 'grid'
-                      ? 'bg-primary text-white shadow-[0_2px_8px_rgba(0,0,0,0.08)]'
-                      : 'bg-white dark:bg-[#1B2131] text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#252B3B] shadow-[0_2px_8px_rgba(0,0,0,0.04)]'
+                      ? 'bg-primary text-white shadow-sm'
+                      : 'bg-white dark:bg-[#1B2131] text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#252B3B] shadow-sm'
                   }`}
                   title="Grid View"
                 >
-                  <span className="material-icons">grid_view</span>
+                  <span className="material-icons text-sm">grid_view</span>
                 </button>
                 <button
                   onClick={() => setViewMode('list')}
-                  className={`h-12 w-12 flex items-center justify-center rounded-lg transition-colors ${
+                  className={`h-10 w-10 flex items-center justify-center rounded-lg transition-colors ${
                     viewMode === 'list'
-                      ? 'bg-primary text-white shadow-[0_2px_8px_rgba(0,0,0,0.08)]'
-                      : 'bg-white dark:bg-[#1B2131] text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#252B3B] shadow-[0_2px_8px_rgba(0,0,0,0.04)]'
+                      ? 'bg-primary text-white shadow-sm'
+                      : 'bg-white dark:bg-[#1B2131] text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#252B3B] shadow-sm'
                   }`}
                   title="List View"
                 >
-                  <span className="material-icons">view_list</span>
+                  <span className="material-icons text-sm">view_list</span>
                 </button>
               </div>
             </div>
 
             {/* Sort and Add Card */}
             <div className="flex items-center gap-2 w-full sm:w-auto">
-              <div className="relative flex-1 sm:flex-initial sm:w-[140px]" ref={sortDropdownRef}>
+              <div className="relative flex-1 sm:flex-initial sm:w-[220px]" ref={sortDropdownRef}>
                 <button
                   onClick={() => setShowSortDropdown(!showSortDropdown)}
-                  className="h-12 w-full px-3 py-2 rounded-xl bg-white dark:bg-[#1B2131] text-gray-700 dark:text-white
-                           flex items-center justify-between shadow-[0_2px_8px_rgba(0,0,0,0.04)]"
+                  className="h-10 sm:h-11 w-full px-3 py-2 rounded-lg bg-white dark:bg-[#1B2131] text-gray-700 dark:text-white
+                           flex items-center justify-between shadow-sm text-xs sm:text-sm"
                 >
-                  <span className="truncate text-sm">Sort: {getSortFieldLabel(sortField)}</span>
-                  <span className="material-icons text-gray-600 dark:text-gray-300 ml-1 flex-shrink-0 text-xl">
+                  <span className="truncate">Sort: {getSortFieldLabel(sortField)}</span>
+                  <span className="material-icons text-gray-600 dark:text-gray-300 ml-1 flex-shrink-0 text-sm">
                     {showSortDropdown ? 'expand_less' : 'expand_more'}
                   </span>
                 </button>
                 {showSortDropdown && (
-                  <div className="absolute right-0 mt-2 w-[160px] rounded-lg shadow-lg
+                  <div className="absolute right-0 mt-2 w-[220px] rounded-lg shadow-lg
                                 bg-white dark:bg-[#1B2131] z-50 py-1">
                     {sortOptions.map(option => (
                       <div
                         key={option.field}
                         className="px-3 py-2 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-[#252B3B] 
-                                 cursor-pointer text-gray-700 dark:text-gray-300 text-sm"
+                                 cursor-pointer text-gray-700 dark:text-gray-300 text-xs sm:text-sm"
                         onClick={() => {
                           handleSortChange(option.field);
                           setShowSortDropdown(false);
@@ -728,7 +728,7 @@ const CardList = ({
                       >
                         <span className="truncate mr-2">{option.label}</span>
                         {sortField === option.field && (
-                          <span className="material-icons text-gray-600 dark:text-gray-300 text-xl flex-shrink-0">
+                          <span className="material-icons text-xs sm:text-sm text-gray-600 dark:text-gray-300 flex-shrink-0">
                             {sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward'}
                           </span>
                         )}
@@ -739,7 +739,7 @@ const CardList = ({
               </div>
               <button
                 onClick={onAddCard}
-                className="h-12 px-4 py-2 bg-primary text-white rounded-xl hover:bg-primary/90 transition-colors whitespace-nowrap flex-shrink-0 shadow-[0_2px_8px_rgba(0,0,0,0.08)]"
+                className="h-10 sm:h-11 px-3 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors whitespace-nowrap flex-shrink-0 shadow-sm text-xs sm:text-sm"
               >
                 Add Card
               </button>
@@ -750,18 +750,17 @@ const CardList = ({
 
       {/* Cards Display */}
       {filteredCards.length === 0 ? (
-        <div className="text-center py-12">
-          <span className="material-icons text-5xl mb-4 text-gray-400">search_off</span>
-          <h3 className="text-xl font-medium mb-2">No cards found</h3>
-          <p className="text-gray-600">Try adjusting your search or filters</p>
+        <div className="text-center py-8 sm:py-12">
+          <span className="material-icons text-4xl sm:text-5xl mb-3 sm:mb-4 text-gray-400 dark:text-gray-600">search_off</span>
+          <h3 className="text-sm sm:text-base font-medium text-gray-900 dark:text-white mb-1 sm:mb-2">No cards found</h3>
+          <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Try adjusting your search or filters</p>
         </div>
       ) : viewMode === 'grid' ? (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           {filteredCards.map(card => (
             <div 
               key={card.slabSerial}
-              className="bg-white dark:bg-[#1B2131] rounded-xl overflow-hidden transition-all duration-200 
-                       hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] cursor-pointer shadow-[0_2px_8px_rgba(0,0,0,0.04)]"
+              className="bg-white dark:bg-[#1B2131] rounded-lg overflow-hidden transition-all duration-200 hover:shadow-md cursor-pointer shadow-sm"
               onClick={() => onCardClick(card)}
             >
               <Card
@@ -782,7 +781,7 @@ const CardList = ({
             <div
               key={card.slabSerial}
               onClick={() => onCardClick(card)}
-              className="bg-white dark:bg-[#1B2131] rounded-xl border border-gray-200 dark:border-gray-700/50 overflow-hidden cursor-pointer hover:bg-gray-50 dark:hover:bg-[#252B3B] transition-colors"
+              className="bg-white dark:bg-[#1B2131] rounded-xl overflow-hidden cursor-pointer hover:bg-gray-50 dark:hover:bg-[#252B3B] transition-colors"
             >
               <div className="flex items-center p-2 sm:p-4">
                 {/* Small image - consistent size on mobile and desktop */}
@@ -794,7 +793,7 @@ const CardList = ({
                       className="w-full h-full object-contain rounded-lg"
                     />
                   ) : (
-                    <div className="w-full h-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center rounded-lg">
+                    <div className="w-full h-full flex items-center justify-center rounded-lg">
                       <span className="material-icons text-gray-400">image</span>
                     </div>
                   )}
@@ -805,7 +804,7 @@ const CardList = ({
                   {/* Card name - always shown */}
                   <div className="flex items-start justify-between">
                     <div className="min-w-0 max-w-[70%]">
-                      <h3 className="text-sm sm:text-lg font-medium text-gray-900 dark:text-white truncate">
+                      <h3 className="text-sm sm:text-base font-medium text-gray-900 dark:text-white truncate">
                         {card.card}
                       </h3>
                       <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 truncate">
@@ -819,7 +818,7 @@ const CardList = ({
                         type="checkbox"
                         checked={selectedCards.has(card.slabSerial)}
                         onChange={(e) => handleSelectCard(e, card.slabSerial)}
-                        className="w-5 h-5 sm:w-6 sm:h-6 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+                        className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer bg-white dark:bg-transparent"
                         aria-label={`Select ${card.card}`}
                       />
                     </div>
@@ -831,17 +830,17 @@ const CardList = ({
                     {sortField === 'potentialProfit' && (
                       <div className="flex items-center">
                         <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Profit:</span>
-                        <span className={`ml-2 font-medium text-sm sm:text-base ${(card.currentValueAUD - card.investmentAUD) >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                          {formatCurrency(card.currentValueAUD - card.investmentAUD)}
+                        <span className={`ml-2 font-medium text-xs sm:text-sm ${(card.currentValueAUD - card.investmentAUD) >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                          {formatCurrency(card.currentValueAUD - card.investmentAUD, true)}
                         </span>
                       </div>
                     )}
                     
                     {sortField === 'investmentAUD' && (
                       <div className="flex items-center">
-                        <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Investment:</span>
-                        <span className="ml-2 font-medium text-sm sm:text-base text-gray-900 dark:text-white">
-                          {formatCurrency(card.investmentAUD)}
+                        <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Paid:</span>
+                        <span className="ml-2 font-medium text-xs sm:text-sm text-gray-900 dark:text-white">
+                          {formatCurrency(card.investmentAUD, true)}
                         </span>
                       </div>
                     )}
@@ -849,8 +848,8 @@ const CardList = ({
                     {sortField === 'currentValueAUD' && (
                       <div className="flex items-center">
                         <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Value:</span>
-                        <span className="ml-2 font-medium text-sm sm:text-base text-gray-900 dark:text-white">
-                          {formatCurrency(card.currentValueAUD)}
+                        <span className="ml-2 font-medium text-xs sm:text-sm text-gray-900 dark:text-white">
+                          {formatCurrency(card.currentValueAUD, true)}
                         </span>
                       </div>
                     )}
@@ -858,7 +857,7 @@ const CardList = ({
                     {sortField === 'datePurchased' && (
                       <div className="flex items-center">
                         <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Date:</span>
-                        <span className="ml-2 font-medium text-sm sm:text-base text-gray-900 dark:text-white">
+                        <span className="ml-2 font-medium text-xs sm:text-sm text-gray-900 dark:text-white">
                           {card.datePurchased || 'N/A'}
                         </span>
                       </div>
@@ -867,7 +866,7 @@ const CardList = ({
                     {sortField === 'player' && (
                       <div className="flex items-center">
                         <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Player:</span>
-                        <span className="ml-2 font-medium text-sm sm:text-base text-gray-900 dark:text-white truncate">
+                        <span className="ml-2 font-medium text-xs sm:text-sm text-gray-900 dark:text-white truncate">
                           {card.player || 'N/A'}
                         </span>
                       </div>
@@ -883,35 +882,35 @@ const CardList = ({
       {/* Selected Cards Actions */}
       {selectedCards.size > 0 && (
         <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 
-                      flex flex-col items-center gap-2 px-6 py-3 rounded-lg shadow-lg
+                      flex flex-col items-center gap-2 px-4 py-2 rounded-lg shadow-lg
                       bg-white dark:bg-[#1B2131] border border-gray-200 dark:border-gray-700/50 z-50">
-          <span className="text-sm text-gray-600 dark:text-gray-400">
+          <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
             {selectedCards.size} card{selectedCards.size > 1 ? 's' : ''} selected
           </span>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <button
               onClick={handleMarkAsSold}
-              className="px-4 py-2 rounded-lg bg-green-500 text-white
-                       hover:bg-green-600 transition-colors flex items-center gap-2 whitespace-nowrap"
+              className="px-3 py-1.5 rounded-lg bg-green-500 text-white text-xs sm:text-sm
+                       hover:bg-green-600 transition-colors flex items-center gap-1 whitespace-nowrap"
             >
-              <span className="material-icons text-base">sell</span>
+              <span className="material-icons text-sm">sell</span>
               <span>Sell</span>
             </button>
             <button
               onClick={handleDeleteClick}
-              className="px-4 py-2 rounded-lg bg-red-500 text-white
-                       hover:bg-red-600 transition-colors flex items-center gap-2"
+              className="px-3 py-1.5 rounded-lg bg-red-500 text-white text-xs sm:text-sm
+                       hover:bg-red-600 transition-colors flex items-center gap-1"
             >
-              <span className="material-icons text-base">delete</span>
+              <span className="material-icons text-sm">delete</span>
               <span>Delete</span>
             </button>
             <button
               onClick={() => setSelectedCards(new Set())}
-              className="px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 
+              className="px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-xs sm:text-sm
                        text-gray-700 dark:text-gray-300
-                       hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
+                       hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors flex items-center gap-1"
             >
-              <span className="material-icons text-base">close</span>
+              <span className="material-icons text-sm">close</span>
               <span>Clear</span>
             </button>
           </div>

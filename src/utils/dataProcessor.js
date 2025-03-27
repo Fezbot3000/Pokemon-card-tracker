@@ -27,6 +27,32 @@ export const parseCSVFile = (file) => {
 };
 
 /**
+ * Parse multiple CSV files and combine their data
+ * @param {File[]} files - The CSV files to parse
+ * @returns {Promise<Array>} The combined parsed data
+ */
+export const parseMultipleCSVFiles = async (files) => {
+  const results = [];
+  const errors = [];
+  
+  // Process each file
+  for (const file of files) {
+    try {
+      const data = await parseCSVFile(file);
+      results.push(...data);
+    } catch (error) {
+      errors.push({ file: file.name, error });
+    }
+  }
+  
+  if (errors.length > 0 && results.length === 0) {
+    throw new Error(`Failed to parse CSV files: ${errors.map(e => `${e.file}: ${e.error}`).join(', ')}`);
+  }
+  
+  return results;
+};
+
+/**
  * Process imported data, merging with existing data and updating values
  * @param {Array} importedData - Data imported from CSV
  * @param {Array} existingCards - Existing card data for the current collection
@@ -132,6 +158,83 @@ export const processImportedData = (importedData, existingCards, exchangeRate, i
 
   // For base data import, merge with existing cards
   return [...processedCards];
+};
+
+/**
+ * Process imported data across all collections based on Slab Serial #
+ * @param {Array} importedData - Data imported from multiple CSV files
+ * @param {Object} allCollections - All collections containing cards
+ * @param {number} exchangeRate - Current USD to AUD exchange rate
+ * @returns {Object} Updated collections object with modified cards
+ */
+export const processMultipleCollectionsUpdate = (importedData, allCollections, exchangeRate) => {
+  // Create a deep copy to avoid mutations
+  const allCollectionsCopy = JSON.parse(JSON.stringify(allCollections || {}));
+  
+  // Create a map of imported data for quick lookup by Slab Serial #
+  const importedDataMap = new Map();
+  importedData.forEach(item => {
+    if (item['Slab Serial #']) {
+      importedDataMap.set(item['Slab Serial #'].toString(), item);
+    }
+  });
+  
+  // Track all updates for summary
+  const updates = {
+    totalCards: 0,
+    updatedCards: 0,
+    collections: {}
+  };
+  
+  // Ignore 'All Cards' collection as it's a virtual collection
+  const collectionsToUpdate = { ...allCollectionsCopy };
+  if ('All Cards' in collectionsToUpdate) {
+    delete collectionsToUpdate['All Cards'];
+  }
+  
+  // Process each collection
+  Object.keys(collectionsToUpdate).forEach(collectionName => {
+    const collection = collectionsToUpdate[collectionName];
+    
+    // Skip if not an array
+    if (!Array.isArray(collection)) return;
+    
+    // Update collection stats
+    updates.collections[collectionName] = {
+      totalCards: collection.length,
+      updatedCards: 0
+    };
+    
+    // Update each card if it exists in the imported data
+    const updatedCollection = collection.map(card => {
+      if (!card.slabSerial) return card;
+      
+      const importedCard = importedDataMap.get(card.slabSerial.toString());
+      if (importedCard) {
+        const newValueUSD = parseFloat(importedCard['Current Value']) || 0;
+        const newValueAUD = Number((newValueUSD * exchangeRate).toFixed(2));
+        
+        updates.updatedCards++;
+        updates.collections[collectionName].updatedCards++;
+        
+        return {
+          ...card,
+          currentValueUSD: newValueUSD,
+          currentValueAUD: newValueAUD,
+          potentialProfit: Number((newValueAUD - (card.investmentAUD || 0)).toFixed(2))
+        };
+      }
+      return card;
+    });
+    
+    updates.totalCards += collection.length;
+    collectionsToUpdate[collectionName] = updatedCollection;
+  });
+  
+  return {
+    collections: collectionsToUpdate,
+    stats: updates
+  };
 };
 
 /**

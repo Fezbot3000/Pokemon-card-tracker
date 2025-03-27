@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { HashRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Header from './components/Header';
 import CardList from './components/CardList';
@@ -15,11 +15,14 @@ import { processImportedData } from './utils/dataProcessor';
 import { db } from './services/db';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { TutorialProvider, useTutorial } from './contexts/TutorialContext';
+import TutorialModal from './components/TutorialModal';
 import PrivateRoute from './components/PrivateRoute';
 import ErrorBoundary from './components/ErrorBoundary';
 import './styles/main.css';
 import SoldItems from './components/SoldItems/SoldItems';
 import SettingsModal from './components/SettingsModal';
+import BottomNavBar from './components/BottomNavBar';
 import JSZip from 'jszip';
 import { Toaster, toast } from 'react-hot-toast';
 
@@ -50,6 +53,7 @@ function AppContent() {
     newProfit: 0
   });
   const [currentView, setCurrentView] = useState('cards'); // 'cards' or 'sold'
+  const { registerSettingsCallback } = useTutorial();
   
   const {
     cards,
@@ -64,6 +68,17 @@ function AppContent() {
     deleteCard,
     addCard
   } = useCardData();
+
+  // Register the settings callback when component mounts
+  // Using a ref to ensure we only register the callback once
+  const callbackRegistered = useRef(false);
+  
+  useEffect(() => {
+    if (!callbackRegistered.current) {
+      registerSettingsCallback(() => setShowSettings(true));
+      callbackRegistered.current = true;
+    }
+  }, [registerSettingsCallback]);
 
   // Memoized collection data
   const collectionData = useMemo(() => {
@@ -193,17 +208,83 @@ function AppContent() {
 
   const handleImportData = useCallback(async (file) => {
     try {
-      // Calculate current total profit before update
-      const currentCards = collections[selectedCollection] || [];
-      const previousProfit = currentCards.reduce((total, card) => {
-        const currentValue = parseFloat(card.currentValueAUD) || 0;
-        const purchasePrice = parseFloat(card.investmentAUD) || 0;
-        return total + (currentValue - purchasePrice);
-      }, 0);
+      // Check if file is an array (multiple files)
+      const isMultipleFiles = Array.isArray(file);
+      
+      if (isMultipleFiles && importMode === 'priceUpdate') {
+        // For multiple files in price update mode, we'll update across all collections
+        const { parseMultipleCSVFiles, validateCSVStructure, processMultipleCollectionsUpdate } = await import('./utils/dataProcessor');
+        
+        // Calculate total profit before update for all collections (except 'All Cards')
+        const allCollections = { ...collections };
+        if ('All Cards' in allCollections) {
+          delete allCollections['All Cards'];
+        }
+        
+        // Calculate previous profit across all collections
+        let previousProfit = 0;
+        Object.values(allCollections).forEach(cards => {
+          if (Array.isArray(cards)) {
+            previousProfit += calculateTotalProfit(cards);
+          }
+        });
 
-      const result = await importCsvData(file, importMode);
-      if (result.success) {
-        const processedData = await processImportedData(result.data, currentCards, exchangeRate, importMode);
+        // Parse and combine data from multiple files
+        const parsedData = await parseMultipleCSVFiles(file);
+        // Validate the structure
+        const validation = validateCSVStructure(parsedData, importMode);
+        if (!validation.success) {
+          throw new Error(validation.error);
+        }
+        
+        // Apply updates across all collections
+        const { collections: updatedCollections, stats } = 
+          processMultipleCollectionsUpdate(parsedData, allCollections, exchangeRate);
+        
+        // Save to database
+        await db.saveCollections(updatedCollections);
+        
+        // Update state
+        setCollections({...updatedCollections, 'All Cards': []});
+        
+        // Calculate new profit after update
+        let newProfit = 0;
+        Object.values(updatedCollections).forEach(cards => {
+          if (Array.isArray(cards)) {
+            newProfit += calculateTotalProfit(cards);
+          }
+        });
+        
+        // Show the profit change modal
+        setProfitChangeData({
+          oldProfit: previousProfit,
+          newProfit: newProfit
+        });
+        setShowProfitChangeModal(true);
+        
+        // Show success message with stats
+        toast.success(`Updated ${stats.updatedCards} cards across ${Object.keys(stats.collections).length} collections`);
+      } else {
+        // Single file or base data import - existing logic
+        // Calculate current total profit before update
+        const currentCards = collections[selectedCollection] || [];
+        const previousProfit = currentCards.reduce((total, card) => {
+          const currentValue = parseFloat(card.currentValueAUD) || 0;
+          const purchasePrice = parseFloat(card.investmentAUD) || 0;
+          return total + (currentValue - purchasePrice);
+        }, 0);
+
+        const { parseCSVFile, validateCSVStructure, processImportedData } = await import('./utils/dataProcessor');
+        
+        // Parse the CSV file
+        const parsedData = await parseCSVFile(file);
+        // Validate the structure
+        const validation = validateCSVStructure(parsedData, importMode);
+        if (!validation.success) {
+          throw new Error(validation.error);
+        }
+        
+        const processedData = await processImportedData(parsedData, currentCards, exchangeRate, importMode);
         
         // Update collections with new data
         const updatedCollections = {
@@ -238,8 +319,9 @@ function AppContent() {
     } catch (error) {
       console.error('Error updating prices:', error);
       toast.error('Error updating prices: ' + error.message);
+      setImportModalOpen(false);
     }
-  }, [importCsvData, importMode, selectedCollection, collections, exchangeRate]);
+  }, [importMode, selectedCollection, collections, exchangeRate, calculateTotalProfit]);
 
   const handleCollectionChange = useCallback((collection) => {
     setSelectedCollection(collection);
@@ -261,7 +343,12 @@ function AppContent() {
     const loadCollections = async () => {
       try {
         setIsLoading(true);
-        const savedCollections = await db.getCollections();
+        
+        // Attempt to load collections from IndexedDB
+        const savedCollections = await db.getCollections().catch(error => {
+          console.error('Failed to load collections:', error);
+          return { 'Default Collection': [] };
+        });
         
         // Get saved collection from localStorage
         const savedSelectedCollection = localStorage.getItem('selectedCollection');
@@ -285,10 +372,21 @@ function AppContent() {
           const defaultCollections = { 'Default Collection': [] };
           setCollections(defaultCollections);
           setSelectedCollection('Default Collection');
-          await db.saveCollections(defaultCollections);
+          
+          // Try to save the default collection, but don't fail if it errors
+          try {
+            await db.saveCollections(defaultCollections);
+          } catch (saveError) {
+            console.error('Could not save default collection:', saveError);
+          }
         }
       } catch (error) {
         console.error('Error loading collections:', error);
+        
+        // Set default collections as fallback
+        const defaultCollections = { 'Default Collection': [] };
+        setCollections(defaultCollections);
+        setSelectedCollection('Default Collection');
       } finally {
         setIsLoading(false);
       }
@@ -298,7 +396,7 @@ function AppContent() {
   }, []);
 
   // Function to export all collection data as a ZIP file
-  const handleExportData = async () => {
+  const handleExportData = async (options = {}) => {
     return new Promise(async (resolve, reject) => {
       try {
         // Create a new ZIP file
@@ -418,6 +516,12 @@ To import this backup:
             }
           });
           
+          // If returnBlob option is true, return the blob directly instead of downloading
+          if (options.returnBlob) {
+            resolve(content);
+            return;
+          }
+          
           // Create download link for ZIP file
           const link = document.createElement('a');
           link.href = URL.createObjectURL(content);
@@ -444,125 +548,197 @@ To import this backup:
     });
   };
 
-  // Function to handle collection import (backup file)
-  const handleImportCollection = () => {
-    // Create a file input element
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.zip,.json';
+  // Function to handle importing collections from JSON or ZIP file
+  const handleImportCollection = (file) => {
+    // If file is not provided, show file input dialog
+    if (!file) {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.zip,.json';
+      
+      input.onchange = async (e) => {
+        try {
+          const file = e.target.files[0];
+          if (!file) {
+            return;
+          }
+          
+          // Create a loading overlay
+          const loadingEl = document.createElement('div');
+          loadingEl.className = 'fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[100]';
+          loadingEl.innerHTML = `
+            <div class="bg-white dark:bg-[#1B2131] p-6 rounded-lg shadow-lg text-center max-w-md">
+              <div class="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mx-auto mb-4"></div>
+              <p class="text-gray-700 dark:text-gray-300">Importing backup...</p>
+              <p class="text-gray-500 dark:text-gray-400 text-sm mt-2">This may take a few moments</p>
+            </div>
+          `;
+          document.body.appendChild(loadingEl);
+          
+          // Start processing the file
+          processImportFile(file, loadingEl);
+        } catch (error) {
+          console.error('Import error:', error);
+          toast.error('Import failed: ' + error.message);
+        }
+      };
+      
+      input.click();
+    } else {
+      // If file is provided directly (e.g. from cloud sync)
+      // Create a loading overlay
+      const loadingEl = document.createElement('div');
+      loadingEl.className = 'fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[100]';
+      loadingEl.innerHTML = `
+        <div class="bg-white dark:bg-[#1B2131] p-6 rounded-lg shadow-lg text-center max-w-md">
+          <div class="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mx-auto mb-4"></div>
+          <p class="text-gray-700 dark:text-gray-300">Importing from cloud...</p>
+          <p class="text-gray-500 dark:text-gray-400 text-sm mt-2">This may take a few moments</p>
+        </div>
+      `;
+      document.body.appendChild(loadingEl);
+      
+      // Process the file
+      processImportFile(file, loadingEl);
+    }
+  };
+  
+  // Process the imported file
+  const processImportFile = async (file, loadingEl) => {
+    // Record start time for minimum loading duration
+    const startTime = Date.now();
     
-    input.onchange = async (e) => {
-      try {
-        const file = e.target.files[0];
-        if (!file) return;
+    try {
+      if (file.name.endsWith('.zip')) {
+        // Process ZIP file
+        const zip = new JSZip();
+        const zipContent = await zip.loadAsync(file);
         
-        // Create a loading overlay
-        const loadingEl = document.createElement('div');
-        loadingEl.className = 'fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[100]';
-        loadingEl.innerHTML = `
-          <div class="bg-white dark:bg-[#1B2131] p-6 rounded-lg shadow-lg text-center max-w-md">
-            <div class="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mx-auto mb-4"></div>
-            <p class="text-gray-700 dark:text-gray-300">Importing backup...</p>
-            <p class="text-gray-500 dark:text-gray-400 text-sm mt-2">This may take a few moments</p>
-          </div>
-        `;
-        document.body.appendChild(loadingEl);
+        // Check if collections.json exists
+        const collectionsFile = zipContent.file("data/collections.json");
+        if (!collectionsFile) {
+          throw new Error("Invalid backup file: missing collections.json");
+        }
         
-        // Record start time for minimum loading duration
-        const startTime = Date.now();
+        // Load collections data
+        const collectionsJson = await collectionsFile.async("string");
+        const collectionsData = JSON.parse(collectionsJson);
         
-        if (file.name.endsWith('.zip')) {
-          // Process ZIP file
-          const zip = new JSZip();
-          const zipContent = await zip.loadAsync(file);
-          
-          // Check if collections.json exists
-          const collectionsFile = zipContent.file("data/collections.json");
-          if (!collectionsFile) {
-            throw new Error("Invalid backup file: missing collections.json");
+        // Validate format
+        if (!collectionsData.collections) {
+          throw new Error("Invalid backup format");
+        }
+        
+        // Extract images
+        const imagePromises = [];
+        zipContent.folder("images")?.forEach((relativePath, file) => {
+          if (!file.dir) {
+            const promise = (async () => {
+              const content = await file.async("blob");
+              const fileName = relativePath.split("/").pop();
+              const serialNumber = fileName.split(".")[0];
+              
+              if (serialNumber) {
+                await db.saveImage(serialNumber, content);
+              }
+            })();
+            imagePromises.push(promise);
           }
-          
-          // Load collections data
-          const collectionsJson = await collectionsFile.async("string");
-          const collectionsData = JSON.parse(collectionsJson);
-          
-          // Validate format
-          if (!collectionsData.collections) {
-            throw new Error("Invalid backup format");
-          }
-          
-          // Extract images
-          const imagePromises = [];
-          zipContent.folder("images")?.forEach((relativePath, file) => {
-            if (!file.dir) {
-              const promise = (async () => {
-                const content = await file.async("blob");
-                const fileName = relativePath.split("/").pop();
-                const serialNumber = fileName.split(".")[0];
-                
-                if (serialNumber) {
-                  await db.saveImage(serialNumber, content);
-                }
-              })();
-              imagePromises.push(promise);
+        });
+        
+        // Wait for all images to be processed
+        await Promise.all(imagePromises);
+        
+        // Save collections data
+        await db.saveCollections(collectionsData.collections);
+        
+        // Save profile data if it exists
+        if (collectionsData.profile) {
+          await db.saveProfile(collectionsData.profile);
+        }
+        
+        // Save sold cards data if it exists
+        if (collectionsData.soldCards) {
+          localStorage.setItem('soldCards', JSON.stringify(collectionsData.soldCards));
+        }
+        
+        // Refresh collections
+        const savedCollections = await db.getCollections();
+        setCollections(savedCollections);
+        
+        // Switch to "All Cards" view after successful import
+        setSelectedCollection('All Cards');
+        localStorage.setItem('selectedCollection', 'All Cards');
+        
+        // Ensure minimum loading time for better UX
+        const elapsedTime = Date.now() - startTime;
+        const minimumLoadingTime = 3000; // 3 seconds
+        if (elapsedTime < minimumLoadingTime) {
+          await new Promise(resolve => setTimeout(resolve, minimumLoadingTime - elapsedTime));
+        }
+        
+        // Remove loading overlay
+        document.body.removeChild(loadingEl);
+        
+        // Show success toast
+        toast.success('Backup imported successfully!');
+        
+        // Close settings modal
+        setShowSettings(false);
+      } else if (file.name.endsWith('.json')) {
+        // Process JSON file implementation...
+        // Similar to the existing code for handling JSON files
+        const reader = new FileReader();
+        
+        reader.onload = async (e) => {
+          try {
+            const jsonData = JSON.parse(e.target.result);
+            
+            // Try to update collections
+            const newCollections = {
+              ...collections,
+              'Imported Collection': Array.isArray(jsonData) ? jsonData : [jsonData]
+            };
+            
+            // Save to database
+            await db.saveCollections(newCollections);
+            
+            // Update state
+            setCollections(newCollections);
+            setSelectedCollection('Imported Collection');
+            localStorage.setItem('selectedCollection', 'Imported Collection');
+            
+            // Ensure minimum loading time
+            const elapsedTime = Date.now() - startTime;
+            const minimumLoadingTime = 3000; // 3 seconds
+            if (elapsedTime < minimumLoadingTime) {
+              await new Promise(resolve => setTimeout(resolve, minimumLoadingTime - elapsedTime));
             }
-          });
-          
-          // Wait for all images to be processed
-          await Promise.all(imagePromises);
-          
-          // Save collections data
-          await db.saveCollections(collectionsData.collections);
-          
-          // Save profile data if it exists
-          if (collectionsData.profile) {
-            await db.saveProfile(collectionsData.profile);
+            
+            // Remove loading overlay
+            document.body.removeChild(loadingEl);
+            
+            toast.success('JSON data imported successfully!');
+          } catch (error) {
+            console.error('JSON parsing error:', error);
+            document.body.removeChild(loadingEl);
+            toast.error('Invalid JSON file: ' + error.message);
           }
-          
-          // Save sold cards data if it exists
-          if (collectionsData.soldCards) {
-            localStorage.setItem('soldCards', JSON.stringify(collectionsData.soldCards));
-          }
-          
-          // Refresh collections
-          const savedCollections = await db.getCollections();
-          setCollections(savedCollections);
-          
-          // Switch to "All Cards" view after successful import
-          setSelectedCollection('All Cards');
-          localStorage.setItem('selectedCollection', 'All Cards');
-          
-          // Ensure minimum loading time for better UX
-          const elapsedTime = Date.now() - startTime;
-          const minimumLoadingTime = 3000; // 3 seconds
-          if (elapsedTime < minimumLoadingTime) {
-            await new Promise(resolve => setTimeout(resolve, minimumLoadingTime - elapsedTime));
-          }
-          
-          // Remove loading overlay
-          document.body.removeChild(loadingEl);
-          
-          // Show success toast
-          toast.success('Backup imported successfully!');
-          
-          // Close settings modal
-          setShowSettings(false);
-        } else {
-          throw new Error("Unsupported file format. Please upload a .zip backup file.");
-        }
-      } catch (error) {
-        console.error("Import error:", error);
-        // Remove loading overlay if it exists
-        const loadingEl = document.querySelector('.fixed.inset-0.bg-black.bg-opacity-70');
-        if (loadingEl) {
-          document.body.removeChild(loadingEl);
-        }
-        toast.error(`Error importing backup: ${error.message}`);
+        };
+        
+        reader.readAsText(file);
+      } else {
+        document.body.removeChild(loadingEl);
+        throw new Error("Unsupported file format. Please upload a .zip backup file or .json file.");
       }
-    };
-    
-    // Trigger file selection
-    input.click();
+    } catch (error) {
+      console.error("Import error:", error);
+      // Remove loading overlay if it exists
+      if (loadingEl && document.body.contains(loadingEl)) {
+        document.body.removeChild(loadingEl);
+      }
+      toast.error(`Error importing backup: ${error.message}`);
+    }
   };
 
   const onDeleteCards = useCallback(async (cardIds) => {
@@ -587,7 +763,7 @@ To import this backup:
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#111827] dashboard-page">
+    <div className="min-h-screen bg-gray-100 dark:bg-[#111827] dashboard-page">
       <Header
         className="header"
         selectedCollection={selectedCollection}
@@ -645,30 +821,52 @@ To import this backup:
             });
           }
         }}
-        onDeleteCollection={(name) => {
-          // Only allow deleting non-default collections
-          if (name !== 'Default Collection' && collections[name]) {
-            const newCollections = {
-              ...collections
-            };
-            // Remove the collection
-            delete newCollections[name];
+        onDeleteCollection={async (name) => {
+          try {
+            console.log("App.js: Attempting to delete collection:", name);
             
-            // Save to database
-            db.saveCollections(newCollections).then(() => {
-              setCollections(newCollections);
-              // Update selected collection if it was deleted
-              if (selectedCollection === name) {
-                // Select first available collection
-                const newSelectedCollection = Object.keys(newCollections)[0] || 'Default Collection';
-                setSelectedCollection(newSelectedCollection);
-                localStorage.setItem('selectedCollection', newSelectedCollection);
-              }
-            });
+            // Get current collections
+            const currentCollections = { ...collections };
+            
+            // Check if collection exists
+            if (!currentCollections[name]) {
+              console.error(`Collection "${name}" does not exist in:`, Object.keys(currentCollections));
+              throw new Error(`Collection "${name}" does not exist`);
+            }
+            
+            // Check if it's the last collection
+            if (Object.keys(currentCollections).length <= 1) {
+              throw new Error("Cannot delete the last collection");
+            }
+            
+            // Remove the collection
+            delete currentCollections[name];
+            console.log("Collection removed from object, saving to DB...");
+            
+            // Save updated collections to database
+            await db.saveCollections(currentCollections);
+            console.log("Successfully saved updated collections to DB");
+            
+            // Update state
+            setCollections(currentCollections);
+            
+            // Switch to another collection if the deleted one was selected
+            if (selectedCollection === name) {
+              const newSelection = Object.keys(currentCollections)[0];
+              setSelectedCollection(newSelection);
+              localStorage.setItem('selectedCollection', newSelection);
+              console.log("Selected new collection:", newSelection);
+            }
+            
+            return true;
+          } catch (error) {
+            console.error("Error deleting collection:", error);
+            toast.error(`Failed to delete collection: ${error.message}`);
+            throw error;
           }
         }}
       />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 pb-20">
         {currentView === 'cards' ? (
           <CardList
             cards={collectionData}
@@ -734,11 +932,14 @@ To import this backup:
           }}
           onDeleteCollection={async (name) => {
             try {
+              console.log("App.js: Attempting to delete collection:", name);
+              
               // Get current collections
               const currentCollections = { ...collections };
               
               // Check if collection exists
               if (!currentCollections[name]) {
+                console.error(`Collection "${name}" does not exist in:`, Object.keys(currentCollections));
                 throw new Error(`Collection "${name}" does not exist`);
               }
               
@@ -749,9 +950,11 @@ To import this backup:
               
               // Remove the collection
               delete currentCollections[name];
+              console.log("Collection removed from object, saving to DB...");
               
               // Save updated collections to database
               await db.saveCollections(currentCollections);
+              console.log("Successfully saved updated collections to DB");
               
               // Update state
               setCollections(currentCollections);
@@ -761,10 +964,14 @@ To import this backup:
                 const newSelection = Object.keys(currentCollections)[0];
                 setSelectedCollection(newSelection);
                 localStorage.setItem('selectedCollection', newSelection);
+                console.log("Selected new collection:", newSelection);
               }
+              
+              return true;
             } catch (error) {
               console.error("Error deleting collection:", error);
               toast.error(`Failed to delete collection: ${error.message}`);
+              throw error;
             }
           }}
           refreshCollections={() => {
@@ -791,6 +998,18 @@ To import this backup:
           }}
         />
       )}
+
+      {/* Mobile Bottom Navigation */}
+      <div className="md:hidden">
+        <BottomNavBar 
+          currentView={currentView}
+          onViewChange={setCurrentView}
+          onAddCard={() => setShowNewCardForm(true)}
+          onMenuClick={() => setShowSettings(true)}
+        />
+      </div>
+
+      <TutorialModal />
     </div>
   );
 }
@@ -800,45 +1019,47 @@ function App() {
     <ErrorBoundary>
       <AuthProvider>
         <ThemeProvider>
-          <Router>
-            <Toaster position="bottom-right" />
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route 
-                path="/login" 
-                element={
-                  <PublicRoute>
-                    <Login />
-                  </PublicRoute>
-                } 
-              />
-              <Route 
-                path="/forgot-password" 
-                element={
-                  <PublicRoute>
-                    <ForgotPassword />
-                  </PublicRoute>
-                } 
-              />
-              <Route 
-                path="/pricing" 
-                element={
-                  <PublicRoute>
-                    <Pricing />
-                  </PublicRoute>
-                } 
-              />
-              <Route 
-                path="/dashboard" 
-                element={
-                  <PrivateRoute>
-                    <AppContent />
-                  </PrivateRoute>
-                } 
-              />
-              <Route path="*" element={<Navigate to="/" />} />
-            </Routes>
-          </Router>
+          <TutorialProvider>
+            <Router>
+              <Toaster position="bottom-right" />
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route 
+                  path="/login" 
+                  element={
+                    <PublicRoute>
+                      <Login />
+                    </PublicRoute>
+                  } 
+                />
+                <Route 
+                  path="/forgot-password" 
+                  element={
+                    <PublicRoute>
+                      <ForgotPassword />
+                    </PublicRoute>
+                  } 
+                />
+                <Route 
+                  path="/pricing" 
+                  element={
+                    <PublicRoute>
+                      <Pricing />
+                    </PublicRoute>
+                  } 
+                />
+                <Route 
+                  path="/dashboard" 
+                  element={
+                    <PrivateRoute>
+                      <AppContent />
+                    </PrivateRoute>
+                  } 
+                />
+                <Route path="*" element={<Navigate to="/" />} />
+              </Routes>
+            </Router>
+          </TutorialProvider>
         </ThemeProvider>
       </AuthProvider>
     </ErrorBoundary>

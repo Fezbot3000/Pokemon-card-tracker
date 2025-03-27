@@ -5,6 +5,7 @@
   "homepage": "https://www.mycardtracker.com.au",
   "dependencies": {
     "@heroicons/react": "^2.2.0",
+    "@popperjs/core": "^2.11.8",
     "@react-pdf/renderer": "^4.3.0",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
@@ -16,6 +17,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-hot-toast": "^2.5.2",
+    "react-popper": "^2.3.0",
     "react-router-dom": "^6.22.1",
     "react-scripts": "5.0.1",
     "web-vitals": "^2.1.4"
@@ -48,7 +50,9 @@
   },
   "devDependencies": {
     "autoprefixer": "^10.4.17",
+    "dotenv": "^16.4.7",
     "gh-pages": "^6.3.0",
+    "node-fetch": "^2.7.0",
     "postcss": "^8.4.35",
     "tailwindcss": "^3.4.1"
   }

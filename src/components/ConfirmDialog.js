@@ -1,8 +1,25 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 
 const ConfirmDialog = ({ isOpen, onClose, onConfirm, title, message }) => {
   const { isDarkMode } = useTheme();
+
+  // Manage body overflow and padding to prevent page jumping
+  useEffect(() => {
+    if (isOpen) {
+      // Calculate scrollbar width
+      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+      // Prevent background scrolling but compensate for scrollbar width
+      document.body.style.overflow = 'hidden';
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
+    }
+    
+    return () => {
+      // Restore scrolling on unmount
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+    };
+  }, [isOpen]);
 
   if (!isOpen) return null;
 

@@ -1,10 +1,28 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 
 const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading }) => {
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef(null);
   const { isDarkMode } = useTheme();
+  const [selectedFiles, setSelectedFiles] = useState([]);
+
+  // Manage body overflow and padding to prevent page jumping
+  useEffect(() => {
+    if (isOpen) {
+      // Calculate scrollbar width
+      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+      // Prevent background scrolling but compensate for scrollbar width
+      document.body.style.overflow = 'hidden';
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
+    }
+    
+    return () => {
+      // Restore scrolling on unmount
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+    };
+  }, [isOpen]);
 
   const handleDrag = (e) => {
     e.preventDefault();
@@ -21,15 +39,47 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading 
     e.stopPropagation();
     setDragActive(false);
     
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      onImport(e.dataTransfer.files[0]);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      if (mode === 'priceUpdate') {
+        // For price update, allow multiple files
+        const files = Array.from(e.dataTransfer.files).filter(file => 
+          file.type === "text/csv" || file.name.endsWith('.csv')
+        );
+        if (files.length > 0) {
+          setSelectedFiles(prevFiles => [...prevFiles, ...files]);
+        }
+      } else {
+        // For base data import, only one file at a time
+        onImport(e.dataTransfer.files[0]);
+      }
     }
   };
 
   const handleChange = (e) => {
     e.preventDefault();
-    if (e.target.files && e.target.files[0]) {
-      onImport(e.target.files[0]);
+    if (e.target.files && e.target.files.length > 0) {
+      if (mode === 'priceUpdate') {
+        // For price update, allow multiple files
+        const files = Array.from(e.target.files).filter(file => 
+          file.type === "text/csv" || file.name.endsWith('.csv')
+        );
+        if (files.length > 0) {
+          setSelectedFiles(prevFiles => [...prevFiles, ...files]);
+        }
+      } else {
+        // For base data import, only one file at a time
+        onImport(e.target.files[0]);
+      }
+    }
+  };
+
+  const handleRemoveFile = (index) => {
+    setSelectedFiles(prevFiles => prevFiles.filter((_, i) => i !== index));
+  };
+
+  const handleSubmitFiles = () => {
+    if (selectedFiles.length > 0) {
+      onImport(selectedFiles);
     }
   };
 
@@ -62,8 +112,16 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading 
         >
           <div className="text-center mb-4">
             <span className="material-icons text-gray-400 dark:text-gray-600 text-5xl mb-4">description</span>
-            <p className="text-gray-800 dark:text-gray-200 text-lg mb-2">Drop your CSV file here</p>
-            <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">or click to select a file</p>
+            <p className="text-gray-800 dark:text-gray-200 text-lg mb-2">
+              {mode === 'priceUpdate' 
+                ? 'Drop your CSV file(s) here' 
+                : 'Drop your CSV file here'}
+            </p>
+            <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">
+              {mode === 'priceUpdate' 
+                ? 'or click to select multiple files' 
+                : 'or click to select a file'}
+            </p>
           </div>
           
           <button
@@ -71,7 +129,7 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading 
             onClick={() => fileInputRef.current?.click()}
             disabled={loading}
           >
-            {loading ? 'Processing...' : 'Select File'}
+            {loading ? 'Processing...' : 'Select File(s)'}
           </button>
           
           <input
@@ -80,8 +138,50 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading 
             className="hidden"
             accept=".csv"
             onChange={handleChange}
+            multiple={mode === 'priceUpdate'}
           />
         </div>
+
+        {/* Display selected files for price update mode */}
+        {mode === 'priceUpdate' && selectedFiles.length > 0 && (
+          <div className="mt-6">
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">
+              Selected CSV Files ({selectedFiles.length})
+            </h3>
+            
+            <ul className="space-y-2 mb-4">
+              {selectedFiles.map((file, index) => (
+                <li 
+                  key={`${file.name}-${index}`}
+                  className="flex items-center justify-between bg-gray-50 dark:bg-[#1B2131] p-3 rounded-lg"
+                >
+                  <div className="flex items-center">
+                    <span className="material-icons text-primary mr-2">description</span>
+                    <span className="text-gray-900 dark:text-white">{file.name}</span>
+                  </div>
+                  <button 
+                    onClick={() => handleRemoveFile(index)}
+                    className="text-gray-500 hover:text-red-500"
+                  >
+                    <span className="material-icons">close</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+            
+            <div className="flex justify-end">
+              <button
+                onClick={handleSubmitFiles}
+                disabled={loading || selectedFiles.length === 0}
+                className={`px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 ${
+                  (loading || selectedFiles.length === 0) ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
+              >
+                {loading ? 'Processing...' : 'Update Prices'}
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className="mt-10">
           <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">
@@ -112,7 +212,14 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading 
           
           <div className="bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 p-4 rounded-md">
             {mode === 'priceUpdate' ? (
-              "Important: This import will ONLY update the current values and optional card details. Investment values will not be modified to preserve your cost basis data."
+              <>
+                <p className="mb-2">
+                  <strong>Multiple File Upload:</strong> You can now upload multiple CSV files at once. The system will match cards across all collections by Slab Serial #.
+                </p>
+                <p>
+                  Important: This import will ONLY update the current values and optional card details. Investment values will not be modified to preserve your cost basis data.
+                </p>
+              </>
             ) : (
               "Note: All USD values will be converted to AUD using the current exchange rate. For price updates only, use the \"Update Prices\" option instead."
             )}

@@ -4,7 +4,7 @@ const FilterSection = ({
   onSort, 
   onViewChange, 
   currentSort = 'Player Name',
-  currentView = 'Investment',
+  currentView = 'Paid',
   sortDirection = 'ascending'
 }) => {
   const [isSortOpen, setIsSortOpen] = useState(false);
@@ -19,7 +19,7 @@ const FilterSection = ({
     'Player Name'
   ];
 
-  const viewOptions = ['Current Value', 'Investment', 'Profit'];
+  const viewOptions = ['Current Value', 'Paid', 'Profit'];
 
   return (
     <div className="filter-section">
@@ -118,6 +118,7 @@ const FilterSection = ({
         <div className="column-header">Profit</div>
         <div className="column-header">Purchase Date</div>
         <div className="column-header">Player Name</div>
+        <div className="column-header">Paid</div>
       </div>
     </div>
   );

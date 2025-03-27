@@ -234,19 +234,41 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
             imageUpdatedAt: timestamp
           });
           
-          // Show success message
-          toast.success('Image uploaded successfully');
+          // Show success message in UI
+          setSaveMessage('Image uploaded successfully');
+          
+          // Try toast, but don't let it break the app
+          try {
+            toast.success('Image uploaded successfully');
+          } catch (toastError) {
+            console.error('Toast notification error:', toastError);
+          }
         } catch (updateError) {
           console.error('Error updating card after image upload:', updateError);
+          
           // Still show success for the image upload since it was saved in the database
-          toast.success('Image saved, but there was a problem updating the card');
+          setSaveMessage('Image saved, but card update failed');
+          
+          // Try toast, but don't let it break the app
+          try {
+            toast.success('Image saved, but there was a problem updating the card');
+          } catch (toastError) {
+            console.error('Toast notification error:', toastError);
+          }
         }
       } catch (error) {
         console.error('Error saving image:', error);
         setImageLoadingState('error');
         
-        // Show error message
-        toast.error(`Failed to upload image: ${error.message || 'Unknown error'}`);
+        // Show error message in UI
+        setSaveMessage(`Error: ${error.message || 'Failed to upload image'}`);
+        
+        // Try toast, but don't let it break the app
+        try {
+          toast.error(`Failed to upload image: ${error.message || 'Unknown error'}`);
+        } catch (toastError) {
+          console.error('Toast notification error:', toastError);
+        }
       }
     }
   };
@@ -269,7 +291,9 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
     try {
       // Check if there are any changes
       if (!hasCardBeenEdited()) {
-        toast.info('No changes to save');
+        // Use a simple message instead of toast to avoid potential errors
+        setSaveMessage('No changes to save');
+        // Show a simple feedback message in the UI rather than using toast here
         return;
       }
 
@@ -291,10 +315,27 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
       setHasUnsavedChanges(false);
       
       // Show success message
-      toast.success('Card updated successfully');
+      setSaveMessage('Card updated successfully');
+      
+      // Use try-catch specifically for toast to isolate potential errors
+      try {
+        toast.success('Card updated successfully');
+      } catch (toastError) {
+        console.error('Toast notification error:', toastError);
+        // Continue execution even if toast fails
+      }
     } catch (error) {
       console.error('Error saving card:', error);
-      toast.error('Failed to update card: ' + (error.message || 'Unknown error'));
+      
+      // Set a message that will be shown in the UI
+      setSaveMessage(`Error: ${error.message || 'Failed to update card'}`);
+      
+      // Try to show toast, but don't let it break the app
+      try {
+        toast.error('Failed to update card: ' + (error.message || 'Unknown error'));
+      } catch (toastError) {
+        console.error('Toast notification error:', toastError);
+      }
     }
   };
 
@@ -331,7 +372,7 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
         </div>
 
         {/* Scrollable Content */}
-        <div className="card-details-content">
+        <div className="card-details-content h-[calc(100vh-128px)] overflow-y-auto">
           {/* Image upload section */}
           <div className="mb-6">
             <div className="image-upload-container">
@@ -461,9 +502,7 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
               <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Financial Details</h3>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Investment (AUD)
-                  </label>
+                  <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Paid (AUD)</label>
                   <input
                     type="text"
                     name="investmentAUD"
@@ -473,9 +512,7 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Current Value (AUD)
-                  </label>
+                  <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Current Value (AUD)</label>
                   <input
                     type="text"
                     name="currentValueAUD"
@@ -491,28 +528,43 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
 
         {/* Footer with Actions */}
         <div className="card-details-footer">
-          <button
-            type="button"
-            onClick={handleClose}
-            className="px-4 py-2 rounded-lg border border-gray-300 
-                     text-sm font-medium text-gray-700 bg-white 
-                     hover:bg-gray-50 focus:outline-none focus:ring-2 
-                     focus:ring-offset-2 focus:ring-primary 
-                     dark:bg-gray-700 dark:border-gray-600 
-                     dark:text-white dark:hover:bg-gray-600"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            onClick={handleSave}
-            className="px-4 py-2 rounded-lg border border-transparent 
-                     text-sm font-medium text-white bg-primary 
-                     hover:bg-primary/90 focus:outline-none focus:ring-2 
-                     focus:ring-offset-2 focus:ring-primary"
-          >
-            Save Changes
-          </button>
+          <div className="flex items-center space-x-2">
+            <button
+              type="button"
+              onClick={handleClose}
+              className="px-4 py-2 rounded-lg border border-gray-300 
+                       text-sm font-medium text-gray-700 bg-white 
+                       hover:bg-gray-50 focus:outline-none focus:ring-2 
+                       focus:ring-offset-2 focus:ring-primary 
+                       dark:bg-gray-700 dark:border-gray-600 
+                       dark:text-white dark:hover:bg-gray-600"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleSave}
+              className="px-4 py-2 rounded-lg border border-transparent 
+                       text-sm font-medium text-white bg-primary 
+                       hover:bg-primary/90 focus:outline-none focus:ring-2 
+                       focus:ring-offset-2 focus:ring-primary"
+            >
+              Save Changes
+            </button>
+            
+            {/* Status message */}
+            {saveMessage && (
+              <div className={`text-sm px-3 py-1 rounded-md transition-opacity ${
+                saveMessage.startsWith('Error') 
+                  ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' 
+                  : saveMessage === 'No changes to save'
+                    ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                    : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+              }`}>
+                {saveMessage}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </>

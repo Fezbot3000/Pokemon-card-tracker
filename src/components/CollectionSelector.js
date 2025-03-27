@@ -17,73 +17,99 @@ const CollectionSelector = ({ collections, selectedCollection, onCollectionChang
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  // Prevent body scroll when dropdown is open on mobile
+  useEffect(() => {
+    if (isOpen && window.innerWidth <= 639) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
   
   return (
-    <div className="collection-selector" ref={dropdownRef}>
+    <div className="collection-selector w-full" ref={dropdownRef}>
       <button
-        className="collection-name"
+        className="collection-name w-full"
         onClick={() => setIsOpen(!isOpen)}
         aria-label="Select collection"
       >
         <span className="material-icons">lock</span>
-        <span>{selectedCollection}</span>
-        <span className="material-icons">{isOpen ? 'keyboard_arrow_up' : 'keyboard_arrow_down'}</span>
+        <span className="truncate flex-1">{selectedCollection}</span>
+        <span className="material-icons flex-shrink-0">{isOpen ? 'keyboard_arrow_up' : 'keyboard_arrow_down'}</span>
       </button>
       
       {isOpen && (
-        <div className="collection-dropdown">
-          {/* All Cards option */}
-          <div 
-            className={`collection-item ${selectedCollection === 'All Cards' ? 'text-primary' : ''}`}
-            onClick={() => {
-              onCollectionChange('All Cards');
-              setIsOpen(false);
-            }}
-          >
-            <span>All Cards</span>
-            {selectedCollection === 'All Cards' && (
-              <span className="material-icons">check</span>
-            )}
-          </div>
+        <>
+          {/* Mobile backdrop */}
+          <div className="sm:hidden fixed inset-0 bg-black/50 z-[149]" onClick={() => setIsOpen(false)}></div>
           
-          {/* Divider between All Cards and collections */}
-          <div className="collection-divider"></div>
-          
-          {/* Collections list */}
-          {collections
-            .filter(collection => collection !== 'All Cards')
-            .map(collection => (
-              <div 
-                key={collection}
-                className={`collection-item ${selectedCollection === collection ? 'text-primary' : ''}`}
-                onClick={() => {
-                  onCollectionChange(collection);
-                  setIsOpen(false);
-                }}
-              >
-                <span>{collection}</span>
-                {selectedCollection === collection && (
-                  <span className="material-icons">check</span>
-                )}
-              </div>
-            ))}
+          <div className="collection-dropdown">
+            {/* Mobile header (visible only on small screens) */}
+            <div className="sm:hidden px-4 py-3 border-b border-gray-200 dark:border-gray-700/50 flex justify-between items-center">
+              <h3 className="font-medium">Select Collection</h3>
+              <button onClick={() => setIsOpen(false)} className="p-1">
+                <span className="material-icons">close</span>
+              </button>
+            </div>
             
-          {/* Divider before Add Collection */}
-          <div className="collection-divider"></div>
-          
-          {/* Add Collection option */}
-          <div 
-            className="collection-item text-primary"
-            onClick={(e) => {
-              e.stopPropagation();
-              onAddCollection();
-              setIsOpen(false);
-            }}
-          >
-            <span>New Collection</span>
-            <span className="material-icons">add</span>
+            {/* All Cards option */}
+            <div 
+              className={`collection-item ${selectedCollection === 'All Cards' ? 'text-primary' : ''}`}
+              onClick={() => {
+                onCollectionChange('All Cards');
+                setIsOpen(false);
+              }}
+            >
+              <span>All Cards</span>
+              {selectedCollection === 'All Cards' && (
+                <span className="material-icons">check</span>
+              )}
+            </div>
+            
+            {/* Divider between All Cards and collections */}
+            <div className="collection-divider"></div>
+            
+            {/* Collections list */}
+            {collections
+              .filter(collection => collection !== 'All Cards')
+              .map(collection => (
+                <div 
+                  key={collection}
+                  className={`collection-item ${selectedCollection === collection ? 'text-primary' : ''}`}
+                  onClick={() => {
+                    onCollectionChange(collection);
+                    setIsOpen(false);
+                  }}
+                >
+                  <span>{collection}</span>
+                  {selectedCollection === collection && (
+                    <span className="material-icons">check</span>
+                  )}
+                </div>
+              ))}
+              
+            {/* Divider before Add Collection */}
+            <div className="collection-divider"></div>
+            
+            {/* Add Collection option */}
+            <div 
+              className="collection-item text-primary"
+              onClick={(e) => {
+                e.stopPropagation();
+                onAddCollection();
+                setIsOpen(false);
+              }}
+            >
+              <span>New Collection</span>
+              <span className="material-icons">add</span>
+            </div>
           </div>
-        </div>
+        </>
       )}
     </div>
   );
