@@ -23,7 +23,6 @@ const Header = ({
 }) => {
   const { isDarkMode, toggleTheme } = useTheme();
   const { currentUser } = useAuth();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isNewCollectionModalOpen, setIsNewCollectionModalOpen] = useState(false);
   const [newCollectionName, setNewCollectionName] = useState('');
@@ -52,32 +51,6 @@ const Header = ({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isNewCollectionModalOpen]);
-
-  // Handle mobile menu close on resize
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth >= 1024) { // lg breakpoint (1024px)
-        setIsMobileMenuOpen(false);
-      }
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  // Prevent body scroll when mobile menu is open
-  useEffect(() => {
-    if (isMobileMenuOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-
-    // Cleanup function to ensure scroll is restored when component unmounts
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [isMobileMenuOpen]);
 
   // Remove page-no-padding class when Header is mounted
   useEffect(() => {
@@ -122,10 +95,6 @@ const Header = ({
     }
   };
 
-  const toggleMobileMenu = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen);
-  };
-
   return (
     <>
       <header className="fixed top-0 left-0 right-0 w-full z-40 bg-white dark:bg-[#1B2131] shadow-md border-b border-gray-200 dark:border-gray-700/50" style={{position: 'fixed'}}>
@@ -157,16 +126,18 @@ const Header = ({
                     >
                       All Cards
                     </div>
-                    {collections.map((collection) => (
-                      <div
-                        key={collection}
-                        className="px-4 py-2 hover:bg-gray-50 dark:hover:bg-[#252B3B] cursor-pointer
-                                 text-gray-700 dark:text-gray-200 truncate"
-                        onClick={() => handleCollectionSelect(collection)}
-                      >
-                        {collection}
-                      </div>
-                    ))}
+                    {collections
+                      .filter(collection => collection !== 'All Cards')
+                      .map((collection) => (
+                        <div
+                          key={collection}
+                          className="px-4 py-2 hover:bg-gray-50 dark:hover:bg-[#252B3B] cursor-pointer
+                                   text-gray-700 dark:text-gray-200 truncate"
+                          onClick={() => handleCollectionSelect(collection)}
+                        >
+                          {collection}
+                        </div>
+                      ))}
                     <div className="h-px bg-gray-100 dark:bg-gray-800 my-1" />
                     <div 
                       className="px-4 py-2 hover:bg-gray-50 dark:hover:bg-[#252B3B] cursor-pointer
@@ -182,7 +153,7 @@ const Header = ({
             </div>
             
             {/* View switcher - Desktop Only */}
-            <div className="hidden xl:flex items-center space-x-2">
+            <div className="hidden lg:flex items-center space-x-2">
               <button
                 className={`px-4 py-2 rounded-lg transition-colors ${
                   currentView === 'cards'
@@ -208,7 +179,7 @@ const Header = ({
             {/* Right side actions */}
             <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
               {/* Desktop Actions - keep theme and settings only on desktop */}
-              <div className="hidden xl:flex items-center space-x-2">
+              <div className="hidden lg:flex items-center space-x-2">
                 {selectedCollection !== 'All Cards' && (
                   <>
                     <button
@@ -248,139 +219,9 @@ const Header = ({
                   <span className="material-icons">settings</span>
                 </button>
               </div>
-
-              {/* Mobile/Tablet menu button */}
-              <button
-                onClick={toggleMobileMenu}
-                className="xl:hidden w-10 h-10 flex items-center justify-center rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800/50"
-                aria-label="Menu"
-              >
-                <span className="material-icons">menu</span>
-              </button>
             </div>
           </div>
         </div>
-
-        {/* Mobile/Tablet menu - full page */}
-        {isMobileMenuOpen && (
-          <div className="fixed inset-0 flex z-50 xl:hidden">
-            <div 
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity" 
-              aria-hidden="true"
-              onClick={toggleMobileMenu}
-            />
-            
-            <div 
-              className="relative flex-1 flex flex-col w-full bg-white dark:bg-[#1B2131] shadow-xl overflow-y-auto"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="sticky top-0 z-10 px-6 py-4 border-b border-gray-200 dark:border-gray-700/50 flex items-center justify-between bg-white dark:bg-[#1B2131]">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Menu</h2>
-                <button 
-                  onClick={toggleMobileMenu}
-                  className="w-10 h-10 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800/50 transition-colors"
-                >
-                  <span className="material-icons">close</span>
-                </button>
-              </div>
-              
-              <div className="overflow-y-auto flex-1 px-6 py-4 space-y-6">
-                {/* View Switcher for mobile */}
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">View</h3>
-                  <div className="space-y-2">
-                    <button
-                      onClick={() => {
-                        onViewChange('cards');
-                        setIsMobileMenuOpen(false);
-                      }}
-                      className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-colors ${
-                        currentView === 'cards'
-                          ? 'bg-primary text-white'
-                          : 'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800/50'
-                      }`}
-                    >
-                      <span className="material-icons">grid_view</span>
-                      <span className="font-medium">Cards</span>
-                    </button>
-                    <button
-                      onClick={() => {
-                        onViewChange('sold');
-                        setIsMobileMenuOpen(false);
-                      }}
-                      className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-colors ${
-                        currentView === 'sold'
-                          ? 'bg-primary text-white'
-                          : 'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800/50'
-                      }`}
-                    >
-                      <span className="material-icons">sell</span>
-                      <span className="font-medium">Sold Items</span>
-                    </button>
-                  </div>
-                </div>
-                
-                {/* Import Actions */}
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Actions</h3>
-                  <div className="space-y-2">
-                    {selectedCollection !== 'All Cards' && (
-                      <>
-                        <button
-                          onClick={() => {
-                            onImportClick('priceUpdate');
-                            setIsMobileMenuOpen(false);
-                          }}
-                          className="w-full flex items-center space-x-3 px-4 py-3 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-xl transition-colors"
-                        >
-                          <span className="material-icons">update</span>
-                          <span className="font-medium">Update Prices</span>
-                        </button>
-                        <button
-                          onClick={() => {
-                            onImportClick('baseData');
-                            setIsMobileMenuOpen(false);
-                          }}
-                          className="w-full flex items-center space-x-3 px-4 py-3 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-xl transition-colors"
-                        >
-                          <span className="material-icons">upload_file</span>
-                          <span className="font-medium">Import Base Data</span>
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </div>
-
-                {/* Theme & Settings */}
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Theme & Settings</h3>
-                  <div className="space-y-2">
-                    <button
-                      onClick={() => {
-                        toggleTheme();
-                        setIsMobileMenuOpen(false);
-                      }}
-                      className="w-full flex items-center space-x-3 px-4 py-3 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-xl transition-colors"
-                    >
-                      <span className="material-icons">{isDarkMode ? 'light_mode' : 'dark_mode'}</span>
-                      <span className="font-medium">{isDarkMode ? 'Light Mode' : 'Dark Mode'}</span>
-                    </button>
-                    <button
-                      onClick={() => {
-                        onSettingsClick();
-                        setIsMobileMenuOpen(false);
-                      }}
-                      className="w-full flex items-center space-x-3 px-4 py-3 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-xl transition-colors"
-                    >
-                      <span className="material-icons">settings</span>
-                      <span className="font-medium">Settings</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
       </header>
 
       {/* New Collection Modal */}

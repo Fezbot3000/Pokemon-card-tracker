@@ -1,46 +1,49 @@
 import React from 'react';
 
-const BottomNavBar = ({ currentView, onViewChange, onAddCard, onMenuClick }) => {
+const BottomNavBar = ({ 
+  currentView, 
+  onViewChange, 
+  onAddCard, 
+  onSettingsClick
+}) => {
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-[#1B2131] border-t border-gray-200 dark:border-gray-700 z-50 flex items-center justify-around h-14">
+    <div className="bottom-nav">
       <button
+        className={`bottom-nav-item ${
+          currentView === 'cards' ? 'active' : ''
+        }`}
         onClick={() => onViewChange('cards')}
-        className={`flex flex-col items-center justify-center w-1/4 py-1 ${
-          currentView === 'cards'
-            ? 'text-primary'
-            : 'text-gray-500 dark:text-gray-400'
-        }`}
       >
-        <span className="material-icons text-xl">grid_view</span>
-        <span className="text-xs mt-0.5">Cards</span>
+        <span className="material-icons">dashboard</span>
+        <span className="text-xs">Cards</span>
       </button>
       
       <button
+        className={`bottom-nav-item ${
+          currentView === 'sold' ? 'active' : ''
+        }`}
         onClick={() => onViewChange('sold')}
-        className={`flex flex-col items-center justify-center w-1/4 py-1 ${
-          currentView === 'sold'
-            ? 'text-primary'
-            : 'text-gray-500 dark:text-gray-400'
-        }`}
       >
-        <span className="material-icons text-xl">sell</span>
-        <span className="text-xs mt-0.5">Sold</span>
+        <span className="material-icons">sell</span>
+        <span className="text-xs">Sold</span>
       </button>
       
       <button
+        className="bottom-nav-item"
         onClick={onAddCard}
-        className="flex flex-col items-center justify-center w-1/4 py-1 text-gray-500 dark:text-gray-400"
       >
-        <span className="material-icons text-xl">add_circle</span>
-        <span className="text-xs mt-0.5">Add Card</span>
+        <span className="material-icons">add_circle</span>
+        <span className="text-xs">Add</span>
       </button>
       
       <button
-        onClick={onMenuClick}
-        className="flex flex-col items-center justify-center w-1/4 py-1 text-gray-500 dark:text-gray-400"
+        className={`bottom-nav-item ${
+          currentView === 'settings' ? 'active' : ''
+        }`}
+        onClick={() => onViewChange('settings')}
       >
-        <span className="material-icons text-xl">menu</span>
-        <span className="text-xs mt-0.5">Menu</span>
+        <span className="material-icons">settings</span>
+        <span className="text-xs">Settings</span>
       </button>
     </div>
   );

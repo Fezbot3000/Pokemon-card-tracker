@@ -22,7 +22,7 @@ const CollectionList = ({ collections, cards, onAddCollection, onSelectCollectio
         <h2 className={`text-xl font-semibold ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>Collections</h2>
         <button
           onClick={onAddCollection}
-          className={`flex items-center gap-2 px-4 py-2 rounded-md bg-primary text-black hover:bg-primary/90 transition-all duration-200 text-sm ${
+          className={`btn btn-primary text-sm ${
             isDark ? 'bg-gray-800 text-gray-200 border border-gray-700 hover:bg-gray-700' : ''
           }`}
         >

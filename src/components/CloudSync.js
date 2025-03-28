@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { storage } from '../services/firebase';
 import { useAuth } from '../contexts/AuthContext';
@@ -11,6 +11,21 @@ const CloudSync = ({ onExportData, onImportCollection }) => {
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [isSyncing, setIsSyncing] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Check if the device is mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768); // md breakpoint in Tailwind
+    };
+    
+    checkMobile(); // Check on initial load
+    window.addEventListener('resize', checkMobile);
+    
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+    };
+  }, []);
 
   const handleSyncToCloud = async () => {
     if (!currentUser) {
@@ -137,32 +152,43 @@ const CloudSync = ({ onExportData, onImportCollection }) => {
 
   return (
     <div className="py-4 space-y-4">
-      <h3 className="text-lg font-medium text-gray-900 dark:text-white">Cloud Sync</h3>
-      <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
-        Sync your data to the cloud to access it from any device
-      </p>
-      
       <div className="flex flex-col gap-2 mb-4">
         <p className="text-sm text-gray-500 dark:text-gray-400">
           Last synced: {getLastSyncTime()}
         </p>
       </div>
       
-      <div className="flex gap-4">
+      <div className={`${isMobile ? 'flex flex-col gap-3' : 'flex gap-2'}`}>
         <button
           onClick={handleSyncToCloud}
           disabled={isSyncing || !currentUser}
-          className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
+          className={`btn btn-primary ${isMobile ? 'w-full' : 'flex-1'}`}
+          style={{ minWidth: '110px' }}
         >
-          {isSyncing ? 'Syncing...' : 'Sync to Cloud'}
+          {isSyncing ? (
+            <>Saving...</>
+          ) : (
+            <>
+              <span className="material-icons" style={{ fontSize: '20px' }}>cloud_upload</span>
+              <span>Backup to Cloud</span>
+            </>
+          )}
         </button>
         
         <button
           onClick={handleImportFromCloud}
           disabled={isImporting || !currentUser}
-          className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
+          className={`btn btn-primary ${isMobile ? 'w-full' : 'flex-1'}`}
+          style={{ minWidth: '110px' }}
         >
-          {isImporting ? 'Importing...' : 'Import from Cloud'}
+          {isImporting ? (
+            <>Loading...</>
+          ) : (
+            <>
+              <span className="material-icons" style={{ fontSize: '20px' }}>cloud_download</span>
+              <span>Restore from Cloud</span>
+            </>
+          )}
         </button>
       </div>
       

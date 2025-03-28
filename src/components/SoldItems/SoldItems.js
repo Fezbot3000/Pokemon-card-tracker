@@ -222,30 +222,30 @@ const SoldItems = () => {
   }, [groupedInvoices]);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 sold-items-mobile-fixes">
       {/* Stats Section */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-3 mb-3 sm:mb-4">
-        <div className="bg-white dark:bg-[#1B2131] rounded-lg p-1.5 sm:p-3 shadow-sm flex flex-col">
+        <div className="bg-white dark:bg-[#1B2131] rounded-lg p-2.5 sm:p-3 shadow-sm flex flex-col">
           <div className="text-xs font-medium text-gray-600 dark:text-gray-300">PAID</div>
-          <div className="text-xl sm:text-3xl text-gray-900 dark:text-white font-medium text-center">
+          <div className="text-base sm:text-3xl text-gray-900 dark:text-white font-medium">
             {formatCurrency(totals.totalInvestment, true)}
           </div>
         </div>
-        <div className="bg-white dark:bg-[#1B2131] rounded-lg p-1.5 sm:p-3 shadow-sm flex flex-col">
+        <div className="bg-white dark:bg-[#1B2131] rounded-lg p-2.5 sm:p-3 shadow-sm flex flex-col">
           <div className="text-xs font-medium text-gray-600 dark:text-gray-300">SALE VALUE</div>
-          <div className="text-xl sm:text-3xl text-gray-900 dark:text-white font-medium text-center">
+          <div className="text-base sm:text-3xl text-gray-900 dark:text-white font-medium">
             {formatCurrency(totals.totalValue, true)}
           </div>
         </div>
-        <div className="bg-white dark:bg-[#1B2131] rounded-lg p-1.5 sm:p-3 shadow-sm flex flex-col">
+        <div className="bg-white dark:bg-[#1B2131] rounded-lg p-2.5 sm:p-3 shadow-sm flex flex-col">
           <div className="text-xs font-medium text-gray-600 dark:text-gray-300">PROFIT</div>
-          <div className={`text-xl sm:text-3xl font-medium text-center ${totals.totalProfit >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+          <div className={`text-base sm:text-3xl font-medium ${totals.totalProfit >= 0 ? 'text-green-500' : 'text-red-500'}`}>
             {formatCurrency(Math.abs(totals.totalProfit), true, totals.totalProfit < 0 ? '-' : '')}
           </div>
         </div>
-        <div className="bg-white dark:bg-[#1B2131] rounded-lg p-1.5 sm:p-3 shadow-sm flex flex-col">
+        <div className="bg-white dark:bg-[#1B2131] rounded-lg p-2.5 sm:p-3 shadow-sm flex flex-col">
           <div className="text-xs font-medium text-gray-600 dark:text-gray-300">SOLD CARDS</div>
-          <div className="text-xl sm:text-3xl text-gray-900 dark:text-white font-medium flex items-center justify-center gap-0.5 sm:gap-1">
+          <div className="text-base sm:text-3xl text-gray-900 dark:text-white font-medium flex items-center justify-start gap-0.5 sm:gap-1">
             <span className="material-icons text-xs sm:text-sm text-gray-600 dark:text-gray-300">style</span>
             {filteredCards.length}
           </div>
@@ -253,20 +253,19 @@ const SoldItems = () => {
       </div>
 
       {/* Controls Section */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-        <div className="w-full">
-          <div className="flex flex-col sm:flex-row gap-2">
-            <div className="flex-1 flex items-center gap-2">
-              <input
-                type="text"
-                placeholder="Search by name, player, serial number, or buyer..."
-                value={filter}
-                onChange={(e) => setFilter(e.target.value)}
-                className="w-full h-10 sm:h-11 px-3 py-2 rounded-xl bg-white dark:bg-[#1B2131] text-gray-900 dark:text-white
-                         focus:outline-none focus:ring-2 focus:ring-primary shadow-sm
-                         placeholder-gray-500 dark:placeholder-gray-400 text-xs sm:text-sm"
-              />
-            </div>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+        <div className="w-full flex flex-col sm:flex-row sm:items-center gap-2">
+          {/* Search Bar */}
+          <div className="flex items-center gap-2 flex-1">
+            <input
+              type="text"
+              placeholder="Search by name, player, serial number, or buyer..."
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              className="w-full h-11 px-3 py-2 rounded-xl bg-white dark:bg-[#1B2131] text-gray-900 dark:text-white
+                       focus:outline-none focus:ring-2 focus:ring-primary shadow-sm
+                       placeholder-gray-500 dark:placeholder-gray-400 text-sm"
+            />
           </div>
         </div>
       </div>
@@ -283,17 +282,20 @@ const SoldItems = () => {
             .sort(([yearA], [yearB]) => yearB.localeCompare(yearA))
             .map(([year, yearGroup]) => (
               <div key={year} className="bg-gray-50 dark:bg-[#151921] rounded-xl shadow-sm overflow-hidden">
-                {/* Financial Year Header - Fixed alignment and spacing */}
+                {/* Financial Year Header - With Sale Value */}
                 <button
                   onClick={() => toggleYear(year)}
                   className="w-full p-4 sm:p-6 flex items-center justify-between border-b border-gray-200 dark:border-gray-700/50 bg-white dark:bg-[#1B2131]"
                 >
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2 sm:gap-4">
                     <h2 className="text-base sm:text-lg font-medium text-gray-900 dark:text-white text-left">
                       FY {year}
                     </h2>
-                    <div className={`text-sm font-medium text-right ${yearGroup.totalProfit >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                      {formatCurrency(Math.abs(yearGroup.totalProfit), true, yearGroup.totalProfit < 0 ? '-' : '')}
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                      <span className="text-xs text-gray-600 dark:text-gray-400 sm:hidden">Sale Value:</span>
+                      <span className="text-sm font-medium text-gray-900 dark:text-white">
+                        {formatCurrency(yearGroup.totalSale, true)}
+                      </span>
                     </div>
                   </div>
                   <span className="material-icons text-gray-500">
@@ -306,28 +308,33 @@ const SoldItems = () => {
                   <div className="divide-y divide-gray-200 dark:divide-gray-700/50">
                     {yearGroup.invoices.map((invoice) => (
                       <div key={invoice.id} className="bg-gray-50 dark:bg-[#151921]">
-                        {/* Invoice Header - Fixed layout for mobile */}
+                        {/* Invoice Header - With Sale Value */}
                         <button
                           onClick={() => toggleInvoice(invoice.id)}
                           className="w-full p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between bg-white dark:bg-[#1B2131]"
                         >
                           <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-2 sm:mb-0">
-                            <div className="flex flex-wrap items-center gap-2">
+                            <div className="flex flex-col sm:flex-wrap sm:items-center gap-2">
                               <h3 className="text-sm sm:text-base font-medium text-gray-900 dark:text-white text-left">
                                 {invoice.buyer}
                               </h3>
-                              <span className="text-xs bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 px-2 py-0.5 rounded-lg border border-gray-200 dark:border-gray-700/50">
-                                {invoice.id}
-                              </span>
-                              <span className="text-xs text-gray-600 dark:text-gray-400">
-                                {new Date(invoice.dateSold).toLocaleDateString()}
-                              </span>
+                              <div className="flex flex-wrap items-center gap-2">
+                                <span className="text-xs bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 px-2 py-0.5 rounded-lg border border-gray-200 dark:border-gray-700/50">
+                                  {invoice.id}
+                                </span>
+                                <span className="text-xs text-gray-600 dark:text-gray-400">
+                                  {new Date(invoice.dateSold).toLocaleDateString()}
+                                </span>
+                              </div>
                             </div>
-                            <div className={`text-sm font-medium text-right ${invoice.totalProfit >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                              {formatCurrency(Math.abs(invoice.totalProfit), true, invoice.totalProfit < 0 ? '-' : '')}
+                            <div className="flex flex-col mt-2 sm:mt-0">
+                              <span className="text-xs text-gray-600 dark:text-gray-400">Sale Value:</span>
+                              <span className="text-sm font-medium text-gray-900 dark:text-white">
+                                {formatCurrency(invoice.totalSale, true)}
+                              </span>
                             </div>
                           </div>
-                          <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center justify-between sm:justify-end gap-2 mt-2 sm:mt-0">
                             <PDFDownloadLink
                               document={
                                 <InvoicePDF
@@ -339,13 +346,13 @@ const SoldItems = () => {
                                 />
                               }
                               fileName={`invoice-${invoice.id}.pdf`}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-primary hover:bg-primary/90 rounded-lg transition-colors"
+                              className="btn btn-sm btn-primary flex-1 sm:flex-initial"
                             >
                               {({ blob, url, loading, error }) => (
-                                <>
+                                <div className="flex items-center justify-center w-full gap-1">
                                   <span className="material-icons text-sm">download</span>
-                                  {loading ? 'Generating...' : 'Invoice'}
-                                </>
+                                  <span>{loading ? 'Generating...' : 'Invoice'}</span>
+                                </div>
                               )}
                             </PDFDownloadLink>
                             <span className="material-icons text-gray-500">
@@ -378,37 +385,37 @@ const SoldItems = () => {
                                   )}
                                 </div>
 
-                                {/* Card Details - Fixed text and number alignment */}
+                                {/* Card Details - Improved mobile layout with aligned amounts */}
                                 <div className="flex-1 min-w-0">
-                                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 sm:gap-4 mb-2">
-                                    <div className="text-left">
-                                      <h4 className="text-sm font-medium text-gray-900 dark:text-white" title={card.card}>
-                                        {card.card}
-                                      </h4>
-                                      <p className="text-xs text-gray-600 dark:text-gray-400">
-                                        {card.player}
-                                      </p>
-                                    </div>
-                                    <div className="text-right">
-                                      <span className="text-xs text-gray-600 dark:text-gray-400 block">Profit:</span>
+                                  <div className="mb-2">
+                                    <h4 className="text-sm font-medium text-gray-900 dark:text-white truncate" title={card.card}>
+                                      {card.card}
+                                    </h4>
+                                    <p className="text-xs text-gray-600 dark:text-gray-400 truncate">
+                                      {card.player}
+                                    </p>
+                                  </div>
+
+                                  <div className="flex flex-col space-y-1">
+                                    <div className="flex justify-between items-center">
+                                      <div className="text-xs text-gray-600 dark:text-gray-400">Profit:</div>
                                       <div className={`text-sm font-medium ${card.finalProfitAUD >= 0 ? 'text-green-500' : 'text-red-500'}`}>
                                         {formatCurrency(Math.abs(card.finalProfitAUD), true, card.finalProfitAUD < 0 ? '-' : '')}
                                       </div>
                                     </div>
-                                  </div>
-
-                                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6">
-                                    <div className="flex items-center justify-between sm:justify-start gap-2">
-                                      <span className="text-xs text-gray-600 dark:text-gray-400 text-left">Paid:</span>
-                                      <span className="text-sm font-medium text-gray-900 dark:text-white text-right">
+                                    
+                                    <div className="flex justify-between items-center">
+                                      <div className="text-xs text-gray-600 dark:text-gray-400">Paid:</div>
+                                      <div className="text-sm font-medium text-gray-900 dark:text-white">
                                         {formatCurrency(card.investmentAUD, true)}
-                                      </span>
+                                      </div>
                                     </div>
-                                    <div className="flex items-center justify-between sm:justify-start gap-2">
-                                      <span className="text-xs text-gray-600 dark:text-gray-400 text-left">Sold:</span>
-                                      <span className="text-sm font-medium text-gray-900 dark:text-white text-right">
+                                    
+                                    <div className="flex justify-between items-center">
+                                      <div className="text-xs text-gray-600 dark:text-gray-400">Sold:</div>
+                                      <div className="text-sm font-medium text-gray-900 dark:text-white">
                                         {formatCurrency(card.finalValueAUD, true)}
-                                      </span>
+                                      </div>
                                     </div>
                                   </div>
                                 </div>

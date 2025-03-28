@@ -17,7 +17,9 @@ const SettingsModal = ({
   onDeleteCollection,
   refreshCollections,
   onExportData,
-  onImportCollection
+  onImportCollection,
+  onUpdatePrices,
+  onImportBaseData
 }) => {
   const { isDarkMode, toggleTheme } = useTheme();
   const { currentUser, signOut } = useAuth();
@@ -25,6 +27,8 @@ const SettingsModal = ({
   const [isRenaming, setIsRenaming] = useState(false);
   const [newCollectionName, setNewCollectionName] = useState('');
   const [isExporting, setIsExporting] = useState(false);
+  const [isUpdatingPrices, setIsUpdatingPrices] = useState(false);
+  const [isImportingBaseData, setIsImportingBaseData] = useState(false);
   const [activeTab, setActiveTab] = useState('general');
   const [collectionToDelete, setCollectionToDelete] = useState('');
   const [profile, setProfile] = useState({
@@ -34,6 +38,23 @@ const SettingsModal = ({
     address: '',
     companyName: ''
   });
+  const [isMobile, setIsMobile] = useState(false);
+  const [collectionToRename, setCollectionToRename] = useState('');
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  // Check if the device is mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768); // md breakpoint in Tailwind
+    };
+    
+    checkMobile(); // Check on initial load
+    window.addEventListener('resize', checkMobile);
+    
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+    };
+  }, []);
 
   // Load profile data
   useEffect(() => {
@@ -51,6 +72,14 @@ const SettingsModal = ({
 
     loadProfile();
   }, []);
+
+  // Initialize collection to rename 
+  useEffect(() => {
+    if (collections.length > 0) {
+      const firstCollection = collections.find(c => c !== 'All Cards') || collections[0];
+      setCollectionToRename(firstCollection);
+    }
+  }, [collections]);
 
   // Handle profile changes
   const handleProfileChange = (e) => {
@@ -73,15 +102,15 @@ const SettingsModal = ({
   };
 
   const handleRenameConfirm = () => {
-    if (newCollectionName && newCollectionName !== selectedCollection) {
-      onRenameCollection(selectedCollection, newCollectionName);
+    if (newCollectionName && newCollectionName !== collectionToRename) {
+      onRenameCollection(collectionToRename, newCollectionName);
       setIsRenaming(false);
       toast.success('Collection renamed successfully!');
     }
   };
 
   const handleStartRenaming = () => {
-    setNewCollectionName(selectedCollection);
+    setNewCollectionName(collectionToRename);
     setIsRenaming(true);
   };
 
@@ -121,9 +150,11 @@ const SettingsModal = ({
     onClose();
   };
 
-  // Add click outside handler for modal
+  // Add click outside handler for modal (desktop only)
   useEffect(() => {
     const handleClickOutside = (event) => {
+      if (isMobile) return; // Don't close on outside click on mobile
+      
       const modalContent = document.querySelector('.settings-modal-content');
       if (modalContent && !modalContent.contains(event.target)) {
         onClose();
@@ -137,11 +168,11 @@ const SettingsModal = ({
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, isMobile]);
 
-  // Prevent background scroll when modal is open
+  // Prevent background scroll when modal is open (desktop only)
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && !isMobile) {
       // Calculate scrollbar width
       const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
       // Prevent background scrolling but compensate for scrollbar width
@@ -154,372 +185,613 @@ const SettingsModal = ({
         document.body.style.paddingRight = '';
       };
     }
-  }, [isOpen]);
+  }, [isOpen, isMobile]);
   
   // Stop propagation of scroll events in modal content
   const preventPropagation = (e) => {
+    if (isMobile) return; // Don't prevent on mobile
     e.stopPropagation();
   };
 
+  // Handle dropdown outside clicks
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownOpen) {
+        const dropdown = document.querySelector('.collection-rename-dropdown');
+        if (dropdown && !dropdown.contains(event.target)) {
+          setDropdownOpen(false);
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [dropdownOpen]);
+
   if (!isOpen) return null;
 
+  // Render different layouts based on screen size
   return (
-    <div className="settings-modal" 
+    <div className={`${isMobile ? 'fixed inset-0 bg-gray-100 dark:bg-[#111827] z-30 settings-page' : 'settings-modal'}`} 
       onWheel={preventPropagation} 
       onTouchMove={preventPropagation}>
       <div 
-        className="settings-modal-content"
+        className={`${isMobile ? 'h-full overflow-y-auto pb-20 scroll-pt-44' : 'settings-modal-content'}`}
         onScroll={preventPropagation}
       >
-        <div className="settings-header">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Settings</h2>
-            <button
-              onClick={onClose}
-              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-[#252B3B] transition-colors"
-            >
-              <XMarkIcon className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-            </button>
-          </div>
-          
-          {/* Settings Tabs */}
-          <div className="mt-4 border-b border-gray-200 dark:border-gray-700">
-            <div className="flex space-x-4">
-              <button
-                onClick={() => setActiveTab('general')}
-                className={`pb-2 px-1 ${
-                  activeTab === 'general'
-                    ? 'border-b-2 border-primary text-primary'
-                    : 'text-gray-500 dark:text-gray-400'
-                }`}
-              >
-                General
-              </button>
-              <button
-                onClick={() => setActiveTab('profile')}
-                className={`pb-2 px-1 ${
-                  activeTab === 'profile'
-                    ? 'border-b-2 border-primary text-primary'
-                    : 'text-gray-500 dark:text-gray-400'
-                }`}
-              >
-                Profile
-              </button>
-              <button
-                onClick={() => setActiveTab('account')}
-                className={`pb-2 px-1 ${
-                  activeTab === 'account'
-                    ? 'border-b-2 border-primary text-primary'
-                    : 'text-gray-500 dark:text-gray-400'
-                }`}
-              >
-                Account
-              </button>
+        {/* Mobile header with tabs */}
+        {isMobile && (
+          <div className="fixed top-0 left-0 right-0 z-40 bg-white dark:bg-[#1B2131] border-b border-gray-200 dark:border-gray-700/50">
+            <div className="max-w-xl mx-auto px-4 sm:px-6 w-full">
+              <div className="flex items-center h-16">
+                <div className="flex items-center gap-2 sm:gap-4 flex-shrink min-w-0 max-w-[45%] sm:max-w-[60%] md:max-w-[70%]">
+                  <img src="/favicon-192x192.png" alt="Pokemon Card Tracker" className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl object-contain" />
+                  <div className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 rounded-lg text-gray-700 dark:text-gray-200 whitespace-nowrap">
+                    <span className="text-sm font-medium truncate max-w-[120px] sm:max-w-[180px] md:max-w-[250px]">
+                      {selectedCollection ? selectedCollection : 'Settings'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Settings tabs in top bar */}
+            <div className="border-t border-gray-200 dark:border-gray-700/50">
+              <div className="max-w-xl mx-auto px-4 sm:px-6 w-full">
+                <div className="flex">
+                  <button
+                    onClick={() => setActiveTab('general')}
+                    className={`py-3 px-2 transition-colors ${
+                      activeTab === 'general'
+                        ? 'text-primary font-medium'
+                        : 'text-gray-500 dark:text-gray-400'
+                    }`}
+                  >
+                    General
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('profile')}
+                    className={`py-3 px-4 transition-colors ${
+                      activeTab === 'profile'
+                        ? 'text-primary font-medium'
+                        : 'text-gray-500 dark:text-gray-400'
+                    }`}
+                  >
+                    Profile
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('account')}
+                    className={`py-3 px-4 transition-colors ${
+                      activeTab === 'account'
+                        ? 'text-primary font-medium'
+                        : 'text-gray-500 dark:text-gray-400'
+                    }`}
+                  >
+                    Account
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
+        )}
+
+        {/* Desktop header */}
+        {!isMobile && (
+          <div className="settings-header">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Settings</h2>
+              <button
+                onClick={onClose}
+                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-[#252B3B] transition-colors"
+              >
+                <XMarkIcon className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+              </button>
+            </div>
+            
+            {/* Settings Tabs */}
+            <div className="mt-4 border-b border-gray-200 dark:border-gray-700">
+              <div className="flex space-x-4">
+                <button
+                  onClick={() => setActiveTab('general')}
+                  className={`pb-2 px-1 transition-colors ${
+                    activeTab === 'general'
+                      ? 'text-primary font-medium'
+                      : 'text-gray-500 dark:text-gray-400'
+                  }`}
+                >
+                  General
+                </button>
+                <button
+                  onClick={() => setActiveTab('profile')}
+                  className={`pb-2 px-1 transition-colors ${
+                    activeTab === 'profile'
+                      ? 'text-primary font-medium'
+                      : 'text-gray-500 dark:text-gray-400'
+                  }`}
+                >
+                  Profile
+                </button>
+                <button
+                  onClick={() => setActiveTab('account')}
+                  className={`pb-2 px-1 transition-colors ${
+                    activeTab === 'account'
+                      ? 'text-primary font-medium'
+                      : 'text-gray-500 dark:text-gray-400'
+                  }`}
+                >
+                  Account
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
         
-        <div className="p-6 space-y-6 overflow-y-auto flex-1"
+        <div className={`${isMobile ? 'p-4 sm:p-6 pt-32 max-w-xl mx-auto w-full space-y-6' : 'p-6 space-y-6'} overflow-y-auto flex-1`}
           onWheel={preventPropagation}
           onTouchMove={preventPropagation}>
           {activeTab === 'general' && (
-            <div className="space-y-6">
+            <div className={`space-y-6 ${isMobile ? 'mobile-settings-content' : ''}`}>
               {/* Help Section */}
-              <div>
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Help</h3>
-                <button
+              <div className={`${isMobile ? 'bg-white dark:bg-[#1B2131] p-4 rounded-lg shadow-sm' : ''}`}>
+                <h3 className="text-base font-medium text-gray-900 dark:text-white mb-2">Help</h3>
+                <button 
                   onClick={handleStartTutorial}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-primary/10 text-primary rounded-xl hover:bg-primary/20 transition-colors"
+                  className="w-full btn btn-custom-purple"
                 >
                   <span className="material-icons">help_outline</span>
-                  Start Tutorial
+                  <span className="font-medium">Start Tutorial</span>
                 </button>
               </div>
-
+              
               {/* Theme Section */}
-              <div>
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Theme</h3>
-                <div className="flex items-center gap-4">
+              <div className={`${isMobile ? 'bg-white dark:bg-[#1B2131] p-4 rounded-lg shadow-sm' : ''}`}>
+                <h3 className="text-base font-medium text-gray-900 dark:text-white mb-2">Theme</h3>
+                <div className="flex gap-2">
                   <button
-                    onClick={() => toggleTheme()}
-                    className={`flex-1 p-3 rounded-xl border ${
-                      !isDarkMode ? 'border-blue-500 bg-blue-50 dark:bg-blue-500/10' : 'border-gray-200 dark:border-gray-700'
+                    onClick={() => {
+                      if (isDarkMode) toggleTheme();
+                    }}
+                    className={`flex-1 ${
+                      !isDarkMode 
+                        ? 'btn btn-secondary'
+                        : 'btn btn-tertiary'
                     }`}
                   >
-                    <div className="flex items-center justify-center gap-2">
-                      <SunIcon className="h-5 w-5 text-gray-700 dark:text-gray-200" />
-                      <span className="font-medium text-gray-700 dark:text-gray-200">Light</span>
-                    </div>
+                    <span className="material-icons">light_mode</span>
+                    <span className="font-medium">Light</span>
                   </button>
                   <button
-                    onClick={() => toggleTheme()}
-                    className={`flex-1 p-3 rounded-xl border ${
-                      isDarkMode ? 'border-blue-500 bg-blue-50 dark:bg-blue-500/10' : 'border-gray-200 dark:border-gray-700'
+                    onClick={() => {
+                      if (!isDarkMode) toggleTheme();
+                    }}
+                    className={`flex-1 ${
+                      isDarkMode 
+                        ? 'btn btn-secondary'
+                        : 'btn btn-tertiary'
                     }`}
                   >
-                    <div className="flex items-center justify-center gap-2">
-                      <MoonIcon className="h-5 w-5 text-gray-700 dark:text-gray-200" />
-                      <span className="font-medium text-gray-700 dark:text-gray-200">Dark</span>
-                    </div>
+                    <span className="material-icons">dark_mode</span>
+                    <span className="font-medium">Dark</span>
                   </button>
                 </div>
               </div>
-
+              
               {/* Data Management Section */}
-              <div>
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Data Management</h3>
-                
-                {/* Local Backup */}
-                <div className="mb-6">
-                  <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Local Backup</h4>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
-                    Export your data to a file or import data from a backup
-                  </p>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={handleExport}
-                      disabled={isExporting}
-                      className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
-                    >
-                      {isExporting ? 'Exporting...' : 'Export Data'}
-                    </button>
-                    <label className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors cursor-pointer">
-                      Import Data
-                      <input
-                        type="file"
-                        accept=".zip,.json"
-                        onChange={handleFileChange}
-                        className="hidden"
-                      />
-                    </label>
-                  </div>
-                </div>
-
-                {/* Cloud Storage */}
-                <div>
-                  <CloudSync onExportData={onExportData} onImportCollection={onImportCollection} />
+              <div className={`${isMobile ? 'bg-white dark:bg-[#1B2131] p-4 rounded-lg shadow-sm' : ''}`}>
+                <h3 className="text-base font-medium text-gray-900 dark:text-white mb-2">Local Backup</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+                  Export your data to a file or import data from a backup
+                </p>
+                <div className={`${isMobile ? 'flex flex-col gap-3' : 'flex gap-2'}`}>
+                  <button
+                    onClick={handleExport}
+                    disabled={isExporting}
+                    className={`btn btn-primary ${isMobile ? 'w-full' : 'flex-1'}`}
+                  >
+                    {isExporting ? (
+                      <>Exporting...</>
+                    ) : (
+                      <>
+                        <span className="material-icons">download</span>
+                        <span>Export Data</span>
+                      </>
+                    )}
+                  </button>
+                  
+                  <label className={`${isMobile ? 'w-full' : 'flex-1'}`}>
+                    <div className="btn btn-primary w-full cursor-pointer text-center">
+                      <span className="material-icons">upload</span>
+                      <span>Import Data</span>
+                    </div>
+                    <input
+                      type="file"
+                      accept=".json"
+                      onChange={handleFileChange}
+                      className="hidden"
+                    />
+                  </label>
                 </div>
               </div>
+              
+              {/* Cloud Sync Section */}
+              <div className={`${isMobile ? 'bg-white dark:bg-[#1B2131] p-4 rounded-lg shadow-sm' : ''}`}>
+                <h3 className="text-base font-medium text-gray-900 dark:text-white mb-2">Cloud Backup</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+                  Save your collection to the cloud and restore it on any device
+                </p>
+                <CloudSync onExportData={onExportData} onImportCollection={onImportCollection} />
+              </div>
 
-              {/* Danger Zone */}
-              <div className="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700/50">
-                <h3 className="text-lg font-medium text-red-600 dark:text-red-500 mb-4">Danger Zone</h3>
-                
-                {/* Delete Collection */}
-                <div className="rounded-lg border border-red-200 dark:border-red-900/50 p-4 mb-4">
-                  <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100">Delete Collection</h4>
-                  <p className="mt-1 text-sm text-gray-500 dark:text-gray-400 mb-3">
-                    Once you delete a collection, there is no going back. Please be certain.
-                  </p>
-                  
-                  {/* Collection Selection */}
-                  <div className="mb-4">
-                    {collections && collections.length > 0 ? (
-                      <div className="space-y-2">
-                        {collections
-                          .filter(collection => collection !== 'All Cards' && collection !== 'Default Collection')
-                          .map((collection) => (
-                            <div key={collection} className="flex items-center">
-                              <input
-                                type="radio"
-                                id={`collection-${collection}`}
-                                name="collectionToDelete"
-                                value={collection}
-                                checked={collectionToDelete === collection}
-                                onChange={() => setCollectionToDelete(collection)}
-                                className="w-4 h-4 text-primary focus:ring-primary"
-                              />
-                              <label
-                                htmlFor={`collection-${collection}`}
-                                className="ml-2 block text-sm text-gray-700 dark:text-gray-200"
-                              >
-                                {collection}
-                              </label>
-                            </div>
-                          ))
+              {/* Data Management Tools Section */}
+              <div className={`${isMobile ? 'bg-white dark:bg-[#1B2131] p-4 rounded-lg shadow-sm' : ''}`}>
+                <h3 className="text-base font-medium text-gray-900 dark:text-white mb-2">Data Management Tools</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+                  Update prices and import base card data
+                </p>
+                <div className={`${isMobile ? 'flex flex-col gap-3' : 'flex gap-2'}`}>
+                  <button
+                    onClick={async () => {
+                      try {
+                        setIsUpdatingPrices(true);
+                        await onUpdatePrices();
+                        toast.success('Card prices updated successfully!');
+                      } catch (error) {
+                        console.error('Failed to update prices:', error);
+                        toast.error('Failed to update prices: ' + error.message);
+                      } finally {
+                        setIsUpdatingPrices(false);
                       }
+                    }}
+                    disabled={isUpdatingPrices}
+                    className={`btn btn-primary ${isMobile ? 'w-full' : 'flex-1'}`}
+                  >
+                    {isUpdatingPrices ? (
+                      <span>Updating Prices...</span>
+                    ) : (
+                      <div className="flex items-center justify-center w-full gap-2">
+                        <span className="material-icons">update</span>
+                        <span>Update Prices</span>
+                      </div>
+                    )}
+                  </button>
+                  
+                  <button
+                    onClick={async () => {
+                      try {
+                        setIsImportingBaseData(true);
+                        await onImportBaseData();
+                        toast.success('Base card data imported successfully!');
+                      } catch (error) {
+                        console.error('Failed to import base data:', error);
+                        toast.error('Failed to import base data: ' + error.message);
+                      } finally {
+                        setIsImportingBaseData(false);
+                      }
+                    }}
+                    disabled={isImportingBaseData}
+                    className={`btn btn-primary ${isMobile ? 'w-full' : 'flex-1'}`}
+                  >
+                    {isImportingBaseData ? (
+                      <span>Importing Data...</span>
+                    ) : (
+                      <div className="flex items-center justify-center w-full">
+                        <span>Import Base Data</span>
+                      </div>
+                    )}
+                  </button>
+                </div>
+              </div>
+              
+              {/* Collection Management */}
+              <div className={`${isMobile ? 'bg-white dark:bg-[#1B2131] p-4 rounded-lg shadow-sm' : ''}`}>
+                <h3 className="text-base font-medium text-gray-900 dark:text-white mb-2">Collection Management</h3>
+                <div className="space-y-3 mt-2">
+                  {/* Rename Collection */}
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100">Rename Collection</h4>
+                    </div>
+                    {isRenaming ? (
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={newCollectionName}
+                          onChange={(e) => setNewCollectionName(e.target.value)}
+                          className="flex-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600
+                                   bg-white dark:bg-[#252B3B] text-gray-900 dark:text-white
+                                   focus:outline-none focus:ring-2 focus:ring-primary/20"
+                          placeholder="New name"
+                        />
+                        <button
+                          onClick={handleRenameConfirm}
+                          className="btn btn-primary"
+                        >
+                          Save
+                        </button>
+                        <button
+                          onClick={() => setIsRenaming(false)}
+                          className="btn btn-tertiary"
+                        >
+                          Cancel
+                        </button>
                       </div>
                     ) : (
-                      <div className="text-center text-gray-500 py-2">
-                        No collections available to delete
+                      <div className="flex items-center gap-2">
+                        {collections.filter(c => c !== 'All Cards').length > 0 ? (
+                          <div className="flex-1 relative">
+                            <div 
+                              onClick={() => setDropdownOpen(!dropdownOpen)}
+                              className="w-full px-3 py-1.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800/50 rounded-lg flex items-center justify-between cursor-pointer text-gray-700 dark:text-gray-300"
+                            >
+                              <div className="flex items-center">
+                                <span className="material-icons text-sm mr-2 text-blue-500">collections_bookmark</span>
+                                <span className="truncate">{collectionToRename}</span>
+                              </div>
+                              <span className="material-icons text-sm flex-shrink-0 ml-1">
+                                {dropdownOpen ? 'arrow_drop_up' : 'arrow_drop_down'}
+                              </span>
+                            </div>
+                            
+                            {dropdownOpen && (
+                              <div className="collection-rename-dropdown absolute z-10 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg overflow-hidden">
+                                {collections
+                                  .filter(c => c !== 'All Cards')
+                                  .map(collection => (
+                                    <div 
+                                      key={collection} 
+                                      className={`px-3 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 ${collection === collectionToRename ? 'bg-gray-100 dark:bg-gray-700' : ''}`}
+                                      onClick={() => {
+                                        setCollectionToRename(collection);
+                                        setDropdownOpen(false);
+                                      }}
+                                    >
+                                      <div className="flex items-center justify-between">
+                                        <span className="truncate">{collection}</span>
+                                        {collection === collectionToRename && (
+                                          <span className="material-icons text-primary text-sm flex-shrink-0 ml-1">check</span>
+                                        )}
+                                      </div>
+                                    </div>
+                                  ))}
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="flex-1 px-3 py-2 border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+                            <span className="text-gray-500 dark:text-gray-400">
+                              No collections available to rename
+                            </span>
+                          </div>
+                        )}
+                        <button
+                          onClick={handleStartRenaming}
+                          disabled={collections.filter(c => c !== 'All Cards').length === 0}
+                          className="btn btn-sm btn-secondary flex-shrink-0 collection-rename-btn"
+                        >
+                          <span className="material-icons" style={{ fontSize: '16px' }}>edit</span>
+                        </button>
                       </div>
                     )}
                   </div>
                   
-                  {/* Delete Button */}
-                  <button 
-                    onClick={async () => {
-                      if (!collectionToDelete) {
-                        toast.error("Please select a collection to delete");
-                        return;
-                      }
-
-                      // Confirm before deletion
-                      if (window.confirm(`Are you sure you want to delete collection "${collectionToDelete}"? This cannot be undone.`)) {
-                        try {
-                          // Get current collections from IndexedDB
-                          const savedCollections = await db.getCollections();
-                          console.log("Current collections:", savedCollections);
-                          
-                          if (savedCollections[collectionToDelete]) {
-                            // Delete the collection
-                            delete savedCollections[collectionToDelete];
-                            
-                            // Save back to IndexedDB
-                            await db.saveCollections(savedCollections);
-                            console.log("Collection deleted successfully");
-                            
-                            // Check if we need to update selected collection in localStorage
-                            const currentSelected = localStorage.getItem('selectedCollection');
-                            if (currentSelected === collectionToDelete) {
-                              // Select first available collection
-                              const newSelected = Object.keys(savedCollections)[0] || 'Default Collection';
-                              localStorage.setItem('selectedCollection', newSelected);
-                            }
-                            
-                            toast.success('Collection deleted successfully!');
-                            setCollectionToDelete('');
-                            
-                            // Force reload to ensure everything is in sync
-                            window.location.reload();
-                          } else {
-                            throw new Error(`Collection "${collectionToDelete}" not found`);
-                          }
-                        } catch (error) {
-                          console.error("Error deleting collection:", error);
-                          toast.error(`Failed to delete collection: ${error.message}`);
+                  {/* Delete Collection */}
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">Delete Collection</h4>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                      Select a collection to delete. You cannot delete your last collection.
+                    </p>
+                    {/* Collection Selection */}
+                    <div className={`mb-3 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg ${isMobile ? 'max-h-40 overflow-y-auto' : ''}`}>
+                      {collections.length > 1 ? (
+                        <div className="space-y-2">
+                          {collections
+                            .filter(c => c !== 'All Cards')
+                            .map(collection => (
+                              <div key={collection} className="flex items-center">
+                                <input
+                                  type="radio"
+                                  id={`collection-${collection}`}
+                                  name="collectionToDelete"
+                                  value={collection}
+                                  checked={collectionToDelete === collection}
+                                  onChange={() => setCollectionToDelete(collection)}
+                                  className="w-4 h-4 text-primary focus:ring-primary border-primary"
+                                />
+                                <label
+                                  htmlFor={`collection-${collection}`}
+                                  className="ml-2 block text-sm text-gray-700 dark:text-gray-200"
+                                >
+                                  {collection}
+                                </label>
+                              </div>
+                            ))
                         }
-                      }
-                    }}
-                    disabled={!collectionToDelete || collections.length <= 1}
-                    className="w-full px-4 py-2 bg-red-50 dark:bg-red-900/20 
-                             text-red-600 dark:text-red-400 rounded-lg 
-                             hover:bg-red-100 dark:hover:bg-red-900/30 
-                             transition-colors disabled:opacity-50 
-                             disabled:cursor-not-allowed"
-                  >
-                    Delete Collection
-                  </button>
-                </div>
+                        </div>
+                      ) : (
+                        <div className="text-center text-gray-500 py-2">
+                          No collections available to delete
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Delete Button */}
+                    <button 
+                      onClick={async () => {
+                        if (!collectionToDelete) {
+                          toast.error("Please select a collection to delete");
+                          return;
+                        }
 
-                {/* Reset Application */}
-                <div className="rounded-lg border border-red-200 dark:border-red-900/50 p-4">
-                  <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100">Reset Application</h4>
-                  <p className="mt-1 text-sm text-gray-500 dark:text-gray-400 mb-3">
-                    This will permanently delete all your collections, cards, and settings. This action cannot be undone.
-                  </p>
-                  <button
-                    onClick={handleResetData}
-                    className="w-full px-4 py-2 bg-red-200 dark:bg-red-900/30 
-                             text-red-700 dark:text-red-400 rounded-lg 
-                             hover:bg-red-300 dark:hover:bg-red-900/40 
-                             transition-colors font-medium"
-                  >
-                    Reset All Data
-                  </button>
+                        // Confirm before deletion
+                        if (window.confirm(`Are you sure you want to delete collection "${collectionToDelete}"? This cannot be undone.`)) {
+                          try {
+                            // Get current collections from IndexedDB
+                            const savedCollections = await db.getCollections();
+                            console.log("Current collections:", savedCollections);
+                            
+                            if (savedCollections[collectionToDelete]) {
+                              // Delete the collection
+                              delete savedCollections[collectionToDelete];
+                              
+                              // Save back to IndexedDB
+                              await db.saveCollections(savedCollections);
+                              console.log("Collection deleted successfully");
+                              
+                              // Check if we need to update selected collection in localStorage
+                              const currentSelected = localStorage.getItem('selectedCollection');
+                              if (currentSelected === collectionToDelete) {
+                                // Select first available collection
+                                const newSelected = Object.keys(savedCollections)[0] || 'Default Collection';
+                                localStorage.setItem('selectedCollection', newSelected);
+                              }
+                              
+                              toast.success('Collection deleted successfully!');
+                              setCollectionToDelete('');
+                              
+                              // Force reload to ensure everything is in sync
+                              window.location.reload();
+                            } else {
+                              throw new Error(`Collection "${collectionToDelete}" not found`);
+                            }
+                          } catch (error) {
+                            console.error("Error deleting collection:", error);
+                            toast.error(`Failed to delete collection: ${error.message}`);
+                          }
+                        }
+                      }}
+                      disabled={!collectionToDelete || collections.length <= 1}
+                      className="w-full btn btn-danger disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <div className="flex items-center justify-center w-full gap-2">
+                        <span className="material-icons">delete</span>
+                        <span>Delete Collection</span>
+                      </div>
+                    </button>
+                  </div>
                 </div>
+              </div>
+
+              {/* Reset Application */}
+              <div className={`rounded-lg border border-red-200 dark:border-red-900/50 p-4 ${isMobile ? 'bg-white dark:bg-[#1B2131] shadow-sm' : ''}`}>
+                <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100">Reset Application</h4>
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400 mb-3">
+                  This will permanently delete all your collections, cards, and settings. This action cannot be undone.
+                </p>
+                <button
+                  onClick={handleResetData}
+                  className="w-full btn btn-danger"
+                >
+                  Reset All Data
+                </button>
               </div>
             </div>
           )}
 
           {activeTab === 'profile' && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    First Name
-                  </label>
-                  <input
-                    type="text"
-                    name="firstName"
-                    value={profile.firstName}
-                    onChange={handleProfileChange}
-                    className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600
-                             bg-white dark:bg-[#1B2131] text-gray-900 dark:text-white
-                             focus:outline-none focus:ring-2 focus:ring-primary/20"
-                    placeholder="Enter first name"
-                  />
+            <div className={`space-y-6 ${isMobile ? 'mobile-settings-content' : ''}`}>
+              <div className={`${isMobile ? 'bg-white dark:bg-[#1B2131] p-4 rounded-lg shadow-sm' : ''}`}>
+                <h3 className="text-base font-medium text-gray-900 dark:text-white mb-4">Profile Information</h3>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        First Name
+                      </label>
+                      <input
+                        type="text"
+                        name="firstName"
+                        value={profile.firstName}
+                        onChange={handleProfileChange}
+                        className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600
+                                 bg-white dark:bg-[#1B2131] text-gray-900 dark:text-white
+                                 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                        placeholder="Enter first name"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Last Name
+                      </label>
+                      <input
+                        type="text"
+                        name="lastName"
+                        value={profile.lastName}
+                        onChange={handleProfileChange}
+                        className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600
+                                 bg-white dark:bg-[#1B2131] text-gray-900 dark:text-white
+                                 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                        placeholder="Enter last name"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Mobile Number
+                    </label>
+                    <input
+                      type="tel"
+                      name="mobileNumber"
+                      value={profile.mobileNumber}
+                      onChange={handleProfileChange}
+                      className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600
+                               bg-white dark:bg-[#1B2131] text-gray-900 dark:text-white
+                               focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      placeholder="Enter mobile number"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Company Name
+                    </label>
+                    <input
+                      type="text"
+                      name="companyName"
+                      value={profile.companyName}
+                      onChange={handleProfileChange}
+                      className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600
+                               bg-white dark:bg-[#1B2131] text-gray-900 dark:text-white
+                               focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      placeholder="Enter company name"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Address
+                    </label>
+                    <textarea
+                      name="address"
+                      value={profile.address}
+                      onChange={handleProfileChange}
+                      rows="3"
+                      className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600
+                               bg-white dark:bg-[#1B2131] text-gray-900 dark:text-white
+                               focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      placeholder="Enter address"
+                    />
+                  </div>
+
+                  <div className="flex justify-end">
+                    <button
+                      onClick={handleProfileSave}
+                      className="btn btn-primary"
+                    >
+                      Save Profile
+                    </button>
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Last Name
-                  </label>
-                  <input
-                    type="text"
-                    name="lastName"
-                    value={profile.lastName}
-                    onChange={handleProfileChange}
-                    className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600
-                             bg-white dark:bg-[#1B2131] text-gray-900 dark:text-white
-                             focus:outline-none focus:ring-2 focus:ring-primary/20"
-                    placeholder="Enter last name"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Mobile Number
-                </label>
-                <input
-                  type="tel"
-                  name="mobileNumber"
-                  value={profile.mobileNumber}
-                  onChange={handleProfileChange}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600
-                           bg-white dark:bg-[#1B2131] text-gray-900 dark:text-white
-                           focus:outline-none focus:ring-2 focus:ring-primary/20"
-                  placeholder="Enter mobile number"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Company Name
-                </label>
-                <input
-                  type="text"
-                  name="companyName"
-                  value={profile.companyName}
-                  onChange={handleProfileChange}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600
-                           bg-white dark:bg-[#1B2131] text-gray-900 dark:text-white
-                           focus:outline-none focus:ring-2 focus:ring-primary/20"
-                  placeholder="Enter company name"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Address
-                </label>
-                <textarea
-                  name="address"
-                  value={profile.address}
-                  onChange={handleProfileChange}
-                  rows="3"
-                  className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600
-                           bg-white dark:bg-[#1B2131] text-gray-900 dark:text-white
-                           focus:outline-none focus:ring-2 focus:ring-primary/20"
-                  placeholder="Enter address"
-                />
-              </div>
-
-              <div className="flex justify-end">
-                <button
-                  onClick={handleProfileSave}
-                  className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
-                >
-                  Save Profile
-                </button>
               </div>
             </div>
           )}
 
           {activeTab === 'account' && (
-            <div className="space-y-4">
+            <div className={`space-y-6 ${isMobile ? 'mobile-settings-content' : ''}`}>
               {/* User Info */}
-              <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+              <div className={`${isMobile ? 'bg-white dark:bg-[#1B2131] p-4 rounded-lg shadow-sm' : ''}`}>
                 <div className="flex items-center space-x-3">
                   <span className="material-icons text-gray-400">account_circle</span>
                   <div>
@@ -545,10 +817,7 @@ const SettingsModal = ({
                     toast.error('Failed to sign out');
                   }
                 }}
-                className="w-full px-4 py-2 mt-4 bg-gray-100 dark:bg-gray-800 
-                         text-gray-700 dark:text-gray-300 rounded-lg 
-                         hover:bg-gray-200 dark:hover:bg-gray-700 
-                         transition-colors flex items-center justify-center gap-2"
+                className="w-full btn btn-tertiary mt-4"
               >
                 <span className="material-icons text-gray-600 dark:text-gray-400">logout</span>
                 Sign Out

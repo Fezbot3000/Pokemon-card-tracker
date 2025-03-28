@@ -31,6 +31,9 @@ const CollectionSelector = ({ collections, selectedCollection, onCollectionChang
     };
   }, [isOpen]);
   
+  // Filter any existing "All Cards" from collections to prevent duplication
+  const filteredCollections = collections.filter(collection => collection !== 'All Cards');
+  
   return (
     <div className="collection-selector w-full" ref={dropdownRef}>
       <button
@@ -75,8 +78,7 @@ const CollectionSelector = ({ collections, selectedCollection, onCollectionChang
             <div className="collection-divider"></div>
             
             {/* Collections list */}
-            {collections
-              .filter(collection => collection !== 'All Cards')
+            {filteredCollections
               .map(collection => (
                 <div 
                   key={collection}

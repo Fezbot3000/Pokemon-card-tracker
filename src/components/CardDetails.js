@@ -136,6 +136,22 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
     };
   }, []);
 
+  useEffect(() => {
+    // Calculate scrollbar width
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+    // Prevent background scrolling but compensate for scrollbar width
+    document.body.style.overflow = 'hidden';
+    document.body.style.paddingRight = `${scrollbarWidth}px`;
+    document.body.classList.add('modal-open');
+    
+    return () => {
+      // Restore scrolling on unmount
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+      document.body.classList.remove('modal-open');
+    };
+  }, []);
+
   const loadCardImage = async () => {
     setImageLoadingState('loading');
     try {
@@ -360,19 +376,20 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
         onClick={(e) => e.stopPropagation()}
         ref={modalContentRef}
       >
-        {/* Header */}
-        <div className="card-details-header">
-          <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">Card Details</h2>
+        {/* Header - Made smaller */}
+        <div className="card-details-header flex items-center h-14">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Card Details</h2>
           <button
             onClick={handleClose}
-            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 ml-auto p-2"
+            aria-label="Close"
           >
             <span className="material-icons">close</span>
           </button>
         </div>
 
         {/* Scrollable Content */}
-        <div className="card-details-content h-[calc(100vh-128px)] overflow-y-auto">
+        <div className="card-details-content h-[calc(100vh-112px)] overflow-y-auto">
           {/* Image upload section */}
           <div className="mb-6">
             <div className="image-upload-container">
@@ -381,13 +398,7 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
                 loadingState={imageLoadingState}
                 onRetry={loadCardImage}
               />
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleImageChange}
-                className="absolute inset-0 opacity-0 cursor-pointer z-10"
-              />
+              {/* Move the input outside the overlay to avoid click conflicts */}
               <div className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-50 opacity-0 hover:opacity-100 transition-opacity">
                 <span className="material-icons text-white text-4xl mb-2">
                   upload
@@ -397,6 +408,22 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
                 </span>
               </div>
             </div>
+            {/* File input moved here to separate it from the close button */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
+              className="absolute opacity-0 h-0 w-0"
+              tabIndex="-1"
+            />
+            <button 
+              onClick={() => fileInputRef.current?.click()} 
+              className="mt-2 w-full py-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm flex items-center justify-center"
+            >
+              <span className="material-icons text-sm mr-1">photo_camera</span>
+              Upload Image
+            </button>
           </div>
 
           {/* Card Details Form */}
@@ -532,22 +559,14 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
             <button
               type="button"
               onClick={handleClose}
-              className="px-4 py-2 rounded-lg border border-gray-300 
-                       text-sm font-medium text-gray-700 bg-white 
-                       hover:bg-gray-50 focus:outline-none focus:ring-2 
-                       focus:ring-offset-2 focus:ring-primary 
-                       dark:bg-gray-700 dark:border-gray-600 
-                       dark:text-white dark:hover:bg-gray-600"
+              className="btn btn-tertiary"
             >
               Cancel
             </button>
             <button
               type="button"
               onClick={handleSave}
-              className="px-4 py-2 rounded-lg border border-transparent 
-                       text-sm font-medium text-white bg-primary 
-                       hover:bg-primary/90 focus:outline-none focus:ring-2 
-                       focus:ring-offset-2 focus:ring-primary"
+              className="btn btn-primary"
             >
               Save Changes
             </button>

@@ -36,8 +36,8 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
   const [isDragging, setIsDragging] = useState(false);
   const dropZoneRef = useRef(null);
   
-  // Batch import states
-  const [showBatchImport, setShowBatchImport] = useState(false);
+  // Use activeTab instead of showBatchImport
+  const [activeTab, setActiveTab] = useState('single'); // 'single' or 'batch'
   const [batchImportDragActive, setBatchImportDragActive] = useState(false);
   const batchFileInputRef = useRef(null);
   const [importLoading, setImportLoading] = useState(false);
@@ -47,11 +47,7 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
   useEffect(() => {
     const handleEscapeKey = (event) => {
       if (event.key === 'Escape') {
-        if (showBatchImport) {
-          setShowBatchImport(false);
-        } else {
-          onClose();
-        }
+        onClose();
       }
     };
 
@@ -60,7 +56,7 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
     return () => {
       document.removeEventListener('keydown', handleEscapeKey);
     };
-  }, [onClose, showBatchImport]);
+  }, [onClose]);
 
   // Manage body overflow and padding to prevent page jumping
   useEffect(() => {
@@ -69,11 +65,13 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
     // Prevent background scrolling but compensate for scrollbar width
     document.body.style.overflow = 'hidden';
     document.body.style.paddingRight = `${scrollbarWidth}px`;
+    document.body.classList.add('modal-open');
     
     return () => {
       // Restore scrolling on unmount
       document.body.style.overflow = '';
       document.body.style.paddingRight = '';
+      document.body.classList.remove('modal-open');
     };
   }, []);
 
@@ -383,343 +381,368 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
   };
 
   return (
-    <div className="fixed inset-0 bg-white dark:bg-[#0B0F19] z-50 overflow-hidden flex flex-col">
-      <div className="sticky top-0 z-10 flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700 flex-wrap gap-2">
-        <h1 className="text-xl font-semibold text-gray-800 dark:text-white">
-          Add Card
-        </h1>
+    <div className="fixed inset-0 z-[200] flex flex-col bg-white dark:bg-[#1B2131] overflow-hidden">
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700/50 bg-gray-50 dark:bg-[#151821] add-card-header">
+        <h1 className="text-xl font-semibold text-gray-900 dark:text-white">Add Card</h1>
         
-        <button
+        <button 
           onClick={onClose}
-          className="md:hidden text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+          className="ml-auto text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+          aria-label="Close"
         >
           <span className="material-icons">close</span>
         </button>
-        
-        <div className="flex items-center gap-2 flex-wrap w-full md:w-auto mt-2 md:mt-0">
-          <button 
-            onClick={() => setShowBatchImport(true)}
-            className="flex-1 md:flex-none h-10 md:h-12 px-3 md:px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700/50 
-                     bg-white dark:bg-[#1B2131] text-gray-700 dark:text-gray-200
-                     hover:bg-gray-50 dark:hover:bg-[#252B3B] transition-colors
-                     flex items-center justify-center gap-2 text-sm"
-          >
-            <span className="material-icons text-sm">upload_file</span>
-            Batch Import
-          </button>
-          <button 
-            onClick={onClose}
-            className="hidden md:block h-12 px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700/50 
-                     bg-white dark:bg-[#1B2131] text-gray-700 dark:text-gray-200
-                     hover:bg-gray-50 dark:hover:bg-[#252B3B] transition-colors"
-          >
-            Cancel
-          </button>
-          <button 
-            onClick={handleSubmit}
-            className="flex-1 md:flex-none h-10 md:h-12 px-3 md:px-4 py-2 bg-primary text-white rounded-xl hover:bg-primary/90 transition-colors text-sm"
-          >
-            Add Card
-          </button>
-        </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex border-b border-gray-200 dark:border-gray-700/50 bg-gray-50 dark:bg-[#151821]">
+        <button
+          className={`px-4 py-2 text-sm font-medium ${
+            activeTab === 'single'
+              ? 'text-primary border-b-2 border-primary'
+              : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+          }`}
+          onClick={() => setActiveTab('single')}
+        >
+          Single Card
+        </button>
+        <button
+          className={`px-4 py-2 text-sm font-medium ${
+            activeTab === 'batch'
+              ? 'text-primary border-b-2 border-primary'
+              : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+          }`}
+          onClick={() => setActiveTab('batch')}
+        >
+          Batch Import
+        </button>
       </div>
 
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-4xl mx-auto p-4 md:p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
-            {/* Image Upload */}
-            <div 
-              ref={dropZoneRef}
-              className={`border-2 border-dashed rounded-lg p-4 flex flex-col items-center justify-center cursor-pointer relative transition-colors
-                         ${isDragging 
-                           ? 'border-primary bg-primary/5' 
-                           : 'border-gray-300 dark:border-gray-700 hover:border-primary dark:hover:border-primary'}`}
-              onClick={() => fileInputRef.current?.click()}
-              onDragEnter={handleDragEnter}
-              onDragLeave={handleDragLeave}
-              onDragOver={handleDragOver}
-              onDrop={handleDrop}
-              style={{ minHeight: '250px', maxHeight: '350px' }}
-            >
-              {imagePreview ? (
-                <div className="relative w-full h-full flex items-center justify-center">
-                  <img src={imagePreview} alt="Card preview" className="max-h-full max-w-full object-contain" />
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setImageFile(null);
-                      setImagePreview(null);
-                    }}
-                    className="absolute top-2 right-2 p-1 rounded-full bg-gray-800/50 hover:bg-gray-800/75 text-white"
-                  >
-                    <span className="material-icons text-sm">close</span>
-                  </button>
-                </div>
-              ) : (
-                <div className="text-center">
-                  <span className="material-icons text-gray-400 dark:text-gray-600 text-4xl md:text-6xl mb-2">add_photo_alternate</span>
-                  <p className="text-gray-500 dark:text-gray-400 mb-2 text-sm md:text-base">Drag and drop an image here</p>
-                  <p className="text-gray-400 dark:text-gray-500 text-xs md:text-sm">or click to browse</p>
-                </div>
-              )}
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleImageChange}
-              />
-            </div>
-
-            {/* Form Fields */}
-            <div>
-              <h2 className="text-xl md:text-2xl font-semibold mb-4 md:mb-6 text-gray-800 dark:text-gray-200">Card Details</h2>
-              
-              {/* Collection Selector */}
-              <div className="mb-4 md:mb-6">
-                <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">
-                  Collection <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() => setShowCollectionDropdown(!showCollectionDropdown)}
-                    className={`w-full px-3 md:px-4 py-2 text-left rounded-xl border 
-                             ${!targetCollection || targetCollection === 'All Cards' 
-                               ? 'border-red-500 dark:border-red-500' 
-                               : 'border-gray-200 dark:border-gray-700/50'}
-                             bg-white dark:bg-[#1B2131] text-gray-900 dark:text-white
-                             focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent
-                             flex items-center justify-between`}
-                  >
-                    <span className={`text-sm md:text-base ${!targetCollection ? 'text-gray-400 dark:text-gray-500' : ''}`}>
-                      {targetCollection || 'Select a collection'}
-                    </span>
-                    <span className="material-icons">
-                      {showCollectionDropdown ? 'keyboard_arrow_up' : 'keyboard_arrow_down'}
-                    </span>
-                  </button>
-
-                  {showCollectionDropdown && (
-                    <div className="absolute z-10 w-full mt-1 bg-white dark:bg-[#1B2131] rounded-xl shadow-lg 
-                                  border border-gray-200 dark:border-gray-700/50 py-1 max-h-60 overflow-auto">
-                      {Object.keys(collections)
-                        .filter(name => name !== 'All Cards')
-                        .map(collectionName => (
-                          <button
-                            key={collectionName}
-                            type="button"
-                            className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-800
-                                     text-gray-900 dark:text-white flex items-center justify-between text-sm md:text-base"
-                            onClick={() => {
-                              setTargetCollection(collectionName);
-                              setShowCollectionDropdown(false);
-                            }}
-                          >
-                            <span>{collectionName}</span>
-                            {targetCollection === collectionName && (
-                              <span className="material-icons text-primary text-lg">check</span>
-                            )}
-                          </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                {(!targetCollection || targetCollection === 'All Cards') && (
-                  <p className="text-red-500 text-xs md:text-sm mt-1">Please select a collection</p>
+        {activeTab === 'single' ? (
+          <div className="max-w-4xl mx-auto p-4 md:p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
+              {/* Image Upload */}
+              <div 
+                ref={dropZoneRef}
+                className={`border-2 border-dashed rounded-lg p-4 flex flex-col items-center justify-center cursor-pointer relative transition-colors
+                           ${isDragging 
+                             ? 'border-purple-400 dark:border-purple-500 bg-purple-50/80 dark:bg-purple-900/10' 
+                             : 'border-gray-300 dark:border-gray-700 hover:border-purple-400 dark:hover:border-purple-500'}`}
+                onClick={() => fileInputRef.current?.click()}
+                onDragEnter={handleDragEnter}
+                onDragLeave={handleDragLeave}
+                onDragOver={handleDragOver}
+                onDrop={handleDrop}
+                style={{ minHeight: '250px', maxHeight: '350px' }}
+              >
+                {imagePreview ? (
+                  <div className="relative w-full h-full flex items-center justify-center">
+                    <img src={imagePreview} alt="Card preview" className="max-h-full max-w-full object-contain" />
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setImageFile(null);
+                        setImagePreview(null);
+                      }}
+                      className="absolute top-2 right-2 p-1 rounded-full bg-gray-800/50 hover:bg-gray-800/75 text-white"
+                    >
+                      <span className="material-icons text-sm">close</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="text-center">
+                    <span className="material-icons text-gray-400 dark:text-gray-600 text-4xl md:text-6xl mb-2">add_photo_alternate</span>
+                    <p className="text-gray-500 dark:text-gray-400 mb-2 text-sm md:text-base">Drag and drop an image here</p>
+                    <p className="text-gray-400 dark:text-gray-500 text-xs md:text-sm">or click to browse</p>
+                  </div>
                 )}
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 mb-4 md:mb-6">
-                <div>
-                  <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Player</label>
-                  <input
-                    type="text"
-                    name="player"
-                    value={formData.player}
-                    onChange={handleInputChange}
-                    className="input text-sm"
-                    placeholder="Charizard"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Card Name</label>
-                  <input
-                    type="text"
-                    name="card"
-                    value={formData.card}
-                    onChange={handleInputChange}
-                    className="input text-sm"
-                    placeholder="1999 Pokemon Game"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Set</label>
-                  <input
-                    type="text"
-                    name="set"
-                    value={formData.set}
-                    onChange={handleInputChange}
-                    className="input text-sm"
-                    placeholder="Pokemon Game"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Year</label>
-                  <input
-                    type="text"
-                    name="year"
-                    value={formData.year}
-                    onChange={handleInputChange}
-                    className="input text-sm"
-                    placeholder="1999"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Category</label>
-                  <input
-                    type="text"
-                    name="category"
-                    value={formData.category}
-                    onChange={handleInputChange}
-                    className="input text-sm"
-                    placeholder="Pokemon"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Condition</label>
-                  <input
-                    type="text"
-                    name="condition"
-                    value={formData.condition}
-                    onChange={handleInputChange}
-                    className="input text-sm"
-                    placeholder="PSA 10"
-                  />
-                </div>
-              </div>
-              
-              <div className="mb-4 md:mb-6">
-                <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Serial Number</label>
                 <input
-                  type="text"
-                  name="slabSerial"
-                  value={formData.slabSerial}
-                  onChange={handleInputChange}
-                  className="input text-sm"
-                  placeholder="12345678"
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleImageChange}
                 />
               </div>
 
-              <h2 className="text-xl md:text-2xl font-semibold mb-4 md:mb-6 text-gray-800 dark:text-gray-200">Financial Details</h2>
-              
-              {/* Currency Toggle */}
-              <div className="mb-4 flex items-center justify-end">
-                <span className="text-xs md:text-sm text-gray-600 dark:text-gray-400 mr-2">Input Currency:</span>
-                <button 
-                  onClick={handleCurrencyToggle}
-                  className={`px-3 py-1 rounded-lg transition-colors ${
-                    isDarkMode 
-                      ? 'bg-[#252B3B] hover:bg-[#323B4B]' 
-                      : 'bg-gray-100 hover:bg-gray-200'
-                  }`}
-                >
-                  <span className={`text-xs md:text-sm font-medium ${inputCurrency === 'AUD' ? 'text-primary' : 'text-gray-500 dark:text-gray-400'}`}>
-                    AUD
-                  </span>
-                  <span className="mx-2 text-gray-500 dark:text-gray-400">/</span>
-                  <span className={`text-xs md:text-sm font-medium ${inputCurrency === 'USD' ? 'text-primary' : 'text-gray-500 dark:text-gray-400'}`}>
-                    USD
-                  </span>
-                </button>
-              </div>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
-                {inputCurrency === 'AUD' ? (
-                  <>
-                    <div>
-                      <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Paid (AUD)</label>
-                      <input
-                        type="number"
-                        name="investmentAUD"
-                        value={formData.investmentAUD}
-                        onChange={handleNumberInputChange}
-                        className="input text-sm"
-                        placeholder="0"
-                      />
-                      <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 mt-1">
-                        USD: ${formatValue(formData.investmentUSD, 'currency', false)}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Current Value (AUD)</label>
-                      <input
-                        type="number"
-                        name="currentValueAUD"
-                        value={formData.currentValueAUD}
-                        onChange={handleNumberInputChange}
-                        className="input text-sm"
-                        placeholder="0"
-                      />
-                      <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 mt-1">
-                        USD: ${formatValue(formData.currentValueUSD, 'currency', false)}
-                      </p>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div>
-                      <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Paid (USD)</label>
-                      <input
-                        type="number"
-                        name="investmentUSD"
-                        value={formData.investmentUSD}
-                        onChange={handleNumberInputChange}
-                        className="input text-sm"
-                        placeholder="0"
-                      />
-                      <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 mt-1">
-                        AUD: ${formatValue(formData.investmentAUD, 'currency', false)}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Current Value (USD)</label>
-                      <input
-                        type="number"
-                        name="currentValueUSD"
-                        value={formData.currentValueUSD}
-                        onChange={handleNumberInputChange}
-                        className="input text-sm"
-                        placeholder="0"
-                      />
-                      <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 mt-1">
-                        AUD: ${formatValue(formData.currentValueAUD, 'currency', false)}
-                      </p>
-                    </div>
-                  </>
-                )}
+              {/* Form Fields */}
+              <div>
+                <h2 className="text-xl md:text-2xl font-semibold mb-4 md:mb-6 text-gray-800 dark:text-gray-200">Card Details</h2>
+                
+                {/* Collection Selector */}
+                <div className="mb-4 md:mb-6">
+                  <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">
+                    Collection <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setShowCollectionDropdown(!showCollectionDropdown)}
+                      className={`w-full px-3 md:px-4 py-2 text-left rounded-xl border 
+                               ${!targetCollection || targetCollection === 'All Cards' 
+                                 ? 'border-red-500 dark:border-red-500' 
+                                 : 'border-gray-200 dark:border-gray-700/50'}
+                               bg-white dark:bg-[#1B2131] text-gray-900 dark:text-white
+                               focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent
+                               flex items-center justify-between`}
+                    >
+                      <span className={`text-sm md:text-base ${!targetCollection ? 'text-gray-400 dark:text-gray-500' : ''}`}>
+                        {targetCollection || 'Select a collection'}
+                      </span>
+                      <span className="material-icons">
+                        {showCollectionDropdown ? 'keyboard_arrow_up' : 'keyboard_arrow_down'}
+                      </span>
+                    </button>
+
+                    {showCollectionDropdown && (
+                      <div className="absolute z-10 w-full mt-1 bg-white dark:bg-[#1B2131] rounded-xl shadow-lg 
+                                    border border-gray-200 dark:border-gray-700/50 py-1 max-h-60 overflow-auto">
+                        {Object.keys(collections)
+                          .filter(name => name !== 'All Cards')
+                          .map(collectionName => (
+                            <button
+                              key={collectionName}
+                              type="button"
+                              className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-800
+                                       text-gray-900 dark:text-white flex items-center justify-between text-sm md:text-base"
+                              onClick={() => {
+                                setTargetCollection(collectionName);
+                                setShowCollectionDropdown(false);
+                              }}
+                            >
+                              <span>{collectionName}</span>
+                              {targetCollection === collectionName && (
+                                <span className="material-icons text-primary text-lg">check</span>
+                              )}
+                            </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  {(!targetCollection || targetCollection === 'All Cards') && (
+                    <p className="text-red-500 text-xs md:text-sm mt-1">Please select a collection</p>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 mb-4 md:mb-6">
+                  <div>
+                    <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Player</label>
+                    <input
+                      type="text"
+                      name="player"
+                      value={formData.player}
+                      onChange={handleInputChange}
+                      className="input text-sm"
+                      placeholder="Charizard"
+                      inputMode="text"
+                      enterKeyHint="next"
+                      autoCapitalize="words"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Card Name</label>
+                    <input
+                      type="text"
+                      name="card"
+                      value={formData.card}
+                      onChange={handleInputChange}
+                      className="input text-sm"
+                      placeholder="1999 Pokemon Game"
+                      inputMode="text"
+                      enterKeyHint="next"
+                      autoCapitalize="words"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Set</label>
+                    <input
+                      type="text"
+                      name="set"
+                      value={formData.set}
+                      onChange={handleInputChange}
+                      className="input text-sm"
+                      placeholder="Pokemon Game"
+                      inputMode="text"
+                      enterKeyHint="next"
+                      autoCapitalize="words"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Year</label>
+                    <input
+                      type="text"
+                      name="year"
+                      value={formData.year}
+                      onChange={handleInputChange}
+                      className="input text-sm"
+                      placeholder="1999"
+                      inputMode="numeric"
+                      pattern="\d*"
+                      enterKeyHint="next"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Category</label>
+                    <input
+                      type="text"
+                      name="category"
+                      value={formData.category}
+                      onChange={handleInputChange}
+                      className="input text-sm"
+                      placeholder="Pokemon"
+                      inputMode="text"
+                      enterKeyHint="next"
+                      autoCapitalize="words"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Condition</label>
+                    <input
+                      type="text"
+                      name="condition"
+                      value={formData.condition}
+                      onChange={handleInputChange}
+                      className="input text-sm"
+                      placeholder="PSA 10"
+                      inputMode="text"
+                      enterKeyHint="next"
+                      autoCapitalize="characters"
+                    />
+                  </div>
+                </div>
+                
+                <div className="mb-4 md:mb-6">
+                  <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Serial Number</label>
+                  <input
+                    type="text"
+                    name="slabSerial"
+                    value={formData.slabSerial}
+                    onChange={handleInputChange}
+                    className="input text-sm"
+                    placeholder="12345678"
+                    inputMode="numeric"
+                    pattern="\d*"
+                    enterKeyHint="next"
+                  />
+                </div>
+
+                <h2 className="text-xl md:text-2xl font-semibold mb-4 md:mb-6 text-gray-800 dark:text-gray-200">Financial Details</h2>
+                
+                {/* Currency Toggle */}
+                <div className="mb-4 flex items-center justify-end">
+                  <span className="text-xs md:text-sm text-gray-600 dark:text-gray-400 mr-2">Input Currency:</span>
+                  <button 
+                    type="button"
+                    onClick={handleCurrencyToggle}
+                    className={`px-3 py-1 rounded-lg transition-colors ${
+                      isDarkMode 
+                        ? 'bg-[#252B3B] hover:bg-[#323B4B]' 
+                        : 'bg-gray-100 hover:bg-gray-200'
+                    }`}
+                  >
+                    <span className={`text-xs md:text-sm font-medium ${inputCurrency === 'AUD' ? 'text-primary' : 'text-gray-500 dark:text-gray-400'}`}>
+                      AUD
+                    </span>
+                    <span className="mx-2 text-gray-500 dark:text-gray-400">/</span>
+                    <span className={`text-xs md:text-sm font-medium ${inputCurrency === 'USD' ? 'text-primary' : 'text-gray-500 dark:text-gray-400'}`}>
+                      USD
+                    </span>
+                  </button>
+                </div>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
+                  {inputCurrency === 'AUD' ? (
+                    <>
+                      <div>
+                        <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Paid (AUD)</label>
+                        <input
+                          type="number"
+                          name="investmentAUD"
+                          value={formData.investmentAUD}
+                          onChange={handleNumberInputChange}
+                          className="input text-sm"
+                          placeholder="0"
+                          inputMode="decimal"
+                          pattern="[0-9]*\.?[0-9]*"
+                          enterKeyHint="next"
+                        />
+                        <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 mt-1">
+                          USD: ${formatValue(formData.investmentUSD, 'currency', false)}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Current Value (AUD)</label>
+                        <input
+                          type="number"
+                          name="currentValueAUD"
+                          value={formData.currentValueAUD}
+                          onChange={handleNumberInputChange}
+                          className="input text-sm"
+                          placeholder="0"
+                          inputMode="decimal"
+                          pattern="[0-9]*\.?[0-9]*"
+                          enterKeyHint="done"
+                        />
+                        <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 mt-1">
+                          USD: ${formatValue(formData.currentValueUSD, 'currency', false)}
+                        </p>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div>
+                        <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Paid (USD)</label>
+                        <input
+                          type="number"
+                          name="investmentUSD"
+                          value={formData.investmentUSD}
+                          onChange={handleNumberInputChange}
+                          className="input text-sm"
+                          placeholder="0"
+                          inputMode="decimal"
+                          pattern="[0-9]*\.?[0-9]*"
+                          enterKeyHint="next"
+                        />
+                        <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 mt-1">
+                          AUD: ${formatValue(formData.investmentAUD, 'currency', false)}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Current Value (USD)</label>
+                        <input
+                          type="number"
+                          name="currentValueUSD"
+                          value={formData.currentValueUSD}
+                          onChange={handleNumberInputChange}
+                          className="input text-sm"
+                          placeholder="0"
+                          inputMode="decimal"
+                          pattern="[0-9]*\.?[0-9]*"
+                          enterKeyHint="done"
+                        />
+                        <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 mt-1">
+                          AUD: ${formatValue(formData.currentValueAUD, 'currency', false)}
+                        </p>
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
 
-      {/* Batch Import Modal */}
-      {showBatchImport && (
-        <div className="fixed inset-0 bg-white dark:bg-[#0B0F19] z-50">
-          <div className="sticky top-0 z-10 flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
-            <h1 className="text-lg md:text-xl font-semibold text-gray-800 dark:text-white">
-              Batch Import Cards
-            </h1>
-            <button 
-              onClick={() => setShowBatchImport(false)}
-              className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-            >
-              <span className="material-icons">close</span>
-            </button>
+            <div className="sticky bottom-0 bg-white dark:bg-[#1B2131] border-t border-gray-200 dark:border-gray-700/50 px-4 py-3 mt-8">
+              <button 
+                onClick={handleSubmit}
+                className="w-full btn btn-primary"
+              >
+                Add Card
+              </button>
+            </div>
           </div>
-
-          <div className="max-w-4xl mx-auto p-4 md:p-6 h-[calc(100vh-64px)] overflow-y-auto batch-import-modal-content">
+        ) : (
+          <div className="max-w-4xl mx-auto p-4 md:p-6">
             {/* Collection Selection */}
             <div className="mb-4 md:mb-6">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -765,7 +788,7 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
             <div 
               className={`
                 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg p-4 md:p-8 flex flex-col items-center justify-center
-                ${batchImportDragActive ? 'border-primary dark:border-primary bg-primary/5 dark:bg-primary/10' : ''}
+                ${batchImportDragActive ? 'border-purple-400 dark:border-purple-500 bg-purple-50/80 dark:bg-purple-900/10' : ''}
               `}
               onDragEnter={handleBatchImportDrag}
               onDragLeave={handleBatchImportDrag}
@@ -779,7 +802,7 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
               </div>
               
               <button
-                className="px-3 md:px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 text-sm md:text-base"
+                className="btn btn-primary"
                 onClick={() => batchFileInputRef.current?.click()}
                 disabled={importLoading}
               >
@@ -860,8 +883,8 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };

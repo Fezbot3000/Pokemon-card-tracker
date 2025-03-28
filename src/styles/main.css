@@ -1,4 +1,4 @@
-@import url('https://cdn.fontshare.com/fonts/satoshi/css/satoshi.css');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,15 +6,34 @@
 
 @import './shared.css';
 
+/* Design system variables */
+:root {
+  --primary: rgba(67, 24, 255, 0.9); /* Slightly transparent purple */
+  --primary-dark: rgba(107, 78, 255, 0.9); /* Slightly transparent dark mode purple */
+  --error: #FF3B3B;
+  --success: #05CD99;
+  --border-radius-sm: 0.375rem; /* 6px */
+  --border-radius-md: 0.5rem; /* 8px */
+  --border-radius-lg: 0.75rem; /* 12px */
+  --border-radius-xl: 1rem; /* 16px */
+  --btn-height: 2.75rem; /* 44px */
+  --btn-padding-x: 1rem; /* 16px */
+  --btn-padding-y: 0.625rem; /* 10px */
+  --btn-font-size: 0.875rem; /* 14px */
+  --btn-font-weight: 500;
+  --btn-radius: var(--border-radius-lg);
+  --btn-icon-size: 1.25rem; /* 20px */
+}
+
 /* Prevent scrollbar layout shift */
 html {
   scrollbar-gutter: stable;
-  font-family: 'Satoshi', -apple-system, BlinkMacSystemFont, system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family: 'Noto Sans', -apple-system, BlinkMacSystemFont, system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   @apply overflow-x-hidden text-base font-normal;
   overscroll-behavior-y: none;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  letter-spacing: -0.01em;
+  letter-spacing: 0; /* Reset letter spacing for Noto Sans */
   overflow-y: scroll;
 }
 
@@ -34,7 +53,7 @@ html::-webkit-scrollbar-track {
 
 html::-webkit-scrollbar-thumb {
   background-color: rgba(155, 155, 155, 0.5);
-  border-radius: 20px;
+  border-radius: var(--border-radius-lg);
 }
 
 /* Dark mode scrollbar adjustments */
@@ -128,29 +147,32 @@ body {
 
   /* Adjust font weights for better rendering */
   h1, h2, h3, h4, h5, h6 {
-    @apply font-medium tracking-tight;
-    letter-spacing: -0.03em;
+    @apply font-medium;
+    letter-spacing: -0.01em; /* Adjusted for Noto Sans */
   }
 
   .text-2xl {
-    letter-spacing: -0.03em;
+    letter-spacing: -0.01em; /* Adjusted for Noto Sans */
   }
 
   .font-medium {
-    @apply tracking-tight;
+    @apply tracking-normal; /* Adjusted for Noto Sans */
   }
 
   /* Typography Scale */
   h1 {
-    @apply text-2xl font-semibold tracking-tight;
+    @apply text-2xl font-semibold;
+    letter-spacing: -0.01em; /* Adjusted for Noto Sans */
   }
 
   h2 {
-    @apply text-xl font-semibold tracking-tight;
+    @apply text-xl font-semibold;
+    letter-spacing: -0.01em; /* Adjusted for Noto Sans */
   }
 
   h3 {
-    @apply text-lg font-semibold tracking-tight;
+    @apply text-lg font-semibold;
+    letter-spacing: -0.01em; /* Adjusted for Noto Sans */
   }
 
   h4 {
@@ -175,11 +197,11 @@ body {
 
   /* Stats values */
   .stat-value {
-    @apply text-2xl font-semibold;
+    @apply text-base sm:text-2xl font-semibold;
   }
 
   .stat-label {
-    @apply text-sm font-medium uppercase tracking-normal text-gray-700 dark:text-gray-300;
+    @apply text-xs font-medium uppercase tracking-normal text-gray-600 dark:text-gray-300;
   }
 
   /* Card title and content */
@@ -267,14 +289,19 @@ body {
 
   /* Stats Section */
   .stats-section {
-    .stat-card {
-      .stat-label {
-        @apply text-sm font-medium text-gray-700 dark:text-gray-300 mb-1;
-      }
-      .stat-value {
-        @apply text-2xl font-semibold;
-      }
-    }
+    @apply grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-3 mb-3 sm:mb-4 px-2 sm:px-4;
+  }
+
+  .stat-card {
+    @apply bg-white dark:bg-[#1B2131] rounded-lg p-2.5 sm:p-3 shadow-sm flex flex-col;
+  }
+
+  .stat-label {
+    @apply text-xs font-medium text-gray-600 dark:text-gray-300 mb-0.5;
+  }
+
+  .stat-value {
+    @apply text-base sm:text-3xl text-gray-900 dark:text-white font-medium;
   }
 
   /* Profit/Loss Values */
@@ -291,7 +318,8 @@ body {
 
 /* Custom styles that are specific to this app */
 :root {
-  --primary: #4318FF;
+  --primary: rgba(67, 24, 255, 0.9); /* Slightly transparent purple */
+  --primary-dark: rgba(107, 78, 255, 0.9); /* Slightly transparent dark mode purple */
   --error: #FF3B3B;
   --success: #05CD99;
 }
@@ -330,16 +358,24 @@ body {
 
   /* Button Styles */
   .btn {
-    @apply px-4 py-3 rounded-xl transition-all duration-200 font-medium text-sm flex items-center justify-center h-12;
+    @apply px-4 py-2.5 rounded-lg transition-all duration-200 font-medium text-sm flex items-center justify-center;
+    height: var(--btn-height);
+    border-radius: var(--btn-radius) !important;
+    font-weight: var(--btn-font-weight);
+    font-size: var(--btn-font-size);
+    padding: var(--btn-padding-y) var(--btn-padding-x);
+    white-space: nowrap;
   }
 
   .btn span.material-icons {
-    @apply inline-block text-xl flex-shrink-0;
+    @apply inline-block flex-shrink-0;
+    font-size: var(--btn-icon-size);
+    margin-right: 0.25rem;
   }
 
-  /* Only show text on desktop */
+  /* Only hide text on desktop for specific side-panel buttons */
   .btn span:not(.material-icons) {
-    @apply hidden xl:inline;
+    @apply inline; /* Show text by default */
   }
 
   /* Mobile menu */
@@ -485,11 +521,11 @@ body {
   }
 
   .collection-item.text-primary {
-    @apply text-[#4318FF] dark:text-[#6B4EFF];
+    @apply text-purple-700 dark:text-purple-400;
   }
 
   .collection-item.text-primary span {
-    @apply text-[#4318FF] dark:text-[#6B4EFF];
+    @apply text-purple-700 dark:text-purple-400;
   }
 
   .collection-divider {
@@ -511,45 +547,143 @@ body {
 
   /* Button Styles */
   .btn-primary {
-    @apply bg-[#4318FF] text-white hover:bg-[#4318FF]/90;
+    @apply bg-purple-100/90 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 
+           hover:bg-purple-200 dark:hover:bg-purple-900/40 border border-purple-200 dark:border-purple-900/30
+           flex items-center justify-center gap-2;
   }
 
   .btn-secondary {
-    @apply bg-white text-gray-700 hover:bg-gray-50 border border-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700 dark:border-gray-700;
+    @apply bg-blue-100 dark:bg-blue-900/20 
+           text-blue-600 dark:text-blue-400 
+           border-2 border-blue-400 dark:border-blue-500
+           hover:bg-blue-200 dark:hover:bg-blue-900/30
+           flex items-center justify-center gap-2;
+  }
+
+  .btn-tertiary {
+    @apply bg-gray-100 dark:bg-gray-800/40 
+           text-gray-600 dark:text-gray-400
+           hover:bg-gray-200 dark:hover:bg-gray-700/60
+           flex items-center justify-center gap-2;
   }
 
   .btn-danger {
-    @apply bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400 
+    @apply bg-red-100 dark:bg-red-900/20 
+           text-red-600 dark:text-red-400 
            hover:bg-red-200 dark:hover:bg-red-900/30 
-           border border-red-200 dark:border-red-900/30;
+           border border-red-200 dark:border-red-900/30
+           flex items-center justify-center gap-2;
   }
 
   /* Delete button */
   .delete-button {
-    @apply w-full px-4 py-3 rounded-xl h-12
-           bg-red-600 dark:bg-red-800
-           text-white font-medium
-           hover:bg-red-700 dark:hover:bg-red-700
-           transition-colors flex items-center justify-center;
+    @apply px-4 py-2.5 rounded-lg 
+           bg-red-100 dark:bg-red-900/20
+           text-red-600 dark:text-red-400
+           border border-red-200 dark:border-red-900/30
+           hover:bg-red-200 dark:hover:bg-red-900/30 
+           transition-colors flex items-center justify-center gap-2 font-medium;
+    height: var(--btn-height);
+  }
+
+  /* Custom button styles for specific use cases */
+  .btn-custom-purple {
+    @apply bg-purple-100 dark:bg-purple-900/20 
+           text-purple-600 dark:text-purple-400 
+           hover:bg-purple-200 dark:hover:bg-purple-900/30
+           flex items-center justify-center gap-2;
+  }
+
+  .btn-custom-green {
+    @apply bg-green-100 dark:bg-green-900/20 
+           text-green-600 dark:text-green-400 
+           hover:bg-green-200 dark:hover:bg-green-900/30
+           flex items-center justify-center gap-2;
+  }
+
+  /* Button sizes */
+  .btn-sm {
+    @apply px-3 py-1.5 text-xs;
+    height: 2.25rem; /* 36px */
+  }
+
+  .btn-lg {
+    @apply px-5 py-3 text-base;
+    height: 3.25rem; /* 52px */
+  }
+
+  /* Outline versions */
+  .btn-outline-primary {
+    @apply bg-transparent border-2 border-primary 
+           text-primary hover:bg-primary/10;
+  }
+
+  .btn-outline-secondary {
+    @apply bg-transparent border-2 border-blue-400 dark:border-blue-500
+           text-blue-600 dark:text-blue-400
+           hover:bg-blue-100/50 dark:hover:bg-blue-900/10;
+  }
+
+  /* For default gray button */
+  .btn-default {
+    @apply bg-gray-50 dark:bg-[#252B3B]
+           text-gray-700 dark:text-gray-300
+           border border-gray-200 dark:border-gray-700
+           hover:bg-gray-100 dark:hover:bg-[#323B4B]
+           flex items-center justify-center gap-2;
+  }
+
+  /* Override all old button styles */
+  .btn-primary, 
+  .sort-button, 
+  .view-button, 
+  .collection-button,
+  button[type="submit"],
+  .modal-btn-create,
+  .btn-marketing-primary,
+  .btn-marketing-secondary,
+  .btn-marketing-tertiary {
+    height: var(--btn-height);
+    border-radius: var(--btn-radius) !important;
+  }
+
+  .btn-secondary,
+  .modal-btn-cancel {
+    height: var(--btn-height);
+    border-radius: var(--btn-radius) !important;
+  }
+
+  /* Sort dropdown button and Add Card button */
+  .sort-button, 
+  .view-button, 
+  .btn-primary, 
+  .btn-secondary, 
+  .btn-tertiary,
+  .btn-danger,
+  .btn-custom-purple,
+  .btn-custom-green,
+  .btn-default,
+  .btn-outline-primary,
+  .btn-outline-secondary {
+    height: var(--btn-height);
+    border-radius: var(--btn-radius) !important;
   }
 
   /* Stats Section */
   .stats-section {
-    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 xl:gap-4 px-2 sm:px-4 xl:px-6 py-3;
+    @apply grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-3 mb-3 sm:mb-4 px-2 sm:px-4;
   }
 
   .stat-card {
-    @apply p-4 rounded-xl bg-gray-50 dark:bg-[#1B2131] 
-           border border-gray-200 dark:border-gray-700/50
-           transition-all duration-200;
+    @apply bg-white dark:bg-[#1B2131] rounded-lg p-2.5 sm:p-3 shadow-sm flex flex-col;
   }
 
   .stat-label {
-    @apply text-sm uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-2;
+    @apply text-xs font-medium text-gray-600 dark:text-gray-300 mb-0.5;
   }
 
   .stat-value {
-    @apply text-2xl font-medium text-gray-900 dark:text-white;
+    @apply text-base sm:text-3xl text-gray-900 dark:text-white font-medium;
   }
 
   /* This ensures the profit value is colored but keeps the same font size */
@@ -652,10 +786,10 @@ body {
   .card {
     @apply bg-gray-50 dark:bg-[#1B2131] 
            border border-gray-200 dark:border-gray-700/50
-           rounded-[16px] sm:rounded-[24px]
            overflow-hidden
            flex flex-col
            transition-all duration-200;
+    border-radius: var(--border-radius-lg) !important;
   }
 
   /* Image Container */
@@ -697,6 +831,7 @@ body {
 
   .card-stat {
     @apply p-4 rounded-xl bg-gray-50 dark:bg-[#1B2131] border border-gray-200 dark:border-gray-700/50;
+    border-radius: var(--border-radius-lg) !important;
   }
 
   .card-stat-label {
@@ -761,6 +896,7 @@ body {
 
   .modal-content {
     @apply bg-gray-50 dark:bg-[#1B2131] rounded-xl w-full max-w-md mx-4 overflow-hidden;
+    border-radius: var(--border-radius-lg) !important;
   }
 
   .modal-header {
@@ -790,6 +926,7 @@ body {
            text-gray-900 dark:text-white
            focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary
            placeholder-gray-500 dark:placeholder-gray-400;
+    border-radius: var(--border-radius-lg) !important;
   }
 
   .modal-footer {
@@ -802,6 +939,7 @@ body {
            text-gray-700 dark:text-gray-300
            hover:bg-gray-200 dark:hover:bg-[#323B4B]
            transition-colors;
+    border-radius: var(--border-radius-lg) !important;
   }
 
   .modal-btn-create {
@@ -809,6 +947,7 @@ body {
            bg-primary text-white
            hover:bg-primary/90
            transition-colors;
+    border-radius: var(--border-radius-lg) !important;
   }
 
   /* Dropdown Styles */
@@ -894,6 +1033,7 @@ body {
 
   .card-stat {
     @apply p-4 rounded-xl bg-gray-50 dark:bg-[#1B2131] border border-gray-200 dark:border-gray-700/50;
+    border-radius: var(--border-radius-lg) !important;
   }
 
   .card-stat-label {
@@ -1158,20 +1298,21 @@ body {
   /* Card Details Header */
   .card-details-header {
     @apply sticky top-0 bg-white dark:bg-[#1B2131] 
-           border-b border-gray-200 dark:border-gray-700/50
-           px-6 py-4 flex justify-between items-center z-10;
+           border-b border-gray-200/50 dark:border-gray-700/25
+           px-4 z-10;
+    box-shadow: none;
   }
 
   /* Card Details Content */
   .card-details-content {
-    @apply flex-1 overflow-y-auto px-6 py-4;
+    @apply flex-1 overflow-y-auto px-4 py-4;
   }
 
   /* Card Details Footer */
   .card-details-footer {
     @apply sticky bottom-0 bg-white dark:bg-[#1B2131] 
            border-t border-gray-200 dark:border-gray-700/50
-           px-6 py-4 flex justify-end gap-3 z-10;
+           px-4 py-3 flex justify-end gap-3 z-10;
   }
 
   /* Card Details Overlay */
@@ -1224,6 +1365,7 @@ body {
     @apply fixed inset-y-0 right-0 w-full sm:max-w-md 
            bg-white dark:bg-[#1B2131] shadow-xl
            flex flex-col overflow-hidden;
+    border-radius: 0 !important;
   }
 
   .settings-header {
@@ -1296,40 +1438,301 @@ body {
 
   /* Bottom Navigation Bar */
   .bottom-nav {
-    @apply fixed bottom-0 left-0 right-0 bg-gray-100 dark:bg-[#1B2131] 
-           border-t border-gray-200 dark:border-gray-700 
-           z-50 flex items-center justify-around h-14;
+    @apply fixed bottom-0 left-0 right-0 bg-white dark:bg-[#1B2131] border-t border-gray-200 dark:border-gray-700/50 grid grid-cols-4 z-40;
+    padding-bottom: env(safe-area-inset-bottom, 0);
+    padding-bottom: max(env(safe-area-inset-bottom, 0), 12px);
   }
 
   .bottom-nav-item {
-    @apply flex flex-col items-center justify-center w-1/4 py-1;
+    @apply flex flex-col items-center justify-center py-2 text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-primary transition-colors;
   }
 
   .bottom-nav-item.active {
     @apply text-primary;
   }
 
-  .bottom-nav-item:not(.active) {
-    @apply text-gray-500 dark:text-gray-400;
+  /* Only hide bottom nav when modal is open on desktop */
+  @media (min-width: 768px) {
+    .modal-open .bottom-nav {
+      display: none;
+    }
   }
 
-  .bottom-nav-icon {
-    @apply text-xl;
+  .dashboard-page {
+    @apply min-h-screen bg-gray-100 dark:bg-[#111827];
+    padding-bottom: calc(env(safe-area-inset-bottom, 0) + 64px);
   }
 
-  .bottom-nav-label {
-    @apply text-xs mt-0.5;
+  .card-details-content {
+    @apply h-[calc(100vh-128px)] overflow-y-auto;
+    padding-bottom: calc(env(safe-area-inset-bottom, 0) + 12px);
   }
 
-  /* Adjust bottom padding for pages with bottom nav */
+  /* Settings page styles */
+  .settings-page {
+    @apply bg-gray-100 dark:bg-[#111827];
+  }
+
+  /* Mobile settings content */
+  .mobile-settings-content > div {
+    @apply mb-4 shadow-sm;
+  }
+
+  /* Ensure mobile buttons show both icon and text */
   @media (max-width: 768px) {
-    .dashboard-page {
-      @apply pb-14;
+    .btn span:not(.material-icons) {
+      @apply inline; /* Always show text on mobile */
     }
     
-    /* Add padding to fixed elements at the bottom to prevent overlap with navbar */
-    .fixed.bottom-6 {
-      @apply bottom-20;
+    /* Make sure buttons in modals have consistent width */
+    .card-details-footer .btn,
+    .card-details-footer button {
+      min-width: 110px;
+      height: var(--btn-height);
+    }
+    
+    /* Add Card modal buttons */
+    .add-card-header .btn,
+    .add-card-header button {
+      min-width: 110px;
+      height: var(--btn-height);
+    }
+  }
+
+  /* Settings dropdown fix for mobile */
+  .collection-rename-dropdown {
+    z-index: 50;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+
+  /* Collection rename edit button fix */
+  .collection-rename-btn {
+    padding: 4px !important;
+    height: auto !important;
+    width: auto !important;
+    min-width: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  /* Add this at the appropriate section of the file */
+  .PDFDownloadLink,
+  .btn.btn-sm.btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    white-space: nowrap;
+    width: auto;
+  }
+
+  /* Fix the invoice button on mobile */
+  @media (max-width: 640px) {
+    .PDFDownloadLink {
+      min-width: 0;
+      width: auto;
+      flex: 1;
+    }
+    
+    .PDFDownloadLink .material-icons {
+      margin-right: 4px;
+    }
+    
+    /* Improve sold items card display on mobile */
+    .grid.grid-cols-2 > div {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    
+    /* Make sure buttons have proper height on small screens */
+    .btn.btn-sm {
+      min-height: 32px;
+      padding-top: 4px;
+      padding-bottom: 4px;
+    }
+  }
+
+  /* Ensure buttons have properly contained text */
+  .btn,
+  .btn-primary,
+  .btn-secondary,
+  .btn-tertiary,
+  .btn-danger {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+  }
+
+  /* Add these specific fixes for sold items page */
+  .sold-items-mobile-fixes {
+    display: contents;
+  }
+
+  /* Additional mobile-specific fixes for sold items page */
+  @media (max-width: 640px) {
+    /* Ensure grid layout maintains alignment */
+    .grid.grid-cols-2.gap-y-1 {
+      display: grid;
+      grid-template-columns: minmax(80px, 1fr) 1fr;
+      gap: 4px 8px;
+      width: 100%;
+      margin-top: 8px;
+    }
+    
+    /* Left column (labels) */
+    .grid.grid-cols-2.gap-y-1 > div:nth-child(odd) {
+      text-align: left;
+      color: #6B7280;
+      font-size: 0.75rem;
+      line-height: 1.25rem;
+    }
+    
+    /* Right column (values) */
+    .grid.grid-cols-2.gap-y-1 > div:nth-child(even) {
+      text-align: right;
+      font-weight: 500;
+      font-size: 0.875rem;
+      line-height: 1.25rem;
+    }
+    
+    /* Better sales value display in invoice header */
+    .flex.flex-col.mt-2 {
+      margin-top: 8px;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .flex.flex-col.mt-2 > span:first-child {
+      font-size: 0.75rem;
+      color: #6B7280;
+    }
+    
+    .flex.flex-col.mt-2 > span:last-child {
+      font-weight: 500;
+      font-size: 0.875rem;
+    }
+
+    /* Card title and player name */
+    .bg-gray-50.dark\:bg-\[\#1B2131\].rounded-xl.p-3 .mb-2 {
+      margin-bottom: 8px;
+    }
+    
+    .bg-gray-50.dark\:bg-\[\#1B2131\].rounded-xl.p-3 .mb-2 h4 {
+      font-size: 0.875rem;
+      line-height: 1.25rem;
+    }
+    
+    .bg-gray-50.dark\:bg-\[\#1B2131\].rounded-xl.p-3 .mb-2 p {
+      font-size: 0.75rem;
+      line-height: 1rem;
+      color: #6B7280;
+    }
+    
+    /* Improve spacing in card items */
+    .space-y-2.p-4.sm\:p-6 {
+      padding: 12px;
+    }
+    
+    .bg-gray-50.dark\:bg-\[\#1B2131\].rounded-xl.p-3 {
+      padding: 12px;
+      margin-bottom: 8px;
+    }
+    
+    /* Improve financial year header */
+    .flex.items-center.gap-2.sm\:gap-4 h2 {
+      font-size: 1rem;
+      line-height: 1.5rem;
+    }
+    
+    /* Fix line wrapping in card titles */
+    .truncate {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+    }
+    
+    /* Specific Invoice button fixes */
+    .btn.btn-sm.btn-primary.flex-1.sm\:flex-initial {
+      font-size: 0.75rem;
+      height: auto !important;
+      min-height: 36px;
+    }
+    
+    /* Fix invoice card spacing */
+    .space-y-2.p-4.sm\:p-6.border-t.border-gray-200 > div:not(:last-child) {
+      margin-bottom: 8px;
+    }
+    
+    /* Align invoice header elements better */
+    button .flex.flex-col.sm\:flex-row.sm\:items-center.gap-2 {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    /* Improve financial data visibility */
+    .text-green-500, .text-red-500 {
+      font-weight: 600 !important;
+    }
+    
+    /* Fix the button containing text and icon */
+    .flex.items-center.justify-center.w-full {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      justify-content: center;
+    }
+    
+    /* Fix the expand collapse icons for invoice */
+    button .material-icons:last-child {
+      flex-shrink: 0;
+    }
+    
+    /* Stats section adjustments */
+    .grid.grid-cols-2.sm\:grid-cols-4 > div {
+      padding: 10px !important;
+    }
+    
+    /* Make sure buttons center content properly */
+    .btn div,
+    .btn span:not(.material-icons) {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  /* Ensure invoice header is fully visible */
+  .flex.flex-col.sm\:flex-row.sm\:items-center.gap-2.sm\:gap-4.mb-2.sm\:mb-0 {
+    width: 100%;
+  }
+
+  /* Card value stacked layout for mobile */
+  @media (max-width: 640px) {
+    .flex.flex-col.space-y-1\.5 {
+      margin-top: 0.5rem;
+    }
+    
+    .flex.flex-col.space-y-1\.5 > div {
+      padding: 0.5rem;
+      border-radius: 0.5rem;
+    }
+    
+    .flex.flex-col.space-y-1\.5 > div .text-xs {
+      margin-bottom: 0.125rem;
+    }
+    
+    .flex.flex-col.space-y-1\.5 > div .text-sm {
+      font-weight: 600;
     }
   }
 }
@@ -1436,13 +1839,23 @@ input[type="checkbox"] {
          checked:bg-primary checked:border-primary
          focus:ring-2 focus:ring-primary/30 focus:ring-offset-0
          cursor-pointer transition-colors;
+  aspect-ratio: 1/1;
+  min-width: 16px;
+  min-height: 16px;
+  max-width: 16px;
+  max-height: 16px;
 }
 
 input[type="checkbox"]:checked {
-  background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3e%3c/svg%3e");
-  background-size: 100% 100%;
-  background-position: center;
-  background-repeat: no-repeat;
+  @apply bg-purple-100 border-purple-300 dark:bg-purple-900/30 dark:border-purple-700;
+}
+
+input[type="checkbox"].text-primary {
+  @apply text-purple-700 dark:text-purple-400;
+}
+
+input[type="checkbox"].focus\:ring-primary:focus {
+  @apply ring-purple-300 dark:ring-purple-800/50;
 }
 
 /* Card checkbox container */
@@ -1453,4 +1866,480 @@ input[type="checkbox"]:checked {
 /* Ensure checkboxes are visible */
 .card input[type="checkbox"] {
   @apply opacity-100 visible;
+}
+
+/* Stats values */
+.stat-value {
+  @apply text-base sm:text-2xl font-semibold;
+}
+
+.stat-label {
+  @apply text-xs font-medium uppercase tracking-normal text-gray-600 dark:text-gray-300;
+}
+
+/* This ensures the profit value is colored but keeps the same font size */
+.stat-value.profit-value {
+  @apply text-green-500 dark:text-green-400;
+}
+
+.stat-value.loss-value {
+  @apply text-red-500 dark:text-red-400;
+}
+
+/* Card Counter */
+.card-counter {
+  @apply flex items-center gap-0.5 sm:gap-1 justify-center;
+}
+
+.card-counter .material-icons {
+  @apply text-xs sm:text-sm text-gray-600 dark:text-gray-300;
+}
+
+/* Settings page background */
+.settings-page {
+  background-color: #f3f4f6;
+}
+
+.dark .settings-page {
+  background-color: #111827;
+}
+
+/* Settings mobile styles */
+.mobile-settings-content > div:not(:last-child) {
+  margin-bottom: 16px;
+}
+
+.mobile-settings-content > div {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* Settings container max width for mobile */
+@media (max-width: 768px) {
+  .settings-page .p-6 {
+    max-width: 36rem; /* Same as max-w-xl (36rem/576px) */
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  .settings-page .mobile-settings-content > div {
+    width: 100%;
+  }
+}
+
+/* Fix mobile content distortion */
+@media (max-width: 768px) {
+  /* Ensure proper scaling on mobile */
+  html, body {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+  
+  /* Prevent horizontal overflow */
+  .app, .app-content, .dashboard-page, .settings-page {
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+  
+  /* Ensure buttons have minimum touch target size */
+  button, 
+  .btn,
+  [role="button"],
+  input,
+  select,
+  .card-stat,
+  .collection-item {
+    min-height: 44px;
+    touch-action: manipulation;
+  }
+  
+  /* Ensure content fits within viewport */
+  .card-grid {
+    width: 100%;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+  
+  /* Prevent flex items from shrinking too much */
+  .flex-1 {
+    flex-shrink: 0;
+    min-width: 0;
+  }
+  
+  /* Fix settings page display */
+  .settings-page .mobile-settings-content > div {
+    border-radius: 0.75rem;
+    margin-bottom: 1rem;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  
+  /* Ensure consistent spacing */
+  .p-4 {
+    padding: 1rem !important;
+  }
+  
+  /* Make sure buttons display correctly */
+  .settings-page button {
+    width: 100%;
+    height: auto;
+    min-height: 44px;
+    padding-top: 0.625rem;
+    padding-bottom: 0.625rem;
+    line-height: 1.5;
+  }
+  
+  /* Fix for flexbox items on iOS */
+  .flex {
+    display: flex;
+  }
+  
+  .flex > * {
+    max-width: 100%;
+  }
+  
+  /* Fix for label alignment */
+  label {
+    display: block;
+  }
+  
+  /* Fix Safari button rendering */
+  button,
+  input[type="button"] {
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  
+  /* Fix for fixed header on mobile */
+  .settings-page .fixed.top-0 {
+    height: auto;
+    z-index: 50;
+  }
+  
+  /* Height for tabs container on mobile */
+  .settings-page .fixed.top-0 {
+    min-height: 112px; /* 64px for header + 48px for tabs */
+  }
+  
+  /* Ensure safe content area beneath fixed header */
+  .settings-page .pt-32 {
+    /* This ensures content starts below the fixed header */
+    padding-top: 8rem !important; /* 128px in rem units */
+  }
+}
+
+/* Unified border radius utility classes */
+.rounded-consistent-sm {
+  border-radius: var(--border-radius-sm);
+}
+
+.rounded-consistent-md {
+  border-radius: var(--border-radius-md);
+}
+
+.rounded-consistent-lg {
+  border-radius: var(--border-radius-lg);
+}
+
+.rounded-consistent-xl {
+  border-radius: var(--border-radius-xl);
+}
+
+/* Update button styles */
+.btn-primary, 
+.btn-secondary, 
+.btn,
+.btn-danger,
+.delete-button,
+.sort-button,
+.view-button,
+.collection-button,
+button[type="submit"],
+.modal-btn-create,
+.modal-btn-cancel {
+  border-radius: var(--border-radius-lg) !important;
+}
+
+/* Update input styles */
+.search-input,
+.modal-input,
+input[type="text"],
+input[type="number"],
+input[type="email"],
+input[type="password"],
+input[type="tel"],
+textarea,
+select {
+  border-radius: var(--border-radius-lg) !important;
+}
+
+/* Update card components */
+.card-stat,
+.stat-card,
+.collection-dropdown,
+.sort-dropdown,
+.view-dropdown,
+.mobile-settings-content > div {
+  border-radius: var(--border-radius-lg) !important;
+}
+
+/* Update modal styles */
+.modal-content,
+.settings-modal-content,
+.card-details {
+  border-radius: var(--border-radius-lg) !important;
+}
+
+/* Override Tailwind classes for consistent border radius */
+.rounded-xl, 
+.rounded-2xl,
+.rounded-full {
+  border-radius: var(--border-radius-lg) !important;
+}
+
+.rounded, 
+.rounded-md {
+  border-radius: var(--border-radius-md) !important;
+}
+
+.rounded-sm {
+  border-radius: var(--border-radius-sm) !important;
+}
+
+/* Additional specific overrides */
+.card-image img,
+.image-placeholder,
+.card-image-container,
+.image-upload-container {
+  border-radius: var(--border-radius-lg) !important;
+}
+
+/* Fix for logos and user avatars - keep these rounded */
+.logo-image,
+.user-avatar,
+.avatar-round {
+  border-radius: var(--border-radius-xl) !important;
+}
+
+/* Make sure standard buttons also use the consistent radius */
+button,
+a.button,
+.button,
+a.btn,
+[type="button"],
+[type="submit"],
+[type="reset"] {
+  border-radius: var(--border-radius-lg) !important;
+}
+
+/* Override header shadow styles on mobile */
+@media (max-width: 768px) {
+  /* Remove shadows from mobile header */
+  .fixed.top-0.left-0.right-0.z-40, 
+  .settings-page .fixed.top-0.left-0.right-0.z-40 {
+    box-shadow: none !important;
+    border-bottom-width: 1px !important;
+  }
+  
+  /* Remove purple underline on active tab */
+  .border-primary {
+    border-color: transparent !important;
+  }
+  
+  /* Use text color instead for active tab */
+  .text-primary {
+    color: rgba(107, 78, 255, 0.9) !important;
+  }
+  
+  /* Ensure safe content area beneath fixed header */
+  .settings-page .pt-32 {
+    /* This ensures content starts below the fixed header */
+    padding-top: 8rem !important; /* 128px in rem units */
+  }
+}
+
+/* Marketing Button Styles */
+.btn-marketing {
+  @apply text-lg px-8 py-4 inline-flex items-center gap-2 rounded-xl 
+         shadow-lg transition-all duration-200 
+         hover:shadow-xl font-medium;
+  height: auto;
+}
+
+.btn-marketing-primary {
+  @apply btn-marketing bg-white text-gray-900 hover:bg-gray-50;
+}
+
+.btn-marketing-secondary {
+  @apply btn-marketing bg-blue-600/90 text-white hover:bg-blue-600;
+}
+
+.btn-marketing-tertiary {
+  @apply btn-marketing bg-green-600/90 text-white hover:bg-green-600;
+}
+
+/* Add this updated selector to catch additional buttons with primary styling */
+.bg-primary, 
+button[type="submit"]:not(.btn-secondary):not(.btn-tertiary):not(.btn-danger),
+.btn-primary, 
+.modal-btn-create,
+.sort-button[aria-pressed="true"],
+.view-button[aria-pressed="true"] {
+  @apply bg-purple-100/90 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 
+         hover:bg-purple-200 dark:hover:bg-purple-900/40 border border-purple-200 dark:border-purple-900/30
+         flex items-center justify-center gap-2;
+}
+
+/* Update focus rings */
+.focus\:ring-primary:focus,
+.focus-ring-primary {
+  @apply ring-purple-300 dark:ring-purple-800/50;
+}
+
+/* Update active states */
+.active\:bg-primary:active {
+  @apply bg-purple-200 dark:bg-purple-900/40;
+}
+
+.active\:text-primary:active {
+  @apply text-purple-700 dark:text-purple-400;
+}
+
+/* Update the check mark image for checkboxes */
+input[type="checkbox"]:checked {
+  background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='%236B46C1' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3e%3c/svg%3e");
+  background-size: 100% 100%;
+  background-position: center;
+  background-repeat: no-repeat;
+  @apply bg-purple-100 border-purple-300 dark:bg-purple-900/30 dark:border-purple-700;
+}
+
+/* Make sure we update all references to primary color */
+.border-primary {
+  @apply border-purple-300 dark:border-purple-600/50;
+}
+
+.hover\:border-primary:hover {
+  @apply hover:border-purple-400 dark:hover:border-purple-500;
+}
+
+.text-primary {
+  @apply text-purple-700 dark:text-purple-400;
+}
+
+.hover\:text-primary:hover {
+  @apply hover:text-purple-700 dark:hover:text-purple-400;
+}
+
+.ring-primary {
+  @apply ring-purple-300 dark:ring-purple-800/50;
+}
+
+.focus\:ring-primary:focus {
+  @apply focus:ring-purple-300 dark:focus:ring-purple-800/50;
+}
+
+.hover\:bg-primary:hover {
+  @apply hover:bg-purple-200 dark:hover:bg-purple-900/40;
+}
+
+.hover\:bg-primary\/90:hover {
+  @apply hover:bg-purple-200 dark:hover:bg-purple-900/40;
+}
+
+.bg-primary\/5, .bg-primary\/10, .bg-primary\/20 {
+  @apply bg-purple-100/50 dark:bg-purple-900/20; 
+}
+
+.active-indicator {
+  @apply bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400;
+}
+
+/* Fix button overflow issues */
+.btn {
+  white-space: nowrap;
+  min-width: 110px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  position: relative;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  height: var(--btn-height);
+  padding: var(--btn-padding-y) var(--btn-padding-x);
+  border-radius: var(--btn-radius) !important;
+  font-weight: var(--btn-font-weight);
+  font-size: var(--btn-font-size);
+}
+
+/* Fix cloud backup and data management tool buttons */
+.btn .material-icons {
+  flex-shrink: 0;
+  font-size: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+}
+
+/* Override earlier rule that might be causing conflicts */
+.btn span.material-icons {
+  margin-right: 0;
+}
+
+/* Remove fixed width rule that might be causing issues */
+.btn > span {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Fix mobile checkbox alignment */
+input[type="radio"],
+input[type="checkbox"] {
+  vertical-align: middle;
+  margin-top: 0;
+  aspect-ratio: 1/1;
+  min-width: 16px;
+  min-height: 16px;
+  max-width: 16px;
+  max-height: 16px;
+}
+
+/* Ensure form elements have proper spacing */
+.form-group {
+  @apply space-y-1;
+}
+
+.form-hint {
+  @apply mt-1 text-sm text-gray-500 dark:text-gray-300;
+}
+
+.form-error {
+  @apply mt-1 text-sm text-red-500 dark:text-red-400;
+}
+
+/* Card value styling for stacked layout */
+.flex.flex-col.space-y-1 {
+  margin-top: 8px;
+}
+
+.flex.flex-col.space-y-1 > .flex.justify-between {
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.flex.flex-col.space-y-1 > .flex.justify-between:nth-child(odd) {
+  background-color: rgba(243, 244, 246, 0.5);
+}
+
+.dark .flex.flex-col.space-y-1 > .flex.justify-between:nth-child(odd) {
+  background-color: rgba(31, 41, 55, 0.3);
+}
+
+/* Add spacing between card items in sold items view */
+.bg-gray-50.dark\:bg-\[\#1B2131\].rounded-xl.p-3 {
+  margin-bottom: 12px;
 }

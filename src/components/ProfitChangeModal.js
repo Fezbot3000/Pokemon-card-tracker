@@ -43,7 +43,7 @@ const ProfitChangeModal = ({ isOpen, onClose, profitChangeData, oldProfit, newPr
           <div className="mt-6 flex justify-end">
             <button
               onClick={onClose}
-              className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+              className="btn btn-primary"
             >
               Close
             </button>

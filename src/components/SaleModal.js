@@ -243,16 +243,13 @@ const SaleModal = ({ isOpen, onClose, selectedCards, onConfirm }) => {
       <div className="fixed bottom-0 left-0 right-0 flex justify-between items-center p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0B0F19] z-10">
         <button
           onClick={handleClose}
-          className="h-10 px-4 rounded-lg bg-gray-200 dark:bg-gray-800 
-                   text-gray-800 dark:text-gray-300 text-sm hover:bg-gray-300 
-                   dark:hover:bg-gray-700 transition-colors"
+          className="btn btn-primary h-10 text-sm"
         >
           Cancel
         </button>
         <button
           onClick={handleSubmit}
-          className="h-10 px-4 rounded-lg bg-primary text-white text-sm
-                   hover:bg-primary/90 transition-colors"
+          className="btn btn-primary h-10 text-sm"
         >
           Confirm Sale
         </button>

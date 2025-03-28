@@ -38,7 +38,7 @@ function Home() {
             {currentUser ? (
               <Link 
                 to="/dashboard" 
-                className="btn bg-white text-gray-900 hover:bg-gray-50 text-lg px-8 py-4 inline-flex items-center gap-2 rounded-xl shadow-lg transition-all duration-200 hover:shadow-xl"
+                className="btn-marketing-primary"
               >
                 <span className="material-icons">dashboard</span>
                 Open Dashboard
@@ -47,14 +47,14 @@ function Home() {
               <>
                 <Link 
                   to="/login" 
-                  className="btn bg-blue-600 text-white hover:bg-blue-700 text-lg px-8 py-4 inline-flex items-center gap-2 rounded-xl shadow-lg transition-all duration-200 hover:shadow-xl"
+                  className="btn-marketing-secondary"
                 >
                   <span className="material-icons">login</span>
                   Login / Sign Up
                 </Link>
                 <Link 
                   to="/pricing" 
-                  className="btn bg-green-600 text-white hover:bg-green-700 text-lg px-8 py-4 inline-flex items-center gap-2 rounded-xl shadow-lg transition-all duration-200 hover:shadow-xl"
+                  className="btn-marketing-tertiary"
                 >
                   <span className="material-icons">sell</span>
                   View Pricing

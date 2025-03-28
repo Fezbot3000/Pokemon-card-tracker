@@ -88,7 +88,7 @@ const Card = memo(({ card, cardImage, onCardClick, isSelected, onSelect, display
             e.stopPropagation();
             onSelect(e, card.slabSerial);
           }}
-          className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer bg-white dark:bg-transparent"
+          className="w-4 h-4 min-w-[16px] min-h-[16px] max-w-[16px] max-h-[16px] aspect-square rounded border-gray-300 text-primary focus:ring-primary cursor-pointer bg-white dark:bg-transparent"
           aria-label={`Select ${card.card}`}
           onClick={(e) => e.stopPropagation()}
         />
@@ -129,7 +129,7 @@ const Card = memo(({ card, cardImage, onCardClick, isSelected, onSelect, display
         </p>
 
         {/* Stats - Same layout for both mobile and desktop */}
-        <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
+        <div className="hidden sm:grid grid-cols-2 gap-1.5 sm:gap-2">
           <div className="bg-gray-50 dark:bg-[#252B3B] rounded-lg p-2 text-center">
             <div className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Paid</div>
             <div className="text-sm font-medium text-gray-900 dark:text-white">
@@ -143,6 +143,28 @@ const Card = memo(({ card, cardImage, onCardClick, isSelected, onSelect, display
             </div>
           </div>
           <div className="bg-gray-50 dark:bg-[#252B3B] rounded-lg p-2 col-span-2 text-center">
+            <div className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Profit</div>
+            <div className={`text-sm font-medium ${(card.currentValueAUD - card.investmentAUD) >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+              {formatCurrency(card.currentValueAUD - card.investmentAUD, true)}
+            </div>
+          </div>
+        </div>
+        
+        {/* Mobile-only stacked layout */}
+        <div className="sm:hidden flex flex-col space-y-1.5">
+          <div className="bg-gray-50 dark:bg-[#252B3B] rounded-lg p-2 text-center">
+            <div className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Paid</div>
+            <div className="text-sm font-medium text-gray-900 dark:text-white">
+              {formatCurrency(card.investmentAUD, true)}
+            </div>
+          </div>
+          <div className="bg-gray-50 dark:bg-[#252B3B] rounded-lg p-2 text-center">
+            <div className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Value</div>
+            <div className="text-sm font-medium text-gray-900 dark:text-white">
+              {formatCurrency(card.currentValueAUD, true)}
+            </div>
+          </div>
+          <div className="bg-gray-50 dark:bg-[#252B3B] rounded-lg p-2 text-center">
             <div className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Profit</div>
             <div className={`text-sm font-medium ${(card.currentValueAUD - card.investmentAUD) >= 0 ? 'text-green-500' : 'text-red-500'}`}>
               {formatCurrency(card.currentValueAUD - card.investmentAUD, true)}
@@ -632,27 +654,27 @@ const CardList = ({
     <div className="space-y-4">
       {/* Stats Section */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-3 mb-3 sm:mb-4">
-        <div className="bg-white dark:bg-[#1B2131] rounded-lg p-1.5 sm:p-3 shadow-sm flex flex-col">
+        <div className="bg-white dark:bg-[#1B2131] rounded-lg p-2.5 sm:p-3 shadow-sm flex flex-col">
           <div className="text-xs font-medium text-gray-600 dark:text-gray-300">PAID</div>
-          <div className="text-xl sm:text-3xl text-gray-900 dark:text-white font-medium text-center">
+          <div className="text-base sm:text-3xl text-gray-900 dark:text-white font-medium">
             {formatCurrency(totals.investment, true)}
           </div>
         </div>
-        <div className="bg-white dark:bg-[#1B2131] rounded-lg p-1.5 sm:p-3 shadow-sm flex flex-col">
+        <div className="bg-white dark:bg-[#1B2131] rounded-lg p-2.5 sm:p-3 shadow-sm flex flex-col">
           <div className="text-xs font-medium text-gray-600 dark:text-gray-300">VALUE</div>
-          <div className="text-xl sm:text-3xl text-gray-900 dark:text-white font-medium text-center">
+          <div className="text-base sm:text-3xl text-gray-900 dark:text-white font-medium">
             {formatCurrency(totals.value, true)}
           </div>
         </div>
-        <div className="bg-white dark:bg-[#1B2131] rounded-lg p-1.5 sm:p-3 shadow-sm flex flex-col">
+        <div className="bg-white dark:bg-[#1B2131] rounded-lg p-2.5 sm:p-3 shadow-sm flex flex-col">
           <div className="text-xs font-medium text-gray-600 dark:text-gray-300">PROFIT</div>
-          <div className={`text-xl sm:text-3xl font-medium text-center ${totals.profit >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-            {formatCurrency(totals.profit, true)}
+          <div className={`text-base sm:text-3xl font-medium ${totals.profit >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+            {formatCurrency(Math.abs(totals.profit), true, totals.profit < 0 ? '-' : '')}
           </div>
         </div>
-        <div className="bg-white dark:bg-[#1B2131] rounded-lg p-1.5 sm:p-3 shadow-sm flex flex-col">
+        <div className="bg-white dark:bg-[#1B2131] rounded-lg p-2.5 sm:p-3 shadow-sm flex flex-col">
           <div className="text-xs font-medium text-gray-600 dark:text-gray-300">CARDS</div>
-          <div className="text-xl sm:text-3xl text-gray-900 dark:text-white font-medium flex items-center justify-center gap-0.5 sm:gap-1">
+          <div className="text-base sm:text-3xl text-gray-900 dark:text-white font-medium flex items-center justify-start gap-0.5 sm:gap-1">
             <span className="material-icons text-xs sm:text-sm text-gray-600 dark:text-gray-300">style</span>
             {filteredCards.length}
           </div>
@@ -660,90 +682,94 @@ const CardList = ({
       </div>
 
       {/* Controls Section */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         {/* Search and View Mode */}
-        <div className="w-full">
-          <div className="flex flex-col sm:flex-row gap-2">
-            <div className="flex-1 flex items-center gap-2">
-              <input
-                type="text"
-                placeholder="Search by name, set, or serial number..."
-                value={filter}
-                onChange={(e) => setFilter(e.target.value)}
-                className="w-full h-10 sm:h-11 px-3 py-2 rounded-lg bg-white dark:bg-[#1B2131] text-gray-900 dark:text-white
-                         focus:outline-none focus:ring-2 focus:ring-primary shadow-sm
-                         placeholder-gray-500 dark:placeholder-gray-400 text-xs sm:text-sm"
-              />
-              <div className="flex items-center gap-1 flex-shrink-0">
-                <button
-                  onClick={() => setViewMode('grid')}
-                  className={`h-10 w-10 flex items-center justify-center rounded-lg transition-colors ${
-                    viewMode === 'grid'
-                      ? 'bg-primary text-white shadow-sm'
-                      : 'bg-white dark:bg-[#1B2131] text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#252B3B] shadow-sm'
-                  }`}
-                  title="Grid View"
-                >
-                  <span className="material-icons text-sm">grid_view</span>
-                </button>
-                <button
-                  onClick={() => setViewMode('list')}
-                  className={`h-10 w-10 flex items-center justify-center rounded-lg transition-colors ${
-                    viewMode === 'list'
-                      ? 'bg-primary text-white shadow-sm'
-                      : 'bg-white dark:bg-[#1B2131] text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#252B3B] shadow-sm'
-                  }`}
-                  title="List View"
-                >
-                  <span className="material-icons text-sm">view_list</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Sort and Add Card */}
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-              <div className="relative flex-1 sm:flex-initial sm:w-[220px]" ref={sortDropdownRef}>
-                <button
-                  onClick={() => setShowSortDropdown(!showSortDropdown)}
-                  className="h-10 sm:h-11 w-full px-3 py-2 rounded-lg bg-white dark:bg-[#1B2131] text-gray-700 dark:text-white
-                           flex items-center justify-between shadow-sm text-xs sm:text-sm"
-                >
-                  <span className="truncate">Sort: {getSortFieldLabel(sortField)}</span>
-                  <span className="material-icons text-gray-600 dark:text-gray-300 ml-1 flex-shrink-0 text-sm">
-                    {showSortDropdown ? 'expand_less' : 'expand_more'}
-                  </span>
-                </button>
-                {showSortDropdown && (
-                  <div className="absolute right-0 mt-2 w-[220px] rounded-lg shadow-lg
-                                bg-white dark:bg-[#1B2131] z-50 py-1">
-                    {sortOptions.map(option => (
-                      <div
-                        key={option.field}
-                        className="px-3 py-2 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-[#252B3B] 
-                                 cursor-pointer text-gray-700 dark:text-gray-300 text-xs sm:text-sm"
-                        onClick={() => {
-                          handleSortChange(option.field);
-                          setShowSortDropdown(false);
-                        }}
-                      >
-                        <span className="truncate mr-2">{option.label}</span>
-                        {sortField === option.field && (
-                          <span className="material-icons text-xs sm:text-sm text-gray-600 dark:text-gray-300 flex-shrink-0">
-                            {sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward'}
-                          </span>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+        <div className="w-full flex flex-col sm:flex-row sm:items-center gap-2">
+          {/* Search Bar */}
+          <div className="flex items-center gap-2 flex-1">
+            <input
+              type="text"
+              placeholder="Search by name, set, or serial number..."
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              className="flex-1 h-11 px-3 py-2 rounded-xl bg-white dark:bg-[#1B2131] text-gray-900 dark:text-white
+                       focus:outline-none focus:ring-2 focus:ring-primary shadow-sm
+                       placeholder-gray-500 dark:placeholder-gray-400 text-sm"
+            />
+            {/* View Mode Buttons */}
+            <div className="flex items-center gap-1">
               <button
-                onClick={onAddCard}
-                className="h-10 sm:h-11 px-3 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors whitespace-nowrap flex-shrink-0 shadow-sm text-xs sm:text-sm"
+                onClick={() => setViewMode('grid')}
+                className={`h-11 w-11 flex items-center justify-center rounded-xl transition-colors ${
+                  viewMode === 'grid'
+                    ? 'bg-primary text-white shadow-sm'
+                    : 'bg-white dark:bg-[#1B2131] text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#252B3B] shadow-sm'
+                }`}
+                title="Grid View"
               >
-                Add Card
+                <span className="material-icons text-lg">grid_view</span>
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`h-11 w-11 flex items-center justify-center rounded-xl transition-colors ${
+                  viewMode === 'list'
+                    ? 'bg-primary text-white shadow-sm'
+                    : 'bg-white dark:bg-[#1B2131] text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#252B3B] shadow-sm'
+                }`}
+                title="List View"
+              >
+                <span className="material-icons text-lg">view_list</span>
               </button>
             </div>
+          </div>
+
+          {/* Sort and Add Card - Full width on mobile */}
+          <div className="flex items-center gap-2 sm:w-auto">
+            <div className="relative flex-1 sm:w-48" ref={sortDropdownRef}>
+              <button
+                onClick={() => setShowSortDropdown(!showSortDropdown)}
+                className="h-11 w-full px-3 py-2 rounded-xl bg-white dark:bg-[#1B2131] text-gray-700 dark:text-white
+                         flex items-center justify-between shadow-sm text-sm"
+              >
+                <span className="truncate">Sort: {getSortFieldLabel(sortField)}</span>
+                <span className="material-icons text-gray-600 dark:text-gray-300 ml-1 flex-shrink-0 text-lg">
+                  {showSortDropdown ? 'expand_less' : 'expand_more'}
+                </span>
+              </button>
+              {showSortDropdown && (
+                <div className="absolute left-0 right-0 mt-2 rounded-xl shadow-lg
+                              bg-white dark:bg-[#1B2131] z-50 py-1 border border-gray-200 dark:border-gray-700/50">
+                  {sortOptions.map(option => (
+                    <div
+                      key={option.field}
+                      className={`px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors cursor-pointer ${
+                        showSortDropdown && option.field === sortField 
+                          ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400'
+                          : 'hover:bg-gray-100 dark:hover:bg-gray-800/70'
+                      }`}
+                      onClick={() => {
+                        handleSortChange(option.field);
+                        setShowSortDropdown(false);
+                      }}
+                    >
+                      <span className="truncate mr-2">{option.label}</span>
+                      {sortField === option.field && (
+                        <span className="material-icons text-sm text-gray-600 dark:text-gray-300 flex-shrink-0">
+                          {sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward'}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <button
+              onClick={onAddCard}
+              className="btn btn-primary"
+            >
+              <span className="material-icons text-lg">add</span>
+              Add Card
+            </button>
           </div>
         </div>
       </div>
@@ -818,7 +844,7 @@ const CardList = ({
                         type="checkbox"
                         checked={selectedCards.has(card.slabSerial)}
                         onChange={(e) => handleSelectCard(e, card.slabSerial)}
-                        className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer bg-white dark:bg-transparent"
+                        className="w-4 h-4 min-w-[16px] min-h-[16px] max-w-[16px] max-h-[16px] aspect-square rounded border-gray-300 text-primary focus:ring-primary cursor-pointer bg-white dark:bg-transparent"
                         aria-label={`Select ${card.card}`}
                       />
                     </div>
@@ -890,25 +916,21 @@ const CardList = ({
           <div className="flex items-center gap-2">
             <button
               onClick={handleMarkAsSold}
-              className="px-3 py-1.5 rounded-lg bg-green-500 text-white text-xs sm:text-sm
-                       hover:bg-green-600 transition-colors flex items-center gap-1 whitespace-nowrap"
+              className="btn btn-sm btn-custom-green"
             >
               <span className="material-icons text-sm">sell</span>
               <span>Sell</span>
             </button>
             <button
               onClick={handleDeleteClick}
-              className="px-3 py-1.5 rounded-lg bg-red-500 text-white text-xs sm:text-sm
-                       hover:bg-red-600 transition-colors flex items-center gap-1"
+              className="btn btn-sm btn-danger"
             >
               <span className="material-icons text-sm">delete</span>
               <span>Delete</span>
             </button>
             <button
               onClick={() => setSelectedCards(new Set())}
-              className="px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-xs sm:text-sm
-                       text-gray-700 dark:text-gray-300
-                       hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors flex items-center gap-1"
+              className="btn btn-sm btn-tertiary"
             >
               <span className="material-icons text-sm">close</span>
               <span>Clear</span>

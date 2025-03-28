@@ -103,7 +103,7 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading 
         <div 
           className={`
             border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg p-8 flex flex-col items-center justify-center
-            ${dragActive ? 'border-primary dark:border-primary bg-primary/5 dark:bg-primary/10' : ''}
+            ${dragActive ? 'border-purple-400 dark:border-purple-500 bg-purple-50/80 dark:bg-purple-900/10' : ''}
           `}
           onDragEnter={handleDrag}
           onDragLeave={handleDrag}
@@ -125,7 +125,7 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading 
           </div>
           
           <button
-            className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90"
+            className="btn btn-primary"
             onClick={() => fileInputRef.current?.click()}
             disabled={loading}
           >
@@ -173,7 +173,7 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading 
               <button
                 onClick={handleSubmitFiles}
                 disabled={loading || selectedFiles.length === 0}
-                className={`px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 ${
+                className={`btn btn-primary ${
                   (loading || selectedFiles.length === 0) ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
               >

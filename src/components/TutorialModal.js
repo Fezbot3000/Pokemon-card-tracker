@@ -52,13 +52,13 @@ const TutorialModal = () => {
         <div className="flex justify-between">
           <button
             onClick={endTutorial}
-            className="px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+            className="btn btn-sm btn-tertiary"
           >
             Skip
           </button>
           <button
             onClick={nextStep}
-            className="px-3 py-1.5 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary/90 transition-colors"
+            className="btn btn-sm btn-primary"
           >
             {currentStep === tutorialSteps.DATA_MANAGEMENT ? 'Finish' : 'Next'}
           </button>

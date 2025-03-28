@@ -54,6 +54,7 @@ function AppContent() {
   });
   const [currentView, setCurrentView] = useState('cards'); // 'cards' or 'sold'
   const { registerSettingsCallback } = useTutorial();
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   
   const {
     cards,
@@ -79,6 +80,18 @@ function AppContent() {
       callbackRegistered.current = true;
     }
   }, [registerSettingsCallback]);
+
+  // Check if device is mobile on resize
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
 
   // Memoized collection data
   const collectionData = useMemo(() => {
@@ -758,114 +771,140 @@ To import this backup:
     }
   }, [deleteCard]);
 
+  const handleSettingsClick = () => {
+    // For mobile, treat settings as a view
+    if (isMobile) {
+      setCurrentView('settings');
+    }
+    setShowSettings(true);
+  };
+
+  const handleCloseSettings = () => {
+    setShowSettings(false);
+    // If we're on mobile and current view is settings,
+    // go back to cards view when closing settings
+    if (isMobile && currentView === 'settings') {
+      setCurrentView('cards');
+    }
+  };
+
   if (isLoading) {
     return null;
   }
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-[#111827] dashboard-page">
-      <Header
-        className="header"
-        selectedCollection={selectedCollection}
-        collections={Object.keys(collections)}
-        onCollectionChange={setSelectedCollection}
-        onImportClick={handleImportClick}
-        onSettingsClick={() => setShowSettings(true)}
-        currentView={currentView}
-        onViewChange={setCurrentView}
-        refreshCollections={() => {
-          // Refresh collections data from the database
-          db.getCollections().then(savedCollections => {
-            if (Object.keys(savedCollections).length > 0) {
-              setCollections(savedCollections);
-              // Only switch collection if current isn't "All Cards" and doesn't exist
-              if (selectedCollection !== 'All Cards' && !savedCollections[selectedCollection]) {
-                const newCollection = Object.keys(savedCollections)[0];
-                setSelectedCollection(newCollection);
-                localStorage.setItem('selectedCollection', newCollection);
-              }
-            }
-          });
-        }}
-        onAddCollection={(name) => {
-          // Create new collection
-          const newCollections = {
-            ...collections,
-            [name]: []
-          };
-          db.saveCollections(newCollections).then(() => {
-            setCollections(newCollections);
-            setSelectedCollection(name);
-            localStorage.setItem('selectedCollection', name);
-          });
-        }}
-        onRenameCollection={(oldName, newName) => {
-          if (oldName && newName && oldName !== newName) {
-            // Create new collection
-            const newCollections = {
-              ...collections
-            };
-            // Copy cards to the new collection
-            newCollections[newName] = [...(collections[oldName] || [])];
-            // Remove old collection
-            delete newCollections[oldName];
-            
-            // Save to database
-            db.saveCollections(newCollections).then(() => {
-              setCollections(newCollections);
-              // Update selected collection if it was renamed
-              if (selectedCollection === oldName) {
-                setSelectedCollection(newName);
-                localStorage.setItem('selectedCollection', newName);
+      {/* Hide Header on mobile when in settings view */}
+      {!(isMobile && currentView === 'settings') && (
+        <Header
+          className="header"
+          selectedCollection={selectedCollection}
+          collections={Object.keys(collections)}
+          onCollectionChange={setSelectedCollection}
+          onImportClick={handleImportClick}
+          onSettingsClick={handleSettingsClick}
+          currentView={currentView}
+          onViewChange={setCurrentView}
+          refreshCollections={() => {
+            // Refresh collections data from the database
+            db.getCollections().then(savedCollections => {
+              if (Object.keys(savedCollections).length > 0) {
+                setCollections(savedCollections);
+                // Only switch collection if current isn't "All Cards" and doesn't exist
+                if (selectedCollection !== 'All Cards' && !savedCollections[selectedCollection]) {
+                  const newCollection = Object.keys(savedCollections)[0];
+                  setSelectedCollection(newCollection);
+                  localStorage.setItem('selectedCollection', newCollection);
+                }
               }
             });
-          }
-        }}
-        onDeleteCollection={async (name) => {
-          try {
-            console.log("App.js: Attempting to delete collection:", name);
-            
-            // Get current collections
-            const currentCollections = { ...collections };
-            
-            // Check if collection exists
-            if (!currentCollections[name]) {
-              console.error(`Collection "${name}" does not exist in:`, Object.keys(currentCollections));
-              throw new Error(`Collection "${name}" does not exist`);
+          }}
+          onAddCollection={(name) => {
+            // Prevent adding "All Cards" as a normal collection
+            if (name === 'All Cards') {
+              toast.error('Cannot create a collection named "All Cards" - this is a reserved name');
+              return;
             }
             
-            // Check if it's the last collection
-            if (Object.keys(currentCollections).length <= 1) {
-              throw new Error("Cannot delete the last collection");
+            // Create new collection
+            const newCollections = {
+              ...collections,
+              [name]: []
+            };
+            db.saveCollections(newCollections).then(() => {
+              setCollections(newCollections);
+              setSelectedCollection(name);
+              localStorage.setItem('selectedCollection', name);
+            });
+          }}
+          onRenameCollection={(oldName, newName) => {
+            if (oldName && newName && oldName !== newName) {
+              // Create new collection
+              const newCollections = {
+                ...collections
+              };
+              // Copy cards to the new collection
+              newCollections[newName] = [...(collections[oldName] || [])];
+              // Remove old collection
+              delete newCollections[oldName];
+              
+              // Save to database
+              db.saveCollections(newCollections).then(() => {
+                setCollections(newCollections);
+                // Update selected collection if it was renamed
+                if (selectedCollection === oldName) {
+                  setSelectedCollection(newName);
+                  localStorage.setItem('selectedCollection', newName);
+                }
+              });
             }
-            
-            // Remove the collection
-            delete currentCollections[name];
-            console.log("Collection removed from object, saving to DB...");
-            
-            // Save updated collections to database
-            await db.saveCollections(currentCollections);
-            console.log("Successfully saved updated collections to DB");
-            
-            // Update state
-            setCollections(currentCollections);
-            
-            // Switch to another collection if the deleted one was selected
-            if (selectedCollection === name) {
-              const newSelection = Object.keys(currentCollections)[0];
-              setSelectedCollection(newSelection);
-              localStorage.setItem('selectedCollection', newSelection);
-              console.log("Selected new collection:", newSelection);
+          }}
+          onDeleteCollection={async (name) => {
+            try {
+              console.log("App.js: Attempting to delete collection:", name);
+              
+              // Get current collections
+              const currentCollections = { ...collections };
+              
+              // Check if collection exists
+              if (!currentCollections[name]) {
+                console.error(`Collection "${name}" does not exist in:`, Object.keys(currentCollections));
+                throw new Error(`Collection "${name}" does not exist`);
+              }
+              
+              // Check if it's the last collection
+              if (Object.keys(currentCollections).length <= 1) {
+                throw new Error("Cannot delete the last collection");
+              }
+              
+              // Remove the collection
+              delete currentCollections[name];
+              console.log("Collection removed from object, saving to DB...");
+              
+              // Save updated collections to database
+              await db.saveCollections(currentCollections);
+              console.log("Successfully saved updated collections to DB");
+              
+              // Update state
+              setCollections(currentCollections);
+              
+              // Switch to another collection if the deleted one was selected
+              if (selectedCollection === name) {
+                const newSelection = Object.keys(currentCollections)[0];
+                setSelectedCollection(newSelection);
+                localStorage.setItem('selectedCollection', newSelection);
+                console.log("Selected new collection:", newSelection);
+              }
+              
+              return true;
+            } catch (error) {
+              console.error("Error deleting collection:", error);
+              toast.error(`Failed to delete collection: ${error.message}`);
+              throw error;
             }
-            
-            return true;
-          } catch (error) {
-            console.error("Error deleting collection:", error);
-            toast.error(`Failed to delete collection: ${error.message}`);
-            throw error;
-          }
-        }}
-      />
+          }}
+        />
+      )}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 pb-20">
         {currentView === 'cards' ? (
           <CardList
@@ -920,7 +959,7 @@ To import this backup:
       {showSettings && (
         <SettingsModal
           isOpen={showSettings}
-          onClose={() => setShowSettings(false)}
+          onClose={handleCloseSettings}
           selectedCollection={selectedCollection}
           collections={Object.keys(collections)}
           onRenameCollection={(oldName, newName) => {
@@ -984,6 +1023,22 @@ To import this backup:
           }}
           onExportData={handleExportData}
           onImportCollection={handleImportCollection}
+          onUpdatePrices={() => {
+            return new Promise((resolve, reject) => {
+              handleImportClick('priceUpdate');
+              // This is just triggering the modal to open, so we resolve
+              // The actual update will happen when user selects a file in the import modal
+              resolve();
+            });
+          }}
+          onImportBaseData={() => {
+            return new Promise((resolve, reject) => {
+              handleImportClick('baseData');
+              // This is just triggering the modal to open, so we resolve
+              // The actual import will happen when user selects a file in the import modal
+              resolve();
+            });
+          }}
         />
       )}
 
@@ -1000,12 +1055,22 @@ To import this backup:
       )}
 
       {/* Mobile Bottom Navigation */}
-      <div className="md:hidden">
+      <div className="lg:hidden">
         <BottomNavBar 
           currentView={currentView}
-          onViewChange={setCurrentView}
+          onViewChange={(view) => {
+            setCurrentView(view);
+            // If switching to a view other than settings, hide settings modal
+            if (view !== 'settings' && showSettings) {
+              setShowSettings(false);
+            }
+            // If switching to settings view, show settings modal
+            if (view === 'settings' && !showSettings) {
+              setShowSettings(true);
+            }
+          }}
           onAddCard={() => setShowNewCardForm(true)}
-          onMenuClick={() => setShowSettings(true)}
+          onSettingsClick={handleSettingsClick}
         />
       </div>
 
