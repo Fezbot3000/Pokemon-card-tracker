@@ -241,7 +241,8 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading 
                   <li>Each CSV file should contain Slab Serial # and Current Value columns.</li>
                   <li>The system identifies cards across all your collections by matching Slab Serial #.</li>
                   <li>All cards from all collections will be updated in one go.</li>
-                  <li>Only the current values will be changed, preserving your investment data.</li>
+                  <li>If a card in your CSV doesn't exist in any collection, it will be added as a new card.</li>
+                  <li>New cards will be added to your first collection automatically.</li>
                 </ul>
                 <p className="mt-2 italic">
                   Tip: You can organize your CSV files by set, category, or any other criteria to make price updates more manageable.

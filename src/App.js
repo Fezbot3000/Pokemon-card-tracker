@@ -276,7 +276,7 @@ function AppContent() {
         setShowProfitChangeModal(true);
         
         // Show success message with stats
-        toast.success(`Updated ${stats.updatedCards} cards across ${Object.keys(stats.collections).length} collections`);
+        toast.success(`Updated ${stats.updatedCards} cards and added ${stats.addedCards} new cards across ${Object.keys(stats.collections).length} collections`);
       } else {
         // Single file or base data import - existing logic
         // Calculate current total profit before update
@@ -582,8 +582,11 @@ To import this backup:
           loadingEl.innerHTML = `
             <div class="bg-white dark:bg-[#1B2131] p-6 rounded-lg shadow-lg text-center max-w-md">
               <div class="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mx-auto mb-4"></div>
-              <p class="text-gray-700 dark:text-gray-300">Importing backup...</p>
-              <p class="text-gray-500 dark:text-gray-400 text-sm mt-2">This may take a few moments</p>
+              <p class="text-gray-700 dark:text-gray-300 font-medium mb-1">Importing backup...</p>
+              <p class="text-gray-500 dark:text-gray-400 text-sm" id="import-status">Processing file... (Step 1 of 4)</p>
+              <div class="mt-3 w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                <div id="import-progress" class="bg-primary h-2 rounded-full" style="width: 10%"></div>
+              </div>
             </div>
           `;
           document.body.appendChild(loadingEl);
@@ -605,8 +608,11 @@ To import this backup:
       loadingEl.innerHTML = `
         <div class="bg-white dark:bg-[#1B2131] p-6 rounded-lg shadow-lg text-center max-w-md">
           <div class="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mx-auto mb-4"></div>
-          <p class="text-gray-700 dark:text-gray-300">Importing from cloud...</p>
-          <p class="text-gray-500 dark:text-gray-400 text-sm mt-2">This may take a few moments</p>
+          <p class="text-gray-700 dark:text-gray-300 font-medium mb-1">Importing backup...</p>
+          <p class="text-gray-500 dark:text-gray-400 text-sm" id="import-status">Processing file... (Step 1 of 4)</p>
+          <div class="mt-3 w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+            <div id="import-progress" class="bg-primary h-2 rounded-full" style="width: 10%"></div>
+          </div>
         </div>
       `;
       document.body.appendChild(loadingEl);
@@ -625,44 +631,108 @@ To import this backup:
       if (file.name.endsWith('.zip')) {
         // Process ZIP file
         const zip = new JSZip();
+        
+        // Update progress
+        const updateProgress = (message, percent) => {
+          const statusEl = document.getElementById('import-status');
+          const progressEl = document.getElementById('import-progress');
+          
+          if (statusEl) statusEl.textContent = message;
+          if (progressEl) progressEl.style.width = `${percent}%`;
+        };
+        
+        updateProgress('Reading ZIP file... (Step 1 of 4)', 10);
         const zipContent = await zip.loadAsync(file);
         
-        // Check if collections.json exists
-        const collectionsFile = zipContent.file("data/collections.json");
+        // Check if collections.json exists in data/collections.json (new format)
+        // or directly in the root (old format)
+        updateProgress('Loading collection data... (Step 2 of 4)', 25);
+        let collectionsFile = zipContent.file("data/collections.json");
         if (!collectionsFile) {
-          throw new Error("Invalid backup file: missing collections.json");
+          // Try the old format (root level)
+          collectionsFile = zipContent.file("collections.json");
+          
+          if (!collectionsFile) {
+            throw new Error("Invalid backup file: missing collections.json");
+          }
         }
         
         // Load collections data
         const collectionsJson = await collectionsFile.async("string");
-        const collectionsData = JSON.parse(collectionsJson);
+        let collectionsData;
+        
+        try {
+          collectionsData = JSON.parse(collectionsJson);
+        } catch (jsonError) {
+          console.error('Error parsing JSON:', jsonError);
+          throw new Error("Invalid backup format: JSON parsing failed");
+        }
         
         // Validate format
         if (!collectionsData.collections) {
-          throw new Error("Invalid backup format");
+          throw new Error("Invalid backup format: missing collections property");
+        }
+        
+        // Extract images
+        updateProgress('Processing images... (Step 3 of 4)', 50);
+        let imagesFolder = zipContent.folder("images");
+        if (!imagesFolder || Object.keys(imagesFolder.files).length === 0) {
+          // Try looking for images in root
+          const imageFiles = Object.keys(zipContent.files).filter(path => 
+            path.match(/\.(jpg|jpeg|png|gif)$/i) && !zipContent.files[path].dir
+          );
+          
+          if (imageFiles.length > 0) {
+            console.log('Found images in root directory');
+            imagesFolder = zipContent; // Use root as images folder
+          } else {
+            console.log('No images found in backup');
+            imagesFolder = null;
+          }
         }
         
         // Extract images
         const imagePromises = [];
-        zipContent.folder("images")?.forEach((relativePath, file) => {
-          if (!file.dir) {
-            const promise = (async () => {
-              const content = await file.async("blob");
-              const fileName = relativePath.split("/").pop();
+        
+        if (imagesFolder) {
+          const allFiles = Object.keys(zipContent.files);
+          
+          // This handles both "images/xxx.jpg" format and root-level images
+          for (const path of allFiles) {
+            const file = zipContent.files[path];
+            
+            // Skip directories and collections.json
+            if (file.dir || path === "collections.json" || path === "data/collections.json") {
+              continue;
+            }
+            
+            // Process image files only
+            if (path.match(/\.(jpg|jpeg|png|gif)$/i)) {
+              const fileName = path.split("/").pop();
+              if (!fileName) continue;
+              
+              // Extract slab serial from filename (remove extension)
               const serialNumber = fileName.split(".")[0];
               
               if (serialNumber) {
-                await db.saveImage(serialNumber, content);
+                const promise = (async () => {
+                  const content = await file.async("blob");
+                  await db.saveImage(serialNumber, content);
+                })();
+                imagePromises.push(promise);
               }
-            })();
-            imagePromises.push(promise);
+            }
           }
-        });
+        }
         
         // Wait for all images to be processed
-        await Promise.all(imagePromises);
+        if (imagePromises.length > 0) {
+          await Promise.all(imagePromises);
+          console.log(`Processed ${imagePromises.length} images`);
+        }
         
         // Save collections data
+        updateProgress('Saving data... (Step 4 of 4)', 75);
         await db.saveCollections(collectionsData.collections);
         
         // Save profile data if it exists
@@ -683,12 +753,8 @@ To import this backup:
         setSelectedCollection('All Cards');
         localStorage.setItem('selectedCollection', 'All Cards');
         
-        // Ensure minimum loading time for better UX
-        const elapsedTime = Date.now() - startTime;
-        const minimumLoadingTime = 3000; // 3 seconds
-        if (elapsedTime < minimumLoadingTime) {
-          await new Promise(resolve => setTimeout(resolve, minimumLoadingTime - elapsedTime));
-        }
+        // Update progress to 100%
+        updateProgress('Import completed successfully!', 100);
         
         // Remove loading overlay
         document.body.removeChild(loadingEl);
@@ -701,13 +767,26 @@ To import this backup:
       } else if (file.name.endsWith('.json')) {
         // Process JSON file implementation...
         // Similar to the existing code for handling JSON files
+        
+        // Update progress
+        const updateProgress = (message, percent) => {
+          const statusEl = document.getElementById('import-status');
+          const progressEl = document.getElementById('import-progress');
+          
+          if (statusEl) statusEl.textContent = message;
+          if (progressEl) progressEl.style.width = `${percent}%`;
+        };
+        
+        updateProgress('Reading JSON file... (Step 1 of 3)', 20);
         const reader = new FileReader();
         
         reader.onload = async (e) => {
           try {
+            updateProgress('Parsing JSON data... (Step 2 of 3)', 50);
             const jsonData = JSON.parse(e.target.result);
             
             // Try to update collections
+            updateProgress('Saving collection data... (Step 3 of 3)', 80);
             const newCollections = {
               ...collections,
               'Imported Collection': Array.isArray(jsonData) ? jsonData : [jsonData]
@@ -721,17 +800,15 @@ To import this backup:
             setSelectedCollection('Imported Collection');
             localStorage.setItem('selectedCollection', 'Imported Collection');
             
-            // Ensure minimum loading time
-            const elapsedTime = Date.now() - startTime;
-            const minimumLoadingTime = 3000; // 3 seconds
-            if (elapsedTime < minimumLoadingTime) {
-              await new Promise(resolve => setTimeout(resolve, minimumLoadingTime - elapsedTime));
-            }
+            updateProgress('Import completed successfully!', 100);
             
             // Remove loading overlay
             document.body.removeChild(loadingEl);
             
             toast.success('JSON data imported successfully!');
+            
+            // Close settings if it's open
+            setShowSettings(false);
           } catch (error) {
             console.error('JSON parsing error:', error);
             document.body.removeChild(loadingEl);

@@ -183,6 +183,7 @@ export const processMultipleCollectionsUpdate = (importedData, allCollections, e
   const updates = {
     totalCards: 0,
     updatedCards: 0,
+    addedCards: 0,
     collections: {}
   };
   
@@ -191,6 +192,9 @@ export const processMultipleCollectionsUpdate = (importedData, allCollections, e
   if ('All Cards' in collectionsToUpdate) {
     delete collectionsToUpdate['All Cards'];
   }
+  
+  // Track which card serials we've already found in collections
+  const processedSerials = new Set();
   
   // Process each collection
   Object.keys(collectionsToUpdate).forEach(collectionName => {
@@ -202,12 +206,16 @@ export const processMultipleCollectionsUpdate = (importedData, allCollections, e
     // Update collection stats
     updates.collections[collectionName] = {
       totalCards: collection.length,
-      updatedCards: 0
+      updatedCards: 0,
+      addedCards: 0
     };
     
     // Update each card if it exists in the imported data
     const updatedCollection = collection.map(card => {
       if (!card.slabSerial) return card;
+      
+      // Mark this serial as processed
+      processedSerials.add(card.slabSerial.toString());
       
       const importedCard = importedDataMap.get(card.slabSerial.toString());
       if (importedCard) {
@@ -230,6 +238,55 @@ export const processMultipleCollectionsUpdate = (importedData, allCollections, e
     updates.totalCards += collection.length;
     collectionsToUpdate[collectionName] = updatedCollection;
   });
+  
+  // After updating existing cards, check for new cards to add
+  // Find cards in the import that don't exist in any collection
+  const newCards = [];
+  importedDataMap.forEach((importedCard, serialNumber) => {
+    if (!processedSerials.has(serialNumber)) {
+      // This is a new card that doesn't exist in any collection
+      const newValueUSD = parseFloat(importedCard['Current Value']) || 0;
+      const newValueAUD = Number((newValueUSD * exchangeRate).toFixed(2));
+      const investmentAUD = importedCard['Investment'] 
+        ? Number((parseFloat(importedCard['Investment']) * exchangeRate).toFixed(2)) 
+        : 0;
+      
+      // Create new card object
+      const newCard = {
+        slabSerial: serialNumber,
+        datePurchased: importedCard['Date Purchased'] || new Date().toISOString().split('T')[0],
+        card: importedCard['Card'] || 'Unknown Card',
+        player: importedCard['Player'] || '',
+        year: importedCard['Year'] || '',
+        set: importedCard['Set'] || '',
+        variation: importedCard['Variation'] || '',
+        number: importedCard['Number'] || '',
+        category: importedCard['Category'] || '',
+        condition: importedCard['Condition'] || '',
+        currentValueUSD: newValueUSD,
+        currentValueAUD: newValueAUD,
+        investmentAUD: investmentAUD,
+        potentialProfit: Number((newValueAUD - investmentAUD).toFixed(2)),
+        population: importedCard['Population'] || 0
+      };
+      
+      newCards.push(newCard);
+    }
+  });
+  
+  // If we have new cards, add them to the first collection
+  if (newCards.length > 0 && Object.keys(collectionsToUpdate).length > 0) {
+    const firstCollectionName = Object.keys(collectionsToUpdate)[0];
+    collectionsToUpdate[firstCollectionName] = [
+      ...collectionsToUpdate[firstCollectionName],
+      ...newCards
+    ];
+    
+    updates.addedCards = newCards.length;
+    updates.collections[firstCollectionName].addedCards = newCards.length;
+    updates.collections[firstCollectionName].totalCards += newCards.length;
+    updates.totalCards += newCards.length;
+  }
   
   return {
     collections: collectionsToUpdate,
@@ -264,7 +321,7 @@ export const validateCSVStructure = (data, importMode = 'priceUpdate') => {
   // Define required columns based on import mode
   const requiredColumns = importMode === 'priceUpdate' ? 
     ['Slab Serial #', 'Current Value'] : 
-    ['Slab Serial #', 'Date Purchased', 'Quantity', 'Current Value', 'Investment'];
+    ['Slab Serial #', 'Current Value', 'Investment'];
   
   const firstRow = data[0];
   const missingColumns = requiredColumns.filter(col => !(col in firstRow));
