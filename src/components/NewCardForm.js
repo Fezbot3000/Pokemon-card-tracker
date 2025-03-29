@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { formatValue } from '../utils/formatters';
 import { useTheme } from '../contexts/ThemeContext';
 import { toast } from 'react-hot-toast';
-import { parseCSVFile, validateCSVStructure } from '../utils/dataProcessor';
+import { parseCSVFile, validateCSVStructure, formatDateValue } from '../utils/dataProcessor';
 import { db } from '../services/db';
 
 const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, selectedCollection }) => {
@@ -316,7 +316,7 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
         const newCard = {
           id: slabSerial,
           slabSerial: slabSerial,
-          datePurchased: importedCard['Date Purchased'] || new Date().toISOString().slice(0, 10),
+          datePurchased: formatDateValue(importedCard['Date Purchased']) || new Date().toISOString().slice(0, 10),
           card: importedCard['Card'] || 'Unknown Card',
           player: importedCard['Player'] || '',
           year: importedCard['Year'] || '',
@@ -381,9 +381,9 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
   };
 
   return (
-    <div className="fixed inset-0 z-[200] flex flex-col bg-white dark:bg-[#1B2131] overflow-hidden">
+    <div className="fixed inset-0 z-[200] flex flex-col bg-white dark:bg-[#000000] overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700/50 bg-gray-50 dark:bg-[#151821] add-card-header">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700/50 bg-gray-50 dark:bg-[#000000] add-card-header">
         <h1 className="text-xl font-semibold text-gray-900 dark:text-white">Add Card</h1>
         
         <button 
@@ -396,11 +396,11 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-gray-200 dark:border-gray-700/50 bg-gray-50 dark:bg-[#151821]">
+      <div className="flex border-b border-gray-200 dark:border-gray-700/50 bg-gray-50 dark:bg-[#000000]">
         <button
           className={`px-4 py-2 text-sm font-medium ${
             activeTab === 'single'
-              ? 'text-primary border-b-2 border-primary'
+              ? 'text-primary border-b-2 border-primary tab-underline-fix'
               : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
           }`}
           onClick={() => setActiveTab('single')}
@@ -410,7 +410,7 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
         <button
           className={`px-4 py-2 text-sm font-medium ${
             activeTab === 'batch'
-              ? 'text-primary border-b-2 border-primary'
+              ? 'text-primary border-b-2 border-primary tab-underline-fix'
               : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
           }`}
           onClick={() => setActiveTab('batch')}
@@ -484,7 +484,7 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
                                ${!targetCollection || targetCollection === 'All Cards' 
                                  ? 'border-red-500 dark:border-red-500' 
                                  : 'border-gray-200 dark:border-gray-700/50'}
-                               bg-white dark:bg-[#1B2131] text-gray-900 dark:text-white
+                               bg-white dark:bg-[#0A0E17] text-gray-900 dark:text-white
                                focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent
                                flex items-center justify-between`}
                     >
@@ -497,7 +497,7 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
                     </button>
 
                     {showCollectionDropdown && (
-                      <div className="absolute z-10 w-full mt-1 bg-white dark:bg-[#1B2131] rounded-xl shadow-lg 
+                      <div className="absolute z-10 w-full mt-1 bg-white dark:bg-[#0A0E17] rounded-xl shadow-lg 
                                     border border-gray-200 dark:border-gray-700/50 py-1 max-h-60 overflow-auto">
                         {Object.keys(collections)
                           .filter(name => name !== 'All Cards')
@@ -505,7 +505,7 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
                             <button
                               key={collectionName}
                               type="button"
-                              className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-800
+                              className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-[#1E293B]
                                        text-gray-900 dark:text-white flex items-center justify-between text-sm md:text-base"
                               onClick={() => {
                                 setTargetCollection(collectionName);
@@ -517,7 +517,7 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
                                 <span className="material-icons text-primary text-lg">check</span>
                               )}
                             </button>
-                        ))}
+                          ))}
                       </div>
                     )}
                   </div>
@@ -534,7 +534,7 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
                       name="player"
                       value={formData.player}
                       onChange={handleInputChange}
-                      className="input text-sm"
+                      className="input text-sm bg-white dark:bg-[#0A0E17]"
                       placeholder="Charizard"
                       inputMode="text"
                       enterKeyHint="next"
@@ -548,7 +548,7 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
                       name="card"
                       value={formData.card}
                       onChange={handleInputChange}
-                      className="input text-sm"
+                      className="input text-sm bg-white dark:bg-[#0A0E17]"
                       placeholder="1999 Pokemon Game"
                       inputMode="text"
                       enterKeyHint="next"
@@ -562,7 +562,7 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
                       name="set"
                       value={formData.set}
                       onChange={handleInputChange}
-                      className="input text-sm"
+                      className="input text-sm bg-white dark:bg-[#0A0E17]"
                       placeholder="Pokemon Game"
                       inputMode="text"
                       enterKeyHint="next"
@@ -576,7 +576,7 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
                       name="year"
                       value={formData.year}
                       onChange={handleInputChange}
-                      className="input text-sm"
+                      className="input text-sm bg-white dark:bg-[#0A0E17]"
                       placeholder="1999"
                       inputMode="numeric"
                       pattern="\d*"
@@ -590,7 +590,7 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
                       name="category"
                       value={formData.category}
                       onChange={handleInputChange}
-                      className="input text-sm"
+                      className="input text-sm bg-white dark:bg-[#0A0E17]"
                       placeholder="Pokemon"
                       inputMode="text"
                       enterKeyHint="next"
@@ -604,7 +604,7 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
                       name="condition"
                       value={formData.condition}
                       onChange={handleInputChange}
-                      className="input text-sm"
+                      className="input text-sm bg-white dark:bg-[#0A0E17]"
                       placeholder="PSA 10"
                       inputMode="text"
                       enterKeyHint="next"
@@ -620,7 +620,7 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
                     name="slabSerial"
                     value={formData.slabSerial}
                     onChange={handleInputChange}
-                    className="input text-sm"
+                    className="input text-sm bg-white dark:bg-[#0A0E17]"
                     placeholder="12345678"
                     inputMode="numeric"
                     pattern="\d*"
@@ -638,7 +638,7 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
                     onClick={handleCurrencyToggle}
                     className={`px-3 py-1 rounded-lg transition-colors ${
                       isDarkMode 
-                        ? 'bg-[#252B3B] hover:bg-[#323B4B]' 
+                        ? 'bg-[#0A0E17] hover:bg-[#1E293B]' 
                         : 'bg-gray-100 hover:bg-gray-200'
                     }`}
                   >
@@ -662,7 +662,7 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
                           name="investmentAUD"
                           value={formData.investmentAUD}
                           onChange={handleNumberInputChange}
-                          className="input text-sm"
+                          className="input text-sm bg-white dark:bg-[#0A0E17]"
                           placeholder="0"
                           inputMode="decimal"
                           pattern="[0-9]*\.?[0-9]*"
@@ -679,7 +679,7 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
                           name="currentValueAUD"
                           value={formData.currentValueAUD}
                           onChange={handleNumberInputChange}
-                          className="input text-sm"
+                          className="input text-sm bg-white dark:bg-[#0A0E17]"
                           placeholder="0"
                           inputMode="decimal"
                           pattern="[0-9]*\.?[0-9]*"
@@ -699,7 +699,7 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
                           name="investmentUSD"
                           value={formData.investmentUSD}
                           onChange={handleNumberInputChange}
-                          className="input text-sm"
+                          className="input text-sm bg-white dark:bg-[#0A0E17]"
                           placeholder="0"
                           inputMode="decimal"
                           pattern="[0-9]*\.?[0-9]*"
@@ -716,7 +716,7 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
                           name="currentValueUSD"
                           value={formData.currentValueUSD}
                           onChange={handleNumberInputChange}
-                          className="input text-sm"
+                          className="input text-sm bg-white dark:bg-[#0A0E17]"
                           placeholder="0"
                           inputMode="decimal"
                           pattern="[0-9]*\.?[0-9]*"
@@ -732,7 +732,7 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
               </div>
             </div>
 
-            <div className="sticky bottom-0 bg-white dark:bg-[#1B2131] border-t border-gray-200 dark:border-gray-700/50 px-4 py-3 mt-8">
+            <div className="sticky bottom-0 bg-white dark:bg-[#000000] border-t border-gray-200 dark:border-gray-700/50 px-4 py-3 mt-8">
               <button 
                 onClick={handleSubmit}
                 className="w-full btn btn-primary"
@@ -752,7 +752,7 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
                 <button
                   type="button"
                   className="w-full h-10 md:h-12 px-3 md:px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 
-                            bg-white dark:bg-[#1B2131] text-gray-900 dark:text-white text-left text-sm md:text-base
+                            bg-white dark:bg-[#0A0E17] text-gray-900 dark:text-white text-left text-sm md:text-base
                             focus:outline-none focus:ring-2 focus:ring-primary"
                   onClick={() => setShowCollectionDropdown(!showCollectionDropdown)}
                 >
@@ -763,23 +763,24 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
                 </span>
                 
                 {showCollectionDropdown && (
-                  <div className="absolute z-10 w-full mt-1 bg-white dark:bg-[#1B2131] border border-gray-300 dark:border-gray-700 rounded-lg shadow-lg">
-                    <ul className="py-1 max-h-60 overflow-y-auto">
-                      {Object.keys(collections).filter(col => col !== 'All Cards').map(collection => (
-                        <li key={collection}>
-                          <button
-                            type="button"
-                            className="w-full px-3 md:px-4 py-2 text-left text-sm md:text-base text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-[#252B3B]"
-                            onClick={() => {
-                              setTargetCollection(collection);
-                              setShowCollectionDropdown(false);
-                            }}
-                          >
-                            {collection}
-                          </button>
-                        </li>
+                  <div className="absolute z-10 w-full mt-1 bg-white dark:bg-[#0A0E17] rounded-xl shadow-lg 
+                                border border-gray-200 dark:border-gray-700/50 py-1 max-h-60 overflow-auto">
+                    {Object.keys(collections)
+                      .filter(col => col !== 'All Cards')
+                      .map(collection => (
+                        <button
+                          key={collection}
+                          type="button"
+                          className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-[#1E293B]
+                                   text-gray-900 dark:text-white text-sm md:text-base"
+                          onClick={() => {
+                            setTargetCollection(collection);
+                            setShowCollectionDropdown(false);
+                          }}
+                        >
+                          {collection}
+                        </button>
                       ))}
-                    </ul>
                   </div>
                 )}
               </div>
@@ -789,6 +790,7 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
               className={`
                 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg p-4 md:p-8 flex flex-col items-center justify-center
                 ${batchImportDragActive ? 'border-purple-400 dark:border-purple-500 bg-purple-50/80 dark:bg-purple-900/10' : ''}
+                bg-transparent dark:bg-[#0A0E17]/30
               `}
               onDragEnter={handleBatchImportDrag}
               onDragLeave={handleBatchImportDrag}

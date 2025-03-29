@@ -15,12 +15,16 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading 
       // Prevent background scrolling but compensate for scrollbar width
       document.body.style.overflow = 'hidden';
       document.body.style.paddingRight = `${scrollbarWidth}px`;
+      // Add class to body to hide bottom nav
+      document.body.classList.add('price-update-modal-open');
     }
     
     return () => {
       // Restore scrolling on unmount
       document.body.style.overflow = '';
       document.body.style.paddingRight = '';
+      // Remove class from body
+      document.body.classList.remove('price-update-modal-open');
     };
   }, [isOpen]);
 
@@ -86,7 +90,7 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-white dark:bg-[#0B0F19] z-50">
+    <div className="fixed inset-0 bg-white dark:bg-[#0B0F19] z-[101] flex flex-col">
       <div className="sticky top-0 z-10 flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
         <h1 className="text-xl font-semibold text-gray-800 dark:text-white">
           {mode === 'baseData' ? 'Import Base Data' : 'Update Card Prices'}
@@ -99,130 +103,135 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading 
         </button>
       </div>
 
-      <div className="max-w-4xl mx-auto p-6">
-        <div 
-          className={`
-            border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg p-8 flex flex-col items-center justify-center
-            ${dragActive ? 'border-purple-400 dark:border-purple-500 bg-purple-50/80 dark:bg-purple-900/10' : ''}
-          `}
-          onDragEnter={handleDrag}
-          onDragLeave={handleDrag}
-          onDragOver={handleDrag}
-          onDrop={handleDrop}
-        >
-          <div className="text-center mb-4">
-            <span className="material-icons text-gray-400 dark:text-gray-600 text-5xl mb-4">description</span>
-            <p className="text-gray-800 dark:text-gray-200 text-lg mb-2">
-              {mode === 'priceUpdate' 
-                ? 'Drop your CSV file(s) here' 
-                : 'Drop your CSV file here'}
-            </p>
-            <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">
-              {mode === 'priceUpdate' 
-                ? 'or click to select multiple files' 
-                : 'or click to select a file'}
-            </p>
-          </div>
-          
-          <button
-            className="btn btn-primary"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={loading}
+      <div className="flex-1 overflow-y-auto pb-16">
+        <div className="max-w-4xl mx-auto p-6">
+          <div 
+            className={`
+              border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg p-8 flex flex-col items-center justify-center
+              ${dragActive ? 'border-purple-400 dark:border-purple-500 bg-purple-50/80 dark:bg-purple-900/10' : ''}
+            `}
+            onDragEnter={handleDrag}
+            onDragLeave={handleDrag}
+            onDragOver={handleDrag}
+            onDrop={handleDrop}
           >
-            {loading ? 'Processing...' : 'Select File(s)'}
-          </button>
-          
-          <input
-            ref={fileInputRef}
-            type="file"
-            className="hidden"
-            accept=".csv"
-            onChange={handleChange}
-            multiple={mode === 'priceUpdate'}
-          />
-        </div>
-
-        {/* Display selected files for price update mode */}
-        {mode === 'priceUpdate' && selectedFiles.length > 0 && (
-          <div className="mt-6">
-            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">
-              Selected CSV Files ({selectedFiles.length})
-            </h3>
+            <div className="text-center mb-4">
+              <span className="material-icons text-gray-400 dark:text-gray-600 text-5xl mb-4">description</span>
+              <p className="text-gray-800 dark:text-gray-200 text-lg mb-2">
+                {mode === 'priceUpdate' 
+                  ? 'Drop your CSV file(s) here' 
+                  : 'Drop your CSV file here'}
+              </p>
+              <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">
+                {mode === 'priceUpdate' 
+                  ? 'or click to select multiple files' 
+                  : 'or click to select a file'}
+              </p>
+            </div>
             
-            <ul className="space-y-2 mb-4">
-              {selectedFiles.map((file, index) => (
-                <li 
-                  key={`${file.name}-${index}`}
-                  className="flex items-center justify-between bg-gray-50 dark:bg-[#1B2131] p-3 rounded-lg"
-                >
-                  <div className="flex items-center">
-                    <span className="material-icons text-primary mr-2">description</span>
-                    <span className="text-gray-900 dark:text-white">{file.name}</span>
-                  </div>
-                  <button 
-                    onClick={() => handleRemoveFile(index)}
-                    className="text-gray-500 hover:text-red-500"
+            <button
+              className="btn btn-primary"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={loading}
+            >
+              {loading ? 'Processing...' : 'Select File(s)'}
+            </button>
+            
+            <input
+              ref={fileInputRef}
+              type="file"
+              className="hidden"
+              accept=".csv"
+              onChange={handleChange}
+              multiple={mode === 'priceUpdate'}
+            />
+          </div>
+
+          {/* Display selected files for price update mode */}
+          {mode === 'priceUpdate' && selectedFiles.length > 0 && (
+            <div className="mt-6">
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">
+                Selected CSV Files ({selectedFiles.length})
+              </h3>
+              
+              <ul className="space-y-2 mb-4">
+                {selectedFiles.map((file, index) => (
+                  <li 
+                    key={`${file.name}-${index}`}
+                    className="flex items-center justify-between bg-gray-50 dark:bg-[#1B2131] p-3 rounded-lg"
                   >
-                    <span className="material-icons">close</span>
-                  </button>
-                </li>
-              ))}
+                    <div className="flex items-center">
+                      <span className="material-icons text-primary mr-2">description</span>
+                      <span className="text-gray-900 dark:text-white">{file.name}</span>
+                    </div>
+                    <button 
+                      onClick={() => handleRemoveFile(index)}
+                      className="text-gray-500 hover:text-red-500"
+                    >
+                      <span className="material-icons">close</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              
+              <div className="flex justify-end">
+                <button
+                  onClick={handleSubmitFiles}
+                  disabled={loading || selectedFiles.length === 0}
+                  className={`btn btn-primary ${
+                    (loading || selectedFiles.length === 0) ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
+                >
+                  {loading ? 'Processing...' : 'Update Prices'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          <div className="mt-10">
+            <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">
+              Price Update Instructions
+            </h2>
+            
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
+              Your CSV file should include the following columns:
+            </p>
+            
+            <ul className="list-disc list-inside space-y-2 text-gray-600 dark:text-gray-400 mb-8 pl-4">
+              <li>Slab Serial # - Unique identifier for each card</li>
+              {mode === 'priceUpdate' ? (
+                <>
+                  <li>Current Value - Current value in USD (will be converted to AUD)</li>
+                  <li className="text-gray-500 dark:text-gray-500">Date Purchased - Optional purchase date (formats: YYYY-MM-DD, MM/DD/YYYY, or DD/MM/YYYY)</li>
+                </>
+              ) : (
+                <>
+                  <li>Investment - Investment amount in USD</li>
+                  <li>Current Value - Current value in USD</li>
+                  <li>Card - Card name</li>
+                  <li>Player - Pokémon name</li>
+                  <li>Year - Card year</li>
+                  <li>Set - Card set</li>
+                  <li>Category - Card category</li>
+                  <li>Condition - Card condition</li>
+                </>
+              )}
             </ul>
             
-            <div className="flex justify-end">
-              <button
-                onClick={handleSubmitFiles}
-                disabled={loading || selectedFiles.length === 0}
-                className={`btn btn-primary ${
-                  (loading || selectedFiles.length === 0) ? 'opacity-50 cursor-not-allowed' : ''
-                }`}
-              >
-                {loading ? 'Processing...' : 'Update Prices'}
-              </button>
+            <div className="bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 p-4 rounded-md">
+              {mode === 'priceUpdate' ? (
+                <>
+                  <p className="mb-2">
+                    <strong>Multiple File Upload:</strong> You can now upload multiple CSV files at once. The system will match cards across all collections by Slab Serial #.
+                  </p>
+                  <p>
+                    Important: This import will ONLY update the current values and optional card details. Investment values will not be modified to preserve your cost basis data.
+                  </p>
+                </>
+              ) : (
+                "Note: All USD values will be converted to AUD using the current exchange rate. For price updates only, use the \"Update Prices\" option instead."
+              )}
             </div>
-          </div>
-        )}
-
-        <div className="mt-10">
-          <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">
-            Price Update Instructions
-          </h2>
-          
-          <p className="text-gray-600 dark:text-gray-400 mb-4">
-            Your CSV file should include the following columns:
-          </p>
-          
-          <ul className="list-disc list-inside space-y-2 text-gray-600 dark:text-gray-400 mb-8 pl-4">
-            <li>Slab Serial # - Unique identifier for each card</li>
-            {mode === 'priceUpdate' ? (
-              <li>Current Value - Current value in USD (will be converted to AUD)</li>
-            ) : (
-              <>
-                <li>Investment - Investment amount in USD</li>
-                <li>Current Value - Current value in USD</li>
-                <li>Card - Card name</li>
-                <li>Player - Pokémon name</li>
-                <li>Year - Card year</li>
-                <li>Set - Card set</li>
-                <li>Category - Card category</li>
-                <li>Condition - Card condition</li>
-              </>
-            )}
-          </ul>
-          
-          <div className="bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 p-4 rounded-md">
-            {mode === 'priceUpdate' ? (
-              <>
-                <p className="mb-2">
-                  <strong>Multiple File Upload:</strong> You can now upload multiple CSV files at once. The system will match cards across all collections by Slab Serial #.
-                </p>
-                <p>
-                  Important: This import will ONLY update the current values and optional card details. Investment values will not be modified to preserve your cost basis data.
-                </p>
-              </>
-            ) : (
-              "Note: All USD values will be converted to AUD using the current exchange rate. For price updates only, use the \"Update Prices\" option instead."
-            )}
           </div>
         </div>
       </div>

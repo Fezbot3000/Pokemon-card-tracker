@@ -97,7 +97,7 @@ const Header = ({
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 w-full z-40 bg-white dark:bg-[#1B2131] shadow-md border-b border-gray-200 dark:border-gray-700/50" style={{position: 'fixed'}}>
+      <header className="fixed top-0 left-0 right-0 w-full z-40 bg-theme-background-card dark:bg-theme-dark-background-card shadow-md border-b border-theme-background-border dark:border-theme-dark-background-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo and Collection Dropdown */}
@@ -108,20 +108,20 @@ const Header = ({
               <div className="relative min-w-0 flex-shrink" ref={dropdownRef}>
                 <button
                   onClick={toggleDropdown}
-                  className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 rounded-lg text-gray-700 dark:text-gray-200 
-                           hover:bg-white dark:hover:bg-[#252B3B] transition-colors whitespace-nowrap"
+                  className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 rounded-lg text-theme-text dark:text-theme-dark-text 
+                           hover:bg-theme-background-hover dark:hover:bg-theme-dark-background-hover transition-colors whitespace-nowrap"
                 >
                   <span className="text-sm font-medium truncate max-w-[120px] sm:max-w-[180px] md:max-w-[250px]">{selectedCollection}</span>
-                  <span className="material-icons text-gray-600 dark:text-gray-300 flex-shrink-0">
+                  <span className="material-icons text-theme-text-secondary dark:text-theme-dark-text-secondary flex-shrink-0">
                     {isDropdownOpen ? 'expand_less' : 'expand_more'}
                   </span>
                 </button>
 
                 {isDropdownOpen && (
-                  <div className="absolute top-full left-0 mt-1 w-56 bg-white dark:bg-[#1B2131] rounded-lg shadow-[0_4px_12px_rgba(0,0,0,0.08)] py-1 z-50">
+                  <div className="absolute top-full left-0 mt-1 w-56 bg-theme-background-card dark:bg-theme-dark-background-card rounded-lg shadow-[0_4px_12px_rgba(0,0,0,0.08)] py-1 z-50">
                     <div 
-                      className="px-4 py-2 hover:bg-gray-50 dark:hover:bg-[#252B3B] cursor-pointer
-                               text-gray-700 dark:text-gray-200"
+                      className="px-4 py-2 hover:bg-theme-background-hover dark:hover:bg-theme-dark-background-hover cursor-pointer
+                               text-theme-text dark:text-theme-dark-text"
                       onClick={() => handleCollectionSelect('All Cards')}
                     >
                       All Cards
@@ -131,16 +131,16 @@ const Header = ({
                       .map((collection) => (
                         <div
                           key={collection}
-                          className="px-4 py-2 hover:bg-gray-50 dark:hover:bg-[#252B3B] cursor-pointer
-                                   text-gray-700 dark:text-gray-200 truncate"
+                          className="px-4 py-2 hover:bg-theme-background-hover dark:hover:bg-theme-dark-background-hover cursor-pointer
+                                   text-theme-text dark:text-theme-dark-text truncate"
                           onClick={() => handleCollectionSelect(collection)}
                         >
                           {collection}
                         </div>
                       ))}
-                    <div className="h-px bg-gray-100 dark:bg-gray-800 my-1" />
+                    <div className="h-px bg-theme-background-border dark:bg-theme-dark-background-border my-1" />
                     <div 
-                      className="px-4 py-2 hover:bg-gray-50 dark:hover:bg-[#252B3B] cursor-pointer
+                      className="px-4 py-2 hover:bg-theme-background-hover dark:hover:bg-theme-dark-background-hover cursor-pointer
                                text-primary flex items-center justify-between"
                       onClick={handleAddNewCollection}
                     >
@@ -158,7 +158,7 @@ const Header = ({
                 className={`px-4 py-2 rounded-lg transition-colors ${
                   currentView === 'cards'
                     ? 'bg-primary text-white'
-                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+                    : 'text-theme-text-secondary dark:text-theme-dark-text-secondary hover:bg-theme-background-hover dark:hover:bg-theme-dark-background-hover'
                 }`}
                 onClick={() => onViewChange('cards')}
               >
@@ -168,7 +168,7 @@ const Header = ({
                 className={`px-4 py-2 rounded-lg transition-colors ${
                   currentView === 'sold'
                     ? 'bg-primary text-white'
-                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+                    : 'text-theme-text-secondary dark:text-theme-dark-text-secondary hover:bg-theme-background-hover dark:hover:bg-theme-dark-background-hover'
                 }`}
                 onClick={() => onViewChange('sold')}
               >
@@ -180,30 +180,12 @@ const Header = ({
             <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
               {/* Desktop Actions - keep theme and settings only on desktop */}
               <div className="hidden lg:flex items-center space-x-2">
-                {selectedCollection !== 'All Cards' && (
-                  <>
-                    <button
-                      onClick={() => onImportClick('priceUpdate')}
-                      className="flex items-center space-x-1 px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-                    >
-                      <span className="material-icons">update</span>
-                      <span>Update Prices</span>
-                    </button>
-                    
-                    <button
-                      onClick={() => onImportClick('baseData')}
-                      className="flex items-center space-x-1 px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-                    >
-                      <span className="material-icons">upload_file</span>
-                      <span>Import Base Data</span>
-                    </button>
-                  </>
-                )}
+                {/* Removed Update Prices and Import Base Data buttons as they already exist in Settings */}
 
                 {/* Theme and Settings buttons */}
                 <button
                   onClick={toggleTheme}
-                  className="w-10 h-10 flex items-center justify-center rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800/50"
+                  className="w-10 h-10 flex items-center justify-center rounded-lg text-theme-text-secondary dark:text-theme-dark-text-secondary hover:bg-theme-background-hover dark:hover:bg-theme-dark-background-hover"
                   aria-label="Toggle theme"
                 >
                   <span className="material-icons">
@@ -213,7 +195,7 @@ const Header = ({
                 
                 <button
                   onClick={onSettingsClick}
-                  className="w-10 h-10 flex items-center justify-center rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800/50"
+                  className="w-10 h-10 flex items-center justify-center rounded-lg text-theme-text-secondary dark:text-theme-dark-text-secondary hover:bg-theme-background-hover dark:hover:bg-theme-dark-background-hover"
                   aria-label="Settings"
                 >
                   <span className="material-icons">settings</span>
@@ -227,11 +209,11 @@ const Header = ({
       {/* New Collection Modal */}
       {isNewCollectionModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div ref={newCollectionModalRef} className="bg-white dark:bg-[#1B2131] rounded-xl w-full max-w-md mx-4">
-            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700/50">
-              <h2 className="text-xl font-medium text-gray-800 dark:text-gray-200">New Collection</h2>
+          <div ref={newCollectionModalRef} className="bg-theme-background-card dark:bg-theme-dark-background-card rounded-xl w-full max-w-md mx-4">
+            <div className="flex items-center justify-between p-6 border-b border-theme-background-border dark:border-theme-dark-background-border">
+              <h2 className="text-xl font-medium text-theme-text dark:text-theme-dark-text">New Collection</h2>
               <button 
-                className="text-2xl text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
+                className="text-2xl text-theme-text-tertiary hover:text-theme-text-secondary dark:text-theme-dark-text-tertiary dark:hover:text-theme-dark-text-secondary"
                 onClick={() => setIsNewCollectionModalOpen(false)}
               >
                 ×
@@ -239,7 +221,7 @@ const Header = ({
             </div>
             
             <div className="p-6">
-              <label className="block text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-theme-text dark:text-theme-dark-text mb-2">
                 Collection Name:
               </label>
               <input
@@ -249,11 +231,11 @@ const Header = ({
                 onChange={(e) => setNewCollectionName(e.target.value)}
                 onKeyDown={handleNewCollectionKeyDown}
                 className="w-full px-4 py-2 rounded-xl 
-                         border border-gray-200 dark:border-gray-700/50 
-                         bg-white dark:bg-[#252B3B]
-                         text-gray-900 dark:text-white
+                         border border-theme-background-border dark:border-theme-dark-background-border 
+                         bg-theme-background-input dark:bg-theme-dark-background-input
+                         text-theme-text dark:text-theme-dark-text
                          focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary
-                         placeholder-gray-500 dark:placeholder-gray-400"
+                         placeholder-theme-text-tertiary dark:placeholder-theme-dark-text-tertiary"
                 placeholder="Enter collection name"
                 autoFocus
               />
@@ -261,9 +243,9 @@ const Header = ({
               <div className="flex justify-end gap-2 mt-6">
                 <button 
                   className="px-4 py-2 rounded-lg
-                           bg-gray-100 dark:bg-[#252B3B] 
-                           text-gray-700 dark:text-gray-300
-                           hover:bg-gray-200 dark:hover:bg-[#323B4B]
+                           bg-theme-background-hover dark:bg-theme-dark-background-hover 
+                           text-theme-text dark:text-theme-dark-text
+                           hover:bg-theme-background-active dark:hover:bg-theme-dark-background-active
                            transition-colors"
                   onClick={() => setIsNewCollectionModalOpen(false)}
                 >
@@ -272,7 +254,7 @@ const Header = ({
                 <button 
                   className="px-4 py-2 rounded-lg
                            bg-primary text-white
-                           hover:bg-primary/90
+                           hover:bg-primary-700
                            transition-colors"
                   onClick={handleCreateCollection}
                 >

@@ -199,12 +199,14 @@ const CardList = ({
   cards, 
   exchangeRate, 
   onCardClick, 
-  onDeleteCards, 
+  onDeleteCard, 
   onUpdateCard, 
-  onAddCard,
+  onAddCardClick,
   selectedCollection,
-  collections,
-  setCollections
+  refreshCards,
+  onDeleteMultiple,
+  onMoveMultiple,
+  collections
 }) => {
   const [filter, setFilter] = useState('');
   const [sortField, setSortField] = useState(
@@ -531,6 +533,29 @@ const CardList = ({
     return `INV-${String(nextNumber).padStart(4, '0')}`;
   };
 
+  const handleDeleteClick = () => {
+    const selectedCardsArray = Array.from(selectedCards);
+    setCardsToDelete(selectedCardsArray);
+    setShowDeleteConfirm(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    try {
+      // Call the delete multiple cards function
+      await onDeleteMultiple(cardsToDelete);
+      
+      // Clear selection
+      setSelectedCards(new Set());
+      setShowDeleteConfirm(false);
+      setCardsToDelete([]);
+      
+      // Success message is shown by the onDeleteMultiple function
+    } catch (error) {
+      console.error('Error deleting cards:', error);
+      toast.error('Failed to delete cards');
+    }
+  };
+
   const handleSaleConfirm = async ({ buyer, dateSold, soldPrices, totalSalePrice, totalProfit }) => {
     // Generate a new invoice ID for this transaction
     const invoiceId = generateInvoiceId();
@@ -550,22 +575,9 @@ const CardList = ({
     // Add the new invoice to sold cards
     localStorage.setItem('soldCards', JSON.stringify([...existingSoldCards, ...selectedCardsData]));
 
-    // Remove cards from all collections
-    const updatedCollections = { ...collections };
+    // Remove cards from collections using the provided function
     const cardIds = selectedCardsData.map(card => card.slabSerial);
-    
-    // Remove from each collection
-    Object.keys(updatedCollections).forEach(collectionName => {
-      if (Array.isArray(updatedCollections[collectionName])) {
-        updatedCollections[collectionName] = updatedCollections[collectionName].filter(
-          card => !cardIds.includes(card.slabSerial)
-        );
-      }
-    });
-
-    // Save updated collections
-    await db.saveCollections(updatedCollections);
-    setCollections(updatedCollections);
+    await onDeleteMultiple(cardIds);
 
     // Clear selection and close modal
     setSelectedCards(new Set());
@@ -608,50 +620,8 @@ const CardList = ({
     setIsValueDropdownOpen(!isValueDropdownOpen);
   };
 
-  const handleDeleteClick = () => {
-    const selectedCardsArray = Array.from(selectedCards);
-    setCardsToDelete(selectedCardsArray);
-    setShowDeleteConfirm(true);
-  };
-
-  const handleDeleteConfirm = async () => {
-    try {
-      // Create a copy of the collections
-      const updatedCollections = { ...collections };
-
-      // Remove the cards from all collections
-      Object.keys(updatedCollections).forEach(collectionName => {
-        if (Array.isArray(updatedCollections[collectionName])) {
-          updatedCollections[collectionName] = updatedCollections[collectionName].filter(
-            card => !cardsToDelete.includes(card.slabSerial)
-          );
-        }
-      });
-
-      // Save to database
-      await db.saveCollections(updatedCollections);
-      
-      // Update state
-      setCollections(updatedCollections);
-
-      // Call the original onDeleteCards function
-      onDeleteCards(cardsToDelete);
-      
-      // Clear selection
-      setSelectedCards(new Set());
-      setShowDeleteConfirm(false);
-      setCardsToDelete([]);
-      
-      // Show success message
-      toast.success(`${cardsToDelete.length} card${cardsToDelete.length > 1 ? 's' : ''} deleted`);
-    } catch (error) {
-      console.error('Error deleting cards:', error);
-      toast.error('Failed to delete cards');
-    }
-  };
-
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 mt-1">
       {/* Stats Section */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-3 mb-3 sm:mb-4">
         <div className="bg-white dark:bg-[#1B2131] rounded-lg p-2.5 sm:p-3 shadow-sm flex flex-col">
@@ -764,7 +734,7 @@ const CardList = ({
               )}
             </div>
             <button
-              onClick={onAddCard}
+              onClick={onAddCardClick}
               className="btn btn-primary"
             >
               <span className="material-icons text-lg">add</span>

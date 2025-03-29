@@ -81,7 +81,7 @@ const BaseDataImporter = ({ onImport, loading }) => {
         <p>Your CSV file should include the following columns:</p>
         <ul>
           <li><strong>Slab Serial #</strong> - Unique identifier for each card</li>
-          <li><strong>Date Purchased</strong> - When you bought the card</li>
+          <li><strong>Date Purchased</strong> - When you bought the card (formats: YYYY-MM-DD, MM/DD/YYYY, or DD/MM/YYYY)</li>
           <li><strong>Quantity</strong> - Number of cards</li>
           <li><strong>Current Value</strong> - Current value in USD (will be converted to AUD)</li>
           <li><strong>Investment</strong> - Amount invested in USD (will be converted to AUD)</li>

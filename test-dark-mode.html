@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dark Mode Test</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      padding: 20px;
+      transition: background-color 0.3s, color 0.3s;
+      background-color: #F5F7FA;
+      color: #1E293B;
+    }
+    
+    html.dark body {
+      background-color: #0A0E17;
+      color: #F8FAFC;
+    }
+    
+    .container {
+      max-width: 500px;
+      margin: 0 auto;
+      padding: 20px;
+      border-radius: 12px;
+      background-color: #FFFFFF;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      transition: background-color 0.3s, border-color 0.3s;
+    }
+    
+    html.dark .container {
+      background-color: #121927;
+      border-color: rgba(31, 41, 55, 0.5);
+    }
+    
+    button {
+      padding: 10px 16px;
+      background-color: #4318FF;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    
+    html.dark button {
+      background-color: #6B4EFF;
+    }
+    
+    .status {
+      margin-top: 16px;
+      padding: 12px;
+      border-radius: 8px;
+      background-color: #F0F3F9;
+      font-family: monospace;
+    }
+    
+    html.dark .status {
+      background-color: #1E293B;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Dark Mode Test</h1>
+    <p>This is a test page to check if dark mode is working correctly in your app.</p>
+    
+    <button id="toggle-mode">Toggle Dark Mode</button>
+    
+    <div class="status" id="status">
+      Current Mode: <span id="mode-text">Light</span><br>
+      html.dark Class: <span id="has-class">No</span>
+    </div>
+  </div>
+
+  <script>
+    const toggleButton = document.getElementById('toggle-mode');
+    const modeText = document.getElementById('mode-text');
+    const hasClass = document.getElementById('has-class');
+    
+    // Check initial state
+    const isDarkMode = document.documentElement.classList.contains('dark');
+    updateStatus(isDarkMode);
+    
+    // Toggle dark mode
+    toggleButton.addEventListener('click', () => {
+      const isDark = document.documentElement.classList.contains('dark');
+      
+      if (isDark) {
+        document.documentElement.classList.remove('dark');
+        localStorage.setItem('darkMode', 'false');
+      } else {
+        document.documentElement.classList.add('dark');
+        localStorage.setItem('darkMode', 'true');
+      }
+      
+      updateStatus(!isDark);
+    });
+    
+    function updateStatus(isDark) {
+      modeText.textContent = isDark ? 'Dark' : 'Light';
+      hasClass.textContent = isDark ? 'Yes' : 'No';
+    }
+    
+    // Initialize based on local storage or system preference
+    function initializeTheme() {
+      const savedMode = localStorage.getItem('darkMode');
+      
+      if (savedMode === 'true') {
+        document.documentElement.classList.add('dark');
+        updateStatus(true);
+      } else if (savedMode === 'false') {
+        document.documentElement.classList.remove('dark');
+        updateStatus(false);
+      } else {
+        // Check system preference
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        
+        if (prefersDark) {
+          document.documentElement.classList.add('dark');
+          updateStatus(true);
+        }
+      }
+    }
+    
+    // Run initialization
+    initializeTheme();
+  </script>
+</body>
+</html> 

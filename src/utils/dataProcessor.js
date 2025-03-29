@@ -87,6 +87,10 @@ export const processImportedData = (importedData, existingCards, exchangeRate, i
           ...card,
           currentValueUSD: newValueUSD,
           currentValueAUD: newValueAUD,
+          // Add datePurchased update if present in the imported data
+          ...(importedCard['Date Purchased'] && { 
+            datePurchased: formatDateValue(importedCard['Date Purchased'])
+          }),
           potentialProfit: Number((newValueAUD - (card.investmentAUD || 0)).toFixed(2))
         };
       }
@@ -115,7 +119,7 @@ export const processImportedData = (importedData, existingCards, exchangeRate, i
 
       return {
         ...existingCard,
-        datePurchased: importedCard['Date Purchased'] || existingCard.datePurchased,
+        datePurchased: formatDateValue(importedCard['Date Purchased']) || existingCard.datePurchased,
         card: importedCard['Card'] || existingCard.card,
         player: importedCard['Player'] || existingCard.player,
         year: importedCard['Year'] || existingCard.year,
@@ -139,7 +143,7 @@ export const processImportedData = (importedData, existingCards, exchangeRate, i
     return {
       id: slabSerial,
       slabSerial: slabSerial,
-      datePurchased: importedCard['Date Purchased'] || 'Unknown',
+      datePurchased: formatDateValue(importedCard['Date Purchased']) || new Date().toISOString().split('T')[0],
       card: importedCard['Card'] || 'Unknown Card',
       player: importedCard['Player'] || '',
       year: importedCard['Year'] || '',
@@ -221,6 +225,10 @@ export const processMultipleCollectionsUpdate = (importedData, allCollections, e
           ...card,
           currentValueUSD: newValueUSD,
           currentValueAUD: newValueAUD,
+          // Add datePurchased update if present in the imported data
+          ...(importedCard['Date Purchased'] && { 
+            datePurchased: formatDateValue(importedCard['Date Purchased']) 
+          }),
           potentialProfit: Number((newValueAUD - (card.investmentAUD || 0)).toFixed(2))
         };
       }
@@ -320,4 +328,62 @@ export const calculateCardMetrics = (cards) => {
     worstPerformer,
     totalCards: cards.length
   };
+};
+
+/**
+ * Format the date value to ensure it's in YYYY-MM-DD format
+ * @param {string} dateValue - The date value to format
+ * @returns {string} Formatted date or empty string if invalid
+ */
+export const formatDateValue = (dateValue) => {
+  if (!dateValue) return '';
+  
+  try {
+    // Check if the date is already in YYYY-MM-DD format
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
+      return dateValue;
+    }
+    
+    // Try to parse as MM/DD/YYYY format
+    const mmddyyyyRegex = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/;
+    if (mmddyyyyRegex.test(dateValue)) {
+      const matches = dateValue.match(mmddyyyyRegex);
+      const month = matches[1].padStart(2, '0');
+      const day = matches[2].padStart(2, '0');
+      const year = matches[3];
+      return `${year}-${month}-${day}`;
+    }
+    
+    // Try to parse as DD/MM/YYYY format
+    const ddmmyyyyRegex = /^(\d{1,2})[-./](\d{1,2})[-./](\d{4})$/;
+    if (ddmmyyyyRegex.test(dateValue)) {
+      const matches = dateValue.match(ddmmyyyyRegex);
+      const day = matches[1].padStart(2, '0');
+      const month = matches[2].padStart(2, '0');
+      const year = matches[3];
+      return `${year}-${month}-${day}`;
+    }
+    
+    // Try to parse with Date object (this handles many formats)
+    const date = new Date(dateValue);
+    if (!isNaN(date.getTime())) {
+      const year = date.getFullYear();
+      const month = (date.getMonth() + 1).toString().padStart(2, '0');
+      const day = date.getDate().toString().padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+    
+    // If all parsing attempts fail, return today's date rather than empty string
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = (today.getMonth() + 1).toString().padStart(2, '0');
+    const day = today.getDate().toString().padStart(2, '0');
+    console.warn(`Invalid date format: "${dateValue}", using today's date instead`);
+    return `${year}-${month}-${day}`;
+  } catch (error) {
+    console.error('Error formatting date:', error, dateValue);
+    // Return today's date as fallback
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  }
 };

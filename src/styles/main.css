@@ -1,17 +1,55 @@
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@300;400;500;600;700&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* Import url for fonts */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@300;400;500;600;700&display=swap');
+
+/* Import old shared.css */
 @import './shared.css';
+
+/* Import dark mode fixes */
+@import './darkmode-fix.css';
+
+/* Critical dark mode override - ensures dark mode is applied consistently */
+html.dark,
+html.dark *:not(.force-light) {
+  color-scheme: dark !important;
+}
+
+html.dark body {
+  background-color: #000000 !important;
+  color: #F8FAFC !important;
+}
 
 /* Design system variables */
 :root {
-  --primary: rgba(67, 24, 255, 0.9); /* Slightly transparent purple */
-  --primary-dark: rgba(107, 78, 255, 0.9); /* Slightly transparent dark mode purple */
-  --error: #FF3B3B;
-  --success: #05CD99;
+  /* Brand colors */
+  --color-primary: theme('colors.primary.DEFAULT');
+  --color-primary-light: theme('colors.primary.light');
+  --color-primary-dark: theme('colors.primary.dark');
+  
+  /* Status colors */
+  --color-success: theme('colors.success.DEFAULT');
+  --color-error: theme('colors.error.DEFAULT');
+  --color-warning: theme('colors.warning.DEFAULT');
+  --color-info: theme('colors.info.DEFAULT');
+  
+  /* Theme colors - Light mode */
+  --color-bg: theme('colors.theme.background');
+  --color-bg-card: theme('colors.theme.background-card');
+  --color-bg-input: theme('colors.theme.background-input');
+  --color-bg-hover: theme('colors.theme.background-hover');
+  --color-bg-active: theme('colors.theme.background-active');
+  --color-border: theme('colors.theme.background-border');
+  
+  --color-text: theme('colors.theme.text');
+  --color-text-secondary: theme('colors.theme.text-secondary');
+  --color-text-tertiary: theme('colors.theme.text-tertiary');
+  --color-text-disabled: theme('colors.theme.text-disabled');
+  --color-text-inverse: theme('colors.theme.text-inverse');
+  
+  /* Spacing and sizing */
   --border-radius-sm: 0.375rem; /* 6px */
   --border-radius-md: 0.5rem; /* 8px */
   --border-radius-lg: 0.75rem; /* 12px */
@@ -23,6 +61,22 @@
   --btn-font-weight: 500;
   --btn-radius: var(--border-radius-lg);
   --btn-icon-size: 1.25rem; /* 20px */
+}
+
+/* Dark mode variables */
+.dark {
+  --color-bg: theme('colors.theme.dark-background') !important;
+  --color-bg-card: theme('colors.theme.dark-background-card') !important;
+  --color-bg-input: theme('colors.theme.dark-background-input') !important;
+  --color-bg-hover: theme('colors.theme.dark-background-hover') !important;
+  --color-bg-active: theme('colors.theme.dark-background-active') !important;
+  --color-border: theme('colors.theme.dark-background-border') !important;
+  
+  --color-text: theme('colors.theme.dark-text') !important;
+  --color-text-secondary: theme('colors.theme.dark-text-secondary') !important;
+  --color-text-tertiary: theme('colors.theme.dark-text-tertiary') !important;
+  --color-text-disabled: theme('colors.theme.dark-text-disabled') !important;
+  --color-text-inverse: theme('colors.theme.dark-text-inverse') !important;
 }
 
 /* Prevent scrollbar layout shift */
@@ -52,13 +106,15 @@ html::-webkit-scrollbar-track {
 }
 
 html::-webkit-scrollbar-thumb {
-  background-color: rgba(155, 155, 155, 0.5);
+  background-color: var(--color-text-tertiary);
+  opacity: 0.5;
   border-radius: var(--border-radius-lg);
 }
 
 /* Dark mode scrollbar adjustments */
 html.dark::-webkit-scrollbar-thumb {
-  background-color: rgba(100, 100, 100, 0.5);
+  background-color: var(--color-text-tertiary);
+  opacity: 0.5;
 }
 
 body {
@@ -79,241 +135,22 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-gray-300 dark:bg-gray-700 rounded-full;
+  @apply bg-theme-text-tertiary/50 dark:bg-theme-dark-text-tertiary/50 rounded-full;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-gray-400 dark:bg-gray-600;
+  @apply bg-theme-text-secondary/50 dark:bg-theme-dark-text-secondary/50;
 }
 
-/* Hide scrollbar for card details panel while preserving functionality */
-.card-details {
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE and Edge */
+/* Default light theme */
+body {
+  @apply bg-theme-background text-theme-text overflow-x-hidden dark:bg-theme-dark-background dark:text-theme-dark-text;
+  overscroll-behavior-y: none;
 }
 
-.card-details::-webkit-scrollbar {
-  display: none; /* Chrome, Safari and Opera */
-}
-
-/* Material Icons */
-@layer base {
-  .material-icons {
-    font-family: 'Material Icons';
-    font-weight: normal;
-    font-style: normal;
-    font-size: 24px;
-    line-height: 1;
-    letter-spacing: normal;
-    text-transform: none;
-    display: inline-block;
-    white-space: nowrap;
-    word-wrap: normal;
-    direction: ltr;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    text-rendering: optimizeLegibility;
-    font-feature-settings: 'liga';
-  }
-
-  /* Default light theme */
-  body {
-    @apply bg-gray-100 dark:bg-[#111319] text-gray-900 dark:text-white overflow-x-hidden;
-    overscroll-behavior-y: none;
-  }
-
-  /* Add padding only to dashboard pages */
-  .dashboard-page {
-    @apply pt-16;
-  }
-
-  /* Full-screen pages with no padding top */
-  .page-no-padding {
-    @apply pt-0;
-  }
-
-  /* Dark theme */
-  html.dark body {
-    @apply bg-[#0B0F19] text-white;
-  }
-
-  /* Ensure proper font loading */
-  @font-face {
-    font-family: 'Material Icons';
-    font-style: normal;
-    font-weight: 400;
-    src: url(https://fonts.gstatic.com/s/materialicons/v140/flUhRq6tzZclQEJ-Vdg-IuiaDsNc.woff2) format('woff2');
-  }
-
-  /* Adjust font weights for better rendering */
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-medium;
-    letter-spacing: -0.01em; /* Adjusted for Noto Sans */
-  }
-
-  .text-2xl {
-    letter-spacing: -0.01em; /* Adjusted for Noto Sans */
-  }
-
-  .font-medium {
-    @apply tracking-normal; /* Adjusted for Noto Sans */
-  }
-
-  /* Typography Scale */
-  h1 {
-    @apply text-2xl font-semibold;
-    letter-spacing: -0.01em; /* Adjusted for Noto Sans */
-  }
-
-  h2 {
-    @apply text-xl font-semibold;
-    letter-spacing: -0.01em; /* Adjusted for Noto Sans */
-  }
-
-  h3 {
-    @apply text-lg font-semibold;
-    letter-spacing: -0.01em; /* Adjusted for Noto Sans */
-  }
-
-  h4 {
-    @apply text-base font-medium;
-  }
-
-  p {
-    @apply text-base;
-  }
-
-  small {
-    @apply text-sm font-medium;
-  }
-
-  .text-label {
-    @apply text-sm font-medium;
-  }
-
-  .text-caption {
-    @apply text-xs font-normal;
-  }
-
-  /* Stats values */
-  .stat-value {
-    @apply text-base sm:text-2xl font-semibold;
-  }
-
-  .stat-label {
-    @apply text-xs font-medium uppercase tracking-normal text-gray-600 dark:text-gray-300;
-  }
-
-  /* Card title and content */
-  .card-title {
-    @apply text-base font-semibold;
-  }
-
-  .card-content {
-    @apply text-base;
-  }
-
-  /* Button text */
-  .btn {
-    @apply text-base font-medium;
-  }
-
-  /* Form elements */
-  .form-label {
-    @apply text-sm font-medium;
-  }
-
-  .form-input {
-    @apply text-base;
-  }
-
-  .form-hint {
-    @apply text-sm font-medium text-gray-600 dark:text-gray-400;
-  }
-
-  /* Navigation and menus */
-  .nav-item {
-    @apply text-base font-medium;
-  }
-
-  .menu-item {
-    @apply text-base font-medium;
-  }
-
-  .dropdown-item {
-    @apply text-base font-medium;
-  }
-
-  /* Modal elements */
-  .modal-title {
-    @apply text-xl font-semibold;
-  }
-
-  .modal-content {
-    @apply text-base;
-  }
-
-  /* Card Stats */
-  .card-stat-label {
-    @apply text-sm font-medium text-gray-700 dark:text-gray-300;
-  }
-
-  .card-stat-value {
-    @apply text-lg font-semibold text-gray-900 dark:text-white;
-  }
-
-  /* Search Input */
-  .search-input {
-    @apply text-base font-normal placeholder:text-gray-500 dark:placeholder:text-gray-400;
-  }
-
-  /* Collection Name */
-  .collection-name {
-    @apply text-base font-medium;
-  }
-
-  /* Sort and Filter Labels */
-  .sort-button, 
-  .filter-button {
-    @apply text-base font-medium;
-  }
-
-  /* Card Details */
-  .card-details-title {
-    @apply text-xl font-semibold;
-  }
-
-  .card-details-subtitle {
-    @apply text-base font-medium text-gray-700 dark:text-gray-300;
-  }
-
-  /* Stats Section */
-  .stats-section {
-    @apply grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-3 mb-3 sm:mb-4 px-2 sm:px-4;
-  }
-
-  .stat-card {
-    @apply bg-white dark:bg-[#1B2131] rounded-lg p-2.5 sm:p-3 shadow-sm flex flex-col;
-  }
-
-  .stat-label {
-    @apply text-xs font-medium text-gray-600 dark:text-gray-300 mb-0.5;
-  }
-
-  .stat-value {
-    @apply text-base sm:text-3xl text-gray-900 dark:text-white font-medium;
-  }
-
-  /* Profit/Loss Values */
-  .profit-value {
-    @apply font-semibold;
-    &.positive {
-      @apply text-green-600 dark:text-green-500;
-    }
-    &.negative {
-      @apply text-red-600 dark:text-red-500;
-    }
-  }
+/* Dark theme */
+html.dark body {
+  @apply bg-theme-dark-background text-theme-dark-text;
 }
 
 /* Custom styles that are specific to this app */
@@ -1315,6 +1152,54 @@ body {
            px-4 py-3 flex justify-end gap-3 z-10;
   }
 
+  /* Mobile optimization for card details footer buttons */
+  @media (max-width: 640px) {
+    .card-details .sticky.bottom-0 {
+      padding: 12px;
+    }
+    
+    .card-details .sticky.bottom-0 .btn {
+      padding: 8px 10px;
+      min-width: auto;
+      font-size: 0.875rem;
+      height: 40px;
+    }
+    
+    .card-details .sticky.bottom-0 .material-icons {
+      font-size: 18px;
+    }
+    
+    .card-details .btn-danger {
+      padding: 8px;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Increase spacing between form field elements on mobile */
+    .card-details .mb-4 {
+      margin-bottom: 1rem;
+    }
+    
+    .card-details .grid.gap-4 {
+      gap: 0.75rem;
+    }
+    
+    .card-details .p-4 {
+      padding: 0.75rem;
+    }
+    
+    /* Ensure all form inputs have enough height for easy touch */
+    .card-details input,
+    .card-details textarea,
+    .card-details select {
+      height: 44px;
+      font-size: 16px; /* Prevent iOS zoom */
+    }
+  }
+
   /* Card Details Overlay */
   .card-details-overlay {
     @apply fixed inset-0 bg-black/50 z-[99] transition-opacity duration-300;
@@ -1429,7 +1314,7 @@ body {
 
   /* Batch Import Modal styles */
   .batch-import-modal {
-    @apply fixed inset-0 z-50 bg-white dark:bg-[#0B0F19] overflow-hidden;
+    @apply fixed inset-0 z-50 bg-theme-background dark:bg-theme-dark-background overflow-hidden;
   }
   
   .batch-import-modal-content {
@@ -1438,20 +1323,25 @@ body {
 
   /* Bottom Navigation Bar */
   .bottom-nav {
-    @apply fixed bottom-0 left-0 right-0 bg-white dark:bg-[#1B2131] border-t border-gray-200 dark:border-gray-700/50 grid grid-cols-4 z-40;
+    @apply fixed bottom-0 left-0 right-0 bg-theme-background-card dark:bg-theme-dark-background-card border-t border-theme-background-border dark:border-theme-dark-background-border grid grid-cols-4 z-[51];
     padding-bottom: env(safe-area-inset-bottom, 0);
     padding-bottom: max(env(safe-area-inset-bottom, 0), 12px);
   }
 
+  /* Hide bottom nav when ImportModal is open */
+  body.price-update-modal-open .bottom-nav {
+    display: none !important;
+  }
+
   .bottom-nav-item {
-    @apply flex flex-col items-center justify-center py-2 text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-primary transition-colors;
+    @apply flex flex-col items-center justify-center py-2 text-theme-text-secondary dark:text-theme-dark-text-secondary hover:text-primary dark:hover:text-primary transition-colors;
   }
 
   .bottom-nav-item.active {
     @apply text-primary;
   }
 
-  /* Only hide bottom nav when modal is open on desktop */
+  /* Only hide bottom nav when specific modals are open on desktop */
   @media (min-width: 768px) {
     .modal-open .bottom-nav {
       display: none;
@@ -1459,7 +1349,7 @@ body {
   }
 
   .dashboard-page {
-    @apply min-h-screen bg-gray-100 dark:bg-[#111827];
+    @apply min-h-screen bg-theme-background dark:bg-theme-dark-background;
     padding-bottom: calc(env(safe-area-inset-bottom, 0) + 64px);
   }
 
@@ -1470,7 +1360,7 @@ body {
 
   /* Settings page styles */
   .settings-page {
-    @apply bg-gray-100 dark:bg-[#111827];
+    @apply bg-theme-background dark:bg-theme-dark-background;
   }
 
   /* Mobile settings content */
@@ -1575,6 +1465,25 @@ body {
     display: contents;
   }
 
+  /* Fix spacing to ensure consistent stats section in both Cards and Sold Items pages */
+  .space-y-4 > .grid.grid-cols-2.sm\:grid-cols-4,
+  .sold-items-mobile-fixes > .grid.grid-cols-2.sm\:grid-cols-4 {
+    margin-top: 1rem !important;
+    margin-bottom: 1rem !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  /* Ensure consistent spacing between stats and search input */
+  .space-y-4 > .flex.flex-col.sm\:flex-row {
+    margin-top: 1rem !important;
+  }
+
+  /* Ensure consistent padding in stat cards across all pages */
+  .grid.grid-cols-2.sm\:grid-cols-4 > div {
+    padding: 10px !important;
+  }
+
   /* Additional mobile-specific fixes for sold items page */
   @media (max-width: 640px) {
     /* Ensure grid layout maintains alignment */
@@ -1622,117 +1531,6 @@ body {
     /* Card title and player name */
     .bg-gray-50.dark\:bg-\[\#1B2131\].rounded-xl.p-3 .mb-2 {
       margin-bottom: 8px;
-    }
-    
-    .bg-gray-50.dark\:bg-\[\#1B2131\].rounded-xl.p-3 .mb-2 h4 {
-      font-size: 0.875rem;
-      line-height: 1.25rem;
-    }
-    
-    .bg-gray-50.dark\:bg-\[\#1B2131\].rounded-xl.p-3 .mb-2 p {
-      font-size: 0.75rem;
-      line-height: 1rem;
-      color: #6B7280;
-    }
-    
-    /* Improve spacing in card items */
-    .space-y-2.p-4.sm\:p-6 {
-      padding: 12px;
-    }
-    
-    .bg-gray-50.dark\:bg-\[\#1B2131\].rounded-xl.p-3 {
-      padding: 12px;
-      margin-bottom: 8px;
-    }
-    
-    /* Improve financial year header */
-    .flex.items-center.gap-2.sm\:gap-4 h2 {
-      font-size: 1rem;
-      line-height: 1.5rem;
-    }
-    
-    /* Fix line wrapping in card titles */
-    .truncate {
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 100%;
-    }
-    
-    /* Specific Invoice button fixes */
-    .btn.btn-sm.btn-primary.flex-1.sm\:flex-initial {
-      font-size: 0.75rem;
-      height: auto !important;
-      min-height: 36px;
-    }
-    
-    /* Fix invoice card spacing */
-    .space-y-2.p-4.sm\:p-6.border-t.border-gray-200 > div:not(:last-child) {
-      margin-bottom: 8px;
-    }
-    
-    /* Align invoice header elements better */
-    button .flex.flex-col.sm\:flex-row.sm\:items-center.gap-2 {
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-    }
-    
-    /* Improve financial data visibility */
-    .text-green-500, .text-red-500 {
-      font-weight: 600 !important;
-    }
-    
-    /* Fix the button containing text and icon */
-    .flex.items-center.justify-center.w-full {
-      width: 100%;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      justify-content: center;
-    }
-    
-    /* Fix the expand collapse icons for invoice */
-    button .material-icons:last-child {
-      flex-shrink: 0;
-    }
-    
-    /* Stats section adjustments */
-    .grid.grid-cols-2.sm\:grid-cols-4 > div {
-      padding: 10px !important;
-    }
-    
-    /* Make sure buttons center content properly */
-    .btn div,
-    .btn span:not(.material-icons) {
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-  }
-
-  /* Ensure invoice header is fully visible */
-  .flex.flex-col.sm\:flex-row.sm\:items-center.gap-2.sm\:gap-4.mb-2.sm\:mb-0 {
-    width: 100%;
-  }
-
-  /* Card value stacked layout for mobile */
-  @media (max-width: 640px) {
-    .flex.flex-col.space-y-1\.5 {
-      margin-top: 0.5rem;
-    }
-    
-    .flex.flex-col.space-y-1\.5 > div {
-      padding: 0.5rem;
-      border-radius: 0.5rem;
-    }
-    
-    .flex.flex-col.space-y-1\.5 > div .text-xs {
-      margin-bottom: 0.125rem;
-    }
-    
-    .flex.flex-col.space-y-1\.5 > div .text-sm {
-      font-weight: 600;
     }
   }
 }
@@ -1901,7 +1699,7 @@ input[type="checkbox"].focus\:ring-primary:focus {
 }
 
 .dark .settings-page {
-  background-color: #111827;
+  background-color: var(--color-bg);
 }
 
 /* Settings mobile styles */
@@ -2343,3 +2141,23 @@ input[type="checkbox"] {
 .bg-gray-50.dark\:bg-\[\#1B2131\].rounded-xl.p-3 {
   margin-bottom: 12px;
 }
+
+/* Fix curved underlines in tab navigation */
+.settings-modal button[class*="border-b-2"],
+button[class*="border-b-2"],
+.border-b-2,
+.border-primary {
+  border-radius: 0 !important;
+  transform: translateZ(0);
+}
+
+/* Specific fix for tab underline issues */
+.tab-underline-fix {
+  border-radius: 0 !important;
+  transform: translateZ(0);
+  -webkit-mask-image: -webkit-radial-gradient(white, black);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Image Galleries */

@@ -222,7 +222,7 @@ const SoldItems = () => {
   }, [groupedInvoices]);
 
   return (
-    <div className="space-y-4 sold-items-mobile-fixes">
+    <div className="space-y-4">
       {/* Stats Section */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-3 mb-3 sm:mb-4">
         <div className="bg-white dark:bg-[#1B2131] rounded-lg p-2.5 sm:p-3 shadow-sm flex flex-col">

@@ -13,9 +13,10 @@ import Pricing from './components/Pricing';
 import useCardData from './hooks/useCardData';
 import { processImportedData } from './utils/dataProcessor';
 import { db } from './services/db';
-import { ThemeProvider } from './contexts/ThemeContext';
+import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { TutorialProvider, useTutorial } from './contexts/TutorialContext';
+import { AutoSyncProvider } from './contexts/AutoSyncContext';
 import TutorialModal from './components/TutorialModal';
 import PrivateRoute from './components/PrivateRoute';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -25,6 +26,7 @@ import SettingsModal from './components/SettingsModal';
 import BottomNavBar from './components/BottomNavBar';
 import JSZip from 'jszip';
 import { Toaster, toast } from 'react-hot-toast';
+import SyncProgressToast from './components/SyncProgressToast';
 
 // Public route component to redirect authenticated users to dashboard
 function PublicRoute({ children }) {
@@ -39,7 +41,8 @@ function PublicRoute({ children }) {
   return children;
 }
 
-function AppContent() {
+const AppContent = React.forwardRef((props, ref) => {
+  const { isDarkMode } = useTheme();
   const [showNewCardForm, setShowNewCardForm] = useState(false);
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [importMode, setImportMode] = useState('priceUpdate');
@@ -48,6 +51,8 @@ function AppContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
   const [showProfitChangeModal, setShowProfitChangeModal] = useState(false);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const [syncOnStartup, setSyncOnStartup] = useState(true);
   const [profitChangeData, setProfitChangeData] = useState({
     oldProfit: 0,
     newProfit: 0
@@ -55,6 +60,9 @@ function AppContent() {
   const [currentView, setCurrentView] = useState('cards'); // 'cards' or 'sold'
   const { registerSettingsCallback } = useTutorial();
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [showAddCardModal, setShowAddCardModal] = useState(false);
+  const [showBatchImportModal, setShowBatchImportModal] = useState(false);
+  const [openedImportModalFromSettings, setOpenedImportModalFromSettings] = useState(false);
   
   const {
     cards,
@@ -69,6 +77,14 @@ function AppContent() {
     deleteCard,
     addCard
   } = useCardData();
+  
+  // Forward declare handleImportCollection so we can refer to it in useImperativeHandle
+  let handleImportCollection;
+  
+  // Expose methods via ref - moved to top level
+  React.useImperativeHandle(ref, () => ({
+    handleImportCollection
+  }));
 
   // Register the settings callback when component mounts
   // Using a ref to ensure we only register the callback once
@@ -104,6 +120,32 @@ function AppContent() {
     }
     return collections[selectedCollection] || [];
   }, [collections, selectedCollection]);
+
+  // Load settings from localStorage on mount
+  useEffect(() => {
+    const savedNotifications = localStorage.getItem('notificationsEnabled');
+    const savedSync = localStorage.getItem('syncOnStartup');
+    
+    if (savedNotifications !== null) {
+      setNotificationsEnabled(savedNotifications === 'true');
+    }
+    
+    if (savedSync !== null) {
+      setSyncOnStartup(savedSync === 'true');
+    } else {
+      // If no value is set in localStorage, default to true and save it
+      localStorage.setItem('syncOnStartup', 'true');
+    }
+  }, []);
+
+  // Save settings to localStorage when they change
+  useEffect(() => {
+    localStorage.setItem('notificationsEnabled', String(notificationsEnabled));
+  }, [notificationsEnabled]);
+
+  useEffect(() => {
+    localStorage.setItem('syncOnStartup', String(syncOnStartup));
+  }, [syncOnStartup]);
 
   // Memoized callbacks
   const handleAddCard = useCallback(async (cardData, imageFile, targetCollection) => {
@@ -342,12 +384,11 @@ function AppContent() {
     localStorage.setItem('selectedCollection', collection);
   }, [clearSelectedCard]);
 
-  const handleImportClick = (mode) => {
-    if (mode === 'priceUpdate' && selectedCollection === 'All Cards') {
-      toast.error('Please select a specific collection to update prices');
-      return;
-    }
+  const handleImportClick = (mode, fromSettings = false) => {
+    // Remove the restriction on "All Cards" for price updates
+    // The backend logic already supports updating across all collections
     setImportMode(mode === 'baseData' ? 'baseData' : 'priceUpdate');
+    setOpenedImportModalFromSettings(fromSettings);
     setImportModalOpen(true);
   };
 
@@ -562,7 +603,7 @@ To import this backup:
   };
 
   // Function to handle importing collections from JSON or ZIP file
-  const handleImportCollection = (file) => {
+  handleImportCollection = (file) => {
     // If file is not provided, show file input dialog
     if (!file) {
       const input = document.createElement('input');
@@ -788,19 +829,198 @@ To import this backup:
     }
   };
 
+  // Memoized callbacks
+  const handleCardClick = useCallback((card) => {
+    selectCard(card);
+  }, [selectCard]);
+
+  const fetchCollections = useCallback(async () => {
+    try {
+      const savedCollections = await db.getCollections();
+      if (Object.keys(savedCollections).length > 0) {
+        setCollections(savedCollections);
+      }
+    } catch (error) {
+      console.error('Error fetching collections:', error);
+      toast.error('Failed to refresh collections');
+    }
+  }, []);
+
+  const handleDeleteCard = useCallback(async (cardId) => {
+    try {
+      // Delete the card image
+      await db.deleteImage(cardId);
+      
+      // Delete the card from the collections
+      const updatedCollections = { ...collections };
+      
+      // Remove from each collection
+      Object.keys(updatedCollections).forEach(collectionName => {
+        if (Array.isArray(updatedCollections[collectionName])) {
+          updatedCollections[collectionName] = updatedCollections[collectionName].filter(
+            card => card.slabSerial !== cardId
+          );
+        }
+      });
+      
+      // Save to database
+      await db.saveCollections(updatedCollections);
+      
+      // Update state
+      setCollections(updatedCollections);
+      
+      // Delete from the useCardData hook's state
+      deleteCard(cardId);
+      
+      // Show success message
+      toast.success('Card deleted successfully');
+    } catch (error) {
+      console.error('Error deleting card:', error);
+      toast.error('Failed to delete card');
+    }
+  }, [collections, deleteCard]);
+
+  const handleDeleteMultipleCards = useCallback(async (cardIds) => {
+    try {
+      // Delete images for all cards
+      for (const cardId of cardIds) {
+        await db.deleteImage(cardId);
+      }
+      
+      // Remove cards from collections
+      const updatedCollections = { ...collections };
+      
+      // Remove from each collection
+      Object.keys(updatedCollections).forEach(collectionName => {
+        if (Array.isArray(updatedCollections[collectionName])) {
+          updatedCollections[collectionName] = updatedCollections[collectionName].filter(
+            card => !cardIds.includes(card.slabSerial)
+          );
+        }
+      });
+      
+      // Save to database
+      await db.saveCollections(updatedCollections);
+      
+      // Update state
+      setCollections(updatedCollections);
+      
+      // Delete from the useCardData hook's state
+      cardIds.forEach(cardId => {
+        deleteCard(cardId);
+      });
+      
+      // Show success message
+      toast.success(`${cardIds.length} cards deleted successfully`);
+    } catch (error) {
+      console.error('Error deleting multiple cards:', error);
+      toast.error('Failed to delete cards');
+    }
+  }, [collections, deleteCard]);
+
+  const handleMoveMultipleCards = useCallback(async (cardIds, targetCollection) => {
+    try {
+      if (!targetCollection) {
+        throw new Error('Target collection is required');
+      }
+      
+      // Create a copy of the collections
+      const updatedCollections = { ...collections };
+      
+      // Get cards to move from all collections
+      const cardsToMove = [];
+      let sourceCollection = null;
+      
+      // Find cards and remove from source collections
+      Object.keys(updatedCollections).forEach(collectionName => {
+        if (Array.isArray(updatedCollections[collectionName])) {
+          // For each collection, find cards to move
+          const cardsInThisCollection = updatedCollections[collectionName].filter(
+            card => cardIds.includes(card.slabSerial)
+          );
+          
+          if (cardsInThisCollection.length > 0) {
+            // Add to cards to move
+            cardsToMove.push(...cardsInThisCollection);
+            
+            // Remove from source collection
+            updatedCollections[collectionName] = updatedCollections[collectionName].filter(
+              card => !cardIds.includes(card.slabSerial)
+            );
+            
+            // Remember source collection for success message
+            if (!sourceCollection) {
+              sourceCollection = collectionName;
+            }
+          }
+        }
+      });
+      
+      // Add to target collection
+      if (!updatedCollections[targetCollection]) {
+        updatedCollections[targetCollection] = [];
+      }
+      
+      updatedCollections[targetCollection] = [
+        ...updatedCollections[targetCollection],
+        ...cardsToMove
+      ];
+      
+      // Save to database
+      await db.saveCollections(updatedCollections);
+      
+      // Update state
+      setCollections(updatedCollections);
+      
+      // Show success message
+      toast.success(`${cardsToMove.length} cards moved to ${targetCollection}`);
+      
+      return true;
+    } catch (error) {
+      console.error('Error moving cards:', error);
+      toast.error(`Failed to move cards: ${error.message}`);
+      return false;
+    }
+  }, [collections]);
+
+  const handleSoldItemClick = useCallback((soldItem) => {
+    // Open sold item details or do something with the sold item
+    toast.info(`Viewing details for sold item: ${soldItem.card}`);
+    // Additional implementation can be added here
+  }, []);
+
+  const handleDeleteAllSoldItems = useCallback(async () => {
+    try {
+      // Clear all sold items from localStorage
+      localStorage.removeItem('soldCards');
+      
+      // Show success message
+      toast.success('All sold items have been deleted');
+      
+      // Force re-render of SoldItems component
+      // This can be done by updating a state variable if needed
+      
+      return true;
+    } catch (error) {
+      console.error('Error deleting all sold items:', error);
+      toast.error('Failed to delete sold items');
+      return false;
+    }
+  }, []);
+
   if (isLoading) {
     return null;
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-[#111827] dashboard-page">
+    <div className={`min-h-screen bg-theme-background dark:bg-theme-dark-background dashboard-page ${isDarkMode ? 'dark-theme' : 'light-theme'}`}>
       {/* Hide Header on mobile when in settings view */}
       {!(isMobile && currentView === 'settings') && (
         <Header
           className="header"
           selectedCollection={selectedCollection}
           collections={Object.keys(collections)}
-          onCollectionChange={setSelectedCollection}
+          onCollectionChange={handleCollectionChange}
           onImportClick={handleImportClick}
           onSettingsClick={handleSettingsClick}
           currentView={currentView}
@@ -906,23 +1126,34 @@ To import this backup:
         />
       )}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 pb-20">
-        {currentView === 'cards' ? (
-          <CardList
-            cards={collectionData}
-            exchangeRate={exchangeRate}
-            onCardClick={(card) => {
-              selectCard(card);
-            }}
-            onDeleteCards={onDeleteCards}
-            onUpdateCard={handleCardUpdate}
-            onAddCard={() => setShowNewCardForm(true)}
-            selectedCollection={selectedCollection}
-            collections={collections}
-            setCollections={setCollections}
-          />
-        ) : (
-          <SoldItems />
-        )}
+        {/* Main content area */}
+        <div className="pt-16 pb-16 sm:pt-16">
+          {currentView === 'cards' ? (
+            <>
+              <CardList
+                cards={collectionData}
+                onCardClick={handleCardClick}
+                onAddCardClick={() => setShowNewCardForm(true)}
+                isLoading={isLoading}
+                selectedCollection={selectedCollection}
+                refreshCards={fetchCollections}
+                onDeleteCard={handleDeleteCard}
+                onDeleteMultiple={handleDeleteMultipleCards}
+                onMoveMultiple={handleMoveMultipleCards}
+                exchangeRate={exchangeRate}
+                collections={Object.keys(collections)}
+              />
+            </>
+          ) : (
+            <SoldItems 
+              onSoldItemClick={handleSoldItemClick}
+              onDeleteAll={handleDeleteAllSoldItems}
+              selectedCollection={selectedCollection}
+              collections={Object.keys(collections)}
+              onCollectionChange={handleCollectionChange}
+            />
+          )}
+        </div>
       </main>
 
       {showNewCardForm && (
@@ -949,7 +1180,16 @@ To import this backup:
       {importModalOpen && (
         <ImportModal
           isOpen={importModalOpen}
-          onClose={() => setImportModalOpen(false)}
+          onClose={() => {
+            setImportModalOpen(false);
+            // Re-open settings modal if the import modal was opened from settings
+            if (openedImportModalFromSettings) {
+              setShowSettings(true);
+              if (isMobile) {
+                setCurrentView('settings');
+              }
+            }
+          }}
           onImport={handleImportData}
           mode={importMode}
           loading={loading}
@@ -961,7 +1201,15 @@ To import this backup:
           isOpen={showSettings}
           onClose={handleCloseSettings}
           selectedCollection={selectedCollection}
-          collections={Object.keys(collections)}
+          collections={Object.entries(collections).map(([name, cards]) => ({
+            id: name,
+            name: name,
+            cards: cards
+          }))}
+          notificationsEnabled={notificationsEnabled}
+          setNotificationsEnabled={setNotificationsEnabled}
+          syncOnStartup={syncOnStartup}
+          setSyncOnStartup={setSyncOnStartup}
           onRenameCollection={(oldName, newName) => {
             const newCollections = { ...collections };
             newCollections[newName] = newCollections[oldName];
@@ -1025,7 +1273,7 @@ To import this backup:
           onImportCollection={handleImportCollection}
           onUpdatePrices={() => {
             return new Promise((resolve, reject) => {
-              handleImportClick('priceUpdate');
+              handleImportClick('priceUpdate', true);
               // This is just triggering the modal to open, so we resolve
               // The actual update will happen when user selects a file in the import modal
               resolve();
@@ -1033,7 +1281,7 @@ To import this backup:
           }}
           onImportBaseData={() => {
             return new Promise((resolve, reject) => {
-              handleImportClick('baseData');
+              handleImportClick('baseData', true);
               // This is just triggering the modal to open, so we resolve
               // The actual import will happen when user selects a file in the import modal
               resolve();
@@ -1077,58 +1325,81 @@ To import this backup:
       <TutorialModal />
     </div>
   );
-}
+});
 
 function App() {
+  // We need to wrap the Toaster in a component that has access to the theme context
+  function ToasterWithTheme() {
+    const { isDarkMode } = useTheme();
+    
+    return (
+      <Toaster 
+        position="top-right"
+        toastOptions={{
+          duration: 3000,
+          style: {
+            background: isDarkMode ? '#1E293B' : '#333',
+            color: isDarkMode ? '#F8FAFC' : '#fff',
+            borderRadius: '12px',
+            boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
+          },
+        }}
+      />
+    );
+  }
+
   return (
     <ErrorBoundary>
       <AuthProvider>
         <ThemeProvider>
           <TutorialProvider>
             <Router>
-              <Toaster position="bottom-right" />
               <Routes>
-                <Route path="/" element={<Home />} />
-                <Route 
-                  path="/login" 
-                  element={
-                    <PublicRoute>
-                      <Login />
-                    </PublicRoute>
-                  } 
-                />
-                <Route 
-                  path="/forgot-password" 
-                  element={
-                    <PublicRoute>
-                      <ForgotPassword />
-                    </PublicRoute>
-                  } 
-                />
-                <Route 
-                  path="/pricing" 
-                  element={
-                    <PublicRoute>
-                      <Pricing />
-                    </PublicRoute>
-                  } 
-                />
-                <Route 
-                  path="/dashboard" 
+                <Route path="/" element={<PublicRoute><Home /></PublicRoute>} />
+                <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+                <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
+                <Route path="/pricing" element={<PublicRoute><Pricing /></PublicRoute>} />
+                <Route
+                  path="/dashboard"
                   element={
                     <PrivateRoute>
-                      <AppContent />
+                      <AutoSyncWithImport />
                     </PrivateRoute>
-                  } 
+                  }
                 />
-                <Route path="*" element={<Navigate to="/" />} />
+                <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </Router>
+            <ToasterWithTheme />
           </TutorialProvider>
         </ThemeProvider>
       </AuthProvider>
     </ErrorBoundary>
   );
+}
+
+// Wrapper component to pass the import function to AutoSyncProvider
+function AutoSyncWithImport() {
+  // Get the handleImportCollection function from AppContent
+  const AppContentWithSync = () => {
+    const appContentRef = useRef();
+    
+    // Get import function from AppContent's ref
+    const handleImportForSync = useCallback((file) => {
+      if (appContentRef.current && appContentRef.current.handleImportCollection) {
+        return appContentRef.current.handleImportCollection(file);
+      }
+    }, []);
+    
+    return (
+      <AutoSyncProvider onImportCollection={handleImportForSync}>
+        <AppContent ref={appContentRef} />
+        <SyncProgressToast />
+      </AutoSyncProvider>
+    );
+  };
+  
+  return <AppContentWithSync />;
 }
 
 export default App;

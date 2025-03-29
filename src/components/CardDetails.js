@@ -69,6 +69,8 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
   const fileInputRef = useRef(null);
   const messageTimeoutRef = useRef(null);
   const { isDarkMode } = useTheme();
+  const [isDragging, setIsDragging] = useState(false);
+  const dropZoneRef = useRef(null);
 
   // Add ref for the modal content
   const modalContentRef = useRef(null);
@@ -186,11 +188,10 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
     }, 300);
   };
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
+  const handleInputChange = (field, value) => {
     setEditedCard(prev => ({
       ...prev,
-      [name]: value
+      [field]: value
     }));
     setHasUnsavedChanges(true);
   };
@@ -289,6 +290,78 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
     }
   };
 
+  // Drag and drop handlers
+  const handleDragEnter = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.target === dropZoneRef.current) {
+      setIsDragging(false);
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        toast.error('Please drop an image file');
+        return;
+      }
+      
+      try {
+        // Show loading state
+        setImageLoadingState('loading');
+        
+        // Save image to database
+        await db.saveImage(card.slabSerial, file);
+        
+        // Create URL for local display
+        const imageUrl = URL.createObjectURL(file);
+        setCardImage(imageUrl);
+        setImageLoadingState('loaded');
+        
+        // Create a unique timestamp for this update
+        const timestamp = new Date().toISOString();
+        
+        try {
+          // Notify parent component that image has been updated
+          await updateCard({
+            ...card,
+            hasImage: true,
+            imageUpdatedAt: timestamp
+          });
+          
+          // Show success message
+          setSaveMessage('Image uploaded successfully');
+          toast.success('Image uploaded successfully');
+        } catch (updateError) {
+          console.error('Error updating card after image upload:', updateError);
+          setSaveMessage('Image saved, but card update failed');
+          toast.success('Image saved, but there was a problem updating the card');
+        }
+      } catch (error) {
+        console.error('Error saving image:', error);
+        setImageLoadingState('error');
+        setSaveMessage(`Error: ${error.message || 'Failed to upload image'}`);
+        toast.error(`Failed to upload image: ${error.message || 'Unknown error'}`);
+      }
+    }
+  };
+
   const hasCardBeenEdited = () => {
     return Object.keys(editedCard).some(key => {
       // Skip comparing functions, undefined values, and cardImage
@@ -366,223 +439,296 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
 
   return (
     <>
+      {/* Backdrop overlay */}
       <div 
-        className={`card-details-overlay ${isOpen ? 'open' : ''}`}
+        className="fixed inset-0 z-[95]"
+        style={{
+          backgroundColor: 'rgba(0, 0, 0, 0.25)',
+          backdropFilter: 'blur(2px)',
+          opacity: isOpen ? 1 : 0,
+          pointerEvents: isOpen ? 'auto' : 'none',
+          transition: 'opacity 300ms'
+        }}
         onClick={handleClose}
       />
-      
+    
+      {/* Card Details Modal */}
       <div 
-        className={`card-details ${isOpen ? 'open' : ''}`}
-        onClick={(e) => e.stopPropagation()}
+        className={`fixed inset-y-0 right-0 w-full sm:w-[480px] 
+                   bg-white dark:bg-[#000000] card-details-panel
+                   shadow-2xl border-l border-gray-200 dark:border-gray-700/50
+                   transform transition-transform duration-300 ease-in-out z-[100]
+                   flex flex-col ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
         ref={modalContentRef}
       >
-        {/* Header - Made smaller */}
-        <div className="card-details-header flex items-center h-14">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Card Details</h2>
-          <button
+        {/* Header */}
+        <div className="sticky top-0 z-10 px-4 py-3 flex items-center justify-between 
+                      border-b border-gray-200 dark:border-gray-700/50 
+                      bg-white dark:bg-[#000000]">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Card Details</h2>
+          <button 
             onClick={handleClose}
-            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 ml-auto p-2"
-            aria-label="Close"
+            className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-[#1E293B] 
+                    text-gray-500 dark:text-gray-400 focus:outline-none"
           >
             <span className="material-icons">close</span>
           </button>
         </div>
 
-        {/* Scrollable Content */}
-        <div className="card-details-content h-[calc(100vh-112px)] overflow-y-auto">
-          {/* Image upload section */}
-          <div className="mb-6">
-            <div className="image-upload-container">
-              <CardImage
-                imageUrl={cardImage}
-                loadingState={imageLoadingState}
-                onRetry={loadCardImage}
-              />
-              {/* Move the input outside the overlay to avoid click conflicts */}
-              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-50 opacity-0 hover:opacity-100 transition-opacity">
-                <span className="material-icons text-white text-4xl mb-2">
-                  upload
-                </span>
-                <span className="text-white text-sm">
-                  Click or drag to upload image
-                </span>
+        {/* Content with overflow */}
+        <div className="flex-1 overflow-y-auto bg-white dark:bg-[#000000] p-4">
+          {/* Card image with zoom capability */}
+          <div className="mb-6 flex justify-center">
+            {cardImage ? (
+              <div className="relative rounded-lg overflow-hidden max-w-full" style={{ maxHeight: '50vh' }}>
+                <img 
+                  src={cardImage}
+                  alt={`${card.player} ${card.card}`}
+                  className="object-contain w-full h-full"
+                />
               </div>
-            </div>
-            {/* File input moved here to separate it from the close button */}
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleImageChange}
-              className="absolute opacity-0 h-0 w-0"
-              tabIndex="-1"
-            />
-            <button 
-              onClick={() => fileInputRef.current?.click()} 
-              className="mt-2 w-full py-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm flex items-center justify-center"
-            >
-              <span className="material-icons text-sm mr-1">photo_camera</span>
-              Upload Image
-            </button>
+            ) : (
+              <div className="w-full aspect-[3/4] bg-gray-100 dark:bg-[#0A0E17] rounded-lg flex items-center justify-center">
+                <span className="material-icons text-4xl text-gray-400 dark:text-gray-600">image</span>
+              </div>
+            )}
           </div>
 
-          {/* Card Details Form */}
-          <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
-            <div>
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Card Information</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Player
-                  </label>
-                  <input
-                    type="text"
-                    name="player"
-                    value={editedCard.player || ''}
-                    onChange={handleInputChange}
-                    className="input"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Card Name
-                  </label>
-                  <input
-                    type="text"
-                    name="card"
-                    value={editedCard.card || ''}
-                    onChange={handleInputChange}
-                    className="input"
-                  />
-                </div>
+          {/* Drag and drop image upload area */}
+          <div className="mb-6">
+            <div 
+              ref={dropZoneRef}
+              className={`border-2 border-dashed rounded-lg p-4 flex flex-col items-center justify-center cursor-pointer relative transition-colors
+                        ${isDragging 
+                          ? 'border-purple-400 dark:border-purple-500 bg-purple-50/80 dark:bg-purple-900/10' 
+                          : 'border-gray-300 dark:border-gray-700 hover:border-purple-400 dark:hover:border-purple-500'}`}
+              onClick={() => fileInputRef.current?.click()}
+              onDragEnter={handleDragEnter}
+              onDragLeave={handleDragLeave}
+              onDragOver={handleDragOver}
+              onDrop={handleDrop}
+              style={{ height: '120px' }}
+            >
+              <div className="text-center">
+                <span className="material-icons text-gray-400 dark:text-gray-600 text-3xl mb-1">add_photo_alternate</span>
+                <p className="text-gray-500 dark:text-gray-400 text-sm">Drag and drop an image here</p>
+                <p className="text-gray-400 dark:text-gray-500 text-xs">or click to browse</p>
               </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Set
-                </label>
-                <input
-                  type="text"
-                  name="set"
-                  value={editedCard.set || ''}
-                  onChange={handleInputChange}
-                  className="input"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Year
-                </label>
-                <input
-                  type="text"
-                  name="year"
-                  value={editedCard.year || ''}
-                  onChange={handleInputChange}
-                  className="input"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Category
-                </label>
-                <input
-                  type="text"
-                  name="category"
-                  value={editedCard.category || ''}
-                  onChange={handleInputChange}
-                  className="input"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Condition
-                </label>
-                <input
-                  type="text"
-                  name="condition"
-                  value={editedCard.condition || ''}
-                  onChange={handleInputChange}
-                  className="input"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Serial Number
-              </label>
-              <input
-                type="text"
-                name="slabSerial"
-                value={editedCard.slabSerial}
-                onChange={handleInputChange}
-                className="input"
+              <input 
+                ref={fileInputRef}
+                type="file" 
+                accept="image/*"
+                className="hidden"
+                onChange={handleImageChange}
               />
             </div>
+          </div>
 
-            <div>
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Financial Details</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Paid (AUD)</label>
+          {/* Card Information */}
+          <div className="mb-6">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Card Information</h3>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+              {/* Player */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Player</label>
+                <input
+                  type="text"
+                  value={editedCard.player || ''}
+                  onChange={(e) => handleInputChange('player', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 
+                           rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary
+                           bg-white dark:bg-[#0A0E17] text-gray-900 dark:text-white"
+                />
+              </div>
+              
+              {/* Card Name */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Card Name</label>
+                <input
+                  type="text"
+                  value={editedCard.card || ''}
+                  onChange={(e) => handleInputChange('card', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 
+                           rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary
+                           bg-white dark:bg-[#0A0E17] text-gray-900 dark:text-white"
+                />
+              </div>
+              
+              {/* Set */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Set</label>
+                <input
+                  type="text"
+                  value={editedCard.set || ''}
+                  onChange={(e) => handleInputChange('set', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 
+                           rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary
+                           bg-white dark:bg-[#0A0E17] text-gray-900 dark:text-white"
+                />
+              </div>
+              
+              {/* Year */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Year</label>
+                <input
+                  type="text"
+                  value={editedCard.year || ''}
+                  onChange={(e) => handleInputChange('year', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 
+                           rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary
+                           bg-white dark:bg-[#0A0E17] text-gray-900 dark:text-white"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+              {/* Category */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category</label>
+                <input
+                  type="text"
+                  value={editedCard.category || ''}
+                  onChange={(e) => handleInputChange('category', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 
+                           rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary
+                           bg-white dark:bg-[#0A0E17] text-gray-900 dark:text-white"
+                />
+              </div>
+              
+              {/* Condition */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Condition</label>
+                <input
+                  type="text"
+                  value={editedCard.condition || ''}
+                  onChange={(e) => handleInputChange('condition', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 
+                           rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary
+                           bg-white dark:bg-[#0A0E17] text-gray-900 dark:text-white"
+                />
+              </div>
+            </div>
+
+            {/* Serial Number */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Serial Number</label>
+              <input
+                type="text"
+                value={editedCard.slabSerial || ''}
+                onChange={(e) => handleInputChange('slabSerial', e.target.value)}
+                readOnly={card.slabSerial ? true : false}
+                className={`w-full px-3 py-2 border border-gray-300 dark:border-gray-700 
+                         rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary
+                         bg-white dark:bg-[#0A0E17] text-gray-900 dark:text-white
+                         ${card.slabSerial ? 'opacity-70 cursor-not-allowed' : ''}`}
+              />
+              {card.slabSerial && (
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Serial number cannot be changed after creation</p>
+              )}
+            </div>
+          </div>
+
+          {/* Financial Details */}
+          <div className="mb-6">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Financial Details</h3>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+              {/* Paid Amount */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Paid (AUD)</label>
+                <div className="relative">
+                  <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500 dark:text-gray-400">$</span>
                   <input
-                    type="text"
-                    name="investmentAUD"
-                    value={editedCard.investmentAUD === '' ? '' : editedCard.investmentAUD === 0 ? '' : editedCard.investmentAUD}
-                    onChange={handleNumberInputChange}
-                    className="input"
+                    type="number"
+                    value={editedCard.investmentAUD || ''}
+                    onChange={(e) => handleInputChange('investmentAUD', parseFloat(e.target.value) || 0)}
+                    className="w-full pl-8 pr-3 py-2 border border-gray-300 dark:border-gray-700 
+                             rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary
+                             bg-white dark:bg-[#0A0E17] text-gray-900 dark:text-white"
+                    step="0.01"
+                    min="0"
                   />
                 </div>
-                <div>
-                  <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Current Value (AUD)</label>
+              </div>
+              
+              {/* Current Value */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Current Value (AUD)</label>
+                <div className="relative">
+                  <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500 dark:text-gray-400">$</span>
                   <input
-                    type="text"
-                    name="currentValueAUD"
-                    value={editedCard.currentValueAUD === '' ? '' : editedCard.currentValueAUD === 0 ? '' : editedCard.currentValueAUD}
-                    onChange={handleNumberInputChange}
-                    className="input"
+                    type="number"
+                    value={editedCard.currentValueAUD || ''}
+                    onChange={(e) => handleInputChange('currentValueAUD', parseFloat(e.target.value) || 0)}
+                    className="w-full pl-8 pr-3 py-2 border border-gray-300 dark:border-gray-700 
+                             rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary
+                             bg-white dark:bg-[#0A0E17] text-gray-900 dark:text-white"
+                    step="0.01"
+                    min="0"
                   />
                 </div>
               </div>
             </div>
-          </form>
+
+            {/* Purchase Date */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Purchase Date</label>
+              <input
+                type="date"
+                value={editedCard.datePurchased || ''}
+                onChange={(e) => handleInputChange('datePurchased', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 
+                         rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary
+                         bg-white dark:bg-[#0A0E17] text-gray-900 dark:text-white"
+              />
+            </div>
+          </div>
+
+          {/* Notes */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes</label>
+            <textarea
+              value={editedCard.notes || ''}
+              onChange={(e) => handleInputChange('notes', e.target.value)}
+              rows="3"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 
+                       rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary
+                       bg-white dark:bg-[#0A0E17] text-gray-900 dark:text-white"
+              placeholder="Add any additional notes about this card..."
+            ></textarea>
+          </div>
         </div>
 
-        {/* Footer with Actions */}
-        <div className="card-details-footer">
-          <div className="flex items-center space-x-2">
-            <button
-              type="button"
-              onClick={handleClose}
+        {/* Footer with action buttons */}
+        <div className="sticky bottom-0 px-4 py-3 flex items-center justify-between 
+                      border-t border-gray-200 dark:border-gray-700/50
+                      bg-white dark:bg-[#000000] shadow-lg">
+          <div className="flex">
+            <button 
+              onClick={handleDelete} 
+              className="btn btn-danger sm:flex items-center sm:space-x-1"
+              aria-label="Delete card"
+            >
+              <span className="material-icons">delete</span>
+              <span className="hidden sm:inline">Delete</span>
+            </button>
+          </div>
+          
+          <div className="flex space-x-2">
+            <button 
+              onClick={handleClose} 
               className="btn btn-tertiary"
             >
               Cancel
             </button>
-            <button
-              type="button"
-              onClick={handleSave}
-              className="btn btn-primary"
+            <button 
+              onClick={handleSave} 
+              className="btn btn-primary flex items-center space-x-1"
             >
-              Save Changes
+              <span className="material-icons">save</span>
+              <span>Save</span>
             </button>
-            
-            {/* Status message */}
-            {saveMessage && (
-              <div className={`text-sm px-3 py-1 rounded-md transition-opacity ${
-                saveMessage.startsWith('Error') 
-                  ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' 
-                  : saveMessage === 'No changes to save'
-                    ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-                    : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-              }`}>
-                {saveMessage}
-              </div>
-            )}
           </div>
         </div>
       </div>

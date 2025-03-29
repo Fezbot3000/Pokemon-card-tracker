@@ -1,0 +1,502 @@
+/* Dark Mode Fix - OLED Optimized */
+
+/* Force dark mode styles for all essential elements */
+html.dark {
+  color-scheme: dark !important;
+}
+
+/* Core background - Pure black for OLED */
+html.dark body {
+  background-color: #000000 !important;
+  color: #F8FAFC !important;
+}
+
+/* Header */
+html.dark .app-header,
+html.dark header,
+html.dark .fixed.top-0,
+html.dark .sticky.top-0,
+html.dark .bg-theme-background-card.dark\:bg-theme-dark-background-card,
+html.dark .bg-gray-100.dark\:bg-\[\#0B0F19\] {
+  background-color: #000000 !important;
+  border-color: rgba(31, 41, 55, 0.5) !important;
+}
+
+/* Cards and content areas */
+html.dark .card,
+html.dark .stat-card,
+html.dark .card-stat,
+html.dark .bg-theme-background-card,
+html.dark .bg-white,
+html.dark .bg-gray-50,
+html.dark .bg-gray-100,
+html.dark .dark\:bg-\[\#1B2131\],
+html.dark .dark\:bg-\[\#252B3B\],
+html.dark .dark\:bg-\[\#323B4B\],
+html.dark .modal-content,
+html.dark .dropdown,
+html.dark .sort-dropdown,
+html.dark .view-dropdown,
+html.dark .collection-dropdown {
+  background-color: #0A0E17 !important;
+  border-color: rgba(31, 41, 55, 0.5) !important;
+}
+
+/* Input backgrounds */
+html.dark input,
+html.dark textarea,
+html.dark select,
+html.dark .input,
+html.dark .search-input,
+html.dark .sort-button,
+html.dark .view-button {
+  background-color: #0F1623 !important;
+  border-color: rgba(31, 41, 55, 0.5) !important;
+  color: #F8FAFC !important;
+}
+
+/* Fix color variables */
+html.dark {
+  --color-bg: #000000 !important;
+  --color-bg-card: #0A0E17 !important;
+  --color-bg-input: #0F1623 !important;
+  --color-bg-hover: #0F1623 !important;
+  --color-bg-active: #1E293B !important;
+  --color-border: #1E293B !important;
+  
+  --color-text: #F8FAFC !important;
+  --color-text-secondary: #CBD5E1 !important;
+  --color-text-tertiary: #94A3B8 !important;
+  --color-text-disabled: #64748B !important;
+  --color-text-inverse: #0F172A !important;
+}
+
+/* Text colors */
+html.dark .text-gray-900,
+html.dark .text-gray-800,
+html.dark .text-gray-700,
+html.dark .dark\:text-white,
+html.dark .dark\:text-gray-100,
+html.dark .dark\:text-gray-200,
+html.dark .text-theme-text {
+  color: #F8FAFC !important;
+}
+
+html.dark .text-gray-600,
+html.dark .text-gray-500,
+html.dark .dark\:text-gray-300,
+html.dark .dark\:text-gray-400,
+html.dark .text-theme-text-secondary {
+  color: #CBD5E1 !important;
+}
+
+/* Direct class overrides */
+html.dark .bg-theme-dark-background,
+html.dark .dark\:bg-theme-dark-background {
+  background-color: #000000 !important;
+}
+
+html.dark .bg-theme-dark-background-card,
+html.dark .dark\:bg-theme-dark-background-card {
+  background-color: #0A0E17 !important;
+}
+
+html.dark .bg-theme-dark-background-input,
+html.dark .dark\:bg-theme-dark-background-input,
+html.dark .bg-theme-dark-background-hover,
+html.dark .dark\:bg-theme-dark-background-hover {
+  background-color: #0F1623 !important;
+}
+
+html.dark .text-theme-dark-text,
+html.dark .dark\:text-theme-dark-text {
+  color: #F8FAFC !important;
+}
+
+html.dark .text-theme-dark-text-secondary,
+html.dark .dark\:text-theme-dark-text-secondary {
+  color: #CBD5E1 !important;
+}
+
+/* Hover states */
+html.dark .hover\:bg-gray-100:hover,
+html.dark .hover\:bg-gray-200:hover,
+html.dark .hover\:bg-gray-50:hover,
+html.dark .dark\:hover\:bg-gray-700:hover,
+html.dark .dark\:hover\:bg-\[\#252B3B\]:hover,
+html.dark .dark\:hover\:bg-\[\#323B4B\]:hover {
+  background-color: #1E293B !important;
+}
+
+/* Buttons specific styling */
+html.dark .btn-primary,
+html.dark .btn-secondary,
+html.dark .btn-tertiary,
+html.dark .btn-danger,
+html.dark .btn-default {
+  border-color: rgba(31, 41, 55, 0.5) !important;
+}
+
+/* Ensure modal and card detail backgrounds are dark */
+html.dark .fixed.inset-0 {
+  /* Keep this intentionally empty to avoid conflicts with modal backdrops */
+}
+
+/* Commenting out the problematic rules that prevent transparency */
+/* 
+html.dark .card-details,
+html.dark .settings-modal-content,
+html.dark .card-details-header,
+html.dark .card-details-content,
+html.dark .card-details-footer {
+  background-color: #0A0E17 !important;
+}
+*/
+
+/* Make sure dark mode transitions smoothly */
+html, body, *, *::before, *::after {
+  transition-property: background-color, border-color, color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+/* Make sure dark mode media query is also handled */
+@media (prefers-color-scheme: dark) {
+  html.dark {
+    background-color: #000000 !important;
+  }
+  
+  html.dark body {
+    background-color: #000000 !important;
+    color: #F8FAFC !important;
+  }
+}
+
+/* Fix any remaining issues with hard-coded background colors */
+html.dark [class*="dark:bg-[#"],
+html.dark [class*="dark\:bg-\[#"] {
+  background-color: #0A0E17 !important;
+}
+
+/* Ensure button text is visible */
+html.dark button,
+html.dark .btn {
+  color: inherit !important;
+}
+
+/* Ensure primary buttons maintain their styling */
+html.dark .btn-primary {
+  color: #A18BFF !important;
+}
+
+/* Fix modals */
+html.dark .modal-overlay,
+html.dark .card-details-overlay,
+html.dark .bg-black\/50 {
+  background-color: rgba(0, 0, 0, 0.75) !important;
+}
+
+/* Fix content positioning - ensure nothing is hidden under the header */
+.pt-20 {
+  padding-top: 5rem !important; /* 80px instead of 64px */
+}
+
+html.dark .dashboard-page {
+  padding-top: 1rem;
+}
+
+/* Add more spacing to main content container */
+.min-h-screen.dashboard-page {
+  padding-top: 0 !important; /* Adjust to remove the excessive top padding */
+}
+
+/* Fix the gap between header and summary cards */
+.space-y-4.mt-4 {
+  margin-top: 1rem !important;
+}
+
+.space-y-4.mt-1 {
+  margin-top: 1rem !important;
+}
+
+/* Fix mobile spacing for CardList */
+@media (max-width: 640px) {
+  .space-y-4.mt-4, 
+  .space-y-4.mt-1 {
+    margin-top: 0.75rem !important;
+  }
+}
+
+/* Mobile-specific fixes for bottom padding and iOS issues */
+@media screen and (max-width: 768px) {
+  /* Add bottom spacing for Safari iOS to account for home indicator */
+  .dashboard-page {
+    padding-bottom: env(safe-area-inset-bottom, 20px);
+  }
+  
+  /* Ensure bottom navigation doesn't overlap with content on iOS */
+  .bottom-nav {
+    padding-bottom: env(safe-area-inset-bottom, 12px);
+  }
+  
+  /* Fix for iOS safe area in card details */
+  .card-details-content {
+    padding-bottom: env(safe-area-inset-bottom, 20px);
+  }
+}
+
+/* Force modals to be visible and maintain proper stacking */
+.card-details {
+  z-index: 100 !important;
+}
+
+.settings-modal {
+  z-index: 50 !important; /* Lower than bottom nav z-index */
+}
+
+.settings-modal-content {
+  z-index: 52 !important; /* Higher than bottom nav z-index */
+}
+
+/* Fix for modal overlay backgrounds */
+.fixed.inset-0.bg-black\/50 {
+  background-color: rgba(0, 0, 0, 0.75) !important;
+}
+
+/* Fix for modals that might have inline background colors */
+[class*="bg-white"] {
+  background-color: var(--color-bg-card) !important;
+}
+
+html.dark [class*="bg-white"] {
+  background-color: #0A0E17 !important;
+}
+
+/* Fix bottom nav appearance in dark mode */
+html.dark .bottom-nav {
+  background-color: #000000 !important;
+  border-color: rgba(31, 41, 55, 0.5) !important;
+}
+
+/* Fix for card details missing dark mode */
+html.dark .card-details-modal,
+html.dark .settings-modal,
+html.dark .modal-content {
+  background-color: #0A0E17 !important;
+  color: #F8FAFC !important;
+  border-color: rgba(31, 41, 55, 0.5) !important;
+}
+
+/* Fix for dropdown item hover states in dark mode */
+html.dark .dropdown-item:hover {
+  background-color: #1E293B !important;
+}
+
+/* Ensure all SVG icons are visible in dark mode */
+html.dark svg {
+  fill: currentColor !important;
+}
+
+/* Ensure inputs have dark backgrounds */
+html.dark input,
+html.dark textarea,
+html.dark select {
+  background-color: #121927 !important;
+  color: #F8FAFC !important;
+  border-color: rgba(31, 41, 55, 0.5) !important;
+}
+
+/* Toggle Switch Styles */
+.toggle-checkbox {
+  right: 0;
+  z-index: 5;
+  border-color: #60a5fa;
+  transition: all 0.3s;
+}
+
+.toggle-checkbox:checked {
+  right: 4px;
+  border-color: #60a5fa;
+}
+
+.toggle-checkbox:checked + .toggle-label {
+  background-color: #60a5fa;
+}
+
+.toggle-label {
+  transition: background-color 0.3s;
+}
+
+/* Modal backdrop - completely revise this to avoid conflicts */
+.fixed.inset-0[style*="backgroundColor"] {
+  /* Don't override anything with inline styles */
+}
+
+/* Remove all hardcoded background colors for modals */
+html.dark .fixed.inset-y-0.right-0,
+html.dark .fixed.inset-0 > div[class*="right-0"],
+html.dark [class*="settings-modal"],
+html.dark [class*="card-details"] {
+  /* These were causing conflicts - removing */
+}
+
+/* Override any fixed/sticky headers in dark mode */
+html.dark .sticky.top-0,
+html.dark .fixed.top-0,
+html.dark .fixed.inset-y-0.right-0 > div:first-child {
+  background-color: #000000 !important;
+  border-color: rgba(55, 65, 81, 0.5) !important;
+}
+
+/* Fix form fields */
+html.dark input,
+html.dark textarea,
+html.dark select,
+html.dark .input-field,
+html.dark [class*="bg-white dark:bg"] {
+  background-color: #0A0E17 !important;
+  border-color: rgba(75, 85, 99, 0.7) !important;
+  color: #fff !important;
+}
+
+/* Fix label colors */
+html.dark label,
+html.dark .form-label,
+html.dark .text-gray-700.dark\:text-gray-300,
+html.dark .font-medium.text-gray-700,
+html.dark .font-medium.text-gray-900 {
+  color: #CBD5E1 !important;
+}
+
+/* Critical dark mode fixes - commenting out due to conflicts */
+/*html.dark .inset-y-0.right-0.bg-white.dark\:bg-\[#000000\],
+html.dark .card-details-panel,
+html.dark [class*="bg-white dark:bg-[#000000]"] {
+  background-color: #000000 !important;
+}
+
+html.dark .fixed.inset-0[class*="bg-black"] {
+  background-color: rgba(0, 0, 0, 0.25) !important;
+  backdrop-filter: blur(2px);
+}
+
+html.dark .flex-1.overflow-y-auto.bg-white.dark\:bg-\[#000000\],
+html.dark .sticky.bottom-0.dark\:bg-\[#000000\],
+html.dark .sticky.top-0.dark\:bg-\[#000000\] {
+  background-color: #000000 !important;
+}*/
+
+/* Fix modal backgrounds */
+html.dark .fixed.inset-0.bg-black\/25,
+html.dark .fixed.inset-0.bg-black\/30,
+html.dark .fixed.inset-0.bg-black\/40,
+html.dark .fixed.inset-0.bg-black\/50,
+html.dark .fixed.inset-0.bg-black\/60 {
+  background-color: rgba(0, 0, 0, 0.25) !important;
+  backdrop-filter: blur(2px) !important;
+  opacity: 1 !important;
+}
+
+/* Specific NewCardForm dark mode fixes */
+html.dark .add-card-header,
+html.dark [class*="add-card-header"] {
+  background-color: #000000 !important;
+}
+
+/* Tabs background in add card modal */
+html.dark .flex.border-b.border-gray-200.dark\:border-gray-700\/50 {
+  background-color: #000000 !important;
+}
+
+html.dark .fixed.inset-0.z-\[200\],
+html.dark .z-\[200\].flex.flex-col {
+  background-color: #000000 !important;
+}
+
+html.dark .sticky.bottom-0 {
+  background-color: #000000 !important;
+}
+
+html.dark .input, 
+html.dark input, 
+html.dark select, 
+html.dark textarea {
+  background-color: #0A0E17 !important;
+}
+
+/* Dropdown menus in add card modal */
+html.dark .absolute.z-10.w-full.mt-1,
+html.dark .absolute.z-10.rounded-xl.shadow-lg {
+  background-color: #0A0E17 !important;
+  border-color: rgba(31, 41, 55, 0.5) !important;
+}
+
+/* Batch import drag area */
+html.dark [class*="border-2 border-dashed"] {
+  background-color: rgba(10, 14, 23, 0.3) !important;
+}
+
+/* Fix hover states in dropdowns */
+html.dark [class*="hover:bg-gray-100"] {
+  background-color: transparent !important;
+}
+
+html.dark [class*="hover:bg-gray-100"]:hover {
+  background-color: #1E293B !important;
+}
+
+/* Fix curved underlines in tab navigation */
+button[class*="border-b-2"],
+.border-b-2,
+.border-primary,
+[class*="border-b-2 border-primary"] {
+  border-radius: 0 !important;
+  transform: translateZ(0);
+  -webkit-mask-image: -webkit-radial-gradient(white, black); /* Safari fix */
+}
+
+/* Set up CSS variables for theme colors */
+:root {
+  --bg-primary: #FFFFFF;
+  --bg-secondary: #F9FAFB;
+  --bg-card: #FFFFFF;
+  --bg-input: #FFFFFF;
+  --text-primary: #111827;
+  --text-secondary: #4B5563;
+  --text-muted: #9CA3AF;
+  --border-color: #E5E7EB;
+  
+  --transition-theme: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+/* Dark mode color variables - will be applied with .dark class */
+.dark, :root[class~="dark"] {
+  --bg-primary: #000000;
+  --bg-secondary: #0A0E17;
+  --bg-card: #0A0E17;
+  --bg-input: #0A0E17;
+  --text-primary: #FFFFFF;
+  --text-secondary: #E5E7EB;
+  --text-muted: #9CA3AF;
+  --border-color: rgba(75, 85, 99, 0.5);
+}
+
+/* Apply transitions to specific elements only (avoid transitioning everything) */
+.theme-transition {
+  transition: var(--transition-theme);
+}
+
+/* Apply the transitions to text elements */
+h1, h2, h3, h4, h5, h6, p, span, a, button, input, textarea, select {
+  transition: var(--transition-theme);
+}
+
+/* Avoid transitioning backgrounds of large containers */
+body, main, section, article, aside, nav, header, footer {
+  transition: none;
+}
+
+/* For modals and cards with immediate visual impact */
+.modal-content, .card, .panel {
+  transition: var(--transition-theme);
+} 
