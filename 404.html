@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>MCT - Redirecting...</title>
+  <script>
+    // Single page apps for GitHub Pages
+    // MIT License
+    // https://github.com/rafgraph/spa-github-pages
+    (function() {
+      // This script takes the current URL path and converts the path and query
+      // string into just a query string, then redirects the browser to the new URL
+      var pathSegments = window.location.pathname.slice(1).split('/');
+      var l = window.location;
+      var segmentCount = pathSegments.length;
+      
+      // Save the current path to session storage
+      sessionStorage.setItem('redirect', segmentCount > 0 ? '/' + pathSegments.join('/') : '/');
+      
+      // Redirect to the index.html page
+      l.replace(
+        l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+        l.pathname.split('/').slice(0, 1).join('/') + '/?/' +
+        l.pathname.slice(1).split('/').slice(0).join('/').replace(/&/g, '~and~') +
+        (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') +
+        l.hash
+      );
+    })();
+  </script>
+</head>
+<body>
+  <h2>Redirecting...</h2>
+</body>
+</html> 
