@@ -1735,6 +1735,19 @@ body {
       font-weight: 600;
     }
   }
+
+  /* Add NewCardForm modal styles similar to settings modal */
+  .new-card-modal {
+    @apply fixed inset-0 bg-black bg-opacity-50 z-50 overflow-hidden;
+  }
+
+  .new-card-modal-content {
+    @apply fixed top-0 right-0 h-full w-[480px] bg-white dark:bg-[#1B2131] shadow-xl transform transition-transform duration-300 ease-in-out;
+  }
+
+  .modal-open {
+    @apply overflow-hidden;
+  }
 }
 
 @layer utilities {

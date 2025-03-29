@@ -26,21 +26,30 @@ const ImportBackupButton = () => {
       loadingEl.innerHTML = `
         <div class="bg-white dark:bg-[#1B2131] p-6 rounded-lg shadow-lg text-center max-w-md">
           <div class="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mx-auto mb-4"></div>
-          <p class="text-gray-700 dark:text-gray-300">Importing backup...</p>
-          <p class="text-gray-500 dark:text-gray-400 text-sm mt-2" id="import-status">This may take a few moments</p>
+          <p class="text-gray-700 dark:text-gray-300 font-medium mb-1">Importing backup...</p>
+          <p class="text-gray-500 dark:text-gray-400 text-sm" id="import-status">Processing file...</p>
+          <div class="mt-3 w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+            <div id="import-progress" class="bg-primary h-2 rounded-full" style="width: 10%"></div>
+          </div>
         </div>
       `;
       document.body.appendChild(loadingEl);
       
-      const updateImportStatus = (status) => {
+      const updateImportStatus = (status, progress = null) => {
         const statusEl = document.getElementById('import-status');
+        const progressEl = document.getElementById('import-progress');
+        
         if (statusEl) {
           statusEl.textContent = status;
+        }
+        
+        if (progressEl && progress !== null) {
+          progressEl.style.width = `${progress}%`;
         }
       };
       
       if (currentUser) {
-        updateImportStatus('Processing backup...');
+        updateImportStatus('Processing backup...', 20);
         
         // Import the migration utility dynamically
         const { importFromZip } = await import('../utils/migration');

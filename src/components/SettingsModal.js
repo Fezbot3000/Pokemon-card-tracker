@@ -19,8 +19,7 @@ const SettingsModal = ({
   onExportData,
   onImportCollection,
   onUpdatePrices,
-  onImportBaseData,
-  onImportToCollection
+  onImportBaseData
 }) => {
   const { isDarkMode, toggleTheme } = useTheme();
   const { currentUser, signOut } = useAuth();
@@ -334,21 +333,9 @@ const SettingsModal = ({
           onTouchMove={preventPropagation}>
           {activeTab === 'general' && (
             <div className={`space-y-6 ${isMobile ? 'mobile-settings-content' : ''}`}>
-              {/* Help Section */}
-              <div className={`${isMobile ? 'bg-white dark:bg-[#1B2131] p-4 rounded-lg shadow-sm' : ''}`}>
-                <h3 className="text-base font-medium text-gray-900 dark:text-white mb-2">Help</h3>
-                <button 
-                  onClick={handleStartTutorial}
-                  className="w-full btn btn-custom-purple"
-                >
-                  <span className="material-icons">help_outline</span>
-                  <span className="font-medium">Start Tutorial</span>
-                </button>
-              </div>
-              
               {/* Theme Section */}
               <div className={`${isMobile ? 'bg-white dark:bg-[#1B2131] p-4 rounded-lg shadow-sm' : ''}`}>
-                <h3 className="text-base font-medium text-gray-900 dark:text-white mb-2">Theme</h3>
+                <h3 className="text-base font-medium text-gray-900 dark:text-white mb-2">Appearance</h3>
                 <div className="flex gap-2">
                   <button
                     onClick={() => {
@@ -379,134 +366,9 @@ const SettingsModal = ({
                 </div>
               </div>
               
-              {/* Data Management Section */}
-              <div className={`${isMobile ? 'bg-white dark:bg-[#1B2131] p-4 rounded-lg shadow-sm' : ''}`}>
-                <h3 className="text-base font-medium text-gray-900 dark:text-white mb-2">Local Backup</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
-                  Export your data to a file or import data from a backup
-                </p>
-                <div className={`${isMobile ? 'flex flex-col gap-3' : 'flex gap-2'}`}>
-                  <button
-                    onClick={handleExport}
-                    disabled={isExporting}
-                    className={`btn btn-primary ${isMobile ? 'w-full' : 'flex-1'}`}
-                  >
-                    {isExporting ? (
-                      <>Exporting...</>
-                    ) : (
-                      <>
-                        <span className="material-icons">download</span>
-                        <span>Export Data</span>
-                      </>
-                    )}
-                  </button>
-                  
-                  <label className={`${isMobile ? 'w-full' : 'flex-1'}`}>
-                    <div className="btn btn-primary w-full cursor-pointer text-center">
-                      <span className="material-icons">upload</span>
-                      <span>Import Data</span>
-                    </div>
-                    <input
-                      type="file"
-                      accept=".zip,.json"
-                      onChange={handleFileChange}
-                      className="hidden"
-                    />
-                  </label>
-                </div>
-              </div>
-              
-              {/* Cloud Sync Section */}
-              <div className={`${isMobile ? 'bg-white dark:bg-[#1B2131] p-4 rounded-lg shadow-sm' : ''}`}>
-                <h3 className="text-base font-medium text-gray-900 dark:text-white mb-2">Cloud Backup</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
-                  Save your collection to the cloud and restore it on any device
-                </p>
-                <CloudSync onExportData={onExportData} onImportCollection={onImportCollection} />
-              </div>
-
-              {/* Data Management Tools Section */}
-              <div className={`${isMobile ? 'bg-white dark:bg-[#1B2131] p-4 rounded-lg shadow-sm' : ''}`}>
-                <h3 className="text-base font-medium text-gray-900 dark:text-white mb-2">Data Management Tools</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
-                  Update prices and import base card data
-                </p>
-                <div className={`${isMobile ? 'flex flex-col gap-3' : 'grid grid-cols-2 gap-2'}`}>
-                  <button
-                    onClick={async () => {
-                      try {
-                        setIsUpdatingPrices(true);
-                        await onUpdatePrices();
-                        toast.success('Card prices updated successfully!');
-                      } catch (error) {
-                        console.error('Failed to update prices:', error);
-                        toast.error('Failed to update prices: ' + error.message);
-                      } finally {
-                        setIsUpdatingPrices(false);
-                      }
-                    }}
-                    disabled={isUpdatingPrices}
-                    className={`btn btn-primary ${isMobile ? 'w-full' : 'flex-1'}`}
-                  >
-                    {isUpdatingPrices ? (
-                      <span>Updating Prices...</span>
-                    ) : (
-                      <div className="flex items-center justify-center w-full gap-2">
-                        <span className="material-icons">update</span>
-                        <span>Update Prices</span>
-                        <span className="opacity-70 text-xs font-normal">(Supports multiple CSVs)</span>
-                      </div>
-                    )}
-                  </button>
-                  
-                  <button
-                    onClick={async () => {
-                      try {
-                        setIsImportingBaseData(true);
-                        await onImportBaseData();
-                        toast.success('Base card data imported successfully!');
-                      } catch (error) {
-                        console.error('Failed to import base data:', error);
-                        toast.error('Failed to import base data: ' + error.message);
-                      } finally {
-                        setIsImportingBaseData(false);
-                      }
-                    }}
-                    disabled={isImportingBaseData}
-                    className={`btn btn-primary ${isMobile ? 'w-full' : 'flex-1'}`}
-                  >
-                    {isImportingBaseData ? (
-                      <span>Importing Data...</span>
-                    ) : (
-                      <div className="flex items-center justify-center w-full">
-                        <span>Import Base Data</span>
-                      </div>
-                    )}
-                  </button>
-                  
-                  <button
-                    onClick={async () => {
-                      try {
-                        await onImportToCollection();
-                        toast.success('CSV data processed successfully!');
-                      } catch (error) {
-                        console.error('Failed to process CSV data:', error);
-                        toast.error('Failed to process CSV data: ' + error.message);
-                      }
-                    }}
-                    className={`btn btn-primary ${isMobile ? 'w-full' : 'col-span-2'}`}
-                  >
-                    <div className="flex items-center justify-center w-full gap-2">
-                      <span className="material-icons">add_circle</span>
-                      <span>Add Cards to Collection</span>
-                    </div>
-                  </button>
-                </div>
-              </div>
-              
               {/* Collection Management */}
               <div className={`${isMobile ? 'bg-white dark:bg-[#1B2131] p-4 rounded-lg shadow-sm' : ''}`}>
-                <h3 className="text-base font-medium text-gray-900 dark:text-white mb-2">Collection Management</h3>
+                <h3 className="text-base font-medium text-gray-900 dark:text-white mb-2">Manage Collections</h3>
                 <div className="space-y-3 mt-2">
                   {/* Rename Collection */}
                   <div>
@@ -600,7 +462,7 @@ const SettingsModal = ({
                   <div>
                     <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">Delete Collection</h4>
                     <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
-                      Select a collection to delete. You cannot delete your last collection.
+                      Select a collection to delete. (Note: You must always have at least one collection.)
                     </p>
                     {/* Collection Selection */}
                     <div className={`mb-3 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg ${isMobile ? 'max-h-40 overflow-y-auto' : ''}`}>
@@ -693,11 +555,140 @@ const SettingsModal = ({
                 </div>
               </div>
 
+              {/* Import & Export Section */}
+              <div className={`${isMobile ? 'bg-white dark:bg-[#1B2131] p-4 rounded-lg shadow-sm' : ''}`}>
+                <h3 className="text-base font-medium text-gray-900 dark:text-white mb-2">Card Data Tools</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+                  Update your card prices or import new cards
+                </p>
+                <div className={`${isMobile ? 'flex flex-col gap-3' : 'flex gap-2'}`}>
+                  <button
+                    onClick={async () => {
+                      try {
+                        setIsUpdatingPrices(true);
+                        await onUpdatePrices();
+                        toast.success('Card prices updated successfully!');
+                      } catch (error) {
+                        console.error('Failed to update prices:', error);
+                        toast.error('Failed to update prices: ' + error.message);
+                      } finally {
+                        setIsUpdatingPrices(false);
+                      }
+                    }}
+                    disabled={isUpdatingPrices}
+                    className={`btn btn-primary ${isMobile ? 'w-full' : 'flex-1'}`}
+                  >
+                    {isUpdatingPrices ? (
+                      <span>Updating Prices...</span>
+                    ) : (
+                      <div className="flex items-center justify-center w-full gap-2">
+                        <span className="material-icons">update</span>
+                        <span>Update Prices</span>
+                      </div>
+                    )}
+                  </button>
+                  
+                  <button
+                    onClick={async () => {
+                      try {
+                        setIsImportingBaseData(true);
+                        await onImportBaseData();
+                        toast.success('Cards imported successfully!');
+                      } catch (error) {
+                        console.error('Failed to import base data:', error);
+                        toast.error('Failed to import base data: ' + error.message);
+                      } finally {
+                        setIsImportingBaseData(false);
+                      }
+                    }}
+                    disabled={isImportingBaseData}
+                    className={`btn btn-primary ${isMobile ? 'w-full' : 'flex-1'}`}
+                  >
+                    {isImportingBaseData ? (
+                      <span>Importing Cards...</span>
+                    ) : (
+                      <div className="flex items-center justify-center w-full gap-2">
+                        <span className="material-icons">upload_file</span>
+                        <span>Import Cards</span>
+                      </div>
+                    )}
+                  </button>
+                </div>
+                
+                <div className="mt-3 text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/30 p-2 rounded">
+                  <div className="flex items-start">
+                    <span className="material-icons text-primary text-xs mr-1">info</span>
+                    <p>You can upload multiple CSV files at once when updating prices. Cards will be matched by their Serial Number across all collections.</p>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Backup & Restore */}
+              <div className={`${isMobile ? 'bg-white dark:bg-[#1B2131] p-4 rounded-lg shadow-sm' : ''}`}>
+                <h3 className="text-base font-medium text-gray-900 dark:text-white mb-2">Backup & Restore</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+                  Save your collection data or restore from a previous backup
+                </p>
+                <div className={`${isMobile ? 'flex flex-col gap-3' : 'flex gap-2'}`}>
+                  <button
+                    onClick={handleExport}
+                    disabled={isExporting}
+                    className={`btn btn-primary ${isMobile ? 'w-full' : 'flex-1'}`}
+                  >
+                    {isExporting ? (
+                      <>Exporting...</>
+                    ) : (
+                      <>
+                        <span className="material-icons">download</span>
+                        <span>Backup Data</span>
+                      </>
+                    )}
+                  </button>
+                  
+                  <label className={`${isMobile ? 'w-full' : 'flex-1'}`}>
+                    <div className="btn btn-primary w-full cursor-pointer text-center">
+                      <span className="material-icons">upload</span>
+                      <span>Restore Backup</span>
+                    </div>
+                    <input
+                      type="file"
+                      accept=".zip,.json"
+                      onChange={handleFileChange}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+              </div>
+              
+              {/* Cloud Sync Section */}
+              <div className={`${isMobile ? 'bg-white dark:bg-[#1B2131] p-4 rounded-lg shadow-sm' : ''}`}>
+                <h3 className="text-base font-medium text-gray-900 dark:text-white mb-2">Cloud Backup</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+                  Sync your collection to the cloud so you can access it on any device
+                </p>
+                <CloudSync onExportData={onExportData} onImportCollection={onImportCollection} />
+              </div>
+
+              {/* Help Section */}
+              <div className={`${isMobile ? 'bg-white dark:bg-[#1B2131] p-4 rounded-lg shadow-sm' : ''}`}>
+                <h3 className="text-base font-medium text-gray-900 dark:text-white mb-2">Help & Guidance</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+                  Learn how to use the app with our step-by-step tutorial
+                </p>
+                <button 
+                  onClick={handleStartTutorial}
+                  className="w-full btn btn-custom-purple"
+                >
+                  <span className="material-icons">help_outline</span>
+                  <span className="font-medium">Start Tutorial</span>
+                </button>
+              </div>
+
               {/* Reset Application */}
               <div className={`rounded-lg border border-red-200 dark:border-red-900/50 p-4 ${isMobile ? 'bg-white dark:bg-[#1B2131] shadow-sm' : ''}`}>
                 <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100">Reset Application</h4>
                 <p className="mt-1 text-sm text-gray-500 dark:text-gray-400 mb-3">
-                  This will permanently delete all your collections, cards, and settings. This action cannot be undone.
+                  Start fresh by deleting all your collections and settings. Warning: This cannot be undone.
                 </p>
                 <button
                   onClick={handleResetData}
@@ -712,7 +703,10 @@ const SettingsModal = ({
           {activeTab === 'profile' && (
             <div className={`space-y-6 ${isMobile ? 'mobile-settings-content' : ''}`}>
               <div className={`${isMobile ? 'bg-white dark:bg-[#1B2131] p-4 rounded-lg shadow-sm' : ''}`}>
-                <h3 className="text-base font-medium text-gray-900 dark:text-white mb-4">Profile Information</h3>
+                <h3 className="text-base font-medium text-gray-900 dark:text-white mb-4">Your Information</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+                  This information is used when generating sale invoices and receipts
+                </p>
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
@@ -812,6 +806,7 @@ const SettingsModal = ({
             <div className={`space-y-6 ${isMobile ? 'mobile-settings-content' : ''}`}>
               {/* User Info */}
               <div className={`${isMobile ? 'bg-white dark:bg-[#1B2131] p-4 rounded-lg shadow-sm' : ''}`}>
+                <h3 className="text-base font-medium text-gray-900 dark:text-white mb-2">Account Information</h3>
                 <div className="flex items-center space-x-3">
                   <span className="material-icons text-gray-400">account_circle</span>
                   <div>

@@ -53,7 +53,8 @@ function AppContent() {
     newProfit: 0
   });
   const [currentView, setCurrentView] = useState('cards'); // 'cards' or 'sold'
-  const { registerSettingsCallback } = useTutorial();
+  const { registerSettingsCallback, checkAndStartTutorial } = useTutorial();
+  const { currentUser } = useAuth();
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   
   const {
@@ -80,6 +81,17 @@ function AppContent() {
       callbackRegistered.current = true;
     }
   }, [registerSettingsCallback]);
+
+  // Check if this is a new user and start the tutorial
+  useEffect(() => {
+    if (currentUser) {
+      // Start the tutorial for new users after a short delay
+      // to ensure the UI is fully loaded
+      setTimeout(() => {
+        checkAndStartTutorial();
+      }, 1000);
+    }
+  }, [currentUser, checkAndStartTutorial]);
 
   // Check if device is mobile on resize
   useEffect(() => {
@@ -219,7 +231,7 @@ function AppContent() {
     }, 0);
   }, []);
 
-  const handleImportData = useCallback(async (file, options = {}) => {
+  const handleImportData = useCallback(async (file) => {
     try {
       // Check if file is an array (multiple files)
       const isMultipleFiles = Array.isArray(file);
@@ -250,18 +262,19 @@ function AppContent() {
           throw new Error(validation.error);
         }
         
-        // Use targetCollection from options if provided, otherwise use first collection
-        const targetCollection = options.targetCollection || Object.keys(allCollections)[0];
-        
         // Apply updates across all collections
         const { collections: updatedCollections, stats } = 
-          processMultipleCollectionsUpdate(parsedData, allCollections, exchangeRate, targetCollection);
-
+          processMultipleCollectionsUpdate(parsedData, allCollections, exchangeRate);
+        
         // Save to database
         await db.saveCollections(updatedCollections);
         
-        // Update state
-        setCollections({...updatedCollections, 'All Cards': []});
+        // Update state - make sure to preserve the 'All Cards' entry if it exists
+        const newCollections = {...updatedCollections};
+        if ('All Cards' in collections) {
+          newCollections['All Cards'] = [];
+        }
+        setCollections(newCollections);
         
         // Calculate new profit after update
         let newProfit = 0;
@@ -279,135 +292,59 @@ function AppContent() {
         setShowProfitChangeModal(true);
         
         // Show success message with stats
-        toast.success(`Updated ${stats.updatedCards} cards and added ${stats.addedCards} new cards across ${Object.keys(stats.collections).length} collections`);
-      } else if (options.mode === 'addToCollection') {
-        // Handle "Add Cards to Collection" mode
-        const { parseCSVFile, validateCSVStructure } = await import('./utils/dataProcessor');
+        toast.success(`Updated ${stats.updatedCards} cards across ${Object.keys(stats.collections).length} collections`);
+      } else if (selectedCollection === 'All Cards' && importMode === 'priceUpdate') {
+        // If "All Cards" is selected for price update, use the same multi-collection update logic
+        const { parseCSVFile, validateCSVStructure, processMultipleCollectionsUpdate } = await import('./utils/dataProcessor');
         
-        // Get the target collection from options
-        const targetCollection = options.targetCollection || selectedCollection;
+        // Calculate total profit before update for all collections (except 'All Cards')
+        const allCollections = { ...collections };
+        delete allCollections['All Cards'];
         
+        // Calculate previous profit across all collections
+        let previousProfit = 0;
+        Object.values(allCollections).forEach(cards => {
+          if (Array.isArray(cards)) {
+            previousProfit += calculateTotalProfit(cards);
+          }
+        });
+
         // Parse the CSV file
-        const parsedData = await parseCSVFile(file[0]); // Only using the first file
-        
-        // Validate minimum structure (only require Slab Serial #)
-        if (!parsedData || parsedData.length === 0) {
-          throw new Error("CSV file appears to be empty");
+        const parsedData = await parseCSVFile(file);
+        // Validate the structure
+        const validation = validateCSVStructure(parsedData, importMode);
+        if (!validation.success) {
+          throw new Error(validation.error);
         }
         
-        // Check for required Slab Serial column
-        const firstRow = parsedData[0];
-        if (!('Slab Serial #' in firstRow)) {
-          throw new Error("CSV is missing required column: Slab Serial #");
-        }
+        // Apply updates across all collections
+        const { collections: updatedCollections, stats } = 
+          processMultipleCollectionsUpdate(parsedData, allCollections, exchangeRate);
         
-        // Get current collection cards (if any)
-        const currentCards = collections[targetCollection] || [];
-        
-        // Create a map for faster lookups
-        const existingCardsMap = new Map();
-        currentCards.forEach(card => {
-          if (card.slabSerial) {
-            existingCardsMap.set(card.slabSerial.toString(), card);
-          }
-        });
-        
-        // Process all cards from the CSV
-        const processedCards = parsedData.map(csvCard => {
-          const slabSerial = csvCard['Slab Serial #']?.toString();
-          if (!slabSerial) return null;
-          
-          // Check if this card already exists in the collection
-          const existingCard = existingCardsMap.get(slabSerial);
-          
-          // Values that need conversion from USD to AUD
-          const currentValueUSD = parseFloat(csvCard['Current Value']) || 0;
-          const currentValueAUD = Number((currentValueUSD * exchangeRate).toFixed(2));
-          const investmentUSD = parseFloat(csvCard['Investment']) || 0;
-          const investmentAUD = Number((investmentUSD * exchangeRate).toFixed(2));
-          
-          if (existingCard) {
-            // Update existing card
-            return {
-              ...existingCard,
-              card: csvCard['Card'] || existingCard.card,
-              player: csvCard['Player'] || existingCard.player,
-              year: csvCard['Year'] || existingCard.year,
-              set: csvCard['Set'] || existingCard.set,
-              variation: csvCard['Variation'] || existingCard.variation,
-              number: csvCard['Number'] || existingCard.number,
-              category: csvCard['Category'] || existingCard.category,
-              condition: csvCard['Condition'] || existingCard.condition,
-              currentValueUSD,
-              currentValueAUD,
-              investmentAUD: investmentUSD > 0 ? investmentAUD : existingCard.investmentAUD,
-              potentialProfit: Number((currentValueAUD - (investmentUSD > 0 ? investmentAUD : existingCard.investmentAUD)).toFixed(2)),
-              population: csvCard['Population'] || existingCard.population
-            };
-          } else {
-            // Create new card
-            return {
-              slabSerial,
-              datePurchased: csvCard['Date Purchased'] || new Date().toISOString().split('T')[0],
-              card: csvCard['Card'] || 'Unknown Card',
-              player: csvCard['Player'] || '',
-              year: csvCard['Year'] || '',
-              set: csvCard['Set'] || '',
-              variation: csvCard['Variation'] || '',
-              number: csvCard['Number'] || '',
-              category: csvCard['Category'] || '',
-              condition: csvCard['Condition'] || '',
-              currentValueUSD,
-              currentValueAUD,
-              investmentAUD,
-              potentialProfit: Number((currentValueAUD - investmentAUD).toFixed(2)),
-              population: csvCard['Population'] || 0
-            };
-          }
-        }).filter(Boolean);
-        
-        // Calculate stats for success message
-        const updatedCount = processedCards.filter(card => existingCardsMap.has(card.slabSerial.toString())).length;
-        const addedCount = processedCards.length - updatedCount;
-        
-        // Create a map of processed cards
-        const processedCardsMap = new Map();
-        processedCards.forEach(card => {
-          processedCardsMap.set(card.slabSerial.toString(), card);
-        });
-        
-        // Combine existing cards with processed cards
-        const combinedCards = [...currentCards];
-        
-        // Update existing cards in place
-        for (let i = 0; i < combinedCards.length; i++) {
-          const card = combinedCards[i];
-          if (card.slabSerial && processedCardsMap.has(card.slabSerial.toString())) {
-            combinedCards[i] = processedCardsMap.get(card.slabSerial.toString());
-            // Remove from processedCardsMap to track what's been added
-            processedCardsMap.delete(card.slabSerial.toString());
-          }
-        }
-        
-        // Add any remaining new cards
-        processedCardsMap.forEach(card => {
-          combinedCards.push(card);
-        });
-        
-        // Update collections with merged data
-        const updatedCollections = {
-          ...collections,
-          [targetCollection]: combinedCards
-        };
-        
-        // Save to database to persist changes
+        // Save to database
         await db.saveCollections(updatedCollections);
         
-        // Update state
-        setCollections(updatedCollections);
+        // Update state - make sure to preserve the 'All Cards' entry
+        const newCollections = {...updatedCollections, 'All Cards': []};
+        setCollections(newCollections);
         
-        // Show success message
-        toast.success(`Added ${addedCount} new cards and updated ${updatedCount} existing cards in "${targetCollection}"`);
+        // Calculate new profit after update
+        let newProfit = 0;
+        Object.values(updatedCollections).forEach(cards => {
+          if (Array.isArray(cards)) {
+            newProfit += calculateTotalProfit(cards);
+          }
+        });
+        
+        // Show the profit change modal
+        setProfitChangeData({
+          oldProfit: previousProfit,
+          newProfit: newProfit
+        });
+        setShowProfitChangeModal(true);
+        
+        // Show success message with stats
+        toast.success(`Updated ${stats.updatedCards} cards across ${Object.keys(stats.collections).length} collections`);
       } else {
         // Single file or base data import - existing logic
         // Calculate current total profit before update
@@ -474,20 +411,9 @@ function AppContent() {
   }, [clearSelectedCard]);
 
   const handleImportClick = (mode) => {
-    if (mode === 'priceUpdate' && selectedCollection === 'All Cards') {
-      toast.error('Please select a specific collection to update prices');
-      return;
-    }
-    setImportMode(mode === 'baseData' ? 'baseData' : mode === 'addToCollection' ? 'addToCollection' : 'priceUpdate');
+    // Remove the restriction that prevents updating prices when "All Cards" is selected
+    setImportMode(mode === 'baseData' ? 'baseData' : 'priceUpdate');
     setImportModalOpen(true);
-  };
-
-  const handleImportToCollection = () => {
-    if (selectedCollection === 'All Cards') {
-      toast.error('Please select a specific collection to add cards to');
-      return;
-    }
-    handleImportClick('addToCollection');
   };
 
   // Load collections from IndexedDB on mount
@@ -1169,7 +1095,6 @@ To import this backup:
           onImport={handleImportData}
           mode={importMode}
           loading={loading}
-          collections={collections}
         />
       )}
 
@@ -1243,6 +1168,8 @@ To import this backup:
           onUpdatePrices={() => {
             return new Promise((resolve, reject) => {
               handleImportClick('priceUpdate');
+              // Close the settings modal
+              setShowSettings(false);
               // This is just triggering the modal to open, so we resolve
               // The actual update will happen when user selects a file in the import modal
               resolve();
@@ -1251,14 +1178,10 @@ To import this backup:
           onImportBaseData={() => {
             return new Promise((resolve, reject) => {
               handleImportClick('baseData');
+              // Close the settings modal
+              setShowSettings(false);
               // This is just triggering the modal to open, so we resolve
               // The actual import will happen when user selects a file in the import modal
-              resolve();
-            });
-          }}
-          onImportToCollection={() => {
-            return new Promise((resolve, reject) => {
-              handleImportToCollection();
               resolve();
             });
           }}

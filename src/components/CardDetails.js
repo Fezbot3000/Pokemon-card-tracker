@@ -4,6 +4,15 @@ import { db } from '../services/db';
 import { useTheme } from '../contexts/ThemeContext';
 import { toast } from 'react-hot-toast';
 
+// Add CSS class definitions
+const inputStyles = `
+  w-full px-3 py-2 border border-gray-200 dark:border-gray-700/50 
+  rounded-lg bg-white dark:bg-[#252B3B]
+  text-gray-900 dark:text-white text-sm
+  focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary
+  placeholder-gray-500 dark:placeholder-gray-400
+`;
+
 // Image loading states component
 const CardImage = memo(({ imageUrl, loadingState, onRetry }) => {
   if (loadingState === 'loading') {
@@ -60,7 +69,8 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
     investmentUSD: typeof card.investmentUSD === 'number' ? Number(card.investmentUSD.toFixed(2)) : 0,
     currentValueUSD: typeof card.currentValueUSD === 'number' ? Number(card.currentValueUSD.toFixed(2)) : 0,
     investmentAUD: typeof card.investmentAUD === 'number' ? Number(card.investmentAUD.toFixed(2)) : 0,
-    currentValueAUD: typeof card.currentValueAUD === 'number' ? Number(card.currentValueAUD.toFixed(2)) : 0
+    currentValueAUD: typeof card.currentValueAUD === 'number' ? Number(card.currentValueAUD.toFixed(2)) : 0,
+    datePurchased: card.datePurchased || ''
   });
   const [cardImage, setCardImage] = useState(null);
   const [imageLoadingState, setImageLoadingState] = useState('loading');
@@ -430,7 +440,7 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
           <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
             <div>
               <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Card Information</h3>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Player
@@ -440,7 +450,7 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
                     name="player"
                     value={editedCard.player || ''}
                     onChange={handleInputChange}
-                    className="input"
+                    className={inputStyles}
                   />
                 </div>
                 <div>
@@ -452,13 +462,13 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
                     name="card"
                     value={editedCard.card || ''}
                     onChange={handleInputChange}
-                    className="input"
+                    className={inputStyles}
                   />
                 </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Set
@@ -468,7 +478,7 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
                   name="set"
                   value={editedCard.set || ''}
                   onChange={handleInputChange}
-                  className="input"
+                  className={inputStyles}
                 />
               </div>
               <div>
@@ -480,12 +490,12 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
                   name="year"
                   value={editedCard.year || ''}
                   onChange={handleInputChange}
-                  className="input"
+                  className={inputStyles}
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Category
@@ -495,7 +505,7 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
                   name="category"
                   value={editedCard.category || ''}
                   onChange={handleInputChange}
-                  className="input"
+                  className={inputStyles}
                 />
               </div>
               <div>
@@ -507,27 +517,41 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
                   name="condition"
                   value={editedCard.condition || ''}
                   onChange={handleInputChange}
-                  className="input"
+                  className={inputStyles}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Serial Number
+                </label>
+                <input
+                  type="text"
+                  name="slabSerial"
+                  value={editedCard.slabSerial}
+                  onChange={handleInputChange}
+                  className={inputStyles}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Date Purchased
+                </label>
+                <input
+                  type="date"
+                  name="datePurchased"
+                  value={editedCard.datePurchased || ''}
+                  onChange={handleInputChange}
+                  className={inputStyles}
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Serial Number
-              </label>
-              <input
-                type="text"
-                name="slabSerial"
-                value={editedCard.slabSerial}
-                onChange={handleInputChange}
-                className="input"
-              />
-            </div>
-
-            <div>
               <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Financial Details</h3>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Paid (AUD)</label>
                   <input
@@ -535,7 +559,7 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
                     name="investmentAUD"
                     value={editedCard.investmentAUD === '' ? '' : editedCard.investmentAUD === 0 ? '' : editedCard.investmentAUD}
                     onChange={handleNumberInputChange}
-                    className="input"
+                    className={inputStyles}
                   />
                 </div>
                 <div>
@@ -545,7 +569,7 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
                     name="currentValueAUD"
                     value={editedCard.currentValueAUD === '' ? '' : editedCard.currentValueAUD === 0 ? '' : editedCard.currentValueAUD}
                     onChange={handleNumberInputChange}
-                    className="input"
+                    className={inputStyles}
                   />
                 </div>
               </div>
@@ -555,25 +579,27 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
 
         {/* Footer with Actions */}
         <div className="card-details-footer">
-          <div className="flex items-center space-x-2">
-            <button
-              type="button"
-              onClick={handleClose}
-              className="btn btn-tertiary"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              onClick={handleSave}
-              className="btn btn-primary"
-            >
-              Save Changes
-            </button>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={handleClose}
+                className="btn btn-tertiary min-w-[80px]"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSave}
+                className="btn btn-primary min-w-[120px]"
+              >
+                Save Changes
+              </button>
+            </div>
             
             {/* Status message */}
             {saveMessage && (
-              <div className={`text-sm px-3 py-1 rounded-md transition-opacity ${
+              <div className={`text-sm px-3 py-1 rounded-md transition-opacity max-w-full ${
                 saveMessage.startsWith('Error') 
                   ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' 
                   : saveMessage === 'No changes to save'

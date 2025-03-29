@@ -180,26 +180,6 @@ const Header = ({
             <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
               {/* Desktop Actions - keep theme and settings only on desktop */}
               <div className="hidden lg:flex items-center space-x-2">
-                {selectedCollection !== 'All Cards' && (
-                  <>
-                    <button
-                      onClick={() => onImportClick('priceUpdate')}
-                      className="flex items-center space-x-1 px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-                    >
-                      <span className="material-icons">update</span>
-                      <span>Update Prices</span>
-                    </button>
-                    
-                    <button
-                      onClick={() => onImportClick('baseData')}
-                      className="flex items-center space-x-1 px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-                    >
-                      <span className="material-icons">upload_file</span>
-                      <span>Import Base Data</span>
-                    </button>
-                  </>
-                )}
-
                 {/* Theme and Settings buttons */}
                 <button
                   onClick={toggleTheme}
