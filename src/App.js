@@ -370,10 +370,34 @@ function AppContent() {
         const updatedCount = processedCards.filter(card => existingCardsMap.has(card.slabSerial.toString())).length;
         const addedCount = processedCards.length - updatedCount;
         
-        // Update collections with new data
+        // Create a map of processed cards
+        const processedCardsMap = new Map();
+        processedCards.forEach(card => {
+          processedCardsMap.set(card.slabSerial.toString(), card);
+        });
+        
+        // Combine existing cards with processed cards
+        const combinedCards = [...currentCards];
+        
+        // Update existing cards in place
+        for (let i = 0; i < combinedCards.length; i++) {
+          const card = combinedCards[i];
+          if (card.slabSerial && processedCardsMap.has(card.slabSerial.toString())) {
+            combinedCards[i] = processedCardsMap.get(card.slabSerial.toString());
+            // Remove from processedCardsMap to track what's been added
+            processedCardsMap.delete(card.slabSerial.toString());
+          }
+        }
+        
+        // Add any remaining new cards
+        processedCardsMap.forEach(card => {
+          combinedCards.push(card);
+        });
+        
+        // Update collections with merged data
         const updatedCollections = {
           ...collections,
-          [targetCollection]: processedCards
+          [targetCollection]: combinedCards
         };
         
         // Save to database to persist changes
