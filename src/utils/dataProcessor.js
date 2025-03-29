@@ -165,9 +165,10 @@ export const processImportedData = (importedData, existingCards, exchangeRate, i
  * @param {Array} importedData - Data imported from multiple CSV files
  * @param {Object} allCollections - All collections containing cards
  * @param {number} exchangeRate - Current USD to AUD exchange rate
+ * @param {string} targetCollection - Collection name to add new cards to
  * @returns {Object} Updated collections object with modified cards
  */
-export const processMultipleCollectionsUpdate = (importedData, allCollections, exchangeRate) => {
+export const processMultipleCollectionsUpdate = (importedData, allCollections, exchangeRate, targetCollection) => {
   // Create a deep copy to avoid mutations
   const allCollectionsCopy = JSON.parse(JSON.stringify(allCollections || {}));
   
@@ -274,17 +275,31 @@ export const processMultipleCollectionsUpdate = (importedData, allCollections, e
     }
   });
   
-  // If we have new cards, add them to the first collection
+  // If we have new cards, add them to the specified target collection
   if (newCards.length > 0 && Object.keys(collectionsToUpdate).length > 0) {
-    const firstCollectionName = Object.keys(collectionsToUpdate)[0];
-    collectionsToUpdate[firstCollectionName] = [
-      ...collectionsToUpdate[firstCollectionName],
+    // If targetCollection doesn't exist, fall back to the first collection
+    const collectionToAddTo = (targetCollection && collectionsToUpdate[targetCollection]) 
+      ? targetCollection 
+      : Object.keys(collectionsToUpdate)[0];
+    
+    collectionsToUpdate[collectionToAddTo] = [
+      ...collectionsToUpdate[collectionToAddTo],
       ...newCards
     ];
     
     updates.addedCards = newCards.length;
-    updates.collections[firstCollectionName].addedCards = newCards.length;
-    updates.collections[firstCollectionName].totalCards += newCards.length;
+    
+    // Initialize collection stats if needed
+    if (!updates.collections[collectionToAddTo]) {
+      updates.collections[collectionToAddTo] = {
+        totalCards: 0,
+        updatedCards: 0,
+        addedCards: 0
+      };
+    }
+    
+    updates.collections[collectionToAddTo].addedCards = newCards.length;
+    updates.collections[collectionToAddTo].totalCards += newCards.length;
     updates.totalCards += newCards.length;
   }
   

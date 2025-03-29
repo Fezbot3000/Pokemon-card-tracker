@@ -1,11 +1,23 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 
-const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading }) => {
+const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading, collections = {} }) => {
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef(null);
   const { isDarkMode } = useTheme();
   const [selectedFiles, setSelectedFiles] = useState([]);
+  const [targetCollection, setTargetCollection] = useState('');
+
+  // Initialize target collection from the first available collection
+  useEffect(() => {
+    if (mode === 'priceUpdate' && Object.keys(collections).length > 0) {
+      // Filter out 'All Cards' and use the first real collection
+      const realCollections = Object.keys(collections).filter(c => c !== 'All Cards');
+      if (realCollections.length > 0) {
+        setTargetCollection(realCollections[0]);
+      }
+    }
+  }, [collections, mode]);
 
   // Manage body overflow and padding to prevent page jumping
   useEffect(() => {
@@ -79,11 +91,15 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading 
 
   const handleSubmitFiles = () => {
     if (selectedFiles.length > 0) {
-      onImport(selectedFiles);
+      // Include target collection with the files
+      onImport(selectedFiles, { targetCollection });
     }
   };
 
   if (!isOpen) return null;
+
+  // Filter available collections (exclude 'All Cards')
+  const availableCollections = Object.keys(collections).filter(name => name !== 'All Cards');
 
   return (
     <div className="fixed inset-0 bg-white dark:bg-[#0B0F19] z-50">
@@ -177,6 +193,29 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading 
               ))}
             </ul>
             
+            {/* Target Collection Dropdown */}
+            {mode === 'priceUpdate' && availableCollections.length > 0 && (
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-800 dark:text-gray-200 mb-2">
+                  Select collection for new cards:
+                </label>
+                <select
+                  value={targetCollection}
+                  onChange={(e) => setTargetCollection(e.target.value)}
+                  className="w-full px-3 py-2 bg-white dark:bg-[#1B2131] border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white"
+                >
+                  {availableCollections.map(name => (
+                    <option key={name} value={name}>
+                      {name}
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  Any new cards found in your CSV files will be added to this collection.
+                </p>
+              </div>
+            )}
+            
             <div className="flex justify-end">
               <button
                 onClick={handleSubmitFiles}
@@ -242,7 +281,7 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading 
                   <li>The system identifies cards across all your collections by matching Slab Serial #.</li>
                   <li>All cards from all collections will be updated in one go.</li>
                   <li>If a card in your CSV doesn't exist in any collection, it will be added as a new card.</li>
-                  <li>New cards will be added to your first collection automatically.</li>
+                  <li>New cards will be added to your selected collection.</li>
                 </ul>
                 <p className="mt-2 italic">
                   Tip: You can organize your CSV files by set, category, or any other criteria to make price updates more manageable.

@@ -219,7 +219,7 @@ function AppContent() {
     }, 0);
   }, []);
 
-  const handleImportData = useCallback(async (file) => {
+  const handleImportData = useCallback(async (file, options = {}) => {
     try {
       // Check if file is an array (multiple files)
       const isMultipleFiles = Array.isArray(file);
@@ -250,9 +250,12 @@ function AppContent() {
           throw new Error(validation.error);
         }
         
+        // Use targetCollection from options if provided, otherwise use first collection
+        const targetCollection = options.targetCollection || Object.keys(allCollections)[0];
+        
         // Apply updates across all collections
         const { collections: updatedCollections, stats } = 
-          processMultipleCollectionsUpdate(parsedData, allCollections, exchangeRate);
+          processMultipleCollectionsUpdate(parsedData, allCollections, exchangeRate, targetCollection);
         
         // Save to database
         await db.saveCollections(updatedCollections);
@@ -1030,6 +1033,7 @@ To import this backup:
           onImport={handleImportData}
           mode={importMode}
           loading={loading}
+          collections={collections}
         />
       )}
 
