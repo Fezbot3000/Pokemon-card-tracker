@@ -19,7 +19,8 @@ const SettingsModal = ({
   onExportData,
   onImportCollection,
   onUpdatePrices,
-  onImportBaseData
+  onImportBaseData,
+  onImportToCollection
 }) => {
   const { isDarkMode, toggleTheme } = useTheme();
   const { currentUser, signOut } = useAuth();
@@ -430,7 +431,7 @@ const SettingsModal = ({
                 <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
                   Update prices and import base card data
                 </p>
-                <div className={`${isMobile ? 'flex flex-col gap-3' : 'flex gap-2'}`}>
+                <div className={`${isMobile ? 'flex flex-col gap-3' : 'grid grid-cols-2 gap-2'}`}>
                   <button
                     onClick={async () => {
                       try {
@@ -481,6 +482,24 @@ const SettingsModal = ({
                         <span>Import Base Data</span>
                       </div>
                     )}
+                  </button>
+                  
+                  <button
+                    onClick={async () => {
+                      try {
+                        await onImportToCollection();
+                        toast.success('CSV data processed successfully!');
+                      } catch (error) {
+                        console.error('Failed to process CSV data:', error);
+                        toast.error('Failed to process CSV data: ' + error.message);
+                      }
+                    }}
+                    className={`btn btn-primary ${isMobile ? 'w-full' : 'col-span-2'}`}
+                  >
+                    <div className="flex items-center justify-center w-full gap-2">
+                      <span className="material-icons">add_circle</span>
+                      <span>Add Cards to Collection</span>
+                    </div>
                   </button>
                 </div>
               </div>

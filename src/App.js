@@ -256,7 +256,7 @@ function AppContent() {
         // Apply updates across all collections
         const { collections: updatedCollections, stats } = 
           processMultipleCollectionsUpdate(parsedData, allCollections, exchangeRate, targetCollection);
-        
+
         // Save to database
         await db.saveCollections(updatedCollections);
         
@@ -280,6 +280,110 @@ function AppContent() {
         
         // Show success message with stats
         toast.success(`Updated ${stats.updatedCards} cards and added ${stats.addedCards} new cards across ${Object.keys(stats.collections).length} collections`);
+      } else if (options.mode === 'addToCollection') {
+        // Handle "Add Cards to Collection" mode
+        const { parseCSVFile, validateCSVStructure } = await import('./utils/dataProcessor');
+        
+        // Get the target collection from options
+        const targetCollection = options.targetCollection || selectedCollection;
+        
+        // Parse the CSV file
+        const parsedData = await parseCSVFile(file[0]); // Only using the first file
+        
+        // Validate minimum structure (only require Slab Serial #)
+        if (!parsedData || parsedData.length === 0) {
+          throw new Error("CSV file appears to be empty");
+        }
+        
+        // Check for required Slab Serial column
+        const firstRow = parsedData[0];
+        if (!('Slab Serial #' in firstRow)) {
+          throw new Error("CSV is missing required column: Slab Serial #");
+        }
+        
+        // Get current collection cards (if any)
+        const currentCards = collections[targetCollection] || [];
+        
+        // Create a map for faster lookups
+        const existingCardsMap = new Map();
+        currentCards.forEach(card => {
+          if (card.slabSerial) {
+            existingCardsMap.set(card.slabSerial.toString(), card);
+          }
+        });
+        
+        // Process all cards from the CSV
+        const processedCards = parsedData.map(csvCard => {
+          const slabSerial = csvCard['Slab Serial #']?.toString();
+          if (!slabSerial) return null;
+          
+          // Check if this card already exists in the collection
+          const existingCard = existingCardsMap.get(slabSerial);
+          
+          // Values that need conversion from USD to AUD
+          const currentValueUSD = parseFloat(csvCard['Current Value']) || 0;
+          const currentValueAUD = Number((currentValueUSD * exchangeRate).toFixed(2));
+          const investmentUSD = parseFloat(csvCard['Investment']) || 0;
+          const investmentAUD = Number((investmentUSD * exchangeRate).toFixed(2));
+          
+          if (existingCard) {
+            // Update existing card
+            return {
+              ...existingCard,
+              card: csvCard['Card'] || existingCard.card,
+              player: csvCard['Player'] || existingCard.player,
+              year: csvCard['Year'] || existingCard.year,
+              set: csvCard['Set'] || existingCard.set,
+              variation: csvCard['Variation'] || existingCard.variation,
+              number: csvCard['Number'] || existingCard.number,
+              category: csvCard['Category'] || existingCard.category,
+              condition: csvCard['Condition'] || existingCard.condition,
+              currentValueUSD,
+              currentValueAUD,
+              investmentAUD: investmentUSD > 0 ? investmentAUD : existingCard.investmentAUD,
+              potentialProfit: Number((currentValueAUD - (investmentUSD > 0 ? investmentAUD : existingCard.investmentAUD)).toFixed(2)),
+              population: csvCard['Population'] || existingCard.population
+            };
+          } else {
+            // Create new card
+            return {
+              slabSerial,
+              datePurchased: csvCard['Date Purchased'] || new Date().toISOString().split('T')[0],
+              card: csvCard['Card'] || 'Unknown Card',
+              player: csvCard['Player'] || '',
+              year: csvCard['Year'] || '',
+              set: csvCard['Set'] || '',
+              variation: csvCard['Variation'] || '',
+              number: csvCard['Number'] || '',
+              category: csvCard['Category'] || '',
+              condition: csvCard['Condition'] || '',
+              currentValueUSD,
+              currentValueAUD,
+              investmentAUD,
+              potentialProfit: Number((currentValueAUD - investmentAUD).toFixed(2)),
+              population: csvCard['Population'] || 0
+            };
+          }
+        }).filter(Boolean);
+        
+        // Calculate stats for success message
+        const updatedCount = processedCards.filter(card => existingCardsMap.has(card.slabSerial.toString())).length;
+        const addedCount = processedCards.length - updatedCount;
+        
+        // Update collections with new data
+        const updatedCollections = {
+          ...collections,
+          [targetCollection]: processedCards
+        };
+        
+        // Save to database to persist changes
+        await db.saveCollections(updatedCollections);
+        
+        // Update state
+        setCollections(updatedCollections);
+        
+        // Show success message
+        toast.success(`Added ${addedCount} new cards and updated ${updatedCount} existing cards in "${targetCollection}"`);
       } else {
         // Single file or base data import - existing logic
         // Calculate current total profit before update
@@ -350,8 +454,16 @@ function AppContent() {
       toast.error('Please select a specific collection to update prices');
       return;
     }
-    setImportMode(mode === 'baseData' ? 'baseData' : 'priceUpdate');
+    setImportMode(mode === 'baseData' ? 'baseData' : mode === 'addToCollection' ? 'addToCollection' : 'priceUpdate');
     setImportModalOpen(true);
+  };
+
+  const handleImportToCollection = () => {
+    if (selectedCollection === 'All Cards') {
+      toast.error('Please select a specific collection to add cards to');
+      return;
+    }
+    handleImportClick('addToCollection');
   };
 
   // Load collections from IndexedDB on mount
@@ -1117,6 +1229,12 @@ To import this backup:
               handleImportClick('baseData');
               // This is just triggering the modal to open, so we resolve
               // The actual import will happen when user selects a file in the import modal
+              resolve();
+            });
+          }}
+          onImportToCollection={() => {
+            return new Promise((resolve, reject) => {
+              handleImportToCollection();
               resolve();
             });
           }}

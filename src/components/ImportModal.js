@@ -10,7 +10,7 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading,
 
   // Initialize target collection from the first available collection
   useEffect(() => {
-    if (mode === 'priceUpdate' && Object.keys(collections).length > 0) {
+    if ((mode === 'priceUpdate' || mode === 'addToCollection') && Object.keys(collections).length > 0) {
       // Filter out 'All Cards' and use the first real collection
       const realCollections = Object.keys(collections).filter(c => c !== 'All Cards');
       if (realCollections.length > 0) {
@@ -60,6 +60,14 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading,
         if (files.length > 0) {
           setSelectedFiles(prevFiles => [...prevFiles, ...files]);
         }
+      } else if (mode === 'addToCollection') {
+        // For add to collection mode, just handle the single file
+        const files = Array.from(e.dataTransfer.files).filter(file => 
+          file.type === "text/csv" || file.name.endsWith('.csv')
+        );
+        if (files.length > 0) {
+          setSelectedFiles([files[0]]);
+        }
       } else {
         // For base data import, only one file at a time
         onImport(e.dataTransfer.files[0]);
@@ -78,6 +86,14 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading,
         if (files.length > 0) {
           setSelectedFiles(prevFiles => [...prevFiles, ...files]);
         }
+      } else if (mode === 'addToCollection') {
+        // For add to collection mode, just handle the single file
+        const files = Array.from(e.target.files).filter(file => 
+          file.type === "text/csv" || file.name.endsWith('.csv')
+        );
+        if (files.length > 0) {
+          setSelectedFiles([files[0]]);
+        }
       } else {
         // For base data import, only one file at a time
         onImport(e.target.files[0]);
@@ -92,7 +108,7 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading,
   const handleSubmitFiles = () => {
     if (selectedFiles.length > 0) {
       // Include target collection with the files
-      onImport(selectedFiles, { targetCollection });
+      onImport(selectedFiles, { targetCollection, mode });
     }
   };
 
@@ -101,11 +117,68 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading,
   // Filter available collections (exclude 'All Cards')
   const availableCollections = Object.keys(collections).filter(name => name !== 'All Cards');
 
+  // Get title based on mode
+  const getTitle = () => {
+    switch (mode) {
+      case 'baseData':
+        return 'Import Base Data';
+      case 'addToCollection':
+        return 'Add Cards to Collection';
+      default:
+        return 'Update Card Prices';
+    }
+  };
+
+  // Get button text based on mode
+  const getButtonText = () => {
+    if (loading) {
+      return 'Processing...';
+    }
+    
+    switch (mode) {
+      case 'baseData':
+        return 'Select File';
+      case 'addToCollection':
+        return 'Select CSV File';
+      default:
+        return 'Select CSV Files';
+    }
+  };
+
+  // Get submission button text based on mode
+  const getSubmitButtonText = () => {
+    if (loading) {
+      return (
+        <>
+          <span className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></span>
+          <span>Processing...</span>
+        </>
+      );
+    }
+    
+    switch (mode) {
+      case 'addToCollection':
+        return (
+          <>
+            <span className="material-icons">add_circle</span>
+            <span>Add {selectedFiles.length > 0 ? selectedFiles.length : ''} Cards to Collection</span>
+          </>
+        );
+      default:
+        return (
+          <>
+            <span className="material-icons">update</span>
+            <span>Update Prices for All {selectedFiles.length} Files</span>
+          </>
+        );
+    }
+  };
+
   return (
     <div className="fixed inset-0 bg-white dark:bg-[#0B0F19] z-50">
       <div className="sticky top-0 z-10 flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
         <h1 className="text-xl font-semibold text-gray-800 dark:text-white">
-          {mode === 'baseData' ? 'Import Base Data' : 'Update Card Prices'}
+          {getTitle()}
         </h1>
         <button 
           onClick={onClose}
@@ -140,7 +213,7 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading,
             </p>
             
             {/* Show badge for selected files if in price update mode */}
-            {mode === 'priceUpdate' && selectedFiles.length > 0 && (
+            {(mode === 'priceUpdate' || mode === 'addToCollection') && selectedFiles.length > 0 && (
               <div className="inline-flex items-center px-3 py-1 bg-primary/10 border border-primary/20 rounded-full text-primary">
                 <span className="material-icons text-sm mr-1.5">check_circle</span>
                 <span className="text-sm font-medium">{selectedFiles.length} file(s) selected</span>
@@ -153,7 +226,7 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading,
             onClick={() => fileInputRef.current?.click()}
             disabled={loading}
           >
-            {loading ? 'Processing...' : (mode === 'priceUpdate' ? 'Select CSV Files' : 'Select File')}
+            {getButtonText()}
           </button>
           
           <input
@@ -166,8 +239,8 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading,
           />
         </div>
 
-        {/* Display selected files for price update mode */}
-        {mode === 'priceUpdate' && selectedFiles.length > 0 && (
+        {/* Display selected files and options for import modes that handle files in the UI */}
+        {(mode === 'priceUpdate' || mode === 'addToCollection') && selectedFiles.length > 0 && (
           <div className="mt-6">
             <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">
               Selected CSV Files ({selectedFiles.length})
@@ -194,10 +267,12 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading,
             </ul>
             
             {/* Target Collection Dropdown */}
-            {mode === 'priceUpdate' && availableCollections.length > 0 && (
+            {availableCollections.length > 0 && (
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-800 dark:text-gray-200 mb-2">
-                  Select collection for new cards:
+                  {mode === 'addToCollection' 
+                    ? 'Select collection to add cards to:' 
+                    : 'Select collection for new cards:'}
                 </label>
                 <select
                   value={targetCollection}
@@ -211,7 +286,9 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading,
                   ))}
                 </select>
                 <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                  Any new cards found in your CSV files will be added to this collection.
+                  {mode === 'addToCollection'
+                    ? 'All cards from your CSV file will be added to this collection.'
+                    : 'Any new cards found in your CSV files will be added to this collection.'}
                 </p>
               </div>
             )}
@@ -224,17 +301,7 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading,
                   (loading || selectedFiles.length === 0) ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
               >
-                {loading ? (
-                  <>
-                    <span className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></span>
-                    <span>Processing...</span>
-                  </>
-                ) : (
-                  <>
-                    <span className="material-icons">update</span>
-                    <span>Update Prices for All {selectedFiles.length} Files</span>
-                  </>
-                )}
+                {getSubmitButtonText()}
               </button>
             </div>
           </div>
@@ -242,7 +309,7 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading,
 
         <div className="mt-10">
           <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">
-            Price Update Instructions
+            {mode === 'addToCollection' ? 'Add to Collection Instructions' : 'Price Update Instructions'}
           </h2>
           
           <p className="text-gray-600 dark:text-gray-400 mb-4">
@@ -251,7 +318,16 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading,
           
           <ul className="list-disc list-inside space-y-2 text-gray-600 dark:text-gray-400 mb-8 pl-4">
             <li>Slab Serial # - Unique identifier for each card</li>
-            {mode === 'priceUpdate' ? (
+            {mode === 'addToCollection' ? (
+              <>
+                <li>Card - Card name</li>
+                <li>Current Value - Current value in USD (will be converted to AUD)</li>
+                <li>Investment - Original investment amount in USD (optional)</li>
+                <li>Player - Pokémon name (optional)</li>
+                <li>Set - Card set (optional)</li>
+                <li>Category - Card category (optional)</li>
+              </>
+            ) : mode === 'priceUpdate' ? (
               <li>Current Value - Current value in USD (will be converted to AUD)</li>
             ) : (
               <>
@@ -268,7 +344,25 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading,
           </ul>
           
           <div className="bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 p-4 rounded-md">
-            {mode === 'priceUpdate' ? (
+            {mode === 'addToCollection' ? (
+              <>
+                <p className="mb-2 font-semibold">
+                  <strong>Add Cards to Collection</strong> - Import cards directly into a specific collection
+                </p>
+                <p className="mb-2">
+                  How it works:
+                </p>
+                <ul className="list-disc pl-5 mb-2 space-y-1">
+                  <li>Upload a CSV with card details</li>
+                  <li>All cards in the CSV will be added to your selected collection</li>
+                  <li>If a card with the same Slab Serial # already exists, it will be updated</li>
+                  <li>This is ideal for adding a set of related cards to one collection</li>
+                </ul>
+                <p className="mt-2 italic">
+                  Tip: This feature is great for organizing cards by set, series, or category.
+                </p>
+              </>
+            ) : mode === 'priceUpdate' ? (
               <>
                 <p className="mb-2 font-semibold">
                   <strong>Multiple File Upload:</strong> Upload multiple CSV files at once to update your entire collection.
