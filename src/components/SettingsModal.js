@@ -407,7 +407,7 @@ const SettingsModal = ({
                     </div>
                     <input
                       type="file"
-                      accept=".json"
+                      accept=".zip,.json"
                       onChange={handleFileChange}
                       className="hidden"
                     />
@@ -453,6 +453,7 @@ const SettingsModal = ({
                       <div className="flex items-center justify-center w-full gap-2">
                         <span className="material-icons">update</span>
                         <span>Update Prices</span>
+                        <span className="opacity-70 text-xs font-normal">(Supports multiple CSVs)</span>
                       </div>
                     )}
                   </button>

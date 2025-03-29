@@ -122,6 +122,14 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading 
                 ? 'or click to select multiple files' 
                 : 'or click to select a file'}
             </p>
+            
+            {/* Show badge for selected files if in price update mode */}
+            {mode === 'priceUpdate' && selectedFiles.length > 0 && (
+              <div className="inline-flex items-center px-3 py-1 bg-primary/10 border border-primary/20 rounded-full text-primary">
+                <span className="material-icons text-sm mr-1.5">check_circle</span>
+                <span className="text-sm font-medium">{selectedFiles.length} file(s) selected</span>
+              </div>
+            )}
           </div>
           
           <button
@@ -129,7 +137,7 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading 
             onClick={() => fileInputRef.current?.click()}
             disabled={loading}
           >
-            {loading ? 'Processing...' : 'Select File(s)'}
+            {loading ? 'Processing...' : (mode === 'priceUpdate' ? 'Select CSV Files' : 'Select File')}
           </button>
           
           <input
@@ -173,11 +181,21 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading 
               <button
                 onClick={handleSubmitFiles}
                 disabled={loading || selectedFiles.length === 0}
-                className={`btn btn-primary ${
+                className={`btn btn-primary flex items-center gap-2 ${
                   (loading || selectedFiles.length === 0) ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
               >
-                {loading ? 'Processing...' : 'Update Prices'}
+                {loading ? (
+                  <>
+                    <span className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></span>
+                    <span>Processing...</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="material-icons">update</span>
+                    <span>Update Prices for All {selectedFiles.length} Files</span>
+                  </>
+                )}
               </button>
             </div>
           </div>
@@ -213,11 +231,20 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading 
           <div className="bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 p-4 rounded-md">
             {mode === 'priceUpdate' ? (
               <>
-                <p className="mb-2">
-                  <strong>Multiple File Upload:</strong> You can now upload multiple CSV files at once. The system will match cards across all collections by Slab Serial #.
+                <p className="mb-2 font-semibold">
+                  <strong>Multiple File Upload:</strong> Upload multiple CSV files at once to update your entire collection.
                 </p>
-                <p>
-                  Important: This import will ONLY update the current values and optional card details. Investment values will not be modified to preserve your cost basis data.
+                <p className="mb-2">
+                  How it works:
+                </p>
+                <ul className="list-disc pl-5 mb-2 space-y-1">
+                  <li>Each CSV file should contain Slab Serial # and Current Value columns.</li>
+                  <li>The system identifies cards across all your collections by matching Slab Serial #.</li>
+                  <li>All cards from all collections will be updated in one go.</li>
+                  <li>Only the current values will be changed, preserving your investment data.</li>
+                </ul>
+                <p className="mt-2 italic">
+                  Tip: You can organize your CSV files by set, category, or any other criteria to make price updates more manageable.
                 </p>
               </>
             ) : (
