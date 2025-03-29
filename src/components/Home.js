@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import NavigationBar from './NavigationBar';
 
 function Home() {
   const { currentUser } = useAuth();
@@ -25,7 +26,9 @@ function Home() {
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-red-500 to-green-500 text-gray-900 dark:text-white page-no-padding">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
+      <NavigationBar />
+      
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 pt-28">
         <div className="text-center">
           <h1 className="text-4xl sm:text-6xl font-bold mb-8 text-white">
             Pokémon Card Tracker

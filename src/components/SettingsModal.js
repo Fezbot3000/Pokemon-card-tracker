@@ -41,6 +41,7 @@ const SettingsModal = ({
   const [isMobile, setIsMobile] = useState(false);
   const [collectionToRename, setCollectionToRename] = useState('');
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
 
   // Check if the device is mobile
   useEffect(() => {
@@ -147,7 +148,7 @@ const SettingsModal = ({
 
   const handleStartTutorial = () => {
     startTutorial();
-    onClose();
+    handleClose();
   };
 
   // Add click outside handler for modal (desktop only)
@@ -157,7 +158,7 @@ const SettingsModal = ({
       
       const modalContent = document.querySelector('.settings-modal-content');
       if (modalContent && !modalContent.contains(event.target)) {
-        onClose();
+        handleClose();
       }
     };
 
@@ -168,7 +169,7 @@ const SettingsModal = ({
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isOpen, onClose, isMobile]);
+  }, [isOpen, isMobile]);
 
   // Prevent background scroll when modal is open (desktop only)
   useEffect(() => {
@@ -210,15 +211,44 @@ const SettingsModal = ({
     };
   }, [dropdownOpen]);
 
+  // Effect to trigger open animation on mount
+  useEffect(() => {
+    if (isOpen) {
+      // Small delay to ensure DOM is ready
+      const timer = setTimeout(() => {
+        setModalOpen(true);
+      }, 50);
+      return () => clearTimeout(timer);
+    } else {
+      setModalOpen(false);
+    }
+  }, [isOpen]);
+
+  // Add handle close with animation
+  const handleClose = () => {
+    setModalOpen(false);
+    // Wait for animation to complete
+    setTimeout(() => {
+      onClose();
+    }, 300);
+  };
+
   if (!isOpen) return null;
 
   // Render different layouts based on screen size
   return (
-    <div className={`${isMobile ? 'fixed inset-0 bg-gray-100 dark:bg-[#111827] z-30 settings-page' : 'settings-modal'}`} 
-      onWheel={preventPropagation} 
-      onTouchMove={preventPropagation}>
+    <>
+      {/* Semi-transparent overlay */}
       <div 
-        className={`${isMobile ? 'h-full overflow-y-auto pb-20 scroll-pt-44' : 'settings-modal-content'}`}
+        className={`card-details-overlay ${modalOpen ? 'open' : ''}`}
+        onClick={handleClose}
+      />
+      
+      {/* Settings content */}
+      <div 
+        className={`settings-modal-content ${modalOpen ? 'open' : ''}`}
+        onWheel={preventPropagation} 
+        onTouchMove={preventPropagation}
         onScroll={preventPropagation}
       >
         {/* Mobile header with tabs */}
@@ -277,13 +307,13 @@ const SettingsModal = ({
           </div>
         )}
 
-        {/* Desktop header */}
+        {/* Desktop Header */}
         {!isMobile && (
           <div className="settings-header">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Settings</h2>
-              <button
-                onClick={onClose}
+              <button 
+                onClick={handleClose}
                 className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-[#252B3B] transition-colors"
               >
                 <XMarkIcon className="h-5 w-5 text-gray-500 dark:text-gray-400" />
@@ -841,7 +871,7 @@ const SettingsModal = ({
           )}
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

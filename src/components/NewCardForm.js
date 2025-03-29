@@ -14,6 +14,7 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
     category: '',
     condition: '',
     slabSerial: '',
+    datePurchased: '',
     investmentUSD: '',
     currentValueUSD: '',
     investmentAUD: '',
@@ -29,9 +30,11 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
 
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+  const [showEnlargedImage, setShowEnlargedImage] = useState(false);
   const [error, setError] = useState(null);
   const fileInputRef = useRef(null);
   const { isDarkMode } = useTheme();
+  const [isOpen, setIsOpen] = useState(false);
 
   const [isDragging, setIsDragging] = useState(false);
   const dropZoneRef = useRef(null);
@@ -59,10 +62,19 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
     };
   }, []);
 
+  // Handle close with animation
+  const handleClose = () => {
+    setIsOpen(false);
+    // Wait for the close animation to finish
+    setTimeout(() => {
+      onClose();
+    }, 300);
+  };
+
   useEffect(() => {
     const handleEscapeKey = (event) => {
       if (event.key === 'Escape') {
-        onClose();
+        handleClose();
       }
     };
 
@@ -97,7 +109,7 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
       
       const modalContent = document.querySelector('.new-card-modal-content');
       if (modalContent && !modalContent.contains(event.target)) {
-        onClose();
+        handleClose();
       }
     };
 
@@ -252,18 +264,25 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
     const potentialProfit = currentValueAUD - investmentAUD;
     
     try {
-      await onSubmit({
-        ...formData,
-        // Ensure numbers are stored as numbers, not strings
+      const cardData = {
+        player: formData.player,
+        card: formData.card,
+        set: formData.set,
+        year: formData.year,
+        category: formData.category,
+        condition: formData.condition,
+        slabSerial: formData.slabSerial,
+        datePurchased: formData.datePurchased,
+        investmentUSD: parseFloat(formData.investmentUSD) || 0,
+        currentValueUSD: parseFloat(formData.currentValueUSD) || 0, 
         investmentAUD: investmentAUD,
         currentValueAUD: currentValueAUD,
-        investmentUSD: parseFloat(formData.investmentUSD) || 0,
-        currentValueUSD: parseFloat(formData.currentValueUSD) || 0,
-        potentialProfit
-      }, imageFile, targetCollection);
-      onClose();
+        potentialProfit: potentialProfit
+      };
+      
+      await onSubmit(cardData, imageFile, targetCollection);
     } catch (error) {
-      toast.error(error.message);
+      setError(error.message);
     }
   };
 
@@ -296,172 +315,180 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
   };
 
   const handleBatchImport = async (file) => {
-    if (!file.name.endsWith('.csv')) {
-      toast.error("Please upload a CSV file");
-      return;
-    }
-
-    if (!targetCollection || targetCollection === 'All Cards') {
-      toast.error("Please select a valid collection");
-      return;
-    }
-
-    setImportLoading(true);
-    setImportErrors([]);
-    setImportSuccess(null);
-    
     try {
-      // Parse the CSV file
+      setImportLoading(true);
+      setImportErrors([]);
+      
+      // Parse CSV file
       const parsedData = await parseCSVFile(file);
       
-      // Validate the structure
+      // Validate CSV structure
       const validation = validateCSVStructure(parsedData, 'baseData');
       if (!validation.success) {
-        throw new Error(validation.error);
+        setImportErrors([validation.error]);
+        setImportLoading(false);
+        return;
       }
 
-      // Get the current collection cards
-      const currentCollections = await db.getCollections();
-      const collectionCards = currentCollections[targetCollection] || [];
+      // Validate target collection
+      if (!targetCollection || targetCollection === 'All Cards') {
+        setImportErrors(['Please select a valid collection']);
+        setImportLoading(false);
+        return;
+      }
       
-      // Process each card in the import
-      const newCards = [];
-      const duplicates = [];
+      // Process and validate each entry
+      const errors = [];
+      const validCards = [];
       
-      for (const importedCard of parsedData) {
-        const slabSerial = importedCard['Slab Serial #']?.toString();
-        if (!slabSerial) {
-          continue; // Skip cards without a serial number
-        }
+      for (let i = 0; i < parsedData.length; i++) {
+        const row = parsedData[i];
         
-        // Check if card already exists in the collection
-        const exists = collectionCards.some(card => 
-          card.slabSerial?.toString() === slabSerial
-        );
+        // Skip empty rows
+        if (Object.values(row).every(val => !val)) continue;
         
-        if (exists) {
-          duplicates.push(slabSerial);
+        // Check for required fields
+        if (!row.slabSerial) {
+          errors.push(`Row ${i + 1}: Missing serial number`);
           continue;
         }
         
-        // Add the new card
-        const currentValueUSD = parseFloat(importedCard['Current Value']) || 0;
-        const investmentUSD = parseFloat(importedCard['Investment']) || 0;
-        const currentValueAUD = Number((currentValueUSD * exchangeRate).toFixed(2));
-        const investmentAUD = Number((investmentUSD * exchangeRate).toFixed(2));
-        const potentialProfit = currentValueAUD - investmentAUD;
+        // Make sure numeric fields are parsed as numbers
+        const investmentAUD = parseFloat(row.investmentAUD) || 0;
+        const currentValueAUD = parseFloat(row.currentValueAUD) || 0;
         
-        const newCard = {
-          id: slabSerial,
-          slabSerial: slabSerial,
-          datePurchased: importedCard['Date Purchased'] || new Date().toISOString().slice(0, 10),
-          card: importedCard['Card'] || 'Unknown Card',
-          player: importedCard['Player'] || '',
-          year: importedCard['Year'] || '',
-          set: importedCard['Set'] || '',
-          variation: importedCard['Variation'] || '',
-          number: importedCard['Number'] || '',
-          category: importedCard['Category'] || '',
-          condition: importedCard['Condition'] || '',
-          currentValueUSD: currentValueUSD,
-          currentValueAUD: currentValueAUD,
-          investmentUSD: investmentUSD,
-          investmentAUD: investmentAUD,
-          potentialProfit: potentialProfit,
-          population: importedCard['Population'] || 0
+        // Calculate derived fields
+        const potentialProfit = currentValueAUD - investmentAUD;
+        const investmentUSD = investmentAUD / exchangeRate;
+        const currentValueUSD = currentValueAUD / exchangeRate;
+        
+        // Create card object
+        const cardData = {
+          player: row.player || '',
+          card: row.card || '',
+          set: row.set || '',
+          year: row.year || '',
+          category: row.category || '',
+          condition: row.condition || '',
+          slabSerial: row.slabSerial,
+          datePurchased: row.datePurchased || '',
+          investmentUSD: parseFloat(investmentUSD.toFixed(2)),
+          currentValueUSD: parseFloat(currentValueUSD.toFixed(2)),
+          investmentAUD,
+          currentValueAUD,
+          potentialProfit
         };
         
-        newCards.push(newCard);
+        validCards.push(cardData);
       }
       
-      // Add the new cards to the collection
-      if (newCards.length > 0) {
-        const updatedCollection = [...collectionCards, ...newCards];
-        const updatedCollections = {
-          ...currentCollections,
+      // Check for errors
+      if (errors.length > 0) {
+        setImportErrors(errors);
+        setImportLoading(false);
+        return;
+      }
+      
+      // Add cards to collection
+      try {
+        // Get existing collection
+        const existingCards = collections[targetCollection] || [];
+        
+        // Check for duplicate serials
+        const existingSerials = new Set(existingCards.map(card => card.slabSerial));
+        const duplicates = validCards.filter(card => existingSerials.has(card.slabSerial));
+        
+        if (duplicates.length > 0) {
+          setImportErrors([`${duplicates.length} cards have duplicate serial numbers`]);
+          setImportLoading(false);
+          return;
+        }
+        
+        // Combine existing and new cards
+        const updatedCollection = [...existingCards, ...validCards];
+        
+        // Update collections
+        await db.saveCollections({
+          ...collections,
           [targetCollection]: updatedCollection
-        };
-        
-        // Save to database
-        await db.saveCollections(updatedCollections);
-        
-        setImportSuccess({
-          totalImported: parsedData.length,
-          added: newCards.length,
-          duplicates: duplicates.length
         });
         
-        toast.success(`Added ${newCards.length} new cards to your collection`);
+        // Success!
+        setImportSuccess({
+          count: validCards.length,
+          collection: targetCollection
+        });
         
-        // Save the targetCollection in localStorage to ensure we navigate to it after refresh
-        localStorage.setItem('selectedCollection', targetCollection);
-        
-        // Allow time for the success message to be seen
+        // Close modal after a delay
         setTimeout(() => {
-          // Close the form
-          onClose();
-          
-          // Refresh the page to show the updated collection
-          window.location.reload();
-        }, 1500);
-      } else if (duplicates.length > 0) {
-        setImportErrors([`All ${duplicates.length} cards already exist in your collection`]);
-      } else {
-        setImportErrors(['No valid cards found in the import file']);
+          handleClose();
+        }, 2000);
+        
+      } catch (error) {
+        console.error('Error saving to database:', error);
+        setImportErrors(['Failed to save cards to database']);
       }
+      
     } catch (error) {
-      console.error('Import error:', error);
-      setImportErrors([error.message]);
-      toast.error(`Import error: ${error.message}`);
+      console.error('Batch import error:', error);
+      setImportErrors([`Error processing file: ${error.message}`]);
     } finally {
       setImportLoading(false);
     }
   };
 
+  // Effect to trigger open animation on mount
+  useEffect(() => {
+    // Small delay to ensure DOM is ready
+    const timer = setTimeout(() => {
+      setIsOpen(true);
+    }, 50);
+    return () => clearTimeout(timer);
+  }, []);
+
   // Render different layouts based on screen size
   return (
-    <div className={`${isMobile ? 'fixed inset-0 bg-gray-100 dark:bg-[#111827] z-30' : 'fixed inset-0 bg-black/50 z-50 overflow-hidden'}`}
-         onWheel={preventPropagation} 
-         onTouchMove={preventPropagation}>
+    <>
+      {/* Semi-transparent overlay that covers the entire screen */}
       <div 
-        className={`
-          ${isMobile 
-            ? 'h-full overflow-y-auto pb-20' 
-            : 'fixed top-0 right-0 h-full w-[480px] bg-white dark:bg-[#1B2131] shadow-xl new-card-modal-content transform translate-x-0 transition-transform duration-300 ease-in-out'
-          }
-        `}
-        onScroll={preventPropagation}
-      >
-        {/* Modal Header */}
-        <div className="sticky top-0 z-10 bg-white dark:bg-[#1B2131] border-b border-gray-200 dark:border-gray-700 px-4 py-4 flex items-center justify-between">
-          <h1 className="text-xl font-semibold text-gray-800 dark:text-white">Add Card</h1>
+        className={`card-details-overlay ${isOpen ? 'open' : ''}`}
+        onClick={handleClose}
+      />
+      
+      {/* Modal content positioned on the right side */}
+      <div className={`new-card-modal-content ${isOpen ? 'open' : ''}`}>
+        {/* Header */}
+        <div className="border-b border-gray-700/50 px-6 py-4 flex justify-between items-center">
+          <h3 className="text-xl font-semibold text-white">
+            Add Card
+          </h3>
           <button 
-            onClick={onClose}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-[#252B3B] transition-colors"
+            onClick={handleClose}
+            className="text-gray-400 hover:text-gray-200"
           >
-            <span className="material-icons text-gray-500 dark:text-gray-400">close</span>
+            <span className="material-icons">close</span>
           </button>
         </div>
 
-        {/* Tabs */}
-        <div className="border-b border-gray-200 dark:border-gray-700">
+        {/* Tab Navigation */}
+        <div className="border-b border-gray-700/50">
           <div className="flex">
             <button
               onClick={() => setActiveTab('single')}
-              className={`py-3 px-6 transition-colors ${
+              className={`px-6 py-3 text-sm font-medium ${
                 activeTab === 'single'
-                  ? 'text-primary border-b-2 border-primary font-medium'
-                  : 'text-gray-500 dark:text-gray-400'
+                  ? 'text-purple-400 border-b-2 border-purple-500'
+                  : 'text-gray-400 hover:text-gray-300'
               }`}
             >
               Single Card
             </button>
             <button
               onClick={() => setActiveTab('batch')}
-              className={`py-3 px-6 transition-colors ${
+              className={`px-6 py-3 text-sm font-medium ${
                 activeTab === 'batch'
-                  ? 'text-primary border-b-2 border-primary font-medium'
-                  : 'text-gray-500 dark:text-gray-400'
+                  ? 'text-purple-400 border-b-2 border-purple-500'
+                  : 'text-gray-400 hover:text-gray-300'
               }`}
             >
               Batch Import
@@ -469,217 +496,429 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
           </div>
         </div>
 
-        {/* Modal Content */}
-        <div className="overflow-y-auto h-[calc(100%-120px)]">
-          {/* Use your existing content but simplified structure */}
-          <div className="p-4">
-            {activeTab === 'single' ? (
-              <div>
-                {/* Card Details Section */}
-                <div className="flex flex-col md:flex-row gap-4 md:gap-8">
-                  {/* Left column - Image upload */}
-                  <div 
-                    ref={dropZoneRef}
-                    className={`
-                      border-2 border-dashed rounded-lg flex flex-col items-center justify-center p-4 md:p-6 min-h-[240px] w-full md:w-48 md:min-w-[12rem]
-                      ${isDragging ? 'border-primary bg-primary/5' : 'border-gray-300 dark:border-gray-700'}
-                      ${imagePreview ? 'bg-gray-50 dark:bg-gray-800/30' : ''}
-                    `}
-                    onDragEnter={handleDragEnter}
-                    onDragLeave={handleDragLeave}
-                    onDragOver={handleDragOver}
-                    onDrop={handleDrop}
-                  >
-                    {imagePreview ? (
-                      <div className="relative w-full h-full">
-                        <img 
-                          src={imagePreview} 
-                          alt="Card preview" 
-                          className="w-full h-full object-contain" 
-                        />
-                        <button 
-                          onClick={() => {
-                            setImageFile(null);
-                            setImagePreview(null);
-                          }}
-                          className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
-                        >
-                          <span className="material-icons text-sm">close</span>
-                        </button>
+        {activeTab === 'single' ? (
+          <>
+            {/* Scrollable Content Area */}
+            <div className="flex-1 overflow-y-auto p-6">
+              <form id="cardForm" onSubmit={handleSubmit}>
+                {/* Image upload area */}
+                <div
+                  ref={dropZoneRef}
+                  className="border border-gray-700 rounded-lg overflow-hidden bg-gray-800/30 mb-4 max-w-[180px] max-h-[250px] aspect-[2/3] relative mx-auto cursor-pointer"
+                  onClick={() => imagePreview && setShowEnlargedImage(true)}
+                >
+                  {imagePreview ? (
+                    <div className="w-full h-full">
+                      <img 
+                        src={imagePreview} 
+                        alt="Card preview" 
+                        className="w-full h-full object-contain" 
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/0 hover:bg-black/20 transition-all">
+                        <span className="material-icons text-white opacity-0 hover:opacity-100 scale-75 hover:scale-100 transition-all">zoom_in</span>
                       </div>
-                    ) : (
-                      <>
-                        <div className="text-center mb-4">
-                          <span className="material-icons text-gray-400 dark:text-gray-600 text-4xl mb-2">
-                            add_photo_alternate
-                          </span>
-                          <p className="text-sm text-gray-700 dark:text-gray-300 mb-1">
-                            Drag and drop an image here
-                          </p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
-                            or click to browse
-                          </p>
-                        </div>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleImageChange}
-                          ref={fileInputRef}
-                          className="hidden"
-                        />
-                        <button
-                          onClick={() => fileInputRef.current?.click()}
-                          className="btn btn-sm btn-secondary mt-2"
-                        >
-                          Select Image
-                        </button>
-                      </>
-                    )}
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-full p-4 text-center">
+                      <span className="material-icons text-gray-600 text-4xl mb-2">
+                        add_photo_alternate
+                      </span>
+                      <p className="text-sm text-gray-300 mb-1">
+                        No image yet
+                      </p>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Enlarged Image Modal */}
+                {showEnlargedImage && imagePreview && (
+                  <div className="fixed inset-0 z-[200] bg-black/80 flex items-center justify-center p-4" onClick={() => setShowEnlargedImage(false)}>
+                    <div className="relative max-h-[90vh] max-w-[90vw] overflow-hidden">
+                      <img 
+                        src={imagePreview} 
+                        alt="Card preview (enlarged)" 
+                        className="max-h-[90vh] max-w-[90vw] object-contain" 
+                      />
+                      <button 
+                        className="absolute top-2 right-2 bg-black/50 text-white p-1 rounded-full"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowEnlargedImage(false);
+                        }}
+                      >
+                        <span className="material-icons">close</span>
+                      </button>
+                    </div>
                   </div>
+                )}
 
-                  {/* Right column - Form fields */}
-                  <div className="flex-1">
-                    <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200">Card Details</h2>
-                    
-                    {/* Collection Selection */}
-                    <div className="mb-4">
-                      <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Collection</label>
-                      <div className="relative">
-                        <button
-                          type="button"
-                          className="w-full h-10 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 
-                                  bg-white dark:bg-[#1B2131] text-gray-900 dark:text-white text-left text-sm
-                                  focus:outline-none focus:ring-2 focus:ring-primary"
-                          onClick={() => setShowCollectionDropdown(!showCollectionDropdown)}
-                        >
-                          {targetCollection === 'All Cards' ? 'Select a collection' : targetCollection}
-                        </button>
-                        <span className="absolute right-3 top-3 material-icons text-gray-500">
-                          {showCollectionDropdown ? 'arrow_drop_up' : 'arrow_drop_down'}
-                        </span>
-                        
-                        {showCollectionDropdown && (
-                          <div className="absolute z-10 w-full mt-1 bg-white dark:bg-[#1B2131] border border-gray-300 dark:border-gray-700 rounded-lg shadow-lg">
-                            <ul className="py-1 max-h-60 overflow-y-auto">
-                              {Object.keys(collections).filter(col => col !== 'All Cards').map(collection => (
-                                <li key={collection}>
-                                  <button
-                                    type="button"
-                                    className="w-full px-3 py-2 text-left text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-[#252B3B]"
-                                    onClick={() => {
-                                      setTargetCollection(collection);
-                                      setShowCollectionDropdown(false);
-                                    }}
-                                  >
-                                    {collection}
-                                  </button>
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-                      </div>
-                      {/* Error message if needed */}
-                      {targetCollection === 'All Cards' && (
-                        <p className="text-red-500 text-xs mt-1">Please select a collection</p>
+                {/* Upload Image Button */}
+                <div 
+                  className="flex justify-center mb-6 relative"
+                  onDragEnter={handleDragEnter}
+                  onDragLeave={handleDragLeave}
+                  onDragOver={handleDragOver}
+                  onDrop={handleDrop}
+                >
+                  {isDragging && (
+                    <div className="absolute inset-0 -m-4 border-2 border-dashed border-purple-500 rounded-lg bg-purple-900/10 flex items-center justify-center z-0">
+                      <p className="text-purple-300 font-medium">Drop image here</p>
+                    </div>
+                  )}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      fileInputRef.current?.click();
+                    }}
+                    className="flex items-center space-x-2 text-white bg-gray-800/70 px-4 py-2 rounded-lg relative z-10"
+                  >
+                    <span className="material-icons text-sm">photo_camera</span>
+                    <span>{imagePreview ? 'Change Image' : 'Upload Image'}</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      ref={fileInputRef}
+                      className="hidden"
+                    />
+                  </button>
+                </div>
+
+                {/* Card Information */}
+                <div className="mb-6">
+                  <h4 className="text-white text-lg font-medium mb-4">Card Information</h4>
+                  
+                  {/* Collection Selection */}
+                  <div className="mb-4">
+                    <label htmlFor="collection" className="block text-sm font-medium text-gray-300 mb-1">
+                      Collection
+                    </label>
+                    <div className="relative">
+                      <button
+                        type="button"
+                        className="w-full px-3 py-2 border border-gray-700 rounded-lg bg-[#252B3B] text-left text-white"
+                        onClick={() => setShowCollectionDropdown(!showCollectionDropdown)}
+                      >
+                        {targetCollection || 'Select a collection'}
+                      </button>
+                      {showCollectionDropdown && (
+                        <div className="absolute z-10 mt-1 w-full bg-[#1B2131] border border-gray-700 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                          {Object.keys(collections).filter(c => c !== 'All Cards').map(collection => (
+                            <button
+                              key={collection}
+                              type="button"
+                              className="w-full px-3 py-2 text-left hover:bg-[#252B3B] text-white"
+                              onClick={() => {
+                                setTargetCollection(collection);
+                                setShowCollectionDropdown(false);
+                              }}
+                            >
+                              {collection}
+                            </button>
+                          ))}
+                        </div>
                       )}
                     </div>
+                  </div>
+                  
+                  {/* Player and Card Name Row */}
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <label htmlFor="player" className="block text-sm font-medium text-gray-300 mb-1">
+                        Player
+                      </label>
+                      <input
+                        type="text"
+                        id="player"
+                        name="player"
+                        value={formData.player}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2 border border-gray-700 rounded-lg bg-[#252B3B] text-white"
+                        placeholder="e.g., Charizard"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="card" className="block text-sm font-medium text-gray-300 mb-1">
+                        Card Name
+                      </label>
+                      <input
+                        type="text"
+                        id="card"
+                        name="card"
+                        value={formData.card}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2 border border-gray-700 rounded-lg bg-[#252B3B] text-white"
+                        placeholder="e.g., Base Set"
+                      />
+                    </div>
+                  </div>
 
-                    {/* Rest of your form fields - simplified */}
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Player</label>
-                          <input
-                            type="text"
-                            name="player"
-                            value={formData.player}
-                            onChange={handleInputChange}
-                            className="input text-sm"
-                            placeholder="Charizard"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Card Name</label>
-                          <input
-                            type="text"
-                            name="card"
-                            value={formData.card}
-                            onChange={handleInputChange}
-                            className="input text-sm"
-                            placeholder="1999 Pokemon Game"
-                          />
-                        </div>
-                      </div>
-                      
-                      {/* More form fields would go here */}
-                      
-                      <div className="mb-4">
-                        <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">Serial Number</label>
-                        <input
-                          type="text"
-                          name="slabSerial"
-                          value={formData.slabSerial}
-                          onChange={handleInputChange}
-                          className="input text-sm"
-                          placeholder="12345678"
-                        />
-                      </div>
+                  {/* Set and Year Row */}
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <label htmlFor="set" className="block text-sm font-medium text-gray-300 mb-1">
+                        Set
+                      </label>
+                      <input
+                        type="text"
+                        id="set"
+                        name="set"
+                        value={formData.set}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2 border border-gray-700 rounded-lg bg-[#252B3B] text-white"
+                        placeholder="e.g., Base Set"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="year" className="block text-sm font-medium text-gray-300 mb-1">
+                        Year
+                      </label>
+                      <input
+                        type="text"
+                        id="year"
+                        name="year"
+                        value={formData.year}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2 border border-gray-700 rounded-lg bg-[#252B3B] text-white"
+                        placeholder="e.g., 1999"
+                      />
+                    </div>
+                  </div>
 
-                      <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200">Financial Details</h2>
-                      
-                      {/* Currency Toggle */}
-                      <div className="mb-4 flex items-center justify-end">
-                        <span className="text-xs text-gray-600 dark:text-gray-400 mr-2">Input Currency:</span>
-                        <button 
-                          type="button"
-                          onClick={handleCurrencyToggle}
-                          className="px-3 py-1 rounded-lg bg-gray-100 dark:bg-[#252B3B] hover:bg-gray-200 dark:hover:bg-[#323B4B] transition-colors"
-                        >
-                          <span className={`text-xs font-medium ${inputCurrency === 'AUD' ? 'text-primary' : 'text-gray-500 dark:text-gray-400'}`}>
-                            AUD
-                          </span>
-                          <span className="mx-2 text-gray-500 dark:text-gray-400">/</span>
-                          <span className={`text-xs font-medium ${inputCurrency === 'USD' ? 'text-primary' : 'text-gray-500 dark:text-gray-400'}`}>
-                            USD
-                          </span>
-                        </button>
-                      </div>
-                      
-                      {/* Financial inputs would go here */}
+                  {/* Category and Condition Row */}
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <label htmlFor="category" className="block text-sm font-medium text-gray-300 mb-1">
+                        Category
+                      </label>
+                      <input
+                        type="text"
+                        id="category"
+                        name="category"
+                        value={formData.category}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2 border border-gray-700 rounded-lg bg-[#252B3B] text-white"
+                        placeholder="e.g., Pokemon"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="condition" className="block text-sm font-medium text-gray-300 mb-1">
+                        Condition
+                      </label>
+                      <input
+                        type="text"
+                        id="condition"
+                        name="condition"
+                        value={formData.condition}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2 border border-gray-700 rounded-lg bg-[#252B3B] text-white"
+                        placeholder="e.g., PSA 10"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Serial Number and Date Purchased Row */}
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <label htmlFor="slabSerial" className="block text-sm font-medium text-gray-300 mb-1">
+                        Serial Number
+                      </label>
+                      <input
+                        type="text"
+                        id="slabSerial"
+                        name="slabSerial"
+                        value={formData.slabSerial}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2 border border-gray-700 rounded-lg bg-[#252B3B] text-white"
+                        placeholder="e.g., 12345678"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="datePurchased" className="block text-sm font-medium text-gray-300 mb-1">
+                        Date Purchased
+                      </label>
+                      <input
+                        type="date"
+                        id="datePurchased"
+                        name="datePurchased"
+                        value={formData.datePurchased}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2 border border-gray-700 rounded-lg bg-[#252B3B] text-white"
+                      />
                     </div>
                   </div>
                 </div>
-              </div>
-            ) : (
-              /* Batch Import Tab Content */
-              <div>
-                {/* Your existing batch import content */}
-              </div>
-            )}
-          </div>
-        </div>
 
-        {/* Modal Footer */}
-        <div className="sticky bottom-0 bg-white dark:bg-[#1B2131] border-t border-gray-200 dark:border-gray-700 px-4 py-3">
-          {activeTab === 'single' ? (
-            <button 
-              onClick={handleSubmit}
-              className="w-full btn btn-primary"
-            >
-              Add Card
-            </button>
-          ) : (
-            <button 
-              onClick={() => setActiveTab('single')} 
-              className="w-full btn btn-secondary"
-            >
-              Back to Single Card
-            </button>
-          )}
-        </div>
+                {/* Financial Details */}
+                <div>
+                  <h4 className="text-white text-lg font-medium mb-4">Financial Details</h4>
+                  
+                  {/* Price inputs */}
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <label htmlFor="investmentAUD" className="block text-sm font-medium text-gray-300 mb-1">
+                        Paid (AUD)
+                      </label>
+                      <input
+                        type="number"
+                        id="investmentAUD"
+                        name="investmentAUD"
+                        value={formData.investmentAUD}
+                        onChange={handleNumberInputChange}
+                        min="0"
+                        step="0.01"
+                        className="w-full px-3 py-2 border border-gray-700 rounded-lg bg-[#252B3B] text-white"
+                        placeholder="0.00"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="currentValueAUD" className="block text-sm font-medium text-gray-300 mb-1">
+                        Current Value (AUD)
+                      </label>
+                      <input
+                        type="number"
+                        id="currentValueAUD"
+                        name="currentValueAUD"
+                        value={formData.currentValueAUD}
+                        onChange={handleNumberInputChange}
+                        min="0"
+                        step="0.01"
+                        className="w-full px-3 py-2 border border-gray-700 rounded-lg bg-[#252B3B] text-white"
+                        placeholder="0.00"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </form>
+            </div>
+            
+            {/* Sticky Footer */}
+            <div className="border-t border-gray-700/50 p-4 bg-[#111827] flex justify-end space-x-3">
+              <button
+                type="button"
+                onClick={handleClose}
+                className="text-gray-300 bg-transparent hover:bg-gray-700 px-4 py-2 rounded-lg font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                form="cardForm"
+                className="bg-purple-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-purple-700"
+              >
+                Add Card
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            {/* Scrollable Batch Import Content */}
+            <div className="flex-1 overflow-y-auto p-6">
+              {/* Batch import area */}
+              <div
+                className={`border-2 ${batchImportDragActive ? 'border-purple-500 border-solid bg-purple-900/10' : 'border-dashed border-gray-700'} rounded-lg p-8 text-center h-64 flex flex-col items-center justify-center relative`}
+                onDragEnter={handleBatchImportDrag}
+                onDragLeave={handleBatchImportDrag}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={handleBatchImportDrop}
+              >
+                {importLoading ? (
+                  <div className="text-center">
+                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-purple-500 border-t-transparent mb-4"></div>
+                    <p className="text-gray-400">Processing file...</p>
+                  </div>
+                ) : importSuccess ? (
+                  <div className="text-center">
+                    <span className="material-icons text-green-500 text-5xl mb-2">check_circle</span>
+                    <p className="text-gray-200 font-medium mb-1">Import successful!</p>
+                    <p className="text-gray-400 text-sm mb-4">
+                      {importSuccess.count} cards imported to {importSuccess.collection}
+                    </p>
+                    <button
+                      onClick={() => {
+                        setImportSuccess(null);
+                        setImportErrors([]);
+                      }}
+                      className="bg-purple-600 text-white px-4 py-2 rounded-lg text-sm"
+                    >
+                      Import Another File
+                    </button>
+                  </div>
+                ) : importErrors.length > 0 ? (
+                  <div className="text-center">
+                    <span className="material-icons text-red-500 text-5xl mb-2">error</span>
+                    <p className="text-gray-200 font-medium mb-1">Import failed</p>
+                    <div className="text-left bg-red-900/20 border border-red-800 p-3 rounded-lg mb-4 max-h-32 overflow-y-auto">
+                      <ul className="list-disc pl-5 text-sm text-red-400">
+                        {importErrors.map((error, index) => (
+                          <li key={index}>{error}</li>
+                        ))}
+                      </ul>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setImportErrors([]);
+                      }}
+                      className="bg-purple-600 text-white px-4 py-2 rounded-lg text-sm"
+                    >
+                      Try Again
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <span className="material-icons text-gray-600 text-5xl mb-4">
+                      upload_file
+                    </span>
+                    <p className="text-gray-300 mb-2">
+                      Drag and drop your CSV file here
+                    </p>
+                    <p className="text-gray-400 text-sm mb-4">
+                      or click to browse files
+                    </p>
+                    <input
+                      type="file"
+                      accept=".csv"
+                      onChange={handleBatchFileChange}
+                      ref={batchFileInputRef}
+                      className="hidden"
+                    />
+                    <button
+                      onClick={() => batchFileInputRef.current?.click()}
+                      className="bg-gray-700 text-white px-4 py-2 rounded-lg text-sm"
+                    >
+                      Browse Files
+                    </button>
+                  </>
+                )}
+              </div>
+              
+              {/* CSV Instructions */}
+              <div className="mt-8">
+                <h3 className="text-md font-medium text-white mb-2">
+                  CSV Format Requirements
+                </h3>
+                <p className="text-sm text-gray-400 mb-4">
+                  Your CSV file should include the following fields: player, card, set, year, category, condition, slabSerial, datePurchased, investmentAUD, currentValueAUD
+                </p>
+              </div>
+            </div>
+            
+            {/* Sticky Footer for Batch Import */}
+            <div className="border-t border-gray-700/50 p-4 bg-[#111827] flex justify-end">
+              <button
+                type="button"
+                onClick={handleClose}
+                className="text-gray-300 bg-transparent hover:bg-gray-700 px-4 py-2 rounded-lg font-medium"
+              >
+                Cancel
+              </button>
+            </div>
+          </>
+        )}
       </div>
-    </div>
+    </>
   );
 };
 

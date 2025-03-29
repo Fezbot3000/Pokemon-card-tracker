@@ -6,30 +6,32 @@ import { toast } from 'react-hot-toast';
 
 // Add CSS class definitions
 const inputStyles = `
-  w-full px-3 py-2 border border-gray-200 dark:border-gray-700/50 
-  rounded-lg bg-white dark:bg-[#252B3B]
-  text-gray-900 dark:text-white text-sm
-  focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary
-  placeholder-gray-500 dark:placeholder-gray-400
+  w-full px-3 py-2 border border-gray-700
+  rounded-lg bg-[#252B3B] text-white text-sm
+  focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500
+  placeholder-gray-400
 `;
 
 // Image loading states component
-const CardImage = memo(({ imageUrl, loadingState, onRetry }) => {
+const CardImage = memo(({ imageUrl, loadingState, onRetry, onClick }) => {
   if (loadingState === 'loading') {
     return (
-      <div className="card-image-display loading">
-        <span className="material-icons animate-spin">hourglass_empty</span>
-        <span className="text-sm text-gray-500 dark:text-gray-400">Loading image...</span>
+      <div className="w-full h-full flex items-center justify-center">
+        <span className="material-icons animate-spin text-gray-500">hourglass_empty</span>
+        <span className="text-sm text-gray-400 ml-2">Loading image...</span>
       </div>
     );
   }
   
   if (loadingState === 'error') {
     return (
-      <div className="card-image-display error">
-        <span className="material-icons">error_outline</span>
-        <span className="text-sm text-gray-500 dark:text-gray-400">Failed to load image</span>
-        <button onClick={onRetry}>
+      <div className="w-full h-full flex flex-col items-center justify-center">
+        <span className="material-icons text-red-500 mb-2">error_outline</span>
+        <span className="text-sm text-gray-400 mb-2">Failed to load image</span>
+        <button 
+          onClick={onRetry}
+          className="text-sm bg-gray-700 text-white px-3 py-1 rounded-lg"
+        >
           Retry
         </button>
       </div>
@@ -38,21 +40,19 @@ const CardImage = memo(({ imageUrl, loadingState, onRetry }) => {
   
   if (!imageUrl) {
     return (
-      <div className="card-image-display">
-        <div className="flex flex-col items-center justify-center h-full">
-          <span className="material-icons text-4xl text-gray-400 dark:text-gray-500 mb-2">
-            image
-          </span>
-          <span className="text-sm text-gray-500 dark:text-gray-400">
-            No image available
-          </span>
-        </div>
+      <div className="w-full h-full flex flex-col items-center justify-center">
+        <span className="material-icons text-4xl text-gray-600 mb-2">
+          image
+        </span>
+        <span className="text-sm text-gray-400">
+          No image available
+        </span>
       </div>
     );
   }
   
   return (
-    <div className="card-image-display">
+    <div className="w-full h-full cursor-pointer" onClick={onClick}>
       <img
         src={imageUrl}
         alt="Card"
@@ -74,11 +74,14 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
   });
   const [cardImage, setCardImage] = useState(null);
   const [imageLoadingState, setImageLoadingState] = useState('loading');
+  const [showEnlargedImage, setShowEnlargedImage] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [saveMessage, setSaveMessage] = useState(null);
   const fileInputRef = useRef(null);
   const messageTimeoutRef = useRef(null);
   const { isDarkMode } = useTheme();
+  const [isDragging, setIsDragging] = useState(false);
+  const dropZoneRef = useRef(null);
 
   // Add ref for the modal content
   const modalContentRef = useRef(null);
@@ -177,6 +180,40 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
     } catch (error) {
       console.error('Error loading card image:', error);
       setImageLoadingState('error');
+    }
+  };
+
+  const handleDragEnter = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.target === dropZoneRef.current) {
+      setIsDragging(false);
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        toast.error('Please drop an image file');
+        return;
+      }
+      handleImageChange({ target: { files: [file] } });
     }
   };
 
@@ -402,38 +439,71 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
         <div className="card-details-content h-[calc(100vh-112px)] overflow-y-auto">
           {/* Image upload section */}
           <div className="mb-6">
-            <div className="image-upload-container">
+            <div className="border border-gray-700 rounded-lg overflow-hidden bg-gray-800/30 mb-4 max-w-[180px] max-h-[250px] aspect-[2/3] relative mx-auto">
               <CardImage
                 imageUrl={cardImage}
                 loadingState={imageLoadingState}
                 onRetry={loadCardImage}
+                onClick={() => cardImage && setShowEnlargedImage(true)}
               />
-              {/* Move the input outside the overlay to avoid click conflicts */}
-              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-50 opacity-0 hover:opacity-100 transition-opacity">
-                <span className="material-icons text-white text-4xl mb-2">
-                  upload
-                </span>
-                <span className="text-white text-sm">
-                  Click or drag to upload image
-                </span>
-              </div>
             </div>
-            {/* File input moved here to separate it from the close button */}
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleImageChange}
-              className="absolute opacity-0 h-0 w-0"
-              tabIndex="-1"
-            />
-            <button 
-              onClick={() => fileInputRef.current?.click()} 
-              className="mt-2 w-full py-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm flex items-center justify-center"
+            
+            {/* Enlarged Image Modal */}
+            {showEnlargedImage && cardImage && (
+              <div 
+                className="fixed inset-0 z-[200] bg-black/80 flex items-center justify-center p-4" 
+                onClick={() => setShowEnlargedImage(false)}
+              >
+                <div className="relative max-h-[90vh] max-w-[90vw] overflow-hidden">
+                  <img 
+                    src={cardImage} 
+                    alt="Card preview (enlarged)" 
+                    className="max-h-[90vh] max-w-[90vw] object-contain" 
+                  />
+                  <button 
+                    className="absolute top-2 right-2 bg-black/50 text-white p-1 rounded-full"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowEnlargedImage(false);
+                    }}
+                  >
+                    <span className="material-icons">close</span>
+                  </button>
+                </div>
+              </div>
+            )}
+            
+            {/* Upload Image Button with Drag & Drop */}
+            <div 
+              ref={dropZoneRef}
+              className="flex justify-center relative"
+              onDragEnter={handleDragEnter}
+              onDragLeave={handleDragLeave}
+              onDragOver={handleDragOver}
+              onDrop={handleDrop}
             >
-              <span className="material-icons text-sm mr-1">photo_camera</span>
-              Upload Image
-            </button>
+              {isDragging && (
+                <div className="absolute inset-0 -m-4 border-2 border-dashed border-purple-500 rounded-lg bg-purple-900/10 flex items-center justify-center z-0">
+                  <p className="text-purple-300 font-medium">Drop image here</p>
+                </div>
+              )}
+              
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="hidden"
+              />
+              
+              <button 
+                onClick={() => fileInputRef.current?.click()} 
+                className="flex items-center space-x-2 text-white bg-gray-800/70 px-4 py-2 rounded-lg relative z-10"
+              >
+                <span className="material-icons text-sm">photo_camera</span>
+                <span>Upload Image</span>
+              </button>
+            </div>
           </div>
 
           {/* Card Details Form */}

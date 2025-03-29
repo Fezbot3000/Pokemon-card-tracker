@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import NavigationBar from './NavigationBar';
 
 function Login() {
   const [isLogin, setIsLogin] = useState(true);
@@ -143,23 +144,9 @@ function Login() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-red-500 to-green-500 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 page-no-padding">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 absolute top-0 w-full pt-12">
-        {/* Navigation */}
-        <div className="flex justify-center mb-8">
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl">
-            <div className="flex">
-              <Link to="/" className="px-5 py-3 text-sm font-medium text-white hover:bg-white/10 rounded-l-xl transition-colors">
-                Home
-              </Link>
-              <Link to="/pricing" className="px-5 py-3 text-sm font-medium text-white hover:bg-white/10 rounded-r-xl transition-colors">
-                Pricing
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
+      <NavigationBar />
       
-      <div className="max-w-md w-full bg-white dark:bg-[#1B2131] rounded-2xl shadow-xl overflow-hidden">
+      <div className="max-w-md w-full bg-white dark:bg-[#1B2131] rounded-2xl shadow-xl overflow-hidden mt-16">
         {/* Header with logo */}
         <div className="px-6 py-8 text-center">
           <Link to="/" className="inline-block">

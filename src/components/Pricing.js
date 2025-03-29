@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import NavigationBar from './NavigationBar';
 
 function Pricing() {
   // Add page-no-padding class to body when component mounts
@@ -14,21 +15,9 @@ function Pricing() {
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-red-500 to-green-500 text-gray-900 dark:text-white page-no-padding">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
-        {/* Navigation */}
-        <div className="flex justify-center mb-8">
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl">
-            <div className="flex">
-              <Link to="/" className="px-5 py-3 text-sm font-medium text-white hover:bg-white/10 rounded-l-xl transition-colors">
-                Home
-              </Link>
-              <Link to="/login" className="px-5 py-3 text-sm font-medium text-white hover:bg-white/10 rounded-r-xl transition-colors">
-                Login
-              </Link>
-            </div>
-          </div>
-        </div>
-        
+      <NavigationBar />
+      
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 pt-28">
         <div className="text-center mb-16">
           <h1 className="text-4xl sm:text-6xl font-bold mb-8 text-white">
             Choose Your Plan
