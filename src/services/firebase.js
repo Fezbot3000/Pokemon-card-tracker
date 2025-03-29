@@ -1,5 +1,5 @@
 import { initializeApp, getApps } from 'firebase/app';
-import { getFirestore, enableIndexedDbPersistence } from 'firebase/firestore';
+import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 
@@ -23,8 +23,19 @@ const firebaseConfig = {
 // Check if Firebase app is already initialized to prevent multiple instances
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 
-// Initialize Firestore
-const db = getFirestore(app);
+// Initialize Firestore with persistence settings
+let db;
+try {
+  // Always use getFirestore to avoid conflicts with multiple initialization
+  db = getFirestore(app);
+  
+  if (process.env.NODE_ENV === 'development') {
+    console.log("Firestore initialized for services module");
+  }
+} catch (error) {
+  console.error('Failed to initialize Firestore:', error);
+  db = getFirestore(app);
+}
 
 // Initialize Storage with explicit region
 const storage = getStorage(app);
@@ -46,29 +57,5 @@ googleProvider.setCustomParameters({
   // Allow user to select account every time
   prompt: 'select_account'
 });
-
-// Only enable IndexedDB persistence if not in a problematic environment
-try {
-  // Check if we're in a browser environment and if IndexedDB is available
-  if (typeof window !== 'undefined' && window.indexedDB && getApps().length === 1) {
-    // Only try to enable persistence if this is the first initialization
-    console.log("Attempting to enable Firestore persistence...");
-    enableIndexedDbPersistence(db).catch((err) => {
-      if (err.code === 'failed-precondition') {
-        // Multiple tabs open, persistence can only be enabled in one tab at a time
-        console.warn('Firebase persistence failed: Multiple tabs open');
-      } else if (err.code === 'unimplemented') {
-        // The current browser doesn't support persistence
-        console.warn('Firebase persistence not available');
-      } else {
-        console.error('Firebase persistence error:', err);
-      }
-    });
-  } else {
-    console.log("Skipping Firestore persistence initialization");
-  }
-} catch (error) {
-  console.error('Failed to enable Firebase persistence:', error);
-}
 
 export { db, storage, auth, googleProvider }; 
