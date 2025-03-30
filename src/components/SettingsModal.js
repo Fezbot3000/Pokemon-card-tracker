@@ -2,11 +2,12 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useTutorial } from '../contexts/TutorialContext';
-import { db } from '../services/db';
+import db from '../services/db';
 import JSZip from 'jszip';
 import { toast } from 'react-hot-toast';
 import { XMarkIcon, SunIcon, MoonIcon } from '@heroicons/react/24/outline';
 import CloudSync from './CloudSync';
+import SubscriptionManagement from './SubscriptionManagement';
 
 const SettingsModal = ({ 
   isOpen, 
@@ -696,7 +697,7 @@ const SettingsModal = ({
                 <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
                   Sync your collection to the cloud so you can access it on any device
                 </p>
-                <CloudSync onExportData={onExportData} onImportCollection={onImportCollection} />
+                <CloudSync onExportData={onExportData} onImportCollection={onImportCollection} onClose={handleClose} />
               </div>
 
               {/* Help Section */}
@@ -834,6 +835,9 @@ const SettingsModal = ({
 
           {activeTab === 'account' && (
             <div className={`space-y-6 ${isMobile ? 'mobile-settings-content' : ''}`}>
+              {/* Subscription Management */}
+              <SubscriptionManagement isMobile={isMobile} onClose={handleClose} />
+              
               {/* User Info */}
               <div className={`${isMobile ? 'bg-white dark:bg-[#1B2131] p-4 rounded-lg shadow-sm' : ''}`}>
                 <h3 className="text-base font-medium text-gray-900 dark:text-white mb-2">Account Information</h3>

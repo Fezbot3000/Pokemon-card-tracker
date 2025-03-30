@@ -1,8 +1,18 @@
 import React from 'react';
-import { useTheme } from '../contexts/ThemeContext';
 
 const ErrorFallback = ({ error, resetErrorBoundary }) => {
-  const { isDarkMode } = useTheme();
+  // Instead of using useTheme, we'll check the document class directly
+  // or use a simpler approach to determine dark mode
+  const prefersDarkMode = () => {
+    // Check if <html> has 'dark' class
+    if (typeof document !== 'undefined') {
+      return document.documentElement.classList.contains('dark');
+    }
+    // Fallback to media query if document is not available
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  };
+  
+  const isDarkMode = prefersDarkMode();
   
   return (
     <div className="min-h-screen flex items-center justify-center p-4">

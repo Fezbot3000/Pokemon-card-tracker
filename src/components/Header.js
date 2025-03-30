@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
-import { db } from '../services/db';  // Use the correct db service
+import db from '../services/db';  // Use the correct db service
 import { useAuth } from '../contexts/AuthContext'; // Import auth context
 import JSZip from 'jszip';
 import CollectionSelector from './CollectionSelector';

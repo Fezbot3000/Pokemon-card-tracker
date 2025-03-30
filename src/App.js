@@ -1,5 +1,14 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { HashRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { 
+  BrowserRouter as Router, 
+  Routes, 
+  Route, 
+  Navigate, 
+  useLocation, 
+  Link, 
+  useNavigate,
+  Outlet
+} from 'react-router-dom';
 import Header from './components/Header';
 import CardList from './components/CardList';
 import CardDetails from './components/CardDetails';
@@ -12,10 +21,11 @@ import ForgotPassword from './components/ForgotPassword';
 import Pricing from './components/Pricing';
 import useCardData from './hooks/useCardData';
 import { processImportedData } from './utils/dataProcessor';
-import { db } from './services/db';
+import db from './services/db';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { TutorialProvider, useTutorial } from './contexts/TutorialContext';
+import { SubscriptionProvider, useSubscription } from './contexts/SubscriptionContext';
 import TutorialModal from './components/TutorialModal';
 import PrivateRoute from './components/PrivateRoute';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -23,20 +33,185 @@ import './styles/main.css';
 import SoldItems from './components/SoldItems/SoldItems';
 import SettingsModal from './components/SettingsModal';
 import BottomNavBar from './components/BottomNavBar';
+import CloudSync from './components/CloudSync';
 import JSZip from 'jszip';
 import { Toaster, toast } from 'react-hot-toast';
+import SubscriptionGateway from './components/SubscriptionGateway';
+import DashboardPricing from './components/DashboardPricing';
 
 // Public route component to redirect authenticated users to dashboard
 function PublicRoute({ children }) {
   const { currentUser } = useAuth();
   const location = useLocation();
+  const path = location.pathname;
+  const navigate = useNavigate();
 
   if (currentUser) {
+    // Special case: Redirect to dashboard pricing if user is trying to access /pricing
+    if (path === '/pricing') {
+      navigate('/dashboard/pricing', { replace: true });
+      return null;
+    }
+    
     // Redirect to dashboard if user is already logged in
     return <Navigate to="/dashboard" state={{ from: location }} replace />;
   }
 
   return children;
+}
+
+// NewUserRoute to check subscription status and redirect to pricing for new sign-ups
+function NewUserRoute() {
+  const { currentUser } = useAuth();
+  const { subscriptionStatus, isLoading } = useSubscription();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const hasRedirected = useRef(false);
+  
+  // Debugging: Inspect the isNewUser flag on component mount
+  useEffect(() => {
+    const isNewUser = localStorage.getItem('isNewUser');
+    if (currentUser) {
+      console.log("DEBUG: IsNewUser Flag Value:", { 
+        isNewUser, 
+        value: isNewUser === 'true',
+        path: location.pathname, 
+        uid: currentUser.uid 
+      });
+    }
+  }, [currentUser, location.pathname]);
+  
+  // Check if we are coming from a successful payment
+  const isFromPayment = useMemo(() => {
+    return location.search.includes('checkout_success=true') || 
+      localStorage.getItem('recentPayment') === 'true';
+  }, [location.search]);
+  
+  // Completely revamped to ensure proper redirection logic
+  useEffect(() => {
+    // Don't do anything if we're not logged in or already on a pricing page
+    if (!currentUser || 
+        location.pathname.includes('/pricing') || 
+        location.pathname.includes('/dashboard/pricing')) {
+      return;
+    }
+    
+    // Helper function for logging
+    const logRedirectInfo = () => {
+      console.log('NewUserRoute - Checking if redirect needed', {
+        pathname: location.pathname,
+        hasRedirected: hasRedirected.current,
+        isNewUser: localStorage.getItem('isNewUser') === 'true',
+        chosenPlan: localStorage.getItem('chosenPlan'),
+        isFromPayment,
+        subscriptionStatus: subscriptionStatus?.status,
+        isLoading
+      });
+    };
+    
+    logRedirectInfo();
+    
+    // If user just completed payment, never redirect them to pricing
+    if (isFromPayment) {
+      console.log('User is coming from payment flow, skipping pricing redirect');
+      hasRedirected.current = true;
+      return;
+    }
+    
+    // Skip if we've already processed a redirect
+    if (hasRedirected.current) {
+      return;
+    }
+    
+    // Check if user is a brand new sign-up (localStorage flag set by auth flows)
+    const isNewUser = localStorage.getItem('isNewUser') === 'true';
+    
+    // ALWAYS redirect new users to pricing first, regardless of what page they're on
+    if (isNewUser) {
+      console.log('New user detected, redirecting to subscription page');
+      localStorage.removeItem('isNewUser'); // Clear the flag
+      hasRedirected.current = true;
+      navigate('/dashboard/pricing');
+      return;
+    }
+    
+    // For returning users, check subscription status
+    if (!isLoading && subscriptionStatus?.status !== 'loading') {
+      const chosenPlan = localStorage.getItem('chosenPlan');
+      
+      // If they've explicitly chosen the free plan, don't redirect
+      if (chosenPlan === 'free') {
+        console.log('User has explicitly chosen the free plan');
+        hasRedirected.current = true;
+        return;
+      }
+      
+      // If user has an active subscription, they can access the dashboard
+      if (subscriptionStatus?.status === 'active') {
+        console.log('Active subscription detected, user can access dashboard');
+        hasRedirected.current = true;
+        return;
+      }
+      
+      // For inactive/no subscription users who haven't chosen the free plan,
+      // redirect to pricing page
+      if (subscriptionStatus?.status !== 'active') {
+        console.log('User needs subscription, redirecting to pricing');
+        hasRedirected.current = true;
+        navigate('/dashboard/pricing');
+        return;
+      }
+    }
+  }, [currentUser, subscriptionStatus, isLoading, navigate, location.pathname, isFromPayment]);
+  
+  return null;
+}
+
+// Main Dashboard Component
+function Dashboard() {
+  const location = useLocation();
+  const { refreshSubscriptionStatus } = useSubscription();
+  const hasRefreshed = useRef(false);
+  const navigate = useNavigate();
+  
+  // Check for checkout_success parameter when dashboard loads - but only once
+  useEffect(() => {
+    // Only run this once per component mount
+    if (hasRefreshed.current) return;
+    
+    // Detect if user is coming from a payment flow
+    const isFromPayment = location.search.includes('checkout_success=true');
+    
+    if (isFromPayment) {
+      console.log('Detected checkout_success parameter, refreshing subscription status');
+      hasRefreshed.current = true;
+      
+      // Force refresh subscription status
+      refreshSubscriptionStatus();
+      
+      // Remove the parameter from URL
+      const url = new URL(window.location);
+      url.searchParams.delete('checkout_success');
+      window.history.replaceState({}, '', url);
+      
+      // If we're on the pricing page but came from payment success, force redirect to dashboard
+      if (location.pathname.includes('/dashboard/pricing')) {
+        console.log('User completed payment but is on pricing page, forcing redirect to dashboard');
+        // Add a small delay to allow the subscription status to refresh
+        setTimeout(() => {
+          // Force navigate to dashboard instead of pricing
+          navigate('/dashboard', { replace: true });
+        }, 1500);
+      }
+    }
+    
+    // If user is trying to access /dashboard/pricing directly but has an active subscription
+    // we will let the route component (DashboardPricing) handle this instead of redirecting here
+  }, [location.search, location.pathname, refreshSubscriptionStatus, navigate]);
+  
+  return (
+    <Outlet />
+  );
 }
 
 function AppContent() {
@@ -56,6 +231,8 @@ function AppContent() {
   const { registerSettingsCallback, checkAndStartTutorial } = useTutorial();
   const { currentUser } = useAuth();
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const location = useLocation();
+  const { refreshSubscriptionStatus } = useSubscription();
   
   const {
     cards,
@@ -74,6 +251,7 @@ function AppContent() {
   // Register the settings callback when component mounts
   // Using a ref to ensure we only register the callback once
   const callbackRegistered = useRef(false);
+  const { subscriptionStatus } = useSubscription();
   
   useEffect(() => {
     if (!callbackRegistered.current) {
@@ -82,16 +260,16 @@ function AppContent() {
     }
   }, [registerSettingsCallback]);
 
-  // Check if this is a new user and start the tutorial
+  // Check if this is a new user and start the tutorial, but only if they have an active subscription
   useEffect(() => {
-    if (currentUser) {
+    if (currentUser && subscriptionStatus?.status === 'active') {
       // Start the tutorial for new users after a short delay
       // to ensure the UI is fully loaded
       setTimeout(() => {
         checkAndStartTutorial();
       }, 1000);
     }
-  }, [currentUser, checkAndStartTutorial]);
+  }, [currentUser, checkAndStartTutorial, subscriptionStatus?.status]);
 
   // Check if device is mobile on resize
   useEffect(() => {
@@ -1185,7 +1363,16 @@ To import this backup:
               resolve();
             });
           }}
-        />
+        >
+          {/* Cloud Sync Section */}
+          <div className={`${isMobile ? 'bg-white dark:bg-[#1B2131] p-4 rounded-lg shadow-sm' : ''}`}>
+            <h3 className="text-base font-medium text-gray-900 dark:text-white mb-2">Cloud Backup</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+              Sync your collection to the cloud so you can access it on any device
+            </p>
+            <CloudSync onExportData={handleExportData} onImportCollection={handleImportCollection} />
+          </div>
+        </SettingsModal>
       )}
 
       {/* Profit Change Modal */}
@@ -1230,47 +1417,95 @@ function App() {
     <ErrorBoundary>
       <AuthProvider>
         <ThemeProvider>
-          <TutorialProvider>
-            <Router>
-              <Toaster position="bottom-right" />
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route 
-                  path="/login" 
-                  element={
-                    <PublicRoute>
-                      <Login />
-                    </PublicRoute>
-                  } 
+          <SubscriptionProvider>
+            <TutorialProvider>
+              <Router>
+                <Toaster
+                  position="top-center"
+                  toastOptions={{
+                    duration: 3000,
+                    className: 'notification-toast',
+                    style: {
+                      backgroundColor: 'var(--toast-background)',
+                      color: 'var(--toast-text)'
+                    }
+                  }}
                 />
-                <Route 
-                  path="/forgot-password" 
-                  element={
-                    <PublicRoute>
-                      <ForgotPassword />
-                    </PublicRoute>
-                  } 
-                />
-                <Route 
-                  path="/pricing" 
-                  element={
-                    <PublicRoute>
-                      <Pricing />
-                    </PublicRoute>
-                  } 
-                />
-                <Route 
-                  path="/dashboard" 
-                  element={
-                    <PrivateRoute>
-                      <AppContent />
-                    </PrivateRoute>
-                  } 
-                />
-                <Route path="*" element={<Navigate to="/" />} />
-              </Routes>
-            </Router>
-          </TutorialProvider>
+                <Routes>
+                  <Route path="/" element={<Home />} />
+                  <Route 
+                    path="/login" 
+                    element={
+                      <PublicRoute>
+                        <Login />
+                      </PublicRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/forgot-password" 
+                    element={
+                      <PublicRoute>
+                        <ForgotPassword />
+                      </PublicRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/pricing" 
+                    element={<Pricing />} 
+                  />
+                  
+                  {/* Dashboard routes with nested routes using Outlet */}
+                  <Route 
+                    path="/dashboard"
+                    element={
+                      <PrivateRoute>
+                        <Dashboard />
+                      </PrivateRoute>
+                    }
+                  >
+                    <Route 
+                      index
+                      element={
+                        <>
+                          <NewUserRoute />
+                          <AppContent />
+                        </>
+                      }
+                    />
+                    <Route 
+                      path="pricing" 
+                      element={<DashboardPricing />} 
+                    />
+                  </Route>
+                  
+                  {/* Premium-only route example */}
+                  <Route
+                    path="/premium/*"
+                    element={
+                      <PrivateRoute requireSubscription={true}>
+                        <div className="min-h-screen bg-gray-100 dark:bg-[#111827] p-8">
+                          <div className="max-w-4xl mx-auto bg-white dark:bg-[#1B2131] rounded-lg shadow-lg p-6">
+                            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+                              Premium Features
+                            </h1>
+                            <p className="text-gray-700 dark:text-gray-300 mb-6">
+                              This is a premium-only section. You have access because you're a premium subscriber!
+                            </p>
+                            <div className="flex justify-center">
+                              <Link to="/dashboard" className="bg-primary text-white px-6 py-2 rounded-lg hover:bg-primary-dark transition-colors">
+                                Back to Dashboard
+                              </Link>
+                            </div>
+                          </div>
+                        </div>
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route path="*" element={<Navigate to="/" />} />
+                </Routes>
+              </Router>
+            </TutorialProvider>
+          </SubscriptionProvider>
         </ThemeProvider>
       </AuthProvider>
     </ErrorBoundary>

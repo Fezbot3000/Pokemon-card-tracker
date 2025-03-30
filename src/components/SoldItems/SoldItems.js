@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { formatCurrency } from '../../utils/currencyAPI';
-import { db } from '../../services/db';
+import db from '../../services/db';
 import { PDFDownloadLink } from '@react-pdf/renderer';
 import InvoicePDF from '../InvoicePDF';
 

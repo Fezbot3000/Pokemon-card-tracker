@@ -1,10 +1,12 @@
 import { compressImage } from '../utils/imageCompression';
+import { auth } from './firebase'; // Import Firebase auth to get the current user
 
 const DB_NAME = 'PokemonCardDB';
-const DB_VERSION = 1;
+const DB_VERSION = 3; // Incrementing version to trigger database upgrade
 const COLLECTIONS_STORE = 'collections';
 const IMAGES_STORE = 'images';
 const PROFILE_STORE = 'profile';
+const SUBSCRIPTION_STORE = 'subscription';
 
 class DatabaseService {
   constructor() {
@@ -71,30 +73,61 @@ class DatabaseService {
   setupDatabase(event) {
     const db = event.target.result;
 
-    // Create collections store
+    // Create collections store with compound key for user isolation
     if (!db.objectStoreNames.contains(COLLECTIONS_STORE)) {
-      db.createObjectStore(COLLECTIONS_STORE, { keyPath: 'name' });
+      db.createObjectStore(COLLECTIONS_STORE, { keyPath: ['userId', 'name'] });
+    } else {
+      // If upgrading from version 2 to 3, we need to recreate the object store
+      // with the new compound key structure
+      db.deleteObjectStore(COLLECTIONS_STORE);
+      db.createObjectStore(COLLECTIONS_STORE, { keyPath: ['userId', 'name'] });
     }
 
-    // Create images store
+    // Create images store with compound key for user isolation
     if (!db.objectStoreNames.contains(IMAGES_STORE)) {
-      db.createObjectStore(IMAGES_STORE, { keyPath: 'id' });
+      db.createObjectStore(IMAGES_STORE, { keyPath: ['userId', 'id'] });
+    } else {
+      // If upgrading from version 2 to 3, we need to recreate the object store
+      db.deleteObjectStore(IMAGES_STORE);
+      db.createObjectStore(IMAGES_STORE, { keyPath: ['userId', 'id'] });
     }
 
-    // Create profile store
+    // Create profile store with compound key for user isolation
     if (!db.objectStoreNames.contains(PROFILE_STORE)) {
-      db.createObjectStore(PROFILE_STORE, { keyPath: 'id' });
+      db.createObjectStore(PROFILE_STORE, { keyPath: ['userId', 'id'] });
+    } else {
+      // If upgrading from version 2 to 3, we need to recreate the object store
+      db.deleteObjectStore(PROFILE_STORE);
+      db.createObjectStore(PROFILE_STORE, { keyPath: ['userId', 'id'] });
     }
+
+    // Subscription store already uses userId as the key, so it's already isolated
+    if (!db.objectStoreNames.contains(SUBSCRIPTION_STORE)) {
+      db.createObjectStore(SUBSCRIPTION_STORE, { keyPath: 'userId' });
+    }
+  }
+
+  // Helper to get the current user ID or a default for anonymous users
+  getCurrentUserId() {
+    const currentUser = auth.currentUser;
+    return currentUser ? currentUser.uid : 'anonymous';
   }
 
   async getCollections() {
     try {
       await this.ensureDB();
+      const userId = this.getCurrentUserId();
+      
       return new Promise((resolve, reject) => {
         try {
           const transaction = this.db.transaction([COLLECTIONS_STORE], 'readonly');
           const store = transaction.objectStore(COLLECTIONS_STORE);
-          const request = store.getAll();
+          
+          // Using an index range to get all collections for the current user
+          const request = store.getAll(IDBKeyRange.bound(
+            [userId, ''], // Lower bound: current user, start of name range
+            [userId, '\uffff'] // Upper bound: current user, end of name range
+          ));
 
           request.onsuccess = () => {
             const collections = {};
@@ -124,22 +157,29 @@ class DatabaseService {
 
   async saveCollections(collections) {
     await this.ensureDB();
+    const userId = this.getCurrentUserId();
+    
     return new Promise((resolve, reject) => {
       try {
         console.log("DB: Saving collections:", Object.keys(collections));
         const transaction = this.db.transaction([COLLECTIONS_STORE], 'readwrite');
         const store = transaction.objectStore(COLLECTIONS_STORE);
         
-        // Clear existing collections
-        const clearRequest = store.clear();
+        // Clear existing collections for this user
+        const range = IDBKeyRange.bound(
+          [userId, ''], // Lower bound: current user, start of name range
+          [userId, '\uffff'] // Upper bound: current user, end of name range
+        );
+        
+        const clearRequest = store.delete(range);
         
         clearRequest.onsuccess = () => {
-          console.log('DB: Cleared existing collections');
+          console.log('DB: Cleared existing collections for user:', userId);
           
           // Add new collections
           Object.entries(collections).forEach(([name, data]) => {
             console.log(`DB: Saving collection: ${name} with ${Array.isArray(data) ? data.length : 0} cards`);
-            const request = store.put({ name, data });
+            const request = store.put({ userId, name, data });
             request.onerror = (e) => {
               console.error(`Error saving collection ${name}:`, e.target.error);
             };
@@ -169,6 +209,8 @@ class DatabaseService {
 
   async saveImage(cardId, imageFile) {
     await this.ensureDB();
+    const userId = this.getCurrentUserId();
+    
     try {
       // Compress the image before saving
       const compressedImage = await compressImage(imageFile, {
@@ -180,7 +222,7 @@ class DatabaseService {
       return new Promise((resolve, reject) => {
         const transaction = this.db.transaction([IMAGES_STORE], 'readwrite');
         const store = transaction.objectStore(IMAGES_STORE);
-        const request = store.put({ id: cardId, blob: compressedImage });
+        const request = store.put({ userId, id: cardId, blob: compressedImage });
 
         request.onsuccess = () => resolve();
         request.onerror = () => reject('Error saving image');
@@ -193,10 +235,12 @@ class DatabaseService {
 
   async getImage(cardId) {
     await this.ensureDB();
+    const userId = this.getCurrentUserId();
+    
     return new Promise((resolve, reject) => {
       const transaction = this.db.transaction([IMAGES_STORE], 'readonly');
       const store = transaction.objectStore(IMAGES_STORE);
-      const request = store.get(cardId);
+      const request = store.get([userId, cardId]);
 
       request.onsuccess = () => {
         const result = request.result?.blob || null;
@@ -215,10 +259,12 @@ class DatabaseService {
 
   async deleteImage(cardId) {
     await this.ensureDB();
+    const userId = this.getCurrentUserId();
+    
     return new Promise((resolve, reject) => {
       const transaction = this.db.transaction([IMAGES_STORE], 'readwrite');
       const store = transaction.objectStore(IMAGES_STORE);
-      const request = store.delete(cardId);
+      const request = store.delete([userId, cardId]);
 
       request.onsuccess = () => resolve();
       request.onerror = () => reject('Error deleting image');
@@ -227,10 +273,12 @@ class DatabaseService {
 
   async getProfile() {
     await this.ensureDB();
+    const userId = this.getCurrentUserId();
+    
     return new Promise((resolve, reject) => {
       const transaction = this.db.transaction([PROFILE_STORE], 'readonly');
       const store = transaction.objectStore(PROFILE_STORE);
-      const request = store.get('user');
+      const request = store.get([userId, 'user']);
 
       request.onsuccess = () => {
         resolve(request.result?.data || null);
@@ -242,18 +290,48 @@ class DatabaseService {
 
   async saveProfile(profileData) {
     await this.ensureDB();
+    const userId = this.getCurrentUserId();
+    
     return new Promise((resolve, reject) => {
       const transaction = this.db.transaction([PROFILE_STORE], 'readwrite');
       const store = transaction.objectStore(PROFILE_STORE);
-      const request = store.put({ id: 'user', data: profileData });
+      const request = store.put({ userId, id: 'user', data: profileData });
 
       request.onsuccess = () => resolve();
       request.onerror = () => reject('Error saving profile');
     });
   }
 
+  async saveSubscription(subscriptionData) {
+    await this.ensureDB();
+    return new Promise((resolve, reject) => {
+      const transaction = this.db.transaction([SUBSCRIPTION_STORE], 'readwrite');
+      const store = transaction.objectStore(SUBSCRIPTION_STORE);
+      const request = store.put(subscriptionData);
+
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject('Error saving subscription');
+    });
+  }
+
+  async getSubscription(userId) {
+    await this.ensureDB();
+    return new Promise((resolve, reject) => {
+      const transaction = this.db.transaction([SUBSCRIPTION_STORE], 'readonly');
+      const store = transaction.objectStore(SUBSCRIPTION_STORE);
+      const request = store.get(userId);
+
+      request.onsuccess = () => {
+        resolve(request.result || null);
+      };
+
+      request.onerror = () => reject('Error fetching subscription');
+    });
+  }
+
   async ensureDB() {
     if (!this.db) {
+      console.log("Database connection not initialized, creating new connection");
       try {
         await this.initDatabase();
       } catch (error) {
@@ -275,13 +353,45 @@ class DatabaseService {
         }
       }
     }
-    return this.db;
+    
+    // Check if the connection is still valid
+    try {
+      // Access the objectStoreNames property as a simple test
+      // This will throw an error if the connection is closed
+      const storeCount = this.db.objectStoreNames?.length;
+      
+      // If we got here, the connection seems valid
+      return this.db;
+    } catch (error) {
+      // The database connection appears to be invalid
+      console.warn("Database connection appears invalid, reinitializing:", error);
+      
+      // Reset the db reference
+      this.db = null;
+      
+      // Try to initialize again
+      try {
+        await this.initDatabase();
+      } catch (reinitError) {
+        console.error("Failed to reinitialize database after connection error:", reinitError);
+        // Create a minimal mock to prevent further errors
+        this.db = {
+          transaction: () => {
+            throw new Error("Database reconnection failed");
+          },
+          objectStoreNames: { length: 0 }
+        };
+      }
+      
+      return this.db;
+    }
   }
 
-  // Reset all data in the application
+  // Reset all data for the current user
   resetAllData = async () => {
     try {
-      console.log("Resetting all application data...");
+      console.log("Resetting all application data for current user...");
+      const userId = this.getCurrentUserId();
       
       // Clear localStorage
       localStorage.removeItem('soldCards');
@@ -290,36 +400,58 @@ class DatabaseService {
       localStorage.removeItem('cardListDisplayMetric');
       localStorage.removeItem('theme');
       
-      // Clear IndexedDB
+      // Clear IndexedDB for current user only
       await this.ensureDB();
       
       return new Promise((resolve, reject) => {
         try {
-          // Clear collections store
+          // Clear collections for current user
           const collectionsTransaction = this.db.transaction([COLLECTIONS_STORE], 'readwrite');
           const collectionsStore = collectionsTransaction.objectStore(COLLECTIONS_STORE);
-          const clearCollectionsRequest = collectionsStore.clear();
+          const collectionsRange = IDBKeyRange.bound(
+            [userId, ''], // Lower bound: current user, start of name range
+            [userId, '\uffff'] // Upper bound: current user, end of name range
+          );
+          const clearCollectionsRequest = collectionsStore.delete(collectionsRange);
           
-          // Clear images store
+          // Clear images for current user
           const imagesTransaction = this.db.transaction([IMAGES_STORE], 'readwrite');
           const imagesStore = imagesTransaction.objectStore(IMAGES_STORE);
-          const clearImagesRequest = imagesStore.clear();
+          const imagesRange = IDBKeyRange.bound(
+            [userId, ''], // Lower bound: current user, start of id range
+            [userId, '\uffff'] // Upper bound: current user, end of id range
+          );
+          const clearImagesRequest = imagesStore.delete(imagesRange);
+          
+          // Clear profile for current user
+          const profileTransaction = this.db.transaction([PROFILE_STORE], 'readwrite');
+          const profileStore = profileTransaction.objectStore(PROFILE_STORE);
+          const profileRange = IDBKeyRange.bound(
+            [userId, ''], // Lower bound: current user, start of id range
+            [userId, '\uffff'] // Upper bound: current user, end of id range
+          );
+          const clearProfileRequest = profileStore.delete(profileRange);
           
           // Wait for transactions to complete
           collectionsTransaction.oncomplete = () => {
-            console.log("Collections cleared");
+            console.log("Collections cleared for user:", userId);
           };
           
           imagesTransaction.oncomplete = () => {
-            console.log("Images cleared");
+            console.log("Images cleared for user:", userId);
           };
           
-          // When both are done
+          profileTransaction.oncomplete = () => {
+            console.log("Profile cleared for user:", userId);
+          };
+          
+          // When all are done
           Promise.all([
             new Promise(r => { clearCollectionsRequest.onsuccess = r; }),
-            new Promise(r => { clearImagesRequest.onsuccess = r; })
+            new Promise(r => { clearImagesRequest.onsuccess = r; }),
+            new Promise(r => { clearProfileRequest.onsuccess = r; })
           ]).then(() => {
-            console.log("All data reset successfully");
+            console.log("All data reset successfully for user:", userId);
             resolve(true);
           }).catch(error => {
             console.error("Error during reset:", error);
@@ -331,8 +463,8 @@ class DatabaseService {
         }
       });
     } catch (error) {
-      console.error("Error resetting application data:", error);
-      return false;
+      console.error("Unexpected error in resetAllData:", error);
+      throw error;
     }
   };
 
@@ -409,4 +541,5 @@ class DatabaseService {
   }
 }
 
-export const db = new DatabaseService(); 
+const db = new DatabaseService();
+export default db; 

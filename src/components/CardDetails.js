@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, memo } from 'react';
 import { formatCurrency, formatValue } from '../utils/formatters';
-import { db } from '../services/db';
+import db from '../services/db';
 import { useTheme } from '../contexts/ThemeContext';
 import { toast } from 'react-hot-toast';
 

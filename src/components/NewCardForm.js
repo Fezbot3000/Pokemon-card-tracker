@@ -3,7 +3,7 @@ import { formatValue } from '../utils/formatters';
 import { useTheme } from '../contexts/ThemeContext';
 import { toast } from 'react-hot-toast';
 import { parseCSVFile, validateCSVStructure } from '../utils/dataProcessor';
-import { db } from '../services/db';
+import db from '../services/db';
 
 const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, selectedCollection }) => {
   const [formData, setFormData] = useState({
@@ -456,48 +456,57 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
       />
       
       {/* Modal content positioned on the right side */}
-      <div className={`new-card-modal-content ${isOpen ? 'open' : ''}`}>
-        {/* Header */}
-        <div className="border-b border-gray-700/50 px-6 py-4 flex justify-between items-center">
-          <h3 className="text-xl font-semibold text-white">
-            Add Card
-          </h3>
-          <button 
-            onClick={handleClose}
-            className="text-gray-400 hover:text-gray-200"
-          >
-            <span className="material-icons">close</span>
-          </button>
-        </div>
-
-        {/* Tab Navigation */}
-        <div className="border-b border-gray-700/50">
-          <div className="flex">
-            <button
-              onClick={() => setActiveTab('single')}
-              className={`px-6 py-3 text-sm font-medium ${
-                activeTab === 'single'
-                  ? 'text-purple-400 border-b-2 border-purple-500'
-                  : 'text-gray-400 hover:text-gray-300'
-              }`}
+      <div
+        className={`new-card-modal-content ${isOpen ? 'open' : ''}`}
+        onWheel={preventPropagation}
+        onTouchMove={preventPropagation}
+      >
+        {/* Modal Header */}
+        <div className={`sticky top-0 z-10 border-b ${isDarkMode ? 'bg-[#1B2131] border-gray-700/50' : 'bg-white border-gray-200'}`}>
+          <div className="flex items-center justify-between p-4">
+            <div className="flex items-center">
+              <h2 className={`text-xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                {activeTab === 'single' ? 'Add New Card' : 'Batch Import'}
+              </h2>
+            </div>
+            <button 
+              onClick={handleClose}
+              className={`p-2 rounded-full ${isDarkMode ? 'hover:bg-gray-800' : 'hover:bg-gray-100'}`}
             >
-              Single Card
+              <span className={`material-icons ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>close</span>
             </button>
-            <button
-              onClick={() => setActiveTab('batch')}
-              className={`px-6 py-3 text-sm font-medium ${
-                activeTab === 'batch'
-                  ? 'text-purple-400 border-b-2 border-purple-500'
-                  : 'text-gray-400 hover:text-gray-300'
-              }`}
-            >
-              Batch Import
-            </button>
+          </div>
+          
+          {/* Tabs */}
+          <div className="px-4 pt-1">
+            <div className="flex border-b space-x-6 overflow-x-auto">
+              <button
+                className={`pb-3 font-medium text-base border-b-2 transition-colors ${
+                  activeTab === 'single' 
+                    ? (isDarkMode ? 'text-white border-primary' : 'text-gray-900 border-primary')
+                    : (isDarkMode ? 'text-gray-400 border-transparent' : 'text-gray-500 border-transparent')
+                }`}
+                onClick={() => setActiveTab('single')}
+              >
+                Single Card
+              </button>
+              <button
+                className={`pb-3 font-medium text-base border-b-2 transition-colors ${
+                  activeTab === 'batch' 
+                    ? (isDarkMode ? 'text-white border-primary' : 'text-gray-900 border-primary')
+                    : (isDarkMode ? 'text-gray-400 border-transparent' : 'text-gray-500 border-transparent')
+                }`}
+                onClick={() => setActiveTab('batch')}
+              >
+                Batch Import
+              </button>
+            </div>
           </div>
         </div>
 
         {activeTab === 'single' ? (
           <>
+            {/* Single Card Content */}
             {/* Scrollable Content Area */}
             <div className="flex-1 overflow-y-auto p-6">
               <form id="cardForm" onSubmit={handleSubmit}>
@@ -587,28 +596,40 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
 
                 {/* Card Information */}
                 <div className="mb-6">
-                  <h4 className="text-white text-lg font-medium mb-4">Card Information</h4>
+                  <h4 className={`text-lg font-medium mb-4 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>Card Information</h4>
                   
                   {/* Collection Selection */}
                   <div className="mb-4">
-                    <label htmlFor="collection" className="block text-sm font-medium text-gray-300 mb-1">
+                    <label htmlFor="collection" className={`block text-sm font-medium mb-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                       Collection
                     </label>
                     <div className="relative">
                       <button
                         type="button"
-                        className="w-full px-3 py-2 border border-gray-700 rounded-lg bg-[#252B3B] text-left text-white"
+                        className={`w-full px-3 py-2 border rounded-lg text-left ${
+                          isDarkMode 
+                            ? 'border-gray-700 bg-[#252B3B] text-white' 
+                            : 'border-gray-300 bg-white text-gray-900'
+                        }`}
                         onClick={() => setShowCollectionDropdown(!showCollectionDropdown)}
                       >
                         {targetCollection || 'Select a collection'}
                       </button>
                       {showCollectionDropdown && (
-                        <div className="absolute z-10 mt-1 w-full bg-[#1B2131] border border-gray-700 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                        <div className={`absolute z-10 mt-1 w-full border rounded-lg shadow-lg max-h-48 overflow-y-auto ${
+                          isDarkMode 
+                            ? 'bg-[#1B2131] border-gray-700' 
+                            : 'bg-white border-gray-200'
+                        }`}>
                           {Object.keys(collections).filter(c => c !== 'All Cards').map(collection => (
                             <button
                               key={collection}
                               type="button"
-                              className="w-full px-3 py-2 text-left hover:bg-[#252B3B] text-white"
+                              className={`w-full px-3 py-2 text-left ${
+                                isDarkMode 
+                                  ? 'hover:bg-[#252B3B] text-white' 
+                                  : 'hover:bg-gray-50 text-gray-900'
+                              }`}
                               onClick={() => {
                                 setTargetCollection(collection);
                                 setShowCollectionDropdown(false);
@@ -625,7 +646,7 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
                   {/* Player and Card Name Row */}
                   <div className="grid grid-cols-2 gap-4 mb-4">
                     <div>
-                      <label htmlFor="player" className="block text-sm font-medium text-gray-300 mb-1">
+                      <label htmlFor="player" className={`block text-sm font-medium mb-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                         Player
                       </label>
                       <input
@@ -634,12 +655,16 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
                         name="player"
                         value={formData.player}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-700 rounded-lg bg-[#252B3B] text-white"
+                        className={`w-full px-3 py-2 border rounded-lg ${
+                          isDarkMode 
+                            ? 'border-gray-700 bg-[#252B3B] text-white' 
+                            : 'border-gray-300 bg-white text-gray-900'
+                        }`}
                         placeholder="e.g., Charizard"
                       />
                     </div>
                     <div>
-                      <label htmlFor="card" className="block text-sm font-medium text-gray-300 mb-1">
+                      <label htmlFor="card" className={`block text-sm font-medium mb-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                         Card Name
                       </label>
                       <input
@@ -648,7 +673,11 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
                         name="card"
                         value={formData.card}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-700 rounded-lg bg-[#252B3B] text-white"
+                        className={`w-full px-3 py-2 border rounded-lg ${
+                          isDarkMode 
+                            ? 'border-gray-700 bg-[#252B3B] text-white' 
+                            : 'border-gray-300 bg-white text-gray-900'
+                        }`}
                         placeholder="e.g., Base Set"
                       />
                     </div>
@@ -657,7 +686,7 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
                   {/* Set and Year Row */}
                   <div className="grid grid-cols-2 gap-4 mb-4">
                     <div>
-                      <label htmlFor="set" className="block text-sm font-medium text-gray-300 mb-1">
+                      <label htmlFor="set" className={`block text-sm font-medium mb-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                         Set
                       </label>
                       <input
@@ -666,12 +695,16 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
                         name="set"
                         value={formData.set}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-700 rounded-lg bg-[#252B3B] text-white"
+                        className={`w-full px-3 py-2 border rounded-lg ${
+                          isDarkMode 
+                            ? 'border-gray-700 bg-[#252B3B] text-white' 
+                            : 'border-gray-300 bg-white text-gray-900'
+                        }`}
                         placeholder="e.g., Base Set"
                       />
                     </div>
                     <div>
-                      <label htmlFor="year" className="block text-sm font-medium text-gray-300 mb-1">
+                      <label htmlFor="year" className={`block text-sm font-medium mb-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                         Year
                       </label>
                       <input
@@ -680,7 +713,11 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
                         name="year"
                         value={formData.year}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-700 rounded-lg bg-[#252B3B] text-white"
+                        className={`w-full px-3 py-2 border rounded-lg ${
+                          isDarkMode 
+                            ? 'border-gray-700 bg-[#252B3B] text-white' 
+                            : 'border-gray-300 bg-white text-gray-900'
+                        }`}
                         placeholder="e.g., 1999"
                       />
                     </div>
@@ -689,7 +726,7 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
                   {/* Category and Condition Row */}
                   <div className="grid grid-cols-2 gap-4 mb-4">
                     <div>
-                      <label htmlFor="category" className="block text-sm font-medium text-gray-300 mb-1">
+                      <label htmlFor="category" className={`block text-sm font-medium mb-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                         Category
                       </label>
                       <input
@@ -698,12 +735,16 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
                         name="category"
                         value={formData.category}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-700 rounded-lg bg-[#252B3B] text-white"
+                        className={`w-full px-3 py-2 border rounded-lg ${
+                          isDarkMode 
+                            ? 'border-gray-700 bg-[#252B3B] text-white' 
+                            : 'border-gray-300 bg-white text-gray-900'
+                        }`}
                         placeholder="e.g., Pokemon"
                       />
                     </div>
                     <div>
-                      <label htmlFor="condition" className="block text-sm font-medium text-gray-300 mb-1">
+                      <label htmlFor="condition" className={`block text-sm font-medium mb-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                         Condition
                       </label>
                       <input
@@ -712,7 +753,11 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
                         name="condition"
                         value={formData.condition}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-700 rounded-lg bg-[#252B3B] text-white"
+                        className={`w-full px-3 py-2 border rounded-lg ${
+                          isDarkMode 
+                            ? 'border-gray-700 bg-[#252B3B] text-white' 
+                            : 'border-gray-300 bg-white text-gray-900'
+                        }`}
                         placeholder="e.g., PSA 10"
                       />
                     </div>
@@ -721,7 +766,7 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
                   {/* Serial Number and Date Purchased Row */}
                   <div className="grid grid-cols-2 gap-4 mb-4">
                     <div>
-                      <label htmlFor="slabSerial" className="block text-sm font-medium text-gray-300 mb-1">
+                      <label htmlFor="slabSerial" className={`block text-sm font-medium mb-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                         Serial Number
                       </label>
                       <input
@@ -730,13 +775,17 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
                         name="slabSerial"
                         value={formData.slabSerial}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-700 rounded-lg bg-[#252B3B] text-white"
+                        className={`w-full px-3 py-2 border rounded-lg ${
+                          isDarkMode 
+                            ? 'border-gray-700 bg-[#252B3B] text-white' 
+                            : 'border-gray-300 bg-white text-gray-900'
+                        }`}
                         placeholder="e.g., 12345678"
                         required
                       />
                     </div>
                     <div>
-                      <label htmlFor="datePurchased" className="block text-sm font-medium text-gray-300 mb-1">
+                      <label htmlFor="datePurchased" className={`block text-sm font-medium mb-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                         Date Purchased
                       </label>
                       <input
@@ -745,68 +794,138 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
                         name="datePurchased"
                         value={formData.datePurchased}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-700 rounded-lg bg-[#252B3B] text-white"
+                        className={`w-full px-3 py-2 border rounded-lg ${
+                          isDarkMode 
+                            ? 'border-gray-700 bg-[#252B3B] text-white' 
+                            : 'border-gray-300 bg-white text-gray-900'
+                        }`}
                       />
                     </div>
                   </div>
                 </div>
 
-                {/* Financial Details */}
-                <div>
-                  <h4 className="text-white text-lg font-medium mb-4">Financial Details</h4>
+                {/* Price Section */}
+                <div className="mb-6">
+                  <h4 className={`text-lg font-medium mb-4 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>Investment Details</h4>
                   
-                  {/* Price inputs */}
+                  {/* Currency Toggle */}
+                  <div className="flex justify-end mb-3">
+                    <div className="inline-flex rounded-md shadow-sm">
+                      <button
+                        type="button"
+                        onClick={() => setInputCurrency('USD')}
+                        className={`px-4 py-2 text-sm font-medium rounded-l-lg border ${
+                          inputCurrency === 'USD'
+                            ? (isDarkMode ? 'bg-purple-700 text-white border-purple-700' : 'bg-purple-600 text-white border-purple-600')
+                            : (isDarkMode ? 'bg-gray-800 text-gray-300 border-gray-700' : 'bg-gray-100 text-gray-700 border-gray-300')
+                        }`}
+                      >
+                        USD
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setInputCurrency('AUD')}
+                        className={`px-4 py-2 text-sm font-medium rounded-r-lg border ${
+                          inputCurrency === 'AUD'
+                            ? (isDarkMode ? 'bg-purple-700 text-white border-purple-700' : 'bg-purple-600 text-white border-purple-600')
+                            : (isDarkMode ? 'bg-gray-800 text-gray-300 border-gray-700' : 'bg-gray-100 text-gray-700 border-gray-300')
+                        }`}
+                      >
+                        AUD
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {/* Paid Value */}
                   <div className="grid grid-cols-2 gap-4 mb-4">
                     <div>
-                      <label htmlFor="investmentAUD" className="block text-sm font-medium text-gray-300 mb-1">
-                        Paid (AUD)
+                      <label htmlFor={inputCurrency === 'AUD' ? 'investmentAUD' : 'investmentUSD'} className={`block text-sm font-medium mb-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                        Paid ({inputCurrency})
                       </label>
-                      <input
-                        type="number"
-                        id="investmentAUD"
-                        name="investmentAUD"
-                        value={formData.investmentAUD}
-                        onChange={handleNumberInputChange}
-                        min="0"
-                        step="0.01"
-                        className="w-full px-3 py-2 border border-gray-700 rounded-lg bg-[#252B3B] text-white"
-                        placeholder="0.00"
-                      />
+                      <div className="relative">
+                        <div className={`absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                          {inputCurrency === 'AUD' ? 'A$' : '$'}
+                        </div>
+                        <input
+                          type="number"
+                          step="0.01"
+                          id={inputCurrency === 'AUD' ? 'investmentAUD' : 'investmentUSD'}
+                          name={inputCurrency === 'AUD' ? 'investmentAUD' : 'investmentUSD'}
+                          value={inputCurrency === 'AUD' ? formData.investmentAUD : formData.investmentUSD}
+                          onChange={handleNumberInputChange}
+                          className={`w-full pl-10 pr-3 py-2 border rounded-lg ${
+                            isDarkMode 
+                              ? 'border-gray-700 bg-[#252B3B] text-white' 
+                              : 'border-gray-300 bg-white text-gray-900'
+                          }`}
+                          placeholder="0.00"
+                        />
+                      </div>
                     </div>
                     <div>
-                      <label htmlFor="currentValueAUD" className="block text-sm font-medium text-gray-300 mb-1">
-                        Current Value (AUD)
+                      <label htmlFor={inputCurrency === 'AUD' ? 'currentValueAUD' : 'currentValueUSD'} className={`block text-sm font-medium mb-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                        Current Value ({inputCurrency})
                       </label>
-                      <input
-                        type="number"
-                        id="currentValueAUD"
-                        name="currentValueAUD"
-                        value={formData.currentValueAUD}
-                        onChange={handleNumberInputChange}
-                        min="0"
-                        step="0.01"
-                        className="w-full px-3 py-2 border border-gray-700 rounded-lg bg-[#252B3B] text-white"
-                        placeholder="0.00"
-                      />
+                      <div className="relative">
+                        <div className={`absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                          {inputCurrency === 'AUD' ? 'A$' : '$'}
+                        </div>
+                        <input
+                          type="number"
+                          step="0.01"
+                          id={inputCurrency === 'AUD' ? 'currentValueAUD' : 'currentValueUSD'}
+                          name={inputCurrency === 'AUD' ? 'currentValueAUD' : 'currentValueUSD'}
+                          value={inputCurrency === 'AUD' ? formData.currentValueAUD : formData.currentValueUSD}
+                          onChange={handleNumberInputChange}
+                          className={`w-full pl-10 pr-3 py-2 border rounded-lg ${
+                            isDarkMode 
+                              ? 'border-gray-700 bg-[#252B3B] text-white' 
+                              : 'border-gray-300 bg-white text-gray-900'
+                          }`}
+                          placeholder="0.00"
+                        />
+                      </div>
                     </div>
+                  </div>
+                  
+                  {/* Conversion Info */}
+                  <div className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'} mb-4`}>
+                    <p>Exchange Rate: 1 USD = {exchangeRate.toFixed(2)} AUD</p>
+                    {inputCurrency === 'AUD' ? (
+                      <p>USD values are calculated automatically</p>
+                    ) : (
+                      <p>AUD values are calculated automatically</p>
+                    )}
                   </div>
                 </div>
               </form>
             </div>
             
             {/* Sticky Footer */}
-            <div className="border-t border-gray-700/50 p-4 bg-[#111827] flex justify-end space-x-3">
+            <div className={`sticky bottom-0 p-4 border-t z-10 flex justify-end space-x-3 ${
+              isDarkMode 
+                ? 'bg-[#1B2131] border-gray-700/50'
+                : 'bg-white border-gray-200'
+            }`}>
               <button
                 type="button"
                 onClick={handleClose}
-                className="text-gray-300 bg-transparent hover:bg-gray-700 px-4 py-2 rounded-lg font-medium"
+                className={`px-4 py-2 rounded-lg ${
+                  isDarkMode 
+                    ? 'bg-gray-800 text-gray-200 hover:bg-gray-700'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 form="cardForm"
-                className="bg-purple-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-purple-700"
+                className={`px-4 py-2 rounded-lg text-white ${
+                  isDarkMode 
+                    ? 'bg-primary hover:bg-primary-dark' 
+                    : 'bg-primary hover:bg-primary-dark'
+                }`}
               >
                 Add Card
               </button>
@@ -814,106 +933,181 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
           </>
         ) : (
           <>
-            {/* Scrollable Batch Import Content */}
+            {/* Batch Import Content */}
             <div className="flex-1 overflow-y-auto p-6">
-              {/* Batch import area */}
-              <div
-                className={`border-2 ${batchImportDragActive ? 'border-purple-500 border-solid bg-purple-900/10' : 'border-dashed border-gray-700'} rounded-lg p-8 text-center h-64 flex flex-col items-center justify-center relative`}
-                onDragEnter={handleBatchImportDrag}
-                onDragLeave={handleBatchImportDrag}
-                onDragOver={(e) => e.preventDefault()}
-                onDrop={handleBatchImportDrop}
-              >
-                {importLoading ? (
-                  <div className="text-center">
-                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-purple-500 border-t-transparent mb-4"></div>
-                    <p className="text-gray-400">Processing file...</p>
-                  </div>
-                ) : importSuccess ? (
-                  <div className="text-center">
-                    <span className="material-icons text-green-500 text-5xl mb-2">check_circle</span>
-                    <p className="text-gray-200 font-medium mb-1">Import successful!</p>
-                    <p className="text-gray-400 text-sm mb-4">
-                      {importSuccess.count} cards imported to {importSuccess.collection}
-                    </p>
-                    <button
-                      onClick={() => {
-                        setImportSuccess(null);
-                        setImportErrors([]);
-                      }}
-                      className="bg-purple-600 text-white px-4 py-2 rounded-lg text-sm"
-                    >
-                      Import Another File
-                    </button>
-                  </div>
-                ) : importErrors.length > 0 ? (
-                  <div className="text-center">
-                    <span className="material-icons text-red-500 text-5xl mb-2">error</span>
-                    <p className="text-gray-200 font-medium mb-1">Import failed</p>
-                    <div className="text-left bg-red-900/20 border border-red-800 p-3 rounded-lg mb-4 max-h-32 overflow-y-auto">
-                      <ul className="list-disc pl-5 text-sm text-red-400">
-                        {importErrors.map((error, index) => (
-                          <li key={index}>{error}</li>
-                        ))}
-                      </ul>
-                    </div>
-                    <button
-                      onClick={() => {
-                        setImportErrors([]);
-                      }}
-                      className="bg-purple-600 text-white px-4 py-2 rounded-lg text-sm"
-                    >
-                      Try Again
-                    </button>
-                  </div>
-                ) : (
-                  <>
-                    <span className="material-icons text-gray-600 text-5xl mb-4">
-                      upload_file
+              <div className={`rounded-lg p-6 mb-6 ${
+                isDarkMode 
+                  ? 'bg-[#252B3B] border border-gray-700' 
+                  : 'bg-gray-50 border border-gray-200'
+              }`}>
+                <h3 className={`text-lg font-medium mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                  Import Multiple Cards
+                </h3>
+                <p className={`text-sm mb-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                  Upload a CSV file with multiple card entries. 
+                  The file must have the following headers:
+                </p>
+                
+                <div className={`p-3 rounded mb-4 font-mono text-xs whitespace-nowrap overflow-x-auto ${
+                  isDarkMode 
+                    ? 'bg-gray-800 text-green-300' 
+                    : 'bg-gray-100 text-green-600'
+                }`}>
+                  player,card,set,year,category,condition,slabSerial,datePurchased,investmentAUD,currentValueAUD
+                </div>
+                
+                <div
+                  className={`border-2 border-dashed rounded-lg p-8 mb-4 text-center cursor-pointer ${
+                    batchImportDragActive
+                      ? (isDarkMode ? 'border-purple-400 bg-purple-900/20' : 'border-purple-400 bg-purple-50')
+                      : (isDarkMode ? 'border-gray-700 hover:border-purple-400 hover:bg-purple-900/10' : 'border-gray-300 hover:border-purple-400 hover:bg-purple-50')
+                  }`}
+                  onDragEnter={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setBatchImportDragActive(true);
+                  }}
+                  onDragLeave={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setBatchImportDragActive(false);
+                  }}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
+                  onDrop={handleBatchImportDrop}
+                  onClick={() => batchFileInputRef.current?.click()}
+                >
+                  <div className="flex flex-col items-center">
+                    <span className={`material-icons text-4xl mb-2 ${
+                      batchImportDragActive
+                        ? 'text-purple-400'
+                        : (isDarkMode ? 'text-gray-500' : 'text-gray-400')
+                    }`}>
+                      cloud_upload
                     </span>
-                    <p className="text-gray-300 mb-2">
-                      Drag and drop your CSV file here
+                    {importLoading ? (
+                      <div className="flex flex-col items-center">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-2"></div>
+                        <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Processing...</p>
+                      </div>
+                    ) : (
+                      <>
+                        <p className={`font-medium mb-1 ${isDarkMode ? 'text-white' : 'text-gray-700'}`}>
+                          {batchImportDragActive ? 'Drop your file here' : 'Drag and drop your CSV file here'}
+                        </p>
+                        <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                          or click to browse
+                        </p>
+                      </>
+                    )}
+                  </div>
+                  <input
+                    type="file"
+                    accept=".csv"
+                    onChange={handleBatchFileChange}
+                    ref={batchFileInputRef}
+                    className="hidden"
+                  />
+                </div>
+                
+                {importSuccess && (
+                  <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-200 rounded-lg">
+                    <p className="flex items-start">
+                      <span className="material-icons text-green-500 mr-2">check_circle</span>
+                      <span>{importSuccess}</span>
                     </p>
-                    <p className="text-gray-400 text-sm mb-4">
-                      or click to browse files
-                    </p>
-                    <input
-                      type="file"
-                      accept=".csv"
-                      onChange={handleBatchFileChange}
-                      ref={batchFileInputRef}
-                      className="hidden"
-                    />
-                    <button
-                      onClick={() => batchFileInputRef.current?.click()}
-                      className="bg-gray-700 text-white px-4 py-2 rounded-lg text-sm"
-                    >
-                      Browse Files
-                    </button>
-                  </>
+                  </div>
                 )}
+                
+                {importErrors.length > 0 && (
+                  <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200 rounded-lg">
+                    <p className="font-medium mb-1 flex items-center">
+                      <span className="material-icons text-red-500 mr-2">error</span>
+                      <span>Import Errors</span>
+                    </p>
+                    <ul className="list-disc ml-8 text-sm space-y-1 mt-2">
+                      {importErrors.map((error, index) => (
+                        <li key={index}>{error}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                
+                <div className="text-sm mt-4">
+                  <p className={`font-medium mb-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Need a template?</p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      // Generate template CSV
+                      const headers = "player,card,set,year,category,condition,slabSerial,datePurchased,investmentAUD,currentValueAUD";
+                      const example = "Charizard,Base Set,Pokemon Base Set,1999,Pokemon,PSA 10,12345678,2022-01-01,1000,1500";
+                      const csvContent = `${headers}\n${example}`;
+                      
+                      // Create and download the file
+                      const blob = new Blob([csvContent], { type: 'text/csv' });
+                      const url = URL.createObjectURL(blob);
+                      const link = document.createElement('a');
+                      link.href = url;
+                      link.download = 'card_import_template.csv';
+                      document.body.appendChild(link);
+                      link.click();
+                      document.body.removeChild(link);
+                    }}
+                    className={`text-primary hover:underline ${isDarkMode ? 'text-purple-400 hover:text-purple-300' : 'text-purple-600 hover:text-purple-700'}`}
+                  >
+                    Download template CSV
+                  </button>
+                </div>
               </div>
               
-              {/* CSV Instructions */}
-              <div className="mt-8">
-                <h3 className="text-md font-medium text-white mb-2">
-                  CSV Format Requirements
-                </h3>
-                <p className="text-sm text-gray-400 mb-4">
-                  Your CSV file should include the following fields: player, card, set, year, category, condition, slabSerial, datePurchased, investmentAUD, currentValueAUD
-                </p>
+              <div className={`rounded-lg p-6 ${
+                isDarkMode 
+                  ? 'bg-[#252B3B] border border-gray-700' 
+                  : 'bg-gray-50 border border-gray-200'
+              }`}>
+                <h4 className={`font-medium mb-3 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Import Tips</h4>
+                <ul className={`text-sm space-y-2 list-disc pl-5 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                  <li>Make sure your CSV file has the correct header row</li>
+                  <li>Dates should be in YYYY-MM-DD format</li>
+                  <li>Use the slabSerial field as a unique identifier</li>
+                  <li>Currency values should be numeric only (e.g., 10.99)</li>
+                  <li>Each card requires a unique serial number</li>
+                </ul>
               </div>
             </div>
             
-            {/* Sticky Footer for Batch Import */}
-            <div className="border-t border-gray-700/50 p-4 bg-[#111827] flex justify-end">
+            {/* Footer with action buttons */}
+            <div className={`sticky bottom-0 p-4 border-t z-10 flex justify-end space-x-3 ${
+              isDarkMode 
+                ? 'bg-[#1B2131] border-gray-700/50'
+                : 'bg-white border-gray-200'
+            }`}>
               <button
                 type="button"
                 onClick={handleClose}
-                className="text-gray-300 bg-transparent hover:bg-gray-700 px-4 py-2 rounded-lg font-medium"
+                className={`px-4 py-2 rounded-lg ${
+                  isDarkMode 
+                    ? 'bg-gray-800 text-gray-200 hover:bg-gray-700'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
               >
                 Cancel
               </button>
+              {activeTab === 'single' && (
+                <button
+                  type="submit"
+                  form="cardForm"
+                  className={`px-4 py-2 rounded-lg text-white ${
+                    isDarkMode 
+                      ? 'bg-primary hover:bg-primary-dark' 
+                      : 'bg-primary hover:bg-primary-dark'
+                  }`}
+                >
+                  Add Card
+                </button>
+              )}
             </div>
           </>
         )}

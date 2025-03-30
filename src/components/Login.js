@@ -79,20 +79,10 @@ function Login() {
         // Sign up
         await signUp({ email, password, displayName: email.split('@')[0] });
         setSignupSuccess(true);
-        // Wait before signing in to allow time for Firebase to process
-        setTimeout(async () => {
-          try {
-            // Automatically sign in after registration
-            await signIn({ email, password, remember: rememberMe });
-            navigate(from, { replace: true });
-          } catch (error) {
-            console.error('Auto-login error after signup:', error);
-            // Don't show this error, just let user login manually
-            setIsLogin(true);
-          } finally {
-            setIsLoading(false);
-          }
-        }, 1000);
+        // Instead of navigating directly to pricing, set isNewUser flag and go to dashboard
+        localStorage.setItem('isNewUser', 'true');
+        navigate('/dashboard', { replace: true });
+        setIsLoading(false);
       }
     } catch (error) {
       console.error('Authentication error:', error);
@@ -105,8 +95,12 @@ function Login() {
   const handleGoogleSignIn = async () => {
     try {
       setSocialLoading({ ...socialLoading, google: true });
-      await signInWithGoogle();
-      navigate(from, { replace: true });
+      const user = await signInWithGoogle();
+      
+      // IMPORTANT: Always navigate to dashboard and let NewUserRoute handle the redirects
+      // This ensures all flows go through the same redirect logic
+      console.log('Google sign-in successful, going through dashboard flow');
+      navigate('/dashboard', { replace: true });
     } catch (error) {
       // Only log errors that aren't popup closed by user
       if (error.code !== 'auth/popup-closed-by-user') {
@@ -122,8 +116,12 @@ function Login() {
   const handleAppleSignIn = async () => {
     try {
       setSocialLoading({ ...socialLoading, apple: true });
-      await signInWithApple();
-      navigate(from, { replace: true });
+      const user = await signInWithApple();
+      
+      // IMPORTANT: Always navigate to dashboard and let NewUserRoute handle the redirects
+      // This ensures all flows go through the same redirect logic
+      console.log('Apple sign-in successful, going through dashboard flow');
+      navigate('/dashboard', { replace: true });
     } catch (error) {
       // Only log errors that aren't popup closed by user
       if (error.code !== 'auth/popup-closed-by-user') {

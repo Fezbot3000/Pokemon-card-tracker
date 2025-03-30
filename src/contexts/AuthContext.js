@@ -185,6 +185,15 @@ export function AuthProvider({ children }) {
       const { user } = await signInWithEmailAndPassword(auth, email, password);
       console.log("Sign in successful for:", user.email);
       toast.success('Signed in successfully!');
+
+      // After successful sign-in, clear any previous plan choice
+      localStorage.removeItem('chosenPlan');
+      
+      // Setting a flag for new users
+      if (user.metadata.creationTime === user.metadata.lastSignInTime) {
+        localStorage.setItem('isNewUser', 'true');
+      }
+
       return user;
     } catch (err) {
       console.error("Sign in error:", err);
@@ -205,6 +214,9 @@ export function AuthProvider({ children }) {
       const result = await signInWithPopup(auth, googleProvider);
       console.log("Google sign-in successful:", result.user?.email);
       
+      // Check if this is a new user more reliably by checking if this is their first sign-in
+      const isFirstSignIn = result?.additionalUserInfo?.isNewUser;
+      
       // Try to create user document but don't fail if it errors
       try {
         await createUserDocument(result.user);
@@ -214,6 +226,35 @@ export function AuthProvider({ children }) {
       }
       
       toast.success('Signed in with Google successfully!');
+
+      // After successful Google sign-in, clear any previous plan choice
+      localStorage.removeItem('chosenPlan');
+      
+      // Check if this is a truly new user (by comparing creation and last sign-in times)
+      // Also use the isNewUser flag from the result if available
+      const isNewAccount = 
+        isFirstSignIn || 
+        result.user.metadata.creationTime === result.user.metadata.lastSignInTime;
+      
+      // Log the determination process
+      console.log("New account detection:", {
+        isFirstSignIn,
+        creationTime: result.user.metadata.creationTime,
+        lastSignInTime: result.user.metadata.lastSignInTime,
+        isSameTime: result.user.metadata.creationTime === result.user.metadata.lastSignInTime,
+        finalDecision: isNewAccount
+      });
+      
+      // Only set the isNewUser flag for brand new accounts
+      if (isNewAccount) {
+        console.log("Brand new Google account detected, setting isNewUser flag");
+        localStorage.setItem('isNewUser', 'true');
+      } else {
+        console.log("Existing Google account detected, not setting isNewUser flag");
+        // Ensure we clear any existing flag for sign-ins
+        localStorage.removeItem('isNewUser');
+      }
+
       return result.user;
     } catch (err) {
       console.error("Google sign-in error:", err);
@@ -237,6 +278,9 @@ export function AuthProvider({ children }) {
       const result = await signInWithPopup(auth, provider);
       console.log("Apple sign-in successful:", result.user?.email);
       
+      // Check if this is a new user more reliably by checking if this is their first sign-in
+      const isFirstSignIn = result?.additionalUserInfo?.isNewUser;
+      
       // Try to create user document but don't fail if it errors
       try {
         await createUserDocument(result.user);
@@ -246,6 +290,35 @@ export function AuthProvider({ children }) {
       }
       
       toast.success('Signed in with Apple successfully!');
+      
+      // After successful Apple sign-in, clear any previous plan choice
+      localStorage.removeItem('chosenPlan');
+      
+      // Check if this is a truly new user (by comparing creation and last sign-in times)
+      // Also use the isNewUser flag from the result if available
+      const isNewAccount = 
+        isFirstSignIn || 
+        result.user.metadata.creationTime === result.user.metadata.lastSignInTime;
+      
+      // Log the determination process
+      console.log("New account detection (Apple):", {
+        isFirstSignIn,
+        creationTime: result.user.metadata.creationTime,
+        lastSignInTime: result.user.metadata.lastSignInTime,
+        isSameTime: result.user.metadata.creationTime === result.user.metadata.lastSignInTime,
+        finalDecision: isNewAccount
+      });
+      
+      // Only set the isNewUser flag for brand new accounts
+      if (isNewAccount) {
+        console.log("Brand new Apple account detected, setting isNewUser flag");
+        localStorage.setItem('isNewUser', 'true');
+      } else {
+        console.log("Existing Apple account detected, not setting isNewUser flag");
+        // Ensure we clear any existing flag for sign-ins
+        localStorage.removeItem('isNewUser');
+      }
+      
       return result.user;
     } catch (err) {
       console.error("Apple sign-in error:", err);

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, memo, useCallback } from 'react';
-import { db } from '../services/db';
+import db from '../services/db';
 import { formatValue } from '../utils/formatters';
 import { formatCurrency } from '../utils/currencyAPI';
 import { useTheme } from '../contexts/ThemeContext';

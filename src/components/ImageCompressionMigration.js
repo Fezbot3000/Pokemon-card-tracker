@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { db } from '../services/db';
+import db from '../services/db';
 import { toast } from 'react-hot-toast';
 
 const ImageCompressionMigration = () => {
