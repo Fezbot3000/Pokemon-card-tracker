@@ -6,19 +6,21 @@ import { toast } from 'react-hot-toast';
 
 // Add CSS class definitions
 const inputStyles = `
-  w-full px-3 py-2 border border-gray-700
-  rounded-lg bg-[#252B3B] text-white text-sm
+  w-full px-3 py-2 border border-gray-200 dark:border-gray-700
+  rounded-lg bg-white dark:bg-[#252B3B] text-gray-900 dark:text-white text-sm
   focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500
-  placeholder-gray-400
+  placeholder-gray-500 dark:placeholder-gray-400
 `;
 
 // Image loading states component
 const CardImage = memo(({ imageUrl, loadingState, onRetry, onClick }) => {
+  const { isDarkMode } = useTheme();
+  
   if (loadingState === 'loading') {
     return (
       <div className="w-full h-full flex items-center justify-center">
         <span className="material-icons animate-spin text-gray-500">hourglass_empty</span>
-        <span className="text-sm text-gray-400 ml-2">Loading image...</span>
+        <span className="text-sm text-gray-500 dark:text-gray-400 ml-2">Loading image...</span>
       </div>
     );
   }
@@ -27,10 +29,10 @@ const CardImage = memo(({ imageUrl, loadingState, onRetry, onClick }) => {
     return (
       <div className="w-full h-full flex flex-col items-center justify-center">
         <span className="material-icons text-red-500 mb-2">error_outline</span>
-        <span className="text-sm text-gray-400 mb-2">Failed to load image</span>
+        <span className="text-sm text-gray-500 dark:text-gray-400 mb-2">Failed to load image</span>
         <button 
           onClick={onRetry}
-          className="text-sm bg-gray-700 text-white px-3 py-1 rounded-lg"
+          className="text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-white px-3 py-1 rounded-lg"
         >
           Retry
         </button>
@@ -41,10 +43,10 @@ const CardImage = memo(({ imageUrl, loadingState, onRetry, onClick }) => {
   if (!imageUrl) {
     return (
       <div className="w-full h-full flex flex-col items-center justify-center">
-        <span className="material-icons text-4xl text-gray-600 mb-2">
+        <span className="material-icons text-4xl text-gray-400 dark:text-gray-600 mb-2">
           image
         </span>
-        <span className="text-sm text-gray-400">
+        <span className="text-sm text-gray-500 dark:text-gray-400">
           No image available
         </span>
       </div>
@@ -439,7 +441,7 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
         <div className="card-details-content h-[calc(100vh-112px)] overflow-y-auto">
           {/* Image upload section */}
           <div className="mb-6">
-            <div className="border border-gray-700 rounded-lg overflow-hidden bg-gray-800/30 mb-4 max-w-[180px] max-h-[250px] aspect-[2/3] relative mx-auto">
+            <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800/30 mb-4 max-w-[180px] max-h-[250px] aspect-[2/3] relative mx-auto">
               <CardImage
                 imageUrl={cardImage}
                 loadingState={imageLoadingState}
@@ -483,8 +485,8 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
               onDrop={handleDrop}
             >
               {isDragging && (
-                <div className="absolute inset-0 -m-4 border-2 border-dashed border-purple-500 rounded-lg bg-purple-900/10 flex items-center justify-center z-0">
-                  <p className="text-purple-300 font-medium">Drop image here</p>
+                <div className="absolute inset-0 -m-4 border-2 border-dashed border-purple-500 rounded-lg bg-purple-100/30 dark:bg-purple-900/10 flex items-center justify-center z-0">
+                  <p className="text-purple-700 dark:text-purple-300 font-medium">Drop image here</p>
                 </div>
               )}
               
@@ -498,7 +500,7 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
               
               <button 
                 onClick={() => fileInputRef.current?.click()} 
-                className="flex items-center space-x-2 text-white bg-gray-800/70 px-4 py-2 rounded-lg relative z-10"
+                className="flex items-center space-x-2 text-gray-700 dark:text-white bg-gray-100 dark:bg-gray-800/70 px-4 py-2 rounded-lg relative z-10"
               >
                 <span className="material-icons text-sm">photo_camera</span>
                 <span>Upload Image</span>

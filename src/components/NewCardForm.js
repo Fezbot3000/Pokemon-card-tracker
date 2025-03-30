@@ -504,7 +504,7 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
                 {/* Image upload area */}
                 <div
                   ref={dropZoneRef}
-                  className="border border-gray-700 rounded-lg overflow-hidden bg-gray-800/30 mb-4 max-w-[180px] max-h-[250px] aspect-[2/3] relative mx-auto cursor-pointer"
+                  className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800/30 mb-4 max-w-[180px] max-h-[250px] aspect-[2/3] relative mx-auto cursor-pointer"
                   onClick={() => imagePreview && setShowEnlargedImage(true)}
                 >
                   {imagePreview ? (
@@ -520,10 +520,10 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
                     </div>
                   ) : (
                     <div className="flex flex-col items-center justify-center h-full p-4 text-center">
-                      <span className="material-icons text-gray-600 text-4xl mb-2">
+                      <span className="material-icons text-gray-400 dark:text-gray-600 text-4xl mb-2">
                         add_photo_alternate
                       </span>
-                      <p className="text-sm text-gray-300 mb-1">
+                      <p className="text-sm text-gray-500 dark:text-gray-300 mb-1">
                         No image yet
                       </p>
                     </div>

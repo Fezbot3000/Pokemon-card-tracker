@@ -1341,6 +1341,15 @@ body {
     box-shadow: -4px 0 16px rgba(0, 0, 0, 0.3);
   }
 
+  /* Fix for card image container in light mode */
+  .card-details-content .image-container {
+    @apply border-gray-200;
+  }
+
+  .dark .card-details-content .image-container {
+    @apply border-gray-700;
+  }
+
   /* Card checkbox styles */
   .card input[type="checkbox"] {
     @apply z-[45];
