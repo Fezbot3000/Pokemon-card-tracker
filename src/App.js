@@ -30,6 +30,7 @@ import TutorialModal from './components/TutorialModal';
 import PrivateRoute from './components/PrivateRoute';
 import ErrorBoundary from './components/ErrorBoundary';
 import './styles/main.css';
+import './styles/z-index-fixes.css';
 import SoldItems from './components/SoldItems/SoldItems';
 import SettingsModal from './components/SettingsModal';
 import BottomNavBar from './components/BottomNavBar';
@@ -1240,6 +1241,9 @@ To import this backup:
             collections={collections}
             setCollections={setCollections}
           />
+        ) : currentView === 'settings' && isMobile ? (
+          // The SettingsModal component will handle rendering for mobile view
+          null
         ) : (
           <SoldItems />
         )}
@@ -1387,8 +1391,8 @@ To import this backup:
         />
       )}
 
-      {/* Mobile Bottom Navigation */}
-      <div className="lg:hidden">
+      {/* Mobile Bottom Navigation - Always visible on mobile */}
+      <div className="lg:hidden bottom-nav-container">
         <BottomNavBar 
           currentView={currentView}
           onViewChange={(view) => {

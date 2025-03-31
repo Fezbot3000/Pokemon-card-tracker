@@ -239,22 +239,24 @@ const SettingsModal = ({
   // Render different layouts based on screen size
   return (
     <>
-      {/* Semi-transparent overlay */}
-      <div 
-        className={`card-details-overlay ${modalOpen ? 'open' : ''}`}
-        onClick={handleClose}
-      />
+      {/* Semi-transparent overlay - only shown on desktop */}
+      {!isMobile && (
+        <div 
+          className={`card-details-overlay settings-overlay ${modalOpen ? 'open' : ''}`}
+          onClick={handleClose}
+        />
+      )}
       
       {/* Settings content */}
       <div 
-        className={`settings-modal-content ${modalOpen ? 'open' : ''}`}
+        className={`settings-modal-content ${modalOpen ? 'open' : ''} ${isMobile ? 'settings-mobile-page settings-fullscreen settings-direct-page settings-with-nav' : ''}`}
         onWheel={preventPropagation} 
         onTouchMove={preventPropagation}
         onScroll={preventPropagation}
       >
-        {/* Mobile header with tabs */}
+        {/* Mobile header with tabs - removing fixed positioning */}
         {isMobile && (
-          <div className="fixed top-0 left-0 right-0 z-40 bg-white dark:bg-[#1B2131] border-b border-gray-200 dark:border-gray-700/50">
+          <div className="bg-white dark:bg-[#1B2131] border-b border-gray-200 dark:border-gray-700/50">
             <div className="max-w-xl mx-auto px-4 sm:px-6 w-full">
               <div className="flex items-center h-16">
                 <div className="flex items-center gap-2 sm:gap-4 flex-shrink min-w-0 max-w-[45%] sm:max-w-[60%] md:max-w-[70%]">
@@ -274,7 +276,7 @@ const SettingsModal = ({
                 <div className="flex">
                   <button
                     onClick={() => setActiveTab('general')}
-                    className={`py-3 px-2 transition-colors ${
+                    className={`py-3 px-3 transition-colors ${
                       activeTab === 'general'
                         ? 'text-primary font-medium'
                         : 'text-gray-500 dark:text-gray-400'
@@ -359,7 +361,7 @@ const SettingsModal = ({
           </div>
         )}
         
-        <div className={`${isMobile ? 'p-4 sm:p-6 pt-32 max-w-xl mx-auto w-full space-y-6' : 'p-6 space-y-6'} overflow-y-auto flex-1`}
+        <div className={`${isMobile ? 'p-4 sm:p-6 pt-0 max-w-xl mx-auto w-full space-y-6 mobile-settings-scrollable' : 'p-6 space-y-6'} overflow-y-auto flex-1`}
           onWheel={preventPropagation}
           onTouchMove={preventPropagation}>
           {activeTab === 'general' && (
@@ -716,7 +718,7 @@ const SettingsModal = ({
               </div>
 
               {/* Reset Application */}
-              <div className={`rounded-lg border border-red-200 dark:border-red-900/50 p-4 ${isMobile ? 'bg-white dark:bg-[#1B2131] shadow-sm' : ''}`}>
+              <div className={`rounded-lg border border-red-200 dark:border-red-900/50 p-4 ${isMobile ? 'bg-white dark:bg-[#1B2131] shadow-sm mb-20' : ''}`}>
                 <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100">Reset Application</h4>
                 <p className="mt-1 text-sm text-gray-500 dark:text-gray-400 mb-3">
                   Start fresh by deleting all your collections and settings. Warning: This cannot be undone.
@@ -820,7 +822,7 @@ const SettingsModal = ({
                     />
                   </div>
 
-                  <div className="flex justify-end">
+                  <div className={`flex justify-end ${isMobile ? 'mb-20' : ''}`}>
                     <button
                       onClick={handleProfileSave}
                       className="btn btn-primary"
@@ -866,7 +868,7 @@ const SettingsModal = ({
                     toast.error('Failed to sign out');
                   }
                 }}
-                className="w-full btn btn-tertiary mt-4"
+                className={`w-full btn btn-tertiary mt-4 ${isMobile ? 'mb-20' : ''}`}
               >
                 <span className="material-icons text-gray-600 dark:text-gray-400">logout</span>
                 Sign Out
