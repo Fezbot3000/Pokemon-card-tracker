@@ -131,10 +131,40 @@ const SettingsModal = ({
   const handleResetData = async () => {
     if (window.confirm('Are you sure you want to reset all data? This action cannot be undone.')) {
       try {
+        // Show loading spinner
+        const loader = document.getElementById('loader');
+        if (loader) {
+          loader.style.display = 'flex';
+          loader.classList.remove('loader-hidden');
+        }
+
+        // Reset all data
         await db.resetAllData();
-        window.location.reload();
+        
+        // Set up default collection before reload
+        const defaultCollections = { 'Default Collection': [] };
+        await db.saveCollections(defaultCollections);
+        
+        // Set default collection in localStorage
+        localStorage.setItem('selectedCollection', 'Default Collection');
+        
+        // Small delay to ensure loading spinner is visible
+        setTimeout(() => {
+          // Now reload the page
+          window.location.reload();
+        }, 300);
       } catch (error) {
         console.error('Error resetting data:', error);
+        toast.error('Failed to reset data: ' + error.message);
+        
+        // Hide loading spinner on error
+        const loader = document.getElementById('loader');
+        if (loader) {
+          loader.classList.add('loader-hidden');
+          setTimeout(() => {
+            loader.style.display = 'none';
+          }, 300);
+        }
       }
     }
   };

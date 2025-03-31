@@ -450,31 +450,6 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
               />
             </div>
             
-            {/* Enlarged Image Modal */}
-            {showEnlargedImage && cardImage && (
-              <div 
-                className="fixed inset-0 z-[200] bg-black/80 flex items-center justify-center p-4" 
-                onClick={() => setShowEnlargedImage(false)}
-              >
-                <div className="relative max-h-[90vh] max-w-[90vw] overflow-hidden">
-                  <img 
-                    src={cardImage} 
-                    alt="Card preview (enlarged)" 
-                    className="max-h-[90vh] max-w-[90vw] object-contain" 
-                  />
-                  <button 
-                    className="absolute top-2 right-2 bg-black/50 text-white p-1 rounded-full"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setShowEnlargedImage(false);
-                    }}
-                  >
-                    <span className="material-icons">close</span>
-                  </button>
-                </div>
-              </div>
-            )}
-            
             {/* Upload Image Button with Drag & Drop */}
             <div 
               ref={dropZoneRef}
@@ -684,6 +659,50 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
           </div>
         </div>
       </div>
+
+      {/* Move the enlarged image modal outside the card details modal */}
+      {showEnlargedImage && cardImage && (
+        <div 
+          className="fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center cursor-zoom-out" 
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowEnlargedImage(false);
+          }}
+          style={{ 
+            backdropFilter: 'blur(8px)',
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}
+        >
+          <div 
+            className="relative max-w-[90vw] max-h-[90vh] flex items-center justify-center"
+            onClick={e => e.stopPropagation()}
+          >
+            <img 
+              src={cardImage} 
+              alt="Card preview (enlarged)" 
+              className="max-h-[90vh] max-w-[90vw] w-auto h-auto object-contain rounded-lg" 
+              style={{ margin: 'auto' }}
+              onClick={e => e.stopPropagation()}
+            />
+            <button 
+              className="absolute top-4 right-4 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowEnlargedImage(false);
+              }}
+            >
+              <span className="material-icons">close</span>
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 };

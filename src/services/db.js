@@ -539,6 +539,37 @@ class DatabaseService {
       }
     });
   }
+
+  async getSoldCards() {
+    await this.ensureDB();
+    const userId = this.getCurrentUserId();
+    
+    return new Promise((resolve, reject) => {
+      const transaction = this.db.transaction([COLLECTIONS_STORE], 'readonly');
+      const store = transaction.objectStore(COLLECTIONS_STORE);
+      const request = store.get([userId, 'sold']);
+
+      request.onsuccess = () => {
+        resolve(request.result?.data || []);
+      };
+
+      request.onerror = () => reject('Error fetching sold cards');
+    });
+  }
+
+  async saveSoldCards(soldCards) {
+    await this.ensureDB();
+    const userId = this.getCurrentUserId();
+    
+    return new Promise((resolve, reject) => {
+      const transaction = this.db.transaction([COLLECTIONS_STORE], 'readwrite');
+      const store = transaction.objectStore(COLLECTIONS_STORE);
+      const request = store.put({ userId, name: 'sold', data: soldCards });
+
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject('Error saving sold cards');
+    });
+  }
 }
 
 const db = new DatabaseService();

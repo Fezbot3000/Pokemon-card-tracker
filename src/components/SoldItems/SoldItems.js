@@ -66,6 +66,21 @@ const SoldItems = () => {
     loadProfile();
   }, []);
 
+  // Load sold cards from IndexedDB
+  useEffect(() => {
+    const loadSoldCards = async () => {
+      try {
+        const soldCardsData = await db.getSoldCards();
+        setSoldCards(soldCardsData || []);
+      } catch (error) {
+        console.error('Error loading sold cards:', error);
+        setSoldCards([]);
+      }
+    };
+
+    loadSoldCards();
+  }, []);
+
   // Group cards by invoice ID instead of buyer+date
   const groupCardsByInvoice = (cards) => {
     const invoicesMap = {};
@@ -94,17 +109,6 @@ const SoldItems = () => {
     
     return Object.values(invoicesMap);
   };
-
-  useEffect(() => {
-    const loadSoldCards = () => {
-      const savedCards = JSON.parse(localStorage.getItem('soldCards') || '[]');
-      setSoldCards(savedCards);
-    };
-
-    loadSoldCards();
-    window.addEventListener('storage', loadSoldCards);
-    return () => window.removeEventListener('storage', loadSoldCards);
-  }, []);
 
   const filteredCards = soldCards.filter(card => 
     card.card?.toLowerCase().includes(filter.toLowerCase()) ||

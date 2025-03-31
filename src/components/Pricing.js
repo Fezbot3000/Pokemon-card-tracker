@@ -147,72 +147,10 @@ function Pricing() {
         
         {/* Subscription Plans */}
         <div className="flex flex-col md:flex-row max-w-6xl mx-auto gap-8 mb-16">
-          {/* Free Tier */}
-          <div className="md:w-1/2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-3xl overflow-hidden transform transition-all duration-300 hover:scale-105 hover:shadow-2xl">
-            <div className="p-8 flex flex-col h-full">
-              <div className="mb-8">
-                <h2 className="text-3xl font-bold text-white mb-4">Free</h2>
-                <div className="flex items-baseline mb-6">
-                  <span className="text-5xl font-extrabold text-white">$0</span>
-                  <span className="text-xl text-gray-200 ml-2">/month</span>
-                </div>
-                <p className="text-gray-200 mb-6">Perfect for casual collectors just getting started</p>
-                <hr className="border-white/20 mb-6" />
-              </div>
-              
-              <div className="space-y-4 flex-grow mb-8">
-                <div className="flex items-center">
-                  <span className="material-icons text-green-400 mr-2">check_circle</span>
-                  <span className="text-gray-100">Track unlimited cards</span>
-                </div>
-                <div className="flex items-center">
-                  <span className="material-icons text-green-400 mr-2">check_circle</span>
-                  <span className="text-gray-100">Basic analytics</span>
-                </div>
-                <div className="flex items-center">
-                  <span className="material-icons text-green-400 mr-2">check_circle</span>
-                  <span className="text-gray-100">Manual local backups</span>
-                </div>
-                <div className="flex items-center">
-                  <span className="material-icons text-green-400 mr-2">check_circle</span>
-                  <span className="text-gray-100">Unlimited collections</span>
-                </div>
-                <div className="flex items-center">
-                  <span className="material-icons text-red-400 mr-2">cancel</span>
-                  <span className="text-gray-100">Cloud backup & sync</span>
-                </div>
-                <div className="flex items-center">
-                  <span className="material-icons text-red-400 mr-2">cancel</span>
-                  <span className="text-gray-100">Multi-device access</span>
-                </div>
-                <div className="flex items-center">
-                  <span className="material-icons text-red-400 mr-2">cancel</span>
-                  <span className="text-gray-100">Priority support</span>
-                </div>
-              </div>
-              
-              {currentUser ? (
-                <button 
-                  className="w-full bg-white text-gray-900 hover:bg-gray-100 text-lg font-medium py-4 rounded-xl shadow-lg transition-all duration-200 hover:shadow-xl text-center"
-                  onClick={() => navigate('/dashboard')}
-                >
-                  Continue with Free
-                </button>
-              ) : (
-                <Link 
-                  to="/login" 
-                  className="w-full bg-white text-gray-900 hover:bg-gray-100 text-lg font-medium py-4 rounded-xl shadow-lg transition-all duration-200 hover:shadow-xl text-center"
-                >
-                  Sign Up Free
-                </Link>
-              )}
-            </div>
-          </div>
-          
           {/* Premium Tier */}
-          <div className="md:w-1/2 bg-white/10 backdrop-blur-sm border-2 border-yellow-400/50 rounded-3xl overflow-hidden transform transition-all duration-300 hover:scale-105 hover:shadow-2xl relative">
+          <div className="w-full bg-white/10 backdrop-blur-sm border-2 border-yellow-400/50 rounded-3xl overflow-hidden transform transition-all duration-300 hover:scale-105 hover:shadow-2xl relative">
             <div className="absolute top-0 right-0 bg-yellow-400 text-gray-900 px-4 py-1 rounded-bl-lg font-bold">
-              RECOMMENDED
+              BEST VALUE
             </div>
             <div className="p-8 flex flex-col h-full">
               <div className="mb-8">
@@ -228,7 +166,15 @@ function Pricing() {
               <div className="space-y-4 flex-grow mb-8">
                 <div className="flex items-center">
                   <span className="material-icons text-green-400 mr-2">check_circle</span>
-                  <span className="text-gray-100">Everything in Free</span>
+                  <span className="text-gray-100">Track unlimited cards</span>
+                </div>
+                <div className="flex items-center">
+                  <span className="material-icons text-green-400 mr-2">check_circle</span>
+                  <span className="text-gray-100">Advanced analytics</span>
+                </div>
+                <div className="flex items-center">
+                  <span className="material-icons text-green-400 mr-2">check_circle</span>
+                  <span className="text-gray-100">Unlimited collections</span>
                 </div>
                 <div className="flex items-center">
                   <span className="material-icons text-green-400 mr-2">check_circle</span>
@@ -240,51 +186,25 @@ function Pricing() {
                 </div>
                 <div className="flex items-center">
                   <span className="material-icons text-green-400 mr-2">check_circle</span>
-                  <span className="text-gray-100">Advanced analytics</span>
-                </div>
-                <div className="flex items-center">
-                  <span className="material-icons text-green-400 mr-2">check_circle</span>
                   <span className="text-gray-100">Priority customer support</span>
-                </div>
-                <div className="flex items-center">
-                  <span className="material-icons text-green-400 mr-2">check_circle</span>
-                  <span className="text-gray-100">Early access to new features</span>
                 </div>
               </div>
               
-              {isNewUser && (
-                <div className="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 mb-8 rounded-lg">
-                  <h3 className="font-bold text-lg">Welcome to Pokémon Card Tracker!</h3>
-                  <p className="mt-1">Please select a plan to continue. Your data will be saved after you choose a subscription.</p>
-                </div>
-              )}
-              
-              {tableError && (
-                <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-8 rounded-lg">
-                  <h3 className="font-bold">There was a problem loading the pricing table</h3>
-                  <p className="mt-1">Please use the direct subscription button above or try again later.</p>
-                </div>
-              )}
-              
               {currentUser ? (
-                <div ref={pricingTableRef}>
-                  {/* Direct subscription button - always visible */}
-                  <a
-                    href={`https://buy.stripe.com/bIY2aL2oC2kBaXe9AA?client_reference_id=${currentUser?.uid || ''}&prefilled_email=${currentUser?.email || ''}`}
-                    className="w-full bg-yellow-400 text-gray-900 hover:bg-yellow-300 text-lg font-medium py-4 rounded-xl shadow-lg transition-all duration-200 hover:shadow-xl text-center block"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Subscribe to Premium - $12.99/month
-                  </a>
-                  <p className="text-center text-sm text-white mt-2">Securely processed by Stripe</p>
-                </div>
+                <a
+                  href={`https://buy.stripe.com/bIY2aL2oC2kBaXe9AA?client_reference_id=${currentUser?.uid || ''}&prefilled_email=${currentUser?.email || ''}`}
+                  className="w-full bg-yellow-400 text-gray-900 hover:bg-yellow-300 text-lg font-medium py-4 rounded-xl shadow-lg transition-all duration-200 hover:shadow-xl text-center"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Subscribe Now
+                </a>
               ) : (
                 <Link 
-                  to="/login?redirect=pricing" 
+                  to="/login" 
                   className="w-full bg-yellow-400 text-gray-900 hover:bg-yellow-300 text-lg font-medium py-4 rounded-xl shadow-lg transition-all duration-200 hover:shadow-xl text-center"
                 >
-                  Sign In to Subscribe
+                  Sign Up to Subscribe
                 </Link>
               )}
             </div>

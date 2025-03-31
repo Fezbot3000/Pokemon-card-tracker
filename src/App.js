@@ -215,6 +215,35 @@ function Dashboard() {
   );
 }
 
+// Add LoadingProvider component
+const LoadingContext = React.createContext({
+  setLoading: () => {},
+  isLoading: false
+});
+
+function LoadingProvider({ children }) {
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const loader = document.getElementById('loader');
+    if (loader) {
+      setTimeout(() => {
+        setIsLoading(false);
+        loader.classList.add('loader-hidden');
+        setTimeout(() => {
+          loader.style.display = 'none';
+        }, 300);
+      }, 500);
+    }
+  }, []);
+
+  return (
+    <LoadingContext.Provider value={{ isLoading, setIsLoading }}>
+      {children}
+    </LoadingContext.Provider>
+  );
+}
+
 function AppContent() {
   const [showNewCardForm, setShowNewCardForm] = useState(false);
   const [importModalOpen, setImportModalOpen] = useState(false);
@@ -665,8 +694,8 @@ function AppContent() {
         // Get profile data
         const profileData = await db.getProfile();
         
-        // Get sold cards data
-        const soldCardsData = JSON.parse(localStorage.getItem('soldCards') || '[]');
+        // Get sold cards data from IndexedDB
+        const soldCardsData = await db.getSoldCards();
         
         // Create a data folder in the ZIP
         const dataFolder = zip.folder("data");
@@ -1419,99 +1448,105 @@ To import this backup:
 function App() {
   return (
     <ErrorBoundary>
-      <AuthProvider>
-        <ThemeProvider>
-          <SubscriptionProvider>
-            <TutorialProvider>
-              <Router>
-                <Toaster
-                  position="top-center"
-                  toastOptions={{
-                    duration: 3000,
-                    className: 'notification-toast',
-                    style: {
-                      backgroundColor: 'var(--toast-background)',
-                      color: 'var(--toast-text)'
-                    }
-                  }}
-                />
-                <Routes>
-                  <Route path="/" element={<Home />} />
-                  <Route 
-                    path="/login" 
-                    element={
-                      <PublicRoute>
-                        <Login />
-                      </PublicRoute>
-                    } 
-                  />
-                  <Route 
-                    path="/forgot-password" 
-                    element={
-                      <PublicRoute>
-                        <ForgotPassword />
-                      </PublicRoute>
-                    } 
-                  />
-                  <Route 
-                    path="/pricing" 
-                    element={<Pricing />} 
-                  />
-                  
-                  {/* Dashboard routes with nested routes using Outlet */}
-                  <Route 
-                    path="/dashboard"
-                    element={
-                      <PrivateRoute>
-                        <Dashboard />
-                      </PrivateRoute>
-                    }
-                  >
-                    <Route 
-                      index
-                      element={
-                        <>
-                          <NewUserRoute />
-                          <AppContent />
-                        </>
+      <LoadingProvider>
+        <AuthProvider>
+          <ThemeProvider>
+            <SubscriptionProvider>
+              <TutorialProvider>
+                <Router basename={process.env.PUBLIC_URL}>
+                  <Toaster
+                    position="top-center"
+                    toastOptions={{
+                      duration: 3000,
+                      className: 'notification-toast',
+                      style: {
+                        background: '#1B2131',
+                        color: '#FFFFFF',
+                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                        borderRadius: '12px',
+                        padding: '12px 24px',
+                        fontWeight: '500'
                       }
+                    }}
+                  />
+                  <Routes>
+                    <Route path="/" element={<Home />} />
+                    <Route 
+                      path="/login" 
+                      element={
+                        <PublicRoute>
+                          <Login />
+                        </PublicRoute>
+                      } 
                     />
                     <Route 
-                      path="pricing" 
-                      element={<DashboardPricing />} 
+                      path="/forgot-password" 
+                      element={
+                        <PublicRoute>
+                          <ForgotPassword />
+                        </PublicRoute>
+                      } 
                     />
-                  </Route>
-                  
-                  {/* Premium-only route example */}
-                  <Route
-                    path="/premium/*"
-                    element={
-                      <PrivateRoute requireSubscription={true}>
-                        <div className="min-h-screen bg-gray-100 dark:bg-[#111827] p-8">
-                          <div className="max-w-4xl mx-auto bg-white dark:bg-[#1B2131] rounded-lg shadow-lg p-6">
-                            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-                              Premium Features
-                            </h1>
-                            <p className="text-gray-700 dark:text-gray-300 mb-6">
-                              This is a premium-only section. You have access because you're a premium subscriber!
-                            </p>
-                            <div className="flex justify-center">
-                              <Link to="/dashboard" className="bg-primary text-white px-6 py-2 rounded-lg hover:bg-primary-dark transition-colors">
-                                Back to Dashboard
-                              </Link>
+                    <Route 
+                      path="/pricing" 
+                      element={<Pricing />} 
+                    />
+                    
+                    {/* Dashboard routes with nested routes using Outlet */}
+                    <Route 
+                      path="/dashboard"
+                      element={
+                        <PrivateRoute>
+                          <Dashboard />
+                        </PrivateRoute>
+                      }
+                    >
+                      <Route 
+                        index
+                        element={
+                          <>
+                            <NewUserRoute />
+                            <AppContent />
+                          </>
+                        }
+                      />
+                      <Route 
+                        path="pricing" 
+                        element={<DashboardPricing />} 
+                      />
+                    </Route>
+                    
+                    {/* Premium-only route example */}
+                    <Route
+                      path="/premium/*"
+                      element={
+                        <PrivateRoute requireSubscription={true}>
+                          <div className="min-h-screen bg-gray-100 dark:bg-[#111827] p-8">
+                            <div className="max-w-4xl mx-auto bg-white dark:bg-[#1B2131] rounded-lg shadow-lg p-6">
+                              <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+                                Premium Features
+                              </h1>
+                              <p className="text-gray-700 dark:text-gray-300 mb-6">
+                                This is a premium-only section. You have access because you're a premium subscriber!
+                              </p>
+                              <div className="flex justify-center">
+                                <Link to="/dashboard" className="bg-primary text-white px-6 py-2 rounded-lg hover:bg-primary-dark transition-colors">
+                                  Back to Dashboard
+                                </Link>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </PrivateRoute>
-                    }
-                  />
-                  <Route path="*" element={<Navigate to="/" />} />
-                </Routes>
-              </Router>
-            </TutorialProvider>
-          </SubscriptionProvider>
-        </ThemeProvider>
-      </AuthProvider>
+                        </PrivateRoute>
+                      }
+                    />
+                    <Route path="*" element={<Navigate to="/" />} />
+                  </Routes>
+                </Router>
+              </TutorialProvider>
+            </SubscriptionProvider>
+          </ThemeProvider>
+        </AuthProvider>
+      </LoadingProvider>
     </ErrorBoundary>
   );
 }

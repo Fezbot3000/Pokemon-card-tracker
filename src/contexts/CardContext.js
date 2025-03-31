@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useAuth } from './AuthContext';
 import CardRepository from '../repositories/CardRepository';
+import db from '../services/db';
 
 const CardContext = createContext();
 
@@ -18,38 +19,20 @@ export function CardProvider({ children }) {
 
   // Load sold card IDs on mount
   useEffect(() => {
-    try {
-      // First try to load from localStorage (more persistent)
-      let pendingSoldCardIds = [];
+    const loadSoldCardIds = async () => {
       try {
-        pendingSoldCardIds = JSON.parse(localStorage.getItem('pendingSoldCardIds') || '[]');
-        console.log(`Loaded ${pendingSoldCardIds.length} sold card IDs from localStorage`);
-      } catch (error) {
-        console.warn('Failed to load pending sold cards from localStorage:', error);
-      }
-      
-      // Add any from sessionStorage as well (for backwards compatibility)
-      try {
-        const sessionPendingSoldCardIds = JSON.parse(sessionStorage.getItem('pendingSoldCardIds') || '[]');
-        if (sessionPendingSoldCardIds.length > 0) {
-          console.log(`Found ${sessionPendingSoldCardIds.length} sold card IDs in sessionStorage`);
-          // Combine unique IDs from both sources
-          pendingSoldCardIds = [...new Set([...pendingSoldCardIds, ...sessionPendingSoldCardIds])];
-          // Clean up sessionStorage since we're moving to localStorage
-          sessionStorage.removeItem('pendingSoldCardIds');
+        const soldCards = await db.getSoldCards();
+        if (soldCards && soldCards.length > 0) {
+          const soldCardIds = new Set(soldCards.map(card => card.originalCardId || card.id));
+          setSoldCardIds(soldCardIds);
+          console.log(`Loaded ${soldCardIds.size} sold card IDs from IndexedDB`);
         }
       } catch (error) {
-        console.warn('Failed to process pending sold cards from sessionStorage:', error);
+        console.warn('Failed to load sold card IDs from IndexedDB:', error);
       }
-      
-      // Set the sold card IDs in state
-      if (pendingSoldCardIds.length > 0) {
-        console.log(`Setting ${pendingSoldCardIds.length} sold card IDs in state`);
-        setSoldCardIds(new Set(pendingSoldCardIds));
-      }
-    } catch (error) {
-      console.warn('Failed to process pending sold cards:', error);
-    }
+    };
+
+    loadSoldCardIds();
   }, []);
 
   // Initialize repository when user changes
@@ -102,393 +85,58 @@ export function CardProvider({ children }) {
   // Load initial data (collections, cards, etc)
   const loadInitialData = useCallback(async (repo) => {
     if (!repo) {
-      console.error('Cannot load data: repository is null');
-      setLoading(false);
-      return { success: false, message: 'Repository is not initialized' };
+      console.error('No repository provided to loadInitialData');
+      return { success: false, message: 'No repository available' };
     }
-    
+
     try {
       setLoading(true);
       setError(null);
-      console.log("CardContext: Loading initial data...");
-      
-      // First, get all collections from the repository
-      let collections = [];
+      setSyncStatus('syncing');
+
+      // Load collections
+      let collectionsFromRepo = [];
       try {
-        collections = await repo.getCollections();
-        console.log(`CardContext: Loaded ${collections.length} collections`);
+        collectionsFromRepo = await repo.getCollections();
+        console.log(`CardContext: Loaded ${collectionsFromRepo.length} collections`);
       } catch (collectionsError) {
         console.error('Failed to load collections:', collectionsError);
-        setError('Failed to load collections');
-        collections = [];
+        collectionsFromRepo = [];
       }
 
-      // IMPORTANT: Don't filter out any existing collections
-      // Just ensure there are no duplicates with the same name
-      const uniqueCollections = [];
-      const collectionNames = new Set();
-      const collectionIds = new Set();
-      
-      for (const collection of collections) {
-        // Skip any null or undefined collections
-        if (!collection || !collection.name) continue;
-        
-        // Add collection IDs to set for later detection of orphaned cards
-        collectionIds.add(collection.id);
-        
-        // Check if we've already seen this collection name
-        if (!collectionNames.has(collection.name.toLowerCase())) {
-          collectionNames.add(collection.name.toLowerCase());
-          uniqueCollections.push({
-            ...collection,
-            cardCount: collection.cardCount || 0
-          });
-        } else {
-          console.warn(`Duplicate collection name detected: ${collection.name} - keeping the first one`);
-        }
-      }
-      
-      // Add the "All Cards" pseudo-collection only if it doesn't exist already
-      const hasAllCards = uniqueCollections.some(c => 
-        c.name === 'All Cards' || c.id === 'all-cards'
-      );
-      
-      let fullCollections = uniqueCollections;
-      
-      if (!hasAllCards) {
-        const allCollectionsOption = {
-          id: 'all-cards',
-          name: 'All Cards',
-          cardCount: 0
-        };
-        // Add All Cards at the beginning
-        fullCollections = [allCollectionsOption, ...uniqueCollections];
-      }
-      
-      console.log(`CardContext: Setting ${fullCollections.length} collections (including All Cards)`);
-      setCollections(fullCollections);
-
-      // Check if a collection was previously selected in this session
-      // Use selectedCollectionId in localStorage first (it's more reliable)
-      const storedCollectionId = localStorage.getItem('selectedCollectionId');
-      const storedCollectionName = localStorage.getItem('selectedCollection');
-      
-      console.log(`CardContext: Stored collection ID: ${storedCollectionId}`);
-      console.log(`CardContext: Stored collection name: ${storedCollectionName}`);
-      
-      let selected = null;
-      
-      // First try to get by ID
-      if (storedCollectionId) {
-        selected = fullCollections.find(c => c.id === storedCollectionId);
-        console.log(`CardContext: Found collection by ID: ${selected?.name || 'none'}`);
-      }
-      
-      // If not found by ID, try by name
-      if (!selected && storedCollectionName) {
-        selected = fullCollections.find(c => c.name === storedCollectionName);
-        console.log(`CardContext: Found collection by name: ${selected?.name || 'none'}`);
-      }
-      
-      // If still not found, default to "All Cards" or first collection
-      if (!selected) {
-        selected = fullCollections.find(c => c.id === 'all-cards' || c.name === 'All Cards') || 
-                 (fullCollections.length > 0 ? fullCollections[0] : null);
-        console.log(`CardContext: Defaulting to ${selected?.name || 'no'} collection`);
-      }
-      
-      // Set the selected collection
-      if (selected) {
-        setSelectedCollection(selected);
-        console.log(`CardContext: Selected collection set to: ${selected.name}`);
-      } else {
-        console.log('CardContext: No collection available to select');
-      }
-
-      // Get ALL cards to check for orphaned collections (those referenced by cards but not in collections list)
-      let allCardsFromRepo = [];
-      
-      try {
-        // Get all cards regardless of collection
-        allCardsFromRepo = await repo.getCardsByCollection(null);
-        console.log(`CardContext: Loaded ${allCardsFromRepo.length} total cards across all collections`);
-        
-        // Check for orphaned collections (cards with collection IDs that don't exist in our collections)
-        const orphanedCollectionIds = new Set();
-        
-        // Find collection IDs in cards that don't exist in our collections
-        allCardsFromRepo.forEach(card => {
-          if (card.collectionId && 
-              card.collectionId !== 'all-cards' && 
-              !collectionIds.has(card.collectionId)) {
-            orphanedCollectionIds.add(card.collectionId);
-          }
-        });
-        
-        // If we found orphaned collections, try to recover them
-        if (orphanedCollectionIds.size > 0) {
-          console.log(`Found ${orphanedCollectionIds.size} orphaned collections, attempting to recover`);
-          
-          const orphanedCollectionIdsArray = Array.from(orphanedCollectionIds);
-          for (const collectionId of orphanedCollectionIdsArray) {
-            try {
-              // Get a card from this collection to see what name it might have had
-              const sampleCard = allCardsFromRepo.find(card => card.collectionId === collectionId);
-              
-              // Generate a collection name based on available information
-              let collectionName = 'Recovered Collection';
-              if (sampleCard && sampleCard.set) {
-                collectionName = sampleCard.set;
-              }
-              
-              // Create a new collection with the recovered ID
-              const recoveredCollection = {
-                id: collectionId,
-                name: collectionName,
-                cardCount: allCardsFromRepo.filter(card => card.collectionId === collectionId).length,
-                description: 'Recovered collection',
-                createdAt: new Date(),
-                updatedAt: new Date()
-              };
-              
-              // Save the collection to Firestore
-              try {
-                await repo.createCollectionWithId(collectionId, recoveredCollection);
-                console.log(`Successfully recovered collection ${collectionId} as "${collectionName}"`);
-                
-                // Add to our collections array
-                fullCollections.push(recoveredCollection);
-              } catch (saveError) {
-                console.error(`Failed to save recovered collection ${collectionId}:`, saveError);
-              }
-            } catch (recoveryError) {
-              console.error(`Error recovering collection ${collectionId}:`, recoveryError);
-            }
-          }
-          
-          // Update collections in state
-          if (fullCollections.length > uniqueCollections.length) {
-            console.log(`Updating collections list with ${fullCollections.length} total collections after recovery`);
-            setCollections(fullCollections);
-          }
-        }
-      } catch (allCardsError) {
-        console.error('Failed to load all cards:', allCardsError);
-      }
-
-      // Get cards from repository based on the selected collection
+      // Load cards
       let cardsFromRepo = [];
-      
       try {
-        // With our updated getCardsByCollection method, we can use it for both cases
-        cardsFromRepo = await repo.getCardsByCollection(selected.id);
-        console.log(`CardContext: Loaded ${cardsFromRepo.length} cards for collection ${selected.name}`);
-        
-        // Find and remove duplicate cards
-        try {
-          // Look for potential duplicate cards created during image uploads
-          const duplicateGroups = await findDuplicateCards(cardsFromRepo, repo);
-          if (duplicateGroups.length > 0) {
-            console.log(`Found ${duplicateGroups.length} groups of duplicate cards, cleaning up...`);
-            let totalDuplicatesRemoved = 0;
-            
-            // Process each group of duplicates
-            for (const group of duplicateGroups) {
-              // Keep the most complete card and remove others
-              const [cardToKeep, ...cardsToRemove] = group;
-              
-              console.log(`Keeping card ${cardToKeep.id} and removing ${cardsToRemove.length} duplicates`);
-              
-              // Delete duplicates
-              for (const duplicate of cardsToRemove) {
-                try {
-                  await repo.deleteCard(duplicate.id);
-                  totalDuplicatesRemoved++;
-                } catch (deleteError) {
-                  console.error(`Failed to delete duplicate card ${duplicate.id}:`, deleteError);
-                }
-              }
-            }
-            
-            console.log(`Successfully removed ${totalDuplicatesRemoved} duplicate cards`);
-            
-            // Reload cards after cleanup
-            if (totalDuplicatesRemoved > 0) {
-              console.log('Reloading cards after duplicate cleanup');
-              cardsFromRepo = await repo.getCardsByCollection(selected.id);
-            }
-          }
-        } catch (duplicateError) {
-          console.error('Error checking for duplicate cards:', duplicateError);
-        }
-        
-        // Fix cards with hardcoded collection IDs
-        try {
-          // Look for cards with hardcoded 'colect1' collection ID
-          const cardsWithHardcodedCollection = cardsFromRepo.filter(card => 
-            card.collectionId === 'colect1'
-          );
-          
-          if (cardsWithHardcodedCollection.length > 0) {
-            console.log(`Found ${cardsWithHardcodedCollection.length} cards with hardcoded collection ID 'colect1'`);
-            
-            // Find a valid user-created collection (not 'all-cards')
-            const targetCollection = fullCollections.find(c => c.id !== 'all-cards') || 
-                                    (fullCollections.length > 0 ? fullCollections[0] : null);
-            
-            if (targetCollection) {
-              console.log(`Assigning these cards to collection: ${targetCollection.name}`);
-              
-              // Update each card with the correct collection ID
-              for (const card of cardsWithHardcodedCollection) {
-                try {
-                  await repo.updateCard(card.id, {
-                    collectionId: targetCollection.id
-                  });
-                  console.log(`Updated card ${card.id} with correct collection ID: ${targetCollection.id}`);
-                } catch (updateError) {
-                  console.error(`Failed to update collection for card ${card.id}:`, updateError);
-                }
-              }
-              
-              // Reload cards after fixing
-              console.log('Reloading cards after fixing collection IDs');
-              cardsFromRepo = await repo.getCardsByCollection(selected.id);
-            }
-          }
-        } catch (collectionFixError) {
-          console.error('Error fixing hardcoded collection IDs:', collectionFixError);
-        }
+        cardsFromRepo = await repo.getCards();
+        console.log(`CardContext: Loaded ${cardsFromRepo.length} cards`);
       } catch (cardsError) {
         console.error('Failed to load cards:', cardsError);
-        setError('Failed to load cards');
         cardsFromRepo = [];
       }
-      
+
       // Filter out any sold cards at initial load time
-      let pendingSoldCardIds = [];
       try {
-        // Get from localStorage (primary source)
-        pendingSoldCardIds = JSON.parse(localStorage.getItem('pendingSoldCardIds') || '[]');
-        
-        // Also check sessionStorage (for backward compatibility)
-        const sessionPendingSoldCardIds = JSON.parse(sessionStorage.getItem('pendingSoldCardIds') || '[]');
-        if (sessionPendingSoldCardIds.length > 0) {
-          pendingSoldCardIds = [...new Set([...pendingSoldCardIds, ...sessionPendingSoldCardIds])];
-        }
-        
-        if (pendingSoldCardIds.length > 0) {
+        const soldCards = await db.getSoldCards();
+        if (soldCards && soldCards.length > 0) {
+          const soldCardIds = new Set(soldCards.map(card => card.originalCardId || card.id));
           const originalCount = cardsFromRepo.length;
-          cardsFromRepo = cardsFromRepo.filter(card => !pendingSoldCardIds.includes(card.id));
+          cardsFromRepo = cardsFromRepo.filter(card => !soldCardIds.has(card.id));
           console.log(`Initial load: Filtered out ${originalCount - cardsFromRepo.length} sold cards`);
         }
       } catch (e) {
         console.warn('Failed to filter sold cards during initial load:', e);
       }
-      
-      // Helper function to find duplicate cards
-      async function findDuplicateCards(cards, repository) {
-        // Group cards by potential identifying features
-        const cardsByFeatures = {};
-        
-        // Look for cards with very similar attributes (likely duplicates)
-        for (const card of cards) {
-          if (!card.card || !card.player) continue; // Skip cards with missing core data
-          
-          // Create a key based on core card attributes
-          const key = `${card.player?.toLowerCase()}_${card.card?.toLowerCase()}_${card.set?.toLowerCase()}`;
-          
-          if (!cardsByFeatures[key]) {
-            cardsByFeatures[key] = [];
-          }
-          
-          cardsByFeatures[key].push(card);
-        }
-        
-        // Return groups with more than one card (duplicates)
-        return Object.values(cardsByFeatures)
-          .filter(group => group.length > 1)
-          // Sort each group so the most complete card comes first (to keep)
-          .map(group => {
-            return group.sort((a, b) => {
-              // Cards with images are preferred
-              if (a.imageUrl && !b.imageUrl) return -1;
-              if (!a.imageUrl && b.imageUrl) return 1;
-              
-              // Cards with more fields filled in are preferred
-              const aFields = Object.keys(a).length;
-              const bFields = Object.keys(b).length;
-              if (aFields !== bFields) return bFields - aFields;
-              
-              // Newer cards (by ID) are preferred
-              return a.id < b.id ? 1 : -1;
-            });
-          });
-      }
-      
-      // Update card counts in collections
-      if (cardsFromRepo.length > 0) {
-        try {
-          // Count cards by collection
-          const countsByCollection = cardsFromRepo.reduce((acc, card) => {
-            if (card.collectionId) {
-              acc[card.collectionId] = (acc[card.collectionId] || 0) + 1;
-            }
-            return acc;
-          }, {});
-          
-          // Update collections with counts
-          const updatedCollections = fullCollections.map(collection => {
-            if (collection.id === 'all-cards') {
-              return {
-                ...collection,
-                cardCount: cardsFromRepo.length
-              };
-            }
-            return {
-              ...collection,
-              cardCount: countsByCollection[collection.id] || 0
-            };
-          });
-          
-          console.log(`CardContext: Updating collections with card counts`);
-          setCollections(updatedCollections);
-        } catch (countError) {
-          console.error('Error updating collection counts:', countError);
-        }
-      }
-      
-      setCards(cardsFromRepo);
-      
+
       // Load sold cards
       let soldCardsFromRepo = [];
       try {
-        soldCardsFromRepo = await repo.getSoldCards();
-        // getSoldCards now directly returns an array
+        soldCardsFromRepo = await db.getSoldCards();
         console.log(`CardContext: Loaded ${soldCardsFromRepo.length} sold cards`);
         
-        // Update soldCardIds from Firestore data as well (extra reliability)
+        // Update soldCardIds from IndexedDB data
         if (soldCardsFromRepo.length > 0) {
-          // Extract all originalCardIds from sold cards
-          const originalCardIds = soldCardsFromRepo
-            .map(card => card.originalCardId)
-            .filter(id => id); // Filter out any undefined/null IDs
-          
-          // Add these to localStorage and state for future filtering
-          if (originalCardIds.length > 0) {
-            // Update state with sold card IDs from Firestore
-            setSoldCardIds(prev => new Set([...prev, ...originalCardIds]));
-            
-            // Update localStorage
-            try {
-              const existingIds = JSON.parse(localStorage.getItem('pendingSoldCardIds') || '[]');
-              const combinedIds = [...new Set([...existingIds, ...originalCardIds])];
-              localStorage.setItem('pendingSoldCardIds', JSON.stringify(combinedIds));
-              console.log(`Added ${originalCardIds.length} sold card IDs from Firestore to tracking`);
-            } catch (storageError) {
-              console.warn('Failed to update localStorage with Firestore sold cards:', storageError);
-            }
-          }
+          const soldCardIds = new Set(soldCardsFromRepo.map(card => card.originalCardId || card.id));
+          setSoldCardIds(soldCardIds);
         }
       } catch (soldCardsError) {
         console.error('Failed to load sold cards:', soldCardsError);
@@ -503,13 +151,12 @@ export function CardProvider({ children }) {
       console.log("CardContext: Initial data load complete");
       
       return { success: true, message: 'Data loaded successfully' };
-    } catch (err) {
-      console.error('Error loading initial data:', err);
-      setError(err.message || 'Failed to load initial data');
+    } catch (error) {
+      console.error('Error in loadInitialData:', error);
+      setError(error.message);
       setLoading(false);
       setSyncStatus('error');
-      
-      return { success: false, message: err.message };
+      return { success: false, message: error.message };
     }
   }, []);
 
@@ -867,33 +514,8 @@ export function CardProvider({ children }) {
         throw new Error(`Card with ID ${cardId} not found in local state`);
       }
       
-      // Store the card ID in both local state and localStorage for redundant tracking
-      // Update state
+      // Store the card ID in state
       setSoldCardIds(prev => new Set([...prev, cardId]));
-      
-      // Update localStorage (primary persistence)
-      try {
-        const pendingSoldCardIds = JSON.parse(localStorage.getItem('pendingSoldCardIds') || '[]');
-        if (!pendingSoldCardIds.includes(cardId)) {
-          pendingSoldCardIds.push(cardId);
-          localStorage.setItem('pendingSoldCardIds', JSON.stringify(pendingSoldCardIds));
-          console.log(`Added card ID ${cardId} to localStorage pending sold list`);
-        }
-      } catch (storageError) {
-        console.warn('Failed to update localStorage:', storageError);
-      }
-      
-      // Update sessionStorage as well (for backward compatibility)
-      try {
-        const pendingSoldCardIds = JSON.parse(sessionStorage.getItem('pendingSoldCardIds') || '[]');
-        if (!pendingSoldCardIds.includes(cardId)) {
-          pendingSoldCardIds.push(cardId);
-          sessionStorage.setItem('pendingSoldCardIds', JSON.stringify(pendingSoldCardIds));
-          console.log(`Added card ID ${cardId} to sessionStorage pending sold list`);
-        }
-      } catch (storageError) {
-        console.warn('Failed to update sessionStorage:', storageError);
-      }
       
       // Immediately update local state to remove the card
       // This prevents the user from seeing it while the operation processes
@@ -904,49 +526,32 @@ export function CardProvider({ children }) {
         const soldCard = await repository.markCardAsSold(cardId, soldData);
         
         // Update sold cards state
-      setSoldCards(prev => [soldCard, ...prev]);
-      
-      // Also update collection cardCount if needed
-      if (cardToMark.collectionId) {
-        setCollections(prev => {
-          return prev.map(collection => {
-            if (collection.id === cardToMark.collectionId) {
-              return {
-                ...collection,
-                cardCount: Math.max((collection.cardCount || 0) - 1, 0)
-              };
-            }
-            return collection;
+        setSoldCards(prev => [soldCard, ...prev]);
+        
+        // Also update collection cardCount if needed
+        if (cardToMark.collectionId) {
+          setCollections(prev => {
+            return prev.map(collection => {
+              if (collection.id === cardToMark.collectionId) {
+                return {
+                  ...collection,
+                  cardCount: Math.max((collection.cardCount || 0) - 1, 0)
+                };
+              }
+              return collection;
+            });
           });
-        });
-      }
+        }
         
         // Remove from pending list after successful sale
-        try {
-          // Update state
-          setSoldCardIds(prev => {
-            const newSet = new Set(prev);
-            newSet.delete(cardId);
-            return newSet;
-          });
-          
-          // Update localStorage
-          const pendingSoldCardIds = JSON.parse(localStorage.getItem('pendingSoldCardIds') || '[]');
-          const updatedPendingIds = pendingSoldCardIds.filter(id => id !== cardId);
-          localStorage.setItem('pendingSoldCardIds', JSON.stringify(updatedPendingIds));
-          
-          // Update sessionStorage (backward compatibility)
-          const sessionPendingSoldCardIds = JSON.parse(sessionStorage.getItem('pendingSoldCardIds') || '[]');
-          const updatedSessionIds = sessionPendingSoldCardIds.filter(id => id !== cardId);
-          sessionStorage.setItem('pendingSoldCardIds', JSON.stringify(updatedSessionIds));
-          
-          console.log(`Removed card ID ${cardId} from pending sold lists`);
-        } catch (storageError) {
-          console.warn('Failed to update storage after sale:', storageError);
-        }
+        setSoldCardIds(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(cardId);
+          return newSet;
+        });
       
-      setSyncStatus('synced');
-      return soldCard;
+        setSyncStatus('synced');
+        return soldCard;
       } catch (repoError) {
         // If card not found in Firestore but exists in local state,
         // try to create a sold card from the local state data
@@ -990,28 +595,11 @@ export function CardProvider({ children }) {
             }
             
             // Remove from pending list after successful local sale
-            try {
-              // Update state
-              setSoldCardIds(prev => {
-                const newSet = new Set(prev);
-                newSet.delete(cardId);
-                return newSet;
-              });
-              
-              // Update localStorage
-              const pendingSoldCardIds = JSON.parse(localStorage.getItem('pendingSoldCardIds') || '[]');
-              const updatedPendingIds = pendingSoldCardIds.filter(id => id !== cardId);
-              localStorage.setItem('pendingSoldCardIds', JSON.stringify(updatedPendingIds));
-              
-              // Update sessionStorage (backward compatibility)
-              const sessionPendingSoldCardIds = JSON.parse(sessionStorage.getItem('pendingSoldCardIds') || '[]');
-              const updatedSessionIds = sessionPendingSoldCardIds.filter(id => id !== cardId);
-              sessionStorage.setItem('pendingSoldCardIds', JSON.stringify(updatedSessionIds));
-              
-              console.log(`Removed card ID ${cardId} from pending sold lists after local sale`);
-            } catch (storageError) {
-              console.warn('Failed to update storage after local sale:', storageError);
-            }
+            setSoldCardIds(prev => {
+              const newSet = new Set(prev);
+              newSet.delete(cardId);
+              return newSet;
+            });
             
             setSyncStatus('synced');
             return savedSoldCard;
@@ -1024,28 +612,11 @@ export function CardProvider({ children }) {
           setCards(prev => [...prev, cardToMark]);
           
           // Remove from pending list
-          try {
-            // Update state
-            setSoldCardIds(prev => {
-              const newSet = new Set(prev);
-              newSet.delete(cardId);
-              return newSet;
-            });
-            
-            // Update localStorage
-            const pendingSoldCardIds = JSON.parse(localStorage.getItem('pendingSoldCardIds') || '[]');
-            const updatedPendingIds = pendingSoldCardIds.filter(id => id !== cardId);
-            localStorage.setItem('pendingSoldCardIds', JSON.stringify(updatedPendingIds));
-            
-            // Update sessionStorage (backward compatibility)
-            const sessionPendingSoldCardIds = JSON.parse(sessionStorage.getItem('pendingSoldCardIds') || '[]');
-            const updatedSessionIds = sessionPendingSoldCardIds.filter(id => id !== cardId);
-            sessionStorage.setItem('pendingSoldCardIds', JSON.stringify(updatedSessionIds));
-            
-            console.log(`Removed card ID ${cardId} from pending sold lists due to error`);
-          } catch (storageError) {
-            console.warn('Failed to update storage:', storageError);
-          }
+          setSoldCardIds(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(cardId);
+            return newSet;
+          });
           
           // Rethrow the original error
           throw repoError;

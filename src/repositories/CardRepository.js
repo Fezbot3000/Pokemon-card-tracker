@@ -769,7 +769,7 @@ class CardRepository {
     try {
       if (!Array.isArray(soldCards) || soldCards.length === 0) {
         console.log('No sold cards to import');
-        return { success: true, count: 0 };
+        return { success: true, count: 0, errorCount: 0 };
       }
       
       console.log(`Importing ${soldCards.length} sold cards`);
@@ -784,6 +784,21 @@ class CardRepository {
       // Process sold cards in batches
       for (const soldCard of soldCards) {
         try {
+          // Skip if this card has already been marked as sold
+          if (soldCard.originalCardId) {
+            const existingSoldCardsQuery = query(
+              this.soldCardsRef,
+              where('originalCardId', '==', soldCard.originalCardId),
+              limit(1)
+            );
+            
+            const existingSoldCardsSnapshot = await getDocs(existingSoldCardsQuery);
+            if (!existingSoldCardsSnapshot.empty) {
+              console.log(`Card ${soldCard.originalCardId} already exists as sold, skipping`);
+              continue;
+            }
+          }
+
           // Create a new sold card document
           const soldCardRef = doc(this.soldCardsRef);
           
@@ -795,7 +810,13 @@ class CardRepository {
               0
             ) : serverTimestamp(),
             createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp()
+            updatedAt: serverTimestamp(),
+            // Ensure required fields are present
+            finalValueAUD: soldCard.finalValueAUD || soldCard.soldPrice || 0,
+            finalProfitAUD: soldCard.finalProfitAUD || (soldCard.soldPrice - (soldCard.investmentAUD || 0)) || 0,
+            buyer: soldCard.buyer || 'Unknown',
+            dateSold: soldCard.dateSold || new Date().toISOString().split('T')[0],
+            invoiceId: soldCard.invoiceId || `INV-LEGACY-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`
           };
           
           // Delete any fields that might cause issues

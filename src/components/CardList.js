@@ -506,74 +506,85 @@ const CardList = ({
   };
 
   // Function to generate a unique invoice ID
-  const generateInvoiceId = () => {
-    // Get existing sold cards
-    const existingSoldCards = JSON.parse(localStorage.getItem('soldCards') || '[]');
-    
-    // Get the highest invoice number
-    let highestNumber = 0;
-    existingSoldCards.forEach(card => {
-      if (card.invoiceId) {
-        const match = card.invoiceId.match(/INV-(\d+)/);
-        if (match) {
-          const num = parseInt(match[1], 10);
-          if (num > highestNumber) {
-            highestNumber = num;
+  const generateInvoiceId = async () => {
+    try {
+      // Get existing sold cards from IndexedDB
+      const existingSoldCards = await db.getSoldCards();
+      
+      // Get the highest invoice number
+      let highestNumber = 0;
+      existingSoldCards.forEach(card => {
+        if (card.invoiceId) {
+          const match = card.invoiceId.match(/INV-(\d+)/);
+          if (match) {
+            const num = parseInt(match[1], 10);
+            if (num > highestNumber) {
+              highestNumber = num;
+            }
           }
         }
-      }
-    });
-    
-    // Generate next invoice number
-    const nextNumber = highestNumber + 1;
-    
-    // Format with leading zeros (e.g., INV-0001)
-    return `INV-${String(nextNumber).padStart(4, '0')}`;
+      });
+      
+      // Generate next invoice number
+      const nextNumber = highestNumber + 1;
+      
+      // Format with leading zeros (e.g., INV-0001)
+      return `INV-${String(nextNumber).padStart(4, '0')}`;
+    } catch (error) {
+      console.error('Error generating invoice ID:', error);
+      // Fallback to timestamp-based ID if there's an error
+      return `INV-${Date.now()}`;
+    }
   };
 
   const handleSaleConfirm = async ({ buyer, dateSold, soldPrices, totalSalePrice, totalProfit }) => {
-    // Generate a new invoice ID for this transaction
-    const invoiceId = generateInvoiceId();
-    
-    const selectedCardsData = selectedCardsForSale.map(card => ({
-      ...card,
-      finalValueAUD: parseFloat(soldPrices[card.slabSerial]),
-      finalProfitAUD: parseFloat(soldPrices[card.slabSerial]) - card.investmentAUD,
-      dateSold,
-      buyer,
-      invoiceId // Add the invoice ID to each card
-    }));
+    try {
+      // Generate a new invoice ID for this transaction
+      const invoiceId = await generateInvoiceId();
+      
+      const selectedCardsData = selectedCardsForSale.map(card => ({
+        ...card,
+        finalValueAUD: parseFloat(soldPrices[card.slabSerial]),
+        finalProfitAUD: parseFloat(soldPrices[card.slabSerial]) - card.investmentAUD,
+        dateSold,
+        buyer,
+        invoiceId // Add the invoice ID to each card
+      }));
 
-    // Get existing sold cards
-    const existingSoldCards = JSON.parse(localStorage.getItem('soldCards') || '[]');
+      // Get existing sold cards from IndexedDB
+      const existingSoldCards = await db.getSoldCards();
 
-    // Add the new invoice to sold cards
-    localStorage.setItem('soldCards', JSON.stringify([...existingSoldCards, ...selectedCardsData]));
+      // Add the new cards to sold cards in IndexedDB
+      await db.saveSoldCards([...existingSoldCards, ...selectedCardsData]);
 
-    // Remove cards from all collections
-    const updatedCollections = { ...collections };
-    const cardIds = selectedCardsData.map(card => card.slabSerial);
-    
-    // Remove from each collection
-    Object.keys(updatedCollections).forEach(collectionName => {
-      if (Array.isArray(updatedCollections[collectionName])) {
-        updatedCollections[collectionName] = updatedCollections[collectionName].filter(
-          card => !cardIds.includes(card.slabSerial)
-        );
-      }
-    });
+      // Remove cards from all collections
+      const updatedCollections = { ...collections };
+      const cardIds = selectedCardsData.map(card => card.slabSerial);
+      
+      // Remove from each collection
+      Object.keys(updatedCollections).forEach(collectionName => {
+        if (Array.isArray(updatedCollections[collectionName])) {
+          updatedCollections[collectionName] = updatedCollections[collectionName].filter(
+            card => !cardIds.includes(card.slabSerial)
+          );
+        }
+      });
 
-    // Save updated collections
-    await db.saveCollections(updatedCollections);
-    setCollections(updatedCollections);
+      // Save updated collections
+      await db.saveCollections(updatedCollections);
+      setCollections(updatedCollections);
 
-    // Clear selection and close modal
-    setSelectedCards(new Set());
-    setShowSaleModal(false);
-    setSelectedCardsForSale([]);
+      // Clear selection and close modal
+      setSelectedCards(new Set());
+      setShowSaleModal(false);
+      setSelectedCardsForSale([]);
 
-    // Show success message using react-hot-toast only
-    toast.success(`${selectedCardsData.length} card${selectedCardsData.length > 1 ? 's' : ''} marked as sold`);
+      // Show success message using react-hot-toast only
+      toast.success(`${selectedCardsData.length} card${selectedCardsData.length > 1 ? 's' : ''} marked as sold`);
+    } catch (error) {
+      console.error('Error marking cards as sold:', error);
+      toast.error('Failed to mark cards as sold. Please try again.');
+    }
   };
 
   // Toggle sort direction
