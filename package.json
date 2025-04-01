@@ -2,7 +2,7 @@
   "name": "pokemon-card-tracker",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://fezbot3000.github.io/Pokemon-card-tracker",
+  "homepage": "https://www.mycardtracker.com.au",
   "dependencies": {
     "@heroicons/react": "^2.2.0",
     "@popperjs/core": "^2.11.8",
