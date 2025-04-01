@@ -541,6 +541,7 @@ const CardList = ({
     try {
       // Generate a new invoice ID for this transaction
       const invoiceId = await generateInvoiceId();
+      console.log('Generated invoice ID:', invoiceId);
       
       const selectedCardsData = selectedCardsForSale.map(card => ({
         ...card,
@@ -548,14 +549,20 @@ const CardList = ({
         finalProfitAUD: parseFloat(soldPrices[card.slabSerial]) - card.investmentAUD,
         dateSold,
         buyer,
-        invoiceId // Add the invoice ID to each card
+        invoiceId,
+        originalCardId: card.slabSerial // Ensure we have a reference to the original card
       }));
+
+      console.log('Preparing to mark cards as sold:', selectedCardsData);
 
       // Get existing sold cards from IndexedDB
       const existingSoldCards = await db.getSoldCards();
+      console.log('Existing sold cards:', existingSoldCards);
 
       // Add the new cards to sold cards in IndexedDB
-      await db.saveSoldCards([...existingSoldCards, ...selectedCardsData]);
+      const updatedSoldCards = [...(existingSoldCards || []), ...selectedCardsData];
+      console.log('Saving updated sold cards:', updatedSoldCards);
+      await db.saveSoldCards(updatedSoldCards);
 
       // Remove cards from all collections
       const updatedCollections = { ...collections };
@@ -571,6 +578,7 @@ const CardList = ({
       });
 
       // Save updated collections
+      console.log('Saving updated collections:', updatedCollections);
       await db.saveCollections(updatedCollections);
       setCollections(updatedCollections);
 

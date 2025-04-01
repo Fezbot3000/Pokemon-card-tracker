@@ -7,16 +7,35 @@
     bottom: 0 !important;
     left: 0 !important;
     right: 0 !important;
+    display: grid !important;
+    opacity: 1 !important;
+    visibility: visible !important;
   }
   
   /* Settings page should be below the bottom nav but above other content */
   .settings-mobile-page {
     z-index: 2000 !important;
+    padding-bottom: 64px !important; /* Add padding for bottom nav */
   }
   
-  /* Header should be above settings */
+  /* Header should be above settings but below bottom nav */
   .header, .app-header, .collection-header {
     z-index: 2500 !important;
+  }
+
+  /* Hide bottom nav when add card modal or card details modal is open */
+  .new-card-modal-open .bottom-nav,
+  .new-card-modal-open .bottom-nav-container,
+  .card-details-modal-open .bottom-nav,
+  .card-details-modal-open .bottom-nav-container {
+    display: none !important;
+  }
+
+  /* Ensure bottom nav is visible in all contexts except modals */
+  .modal-open .bottom-nav {
+    display: grid !important;
+    opacity: 1 !important;
+    visibility: visible !important;
   }
 }
 

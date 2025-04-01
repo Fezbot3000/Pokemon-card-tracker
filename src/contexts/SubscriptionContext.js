@@ -68,48 +68,84 @@ export function SubscriptionProvider({ children }) {
       
       // Add a flag to local storage to indicate this was a successful payment
       localStorage.setItem('recentPayment', 'true');
+      localStorage.setItem('paymentTimestamp', Date.now().toString());
       
-      // Immediately trigger the fixSubscription method which has better success finding subscriptions
+      // Immediately trigger the subscription fix and verification
       postPaymentCheck();
     } else if (localStorage.getItem('recentPayment') === 'true') {
       // If we had a recent payment but lost the URL parameter (page refresh),
-      // try to fix subscription status
-      console.log('Detected recent payment from localStorage, applying fix subscription logic');
-      postPaymentCheck();
+      // check if we're still within the verification window (5 minutes)
+      const paymentTimestamp = parseInt(localStorage.getItem('paymentTimestamp') || '0');
+      const fiveMinutes = 5 * 60 * 1000;
+      
+      if (Date.now() - paymentTimestamp < fiveMinutes) {
+        console.log('Detected recent payment from localStorage, applying fix subscription logic');
+        postPaymentCheck();
+      } else {
+        // Clear the payment flags if we're outside the verification window
+        localStorage.removeItem('recentPayment');
+        localStorage.removeItem('paymentTimestamp');
+      }
     }
   }, []);
   
-  // New function to handle post-payment subscription verification
+  // Enhanced function to handle post-payment subscription verification
   const postPaymentCheck = async () => {
     setIsLoading(true);
     console.log('Running post-payment subscription check and fix...');
     
-    try {
-      // First try the fix method which does a direct email lookup in Stripe
-      const fixResult = await fixSubscription();
-      console.log('Post-payment fix result:', fixResult);
-      
-      // If fix was successful, we're done
-      if (fixResult.success) {
-        console.log('Subscription successfully fixed after payment!');
-        // Clear the recent payment flag
-        localStorage.removeItem('recentPayment');
+    let retryCount = 0;
+    const maxRetries = 5;
+    const retryDelay = 3000; // 3 seconds between retries
+    
+    const attemptFix = async () => {
+      try {
+        // First try the fix method which does a direct email lookup in Stripe
+        const fixResult = await fixSubscription();
+        console.log('Post-payment fix attempt result:', fixResult);
         
-        // If we're on the pricing page, redirect to dashboard
-        if (window.location.pathname.includes('/dashboard/pricing')) {
-          console.log('Redirecting from pricing to dashboard after successful fix');
-          window.location.href = '/dashboard';
+        // If fix was successful, we're done
+        if (fixResult.success) {
+          console.log('Subscription successfully fixed after payment!');
+          // Clear the recent payment flags
+          localStorage.removeItem('recentPayment');
+          localStorage.removeItem('paymentTimestamp');
+          
+          // If we're on the pricing page, redirect to dashboard
+          if (window.location.pathname.includes('/dashboard/pricing')) {
+            console.log('Redirecting from pricing to dashboard after successful fix');
+            window.location.href = '/dashboard';
+          }
+          return true;
         }
-        return;
+        
+        // If we haven't reached max retries, wait and try again
+        if (retryCount < maxRetries) {
+          retryCount++;
+          console.log(`Fix attempt ${retryCount} unsuccessful, retrying in ${retryDelay}ms...`);
+          await new Promise(resolve => setTimeout(resolve, retryDelay));
+          return attemptFix();
+        }
+        
+        // If we've exhausted retries, fall back to regular verification
+        console.log('Max retries reached, falling back to regular verification...');
+        await verifySubscription();
+        return false;
+      } catch (error) {
+        console.error('Error during post-payment check:', error);
+        // Only retry on certain errors (e.g., not on auth errors)
+        if (retryCount < maxRetries && !error.message?.includes('unauthenticated')) {
+          retryCount++;
+          console.log(`Error during attempt ${retryCount}, retrying in ${retryDelay}ms...`);
+          await new Promise(resolve => setTimeout(resolve, retryDelay));
+          return attemptFix();
+        }
+        return false;
       }
-      
-      // If fix wasn't successful, fall back to regular verification
-      console.log('Fix unsuccessful, falling back to regular verification...');
-      await verifySubscription();
-    } catch (error) {
-      console.error('Error during post-payment check:', error);
-      // Fall back to regular verification
-      await verifySubscription();
+    };
+    
+    try {
+      await attemptFix();
     } finally {
       setIsLoading(false);
       

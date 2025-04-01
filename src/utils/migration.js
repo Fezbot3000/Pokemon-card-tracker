@@ -552,34 +552,41 @@ export async function importFromZip(userId, zipFile) {
       if (soldCardsFile) {
         try {
           const soldCardsData = JSON.parse(await soldCardsFile.async('string'));
+          let soldCardsToImport = [];
+          
           if (Array.isArray(soldCardsData)) {
             // Direct array of sold cards
-            const result = await repository.importSoldCards(soldCardsData);
-            console.log(`Imported ${result.count} sold cards (${result.errorCount} errors)`);
+            soldCardsToImport = soldCardsData;
           } else if (soldCardsData.soldCards && Array.isArray(soldCardsData.soldCards)) {
             // Nested under soldCards property
-            const result = await repository.importSoldCards(soldCardsData.soldCards);
-            console.log(`Imported ${result.count} sold cards (${result.errorCount} errors)`);
+            soldCardsToImport = soldCardsData.soldCards;
           } else {
             console.warn('Invalid sold cards data format in backup');
+          }
+
+          if (soldCardsToImport.length > 0) {
+            // Save to IndexedDB
+            await db.saveSoldCards(soldCardsToImport);
+            console.log(`Imported ${soldCardsToImport.length} sold cards to IndexedDB`);
           }
         } catch (soldCardsError) {
           console.error('Error importing sold cards:', soldCardsError);
         }
-      } else {
-        // Try legacy format where sold cards might be in collections.json
-        try {
-          const collectionsFile = zipContent.file('data/collections.json');
-          if (collectionsFile) {
-            const collectionsData = JSON.parse(await collectionsFile.async('string'));
-            if (collectionsData.soldCards && Array.isArray(collectionsData.soldCards)) {
-              const result = await repository.importSoldCards(collectionsData.soldCards);
-              console.log(`Imported ${result.count} sold cards from collections data (${result.errorCount} errors)`);
-            }
+      }
+
+      // Try legacy format where sold cards might be in collections.json
+      try {
+        const collectionsFile = zipContent.file('data/collections.json');
+        if (collectionsFile) {
+          const collectionsData = JSON.parse(await collectionsFile.async('string'));
+          if (collectionsData.soldCards && Array.isArray(collectionsData.soldCards)) {
+            // Save to IndexedDB
+            await db.saveSoldCards(collectionsData.soldCards);
+            console.log(`Imported ${collectionsData.soldCards.length} sold cards from collections data to IndexedDB`);
           }
-        } catch (legacyError) {
-          console.error('Error checking legacy sold cards format:', legacyError);
         }
+      } catch (legacyError) {
+        console.error('Error checking legacy sold cards format:', legacyError);
       }
 
       // Process images

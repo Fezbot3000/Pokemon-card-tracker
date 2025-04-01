@@ -158,12 +158,14 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
     document.body.style.overflow = 'hidden';
     document.body.style.paddingRight = `${scrollbarWidth}px`;
     document.body.classList.add('modal-open');
+    document.body.classList.add('card-details-modal-open');
     
     return () => {
       // Restore scrolling on unmount
       document.body.style.overflow = '';
       document.body.style.paddingRight = '';
       document.body.classList.remove('modal-open');
+      document.body.classList.remove('card-details-modal-open');
     };
   }, []);
 

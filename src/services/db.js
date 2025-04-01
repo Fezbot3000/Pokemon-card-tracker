@@ -2,11 +2,12 @@ import { compressImage } from '../utils/imageCompression';
 import { auth } from './firebase'; // Import Firebase auth to get the current user
 
 const DB_NAME = 'PokemonCardDB';
-const DB_VERSION = 3; // Incrementing version to trigger database upgrade
+const DB_VERSION = 4; // Increment version to trigger database upgrade
 const COLLECTIONS_STORE = 'collections';
 const IMAGES_STORE = 'images';
 const PROFILE_STORE = 'profile';
 const SUBSCRIPTION_STORE = 'subscription';
+const SOLD_CARDS_STORE = 'soldCards'; // Add new store for sold cards
 
 class DatabaseService {
   constructor() {
@@ -105,6 +106,12 @@ class DatabaseService {
     if (!db.objectStoreNames.contains(SUBSCRIPTION_STORE)) {
       db.createObjectStore(SUBSCRIPTION_STORE, { keyPath: 'userId' });
     }
+
+    // Create dedicated sold cards store
+    if (!db.objectStoreNames.contains(SOLD_CARDS_STORE)) {
+      const soldCardsStore = db.createObjectStore(SOLD_CARDS_STORE, { keyPath: ['userId', 'id'] });
+      soldCardsStore.createIndex('userId', 'userId', { unique: false });
+    }
   }
 
   // Helper to get the current user ID or a default for anonymous users
@@ -115,14 +122,10 @@ class DatabaseService {
 
   async getCollections() {
     try {
-      await this.ensureDB();
       const userId = this.getCurrentUserId();
       
-      return new Promise((resolve, reject) => {
+      const collections = await this.retryTransaction(COLLECTIONS_STORE, 'readonly', (store, resolve, reject) => {
         try {
-          const transaction = this.db.transaction([COLLECTIONS_STORE], 'readonly');
-          const store = transaction.objectStore(COLLECTIONS_STORE);
-          
           // Using an index range to get all collections for the current user
           const request = store.getAll(IDBKeyRange.bound(
             [userId, ''], // Lower bound: current user, start of name range
@@ -139,31 +142,27 @@ class DatabaseService {
 
           request.onerror = (error) => {
             console.error('Error fetching collections:', error);
-            // Return empty collections object with Default Collection
-            resolve({ 'Default Collection': [] });
+            reject(error);
           };
         } catch (error) {
-          console.error('Transaction error in getCollections:', error);
-          // Return empty collections object with Default Collection
-          resolve({ 'Default Collection': [] });
+          reject(error);
         }
       });
+      
+      return collections;
     } catch (error) {
-      console.error('Unexpected error in getCollections:', error);
-      // Return empty collections object with Default Collection
+      console.error('Error in getCollections:', error);
+      // Return empty collections object with Default Collection as fallback
       return { 'Default Collection': [] };
     }
   }
 
   async saveCollections(collections) {
-    await this.ensureDB();
     const userId = this.getCurrentUserId();
     
-    return new Promise((resolve, reject) => {
+    return this.retryTransaction(COLLECTIONS_STORE, 'readwrite', async (store, resolve, reject) => {
       try {
         console.log("DB: Saving collections:", Object.keys(collections));
-        const transaction = this.db.transaction([COLLECTIONS_STORE], 'readwrite');
-        const store = transaction.objectStore(COLLECTIONS_STORE);
         
         // Clear existing collections for this user
         const range = IDBKeyRange.bound(
@@ -171,35 +170,17 @@ class DatabaseService {
           [userId, '\uffff'] // Upper bound: current user, end of name range
         );
         
-        const clearRequest = store.delete(range);
+        await store.delete(range);
+        console.log('DB: Cleared existing collections for user:', userId);
         
-        clearRequest.onsuccess = () => {
-          console.log('DB: Cleared existing collections for user:', userId);
-          
-          // Add new collections
-          Object.entries(collections).forEach(([name, data]) => {
-            console.log(`DB: Saving collection: ${name} with ${Array.isArray(data) ? data.length : 0} cards`);
-            const request = store.put({ userId, name, data });
-            request.onerror = (e) => {
-              console.error(`Error saving collection ${name}:`, e.target.error);
-            };
-          });
-          
-          transaction.oncomplete = () => {
-            console.log('DB: Successfully saved all collections:', Object.keys(collections));
-            resolve();
-          };
-        };
+        // Add new collections
+        for (const [name, data] of Object.entries(collections)) {
+          console.log(`DB: Saving collection: ${name} with ${Array.isArray(data) ? data.length : 0} cards`);
+          await store.put({ userId, name, data });
+        }
         
-        clearRequest.onerror = (error) => {
-          console.error('DB: Error clearing collections:', error);
-          reject('Error clearing collections');
-        };
-        
-        transaction.onerror = (error) => {
-          console.error('DB: Error saving collections:', error);
-          reject('Error saving collections');
-        };
+        console.log('DB: Successfully saved all collections:', Object.keys(collections));
+        resolve();
       } catch (error) {
         console.error('DB: Error in saveCollections:', error);
         reject(error);
@@ -208,7 +189,6 @@ class DatabaseService {
   }
 
   async saveImage(cardId, imageFile) {
-    await this.ensureDB();
     const userId = this.getCurrentUserId();
     
     try {
@@ -219,13 +199,14 @@ class DatabaseService {
         quality: 0.8
       });
 
-      return new Promise((resolve, reject) => {
-        const transaction = this.db.transaction([IMAGES_STORE], 'readwrite');
-        const store = transaction.objectStore(IMAGES_STORE);
-        const request = store.put({ userId, id: cardId, blob: compressedImage });
-
-        request.onsuccess = () => resolve();
-        request.onerror = () => reject('Error saving image');
+      return this.retryTransaction(IMAGES_STORE, 'readwrite', (store, resolve, reject) => {
+        try {
+          const request = store.put({ userId, id: cardId, blob: compressedImage });
+          request.onsuccess = () => resolve();
+          request.onerror = () => reject('Error saving image');
+        } catch (error) {
+          reject(error);
+        }
       });
     } catch (error) {
       console.error('Error compressing image:', error);
@@ -234,26 +215,26 @@ class DatabaseService {
   }
 
   async getImage(cardId) {
-    await this.ensureDB();
     const userId = this.getCurrentUserId();
     
-    return new Promise((resolve, reject) => {
-      const transaction = this.db.transaction([IMAGES_STORE], 'readonly');
-      const store = transaction.objectStore(IMAGES_STORE);
-      const request = store.get([userId, cardId]);
-
-      request.onsuccess = () => {
-        const result = request.result?.blob || null;
-        if (result) {
-          // Create a new blob with the same content but different object identity
-          // This prevents browser caching when the same image is retrieved again
-          const newBlob = result.slice(0, result.size, result.type);
-          resolve(newBlob);
-        } else {
-          resolve(null);
-        }
-      };
-      request.onerror = () => reject('Error fetching image');
+    return this.retryTransaction(IMAGES_STORE, 'readonly', (store, resolve, reject) => {
+      try {
+        const request = store.get([userId, cardId]);
+        request.onsuccess = () => {
+          const result = request.result?.blob || null;
+          if (result) {
+            // Create a new blob with the same content but different object identity
+            // This prevents browser caching when the same image is retrieved again
+            const newBlob = result.slice(0, result.size, result.type);
+            resolve(newBlob);
+          } else {
+            resolve(null);
+          }
+        };
+        request.onerror = () => reject('Error fetching image');
+      } catch (error) {
+        reject(error);
+      }
     });
   }
 
@@ -336,34 +317,17 @@ class DatabaseService {
         await this.initDatabase();
       } catch (error) {
         console.error("Failed to initialize database:", error);
-        
-        // Create a default empty database state to prevent cascading errors
-        this.db = {
-          transaction: () => {
-            throw new Error("Database not available");
-          }
-        };
-        
-        // Show user-friendly error
-        if (typeof window !== 'undefined') {
-          // Only show in browser environment
-          setTimeout(() => {
-            alert("There was a problem with the database. Try reloading the page or clearing your browser data.");
-          }, 100);
-        }
+        throw new Error("Database initialization failed");
       }
     }
     
     // Check if the connection is still valid
     try {
-      // Access the objectStoreNames property as a simple test
-      // This will throw an error if the connection is closed
-      const storeCount = this.db.objectStoreNames?.length;
-      
-      // If we got here, the connection seems valid
+      // Try to start a test transaction to verify the connection
+      const testTransaction = this.db.transaction([COLLECTIONS_STORE], 'readonly');
+      testTransaction.abort(); // Clean up the test transaction
       return this.db;
     } catch (error) {
-      // The database connection appears to be invalid
       console.warn("Database connection appears invalid, reinitializing:", error);
       
       // Reset the db reference
@@ -372,40 +336,68 @@ class DatabaseService {
       // Try to initialize again
       try {
         await this.initDatabase();
+        return this.db;
       } catch (reinitError) {
         console.error("Failed to reinitialize database after connection error:", reinitError);
-        // Create a minimal mock to prevent further errors
-        this.db = {
-          transaction: () => {
-            throw new Error("Database reconnection failed");
-          },
-          objectStoreNames: { length: 0 }
-        };
+        throw new Error("Database reconnection failed");
       }
-      
-      return this.db;
+    }
+  }
+
+  // Add a helper method for retrying transactions
+  async retryTransaction(storeName, mode, operation, maxRetries = 3) {
+    let attempt = 0;
+    while (attempt < maxRetries) {
+      try {
+        await this.ensureDB();
+        
+        return await new Promise((resolve, reject) => {
+          const transaction = this.db.transaction([storeName], mode);
+          const store = transaction.objectStore(storeName);
+          
+          transaction.onerror = (error) => {
+            console.error(`Transaction error (attempt ${attempt + 1}):`, error);
+            reject(error);
+          };
+          
+          transaction.oncomplete = () => {
+            resolve();
+          };
+          
+          operation(store, resolve, reject);
+        });
+      } catch (error) {
+        attempt++;
+        if (attempt >= maxRetries) {
+          throw error;
+        }
+        // Wait before retrying (exponential backoff)
+        await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 100));
+      }
     }
   }
 
   // Reset all data for the current user
   resetAllData = async () => {
     try {
-      console.log("Resetting all application data for current user...");
+      console.log("Resetting data for current user only...");
       const userId = this.getCurrentUserId();
       
-      // Clear localStorage
-      localStorage.removeItem('soldCards');
-      localStorage.removeItem('cardListSortField');
-      localStorage.removeItem('cardListSortDirection');
-      localStorage.removeItem('cardListDisplayMetric');
-      localStorage.removeItem('theme');
+      // Clear localStorage items only for current user
+      // We'll prefix all localStorage items with userId
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key.startsWith(`${userId}_`)) {
+          localStorage.removeItem(key);
+        }
+      }
       
       // Clear IndexedDB for current user only
       await this.ensureDB();
       
       return new Promise((resolve, reject) => {
         try {
-          // Clear collections for current user
+          // Clear collections for current user only
           const collectionsTransaction = this.db.transaction([COLLECTIONS_STORE], 'readwrite');
           const collectionsStore = collectionsTransaction.objectStore(COLLECTIONS_STORE);
           const collectionsRange = IDBKeyRange.bound(
@@ -414,7 +406,7 @@ class DatabaseService {
           );
           const clearCollectionsRequest = collectionsStore.delete(collectionsRange);
           
-          // Clear images for current user
+          // Clear images for current user only
           const imagesTransaction = this.db.transaction([IMAGES_STORE], 'readwrite');
           const imagesStore = imagesTransaction.objectStore(IMAGES_STORE);
           const imagesRange = IDBKeyRange.bound(
@@ -423,7 +415,7 @@ class DatabaseService {
           );
           const clearImagesRequest = imagesStore.delete(imagesRange);
           
-          // Clear profile for current user
+          // Clear profile for current user only
           const profileTransaction = this.db.transaction([PROFILE_STORE], 'readwrite');
           const profileStore = profileTransaction.objectStore(PROFILE_STORE);
           const profileRange = IDBKeyRange.bound(
@@ -431,28 +423,36 @@ class DatabaseService {
             [userId, '\uffff'] // Upper bound: current user, end of id range
           );
           const clearProfileRequest = profileStore.delete(profileRange);
+
+          // Clear sold cards for current user only
+          const soldCardsTransaction = this.db.transaction([SOLD_CARDS_STORE], 'readwrite');
+          const soldCardsStore = soldCardsTransaction.objectStore(SOLD_CARDS_STORE);
+          const soldCardsRange = IDBKeyRange.bound(
+            [userId, ''], // Lower bound: current user, start of id range
+            [userId, '\uffff'] // Upper bound: current user, end of id range
+          );
+          const clearSoldCardsRequest = soldCardsStore.delete(soldCardsRange);
           
-          // Wait for transactions to complete
-          collectionsTransaction.oncomplete = () => {
-            console.log("Collections cleared for user:", userId);
-          };
-          
-          imagesTransaction.oncomplete = () => {
-            console.log("Images cleared for user:", userId);
-          };
-          
-          profileTransaction.oncomplete = () => {
-            console.log("Profile cleared for user:", userId);
-          };
-          
-          // When all are done
+          // Wait for all clear operations to complete
           Promise.all([
             new Promise(r => { clearCollectionsRequest.onsuccess = r; }),
             new Promise(r => { clearImagesRequest.onsuccess = r; }),
-            new Promise(r => { clearProfileRequest.onsuccess = r; })
-          ]).then(() => {
-            console.log("All data reset successfully for user:", userId);
-            resolve(true);
+            new Promise(r => { clearProfileRequest.onsuccess = r; }),
+            new Promise(r => { clearSoldCardsRequest.onsuccess = r; })
+          ]).then(async () => {
+            try {
+              // Set up default collection after clearing
+              const defaultCollection = { userId, name: 'Default Collection', data: [] };
+              const setupTransaction = this.db.transaction([COLLECTIONS_STORE], 'readwrite');
+              const store = setupTransaction.objectStore(COLLECTIONS_STORE);
+              await store.put(defaultCollection);
+              
+              console.log("Reset completed successfully for user:", userId);
+              resolve(true);
+            } catch (setupError) {
+              console.error("Error setting up default collection:", setupError);
+              reject(setupError);
+            }
           }).catch(error => {
             console.error("Error during reset:", error);
             reject(error);
@@ -541,33 +541,75 @@ class DatabaseService {
   }
 
   async getSoldCards() {
-    await this.ensureDB();
     const userId = this.getCurrentUserId();
     
-    return new Promise((resolve, reject) => {
-      const transaction = this.db.transaction([COLLECTIONS_STORE], 'readonly');
-      const store = transaction.objectStore(COLLECTIONS_STORE);
-      const request = store.get([userId, 'sold']);
-
-      request.onsuccess = () => {
-        resolve(request.result?.data || []);
-      };
-
-      request.onerror = () => reject('Error fetching sold cards');
+    return this.retryTransaction(SOLD_CARDS_STORE, 'readonly', (store, resolve, reject) => {
+      try {
+        console.log('Loading sold cards from IndexedDB...');
+        const index = store.index('userId');
+        const request = index.getAll(userId);
+        
+        request.onsuccess = () => {
+          const result = request.result || [];
+          console.log('Loaded sold cards:', result);
+          resolve(result);
+        };
+        request.onerror = (error) => {
+          console.error('Error fetching sold cards:', error);
+          reject('Error fetching sold cards');
+        };
+      } catch (error) {
+        console.error('Error in getSoldCards:', error);
+        reject(error);
+      }
     });
   }
 
   async saveSoldCards(soldCards) {
-    await this.ensureDB();
     const userId = this.getCurrentUserId();
     
-    return new Promise((resolve, reject) => {
-      const transaction = this.db.transaction([COLLECTIONS_STORE], 'readwrite');
-      const store = transaction.objectStore(COLLECTIONS_STORE);
-      const request = store.put({ userId, name: 'sold', data: soldCards });
-
-      request.onsuccess = () => resolve();
-      request.onerror = () => reject('Error saving sold cards');
+    return this.retryTransaction(SOLD_CARDS_STORE, 'readwrite', async (store, resolve, reject) => {
+      try {
+        console.log('Saving sold cards to IndexedDB:', soldCards);
+        
+        // Clear existing sold cards for this user
+        const index = store.index('userId');
+        const existingRequest = index.getAll(userId);
+        
+        existingRequest.onsuccess = async () => {
+          try {
+            // Delete existing cards
+            const existing = existingRequest.result || [];
+            for (const card of existing) {
+              await store.delete([userId, card.id]);
+            }
+            
+            // Add new cards
+            for (const card of soldCards) {
+              const cardId = card.originalCardId || card.slabSerial;
+              await store.put({
+                userId,
+                id: cardId,
+                ...card
+              });
+            }
+            
+            console.log('Successfully saved sold cards');
+            resolve();
+          } catch (error) {
+            console.error('Error saving sold cards:', error);
+            reject(error);
+          }
+        };
+        
+        existingRequest.onerror = (error) => {
+          console.error('Error fetching existing sold cards:', error);
+          reject(error);
+        };
+      } catch (error) {
+        console.error('Error in saveSoldCards:', error);
+        reject(error);
+      }
     });
   }
 }

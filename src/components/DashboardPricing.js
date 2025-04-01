@@ -18,14 +18,43 @@ function DashboardPricing() {
   const location = useLocation();
 
   // Add handleSubscribeClick function
-  const handleSubscribeClick = () => {
+  const handleSubscribeClick = async () => {
     if (!currentUser) {
       toast.error('You must be logged in to subscribe');
       return;
     }
-    
-    // Redirect to Stripe checkout
-    window.location.href = `https://buy.stripe.com/bIY2aL2oC2kBaXe9AA?client_reference_id=${currentUser.uid}&prefilled_email=${currentUser.email}`;
+
+    try {
+      const functions = getFunctions(undefined, 'us-central1');
+      const createCheckoutSession = httpsCallable(functions, 'createCheckoutSession');
+      
+      // Get the current URL origin for success/cancel URLs
+      const baseUrl = window.location.origin;
+      
+      const { data } = await createCheckoutSession({
+        baseUrl,
+        successUrl: `${baseUrl}/dashboard?checkout_success=true`,
+        cancelUrl: `${baseUrl}/dashboard/pricing`,
+        productId: 'prod_S2EYR7XWZewDLv',
+        priceData: {
+          currency: 'usd',
+          unit_amount: 1299, // $12.99
+          recurring: {
+            interval: 'month'
+          }
+        }
+      });
+      
+      if (data && data.url) {
+        // Redirect to Stripe Checkout
+        window.location.href = data.url;
+      } else {
+        toast.error('Could not create checkout session');
+      }
+    } catch (error) {
+      console.error('Error creating checkout session:', error);
+      toast.error('Failed to start subscription process');
+    }
   };
 
   // Detect if user is coming from a successful payment

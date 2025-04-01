@@ -39,23 +39,19 @@ const SettingsModal = ({
     address: '',
     companyName: ''
   });
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [collectionToRename, setCollectionToRename] = useState('');
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
 
-  // Check if the device is mobile
+  // Add window resize listener
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768); // md breakpoint in Tailwind
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
     };
-    
-    checkMobile(); // Check on initial load
-    window.addEventListener('resize', checkMobile);
-    
-    return () => {
-      window.removeEventListener('resize', checkMobile);
-    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   // Load profile data
@@ -141,18 +137,8 @@ const SettingsModal = ({
         // Reset all data
         await db.resetAllData();
         
-        // Set up default collection before reload
-        const defaultCollections = { 'Default Collection': [] };
-        await db.saveCollections(defaultCollections);
-        
-        // Set default collection in localStorage
-        localStorage.setItem('selectedCollection', 'Default Collection');
-        
-        // Small delay to ensure loading spinner is visible
-        setTimeout(() => {
-          // Now reload the page
-          window.location.reload();
-        }, 300);
+        // Force refresh the page to ensure clean state
+        window.location.href = '/dashboard';
       } catch (error) {
         console.error('Error resetting data:', error);
         toast.error('Failed to reset data: ' + error.message);
@@ -279,7 +265,9 @@ const SettingsModal = ({
       
       {/* Settings content */}
       <div 
-        className={`settings-modal-content ${modalOpen ? 'open' : ''} ${isMobile ? 'settings-mobile-page settings-fullscreen settings-direct-page settings-with-nav' : ''}`}
+        className={`settings-modal-content ${modalOpen ? 'open' : ''} ${
+          isMobile ? 'settings-mobile-page settings-fullscreen settings-direct-page settings-with-nav' : ''
+        }`}
         onWheel={preventPropagation} 
         onTouchMove={preventPropagation}
         onScroll={preventPropagation}

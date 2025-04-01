@@ -572,66 +572,37 @@ exports.createCheckoutSession = functions.https.onCall(async (data, context) => 
     console.log('Creating checkout session for user:', context.auth.uid);
     console.log('Data received:', JSON.stringify(data));
     
-    // Get the price ID from the request data or use a default
-    let priceId = data.priceId || 'bIY2aL2oC2kBaXe9AA';
     let lineItems = [];
     
-    try {
-      // First attempt with the standard approach using price_id
-      if (priceId && !priceId.startsWith('price_')) {
-        console.log(`Adding 'price_' prefix to price ID: ${priceId}`);
-        priceId = `price_${priceId}`;
-      }
+    // Check if we have productId and priceData
+    if (data.productId && data.priceData) {
+      console.log('Using product-based pricing with:', {
+        productId: data.productId,
+        priceData: data.priceData
+      });
       
-      console.log('Using price ID:', priceId);
+      lineItems = [{
+        price_data: {
+          ...data.priceData,
+          product: data.productId
+        },
+        quantity: 1
+      }];
+    } else if (data.priceId) {
+      // Fallback to price ID if provided
+      console.log('Using price ID:', data.priceId);
+      const priceId = data.priceId.startsWith('price_') ? data.priceId : `price_${data.priceId}`;
       
-      // Attempt to retrieve the price to validate it exists
-      try {
-        await stripe.prices.retrieve(priceId);
-        console.log(`Verified price exists: ${priceId}`);
-        
-        // Use the price in line_items if it exists
-        lineItems = [
-          {
-            price: priceId,
-            quantity: 1
-          }
-        ];
-      } catch (priceError) {
-        console.error(`Price ${priceId} not found:`, priceError.message);
-        
-        // Fallback to creating a price from a product
-        console.log('Falling back to product-based pricing');
-        
-        // Use the known product ID directly
-        const productId = 'prod_S2EYR7XWZewDLv';
-        console.log(`Using existing product ID: ${productId}`);
-        
-        // Use direct price specification in line_items instead
-        lineItems = [
-          {
-            price_data: {
-              currency: 'usd',
-              product: productId,
-              unit_amount: 1299, // $12.99
-              recurring: {
-                interval: 'month'
-              }
-            },
-            quantity: 1
-          }
-        ];
-        console.log('Using price_data approach with product ID:', productId);
-      }
-    } catch (error) {
-      console.error('Error setting up line items:', error);
-      throw error;
+      lineItems = [{
+        price: priceId,
+        quantity: 1
+      }];
+    } else {
+      throw new Error('Must provide either productId and priceData, or priceId');
     }
     
     // Construct the success and cancel URLs
     const baseUrl = data.baseUrl || 'http://localhost:3000';
-    
-    // Use provided success/cancel URLs if available, otherwise construct defaults
     const successUrl = data.successUrl || `${baseUrl}/?checkout_success=true`;
     const cancelUrl = data.cancelUrl || `${baseUrl}/dashboard/pricing`;
     
@@ -657,7 +628,6 @@ exports.createCheckoutSession = functions.https.onCall(async (data, context) => 
       const newCustomer = await stripe.customers.create({
         email: context.auth.token.email,
         metadata: {
-          client_reference_id: context.auth.uid,
           firebaseUID: context.auth.uid
         }
       });

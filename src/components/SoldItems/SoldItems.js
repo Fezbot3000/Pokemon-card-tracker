@@ -8,6 +8,8 @@ import InvoicePDF from '../InvoicePDF';
 const SoldItems = () => {
   const { isDarkMode } = useTheme();
   const [soldCards, setSoldCards] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [sortField, setSortField] = useState('dateSold');
   const [sortDirection, setSortDirection] = useState('desc');
   const [filter, setFilter] = useState('');
@@ -69,12 +71,19 @@ const SoldItems = () => {
   // Load sold cards from IndexedDB
   useEffect(() => {
     const loadSoldCards = async () => {
+      setIsLoading(true);
+      setError(null);
       try {
+        console.log('Loading sold cards from IndexedDB...');
         const soldCardsData = await db.getSoldCards();
+        console.log('Loaded sold cards:', soldCardsData);
         setSoldCards(soldCardsData || []);
       } catch (error) {
         console.error('Error loading sold cards:', error);
+        setError('Failed to load sold cards. Please try refreshing the page.');
         setSoldCards([]);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -274,7 +283,18 @@ const SoldItems = () => {
         </div>
       </div>
 
-      {soldCards.length === 0 ? (
+      {isLoading ? (
+        <div className="text-center py-8 sm:py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-sm text-gray-600 dark:text-gray-400">Loading sold cards...</p>
+        </div>
+      ) : error ? (
+        <div className="text-center py-8 sm:py-12">
+          <span className="material-icons text-4xl sm:text-5xl mb-3 sm:mb-4 text-red-500">error_outline</span>
+          <h3 className="text-sm sm:text-base font-medium text-gray-900 dark:text-white mb-1 sm:mb-2">Error Loading Sold Cards</h3>
+          <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">{error}</p>
+        </div>
+      ) : soldCards.length === 0 ? (
         <div className="text-center py-8 sm:py-12">
           <span className="material-icons text-4xl sm:text-5xl mb-3 sm:mb-4 text-gray-400 dark:text-gray-600">inventory_2</span>
           <h3 className="text-sm sm:text-base font-medium text-gray-900 dark:text-white mb-1 sm:mb-2">No sold cards found</h3>

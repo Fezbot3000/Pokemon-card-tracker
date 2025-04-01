@@ -309,16 +309,26 @@ class CardRepository {
     try {
       console.log(`Starting markCardAsSold for card ${cardId} with data:`, soldData);
       
-      const cardRef = doc(this.cardsRef, cardId);
-      const soldCardRef = doc(this.soldCardsRef);
+      // Get the card data from IndexedDB
+      const collections = await db.getCollections();
+      let cardToMark = null;
+      let collectionId = null;
       
-      // Get the card data
-      const cardSnap = await getDoc(cardRef);
-      if (!cardSnap.exists()) {
-        throw new Error('Card not found');
+      // Find the card in collections
+      for (const [collectionName, cards] of Object.entries(collections)) {
+        if (Array.isArray(cards)) {
+          const card = cards.find(c => c.slabSerial === cardId);
+          if (card) {
+            cardToMark = card;
+            collectionId = collectionName;
+            break;
+          }
+        }
       }
-
-      const cardData = cardSnap.data();
+      
+      if (!cardToMark) {
+        throw new Error('Card not found in any collection');
+      }
       
       // Ensure soldPrice exists and is a number
       if (typeof soldData.soldPrice !== 'number' || isNaN(soldData.soldPrice)) {
@@ -333,85 +343,63 @@ class CardRepository {
       
       console.log(`Using invoiceId: ${soldData.invoiceId} for card ${cardId}`);
       
-      // Check if this card has already been marked as sold by querying for soldCards with this originalCardId
-      const existingSoldCardsQuery = query(
-        this.soldCardsRef,
-        where('originalCardId', '==', cardId),
-        limit(1)
-      );
+      // Get existing sold cards
+      const existingSoldCards = await db.getSoldCards();
       
-      const existingSoldCardsSnapshot = await getDocs(existingSoldCardsQuery);
-      
-      if (!existingSoldCardsSnapshot.empty) {
-        const existingSoldCard = existingSoldCardsSnapshot.docs[0];
-        console.warn(`Card ${cardId} has already been marked as sold with ID: ${existingSoldCard.id}`);
-        return {
-          id: existingSoldCard.id,
-          ...existingSoldCard.data(),
-          alreadyExists: true
-        };
+      // Check if card is already sold
+      if (existingSoldCards.some(card => card.originalCardId === cardId)) {
+        console.warn(`Card ${cardId} has already been marked as sold`);
+        return existingSoldCards.find(card => card.originalCardId === cardId);
       }
       
       // Get the investment value
-      const investmentValue = parseFloat(cardData.investmentAUD) || 0;
+      const investmentValue = parseFloat(cardToMark.investmentAUD) || 0;
       const soldPrice = parseFloat(soldData.soldPrice) || 0;
       const profit = soldPrice - investmentValue;
       
       console.log(`Card ${cardId} investment: ${investmentValue}, sold price: ${soldPrice}, profit: ${profit}`);
       
-      // Create sold card document with all fields from the original card
-      // plus the sold data fields
+      // Create sold card data
       const soldCard = {
-        ...cardData,
-        originalCardId: cardId, // Keep track of the original card ID
-        soldDate: serverTimestamp(),
+        ...cardToMark,
+        originalCardId: cardId,
+        soldDate: new Date().toISOString(),
         soldPrice: soldPrice,
-        finalValueAUD: soldPrice, // Add this field to match expected naming
+        finalValueAUD: soldPrice,
         profit: profit,
-        finalProfitAUD: profit, // Add this field to match expected naming
+        finalProfitAUD: profit,
         buyer: soldData.buyer || 'Unknown',
         dateSold: soldData.dateSold || new Date().toISOString().split('T')[0],
-        invoiceId: soldData.invoiceId // Use the exact invoiceId provided
+        invoiceId: soldData.invoiceId
       };
 
       console.log(`Created soldCard data:`, soldCard);
 
-      // First add the sold card document
-      await setDoc(soldCardRef, soldCard);
-      console.log(`Successfully added sold card document with ID: ${soldCardRef.id}`);
-      
-      // Then delete the original card document
-      await deleteDoc(cardRef);
-      console.log(`Successfully deleted original card document with ID: ${cardId}`);
-      
-      // If the card belonged to a collection, update the collection's card count
-      if (cardData.collectionId) {
+      // Save to IndexedDB using retryTransaction
+      await db.retryTransaction(db.COLLECTIONS_STORE, 'readwrite', async (store, resolve, reject) => {
         try {
-          const collectionRef = doc(this.collectionsRef, cardData.collectionId);
-          const collectionDoc = await getDoc(collectionRef);
+          // Save sold card
+          await store.put({ userId: db.getCurrentUserId(), name: 'sold', data: [...existingSoldCards, soldCard] });
           
-          if (collectionDoc.exists()) {
-            const collectionData = collectionDoc.data();
-            await updateDoc(collectionRef, {
-              cardCount: Math.max((collectionData.cardCount || 0) - 1, 0),
-              updatedAt: serverTimestamp()
-            });
-            console.log(`Updated collection ${cardData.collectionId} card count`);
+          // Remove from collection
+          if (collectionId) {
+            const updatedCollections = { ...collections };
+            if (Array.isArray(updatedCollections[collectionId])) {
+              updatedCollections[collectionId] = updatedCollections[collectionId].filter(
+                card => card.slabSerial !== cardId
+              );
+              await store.put({ userId: db.getCurrentUserId(), name: collectionId, data: updatedCollections[collectionId] });
+            }
           }
-        } catch (collectionError) {
-          console.error("Error updating collection card count:", collectionError);
-          // Continue even if updating the collection fails
+          
+          resolve();
+        } catch (error) {
+          reject(error);
         }
-      }
+      });
 
-      const result = { 
-        id: soldCardRef.id, 
-        ...soldCard,
-        soldDate: new Date() // Convert serverTimestamp for immediate use
-      };
-      
-      console.log(`Completed markCardAsSold for card ${cardId} with result:`, result);
-      return result;
+      console.log(`Successfully saved sold card to IndexedDB and updated collections`);
+      return soldCard;
     } catch (error) {
       console.error("Error marking card as sold:", error);
       throw error;

@@ -329,11 +329,17 @@ function AppContent() {
   const handleAddCard = useCallback(async (cardData, imageFile, targetCollection) => {
     try {
       // Check if a card with this serial number already exists in any collection
-      const allCards = Object.values(collections).flat();
-      const existingCard = allCards.find(card => card.slabSerial === cardData.slabSerial);
+      const allCards = Object.values(collections)
+        .filter(Array.isArray)  // Filter out non-array values
+        .flat()
+        .filter(Boolean);  // Filter out null/undefined values
+      
+      const existingCard = allCards.find(card => 
+        card.slabSerial && card.slabSerial.toLowerCase() === cardData.slabSerial.toLowerCase()
+      );
       
       if (existingCard) {
-        throw new Error('A card with this serial number already exists');
+        throw new Error('Card already exists in the database');
       }
 
       // Save the image if provided
@@ -1015,7 +1021,7 @@ To import this backup:
         
         // Save sold cards data if it exists
         if (collectionsData.soldCards) {
-          localStorage.setItem('soldCards', JSON.stringify(collectionsData.soldCards));
+          await db.saveSoldCards(collectionsData.soldCards);
         }
         
         // Refresh collections
@@ -1420,19 +1426,19 @@ To import this backup:
         />
       )}
 
-      {/* Mobile Bottom Navigation - Always visible on mobile */}
-      <div className="lg:hidden bottom-nav-container">
+      {/* Mobile Bottom Navigation - Only visible on mobile */}
+      <div className="sm:hidden bottom-nav-container">
         <BottomNavBar 
           currentView={currentView}
           onViewChange={(view) => {
             setCurrentView(view);
-            // If switching to a view other than settings, hide settings modal
-            if (view !== 'settings' && showSettings) {
-              setShowSettings(false);
-            }
             // If switching to settings view, show settings modal
-            if (view === 'settings' && !showSettings) {
+            if (view === 'settings') {
               setShowSettings(true);
+            }
+            // If switching to a view other than settings, hide settings modal
+            else if (showSettings) {
+              setShowSettings(false);
             }
           }}
           onAddCard={() => setShowNewCardForm(true)}
