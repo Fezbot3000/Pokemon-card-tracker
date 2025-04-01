@@ -1,0 +1,14 @@
+name: Disable GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  cancel-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cancel deployment
+        run: exit 0  # Do nothing, effectively preventing Pages from deploying 
