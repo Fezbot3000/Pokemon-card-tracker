@@ -1,0 +1,56 @@
+/* iOS-specific fixes */
+
+/* Fix for iOS input zoom issues */
+@supports (-webkit-touch-callout: none) {
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+  
+  /* Fix for iOS Safari bottom bar overlap */
+  .fixed-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  /* Fix for iOS Safari top bar overlap */
+  .fixed-top {
+    padding-top: env(safe-area-inset-top);
+  }
+  
+  /* Fix for iOS Safari viewport height issues */
+  .min-h-screen {
+    min-height: -webkit-fill-available;
+  }
+  
+  /* Fix for iOS Safari scrolling momentum */
+  .ios-momentum-scroll {
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Fix for iOS button hover state persisting */
+  button:hover {
+    transition: none !important;
+  }
+  
+  /* Fix for iOS Safari form element styling */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  textarea,
+  select {
+    -webkit-appearance: none;
+    border-radius: 4px;
+  }
+  
+  /* Fix for iOS Safari double-tap zoom */
+  a, button {
+    touch-action: manipulation;
+  }
+}
+
+/* Fix for iOS Safari position:fixed issues with keyboard open */
+@media screen and (max-width: 768px) {
+  body.keyboard-open .fixed-bottom {
+    position: absolute;
+  }
+}

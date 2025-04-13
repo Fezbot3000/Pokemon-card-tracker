@@ -1,0 +1,899 @@
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { 
+  Button, 
+  Icon, 
+  Dropdown, 
+  DropdownItem, 
+  DropdownDivider, 
+  Modal, 
+  Header,
+  StatisticsSummary,
+  SearchToolbar 
+} from '../design-system';
+import { useTheme } from '../contexts/ThemeContext';
+
+// Component to display a section with title and children
+const ComponentSection = ({ title, children, id }) => (
+  <div id={id} className="mb-12">
+    <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-4 pb-2 border-b border-gray-200 dark:border-gray-700">
+      {title}
+    </h2>
+    {children}
+  </div>
+);
+
+// Demo Header Component for the component library
+const HeaderDemo = () => {
+  const [isCollectionDropdownOpen, setIsCollectionDropdownOpen] = useState(false);
+  const { isDarkMode, toggleTheme } = useTheme();
+  const [currentView, setCurrentView] = useState('cards');
+  
+  // Collection dropdown trigger
+  const collectionDropdownTrigger = (
+    <Button 
+      variant="text"
+      className="flex items-center gap-1 sm:gap-2 whitespace-nowrap max-w-[200px] sm:max-w-[300px] truncate"
+    >
+      <span className="truncate">My Collection</span>
+      <Icon name="expand_more" size="sm" />
+    </Button>
+  );
+  
+  return (
+    <div className="relative">
+      <header className="w-full z-40 bg-white dark:bg-[#0F0F0F] shadow-md">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            {/* Logo and Collection Dropdown */}
+            <div className="flex items-center gap-2 sm:gap-4 flex-shrink min-w-0 max-w-[45%] sm:max-w-[60%] md:max-w-[70%]">
+              <Link to="#" className="flex-shrink-0">
+                <img src="/favicon-192x192.png" alt="Pokemon Card Tracker" className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl object-contain" />
+              </Link>
+              
+              {/* Collection Dropdown */}
+              <Dropdown
+                trigger={collectionDropdownTrigger}
+                isOpen={isCollectionDropdownOpen}
+                onOpenChange={setIsCollectionDropdownOpen}
+                width="md"
+                className="min-w-[180px]"
+              >
+                <DropdownItem onClick={() => {}}>All Cards</DropdownItem>
+                <DropdownItem onClick={() => {}}>Base Set</DropdownItem>
+                <DropdownItem onClick={() => {}}>Jungle</DropdownItem>
+                <DropdownItem onClick={() => {}}>Fossil</DropdownItem>
+                <DropdownDivider />
+                <DropdownItem icon={<Icon name="add" size="sm" />} onClick={() => {}}>
+                  Add New Collection
+                </DropdownItem>
+              </Dropdown>
+            </div>
+            
+            {/* Center - View Selector */}
+            <div className="hidden md:flex items-center space-x-2">
+              <Button
+                variant={currentView === 'cards' ? 'primary' : 'text'}
+                onClick={() => setCurrentView('cards')}
+              >
+                Cards
+              </Button>
+              
+              <Button
+                variant={currentView === 'sold-items' ? 'primary' : 'text'}
+                onClick={() => setCurrentView('sold-items')}
+              >
+                Sold Items
+              </Button>
+            </div>
+            
+            {/* Right side actions */}
+            <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
+              {/* Desktop Actions - keep theme and settings only on desktop */}
+              <div className="hidden lg:flex items-center space-x-2">
+                {/* Theme and Settings buttons */}
+                <Button
+                  variant="icon"
+                  onClick={toggleTheme}
+                  aria-label="Toggle theme"
+                >
+                  <Icon name={isDarkMode ? 'light_mode' : 'dark_mode'} />
+                </Button>
+                
+                <Button
+                  variant="icon"
+                  onClick={() => {}}
+                  aria-label="Settings"
+                >
+                  <Icon name="settings" />
+                </Button>
+              </div>
+              
+              {/* Mobile View Selector */}
+              <div className="flex md:hidden">
+                <Button
+                  variant="icon"
+                  onClick={() => setCurrentView(currentView === 'cards' ? 'sold-items' : 'cards')}
+                  aria-label="Switch View"
+                >
+                  <Icon name={currentView === 'cards' ? 'sell' : 'style'} />
+                </Button>
+              </div>
+              
+              {/* Mobile Settings - Only on small screens */}
+              <div className="flex lg:hidden">
+                <Button
+                  variant="icon"
+                  onClick={() => {}}
+                  aria-label="Settings"
+                >
+                  <Icon name="settings" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+    </div>
+  );
+};
+
+const ComponentLibrary = () => {
+  const { isDarkMode, toggleTheme } = useTheme();
+  
+  // State management for interactive components
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  
+  // State for SearchToolbar demo
+  const [searchValue, setSearchValue] = useState('');
+  const [viewMode, setViewMode] = useState('grid');
+  const [sortOption, setSortOption] = useState('Current Value');
+  
+  // Mock data for StatisticsSummary
+  const mockStatistics = [
+    {
+      label: 'Paid',
+      value: 89400,
+      formattedValue: '$89.4k'
+    },
+    {
+      label: 'Value',
+      value: 104300,
+      formattedValue: '$104.3k'
+    },
+    {
+      label: 'Profit',
+      value: 14900,
+      formattedValue: '$14.9k',
+      isProfit: true
+    },
+    {
+      label: 'Cards',
+      value: 296,
+      icon: 'style'
+    }
+  ];
+
+  return (
+    <div className="min-h-screen bg-gray-100 dark:bg-[#000000] pt-16">
+      <div className="max-w-5xl mx-auto px-4 py-8">
+        {/* Page Header */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Component Library</h1>
+            <Link to="/" className="flex items-center text-primary hover:text-primary-hover">
+              <Icon name="arrow_back" size="sm" />
+              <span className="ml-1">Back to App</span>
+            </Link>
+          </div>
+          <p className="text-gray-600 dark:text-gray-300 mb-4">
+            This page showcases all the components in our design system. Use this as a reference when building new features.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <Button 
+              variant="primary" 
+              onClick={() => toggleTheme()}
+            >
+              {isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            </Button>
+          </div>
+        </div>
+
+        {/* Table of Contents */}
+        <div className="mb-8 p-4 bg-white dark:bg-[#1A1A1A] rounded-xl shadow-sm">
+          <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Table of Contents</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">Design Tokens</h3>
+              <div className="flex flex-col gap-2">
+                <a href="#colors" className="text-primary hover:underline">Colors</a>
+              </div>
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">Atomic Components</h3>
+              <div className="flex flex-col gap-2">
+                <a href="#buttons" className="text-primary hover:underline">Buttons</a>
+                <a href="#icons" className="text-primary hover:underline">Icons</a>
+                <a href="#form-elements" className="text-primary hover:underline">Form Elements</a>
+              </div>
+            </div>
+            <div className="md:col-span-2 mt-4">
+              <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">Composite Components</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                <a href="#statistics" className="text-primary hover:underline">Statistics Summary</a>
+                <a href="#header" className="text-primary hover:underline">Header Navigation</a>
+                <a href="#search-toolbar" className="text-primary hover:underline">Search Toolbar</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Design Tokens */}
+        <div className="mb-12">
+          <h2 className="text-2xl font-bold mb-6 pb-2 border-b border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white">
+            Design Tokens
+          </h2>
+          
+          {/* Colors */}
+          <ComponentSection title="Colors" id="colors">
+            <p className="text-gray-600 dark:text-gray-300 mb-6">
+              Our design system uses a consistent color palette across all components. These colors are defined as tokens to ensure uniformity throughout the application.
+            </p>
+
+            {/* Brand Colors */}
+            <div className="mb-8">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Primary Brand Colors</h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {/* Primary Button Gradient */}
+                <div className="space-y-2">
+                  <div className="h-16 rounded-lg bg-gradient-to-r from-[#E6185C] to-[#FF2D55]"></div>
+                  <div className="px-2">
+                    <p className="font-medium text-sm">Button Primary</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Gradient from #E6185C to #FF2D55</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Used in: Primary buttons</p>
+                  </div>
+                </div>
+                
+                {/* Primary & Secondary Colors */}
+                <div className="space-y-2">
+                  <div className="h-16 rounded-lg bg-[#a855f7]"></div>
+                  <div className="px-2">
+                    <p className="font-medium text-sm">Primary</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">#a855f7</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Used in: Active tabs, focus states</p>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <div className="h-16 rounded-lg bg-[#ec4899]"></div>
+                  <div className="px-2">
+                    <p className="font-medium text-sm">Secondary</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">#ec4899</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Used in: Accent elements</p>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <div className="h-16 rounded-lg bg-[#f59e0b]"></div>
+                  <div className="px-2">
+                    <p className="font-medium text-sm">Accent</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">#f59e0b</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Used in: Highlights, warnings</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Semantic Colors */}
+            <div className="mb-8">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Semantic Colors</h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="space-y-2">
+                  <div className="h-12 rounded-lg bg-[#22c55e]"></div>
+                  <div className="px-2">
+                    <p className="font-medium text-sm">Success</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">#22c55e</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Used in: Success buttons, positive indicators</p>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <div className="h-12 rounded-lg bg-[#f59e0b]"></div>
+                  <div className="px-2">
+                    <p className="font-medium text-sm">Warning</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">#f59e0b</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Used in: Warning indicators</p>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <div className="h-12 rounded-lg bg-[#ef4444]"></div>
+                  <div className="px-2">
+                    <p className="font-medium text-sm">Error/Danger</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">#ef4444</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Used in: Danger buttons, error alerts</p>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <div className="h-12 rounded-lg bg-[#3b82f6]"></div>
+                  <div className="px-2">
+                    <p className="font-medium text-sm">Info</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">#3b82f6</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Used in: Information indicators</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* UI Colors - Light Mode */}
+            <div className="mb-8">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">UI Colors - Light Mode</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <div className="p-4 border rounded-lg bg-white space-y-2">
+                    <div className="h-8 rounded bg-white border"></div>
+                    <div className="h-8 rounded bg-[#F5F5F5]"></div>
+                    <div className="h-8 rounded bg-[#D4D4D4]"></div>
+                  </div>
+                  <div className="px-2">
+                    <p className="font-medium text-sm">Background Colors</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Primary: #FFFFFF</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Secondary: #F5F5F5</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Tertiary: #D4D4D4</p>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <div className="p-4 border rounded-lg bg-white space-y-2">
+                    <div className="h-8 rounded bg-white flex items-center px-2">
+                      <span className="text-[#0F0F0F] font-medium">Primary Text</span>
+                    </div>
+                    <div className="h-8 rounded bg-white flex items-center px-2">
+                      <span className="text-[#2C2C2C]">Secondary Text</span>
+                    </div>
+                    <div className="h-8 rounded bg-white flex items-center px-2">
+                      <span className="text-[#5A5A5A]">Tertiary Text</span>
+                    </div>
+                  </div>
+                  <div className="px-2">
+                    <p className="font-medium text-sm">Text Colors</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Primary: #0F0F0F</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Secondary: #2C2C2C</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Tertiary: #5A5A5A</p>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <div className="p-4 border rounded-lg bg-white space-y-2">
+                    <div className="h-8 rounded border border-[rgba(15,15,15,0.1)]"></div>
+                    <div className="h-8 rounded border-2 border-[#a855f7]"></div>
+                    <div className="h-8 rounded border border-[rgba(15,15,15,0.2)]"></div>
+                  </div>
+                  <div className="px-2">
+                    <p className="font-medium text-sm">Border Colors</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Default: rgba(15,15,15,0.1)</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Focus: #a855f7</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Hover: rgba(15,15,15,0.2)</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* UI Colors - Dark Mode */}
+            <div>
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">UI Colors - Dark Mode</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <div className="p-4 border rounded-lg dark:border-gray-700 bg-[#1A1A1A] space-y-2">
+                    <div className="h-8 rounded bg-[#000000]"></div>
+                    <div className="h-8 rounded bg-[#0F0F0F]"></div>
+                    <div className="h-8 rounded bg-[#1A1A1A]"></div>
+                  </div>
+                  <div className="px-2">
+                    <p className="font-medium text-sm">Background Colors</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Primary: #000000</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Secondary: #0F0F0F <span className="italic">(used for cards, headers)</span></p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Tertiary: #1A1A1A</p>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <div className="p-4 border rounded-lg dark:border-gray-700 bg-[#1A1A1A] space-y-2">
+                    <div className="h-8 rounded bg-[#1A1A1A] flex items-center px-2">
+                      <span className="text-[#FFFFFF] font-medium">Primary Text</span>
+                    </div>
+                    <div className="h-8 rounded bg-[#1A1A1A] flex items-center px-2">
+                      <span className="text-[#F5F5F5]">Secondary Text</span>
+                    </div>
+                    <div className="h-8 rounded bg-[#1A1A1A] flex items-center px-2">
+                      <span className="text-[#D4D4D4]">Tertiary Text</span>
+                    </div>
+                  </div>
+                  <div className="px-2">
+                    <p className="font-medium text-sm">Text Colors</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Primary: #FFFFFF</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Secondary: #F5F5F5</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Tertiary: #D4D4D4</p>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <div className="p-4 border rounded-lg dark:border-gray-700 bg-[#1A1A1A] space-y-2">
+                    <div className="h-8 rounded border border-[rgba(255,255,255,0.1)]"></div>
+                    <div className="h-8 rounded border-2 border-[#a855f7]"></div>
+                    <div className="h-8 rounded border border-[rgba(255,255,255,0.2)]"></div>
+                  </div>
+                  <div className="px-2">
+                    <p className="font-medium text-sm">Border Colors</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Default: rgba(255,255,255,0.1)</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Focus: #a855f7</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Hover: rgba(255,255,255,0.2)</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </ComponentSection>
+
+        {/* ATOMIC COMPONENTS SECTION */}
+        <div className="mb-12">
+          <h2 className="text-2xl font-bold mb-6 pb-2 border-b border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white">
+            Atomic Components
+          </h2>
+        
+          {/* Buttons */}
+          <ComponentSection title="Buttons" id="buttons">
+            <p className="text-gray-600 dark:text-gray-300 mb-4">
+              Buttons are used to trigger actions or navigate to different views. We have several variants to suit different needs.
+            </p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div className="p-4 bg-white dark:bg-[#1A1A1A] rounded-xl">
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">Button Variants</h3>
+                <div className="flex flex-wrap gap-2">
+                  <Button variant="primary">Primary</Button>
+                  <Button variant="secondary">Secondary</Button>
+                  <Button variant="outline">Outline</Button>
+                  <Button variant="text">Text</Button>
+                  <Button variant="danger">Danger</Button>
+                  <Button variant="success">Success</Button>
+                  <Button variant="icon">
+                    <Icon name="settings" />
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="p-4 bg-white dark:bg-[#1A1A1A] rounded-xl">
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">Button Sizes</h3>
+                <div className="flex items-center flex-wrap gap-2">
+                  <Button variant="primary" size="sm">Small</Button>
+                  <Button variant="primary" size="md">Medium</Button>
+                  <Button variant="primary" size="lg">Large</Button>
+                </div>
+              </div>
+            </div>
+            
+            <div className="p-4 bg-white dark:bg-[#1A1A1A] rounded-xl">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">Button with Icons</h3>
+              <div className="flex flex-wrap gap-2">
+                <Button variant="primary" iconLeft={<Icon name="add" />}>
+                  Add New
+                </Button>
+                <Button variant="secondary" iconRight={<Icon name="arrow_forward" />}>
+                  Next
+                </Button>
+                <Button variant="outline" iconLeft={<Icon name="download" />}>
+                  Download
+                </Button>
+              </div>
+            </div>
+
+          </ComponentSection>
+
+          {/* Icons */}
+          <ComponentSection title="Icons" id="icons">
+            <p className="text-gray-600 dark:text-gray-300 mb-4">
+              Icons use the Material Icons font for consistent styling across the application.
+            </p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="p-4 bg-white dark:bg-[#1A1A1A] rounded-xl">
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">Icon Sizes</h3>
+                <div className="flex items-end gap-4">
+                  <div className="flex flex-col items-center">
+                    <Icon name="star" size="xs" />
+                    <span className="text-xs mt-1">XS</span>
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <Icon name="star" size="sm" />
+                    <span className="text-xs mt-1">SM</span>
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <Icon name="star" size="md" />
+                    <span className="text-xs mt-1">MD</span>
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <Icon name="star" size="lg" />
+                    <span className="text-xs mt-1">LG</span>
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <Icon name="star" size="xl" />
+                    <span className="text-xs mt-1">XL</span>
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <Icon name="star" size="2xl" />
+                    <span className="text-xs mt-1">2XL</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="p-4 bg-white dark:bg-[#1A1A1A] rounded-xl">
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">Icon Colors</h3>
+                <div className="flex flex-wrap gap-4">
+                  <Icon name="cloud" color="default" />
+                  <Icon name="cloud" color="primary" />
+                  <Icon name="cloud" color="secondary" />
+                  <Icon name="cloud" color="success" />
+                  <Icon name="cloud" color="danger" />
+                  <Icon name="cloud" color="warning" />
+                  <Icon name="cloud" color="info" />
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 bg-white dark:bg-[#1A1A1A] rounded-xl mt-4">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">Commonly Used Icons</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                {[
+                  'home', 'settings', 'search', 'add', 'edit', 'delete', 
+                  'favorite', 'star', 'check', 'close', 'menu', 'person',
+                  'arrow_back', 'arrow_forward', 'download', 'upload', 'refresh', 'info'
+                ].map(name => (
+                  <div key={name} className="flex flex-col items-center">
+                    <Icon name={name} />
+                    <span className="text-xs mt-1">{name}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+          </ComponentSection>
+
+          {/* Form Elements */}
+          <ComponentSection title="Form Elements" id="form-elements">
+            <p className="text-gray-600 dark:text-gray-300 mb-4">
+              Form elements are used to collect user input. We have several variants to suit different needs.
+            </p>
+
+            {/* Search Input */}
+            <div className="p-4 bg-white dark:bg-[#1A1A1A] rounded-xl mb-4">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">Search Input</h3>
+              <div className="flex-1 relative mb-4">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Icon name="search" size="sm" className="text-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  placeholder="Search by name, set, or serial number..."
+                  className="w-full pl-10 pr-4 py-2 bg-gray-100 dark:bg-[#0F0F0F] border-0 
+                           rounded-lg text-gray-900 dark:text-white placeholder-gray-500 
+                           dark:placeholder-gray-400 focus:ring-2 focus:ring-primary/20 
+                           focus:bg-white dark:focus:bg-[#0F0F0F]"
+                />
+              </div>
+              <div className="mt-3 mb-2">
+                <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-2">Styling Guide</h4>
+                <div className="flex flex-wrap gap-2">
+                  <div className="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full text-xs text-gray-600 dark:text-gray-300">
+                    <code>bg-gray-100 dark:bg-[#0F0F0F]</code> - Input background
+                  </div>
+                  <div className="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full text-xs text-gray-600 dark:text-gray-300">
+                    <code>pl-10</code> - Left padding for icon
+                  </div>
+                  <div className="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full text-xs text-gray-600 dark:text-gray-300">
+                    <code>rounded-lg</code> - Border radius
+                  </div>
+                  <div className="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full text-xs text-gray-600 dark:text-gray-300">
+                    <code>focus:ring-2 focus:ring-primary/20</code> - Focus state
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Toggle Buttons */}
+            <div className="p-4 bg-white dark:bg-[#1A1A1A] rounded-xl mb-4">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">Toggle Buttons</h3>
+              <div className="flex bg-gray-100 dark:bg-[#0F0F0F] rounded-lg p-1 w-fit mb-4">
+                <button
+                  className="w-9 h-9 flex items-center justify-center rounded-md bg-gradient-to-r from-[#E6185C] to-[#FF2D55] text-white shadow-sm"
+                  aria-label="Grid view"
+                >
+                  <Icon name="grid_view" size="sm" className="text-white" />
+                </button>
+                <button
+                  className="w-9 h-9 flex items-center justify-center rounded-md text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                  aria-label="List view"
+                >
+                  <Icon name="view_list" size="sm" />
+                </button>
+              </div>
+              <div className="mt-3 mb-2">
+                <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-2">Styling Guide</h4>
+                <div className="flex flex-wrap gap-2">
+                  <div className="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full text-xs text-gray-600 dark:text-gray-300">
+                    <code>bg-gray-100 dark:bg-[#0F0F0F]</code> - Toggle container background
+                  </div>
+                  <div className="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full text-xs text-gray-600 dark:text-gray-300">
+                    <code>w-9 h-9</code> - Square button dimensions
+                  </div>
+                  <div className="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full text-xs text-gray-600 dark:text-gray-300">
+                    <code>bg-gradient-to-r from-[#E6185C] to-[#FF2D55]</code> - Selected state
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Dropdowns */}
+            <div className="p-4 bg-white dark:bg-[#1A1A1A] rounded-xl mb-4">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">Dropdown Menus</h3>
+              <div className="flex flex-col gap-4">
+                <div>
+                  <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-2">Sort Dropdown</h4>
+                  <Button 
+                    variant="text" 
+                    className="flex items-center gap-1 text-sm sm:text-base w-32 sm:w-40"
+                    iconRight={<Icon name="expand_more" size="sm" />}
+                  >
+                    <span className="truncate">Sort: Value</span>
+                  </Button>
+                </div>
+                <div className="mt-3 mb-2">
+                  <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-2">Styling Guide</h4>
+                  <div className="flex flex-wrap gap-2">
+                    <div className="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full text-xs text-gray-600 dark:text-gray-300">
+                      <code>w-32 sm:w-40</code> - Fixed width
+                    </div>
+                    <div className="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full text-xs text-gray-600 dark:text-gray-300">
+                      <code>truncate</code> - Text overflow handling
+                    </div>
+                    <div className="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full text-xs text-gray-600 dark:text-gray-300">
+                      <code>bg-white dark:bg-[#0F0F0F]</code> - Dropdown menu background
+                    </div>
+                  </div>
+                </div>
+                <div className="p-3 bg-gray-100 dark:bg-gray-800 rounded-lg text-sm">
+                  <p className="mb-2 text-gray-700 dark:text-gray-300">Important Guidelines:</p>
+                  <ul className="list-disc pl-5 text-gray-600 dark:text-gray-400 space-y-1">
+                    <li>Always use fixed width for dropdown triggers to prevent layout shifts</li>
+                    <li>Use the secondary color (#0F0F0F) for all dark mode backgrounds</li>
+                    <li>Selected dropdown items should use the primary color</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </ComponentSection>
+        </div>
+
+        {/* COMPOSITE COMPONENTS SECTION */}
+        <div className="mb-12">
+          <h2 className="text-2xl font-bold mb-6 pb-2 border-b border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white">
+            Composite Components
+          </h2>
+
+          {/* Header Navigation */}
+          <ComponentSection title="Header Navigation" id="header">
+            <p className="text-gray-600 dark:text-gray-300 mb-4">
+              The Header component is used to display the top navigation bar. It combines multiple atomic components like Buttons, Icons, and Dropdowns into a complete navigation interface.
+            </p>
+            
+            <div className="space-y-6">
+              <div className="p-4 bg-white dark:bg-[#1A1A1A] rounded-xl">
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">Header Component Structure</h3>
+                <p className="text-gray-600 dark:text-gray-300 mb-4">
+                  The Header combines these elements:
+                </p>
+                <ul className="list-disc pl-5 text-gray-600 dark:text-gray-300 mb-4 space-y-2">
+                  <li><strong>Logo & Collection Dropdown</strong> - Left side with app logo and collection selector</li>
+                  <li><strong>View Selector</strong> - Center section with navigation between main views</li>
+                  <li><strong>Action Buttons</strong> - Right side with theme toggle and settings</li>
+                  <li><strong>Responsive Design</strong> - Adapts layout for mobile and desktop views</li>
+                </ul>
+              </div>
+
+              <div className="relative">
+                <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">Live Example:</div>
+                <div className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+                  <HeaderDemo />
+                </div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <div className="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full text-xs text-gray-600 dark:text-gray-300">
+                    <code>bg-white dark:bg-[#0F0F0F]</code> - Header background
+                  </div>
+                  <div className="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full text-xs text-gray-600 dark:text-gray-300">
+                    <code>shadow-md</code> - Header shadow
+                  </div>
+                </div>
+              </div>
+            </div>
+          </ComponentSection>
+
+          {/* Statistics Summary */}
+          <ComponentSection title="Statistics Summary" id="statistics">
+            <p className="text-gray-600 dark:text-gray-300 mb-4">
+              The Statistics Summary component is used to display key metrics in a single container with dividers.
+            </p>
+            
+            <div className="p-4 bg-white dark:bg-[#1A1A1A] rounded-xl mb-4">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">Example</h3>
+              <StatisticsSummary 
+                statistics={mockStatistics}
+              />
+            </div>
+
+          </ComponentSection>
+
+          {/* Search Toolbar */}
+          <ComponentSection title="Search Toolbar" id="search-toolbar">
+            <p className="text-gray-600 dark:text-gray-300 mb-4">
+              The Search Toolbar component is used to display a search input field with optional filters and actions.
+            </p>
+            
+            <div className="p-4 bg-white dark:bg-[#1A1A1A] rounded-xl mb-4">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">Example</h3>
+              <SearchToolbar 
+                searchValue={searchValue}
+                onSearchChange={(value) => setSearchValue(value)}
+                viewMode={viewMode}
+                onViewModeChange={(mode) => setViewMode(mode)}
+                sortOption={sortOption}
+                onSortChange={(option) => setSortOption(option)}
+                onAddCard={() => alert('Add Card clicked!')}
+              />
+            </div>
+
+            <div className="space-y-4">
+              <div className="p-4 bg-white dark:bg-[#1A1A1A] rounded-xl">
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">Search Toolbar Breakdown</h3>
+                <p className="text-gray-600 dark:text-gray-300 mb-4">
+                  The Search Toolbar combines these elements:
+                </p>
+                <ul className="list-disc pl-5 text-gray-600 dark:text-gray-300 mb-4 space-y-2">
+                  <li><strong>Search Input</strong> - Allows filtering of cards by name, set, or other attributes</li>
+                  <li><strong>View Mode Selector</strong> - Toggle between grid and list views</li>
+                  <li><strong>Sort Dropdown</strong> - Change how cards are sorted</li>
+                  <li><strong>Add Card Button</strong> - Quick access to add new cards</li>
+                </ul>
+              </div>
+              
+              <div className="p-4 bg-white dark:bg-[#1A1A1A] rounded-xl">
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">Current Demo State</h3>
+                <div className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+                  <div><strong>Search Value:</strong> {searchValue || '(empty)'}</div>
+                  <div><strong>View Mode:</strong> {viewMode}</div>
+                  <div><strong>Sort Option:</strong> {sortOption}</div>
+                </div>
+              </div>
+            </div>
+          </ComponentSection>
+
+          {/* Form Elements */}
+          <ComponentSection title="Form Elements" id="form-elements">
+            <p className="text-gray-600 dark:text-gray-300 mb-4">
+              Form elements are used to collect user input. We have several variants to suit different needs.
+            </p>
+
+            {/* Search Input */}
+            <div className="p-4 bg-white dark:bg-[#1A1A1A] rounded-xl mb-4">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">Search Input</h3>
+              <div className="flex-1 relative mb-4">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Icon name="search" size="sm" className="text-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  placeholder="Search by name, set, or serial number..."
+                  className="w-full pl-10 pr-4 py-2 bg-gray-100 dark:bg-[#0F0F0F] border-0 
+                           rounded-lg text-gray-900 dark:text-white placeholder-gray-500 
+                           dark:placeholder-gray-400 focus:ring-2 focus:ring-primary/20 
+                           focus:bg-white dark:focus:bg-[#0F0F0F]"
+                />
+              </div>
+              <div className="mt-3 mb-2">
+                <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-2">Styling Guide</h4>
+                <div className="flex flex-wrap gap-2">
+                  <div className="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full text-xs text-gray-600 dark:text-gray-300">
+                    <code>bg-gray-100 dark:bg-[#0F0F0F]</code> - Input background
+                  </div>
+                  <div className="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full text-xs text-gray-600 dark:text-gray-300">
+                    <code>pl-10</code> - Left padding for icon
+                  </div>
+                  <div className="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full text-xs text-gray-600 dark:text-gray-300">
+                    <code>rounded-lg</code> - Border radius
+                  </div>
+                  <div className="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full text-xs text-gray-600 dark:text-gray-300">
+                    <code>focus:ring-2 focus:ring-primary/20</code> - Focus state
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Toggle Buttons */}
+            <div className="p-4 bg-white dark:bg-[#1A1A1A] rounded-xl mb-4">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">Toggle Buttons</h3>
+              <div className="flex bg-gray-100 dark:bg-[#0F0F0F] rounded-lg p-1 w-fit mb-4">
+                <button
+                  className="w-9 h-9 flex items-center justify-center rounded-md bg-gradient-to-r from-[#E6185C] to-[#FF2D55] text-white shadow-sm"
+                  aria-label="Grid view"
+                >
+                  <Icon name="grid_view" size="sm" className="text-white" />
+                </button>
+                <button
+                  className="w-9 h-9 flex items-center justify-center rounded-md text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                  aria-label="List view"
+                >
+                  <Icon name="view_list" size="sm" />
+                </button>
+              </div>
+              <div className="mt-3 mb-2">
+                <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-2">Styling Guide</h4>
+                <div className="flex flex-wrap gap-2">
+                  <div className="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full text-xs text-gray-600 dark:text-gray-300">
+                    <code>bg-gray-100 dark:bg-[#0F0F0F]</code> - Toggle container background
+                  </div>
+                  <div className="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full text-xs text-gray-600 dark:text-gray-300">
+                    <code>w-9 h-9</code> - Square button dimensions
+                  </div>
+                  <div className="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full text-xs text-gray-600 dark:text-gray-300">
+                    <code>bg-gradient-to-r from-[#E6185C] to-[#FF2D55]</code> - Selected state
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Dropdowns */}
+            <div className="p-4 bg-white dark:bg-[#1A1A1A] rounded-xl mb-4">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">Dropdown Menus</h3>
+              <div className="flex flex-col gap-4">
+                <div>
+                  <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-2">Sort Dropdown</h4>
+                  <Button 
+                    variant="text" 
+                    className="flex items-center gap-1 text-sm sm:text-base w-32 sm:w-40"
+                    iconRight={<Icon name="expand_more" size="sm" />}
+                  >
+                    <span className="truncate">Sort: Value</span>
+                  </Button>
+                </div>
+                <div className="mt-3 mb-2">
+                  <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-2">Styling Guide</h4>
+                  <div className="flex flex-wrap gap-2">
+                    <div className="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full text-xs text-gray-600 dark:text-gray-300">
+                      <code>w-32 sm:w-40</code> - Fixed width
+                    </div>
+                    <div className="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full text-xs text-gray-600 dark:text-gray-300">
+                      <code>truncate</code> - Text overflow handling
+                    </div>
+                    <div className="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full text-xs text-gray-600 dark:text-gray-300">
+                      <code>bg-white dark:bg-[#0F0F0F]</code> - Dropdown menu background
+                    </div>
+                  </div>
+                </div>
+                <div className="p-3 bg-gray-100 dark:bg-gray-800 rounded-lg text-sm">
+                  <p className="mb-2 text-gray-700 dark:text-gray-300">Important Guidelines:</p>
+                  <ul className="list-disc pl-5 text-gray-600 dark:text-gray-400 space-y-1">
+                    <li>Always use fixed width for dropdown triggers to prevent layout shifts</li>
+                    <li>Use the secondary color (#0F0F0F) for all dark mode backgrounds</li>
+                    <li>Selected dropdown items should use the primary color</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </ComponentSection>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ComponentLibrary;

@@ -1,0 +1,165 @@
+/**
+ * Pokemon Card Tracker - Design System CSS
+ * 
+ * This file implements a structured approach to CSS that eliminates the need for !important tags
+ * by using more specific selectors and a proper CSS cascade strategy.
+ */
+
+/* ---------- DESIGN TOKENS ---------- */
+
+:root {
+  /* Color Palette - Light Mode */
+  --color-white: #FFFFFF;
+  --color-black: #000000;
+  --color-gray-50: #F9FAFB;
+  --color-gray-100: #F3F4F6;
+  --color-gray-200: #E5E7EB;
+  --color-gray-300: #D1D5DB;
+  --color-gray-400: #9CA3AF;
+  --color-gray-500: #6B7280;
+  --color-gray-600: #4B5563;
+  --color-gray-700: #374151;
+  --color-gray-800: #1F2937;
+  --color-gray-900: #111827;
+  
+  /* Primary Colors */
+  --color-primary-300: #fca5a5; /* red-300 */
+  --color-primary-500: #ef4444; /* red-500 */
+  --color-primary-600: #dc2626; /* red-600 */
+  --color-primary-700: #b91c1c; /* red-700 */
+  
+  /* Status Colors */
+  --color-success: #22c55e; /* green-500 */
+  --color-error: #ef4444;   /* red-500 */
+  --color-warning: #f59e0b; /* amber-500 */
+  --color-info: #3b82f6;    /* blue-500 */
+  
+  /* Theme-specific tokens - Light mode (default) */
+  --bg-primary: var(--color-white);
+  --bg-secondary: var(--color-gray-50);
+  --bg-tertiary: var(--color-gray-100);
+  
+  --text-primary: var(--color-gray-900);
+  --text-secondary: var(--color-gray-700);
+  --text-tertiary: var(--color-gray-500);
+  
+  --border-color: var(--color-gray-200);
+  
+  /* Common spacing and sizing variables */
+  --spacing-1: 0.25rem;  /* 4px */
+  --spacing-2: 0.5rem;   /* 8px */
+  --spacing-3: 0.75rem;  /* 12px */
+  --spacing-4: 1rem;     /* 16px */
+  --spacing-5: 1.25rem;  /* 20px */
+  --spacing-6: 1.5rem;   /* 24px */
+  
+  --border-radius-sm: 0.375rem; /* 6px */
+  --border-radius-md: 0.5rem;   /* 8px */
+  --border-radius-lg: 0.75rem;  /* 12px */
+  --border-radius-xl: 1rem;     /* 16px */
+}
+
+/* Dark Mode Theme Variables */
+.dark {
+  /* Theme-specific tokens - Dark mode */
+  --bg-primary: var(--color-black);
+  --bg-secondary: #0F0F0F;  /* Custom dark gray */
+  --bg-tertiary: var(--color-gray-800);
+  
+  --text-primary: var(--color-white);
+  --text-secondary: var(--color-gray-300);
+  --text-tertiary: var(--color-gray-400);
+  
+  --border-color: var(--color-gray-700);
+}
+
+/* ---------- COMPONENT-SPECIFIC STYLING ---------- */
+
+/* Card Component - Financial Detail Boxes */
+.dark .card-financial-box {
+  background-color: var(--color-black);
+  color: var(--text-primary);
+}
+
+/* Card component base styling */
+.card {
+  background-color: var(--bg-primary);
+  border-radius: var(--border-radius-lg);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.3s ease;
+}
+
+.dark .card {
+  background-color: var(--bg-secondary);
+}
+
+/* Make sure these have higher specificity than any conflicting rules */
+.dark .bg-black, 
+.dark [data-theme-bg="black"] {
+  background-color: var(--color-black);
+}
+
+.dark .bg-dark-primary, 
+.dark [data-theme-bg="dark-primary"] {
+  background-color: var(--bg-primary);
+}
+
+.dark .bg-dark-secondary, 
+.dark [data-theme-bg="dark-secondary"] {
+  background-color: var(--bg-secondary);
+}
+
+/* ---------- TAILWIND OVERRIDES ---------- */
+
+/* Ensure Tailwind dark mode classes have proper specificity */
+html.dark .dark\:bg-black {
+  background-color: var(--color-black);
+}
+
+html.dark .dark\:text-white {
+  color: var(--text-primary);
+}
+
+/* Financial detail boxes - Ensure they always use black in dark mode */
+html.dark .financial-detail-box,
+html.dark body .financial-detail-box,
+html.dark [class*="dark:bg-"] .financial-detail-box,
+html.dark div.financial-detail-box,
+.dark html body div.financial-detail-box,
+body.dark .financial-detail-box,
+.dark div[class*="bg-gray-100"],
+.dark div[class$="p-2"][class*="text-center"][class*="rounded-lg"],
+html.dark body .card div.financial-detail-box {
+  background-color: #000000;
+}
+
+/* ---------- DOCUMENTATION ---------- */
+
+/*
+  HOW TO USE THIS DESIGN SYSTEM:
+  
+  1. For dark backgrounds in dark mode, use these classes:
+     - financial-detail-box: For card financial details (always black in dark mode)
+     - Use CSS variables in your components: var(--bg-primary), var(--bg-secondary)
+  
+  2. For text colors:
+     - Use CSS variables: var(--text-primary), var(--text-secondary), var(--text-tertiary)
+  
+  3. For maintaining the design system:
+     - Update colors in :root and .dark variables
+     - Avoid using !important tags
+     - Use specific selectors when you need to override styles
+*/
+
+/* ---------- UTILITIES ---------- */
+
+/* Hide scrollbars while maintaining scroll functionality */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;     /* Firefox */
+}
+
+/* For Chrome, Safari and Opera */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}

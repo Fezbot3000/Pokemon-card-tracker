@@ -1,0 +1,60 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper function to check if user is authenticated and owns the document path
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    // Match the main user document (contains email, displayName etc.)
+    match /users/{userId} {
+      // Allow owner to GET/LIST their own top-level user doc
+      allow get, list: if isOwner(userId);
+      // Allow owner to write
+      allow write: if isOwner(userId);
+    }
+
+    // Match the specific profile document within the 'profile' subcollection
+    match /users/{userId}/profile/userData {
+       // Allow owner to GET/LIST their own profile data
+      allow get, list: if isOwner(userId);
+      // Allow owner to write
+      allow write: if isOwner(userId);
+    }
+
+    // Collections: Only the owner can read/write their collections data.
+    match /users/{userId}/collections/{document=**} { 
+      // Separate read into get and list
+      allow get, list: if isOwner(userId);
+      // Allow owner to write
+      allow write: if isOwner(userId);
+    }
+
+    // Sold Cards: Only the owner can read/write their sold card data.
+    match /users/{userId}/soldCards/{document=**} { 
+      // Separate read into get and list
+      allow get, list: if isOwner(userId);
+      // Allow owner to write
+      allow write: if isOwner(userId);
+    }
+    
+    // --- Add Rule for Cards Subcollection ---
+    match /users/{userId}/cards/{document=**} {
+      // Allow owner to get, list, and write cards
+      allow get, list: if isOwner(userId);
+      allow write: if isOwner(userId);
+    }
+    // --- End Added Rule ---
+
+    // Subscriptions: Only the owner can read their subscription status document.
+    match /subscriptions/{userId} {
+      // 'get' allows reading a single document (getDoc)
+      allow get: if isOwner(userId); 
+      // Deny list/write operations from client
+      allow list, create, update, delete: if false; 
+    }
+
+  }
+}
