@@ -4,7 +4,6 @@ import ReactDOM from 'react-dom/client';
 import './styles/design-system.css';  // Base design tokens and variables
 import './styles/main.css';           // Core styles with Tailwind
 import './styles/black-background.css'; // Dark mode styling
-import './styles/z-index-fixes.css';   // Z-index management
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 // Import environment validation before Firebase initialization

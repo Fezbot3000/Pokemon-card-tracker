@@ -196,9 +196,24 @@ const Header = ({
             
             {onSettingsClick && (
               <button
-                onClick={onSettingsClick}
-                className="p-1 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+                id="settings-button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  console.log('Settings button clicked in Header component');
+                  // Call the handler directly
+                  if (typeof onSettingsClick === 'function') {
+                    onSettingsClick();
+                  }
+                }}
+                className="p-1 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 settings-button"
                 aria-label="Settings"
+                style={{ 
+                  position: 'relative', 
+                  zIndex: 10000, 
+                  pointerEvents: 'auto',
+                  cursor: 'pointer'
+                }}
               >
                 <Icon name="settings" />
               </button>

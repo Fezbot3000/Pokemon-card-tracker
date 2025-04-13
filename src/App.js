@@ -14,17 +14,17 @@ import {
   useTheme, 
   useAuth,
   toast,
-  Toast, // Correct the import path for the design system modal
+  Toast, 
+  SettingsModal, 
 } from './design-system';
 import DesignSystemProvider from './design-system/providers/DesignSystemProvider';
-import SettingsModal from './components/SettingsModal'; // Updated import path
-import MobileSettingsModal from './components/MobileSettingsModal'; // Import the mobile version
+import MobileSettingsModal from './components/MobileSettingsModal'; 
 import CardList from './components/CardList';
 import CardDetails from './components/CardDetails';
 import NewCardForm from './components/NewCardForm';
 import ImportModal from './components/ImportModal';
 import ProfitChangeModal from './components/ProfitChangeModal';
-import AddCardModal from './components/AddCardModal'; // Import the new AddCardModal component
+import AddCardModal from './components/AddCardModal'; 
 import Home from './components/Home';
 import Login from './components/Login';
 import ForgotPassword from './components/ForgotPassword';
@@ -38,9 +38,8 @@ import TutorialModal from './components/TutorialModal';
 import PrivateRoute from './components/PrivateRoute';
 import ErrorBoundary from './components/ErrorBoundary';
 import './styles/main.css';
-import './styles/z-index-fixes.css';
-import './styles/black-background.css'; // Import the pure black background
-import './styles/ios-fixes.css'; // Import iOS-specific fixes
+import './styles/black-background.css'; 
+import './styles/ios-fixes.css'; 
 import SoldItems from './components/SoldItems/SoldItems';
 import BottomNavBar from './components/BottomNavBar';
 import CloudSync from './components/CloudSync';
@@ -278,6 +277,22 @@ function AppContent() {
     window.addEventListener('resize', handleResize);
     return () => {
       window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
+  // Add keyboard shortcut for settings (press 's' key)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // When 's' key is pressed, open settings
+      if (e.key === 's' && !e.ctrlKey && !e.altKey && !e.metaKey) {
+        console.log('Settings keyboard shortcut triggered');
+        setShowSettings(true);
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
     };
   }, []);
 
@@ -1257,16 +1272,22 @@ To import this backup:
   }, [deleteCard]);
 
   const handleSettingsClick = () => {
-    console.log('Settings clicked'); // Add logging to debug
+    console.log('Settings clicked - Debug log'); 
+    document.body.classList.add('settings-open'); 
+    
     // For mobile, treat settings as a view
     if (isMobile) {
       setCurrentView('settings');
     }
+    
     // Always show settings regardless of device
     setShowSettings(true);
   };
 
   const handleCloseSettings = () => {
+    console.log('Closing settings - Debug log'); 
+    document.body.classList.remove('settings-open'); 
+    
     setShowSettings(false);
     // If we're on mobile and current view is settings,
     // go back to cards view when closing settings
@@ -1366,9 +1387,7 @@ To import this backup:
           onRenameCollection={(oldName, newName) => {
             if (oldName && newName && oldName !== newName) {
               // Create new collection
-              const newCollections = {
-                ...collections
-              };
+              const newCollections = { ...collections };
               // Copy cards to the new collection
               newCollections[newName] = newCollections[oldName];
               // Remove old collection
@@ -1431,6 +1450,16 @@ To import this backup:
           }}
         />
       )}
+      
+      {/* Temporary Settings Button - Positioned in the bottom right corner */}
+      <button
+        onClick={handleSettingsClick}
+        className="fixed bottom-20 right-4 z-[9999] bg-primary text-white p-3 rounded-full shadow-lg"
+        style={{ pointerEvents: 'auto' }}
+      >
+        <span className="material-icons">settings</span>
+      </button>
+
       <main className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-4 pb-20">
         {currentView === 'cards' ? (
           <CardList
@@ -1572,7 +1601,7 @@ To import this backup:
         />
       )}
 
-      {showSettings && !isMobile && (
+      {showSettings && (
         <SettingsModal
           isOpen={true}
           onClose={handleCloseSettings}
