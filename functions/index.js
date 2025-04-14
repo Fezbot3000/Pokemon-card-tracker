@@ -1,25 +1,23 @@
-const functions = require('firebase-functions');
-const cors = require('cors')({ origin: true });
-const fetch = require('node-fetch');
+// Test comment to verify GitHub Actions automatic deployment is working
+const functions = require("firebase-functions");
+const admin = require("firebase-admin");
+const fetch = require('node-fetch'); // Use node-fetch v2 syntax
+const cors = require('cors')({ origin: true }); // Enable CORS
+
+// Initialize Firebase Admin
+admin.initializeApp();
 
 // Add better logging for Stripe initialization
 let stripe;
 try {
-  const stripeSecretKey = functions.config().stripe.secret_key;
-  // Trim any whitespace and remove quotes if they exist
-  const cleanKey = stripeSecretKey.trim().replace(/^['"]|['"]$/g, '');
-  console.log('Initializing Stripe with key starting with:', cleanKey.substring(0, 7));
-  stripe = require('stripe')(cleanKey);
+  stripe = require("stripe")(functions.config().stripe.secret_key);
+  console.log("Stripe initialized successfully");
 } catch (error) {
-  console.error('Error initializing Stripe:', error);
-  // Initialize with an invalid key to prevent crashes, but functions will return errors
-  stripe = require('stripe')('invalid_key');
+  console.error("Error initializing Stripe:", error);
 }
 
-// Initialize Firebase Admin SDK if not already initialized
-let admin;
+// Additional Firebase Admin SDK initialization error handling
 try {
-  admin = require('firebase-admin');
   if (!admin.apps.length) {
     console.log('Initializing Firebase Admin SDK');
     admin.initializeApp();
@@ -424,11 +422,6 @@ exports.stripeWebhook = functions.https.onRequest(async (request, response) => {
           const subscription = await stripe.subscriptions.retrieve(session.subscription);
           
           // Update the user's subscription status in Firestore
-          const admin = require('firebase-admin');
-          if (!admin.apps.length) {
-            admin.initializeApp();
-          }
-          
           await admin.firestore().collection('subscriptions').doc(firebaseUid).set({
             status: subscription.status,
             customerId: session.customer,
@@ -457,11 +450,6 @@ exports.stripeWebhook = functions.https.onRequest(async (request, response) => {
             console.log(`Found Firebase user ID: ${firebaseUserId}`);
             
             // Update the subscription in Firestore
-            const admin = require('firebase-admin');
-            if (!admin.apps.length) {
-              admin.initializeApp();
-            }
-            
             await admin.firestore().collection('subscriptions').doc(firebaseUserId).set({
               status: subscriptionEvent.status,
               customerId: subscriptionEvent.customer,
@@ -492,11 +480,6 @@ exports.stripeWebhook = functions.https.onRequest(async (request, response) => {
             console.log(`Found Firebase user ID for deleted subscription: ${firebaseUserId}`);
             
             // Update the subscription in Firestore
-            const admin = require('firebase-admin');
-            if (!admin.apps.length) {
-              admin.initializeApp();
-            }
-            
             await admin.firestore().collection('subscriptions').doc(firebaseUserId).set({
               status: 'inactive',
               updatedAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -1195,3 +1178,89 @@ exports.psaLookup = functions.https.onCall(async (data, context) => {
     );
   }
 });
+
+// --- PriceCharting Proxy Function --- 
+
+exports.proxyPriceCharting = functions.https.onCall(async (data, context) => {
+    // Check if user is authenticated if required for your app logic
+    // if (!context.auth) {
+    //     throw new functions.https.HttpsError('unauthenticated', 'The function must be called while authenticated.');
+    // }
+
+    const apiKey = functions.config().pricecharting?.key;
+    if (!apiKey) {
+        functions.logger.error("PriceCharting API key is not configured. Run 'firebase functions:config:set pricecharting.key=42860c20259590c64cea6da53ecdf25cd084c16b'");
+        throw new functions.https.HttpsError('internal', 'Server configuration error.');
+    }
+
+    const { endpoint, params } = data; // e.g., endpoint: 'products', params: { q: 'charizard base set' } OR endpoint: 'product', params: { id: '6910' }
+
+    if (!endpoint || !['product', 'products'].includes(endpoint)) {
+        throw new functions.https.HttpsError('invalid-argument', 'Invalid endpoint specified.');
+    }
+    if (!params || typeof params !== 'object') {
+        throw new functions.https.HttpsError('invalid-argument', 'Invalid parameters specified.');
+    }
+
+    const baseURL = "https://www.pricecharting.com/api/";
+    const url = new URL(`${baseURL}${endpoint}`);
+    url.searchParams.append('t', apiKey);
+
+    // Append parameters from the frontend call
+    for (const [key, value] of Object.entries(params)) {
+        url.searchParams.append(key, value);
+    }
+
+    functions.logger.info(`Calling PriceCharting API: ${url.toString()}`);
+
+    try {
+        const response = await fetch(url.toString(), { method: 'GET' });
+
+        if (!response.ok) {
+            functions.logger.error(`PriceCharting API error: ${response.status} ${response.statusText}`);
+            // Attempt to read error body if possible
+            let errorBody = '';
+            try {
+                 errorBody = await response.text();
+                 functions.logger.error(`PriceCharting error body: ${errorBody}`);
+            } catch(e) { /* ignore if body cannot be read */}
+            
+            throw new functions.https.HttpsError('internal', `Failed to fetch data from PriceCharting. Status: ${response.status}`);
+        }
+
+        const responseData = await response.json();
+        functions.logger.info('Successfully received data from PriceCharting.');
+
+        // Check PriceCharting's internal status
+        if (responseData.status === 'error') {
+             functions.logger.error(`PriceCharting returned error: ${responseData['error-message']}`);
+             // Decide if you want to throw an HttpsError or return the error structure
+             // Throwing might be simpler for the client to handle standard errors
+             throw new functions.https.HttpsError('internal', responseData['error-message'] || 'PriceCharting API returned an error.');
+             // Or return the structure:
+             // return responseData;
+        }
+
+        return responseData; // Return the successful JSON data
+
+    } catch (error) {
+        functions.logger.error("Error calling PriceCharting API:", error);
+        if (error instanceof functions.https.HttpsError) {
+            throw error; // Re-throw HttpsError
+        }
+        throw new functions.https.HttpsError('internal', 'An unexpected error occurred while calling the PriceCharting API.');
+    }
+});
+
+// Example usage from frontend:
+// const functions = getFunctions();
+// const proxyPriceCharting = httpsCallable(functions, 'proxyPriceCharting');
+// try {
+//   const result = await proxyPriceCharting({ 
+//     endpoint: 'products', 
+//     params: { q: 'Pikachu Illustrator' } 
+//   });
+//   console.log(result.data); // Access the JSON response data
+// } catch (error) {
+//   console.error("Error calling proxy function:", error);
+// }
