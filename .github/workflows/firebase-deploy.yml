@@ -36,7 +36,11 @@ jobs:
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
       
+      - name: Build React App
+        run: |
+          npm run build
+      
       - name: Deploy to Firebase
         run: |
           npm install -g firebase-tools
-          firebase deploy --only functions --project mycardtracker-c8479 --token "${{ secrets.FIREBASE_TOKEN }}"
+          firebase deploy --project mycardtracker-c8479 --token "${{ secrets.FIREBASE_TOKEN }}"
