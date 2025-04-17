@@ -75,15 +75,7 @@ const SoldItems = () => {
     const loadSoldCards = async () => {
       try {
         const soldCardsData = await db.getSoldCards();
-        console.log('Loaded sold cards data:', soldCardsData);
         setSoldCards(soldCardsData || []);
-        
-        // Log if we found any sold cards but don't add test data
-        if (!soldCardsData || soldCardsData.length === 0) {
-          console.log('No sold cards found in database.');
-        } else {
-          console.log(`Found ${soldCardsData.length} sold cards in the database`);
-        }
       } catch (error) {
         console.error('Error loading sold cards:', error);
         setSoldCards([]);
@@ -94,13 +86,11 @@ const SoldItems = () => {
     
     // Add a window event listener to catch when import is complete
     const handleImportComplete = () => {
-      console.log("Detected import completion event - refreshing sold items");
       loadSoldCards();
     };
     
     // Add listener for sold items updates (from import or marking as sold)
     const handleSoldItemsUpdated = () => {
-      console.log("Detected sold-items-updated event - refreshing");
       loadSoldCards();
     };
     
@@ -145,15 +135,11 @@ const SoldItems = () => {
 
   // Process grouped invoices
   const groupedInvoices = useMemo(() => {
-    console.log("Processing sold cards for display:", soldCards);
-    // Early return for empty data
     if (!soldCards || !Array.isArray(soldCards) || soldCards.length === 0) {
-      console.log("No sold cards to process");
       return [];
     }
 
     const invoices = groupCardsByInvoice(soldCards);
-    console.log("Grouped invoices:", invoices);
     return Array.isArray(invoices) ? invoices : Object.values(invoices);
   }, [soldCards]);
 
@@ -280,19 +266,15 @@ const SoldItems = () => {
   const debugIndexedDB = () => {
     // Debug function to check what's in IndexedDB
     try {
-      console.log("--- DEBUGGING SOLD ITEMS ---");
-      
-      // Safely check the database structure first
       const dbRequest = window.indexedDB.open("pokemonCardTracker", 1);
       
       dbRequest.onerror = (event) => {
         console.error("Database error:", event.target.error);
+        alert("Error accessing database: " + event.target.error);
       };
       
       dbRequest.onsuccess = (event) => {
         const db = event.target.result;
-        console.log("Database opened successfully");
-        console.log("Object store names:", Array.from(db.objectStoreNames));
         
         // Check if the collections store exists before trying to use it
         if (db.objectStoreNames.contains("collections")) {
@@ -301,38 +283,28 @@ const SoldItems = () => {
           const request = store.getAll();
           
           request.onsuccess = function() {
-            console.log("All collections in IndexedDB:", request.result);
-            
-            // Find the 'sold' collection specifically
             const soldCollection = request.result.find(item => item.name === 'sold');
-            console.log("Sold collection in IndexedDB:", soldCollection);
             
             if (soldCollection && Array.isArray(soldCollection.data)) {
-              console.log(`Found ${soldCollection.data.length} sold items`);
               alert(`Found ${soldCollection.data.length} sold items in database. Check browser console for details.`);
             } else {
-              console.log("No sold items found or invalid format");
               alert("No sold items found in database. Check browser console for details.");
             }
           };
           
           request.onerror = function(event) {
             console.error("Error getting collections:", event.target.error);
-            alert("Error accessing database collections. Check browser console for details.");
+            alert("Error accessing database collections: " + event.target.error);
           };
         } else {
-          console.log("The 'collections' object store does not exist yet");
-          alert("The 'collections' object store does not exist yet. Check browser console for details.");
+          alert("The 'collections' object store does not exist. Database may be corrupted.");
         }
       };
       
-      // Also check what comes from our db service
-      db.getSoldCards().then(soldCardsData => {
-        console.log("Result from db.getSoldCards():", soldCardsData);
-      }).catch(e => {
-        console.error("Error from db.getSoldCards():", e);
-      });
-      
+      dbRequest.onerror = (event) => {
+        console.error("Error opening database:", event.target.error);
+        alert("Error opening database: " + event.target.error);
+      };
     } catch (error) {
       console.error("Debug error:", error);
       alert("Error debugging database: " + error.message);
@@ -352,32 +324,24 @@ const SoldItems = () => {
         const deleteRequest = indexedDB.deleteDatabase("pokemonCardTracker");
         
         deleteRequest.onsuccess = () => {
-          console.log("Database deleted successfully");
-          
           // Create new database with correct structure
           const request = indexedDB.open("pokemonCardTracker", 1);
           
           request.onupgradeneeded = (event) => {
             const db = event.target.result;
-            console.log("Creating new database structure");
             
             // Create collections store
-            console.log("Creating collections store");
             db.createObjectStore("collections", { keyPath: ["userId", "name"] });
             
             // Create other stores
-            console.log("Creating images store");
             db.createObjectStore("images", { keyPath: ["userId", "id"] });
             
-            console.log("Creating profile store");
             db.createObjectStore("profile", { keyPath: ["userId", "id"] });
             
-            console.log("Creating subscription store");
             db.createObjectStore("subscription", { keyPath: "userId" });
           };
           
           request.onsuccess = () => {
-            console.log("Database created successfully");
             // Now create and insert a test sold item
             const dbInstance = request.result;
             const transaction = dbInstance.transaction(["collections"], "readwrite");
@@ -405,7 +369,6 @@ const SoldItems = () => {
             });
             
             request.onsuccess = () => {
-              console.log("Test sold item created successfully");
               alert("Database has been reset with a test sold item. Refresh the page to continue.");
               window.location.reload();
             };
@@ -444,8 +407,6 @@ const SoldItems = () => {
       if (!file) return;
       
       try {
-        console.log("Processing direct backup import for sold items:", file.name);
-        
         // Read the file
         const reader = new FileReader();
         const fileContent = await new Promise((resolve, reject) => {
@@ -456,14 +417,12 @@ const SoldItems = () => {
         
         // Parse JSON
         const jsonData = JSON.parse(fileContent);
-        console.log("Parsed backup file, looking for sold items");
         
         // Look for sold cards in different possible locations
         let soldItems = [];
         
         // Check for soldCards array at top level
         if (jsonData.soldCards && Array.isArray(jsonData.soldCards)) {
-          console.log(`Found ${jsonData.soldCards.length} sold cards in top-level soldCards array`);
           soldItems.push(...jsonData.soldCards);
         }
         
@@ -471,15 +430,12 @@ const SoldItems = () => {
         if (jsonData.collections && typeof jsonData.collections === 'object') {
           Object.entries(jsonData.collections).forEach(([collectionName, cards]) => {
             if (collectionName.toLowerCase() === 'sold' && Array.isArray(cards)) {
-              console.log(`Found ${cards.length} sold items in 'sold' collection`);
               soldItems.push(...cards);
             }
           });
         }
         
         if (soldItems.length > 0) {
-          console.log(`Found ${soldItems.length} total sold items to import`);
-          
           // Process the sold items
           const processedSoldItems = soldItems.map(item => ({
             ...item,
@@ -492,7 +448,6 @@ const SoldItems = () => {
           
           // Get existing sold cards
           const existingSoldCards = await db.getSoldCards();
-          console.log(`Found ${existingSoldCards.length} existing sold items`);
           
           // Create a Set of existing IDs to avoid duplicates
           const existingIds = new Set(existingSoldCards.map(card => card.slabSerial || card.id));
@@ -502,20 +457,15 @@ const SoldItems = () => {
             item => !existingIds.has(item.slabSerial || item.id)
           );
           
-          console.log(`Adding ${newSoldItems.length} new sold items (filtered out ${processedSoldItems.length - newSoldItems.length} duplicates)`);
-          
           // Merge with existing sold cards
           const mergedSoldCards = [...existingSoldCards, ...newSoldItems];
           
           // Save to database
           await db.saveSoldCards(mergedSoldCards);
-          console.log(`Successfully saved ${mergedSoldCards.length} sold items to IndexedDB`);
-          
           alert(`Successfully imported ${newSoldItems.length} sold items. Refreshing page...`);
           window.location.reload();
         } else {
-          console.log("No sold items found in backup file");
-          alert("No sold items found in the backup file. Make sure it contains a soldCards array or a 'sold' collection.");
+          alert("No sold items found in backup file");
         }
       } catch (error) {
         console.error("Error importing sold items:", error);
@@ -529,7 +479,6 @@ const SoldItems = () => {
 
   const forceRefreshSoldItems = () => {
     db.getSoldCards().then(soldCardsData => {
-      console.log("Force refresh sold items:", soldCardsData);
       setSoldCards(soldCardsData || []);
     }).catch(e => {
       console.error("Error force refreshing sold items:", e);
@@ -548,7 +497,6 @@ const SoldItems = () => {
       
       dbRequest.onsuccess = (event) => {
         const db = event.target.result;
-        console.log("Database opened successfully for direct access");
         
         // Check if the collections store exists
         if (db.objectStoreNames.contains("collections")) {
@@ -558,25 +506,20 @@ const SoldItems = () => {
           
           request.onsuccess = function() {
             const soldCollection = request.result;
-            console.log("DIRECT DB ACCESS - Retrieved sold items:", soldCollection);
             
             if (soldCollection && Array.isArray(soldCollection.data)) {
-              console.log(`DIRECT DB ACCESS - Found ${soldCollection.data.length} sold items`);
-              // Set the sold items directly
               setSoldCards(soldCollection.data);
               alert(`Found ${soldCollection.data.length} sold items using direct DB access. Check browser console for details.`);
             } else {
-              console.log("DIRECT DB ACCESS - No sold items found or invalid format");
               alert("No sold items found using direct DB access. Check browser console for details.");
             }
           };
           
           request.onerror = function(event) {
-            console.error("DIRECT DB ACCESS - Error getting sold items:", event.target.error);
+            console.error("Error getting sold items:", event.target.error);
             alert("Error accessing sold items in database: " + event.target.error);
           };
         } else {
-          console.log("DIRECT DB ACCESS - The 'collections' object store does not exist");
           alert("The 'collections' object store does not exist. Database may be corrupted.");
         }
       };
@@ -604,8 +547,6 @@ const SoldItems = () => {
 
   // Handle printing an invoice
   const handlePrintInvoice = (invoice) => {
-    console.log("Print invoice requested:", invoice);
-    
     // Create a unique filename for the invoice
     const fileName = `invoice-${invoice.id || invoice.buyer.replace(/\s+/g, '_')}-${new Date(invoice.dateSold).toISOString().split('T')[0]}.pdf`;
     
@@ -675,10 +616,6 @@ const SoldItems = () => {
   const displayData = useMemo(() => {
     return sortedInvoices && sortedInvoices.length > 0 ? sortedInvoices : [];
   }, [sortedInvoices]);
-
-  useEffect(() => {
-    console.log("Final display data:", displayData);
-  }, [displayData]);
 
   // Reset sold items database (remove test data)
   const resetSoldItems = async () => {

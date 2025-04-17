@@ -14,7 +14,8 @@ const PSADetailModal = ({
   onClose, 
   certNumber, 
   currentCardData, 
-  onApplyDetails 
+  onApplyDetails,
+  autoApply = true // New prop to control auto-applying data
 }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [psaData, setPsaData] = useState(null);
@@ -52,6 +53,9 @@ const PSADetailModal = ({
             if (!hasData) {
               setError('No meaningful data found for this certification number');
               toast.error('PSA returned empty card data');
+            } else if (autoApply) {
+              // Auto-apply the data if we have it and autoApply is true
+              applyPSADetails(parsed);
             }
           } catch (parseError) {
             console.error('Error parsing PSA data:', parseError);
@@ -71,15 +75,15 @@ const PSADetailModal = ({
     if (isOpen && certNumber) {
       fetchPSAData();
     }
-  }, [isOpen, certNumber]);
+  }, [isOpen, certNumber, autoApply, currentCardData, onApplyDetails]);
 
-  // Handler for applying PSA details to card
-  const handleApplyDetails = () => {
-    if (!parsedData) return;
+  // Function to apply PSA details to card
+  const applyPSADetails = (data) => {
+    if (!data) return;
     
     try {
       // Merge PSA data with existing card data
-      const mergedData = mergeWithExistingCard(currentCardData, parsedData);
+      const mergedData = mergeWithExistingCard(currentCardData, data);
       onApplyDetails(mergedData);
       toast.success('PSA data applied successfully!');
       onClose();
@@ -89,10 +93,20 @@ const PSADetailModal = ({
     }
   };
   
+  // Handler for applying PSA details to card (for manual button click)
+  const handleApplyDetails = () => {
+    applyPSADetails(parsedData);
+  };
+  
   // Stop click propagation to prevent closing parent modal
   const handleModalContentClick = (e) => {
     e.stopPropagation();
   };
+
+  // If autoApply is true, we don't need to show the modal at all
+  if (autoApply) {
+    return null;
+  }
 
   // We'll create a specialized modal backdrop that doesn't close when clicked
   return (
@@ -117,34 +131,38 @@ const PSADetailModal = ({
             PSA Card Details: {certNumber}
           </h2>
           <button
-            className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300"
+            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
             onClick={(e) => {
               e.stopPropagation();
               e.preventDefault();
               onClose();
             }}
           >
-            <span className="text-2xl">×</span>
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
           </button>
         </div>
         
         {/* Modal Content */}
         <div className="p-4">
           {isLoading && (
-            <div className="flex justify-center items-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 dark:border-white"></div>
+            <div className="text-center py-8">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-500 border-t-transparent"></div>
+              <p className="mt-2 text-gray-600 dark:text-gray-400">Searching PSA for cert number: {certNumber}</p>
             </div>
           )}
-          
+
           {error && (
-            <div className="bg-red-100 dark:bg-red-900/20 border border-red-400 text-red-700 dark:text-red-400 px-4 py-3 rounded">
-              <p className="font-medium">Error: {error}</p>
+            <div className="bg-red-100 dark:bg-red-900/20 border border-red-400 text-red-700 dark:text-red-400 px-4 py-3 rounded relative">
+              <p className="font-bold">Error</p>
+              <p>{error}</p>
             </div>
           )}
-          
+
           {!isLoading && parsedData && (
             <div className="space-y-6">
-              {/* Card Details section */}
+              {/* Card details section */}
               <div>
                 <h3 className="text-lg font-semibold mb-2">Card Details</h3>
                 <div className="grid grid-cols-2 gap-2">
@@ -165,15 +183,14 @@ const PSADetailModal = ({
                   
                   <div className="text-gray-500 dark:text-gray-400">PSA Link:</div>
                   <div className="font-medium">
-                    {parsedData.psaWebUrl ? (
+                    {parsedData.psaUrl ? (
                       <a 
-                        href={parsedData.psaWebUrl} 
+                        href={parsedData.psaUrl} 
                         target="_blank" 
                         rel="noopener noreferrer"
-                        className="text-blue-600 dark:text-blue-400 hover:underline"
-                        onClick={(e) => e.stopPropagation()}
+                        className="text-blue-500 hover:text-blue-700 flex items-center"
                       >
-                        View on PSA ↗
+                        View on PSA <span className="ml-1">↗</span>
                       </a>
                     ) : 'N/A'}
                   </div>
@@ -220,14 +237,6 @@ const PSADetailModal = ({
                 </div>
               </div>
               
-              {/* Confirmation message */}
-              <div className="bg-blue-100 dark:bg-blue-900/20 border border-blue-400 text-blue-700 dark:text-blue-400 px-4 py-3 rounded relative">
-                <p>Would you like to apply these PSA details to your card?</p>
-                <p className="text-sm mt-1">
-                  This will update card information but preserve your purchase details, values, and notes.
-                </p>
-              </div>
-              
               {/* Action buttons */}
               <div className="flex justify-end space-x-3 mt-4">
                 <Button 
@@ -270,7 +279,8 @@ PSADetailModal.propTypes = {
   onClose: PropTypes.func.isRequired,
   certNumber: PropTypes.string,
   currentCardData: PropTypes.object,
-  onApplyDetails: PropTypes.func.isRequired
+  onApplyDetails: PropTypes.func.isRequired,
+  autoApply: PropTypes.bool
 };
 
 export default PSADetailModal;

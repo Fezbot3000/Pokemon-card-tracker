@@ -39,7 +39,7 @@ const BottomNavBar = ({
       <button
         className={`bottom-nav-item ${
           currentView === 'settings' ? 'active' : ''
-        }`}
+        } hidden sm:flex`}
         onClick={() => onViewChange('settings')}
       >
         <span className="material-icons">settings</span>

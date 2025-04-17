@@ -25,7 +25,6 @@ export function CardProvider({ children }) {
         if (soldCards && soldCards.length > 0) {
           const soldCardIds = new Set(soldCards.map(card => card.originalCardId || card.id));
           setSoldCardIds(soldCardIds);
-          console.log(`Loaded ${soldCardIds.size} sold card IDs from IndexedDB`);
         }
       } catch (error) {
         console.warn('Failed to load sold card IDs from IndexedDB:', error);
@@ -41,9 +40,9 @@ export function CardProvider({ children }) {
     
     const initializeRepository = async () => {
       try {
-    if (currentUser) {
-      const repo = new CardRepository(currentUser.uid);
-      setRepository(repo);
+        if (currentUser) {
+          const repo = new CardRepository(currentUser.uid);
+          setRepository(repo);
           
           if (mounted) {
             await loadInitialData(repo);
@@ -72,12 +71,7 @@ export function CardProvider({ children }) {
       return cardsToVerify; // No sold cards to filter
     }
     
-    console.log(`Filtering ${cardsToVerify.length} cards against ${currentSoldCardIds.length} sold card IDs`);
     const filteredCards = cardsToVerify.filter(card => !currentSoldCardIds.includes(card.id));
-    
-    if (filteredCards.length !== cardsToVerify.length) {
-      console.log(`Filtered out ${cardsToVerify.length - filteredCards.length} sold cards`);
-    }
     
     return filteredCards;
   }, [soldCardIds]);
@@ -98,7 +92,6 @@ export function CardProvider({ children }) {
       let collectionsFromRepo = [];
       try {
         collectionsFromRepo = await repo.getCollections();
-        console.log(`CardContext: Loaded ${collectionsFromRepo.length} collections`);
       } catch (collectionsError) {
         console.error('Failed to load collections:', collectionsError);
         collectionsFromRepo = [];
@@ -108,7 +101,6 @@ export function CardProvider({ children }) {
       let cardsFromRepo = [];
       try {
         cardsFromRepo = await repo.getCards();
-        console.log(`CardContext: Loaded ${cardsFromRepo.length} cards`);
       } catch (cardsError) {
         console.error('Failed to load cards:', cardsError);
         cardsFromRepo = [];
@@ -121,7 +113,6 @@ export function CardProvider({ children }) {
           const soldCardIds = new Set(soldCards.map(card => card.originalCardId || card.id));
           const originalCount = cardsFromRepo.length;
           cardsFromRepo = cardsFromRepo.filter(card => !soldCardIds.has(card.id));
-          console.log(`Initial load: Filtered out ${originalCount - cardsFromRepo.length} sold cards`);
         }
       } catch (e) {
         console.warn('Failed to filter sold cards during initial load:', e);
@@ -131,13 +122,6 @@ export function CardProvider({ children }) {
       let soldCardsFromRepo = [];
       try {
         soldCardsFromRepo = await db.getSoldCards();
-        console.log(`CardContext: Loaded ${soldCardsFromRepo.length} sold cards`);
-        
-        // Update soldCardIds from IndexedDB data
-        if (soldCardsFromRepo.length > 0) {
-          const soldCardIds = new Set(soldCardsFromRepo.map(card => card.originalCardId || card.id));
-          setSoldCardIds(soldCardIds);
-        }
       } catch (soldCardsError) {
         console.error('Failed to load sold cards:', soldCardsError);
         soldCardsFromRepo = [];
@@ -147,8 +131,6 @@ export function CardProvider({ children }) {
       
       setLoading(false);
       setSyncStatus('synced');
-      
-      console.log("CardContext: Initial data load complete");
       
       return { success: true, message: 'Data loaded successfully' };
     } catch (error) {
@@ -171,7 +153,6 @@ export function CardProvider({ children }) {
       try {
         // Always clean up any existing subscription first
         if (unsubscribe) {
-          console.log('Unsubscribing from previous cards subscription');
           unsubscribe();
           unsubscribe = null;
         }
@@ -184,43 +165,31 @@ export function CardProvider({ children }) {
         unsubscribe = repository.subscribeToCollection(
           selectedCollection.id,
           (updatedCards) => {
-              // Only log significant changes, not every update
-              if (isFirstLoad || updatedCards.length !== cards.length) {
-            console.log(`Received ${updatedCards.length} cards from collection subscription`);
-                isFirstLoad = false;
+            let filteredCards = verifyCardsAgainstSoldList(updatedCards);
+            
+            // Secondary filter from localStorage/sessionStorage for redundancy
+            let pendingSoldCardIds = [];
+            try {
+              // First from localStorage (primary)
+              pendingSoldCardIds = JSON.parse(localStorage.getItem('pendingSoldCardIds') || '[]');
+              
+              // Then add any from sessionStorage (backward compatibility)
+              const sessionStorageIds = JSON.parse(sessionStorage.getItem('pendingSoldCardIds') || '[]');
+              if (sessionStorageIds.length > 0) {
+                pendingSoldCardIds = [...new Set([...pendingSoldCardIds, ...sessionStorageIds])];
               }
-              
-              // Apply double filtering - first from state, then from local/sessionStorage
-              let filteredCards = verifyCardsAgainstSoldList(updatedCards);
-              
-              // Secondary filter from localStorage/sessionStorage for redundancy
-              let pendingSoldCardIds = [];
-              try {
-                // First from localStorage (primary)
-                pendingSoldCardIds = JSON.parse(localStorage.getItem('pendingSoldCardIds') || '[]');
-                
-                // Then add any from sessionStorage (backward compatibility)
-                const sessionStorageIds = JSON.parse(sessionStorage.getItem('pendingSoldCardIds') || '[]');
-                if (sessionStorageIds.length > 0) {
-                  pendingSoldCardIds = [...new Set([...pendingSoldCardIds, ...sessionStorageIds])];
-                }
-              } catch (e) {
-                console.warn('Failed to get pending sold cards from storage', e);
-              }
-              
-              // Final filter step if needed
-              if (pendingSoldCardIds.length > 0) {
-                const initialCount = filteredCards.length;
-                filteredCards = filteredCards.filter(card => !pendingSoldCardIds.includes(card.id));
-                
-                // If any cards were filtered out, log it
-                if (filteredCards.length !== initialCount) {
-                  console.log(`Storage filter: Filtered out ${initialCount - filteredCards.length} cards that are pending sale`);
-                }
-              }
-              
-              // Always update cards immediately with what we get from Firestore
-              setCards(filteredCards);
+            } catch (e) {
+              console.warn('Failed to get pending sold cards from storage', e);
+            }
+            
+            // Final filter step if needed
+            if (pendingSoldCardIds.length > 0) {
+              const initialCount = filteredCards.length;
+              filteredCards = filteredCards.filter(card => !pendingSoldCardIds.includes(card.id));
+            }
+            
+            // Always update cards immediately with what we get from Firestore
+            setCards(filteredCards);
             setSyncStatus('synced');
           }
         );
@@ -228,43 +197,31 @@ export function CardProvider({ children }) {
           // Subscribe to all cards when "All Cards" is selected
         unsubscribe = repository.subscribeToAllCards(
           (updatedCards) => {
-              // Only log significant changes, not every update
-              if (isFirstLoad || updatedCards.length !== cards.length) {
-            console.log(`Received ${updatedCards.length} cards from all-cards subscription`);
-                isFirstLoad = false;
+            let filteredCards = verifyCardsAgainstSoldList(updatedCards);
+            
+            // Secondary filter from localStorage/sessionStorage for redundancy
+            let pendingSoldCardIds = [];
+            try {
+              // First from localStorage (primary)
+              pendingSoldCardIds = JSON.parse(localStorage.getItem('pendingSoldCardIds') || '[]');
+              
+              // Then add any from sessionStorage (backward compatibility)
+              const sessionStorageIds = JSON.parse(sessionStorage.getItem('pendingSoldCardIds') || '[]');
+              if (sessionStorageIds.length > 0) {
+                pendingSoldCardIds = [...new Set([...pendingSoldCardIds, ...sessionStorageIds])];
               }
-              
-              // Apply double filtering - first from state, then from local/sessionStorage
-              let filteredCards = verifyCardsAgainstSoldList(updatedCards);
-              
-              // Secondary filter from localStorage/sessionStorage for redundancy
-              let pendingSoldCardIds = [];
-              try {
-                // First from localStorage (primary)
-                pendingSoldCardIds = JSON.parse(localStorage.getItem('pendingSoldCardIds') || '[]');
-                
-                // Then add any from sessionStorage (backward compatibility)
-                const sessionStorageIds = JSON.parse(sessionStorage.getItem('pendingSoldCardIds') || '[]');
-                if (sessionStorageIds.length > 0) {
-                  pendingSoldCardIds = [...new Set([...pendingSoldCardIds, ...sessionStorageIds])];
-                }
-              } catch (e) {
-                console.warn('Failed to get pending sold cards from storage', e);
-              }
-              
-              // Final filter step if needed
-              if (pendingSoldCardIds.length > 0) {
-                const initialCount = filteredCards.length;
-                filteredCards = filteredCards.filter(card => !pendingSoldCardIds.includes(card.id));
-                
-                // If any cards were filtered out, log it
-                if (filteredCards.length !== initialCount) {
-                  console.log(`Storage filter: Filtered out ${initialCount - filteredCards.length} cards that are pending sale`);
-                }
-              }
-              
-              // Always update cards immediately
-              setCards(filteredCards);
+            } catch (e) {
+              console.warn('Failed to get pending sold cards from storage', e);
+            }
+            
+            // Final filter step if needed
+            if (pendingSoldCardIds.length > 0) {
+              const initialCount = filteredCards.length;
+              filteredCards = filteredCards.filter(card => !pendingSoldCardIds.includes(card.id));
+            }
+            
+            // Always update cards immediately
+            setCards(filteredCards);
             setSyncStatus('synced');
           }
         );
@@ -278,12 +235,7 @@ export function CardProvider({ children }) {
       
       return () => {
         if (unsubscribe) {
-        console.log('Unsubscribing from cards collection on cleanup');
-        try {
           unsubscribe();
-        } catch (error) {
-          console.error('Error unsubscribing:', error);
-        }
         }
       };
   }, [repository, selectedCollection, verifyCardsAgainstSoldList]); // Added verifyCardsAgainstSoldList dependency
@@ -297,7 +249,6 @@ export function CardProvider({ children }) {
       
       try {
         if (unsubscribe) {
-          console.log('Unsubscribing from previous sold cards subscription');
           unsubscribe();
           unsubscribe = null;
         }
@@ -308,10 +259,6 @@ export function CardProvider({ children }) {
         // Set up sold cards subscription with minimal logging
         unsubscribe = repository.subscribeToSoldCards(
         (updatedSoldCards) => {
-            // Only log if there's a significant change
-            if (updatedSoldCards.length !== soldCards.length) {
-              console.log(`Received ${updatedSoldCards.length} sold cards (was ${soldCards.length})`);
-            }
           setSoldCards(updatedSoldCards);
           setSyncStatus('synced');
         }
@@ -325,12 +272,7 @@ export function CardProvider({ children }) {
     
     return () => {
       if (unsubscribe) {
-        console.log('Unsubscribing from sold cards on cleanup');
-        try {
-          unsubscribe();
-        } catch (error) {
-          console.error('Error unsubscribing from sold cards:', error);
-        }
+        unsubscribe();
       }
     };
   }, [repository, soldCards.length]);
@@ -356,7 +298,6 @@ export function CardProvider({ children }) {
       setCollections(prev => [...prev, formattedCollection]);
       
       // Immediately select the new collection
-      console.log('Setting selected collection to new collection:', formattedCollection);
       setSelectedCollection(formattedCollection);
       
       setSyncStatus('synced');
@@ -407,7 +348,6 @@ export function CardProvider({ children }) {
       
       // Ensure we have a valid collectionId
       if (!cardData.collectionId && selectedCollection?.id) {
-        console.log(`No collectionId provided, using selectedCollection: ${selectedCollection.id}`);
         cardData.collectionId = selectedCollection.id;
       }
       
@@ -477,7 +417,6 @@ export function CardProvider({ children }) {
     
     try {
       setSyncStatus('syncing');
-      console.log(`Deleting ${cardIds.length} cards`);
       
       // Use the repository's batch delete function
       const result = await repository.deleteCards(cardIds);
@@ -639,7 +578,6 @@ export function CardProvider({ children }) {
   const importCards = useCallback(async (file, collectionId, importMode = 'priceUpdate') => {
     try {
       setSyncStatus('syncing');
-      console.log(`CardContext: Starting import with mode: ${importMode}`);
       const result = await repository.importCards(file, collectionId, importMode);
       // Cards will be updated via the subscription
       return { success: true };

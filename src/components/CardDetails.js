@@ -4,6 +4,9 @@ import { useTheme } from '../design-system';
 import { toast } from 'react-hot-toast';
 import CardDetailsModal from '../design-system/components/CardDetailsModal';
 import PSALookupButton from './PSALookupButton';
+import PriceChartingButton from './PriceChartingButton';
+import PriceHistoryGraph from './PriceHistoryGraph';
+import RecentSales from './RecentSales';
 
 // Helper function to format date
 const formatDate = (dateString) => {
@@ -35,6 +38,8 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
 
   // Effect to load card image on mount
   useEffect(() => {
+    // Remove noisy debug logs for cleaner console
+    // console.log('[CardDetails] Component mounted, loading image...');
     loadCardImage();
     
     // Effect to handle body scroll locking
@@ -53,6 +58,12 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
       if (messageTimeoutRef.current) {
         clearTimeout(messageTimeoutRef.current);
       }
+      
+      // Clean up any created object URLs to prevent memory leaks
+      if (cardImage) {
+        // console.log('[CardDetails] Cleaning up image URL on unmount:', cardImage);
+        URL.revokeObjectURL(cardImage);
+      }
     };
   }, []);
 
@@ -61,26 +72,28 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
     setImageLoadingState('loading');
     try {
       // Use the appropriate ID for the image
-      const id = card.id || card.slabSerial;
+      const id = editedCard.id || editedCard.slabSerial || card.id || card.slabSerial;
+      // console.log('[CardDetails] Loading image for ID:', id);
       const imageBlob = await db.getImage(id);
       
       if (imageBlob) {
+        // Revoke any existing object URL to prevent memory leaks
+        if (cardImage) {
+          URL.revokeObjectURL(cardImage);
+        }
+        
         const imageUrl = URL.createObjectURL(imageBlob);
+        // console.log('[CardDetails] Image loaded successfully, URL:', imageUrl);
         setCardImage(imageUrl);
-        
-        // Update the edited card with the image URL
-        setEditedCard(prev => ({
-          ...prev,
-          imageUrl: imageUrl
-        }));
-        
         setImageLoadingState('idle');
       } else {
+        // console.log('[CardDetails] No image found for ID:', id);
         setCardImage(null);
         setImageLoadingState('idle');
       }
     } catch (error) {
       console.error('Error loading card image:', error);
+      setCardImage(null);
       setImageLoadingState('error');
     }
   };
@@ -179,84 +192,53 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
   // Handle save action
   const handleSave = async (updatedCard) => {
     try {
-      // Check if there are any changes
-      if (!hasCardBeenEdited()) {
-        // Show a simple feedback message in the UI
-        try {
-          toast.info('No changes to save');
-        } catch (toastError) {
-          console.error('Toast notification error:', toastError);
-        }
-        return;
-      }
-
-      // Format the card data before saving
-      const cardToSave = {
-        ...card, // Start with original card data
-        ...updatedCard, // Override with edited values
-        investmentAUD: Number(updatedCard.investmentAUD || 0),
-        currentValueAUD: Number(updatedCard.currentValueAUD || 0),
-        investmentUSD: Number(updatedCard.investmentUSD || 0),
-        currentValueUSD: Number(updatedCard.currentValueUSD || 0),
-        potentialProfit: Number((Number(updatedCard.currentValueAUD || 0) - Number(updatedCard.investmentAUD || 0)).toFixed(2))
+      // console.log('[CardDetails] Saving card with data:', updatedCard);
+      
+      // Convert string values to appropriate types
+      const processedCard = {
+        ...updatedCard,
+        year: updatedCard.year ? parseInt(updatedCard.year, 10) : null,
+        investmentUSD: updatedCard.investmentUSD ? parseFloat(updatedCard.investmentUSD) : 0,
+        currentValueUSD: updatedCard.currentValueUSD ? parseFloat(updatedCard.currentValueUSD) : 0,
+        investmentAUD: updatedCard.investmentAUD ? parseFloat(updatedCard.investmentAUD) : 0,
+        currentValueAUD: updatedCard.currentValueAUD ? parseFloat(updatedCard.currentValueAUD) : 0,
+        datePurchased: updatedCard.datePurchased ? new Date(updatedCard.datePurchased) : null
       };
-
-      // Apply exchange rate conversions if needed
-      if (exchangeRate && typeof exchangeRate === 'number') {
-        // If AUD value changed, recalculate USD value
-        if (updatedCard.investmentAUD !== card.investmentAUD) {
-          cardToSave.investmentUSD = Number((updatedCard.investmentAUD / exchangeRate).toFixed(2));
-        }
-        
-        if (updatedCard.currentValueAUD !== card.currentValueAUD) {
-          cardToSave.currentValueUSD = Number((updatedCard.currentValueAUD / exchangeRate).toFixed(2));
-        }
-      }
-
-      // Update the parent component (this will handle the database save)
-      await updateCard(cardToSave);
+      
+      // Update the card in the database
+      await updateCard(processedCard);
+      
+      // Show success message
+      toast.success('Card saved successfully!');
       
       // Reset unsaved changes flag
       setHasUnsavedChanges(false);
       
-      // Use try-catch specifically for toast to isolate potential errors
-      try {
-        toast.success('Card updated successfully');
-      } catch (toastError) {
-        console.error('Toast notification error:', toastError);
-      }
-      
-      // Close the modal with a small delay for animation
-      handleClose();
+      // Close the modal
+      handleClose(true); // Pass true to indicate a successful save
     } catch (error) {
       console.error('Error saving card:', error);
-      
-      // Try to show toast, but don't let it break the app
-      try {
-        toast.error('Failed to update card: ' + (error.message || 'Unknown error'));
-      } catch (toastError) {
-        console.error('Toast notification error:', toastError);
-      }
+      toast.error('Error saving card: ' + error.message);
     }
   };
 
   // Handle delete action
   const handleDelete = async () => {
     try {
-      await onDelete(card);
-      try {
+      // Confirm deletion
+      if (window.confirm('Are you sure you want to delete this card?')) {
+        // Call the onDelete function passed from parent
+        await onDelete(card);
+        
+        // Show success message
         toast.success('Card deleted successfully');
-      } catch (toastError) {
-        console.error('Toast notification error:', toastError);
+        
+        // Close the modal without unsaved changes prompt
+        handleClose(true);
       }
-      handleClose();
     } catch (error) {
       console.error('Error deleting card:', error);
-      try {
-        toast.error('Error deleting card: ' + error.message);
-      } catch (toastError) {
-        console.error('Toast notification error:', toastError);
-      }
+      toast.error('Error deleting card: ' + error.message);
     }
   };
 
@@ -265,7 +247,7 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
     try {
       // First get the existing sold cards
       let soldCards = await db.getSoldCards() || [];
-      console.log("Current sold cards:", soldCards);
+      // console.log("Current sold cards:", soldCards);
       
       // Add the current card to the sold cards list
       soldCards.push({
@@ -283,7 +265,7 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
       }
       
       toast.success('Card marked as sold and moved to Sold Items');
-      handleClose();
+      handleClose(true);
     } catch (error) {
       console.error('Error marking card as sold:', error);
       toast.error('Error marking card as sold: ' + error.message);
@@ -291,20 +273,25 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
   };
 
   // Handle close action with confirmation for unsaved changes
-  const handleClose = () => {
-    setIsOpen(false);
-    // Wait for the close animation to finish
-    setTimeout(() => {
-      if (hasUnsavedChanges) {
+  const handleClose = (skipConfirmation = false) => {
+    if (skipConfirmation || !hasUnsavedChanges) {
+      // If skipConfirmation is true or there are no unsaved changes, close without confirmation
+      setIsOpen(false);
+      setTimeout(() => {
+        onClose();
+      }, 300);
+    } else {
+      // Otherwise, show confirmation dialog
+      setIsOpen(false);
+      // Wait for the close animation to finish
+      setTimeout(() => {
         if (window.confirm('You have unsaved changes. Are you sure you want to close?')) {
           onClose();
         } else {
           setIsOpen(true);
         }
-      } else {
-        onClose();
-      }
-    }, 300);
+      }, 300);
+    }
   };
 
   // Handle card field changes and track if there are unsaved changes
@@ -339,6 +326,51 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
             toast.success("Card details updated from PSA data");
           }}
           buttonText="Lookup PSA Data"
+        />
+      }
+      additionalValueContent={
+        <PriceChartingButton
+          currentCardData={editedCard}
+          onCardUpdate={(updatedData) => {
+            // console.log('[CardDetails] Received updated data from PriceCharting:', updatedData);
+            // console.log('[CardDetails] Current edited card before update:', editedCard);
+            
+            setEditedCard(prev => {
+              const newData = {
+                ...prev,
+                ...updatedData
+              };
+              // console.log('[CardDetails] New card data after update:', newData);
+              return newData;
+            });
+            
+            setHasUnsavedChanges(true);
+            // console.log('[CardDetails] Set hasUnsavedChanges to true');
+            toast.success("Card price updated from PriceCharting");
+          }}
+          buttonText="Update Price"
+          className="ml-2"
+        />
+      }
+      additionalSerialContent={
+        <PSALookupButton 
+          currentCardData={editedCard}
+          onCardUpdate={(updatedData) => {
+            // console.log('[CardDetails] Received updated data from PSA lookup:', updatedData);
+            
+            setEditedCard(prev => {
+              const newData = {
+                ...prev,
+                ...updatedData
+              };
+              // console.log('[CardDetails] New card data after PSA update:', newData);
+              return newData;
+            });
+            
+            setHasUnsavedChanges(true);
+            toast.success("Card details updated from PSA data");
+          }}
+          iconOnly={true}
         />
       }
     />

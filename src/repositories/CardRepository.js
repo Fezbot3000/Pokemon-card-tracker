@@ -68,7 +68,6 @@ class CardRepository {
       // Check if collection already exists to avoid overwriting
       const existingDoc = await getDoc(collectionRef);
       if (existingDoc.exists()) {
-        console.log(`Collection ${collectionId} already exists, updating instead of creating`);
         // Just update the card count and timestamp
         await updateDoc(collectionRef, {
           cardCount: collectionData.cardCount || 0,
@@ -244,12 +243,9 @@ class CardRepository {
       const querySnapshot = await getDocs(q);
       const cards = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       
-      console.log(`Repository: Retrieved ${cards.length} cards ${collectionId ? `for collection ${collectionId}` : 'across all collections'}`);
-      
       return cards;
     } catch (error) {
       console.error('Error getting cards:', error);
-      // Return empty array instead of throwing
       return [];
     }
   }
@@ -272,7 +268,6 @@ class CardRepository {
       
       if (!cardDoc.exists()) {
         // Card doesn't exist - throw an error instead of creating a new card
-        console.error(`Card ${cardId} not found. Cannot update image for a non-existent card.`);
         throw new Error(`Card not found: ${cardId}. Cannot upload image for a non-existent card.`);
       }
       
@@ -307,8 +302,6 @@ class CardRepository {
   // Sold Cards Operations
   async markCardAsSold(cardId, soldData) {
     try {
-      console.log(`Starting markCardAsSold for card ${cardId} with data:`, soldData);
-      
       const cardRef = doc(this.cardsRef, cardId);
       const soldCardRef = doc(this.soldCardsRef);
       
@@ -327,11 +320,8 @@ class CardRepository {
       
       // Ensure we have a valid invoiceId
       if (!soldData.invoiceId) {
-        console.error("No invoiceId provided in soldData");
         soldData.invoiceId = `INV-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`;
       }
-      
-      console.log(`Using invoiceId: ${soldData.invoiceId} for card ${cardId}`);
       
       // Check if this card has already been marked as sold by querying for soldCards with this originalCardId
       const existingSoldCardsQuery = query(
@@ -344,7 +334,6 @@ class CardRepository {
       
       if (!existingSoldCardsSnapshot.empty) {
         const existingSoldCard = existingSoldCardsSnapshot.docs[0];
-        console.warn(`Card ${cardId} has already been marked as sold with ID: ${existingSoldCard.id}`);
         return {
           id: existingSoldCard.id,
           ...existingSoldCard.data(),
@@ -356,8 +345,6 @@ class CardRepository {
       const investmentValue = parseFloat(cardData.investmentAUD) || 0;
       const soldPrice = parseFloat(soldData.soldPrice) || 0;
       const profit = soldPrice - investmentValue;
-      
-      console.log(`Card ${cardId} investment: ${investmentValue}, sold price: ${soldPrice}, profit: ${profit}`);
       
       // Create sold card document with all fields from the original card
       // plus the sold data fields
@@ -374,15 +361,11 @@ class CardRepository {
         invoiceId: soldData.invoiceId // Use the exact invoiceId provided
       };
 
-      console.log(`Created soldCard data:`, soldCard);
-
       // First add the sold card document
       await setDoc(soldCardRef, soldCard);
-      console.log(`Successfully added sold card document with ID: ${soldCardRef.id}`);
       
       // Then delete the original card document
       await deleteDoc(cardRef);
-      console.log(`Successfully deleted original card document with ID: ${cardId}`);
       
       // If the card belonged to a collection, update the collection's card count
       if (cardData.collectionId) {
@@ -396,11 +379,9 @@ class CardRepository {
               cardCount: Math.max((collectionData.cardCount || 0) - 1, 0),
               updatedAt: serverTimestamp()
             });
-            console.log(`Updated collection ${cardData.collectionId} card count`);
           }
         } catch (collectionError) {
           console.error("Error updating collection card count:", collectionError);
-          // Continue even if updating the collection fails
         }
       }
 
@@ -410,7 +391,6 @@ class CardRepository {
         soldDate: new Date() // Convert serverTimestamp for immediate use
       };
       
-      console.log(`Completed markCardAsSold for card ${cardId} with result:`, result);
       return result;
     } catch (error) {
       console.error("Error marking card as sold:", error);
@@ -440,11 +420,8 @@ class CardRepository {
   async importSoldCards(soldCards) {
     try {
       if (!Array.isArray(soldCards) || soldCards.length === 0) {
-        console.log('No sold cards to import');
         return { success: true, count: 0 };
       }
-      
-      console.log(`Importing ${soldCards.length} sold cards`);
       
       // Process sold cards
       const processedCards = soldCards.map(soldCard => ({
@@ -458,10 +435,8 @@ class CardRepository {
       let existingSoldCards = [];
       try {
         existingSoldCards = await db.getSoldCards();
-        console.log(`Found ${existingSoldCards.length} existing sold cards`);
       } catch (error) {
-        console.warn('Error getting existing sold cards:', error);
-        // Continue with empty array
+        console.error('Error getting existing sold cards:', error);
       }
       
       // Merge with existing sold cards, avoiding duplicates
@@ -477,7 +452,6 @@ class CardRepository {
       // Store all sold cards in IndexedDB
       try {
         await db.saveSoldCards(mergedCards);
-        console.log(`Successfully saved ${mergedCards.length} sold cards to IndexedDB`);
       } catch (dbError) {
         console.error('Error saving sold cards to IndexedDB:', dbError);
         return { 
@@ -549,10 +523,8 @@ class CardRepository {
       const docSnap = await getDoc(profileRef);
       
       if (docSnap.exists()) {
-        console.log("Found profile in Firebase:", docSnap.data());
         return docSnap.data();
       } else {
-        console.log("No profile found in Firebase");
         return null;
       }
     } catch (error) {
@@ -563,25 +535,19 @@ class CardRepository {
 
   async updateUserProfile(profileData) {
     try {
-      console.log(`Starting updateUserProfile for user ${this.userId} with data:`, profileData);
-      
       const profileRef = doc(db, 'users', this.userId, 'profile', 'userData');
       
       // Check if profile document exists
       const profileDoc = await getDoc(profileRef);
       const exists = profileDoc.exists();
-      console.log(`Profile document ${exists ? 'exists' : 'does not exist'}`);
       
       const dataToSave = {
         ...profileData,
         updatedAt: serverTimestamp()
       };
       
-      console.log("Saving profile data:", dataToSave);
-      
       // Use setDoc to create or overwrite the document
       await setDoc(profileRef, dataToSave);
-      console.log("Profile data successfully saved to Firestore");
       
       return {
         success: true,
@@ -596,15 +562,12 @@ class CardRepository {
   // Batch Operations
   async importCards(file, collectionId, importMode = 'priceUpdate') {
     try {
-      console.log(`Repository: Importing in ${importMode} mode for collection: ${collectionId}`);
-      
       // Import utilities
       const { parseCSVFile, processImportedData, validateCSVStructure } = await import('../utils/dataProcessor');
       const { getUsdToAudRate } = await import('../utils/currencyAPI');
       
       // Parse CSV file
       const parsedData = await parseCSVFile(file);
-      console.log(`Parsed ${parsedData.length} rows from CSV`);
       
       // Validate the structure based on import mode
       const validation = validateCSVStructure(parsedData, importMode);
@@ -614,7 +577,6 @@ class CardRepository {
       
       // Get current exchange rate
       const exchangeRate = await getUsdToAudRate();
-      console.log(`Using exchange rate: ${exchangeRate}`);
       
       // For price update mode, get existing cards
       let existingCards = [];
@@ -624,16 +586,13 @@ class CardRepository {
           query(this.cardsRef, where('collectionId', '==', collectionId))
         );
         existingCards = cardsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        console.log(`Found ${existingCards.length} existing cards in collection`);
       }
       
       // Process imported data
       const processedData = processImportedData(parsedData, existingCards, exchangeRate, importMode);
-      console.log(`Processed ${processedData.length} cards for import`);
       
       // If no cards to process, return success
       if (processedData.length === 0) {
-        console.log('No cards to import after processing');
         return { success: true, count: 0 };
       }
       
@@ -679,7 +638,6 @@ class CardRepository {
         if (batchCount === 500) {
           await batch.commit();
           totalBatches++;
-          console.log(`Committed batch ${totalBatches} (${batchCount} operations)`);
           batchCount = 0;
         }
       }
@@ -688,10 +646,8 @@ class CardRepository {
       if (batchCount > 0) {
         await batch.commit();
         totalBatches++;
-        console.log(`Committed final batch ${totalBatches} (${batchCount} operations)`);
       }
       
-      console.log(`Successfully imported ${processedData.length} cards`);
       return { success: true, count: processedData.length };
     } catch (error) {
       console.error('Error importing cards:', error);
@@ -702,8 +658,6 @@ class CardRepository {
   // Specialized method for importing cards from backup
   async importCardsForBackup(cards, collectionId) {
     try {
-      console.log(`Importing ${cards.length} cards for collection ID: ${collectionId || 'undefined'}`);
-      
       // If no collection ID provided, try to get an existing one
       if (!collectionId) {
         // Default to first available collection if none specified
@@ -712,18 +666,15 @@ class CardRepository {
           const realCollection = collections.find(c => c.id !== 'all-cards');
           if (realCollection) {
             collectionId = realCollection.id;
-            console.log(`No collection ID provided, using first available: ${realCollection.name} (${collectionId})`);
           } else {
             // Create a new collection if none exists
             const newCollection = await this.createCollection('Imported Cards');
             collectionId = newCollection.id;
-            console.log(`Created new collection for import: Imported Cards (${collectionId})`);
           }
         } else {
           // Create a new collection if none exists
           const newCollection = await this.createCollection('Imported Cards');
           collectionId = newCollection.id;
-          console.log(`No collections found, created new collection: Imported Cards (${collectionId})`);
         }
       }
       
@@ -732,16 +683,13 @@ class CardRepository {
       const collectionDoc = await getDoc(collectionRef);
       
       if (!collectionDoc.exists()) {
-        console.warn(`Collection with ID ${collectionId} not found - creating it`);
         // Create a new collection with a default name
         const newCollection = await this.createCollection(`Imported Collection ${new Date().toISOString().slice(0,10)}`);
         collectionId = newCollection.id;
-        console.log(`Created new collection with ID: ${collectionId}`);
       }
       
       // Get current card count for verification
       const beforeCount = await this.getCardCount(collectionId);
-      console.log(`Collection ${collectionId} has ${beforeCount} cards before import`);
       
       // Create batch for Firestore operations
       let batch = writeBatch(db);
@@ -778,11 +726,7 @@ class CardRepository {
           if (batchCount === 500) {
             await batch.commit();
             totalBatches++;
-            console.log(`Committed batch ${totalBatches} (${batchCount} operations)`);
-            
-            // Create a new batch
             batchCount = 0;
-            batch = writeBatch(db);
           }
         } catch (cardError) {
           console.error(`Error processing card:`, cardError);
@@ -795,7 +739,6 @@ class CardRepository {
         try {
           await batch.commit();
           totalBatches++;
-          console.log(`Committed final batch ${totalBatches} (${batchCount} operations)`);
         } catch (batchError) {
           console.error(`Error committing final batch:`, batchError);
           errorCount += batchCount;
@@ -805,7 +748,6 @@ class CardRepository {
       
       // Verify final card count
       const afterCount = await this.getCardCount(collectionId);
-      console.log(`Collection ${collectionId} has ${afterCount} cards after import (difference: ${afterCount - beforeCount})`);
       
       // Update collection card count
       try {
@@ -814,7 +756,6 @@ class CardRepository {
           cardCount: afterCount,
           updatedAt: serverTimestamp()
         });
-        console.log(`Updated collection ${collectionId} card count to ${afterCount}`);
       } catch (collectionError) {
         console.error(`Error updating collection ${collectionId} card count:`, collectionError);
       }
@@ -860,12 +801,10 @@ class CardRepository {
       );
       
       if (existingCollection) {
-        console.log(`Found existing collection "${name}" (ID: ${existingCollection.id})`);
         return existingCollection;
       }
       
       // Create a new collection if it doesn't exist
-      console.log(`Creating new collection "${name}"`);
       return await this.createCollection(name);
     } catch (error) {
       console.error(`Error getting or creating collection "${name}":`, error);
@@ -882,7 +821,6 @@ class CardRepository {
       const collectionDoc = await getDoc(collectionRef);
       
       if (!collectionDoc.exists()) {
-        console.warn(`Collection with ID ${collectionId} not found for card count update`);
         return false;
       }
       
@@ -893,7 +831,6 @@ class CardRepository {
         updatedAt: serverTimestamp()
       });
       
-      console.log(`Updated collection ${collectionId} card count to ${cardCount}`);
       return true;
     } catch (error) {
       console.error(`Error updating collection ${collectionId} card count:`, error);
@@ -908,8 +845,6 @@ class CardRepository {
     }
     
     try {
-      console.log(`Deleting ${cardIds.length} cards`);
-      
       // Create batch for Firestore operations
       let batch = writeBatch(db);
       let batchCount = 0;
@@ -943,18 +878,15 @@ class CardRepository {
               await deleteObject(storageRef);
             } catch (imageError) {
               // Ignore errors deleting images - they might not exist
-              console.log(`Image for card ${cardId} not found or could not be deleted`);
             }
             
             // Commit batch if we reach 500 operations
             if (batchCount === 500) {
               await batch.commit();
               totalBatches++;
-              console.log(`Committed deletion batch ${totalBatches} (${batchCount} operations)`);
               batchCount = 0;
             }
           } else {
-            console.warn(`Card with ID ${cardId} not found for deletion`);
             errorCount++;
           }
         } catch (cardError) {
@@ -968,7 +900,6 @@ class CardRepository {
         try {
           await batch.commit();
           totalBatches++;
-          console.log(`Committed final deletion batch ${totalBatches} (${batchCount} operations)`);
         } catch (batchError) {
           console.error(`Error committing final deletion batch:`, batchError);
           errorCount += batchCount;

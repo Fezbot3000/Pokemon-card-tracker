@@ -82,7 +82,6 @@ class DatabaseService {
     // Wait for database to be opened
     try {
       this.db = await this.dbPromise;
-      console.log('Database connection established successfully');
       
       // Ensure all expected collections exist for the user
       await this.ensureCollections();
@@ -694,7 +693,6 @@ class DatabaseService {
     
     return new Promise((resolve, reject) => {
       try {
-        // Make sure collections object store exists
         if (!this.db.objectStoreNames.contains(COLLECTIONS_STORE)) {
           console.error('Collections store does not exist');
           reject('Collections store does not exist');
@@ -712,15 +710,6 @@ class DatabaseService {
         });
         
         request.onsuccess = () => {
-          console.log(`Successfully saved ${soldCards.length} sold cards to IndexedDB`);
-          
-          // Dispatch an event to notify components that sold items have been updated
-          try {
-            window.dispatchEvent(new CustomEvent('sold-items-updated'));
-          } catch (e) {
-            console.warn("Could not dispatch sold-items-updated event:", e);
-          }
-          
           resolve();
         };
         
@@ -729,9 +718,7 @@ class DatabaseService {
           reject('Error saving sold cards');
         };
         
-        // Add transaction complete handler to make sure we catch any errors
         transaction.oncomplete = () => {
-          console.log('Transaction completed for saving sold cards');
         };
         
         transaction.onerror = (event) => {
@@ -763,9 +750,6 @@ class DatabaseService {
 
         request.onsuccess = () => {
           const soldCollection = request.result;
-          console.log('Retrieved sold cards from IndexedDB:', soldCollection);
-          
-          // Return exactly what's in the database without any filtering
           if (soldCollection && Array.isArray(soldCollection.data)) {
             resolve(soldCollection.data);
           } else {

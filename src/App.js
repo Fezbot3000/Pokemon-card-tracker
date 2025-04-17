@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { 
-  BrowserRouter as Router, 
-  Routes, 
-  Route, 
+  createBrowserRouter, 
+  RouterProvider, 
   Navigate, 
   useLocation, 
   Link, 
@@ -16,6 +15,7 @@ import {
   toast,
   Toast, 
   SettingsModal, 
+  Icon 
 } from './design-system';
 import DesignSystemProvider from './design-system/providers/DesignSystemProvider';
 import MobileSettingsModal from './components/MobileSettingsModal'; 
@@ -35,8 +35,8 @@ import db from './services/db';
 import { TutorialProvider, useTutorial } from './contexts/TutorialContext';
 import { SubscriptionProvider, useSubscription } from './contexts/SubscriptionContext';
 import TutorialModal from './components/TutorialModal';
-import PrivateRoute from './components/PrivateRoute';
 import ErrorBoundary from './components/ErrorBoundary';
+import PremiumFeatures from './components/PremiumFeatures';
 import './styles/main.css';
 import './styles/black-background.css'; 
 import './styles/ios-fixes.css'; 
@@ -54,27 +54,6 @@ const generateUniqueId = () => {
   return `card_${timestamp}_${randomPart}`;
 };
 
-// Public route component to redirect authenticated users to dashboard
-function PublicRoute({ children }) {
-  const { user } = useAuth();
-  const location = useLocation();
-  const path = location.pathname;
-  const navigate = useNavigate();
-
-  if (user) {
-    // Special case: Redirect to dashboard pricing if user is trying to access /pricing
-    if (path === '/pricing') {
-      navigate('/dashboard/pricing', { replace: true });
-      return null;
-    }
-    
-    // Redirect to dashboard if user is already logged in
-    return <Navigate to="/dashboard" state={{ from: location }} replace />;
-  }
-
-  return children;
-}
-
 // NewUserRoute to check subscription status and redirect to pricing for new sign-ups
 function NewUserRoute() {
   const { user } = useAuth();
@@ -83,35 +62,6 @@ function NewUserRoute() {
   const location = useLocation();
   const hasRedirected = useRef(false);
   
-  // Debugging: Inspect the isNewUser flag on component mount
-  useEffect(() => {
-    const isNewUser = localStorage.getItem('isNewUser');
-    if (user) {
-      console.log("DEBUG: IsNewUser Flag Value:", { 
-        isNewUser, 
-        value: isNewUser === 'true',
-        chosenPlan: localStorage.getItem('chosenPlan')
-      });
-    }
-  }, [user]);
-  
-  // Check if we're coming from a payment flow
-  const isFromPayment = location.search.includes('checkout_success=true');
-  
-  // Helper function for logging
-  const logRedirectInfo = () => {
-    console.log('NewUserRoute - Checking if redirect needed', {
-      pathname: location.pathname,
-      hasRedirected: hasRedirected.current,
-      isNewUser: localStorage.getItem('isNewUser') === 'true',
-      chosenPlan: localStorage.getItem('chosenPlan'),
-      isFromPayment,
-      subscriptionStatus: subscriptionStatus?.status,
-      isLoading
-    });
-  };
-  
-  // Check if we need to redirect the user
   useEffect(() => {
     // Avoid multiple redirects
     if (hasRedirected.current) return;
@@ -122,20 +72,10 @@ function NewUserRoute() {
     // Only proceed if we have a user
     if (!user) return;
     
-    // Log debug info
-    logRedirectInfo();
+    // Check if we're coming from a payment flow
+    const isFromPayment = location.search.includes('checkout_success=true');
     
-    // If we're on the pricing page within the dashboard, don't redirect
-    if (location.pathname === '/dashboard/pricing') {
-      hasRedirected.current = true;
-      return;
-    }
-    
-    // Check if user is marked as new
-    const isNewUser = localStorage.getItem('isNewUser') === 'true';
-    const chosenPlan = localStorage.getItem('chosenPlan');
-    
-    // If coming from payment flow, clear the isNewUser flag
+    // Check if we need to redirect the user
     if (isFromPayment) {
       console.log('User is coming from payment flow, clearing isNewUser flag');
       localStorage.removeItem('isNewUser');
@@ -146,7 +86,6 @@ function NewUserRoute() {
     
     // If user has an active subscription, they can access the dashboard
     if (subscriptionStatus?.status === 'active') {
-      console.log('Active subscription detected, user can access dashboard');
       hasRedirected.current = true;
       return;
     }
@@ -159,18 +98,19 @@ function NewUserRoute() {
       navigate('/dashboard/pricing');
       return;
     }
-  }, [user, subscriptionStatus, isLoading, navigate, location.pathname, isFromPayment]);
+  }, [user, subscriptionStatus, isLoading, navigate, location.pathname]);
   
   return null;
 }
 
 // Main Dashboard Component
 function Dashboard() {
+  const { currentUser, loading: authLoading } = useAuth();
   const location = useLocation();
   const { refreshSubscriptionStatus } = useSubscription();
   const hasRefreshed = useRef(false);
   const navigate = useNavigate();
-  
+
   // Check for checkout_success parameter when dashboard loads - but only once
   useEffect(() => {
     // Only run this once per component mount
@@ -201,14 +141,34 @@ function Dashboard() {
         }, 1500);
       }
     }
-    
-    // If user is trying to access /dashboard/pricing directly but has an active subscription
-    // we will let the route component (DashboardPricing) handle this instead of redirecting here
   }, [location.search, location.pathname, refreshSubscriptionStatus, navigate]);
+
+  // Show loading indicator while auth state is being determined
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
   
+  // Redirect to login if not authenticated
+  if (!currentUser) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+  
+  // Render the dashboard content if authenticated
   return (
     <Outlet />
   );
+}
+
+// Wrapper for dashboard index route (NewUserRoute + AppContent)
+function DashboardIndex() {
+  return <>
+    <NewUserRoute />
+    <AppContent />
+  </>;
 }
 
 function AppContent() {
@@ -285,7 +245,6 @@ function AppContent() {
     const handleKeyDown = (e) => {
       // When 's' key is pressed, open settings
       if (e.key === 's' && !e.ctrlKey && !e.altKey && !e.metaKey) {
-        console.log('Settings keyboard shortcut triggered');
         setShowSettings(true);
       }
     };
@@ -895,7 +854,6 @@ To import this backup:
         const messageEl = loadingEl.querySelector('[data-message]');
         if (progressEl) progressEl.style.width = `${percent}%`;
         if (messageEl) messageEl.textContent = message;
-        console.log(`Import Progress: ${message} (${percent}%)`);
       };
 
       if (file.name.endsWith('.zip')) {
@@ -1272,7 +1230,6 @@ To import this backup:
   }, [deleteCard]);
 
   const handleSettingsClick = () => {
-    console.log('Settings clicked - Debug log'); 
     document.body.classList.add('settings-open'); 
     
     // For mobile, treat settings as a view
@@ -1285,7 +1242,6 @@ To import this backup:
   };
 
   const handleCloseSettings = () => {
-    console.log('Closing settings - Debug log'); 
     document.body.classList.remove('settings-open'); 
     
     setShowSettings(false);
@@ -1451,15 +1407,6 @@ To import this backup:
         />
       )}
       
-      {/* Temporary Settings Button - Positioned in the bottom right corner */}
-      <button
-        onClick={handleSettingsClick}
-        className="fixed bottom-20 right-4 z-[9999] bg-primary text-white p-3 rounded-full shadow-lg"
-        style={{ pointerEvents: 'auto' }}
-      >
-        <span className="material-icons">settings</span>
-      </button>
-
       <main className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-4 pb-20">
         {currentView === 'cards' ? (
           <CardList
@@ -1704,10 +1651,12 @@ To import this backup:
         />
       )}
 
-      {/* Mobile Bottom Navigation - Always visible on mobile */}
-      <div className="lg:hidden bottom-nav-container">
+      {/* Mobile Bottom Navigation */}
+      <div
+        className={`lg:hidden fixed bottom-0 left-0 right-0 z-40 transition-transform duration-300 ${selectedCard ? 'bottom-nav-hidden' : ''}`}
+      >
         <BottomNavBar
-          currentView={currentView}
+          currentView={location.pathname.split('/').pop() || 'cards'} // Determine current view from path
           onViewChange={(view) => {
             setCurrentView(view);
             // If switching to a view other than settings, hide settings modal
@@ -1722,7 +1671,19 @@ To import this backup:
           onAddCard={() => setShowNewCardForm(true)}
           onSettingsClick={handleSettingsClick}
           isModalOpen={selectedCard !== null || showNewCardForm || isAnyModalOpen}
-        />
+        >
+          {/* Settings Button */}
+          <button
+            onClick={handleSettingsClick}
+            className={`flex-1 flex flex-col items-center justify-center p-2 group relative text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors hidden sm:flex lg:hidden`}
+          >
+            <div className="absolute top-0 left-1/2 transform -translate-x-1/2 h-1 w-0 bg-primary transition-all duration-300 group-hover:w-full"></div>
+            <Icon name="settings" className="text-xl transition-colors duration-300" />
+            <span className="text-xs mt-1 transition-colors duration-300">
+              Settings
+            </span>
+          </button>
+        </BottomNavBar>
       </div>
 
       <TutorialModal />
@@ -1730,110 +1691,89 @@ To import this backup:
   );
 }
 
-function App() {
-  return (
-    <ErrorBoundary>
-      <DesignSystemProvider>
-        <SubscriptionProvider>
-          <TutorialProvider>
-            <Router>
-              {/* Replace the direct Toaster with our design system Toast component */}
-              <Toast
-                position="top-center"
-                toastOptions={{
-                  duration: 3000,
-                  style: {
-                    background: '#1B2131',
-                    color: '#FFFFFF',
-                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                    borderRadius: '12px',
-                    padding: '12px 24px',
-                    fontWeight: '500'
-                  }
-                }}
-              />
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route
-                  path="/login"
-                  element={
-                    <PublicRoute>
-                      <Login />
-                    </PublicRoute>
-                  }
-                />
-                <Route
-                  path="/forgot-password"
-                  element={
-                    <PublicRoute>
-                      <ForgotPassword />
-                    </PublicRoute>
-                  }
-                />
-                <Route
-                  path="/pricing"
-                  element={<Pricing />}
-                />
-                
-                {/* Dashboard routes with nested routes using Outlet */}
-                <Route
-                  path="/dashboard"
-                  element={
-                    <PrivateRoute>
-                      <Dashboard />
-                    </PrivateRoute>
-                  }
-                >
-                  <Route
-                    index
-                    element={
-                      <>
-                        <NewUserRoute />
-                        <AppContent />
-                      </>
-                    }
-                  />
-                  <Route
-                    path="pricing"
-                    element={<DashboardPricing />}
-                  />
-                </Route>
-                
-                {/* Premium-only route example */}
-                <Route
-                  path="/premium/*"
-                  element={
-                    <PrivateRoute requireSubscription={true}>
-                      <div className="min-h-screen bg-gray-100 dark:bg-[#0F0F0F] p-8">
-                        <div className="max-w-4xl mx-auto bg-white dark:bg-[#1B2131] rounded-lg shadow-lg p-6">
-                          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-                            Premium Features
-                          </h1>
-                          <p className="text-gray-700 dark:text-gray-300 mb-6">
-                            This is a premium-only section. You have access because you're a premium subscriber!
-                          </p>
-                          <div className="flex justify-center">
-                            <Link to="/dashboard" className="bg-primary text-white px-6 py-2 rounded-lg hover:bg-primary-dark transition-colors">
-                              Back to Dashboard
-                            </Link>
-                          </div>
-                        </div>
-                      </div>
-                    </PrivateRoute>
-                  }
-                />
-                <Route
-                  path="/component-library"
-                  element={<ComponentLibrary />}
-                />
-                <Route path="*" element={<Navigate to="/" />} />
-              </Routes>
-            </Router>
-          </TutorialProvider>
-        </SubscriptionProvider>
-      </DesignSystemProvider>
-    </ErrorBoundary>
-  );
-}
+const RootProviders = () => (
+  <ErrorBoundary>
+    <DesignSystemProvider>
+      <SubscriptionProvider>
+        <TutorialProvider>
+          <Toast
+            position="top-center"
+            toastOptions={{
+              duration: 3000,
+              style: {
+                background: '#1B2131',
+                color: '#FFFFFF',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                borderRadius: '12px',
+                padding: '12px 24px',
+                fontWeight: '500'
+              }
+            }}
+          />
+          <Outlet />
+        </TutorialProvider>
+      </SubscriptionProvider>
+    </DesignSystemProvider>
+  </ErrorBoundary>
+);
 
-export default App;
+export const router = createBrowserRouter([
+  {
+    path: '/',
+    element: <RootProviders />,
+    children: [
+      {
+        index: true,
+        element: <Home />,
+      },
+      {
+        path: 'login',
+        element: <Login />,
+      },
+      {
+        path: 'forgot-password',
+        element: <ForgotPassword />,
+      },
+      {
+        path: 'pricing',
+        element: <Pricing />,
+      },
+      {
+        path: 'dashboard',
+        element: <Dashboard />,
+        children: [
+          {
+            index: true,
+            element: <DashboardIndex />,
+          },
+          {
+            path: 'pricing',
+            element: <DashboardPricing />,
+          },
+        ],
+      },
+      {
+        path: 'premium/*',
+        element: <PremiumFeatures />,
+      },
+      {
+        path: 'component-library',
+        element: <ComponentLibrary />,
+      },
+      {
+        path: '*',
+        element: <Navigate to="/" />,
+      },
+    ]
+  }
+], {
+  future: {
+    v7_startTransition: true,
+    v7_relativeSplatPath: true,
+  },
+});
+
+function App() {
+  // Legacy default export for compatibility, but not used in index.js
+  return null;
+}

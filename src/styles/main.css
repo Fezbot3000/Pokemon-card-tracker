@@ -312,6 +312,38 @@ html.dark body {
     bottom: 0;
     left: 0;
     right: 0;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    background-color: white;
+    border-top: 1px solid #E5E7EB;
+    padding: 0.5rem 0;
+  }
+  
+  .dark .bottom-nav {
+    background-color: #1B2131;
+    border-top: 1px solid #374151;
+  }
+  
+  .bottom-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem;
+    color: #6B7280;
+    transition: color 0.2s ease-in-out;
+  }
+  
+  .bottom-nav-item.active {
+    color: #ef4444;
+  }
+  
+  .dark .bottom-nav-item {
+    color: #9CA3AF;
+  }
+  
+  .dark .bottom-nav-item.active {
+    color: #ef4444;
   }
   
   /* Settings page should be below the bottom nav but above other content */
@@ -359,4 +391,73 @@ html.dark body {
 /* Override modal-open hiding bottom nav */
 .modal-open .bottom-nav {
   display: grid;
+}
+
+/* Ensure dark mode settings icon is styled */
+.dark .settings-button-class svg {
+  fill: white; /* Or your desired dark mode icon color */
+}
+
+/* --- Card Details Modal Mobile Full Screen --- */
+@media (max-width: 768px) {
+  /* Target the modal component directly when it has our specific class */
+  .modal-backdrop > .card-details-modal-instance {
+    width: 100vw !important;
+    height: 100vh !important;
+    max-width: none !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    z-index: 50;
+    /* Override potential backdrop blur/color */
+    backdrop-filter: none !important;
+    /* Use theme background or a solid color */
+    background-color: var(--background-color, white) !important; 
+    display: flex; /* Ensure flex layout */
+    flex-direction: column; /* Stack header/content/footer */
+  }
+
+  /* Make the scrollable content area take available space */
+  .card-details-modal-instance .flex-1.overflow-y-auto {
+    flex-grow: 1;
+    padding: 1rem; /* Adjust padding as needed */
+  }
+
+  /* Ensure header and footer are sticky within the full-screen view */
+  .card-details-modal-instance .sticky {
+    position: sticky;
+    background-color: inherit; /* Ensure background matches */
+  }
+  .card-details-modal-instance .sticky.top-0 {
+    top: 0;
+    border-bottom: 1px solid var(--border-color, #e5e7eb); /* Add border if needed */
+    z-index: 11; /* Ensure header is above content */
+  }
+  .card-details-modal-instance .sticky.bottom-0 {
+    bottom: 0;
+    border-top: 1px solid var(--border-color, #e5e7eb); /* Add border if needed */
+     z-index: 11; /* Ensure footer is above content */
+  }
+}
+
+/* --- Hide Bottom Navigation --- */
+.bottom-nav-hidden {
+  transform: translateY(100%); /* Slide down */
+  opacity: 0;
+  pointer-events: none; /* Prevent interaction when hidden */
+  transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+}
+
+/* Optional: Add transition to the wrapper in App.js if not already present */
+.fixed.bottom-0.z-40 { /* Target the wrapper */
+  transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+}
+
+/* Responsive Design Adjustments */
+@media (max-width: 768px) {
+  .container {
+    padding: 1rem; /* Adjust padding for mobile */
+  }
 }

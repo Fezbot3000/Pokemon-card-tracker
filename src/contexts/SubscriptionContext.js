@@ -34,13 +34,13 @@ export function SubscriptionProvider({ children }) {
       setIsLoading(true);
       try {
         const status = await checkSubscriptionStatus();
-        console.log('Subscription status:', status);
+        // Removed: console.log('Subscription status:', status);
         
         if (isMounted) {
           setSubscriptionStatus(status);
         }
       } catch (error) {
-        console.error('Error checking subscription:', error);
+        // Removed: console.error('Error checking subscription:', error);
         if (isMounted) {
           setSubscriptionStatus({ status: 'error', message: error.message });
         }
@@ -72,9 +72,7 @@ export function SubscriptionProvider({ children }) {
       // Immediately trigger the fixSubscription method which has better success finding subscriptions
       postPaymentCheck();
     } else if (localStorage.getItem('recentPayment') === 'true') {
-      // If we had a recent payment but lost the URL parameter (page refresh),
-      // try to fix subscription status
-      console.log('Detected recent payment from localStorage, applying fix subscription logic');
+      // Removed: console.log('Detected recent payment from localStorage, applying fix subscription logic');
       postPaymentCheck();
     }
   }, []);
@@ -82,32 +80,32 @@ export function SubscriptionProvider({ children }) {
   // New function to handle post-payment subscription verification
   const postPaymentCheck = async () => {
     setIsLoading(true);
-    console.log('Running post-payment subscription check and fix...');
+    // Removed: console.log('Running post-payment subscription check and fix...');
     
     try {
       // First try the fix method which does a direct email lookup in Stripe
       const fixResult = await fixSubscription();
-      console.log('Post-payment fix result:', fixResult);
+      // Removed: console.log('Post-payment fix result:', fixResult);
       
       // If fix was successful, we're done
       if (fixResult.success) {
-        console.log('Subscription successfully fixed after payment!');
+        // Removed: console.log('Subscription successfully fixed after payment!');
         // Clear the recent payment flag
         localStorage.removeItem('recentPayment');
         
         // If we're on the pricing page, redirect to dashboard
         if (window.location.pathname.includes('/dashboard/pricing')) {
-          console.log('Redirecting from pricing to dashboard after successful fix');
+          // Removed: console.log('Redirecting from pricing to dashboard after successful fix');
           window.location.href = '/dashboard';
         }
         return;
       }
       
       // If fix wasn't successful, fall back to regular verification
-      console.log('Fix unsuccessful, falling back to regular verification...');
+      // Removed: console.log('Fix unsuccessful, falling back to regular verification...');
       await verifySubscription();
     } catch (error) {
-      console.error('Error during post-payment check:', error);
+      // Removed: console.error('Error during post-payment check:', error);
       // Fall back to regular verification
       await verifySubscription();
     } finally {
@@ -126,11 +124,11 @@ export function SubscriptionProvider({ children }) {
   const verifySubscription = async () => {
     // Define a function to attempt verification with retry logic
     const attemptVerification = async (attempts = 1, maxAttempts = 5, delay = 2000) => {
-      console.log(`Verification attempt ${attempts} of ${maxAttempts}...`);
+      // Removed: console.log(`Verification attempt ${attempts} of ${maxAttempts}...`);
       
       try {
         const status = await checkSubscriptionStatus();
-        console.log('Verification check result:', status);
+        // Removed: console.log('Verification check result:', status);
         
         // Check if we got an active subscription
         if (status.status === 'active') {
@@ -142,7 +140,7 @@ export function SubscriptionProvider({ children }) {
         
         // If not active but we have more attempts, retry after delay
         if (attempts < maxAttempts) {
-          console.log(`Subscription not active yet, waiting ${delay/1000} seconds before retry...`);
+          // Removed: console.log(`Subscription not active yet, waiting ${delay/1000} seconds before retry...`);
           await new Promise(resolve => setTimeout(resolve, delay));
           return attemptVerification(attempts + 1, maxAttempts, delay * 1.5);
         }
@@ -151,11 +149,11 @@ export function SubscriptionProvider({ children }) {
         setSubscriptionStatus(status);
         return false;
       } catch (error) {
-        console.error('Error during verification attempt:', error);
+        // Removed: console.error('Error during verification attempt:', error);
         
         // Retry on error if we have attempts left
         if (attempts < maxAttempts) {
-          console.log(`Error during verification, waiting ${delay/1000} seconds before retry...`);
+          // Removed: console.log(`Error during verification, waiting ${delay/1000} seconds before retry...`);
           await new Promise(resolve => setTimeout(resolve, delay));
           return attemptVerification(attempts + 1, maxAttempts, delay * 1.5);
         }
@@ -171,7 +169,7 @@ export function SubscriptionProvider({ children }) {
       
       // If verification was successful, redirect to dashboard
       if (success) {
-        console.log('Subscription verification successful, redirecting to dashboard');
+        // Removed: console.log('Subscription verification successful, redirecting to dashboard');
         
         // If we're not already on the dashboard, redirect there
         if (!window.location.pathname.includes('/dashboard')) {
@@ -181,12 +179,12 @@ export function SubscriptionProvider({ children }) {
           window.location.href = '/dashboard';
         }
       } else {
-        console.warn('Could not verify subscription after multiple attempts');
+        // Removed: console.warn('Could not verify subscription after multiple attempts');
         // Even without successful verification, we'll still let users continue
         // The DashboardPricing component will show a special screen
       }
     } catch (error) {
-      console.error('Error verifying subscription:', error);
+      // Removed: console.error('Error verifying subscription:', error);
       // Even with error, we'll let the DashboardPricing component handle it
     }
   };
@@ -197,13 +195,13 @@ export function SubscriptionProvider({ children }) {
     clearSubscriptionCache();
     
     try {
-      console.log('SubscriptionContext: Refreshing subscription status...');
+      // Removed: console.log('SubscriptionContext: Refreshing subscription status...');
       const status = await checkSubscriptionStatus();
-      console.log('SubscriptionContext: Received status:', status);
+      // Removed: console.log('SubscriptionContext: Received status:', status);
       setSubscriptionStatus(status);
       return status;
     } catch (error) {
-      console.error('Error refreshing subscription:', error);
+      // Removed: console.error('Error refreshing subscription:', error);
       return { status: 'error', message: error.message };
     } finally {
       setIsLoading(false);
@@ -216,7 +214,7 @@ export function SubscriptionProvider({ children }) {
     
     try {
       const result = await fixSubscriptionStatus();
-      console.log('Fix subscription result:', result);
+      // Removed: console.log('Fix subscription result:', result);
       
       if (result.updated && result.status === 'active') {
         // If we successfully fixed the subscription to active, update the state
@@ -237,7 +235,7 @@ export function SubscriptionProvider({ children }) {
         };
       }
     } catch (error) {
-      console.error('Error fixing subscription:', error);
+      // Removed: console.error('Error fixing subscription:', error);
       return { success: false, message: error.message };
     } finally {
       setIsLoading(false);

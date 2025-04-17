@@ -5,7 +5,7 @@ import NavigationBar from './NavigationBar';
 
 function Home() {
   const { currentUser } = useAuth();
-  const navigate = useNavigate();
+  const navigate = useNavigate(); // Call useNavigate at the top level
 
   // Add page-no-padding class to body when component mounts
   useEffect(() => {
@@ -20,9 +20,9 @@ function Home() {
   // Auto-navigate to dashboard if user is logged in
   useEffect(() => {
     if (currentUser && window.location.pathname === '/') {
-      navigate('/dashboard');
+      navigate('/dashboard'); // Use navigate defined outside
     }
-  }, [currentUser, navigate]);
+  }, [currentUser, navigate]); // Add navigate to dependency array
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-red-500 to-green-500 text-gray-900 dark:text-white page-no-padding">
@@ -219,11 +219,11 @@ function Home() {
           <div className="flex flex-col md:flex-row items-center gap-8">
             <div className="md:w-1/3">
               <img 
-                src="/swapit-logo.png" 
+                src="/swapit-logo.svg" 
                 alt="SwapITT Logo" 
                 className="w-full max-w-[240px] mx-auto rounded-lg"
                 onError={(e) => {
-                  e.target.src = 'https://via.placeholder.com/240x240?text=SwapITT'; 
+                  e.target.src = '/assets/img/pokeball.svg'; 
                   e.target.onerror = null;
                 }}
               />

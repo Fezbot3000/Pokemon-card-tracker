@@ -57,7 +57,6 @@ export const preventBodyScroll = () => {
   }
 
   modalCount++;
-  console.log("Modal opened, count:", modalCount);
 };
 
 /**
@@ -66,7 +65,6 @@ export const preventBodyScroll = () => {
  */
 export const restoreBodyScroll = () => {
   modalCount = Math.max(0, modalCount - 1);
-  console.log("Modal closed, count:", modalCount);
 
   // Only restore when all modals are closed
   if (modalCount === 0 && originalBodyStyle) {

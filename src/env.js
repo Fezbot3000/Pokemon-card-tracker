@@ -16,8 +16,10 @@ const validateEnvironment = () => {
   const present = [];
   
   // Show the NODE_ENV for debugging
-  console.log('Current NODE_ENV:', process.env.NODE_ENV);
-  console.log('Browser environment detected:', typeof window !== 'undefined');
+  if (typeof process !== 'undefined' && process.env) {
+    console.log('Current NODE_ENV:', process.env.NODE_ENV);
+    console.log('Browser environment detected:', typeof window !== 'undefined');
+  }
   
   // Check if running in browser/React environment (process.env differs between Node.js and browser)
   // For React, environment variables must be prefixed with REACT_APP_
@@ -27,7 +29,6 @@ const validateEnvironment = () => {
         const value = process.env[varName];
         if (!value || value === 'undefined' || value.trim() === '') {
           missing.push(varName);
-          console.error(`❌ Missing ${varName}`);
         } else {
           present.push(varName);
           // Show the first few characters of each variable for debugging
@@ -36,26 +37,18 @@ const validateEnvironment = () => {
           console.log(`✓ ${varName}: ${safeValue}`);
         }
       } catch (error) {
-        console.error(`Error checking ${varName}:`, error);
         missing.push(varName);
       }
     });
   } else {
-    console.error('process.env is not available - cannot validate environment variables');
   }
   
   if (missing.length > 0) {
-    console.error(`⚠️ Missing required environment variables: ${missing.join(', ')}`);
-    console.error('Please check your .env.local file and make sure it contains all required variables');
-    console.error('Have you created a .env.local file from .env.local.example?');
-    console.error('Note: You must restart the development server after changing .env files');
-    
     // Throw error in production, just warn in development
-    if (process.env.NODE_ENV === 'production') {
+    if (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'production') {
       throw new Error('Missing required environment variables for Firebase');
     }
   } else {
-    console.log('✓ All required environment variables are present');
   }
 };
 

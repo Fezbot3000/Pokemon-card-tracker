@@ -5,6 +5,7 @@ import ImageUpload from '../atoms/ImageUpload';
 import ImageUploadButton from '../atoms/ImageUploadButton';
 import Icon from '../atoms/Icon';
 import { gradients } from '../styles/colors';
+import PriceHistoryGraph from '../../components/PriceHistoryGraph';
 
 /**
  * CardDetailsForm Component
@@ -15,17 +16,19 @@ const CardDetailsForm = ({
   card, 
   cardImage, 
   imageLoadingState,
-  onCardChange,
+  onChange,
   onImageChange,
   onImageRetry,
   onImageClick,
   errors = {},
-  className = ''
+  className = '',
+  additionalValueContent,
+  additionalSerialContent
 }) => {
   // Handle text field changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    onCardChange({
+    onChange({
       ...card,
       [name]: value
     });
@@ -35,7 +38,7 @@ const CardDetailsForm = ({
   const handleNumberChange = (e) => {
     const { name, value } = e.target;
     // Store the raw value in the card object, conversion will happen when needed
-    onCardChange({
+    onChange({
       ...card,
       [name]: value === '' ? '' : value
     });
@@ -90,6 +93,14 @@ const CardDetailsForm = ({
                     src={cardImage}
                     alt="Card"
                     className="max-w-full max-h-full object-contain"
+                    onError={(e) => {
+                      // Try to reload the image
+                      const src = e.target.src;
+                      e.target.src = '';
+                      setTimeout(() => {
+                        e.target.src = src;
+                      }, 100);
+                    }}
                   />
                 </div>
               ) : (
@@ -101,7 +112,38 @@ const CardDetailsForm = ({
             </div>
             
             {/* Separate Upload Button */}
-            <ImageUploadButton onImageChange={onImageChange} />
+            <div className="flex flex-col space-y-2 mt-3">
+              <ImageUploadButton
+                onChange={onImageChange}
+                className="w-full"
+              >
+                Replace Image
+              </ImageUploadButton>
+              
+              {card.psaUrl && (
+                <a 
+                  href={card.psaUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="w-full flex items-center justify-center px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-700 text-white rounded-lg text-sm font-medium hover:opacity-90 transition-colors"
+                >
+                  <span className="mr-2">View PSA Card</span>
+                  <Icon name="open_in_new" size="sm" />
+                </a>
+              )}
+              
+              {card.priceChartingUrl && (
+                <a 
+                  href={card.priceChartingUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="w-full flex items-center justify-center px-4 py-2 bg-gradient-to-r from-green-500 to-green-700 text-white rounded-lg text-sm font-medium hover:opacity-90 transition-colors"
+                >
+                  <span className="mr-2">View Price Data</span>
+                  <Icon name="open_in_new" size="sm" />
+                </a>
+              )}
+            </div>
           </div>
         </div>
 
@@ -168,14 +210,21 @@ const CardDetailsForm = ({
               placeholder="Card population count"
             />
             
-            <FormField
-              label="Serial Number"
-              name="slabSerial"
-              value={card.slabSerial || ''}
-              onChange={handleInputChange}
-              error={errors.slabSerial}
-              required
-            />
+            <div className="relative">
+              <FormField
+                label="Serial Number"
+                name="slabSerial"
+                value={card.slabSerial || ''}
+                onChange={handleInputChange}
+                error={errors.slabSerial}
+                required
+              />
+              {additionalSerialContent && (
+                <div className="absolute right-3 top-[38px] transform -translate-y-1/2">
+                  {additionalSerialContent}
+                </div>
+              )}
+            </div>
             
             <FormField
               label="Date Purchased"
@@ -202,17 +251,24 @@ const CardDetailsForm = ({
               error={errors.investmentAUD}
             />
             
-            <FormField
-              label="Current Value (AUD)"
-              name="currentValueAUD"
-              type="number"
-              prefix="$"
-              value={typeof card.currentValueAUD === 'number' ? card.currentValueAUD : 
-                     (typeof card.currentValueAUD === 'string' && !isNaN(parseFloat(card.currentValueAUD))) ? 
-                     parseFloat(card.currentValueAUD) : 0}
-              onChange={handleNumberChange}
-              error={errors.currentValueAUD}
-            />
+            <div className="relative">
+              <FormField
+                label="Current Value (AUD)"
+                name="currentValueAUD"
+                type="number"
+                prefix="$"
+                value={typeof card.currentValueAUD === 'number' ? card.currentValueAUD : 
+                       (typeof card.currentValueAUD === 'string' && !isNaN(parseFloat(card.currentValueAUD))) ? 
+                       parseFloat(card.currentValueAUD) : 0}
+                onChange={handleNumberChange}
+                error={errors.currentValueAUD}
+              />
+              {additionalValueContent && (
+                <div className="mt-2">
+                  {additionalValueContent}
+                </div>
+              )}
+            </div>
           </div>
 
           {(typeof card.investmentAUD === 'number' || typeof card.investmentAUD === 'string') && 
@@ -225,6 +281,28 @@ const CardDetailsForm = ({
               </span>
             </div>
           )}
+          
+          {/* Price History Chart - directly below profit/loss */}
+          <div className="mt-4">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">Price History</h3>
+            {card.priceChartingProductId ? (
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-2">
+                <PriceHistoryGraph 
+                  productId={card.priceChartingProductId} 
+                  condition={card.condition?.toLowerCase().includes('psa') || card.condition?.toLowerCase().includes('gem') ? 'graded' : 'loose'}
+                />
+              </div>
+            ) : (
+              <div className="bg-gray-100 dark:bg-gray-800 p-3 rounded">
+                <p className="text-gray-500 dark:text-gray-400">No price history available for this card. Use the "Update Price" button to fetch current market prices.</p>
+              </div>
+            )}
+            {card.priceChartingUrl && (
+              <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                <p>Price data provided by PriceCharting.com. Last updated: {card.lastPriceUpdate ? new Date(card.lastPriceUpdate).toLocaleString() : 'Unknown'}</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
@@ -239,20 +317,26 @@ CardDetailsForm.propTypes = {
     year: PropTypes.string,
     category: PropTypes.string,
     condition: PropTypes.string,
-    population: PropTypes.string,
+    population: PropTypes.oneOfType([PropTypes.string, PropTypes.number]), // Changed to accept string or number
     slabSerial: PropTypes.string,
     datePurchased: PropTypes.string,
     investmentAUD: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
-    currentValueAUD: PropTypes.oneOfType([PropTypes.number, PropTypes.string])
+    currentValueAUD: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+    psaUrl: PropTypes.string,
+    priceChartingUrl: PropTypes.string,
+    priceChartingProductId: PropTypes.string,
+    lastPriceUpdate: PropTypes.string
   }).isRequired,
   cardImage: PropTypes.string,
   imageLoadingState: PropTypes.oneOf(['idle', 'loading', 'error']),
-  onCardChange: PropTypes.func.isRequired,
+  onChange: PropTypes.func.isRequired,
   onImageChange: PropTypes.func.isRequired,
   onImageRetry: PropTypes.func,
   onImageClick: PropTypes.func,
   errors: PropTypes.object,
-  className: PropTypes.string
+  className: PropTypes.string,
+  additionalValueContent: PropTypes.node,
+  additionalSerialContent: PropTypes.node
 };
 
 export default CardDetailsForm;

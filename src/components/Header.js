@@ -193,7 +193,7 @@ const Header = ({
                 
                 <button
                   onClick={onSettingsClick}
-                  className="w-10 h-10 flex items-center justify-center rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800/50"
+                  className="w-10 h-10 flex items-center justify-center rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800/50 hidden lg:flex"
                   aria-label="Settings"
                   type="button"
                 >

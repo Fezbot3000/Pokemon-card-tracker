@@ -59,11 +59,11 @@ const SearchToolbar = ({
 
   return (
     <div 
-      className={`w-full bg-white dark:bg-[#0F0F0F] py-3 px-4 flex items-center gap-3 ${isDarkMode ? 'shadow-sm' : ''} rounded-md border border-[#ffffff33] dark:border-[#ffffff1a] ${className}`}
+      className={`w-full bg-white dark:bg-[#0F0F0F] py-3 px-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 ${isDarkMode ? 'shadow-sm' : ''} rounded-md border border-[#ffffff33] dark:border-[#ffffff1a] ${className}`}
       {...props}
     >
       {/* Search Input */}
-      <div className="flex-1 relative">
+      <div className="relative w-full sm:flex-1">
         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
           <Icon name="search" size="sm" className="text-gray-400" />
         </div>
@@ -79,76 +79,80 @@ const SearchToolbar = ({
         />
       </div>
 
-      {/* View Mode Selector */}
-      <div className="hidden sm:flex bg-gray-100 dark:bg-black rounded-lg p-1 relative">
-        {/* Animated Background Indicator */}
-        <div 
-          className="absolute top-1 bottom-1 rounded-md bg-gradient-to-r from-[#ef4444] to-[#db2777] transition-transform duration-300 ease-in-out z-0"
-          style={{ 
-            left: '4px',
-            width: '36px',
-            height: '36px',
-            transform: viewMode === 'list' ? 'translateX(36px)' : 'translateX(0)' 
-          }}
-        />
-        
-        {/* Grid View Button */}
-        <button
-          onClick={() => handleViewModeChange('grid')}
-          className={`w-9 h-9 flex items-center justify-center rounded-md z-10 relative transition-colors duration-300 ${
-            viewMode === 'grid'
-              ? 'text-white'
-              : 'text-gray-500 dark:text-gray-400 hover:bg-gray-200/50 dark:hover:bg-gray-700/50'
-          }`}
-          aria-label="Grid view"
-        >
-          <Icon name="grid_view" size="sm" color={viewMode === 'grid' ? 'white' : undefined} />
-        </button>
-        
-        {/* List View Button */}
-        <button
-          onClick={() => handleViewModeChange('list')}
-          className={`w-9 h-9 flex items-center justify-center rounded-md z-10 relative transition-colors duration-300 ${
-            viewMode === 'list'
-              ? 'text-white'
-              : 'text-gray-500 dark:text-gray-400 hover:bg-gray-200/50 dark:hover:bg-gray-700/50'
-          }`}
-          aria-label="List view"
-        >
-          <Icon name="view_list" size="sm" color={viewMode === 'list' ? 'white' : undefined} />
-        </button>
-      </div>
-
-      {/* Sort Dropdown */}
-      <Dropdown
-        trigger={sortDropdownTrigger}
-        isOpen={isSortDropdownOpen}
-        onOpenChange={setIsSortDropdownOpen}
-        align="right"
-        width="sm"
-      >
-        {sortOptions.map((option) => (
-          <DropdownItem
-            key={option}
-            onClick={() => {
-              onSortChange?.(option);
-              setIsSortDropdownOpen(false);
+      {/* Controls Group (View Mode, Sort, Add Card) */}
+      <div className="flex items-center justify-between sm:justify-start gap-3 w-full sm:w-auto">
+        {/* View Mode Selector */}
+        <div className="hidden sm:flex bg-gray-100 dark:bg-black rounded-lg p-1 relative">
+          {/* Animated Background Indicator */}
+          <div 
+            className="absolute top-1 bottom-1 rounded-md bg-gradient-to-r from-[#ef4444] to-[#db2777] transition-transform duration-300 ease-in-out z-0"
+            style={{ 
+              left: '4px',
+              width: '36px',
+              height: '36px',
+              transform: viewMode === 'list' ? 'translateX(36px)' : 'translateX(0)' 
             }}
-            className={sortOption === option ? 'bg-gray-100 dark:bg-black' : ''}
+          />
+          
+          {/* Grid View Button */}
+          <button
+            onClick={() => handleViewModeChange('grid')}
+            className={`w-9 h-9 flex items-center justify-center rounded-md z-10 relative transition-colors duration-300 ${
+              viewMode === 'grid'
+                ? 'text-white'
+                : 'text-gray-500 dark:text-gray-400 hover:bg-gray-200/50 dark:hover:bg-gray-700/50'
+            }`}
+            aria-label="Grid view"
           >
-            {option}
-          </DropdownItem>
-        ))}
-      </Dropdown>
+            <Icon name="grid_view" size="sm" color={viewMode === 'grid' ? 'white' : undefined} />
+          </button>
+          
+          {/* List View Button */}
+          <button
+            onClick={() => handleViewModeChange('list')}
+            className={`w-9 h-9 flex items-center justify-center rounded-md z-10 relative transition-colors duration-300 ${
+              viewMode === 'list'
+                ? 'text-white'
+                : 'text-gray-500 dark:text-gray-400 hover:bg-gray-200/50 dark:hover:bg-gray-700/50'
+            }`}
+            aria-label="List view"
+          >
+            <Icon name="view_list" size="sm" color={viewMode === 'list' ? 'white' : undefined} />
+          </button>
+        </div>
 
-      {/* Add Card Button */}
-      <Button
-        variant="primary"
-        onClick={onAddCard}
-        iconLeft={<Icon name="add" size="sm" />}
-      >
-        Add Card
-      </Button>
+        {/* Sort Dropdown */}
+        <Dropdown
+          trigger={sortDropdownTrigger}
+          isOpen={isSortDropdownOpen}
+          onOpenChange={setIsSortDropdownOpen}
+          align="right"
+          width="sm"
+        >
+          {sortOptions.map((option) => (
+            <DropdownItem
+              key={option}
+              onClick={() => {
+                onSortChange?.(option);
+                setIsSortDropdownOpen(false);
+              }}
+              className={sortOption === option ? 'bg-gray-100 dark:bg-black' : ''}
+            >
+              {option}
+            </DropdownItem>
+          ))}
+        </Dropdown>
+
+        {/* Add Card Button */}
+        <Button
+          variant="primary"
+          onClick={onAddCard}
+          iconLeft={<Icon name="add" size="sm" />}
+          className="hidden sm:inline-flex"
+        >
+          Add Card
+        </Button>
+      </div>
     </div>
   );
 };

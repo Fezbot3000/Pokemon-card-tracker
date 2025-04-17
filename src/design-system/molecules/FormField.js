@@ -17,6 +17,8 @@ const FormField = ({
   className = '',
   prefix,
   suffix,
+  additionalContent,
+  additionalContentPosition = 'inline', // 'inline' or 'below'
   ...inputProps
 }) => {
   const fieldId = id || `field-${inputProps.name}`;
@@ -29,21 +31,54 @@ const FormField = ({
         </FormLabel>
       )}
       
-      {type === 'number' ? (
-        <NumberField 
-          id={fieldId}
-          prefix={prefix}
-          suffix={suffix}
-          required={required}
-          {...inputProps}
-        />
+      {additionalContentPosition === 'inline' ? (
+        <div className="flex items-center gap-2">
+          {type === 'number' ? (
+            <NumberField 
+              id={fieldId}
+              prefix={prefix}
+              suffix={suffix}
+              required={required}
+              className="flex-1"
+              {...inputProps}
+            />
+          ) : (
+            <TextField 
+              id={fieldId}
+              type={type}
+              required={required}
+              className="flex-1"
+              {...inputProps}
+            />
+          )}
+          
+          {additionalContent}
+        </div>
       ) : (
-        <TextField 
-          id={fieldId}
-          type={type}
-          required={required}
-          {...inputProps}
-        />
+        <>
+          {type === 'number' ? (
+            <NumberField 
+              id={fieldId}
+              prefix={prefix}
+              suffix={suffix}
+              required={required}
+              {...inputProps}
+            />
+          ) : (
+            <TextField 
+              id={fieldId}
+              type={type}
+              required={required}
+              {...inputProps}
+            />
+          )}
+          
+          {additionalContent && (
+            <div className="mt-2 flex justify-end">
+              {additionalContent}
+            </div>
+          )}
+        </>
       )}
     </div>
   );
@@ -56,7 +91,9 @@ FormField.propTypes = {
   required: PropTypes.bool,
   className: PropTypes.string,
   prefix: PropTypes.string,
-  suffix: PropTypes.string
+  suffix: PropTypes.string,
+  additionalContent: PropTypes.node,
+  additionalContentPosition: PropTypes.oneOf(['inline', 'below'])
 };
 
 export default FormField;

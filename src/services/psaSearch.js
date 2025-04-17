@@ -166,7 +166,7 @@ const parsePSACardData = (psaData) => {
     brand: psaData.PSACert?.Brand || '',
     
     // PSA website URL for the card
-    psaWebUrl: `https://www.psacard.com/cert/${psaData.PSACert?.CertNumber || ''}`,
+    psaUrl: `https://www.psacard.com/cert/${psaData.PSACert?.CertNumber || ''}`,
     
     // App-specific fields (default values, to be merged with existing data)
     isPSAAuthenticated: true,
@@ -193,6 +193,8 @@ const mergeWithExistingCard = (existingCardData, psaCardData) => {
   if (psaCardData.year) mergedData.year = psaCardData.year;
   if (psaCardData.grade) mergedData.condition = psaCardData.grade;
   if (psaCardData.slabSerial) mergedData.slabSerial = psaCardData.slabSerial;
+  if (psaCardData.population) mergedData.population = psaCardData.population;
+  if (psaCardData.psaUrl) mergedData.psaUrl = psaCardData.psaUrl;
   
   // If there's category information, map it to our category field
   if (psaCardData.cardType) {

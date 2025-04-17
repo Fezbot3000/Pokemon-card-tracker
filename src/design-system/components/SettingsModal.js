@@ -8,6 +8,7 @@ import toastService from '../utils/toast';
 import Modal from '../molecules/Modal';
 import SettingsPanel from '../molecules/SettingsPanel';
 import SettingsNavItem from '../atoms/SettingsNavItem';
+import ConfirmDialog from '../../components/ConfirmDialog'; // Fix import path
 import '../styles/animations.css';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '../../firebase';
@@ -173,12 +174,30 @@ const SettingsModal = ({
     }
   };
   
+  // --- State for custom reset confirmation dialog ---
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+
   const handleResetData = () => {
-    if (window.confirm('Are you sure you want to reset all data? This action cannot be undone.')) {
-      if (onResetData) {
-        onResetData();
+    setShowResetConfirm(true);
+  };
+
+  const handleConfirmReset = async () => {
+    console.log('[SettingsModal] handleConfirmReset called');
+    setShowResetConfirm(false);
+    if (onResetData) {
+      try {
+        await onResetData();
+        console.log('[SettingsModal] onResetData completed');
+      } catch (err) {
+        console.error('[SettingsModal] Error in onResetData:', err);
       }
+    } else {
+      console.warn('[SettingsModal] onResetData is not defined');
     }
+  };
+
+  const handleCancelReset = () => {
+    setShowResetConfirm(false);
   };
 
   // Handle cloud backup
@@ -292,6 +311,7 @@ const SettingsModal = ({
       <Modal
         isOpen={isOpen}
         onClose={onClose}
+        closeOnClickOutside={!showResetConfirm}
         title="Settings"
         footer={
           <div className="flex justify-end w-full">
@@ -307,40 +327,40 @@ const SettingsModal = ({
         className=""
         maxWidth="max-w-3xl"
         forceDarkMode={false}
+        ariaLabel="Settings"
+        size="fullscreen"
       >
-        <div className="flex h-full">
+        <div className="flex flex-col lg:flex-row h-full overflow-hidden">
           {/* Navigation sidebar */}
-          <div className={`w-[240px] pr-4 ${isDarkMode ? 'border-r border-indigo-900/20' : 'border-r border-gray-200'}`}>
-            <nav className="space-y-1 sticky top-0">
-              <SettingsNavItem 
-                icon="settings" 
-                label="General"
-                isActive={activeTab === 'general'}
-                onClick={() => setActiveTab('general')}
-              />
-              <SettingsNavItem 
-                icon="person" 
-                label="Profile" 
-                isActive={activeTab === 'profile'}
-                onClick={() => setActiveTab('profile')}
-              />
-              <SettingsNavItem 
-                icon="account_balance_wallet" 
-                label="Account" 
-                isActive={activeTab === 'account'}
-                onClick={() => setActiveTab('account')}
-              />
-              <SettingsNavItem 
-                icon="code" 
-                label="Development" 
-                isActive={activeTab === 'development'}
-                onClick={() => setActiveTab('development')}
-              />
-            </nav>
-          </div>
+          <nav className="w-full lg:w-64 lg:flex-shrink-0 bg-white dark:bg-[#0F0F0F] border-b lg:border-b-0 lg:border-r border-gray-200 dark:border-gray-700/30 overflow-y-auto lg:h-full p-4 space-y-2">
+            <SettingsNavItem 
+              icon="settings" 
+              label="General"
+              isActive={activeTab === 'general'}
+              onClick={() => setActiveTab('general')}
+            />
+            <SettingsNavItem 
+              icon="person" 
+              label="Profile" 
+              isActive={activeTab === 'profile'}
+              onClick={() => setActiveTab('profile')}
+            />
+            <SettingsNavItem 
+              icon="account_balance_wallet" 
+              label="Account" 
+              isActive={activeTab === 'account'}
+              onClick={() => setActiveTab('account')}
+            />
+            <SettingsNavItem 
+              icon="code" 
+              label="Development" 
+              isActive={activeTab === 'development'}
+              onClick={() => setActiveTab('development')}
+            />
+          </nav>
 
           {/* Content area */}
-          <div className="flex-1 pl-6 pr-2 overflow-y-auto">
+          <div className="w-full lg:flex-1 overflow-y-auto p-6 sm:p-8 bg-gray-50 dark:bg-[#1A1A1A]">
             {activeTab === 'general' && (
               <div className="space-y-2">
                 <SettingsPanel
@@ -660,6 +680,15 @@ const SettingsModal = ({
           </div>
         </div>
       </Modal>
+
+      {/* Custom ConfirmDialog for Reset All Data */}
+      <ConfirmDialog
+        isOpen={showResetConfirm}
+        onClose={handleCancelReset}
+        onConfirm={handleConfirmReset}
+        title="Reset All Data"
+        message="Are you sure you want to reset all data? This action cannot be undone."
+      />
 
       {/* Hidden file inputs */}
       <input

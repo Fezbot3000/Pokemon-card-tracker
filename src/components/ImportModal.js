@@ -51,7 +51,6 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading 
           file.name.toLowerCase().endsWith('.csv')
         );
         if (files.length > 0) {
-          console.log("Dropped files:", files.map(f => f.name));
           setSelectedFiles(prevFiles => [...prevFiles, ...files]);
         }
       } else {
@@ -64,11 +63,9 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading 
   };
 
   const handleChange = (e) => {
-    console.log("File input change triggered");
     e.preventDefault();
     
     if (e.target.files && e.target.files.length > 0) {
-      console.log("Files selected:", e.target.files.length);
       
       if (mode === 'priceUpdate') {
         // For price update, allow multiple files
@@ -76,15 +73,12 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading 
           file.name.toLowerCase().endsWith('.csv')
         );
         
-        console.log("CSV files filtered:", files.length, files.map(f => f.name));
-        
         if (files.length > 0) {
           setSelectedFiles(prevFiles => [...prevFiles, ...files]);
         }
       } else {
         // For base data import, only one file at a time
         const file = e.target.files[0];
-        console.log("Processing single file:", file?.name);
         
         if (file && file.name.toLowerCase().endsWith('.csv')) {
           onImport(file);
@@ -94,7 +88,6 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading 
   };
 
   const triggerFileInput = () => {
-    console.log("Triggering file input click");
     // Add a small delay to help iOS recognize the click
     setTimeout(() => {
       if (fileInputRef.current) {
@@ -109,7 +102,6 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading 
 
   const handleSubmitFiles = () => {
     if (selectedFiles.length > 0) {
-      console.log("Submitting files:", selectedFiles.map(f => f.name));
       // Include import options with the files
       onImport(selectedFiles, {
         currency: importCurrency,
@@ -192,62 +184,57 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading 
         </div>
 
         {/* Import Options */}
-        <div className="mb-6 bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
-          <h3 className="text-lg font-medium text-gray-800 dark:text-gray-200 mb-3">
-            Import Options
-          </h3>
-          
-          <div className="space-y-4">
-            {/* Currency Selection */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Currency in CSV
-              </label>
-              <select 
-                value={importCurrency} 
-                onChange={(e) => setImportCurrency(e.target.value)}
-                className="w-full p-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
-              >
-                <option value="USD">USD (US Dollar)</option>
-                <option value="AUD">AUD (Australian Dollar)</option>
-                <option value="EUR">EUR (Euro)</option>
-                <option value="GBP">GBP (British Pound)</option>
-                <option value="JPY">JPY (Japanese Yen)</option>
-              </select>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                Select the currency used in your CSV file. Values will be converted to AUD.
-              </p>
+        {mode === 'priceUpdate' && (
+          <div className="mb-6 p-4 bg-gray-50 dark:bg-[#1B2131] rounded-lg border border-gray-200 dark:border-gray-700/50">
+            <h3 className="text-md font-semibold text-gray-800 dark:text-gray-200 mb-4">Import Options</h3>
+            <div className="flex flex-col items-start space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0 md:space-x-4 mb-4">
+              {/* Currency Selector */}
+              <div>
+                <label htmlFor="importCurrency" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Currency</label>
+                <select 
+                  value={importCurrency} 
+                  onChange={(e) => setImportCurrency(e.target.value)}
+                  className="w-full p-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+                >
+                  <option value="USD">USD (US Dollar)</option>
+                  <option value="AUD">AUD (Australian Dollar)</option>
+                  <option value="EUR">EUR (Euro)</option>
+                  <option value="GBP">GBP (British Pound)</option>
+                  <option value="JPY">JPY (Japanese Yen)</option>
+                </select>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  Select the currency used in your CSV file. Values will be converted to AUD.
+                </p>
+              </div>
             </div>
-            
-            {/* Fill Missing Fields Option */}
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                id="fillMissingFields"
-                checked={fillMissingFields}
-                onChange={(e) => setFillMissingFields(e.target.checked)}
-                className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
-              />
-              <label htmlFor="fillMissingFields" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
-                Fill in missing card data fields (name, condition, etc.)
-              </label>
-            </div>
-            
-            {/* Update Existing Values Option */}
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                id="updateExistingValues"
-                checked={updateExistingValues}
-                onChange={(e) => setUpdateExistingValues(e.target.checked)}
-                className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
-              />
-              <label htmlFor="updateExistingValues" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
-                Update existing values (uncheck to only fill empty fields)
-              </label>
+
+            {/* Checkboxes */}
+            <div className="space-y-3">
+              <div className="flex items-center">
+                <input
+                  id="fillMissingFields"
+                  checked={fillMissingFields}
+                  onChange={(e) => setFillMissingFields(e.target.checked)}
+                  className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                />
+                <label htmlFor="fillMissingFields" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
+                  Fill in missing card data fields (name, condition, etc.)
+                </label>
+              </div>
+              <div className="flex items-center">
+                <input
+                  id="updateExistingValues"
+                  checked={updateExistingValues}
+                  onChange={(e) => setUpdateExistingValues(e.target.checked)}
+                  className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                />
+                <label htmlFor="updateExistingValues" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
+                  Update existing values (uncheck to only fill empty fields)
+                </label>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Selected Files List */}
         {selectedFiles.length > 0 && (

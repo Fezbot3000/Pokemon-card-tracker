@@ -2,6 +2,7 @@ import { initializeApp, getApps } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 
 // Import environment validation to ensure all variables are loaded
 import '../env';
@@ -43,6 +44,9 @@ const storage = getStorage(app);
 // Initialize Auth
 const auth = getAuth(app);
 
+// Initialize Functions
+const functions = getFunctions(app);
+
 // Create a Google provider instance
 const googleProvider = new GoogleAuthProvider();
 
@@ -58,4 +62,4 @@ googleProvider.setCustomParameters({
   prompt: 'select_account'
 });
 
-export { db, storage, auth, googleProvider }; 
+export { db, storage, auth, googleProvider, functions, httpsCallable }; 

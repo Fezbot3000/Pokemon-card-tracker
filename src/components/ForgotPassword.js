@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../design-system';
 
 function ForgotPassword() {
@@ -7,17 +7,23 @@ function ForgotPassword() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const { resetPassword } = useAuth();
+  const { resetPassword, currentUser, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
 
   // Add page-no-padding class to body when component mounts
   useEffect(() => {
+    // Redirect if user is already logged in
+    if (!authLoading && currentUser) {
+      navigate('/dashboard', { replace: true });
+    }
+
     document.body.classList.add('page-no-padding');
     
     // Clean up function to remove the class when component unmounts
     return () => {
       document.body.classList.remove('page-no-padding');
     };
-  }, []);
+  }, [currentUser, authLoading, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

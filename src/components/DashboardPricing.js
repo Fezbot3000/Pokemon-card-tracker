@@ -16,6 +16,66 @@ function DashboardPricing() {
   const [isPostPayment, setIsPostPayment] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const [isCreatingPortalSession, setIsCreatingPortalSession] = useState(false);
+
+  // Show loading state when checking subscription
+  useEffect(() => {
+    if (isLoadingSubscription) {
+      toast.loading('Checking subscription status...', {
+        id: 'subscription-check',
+        duration: 5000
+      });
+    }
+    // Optionally, clear the toast when loading is done
+    return () => {
+      if (!isLoadingSubscription) {
+        toast.dismiss('subscription-check');
+      }
+    };
+  }, [isLoadingSubscription]);
+
+  // Detect if user is coming from a successful payment
+  useEffect(() => {
+    const isFromPayment = location.search.includes('checkout_success=true') || 
+      localStorage.getItem('recentPayment') === 'true';
+      
+    if (isFromPayment) {
+      setIsPostPayment(true);
+    }
+  }, [location]);
+
+  // Log when this component is mounted
+  useEffect(() => {
+    // Removed: console.log("DashboardPricing component mounted", { 
+    //   subscriptionStatus, 
+    //   isLoading: isLoadingSubscription,
+    //   isPostPayment,
+    //   uid: currentUser?.uid
+    // });
+  }, [subscriptionStatus, isLoadingSubscription, currentUser, isPostPayment]);
+
+  // If user has active subscription and manually navigates to pricing, 
+  // redirect them back to dashboard after a short delay
+  useEffect(() => {
+    if (subscriptionStatus.status === 'active' && !isLoadingSubscription) {
+      // Show a toast instead of the full screen
+      toast.success('Subscription active - Redirecting to dashboard', {
+        id: 'subscription-check',
+        duration: 2000
+      });
+      
+      // Redirect immediately to dashboard
+      const timer = setTimeout(() => {
+        // Removed: console.log("User has active subscription, redirecting to dashboard");
+        const goToDashboard = () => {
+          navigate('/dashboard', { replace: true });
+        };
+        goToDashboard();
+      }, 500); // Shorter delay, since we're using a toast now
+      
+      return () => clearTimeout(timer);
+    }
+  }, [subscriptionStatus, isLoadingSubscription]);
 
   // Handle sign out
   const handleSignOut = async () => {
@@ -24,7 +84,6 @@ function DashboardPricing() {
       toast.success('Successfully signed out');
       navigate('/');
     } catch (error) {
-      console.error('Error signing out:', error);
       toast.error('Failed to sign out');
     }
   };
@@ -40,58 +99,15 @@ function DashboardPricing() {
     window.location.href = `https://buy.stripe.com/bIY2aL2oC2kBaXe9AA?client_reference_id=${currentUser.uid}&prefilled_email=${currentUser.email}`;
   };
 
-  // Detect if user is coming from a successful payment
-  useEffect(() => {
-    const isFromPayment = location.search.includes('checkout_success=true') || 
-      localStorage.getItem('recentPayment') === 'true';
-      
-    if (isFromPayment) {
-      console.log('Detected checkout_success parameter in DashboardPricing');
-      setIsPostPayment(true);
-    }
-  }, [location.search]);
-
-  // Log when this component is mounted
-  useEffect(() => {
-    console.log("DashboardPricing component mounted", { 
-      subscriptionStatus, 
-      isLoading: isLoadingSubscription,
-      isPostPayment,
-      uid: currentUser?.uid
-    });
-  }, [subscriptionStatus, isLoadingSubscription, currentUser, isPostPayment]);
-
   // Function to safely navigate back to dashboard
   const goToDashboard = () => {
     navigate('/dashboard', { replace: true });
   };
-  
-  // If user has active subscription and manually navigates to pricing, 
-  // redirect them back to dashboard after a short delay
-  useEffect(() => {
-    if (subscriptionStatus.status === 'active' && !isLoadingSubscription) {
-      // Show a toast instead of the full screen
-      toast.success('Subscription active - Redirecting to dashboard', {
-        id: 'subscription-check',
-        duration: 2000
-      });
-      
-      // Redirect immediately to dashboard
-      const timer = setTimeout(() => {
-        console.log("User has active subscription, redirecting to dashboard");
-        goToDashboard();
-      }, 500); // Shorter delay, since we're using a toast now
-      
-      return () => clearTimeout(timer);
-    }
-  }, [subscriptionStatus, isLoadingSubscription]);
 
   // Updated Stripe billing URL - only this one is valid and working
   const stripeBillingUrl = "https://billing.stripe.com/p/login/28o5kZeRc9lHdHydQQ";
 
   // Add function to handle the "Manage Your Subscription" button click
-  const [isCreatingPortalSession, setIsCreatingPortalSession] = useState(false);
-  
   const handleManageSubscription = async () => {
     setIsCreatingPortalSession(true);
     try {
@@ -102,11 +118,11 @@ function DashboardPricing() {
       const { data } = await createPortalSession();
       
       if (data && data.url) {
-        console.log('Portal session created successfully, redirecting to:', data.url);
+        // Removed: console.log('Portal session created successfully, redirecting to:', data.url);
         // Redirect to the Stripe Customer Portal
         window.open(data.url, '_blank');
       } else {
-        console.error('No portal URL returned from function:', data);
+        // Removed: console.error('No portal URL returned from function:', data);
         // Use a custom toast style that's more visible
         toast.error('Could not access subscription management portal', {
           style: {
@@ -118,7 +134,7 @@ function DashboardPricing() {
         });
       }
     } catch (error) {
-      console.error('Error creating portal session:', error);
+      // Removed: console.error('Error creating portal session:', error);
       
       // Get more detailed error information
       let errorMessage = 'Failed to access subscription management portal';
@@ -140,14 +156,8 @@ function DashboardPricing() {
     }
   };
 
-  // Show loading state when checking subscription
+  // Early return after all hooks
   if (isLoadingSubscription) {
-    // Instead of showing a loading spinner, show a toast and return null
-    toast.loading('Checking subscription status...', { 
-      id: 'subscription-check',
-      duration: 5000
-    });
-    // Return empty div instead of the full loading screen
     return null;
   }
 

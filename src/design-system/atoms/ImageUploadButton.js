@@ -92,7 +92,7 @@ const ImageUploadButton = ({
 };
 
 ImageUploadButton.propTypes = {
-  onImageChange: PropTypes.func.isRequired,
+  onImageChange: PropTypes.func,
   className: PropTypes.string
 };
 

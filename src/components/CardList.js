@@ -328,47 +328,28 @@ const CardList = ({
     }
   };
 
-  // Get filtered and sorted cards
+  // Memoized filtered and sorted cards to ensure stable keys and prevent duplicate key warnings
   const filteredCards = useMemo(() => {
-    // Filter cards by search term
-    const filtered = filter
-      ? cards.filter(card => {
-          const searchTerm = filter.toLowerCase();
-          return (
-            (card.card && card.card.toLowerCase().includes(searchTerm)) ||
-            (card.player && card.player.toLowerCase().includes(searchTerm)) ||
-            (card.set && card.set.toLowerCase().includes(searchTerm)) ||
-            (card.slabSerial && card.slabSerial.toLowerCase().includes(searchTerm))
-          );
-        })
-      : cards;
-
+    let filtered = cards;
+    if (filter) {
+      const lowerFilter = filter.toLowerCase();
+      filtered = filtered.filter(card =>
+        (card.card && card.card.toLowerCase().includes(lowerFilter)) ||
+        (card.player && card.player.toLowerCase().includes(lowerFilter))
+      );
+    }
     // Sort cards
-    return [...filtered].sort((a, b) => {
-      let valueA = a[sortField];
-      let valueB = b[sortField];
-      
-      // Handle undefined or null values
-      if (valueA === undefined || valueA === null) valueA = '';
-      if (valueB === undefined || valueB === null) valueB = '';
-
-      // Sort by date if the field is datePurchased
-      if (sortField === 'datePurchased') {
-        const dateA = valueA ? new Date(valueA) : new Date(0);
-        const dateB = valueB ? new Date(valueB) : new Date(0);
-        return sortDirection === 'asc' ? dateA - dateB : dateB - dateA;
+    filtered = [...filtered].sort((a, b) => {
+      const aValue = a[sortField] ?? 0;
+      const bValue = b[sortField] ?? 0;
+      if (sortDirection === 'asc') {
+        return aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
+      } else {
+        return aValue < bValue ? 1 : aValue > bValue ? -1 : 0;
       }
-      
-      // Sort by string if the field contains string values
-      if (typeof valueA === 'string' || typeof valueB === 'string') {
-        const strA = String(valueA).toLowerCase();
-        const strB = String(valueB).toLowerCase();
-        return sortDirection === 'asc' ? strA.localeCompare(strB) : strB.localeCompare(strA);
-      }
-      
-      // Sort by number for everything else
-      return sortDirection === 'asc' ? valueA - valueB : valueB - valueA;
     });
+    // Ensure uniqueness by combining slabSerial and collection as fallback key
+    return filtered.map((card, idx) => ({ ...card, _uniqueKey: `${card.slabSerial || 'unknown'}-${card.collection || 'none'}-${idx}` }));
   }, [cards, filter, sortField, sortDirection]);
 
   // Calculate totals
@@ -668,7 +649,7 @@ const CardList = ({
         <div className={`grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4`}>
           {filteredCards.map(card => (
             <Card
-              key={card.slabSerial}
+              key={card._uniqueKey}
               card={card}
               cardImage={cardImages[card.slabSerial]}
               onClick={() => onCardClick(card)} 
@@ -682,7 +663,7 @@ const CardList = ({
         <div className="space-y-3">
           {filteredCards.map(card => (
             <div
-              key={card.slabSerial}
+              key={card._uniqueKey}
               className={`bg-white dark:bg-[#0F0F0F] rounded-2xl overflow-hidden transition-all duration-200 hover:shadow-md ${selectedCards.has(card.slabSerial) ? 'ring-2 ring-[#E6185C]' : 'border border-[#ffffff33] dark:border-[#ffffff1a]'}`}
             >
               <div className="flex p-4 items-center">

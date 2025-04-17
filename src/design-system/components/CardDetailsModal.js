@@ -1,15 +1,19 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import Modal from '../molecules/Modal';
 import Button from '../atoms/Button';
 import Icon from '../atoms/Icon';
 import CardDetailsForm from './CardDetailsForm';
+import PriceHistoryGraph from '../../components/PriceHistoryGraph';
+import RecentSales from '../../components/RecentSales';
+import EbaySales from '../../components/EbaySales';
+import PriceChartingButton from '../../components/PriceChartingButton';
 import '../styles/animations.css';
 
 /**
  * CardDetailsModal Component
  * 
- * A specialized modal for viewing and editing Pokemon card details.
+ * A modal for displaying and editing card details
  */
 const CardDetailsModal = ({
   isOpen,
@@ -18,311 +22,160 @@ const CardDetailsModal = ({
   onSave,
   onDelete,
   onMarkAsSold,
-  showAsStatic = false,
-  className = ''
+  onChange,
+  image,
+  imageLoadingState = 'idle',
+  onImageChange,
+  onImageRetry,
+  className = '',
+  additionalHeaderContent,
+  additionalValueContent,
+  additionalSerialContent
 }) => {
-  // State for edited card data
-  const [editedCard, setEditedCard] = useState({
-    ...card,
-    year: card.year ? String(card.year) : '',
-    investmentAUD: typeof card.investmentAUD === 'number' ? card.investmentAUD : 
-                  (typeof card.investmentAUD === 'string' && !isNaN(parseFloat(card.investmentAUD))) ? 
-                  parseFloat(card.investmentAUD) : 0,
-    currentValueAUD: typeof card.currentValueAUD === 'number' ? card.currentValueAUD : 
-                    (typeof card.currentValueAUD === 'string' && !isNaN(parseFloat(card.currentValueAUD))) ? 
-                    parseFloat(card.currentValueAUD) : 0,
-    datePurchased: card.datePurchased || ''
-  });
-  
-  // State for image handling
-  const [cardImage, setCardImage] = useState(card.imageUrl || null);
-  const [imageLoadingState, setImageLoadingState] = useState('idle');
+  const [activeTab, setActiveTab] = useState('details');
+  const [editedCard, setEditedCard] = useState(card || {});
+  const [cardImage, setCardImage] = useState(image);
+  const [localImageLoadingState, setLocalImageLoadingState] = useState(imageLoadingState);
   const [showEnlargedImage, setShowEnlargedImage] = useState(false);
-  
-  // State for form validation and UI feedback
-  const [errors, setErrors] = useState({});
-  const [saveMessage, setSaveMessage] = useState(null);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [isConfirmingSold, setIsConfirmingSold] = useState(false);
-  const [saleDetails, setSaleDetails] = useState({
-    buyer: '',
-    finalValueAUD: editedCard.currentValueAUD || 0,
-    dateSold: new Date().toISOString().split('T')[0]
-  });
-  const [animClass, setAnimClass] = useState('');
+  const [saveMessage, setSaveMessage] = useState('');
+  const [errors, setErrors] = useState({});
+  const [animClass, setAnimClass] = useState('fade-in');
   
-  // Refs
-  const messageTimeoutRef = useRef(null);
-
-  // Set animation class when open state changes
+  // If the card has pricing data from PriceCharting, extract the product ID
+  let priceChartingProductId = null;
+  if (card?.priceChartingUrl) {
+    try {
+      const urlParts = card.priceChartingUrl.split('/');
+      priceChartingProductId = urlParts[urlParts.length - 1]?.split('?')[0];
+    } catch (error) {
+    }
+  } else if (card?.priceChartingProductId) {
+    // If the product ID is already stored in the card data, use it directly
+    priceChartingProductId = card.priceChartingProductId;
+  }
+    
+  // Log the extracted product ID for debugging
   useEffect(() => {
-    if (isOpen) {
-      setAnimClass('slide-in-right');
+    if (card?.priceChartingUrl) {
     } else {
-      setAnimClass('slide-out-right');
     }
-  }, [isOpen]);
-
-  // Reset form when card changes
+  }, [card, priceChartingProductId]);
+  
+  // Determine the condition type for the price history graph
+  const getPriceConditionType = () => {
+    if (card?.condition) {
+      const condition = card.condition.toLowerCase();
+      if (condition.includes('psa') || condition.includes('bgs') || condition.includes('cgc') || condition.includes('gem mt')) {
+        return 'graded';
+      }
+    }
+    return 'loose';
+  };
+  
+  // Update local state when props change
   useEffect(() => {
-    if (card) {
-      setEditedCard({
-        ...card,
-        year: card.year ? String(card.year) : '',
-        investmentAUD: typeof card.investmentAUD === 'number' ? card.investmentAUD : 
-                      (typeof card.investmentAUD === 'string' && !isNaN(parseFloat(card.investmentAUD))) ? 
-                      parseFloat(card.investmentAUD) : 0,
-        currentValueAUD: typeof card.currentValueAUD === 'number' ? card.currentValueAUD : 
-                        (typeof card.currentValueAUD === 'string' && !isNaN(parseFloat(card.currentValueAUD))) ? 
-                        parseFloat(card.currentValueAUD) : 0,
-        datePurchased: card.datePurchased || ''
-      });
-      // Reset states
-      setErrors({});
-      setSaveMessage(null);
-      setIsConfirmingDelete(false);
-      setIsConfirmingSold(false);
-      
-      // Set card image from the card object - handle both imageUrl and db image source
-      setCardImage(card.imageUrl || null);
-      
-      // If using a DB, you might need to fetch the image:
-      if (!card.imageUrl && card.id) {
-        // Check if we need to fetch an image from DB
-        handleImageFetch(card.id);
-      }
+    setEditedCard(card || {});
+    if (image) {
+      setCardImage(image);
+    } else {
+      setCardImage(null);
     }
-    
-    // Cleanup on unmount or when card changes
-    return () => {
-      if (messageTimeoutRef.current) {
-        clearTimeout(messageTimeoutRef.current);
-      }
-    };
-  }, [card]);
+    setLocalImageLoadingState(imageLoadingState);
+  }, [card, image, imageLoadingState]);
   
-  // Function to fetch image from DB if needed
-  const handleImageFetch = async (cardId) => {
-    setImageLoadingState('loading');
-    
-    try {
-      // Check if we have a DB service to load the image from
-      if (window.db && typeof window.db.getCardImage === 'function') {
-        const imageUrl = await window.db.getCardImage(cardId);
-        if (imageUrl) {
-          setCardImage(imageUrl);
-        }
-      }
-      setImageLoadingState('idle');
-    } catch (error) {
-      console.error('Error fetching card image:', error);
-      setImageLoadingState('error');
-    }
-  };
-  
-  // Handle card image change
-  const handleImageChange = async (file) => {
-    setImageLoadingState('loading');
-    
-    try {
-      // Create a preview URL
-      const imageUrl = URL.createObjectURL(file);
-      
-      // Cleanup previous URL if it exists
-      if (cardImage && cardImage.startsWith('blob:')) {
-        URL.revokeObjectURL(cardImage);
-      }
-      
-      setCardImage(imageUrl);
-      setImageLoadingState('idle');
-      
-      return file; // Return the file for saving by parent component
-    } catch (error) {
-      console.error('Error changing card image:', error);
-      setImageLoadingState('error');
-      return null;
-    }
-  };
-  
-  // Handle form changes
+  // Handle card field changes
   const handleCardChange = (updatedCard) => {
     setEditedCard(updatedCard);
-    
-    // Clear field error when user edits the field
-    if (errors[Object.keys(updatedCard).find(key => updatedCard[key] !== editedCard[key])]) {
-      setErrors(prevErrors => {
-        const updatedErrors = { ...prevErrors };
-        delete updatedErrors[Object.keys(updatedCard).find(key => updatedCard[key] !== editedCard[key])];
-        return updatedErrors;
-      });
+    if (onChange) {
+      onChange(updatedCard);
     }
   };
   
-  // Validate the form
-  const validateForm = () => {
-    const newErrors = {};
-    
-    // Card name is required
-    if (!editedCard.card?.trim()) {
-      newErrors.card = 'Card name is required';
+  // Handle image changes
+  const handleImageChange = (file) => {
+    if (onImageChange && file) {
+      setLocalImageLoadingState('loading');
+      onImageChange(file);
     }
-    
-    // Serial number is required - we call it slabSerial
-    if (!editedCard.slabSerial?.trim()) {
-      newErrors.slabSerial = 'Serial number is required';
-    }
-    
-    // If there are required fields, add custom validation here
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-  
-  // Handle save action
-  const handleSave = () => {
-    // Clear any previous message
-    setSaveMessage(null);
-    
-    // Validate the form
-    if (!validateForm()) {
-      setSaveMessage('Please fix the errors before saving.');
-      return;
-    }
-    
-    // Check if anything changed
-    const hasChanges = JSON.stringify(card) !== JSON.stringify(editedCard);
-    if (!hasChanges) {
-      setSaveMessage('No changes to save');
-      messageTimeoutRef.current = setTimeout(() => {
-        setSaveMessage(null);
-      }, 3000);
-      return;
-    }
-    
-    // Call the onSave callback with edited data
-    onSave(editedCard, cardImage);
   };
   
   // Handle delete action
   const handleDelete = () => {
-    if (!isConfirmingDelete) {
+    if (isConfirmingDelete) {
+      if (onDelete) {
+        onDelete();
+      }
+    } else {
       setIsConfirmingDelete(true);
       
-      // Auto-reset confirmation after 5 seconds
-      messageTimeoutRef.current = setTimeout(() => {
+      // Reset after 5 seconds if not confirmed
+      setTimeout(() => {
         setIsConfirmingDelete(false);
       }, 5000);
-    } else {
-      // Confirmed delete
-      onDelete(card.id);
-      setIsConfirmingDelete(false);
     }
   };
   
-  // Handle marking a card as sold
+  // Handle mark as sold action
   const handleMarkAsSold = () => {
-    if (!isConfirmingSold) {
-      setIsConfirmingSold(true);
-      return;
+    if (onMarkAsSold) {
+      onMarkAsSold(editedCard);
     }
-
-    // Validate sale details
-    const saleErrors = {};
-    if (!saleDetails.buyer.trim()) {
-      saleErrors.buyer = 'Buyer name is required';
-    }
-    if (!saleDetails.finalValueAUD || saleDetails.finalValueAUD <= 0) {
-      saleErrors.finalValueAUD = 'A valid sale price is required';
-    }
-    if (!saleDetails.dateSold) {
-      saleErrors.dateSold = 'Sale date is required';
-    }
-
-    if (Object.keys(saleErrors).length > 0) {
-      setErrors({...errors, ...saleErrors});
-      return;
-    }
-
-    // Calculate profit
-    const investment = parseFloat(editedCard.investmentAUD) || 0;
-    const saleValue = parseFloat(saleDetails.finalValueAUD) || 0;
-    const profit = saleValue - investment;
-
-    // Prepare the sold card data
-    const soldCardData = {
-      ...editedCard,
-      buyer: saleDetails.buyer,
-      dateSold: saleDetails.dateSold,
-      finalValueAUD: saleValue,
-      finalProfitAUD: profit,
-      soldDate: new Date().toISOString()
-    };
-
-    // Call the onMarkAsSold handler with the sold card data
-    if (typeof onMarkAsSold === 'function') {
-      onMarkAsSold(soldCardData);
-    }
-
-    // Reset form state and close modal
-    setIsConfirmingSold(false);
-    onClose();
   };
-
-  // Handle sale details change
-  const handleSaleDetailsChange = (e) => {
-    const { name, value } = e.target;
-    setSaleDetails({
-      ...saleDetails,
-      [name]: name === 'finalValueAUD' ? parseFloat(value) || 0 : value
-    });
+  
+  // Handle save action
+  const handleSave = () => {
+    if (onSave) {
+      onSave(editedCard);
+    }
   };
   
   // Create modal footer with action buttons
   const modalFooter = (
-    <div className="w-full flex flex-col sm:flex-row justify-between gap-4">
+    <div className="flex justify-between items-center w-full">
+      {/* Cancel button (always left) */}
+      <Button variant="secondary" onClick={() => {
+        setIsConfirmingDelete(false);
+        setIsConfirmingSold(false);
+        onClose();
+      }} className="mr-auto md:mr-0">
+        Cancel
+      </Button>
+
+      {/* Right-aligned buttons group */}
       <div className="flex items-center gap-2">
-        {onDelete && !isConfirmingSold && (
+        {/* Delete Button (Icon on mobile) */}
+        {onDelete && (
           <Button
             variant="danger"
             onClick={handleDelete}
-            className="min-w-[120px]"
+            className={`transition-all duration-200 ${isConfirmingDelete ? 'bg-red-100 dark:bg-red-900/50' : ''}`}
           >
-            {isConfirmingDelete ? 'Confirm Delete' : 'Delete'}
+            <Icon name="delete" className="mr-0 md:mr-2" /> {/* Icon always visible */}
+            <span className="hidden md:inline"> {/* Text hidden on mobile */}
+              {isConfirmingDelete ? 'Confirm Delete?' : 'Delete'}
+            </span>
           </Button>
         )}
-        
-        {onMarkAsSold && !isConfirmingDelete && (
+
+        {/* Mark as Sold Button (Icon on mobile) */}
+        {onMarkAsSold && !card?.sold && (
           <Button
-            variant="success" 
+            variant="secondary"
             onClick={handleMarkAsSold}
-            className="min-w-[120px]"
+            className="transition-all duration-200"
           >
-            {isConfirmingSold ? 'Confirm Sale' : 'Mark as Sold'}
+            <Icon name="sell" className="mr-0 md:mr-2" /> {/* Icon always visible */}
+            <span className="hidden md:inline"> {/* Text hidden on mobile */}Mark as Sold</span>
           </Button>
         )}
-      </div>
-      
-      <div className="flex items-center gap-2">
-        {/* Cancel and Save buttons - right aligned */}
-        <Button
-          variant="secondary"
-          onClick={() => {
-            setIsConfirmingDelete(false);
-            setIsConfirmingSold(false);
-            onClose();
-          }}
-          className="min-w-[80px]"
-        >
-          Cancel
-        </Button>
-        
-        {!isConfirmingSold && (
-          <Button
-            variant="primary"
-            onClick={handleSave}
-            className="min-w-[120px]"
-          >
-            Save Changes
+
+        {/* Save Button */}
+        {onSave && (
+          <Button variant="primary" onClick={handleSave}>
+            <Icon name="save" className="mr-2" />
+            Save {/* Changed text */}
           </Button>
         )}
       </div>
@@ -338,112 +191,147 @@ const CardDetailsModal = ({
           setIsConfirmingSold(false);
           onClose();
         }}
-        title={isConfirmingSold ? "Mark Card as Sold" : "Card Details"}
+        title="Card Details"
+        size="4xl" // Use a larger size for desktop
         footer={modalFooter}
         position="right"
-        className={`${animClass} ${className}`}
-        closeOnClickOutside={!showEnlargedImage && !isConfirmingSold} // Disable closing on outside click when image is enlarged or confirming sale
-        showAsStatic={showAsStatic}
+        className={`card-details-modal-instance ${animClass} ${className}`}
+        closeOnClickOutside={!showEnlargedImage && !isConfirmingSold}
       >
         <div className="space-y-6 pb-4">
-          {isConfirmingSold ? (
-            <div className="space-y-4">
-              <p className="text-gray-700 dark:text-gray-300">
-                Please enter the sale details to mark this card as sold:
-              </p>
-              
-              <div className="space-y-4 mb-6">
-                {/* Buyer Name */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Buyer Name
-                  </label>
-                  <input
-                    type="text"
-                    name="buyer"
-                    value={saleDetails.buyer}
-                    onChange={handleSaleDetailsChange}
-                    className="w-full px-3 py-2 rounded-lg border border-[#ffffff33] dark:border-[#ffffff1a] bg-white dark:bg-[#252B3B] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/20"
-                    placeholder="Enter buyer name"
-                  />
-                  {errors.buyer && (
-                    <p className="mt-1 text-sm text-red-500">{errors.buyer}</p>
-                  )}
-                </div>
-                
-                {/* Sale Price */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Sale Price (AUD)
-                  </label>
-                  <div className="relative">
-                    <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500 dark:text-gray-400">
-                      $
-                    </span>
-                    <input
-                      type="number"
-                      name="finalValueAUD"
-                      value={saleDetails.finalValueAUD}
-                      onChange={handleSaleDetailsChange}
-                      className="w-full pl-8 pr-3 py-2 rounded-lg border border-[#ffffff33] dark:border-[#ffffff1a] bg-white dark:bg-[#252B3B] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/20"
-                      min="0"
-                      step="0.01"
-                    />
-                  </div>
-                  {errors.finalValueAUD && (
-                    <p className="mt-1 text-sm text-red-500">{errors.finalValueAUD}</p>
-                  )}
-                </div>
-                
-                {/* Sale Date */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Date Sold
-                  </label>
-                  <input
-                    type="date"
-                    name="dateSold"
-                    value={saleDetails.dateSold}
-                    onChange={handleSaleDetailsChange}
-                    className="w-full px-3 py-2 rounded-lg border border-[#ffffff33] dark:border-[#ffffff1a] bg-white dark:bg-[#252B3B] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/20"
-                  />
-                  {errors.dateSold && (
-                    <p className="mt-1 text-sm text-red-500">{errors.dateSold}</p>
-                  )}
-                </div>
-                
-                {/* Profit/Loss Preview */}
-                <div className="bg-white dark:bg-[#0F0F0F] rounded-lg p-4 border border-[#ffffff33] dark:border-[#ffffff1a] mt-4">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-700 dark:text-gray-300">Investment:</span>
-                    <span className="font-medium">${parseFloat(editedCard.investmentAUD || 0).toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between items-center mt-1">
-                    <span className="text-sm text-gray-700 dark:text-gray-300">Sale Price:</span>
-                    <span className="font-medium">${parseFloat(saleDetails.finalValueAUD || 0).toFixed(2)}</span>
-                  </div>
-                  <div className="border-t border-[#ffffff33] dark:border-[#ffffff1a] my-2"></div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Profit/Loss:</span>
-                    <span className={`font-medium ${(parseFloat(saleDetails.finalValueAUD || 0) - parseFloat(editedCard.investmentAUD || 0)) >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                      ${Math.abs(parseFloat(saleDetails.finalValueAUD || 0) - parseFloat(editedCard.investmentAUD || 0)).toFixed(2)}
-                      {(parseFloat(saleDetails.finalValueAUD || 0) - parseFloat(editedCard.investmentAUD || 0)) >= 0 ? ' profit' : ' loss'}
-                    </span>
-                  </div>
-                </div>
-              </div>
+          {/* Notice and PriceChartingButton */}
+          {!priceChartingProductId && (
+            <div className="bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700 rounded-lg p-4 mb-4 flex flex-col items-center text-center">
+              <span className="text-yellow-700 dark:text-yellow-300 font-semibold mb-2">
+                This card is not yet linked to a PriceCharting product.
+              </span>
+              <span className="text-yellow-600 dark:text-yellow-200 text-sm mb-3">
+                To enable price history and recent sales features, please link this card to a PriceCharting product below.
+              </span>
+              <PriceChartingButton
+                currentCardData={editedCard}
+                onCardUpdate={updated => {
+                  setEditedCard(updated);
+                  if (onChange) onChange(updated);
+                }}
+                buttonText="Link to PriceCharting Product"
+              />
             </div>
-          ) : (
+          )}
+          {/* Tabs */}
+          <div className="flex border-b dark:border-gray-700 mb-4">
+            <button
+              className={`px-4 py-2 ${activeTab === 'details' ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'}`}
+              onClick={() => setActiveTab('details')}
+            >
+              Card Details
+            </button>
+            {priceChartingProductId && (
+              <button
+                className={`px-4 py-2 ${activeTab === 'price-history' ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'}`}
+                onClick={() => setActiveTab('price-history')}
+              >
+                Price History
+              </button>
+            )}
+            {priceChartingProductId && (
+              <button
+                className={`px-4 py-2 ${activeTab === 'recent-sales' ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'}`}
+                onClick={() => setActiveTab('recent-sales')}
+              >
+                Recent Sales
+              </button>
+            )}
+            <button
+              className={`px-4 py-2 ${activeTab === 'ebay-sales' ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'}`}
+              onClick={() => setActiveTab('ebay-sales')}
+            >
+              eBay Sales
+            </button>
+          </div>
+
+          {/* Tab Content */}
+          {activeTab === 'details' && (
             <CardDetailsForm
               card={editedCard}
               cardImage={cardImage}
-              imageLoadingState={imageLoadingState}
-              onCardChange={handleCardChange}
+              imageLoadingState={localImageLoadingState}
+              onChange={handleCardChange}
               onImageChange={handleImageChange}
-              onImageRetry={() => setImageLoadingState('idle')}
-              onImageClick={() => cardImage && setShowEnlargedImage(true)}
-              errors={errors}
+              onImageRetry={onImageRetry}
+              onImageClick={() => setShowEnlargedImage(true)}
+              additionalValueContent={additionalValueContent}
+              additionalSerialContent={additionalSerialContent}
             />
+          )}
+
+          {activeTab === 'price-history' && priceChartingProductId && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold">Price History</h3>
+                {card.priceChartingUrl && (
+                  <a 
+                    href={card.priceChartingUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-blue-500 hover:text-blue-700 flex items-center"
+                  >
+                    View on PriceCharting <span className="ml-1">↗</span>
+                  </a>
+                )}
+              </div>
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+                <PriceHistoryGraph 
+                  productId={priceChartingProductId} 
+                  condition={getPriceConditionType()}
+                />
+              </div>
+              <div className="text-sm text-gray-500 dark:text-gray-400">
+                <p>Price data provided by PriceCharting.com. Last updated: {card.lastPriceUpdate ? new Date(card.lastPriceUpdate).toLocaleString() : 'Unknown'}</p>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'recent-sales' && priceChartingProductId && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold">Recent Sales</h3>
+                {card.priceChartingUrl && (
+                  <a 
+                    href={card.priceChartingUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-blue-500 hover:text-blue-700 flex items-center"
+                  >
+                    View on PriceCharting <span className="ml-1">↗</span>
+                  </a>
+                )}
+              </div>
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
+                <RecentSales 
+                  productId={priceChartingProductId} 
+                  productName={card?.priceChartingName || card?.name} 
+                />
+              </div>
+              <div className="text-sm text-gray-500 dark:text-gray-400">
+                <p>Sales data provided by PriceCharting.com. These are verified recent sales from various marketplaces.</p>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'ebay-sales' && card && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold">Recent eBay Sales</h3>
+              </div>
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
+                {/* Pass the full card object for flexible search */}
+                <EbaySales card={card} />
+              </div>
+              <div className="text-sm text-gray-500 dark:text-gray-400">
+                <p>Sales data provided by eBay. These are recent completed listings matching your card details.</p>
+              </div>
+            </div>
           )}
           
           {/* Status message */}
@@ -500,25 +388,19 @@ const CardDetailsModal = ({
 CardDetailsModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
-  card: PropTypes.shape({
-    id: PropTypes.string,
-    card: PropTypes.string,
-    player: PropTypes.string,
-    set: PropTypes.string,
-    year: PropTypes.string,
-    category: PropTypes.string,
-    condition: PropTypes.string,
-    slabSerial: PropTypes.string,
-    datePurchased: PropTypes.string,
-    investmentAUD: PropTypes.number,
-    currentValueAUD: PropTypes.number,
-    imageUrl: PropTypes.string
-  }).isRequired,
-  onSave: PropTypes.func.isRequired,
+  card: PropTypes.object,
+  onSave: PropTypes.func,
   onDelete: PropTypes.func,
   onMarkAsSold: PropTypes.func,
-  showAsStatic: PropTypes.bool,
-  className: PropTypes.string
+  onChange: PropTypes.func,
+  image: PropTypes.string,
+  imageLoadingState: PropTypes.string,
+  onImageChange: PropTypes.func,
+  onImageRetry: PropTypes.func,
+  className: PropTypes.string,
+  additionalHeaderContent: PropTypes.node,
+  additionalValueContent: PropTypes.node,
+  additionalSerialContent: PropTypes.node
 };
 
 export default CardDetailsModal;

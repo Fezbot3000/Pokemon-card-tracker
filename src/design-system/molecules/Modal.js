@@ -22,6 +22,7 @@ const Modal = ({
   showOverlay = true,
   showAsStatic = false,
   maxWidth = 'max-w-2xl',
+  ariaLabel, // Extract ariaLabel here
   ...props
 }) => {
   const modalRef = useRef(null);
@@ -189,7 +190,8 @@ const Modal = ({
       <div 
         ref={modalRef}
         className={`${modalClasses} w-full mx-4 flex flex-col ${position === 'right' ? 'h-full rounded-l-md rounded-r-none max-w-2xl mr-0' : sizeClasses[size]} ${className}`}
-        {...props}
+        aria-label={ariaLabel} // Apply as aria-label
+        {...props} // props now excludes ariaLabel
       >
         {/* Modal Header - Sticky */}
         {title && (
@@ -235,6 +237,7 @@ Modal.propTypes = {
   showOverlay: PropTypes.bool,
   showAsStatic: PropTypes.bool,
   maxWidth: PropTypes.string,
+  ariaLabel: PropTypes.string, // Add propType for ariaLabel
 };
 
 export default Modal;

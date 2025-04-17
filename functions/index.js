@@ -1182,85 +1182,134 @@ exports.psaLookup = functions.https.onCall(async (data, context) => {
 // --- PriceCharting Proxy Function --- 
 
 exports.proxyPriceCharting = functions.https.onCall(async (data, context) => {
-    // Check if user is authenticated if required for your app logic
-    // if (!context.auth) {
-    //     throw new functions.https.HttpsError('unauthenticated', 'The function must be called while authenticated.');
-    // }
+  functions.logger.info('proxyPriceCharting received data:', data); // Added logging
+  // Check if user is authenticated if required for your app logic
+  // if (!context.auth) {
+  //     throw new functions.https.HttpsError('unauthenticated', 'The function must be called while authenticated.');
+  // }
 
-    const apiKey = functions.config().pricecharting?.key;
-    if (!apiKey) {
-        functions.logger.error("PriceCharting API key is not configured. Run 'firebase functions:config:set pricecharting.key=42860c20259590c64cea6da53ecdf25cd084c16b'");
-        throw new functions.https.HttpsError('internal', 'Server configuration error.');
+  const apiKey = functions.config().pricecharting?.key;
+  if (!apiKey) {
+    functions.logger.error("PriceCharting API key is not configured. Run 'firebase functions:config:set pricecharting.key=42860c20259590c64cea6da53ecdf25cd084c16b'");
+    throw new functions.https.HttpsError('internal', 'Server configuration error.');
+  }
+
+  const { endpoint, params } = data; // e.g., endpoint: 'products', params: { q: 'charizard base set' } OR endpoint: 'product', params: { id: '6910' }
+
+  if (!endpoint || !['product', 'products', 'product-prices'].includes(endpoint)) {
+    throw new functions.https.HttpsError('invalid-argument', 'Invalid endpoint specified.');
+  }
+  if (!params || typeof params !== 'object') {
+    throw new functions.https.HttpsError('invalid-argument', 'Invalid parameters specified.');
+  }
+
+  const baseURL = "https://www.pricecharting.com/api/";
+  const url = new URL(`${baseURL}${endpoint}`);
+  url.searchParams.append('t', apiKey);
+
+  // Append parameters from the frontend call
+  for (const [key, value] of Object.entries(params)) {
+    url.searchParams.append(key, value);
+  }
+
+  functions.logger.info(`Calling PriceCharting API: ${url.toString()}`);
+
+  try {
+    const response = await fetch(url.toString(), { method: 'GET' });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      functions.logger.error(`PriceCharting API error response (${response.status}): ${errorText}`);
+      
+      // Attempt to read error body if possible
+      let errorBody = '';
+      try {
+        errorBody = await response.text();
+        functions.logger.error(`PriceCharting error body: ${errorBody}`);
+      } catch(e) { /* ignore if body cannot be read */}
+      
+      throw new functions.https.HttpsError('internal', 
+        `Failed to fetch data from PriceCharting. Status: ${response.status}`);
     }
 
-    const { endpoint, params } = data; // e.g., endpoint: 'products', params: { q: 'charizard base set' } OR endpoint: 'product', params: { id: '6910' }
+    const responseData = await response.json();
+    functions.logger.info('Successfully received data from PriceCharting.');
 
-    if (!endpoint || !['product', 'products'].includes(endpoint)) {
-        throw new functions.https.HttpsError('invalid-argument', 'Invalid endpoint specified.');
-    }
-    if (!params || typeof params !== 'object') {
-        throw new functions.https.HttpsError('invalid-argument', 'Invalid parameters specified.');
-    }
-
-    const baseURL = "https://www.pricecharting.com/api/";
-    const url = new URL(`${baseURL}${endpoint}`);
-    url.searchParams.append('t', apiKey);
-
-    // Append parameters from the frontend call
-    for (const [key, value] of Object.entries(params)) {
-        url.searchParams.append(key, value);
+    // Check PriceCharting's internal status
+    if (responseData.status === 'error') {
+      functions.logger.error(`PriceCharting returned error: ${responseData['error-message']}`);
+      // Decide if you want to throw an HttpsError or return the error structure
+      // Throwing might be simpler for the client to handle standard errors
+      throw new functions.https.HttpsError('internal', responseData['error-message'] || 'PriceCharting API returned an error.');
+      // Or return the structure:
+      // return responseData;
     }
 
-    functions.logger.info(`Calling PriceCharting API: ${url.toString()}`);
+    return responseData; // Return the successful JSON data
 
-    try {
-        const response = await fetch(url.toString(), { method: 'GET' });
-
-        if (!response.ok) {
-            functions.logger.error(`PriceCharting API error: ${response.status} ${response.statusText}`);
-            // Attempt to read error body if possible
-            let errorBody = '';
-            try {
-                 errorBody = await response.text();
-                 functions.logger.error(`PriceCharting error body: ${errorBody}`);
-            } catch(e) { /* ignore if body cannot be read */}
-            
-            throw new functions.https.HttpsError('internal', `Failed to fetch data from PriceCharting. Status: ${response.status}`);
-        }
-
-        const responseData = await response.json();
-        functions.logger.info('Successfully received data from PriceCharting.');
-
-        // Check PriceCharting's internal status
-        if (responseData.status === 'error') {
-             functions.logger.error(`PriceCharting returned error: ${responseData['error-message']}`);
-             // Decide if you want to throw an HttpsError or return the error structure
-             // Throwing might be simpler for the client to handle standard errors
-             throw new functions.https.HttpsError('internal', responseData['error-message'] || 'PriceCharting API returned an error.');
-             // Or return the structure:
-             // return responseData;
-        }
-
-        return responseData; // Return the successful JSON data
-
-    } catch (error) {
-        functions.logger.error("Error calling PriceCharting API:", error);
-        if (error instanceof functions.https.HttpsError) {
-            throw error; // Re-throw HttpsError
-        }
-        throw new functions.https.HttpsError('internal', 'An unexpected error occurred while calling the PriceCharting API.');
+  } catch (error) {
+    functions.logger.error("Error calling PriceCharting API:", error);
+    if (error instanceof functions.https.HttpsError) {
+      throw error; // Re-throw HttpsError
     }
+    throw new functions.https.HttpsError('internal', 'An unexpected error occurred while calling the PriceCharting API.');
+  }
 });
 
-// Example usage from frontend:
-// const functions = getFunctions();
-// const proxyPriceCharting = httpsCallable(functions, 'proxyPriceCharting');
-// try {
-//   const result = await proxyPriceCharting({ 
-//     endpoint: 'products', 
-//     params: { q: 'Pikachu Illustrator' } 
-//   });
-//   console.log(result.data); // Access the JSON response data
-// } catch (error) {
-//   console.error("Error calling proxy function:", error);
-// }
+// Proxy for eBay completed items search (Finding API with improved error handling)
+exports.proxyEbayCompleted = functions.https.onCall(async (data, context) => {
+  functions.logger.info('proxyEbayCompleted called with data:', data);
+  
+  const { query } = data;
+  const ebayAppId = functions.config().ebay?.appid;
+  
+  if (!ebayAppId) {
+    functions.logger.error('eBay App ID not configured');
+    throw new functions.https.HttpsError('internal', 'eBay App ID not configured');
+  }
+  
+  if (!query) {
+    functions.logger.error('No search query provided');
+    throw new functions.https.HttpsError('invalid-argument', 'No search query provided');
+  }
+  
+  // Clean query - remove special characters and extra spaces
+  const cleanQuery = query.replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ').trim();
+  functions.logger.info(`Clean query: "${cleanQuery}"`);
+  
+  // Minimal URL with only essential parameters
+  const url = 'https://svcs.ebay.com/services/search/FindingService/v1'
+    + '?OPERATION-NAME=findCompletedItems'
+    + '&SERVICE-VERSION=1.0.0'
+    + '&SECURITY-APPNAME=' + encodeURIComponent(ebayAppId)
+    + '&RESPONSE-DATA-FORMAT=JSON'
+    + '&SITE-ID=15' // 15 is for Australia
+    + '&keywords=' + encodeURIComponent(cleanQuery)
+    + '&itemFilter.name=SoldItemsOnly'
+    + '&itemFilter.value=true';
+  
+  try {
+    functions.logger.info('Calling eBay API...');
+    
+    const response = await fetch(url);
+    const responseText = await response.text();
+    
+    functions.logger.info('Response status:', response.status);
+    functions.logger.info('Response preview:', responseText.substring(0, 200));
+    
+    if (!response.ok) {
+      functions.logger.error('eBay API error:', responseText);
+      throw new functions.https.HttpsError('internal', `eBay API error: ${response.status}`);
+    }
+    
+    const json = JSON.parse(responseText);
+    
+    // If we get here, we have a valid JSON response
+    functions.logger.info('Successfully parsed response');
+    
+    return json;
+  } catch (error) {
+    functions.logger.error('Error:', error);
+    throw new functions.https.HttpsError('internal', error.message);
+  }
+});
