@@ -20,12 +20,15 @@ const StatisticsSummary = ({
 
   return (
     <div 
-      className={`w-full bg-white dark:bg-[#0F0F0F] rounded-md ${isDarkMode ? 'shadow-sm' : ''} overflow-hidden border border-[#ffffff33] dark:border-[#ffffff1a] ${className}`}
+      className={`w-full bg-white dark:bg-[#0F0F0F] rounded-md ${isDarkMode ? 'shadow-sm' : ''} overflow-hidden border border-[#ffffff33] dark:border-[#ffffff1a] mb-2 sm:mb-3 ${className}`}
       {...props}
     >
-      <div className="flex flex-row">
+      <div className="grid grid-cols-2 sm:grid-cols-4">
         {statistics.map((stat, index) => (
-          <div key={index} className="flex-1 p-4 py-6 sm:p-6 sm:py-8 flex flex-col items-center justify-center">
+          <div
+            key={index}
+            className="flex flex-col items-center justify-center p-4 py-6 sm:p-6 sm:py-8 border-none"
+          >
             <div className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 sm:mb-2 uppercase">
               {stat.label}
             </div>

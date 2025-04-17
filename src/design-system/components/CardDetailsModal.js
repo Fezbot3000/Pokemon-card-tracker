@@ -8,6 +8,7 @@ import PriceHistoryGraph from '../../components/PriceHistoryGraph';
 import RecentSales from '../../components/RecentSales';
 import EbaySales from '../../components/EbaySales';
 import PriceChartingButton from '../../components/PriceChartingButton';
+import SaleModal from '../../components/SaleModal'; // Import SaleModal
 import '../styles/animations.css';
 
 /**
@@ -120,8 +121,21 @@ const CardDetailsModal = ({
   // Handle mark as sold action
   const handleMarkAsSold = () => {
     if (onMarkAsSold) {
-      onMarkAsSold(editedCard);
+      setIsConfirmingSold(true);
     }
+  };
+
+  // SaleModal integration for single card
+  const handleSaleConfirm = (saleData) => {
+    setIsConfirmingSold(false);
+    if (onMarkAsSold) {
+      // Pass the saleData back to the parent (CardDetails)
+      onMarkAsSold({ ...editedCard, ...saleData });
+    }
+  };
+
+  const handleSaleModalClose = () => {
+    setIsConfirmingSold(false);
   };
   
   // Handle save action
@@ -380,6 +394,16 @@ const CardDetailsModal = ({
             </button>
           </div>
         </div>
+      )}
+      
+      {/* SaleModal for single card sale */}
+      {isConfirmingSold && (
+        <SaleModal
+          isOpen={isConfirmingSold}
+          onClose={handleSaleModalClose}
+          selectedCards={[editedCard]}
+          onConfirm={handleSaleConfirm}
+        />
       )}
     </>
   );

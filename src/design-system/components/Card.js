@@ -45,16 +45,31 @@ const Card = ({
         {/* Selection checkbox (only shown when onSelect is provided) */}
         {onSelect && (
           <div className="absolute top-2 right-2 z-10">
-            <div 
-              className={`w-5 h-5 rounded-full flex items-center justify-center
-                          ${isSelected ? 'bg-purple-500' : 'bg-gray-200 dark:bg-gray-700'}`}
-              onClick={(e) => {
+            <button
+              type="button"
+              aria-label={isSelected ? 'Deselect card' : 'Select card'}
+              tabIndex={0}
+              className={`w-6 h-6 rounded-full flex items-center justify-center focus:outline-none transition-all
+                border-2
+                bg-white dark:bg-[#18181b]
+                ${isSelected ? 'border-purple-500' : 'border-gray-300 dark:border-gray-600'}
+                ${isSelected ? 'ring-2 ring-purple-300' : 'hover:border-purple-400 dark:hover:border-purple-400'}
+                shadow
+              `}
+              onClick={e => {
                 e.stopPropagation();
                 onSelect(!isSelected);
               }}
             >
-              {isSelected && <Icon name="check" className="text-white text-xs" />}
-            </div>
+              <span
+                className={`block w-4 h-4 rounded-full flex items-center justify-center transition-all
+                  ${isSelected ? 'bg-white dark:bg-[#23272F]' : 'bg-transparent'}`}
+              >
+                {isSelected && (
+                  <Icon name="check" className="text-purple-600 text-base" />
+                )}
+              </span>
+            </button>
           </div>
         )}
         
@@ -76,21 +91,36 @@ const Card = ({
       {/* Selection checkbox (only shown when onSelect is provided) */}
       {onSelect && (
         <div className="absolute top-2 right-2 z-10">
-          <div 
-            className={`w-5 h-5 rounded-full flex items-center justify-center
-                        ${isSelected ? 'bg-purple-500' : 'bg-gray-200 dark:bg-gray-700'}`}
-            onClick={(e) => {
+          <button
+            type="button"
+            aria-label={isSelected ? 'Deselect card' : 'Select card'}
+            tabIndex={0}
+            className={`w-6 h-6 rounded-full flex items-center justify-center focus:outline-none transition-all
+              border-2
+              bg-white dark:bg-[#18181b]
+              ${isSelected ? 'border-purple-500' : 'border-gray-300 dark:border-gray-600'}
+              ${isSelected ? 'ring-2 ring-purple-300' : 'hover:border-purple-400 dark:hover:border-purple-400'}
+              shadow
+            `}
+            onClick={e => {
               e.stopPropagation();
               onSelect(!isSelected);
             }}
           >
-            {isSelected && <Icon name="check" className="text-white text-xs" />}
-          </div>
+            <span
+              className={`block w-4 h-4 rounded-full flex items-center justify-center transition-all
+                ${isSelected ? 'bg-white dark:bg-[#23272F]' : 'bg-transparent'}`}
+            >
+              {isSelected && (
+                <Icon name="check" className="text-purple-600 text-base" />
+              )}
+            </span>
+          </button>
         </div>
       )}
       
       {/* Card Image */}
-      <div className="aspect-[2/3] bg-white dark:bg-[#1B2131] relative overflow-hidden p-2 border-b border-gray-100 dark:border-gray-800">
+      <div className="aspect-[2/3] bg-white dark:bg-[#1B2131] relative overflow-hidden p-2">
         {cardImage ? (
           <img 
             src={cardImage} 
@@ -105,7 +135,7 @@ const Card = ({
       </div>
       
       {/* Card Details */}
-      <div className="p-3 text-center">
+      <div className="p-3 text-center bg-[#0F0F0F]">
         <h3 className="font-medium text-gray-900 dark:text-white text-lg mb-1 truncate">
           {card.player || 'Unknown Player'}
         </h3>
@@ -116,7 +146,7 @@ const Card = ({
         {/* Financial Details - Consolidated Box */}
         <div className="flex flex-col">
           {/* Consolidated Financial Details */}
-          <div className="financial-detail-box p-3 rounded-md bg-white dark:bg-[#0F0F0F] border border-[#ffffff33] dark:border-[#ffffff1a]">
+          <div className="financial-detail-box p-3 rounded-md bg-[#0F0F0F] border border-[#ffffff33] dark:border-[#ffffff1a]">
             <div className="flex flex-col">
               {/* Paid */}
               <div className="text-center py-1">
@@ -125,10 +155,6 @@ const Card = ({
                   {formatCurrencyK(investmentAUD)}
                 </div>
               </div>
-              
-              {/* Separator */}
-              <div className="border-t border-gray-200/30 dark:border-gray-700/20 my-1"></div>
-              
               {/* Value */}
               <div className="text-center py-1">
                 <div className="financial-detail-label text-xs text-gray-500 dark:text-gray-400">Value</div>
@@ -136,10 +162,6 @@ const Card = ({
                   {formatCurrencyK(currentValueAUD)}
                 </div>
               </div>
-              
-              {/* Separator */}
-              <div className="border-t border-gray-200/30 dark:border-gray-700/20 my-1"></div>
-              
               {/* Profit */}
               <div className="text-center py-1">
                 <div className="financial-detail-label text-xs text-gray-500 dark:text-gray-400">Profit</div>

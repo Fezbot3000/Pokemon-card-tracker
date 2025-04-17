@@ -50,7 +50,7 @@ const SearchToolbar = ({
   const sortDropdownTrigger = (
     <Button 
       variant="text" 
-      className="flex items-center gap-1 text-sm sm:text-base w-32 sm:w-56"
+      className="w-full sm:w-56 flex items-center gap-1 text-sm sm:text-base"
       iconRight={<Icon name="expand_more" size="sm" />}
     >
       <span className="truncate">Sort: {sortOption}</span>
@@ -82,7 +82,7 @@ const SearchToolbar = ({
       {/* Controls Group (View Mode, Sort, Add Card) */}
       <div className="flex items-center justify-between sm:justify-start gap-3 w-full sm:w-auto">
         {/* View Mode Selector */}
-        <div className="hidden sm:flex bg-gray-100 dark:bg-black rounded-lg p-1 relative">
+        <div className="hidden sm:flex bg-[#000] dark:bg-black rounded-lg p-1 relative">
           {/* Animated Background Indicator */}
           <div 
             className="absolute top-1 bottom-1 rounded-md bg-gradient-to-r from-[#ef4444] to-[#db2777] transition-transform duration-300 ease-in-out z-0"

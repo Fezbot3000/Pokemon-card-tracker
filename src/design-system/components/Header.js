@@ -226,7 +226,7 @@ const Header = ({
       {onViewChange && (
         <div className="px-4 py-2 border-b border-gray-200 dark:border-[#ffffff1a] flex justify-center">
           <div className="max-w-7xl w-full mx-auto flex justify-center">
-            <div className="flex bg-gray-100 dark:bg-black rounded-full p-1 overflow-hidden">
+            <div className="flex bg-gray-100 dark:bg-black rounded-full p-1 overflow-hidden hidden sm:flex">
               {/* Cards Button */}
               <button
                 onClick={() => handleViewChange('cards')}
@@ -238,15 +238,13 @@ const Header = ({
               >
                 <Icon 
                   name="style" 
-                  className="mr-1" 
+                  className="mr-1 hidden xs:inline" 
                   color={currentView === 'cards' ? 'white' : 'default'} 
                 />
                 <span>Cards</span>
               </button>
-              
               {/* Small gap */}
               <div className="w-1"></div>
-              
               {/* Sold Items Button */}
               <button
                 onClick={() => handleViewChange('sold-items')}
@@ -258,7 +256,7 @@ const Header = ({
               >
                 <Icon 
                   name="sell" 
-                  className="mr-1" 
+                  className="mr-1 hidden xs:inline" 
                   color={currentView === 'sold-items' ? 'white' : 'default'} 
                 />
                 <span>Sold Items</span>
