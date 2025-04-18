@@ -46,6 +46,7 @@ export { default as ComponentSection } from './molecules/ComponentSection';
 export { default as SettingsPanel } from './molecules/SettingsPanel';
 export { default as InvoiceCard } from './molecules/invoice/InvoiceCard';
 export { default as InvoiceHeader } from './molecules/invoice/InvoiceHeader';
+export { default as ConfirmDialog } from './molecules/ConfirmDialog';
 
 // Components
 export { default as Header } from './components/Header';

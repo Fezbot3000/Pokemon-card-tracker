@@ -3,9 +3,8 @@ import { useTheme } from '../design-system';
 import db from '../services/db';
 import { formatCurrency, formatCondensed } from '../utils/formatters';
 import { toast } from 'react-hot-toast';
-import { StatisticsSummary, SearchToolbar, Card } from '../design-system';
+import { StatisticsSummary, SearchToolbar, Card, ConfirmDialog } from '../design-system';
 import SaleModal from './SaleModal';
-import ConfirmDialog from './ConfirmDialog';
 import MoveCardsModal from './MoveCardsModal';
 
 // Replace FinancialSummary component with individual stat cards
@@ -563,29 +562,38 @@ const CardList = ({
   };
 
   const handleMoveConfirm = async (targetCollection) => {
-    if (!targetCollection || selectedCardsToMove.length === 0) return;
-    
     try {
-      // Update each card's collection property
-      for (const card of selectedCardsToMove) {
+      // Get the cards to move
+      const cardsToMove = cards.filter(card => selectedCards.has(card.slabSerial));
+      
+      // Update each card's collection
+      for (const card of cardsToMove) {
         const updatedCard = { ...card, collection: targetCollection };
-        await db.updateCard(updatedCard);
+        await db.saveCollections({
+          ...collections,
+          [targetCollection]: [...(collections[targetCollection] || []), updatedCard],
+          [selectedCollection]: collections[selectedCollection].filter(c => c.slabSerial !== card.slabSerial)
+        });
       }
-      
-      toast.success(`${selectedCardsToMove.length} card(s) moved to ${targetCollection}`);
-      
-      // Reset selection and close modal
-      setSelectedCards(new Set());
-      setSelectedCardsToMove([]);
+
+      // Update state
       setShowMoveModal(false);
+      setSelectedCardsToMove([]);
+      setSelectedCards(new Set());
       
-      // Force refresh of the card list if needed
-      if (onUpdateCard) {
-        onUpdateCard();
+      // Show success message
+      toast.success(`Successfully moved ${cardsToMove.length} card${cardsToMove.length > 1 ? 's' : ''} to ${targetCollection}`);
+      
+      // Update collections in parent component
+      if (setCollections) {
+        const updatedCollections = { ...collections };
+        updatedCollections[targetCollection] = [...(collections[targetCollection] || []), ...cardsToMove];
+        updatedCollections[selectedCollection] = collections[selectedCollection].filter(card => !selectedCards.has(card.slabSerial));
+        setCollections(updatedCollections);
       }
     } catch (error) {
       console.error('Error moving cards:', error);
-      toast.error('Failed to move cards');
+      toast.error('Error moving cards. Please try again.');
     }
   };
 
@@ -809,6 +817,9 @@ const CardList = ({
         onConfirm={handleDeleteConfirm}
         title="Delete Cards"
         message={`Are you sure you want to delete ${cardsToDelete.length} card${cardsToDelete.length > 1 ? 's' : ''}? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
       />
 
       <MoveCardsModal

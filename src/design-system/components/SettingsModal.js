@@ -2,13 +2,11 @@ import React, { useState, useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { useTheme } from '../contexts/ThemeContext';
 import Icon from '../atoms/Icon';
-import Button from '../atoms/Button';
+import { Modal, Button, ConfirmDialog } from '../';
 import FormField from '../molecules/FormField';
 import toastService from '../utils/toast';
-import Modal from '../molecules/Modal';
 import SettingsPanel from '../molecules/SettingsPanel';
 import SettingsNavItem from '../atoms/SettingsNavItem';
-import ConfirmDialog from '../../components/ConfirmDialog'; // Fix import path
 import '../styles/animations.css';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '../../firebase';

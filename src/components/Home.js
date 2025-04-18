@@ -29,7 +29,7 @@ function Home() {
       <NavigationBar />
       
       {/* Hero Section */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 pt-28">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 pt-32 sm:pt-40">
         <div className="text-center">
           <h1 className="text-4xl sm:text-6xl font-bold mb-6 text-white">
             Your Ultimate Trading Card Companion
@@ -212,40 +212,42 @@ function Home() {
         </div>
 
         {/* Partnership Highlight Section */}
-        <div className="mt-20 mb-16 bg-white/10 backdrop-blur-sm rounded-xl p-8">
-          <h2 className="text-3xl font-bold mb-6 text-center text-white">
-            Partnering with SwapITT: Elevating Your Collecting Experience
-          </h2>
+        <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 mt-24">
           <div className="flex flex-col md:flex-row items-center gap-8">
-            <div className="md:w-1/3">
+            <div className="w-48 h-48 flex-shrink-0">
               <img 
-                src="/swapit-logo.svg" 
+                src="/swap-itt-logo-vertical.webp" 
                 alt="SwapITT Logo" 
-                className="w-full max-w-[240px] mx-auto rounded-lg"
+                className="w-full h-full object-contain"
                 onError={(e) => {
-                  e.target.src = '/assets/img/pokeball.svg'; 
+                  console.error('Failed to load SwapITT logo:', e);
+                  e.target.src = '/swapit-logo.svg';
                   e.target.onerror = null;
                 }}
               />
             </div>
-            <div className="md:w-2/3">
-              <p className="text-gray-100 mb-6">
+            <div className="flex-grow">
+              <h2 className="text-2xl sm:text-3xl font-bold mb-4 text-white">
+                Partnering with SwapITT: Elevating Your Collecting Experience
+              </h2>
+              <p className="text-lg text-gray-100 mb-6">
                 We've teamed up with SwapITT, Australia's leading trading card and collectibles store, to bring you exclusive insights, deals, and community events. Explore SwapITT's extensive collection of NBA, Pokémon, Soccer, UFC, Formula 1, NFL, Baseball, NRL, One Piece, MARVEL, and more.
               </p>
               <div className="flex flex-wrap gap-2 mb-6">
                 {['NBA', 'Pokémon', 'Soccer', 'UFC', 'F1', 'NFL', 'Baseball', 'NRL', 'One Piece', 'MARVEL'].map(tag => (
-                  <span key={tag} className="bg-white/20 px-3 py-1 rounded-full text-sm text-white">
+                  <span key={tag} className="px-3 py-1 bg-white/20 rounded-full text-sm text-white">
                     {tag}
                   </span>
                 ))}
               </div>
               <a 
-                href="https://swapitonline.com.au/" 
+                href="https://swapitt.com.au/" 
                 target="_blank" 
                 rel="noopener noreferrer" 
-                className="inline-block py-2 px-6 bg-green-500 hover:bg-green-600 text-white font-bold rounded-lg transition-colors"
+                className="inline-flex items-center gap-2 bg-white text-purple-900 font-bold py-2 px-4 rounded-lg hover:bg-gray-100 transition-colors"
               >
-                Visit SwapITT
+                <span>Visit SwapITT</span>
+                <span className="material-icons text-sm">open_in_new</span>
               </a>
             </div>
           </div>

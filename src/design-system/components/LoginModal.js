@@ -80,34 +80,76 @@ const LoginModal = ({
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-5">
-          <FormField
-            id="login-email"
-            label="Email address"
-            type="email"
-            name="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@example.com"
-            required
-            disabled={isLoading}
-            className="mb-4"
-          />
+          {/* Social Sign In */}
+          <div className="space-y-3">
+            <button
+              type="button"
+              onClick={onGoogleLogin}
+              className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-gray-800 rounded-xl hover:bg-gray-900 transition-colors text-white disabled:opacity-50"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <svg className="animate-spin h-5 w-5 text-gray-700 dark:text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                </>
+              ) : (
+                <>
+                  <svg className="h-5 w-5 mr-2" aria-hidden="true" viewBox="0 0 24 24">
+                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                  </svg>
+                  <span>Continue with Google</span>
+                </>
+              )}
+            </button>
+          </div>
 
-          <FormField
-            id="login-password"
-            label="Password"
-            type="password"
-            name="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="••••••••"
-            required
-            disabled={isLoading}
-            className="mb-4"
-          />
+          {/* Divider */}
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-800"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-4 bg-black text-gray-500">
+                Or continue with email
+              </span>
+            </div>
+          </div>
+
+          {/* Email & Password Fields */}
+          <div className="space-y-4">
+            <FormField
+              id="login-email"
+              label="Email address"
+              type="email"
+              name="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
+              required
+              disabled={isLoading}
+            />
+
+            <FormField
+              id="login-password"
+              label="Password"
+              type="password"
+              name="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              required
+              disabled={isLoading}
+            />
+          </div>
 
           {/* Remember me and Forgot password */}
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center justify-between">
             <div className="flex items-center">
               <Toggle
                 checked={rememberMe}
@@ -133,52 +175,13 @@ const LoginModal = ({
           <Button
             type="submit"
             variant="primary"
-            fullWidth
-            disabled={isLoading || !email || !password}
-            className="sign-in-button !bg-gradient-to-r !from-[#E6185C] !to-[#FF2D55] !text-white" 
-            // Use !important flags to override any global styles
-            iconLeft={isLoading ? <Icon name="sync" className="animate-spin" color="white"/> : null}
+            className="w-full"
+            loading={isLoading}
+            disabled={isLoading}
           >
-            {isLoading ? 'Signing in...' : 'Sign in'}
+            Sign in
           </Button>
         </form>
-
-        {/* Divider */}
-        <div className="flex items-center my-6">
-          <div className="flex-grow border-t border-gray-700"></div>
-          <span className="mx-4 text-sm text-gray-500">Or continue with</span>
-          <div className="flex-grow border-t border-gray-700"></div>
-        </div>
-
-        {/* Social Login Buttons */}
-        <div className="grid grid-cols-2 gap-4">
-          <button
-            onClick={onGoogleLogin}
-            className="flex items-center justify-center px-4 py-2 border border-gray-800 rounded-lg hover:bg-gray-900 transition-colors"
-            disabled={isLoading}
-          >
-            <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
-              <path
-                fill="currentColor"
-                d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z"
-              />
-            </svg>
-            <span className="text-white text-sm">Google</span>
-          </button>
-          <button
-            onClick={onAppleLogin}
-            className="flex items-center justify-center px-4 py-2 border border-gray-800 rounded-lg hover:bg-gray-900 transition-colors"
-            disabled={isLoading}
-          >
-            <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
-              <path
-                fill="currentColor"
-                d="M17.05,11.97 C17.0236,10.3647 17.9782,9.01346 19.5,8.5 C18.5519,7.15206 16.9921,6.30821 15.3,6.24 C13.5,6.06 11.8,7.26 10.9,7.26 C9.9,7.26 8.5,6.25 7,6.28 C4.8,6.34 2.9,7.68 1.9,9.78 C-0.1,14.04 1.6,20.05 3.5,23.25 C4.4,24.81 5.5,26.56 7,26.5 C8.5,26.44 9,25.5 10.8,25.5 C12.6,25.5 13,26.5 14.6,26.46 C16.2,26.43 17.2,24.87 18.1,23.3 C18.7,22.2 19.2,21 19.5,19.78 C17.7,19 16.5,17.56 16.5,15.75 C16.5,13.82 17.92,12.21 19.85,11.86 C19.04,11.18 18.04,10.8 17.04,10.8 L17.05,11.97 Z M15.05,4.81 C15.8524,3.85758 16.1812,2.65181 15.95,1.46 C14.7738,1.57038 13.698,2.14159 12.95,3.05 C12.1476,3.99194 11.8174,5.1886 12.04,6.37 C13.2262,6.27901 14.312,5.70786 15.07,4.8 L15.05,4.81 Z"
-              />
-            </svg>
-            <span className="text-white text-sm">Apple</span>
-          </button>
-        </div>
 
         {/* Terms and Privacy */}
         <div className="mt-6 text-center text-xs text-gray-500">
