@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import { Modal, Button, Icon, ConfirmDialog } from '../';
+import { Modal, Button, Icon } from '../';
 import CardDetailsForm from './CardDetailsForm';
 import PriceHistoryGraph from '../../components/PriceHistoryGraph';
 import RecentSales from '../../components/RecentSales';
@@ -40,7 +40,6 @@ const CardDetailsModal = ({
   const [saveMessage, setSaveMessage] = useState('');
   const [errors, setErrors] = useState({});
   const [animClass, setAnimClass] = useState('fade-in');
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   
   // If the card has pricing data from PriceCharting, extract the product ID
   let priceChartingProductId = null;
@@ -100,18 +99,6 @@ const CardDetailsModal = ({
     }
   };
   
-  // Handle delete action
-  const handleDelete = () => {
-    setShowDeleteConfirm(true);
-  };
-
-  const handleConfirmDelete = () => {
-    if (onDelete) {
-      onDelete();
-    }
-    setShowDeleteConfirm(false);
-  };
-  
   // Handle mark as sold action
   const handleMarkAsSold = () => {
     if (onMarkAsSold) {
@@ -144,8 +131,6 @@ const CardDetailsModal = ({
     <div className="flex justify-between items-center w-full">
       {/* Cancel button (always left) */}
       <Button variant="secondary" onClick={() => {
-        setShowDeleteConfirm(false);
-        setIsConfirmingSold(false);
         onClose();
       }} className="mr-auto md:mr-0">
         Cancel
@@ -153,20 +138,6 @@ const CardDetailsModal = ({
 
       {/* Right-aligned buttons group */}
       <div className="flex items-center space-x-3">
-        {/* Delete Button (Icon on mobile) */}
-        {onDelete && (
-          <Button
-            variant="danger"
-            onClick={handleDelete}
-            className="transition-all duration-200"
-          >
-            <Icon name="delete" className="mr-0 md:mr-2" /> {/* Icon always visible */}
-            <span className="hidden md:inline"> {/* Text hidden on mobile */}
-              Delete
-            </span>
-          </Button>
-        )}
-
         {/* Mark as Sold Button (Icon on mobile) */}
         {onMarkAsSold && !card?.sold && (
           <Button
@@ -195,8 +166,6 @@ const CardDetailsModal = ({
       <Modal
         isOpen={isOpen}
         onClose={() => {
-          setShowDeleteConfirm(false);
-          setIsConfirmingSold(false);
           onClose();
         }}
         title="Card Details"
@@ -356,18 +325,6 @@ const CardDetailsModal = ({
           )}
         </div>
       </Modal>
-      
-      {/* Delete confirmation dialog */}
-      <ConfirmDialog
-        isOpen={showDeleteConfirm}
-        onClose={() => setShowDeleteConfirm(false)}
-        onConfirm={handleConfirmDelete}
-        title="Delete Card"
-        message="Are you sure you want to delete this card? This action cannot be undone."
-        confirmText="Delete"
-        cancelText="Cancel"
-        variant="danger"
-      />
       
       {/* Enlarged Image Modal */}
       {showEnlargedImage && cardImage && (

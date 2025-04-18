@@ -61,13 +61,14 @@ const CardList = ({
   cards, 
   exchangeRate, 
   onCardClick, 
-  onDeleteCards, 
+  onDeleteCard, 
   onUpdateCard, 
   onAddCard,
   selectedCollection,
   collections,
   setCollections
 }) => {
+
   const [filter, setFilter] = useState('');
   const [sortField, setSortField] = useState(
     localStorage.getItem('cardListSortField') || 'currentValueAUD'
@@ -91,10 +92,12 @@ const CardList = ({
   const [showSaleModal, setShowSaleModal] = useState(false);
   const [selectedCardsForSale, setSelectedCardsForSale] = useState([]);
   const [buyer, setBuyer] = useState('');
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [cardsToDelete, setCardsToDelete] = useState([]);
   const [showMoveModal, setShowMoveModal] = useState(false);
   const [selectedCardsToMove, setSelectedCardsToMove] = useState([]);
+  const [showCardDetails, setShowCardDetails] = useState(false);
+  const [selectedCard, setSelectedCard] = useState(null);
 
   const valueDropdownRef = useRef(null);
   const metricDropdownRef = useRef(null);
@@ -158,7 +161,7 @@ const CardList = ({
             images[card.slabSerial] = imageUrl;
           }
         } catch (error) {
-          console.error('Error loading image for card:', card.slabSerial, error);
+          // Return original string if parsing fails
         }
       }
       setCardImages(images);
@@ -199,7 +202,7 @@ const CardList = ({
         });
       }
     } catch (error) {
-      console.error('Error refreshing card image:', cardId, error);
+      // Return original string if parsing fails
     }
   };
 
@@ -407,7 +410,6 @@ const CardList = ({
       // Format with leading zeros (e.g., INV-0001)
       return `INV-${String(nextNumber).padStart(4, '0')}`;
     } catch (error) {
-      console.error('Error generating invoice ID:', error);
       // Fallback to timestamp-based ID if there's an error
       return `INV-${Date.now()}`;
     }
@@ -446,19 +448,34 @@ const CardList = ({
         }
       });
 
-      // Save updated collections
+      // Save to database
       await db.saveCollections(updatedCollections);
-      setCollections(updatedCollections);
+      
+      // Update state in parent first
+      if (onDeleteCard) {
+        await onDeleteCard(cardIds);
+      }
 
-      // Clear selection and close modal
+      // Update local state after parent state is updated
+      setCollections(updatedCollections);
       setSelectedCards(new Set());
       setShowSaleModal(false);
       setSelectedCardsForSale([]);
 
-      // Show success message using react-hot-toast only
-      toast.success(`${selectedCardsData.length} card${selectedCardsData.length > 1 ? 's' : ''} marked as sold`);
+      // Always show success message and refresh page, even if there were non-critical errors
+      // This ensures the user sees success and gets a fresh state
+      toast.success(`${selectedCardsData.length} card${selectedCardsData.length > 1 ? 's' : ''} marked as sold`, {
+        id: 'delete-success', // Add an ID to prevent duplicate toasts
+        duration: 2000, // 2 seconds
+      });
+      
+      // Use a separate timeout for page refresh to ensure it happens
+      // This decouples it from the toast system which might have issues
+      setTimeout(() => {
+        window.location.reload();
+      }, 2500); // Wait slightly longer than the toast duration
     } catch (error) {
-      console.error('Error marking cards as sold:', error);
+      // Fallback to timestamp-based ID if there's an error
       toast.error('Failed to mark cards as sold. Please try again.');
     }
   };
@@ -495,22 +512,38 @@ const CardList = ({
     setIsValueDropdownOpen(!isValueDropdownOpen);
   };
 
-  const handleDeleteClick = () => {
-    const selectedCardsArray = Array.from(selectedCards);
-    setCardsToDelete(selectedCardsArray);
-    setShowDeleteConfirm(true);
+  const handleCardDelete = async (cardToDelete) => {
+    if (!cardToDelete || !cardToDelete.slabSerial) {
+      toast.error('Failed to delete card: Invalid card data');
+      return;
+    }
+    try {
+      // Correctly call the onDeleteCard prop passed from App.js
+      if (onDeleteCard) {
+        await onDeleteCard(cardToDelete); // Pass the full card object
+      } else {
+        toast.error('Deletion setup error.');
+      }
+    } catch (err) {
+      toast.error(`Failed to delete card: ${err.message || 'Unknown error'}`);
+    }
+    // Always close the modal and clear selection after delete
+    setShowCardDetails(false);
+    setSelectedCard(null);
+    setSelectedCards(new Set());
   };
 
-  const handleDeleteConfirm = async () => {
+  const handleBulkDelete = async (cardsToDelete) => {
     try {
       // Create a copy of the collections
       const updatedCollections = { ...collections };
+      const cardIds = Array.isArray(cardsToDelete) ? cardsToDelete : [cardsToDelete];
 
       // Remove the cards from all collections
       Object.keys(updatedCollections).forEach(collectionName => {
         if (Array.isArray(updatedCollections[collectionName])) {
           updatedCollections[collectionName] = updatedCollections[collectionName].filter(
-            card => !cardsToDelete.includes(card.slabSerial)
+            card => !cardIds.includes(card.slabSerial)
           );
         }
       });
@@ -518,23 +551,61 @@ const CardList = ({
       // Save to database
       await db.saveCollections(updatedCollections);
       
-      // Update state
-      setCollections(updatedCollections);
+      // Update state in parent first - wrap in try/catch to prevent errors here from failing the whole operation
+      try {
+        if (onDeleteCard) {
+          // Process each card ID individually instead of passing the array
+          for (const cardId of cardIds) {
+            await onDeleteCard(cardId); // Pass single ID string
+          }
+        }
+      } catch (innerError) {
+        // Log error but don't fail the operation - the database update already succeeded
+        console.warn('Warning: Error updating app state after deletion, but database was updated successfully.');
+      }
 
-      // Call the original onDeleteCards function
-      onDeleteCards(cardsToDelete);
-      
-      // Clear selection
+      // Update local state after parent state is updated
+      setCollections(updatedCollections);
       setSelectedCards(new Set());
-      setShowDeleteConfirm(false);
-      setCardsToDelete([]);
+      setShowDeleteModal(false);
+      setShowCardDetails(false);
+      setSelectedCard(null);
       
-      // Show success message
-      toast.success(`${cardsToDelete.length} card${cardsToDelete.length > 1 ? 's' : ''} deleted`);
+      // Always show success message and refresh page, even if there were non-critical errors
+      // This ensures the user sees success and gets a fresh state
+      toast.success(`${cardIds.length} card${cardIds.length > 1 ? 's' : ''} deleted`, {
+        id: 'delete-success', // Add an ID to prevent duplicate toasts
+        duration: 2000, // 2 seconds
+      });
+      
+      // Use a separate timeout for page refresh to ensure it happens
+      // This decouples it from the toast system which might have issues
+      setTimeout(() => {
+        window.location.reload();
+      }, 2500); // Wait slightly longer than the toast duration
     } catch (error) {
-      console.error('Error deleting cards:', error);
+      toast.error('Failed to delete cards');
+      // Don't throw error here, just handle it locally
+      setShowDeleteModal(false);
+      setShowCardDetails(false);
+      setSelectedCard(null);
+      setSelectedCards(new Set());
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    try {
+      const cardsToDelete = Array.from(selectedCards);
+      await handleBulkDelete(cardsToDelete);
+    } catch (error) {
       toast.error('Failed to delete cards');
     }
+  };
+
+  const handleDeleteClick = () => {
+    const selectedCardsArray = Array.from(selectedCards);
+    setCardsToDelete(selectedCardsArray);
+    setShowDeleteModal(true);
   };
 
   const handleMoveCards = () => {
@@ -592,7 +663,6 @@ const CardList = ({
         setCollections(updatedCollections);
       }
     } catch (error) {
-      console.error('Error moving cards:', error);
       toast.error('Error moving cards. Please try again.');
     }
   };
@@ -797,6 +867,20 @@ const CardList = ({
         </div>
       )}
 
+      {/* Card Details Modal */}
+      {showCardDetails && selectedCard && (
+        <CardDetails
+          card={selectedCard}
+          onClose={() => {
+            setSelectedCard(null); // Clear hook state first
+            setShowCardDetails(false); // Then clear local state
+          }}
+          onUpdate={handleCardUpdate} // Uses the local update handler
+          onDelete={handleCardDelete}  // CHANGED: Use local handleCardDelete instead of onDeleteCard
+          exchangeRate={exchangeRate}
+        />
+      )}
+
       <SaleModal
         isOpen={showSaleModal}
         onClose={() => {
@@ -809,9 +893,9 @@ const CardList = ({
       />
 
       <ConfirmDialog
-        isOpen={showDeleteConfirm}
+        isOpen={showDeleteModal}
         onClose={() => {
-          setShowDeleteConfirm(false);
+          setShowDeleteModal(false);
           setCardsToDelete([]);
         }}
         onConfirm={handleDeleteConfirm}

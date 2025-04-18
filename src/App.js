@@ -270,12 +270,16 @@ function AppContent() {
   // Memoized callbacks
   const handleAddCard = useCallback(async (cardData, imageFile, targetCollection) => {
     try {
-      // Check if a card with this serial number already exists in any collection
-      const allCards = Object.values(collections).flat();
-      const existingCard = allCards.find(card => card.slabSerial === cardData.slabSerial);
+      // Check if a card with this serial number already exists in any active collection (excluding sold)
+      const activeCollections = Object.entries(collections)
+        .filter(([name]) => name.toLowerCase() !== 'sold')
+        .map(([, cards]) => cards)
+        .flat();
+      
+      const existingCard = activeCollections.find(card => card.slabSerial === cardData.slabSerial);
       
       if (existingCard) {
-        throw new Error('A card with this serial number already exists');
+        throw new Error('A card with this serial number already exists in your active collections');
       }
 
       // Save the image if provided
@@ -1221,13 +1225,84 @@ To import this backup:
 
       // Delete cards from the useCardData hook's state
       cardIds.forEach(cardId => {
-        deleteCard(cardId);
+        deleteCard({ slabSerial: cardId });
       });
     } catch (error) {
       console.error('Error deleting cards:', error);
       toast.error('Failed to delete cards');
     }
   }, [deleteCard]);
+
+  const handleCardDelete = useCallback(async (cardInput) => {
+    let cardToDelete;
+    let slabSerialToDelete;
+
+    if (typeof cardInput === 'object' && cardInput !== null && cardInput.slabSerial) {
+      cardToDelete = cardInput; // Input is the card object
+      slabSerialToDelete = cardInput.slabSerial;
+    } else if (typeof cardInput === 'string') {
+      slabSerialToDelete = cardInput; // Input is just the ID string
+    } else {
+      console.error('[App] handleCardDelete received invalid input:', cardInput);
+      toast.error('Failed to delete card: Invalid input.');
+      return;
+    }
+
+    if (!slabSerialToDelete) {
+      console.error('[App] Could not determine valid card ID to delete from input:', cardInput);
+      toast.error('Failed to delete card: Missing card ID.');
+      return;
+    }
+
+    try {
+      // Step 1: Load current collections from DB
+      const currentCollections = await db.getCollections();
+      if (!currentCollections || typeof currentCollections !== 'object') {
+        throw new Error('Failed to load collections from database.');
+      }
+
+      // Step 2: Find and remove the card from the collection(s)
+      let cardFoundAndRemoved = false;
+      const updatedCollections = { ...currentCollections };
+
+      for (const collectionName in updatedCollections) {
+        // Skip potential non-array properties if any exist
+        if (!Array.isArray(updatedCollections[collectionName])) continue; 
+        
+        const initialLength = updatedCollections[collectionName].length;
+        updatedCollections[collectionName] = updatedCollections[collectionName].filter(
+          card => card.slabSerial !== slabSerialToDelete
+        );
+        
+        if (updatedCollections[collectionName].length < initialLength) {
+          cardFoundAndRemoved = true;
+        }
+      }
+
+      if (!cardFoundAndRemoved) {
+        // Card wasn't found in any collection - maybe already deleted?
+        // Or maybe it exists in the hook's state but not DB? (unlikely)
+        console.warn(`[App] Card ${slabSerialToDelete} not found in any collection in the database. Assuming already deleted or state mismatch.`);
+      } else {
+        // Step 3: Save updated collections back to DB
+        await db.saveCollections(updatedCollections);
+      }
+
+      // Step 4: Update the useCardData hook's local state (triggers UI update)
+      deleteCard(slabSerialToDelete); 
+
+      // Step 5: Update local App.js collections state (if needed, though maybe redundant if UI relies on hook)
+      // setCollections(updatedCollections); // Consider if this is necessary
+      
+      // Success toast should be handled by the calling component (CardDetails)
+      // or we can add one here if preferred.
+      // toast.success('Card deleted successfully!'); 
+
+    } catch (error) {
+      console.error('[App] Error during card deletion process:', error);
+      toast.error(`Error deleting card: ${error.message}`);
+    }
+  }, [deleteCard]); // Now depends only on the hook's deleteCard function again
 
   const handleSettingsClick = () => {
     document.body.classList.add('settings-open'); 
@@ -1383,8 +1458,7 @@ To import this backup:
               console.log("Collection removed from object, saving to DB...");
               
               // Save updated collections to database
-              await db.saveCollections(currentCollections);
-              console.log("Successfully saved updated collections to DB");
+              await db.saveCollections(currentCollections, true); // Explicitly preserve sold items
               
               // Update state
               setCollections(currentCollections);
@@ -1421,6 +1495,7 @@ To import this backup:
             selectedCollection={selectedCollection}
             collections={collections}
             setCollections={setCollections}
+            onDeleteCard={handleCardDelete}
           />
         ) : currentView === 'settings' && isMobile ? (
           // The SettingsModal component will handle rendering for mobile view

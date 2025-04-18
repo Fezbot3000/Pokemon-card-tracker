@@ -138,30 +138,64 @@ const AddCardModal = ({
     }
     
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return newErrors;
   };
   
   // Handle save action
-  const handleSave = () => {
-    // Clear any previous message
+  const handleSave = async () => {
+    // Clear any previous error messages
     setSaveMessage(null);
-    
-    // Validate the form
-    if (!validateForm()) {
-      setSaveMessage('Please fix the errors before saving.');
+    setErrors({});
+
+    // Validate form
+    const validationErrors = validateForm();
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      setSaveMessage('Please fix the errors before saving');
       return;
     }
-    
-    // Call the onSave callback with edited data and selected collection
-    onSave(newCard, cardImage, selectedCollection);
-    
-    // Reset form
-    setNewCard({...emptyCard});
-    setCardImage(null);
-    setPsaSerial('');
-    
-    // Close modal
-    onClose();
+
+    try {
+      // Prepare card data
+      const cardToSave = {
+        ...newCard,
+        collection: selectedCollection
+      };
+
+      // Try to save the card
+      await onSave(cardToSave, cardImage, selectedCollection);
+      
+      // Clear form on success
+      setNewCard({...emptyCard});
+      setCardImage(null);
+      setErrors({});
+      setSaveMessage('Card saved successfully');
+      
+      // Close modal after a brief delay to show success message
+      setTimeout(() => {
+        onClose();
+      }, 1000);
+
+    } catch (error) {
+      console.error('Error adding card:', error);
+      
+      // Handle specific error cases
+      if (error.message.includes('serial number already exists')) {
+        setErrors({
+          slabSerial: 'This serial number already exists in your active collections'
+        });
+        setSaveMessage('Card already exists');
+        
+        // Scroll the serial number field into view
+        const serialField = document.querySelector('[name="slabSerial"]');
+        if (serialField) {
+          serialField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      } else {
+        // Generic error handling
+        setSaveMessage(`Error: ${error.message}`);
+      }
+    }
   };
 
   // Handle PSA certificate lookup

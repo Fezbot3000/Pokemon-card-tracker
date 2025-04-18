@@ -222,56 +222,6 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
     }
   };
 
-  // Handle delete action
-  const handleDelete = async () => {
-    try {
-      // Confirm deletion
-      if (window.confirm('Are you sure you want to delete this card?')) {
-        // Call the onDelete function passed from parent
-        await onDelete(card);
-        
-        // Show success message
-        toast.success('Card deleted successfully');
-        
-        // Close the modal without unsaved changes prompt
-        handleClose(true);
-      }
-    } catch (error) {
-      console.error('Error deleting card:', error);
-      toast.error('Error deleting card: ' + error.message);
-    }
-  };
-
-  // Handle marking a card as sold
-  const handleMarkAsSold = async (soldCardData) => {
-    try {
-      // First get the existing sold cards
-      let soldCards = await db.getSoldCards() || [];
-      // console.log("Current sold cards:", soldCards);
-      
-      // Add the current card to the sold cards list
-      soldCards.push({
-        ...soldCardData,
-        id: soldCardData.id || soldCardData.slabSerial,
-        imageUrl: cardImage // Include the card image URL
-      });
-      
-      // Save the updated sold cards list
-      await db.saveSoldCards(soldCards);
-      
-      // Remove the card from the main collection if onDelete is provided
-      if (onDelete) {
-        await onDelete(card);
-      }
-      
-      toast.success('Card marked as sold and moved to Sold Items');
-      handleClose(true);
-    } catch (error) {
-      console.error('Error marking card as sold:', error);
-      toast.error('Error marking card as sold: ' + error.message);
-    }
-  };
-
   // Handle close action with confirmation for unsaved changes
   const handleClose = (skipConfirmation = false) => {
     if (skipConfirmation || !hasUnsavedChanges) {
@@ -306,8 +256,35 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
       onClose={handleClose}
       card={editedCard}
       onSave={handleSave}
-      onDelete={onDelete ? () => handleDelete() : null}
-      onMarkAsSold={handleMarkAsSold}
+      // onDelete={onDelete} - Removed delete functionality from modal
+      onMarkAsSold={async (soldCardData) => {
+        try {
+          // First get the existing sold cards
+          let soldCards = await db.getSoldCards() || [];
+          // console.log("Current sold cards:", soldCards);
+          
+          // Add the current card to the sold cards list
+          soldCards.push({
+            ...soldCardData,
+            id: soldCardData.id || soldCardData.slabSerial,
+            imageUrl: cardImage // Include the card image URL
+          });
+          
+          // Save the updated sold cards list
+          await db.saveSoldCards(soldCards);
+          
+          // Remove the card from the main collection if onDelete is provided
+          if (onDelete) {
+            await onDelete(card);
+          }
+          
+          toast.success('Card marked as sold and moved to Sold Items');
+          handleClose(true);
+        } catch (error) {
+          console.error('Error marking card as sold:', error);
+          toast.error('Error marking card as sold: ' + error.message);
+        }
+      }}
       onChange={handleCardChange}
       image={cardImage}
       imageLoadingState={imageLoadingState}

@@ -19,12 +19,27 @@ const ConfirmDialog = ({
   cancelText = 'Cancel',
   variant = 'danger'
 }) => {
+  // Handle confirm action
+  const handleConfirm = async () => {
+    try {
+      // Call onConfirm and wait for it to complete
+      await onConfirm();
+      // Only close if onConfirm succeeds
+      onClose();
+    } catch (error) {
+      console.error('Error in confirmation action:', error);
+      // Still close the dialog on error to prevent UI from getting stuck
+      onClose();
+    }
+  };
+
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
       title={title}
       size="sm"
+      closeOnClickOutside={false}
     >
       <div className="p-6">
         <p className="text-gray-700 dark:text-gray-300 mb-6">
@@ -40,7 +55,7 @@ const ConfirmDialog = ({
           </Button>
           <Button
             variant={variant}
-            onClick={onConfirm}
+            onClick={handleConfirm}
             className="min-w-[80px]"
           >
             {confirmText}

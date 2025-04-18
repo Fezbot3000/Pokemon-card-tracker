@@ -29,20 +29,6 @@ const Modal = ({
   const scrollPosRef = useRef(null);
   const [animationState, setAnimationState] = useState('closed');
   
-  // Handle animation state transitions
-  useEffect(() => {
-    if (isOpen && animationState === 'closed') {
-      setAnimationState('open');
-    } else if (!isOpen && animationState === 'open') {
-      setAnimationState('closing');
-      // Reset to closed after animation completes
-      const timer = setTimeout(() => {
-        setAnimationState('closed');
-      }, 200); // Match this with animation duration
-      return () => clearTimeout(timer);
-    }
-  }, [isOpen, animationState]);
-  
   // Preserve scroll position and prevent background scrolling
   useEffect(() => {
     // Handle clicks outside modal if enabled
@@ -71,14 +57,8 @@ const Modal = ({
         // Cleanup event listener
         document.removeEventListener('mousedown', handleClickOutside);
         
-        // Remove modal-open class from body - delay to match animation
-        if (animationState === 'closing') {
-          setTimeout(() => {
-            document.body.classList.remove('modal-open');
-          }, 200);
-        } else {
-          document.body.classList.remove('modal-open');
-        }
+        // Remove modal-open class from body immediately
+        document.body.classList.remove('modal-open');
         
         // Restore scroll position
         if (scrollPosRef.current) {
@@ -86,8 +66,21 @@ const Modal = ({
         }
       };
     }
-  }, [isOpen, onClose, closeOnClickOutside, showAsStatic, animationState]);
+  }, [isOpen, onClose, closeOnClickOutside, showAsStatic]);
 
+  // Handle animation cleanup
+  useEffect(() => {
+    if (!isOpen && animationState === 'open') {
+      setAnimationState('closing');
+      const timer = setTimeout(() => {
+        setAnimationState('closed');
+      }, 200);
+      return () => clearTimeout(timer);
+    } else if (isOpen && animationState === 'closed') {
+      setAnimationState('open');
+    }
+  }, [isOpen, animationState]);
+  
   // Return null if modal is closed
   if (animationState === 'closed') return null;
   
