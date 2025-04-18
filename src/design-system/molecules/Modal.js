@@ -211,13 +211,13 @@ const Modal = ({
         )}
         
         {/* Modal Body */}
-        <div className="p-6 flex-1 overflow-y-auto scrollbar-hide">
+        <div className="p-6 flex-1 overflow-y-auto scrollbar-hide pb-[env(safe-area-inset-bottom)]">
           {children}
         </div>
         
         {/* Modal Footer - Sticky */}
         {footer && (
-          <div className={footerClasses}>
+          <div className={`${footerClasses} pb-[env(safe-area-inset-bottom)]`}>
             {footer}
           </div>
         )}

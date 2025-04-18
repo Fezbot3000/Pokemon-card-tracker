@@ -15,6 +15,7 @@ import {
 import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db, googleProvider } from '../firebase'; // Use the simplified firebase.js file
 import { toast } from 'react-hot-toast';
+import { useAutoSync } from './AutoSyncContext';
 
 const AuthContext = createContext();
 
@@ -58,6 +59,7 @@ export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { performAutoSync } = useAutoSync();
 
   // Clear any error when component unmounts or when dependencies change
   useEffect(() => {
@@ -178,25 +180,24 @@ export function AuthProvider({ children }) {
   const signIn = async ({ email, password, remember = false }) => {
     try {
       setError(null);
-      console.log("Starting sign in process...");
-      
-      // We've removed setPersistence for simplicity
-      // Just sign in directly
-      const { user } = await signInWithEmailAndPassword(auth, email, password);
-      console.log("Sign in successful for:", user.email);
-      toast.success('Signed in successfully!');
-
-      // After successful sign-in, clear any previous plan choice
-      localStorage.removeItem('chosenPlan');
-      
-      // Setting a flag for new users
-      if (user.metadata.creationTime === user.metadata.lastSignInTime) {
-        localStorage.setItem('isNewUser', 'true');
+      const result = await signInWithEmailAndPassword(auth, email, password);
+      if (remember) {
+        // Set persistence to LOCAL if remember me is checked
+        localStorage.setItem('rememberMe', 'true');
       }
-
-      return user;
+      toast.success('Signed in successfully!');
+      
+      // Trigger auto-sync after successful login
+      if (performAutoSync) {
+        try {
+          await performAutoSync();
+        } catch (syncError) {
+          console.error('Error during auto-sync:', syncError);
+        }
+      }
+      
+      return result.user;
     } catch (err) {
-      console.error("Sign in error:", err);
       const errorMessage = handleFirebaseError(err);
       setError(errorMessage);
       toast.error(errorMessage);
@@ -209,13 +210,8 @@ export function AuthProvider({ children }) {
     try {
       setError(null);
       console.log("Starting Google sign-in process...");
-      
-      // Use the configured provider
       const result = await signInWithPopup(auth, googleProvider);
       console.log("Google sign-in successful:", result.user?.email);
-      
-      // Check if this is a new user more reliably by checking if this is their first sign-in
-      const isFirstSignIn = result?.additionalUserInfo?.isNewUser;
       
       // Try to create user document but don't fail if it errors
       try {
@@ -226,35 +222,30 @@ export function AuthProvider({ children }) {
       }
       
       toast.success('Signed in with Google successfully!');
-
+      
       // After successful Google sign-in, clear any previous plan choice
       localStorage.removeItem('chosenPlan');
       
-      // Check if this is a truly new user (by comparing creation and last sign-in times)
-      // Also use the isNewUser flag from the result if available
-      const isNewAccount = 
-        isFirstSignIn || 
-        result.user.metadata.creationTime === result.user.metadata.lastSignInTime;
+      // Check if this is a truly new user
+      const isNewAccount = result.user.metadata.creationTime === result.user.metadata.lastSignInTime;
       
-      // Log the determination process
-      console.log("New account detection:", {
-        isFirstSignIn,
-        creationTime: result.user.metadata.creationTime,
-        lastSignInTime: result.user.metadata.lastSignInTime,
-        isSameTime: result.user.metadata.creationTime === result.user.metadata.lastSignInTime,
-        finalDecision: isNewAccount
-      });
-      
-      // Only set the isNewUser flag for brand new accounts
       if (isNewAccount) {
         console.log("Brand new Google account detected, setting isNewUser flag");
         localStorage.setItem('isNewUser', 'true');
       } else {
         console.log("Existing Google account detected, not setting isNewUser flag");
-        // Ensure we clear any existing flag for sign-ins
         localStorage.removeItem('isNewUser');
+        
+        // Trigger auto-sync for existing users after successful login
+        if (performAutoSync) {
+          try {
+            await performAutoSync();
+          } catch (syncError) {
+            console.error('Error during auto-sync:', syncError);
+          }
+        }
       }
-
+      
       return result.user;
     } catch (err) {
       console.error("Google sign-in error:", err);
@@ -317,6 +308,15 @@ export function AuthProvider({ children }) {
         console.log("Existing Apple account detected, not setting isNewUser flag");
         // Ensure we clear any existing flag for sign-ins
         localStorage.removeItem('isNewUser');
+        
+        // Trigger auto-sync for existing users after successful login
+        if (performAutoSync) {
+          try {
+            await performAutoSync();
+          } catch (syncError) {
+            console.error('Error during auto-sync:', syncError);
+          }
+        }
       }
       
       return result.user;

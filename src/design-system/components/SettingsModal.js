@@ -321,15 +321,16 @@ const SettingsModal = ({
           </div>
         }
         position="right"
-        className={window.innerWidth < 640 ? 'w-full max-w-full h-full rounded-none m-0' : className}
+        className={`max-w-screen-lg mx-auto ${className}`}
         ariaLabel="Settings"
         size="fullscreen"
-        closeOnClickOutside={window.innerWidth >= 640} // Only allow closing on click outside on desktop
+        closeOnClickOutside={false}
+        {...props}
       >
-        <div className="flex flex-col lg:flex-row h-full overflow-hidden">
+        <div className="flex flex-col lg:flex-row h-full">
           {/* Navigation sidebar */}
           <nav
-            className={`w-full lg:w-64 lg:flex-shrink-0 bg-white dark:bg-[#0F0F0F] border-b lg:border-b-0 lg:border-r border-gray-200 dark:border-gray-700/30 ${window.innerWidth < 1024 ? 'overflow-visible' : 'overflow-y-auto lg:h-full'} p-4 space-y-2`}
+            className={`w-full lg:w-64 border-b lg:border-b-0 lg:border-r border-gray-200 dark:border-gray-800 p-4 space-y-2`}
           >
             <SettingsNavItem 
               icon="settings" 
