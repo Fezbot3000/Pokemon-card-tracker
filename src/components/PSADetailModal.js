@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import { toast } from 'react-hot-toast';
 import Modal from '../design-system/molecules/Modal';
 import Button from '../design-system/atoms/Button';
+import CardDetailsForm from '../design-system/components/CardDetailsForm';
 import { searchByCertNumber, parsePSACardData, mergeWithExistingCard } from '../services/psaSearch';
 
 /**
@@ -165,36 +166,13 @@ const PSADetailModal = ({
               {/* Card details section */}
               <div>
                 <h3 className="text-lg font-semibold mb-2">Card Details</h3>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="text-gray-500 dark:text-gray-400">Card Name:</div>
-                  <div className="font-medium">{parsedData.cardName || 'N/A'}</div>
-                  
-                  <div className="text-gray-500 dark:text-gray-400">Set:</div>
-                  <div className="font-medium">{parsedData.setName || 'N/A'}</div>
-                  
-                  <div className="text-gray-500 dark:text-gray-400">Card Number:</div>
-                  <div className="font-medium">{parsedData.cardNumber || 'N/A'}</div>
-                  
-                  <div className="text-gray-500 dark:text-gray-400">Year:</div>
-                  <div className="font-medium">{parsedData.year || 'N/A'}</div>
-                  
-                  <div className="text-gray-500 dark:text-gray-400">Type:</div>
-                  <div className="font-medium">{parsedData.cardType || 'N/A'}</div>
-                  
-                  <div className="text-gray-500 dark:text-gray-400">PSA Link:</div>
-                  <div className="font-medium">
-                    {parsedData.psaUrl ? (
-                      <a 
-                        href={parsedData.psaUrl} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-blue-500 hover:text-blue-700 flex items-center"
-                      >
-                        View on PSA <span className="ml-1">↗</span>
-                      </a>
-                    ) : 'N/A'}
-                  </div>
-                </div>
+                <CardDetailsForm
+                  card={parsedData}
+                  onChange={(updatedCard) => {
+                    setParsedData(updatedCard);
+                  }}
+                  errors={{}}
+                />
               </div>
               
               {/* Grading details section */}

@@ -146,8 +146,8 @@ const Modal = ({
     : 'text-2xl text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors';
     
   const footerClasses = forceDarkMode
-    ? 'sticky bottom-0 z-10 flex justify-end gap-2 p-6 border-t border-gray-700/50 bg-[#0F0F0F]/95 backdrop-blur-sm'
-    : 'sticky bottom-0 z-10 flex justify-end gap-2 p-6 border-t border-gray-200 dark:border-gray-700/50 bg-white/95 dark:bg-[#0F0F0F]/95 backdrop-blur-sm';
+    ? 'sticky bottom-0 z-10 flex items-center justify-end gap-2 p-6 border-t border-gray-700/50 bg-[#0F0F0F]/95 backdrop-blur-sm'
+    : 'sticky bottom-0 z-10 flex items-center justify-end gap-2 p-6 border-t border-gray-200 dark:border-gray-700/50 bg-white/95 dark:bg-[#0F0F0F]/95 backdrop-blur-sm';
   
   // Force the dark class if needed
   const darkModeClass = forceDarkMode ? 'dark' : '';
@@ -179,7 +179,7 @@ const Modal = ({
         
         {/* Footer */}
         {footer && (
-          <div className="flex justify-end gap-2 p-6 border-t border-gray-200 dark:border-gray-800">
+          <div className="flex justify-center gap-2 p-6 border-t border-gray-200 dark:border-gray-800">
             {footer}
           </div>
         )}
@@ -217,8 +217,10 @@ const Modal = ({
         
         {/* Modal Footer - Sticky */}
         {footer && (
-          <div className={`${footerClasses} pb-[env(safe-area-inset-bottom)]`}>
-            {footer}
+          <div className="sticky bottom-0 z-10 flex items-center justify-end border-t border-gray-200 dark:border-gray-700/50 bg-white/95 dark:bg-[#0F0F0F]/95 backdrop-blur-sm">
+            <div className="w-full px-6 py-3">
+              {footer}
+            </div>
           </div>
         )}
       </div>

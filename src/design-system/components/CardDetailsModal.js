@@ -152,7 +152,7 @@ const CardDetailsModal = ({
       </Button>
 
       {/* Right-aligned buttons group */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center space-x-3">
         {/* Delete Button (Icon on mobile) */}
         {onDelete && (
           <Button

@@ -28,34 +28,31 @@ const CardDetailsForm = ({
   // Handle text field changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    onChange({
-      ...card,
-      [name]: value
-    });
+    if (onChange) {
+      onChange({
+        ...card,
+        [name]: value
+      });
+    }
   };
 
   // Handle number field changes
   const handleNumberChange = (e) => {
     const { name, value } = e.target;
-    // Store the raw value in the card object, conversion will happen when needed
-    onChange({
-      ...card,
-      [name]: value === '' ? '' : value
-    });
+    if (onChange) {
+      // Store the raw value in the card object, conversion will happen when needed
+      onChange({
+        ...card,
+        [name]: value === '' ? '' : parseFloat(value)
+      });
+    }
   };
 
   // Calculate profit safely
   const getProfit = () => {
-    const investment = typeof card.investmentAUD === 'number' ? card.investmentAUD : 
-                      (typeof card.investmentAUD === 'string' ? parseFloat(card.investmentAUD) || 0 : 0);
-    
-    const currentValue = typeof card.currentValueAUD === 'number' ? card.currentValueAUD : 
-                        (typeof card.currentValueAUD === 'string' ? parseFloat(card.currentValueAUD) || 0 : 0);
-    
-    const investmentFloat = isNaN(investment) ? 0 : investment;
-    const currentValueFloat = isNaN(currentValue) ? 0 : currentValue;
-
-    return currentValueFloat - investmentFloat;
+    const investment = card.investmentAUD === '' ? 0 : parseFloat(card.investmentAUD) || 0;
+    const currentValue = card.currentValueAUD === '' ? 0 : parseFloat(card.currentValueAUD) || 0;
+    return currentValue - investment;
   };
 
   return (
@@ -244,9 +241,7 @@ const CardDetailsForm = ({
               name="investmentAUD"
               type="number"
               prefix="$"
-              value={typeof card.investmentAUD === 'number' ? card.investmentAUD : 
-                     (typeof card.investmentAUD === 'string' && !isNaN(parseFloat(card.investmentAUD))) ? 
-                     parseFloat(card.investmentAUD) : 0}
+              value={card.investmentAUD}
               onChange={handleNumberChange}
               error={errors.investmentAUD}
             />
@@ -257,9 +252,7 @@ const CardDetailsForm = ({
                 name="currentValueAUD"
                 type="number"
                 prefix="$"
-                value={typeof card.currentValueAUD === 'number' ? card.currentValueAUD : 
-                       (typeof card.currentValueAUD === 'string' && !isNaN(parseFloat(card.currentValueAUD))) ? 
-                       parseFloat(card.currentValueAUD) : 0}
+                value={card.currentValueAUD}
                 onChange={handleNumberChange}
                 error={errors.currentValueAUD}
               />

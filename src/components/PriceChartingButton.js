@@ -86,124 +86,94 @@ const PriceChartingButton = ({
       
       let score = 0;
       let matchDetails = [];
-      
-      // Create a scoring system based on term frequency
-      
-      // Card name is most important
-      if (cardName && productName.includes(cardName)) {
-        const points = 25;
-        score += points;
-        matchDetails.push(`Card name match (+${points})`);
+
+      // Exact matches are highly valuable
+      if (productName === `${playerName} ${cardNumber}` || productName === `${cardName} ${cardNumber}`) {
+        score += 50;
+        matchDetails.push('Exact match (+50)');
       }
       
-      // Card number is very specific
-      if (cardNumber && productName.includes(`#${cardNumber}`)) {
-        const points = 20;
-        score += points;
-        matchDetails.push(`Card number match (+${points})`);
-      }
-      
-      // Set name is important for distinguishing between different sets
-      if (setName && productName.includes(setName)) {
-        const points = 15;
-        score += points;
-        matchDetails.push(`Set name match (+${points})`);
-      } else if (setName) {
-        // Check for partial set name matches
-        const setWords = setName.split(' ').filter(word => word.length > 2);
-        const matchedWords = setWords.filter(word => productName.includes(word));
-        if (matchedWords.length > 0) {
-          const points = Math.floor(10 * (matchedWords.length / setWords.length));
-          score += points;
-          matchDetails.push(`Partial set match (${matchedWords.join(', ')}) (+${points})`);
+      // Card number is very specific and important
+      if (cardNumber) {
+        if (productName.includes(`#${cardNumber}`)) {
+          score += 40;
+          matchDetails.push('Exact card number match (+40)');
+        } else if (productName.includes(cardNumber)) {
+          score += 30;
+          matchDetails.push('Card number in name (+30)');
         }
       }
-      
-      // Player name might be important for character cards
-      if (playerName && playerName !== cardName && productName.includes(playerName)) {
-        const points = 10;
-        score += points;
-        matchDetails.push(`Player name match (+${points})`);
-      }
-      
-      // Year helps distinguish between reprints
-      if (year && productName.includes(year)) {
-        const points = 10;
-        score += points;
-        matchDetails.push(`Year match (+${points})`);
-      }
-      
-      // Check for edition indicators
-      const isFirstEdition = /\b(1st|first)(\s+edition)?\b/i.test(productName);
-      const isShadowless = /\bshadowless\b/i.test(productName);
-      
-      // Match edition type from set name
-      const cardIsFirstEd = /\b(1st|first)(\s+edition)?\b/i.test(setName);
-      const cardIsShadowless = /\bshadowless\b/i.test(setName);
-      
-      // Award points for matching edition type
-      if (cardIsFirstEd && isFirstEdition) {
-        const points = 20;
-        score += points;
-        matchDetails.push(`1st Edition match (+${points})`);
-      } else if (cardIsShadowless && isShadowless) {
-        const points = 20;
-        score += points;
-        matchDetails.push(`Shadowless match (+${points})`);
-      } else if (!cardIsFirstEd && !cardIsShadowless && !isFirstEdition && !isShadowless) {
-        // If neither card nor product mention 1st edition or shadowless, likely both are unlimited
-        const points = 10;
-        score += points;
-        matchDetails.push(`Unlimited match (+${points})`);
-      } else if ((cardIsFirstEd !== isFirstEdition) || (cardIsShadowless !== isShadowless)) {
-        // Penalize mismatched edition types
-        const points = -15;
-        score += points;
-        matchDetails.push(`Edition mismatch (${points})`);
-      }
-      
-      // Condition matching for graded cards
-      if (condition) {
-        // Extract grading info if present
-        const gradeMatch = condition.match(/\b(psa|bgs|cgc)\s*(\d+)\b/i);
-        
-        if (gradeMatch) {
-          const gradingCompany = gradeMatch[1].toLowerCase();
-          const grade = gradeMatch[2];
-          
-          // Check if product name contains the same grading info
-          if (productName.includes(gradingCompany) && productName.includes(grade)) {
-            const points = 15;
-            score += points;
-            matchDetails.push(`Grade match (${gradingCompany.toUpperCase()} ${grade}) (+${points})`);
+
+      // Set name is crucial for identifying the correct card
+      if (setName) {
+        if (consoleName.includes(setName)) {
+          score += 35;
+          matchDetails.push('Set name exact match (+35)');
+        } else {
+          // Check for partial set name matches
+          const setWords = setName.split(' ').filter(word => word.length > 2);
+          const matchedWords = setWords.filter(word => consoleName.includes(word));
+          if (matchedWords.length > 0) {
+            const partialScore = Math.floor((matchedWords.length / setWords.length) * 25);
+            score += partialScore;
+            matchDetails.push(`Partial set match (+${partialScore})`);
           }
-        } else if (condition.includes('gem mt') && productName.includes('gem mt')) {
-          const points = 15;
-          score += points;
-          matchDetails.push(`Condition match (GEM MT) (+${points})`);
         }
       }
-      
-      // Check if the product is for Pokemon cards
-      if (consoleName.includes('pokemon')) {
-        const points = 10;
-        score += points;
-        matchDetails.push(`Pokemon console match (+${points})`);
+
+      // Card name/player name matches
+      if (cardName && productName.includes(cardName)) {
+        score += 25;
+        matchDetails.push('Card name match (+25)');
       }
-      
-      // Add the product with its score and match details
+      if (playerName && productName.includes(playerName)) {
+        score += 25;
+        matchDetails.push('Player name match (+25)');
+      }
+
+      // Year matching
+      if (year && productName.includes(year)) {
+        score += 20;
+        matchDetails.push('Year match (+20)');
+      }
+
+      // Condition matching (especially for graded cards)
+      if (condition) {
+        if (productName.includes(condition)) {
+          score += 15;
+          matchDetails.push('Condition match (+15)');
+        }
+        // Special handling for PSA graded cards
+        if (condition.includes('psa') && productName.includes('psa')) {
+          score += 10;
+          matchDetails.push('PSA grade match (+10)');
+        }
+      }
+
+      // Penalize matches that seem too different
+      if (score === 0 && cardName && !productName.includes(cardName) && !productName.includes(playerName)) {
+        score -= 20;
+        matchDetails.push('No name match (-20)');
+      }
+
       return {
         ...product,
         score,
         matchDetails
       };
     });
-    
-    // Sort by score (highest first)
-    const sortedProducts = scoredProducts.sort((a, b) => b.score - a.score);
-    
-    // Return the best match
-    return sortedProducts[0];
+
+    // Sort by score descending
+    scoredProducts.sort((a, b) => b.score - a.score);
+
+    // Filter out low-quality matches
+    const highestScore = scoredProducts[0]?.score || 0;
+    const threshold = Math.max(30, highestScore - 20); // Either minimum 30 points or within 20 points of best match
+
+    const filteredProducts = scoredProducts.filter(product => product.score >= threshold);
+
+    // Limit to top 5 matches
+    return filteredProducts.slice(0, 5);
   };
   
   // Determine the most appropriate price field to use
@@ -279,10 +249,7 @@ const PriceChartingButton = ({
         console.log('[PriceCharting] Multiple matches found:', products.length);
         
         // Score and sort the products by relevance
-        const scoredProducts = products.map(product => {
-          const score = findBestMatch([product], currentCardData)?.score || 0;
-          return { ...product, score };
-        }).sort((a, b) => b.score - a.score);
+        const scoredProducts = findBestMatch(products, currentCardData);
         
         setProductMatches(scoredProducts);
         setShowMatchSelector(true);
@@ -385,47 +352,54 @@ const PriceChartingButton = ({
     if (!showMatchSelector || productMatches.length === 0) return null;
     
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-white rounded-lg p-6 max-w-lg w-full max-h-[80vh] overflow-y-auto">
-          <h2 className="text-xl font-bold mb-4">Select the Best Match</h2>
-          <p className="mb-4">Multiple matches found. Please select the most appropriate card:</p>
-          
-          <div className="space-y-3">
-            {productMatches.map((product, index) => {
-              // Handle different property naming conventions in the API response
-              const productName = product['product-name'] || product.product_name || `Product #${index + 1}`;
-              const consoleName = product['console-name'] || product.console_name || 'Unknown';
-              
-              return (
-                <div 
-                  key={product.id || index}
-                  className="border rounded p-3 hover:bg-gray-100 cursor-pointer flex justify-between items-center"
-                  onClick={() => selectProduct(product)}
-                >
-                  <div>
-                    <div className="font-medium">{productName}</div>
-                    <div className="text-sm text-gray-600">{consoleName}</div>
-                    {product.score && (
-                      <div className="text-xs text-gray-500">Match score: {product.score}</div>
-                    )}
-                  </div>
-                  <Button 
-                    size="sm" 
-                    variant="primary"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      selectProduct(product);
-                    }}
-                  >
-                    Select
-                  </Button>
-                </div>
-              );
-            })}
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] backdrop-blur-sm">
+        <div className="bg-white dark:bg-[#0F0F0F] rounded-lg w-full max-w-2xl max-h-[80vh] overflow-hidden">
+          {/* Header */}
+          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700/50">
+            <h2 className="text-xl font-medium text-gray-900 dark:text-white">Select Card Match</h2>
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Multiple matches found. Please select the most appropriate card.</p>
           </div>
-          
-          <div className="mt-4 flex justify-end">
-            <Button variant="outline" onClick={cancelSelection}>
+
+          {/* Product List */}
+          <div className="px-6 py-4 overflow-y-auto max-h-[50vh]">
+            <div className="space-y-2">
+              {productMatches.map((product, index) => {
+                const productName = product['product-name'] || product.product_name || `Product #${index + 1}`;
+                const consoleName = product['console-name'] || product.console_name || 'Unknown';
+                
+                return (
+                  <div 
+                    key={product.id || index}
+                    className="group flex items-center justify-between p-4 rounded-lg bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                    onClick={() => selectProduct(product)}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-base font-medium text-gray-900 dark:text-white truncate">{productName}</h3>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">{consoleName}</p>
+                      {product.score && (
+                        <p className="text-xs text-gray-400 dark:text-gray-500">Match score: {product.score}</p>
+                      )}
+                    </div>
+                    <Button 
+                      variant="primary"
+                      size="sm"
+                      className="opacity-0 group-hover:opacity-100 transition-opacity ml-4"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        selectProduct(product);
+                      }}
+                    >
+                      Select
+                    </Button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="sticky bottom-0 flex items-center justify-end px-6 py-4 border-t border-gray-200 dark:border-gray-700/50 bg-white/95 dark:bg-[#0F0F0F]/95 backdrop-blur-sm">
+            <Button variant="secondary" onClick={cancelSelection}>
               Cancel
             </Button>
           </div>

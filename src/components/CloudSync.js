@@ -103,53 +103,25 @@ const CloudSync = ({ onExportData, onImportCollection }) => {
       // Get download URL
       const downloadURL = await getDownloadURL(storageRef);
       
-      // Create a fetch request that can track progress
+      // Use blob() method which is more widely supported
       const response = await fetch(downloadURL);
       
       if (!response.ok) {
         throw new Error('Failed to download backup');
       }
       
-      // Get total size
-      const contentLength = response.headers.get('content-length');
-      const total = parseInt(contentLength, 10);
+      // Show indeterminate progress since we can't track progress with blob()
+      setDownloadProgress(50);
       
-      // Create a reader to track download progress
-      const reader = response.body.getReader();
-      let receivedLength = 0;
-      let chunks = [];
-
-      // Read the data
-      while(true) {
-        const { done, value } = await reader.read();
-        
-        if (done) {
-          break;
-        }
-        
-        chunks.push(value);
-        receivedLength += value.length;
-        
-        // Update progress
-        setDownloadProgress((receivedLength / total) * 100);
-      }
-      
-      // Combine chunks into a single Uint8Array
-      let chunksAll = new Uint8Array(receivedLength);
-      let position = 0;
-      for(let chunk of chunks) {
-        chunksAll.set(chunk, position);
-        position += chunk.length;
-      }
-      
-      // Create a blob from the data
-      const blob = new Blob([chunksAll]);
+      // Get the blob directly
+      const blob = await response.blob();
       
       // Import the downloaded ZIP using the existing import function
       const file = new File([blob], 'cloud-backup.zip', { type: 'application/zip' });
       await onImportCollection(file);
       
       toast.success('Data imported from cloud successfully!');
+      setDownloadProgress(100);
       setIsImporting(false);
     } catch (error) {
       console.error('Cloud import error:', error);

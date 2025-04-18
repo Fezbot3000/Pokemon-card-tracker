@@ -311,9 +311,9 @@ const SettingsModal = ({
         onClose={onClose}
         title="Settings"
         footer={
-          <div className="flex justify-end w-full">
+          <div className="flex items-center justify-end w-full">
             <Button
-              variant="outline"
+              variant="secondary"
               onClick={onClose}
             >
               Done
@@ -323,7 +323,7 @@ const SettingsModal = ({
         position="right"
         className={`max-w-screen-lg mx-auto ${className}`}
         ariaLabel="Settings"
-        size="fullscreen"
+        size="full"
         closeOnClickOutside={false}
         {...props}
       >

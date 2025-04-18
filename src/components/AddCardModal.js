@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import { Modal, Button, CardDetailsForm } from '../design-system';
+import Modal from '../design-system/molecules/Modal';
+import Button from '../design-system/atoms/Button';
+import CardDetailsForm from '../design-system/components/CardDetailsForm';
 import { toast } from 'react-hot-toast';
 import PSADetailModal from './PSADetailModal';
 import { searchByCertNumber } from '../services/psaSearch';
@@ -28,8 +30,8 @@ const AddCardModal = ({
     condition: '',
     slabSerial: '',
     datePurchased: new Date().toISOString().split('T')[0],
-    investmentAUD: 0,
-    currentValueAUD: 0,
+    investmentAUD: '',
+    currentValueAUD: '',
   };
   
   // State for card data
@@ -228,12 +230,11 @@ const AddCardModal = ({
         {/* Space reserved for potential future buttons */}
       </div>
       
-      <div className="flex items-center gap-2">
+      <div className="flex items-center justify-end space-x-3">
         {/* Cancel and Save buttons - right aligned */}
         <Button
           variant="secondary"
           onClick={onClose}
-          className="min-w-[80px]"
         >
           Cancel
         </Button>
@@ -241,7 +242,6 @@ const AddCardModal = ({
         <Button
           variant="primary"
           onClick={handleSave}
-          className="min-w-[120px]"
         >
           Add Card
         </Button>
@@ -317,7 +317,7 @@ const AddCardModal = ({
             card={newCard}
             cardImage={cardImage}
             imageLoadingState={imageLoadingState}
-            onCardChange={handleCardChange}
+            onChange={handleCardChange}
             onImageChange={handleImageChange}
             onImageRetry={() => setImageLoadingState('idle')}
             onImageClick={() => cardImage && setShowEnlargedImage(true)}

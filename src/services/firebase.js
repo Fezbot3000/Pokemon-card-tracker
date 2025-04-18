@@ -45,7 +45,7 @@ const storage = getStorage(app);
 const auth = getAuth(app);
 
 // Initialize Functions
-const functions = getFunctions(app);
+const functions = getFunctions(app, 'us-central1'); // Specify the region
 
 // Create a Google provider instance
 const googleProvider = new GoogleAuthProvider();
