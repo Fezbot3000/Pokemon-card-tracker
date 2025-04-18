@@ -135,7 +135,7 @@ const Card = ({
       </div>
       
       {/* Card Details */}
-      <div className="p-3 text-center bg-[#0F0F0F]">
+      <div className="p-3 text-center bg-white dark:bg-[#1B2131]">
         <h3 className="font-medium text-gray-900 dark:text-white text-lg mb-1 truncate">
           {card.player || 'Unknown Player'}
         </h3>
@@ -146,7 +146,7 @@ const Card = ({
         {/* Financial Details - Consolidated Box */}
         <div className="flex flex-col">
           {/* Consolidated Financial Details */}
-          <div className="financial-detail-box p-3 rounded-md bg-[#0F0F0F] border border-[#ffffff33] dark:border-[#ffffff1a]">
+          <div className="financial-detail-box p-3 rounded-md bg-white dark:bg-[#252B3B] border border-[#ffffff33] dark:border-[#ffffff1a]">
             <div className="flex flex-col">
               {/* Paid */}
               <div className="text-center py-1">

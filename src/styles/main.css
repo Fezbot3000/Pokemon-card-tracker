@@ -199,7 +199,7 @@ body.modal-open {
   overflow: hidden;
 }
 
-/* Collection Dropdown - REMOVED SCROLLING */
+/* Collection Dropdown */
 .collection-dropdown {
   background-color: white;
   background-color: var(--color-white);
@@ -211,11 +211,10 @@ body.modal-open {
   padding-bottom: 0;
   z-index: 150;
   width: 300px;
-  width: 300px;
   overflow: visible;
 }
 
-/* Make dropdown full width on mobile - REMOVED SCROLLING */
+/* Make dropdown full width on mobile */
 @media (max-width: 639px) {
   .collection-dropdown {
     width: 100vw;
@@ -288,7 +287,7 @@ body.modal-open {
   margin-bottom: 0.5rem;
 }
 
-/* All dropdowns - REMOVED SCROLLING */
+/* All dropdowns */
 .sort-dropdown,
 .view-dropdown,
 .dropdown {
@@ -460,4 +459,17 @@ html.dark body {
   .container {
     padding: 1rem; /* Adjust padding for mobile */
   }
+}
+
+/* Accordion Animation */
+.accordion-content {
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out, padding 0.3s ease-in-out;
+}
+
+.accordion-content.open {
+  max-height: 2000px; /* Large enough to accommodate content */
+  opacity: 1;
 }

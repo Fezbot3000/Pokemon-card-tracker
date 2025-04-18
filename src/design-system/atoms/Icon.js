@@ -12,7 +12,9 @@ const Icon = ({
   size = 'md', 
   color = 'default',
   className = '',
-  ...props 
+  // Destructure 'data-component-name' to prevent it from being spread
+  "data-component-name": dataComponentName, 
+  ...rest // Collect remaining props
 }) => {
   // Size variations
   const sizeClasses = {
@@ -40,7 +42,8 @@ const Icon = ({
   const iconClasses = `material-icons ${sizeClasses[size]} ${colorClasses[color]} ${className}`;
   
   return (
-    <span className={iconClasses} {...props}>
+    // Spread only the 'rest' of the props, excluding data-component-name
+    <span className={iconClasses} {...rest}>
       {name}
     </span>
   );

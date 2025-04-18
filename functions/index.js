@@ -1200,6 +1200,7 @@ exports.proxyPriceCharting = functions.https.onCall(async (data, context) => {
   // Handle different endpoints
   if (endpoint === 'product-prices') {
     // For price history, we need to use a different endpoint
+    // The correct URL format for price history is /api/product/{id}/price-history
     url = new URL(`https://www.pricecharting.com/api/product/${params.id}/price-history`);
     // Remove the id from params since it's in the URL path
     delete params.id;

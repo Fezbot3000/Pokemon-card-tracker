@@ -59,7 +59,7 @@ const SearchToolbar = ({
 
   return (
     <div 
-      className={`w-full bg-white dark:bg-[#0F0F0F] py-3 px-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 ${isDarkMode ? 'shadow-sm' : ''} rounded-md border border-[#ffffff33] dark:border-[#ffffff1a] ${className}`}
+      className={`w-full bg-white dark:bg-[#1B2131] py-3 px-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 ${isDarkMode ? 'shadow-sm' : ''} rounded-md border border-[#ffffff33] dark:border-[#ffffff1a] ${className}`}
       {...props}
     >
       {/* Search Input */}
@@ -72,17 +72,17 @@ const SearchToolbar = ({
           value={searchValue}
           onChange={(e) => onSearchChange?.(e.target.value)}
           placeholder="Search by name, set, or serial number..."
-          className="w-full pl-10 pr-4 py-2 bg-gray-100 dark:bg-black border-0 
+          className="w-full pl-10 pr-4 py-2 bg-gray-100 dark:bg-[#252B3B] border-0 
                    rounded-lg text-gray-900 dark:text-white placeholder-gray-500 
                    dark:placeholder-gray-400 focus:ring-2 focus:ring-[var(--primary-light)]/20 
-                   focus:bg-white dark:focus:bg-black"
+                   focus:bg-white dark:focus:bg-[#252B3B]"
         />
       </div>
 
       {/* Controls Group (View Mode, Sort, Add Card) */}
       <div className="flex items-center justify-between sm:justify-start gap-3 w-full sm:w-auto">
         {/* View Mode Selector */}
-        <div className="flex bg-[#000] dark:bg-black rounded-lg p-1 relative">
+        <div className="flex bg-gray-100 dark:bg-[#252B3B] rounded-lg p-1 relative">
           {/* Animated Background Indicator */}
           <div 
             className="absolute top-1 bottom-1 rounded-md bg-gradient-to-r from-[#ef4444] to-[#db2777] transition-transform duration-300 ease-in-out z-0"

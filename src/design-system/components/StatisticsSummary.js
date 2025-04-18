@@ -20,10 +20,10 @@ const StatisticsSummary = ({
 
   return (
     <div 
-      className={`w-full bg-white dark:bg-[#0F0F0F] rounded-md ${isDarkMode ? 'shadow-sm' : ''} overflow-hidden border border-[#ffffff33] dark:border-[#ffffff1a] mb-2 sm:mb-3 ${className}`}
+      className={`w-full bg-white dark:bg-[#1B2131] rounded-md ${isDarkMode ? 'shadow-sm' : ''} overflow-hidden border border-[#ffffff33] dark:border-[#ffffff1a] mb-2 sm:mb-3 ${className}`}
       {...props}
     >
-      <div className="bg-[#0F0F0F] rounded-md p-4 sm:p-6">
+      <div className="rounded-md p-4 sm:p-6">
         <div className="grid grid-cols-2 sm:grid-cols-4">
           {statistics.map((stat, index) => (
             <div

@@ -652,12 +652,12 @@ const SettingsModal = ({
                   title="Development Resources"
                   description="Access development tools and resources for the Pokemon Card Tracker app."
                 >
-                  <div className="bg-[#0e1525] rounded-lg p-4 border border-indigo-900/20">
-                    <h4 className="font-medium text-white mb-2 flex items-center">
+                  <div className="bg-white dark:bg-[#1B2131] rounded-lg p-4 border border-gray-200 dark:border-indigo-900/20">
+                    <h4 className="font-medium text-gray-900 dark:text-white mb-2 flex items-center">
                       <Icon name="widgets" className="text-indigo-400 mr-2" />
                       Component Library
                     </h4>
-                    <p className="text-sm text-gray-400 mb-3">
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
                       View and reference all design system components used throughout the application.
                     </p>
                     <div className="flex justify-end">

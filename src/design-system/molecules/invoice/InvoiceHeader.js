@@ -26,16 +26,26 @@ const InvoiceHeader = ({
   const headerClasses = `
     flex items-center justify-between w-full 
     p-4 bg-white dark:bg-[#1B2131] 
-    ${isExpanded ? 'rounded-t-md border-b border-gray-200 dark:border-gray-700' : 'rounded-md'}
+    ${isExpanded ? 'border-b border-gray-200 dark:border-borde-gray-700' : ''}
+    cursor-pointer hover:bg-gray-50 dark:hover:bg-[#252B3B] transition-colors
     ${className}
   `;
 
+  // Clean wrapper for Icon component
+  const CleanIcon = (iconProps) => {
+    const cleanedProps = { ...iconProps };
+    if (cleanedProps['data-component-name']) {
+      delete cleanedProps['data-component-name'];
+    }
+    return <Icon {...cleanedProps} />;
+  };
+
   return (
-    <div className={headerClasses} {...props}>
+    <div className={headerClasses} onClick={onToggle} {...props}>
       {/* Left side with invoice info */}
       <div className="flex flex-col min-w-0">
         <div className="flex items-center gap-2">
-          <Icon name="receipt" className="text-gray-500 dark:text-gray-400" />
+          <CleanIcon name="receipt" className="text-gray-500 dark:text-gray-400" />
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white truncate" title={title}>
             {title}
           </h3>
@@ -70,7 +80,7 @@ const InvoiceHeader = ({
             <Button 
               variant="text" 
               size="sm" 
-              iconLeft={<Icon name="print" size="sm" />}
+              iconLeft={<CleanIcon name="print" size="sm" />}
               onClick={(e) => {
                 e.stopPropagation();
                 onPrint();
@@ -81,15 +91,11 @@ const InvoiceHeader = ({
             </Button>
           )}
           
-          <Button 
-            variant="text" 
-            size="sm" 
-            iconLeft={<Icon name={isExpanded ? "expand_less" : "expand_more"} size="sm" />}
-            onClick={onToggle}
-            className="!p-1"
-          >
-            {isExpanded ? 'Collapse' : 'Expand'}
-          </Button>
+          <CleanIcon 
+            name={isExpanded ? "expand_less" : "expand_more"} 
+            size="sm"
+            className="text-gray-400"
+          />
         </div>
       </div>
     </div>

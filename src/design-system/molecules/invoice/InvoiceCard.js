@@ -23,22 +23,20 @@ const InvoiceCard = ({
 
   return (
     <div
-      className={`flex flex-col bg-white dark:bg-[#0F0F0F] rounded-md border border-[#ffffff33] dark:border-[#ffffff1a] overflow-hidden ${className}`}
+      className={`flex flex-col bg-white dark:bg-[#1B2131] rounded-md border border-gray-200 dark:border-[#ffffff1a] overflow-hidden ${className}`}
       {...props}
     >
       {/* Card Header with Image and Title */}
-      <div className="flex items-center p-2 border-b border-[#ffffff33] dark:border-[#ffffff1a]">
+      <div className="flex items-center p-2 border-b border-gray-200 dark:border-[#ffffff1a]">
         <button
           onClick={() => setIsModalOpen(true)}
-          className="w-10 h-10 flex-shrink-0 hover:opacity-75 transition-opacity rounded overflow-hidden"
+          className="w-12 h-16 flex-shrink-0 hover:opacity-75 transition-opacity rounded overflow-hidden bg-white"
         >
-          <div className="w-full h-full relative">
-            <CardImage 
-              src={imageUrl} 
-              alt={`${card.player || ''} - ${card.card || ''}`}
-              className="absolute inset-0 w-full h-full object-contain"
-            />
-          </div>
+          <CardImage 
+            src={imageUrl} 
+            alt={`${card.player || ''} - ${card.card || ''}`}
+            width="w-full h-full"
+          />
         </button>
         <div className="ml-2 flex-1 min-w-0">
           <div className="text-sm font-medium text-gray-900 dark:text-white line-clamp-2">
