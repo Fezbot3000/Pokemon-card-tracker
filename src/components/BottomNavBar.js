@@ -7,7 +7,9 @@ const BottomNavBar = ({
   onSettingsClick
 }) => {
   return (
-    <div className="bottom-nav">
+    <div className={`bottom-nav fixed bottom-0 left-0 w-full z-40 bg-black border-t border-gray-800 flex justify-around items-center
+      ${window.innerWidth >= 640 ? 'hidden' : ''}
+    `}>
       <button
         className={`bottom-nav-item ${
           currentView === 'cards' ? 'active' : ''

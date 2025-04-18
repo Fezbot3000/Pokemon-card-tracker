@@ -746,43 +746,45 @@ const CardList = ({
       {/* Selected Cards Actions */}
       {selectedCards.size > 0 && (
         <div className={`fixed bottom-0 left-0 w-full flex items-center gap-1 px-2 py-2 rounded-t-md shadow-2xl bg-black border-t border-gray-700 z-50
-          ${window.innerWidth < 640 ? 'justify-between rounded-none flex-nowrap overflow-x-auto min-h-[72px] h-[72px] pb-[env(safe-area-inset-bottom,24px)]' : 'left-1/2 transform -translate-x-1/2 w-auto rounded-md border'}
+          ${window.innerWidth < 640 ? 'justify-between rounded-none flex-nowrap overflow-x-auto min-h-[96px] h-[96px] pb-[env(safe-area-inset-bottom,32px)]' : 'left-1/2 transform -translate-x-1/2 w-auto rounded-md border justify-center gap-3 py-3 px-6 min-h-[64px] h-auto'}
         `}>
           <span className="text-xs sm:text-sm text-white mr-2 min-w-max">
             {selectedCards.size} selected
           </span>
           <button
             onClick={handleMarkAsSold}
-            className="flex flex-col items-center gap-0.5 px-2 py-1 rounded-md bg-[#1B2131] hover:bg-[#252B3B] text-white text-xs min-w-[48px]"
+            className={`${window.innerWidth < 640 ? 'flex flex-col items-center gap-0.5 px-2 py-1 rounded-md bg-[#1B2131] hover:bg-[#252B3B] text-white text-xs min-w-[48px]' : 'flex flex-row items-center gap-2 px-4 py-2 rounded-md bg-[#1B2131] hover:bg-[#252B3B] text-white text-base min-w-[96px]'}`}
           >
             <span className="material-icons text-base text-yellow-400">sell</span>
-            <span className="hidden sm:inline">Sell</span>
+            <span className={`${window.innerWidth < 640 ? 'hidden sm:inline' : 'inline ml-1'}`}>Sell</span>
           </button>
           <button
             onClick={handleMoveCards}
-            className="flex flex-col items-center gap-0.5 px-2 py-1 rounded-md bg-[#1B2131] hover:bg-[#252B3B] text-white text-xs min-w-[48px]"
+            className={`${window.innerWidth < 640 ? 'flex flex-col items-center gap-0.5 px-2 py-1 rounded-md bg-[#1B2131] hover:bg-[#252B3B] text-white text-xs min-w-[48px]' : 'flex flex-row items-center gap-2 px-4 py-2 rounded-md bg-[#1B2131] hover:bg-[#252B3B] text-white text-base min-w-[96px]'}`}
           >
             <span className="material-icons text-base text-[#60a5fa]">drive_file_move</span>
-            <span className="hidden sm:inline">Move</span>
+            <span className={`${window.innerWidth < 640 ? 'hidden sm:inline' : 'inline ml-1'}`}>Move</span>
           </button>
           <button
             onClick={handleDeleteClick}
-            className="flex flex-col items-center gap-0.5 px-2 py-1 rounded-md bg-[#1B2131] hover:bg-[#252B3B] text-white text-xs min-w-[48px]"
+            className={`${window.innerWidth < 640 ? 'flex flex-col items-center gap-0.5 px-2 py-1 rounded-md bg-[#1B2131] hover:bg-[#252B3B] text-white text-xs min-w-[48px]' : 'flex flex-row items-center gap-2 px-4 py-2 rounded-md bg-[#1B2131] hover:bg-[#252B3B] text-white text-base min-w-[64px]'}`}
           >
             <span className="material-icons text-base text-red-400">delete</span>
+            <span className={`${window.innerWidth < 640 ? 'hidden sm:inline' : 'inline ml-1'}`}>Delete</span>
           </button>
           <button
             onClick={handleSelectAll}
-            className="flex flex-col items-center gap-0.5 px-2 py-1 rounded-md bg-[#1B2131] hover:bg-[#252B3B] text-white text-xs min-w-[48px]"
+            className={`${window.innerWidth < 640 ? 'flex flex-col items-center gap-0.5 px-2 py-1 rounded-md bg-[#1B2131] hover:bg-[#252B3B] text-white text-xs min-w-[48px]' : 'flex flex-row items-center gap-2 px-4 py-2 rounded-md bg-[#1B2131] hover:bg-[#252B3B] text-white text-base min-w-[96px]'}`}
           >
             <span className="material-icons text-base text-[#60a5fa]">done_all</span>
-            <span className="hidden sm:inline">Select All</span>
+            <span className={`${window.innerWidth < 640 ? 'hidden sm:inline' : 'inline ml-1'}`}>Select All</span>
           </button>
           <button
             onClick={() => setSelectedCards(new Set())}
-            className="flex flex-col items-center gap-0.5 px-2 py-1 rounded-md bg-[#1B2131] hover:bg-[#252B3B] text-white text-xs min-w-[48px]"
+            className={`${window.innerWidth < 640 ? 'flex flex-col items-center gap-0.5 px-2 py-1 rounded-md bg-[#1B2131] hover:bg-[#252B3B] text-white text-xs min-w-[48px]' : 'flex flex-row items-center gap-2 px-4 py-2 rounded-md bg-[#1B2131] hover:bg-[#252B3B] text-white text-base min-w-[64px]'}`}
           >
             <span className="material-icons text-base">close</span>
+            <span className={`${window.innerWidth < 640 ? 'hidden sm:inline' : 'inline ml-1'}`}>Clear</span>
           </button>
         </div>
       )}
