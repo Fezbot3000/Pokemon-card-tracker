@@ -1183,32 +1183,38 @@ exports.psaLookup = functions.https.onCall(async (data, context) => {
 
 exports.proxyPriceCharting = functions.https.onCall(async (data, context) => {
   const { endpoint, params } = data;
-  const apiKey = functions.config().pricecharting?.apikey;
+  functions.logger.info('PriceCharting function called with endpoint:', endpoint);
+  const apiKey = functions.config().pricecharting?.key;
 
   if (!apiKey) {
     functions.logger.error('PriceCharting API key not configured');
     throw new functions.https.HttpsError('internal', 'PriceCharting API key not configured');
   }
 
+  functions.logger.info('PriceCharting API key found, proceeding with request');
+  
   // Build the base URL with the API key
   const baseUrl = 'https://www.pricecharting.com/api/products';
-  const url = new URL(baseUrl);
-
-  // Add API key
-  url.searchParams.append('t', apiKey);
+  let url;
 
   // Handle different endpoints
   if (endpoint === 'product-prices') {
     // For price history, we need to use a different endpoint
-    url.pathname = `/api/product/${params.id}/price-history`;
+    url = new URL(`https://www.pricecharting.com/api/product/${params.id}/price-history`);
     // Remove the id from params since it's in the URL path
     delete params.id;
-  } else if (endpoint === 'search') {
-    url.pathname = '/api/products';
+  } else if (endpoint === 'search' || endpoint === 'products') {
+    url = new URL(baseUrl);
+  } else if (endpoint === 'product') {
+    // Handle single product lookup - use the correct endpoint structure
+    url = new URL(`https://www.pricecharting.com/api/product`);
   } else {
     throw new functions.https.HttpsError('invalid-argument', 'Invalid endpoint specified');
   }
 
+  // Add API key
+  url.searchParams.append('t', apiKey);
+  
   // Append remaining parameters from the frontend call
   for (const [key, value] of Object.entries(params)) {
     url.searchParams.append(key, value);
