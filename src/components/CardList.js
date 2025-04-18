@@ -745,46 +745,44 @@ const CardList = ({
 
       {/* Selected Cards Actions */}
       {selectedCards.size > 0 && (
-        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 
-                      flex items-center gap-2 px-4 py-2 rounded-md shadow-lg
-                      bg-black border border-gray-700 z-50">
-          <span className="text-xs sm:text-sm text-white mr-2">
-            {selectedCards.size} {selectedCards.size === 1 ? 'selected' : 'selected'}
+        <div className={`fixed bottom-0 left-0 w-full flex items-center gap-1 px-2 py-2 rounded-t-md shadow-2xl bg-black border-t border-gray-700 z-50
+          ${window.innerWidth < 640 ? 'justify-between rounded-none flex-nowrap overflow-x-auto min-h-[72px] h-[72px] pb-[env(safe-area-inset-bottom,24px)]' : 'left-1/2 transform -translate-x-1/2 w-auto rounded-md border'}
+        `}>
+          <span className="text-xs sm:text-sm text-white mr-2 min-w-max">
+            {selectedCards.size} selected
           </span>
           <button
             onClick={handleMarkAsSold}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-[#1B2131] hover:bg-[#252B3B] text-white text-sm"
+            className="flex flex-col items-center gap-0.5 px-2 py-1 rounded-md bg-[#1B2131] hover:bg-[#252B3B] text-white text-xs min-w-[48px]"
           >
-            <span className="material-icons text-sm text-[#f87171]">favorite</span>
-            <span>Sell</span>
+            <span className="material-icons text-base text-yellow-400">sell</span>
+            <span className="hidden sm:inline">Sell</span>
           </button>
           <button
             onClick={handleMoveCards}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-[#1B2131] hover:bg-[#252B3B] text-white text-sm"
+            className="flex flex-col items-center gap-0.5 px-2 py-1 rounded-md bg-[#1B2131] hover:bg-[#252B3B] text-white text-xs min-w-[48px]"
           >
-            <span className="material-icons text-sm text-[#60a5fa]">drive_file_move</span>
-            <span>Move</span>
+            <span className="material-icons text-base text-[#60a5fa]">drive_file_move</span>
+            <span className="hidden sm:inline">Move</span>
           </button>
           <button
             onClick={handleDeleteClick}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-[#1B2131] hover:bg-[#252B3B] text-white text-sm"
+            className="flex flex-col items-center gap-0.5 px-2 py-1 rounded-md bg-[#1B2131] hover:bg-[#252B3B] text-white text-xs min-w-[48px]"
           >
-            <span className="material-icons text-sm">delete</span>
-            <span>Delete</span>
+            <span className="material-icons text-base text-red-400">delete</span>
           </button>
           <button
             onClick={handleSelectAll}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-[#1B2131] hover:bg-[#252B3B] text-white text-sm"
+            className="flex flex-col items-center gap-0.5 px-2 py-1 rounded-md bg-[#1B2131] hover:bg-[#252B3B] text-white text-xs min-w-[48px]"
           >
-            <span className="material-icons text-sm text-[#60a5fa]">done_all</span>
-            <span>Select All</span>
+            <span className="material-icons text-base text-[#60a5fa]">done_all</span>
+            <span className="hidden sm:inline">Select All</span>
           </button>
           <button
             onClick={() => setSelectedCards(new Set())}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-[#1B2131] hover:bg-[#252B3B] text-white text-sm"
+            className="flex flex-col items-center gap-0.5 px-2 py-1 rounded-md bg-[#1B2131] hover:bg-[#252B3B] text-white text-xs min-w-[48px]"
           >
-            <span className="material-icons text-sm">close</span>
-            <span>Clear</span>
+            <span className="material-icons text-base">close</span>
           </button>
         </div>
       )}

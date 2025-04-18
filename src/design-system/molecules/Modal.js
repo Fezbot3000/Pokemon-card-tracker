@@ -103,7 +103,10 @@ const Modal = ({
     '5xl': 'max-w-5xl',
     full: 'max-w-full',
   };
-  
+
+  // Mobile full width override
+  const mobileFullWidth = window.innerWidth < 640 ? 'w-screen max-w-none h-screen min-h-screen rounded-none m-0 fixed top-0 left-0 right-0 bottom-0 z-[9999]' : '';
+
   // Position variations
   const positionClasses = {
     center: 'flex items-center justify-center',
@@ -189,7 +192,7 @@ const Modal = ({
     <div className={`${backdropClasses} ${darkModeClass}`}>
       <div 
         ref={modalRef}
-        className={`${modalClasses} w-full mx-4 flex flex-col ${position === 'right' ? 'h-full rounded-l-md rounded-r-none max-w-2xl mr-0' : sizeClasses[size]} ${className}`}
+        className={`${modalClasses} ${window.innerWidth < 640 ? '' : 'w-full mx-4'} flex flex-col ${position === 'right' ? (window.innerWidth < 640 ? 'w-screen max-w-none h-screen min-h-screen rounded-none m-0 fixed top-0 left-0 right-0 bottom-0 z-[9999]' : 'h-full rounded-l-md rounded-r-none max-w-2xl mr-0') : (mobileFullWidth || sizeClasses[size])} ${className}`}
         aria-label={ariaLabel} // Apply as aria-label
         {...props} // props now excludes ariaLabel
       >

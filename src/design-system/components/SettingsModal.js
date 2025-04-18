@@ -311,7 +311,6 @@ const SettingsModal = ({
       <Modal
         isOpen={isOpen}
         onClose={onClose}
-        closeOnClickOutside={!showResetConfirm}
         title="Settings"
         footer={
           <div className="flex justify-end w-full">
@@ -324,15 +323,16 @@ const SettingsModal = ({
           </div>
         }
         position="right"
-        className=""
-        maxWidth="max-w-3xl"
-        forceDarkMode={false}
+        className={window.innerWidth < 640 ? 'w-full max-w-full h-full rounded-none m-0' : className}
         ariaLabel="Settings"
         size="fullscreen"
+        closeOnClickOutside={window.innerWidth >= 640} // Only allow closing on click outside on desktop
       >
         <div className="flex flex-col lg:flex-row h-full overflow-hidden">
           {/* Navigation sidebar */}
-          <nav className="w-full lg:w-64 lg:flex-shrink-0 bg-white dark:bg-[#0F0F0F] border-b lg:border-b-0 lg:border-r border-gray-200 dark:border-gray-700/30 overflow-y-auto lg:h-full p-4 space-y-2">
+          <nav
+            className={`w-full lg:w-64 lg:flex-shrink-0 bg-white dark:bg-[#0F0F0F] border-b lg:border-b-0 lg:border-r border-gray-200 dark:border-gray-700/30 ${window.innerWidth < 1024 ? 'overflow-visible' : 'overflow-y-auto lg:h-full'} p-4 space-y-2`}
+          >
             <SettingsNavItem 
               icon="settings" 
               label="General"

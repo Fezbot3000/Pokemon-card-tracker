@@ -209,7 +209,7 @@ const CardDetailsModal = ({
         size="4xl" // Use a larger size for desktop
         footer={modalFooter}
         position="right"
-        className={`card-details-modal-instance ${animClass} ${className}`}
+        className={window.innerWidth < 640 ? 'w-full max-w-full h-full rounded-none m-0' : `card-details-modal-instance ${animClass} ${className}`}
         closeOnClickOutside={!showEnlargedImage && !isConfirmingSold}
       >
         <div className="space-y-6 pb-4">
