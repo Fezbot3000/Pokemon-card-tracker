@@ -1656,7 +1656,7 @@ To import this backup:
         className={`lg:hidden fixed bottom-0 left-0 right-0 z-40 transition-transform duration-300 ${selectedCard ? 'bottom-nav-hidden' : ''}`}
       >
         <BottomNavBar
-          currentView={location.pathname.split('/').pop() || 'cards'} // Determine current view from path
+          currentView={currentView || location.pathname.split('/').pop() || 'cards'}
           onViewChange={(view) => {
             setCurrentView(view);
             // If switching to a view other than settings, hide settings modal
@@ -1671,19 +1671,7 @@ To import this backup:
           onAddCard={() => setShowNewCardForm(true)}
           onSettingsClick={handleSettingsClick}
           isModalOpen={selectedCard !== null || showNewCardForm || isAnyModalOpen}
-        >
-          {/* Settings Button */}
-          <button
-            onClick={handleSettingsClick}
-            className={`flex-1 flex flex-col items-center justify-center p-2 group relative text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors hidden sm:flex lg:hidden`}
-          >
-            <div className="absolute top-0 left-1/2 transform -translate-x-1/2 h-1 w-0 bg-primary transition-all duration-300 group-hover:w-full"></div>
-            <Icon name="settings" className="text-xl transition-colors duration-300" />
-            <span className="text-xs mt-1 transition-colors duration-300">
-              Settings
-            </span>
-          </button>
-        </BottomNavBar>
+        />
       </div>
 
       <TutorialModal />

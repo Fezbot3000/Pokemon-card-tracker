@@ -224,9 +224,9 @@ const Header = ({
       
       {/* Bottom bar - View toggle buttons */}
       {onViewChange && (
-        <div className="px-4 py-2 border-b border-gray-200 dark:border-[#ffffff1a] flex justify-center">
+        <div className="hidden sm:block px-4 py-2 border-b border-gray-200 dark:border-[#ffffff1a] flex justify-center">
           <div className="max-w-7xl w-full mx-auto flex justify-center">
-            <div className="flex bg-gray-100 dark:bg-black rounded-full p-1 overflow-hidden hidden sm:flex">
+            <div className="flex bg-gray-100 dark:bg-black rounded-full p-1 overflow-hidden">
               {/* Cards Button */}
               <button
                 onClick={() => handleViewChange('cards')}

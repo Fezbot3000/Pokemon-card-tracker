@@ -82,42 +82,40 @@ const SearchToolbar = ({
       {/* Controls Group (View Mode, Sort, Add Card) */}
       <div className="flex items-center justify-between sm:justify-start gap-3 w-full sm:w-auto">
         {/* View Mode Selector */}
-        <div className="hidden sm:flex bg-[#000] dark:bg-black rounded-lg p-1 relative">
+        <div className="flex bg-[#000] dark:bg-black rounded-lg p-1 relative">
           {/* Animated Background Indicator */}
           <div 
             className="absolute top-1 bottom-1 rounded-md bg-gradient-to-r from-[#ef4444] to-[#db2777] transition-transform duration-300 ease-in-out z-0"
-            style={{ 
+            style={{
               left: '4px',
               width: '36px',
               height: '36px',
-              transform: viewMode === 'list' ? 'translateX(36px)' : 'translateX(0)' 
+              transform: `translateX(${viewMode === 'grid' ? '0px' : '36px'})`
             }}
           />
-          
           {/* Grid View Button */}
           <button
-            onClick={() => handleViewModeChange('grid')}
             className={`w-9 h-9 flex items-center justify-center rounded-md z-10 relative transition-colors duration-300 ${
-              viewMode === 'grid'
-                ? 'text-white'
-                : 'text-gray-500 dark:text-gray-400 hover:bg-gray-200/50 dark:hover:bg-gray-700/50'
+              viewMode === 'grid' ? 'text-white' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-200/50 dark:hover:bg-gray-700/50'
             }`}
+            onClick={() => onViewModeChange('grid')}
             aria-label="Grid view"
           >
-            <Icon name="grid_view" size="sm" color={viewMode === 'grid' ? 'white' : undefined} />
+            <span className={`material-icons text-sm ${viewMode === 'grid' ? 'text-white' : 'text-gray-600 dark:text-gray-300'}`}>
+              grid_view
+            </span>
           </button>
-          
           {/* List View Button */}
           <button
-            onClick={() => handleViewModeChange('list')}
             className={`w-9 h-9 flex items-center justify-center rounded-md z-10 relative transition-colors duration-300 ${
-              viewMode === 'list'
-                ? 'text-white'
-                : 'text-gray-500 dark:text-gray-400 hover:bg-gray-200/50 dark:hover:bg-gray-700/50'
+              viewMode === 'list' ? 'text-white' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-200/50 dark:hover:bg-gray-700/50'
             }`}
+            onClick={() => onViewModeChange('list')}
             aria-label="List view"
           >
-            <Icon name="view_list" size="sm" color={viewMode === 'list' ? 'white' : undefined} />
+            <span className={`material-icons text-sm ${viewMode === 'list' ? 'text-white' : 'text-gray-600 dark:text-gray-300'}`}>
+              view_list
+            </span>
           </button>
         </div>
 
