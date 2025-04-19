@@ -8,8 +8,9 @@ import { getFunctions, httpsCallable } from 'firebase/functions';
 import '../env';
 
 // Log environment variables for debugging (remove in production)
-console.log("Services - API Key available:", !!process.env.REACT_APP_FIREBASE_API_KEY);
-console.log("Services - Auth Domain available:", !!process.env.REACT_APP_FIREBASE_AUTH_DOMAIN);
+// REMOVE DEBUG LOGS
+// console.log("Services - API Key available:", !!process.env.REACT_APP_FIREBASE_API_KEY);
+// console.log("Services - Auth Domain available:", !!process.env.REACT_APP_FIREBASE_AUTH_DOMAIN);
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -31,7 +32,7 @@ try {
   db = getFirestore(app);
   
   if (process.env.NODE_ENV === 'development') {
-    console.log("Firestore initialized for services module");
+    // console.log("Firestore initialized for services module");
   }
 } catch (error) {
   console.error('Failed to initialize Firestore:', error);

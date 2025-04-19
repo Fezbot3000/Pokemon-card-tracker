@@ -5,6 +5,7 @@ import Icon from '../atoms/Icon';
 import Dropdown, { DropdownItem } from '../molecules/Dropdown';
 import { baseColors } from '../styles/colors';
 import { useTheme } from '../contexts/ThemeContext';
+import { stripDebugProps } from '../../utils/stripDebugProps';
 
 /**
  * SearchToolbar Component
@@ -57,10 +58,12 @@ const SearchToolbar = ({
     </Button>
   );
 
+  const toolbarClass = `w-full bg-white dark:bg-[#1B2131] py-3 px-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 ${isDarkMode ? 'shadow-sm' : ''} rounded-md border border-[#ffffff33] dark:border-[#ffffff1a] ${className}`;
+
   return (
     <div 
-      className={`w-full bg-white dark:bg-[#1B2131] py-3 px-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 ${isDarkMode ? 'shadow-sm' : ''} rounded-md border border-[#ffffff33] dark:border-[#ffffff1a] ${className}`}
-      {...props}
+      className={toolbarClass} 
+      {...stripDebugProps(props)}
     >
       {/* Search Input */}
       <div className="relative w-full sm:flex-1">
@@ -72,10 +75,10 @@ const SearchToolbar = ({
           value={searchValue}
           onChange={(e) => onSearchChange?.(e.target.value)}
           placeholder="Search by name, set, or serial number..."
-          className="w-full pl-10 pr-4 py-2 bg-gray-100 dark:bg-[#252B3B] border-0 
+          className="w-full pl-10 pr-4 py-2 bg-gray-100 dark:bg-[#181C27] border-0 
                    rounded-lg text-gray-900 dark:text-white placeholder-gray-500 
                    dark:placeholder-gray-400 focus:ring-2 focus:ring-[var(--primary-light)]/20 
-                   focus:bg-white dark:focus:bg-[#252B3B]"
+                   focus:bg-white dark:focus:bg-[#181C27]"
         />
       </div>
 

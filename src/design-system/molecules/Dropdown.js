@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import Icon from '../atoms/Icon';
+import { stripDebugProps } from '../../utils/stripDebugProps';
 
 /**
  * Dropdown component
@@ -74,9 +75,9 @@ const Dropdown = ({
   };
   
   return (
-    <div className={`relative ${className}`} ref={dropdownRef} {...props}>
+    <div className={`relative ${className}`} ref={dropdownRef} {...stripDebugProps(props)}>
       {/* Trigger element */}
-      <div onClick={toggleDropdown} className="cursor-pointer">
+      <div onClick={toggleDropdown} className="cursor-pointer" {...stripDebugProps(props)}>
         {trigger}
       </div>
       
@@ -92,6 +93,7 @@ const Dropdown = ({
             overflowX: 'visible',
             display: 'block'
           }}
+          {...stripDebugProps(props)}
         >
           {children}
         </div>
@@ -123,7 +125,7 @@ export const DropdownItem = ({
       className={`${baseClasses} ${stateClasses} ${className}`}
       onClick={disabled ? undefined : onClick}
       disabled={disabled}
-      {...props}
+      {...stripDebugProps(props)}
     >
       {icon && <span className="mr-2 flex-shrink-0">{icon}</span>}
       <span className="truncate w-full text-left">{children}</span>
@@ -139,7 +141,7 @@ export const DropdownItem = ({
 export const DropdownDivider = ({ className = '', ...props }) => (
   <div 
     className={`my-1 border-t border-gray-200 dark:border-gray-700/50 ${className}`} 
-    {...props} 
+    {...stripDebugProps(props)} 
   />
 );
 

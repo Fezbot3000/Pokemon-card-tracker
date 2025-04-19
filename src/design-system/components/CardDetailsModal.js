@@ -72,16 +72,37 @@ const CardDetailsModal = ({
     return 'loose';
   };
   
-  // Update local state when props change
+  // Log whenever the category changes
   useEffect(() => {
-    setEditedCard(card || {});
-    if (image) {
-      setCardImage(image);
-    } else {
-      setCardImage(null);
+    // console.log('[Debug] editedCard.category changed:', editedCard.category);
+  }, [editedCard.category]);
+  
+  // Update local state when props change or modal opens
+  useEffect(() => {
+    // console.log('[ModalEffect] Running. isOpen:', isOpen, 'Incoming card:', card);
+    // Only update state when the modal is open
+    if (isOpen) {
+      // Ensure a completely fresh state for adding a new card
+      if (!card) {
+        setEditedCard({
+          category: '',
+          gradingCompany: '',
+          // Add other fields as needed for a blank form
+        });
+      } else {
+        setEditedCard(card); // Use the provided card data for 'edit' mode
+      }
+
+      if (image) {
+        setCardImage(image);
+      } else {
+        setCardImage(null);
+      }
+      setLocalImageLoadingState(imageLoadingState);
+      setActiveTab('details'); // Reset to the details tab on open
+      setErrors({}); // Clear any previous errors
     }
-    setLocalImageLoadingState(imageLoadingState);
-  }, [card, image, imageLoadingState]);
+  }, [card, image, imageLoadingState, isOpen]); // Add isOpen to dependency array
   
   // Handle card field changes
   const handleCardChange = (updatedCard) => {
@@ -173,28 +194,9 @@ const CardDetailsModal = ({
         footer={modalFooter}
         position="right"
         className={window.innerWidth < 640 ? 'w-full max-w-full h-full rounded-none m-0' : `card-details-modal-instance ${animClass} ${className}`}
-        closeOnClickOutside={!showEnlargedImage && !isConfirmingSold}
+        closeOnClickOutside={false}
       >
         <div className="space-y-6 pb-4">
-          {/* Notice and PriceChartingButton */}
-          {!priceChartingProductId && (
-            <div className="bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700 rounded-lg p-4 mb-4 flex flex-col items-center text-center">
-              <span className="text-yellow-700 dark:text-yellow-300 font-semibold mb-2">
-                This card is not yet linked to a PriceCharting product.
-              </span>
-              <span className="text-yellow-600 dark:text-yellow-200 text-sm mb-3">
-                To enable price history and recent sales features, please link this card to a PriceCharting product below.
-              </span>
-              <PriceChartingButton
-                currentCardData={editedCard}
-                onCardUpdate={updated => {
-                  setEditedCard(updated);
-                  if (onChange) onChange(updated);
-                }}
-                buttonText="Link to PriceCharting Product"
-              />
-            </div>
-          )}
           {/* Tabs */}
           <div className="flex border-b dark:border-gray-700 mb-4">
             <button
@@ -229,7 +231,8 @@ const CardDetailsModal = ({
 
           {/* Tab Content */}
           {activeTab === 'details' && (
-            <CardDetailsForm
+            <CardDetailsForm 
+              key={card?.id || 'new-card-form'} // Add key here
               card={editedCard}
               cardImage={cardImage}
               imageLoadingState={localImageLoadingState}
@@ -303,7 +306,7 @@ const CardDetailsModal = ({
               </div>
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
                 {/* Pass the full card object for flexible search */}
-                <EbaySales card={card} />
+                {/* <EbaySales card={card} /> */}
               </div>
               <div className="text-sm text-gray-500 dark:text-gray-400">
                 <p>Sales data provided by eBay. These are recent completed listings matching your card details.</p>

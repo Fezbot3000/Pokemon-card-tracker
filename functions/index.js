@@ -1204,6 +1204,10 @@ exports.proxyPriceCharting = functions.https.onCall(async (data, context) => {
     url = new URL(`https://www.pricecharting.com/api/product/${params.id}/price-history`);
     // Remove the id from params since it's in the URL path
     delete params.id;
+    // Remove format param if present, as /price-history may not support it
+    if ('format' in params) {
+      delete params.format;
+    }
   } else if (endpoint === 'search' || endpoint === 'products') {
     url = new URL(baseUrl);
   } else if (endpoint === 'product') {
@@ -1235,6 +1239,12 @@ exports.proxyPriceCharting = functions.https.onCall(async (data, context) => {
       throw new functions.https.HttpsError('internal', 
         `Failed to fetch data from PriceCharting. Status: ${response.status}`);
     }
+
+    // --- ADD LOGGING FOR HISTORY RESPONSE --- 
+    if(endpoint === 'product-prices') {
+      functions.logger.info('Full Price History Response Text:', responseText);
+    }
+    // ----------------------------------------
 
     const responseData = JSON.parse(responseText);
     functions.logger.info('Successfully received data from PriceCharting');
@@ -1293,15 +1303,29 @@ exports.proxyEbayCompleted = functions.https.onCall(async (data, context) => {
   try {
     functions.logger.info('Calling eBay API:', url.toString());
     
-    const response = await fetch(url.toString());
-    const responseText = await response.text();
+    let response;
+    try {
+      response = await fetch(url.toString());
+    } catch (fetchError) {
+      functions.logger.error('eBay API fetch failed:', fetchError);
+      throw new functions.https.HttpsError('internal', `eBay API fetch failed: ${fetchError.message}`);
+    }
+    
+    let responseText = '';
+    try {
+      responseText = await response.text();
+    } catch (textError) {
+      functions.logger.error('Failed to get response text from eBay:', textError);
+      // We might still have a status code, so don't throw immediately
+    }
     
     functions.logger.info('Response status:', response.status);
-    functions.logger.info('Response preview:', responseText.substring(0, 200));
+    functions.logger.info('Response text preview:', responseText.substring(0, 500)); // Log more preview text
     
     if (!response.ok) {
-      functions.logger.error('eBay API error:', responseText);
-      throw new functions.https.HttpsError('internal', `eBay API error: ${response.status}`);
+      functions.logger.error(`eBay API returned non-OK status: ${response.status}`);
+      functions.logger.error('eBay API error response text:', responseText); // Log full text on error
+      throw new functions.https.HttpsError('internal', `eBay API error: ${response.status}. Response: ${responseText.substring(0, 200)}`);
     }
     
     // Try to parse the response as JSON

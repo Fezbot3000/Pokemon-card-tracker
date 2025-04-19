@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import Icon from '../atoms/Icon';
 import { colors } from '../tokens';
 import { useTheme } from '../contexts/ThemeContext';
+import { stripDebugProps } from '../../utils/stripDebugProps';
 
 /**
  * StatisticsSummary Component
@@ -21,7 +22,7 @@ const StatisticsSummary = ({
   return (
     <div 
       className={`w-full bg-white dark:bg-[#1B2131] rounded-md ${isDarkMode ? 'shadow-sm' : ''} overflow-hidden border border-[#ffffff33] dark:border-[#ffffff1a] mb-2 sm:mb-3 ${className}`}
-      {...props}
+      {...stripDebugProps(props)}
     >
       <div className="rounded-md p-4 sm:p-6">
         <div className="grid grid-cols-2 sm:grid-cols-4">

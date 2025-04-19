@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import Icon from '../../atoms/Icon';
 import AmountLabel from '../../atoms/AmountLabel';
 import Button from '../../atoms/Button';
+import { stripDebugProps } from '../../../utils/stripDebugProps';
 
 /**
  * InvoiceHeader Component
@@ -41,7 +42,7 @@ const InvoiceHeader = ({
   };
 
   return (
-    <div className={headerClasses} onClick={onToggle} {...props}>
+    <div className={headerClasses} onClick={onToggle} {...stripDebugProps(props)}>
       {/* Left side with invoice info */}
       <div className="flex flex-col min-w-0">
         <div className="flex items-center gap-2">

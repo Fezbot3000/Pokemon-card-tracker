@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import Button from '../atoms/Button';
 import Icon from '../atoms/Icon';
+import { stripDebugProps } from '../../utils/stripDebugProps';
 
 /**
  * Modal component
@@ -15,7 +16,7 @@ const Modal = ({
   children,
   footer,
   size = 'md',
-  closeOnClickOutside = true,
+  closeOnClickOutside = false, // Set closeOnClickOutside to false by default
   position = 'center',
   className = '',
   forceDarkMode = false,
@@ -31,42 +32,21 @@ const Modal = ({
   
   // Preserve scroll position and prevent background scrolling
   useEffect(() => {
-    // Handle clicks outside modal if enabled
-    const handleClickOutside = (event) => {
-      if (closeOnClickOutside && 
-          modalRef.current && 
-          !modalRef.current.contains(event.target)) {
-        onClose();
-      }
-    };
-    
+    // Only prevent background scroll and restore scroll position
     if (isOpen && !showAsStatic) {
-      // Store current scroll position
       scrollPosRef.current = {
         x: window.scrollX,
         y: window.scrollY
       };
-      
-      // Add click outside listener
-      document.addEventListener('mousedown', handleClickOutside);
-      
-      // Add modal-open class to body
       document.body.classList.add('modal-open');
-      
       return () => {
-        // Cleanup event listener
-        document.removeEventListener('mousedown', handleClickOutside);
-        
-        // Remove modal-open class from body immediately
         document.body.classList.remove('modal-open');
-        
-        // Restore scroll position
         if (scrollPosRef.current) {
           window.scrollTo(scrollPosRef.current.x, scrollPosRef.current.y);
         }
       };
     }
-  }, [isOpen, onClose, closeOnClickOutside, showAsStatic]);
+  }, [isOpen, showAsStatic]);
 
   // Handle animation cleanup
   useEffect(() => {
@@ -187,7 +167,7 @@ const Modal = ({
         ref={modalRef}
         className={`${modalClasses} ${window.innerWidth < 640 ? '' : 'w-full mx-4'} flex flex-col ${position === 'right' ? (window.innerWidth < 640 ? 'w-screen max-w-none h-screen min-h-screen rounded-none m-0 fixed top-0 left-0 right-0 bottom-0 z-[9999]' : 'h-full rounded-l-md rounded-r-none max-w-2xl mr-0') : (mobileFullWidth || sizeClasses[size])} ${className}`}
         aria-label={ariaLabel} // Apply as aria-label
-        {...props} // props now excludes ariaLabel
+        {...stripDebugProps(props)} // props now excludes ariaLabel
       >
         {/* Modal Header - Sticky */}
         {title && (

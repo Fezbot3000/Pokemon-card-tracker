@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import CardImage from '../../atoms/CardImage';
 import ImageModal from '../../atoms/ImageModal';
+import { stripDebugProps } from '../../../utils/stripDebugProps';
 
 /**
  * InvoiceCard Component
@@ -24,7 +25,7 @@ const InvoiceCard = ({
   return (
     <div
       className={`flex flex-col bg-white dark:bg-[#1B2131] rounded-md border border-gray-200 dark:border-[#ffffff1a] overflow-hidden ${className}`}
-      {...props}
+      {...stripDebugProps(props)}
     >
       {/* Card Header with Image and Title */}
       <div className="flex items-center p-2 border-b border-gray-200 dark:border-[#ffffff1a]">

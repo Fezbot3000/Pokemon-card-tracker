@@ -97,12 +97,49 @@ const PriceHistoryGraph = ({ productId, condition = 'loose', className = '' }) =
   }, [productId, condition]);
 
   const prepareChartData = () => {
-    if (!priceHistory || !priceHistory[condition]) {
+    if (!priceHistory) {
+      console.log('[Chart] No price history data available.');
       return null;
     }
 
-    const prices = priceHistory[condition];
+    // --- Flexible Key Finding Logic --- 
+    let conditionData = null;
+    const conditionLower = condition.toLowerCase();
+    const conditionKey = conditionLower.replace(/\s+/g, '-'); // e.g., 'psa-10'
+    const isGraded = conditionLower.includes('psa') || conditionLower.includes('bgs') || conditionLower.includes('cgc') || conditionLower.includes('beckett');
+
+    // Try direct match first (e.g., 'psa-10')
+    if (priceHistory[conditionKey]) {
+      conditionData = priceHistory[conditionKey];
+      console.log(`[Chart] Found history using key: ${conditionKey}`);
+    // Try the prop value directly (e.g., 'PSA 10' or 'loose')
+    } else if (priceHistory[condition]) {
+       conditionData = priceHistory[condition];
+       console.log(`[Chart] Found history using key: ${condition}`);
+    // If graded, try generic 'graded'
+    } else if (isGraded && priceHistory['graded']) {
+      conditionData = priceHistory['graded'];
+      console.log(`[Chart] Found history using fallback key: graded`);
+    // Try generic 'loose'
+    } else if (priceHistory['loose']) {
+       conditionData = priceHistory['loose'];
+       console.log(`[Chart] Found history using fallback key: loose`);
+    }
+    // ------------------------------------
+
+    if (!conditionData) {
+      console.log(`[Chart] Could not find price history data for condition '${condition}' or fallbacks in:`, priceHistory);
+      return null;
+    }
+
+    const prices = conditionData; // Use the found data
     
+    // Ensure prices is an object before proceeding
+    if (typeof prices !== 'object' || prices === null) {
+        console.error('[Chart] Expected price history data to be an object, but received:', prices);
+        return null;
+    }
+
     const sortedPrices = Object.entries(prices)
       .map(([date, price]) => ({ date, price }))
       .sort((a, b) => new Date(a.date) - new Date(b.date));

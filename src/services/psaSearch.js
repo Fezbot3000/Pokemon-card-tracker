@@ -191,26 +191,76 @@ const mergeWithExistingCard = (existingCardData, psaCardData) => {
   if (psaCardData.player) mergedData.player = psaCardData.player;
   if (psaCardData.setName) mergedData.set = psaCardData.setName;
   if (psaCardData.year) mergedData.year = psaCardData.year;
-  if (psaCardData.grade) mergedData.condition = psaCardData.grade;
+  
+  // Format condition string correctly for CardDetailsForm dropdowns
+  if (psaCardData.grade) {
+    const company = "PSA";
+    let gradeValue = psaCardData.grade.trim();
+    
+    // Try to extract numeric grade (e.g., from "GEM MINT 10" or "MINT 9")
+    const gradeMatch = gradeValue.match(/\b(\d+(\.\d+)?)\b$/);
+    const numericGrade = gradeMatch ? gradeMatch[1] : null;
+    
+    if (numericGrade) {
+      // Use only the numeric part if found
+      gradeValue = numericGrade;
+    } else {
+      // Keep the text grade (e.g., "Authentic"), maybe title-case it
+      gradeValue = gradeValue
+        .split(' ')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        .join(' ');
+    }
+    mergedData.condition = `${company} ${gradeValue}`; // e.g., "PSA 10", "PSA Authentic"
+    mergedData.gradingCompany = company; // Ensure grading company is set for dropdown
+  }
+  
   if (psaCardData.slabSerial) mergedData.slabSerial = psaCardData.slabSerial;
   if (psaCardData.population) mergedData.population = psaCardData.population;
   if (psaCardData.psaUrl) mergedData.psaUrl = psaCardData.psaUrl;
   
-  // If there's category information, map it to our category field
-  if (psaCardData.cardType) {
-    // Normalize category to one of our predefined categories if possible
-    const category = psaCardData.cardType.toLowerCase();
-    if (category.includes('pokemon')) {
+  // Refined Category Detection:
+  // Combine relevant fields into a single string for keyword checking (lowercase)
+  const combinedInfo = [
+    psaCardData.cardType,
+    psaCardData.brand,
+    psaCardData.cardName, // Often contains player/character name
+    psaCardData.setName // Set name might also indicate category
+  ].filter(Boolean).join(' ').toLowerCase();
+  
+  // Default category
+  mergedData.category = 'Other';
+  
+  if (combinedInfo) {
+    // Prioritize Pokemon check
+    if (combinedInfo.includes('pokemon') || combinedInfo.includes('pokémon')) {
       mergedData.category = 'Pokemon';
-    } else if (category.includes('basketball')) {
-      mergedData.category = 'Basketball';
-    } else if (category.includes('football')) {
-      mergedData.category = 'Football';
-    } else if (category.includes('baseball')) {
-      mergedData.category = 'Baseball';
-    } else {
-      mergedData.category = psaCardData.cardType;
+    // Check other TCGs
+    } else if (combinedInfo.includes('yu-gi-oh') || combinedInfo.includes('yugioh')) {
+      mergedData.category = 'YuGiOh';
+    } else if (combinedInfo.includes('magic') || combinedInfo.includes('mtg')) {
+      mergedData.category = 'MagicTheGathering';
+    } else if (combinedInfo.includes('dragon ball')) {
+      mergedData.category = 'DragonBallSuper';
+    // Check Sports (add more specific checks if needed, e.g., player names)
+    } else if (combinedInfo.includes('basketball')) {
+      mergedData.category = 'Sports-Basketball';
+    } else if (combinedInfo.includes('football')) {
+      mergedData.category = 'Sports-Football';
+    } else if (combinedInfo.includes('baseball')) {
+      mergedData.category = 'Sports-Baseball';
+    } else if (combinedInfo.includes('hockey')) {
+      mergedData.category = 'Sports-Hockey';
+    } else if (combinedInfo.includes('soccer')) {
+      mergedData.category = 'Sports-Soccer';
+    // Check WWE
+    } else if (combinedInfo.includes('wwe') || combinedInfo.includes('wrestling')) {
+      mergedData.category = 'WWE';
     }
+    // If it's still 'Other', maybe a final check for generic TCG terms?
+    // else if (mergedData.category === 'Other' && (combinedInfo.includes('trading card') || combinedInfo.includes('game card'))) {
+    //   mergedData.category = 'Other'; // Keep as Other TCG for now
+    // }
   }
   
   // Preserve existing financial data and image

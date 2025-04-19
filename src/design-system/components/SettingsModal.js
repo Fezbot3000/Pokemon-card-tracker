@@ -12,6 +12,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '../../firebase';
 import { useAuth } from '../contexts/AuthContext';
 import JSZip from 'jszip';
+import { stripDebugProps } from '../../utils/stripDebugProps';
 
 /**
  * SettingsModal Component
@@ -325,9 +326,9 @@ const SettingsModal = ({
         ariaLabel="Settings"
         size="full"
         closeOnClickOutside={false}
-        {...props}
+        {...stripDebugProps(props)}
       >
-        <div className="flex flex-col lg:flex-row h-full">
+        <div className="flex flex-col lg:flex-row h-full" {...stripDebugProps(props)}>
           {/* Navigation sidebar */}
           <nav
             className={`w-full lg:w-64 border-b lg:border-b-0 lg:border-r border-gray-200 dark:border-gray-800 p-4 space-y-2`}
@@ -359,7 +360,7 @@ const SettingsModal = ({
           </nav>
 
           {/* Content area */}
-          <div className="w-full lg:flex-1 overflow-y-auto p-6 sm:p-8 bg-gray-50 dark:bg-[#1A1A1A]">
+          <div className="w-full lg:flex-1 overflow-y-auto p-6 sm:p-8 bg-gray-50 dark:bg-[#1A1A1A]" {...stripDebugProps(props)}>
             {activeTab === 'general' && (
               <div className="space-y-2">
                 <SettingsPanel

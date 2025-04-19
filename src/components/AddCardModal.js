@@ -26,7 +26,7 @@ const AddCardModal = ({
     card: '',
     set: '',
     year: '',
-    category: 'Pokemon',
+    category: '', // Changed from 'Pokemon' to blank to fix default
     condition: '',
     slabSerial: '',
     datePurchased: new Date().toISOString().split('T')[0],

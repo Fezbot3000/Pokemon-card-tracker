@@ -1,11 +1,13 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import FormField from '../molecules/FormField';
+import SelectField from '../atoms/SelectField';
 import ImageUpload from '../atoms/ImageUpload';
 import ImageUploadButton from '../atoms/ImageUploadButton';
 import Icon from '../atoms/Icon';
 import { gradients } from '../styles/colors';
 import PriceHistoryGraph from '../../components/PriceHistoryGraph';
+import PSALookupButton from '../../components/PSALookupButton'; // Import PSALookupButton
 
 /**
  * CardDetailsForm Component
@@ -25,6 +27,31 @@ const CardDetailsForm = ({
   additionalValueContent,
   additionalSerialContent
 }) => {
+  
+  const [selectedCompany, setSelectedCompany] = useState('');
+  const [selectedGrade, setSelectedGrade] = useState('');
+
+  // Parse condition string on load/change
+  useEffect(() => {
+    if (card?.condition) {
+      const parts = card.condition.split(/\s+-\s+|\s+/); // Split by ' - ' or space
+      const company = parts[0]?.toUpperCase();
+      const grade = parts.slice(1).join(' '); // Join remaining parts for grade
+
+      if (gradingCompanies.some(c => c.value === company)) {
+        setSelectedCompany(company);
+        setSelectedGrade(grade || '');
+      } else {
+        // Handle cases where company might not be standard (e.g., just 'Mint')
+        setSelectedCompany('RAW'); // Assume Raw if no standard company prefix
+        setSelectedGrade(card.condition);
+      }
+    } else {
+      setSelectedCompany('RAW'); // Default to Raw
+      setSelectedGrade('');
+    }
+  }, [card?.condition]);
+
   // Handle text field changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -53,6 +80,101 @@ const CardDetailsForm = ({
     const investment = card.investmentAUD === '' ? 0 : parseFloat(card.investmentAUD) || 0;
     const currentValue = card.currentValueAUD === '' ? 0 : parseFloat(card.currentValueAUD) || 0;
     return currentValue - investment;
+  };
+
+  // --- Dropdown Options ---
+  const gradingCompanies = [
+    { value: '', label: 'Select Company...' },
+    { value: 'RAW', label: 'Raw/Ungraded' },
+    { value: 'PSA', label: 'PSA' },
+    { value: 'BGS', label: 'BGS' },
+    { value: 'CGC', label: 'CGC' },
+    { value: 'SGC', label: 'SGC' },
+  ];
+
+  const rawConditions = [
+    { value: '', label: 'Select Condition...' },
+    { value: 'Mint', label: 'Mint (MT)' },
+    { value: 'Near Mint', label: 'Near Mint (NM)' },
+    { value: 'Excellent', label: 'Excellent (EX)' },
+    { value: 'Very Good', label: 'Very Good (VG)' },
+    { value: 'Good', label: 'Good (G)' },
+    { value: 'Poor', label: 'Poor (P)' },
+  ];
+
+  const gradedConditions = [
+    { value: '', label: 'Select Grade...' },
+    { value: '10', label: '10' },
+    { value: '9.5', label: '9.5' },
+    { value: '9', label: '9' },
+    { value: '8.5', label: '8.5' },
+    { value: '8', label: '8' },
+    { value: '7.5', label: '7.5' },
+    { value: '7', label: '7' },
+    { value: '6.5', label: '6.5' },
+    { value: '6', label: '6' },
+    { value: '5.5', label: '5.5' },
+    { value: '5', label: '5' },
+    { value: '4.5', label: '4.5' },
+    { value: '4', label: '4' },
+    { value: '3.5', label: '3.5' },
+    { value: '3', label: '3' },
+    { value: '2.5', label: '2.5' },
+    { value: '2', label: '2' },
+    { value: '1.5', label: '1.5' },
+    { value: '1', label: '1' },
+    { value: 'Authentic', label: 'Authentic' },
+    { value: 'Authentic Altered', label: 'Authentic Altered' },
+  ];
+
+  const cardCategories = [
+    { value: '', label: 'Select Category...' },
+    { value: 'Pokemon', label: 'Pokémon' },
+    { value: 'YuGiOh', label: 'Yu-Gi-Oh!' },
+    { value: 'MagicTheGathering', label: 'Magic: The Gathering' },
+    { value: 'DragonBallSuper', label: 'Dragon Ball Super' },
+    { value: 'Sports-Baseball', label: 'Sports - Baseball' },
+    { value: 'Sports-Basketball', label: 'Sports - Basketball' },
+    { value: 'Sports-Football', label: 'Sports - Football' },
+    { value: 'Sports-Hockey', label: 'Sports - Hockey' },
+    { value: 'Sports-Soccer', label: 'Sports - Soccer' },
+    { value: 'WWE', label: 'WWE' },
+    { value: 'Other', label: 'Other TCG/CCG' },
+  ];
+
+  const currentGradeOptions = selectedCompany === 'RAW' ? rawConditions : gradedConditions;
+
+  // --- Dropdown Handlers ---
+  const handleCompanyChange = (e) => {
+    const newCompany = e.target.value;
+    setSelectedCompany(newCompany);
+    // Reset grade if company changes, unless switching between graded types
+    const isNewCompanyGraded = newCompany !== 'RAW';
+    const isOldCompanyGraded = selectedCompany !== 'RAW';
+    let newGrade = selectedGrade;
+    if (isNewCompanyGraded !== isOldCompanyGraded) {
+        newGrade = ''; // Reset grade if switching between Raw and Graded
+        setSelectedGrade('');
+    }
+    updateCondition(newCompany, newGrade);
+  };
+
+  const handleGradeChange = (e) => {
+    const newGrade = e.target.value;
+    setSelectedGrade(newGrade);
+    updateCondition(selectedCompany, newGrade);
+  };
+
+  const updateCondition = (company, grade) => {
+    if (!onChange) return;
+    let newConditionString = '';
+    if (company && company !== 'RAW') {
+      newConditionString = `${company} ${grade || ''}`.trim();
+    } else if (grade) { // For RAW
+      newConditionString = grade; // Just use the descriptive condition for Raw
+    }
+    
+    onChange({ ...card, condition: newConditionString });
   };
 
   return (
@@ -116,7 +238,10 @@ const CardDetailsForm = ({
               >
                 Replace Image
               </ImageUploadButton>
-              
+              <PSALookupButton
+                currentCardData={card}
+                onCardUpdate={onChange}
+              />
               {card.psaUrl && (
                 <a 
                   href={card.psaUrl} 
@@ -162,7 +287,6 @@ const CardDetailsForm = ({
               value={card.card || ''}
               onChange={handleInputChange}
               error={errors.card}
-              required
             />
             
             <FormField
@@ -181,20 +305,35 @@ const CardDetailsForm = ({
               error={errors.year}
             />
             
-            <FormField
+            <SelectField
               label="Category"
               name="category"
-              value={card.category || ''}
+              value={card.category ?? ''}
               onChange={handleInputChange}
+              options={cardCategories}
               error={errors.category}
+              required
             />
             
-            <FormField
-              label="Condition"
-              name="condition"
-              value={card.condition || ''}
+            {/* Condition Dropdowns */}
+            <SelectField
+              label="Grading Company"
+              name="gradingCompany"
+              value={card.gradingCompany ?? ''}
               onChange={handleInputChange}
-              error={errors.condition}
+              options={gradingCompanies}
+              error={errors.gradingCompany}
+              required
+            />
+            
+            <SelectField
+              label={selectedCompany === 'RAW' ? 'Condition' : 'Grade'}
+              name="grade"
+              value={selectedGrade}
+              onChange={handleGradeChange}
+              options={currentGradeOptions}
+              disabled={!selectedCompany || currentGradeOptions.length === 0}
+              error={errors.condition} // Reuse condition error state for now
             />
             
             <FormField
@@ -207,21 +346,14 @@ const CardDetailsForm = ({
               placeholder="Card population count"
             />
             
-            <div className="relative">
-              <FormField
-                label="Serial Number"
-                name="slabSerial"
-                value={card.slabSerial || ''}
-                onChange={handleInputChange}
-                error={errors.slabSerial}
-                required
-              />
-              {additionalSerialContent && (
-                <div className="absolute right-3 top-[38px] transform -translate-y-1/2">
-                  {additionalSerialContent}
-                </div>
-              )}
-            </div>
+            {/* Serial Number Field - Removed additionalContent */}
+            <FormField
+              label="Serial Number"
+              name="slabSerial"
+              value={card.slabSerial || ''}
+              onChange={handleInputChange}
+              error={errors.slabSerial}
+            />
             
             <FormField
               label="Date Purchased"
@@ -230,6 +362,17 @@ const CardDetailsForm = ({
               value={card.datePurchased || ''}
               onChange={handleInputChange}
               error={errors.datePurchased}
+            />
+            
+            <FormField
+              label="Quantity"
+              name="quantity"
+              type="number"
+              step="1"
+              value={card.quantity || ''}
+              onChange={handleInputChange}
+              error={errors.quantity}
+              placeholder="Number of identical cards"
             />
           </div>
 
@@ -277,17 +420,12 @@ const CardDetailsForm = ({
           
           {/* Price History Chart - directly below profit/loss */}
           <div className="mt-4">
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">Price History</h3>
-            {card.priceChartingProductId ? (
+            {card.priceChartingProductId && (
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-2">
                 <PriceHistoryGraph 
                   productId={card.priceChartingProductId} 
-                  condition={card.condition?.toLowerCase().includes('psa') || card.condition?.toLowerCase().includes('gem') ? 'graded' : 'loose'}
+                  condition={selectedCompany === 'RAW' ? 'loose' : 'graded'} // Adjust condition based on selected company
                 />
-              </div>
-            ) : (
-              <div className="bg-gray-100 dark:bg-gray-800 p-3 rounded">
-                <p className="text-gray-500 dark:text-gray-400">No price history available for this card. Use the "Update Price" button to fetch current market prices.</p>
               </div>
             )}
             {card.priceChartingUrl && (
@@ -318,7 +456,8 @@ CardDetailsForm.propTypes = {
     psaUrl: PropTypes.string,
     priceChartingUrl: PropTypes.string,
     priceChartingProductId: PropTypes.string,
-    lastPriceUpdate: PropTypes.string
+    lastPriceUpdate: PropTypes.string,
+    quantity: PropTypes.oneOfType([PropTypes.number, PropTypes.string])
   }).isRequired,
   cardImage: PropTypes.string,
   imageLoadingState: PropTypes.oneOf(['idle', 'loading', 'error']),

@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import { stripDebugProps } from '../../utils/stripDebugProps';
 
 /**
  * Card Component
@@ -40,7 +41,7 @@ const Card = ({
     <div 
       className={`${baseClasses} ${variantClasses[variant]} ${hoverClasses} ${selectableClasses} ${className}`}
       onClick={onClick}
-      {...props}
+      {...stripDebugProps(props)}
     >
       {children}
     </div>
