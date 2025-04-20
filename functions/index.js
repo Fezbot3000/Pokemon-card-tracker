@@ -1378,62 +1378,35 @@ exports.proxyEbayCompleted = functions.https.onCall(async (data, context) => {
 });
 
 // Proxy for eBay Marketplace Insights API (Buy API - more modern and reliable than Finding API)
-exports.proxyEbayMarketplaceInsights = functions.https.onRequest((req, res) => {
-  const corsOptions = {
-    origin: function (origin, callback) {
-      // Allow requests with no origin (like mobile apps, curl, Postman)
-      if (!origin) return callback(null, true);
-      if (allowedOrigins.indexOf(origin) !== -1) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'));
-      }
-    },
-    credentials: true,
-  };
+exports.proxyEbayMarketplaceInsights = functions.https.onRequest(async (req, res) => {
+  console.log('proxyEbayMarketplaceInsights invoked', req.method, req.body);
 
-  cors(corsOptions)(req, res, async () => {
-    if (req.method === 'OPTIONS') {
-      // Handle preflight request
-      res.set('Access-Control-Allow-Origin', req.headers.origin || '');
-      res.set('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
-      res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-      res.set('Access-Control-Allow-Credentials', 'true');
-      res.status(204).send('');
+  if (req.method !== 'POST') {
+    res.status(405).send('Method Not Allowed');
+    return;
+  }
+
+  try {
+    const cardName = req.body.cardName || '';
+    if (!cardName) {
+      res.status(400).send('Missing cardName');
       return;
     }
-    try {
-      // --- Use ONLY Marketplace Insights API ---
-      const fetch = require('node-fetch');
-      const EBAY_API_URL = 'https://api.ebay.com/buy/marketplace_insights/v1_beta/item_sales/search';
-      const { cardName, setName, condition, gradingCompany, grade } = req.body;
-      const aspectFilter = [];
-      if (cardName) aspectFilter.push({ aspectName: 'Card Name', aspectValueName: [cardName] });
-      if (setName) aspectFilter.push({ aspectName: 'Set', aspectValueName: [setName] });
-      if (gradingCompany) aspectFilter.push({ aspectName: 'Grading Company', aspectValueName: [gradingCompany] });
-      if (grade) aspectFilter.push({ aspectName: 'Grade', aspectValueName: [grade] });
-      const payload = {
-        filter: [
-          condition ? `conditionIds:{${condition}}` : undefined,
-        ].filter(Boolean),
-        aspect_filter: aspectFilter,
-      };
-      // --- Add your eBay OAuth token here ---
-      const EBAY_OAUTH_TOKEN = process.env.EBAY_OAUTH_TOKEN;
-      const ebayRes = await fetch(EBAY_API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${EBAY_OAUTH_TOKEN}`,
-        },
-        body: JSON.stringify(payload),
-      });
-      const data = await ebayRes.json();
-      res.set('Access-Control-Allow-Origin', req.headers.origin || '');
-      res.set('Access-Control-Allow-Credentials', 'true');
-      res.status(200).json(data);
-    } catch (err) {
-      res.status(500).json({ error: err.message || err.toString() });
-    }
-  });
+
+    // Example eBay API URL (update with your actual endpoint as needed)
+    const EBAY_APP_ID = 'Mattkane-MyCardTn-PRD-50b2c4443-d2b45623';
+    const url = `https://svcs.ebay.com/services/search/FindingService/v1?OPERATION-NAME=findCompletedItems&SERVICE-VERSION=1.0.0&SECURITY-APPNAME=${EBAY_APP_ID}&RESPONSE-DATA-FORMAT=JSON&SITE-ID=15&keywords=${encodeURIComponent(cardName)}`;
+
+    console.log('eBay API URL:', url);
+
+    const ebayRes = await fetch(url);
+    const ebayData = await ebayRes.json();
+
+    console.log('eBay API success:', JSON.stringify(ebayData).substring(0, 500));
+
+    res.status(200).json(ebayData);
+  } catch (error) {
+    console.error('proxyEbayMarketplaceInsights error:', error);
+    res.status(500).send('Internal Server Error: ' + error.message);
+  }
 });
