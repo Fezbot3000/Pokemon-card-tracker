@@ -25,7 +25,7 @@ const formatDate = (dateString) => {
 const CardDetailsModal = ({
   isOpen,
   onClose,
-  card,
+  card = null,
   onSave,
   onDelete,
   onMarkAsSold,
@@ -38,8 +38,8 @@ const CardDetailsModal = ({
   additionalHeaderContent,
   additionalValueContent,
   additionalSerialContent,
-  collections = [], // Expect collections as a prop
-  initialCollectionName // Accept initial collection name
+  collections = [], // Default to empty array
+  initialCollectionName = null // Default to null
 }) => {
   const [activeTab, setActiveTab] = useState('details');
   const [cardImage, setCardImage] = useState(image);
@@ -402,12 +402,6 @@ CardDetailsModal.propTypes = {
   additionalSerialContent: PropTypes.node,
   collections: PropTypes.arrayOf(PropTypes.string), // Expect an array of strings now
   initialCollectionName: PropTypes.string // Add prop type
-};
-
-CardDetailsModal.defaultProps = {
-  card: null,
-  collections: [], // Default to empty array
-  initialCollectionName: null // Add default prop
 };
 
 export default CardDetailsModal;

@@ -1,5 +1,6 @@
 import { compressImage } from '../utils/imageCompression';
 import { auth } from './firebase'; // Import Firebase auth to get the current user
+import logger from '../utils/logger';
 
 const DB_NAME = 'pokemonCardTracker';
 const DB_VERSION = 1;
@@ -14,7 +15,7 @@ class DatabaseService {
     this.dbPromise = null;
     // Initialize database when service is created
     this.initDatabase().catch(error => 
-      console.error('Failed to initialize database on service creation:', error)
+      logger.error('Failed to initialize database on service creation:', error)
     );
   }
 
@@ -24,21 +25,21 @@ class DatabaseService {
         const request = indexedDB.open(DB_NAME, DB_VERSION);
 
         request.onerror = (event) => {
-          console.error("Database error:", event.target.error);
+          logger.error("Database error:", event.target.error);
           
           // Check if this is a version error
           if (event.target.error && event.target.error.name === 'VersionError') {
             // Try to delete the database and recreate it
-            console.log("Version error detected, attempting to delete and recreate database");
+            logger.debug("Version error detected, attempting to delete and recreate database");
             const deleteRequest = indexedDB.deleteDatabase(DB_NAME);
             
             deleteRequest.onsuccess = () => {
-              console.log("Successfully deleted database, recreating...");
+              logger.debug("Successfully deleted database, recreating...");
               // Try again with a new request
               const newRequest = indexedDB.open(DB_NAME, DB_VERSION);
               
               newRequest.onerror = (e) => {
-                console.error("Fatal database error after reset:", e.target.error);
+                logger.error("Fatal database error after reset:", e.target.error);
                 reject('Error opening database after reset');
               };
               
@@ -51,7 +52,7 @@ class DatabaseService {
             };
             
             deleteRequest.onerror = (e) => {
-              console.error("Could not delete database:", e.target.error);
+              logger.error("Could not delete database:", e.target.error);
               reject('Error deleting database');
             };
           } else {
@@ -70,7 +71,7 @@ class DatabaseService {
 
         request.onupgradeneeded = this.setupDatabase.bind(this);
       } catch (error) {
-        console.error("Unexpected error during database initialization:", error);
+        logger.error("Unexpected error during database initialization:", error);
         reject('Unexpected error initializing database');
       }
     });
@@ -86,7 +87,7 @@ class DatabaseService {
       // Ensure all expected collections exist for the user
       await this.ensureCollections();
     } catch (error) {
-      console.error('Error ensuring database:', error);
+      logger.error('Error ensuring database:', error);
       throw error;
     }
   }
@@ -95,7 +96,7 @@ class DatabaseService {
   async ensureCollections() {
     const userId = this.getCurrentUserId();
     if (!userId) {
-      console.warn('No user ID available to ensure collections');
+      logger.warn('No user ID available to ensure collections');
       return;
     }
     
@@ -113,29 +114,29 @@ class DatabaseService {
         await new Promise((resolve) => {
           request.onsuccess = async () => {
             if (!request.result) {
-              console.log(`Collection "${collectionName}" not found for user, creating it`);
+              logger.debug(`Collection "${collectionName}" not found for user, creating it`);
               
               // Create the missing collection in a new transaction
               try {
                 await this.createEmptyCollection(collectionName);
-                console.log(`Created empty "${collectionName}" collection`);
+                logger.debug(`Created empty "${collectionName}" collection`);
               } catch (error) {
-                console.error(`Error creating "${collectionName}" collection:`, error);
+                logger.error(`Error creating "${collectionName}" collection:`, error);
               }
             } else {
-              console.log(`Collection "${collectionName}" exists for user`);
+              logger.debug(`Collection "${collectionName}" exists for user`);
             }
             resolve();
           };
           
           request.onerror = (event) => {
-            console.error(`Error checking for "${collectionName}" collection:`, event.target.error);
+            logger.error(`Error checking for "${collectionName}" collection:`, event.target.error);
             resolve();
           };
         });
       }
     } catch (error) {
-      console.error('Error ensuring collections:', error);
+      logger.error('Error ensuring collections:', error);
     }
   }
   
@@ -196,21 +197,21 @@ class DatabaseService {
       // Save the updated sold cards
       await this.saveSoldCards(updatedSoldCards);
       
-      console.log('Added test sold item successfully');
+      logger.debug('Added test sold item successfully');
       return testItem;
     } catch (error) {
-      console.error('Error adding test sold item:', error);
+      logger.error('Error adding test sold item:', error);
       throw error;
     }
   }
 
   setupDatabase(event) {
     const db = event.target.result;
-    console.log("Setting up database with stores");
+    logger.debug("Setting up database with stores");
 
     // Create collections store with compound key for user isolation
     if (!db.objectStoreNames.contains(COLLECTIONS_STORE)) {
-      console.log("Creating collections store");
+      logger.debug("Creating collections store");
       db.createObjectStore(COLLECTIONS_STORE, { keyPath: ['userId', 'name'] });
     } else {
       // If upgrading from version 2 to 3, we need to recreate the object store
@@ -221,7 +222,7 @@ class DatabaseService {
 
     // Create images store with compound key for user isolation
     if (!db.objectStoreNames.contains(IMAGES_STORE)) {
-      console.log("Creating images store");
+      logger.debug("Creating images store");
       db.createObjectStore(IMAGES_STORE, { keyPath: ['userId', 'id'] });
     } else {
       // If upgrading from version 2 to 3, we need to recreate the object store
@@ -232,7 +233,7 @@ class DatabaseService {
 
     // Create profile store with compound key for user isolation
     if (!db.objectStoreNames.contains(PROFILE_STORE)) {
-      console.log("Creating profile store");
+      logger.debug("Creating profile store");
       db.createObjectStore(PROFILE_STORE, { keyPath: ['userId', 'id'] });
     } else {
       // If upgrading from version 2 to 3, we need to recreate the object store
@@ -243,7 +244,7 @@ class DatabaseService {
 
     // Subscription store already uses userId as the key, so it's already isolated
     if (!db.objectStoreNames.contains(SUBSCRIPTION_STORE)) {
-      console.log("Creating subscription store");
+      logger.debug("Creating subscription store");
       db.createObjectStore(SUBSCRIPTION_STORE, { keyPath: 'userId' });
     }
   }
@@ -258,7 +259,7 @@ class DatabaseService {
     const missingStores = requiredStores.filter(store => !existingStores.includes(store));
     
     if (missingStores.length > 0) {
-      console.log(`Missing object stores: ${missingStores.join(', ')}. Will upgrade database...`);
+      logger.debug(`Missing object stores: ${missingStores.join(', ')}. Will upgrade database...`);
       
       // Close current connection
       this.db.close();
@@ -266,30 +267,39 @@ class DatabaseService {
       
       // Reopen with increased version to trigger upgrade
       const newVersion = DB_VERSION + 1;
-      console.log(`Reopening database with new version ${newVersion}`);
+      logger.debug(`Reopening database with new version ${newVersion}`);
       
       // This is async but we don't wait for it - the next operation will ensureDB again
       const request = indexedDB.open(DB_NAME, newVersion);
       
       request.onupgradeneeded = (event) => {
-        console.log(`Upgrading database to fix missing stores. Version: ${event.oldVersion} -> ${event.newVersion}`);
+        logger.debug(`Upgrading database to fix missing stores. Version: ${event.oldVersion} -> ${event.newVersion}`);
         this.setupDatabase(event);
       };
       
       request.onsuccess = (event) => {
         this.db = event.target.result;
-        console.log(`Database upgraded successfully to version ${this.db.version}`);
+        logger.debug(`Database upgraded successfully to version ${this.db.version}`);
       };
       
       request.onerror = (event) => {
-        console.error('Error upgrading database:', event.target.error);
+        logger.error('Error upgrading database:', event.target.error);
       };
     }
   }
 
   // Helper to get the current user ID or a default for anonymous users
   getCurrentUserId() {
-    // Always use a consistent ID for anonymous users to ensure data persistence
+    // Get the current user from Firebase auth
+    const currentUser = auth.currentUser;
+    
+    // If there's a logged in user, use their UID
+    if (currentUser && currentUser.uid) {
+      return currentUser.uid;
+    }
+    
+    // If no user is logged in, use a consistent anonymous ID
+    // This maintains data persistence for users who haven't signed up yet
     return 'anonymous';
   }
 
@@ -318,18 +328,18 @@ class DatabaseService {
           };
 
           request.onerror = (error) => {
-            console.error('Error fetching collections:', error);
+            logger.error('Error fetching collections:', error);
             // Return empty collections object with Default Collection
             resolve({ 'Default Collection': [] });
           };
         } catch (error) {
-          console.error('Transaction error in getCollections:', error);
+          logger.error('Transaction error in getCollections:', error);
           // Return empty collections object with Default Collection
           resolve({ 'Default Collection': [] });
         }
       });
     } catch (error) {
-      console.error('Unexpected error in getCollections:', error);
+      logger.error('Unexpected error in getCollections:', error);
       // Return empty collections object with Default Collection
       return { 'Default Collection': [] };
     }
@@ -341,16 +351,16 @@ class DatabaseService {
     
     return new Promise(async (resolve, reject) => {
       try {
-        console.log("DB: Saving collections:", Object.keys(collections));
+        logger.debug("DB: Saving collections:", Object.keys(collections));
         
         // If preserveSold is true, retrieve sold items first
         let soldItems = [];
         if (preserveSold) {
           try {
             soldItems = await this.getSoldCards();
-            console.log(`DB: Retrieved ${soldItems.length} sold items to preserve during collection save`);
+            logger.debug(`DB: Retrieved ${soldItems.length} sold items to preserve during collection save`);
           } catch (error) {
-            console.warn("DB: Could not retrieve sold items to preserve:", error);
+            logger.warn("DB: Could not retrieve sold items to preserve:", error);
             // Continue anyway as this is not fatal
           }
         }
@@ -367,20 +377,20 @@ class DatabaseService {
         const clearRequest = store.delete(range);
         
         clearRequest.onsuccess = () => {
-          console.log('DB: Cleared existing collections for user:', userId);
+          logger.debug('DB: Cleared existing collections for user:', userId);
           
           // Add new collections
           Object.entries(collections).forEach(([name, data]) => {
-            console.log(`DB: Saving collection: ${name} with ${Array.isArray(data) ? data.length : 0} cards`);
+            logger.debug(`DB: Saving collection: ${name} with ${Array.isArray(data) ? data.length : 0} cards`);
             const request = store.put({ userId, name, data });
             request.onerror = (e) => {
-              console.error(`Error saving collection ${name}:`, e.target.error);
+              logger.error(`Error saving collection ${name}:`, e.target.error);
             };
           });
           
           // Re-add sold items if they were preserved and exist
           if (preserveSold && soldItems.length > 0) {
-            console.log(`DB: Re-saving ${soldItems.length} preserved sold items`);
+            logger.debug(`DB: Re-saving ${soldItems.length} preserved sold items`);
             store.put({ 
               userId, 
               name: 'sold', 
@@ -389,25 +399,25 @@ class DatabaseService {
           }
           
           transaction.oncomplete = () => {
-            console.log('DB: Successfully saved all collections:', Object.keys(collections));
+            logger.debug('DB: Successfully saved all collections:', Object.keys(collections));
             if (preserveSold && soldItems.length > 0) {
-              console.log('DB: Successfully preserved sold items');
+              logger.debug('DB: Successfully preserved sold items');
             }
             resolve();
           };
         };
         
         clearRequest.onerror = (error) => {
-          console.error('DB: Error clearing collections:', error);
+          logger.error('DB: Error clearing collections:', error);
           reject('Error clearing collections');
         };
         
         transaction.onerror = (error) => {
-          console.error('DB: Error saving collections:', error);
+          logger.error('DB: Error saving collections:', error);
           reject('Error saving collections');
         };
       } catch (error) {
-        console.error('DB: Error in saveCollections:', error);
+        logger.error('DB: Error in saveCollections:', error);
         reject(error);
       }
     });
@@ -434,7 +444,7 @@ class DatabaseService {
         request.onerror = () => reject('Error saving image');
       });
     } catch (error) {
-      console.error('Error compressing image:', error);
+      logger.error('Error compressing image:', error);
       throw error;
     }
   }
@@ -537,7 +547,7 @@ class DatabaseService {
 
   async resetAllData() {
     try {
-      console.log("Resetting all application data for current user...");
+      logger.debug("Resetting all application data for current user...");
       const userId = this.getCurrentUserId();
       
       // Clear localStorage
@@ -581,15 +591,15 @@ class DatabaseService {
           
           // Wait for transactions to complete
           collectionsTransaction.oncomplete = () => {
-            console.log("Collections cleared for user:", userId);
+            logger.debug("Collections cleared for user:", userId);
           };
           
           imagesTransaction.oncomplete = () => {
-            console.log("Images cleared for user:", userId);
+            logger.debug("Images cleared for user:", userId);
           };
           
           profileTransaction.oncomplete = () => {
-            console.log("Profile cleared for user:", userId);
+            logger.debug("Profile cleared for user:", userId);
           };
           
           // When all are done
@@ -598,19 +608,19 @@ class DatabaseService {
             new Promise(r => { clearImagesRequest.onsuccess = r; }),
             new Promise(r => { clearProfileRequest.onsuccess = r; })
           ]).then(() => {
-            console.log("All data reset successfully for user:", userId);
+            logger.debug("All data reset successfully for user:", userId);
             resolve(true);
           }).catch(error => {
-            console.error("Error during reset:", error);
+            logger.error("Error during reset:", error);
             reject(error);
           });
         } catch (error) {
-          console.error("Error in resetAllData transaction:", error);
+          logger.error("Error in resetAllData transaction:", error);
           reject(error);
         }
       });
     } catch (error) {
-      console.error("Unexpected error in resetAllData:", error);
+      logger.error("Unexpected error in resetAllData:", error);
       throw error;
     }
   };
@@ -661,7 +671,7 @@ class DatabaseService {
                 status: `Processed ${processed}/${images.length} images (${compressed} compressed)`
               });
             } catch (error) {
-              console.error(`Error processing image ${image.id}:`, error);
+              logger.error(`Error processing image ${image.id}:`, error);
               // Continue with next image even if one fails
               processed++;
               progressCallback({
@@ -694,7 +704,7 @@ class DatabaseService {
     return new Promise((resolve, reject) => {
       try {
         if (!this.db.objectStoreNames.contains(COLLECTIONS_STORE)) {
-          console.error('Collections store does not exist');
+          logger.error('Collections store does not exist');
           reject('Collections store does not exist');
           return;
         }
@@ -714,7 +724,7 @@ class DatabaseService {
         };
         
         request.onerror = (event) => {
-          console.error('Error saving sold cards:', event.target.error);
+          logger.error('Error saving sold cards:', event.target.error);
           reject('Error saving sold cards');
         };
         
@@ -722,10 +732,10 @@ class DatabaseService {
         };
         
         transaction.onerror = (event) => {
-          console.error('Transaction error for saving sold cards:', event.target.error);
+          logger.error('Transaction error for saving sold cards:', event.target.error);
         };
       } catch (error) {
-        console.error('Exception in saveSoldCards:', error);
+        logger.error('Exception in saveSoldCards:', error);
         reject(error);
       }
     });
@@ -739,7 +749,7 @@ class DatabaseService {
       try {
         // Make sure collections object store exists
         if (!this.db.objectStoreNames.contains(COLLECTIONS_STORE)) {
-          console.log('Collections store does not exist, returning empty array');
+          logger.debug('Collections store does not exist, returning empty array');
           resolve([]);
           return;
         }
@@ -753,24 +763,24 @@ class DatabaseService {
           if (soldCollection && Array.isArray(soldCollection.data)) {
             resolve(soldCollection.data);
           } else {
-            console.log('No sold collection found or invalid format, returning empty array');
+            logger.debug('No sold collection found or invalid format, returning empty array');
             resolve([]);
           }
         };
 
         request.onerror = (event) => {
-          console.error('Error fetching sold cards:', event.target.error);
+          logger.error('Error fetching sold cards:', event.target.error);
           // Return empty array instead of rejecting to prevent UI errors
           resolve([]);
         };
         
         // Add transaction error handler
         transaction.onerror = (event) => {
-          console.error('Transaction error for getting sold cards:', event.target.error);
+          logger.error('Transaction error for getting sold cards:', event.target.error);
           resolve([]);
         };
       } catch (error) {
-        console.error('Exception in getSoldCards:', error);
+        logger.error('Exception in getSoldCards:', error);
         resolve([]); // Return empty array on error to prevent UI crashes
       }
     });

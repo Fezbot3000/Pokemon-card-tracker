@@ -1,21 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '../services/firebase';
 import { useAuth } from '../design-system';
 import { useSubscription } from '../contexts/SubscriptionContext';
 import SubscriptionBanner from './SubscriptionBanner';
 import { toast } from 'react-hot-toast';
-import JSZip from 'jszip';
 import { Link } from 'react-router-dom';
+import logger from '../utils/logger';
 
 const CloudSync = ({ onExportData, onImportCollection }) => {
   const { currentUser } = useAuth();
   const { subscriptionStatus, isLoading: isLoadingSubscription } = useSubscription();
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [downloadProgress, setDownloadProgress] = useState(0);
   const [isSyncing, setIsSyncing] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [syncProgress, setSyncProgress] = useState(0);
 
   // Check if the device is mobile
   useEffect(() => {
@@ -31,6 +30,7 @@ const CloudSync = ({ onExportData, onImportCollection }) => {
     };
   }, []);
 
+  // Simplified cloud backup function
   const handleSyncToCloud = async () => {
     if (!currentUser) {
       toast.error('You must be logged in to use cloud sync');
@@ -44,43 +44,51 @@ const CloudSync = ({ onExportData, onImportCollection }) => {
     }
 
     setIsSyncing(true);
-    setUploadProgress(0);
-
+    setSyncProgress(10); // Initial progress indicator
+    
     try {
-      // Use the existing export function to get the data ZIP
-      const exportedZip = await onExportData({ returnBlob: true });
+      toast.loading('Creating backup... (10%)', { id: 'cloud-backup' });
+      setSyncProgress(10);
       
-      // Upload to Firebase Storage
+      // Get data blob using export function with smaller chunks
+      const exportedZip = await onExportData({ 
+        returnBlob: true,
+        optimizeForMobile: true  // Add hint for export function to optimize if it supports it
+      });
+      
+      setSyncProgress(50);
+      toast.loading('Uploading to cloud... (50%)', { id: 'cloud-backup' });
+      
+      // Reference to storage
       const storageRef = ref(storage, `users/${currentUser.uid}/backups/latest-backup.zip`);
-      const uploadTask = uploadBytesResumable(storageRef, exportedZip);
-
-      // Monitor upload progress
-      uploadTask.on('state_changed', 
-        (snapshot) => {
-          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-          setUploadProgress(progress);
-        },
-        (error) => {
-          console.error('Upload error:', error);
-          toast.error('Failed to upload backup: ' + error.message);
-          setIsSyncing(false);
-        },
-        async () => {
-          // Upload completed successfully
-          toast.success('Backup synced to cloud successfully!');
-          
-          // Store timestamp of latest backup
-          localStorage.setItem('lastCloudSync', new Date().toISOString());
-          setIsSyncing(false);
-        }
-      );
+      
+      // Use simpler uploadBytes instead of uploadBytesResumable for better compatibility
+      await uploadBytes(storageRef, exportedZip);
+      
+      setSyncProgress(100);
+      
+      // Store timestamp of latest backup
+      localStorage.setItem('lastCloudSync', new Date().toISOString());
+      
+      toast.success('Backup completed successfully! (100%)', { id: 'cloud-backup' });
     } catch (error) {
-      console.error('Cloud sync error:', error);
-      toast.error('Failed to sync to cloud: ' + error.message);
+      logger.error('Cloud backup error:', error);
+      
+      // Show more helpful error messages based on error type
+      if (error.code === 'storage/retry-limit-exceeded') {
+        toast.error('Backup file too large for mobile. Try on desktop or reduce collection size.', 
+          { id: 'cloud-backup' });
+      } else if (error.code === 'storage/unauthorized') {
+        toast.error('Unauthorized: Please log in again.', { id: 'cloud-backup' });
+      } else {
+        toast.error(`Cloud backup failed: ${error.message}`, { id: 'cloud-backup' });
+      }
+    } finally {
       setIsSyncing(false);
     }
   };
 
+  // Simplified cloud restore function
   const handleImportFromCloud = async () => {
     if (!currentUser) {
       toast.error('You must be logged in to import from cloud');
@@ -94,38 +102,98 @@ const CloudSync = ({ onExportData, onImportCollection }) => {
     }
 
     setIsImporting(true);
-    setDownloadProgress(0);
-
+    setSyncProgress(10);
+    
     try {
+      toast.loading('Checking for backups... (10%)', { id: 'cloud-restore' });
+      
       // Reference to the latest backup
       const storageRef = ref(storage, `users/${currentUser.uid}/backups/latest-backup.zip`);
       
-      // Get download URL
-      const downloadURL = await getDownloadURL(storageRef);
+      try {
+        // First check if file exists by trying to get download URL
+        const downloadURL = await getDownloadURL(storageRef);
+        
+        setSyncProgress(20);
+        toast.loading('Found backup, starting download... (20%)', { id: 'cloud-restore' });
+        
+        // Use XMLHttpRequest for better mobile compatibility and progress monitoring
+        const xhr = new XMLHttpRequest();
+        xhr.responseType = 'blob';
+        
+        // Set up progress monitoring
+        xhr.onprogress = (event) => {
+          if (event.lengthComputable) {
+            // Scale progress from 20% to 70%
+            const percent = 20 + (event.loaded / event.total) * 50;
+            setSyncProgress(percent);
+            const percentRounded = Math.round(percent);
+            toast.loading(`Downloading backup... (${percentRounded}%)`, { id: 'cloud-restore' });
+          }
+        };
+        
+        xhr.onload = function() {
+          if (this.status === 200) {
+            const blob = new Blob([this.response], { type: 'application/zip' });
+            
+            // Create a File object from the Blob for compatibility
+            const file = new File([blob], 'backup.zip', { type: 'application/zip' });
+            
+            setSyncProgress(70);
+            toast.loading(`Processing backup... (70%)`, { id: 'cloud-restore' });
+            
+            // Pass the file to the import function
+            onImportCollection(file, {
+              noOverlay: true, // Don't show full-page overlay
+              onProgress: (step, percent, message) => {
+                // Scale progress from 70% to 100%
+                const scaledPercent = 70 + (percent / 100) * 30;
+                setSyncProgress(scaledPercent);
+                toast.loading(`${message || `Step ${step}: ${Math.round(scaledPercent)}%`}`, { id: 'cloud-restore' });
+              }
+            }).then(() => {
+              setSyncProgress(100);
+              toast.success('Restore completed successfully! (100%)', { id: 'cloud-restore' });
+              setIsImporting(false);
+            }).catch(error => {
+              logger.error('Import error:', error);
+              toast.error(`Import failed: ${error.message}`, { id: 'cloud-restore' });
+              setIsImporting(false);
+            });
+          } else {
+            throw new Error(`HTTP error: ${this.status}`);
+          }
+        };
+        
+        xhr.onerror = function() {
+          throw new Error('Network error occurred while downloading backup');
+        };
+        
+        // Start the request
+        xhr.open('GET', downloadURL);
+        xhr.send();
+        
+      } catch (error) {
+        // If file not found, handle gracefully
+        if (error.code === 'storage/object-not-found') {
+          toast.error('No backup found in cloud storage', { id: 'cloud-restore' });
+        } else {
+          // Re-throw other errors to be caught by outer handler
+          throw error;
+        }
+      }
+    } catch (error) {
+      logger.error('Cloud restore error:', error);
       
-      // Use blob() method which is more widely supported
-      const response = await fetch(downloadURL);
-      
-      if (!response.ok) {
-        throw new Error('Failed to download backup');
+      // Show more helpful error messages based on error type
+      if (error.code === 'storage/quota-exceeded') {
+        toast.error('Storage quota exceeded. Please contact support.', { id: 'cloud-restore' });
+      } else if (error.code === 'storage/unauthorized') {
+        toast.error('Unauthorized: Please log in again.', { id: 'cloud-restore' });
+      } else {
+        toast.error(`Cloud restore failed: ${error.message}`, { id: 'cloud-restore' });
       }
       
-      // Show indeterminate progress since we can't track progress with blob()
-      setDownloadProgress(50);
-      
-      // Get the blob directly
-      const blob = await response.blob();
-      
-      // Import the downloaded ZIP using the existing import function
-      const file = new File([blob], 'cloud-backup.zip', { type: 'application/zip' });
-      await onImportCollection(file);
-      
-      toast.success('Data imported from cloud successfully!');
-      setDownloadProgress(100);
-      setIsImporting(false);
-    } catch (error) {
-      console.error('Cloud import error:', error);
-      toast.error('Failed to import from cloud: ' + error.message);
       setIsImporting(false);
     }
   };
@@ -134,12 +202,15 @@ const CloudSync = ({ onExportData, onImportCollection }) => {
     const lastSync = localStorage.getItem('lastCloudSync');
     if (!lastSync) return 'Never';
     
-    const date = new Date(lastSync);
-    return date.toLocaleString();
+    try {
+      const date = new Date(lastSync);
+      return date.toLocaleString();
+    } catch (e) {
+      return 'Unknown';
+    }
   };
 
-  // Show premium upgrade banner if user doesn't have premium subscription
-  if (subscriptionStatus.status !== 'active' && !isLoadingSubscription) {
+  if (!currentUser || subscriptionStatus.status !== 'active') {
     return (
       <div className="bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg p-4 text-white relative overflow-hidden">
         <div className="absolute -right-4 -top-4 text-yellow-300 opacity-10">
@@ -176,6 +247,14 @@ const CloudSync = ({ onExportData, onImportCollection }) => {
         <p className="text-sm text-gray-500 dark:text-gray-400">
           Last synced: {getLastSyncTime()}
         </p>
+        {(isSyncing || isImporting) && (
+          <p className="text-sm text-blue-600 dark:text-blue-400 animate-pulse">
+            {isSyncing 
+              ? `Backup in progress: ${Math.round(syncProgress)}% complete`
+              : `Restore in progress: ${Math.round(syncProgress)}% complete`
+            }
+          </p>
+        )}
       </div>
       
       <div className={`${isMobile ? 'flex flex-col gap-3' : 'flex gap-2'}`}>
@@ -186,7 +265,7 @@ const CloudSync = ({ onExportData, onImportCollection }) => {
           style={{ minWidth: '110px' }}
         >
           {isSyncing ? (
-            <>Saving...</>
+            <>Creating backup...</>
           ) : isLoadingSubscription ? (
             <>Checking subscription...</>
           ) : (
@@ -204,7 +283,7 @@ const CloudSync = ({ onExportData, onImportCollection }) => {
           style={{ minWidth: '110px' }}
         >
           {isImporting ? (
-            <>Loading...</>
+            <>Restoring data...</>
           ) : isLoadingSubscription ? (
             <>Checking subscription...</>
           ) : (
@@ -220,22 +299,27 @@ const CloudSync = ({ onExportData, onImportCollection }) => {
         <div className="w-full mt-4">
           <div className="flex items-center justify-between mb-1">
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              {isSyncing ? 'Uploading...' : 'Downloading...'}
+              {isSyncing 
+                ? `Creating backup (${Math.round(syncProgress)}%)` 
+                : `Restoring from backup (${Math.round(syncProgress)}%)`
+              }
             </span>
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              {isSyncing 
-                ? `${Math.round(uploadProgress)}%` 
-                : `${Math.round(downloadProgress)}%`
-              }
+              {`${Math.round(syncProgress)}%`}
             </span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
             <div 
               className="bg-blue-600 h-2.5 rounded-full transition-all duration-300 ease-in-out" 
-              style={{ 
-                width: `${isSyncing ? uploadProgress : downloadProgress}%` 
-              }}
+              style={{ width: `${syncProgress}%` }}
             ></div>
+          </div>
+          <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            {syncProgress < 30 && "Preparing data..."}
+            {syncProgress >= 30 && syncProgress < 50 && "Connecting to cloud..."}
+            {syncProgress >= 50 && syncProgress < 80 && (isSyncing ? "Uploading files..." : "Downloading files...")}
+            {syncProgress >= 80 && syncProgress < 100 && "Processing data..."}
+            {syncProgress >= 100 && "Completed!"}
           </div>
         </div>
       )}
@@ -249,4 +333,4 @@ const CloudSync = ({ onExportData, onImportCollection }) => {
   );
 };
 
-export default CloudSync; 
+export default CloudSync;

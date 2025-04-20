@@ -46,6 +46,8 @@ import CloudSync from './components/CloudSync';
 import JSZip from 'jszip';
 import DashboardPricing from './components/DashboardPricing';
 import ComponentLibrary from './pages/ComponentLibrary';
+import logger from './utils/logger'; // Import the logger utility
+import DataMigrationModal from './components/DataMigrationModal'; // Import the DataMigrationModal component
 
 // Helper function to generate a unique ID for cards without one
 const generateUniqueId = () => {
@@ -77,7 +79,7 @@ function NewUserRoute() {
     
     // Check if we need to redirect the user
     if (isFromPayment) {
-      console.log('User is coming from payment flow, clearing isNewUser flag');
+      logger.debug('User is coming from payment flow, clearing isNewUser flag');
       localStorage.removeItem('isNewUser');
       localStorage.removeItem('chosenPlan');
       hasRedirected.current = true;
@@ -93,7 +95,7 @@ function NewUserRoute() {
     // For inactive/no subscription users who haven't chosen the free plan,
     // redirect to pricing page
     if (subscriptionStatus?.status !== 'active') {
-      console.log('User needs subscription, redirecting to pricing');
+      logger.debug('User needs subscription, redirecting to pricing');
       hasRedirected.current = true;
       navigate('/dashboard/pricing');
       return;
@@ -120,7 +122,7 @@ function Dashboard() {
     const isFromPayment = location.search.includes('checkout_success=true');
     
     if (isFromPayment) {
-      console.log('Detected checkout_success parameter, refreshing subscription status');
+      logger.debug('Detected checkout_success parameter, refreshing subscription status');
       hasRefreshed.current = true;
       
       // Force refresh subscription status
@@ -133,7 +135,7 @@ function Dashboard() {
       
       // If we're on the pricing page but came from payment success, force redirect to dashboard
       if (location.pathname.includes('/dashboard/pricing')) {
-        console.log('User completed payment but is on pricing page, forcing redirect to dashboard');
+        logger.debug('User completed payment but is on pricing page, forcing redirect to dashboard');
         // Add a small delay to allow the subscription status to refresh
         setTimeout(() => {
           // Force navigate to dashboard instead of pricing
@@ -447,7 +449,7 @@ function AppContent() {
       // Close the import modal
       setImportModalOpen(false);
     } catch (error) {
-      console.error('Error importing data:', error);
+      logger.error('Error importing data:', error);
       toast.error(`Import failed: ${error.message}`);
     }
   }, [collections, selectedCollection, importMode, exchangeRate, calculateTotalProfit]);
@@ -472,7 +474,7 @@ function AppContent() {
         
         // Attempt to load collections from IndexedDB
         const savedCollections = await db.getCollections().catch(error => {
-          console.error('Failed to load collections:', error);
+          logger.error('Failed to load collections:', error);
           return { 'Default Collection': [] };
         });
         
@@ -503,11 +505,11 @@ function AppContent() {
           try {
             await db.saveCollections(defaultCollections);
           } catch (saveError) {
-            console.error('Could not save default collection:', saveError);
+            logger.error('Could not save default collection:', saveError);
           }
         }
       } catch (error) {
-        console.error('Error loading collections:', error);
+        logger.error('Error loading collections:', error);
         
         // Set default collections as fallback
         const defaultCollections = { 'Default Collection': [] };
@@ -581,7 +583,7 @@ function AppContent() {
                 card.imagePath = `images/${filename}`;
               } catch (error) {
                 // Silent fail for individual images
-                console.error(`Failed to export image for card ${card.slabSerial}:`, error);
+                logger.error(`Failed to export image for card ${card.slabSerial}:`, error);
               }
             })();
             imagePromises.push(promise);
@@ -605,7 +607,7 @@ function AppContent() {
               soldCard.imagePath = `images/${filename}`;
             } catch (error) {
               // Silent fail for individual images
-              console.error(`Failed to export image for sold card ${soldCard.slabSerial}:`, error);
+              logger.error(`Failed to export image for sold card ${soldCard.slabSerial}:`, error);
             }
           })();
           imagePromises.push(promise);
@@ -664,18 +666,18 @@ To import this backup:
 
           resolve();
         } catch (error) {
-          console.error("Export error:", error);
+          logger.error("Export error:", error);
           reject(error);
         }
       } catch (error) {
-        console.error("Export error:", error);
+        logger.error("Export error:", error);
         reject(error);
       }
     });
   };
 
   // Function to handle importing collections from JSON or ZIP file
-  const handleImportCollection = (file) => {
+  const handleImportCollection = (file, options = {}) => {
     // If file is not provided, show file input dialog
     if (!file) {
       const input = document.createElement('input');
@@ -689,54 +691,78 @@ To import this backup:
             return;
           }
           
-          // Create a loading overlay
-          const loadingEl = document.createElement('div');
-          loadingEl.className = 'fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[100]';
-          loadingEl.innerHTML = `
-            <div class="bg-white dark:bg-[#1B2131] p-6 rounded-lg shadow-lg text-center max-w-md">
-              <div class="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mx-auto mb-4"></div>
-              <p class="text-gray-700 dark:text-gray-300 font-medium mb-1">Importing backup...</p>
-              <p class="text-gray-500 dark:text-gray-400 text-sm" id="import-status">Processing file... (Step 1 of 4)</p>
-              <div class="mt-3 w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                <div id="import-progress" class="bg-primary h-2 rounded-full" style="width: 10%"></div>
+          // Create a loading overlay - only if not called from SettingsModal
+          if (!options.noOverlay) {
+            const loadingEl = document.createElement('div');
+            loadingEl.className = 'fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[100]';
+            loadingEl.innerHTML = `
+              <div class="bg-white dark:bg-[#1B2131] p-6 rounded-lg shadow-lg text-center max-w-md">
+                <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+                <p class="text-gray-700 dark:text-gray-300 font-medium mb-1">Importing backup...</p>
+                <p class="text-gray-500 dark:text-gray-400 text-sm" id="import-status">Processing file... (Step 1 of 4)</p>
+                <div class="mt-3 w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                  <div id="import-progress" class="bg-primary h-2 rounded-full" style="width: 10%"></div>
+                </div>
               </div>
-            </div>
-          `;
-          document.body.appendChild(loadingEl);
-          
-          // Start processing the file
-          processImportFile(file, loadingEl);
+            `;
+            document.body.appendChild(loadingEl);
+            
+            // Start processing the file
+            try {
+              await processImportFile(file, loadingEl, options);
+            } catch (error) {
+              logger.error('Process import file error:', error);
+              // Error is already handled in processImportFile
+            }
+          } else {
+            // Process without overlay (for SettingsModal integration)
+            try {
+              await processImportFile(file, null, options);
+            } catch (error) {
+              logger.error('Process import file error:', error);
+              // Error will be handled by the caller (SettingsModal)
+              throw error;
+            }
+          }
         } catch (error) {
-          console.error('Import error:', error);
-          toast.error('Import failed: ' + error.message);
+          logger.error('Import error:', error);
+          toast.error(`Import failed: ${error.message}`);
         }
       };
       
       input.click();
     } else {
       // If file is provided directly (e.g. from cloud sync)
-      // Create a loading overlay
-      const loadingEl = document.createElement('div');
-      loadingEl.className = 'fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[100]';
-      loadingEl.innerHTML = `
-        <div class="bg-white dark:bg-[#1B2131] p-6 rounded-lg shadow-lg text-center max-w-md">
-          <div class="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mx-auto mb-4"></div>
-          <p class="text-gray-700 dark:text-gray-300 font-medium mb-1">Importing backup...</p>
-          <p class="text-gray-500 dark:text-gray-400 text-sm" id="import-status">Processing file... (Step 1 of 4)</p>
-          <div class="mt-3 w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-            <div id="import-progress" class="bg-primary h-2 rounded-full" style="width: 10%"></div>
+      // Create a loading overlay only if not called from SettingsModal
+      if (!options.noOverlay) {
+        const loadingEl = document.createElement('div');
+        loadingEl.className = 'fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[100]';
+        loadingEl.innerHTML = `
+          <div class="bg-white dark:bg-[#1B2131] p-6 rounded-lg shadow-lg text-center max-w-md">
+            <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+            <p class="text-gray-700 dark:text-gray-300 font-medium mb-1">Importing backup...</p>
+            <p class="text-gray-500 dark:text-gray-400 text-sm" id="import-status">Processing file... (Step 1 of 4)</p>
+            <div class="mt-3 w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+              <div id="import-progress" class="bg-primary h-2 rounded-full" style="width: 10%"></div>
+            </div>
           </div>
-        </div>
-      `;
-      document.body.appendChild(loadingEl);
-      
-      // Process the file
-      processImportFile(file, loadingEl);
+        `;
+        document.body.appendChild(loadingEl);
+        
+        // Process the file
+        return processImportFile(file, loadingEl, options).catch(error => {
+          logger.error('Process import file error:', error);
+          // Error is already handled in processImportFile
+        });
+      } else {
+        // Process without overlay (for SettingsModal integration)
+        return processImportFile(file, null, options);
+      }
     }
   };
-  
+
   // Process the imported file
-  const processImportFile = async (file, loadingEl) => {
+  const processImportFile = async (file, loadingEl, options = {}) => {
     try {
       // Create a JSZip instance
       const zip = new JSZip();
@@ -746,233 +772,178 @@ To import this backup:
       let importedSoldCards = 0;
 
       // Function to update progress
-      const updateProgress = (message, percent) => {
-        if (!loadingEl) return;
-        const progressEl = loadingEl.querySelector('[data-progress]');
-        const messageEl = loadingEl.querySelector('[data-message]');
-        if (progressEl) progressEl.style.width = `${percent}%`;
-        if (messageEl) messageEl.textContent = message;
+      const updateProgress = (message, percent, step) => {
+        // Update the overlay if it exists
+        if (loadingEl) {
+          const progressEl = loadingEl.querySelector('#import-progress');
+          const messageEl = loadingEl.querySelector('#import-status');
+          if (progressEl) progressEl.style.width = `${percent}%`;
+          if (messageEl) messageEl.textContent = message;
+        }
+        
+        // Call the onProgress callback if provided (for SettingsModal integration)
+        if (options.onProgress && typeof options.onProgress === 'function') {
+          options.onProgress(step || 1, percent, message);
+        }
       };
 
-      if (file.name.endsWith('.zip')) {
-        // Process ZIP file
-        const zipContent = await zip.loadAsync(file);
+      // Set initial progress
+      updateProgress('Processing file... (Step 1 of 4)', 10, 1);
+      
+      // Process ZIP file
+      const zipContent = await zip.loadAsync(file);
+      
+      // Check if collections.json exists in data/collections.json (new format)
+      // or directly in the root (old format)
+      let collectionsFile = zipContent.file("data/collections.json");
+      if (!collectionsFile) {
+        // Try the old format (root level)
+        collectionsFile = zipContent.file("collections.json");
         
-        // Check if collections.json exists in data/collections.json (new format)
-        // or directly in the root (old format)
-        let collectionsFile = zipContent.file("data/collections.json");
         if (!collectionsFile) {
-          // Try the old format (root level)
-          collectionsFile = zipContent.file("collections.json");
-          
-          if (!collectionsFile) {
-            throw new Error("Invalid backup file: missing collections.json");
-          }
+          throw new Error("Invalid backup file: missing collections.json");
+        }
+      }
+      
+      // Load collections data
+      const collectionsJson = await collectionsFile.async("string");
+      let collectionsData;
+      
+      try {
+        collectionsData = JSON.parse(collectionsJson);
+      } catch (jsonError) {
+        logger.error('Error parsing JSON:', jsonError);
+        throw new Error("Invalid backup format: JSON parsing failed");
+      }
+      
+      // Validate format
+      if (!collectionsData.collections && !Object.keys(collectionsData).some(key => 
+          (key === 'collections' || (typeof collectionsData[key] === 'object' && !Array.isArray(collectionsData[key]))))) {
+        logger.warn("Backup format unusual: missing or invalid collections property");
+        // Instead of failing, we'll try to continue processing
+      }
+      
+      // Extract and properly save sold cards FIRST, before any other operations
+      if (collectionsData.soldCards && Array.isArray(collectionsData.soldCards)) {
+        logger.log(`[CRITICAL] Found ${collectionsData.soldCards.length} sold cards in ZIP backup`);
+        
+        // Add to collections so they'll be properly saved through the normal channel
+        if (!collectionsData.collections) {
+          collectionsData.collections = {};
         }
         
-        // Load collections data
-        const collectionsJson = await collectionsFile.async("string");
-        let collectionsData;
+        collectionsData.collections.sold = collectionsData.soldCards.map(item => ({
+          ...item,
+          soldDate: item.soldDate || item.dateSold || new Date().toISOString(),
+          buyer: item.buyer || "Import",
+          finalValueAUD: parseFloat(item.finalValueAUD) || parseFloat(item.currentValueAUD) || 0,
+          finalProfitAUD: parseFloat(item.finalProfitAUD) || 
+            (parseFloat(item.finalValueAUD || item.currentValueAUD || 0) - parseFloat(item.investmentAUD || 0))
+        }));
         
-        try {
-          collectionsData = JSON.parse(collectionsJson);
-        } catch (jsonError) {
-          console.error('Error parsing JSON:', jsonError);
-          throw new Error("Invalid backup format: JSON parsing failed");
+        logger.log(`[CRITICAL] Added ${collectionsData.collections.sold.length} sold cards to collections for proper saving`);
+        importedSoldCards = collectionsData.collections.sold.length;
+      } else if (collectionsData.soldItems && Array.isArray(collectionsData.soldItems)) {
+        // Try alternative field name (soldItems instead of soldCards)
+        logger.log(`[CRITICAL] Found ${collectionsData.soldItems.length} sold items in ZIP backup`);
+        
+        if (!collectionsData.collections) {
+          collectionsData.collections = {};
         }
         
-        // Validate format
-        if (!collectionsData.collections && !Object.keys(collectionsData).some(key => 
-            (key === 'collections' || (typeof collectionsData[key] === 'object' && !Array.isArray(collectionsData[key]))))) {
-          console.warn("Backup format unusual: missing or invalid collections property");
-          // Instead of failing, we'll try to continue processing
-        }
+        collectionsData.collections.sold = collectionsData.soldItems.map(item => ({
+          ...item,
+          soldDate: item.soldDate || item.dateSold || new Date().toISOString(),
+          buyer: item.buyer || "Import",
+          finalValueAUD: parseFloat(item.finalValueAUD) || parseFloat(item.currentValueAUD) || 0,
+          finalProfitAUD: parseFloat(item.finalProfitAUD) || 
+            (parseFloat(item.finalValueAUD || item.currentValueAUD || 0) - parseFloat(item.investmentAUD || 0))
+        }));
         
-        // Extract and properly save sold cards FIRST, before any other operations
-        if (collectionsData.soldCards && Array.isArray(collectionsData.soldCards)) {
-          console.log(`[CRITICAL] Found ${collectionsData.soldCards.length} sold cards in ZIP backup`);
-          
-          // Add to collections so they'll be properly saved through the normal channel
-          if (!collectionsData.collections) {
-            collectionsData.collections = {};
-          }
-          
-          collectionsData.collections.sold = collectionsData.soldCards.map(item => ({
-            ...item,
-            soldDate: item.soldDate || item.dateSold || new Date().toISOString(),
-            buyer: item.buyer || "Import",
-            finalValueAUD: parseFloat(item.finalValueAUD) || parseFloat(item.currentValueAUD) || 0,
-            finalProfitAUD: parseFloat(item.finalProfitAUD) || 
-              (parseFloat(item.finalValueAUD || item.currentValueAUD || 0) - parseFloat(item.investmentAUD || 0))
-          }));
-          
-          console.log(`[CRITICAL] Added ${collectionsData.collections.sold.length} sold cards to collections for proper saving`);
-          importedSoldCards = collectionsData.collections.sold.length;
-        } else if (collectionsData.soldItems && Array.isArray(collectionsData.soldItems)) {
-          // Try alternative field name (soldItems instead of soldCards)
-          console.log(`[CRITICAL] Found ${collectionsData.soldItems.length} sold items in ZIP backup`);
-          
-          if (!collectionsData.collections) {
-            collectionsData.collections = {};
-          }
-          
-          collectionsData.collections.sold = collectionsData.soldItems.map(item => ({
-            ...item,
-            soldDate: item.soldDate || item.dateSold || new Date().toISOString(),
-            buyer: item.buyer || "Import",
-            finalValueAUD: parseFloat(item.finalValueAUD) || parseFloat(item.currentValueAUD) || 0,
-            finalProfitAUD: parseFloat(item.finalProfitAUD) || 
-              (parseFloat(item.finalValueAUD || item.currentValueAUD || 0) - parseFloat(item.investmentAUD || 0))
-          }));
-          
-          console.log(`[CRITICAL] Added ${collectionsData.collections.sold.length} sold items to collections for proper saving`);
-          importedSoldCards = collectionsData.collections.sold.length;
-        } else if (collectionsData.collections && collectionsData.collections.sold && Array.isArray(collectionsData.collections.sold)) {
-          // Backup already has the correct structure - sold items are in collections.sold
-          console.log(`[CRITICAL] Found ${collectionsData.collections.sold.length} items in collections.sold already`);
-          importedSoldCards = collectionsData.collections.sold.length;
+        logger.log(`[CRITICAL] Added ${collectionsData.collections.sold.length} sold items to collections for proper saving`);
+        importedSoldCards = collectionsData.collections.sold.length;
+      } else if (collectionsData.collections && collectionsData.collections.sold && Array.isArray(collectionsData.collections.sold)) {
+        // Backup already has the correct structure - sold items are in collections.sold
+        logger.log(`[CRITICAL] Found ${collectionsData.collections.sold.length} items in collections.sold already`);
+        importedSoldCards = collectionsData.collections.sold.length;
+      } else {
+        logger.log("[CRITICAL] No sold items found in backup file");
+      }
+      
+      // Extract images
+      updateProgress('Processing images... (Step 3 of 4)', 50, 3);
+      let imagesFolder = zipContent.folder("images");
+      if (!imagesFolder || Object.keys(imagesFolder.files).length === 0) {
+        // Try looking for images in root
+        const imageFiles = Object.keys(zipContent.files).filter(path => 
+          path.match(/\.(jpg|jpeg|png|gif)$/i) && !zipContent.files[path].dir
+        );
+        
+        if (imageFiles.length > 0) {
+          logger.log('Found images in root directory');
+          imagesFolder = zipContent; // Use root as images folder
         } else {
-          console.log("[CRITICAL] No sold items found in backup file");
+          logger.log('No images found in backup');
+          imagesFolder = null;
         }
+      }
+      
+      // Extract images
+      const imagePromises = [];
+      
+      if (imagesFolder) {
+        const allFiles = Object.keys(zipContent.files);
         
-        // Extract images
-        updateProgress('Processing images... (Step 3 of 4)', 50);
-        let imagesFolder = zipContent.folder("images");
-        if (!imagesFolder || Object.keys(imagesFolder.files).length === 0) {
-          // Try looking for images in root
-          const imageFiles = Object.keys(zipContent.files).filter(path => 
-            path.match(/\.(jpg|jpeg|png|gif)$/i) && !zipContent.files[path].dir
-          );
+        // This handles both "images/xxx.jpg" format and root-level images
+        for (const path of allFiles) {
+          const file = zipContent.files[path];
           
-          if (imageFiles.length > 0) {
-            console.log('Found images in root directory');
-            imagesFolder = zipContent; // Use root as images folder
-          } else {
-            console.log('No images found in backup');
-            imagesFolder = null;
+          // Skip directories and collections.json
+          if (file.dir || path === "collections.json" || path === "data/collections.json") {
+            continue;
           }
-        }
-        
-        // Extract images
-        const imagePromises = [];
-        
-        if (imagesFolder) {
-          const allFiles = Object.keys(zipContent.files);
           
-          // This handles both "images/xxx.jpg" format and root-level images
-          for (const path of allFiles) {
-            const file = zipContent.files[path];
+          // Process image files only
+          if (path.match(/\.(jpg|jpeg|png|gif)$/i)) {
+            const fileName = path.split("/").pop();
+            if (!fileName) continue;
             
-            // Skip directories and collections.json
-            if (file.dir || path === "collections.json" || path === "data/collections.json") {
-              continue;
-            }
+            // Extract slab serial from filename (remove extension)
+            const serialNumber = fileName.split(".")[0];
             
-            // Process image files only
-            if (path.match(/\.(jpg|jpeg|png|gif)$/i)) {
-              const fileName = path.split("/").pop();
-              if (!fileName) continue;
-              
-              // Extract slab serial from filename (remove extension)
-              const serialNumber = fileName.split(".")[0];
-              
-              if (serialNumber) {
-                const promise = (async () => {
-                  try {
-                    const imageBlob = await file.async("blob");
-                    await db.saveImage(serialNumber, imageBlob);
-                  } catch (error) {
-                    // Silent fail for individual images
-                    console.error(`Failed to export image for card ${serialNumber}:`, error);
-                  }
-                })();
-                imagePromises.push(promise);
-              }
+            if (serialNumber) {
+              const promise = (async () => {
+                try {
+                  const imageBlob = await file.async("blob");
+                  await db.saveImage(serialNumber, imageBlob);
+                } catch (error) {
+                  // Silent fail for individual images
+                  logger.error(`Failed to export image for card ${serialNumber}:`, error);
+                }
+              })();
+              imagePromises.push(promise);
             }
           }
         }
-        
-        // Wait for all images to be processed
-        if (imagePromises.length > 0) {
-          await Promise.all(imagePromises);
-          console.log(`Processed ${imagePromises.length} images`);
-        }
-        
-        // Can be nested under a 'collections' key or directly in the root
-        let collectionsToSave = {};
-        let hasCollections = false;
-        let importedCards = 0;
-        
-        if (collectionsData.collections) {
-          // If collections are stored in a 'collections' property
-          if (typeof collectionsData.collections === 'object' && !Array.isArray(collectionsData.collections)) {
-            // Map format (Object with collection names as keys)
-            Object.entries(collectionsData.collections).forEach(([name, cards]) => {
-              if (name.toLowerCase() !== 'sold' && Array.isArray(cards)) {
-                // Process the cards to ensure they have the correct field mappings
-                const processedCards = cards.map(card => {
-                  return {
-                    // Preserve the original data
-                    ...card,
-                    // Map fields to their expected names
-                    player: card.player || card.name || 'Unknown Player',
-                    card: card.card || card.cardName || card.player || card.name || 'Unnamed Card',
-                    name: card.name || card.card || card.player || 'Unknown Card',
-                    slabSerial: card.slabSerial || card.serialNumber || card.id || generateUniqueId(),
-                    // Ensure financial fields are numbers
-                    investmentAUD: typeof card.investmentAUD === 'number' ? card.investmentAUD : 
-                                  (typeof card.investmentAUD === 'string' ? parseFloat(card.investmentAUD) : 0),
-                    currentValueAUD: typeof card.currentValueAUD === 'number' ? card.currentValueAUD : 
-                                    (typeof card.currentValueAUD === 'string' ? parseFloat(card.currentValueAUD) : 0),
-                    // Add any missing fields with defaults
-                    set: card.set || 'Unknown Set',
-                    year: card.year || '',
-                    condition: card.condition || '',
-                    category: card.category || 'Pokemon',
-                  };
-                });
-                collectionsToSave[name] = processedCards;
-                importedCards += processedCards.length;
-                hasCollections = true;
-              }
-            });
-          } else if (Array.isArray(collectionsData.collections)) {
-            // Array format (list of collection objects)
-            collectionsData.collections.forEach(collection => {
-              if (collection && collection.name && collection.name.toLowerCase() !== 'sold') {
-                // Process the cards to ensure they have the correct field mappings
-                const cards = Array.isArray(collection.cards) ? collection.cards : [];
-                const processedCards = cards.map(card => {
-                  return {
-                    // Preserve the original data
-                    ...card,
-                    // Map fields to their expected names
-                    player: card.player || card.name || 'Unknown Player',
-                    card: card.card || card.cardName || card.player || card.name || 'Unnamed Card',
-                    name: card.name || card.card || card.player || 'Unknown Card',
-                    slabSerial: card.slabSerial || card.serialNumber || card.id || generateUniqueId(),
-                    // Ensure financial fields are numbers
-                    investmentAUD: typeof card.investmentAUD === 'number' ? card.investmentAUD : 
-                                  (typeof card.investmentAUD === 'string' ? parseFloat(card.investmentAUD) : 0),
-                    currentValueAUD: typeof card.currentValueAUD === 'number' ? card.currentValueAUD : 
-                                    (typeof card.currentValueAUD === 'string' ? parseFloat(card.currentValueAUD) : 0),
-                    // Add any missing fields with defaults
-                    set: card.set || 'Unknown Set',
-                    year: card.year || '',
-                    condition: card.condition || '',
-                    category: card.category || 'Pokemon',
-                  };
-                });
-                collectionsToSave[collection.name] = processedCards;
-                importedCards += processedCards.length;
-                hasCollections = true;
-              }
-            });
-          }
-        } else {
-          // Legacy format
-          Object.entries(collectionsData).forEach(([name, cards]) => {
-            if (name !== 'profile' && name !== 'settings' && name.toLowerCase() !== 'sold' && Array.isArray(cards)) {
+      }
+      
+      // Wait for all images to be processed
+      if (imagePromises.length > 0) {
+        await Promise.all(imagePromises);
+        logger.log(`Processed ${imagePromises.length} images`);
+      }
+      
+      // Can be nested under a 'collections' key or directly in the root
+      const collectionsToSave = {};
+      let processedHasCollections = false;
+      let processedImportedCards = 0;
+      
+      if (collectionsData.collections) {
+        // If collections are stored in a 'collections' property
+        if (typeof collectionsData.collections === 'object' && !Array.isArray(collectionsData.collections)) {
+          // Map format (Object with collection names as keys)
+          Object.entries(collectionsData.collections).forEach(([name, cards]) => {
+            if (name.toLowerCase() !== 'sold' && Array.isArray(cards)) {
               // Process the cards to ensure they have the correct field mappings
               const processedCards = cards.map(card => {
                 return {
@@ -996,115 +967,143 @@ To import this backup:
                 };
               });
               collectionsToSave[name] = processedCards;
-              importedCards += processedCards.length;
-              hasCollections = true;
+              processedImportedCards += processedCards.length;
+              processedHasCollections = true;
+            }
+          });
+        } else if (Array.isArray(collectionsData.collections)) {
+          // Array format (list of collection objects)
+          collectionsData.collections.forEach(collection => {
+            if (collection && collection.name && collection.name.toLowerCase() !== 'sold') {
+              // Process the cards to ensure they have the correct field mappings
+              const cards = Array.isArray(collection.cards) ? collection.cards : [];
+              const processedCards = cards.map(card => {
+                return {
+                  // Preserve the original data
+                  ...card,
+                  // Map fields to their expected names
+                  player: card.player || card.name || 'Unknown Player',
+                  card: card.card || card.cardName || card.player || card.name || 'Unnamed Card',
+                  name: card.name || card.card || card.player || 'Unknown Card',
+                  slabSerial: card.slabSerial || card.serialNumber || card.id || generateUniqueId(),
+                  // Ensure financial fields are numbers
+                  investmentAUD: typeof card.investmentAUD === 'number' ? card.investmentAUD : 
+                                (typeof card.investmentAUD === 'string' ? parseFloat(card.investmentAUD) : 0),
+                  currentValueAUD: typeof card.currentValueAUD === 'number' ? card.currentValueAUD : 
+                                  (typeof card.currentValueAUD === 'string' ? parseFloat(card.currentValueAUD) : 0),
+                  // Add any missing fields with defaults
+                  set: card.set || 'Unknown Set',
+                  year: card.year || '',
+                  condition: card.condition || '',
+                  category: card.category || 'Pokemon',
+                };
+              });
+              collectionsToSave[collection.name] = processedCards;
+              processedImportedCards += processedCards.length;
+              processedHasCollections = true;
             }
           });
         }
-        
-        // Save collections data
-        updateProgress('Saving data... (Step 4 of 4)', 75);
-        await db.saveCollections(collectionsToSave, true); // Explicitly preserve sold items
-        
-        // Specifically save sold items if they exist
-        if (collectionsData.collections && collectionsData.collections.sold) {
-          console.log(`Explicitly saving ${collectionsData.collections.sold.length} sold items`);
-          await db.saveSoldCards(collectionsData.collections.sold);
-        }
-        
-        // Force refresh all data
-        window.dispatchEvent(new CustomEvent('sold-items-updated'));
-        window.dispatchEvent(new CustomEvent('import-complete'));
-        
-        // Refresh collections
-        const savedCollections = await db.getCollections();
-        setCollections(savedCollections);
-        
-        // Switch to "All Cards" view after successful import
-        setSelectedCollection('All Cards');
-        localStorage.setItem('selectedCollection', 'All Cards');
-        
-        // Update progress to 100%
-        updateProgress('Import completed successfully!', 100);
-        
-        // Ensure we wait at least 1 second to show the loading UI
-        const minimumTime = 1000; // 1 second
-        const elapsedTime = Date.now() - new Date().getTime();
-        
-        if (elapsedTime < minimumTime) {
-          await new Promise(resolve => setTimeout(resolve, minimumTime - elapsedTime));
-        }
-        
-        // Remove loading overlay
-        document.body.removeChild(loadingEl);
-        
-        // Show success toast
-        toast.success('Backup imported successfully!');
-        
-        // Force complete page reload to ensure all data is refreshed
-        window.location.reload();
-      } else if (file.name.endsWith('.json')) {
-        // Process JSON file implementation...
-        // Similar to the existing code for handling JSON files
-        
-        // Update progress
-        const updateProgress = (message, percent) => {
-          const statusEl = document.getElementById('import-status');
-          const progressEl = document.getElementById('import-progress');
-          
-          if (statusEl) statusEl.textContent = message;
-          if (progressEl) progressEl.style.width = `${percent}%`;
-        };
-        
-        updateProgress('Reading JSON file... (Step 1 of 3)', 20);
-        const reader = new FileReader();
-        
-        reader.onload = async (e) => {
-          try {
-            updateProgress('Parsing JSON data... (Step 2 of 3)', 50);
-            const jsonData = JSON.parse(e.target.result);
-            
-            // Try to update collections
-            updateProgress('Saving collection data... (Step 3 of 3)', 80);
-            const newCollections = {
-              ...collections,
-              'Imported Collection': Array.isArray(jsonData) ? jsonData : [jsonData]
-            };
-            
-            // Save to database
-            await db.saveCollections(newCollections);
-            setCollections(newCollections);
-            setSelectedCollection('Imported Collection');
-            localStorage.setItem('selectedCollection', 'Imported Collection');
-            
-            updateProgress('Import completed successfully!', 100);
-            
-            // Remove loading overlay
-            document.body.removeChild(loadingEl);
-            
-            toast.success('JSON data imported successfully!');
-            
-            // Close settings if it's open
-            setShowSettings(false);
-          } catch (error) {
-            console.error('JSON parsing error:', error);
-            document.body.removeChild(loadingEl);
-            toast.error('Invalid JSON file: ' + error.message);
-          }
-        };
-        
-        reader.readAsText(file);
       } else {
-        document.body.removeChild(loadingEl);
-        throw new Error("Unsupported file format. Please upload a .zip backup file or .json file.");
+        // Legacy format
+        Object.entries(collectionsData).forEach(([name, cards]) => {
+          if (name !== 'profile' && name !== 'settings' && name.toLowerCase() !== 'sold' && Array.isArray(cards)) {
+            // Process the cards to ensure they have the correct field mappings
+            const processedCards = cards.map(card => {
+              return {
+                // Preserve the original data
+                ...card,
+                // Map fields to their expected names
+                player: card.player || card.name || 'Unknown Player',
+                card: card.card || card.cardName || card.player || card.name || 'Unnamed Card',
+                name: card.name || card.card || card.player || 'Unknown Card',
+                slabSerial: card.slabSerial || card.serialNumber || card.id || generateUniqueId(),
+                // Ensure financial fields are numbers
+                investmentAUD: typeof card.investmentAUD === 'number' ? card.investmentAUD : 
+                              (typeof card.investmentAUD === 'string' ? parseFloat(card.investmentAUD) : 0),
+                currentValueAUD: typeof card.currentValueAUD === 'number' ? card.currentValueAUD : 
+                                (typeof card.currentValueAUD === 'string' ? parseFloat(card.currentValueAUD) : 0),
+                // Add any missing fields with defaults
+                set: card.set || 'Unknown Set',
+                year: card.year || '',
+                condition: card.condition || '',
+                category: card.category || 'Pokemon',
+              };
+            });
+            collectionsToSave[name] = processedCards;
+            processedImportedCards += processedCards.length;
+            processedHasCollections = true;
+          }
+        });
+      }
+      
+      // Save collections data
+      updateProgress('Saving data... (Step 4 of 4)', 80, 4);
+      await db.saveCollections(collectionsToSave, true); // Explicitly preserve sold items
+      
+      // Specifically save sold items if they exist
+      if (collectionsData.collections && collectionsData.collections.sold) {
+        logger.log(`Explicitly saving ${collectionsData.collections.sold.length} sold items`);
+        await db.saveSoldCards(collectionsData.collections.sold);
+      }
+      
+      // Force refresh all data
+      window.dispatchEvent(new CustomEvent('sold-items-updated'));
+      window.dispatchEvent(new CustomEvent('import-complete'));
+      
+      // Refresh collections
+      const savedCollections = await db.getCollections();
+      setCollections(savedCollections);
+      
+      // Switch to "All Cards" view after successful import
+      setSelectedCollection('All Cards');
+      localStorage.setItem('selectedCollection', 'All Cards');
+      
+      // Update progress to 100%
+      updateProgress('Import completed successfully!', 100, 4);
+      
+      // Ensure we wait at least 1 second to show the loading UI
+      const minimumTime = 1000; // 1 second
+      const elapsedTime = Date.now() - new Date().getTime();
+      
+      if (elapsedTime < minimumTime) {
+        await new Promise(resolve => setTimeout(resolve, minimumTime - elapsedTime));
+      }
+      
+      // Remove the loading overlay after a delay to show completion
+      if (loadingEl) {
+        setTimeout(() => {
+          try {
+            document.body.removeChild(loadingEl);
+          } catch (err) {
+            logger.log('Error removing loadingEl, may have already been removed:', err);
+          }
+        }, 1500);
+      }
+      
+      // Show success toast
+      toast.success('Backup imported successfully!');
+      
+      // Force complete page reload only if not called from SettingsModal
+      if (!options.noOverlay) {
+        window.location.reload();
       }
     } catch (error) {
-      console.error("Import error:", error);
-      // Remove loading overlay if it exists
-      if (loadingEl && document.body.contains(loadingEl)) {
-        document.body.removeChild(loadingEl);
+      logger.error("Import error:", error);
+      // Remove the loading overlay after a delay to show completion
+      if (loadingEl) {
+        setTimeout(() => {
+          try {
+            document.body.removeChild(loadingEl);
+          } catch (err) {
+            logger.log('Error removing loadingEl, may have already been removed:', err);
+          }
+        }, 1500);
       }
       toast.error(`Error importing backup: ${error.message}`);
+      
+      // Rethrow the error so the caller can handle it
+      throw error;
     }
   };
 
@@ -1120,7 +1119,7 @@ To import this backup:
         deleteCard({ slabSerial: cardId });
       });
     } catch (error) {
-      console.error('Error deleting cards:', error);
+      logger.error('Error deleting cards:', error);
       toast.error('Failed to delete cards');
     }
   }, [deleteCard]);
@@ -1135,13 +1134,13 @@ To import this backup:
     } else if (typeof cardInput === 'string') {
       slabSerialToDelete = cardInput; // Input is just the ID string
     } else {
-      console.error('[App] handleCardDelete received invalid input:', cardInput);
+      logger.error('[App] handleCardDelete received invalid input:', cardInput);
       toast.error('Failed to delete card: Invalid input.');
       return;
     }
 
     if (!slabSerialToDelete) {
-      console.error('[App] Could not determine valid card ID to delete from input:', cardInput);
+      logger.error('[App] Could not determine valid card ID to delete from input:', cardInput);
       toast.error('Failed to delete card: Missing card ID.');
       return;
     }
@@ -1153,18 +1152,15 @@ To import this backup:
         throw new Error('Failed to load collections from database.');
       }
 
-      // Step 2: Find and remove the card from the collection(s)
-      let cardFoundAndRemoved = false;
       const updatedCollections = { ...currentCollections };
-
+      let cardFoundAndRemoved = false;
+      const initialLength = updatedCollections[selectedCollection] ? updatedCollections[selectedCollection].length : 0;
+      
       for (const collectionName in updatedCollections) {
         // Skip potential non-array properties if any exist
         if (!Array.isArray(updatedCollections[collectionName])) continue; 
         
-        const initialLength = updatedCollections[collectionName].length;
-        updatedCollections[collectionName] = updatedCollections[collectionName].filter(
-          card => card.slabSerial !== slabSerialToDelete
-        );
+        updatedCollections[collectionName] = updatedCollections[collectionName].filter(card => card.slabSerial !== slabSerialToDelete);
         
         if (updatedCollections[collectionName].length < initialLength) {
           cardFoundAndRemoved = true;
@@ -1174,24 +1170,30 @@ To import this backup:
       if (!cardFoundAndRemoved) {
         // Card wasn't found in any collection - maybe already deleted?
         // Or maybe it exists in the hook's state but not DB? (unlikely)
-        console.warn(`[App] Card ${slabSerialToDelete} not found in any collection in the database. Assuming already deleted or state mismatch.`);
+        logger.warn(`[App] Card ${slabSerialToDelete} not found in any collection in the database. Assuming already deleted or state mismatch.`);
       } else {
         // Step 3: Save updated collections back to DB
-        await db.saveCollections(updatedCollections);
+        await db.saveCollections(updatedCollections, true); // Explicitly preserve sold items
+        
+        // Update state - make sure to preserve the 'All Cards' entry if it exists
+        const newCollections = {...updatedCollections};
+        if ('All Cards' in collections) {
+          newCollections['All Cards'] = [];
+        }
+        setCollections(newCollections);
       }
 
       // Step 4: Update the useCardData hook's local state (triggers UI update)
       deleteCard(slabSerialToDelete); 
 
-      // Step 5: Update local App.js collections state (if needed, though maybe redundant if UI relies on hook)
-      // setCollections(updatedCollections); // Consider if this is necessary
-      
-      // Success toast should be handled by the calling component (CardDetails)
-      // or we can add one here if preferred.
-      // toast.success('Card deleted successfully!'); 
+      // Step 5: Clear selected card to close modal
+      handleCloseDetailsModal(); // Use the handler that clears both card and initial collection
+
+      // Step 6: Show success toast
+      toast.success('Card deleted successfully!');
 
     } catch (error) {
-      console.error('[App] Error during card deletion process:', error);
+      logger.error('[App] Error during card deletion process:', error);
       toast.error(`Error deleting card: ${error.message}`);
     }
   }, [deleteCard]); // Now depends only on the hook's deleteCard function again
@@ -1203,7 +1205,7 @@ To import this backup:
 
   const handleCardUpdate = useCallback(async (updatedCard) => {
     if (!updatedCard || !updatedCard.slabSerial) {
-      console.error('[App] handleCardUpdate received invalid card data:', updatedCard);
+      logger.error('[App] handleCardUpdate received invalid card data:', updatedCard);
       toast.error('Failed to update card: Invalid data.');
       return;
     }
@@ -1217,7 +1219,7 @@ To import this backup:
       return; // Don't proceed if no collection is selected
     }
 
-    console.log(`[App] Updating card ${cardId}. Original Collection: '${originalCollectionName}', New Collection: '${newCollectionName}'`);
+    logger.log(`[App] Updating card ${cardId}. Original Collection: '${originalCollectionName}', New Collection: '${newCollectionName}'`);
 
     try {
       // Step 1: Load current collections from DB
@@ -1231,60 +1233,60 @@ To import this backup:
 
       // Step 2: Determine if collection changed and update collections object
       if (originalCollectionName && originalCollectionName !== newCollectionName) {
-        console.log(`[App] Collection changed for card ${cardId}. Moving from '${originalCollectionName}' to '${newCollectionName}'.`);
+        logger.log(`[App] Collection changed for card ${cardId}. Moving from '${originalCollectionName}' to '${newCollectionName}'.`);
         // Remove card from the original collection
         if (updatedCollections[originalCollectionName] && Array.isArray(updatedCollections[originalCollectionName])) {
           updatedCollections[originalCollectionName] = updatedCollections[originalCollectionName].filter(card => card.slabSerial !== cardId);
-          console.log(`[App] Removed card ${cardId} from old collection '${originalCollectionName}'.`);
+          logger.log(`[App] Removed card ${cardId} from old collection '${originalCollectionName}'.`);
         } else {
-          console.warn(`[App] Original collection '${originalCollectionName}' not found or not an array.`);
+          logger.warn(`[App] Original collection '${originalCollectionName}' not found or not an array.`);
         }
 
         // Add card to the new collection (create if it doesn't exist)
         if (!updatedCollections[newCollectionName]) {
           updatedCollections[newCollectionName] = [];
-          console.log(`[App] Created new collection '${newCollectionName}'.`);
+          logger.log(`[App] Created new collection '${newCollectionName}'.`);
         }
         // Ensure the target is an array before pushing
         if (Array.isArray(updatedCollections[newCollectionName])) {
            // Make sure not to add duplicates if moving within the same logical collection but name changed slightly
           if (!updatedCollections[newCollectionName].some(c => c.slabSerial === cardId)) {
             updatedCollections[newCollectionName].push(updatedCard);
-            console.log(`[App] Added card ${cardId} to new collection '${newCollectionName}'.`);
+            logger.log(`[App] Added card ${cardId} to new collection '${newCollectionName}'.`);
           }
         } else {
-          console.error(`[App] Target collection '${newCollectionName}' is not an array. Cannot add card.`);
+          logger.error(`[App] Target collection '${newCollectionName}' is not an array. Cannot add card.`);
            throw new Error(`Target collection '${newCollectionName}' is not valid.`);
         }
          cardFound = true; // Assume successful move preparation
       } else {
         // Collection did not change, just update the card data within its current collection
         const currentCollection = originalCollectionName || newCollectionName; // Use whichever is valid
-         console.log(`[App] Collection not changed for card ${cardId}. Updating in collection '${currentCollection}'.`);
+         logger.log(`[App] Collection not changed for card ${cardId}. Updating in collection '${currentCollection}'.`);
         if (updatedCollections[currentCollection] && Array.isArray(updatedCollections[currentCollection])) {
           const cardIndex = updatedCollections[currentCollection].findIndex(card => card.slabSerial === cardId);
           if (cardIndex !== -1) {
             updatedCollections[currentCollection][cardIndex] = updatedCard;
             cardFound = true;
-             console.log(`[App] Updated card ${cardId} data in collection '${currentCollection}'.`);
+             logger.log(`[App] Updated card ${cardId} data in collection '${currentCollection}'.`);
           } else {
-             console.warn(`[App] Card ${cardId} not found in its expected collection '${currentCollection}' for update.`);
+             logger.warn(`[App] Card ${cardId} not found in its expected collection '${currentCollection}' for update.`);
              // Attempt to find and add it if it's missing but should be there
              // This handles edge cases where state might be slightly out of sync
              if (!updatedCollections[currentCollection].some(c => c.slabSerial === cardId)) {
                  updatedCollections[currentCollection].push(updatedCard);
-                 console.log(`[App] Card ${cardId} was missing, added it to collection '${currentCollection}'.`);
+                 logger.log(`[App] Card ${cardId} was missing, added it to collection '${currentCollection}'.`);
                  cardFound = true;
              }
           }
         } else {
-          console.warn(`[App] Current collection '${currentCollection}' not found or not an array during update.`);
+          logger.warn(`[App] Current collection '${currentCollection}' not found or not an array during update.`);
         }
       }
 
       if (!cardFound) {
          // If still not found after checks/attempts, something is wrong
-         console.error(`[App] Failed to locate or place card ${cardId} during update.`);
+         logger.error(`[App] Failed to locate or place card ${cardId} during update.`);
          // Decide if we should still try to save or throw an error
          // For now, let's try saving anyway, maybe the DB operation corrects it
          // throw new Error(`Could not find or place card ${cardId} in any collection during update.`);
@@ -1293,7 +1295,7 @@ To import this backup:
       // Step 3: Save the potentially modified collections object back to DB
       // Ensure 'sold' collection, if present, is explicitly preserved during save.
       await db.saveCollections(updatedCollections, true); 
-      console.log(`[App] Saved updated collections to DB for card ${cardId}.`);
+      logger.log(`[App] Saved updated collections to DB for card ${cardId}.`);
 
       // Step 4: Update local state (collections and the hook's card state)
       setCollections(updatedCollections); // Update local collections state
@@ -1306,7 +1308,7 @@ To import this backup:
       toast.success('Card updated successfully!');
 
     } catch (error) {
-      console.error('[App] Error updating card:', error);
+      logger.error('[App] Error updating card:', error);
       toast.error(`Error updating card: ${error.message}`);
     }
   }, [initialCardCollection, updateCard, handleCloseDetailsModal, collections]); // Added collections to dependencies
@@ -1329,7 +1331,7 @@ To import this backup:
       // Show success toast
       toast.success('Card added successfully!');
     } catch (error) {
-      console.error('Error adding card:', error);
+      logger.error('Error adding card:', error);
       toast.error(`Error adding card: ${error.message}`);
     }
   }, [addCard, collections]);
@@ -1377,7 +1379,7 @@ To import this backup:
       // Reload the page to ensure all components refresh properly
       window.location.reload();
     } catch (error) {
-      console.error('Error resetting data:', error);
+      logger.error('Error resetting data:', error);
       toast.error(`Failed to reset data: ${error.message}`, { id: 'reset-data' });
     }
   };
@@ -1467,14 +1469,14 @@ To import this backup:
           }}
           onDeleteCollection={async (name) => {
             try {
-              console.log("App.js: Attempting to delete collection:", name);
+              logger.log("App.js: Attempting to delete collection:", name);
               
               // Get current collections
               const currentCollections = { ...collections };
               
               // Check if collection exists
               if (!currentCollections[name]) {
-                console.error(`Collection "${name}" does not exist in:`, Object.keys(currentCollections));
+                logger.error(`Collection "${name}" does not exist in:`, Object.keys(currentCollections));
                 throw new Error(`Collection "${name}" does not exist`);
               }
               
@@ -1485,7 +1487,7 @@ To import this backup:
               
               // Remove the collection
               delete currentCollections[name];
-              console.log("Collection removed from object, saving to DB...");
+              logger.log("Collection removed from object, saving to DB...");
               
               // Save updated collections to database
               await db.saveCollections(currentCollections, true); // Explicitly preserve sold items
@@ -1498,12 +1500,12 @@ To import this backup:
                 const newSelection = Object.keys(currentCollections)[0];
                 setSelectedCollection(newSelection);
                 localStorage.setItem('selectedCollection', newSelection);
-                console.log("Selected new collection:", newSelection);
+                logger.log("Selected new collection:", newSelection);
               }
               
               return true;
             } catch (error) {
-              console.error("Error deleting collection:", error);
+              logger.error("Error deleting collection:", error);
               toast.error(`Failed to delete collection: ${error.message}`);
               throw error;
             }
@@ -1529,7 +1531,7 @@ To import this backup:
                 }
                 // If somehow not found (shouldn't happen if data is consistent), default to null
                 if (actualCollectionName === 'All Cards') {
-                  console.warn("Could not determine original collection for card: ", card.slabSerial);
+                  logger.warn("Could not determine original collection for card: ", card.slabSerial);
                   actualCollectionName = null; 
                 }
               }
@@ -1560,14 +1562,14 @@ To import this backup:
             }}
             onDeleteCollection={async (name) => {
               try {
-                console.log("App.js: Attempting to delete collection:", name);
+                logger.log("App.js: Attempting to delete collection:", name);
                 
                 // Get current collections
                 const currentCollections = { ...collections };
                 
                 // Check if collection exists
                 if (!currentCollections[name]) {
-                  console.error(`Collection "${name}" does not exist in:`, Object.keys(currentCollections));
+                  logger.error(`Collection "${name}" does not exist in:`, Object.keys(currentCollections));
                   throw new Error(`Collection "${name}" does not exist`);
                 }
                 
@@ -1578,7 +1580,7 @@ To import this backup:
                 
                 // Remove the collection
                 delete currentCollections[name];
-                console.log("Collection removed from object, saving to DB...");
+                logger.log("Collection removed from object, saving to DB...");
                 
                 // Save updated collections to database
                 await db.saveCollections(currentCollections, true); // Explicitly preserve sold items
@@ -1595,7 +1597,7 @@ To import this backup:
                 
                 return true;
               } catch (error) {
-                console.error("Error deleting collection:", error);
+                logger.error("Error deleting collection:", error);
                 toast.error(`Failed to delete collection: ${error.message}`);
                 throw error;
               }
@@ -1686,14 +1688,14 @@ To import this backup:
           }}
           onDeleteCollection={async (name) => {
             try {
-              console.log("App.js: Attempting to delete collection:", name);
+              logger.log("App.js: Attempting to delete collection:", name);
               
               // Get current collections
               const currentCollections = { ...collections };
               
               // Check if collection exists
               if (!currentCollections[name]) {
-                console.error(`Collection "${name}" does not exist in:`, Object.keys(currentCollections));
+                logger.error(`Collection "${name}" does not exist in:`, Object.keys(currentCollections));
                 throw new Error(`Collection "${name}" does not exist`);
               }
               
@@ -1704,7 +1706,7 @@ To import this backup:
               
               // Remove the collection
               delete currentCollections[name];
-              console.log("Collection removed from object, saving to DB...");
+              logger.log("Collection removed from object, saving to DB...");
               
               // Save updated collections to database
               await db.saveCollections(currentCollections, true); // Explicitly preserve sold items
@@ -1721,7 +1723,7 @@ To import this backup:
               
               return true;
             } catch (error) {
-              console.error("Error deleting collection:", error);
+              logger.error("Error deleting collection:", error);
               toast.error(`Failed to delete collection: ${error.message}`);
               throw error;
             }
@@ -1773,6 +1775,8 @@ To import this backup:
           }}
         />
       )}
+
+      <DataMigrationModal />
 
       {/* Mobile Bottom Navigation */}
       <div

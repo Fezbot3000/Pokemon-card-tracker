@@ -12,6 +12,7 @@ const SettingsPanel = ({
   description,
   children,
   className = '',
+  expandable, 
   ...props 
 }) => {
   return (
@@ -40,6 +41,8 @@ SettingsPanel.propTypes = {
   children: PropTypes.node,
   /** Additional className */
   className: PropTypes.string,
+  /** Whether panel is expandable */
+  expandable: PropTypes.bool,
 };
 
 export default SettingsPanel;

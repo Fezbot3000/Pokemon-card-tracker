@@ -48,13 +48,11 @@ const Modal = ({
         y: window.scrollY
       };
       document.body.classList.add('modal-open');
-      console.log('[Modal] Opened, .modal-open added to <body>');
       return () => {
         document.body.classList.remove('modal-open');
         if (scrollPosRef.current) {
           window.scrollTo(scrollPosRef.current.x, scrollPosRef.current.y);
         }
-        console.log('[Modal] Closed, .modal-open removed from <body>');
       };
     }
   }, [isOpen, showAsStatic]);
@@ -64,7 +62,6 @@ const Modal = ({
     return () => {
       document.body.classList.remove('modal-open');
       forceModalCleanup();
-      console.log('[Modal] Unmounted, .modal-open forcibly removed and overlays cleaned up');
     };
   }, []);
 
@@ -74,12 +71,10 @@ const Modal = ({
       setAnimationState('closing');
       const timer = setTimeout(() => {
         setAnimationState('closed');
-        console.log('[Modal] Animation closed, modal is now unmounted');
       }, 200);
       return () => clearTimeout(timer);
     } else if (isOpen && animationState === 'closed') {
       setAnimationState('open');
-      console.log('[Modal] Animation open, modal is now mounted');
     }
   }, [isOpen, animationState]);
   

@@ -1,188 +1,128 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { useAuth } from './AuthContext';
-import { toast } from 'react-hot-toast';
-import { ref, getDownloadURL, getMetadata } from 'firebase/storage';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useAuth } from '../design-system';
+import { ref, getDownloadURL } from 'firebase/storage';
 import { storage } from '../services/firebase';
+import { toast } from 'react-hot-toast';
+import logger from '../utils/logger';
+import { useSubscription } from './SubscriptionContext';
 
-const AutoSyncContext = createContext();
+const AutoSyncContext = createContext({
+  isAutoSyncEnabled: false,
+  setIsAutoSyncEnabled: () => {},
+  lastSyncTime: null,
+  triggerCloudRestore: () => {},
+  isRestoring: false,
+});
 
-export function useAutoSync() {
-  return useContext(AutoSyncContext);
-}
+export const useAutoSync = () => useContext(AutoSyncContext);
 
-export function AutoSyncProvider({ children, onImportCollection }) {
+export const AutoSyncProvider = ({ children }) => {
   const { currentUser } = useAuth();
-  const [syncInProgress, setSyncInProgress] = useState(false);
-  const [syncProgress, setSyncProgress] = useState(0);
-  const [syncError, setSyncError] = useState(null);
-  const [lastSyncDate, setLastSyncDate] = useState(null);
+  const { subscriptionStatus } = useSubscription();
+  const [isAutoSyncEnabled, setIsAutoSyncEnabled] = useState(
+    localStorage.getItem('autoRestoreEnabled') === 'true'
+  );
+  const [lastSyncTime, setLastSyncTime] = useState(
+    localStorage.getItem('lastCloudSync') || null
+  );
+  const [isRestoring, setIsRestoring] = useState(false);
   
-  // Check if sync on startup is enabled (read from localStorage)
-  const isSyncEnabled = useCallback(() => {
-    const syncEnabled = localStorage.getItem('syncOnStartup');
-    // Default to true if the value doesn't exist
-    return syncEnabled === null ? true : syncEnabled === 'true';
-  }, []);
+  // When settings change, update localStorage
+  useEffect(() => {
+    localStorage.setItem('autoRestoreEnabled', isAutoSyncEnabled.toString());
+  }, [isAutoSyncEnabled]);
   
-  // Get the timestamp of the last local sync
-  const getLastLocalSyncTime = useCallback(() => {
-    const lastSync = localStorage.getItem('lastCloudSync');
-    return lastSync ? new Date(lastSync) : null;
-  }, []);
-
-  // Function to check and perform auto sync on startup
-  const performAutoSync = useCallback(async () => {
-    // Exit if user is not logged in or sync is disabled
-    if (!currentUser || !isSyncEnabled()) {
-      return;
-    }
-
-    try {
-      setSyncInProgress(true);
-      setSyncProgress(0);
-      setSyncError(null);
-      
-      // Show initial sync toast with longer duration
-      toast.loading('Auto Sync: Checking for cloud updates...', { 
-        id: 'cloud-sync',
-        duration: 5000
-      });
-      
-      // Create a reference to the backup file
-      const backupRef = ref(storage, `users/${currentUser.uid}/backups/latest-backup.zip`);
-      
+  // Effect to check for cloud backup on login if auto-restore is enabled
+  useEffect(() => {
+    const checkForAutoRestore = async () => {
       try {
-        // Get metadata to check if cloud backup exists and its timestamp
-        const metadata = await getMetadata(backupRef);
-        const cloudBackupDate = new Date(metadata.updated);
+        // Only run if user is logged in, auto-restore is enabled, and user has premium subscription
+        if (!currentUser || !isAutoSyncEnabled || subscriptionStatus.status !== 'active') {
+          return;
+        }
         
-        // Get local backup date
-        const localBackupDate = getLastLocalSyncTime();
+        // Check if we've restored recently to avoid duplicate restores
+        const lastRestore = localStorage.getItem('lastCloudRestore');
+        const noRecentRestores = !lastRestore || 
+          (Date.now() - parseInt(lastRestore)) > 1000 * 60 * 60; // 1 hour cooldown
         
-        // If no local backup or cloud backup is newer, download it
-        if (!localBackupDate || cloudBackupDate > localBackupDate) {
-          // Update toast to show download is starting
-          toast.loading('Auto Sync: Downloading cloud backup...', { 
-            id: 'cloud-sync',
-            duration: 10000 
-          });
+        if (!noRecentRestores) {
+          logger.info('Auto-restore: Skipping - restored within the last hour');
+          return;
+        }
+        
+        logger.info('Auto-restore: Checking for cloud backup');
+        
+        // Reference to the backup file in Firebase Storage
+        const storageRef = ref(storage, `users/${currentUser.uid}/backups/latest-backup.zip`);
+        
+        try {
+          // Verify backup exists without downloading it
+          await getDownloadURL(storageRef);
           
-          // Get the download URL
-          const downloadURL = await getDownloadURL(backupRef);
+          // Set timestamp to avoid rapid consecutive restores
+          localStorage.setItem('lastCloudRestore', Date.now().toString());
           
-          // Download the backup file
-          const response = await fetch(downloadURL);
-          
-          if (!response.ok) {
-            throw new Error('Failed to download backup');
-          }
-          
-          // Get total size and set up progress tracking
-          const contentLength = response.headers.get('content-length');
-          const total = parseInt(contentLength, 10);
-          const reader = response.body.getReader();
-          let receivedLength = 0;
-          let chunks = [];
-          
-          // Read the data with progress updates
-          while(true) {
-            const { done, value } = await reader.read();
+          // Wait for app to fully initialize
+          setTimeout(() => {
+            logger.info('Auto-restore: Backup found, initiating restore');
+            toast.success('Auto-restore: Found cloud backup, restoring your collection');
             
-            if (done) {
-              break;
+            // Get the CloudSync component's restore function
+            if (window.handleCloudRestore) {
+              window.handleCloudRestore();
+            } else {
+              // If reference isn't available, inform user they need to manually restore
+              toast.error('Auto-restore: Please use the Restore from Cloud button in Settings');
             }
-            
-            chunks.push(value);
-            receivedLength += value.length;
-            
-            // Update progress
-            const progress = Math.round((receivedLength / total) * 100);
-            setSyncProgress(progress);
-            
-            // Update the loading toast
-            toast.loading(`Syncing: ${progress}%`, { id: 'cloud-sync' });
-          }
-          
-          // Combine chunks into a single Uint8Array
-          let chunksAll = new Uint8Array(receivedLength);
-          let position = 0;
-          for(let chunk of chunks) {
-            chunksAll.set(chunk, position);
-            position += chunk.length;
-          }
-          
-          // Create a blob and file from the data
-          const blob = new Blob([chunksAll]);
-          const file = new File([blob], 'cloud-backup.zip', { type: 'application/zip' });
-          
-          // Import the downloaded backup
-          if (onImportCollection) {
-            await onImportCollection(file);
-          } else {
-            console.error('Import function not available');
-            throw new Error('Import function not available');
-          }
-          
-          // Update last sync time
-          localStorage.setItem('lastCloudSync', new Date().toISOString());
-          setLastSyncDate(new Date());
-          
-          // Show success message with longer duration
-          toast.success('Auto Sync: Successfully synced with cloud backup', { 
-            id: 'cloud-sync',
-            duration: 5000
-          });
-        } else {
-          // Local data is up to date
-          console.log('Local data is up to date, no sync needed');
-          setSyncProgress(100);
-          toast.success('Auto Sync: Your data is already up to date', { 
-            id: 'cloud-sync',
-            duration: 5000
-          });
+          }, 3000);
+        } catch (error) {
+          logger.info('Auto-restore: No cloud backup found or error', error);
         }
       } catch (error) {
-        // No backup exists yet or other error
-        console.log('No cloud backup exists yet or error checking:', error);
-        toast.error('Auto Sync: No cloud backup found or error checking for updates', { 
-          id: 'cloud-sync',
-          duration: 5000 
-        });
-      }
-    } catch (error) {
-      console.error('Auto sync error:', error);
-      setSyncError(error.message);
-      toast.error(`Auto Sync failed: ${error.message}`, { 
-        id: 'cloud-sync',
-        duration: 5000
-      });
-    } finally {
-      setSyncInProgress(false);
-    }
-  }, [currentUser, isSyncEnabled, getLastLocalSyncTime, onImportCollection]);
-
-  // Run auto sync when component mounts if enabled
-  useEffect(() => {
-    const checkAndSync = async () => {
-      if (currentUser && isSyncEnabled()) {
-        await performAutoSync();
+        logger.error('Error in auto-restore check:', error);
       }
     };
     
-    checkAndSync();
-  }, [currentUser, isSyncEnabled, performAutoSync]);
-
-  const value = {
-    syncInProgress,
-    syncProgress,
-    syncError,
-    lastSyncDate,
-    performAutoSync
+    checkForAutoRestore();
+    
+  }, [currentUser, isAutoSyncEnabled, subscriptionStatus]);
+  
+  // Function to manually trigger cloud restore (can be called from other components)
+  const triggerCloudRestore = () => {
+    if (window.handleCloudRestore) {
+      window.handleCloudRestore();
+    } else {
+      toast.error('Cloud restore function not available');
+    }
   };
-
+  
+  // Update last sync time when localStorage changes
+  useEffect(() => {
+    const handleStorageChange = () => {
+      setLastSyncTime(localStorage.getItem('lastCloudSync'));
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+  
+  const value = {
+    isAutoSyncEnabled,
+    setIsAutoSyncEnabled,
+    lastSyncTime,
+    triggerCloudRestore,
+    isRestoring,
+  };
+  
   return (
     <AutoSyncContext.Provider value={value}>
       {children}
     </AutoSyncContext.Provider>
   );
-} 
+};
+
+export default AutoSyncContext;

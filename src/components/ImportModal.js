@@ -156,7 +156,7 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading 
           
           <button
             onClick={triggerFileInput}
-            className="btn btn-primary"
+            className="px-4 py-2 font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md shadow-sm transition-colors"
           >
             Select Files
           </button>
@@ -171,7 +171,7 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading 
               <button
                 onClick={handleSubmitFiles}
                 disabled={loading || selectedFiles.length === 0}
-                className={`btn btn-primary ${
+                className={`px-4 py-2 font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md shadow-sm transition-colors ${
                   (loading || selectedFiles.length === 0) ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
               >

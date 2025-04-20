@@ -13,6 +13,7 @@ import { storage } from '../../firebase';
 import { useAuth } from '../contexts/AuthContext';
 import JSZip from 'jszip';
 import { stripDebugProps } from '../../utils/stripDebugProps';
+import DataManagementSection from '../../components/DataManagementSection';
 
 /**
  * SettingsModal Component
@@ -47,6 +48,10 @@ const SettingsModal = ({
   const [isExporting, setIsExporting] = useState(false);
   const [isCloudBackingUp, setIsCloudBackingUp] = useState(false);
   const [isCloudRestoring, setIsCloudRestoring] = useState(false);
+  const [cloudSyncProgress, setCloudSyncProgress] = useState(0);
+  const [cloudSyncStatus, setCloudSyncStatus] = useState('');
+  const [importStep, setImportStep] = useState(0); // 0 = not importing, 1-4 = import steps
+  const [importProgress, setImportProgress] = useState(0);
   const [isUpdatingPrices, setIsUpdatingPrices] = useState(false);
   const [isImportingBaseData, setIsImportingBaseData] = useState(false);
   const [activeTab, setActiveTab] = useState('general');
@@ -207,41 +212,71 @@ const SettingsModal = ({
     }
 
     setIsCloudBackingUp(true);
+    setCloudSyncProgress(10);
+    setCloudSyncStatus('Preparing...');
 
     try {
-      // Show uploading toast
-      toastService.loading('Creating cloud backup...', { duration: 10000, id: 'cloud-backup' });
+      // Show uploading toast with percentage
+      toastService.loading('Creating cloud backup... (10%)', { duration: 20000, id: 'cloud-backup' });
       
       // Get the exportData function that handles the ZIP creation
       if (!onExportData) {
         throw new Error('Export functionality not available');
       }
       
+      // Update status
+      setCloudSyncStatus('Creating backup...');
+      
       // Call the export function with returnBlob option to get the data without triggering a download
-      const blob = await onExportData({ returnBlob: true });
+      const blob = await onExportData({ 
+        returnBlob: true,
+        optimizeForMobile: true // Add optimization hint
+      });
       
       if (!blob) {
         throw new Error('Failed to generate backup data');
       }
       
-      // Update toast
-      toastService.loading('Uploading backup to cloud...', { duration: 10000, id: 'cloud-backup' });
+      // Update progress
+      setCloudSyncProgress(50);
+      setCloudSyncStatus('Uploading to cloud...');
       
-      // Upload to Firebase Storage
+      // Update toast
+      toastService.loading('Uploading backup to cloud... (50%)', { duration: 20000, id: 'cloud-backup' });
+      
+      // Upload to Firebase Storage with simple uploadBytes for better mobile compatibility
       const backupRef = ref(storage, `users/${currentUser.uid}/backups/latest-backup.zip`);
       await uploadBytes(backupRef, blob);
+      
+      // Update progress
+      setCloudSyncProgress(100);
+      setCloudSyncStatus('Complete!');
       
       // Update last backup timestamp in localStorage
       const timestamp = new Date().toISOString();
       localStorage.setItem('lastCloudSync', timestamp);
       
       // Show success message
-      toastService.success('Backup successfully uploaded to cloud', { id: 'cloud-backup' });
+      toastService.success('Backup successfully uploaded to cloud (100%)', { id: 'cloud-backup' });
     } catch (error) {
       console.error('Error backing up to cloud:', error);
-      toastService.error(`Cloud backup failed: ${error.message}`);
+      
+      // More specific error messages
+      if (error.code === 'storage/retry-limit-exceeded') {
+        toastService.error('Backup file too large for mobile. Try on desktop or reduce collection size.', 
+          { id: 'cloud-backup' });
+      } else if (error.code === 'storage/unauthorized') {
+        toastService.error('Unauthorized: Please log in again.', { id: 'cloud-backup' });
+      } else {
+        toastService.error(`Cloud backup failed: ${error.message}`, { id: 'cloud-backup' });
+      }
+      
+      setCloudSyncStatus('Failed');
     } finally {
-      setIsCloudBackingUp(false);
+      setTimeout(() => {
+        setIsCloudBackingUp(false);
+        setCloudSyncStatus('');
+      }, 3000); // Keep the status visible briefly after completion
     }
   };
 
@@ -253,78 +288,147 @@ const SettingsModal = ({
     }
 
     setIsCloudRestoring(true);
-    console.log('[CloudRestore] Starting...'); // Added log
+    setCloudSyncProgress(10);
+    setCloudSyncStatus('Preparing...');
 
     try {
       // Create a reference to the backup in Firebase Storage
       const backupRef = ref(storage, `users/${currentUser.uid}/backups/latest-backup.zip`);
-      console.log('[CloudRestore] Backup reference created:', backupRef.fullPath); // Added log
       
       // Show loading toast
-      toastService.loading('Downloading backup from cloud...', { duration: 10000, id: 'cloud-restore' });
+      toastService.loading('Checking for backups... (10%)', { duration: 20000, id: 'cloud-restore' });
       
       // Get download URL
-      console.log('[CloudRestore] Getting download URL...'); // Added log
-      const url = await getDownloadURL(backupRef);
-      console.log('[CloudRestore] Download URL obtained:', url); // Added log
-      
-      // Fetch the file
-      console.log('[CloudRestore] Starting fetch...'); // Added log
-      const response = await fetch(url);
-      console.log('[CloudRestore] Fetch response received. Status:', response.status, 'OK:', response.ok); // Added log
-      
-      if (!response.ok) {
-        // Try to get more error detail from the response if possible
-        let errorDetail = `HTTP status ${response.status}`;
-        try {
-          const errorText = await response.text();
-          errorDetail += `: ${errorText.substring(0, 100)}`; // Log first 100 chars
-        } catch (e) { /* Ignore if reading text fails */ }
-        console.error('[CloudRestore] Fetch failed:', errorDetail); // Added log
-        throw new Error(`Failed to download backup from cloud (${errorDetail})`);
+      let url;
+      try {
+        url = await getDownloadURL(backupRef);
+        setCloudSyncProgress(30);
+        setCloudSyncStatus('Found backup, preparing download...');
+        toastService.loading('Found backup, preparing download... (30%)', { id: 'cloud-restore' });
+      } catch (urlError) {
+        if (urlError.code === 'storage/object-not-found') {
+          throw new Error('No backup found in cloud');
+        } else {
+          throw urlError;
+        }
       }
       
-      // Convert to blob
-      console.log('[CloudRestore] Converting response to blob...'); // Added log
-      const blob = await response.blob();
-      console.log('[CloudRestore] Response converted to blob. Size:', blob.size, 'Type:', blob.type); // Added log
+      // Use XHR for more reliable downloads especially on Safari
+      const downloadPromise = new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.responseType = 'blob';
+        
+        // Add progress monitoring
+        xhr.onprogress = (event) => {
+          if (event.lengthComputable) {
+            const percentComplete = Math.round((event.loaded / event.total) * 50) + 30;
+            setCloudSyncProgress(percentComplete);
+            setCloudSyncStatus(`Downloading: ${percentComplete}%`);
+            // Update toast with current progress
+            toastService.loading(`Downloading backup... (${percentComplete}%)`, { id: 'cloud-restore' });
+          }
+        };
+        
+        xhr.onload = () => {
+          if (xhr.status === 200) {
+            resolve(xhr.response);
+          } else {
+            reject(new Error(`Failed to download: ${xhr.statusText}`));
+          }
+        };
+        
+        xhr.onerror = () => {
+          reject(new Error('Network error occurred'));
+        };
+        
+        xhr.open('GET', url);
+        xhr.send();
+      });
+      
+      // Wait for download to complete
+      const blob = await downloadPromise;
+      
+      setCloudSyncProgress(80);
+      setCloudSyncStatus('Processing data...');
+      toastService.loading('Processing downloaded data... (80%)', { id: 'cloud-restore' });
       
       // Create a file object that can be passed to the import function
       const file = new File([blob], 'cloud-backup.zip', { type: 'application/zip' });
-      console.log('[CloudRestore] File object created from blob.'); // Added log
-      
-      // Update toast
-      toastService.loading('Restoring data from cloud backup...', { duration: 10000, id: 'cloud-restore' });
       
       // Use the import function to handle the restore
       if (!onImportCollection) {
-         console.error('[CloudRestore] onImportCollection function is missing!'); // Added log
         throw new Error('Import functionality not available');
       }
       
-      console.log('[CloudRestore] Calling onImportCollection...'); // Added log
-      await onImportCollection(file);
-      console.log('[CloudRestore] onImportCollection finished.'); // Added log
+      // Instead of passing directly to onImportCollection, handle it in this component
+      // This allows us to show the import progress without the separate overlay
+      await handleImportWithProgress(file);
       
       // Update last sync timestamp
       localStorage.setItem('lastCloudSync', new Date().toISOString());
       
       // Refresh collections if needed
       if (refreshCollections) {
-        console.log('[CloudRestore] Refreshing collections...'); // Added log
         refreshCollections();
       }
       
       // Show success message
-      toastService.success('Successfully restored from cloud backup', { id: 'cloud-restore' });
-      console.log('[CloudRestore] Restore successful.'); // Added log
+      toastService.success('Successfully restored from cloud backup (100%)', { id: 'cloud-restore' });
     } catch (error) {
-      // Log the detailed error object
-      console.error('[CloudRestore] Error during restore process:', error); // Enhanced log
-      toastService.error(`Cloud restore failed: ${error.message}`, { id: 'cloud-restore' }); // Use existing toast ID
+      console.error('Error restoring from cloud:', error);
+      
+      // More specific error messages
+      if (error.message === 'No backup found in cloud') {
+        toastService.error('No backup found in cloud. Please create a backup first.', { id: 'cloud-restore' });
+      } else if (error.code === 'storage/quota-exceeded') {
+        toastService.error('Storage quota exceeded. Please contact support.', { id: 'cloud-restore' });
+      } else {
+        toastService.error(`Cloud restore failed: ${error.message}`, { id: 'cloud-restore' });
+      }
+      
+      setCloudSyncStatus('Failed');
     } finally {
-      setIsCloudRestoring(false);
-      console.log('[CloudRestore] Finished.'); // Added log
+      // Don't reset right away - allow time to see the completion or error state
+      setTimeout(() => {
+        setIsCloudRestoring(false);
+        setCloudSyncStatus('');
+        setImportStep(0);
+        setImportProgress(0);
+      }, 3000);
+    }
+  };
+
+  // Function to handle import with progress tracking
+  const handleImportWithProgress = async (file) => {
+    try {
+      // Set import status to step 1
+      setImportStep(1);
+      setImportProgress(10);
+      setCloudSyncProgress(80); // Continue from cloud download progress
+      setCloudSyncStatus('Processing download...');
+      
+      // Call the import function but tell it NOT to show the overlay
+      await onImportCollection(file, {
+        noOverlay: true, // Critical flag to prevent the full-page overlay
+        // Define callbacks for progress tracking
+        onProgress: (step, percent, message) => {
+          // Map the import steps (1-4) to the 80-100% range of our progress bar
+          const mappedPercent = 80 + (percent / 100) * 20;
+          setCloudSyncProgress(mappedPercent);
+          setCloudSyncStatus(message || `Step ${step} of 4: ${percent}%`);
+        }
+      });
+      
+      // After successful import
+      setCloudSyncProgress(100);
+      setCloudSyncStatus('Import completed successfully!');
+      
+      // Show success message
+      toastService.success('Data imported successfully!');
+    } catch (error) {
+      console.error('Import error:', error);
+      toastService.error(`Import failed: ${error.message}`);
+      setCloudSyncStatus('Import failed: ' + error.message);
     }
   };
 
@@ -353,120 +457,104 @@ const SettingsModal = ({
       >
         <div className="flex flex-col lg:flex-row h-full" {...stripDebugProps(props)}>
           {/* Navigation sidebar */}
-          <nav
-            className={`w-full lg:w-64 border-b lg:border-b-0 lg:border-r border-gray-200 dark:border-gray-800 p-4 space-y-2`}
-          >
-            <SettingsNavItem 
-              icon="settings" 
-              label="General"
-              isActive={activeTab === 'general'}
-              onClick={() => setActiveTab('general')}
-            />
-            <SettingsNavItem 
-              icon="person" 
-              label="Profile" 
-              isActive={activeTab === 'profile'}
-              onClick={() => setActiveTab('profile')}
-            />
-            <SettingsNavItem 
-              icon="account_balance_wallet" 
-              label="Account" 
-              isActive={activeTab === 'account'}
-              onClick={() => setActiveTab('account')}
-            />
-            <SettingsNavItem 
-              icon="code" 
-              label="Development" 
-              isActive={activeTab === 'development'}
-              onClick={() => setActiveTab('development')}
-            />
+          <nav className="w-full lg:w-48 shrink-0 border-b lg:border-b-0 lg:border-r border-gray-200 dark:border-indigo-900/20 mb-4 lg:mb-0 lg:pr-4">
+            <div className="flex flex-row lg:flex-col space-x-4 lg:space-x-0 lg:space-y-2 p-4">
+              <SettingsNavItem 
+                icon="settings" 
+                label="General" 
+                isActive={activeTab === 'general'}
+                onClick={() => setActiveTab('general')}
+              />
+              <SettingsNavItem 
+                icon="account_circle" 
+                label="Account" 
+                isActive={activeTab === 'account'}
+                onClick={() => setActiveTab('account')}
+              />
+              <SettingsNavItem 
+                icon="code" 
+                label="Development" 
+                isActive={activeTab === 'development'}
+                onClick={() => setActiveTab('development')}
+              />
+            </div>
           </nav>
 
           {/* Content area */}
           <div className="w-full lg:flex-1 overflow-y-auto p-6 sm:p-8 bg-gray-50 dark:bg-[#1A1A1A]" {...stripDebugProps(props)}>
             {activeTab === 'general' && (
-              <div className="space-y-2">
-                <SettingsPanel
-                  title="Cloud Backup"
-                  description="Sync your collection to the cloud to access it anywhere."
-                >
-                  <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'} mb-4`}>Last synced: Never</p>
-                  <div className="flex flex-col gap-3">
-                    <Button
-                      variant="outline"
-                      iconLeft={<Icon name="cloud_upload" />}
-                      onClick={handleCloudBackup}
-                      isLoading={isCloudBackingUp}
-                      disabled={isCloudBackingUp || !currentUser}
-                      fullWidth
-                    >
-                      Backup to Cloud
-                    </Button>
-                    <Button
-                      variant="outline"
-                      iconLeft={<Icon name="cloud_download" />}
-                      onClick={handleCloudRestore}
-                      isLoading={isCloudRestoring}
-                      disabled={isCloudRestoring || !currentUser}
-                      fullWidth
-                    >
-                      Restore from Cloud
-                    </Button>
-                  </div>
-                </SettingsPanel>
-                
+              <div className="space-y-6">
                 <SettingsPanel
                   title="Appearance"
                   description="Choose your preferred light or dark theme."
                 >
-                  <div className={`flex p-1 rounded-lg border ${isDarkMode ? 'bg-[#0F0F0F] border-[#ffffff1a]' : 'bg-gray-100 border-gray-300'}`}>
-                    <button
-                      className={`flex items-center justify-center gap-2 flex-1 py-2 px-4 rounded-md transition-colors ${
-                        !isDarkMode 
-                          ? 'bg-gradient-to-r from-[#ef4444] to-[#db2777] text-white' 
-                          : 'bg-transparent text-gray-400 hover:text-white'
-                      }`}
-                      onClick={() => isDarkMode && toggleTheme()}
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <div 
+                      className={`
+                        flex-1 p-4 rounded-lg border-2 cursor-pointer transition-all duration-200
+                        ${!isDarkMode ? 'border-blue-500 bg-blue-50' : 'border-gray-200 dark:border-gray-700'}
+                      `}
+                      onClick={() => toggleTheme('light')}
                     >
-                      <Icon name="light_mode" size="sm" color={!isDarkMode ? 'white' : undefined} />
-                      <span>Light</span>
-                    </button>
-                    <button
-                      className={`flex items-center justify-center gap-2 flex-1 py-2 px-4 rounded-md transition-colors ${
-                        isDarkMode 
-                          ? 'bg-gradient-to-r from-[#ef4444] to-[#db2777] text-white' 
-                          : 'bg-transparent text-gray-400 hover:text-white'
-                      }`}
-                      onClick={() => !isDarkMode && toggleTheme()}
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="font-medium text-gray-900">Light Mode</h4>
+                        {!isDarkMode && <Icon name="check_circle" className="text-blue-500" />}
+                      </div>
+                      <div className="bg-white border border-gray-200 rounded-md p-2">
+                        <div className="h-2 w-8 bg-blue-500 rounded mb-2"></div>
+                        <div className="h-2 w-16 bg-gray-300 rounded mb-2"></div>
+                        <div className="h-2 w-10 bg-gray-300 rounded"></div>
+                      </div>
+                    </div>
+                    
+                    <div 
+                      className={`
+                        flex-1 p-4 rounded-lg border-2 cursor-pointer transition-all duration-200
+                        ${isDarkMode ? 'border-blue-500 bg-gray-800' : 'border-gray-200 dark:border-gray-700'}
+                      `}
+                      onClick={() => toggleTheme('dark')}
                     >
-                      <Icon name="dark_mode" size="sm" color={isDarkMode ? 'white' : undefined} />
-                      <span>Dark</span>
-                    </button>
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="font-medium text-white">Dark Mode</h4>
+                        {isDarkMode && <Icon name="check_circle" className="text-blue-500" />}
+                      </div>
+                      <div className="bg-gray-900 border border-gray-700 rounded-md p-2">
+                        <div className="h-2 w-8 bg-blue-500 rounded mb-2"></div>
+                        <div className="h-2 w-16 bg-gray-700 rounded mb-2"></div>
+                        <div className="h-2 w-10 bg-gray-700 rounded"></div>
+                      </div>
+                    </div>
                   </div>
                 </SettingsPanel>
-                
+
                 <SettingsPanel
-                  title="Currency Settings"
-                  description="Select the default currency for display."
+                  title="Application Settings"
+                  description="Configure general application settings."
                 >
-                  <div className="w-full">
-                    <select 
-                      className={`w-full rounded-lg p-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
-                        isDarkMode 
-                          ? 'bg-[#0F0F0F] text-white border border-[#ffffff1a]' 
-                          : 'bg-white text-gray-800 border border-gray-300'
-                      }`}
-                      defaultValue="AUD (A$)"
+                  <div className="space-y-4">
+                    <Button
+                      variant="outline"
+                      iconLeft={<Icon name="attach_money" />}
+                      onClick={handleUpdatePrices}
+                      disabled={isUpdatingPrices}
+                      fullWidth
                     >
-                      <option>AUD (A$)</option>
-                      <option>USD ($)</option>
-                      <option>EUR (€)</option>
-                      <option>GBP (£)</option>
-                      <option>JPY (¥)</option>
-                    </select>
+                      {isUpdatingPrices ? 'Updating Prices...' : 'Update Card Prices'}
+                    </Button>
+                    
+                    {onStartTutorial && (
+                      <Button
+                        variant="outline"
+                        iconLeft={<Icon name="help_outline" />}
+                        onClick={onStartTutorial}
+                        fullWidth
+                      >
+                        Start Tutorial
+                      </Button>
+                    )}
                   </div>
                 </SettingsPanel>
-                
+
                 {(collections.length > 1 || collections.some(c => c !== 'All Cards')) && (
                 <SettingsPanel
                   title="Manage Collections"
@@ -515,144 +603,87 @@ const SettingsModal = ({
                   )}
                 </SettingsPanel>
                 )}
-                
-                <SettingsPanel
-                  title="Data Management"
-                  description="Backup and restore your card collection data."
-                >
-                  <div className="space-y-4">
-                    <div className="flex flex-col gap-3">
-                      <Button
-                        variant="outline"
-                        iconLeft={<Icon name="restore" />}
-                        onClick={handleImport}
-                        disabled={isExporting}
-                        fullWidth
-                      >
-                        Restore
-                      </Button>
-                      <Button
-                        variant="outline"
-                        iconLeft={<Icon name="backup" />}
-                        onClick={handleExport}
-                        disabled={isExporting}
-                        fullWidth
-                      >
-                        {isExporting ? 'Backing up...' : 'Backup'}
-                      </Button>
-                    </div>
-                  </div>
-                </SettingsPanel>
-                
-                <Button
-                  variant="outline"
-                  iconLeft={<Icon name="attach_money" />}
-                  onClick={handleUpdatePrices}
-                  disabled={isUpdatingPrices}
-                  fullWidth
-                >
-                  {isUpdatingPrices ? 'Updating Prices...' : 'Update Card Prices'}
-                </Button>
-                <Button
-                  variant="outline"
-                  iconLeft={<Icon name="school" />}
-                  onClick={onStartTutorial}
-                  fullWidth
-                >
-                  Start Tutorial
-                </Button>
-                <Button
-                  variant="danger"
-                  iconLeft={<Icon name="delete_forever" />}
-                  onClick={handleResetData}
-                  fullWidth
-                >
-                  Reset All Data
-                </Button>
-              </div>
-            )}
-            
-            {activeTab === 'profile' && (
-              <div className="space-y-6">
-                <SettingsPanel
-                  title="Personal Information"
-                  description="Update your personal details."
-                >
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <FormField
-                        id="firstName"
-                        label="First Name"
-                        name="firstName"
-                        value={profile.firstName || ''}
-                        onChange={handleProfileChange}
-                      />
-                      <FormField
-                        id="lastName"
-                        label="Last Name"
-                        name="lastName"
-                        value={profile.lastName || ''}
-                        onChange={handleProfileChange}
-                      />
-                    </div>
-                    
-                    <FormField
-                      id="mobileNumber"
-                      label="Mobile Number"
-                      name="mobileNumber"
-                      value={profile.mobileNumber || ''}
-                      onChange={handleProfileChange}
-                    />
-                    
-                    <FormField
-                      id="address"
-                      label="Address"
-                      name="address"
-                      value={profile.address || ''}
-                      onChange={handleProfileChange}
-                      multiline
-                      rows={3}
-                    />
-                    
-                    <FormField
-                      id="companyName"
-                      label="Company Name"
-                      name="companyName"
-                      value={profile.companyName || ''}
-                      onChange={handleProfileChange}
-                    />
-                    
-                    <div className="flex justify-end">
-                      <Button
-                        variant="outline"
-                        onClick={handleProfileSave}
-                      >
-                        Save Profile
-                      </Button>
-                    </div>
-                  </div>
-                </SettingsPanel>
               </div>
             )}
             
             {activeTab === 'account' && (
               <div className="space-y-6">
                 <SettingsPanel
-                  title="Account Details"
-                  description="Manage your account information and sign out."
+                  title="Personal Information"
+                  description="Update your personal information and profile settings."
+                >
+                  {/* Profile form fields */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      id="firstName"
+                      label="First Name"
+                      type="text"
+                      name="firstName"
+                      value={profile.firstName || ''}
+                      onChange={handleProfileChange}
+                    />
+                    <FormField
+                      id="lastName"
+                      label="Last Name"
+                      type="text"
+                      name="lastName"
+                      value={profile.lastName || ''}
+                      onChange={handleProfileChange}
+                    />
+                    <FormField
+                      id="companyName"
+                      label="Company Name (Optional)"
+                      type="text"
+                      name="companyName"
+                      value={profile.companyName || ''}
+                      onChange={handleProfileChange}
+                    />
+                    <FormField
+                      id="mobileNumber"
+                      label="Mobile Number (Optional)"
+                      type="tel"
+                      name="mobileNumber"
+                      value={profile.mobileNumber || ''}
+                      onChange={handleProfileChange}
+                    />
+                    <div className="md:col-span-2">
+                      <FormField
+                        id="address"
+                        label="Address (Optional)"
+                        type="text"
+                        name="address"
+                        value={profile.address || ''}
+                        onChange={handleProfileChange}
+                      />
+                    </div>
+                  </div>
+                  <div className="flex justify-end mt-4">
+                    <Button 
+                      variant="primary"
+                      onClick={handleProfileSave}
+                    >
+                      Save Profile
+                    </Button>
+                  </div>
+                </SettingsPanel>
+
+                <SettingsPanel
+                  title="Sign Out"
+                  description="Sign out of your account and return to the login screen."
+                  expandable={undefined}
                 >
                   {userData && (
                     <div className="flex items-center space-x-4 mb-6 bg-[#0a101c] p-4 rounded-lg">
-                      <div className="flex-shrink-0 bg-indigo-600 rounded-full p-2">
-                        <Icon name="account_circle" className="text-2xl text-white" />
+                      <div className="w-12 h-12 bg-indigo-600 rounded-full flex items-center justify-center text-white font-medium">
+                        {userData.firstName ? userData.firstName.charAt(0) : '?'}
                       </div>
                       <div>
-                        <p className="font-medium text-white">
-                          {userData.displayName || 'User'}
-                        </p>
-                        <p className="text-sm text-gray-400">
-                          {userData.email}
-                        </p>
+                        <div className="text-white font-medium">
+                          {userData.firstName} {userData.lastName}
+                        </div>
+                        <div className="text-gray-400 text-sm">
+                          {currentUser ? currentUser.email : 'Not signed in'}
+                        </div>
                       </div>
                     </div>
                   )}
@@ -672,6 +703,90 @@ const SettingsModal = ({
             
             {activeTab === 'development' && (
               <div className="space-y-6">
+                <SettingsPanel
+                  title="Data Management"
+                  description="Analyze and manage your card data storage to ensure everything is up to date."
+                >
+                  <DataManagementSection />
+                </SettingsPanel>
+
+                <SettingsPanel
+                  title="Data Backup & Restore"
+                  description="Backup and restore your card collection data."
+                >
+                  <div className="space-y-4">
+                    <div className="flex flex-col gap-3">
+                      <Button
+                        variant="outline"
+                        iconLeft={<Icon name="cloud_download" />}
+                        fullWidth
+                        onClick={handleCloudRestore}
+                        disabled={isCloudRestoring || !currentUser}
+                      >
+                        {isCloudRestoring ? 'Restoring...' : 'Restore from Cloud'}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        iconLeft={<Icon name="cloud_upload" />}
+                        fullWidth
+                        onClick={handleCloudBackup}
+                        disabled={isCloudBackingUp || !currentUser}
+                      >
+                        {isCloudBackingUp ? 'Backing up...' : 'Backup to Cloud'}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        iconLeft={<Icon name="restore" />}
+                        onClick={handleImport}
+                        disabled={isExporting}
+                        fullWidth
+                      >
+                        Restore from File
+                      </Button>
+                      <Button
+                        variant="outline"
+                        iconLeft={<Icon name="backup" />}
+                        onClick={handleExport}
+                        disabled={isExporting}
+                        fullWidth
+                      >
+                        {isExporting ? 'Backing up...' : 'Backup to File'}
+                      </Button>
+                    </div>
+                    
+                    {(isCloudBackingUp || isCloudRestoring) && (
+                      <div className="mt-4">
+                        <div className="flex justify-between text-sm mb-1">
+                          <span>{cloudSyncStatus}</span>
+                          <span>{Math.round(cloudSyncProgress)}%</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2 dark:bg-gray-700">
+                          <div 
+                            className="bg-blue-600 h-2 rounded-full" 
+                            style={{ width: `${cloudSyncProgress}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </SettingsPanel>
+
+                <SettingsPanel
+                  title="Advanced Actions"
+                  description="Be careful with these options as they may affect your data."
+                >
+                  <div className="space-y-4">
+                    <Button
+                      variant="danger"
+                      iconLeft={<Icon name="delete_forever" />}
+                      onClick={handleResetData}
+                      fullWidth
+                    >
+                      Reset All Data
+                    </Button>
+                  </div>
+                </SettingsPanel>
+
                 <SettingsPanel
                   title="Development Resources"
                   description="Access development tools and resources for the Pokemon Card Tracker app."

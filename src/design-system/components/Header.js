@@ -197,12 +197,8 @@ const Header = ({
             {onSettingsClick && (
               <button
                 id="settings-button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  console.log('Settings button clicked in Header component');
-                  // Call the handler directly
-                  if (typeof onSettingsClick === 'function') {
+                onClick={() => {
+                  if (onSettingsClick) {
                     onSettingsClick();
                   }
                 }}
