@@ -66,6 +66,41 @@ const SettingsModal = ({
   const [collectionToRename, setCollectionToRename] = useState('');
   const fileInputRef = useRef(null);
   const importBaseDataRef = useRef(null);
+  
+  // Add detailed logging state
+  const [operationLogs, setOperationLogs] = useState([]);
+  const [showDetailedLogs, setShowDetailedLogs] = useState(false);
+
+  // Function to add a log entry
+  const addLogEntry = (message, type = 'info') => {
+    const timestamp = new Date().toLocaleTimeString();
+    const newLog = {
+      id: Date.now(),
+      timestamp,
+      message,
+      type // 'info', 'error', 'warning', 'success'
+    };
+    
+    setOperationLogs(prevLogs => {
+      // Keep only the last 50 logs to prevent memory issues
+      const updatedLogs = [...prevLogs, newLog].slice(-50);
+      return updatedLogs;
+    });
+    
+    // Also log to console if available
+    if (type === 'error') {
+      console.error(`[${timestamp}] ${message}`);
+    } else if (type === 'warning') {
+      console.warn(`[${timestamp}] ${message}`);
+    } else {
+      console.log(`[${timestamp}] ${message}`);
+    }
+  };
+
+  // Clear logs
+  const clearLogs = () => {
+    setOperationLogs([]);
+  };
 
   // Initialize collection to rename 
   useEffect(() => {
@@ -208,16 +243,20 @@ const SettingsModal = ({
   const handleCloudBackup = async () => {
     if (!currentUser) {
       toastService.error('You must be logged in to use cloud backup');
+      addLogEntry('Cloud backup failed: User not logged in', 'error');
       return;
     }
 
     setIsCloudBackingUp(true);
     setCloudSyncProgress(10);
     setCloudSyncStatus('Preparing...');
+    clearLogs();
+    addLogEntry('Starting cloud backup process', 'info');
 
     try {
       // Show uploading toast with percentage
       toastService.loading('Creating cloud backup... (10%)', { duration: 20000, id: 'cloud-backup' });
+      addLogEntry('Creating backup data...', 'info');
       
       // Get the exportData function that handles the ZIP creation
       if (!onExportData) {
@@ -228,6 +267,7 @@ const SettingsModal = ({
       setCloudSyncStatus('Creating backup...');
       
       // Call the export function with returnBlob option to get the data without triggering a download
+      addLogEntry('Calling export function to generate backup data', 'info');
       const blob = await onExportData({ 
         returnBlob: true,
         optimizeForMobile: true // Add optimization hint
@@ -236,6 +276,8 @@ const SettingsModal = ({
       if (!blob) {
         throw new Error('Failed to generate backup data');
       }
+      
+      addLogEntry(`Backup data generated successfully: ${(blob.size / 1024 / 1024).toFixed(2)}MB`, 'success');
       
       // Update progress
       setCloudSyncProgress(50);
@@ -246,7 +288,15 @@ const SettingsModal = ({
       
       // Upload to Firebase Storage with simple uploadBytes for better mobile compatibility
       const backupRef = ref(storage, `users/${currentUser.uid}/backups/latest-backup.zip`);
-      await uploadBytes(backupRef, blob);
+      addLogEntry(`Uploading to Firebase Storage path: users/${currentUser.uid}/backups/latest-backup.zip`, 'info');
+      
+      try {
+        await uploadBytes(backupRef, blob);
+        addLogEntry('Upload to Firebase Storage completed successfully', 'success');
+      } catch (uploadError) {
+        addLogEntry(`Upload error: ${uploadError.code} - ${uploadError.message}`, 'error');
+        throw uploadError;
+      }
       
       // Update progress
       setCloudSyncProgress(100);
@@ -255,18 +305,22 @@ const SettingsModal = ({
       // Update last backup timestamp in localStorage
       const timestamp = new Date().toISOString();
       localStorage.setItem('lastCloudSync', timestamp);
+      addLogEntry(`Backup process completed and timestamp saved: ${timestamp}`, 'success');
       
       // Show success message
       toastService.success('Backup successfully uploaded to cloud (100%)', { id: 'cloud-backup' });
     } catch (error) {
       console.error('Error backing up to cloud:', error);
+      addLogEntry(`Error in cloud backup: ${error.code || ''} - ${error.message}`, 'error');
       
       // More specific error messages
       if (error.code === 'storage/retry-limit-exceeded') {
         toastService.error('Backup file too large for mobile. Try on desktop or reduce collection size.', 
           { id: 'cloud-backup' });
+        addLogEntry('Firebase reported retry limit exceeded - this may be due to file size or network issues', 'error');
       } else if (error.code === 'storage/unauthorized') {
         toastService.error('Unauthorized: Please log in again.', { id: 'cloud-backup' });
+        addLogEntry('Firebase reported unauthorized access - user may need to log in again', 'error');
       } else {
         toastService.error(`Cloud backup failed: ${error.message}`, { id: 'cloud-backup' });
       }
@@ -284,16 +338,20 @@ const SettingsModal = ({
   const handleCloudRestore = async () => {
     if (!currentUser) {
       toastService.error('You must be logged in to restore from cloud');
+      addLogEntry('Cloud restore failed: User not logged in', 'error');
       return;
     }
 
     setIsCloudRestoring(true);
     setCloudSyncProgress(10);
     setCloudSyncStatus('Preparing...');
+    clearLogs();
+    addLogEntry('Starting cloud restore process', 'info');
 
     try {
       // Create a reference to the backup in Firebase Storage
       const backupRef = ref(storage, `users/${currentUser.uid}/backups/latest-backup.zip`);
+      addLogEntry(`Checking for backup at: users/${currentUser.uid}/backups/latest-backup.zip`, 'info');
       
       // Show loading toast
       toastService.loading('Checking for backups... (10%)', { duration: 20000, id: 'cloud-restore' });
@@ -301,11 +359,14 @@ const SettingsModal = ({
       // Get download URL
       let url;
       try {
+        addLogEntry('Attempting to get download URL from Firebase Storage', 'info');
         url = await getDownloadURL(backupRef);
+        addLogEntry('Download URL obtained successfully', 'success');
         setCloudSyncProgress(30);
         setCloudSyncStatus('Found backup, preparing download...');
         toastService.loading('Found backup, preparing download... (30%)', { id: 'cloud-restore' });
       } catch (urlError) {
+        addLogEntry(`Error getting download URL: ${urlError.code} - ${urlError.message}`, 'error');
         if (urlError.code === 'storage/object-not-found') {
           throw new Error('No backup found in cloud');
         } else {
@@ -314,6 +375,7 @@ const SettingsModal = ({
       }
       
       // Use XHR for more reliable downloads especially on Safari
+      addLogEntry('Starting download using XMLHttpRequest for better compatibility', 'info');
       const downloadPromise = new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
         xhr.responseType = 'blob';
@@ -324,44 +386,76 @@ const SettingsModal = ({
             const percentComplete = Math.round((event.loaded / event.total) * 50) + 30;
             setCloudSyncProgress(percentComplete);
             setCloudSyncStatus(`Downloading: ${percentComplete}%`);
+            
+            // Log progress at 10% intervals to avoid too many logs
+            if (percentComplete % 10 === 0 || percentComplete === 31) {
+              addLogEntry(`Download progress: ${percentComplete}% (${(event.loaded / 1024 / 1024).toFixed(2)}MB / ${(event.total / 1024 / 1024).toFixed(2)}MB)`, 'info');
+            }
+            
             // Update toast with current progress
             toastService.loading(`Downloading backup... (${percentComplete}%)`, { id: 'cloud-restore' });
+          } else {
+            addLogEntry('Download progress not computable - size unknown', 'warning');
           }
         };
         
         xhr.onload = () => {
           if (xhr.status === 200) {
+            addLogEntry(`Download completed successfully with status ${xhr.status}`, 'success');
             resolve(xhr.response);
           } else {
+            addLogEntry(`Download failed with status: ${xhr.status} ${xhr.statusText}`, 'error');
             reject(new Error(`Failed to download: ${xhr.statusText}`));
           }
         };
         
-        xhr.onerror = () => {
+        xhr.onerror = (e) => {
+          addLogEntry(`Network error during download: ${e.type}`, 'error');
           reject(new Error('Network error occurred'));
         };
+
+        xhr.onabort = () => {
+          addLogEntry('Download was aborted', 'warning');
+          reject(new Error('Download aborted'));
+        };
+
+        xhr.ontimeout = () => {
+          addLogEntry('Download timed out', 'error');
+          reject(new Error('Download timed out'));
+        };
         
+        addLogEntry(`Initiating GET request to: ${url.substring(0, 100)}...`, 'info');
         xhr.open('GET', url);
         xhr.send();
       });
       
       // Wait for download to complete
-      const blob = await downloadPromise;
+      let blob;
+      try {
+        blob = await downloadPromise;
+        addLogEntry(`Download completed, received blob of size: ${(blob.size / 1024 / 1024).toFixed(2)}MB`, 'success');
+      } catch (downloadError) {
+        addLogEntry(`Download failed: ${downloadError.message}`, 'error');
+        throw downloadError;
+      }
       
       setCloudSyncProgress(80);
       setCloudSyncStatus('Processing data...');
       toastService.loading('Processing downloaded data... (80%)', { id: 'cloud-restore' });
       
       // Create a file object that can be passed to the import function
+      addLogEntry('Creating File object from downloaded blob', 'info');
       const file = new File([blob], 'cloud-backup.zip', { type: 'application/zip' });
       
       // Use the import function to handle the restore
       if (!onImportCollection) {
+        addLogEntry('Import functionality not available', 'error');
         throw new Error('Import functionality not available');
       }
       
       // Instead of passing directly to onImportCollection, handle it in this component
       // This allows us to show the import progress without the separate overlay
+      addLogEntry('Starting import process with downloaded file', 'info');
       await handleImportWithProgress(file);
       
       // Update last sync timestamp
@@ -369,19 +463,25 @@ const SettingsModal = ({
       
       // Refresh collections if needed
       if (refreshCollections) {
+        addLogEntry('Refreshing collections after successful restore', 'info');
         refreshCollections();
       }
       
       // Show success message
+      addLogEntry('Cloud restore completed successfully', 'success');
       toastService.success('Successfully restored from cloud backup (100%)', { id: 'cloud-restore' });
     } catch (error) {
       console.error('Error restoring from cloud:', error);
+      addLogEntry(`Error in cloud restore: ${error.code || ''} - ${error.message}`, 'error');
       
       // More specific error messages
       if (error.message === 'No backup found in cloud') {
         toastService.error('No backup found in cloud. Please create a backup first.', { id: 'cloud-restore' });
       } else if (error.code === 'storage/quota-exceeded') {
         toastService.error('Storage quota exceeded. Please contact support.', { id: 'cloud-restore' });
+      } else if (error.code === 'storage/retry-limit-exceeded') {
+        toastService.error('Download failed: Firebase retry limit exceeded. Please try again later.', { id: 'cloud-restore' });
+        addLogEntry('Firebase reported retry limit exceeded - this may be due to file size or network issues on mobile', 'error');
       } else {
         toastService.error(`Cloud restore failed: ${error.message}`, { id: 'cloud-restore' });
       }
@@ -430,6 +530,42 @@ const SettingsModal = ({
       toastService.error(`Import failed: ${error.message}`);
       setCloudSyncStatus('Import failed: ' + error.message);
     }
+  };
+
+  // Render the logs panel
+  const renderLogsPanel = () => {
+    return (
+      <div className="mt-4 border border-gray-700 rounded-md bg-gray-800 p-2 text-xs font-mono overflow-auto max-h-60">
+        <div className="flex justify-between items-center mb-2">
+          <h4 className="text-sm font-semibold text-gray-300">Operation Logs</h4>
+          <button 
+            onClick={clearLogs}
+            className="text-xs text-gray-400 hover:text-white"
+          >
+            Clear
+          </button>
+        </div>
+        {operationLogs.length === 0 ? (
+          <div className="text-gray-500 italic">No logs available</div>
+        ) : (
+          <div>
+            {operationLogs.map(log => (
+              <div 
+                key={log.id} 
+                className={`mb-1 ${
+                  log.type === 'error' ? 'text-red-400' : 
+                  log.type === 'warning' ? 'text-yellow-400' :
+                  log.type === 'success' ? 'text-green-400' :
+                  'text-gray-300'
+                }`}
+              >
+                <span className="text-gray-500">[{log.timestamp}]</span> {log.message}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -768,6 +904,20 @@ const SettingsModal = ({
                         </div>
                       </div>
                     )}
+                    
+                    {/* Toggle for detailed logs */}
+                    <div className="mt-4">
+                      <button
+                        onClick={() => setShowDetailedLogs(!showDetailedLogs)}
+                        className="text-sm text-blue-400 hover:text-blue-300 flex items-center"
+                      >
+                        <Icon name={showDetailedLogs ? "expand_less" : "expand_more"} size="sm" />
+                        {showDetailedLogs ? "Hide Detailed Logs" : "Show Detailed Logs"}
+                      </button>
+                    </div>
+                    
+                    {/* Detailed logs panel */}
+                    {showDetailedLogs && renderLogsPanel()}
                   </div>
                 </SettingsPanel>
 

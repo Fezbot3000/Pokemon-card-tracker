@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { storage } from '../services/firebase';
+import { storage } from '../firebase';
 import { useAuth } from '../design-system';
 import { useSubscription } from '../contexts/SubscriptionContext';
 import SubscriptionBanner from './SubscriptionBanner';
@@ -112,71 +112,85 @@ const CloudSync = ({ onExportData, onImportCollection }) => {
       
       try {
         // First check if file exists by trying to get download URL
+        logger.log('Attempting to get download URL for cloud backup');
         const downloadURL = await getDownloadURL(storageRef);
+        logger.log('Successfully obtained download URL');
         
         setSyncProgress(20);
         toast.loading('Found backup, starting download... (20%)', { id: 'cloud-restore' });
         
-        // Use XMLHttpRequest for better mobile compatibility and progress monitoring
-        const xhr = new XMLHttpRequest();
-        xhr.responseType = 'blob';
+        // Use fetch API instead of XMLHttpRequest for better compatibility
+        logger.log('Starting download using fetch API');
         
-        // Set up progress monitoring
-        xhr.onprogress = (event) => {
-          if (event.lengthComputable) {
-            // Scale progress from 20% to 70%
-            const percent = 20 + (event.loaded / event.total) * 50;
-            setSyncProgress(percent);
-            const percentRounded = Math.round(percent);
-            toast.loading(`Downloading backup... (${percentRounded}%)`, { id: 'cloud-restore' });
+        // Create an AbortController to handle timeouts
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 120000); // 2 minute timeout
+        
+        try {
+          const response = await fetch(downloadURL, { 
+            method: 'GET',
+            signal: controller.signal,
+            headers: {
+              'Cache-Control': 'no-cache'
+            }
+          });
+          
+          // Clear the timeout
+          clearTimeout(timeoutId);
+          
+          if (!response.ok) {
+            throw new Error(`HTTP error: ${response.status}`);
           }
-        };
-        
-        xhr.onload = function() {
-          if (this.status === 200) {
-            const blob = new Blob([this.response], { type: 'application/zip' });
-            
-            // Create a File object from the Blob for compatibility
-            const file = new File([blob], 'backup.zip', { type: 'application/zip' });
-            
-            setSyncProgress(70);
-            toast.loading(`Processing backup... (70%)`, { id: 'cloud-restore' });
-            
-            // Pass the file to the import function
-            onImportCollection(file, {
-              noOverlay: true, // Don't show full-page overlay
-              onProgress: (step, percent, message) => {
-                // Scale progress from 70% to 100%
-                const scaledPercent = 70 + (percent / 100) * 30;
-                setSyncProgress(scaledPercent);
-                toast.loading(`${message || `Step ${step}: ${Math.round(scaledPercent)}%`}`, { id: 'cloud-restore' });
-              }
-            }).then(() => {
-              setSyncProgress(100);
-              toast.success('Restore completed successfully! (100%)', { id: 'cloud-restore' });
-              setIsImporting(false);
-            }).catch(error => {
-              logger.error('Import error:', error);
-              toast.error(`Import failed: ${error.message}`, { id: 'cloud-restore' });
-              setIsImporting(false);
-            });
+          
+          logger.log('Download response received, getting blob data');
+          
+          // Get the blob data
+          const blob = await response.blob();
+          logger.log(`Received blob data: ${(blob.size / 1024 / 1024).toFixed(2)}MB`);
+          
+          // Create a File object from the Blob for compatibility
+          const file = new File([blob], 'backup.zip', { type: 'application/zip' });
+          
+          setSyncProgress(70);
+          toast.loading(`Processing backup... (70%)`, { id: 'cloud-restore' });
+          
+          // Pass the file to the import function
+          logger.log('Starting import process with downloaded file');
+          onImportCollection(file, {
+            noOverlay: true, // Don't show full-page overlay
+            onProgress: (step, percent, message) => {
+              // Scale progress from 70% to 100%
+              const scaledPercent = 70 + (percent / 100) * 30;
+              setSyncProgress(scaledPercent);
+              toast.loading(`${message || `Step ${step}: ${Math.round(scaledPercent)}%`}`, { id: 'cloud-restore' });
+            }
+          }).then(() => {
+            setSyncProgress(100);
+            toast.success('Restore completed successfully! (100%)', { id: 'cloud-restore' });
+            // Update last sync time
+            localStorage.setItem('lastCloudSync', new Date().toISOString());
+            setIsImporting(false);
+          }).catch(error => {
+            logger.error('Import error:', error);
+            toast.error(`Import failed: ${error.message}`, { id: 'cloud-restore' });
+            setIsImporting(false);
+          });
+        } catch (fetchError) {
+          logger.error('Fetch error:', fetchError);
+          
+          if (fetchError.name === 'AbortError') {
+            throw new Error('Download timed out. Please try again on a more stable connection.');
           } else {
-            throw new Error(`HTTP error: ${this.status}`);
+            throw fetchError;
           }
-        };
-        
-        xhr.onerror = function() {
-          throw new Error('Network error occurred while downloading backup');
-        };
-        
-        // Start the request
-        xhr.open('GET', downloadURL);
-        xhr.send();
-        
+        }
       } catch (error) {
         // If file not found, handle gracefully
         if (error.code === 'storage/object-not-found') {
           toast.error('No backup found in cloud storage', { id: 'cloud-restore' });
+        } else if (error.code === 'storage/retry-limit-exceeded') {
+          toast.error('Download failed: Firebase retry limit exceeded. Try again later or on a different network.', { id: 'cloud-restore' });
+          logger.error('Firebase retry limit exceeded:', error);
         } else {
           // Re-throw other errors to be caught by outer handler
           throw error;
@@ -190,6 +204,10 @@ const CloudSync = ({ onExportData, onImportCollection }) => {
         toast.error('Storage quota exceeded. Please contact support.', { id: 'cloud-restore' });
       } else if (error.code === 'storage/unauthorized') {
         toast.error('Unauthorized: Please log in again.', { id: 'cloud-restore' });
+      } else if (error.code === 'storage/retry-limit-exceeded') {
+        toast.error('Download failed: Firebase retry limit exceeded. Try again later or on a different network.', { id: 'cloud-restore' });
+      } else if (error.name === 'AbortError' || error.message?.includes('timeout')) {
+        toast.error('Download timed out. Please try again on a more stable connection.', { id: 'cloud-restore' });
       } else {
         toast.error(`Cloud restore failed: ${error.message}`, { id: 'cloud-restore' });
       }
