@@ -314,8 +314,28 @@ const CardDetailsModal = ({
                 <h3 className="text-lg font-semibold">Recent eBay Sales</h3>
               </div>
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
-                {/* Pass the full card object for flexible search */}
-                {/* <EbaySales card={card} /> */}
+                {/* Pass the full card object and onUpdateValue callback */}
+                <EbaySales 
+                  card={card} 
+                  onUpdateValue={(newValue) => {
+                    // Update the card's value and trigger onChange
+                    if (onChange) {
+                      const updatedCard = {
+                        ...card,
+                        value: newValue.toString() // Ensure it's stored as string to match existing format
+                      };
+                      onChange(updatedCard);
+                      setSaveMessage(`Card value updated to $${newValue} AUD`);
+                      
+                      // Clear message after 3 seconds
+                      setTimeout(() => {
+                        if (saveMessage === `Card value updated to $${newValue} AUD`) {
+                          setSaveMessage('');
+                        }
+                      }, 3000);
+                    }
+                  }}
+                />
               </div>
               <div className="text-sm text-gray-500 dark:text-gray-400">
                 <p>Sales data provided by eBay. These are recent completed listings matching your card details.</p>

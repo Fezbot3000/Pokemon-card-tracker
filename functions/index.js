@@ -2,7 +2,27 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 const fetch = require('node-fetch'); // Use node-fetch v2 syntax
-const cors = require('cors')({ origin: true }); // Enable CORS
+
+// Configure CORS: Allow requests from local dev and production domain
+const allowedOrigins = [
+  'http://localhost:3000', 
+  'http://localhost:51999', // Allow local dev server origin
+  'http://127.0.0.1:51999', // Allow local dev server origin
+  'https://mycardtracker-c8479.web.app', 
+  'https://mycardtracker.com.au'
+];
+
+const cors = require('cors')({
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  }
+});
 
 // Initialize Firebase Admin
 admin.initializeApp();
@@ -876,7 +896,7 @@ exports.directSubscriptionCheck = functions.https.onCall(async (data, context) =
         const activeSubscriptions = customer.subscriptions.data.filter(
           sub => sub.status === 'active' || sub.status === 'trialing'
         );
-        
+
         console.log(`Found ${activeSubscriptions.length} active subscriptions`);
         
         if (activeSubscriptions.length > 0) {
@@ -1355,4 +1375,251 @@ exports.proxyEbayCompleted = functions.https.onCall(async (data, context) => {
     }
     throw new functions.https.HttpsError('internal', error.message);
   }
+});
+
+// Proxy for eBay Marketplace Insights API (Buy API - more modern and reliable than Finding API)
+exports.proxyEbayMarketplaceInsights = functions.https.onRequest((req, res) => {
+  // Apply CORS middleware first
+  cors(req, res, async () => {
+    functions.logger.info('proxyEbayMarketplaceInsights called with method:', req.method);
+    
+    // Handle preflight OPTIONS request
+    if (req.method === 'OPTIONS') {
+      // CORS preflight response is handled by the cors middleware
+      res.status(204).send('');
+      return;
+    }
+    
+    // Log request origin for debugging
+    functions.logger.info('Request from origin:', req.headers.origin || 'unknown');
+    
+    // Only allow POST requests
+    if (req.method !== 'POST') {
+      functions.logger.error('Invalid request method');
+      res.status(405).json({ error: 'Method not allowed' });
+      return;
+    }
+    
+    try {
+      // Extract data from request body
+      const data = req.body || {};
+      functions.logger.info('Request data:', data);
+      
+      // Validate request data
+      const { cardName, setName, condition, gradingCompany, grade } = data;
+      
+      if (!cardName) {
+        functions.logger.error('No card name provided');
+        res.status(400).json({ error: 'No card name provided' });
+        return;
+      }
+      
+      // Get eBay OAuth credentials from Firebase Config
+      const clientId = functions.config().ebay?.client_id;
+      const clientSecret = functions.config().ebay?.client_secret;
+      
+      if (!clientId || !clientSecret) {
+        functions.logger.error('eBay API credentials not configured');
+        res.status(500).json({ error: 'eBay API credentials not configured' });
+        return;
+      }
+      
+      // Step 1: Get OAuth token
+      const tokenResponse = await fetch('https://api.ebay.com/identity/v1/oauth2/token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Authorization': `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString('base64')}`
+        },
+        body: 'grant_type=client_credentials&scope=https://api.ebay.com/oauth/api_scope'
+      });
+      
+      if (!tokenResponse.ok) {
+        const tokenErrorText = await tokenResponse.text();
+        functions.logger.error('Failed to get eBay OAuth token:', tokenErrorText);
+        res.status(500).json({ error: `Failed to authenticate with eBay: ${tokenResponse.status}` });
+        return;
+      }
+      
+      const tokenData = await tokenResponse.json();
+      const accessToken = tokenData.access_token;
+      
+      if (!accessToken) {
+        functions.logger.error('No access token received from eBay');
+        res.status(500).json({ error: 'Authentication failed: No access token received' });
+        return;
+      }
+      
+      functions.logger.info('Successfully obtained eBay OAuth token');
+      
+      // Step 2: Build the query for Marketplace Insights API
+      const queryParts = [];
+      queryParts.push(cardName); // Always include card name
+      
+      // Strip "-Holo" suffix and add as separate aspect if present
+      let isHolo = false;
+      let cleanCardName = cardName;
+      if (cardName.toLowerCase().includes('holo')) {
+        isHolo = true;
+        cleanCardName = cardName.replace(/-?\s*holo/i, '').trim();
+      }
+      
+      // Build the API request payload
+      const apiUrl = 'https://api.ebay.com/buy/marketplace_insights/v1_beta/item_sales/search';
+      
+      // Construct the category and aspect filters
+      const requestBody = {
+        category_ids: ["183454"], // Pokemon Trading Card Game category
+        q: cleanCardName, // Use the clean card name as the main query
+        limit: 10,
+        filter: "buyingOptions:{FIXED_PRICE|AUCTION},itemLocationCountry:AU", // Australia location
+        sort: "endedDate"
+      };
+      
+      // Add aspects based on provided data
+      const aspects = [];
+      
+      // Add set name as an aspect if provided
+      if (setName) {
+        // Strip "Pokémon" from the set name for better compatibility with eBay
+        const cleanSetName = setName.replace(/pok[eé]mon\s*/i, '').trim();
+        aspects.push({
+          name: "Set",
+          values: [cleanSetName]
+        });
+      }
+      
+      // Handle graded cards
+      if (gradingCompany && gradingCompany !== 'Raw/Ungraded') {
+        aspects.push({
+          name: "Graded",
+          values: ["Yes"]
+        });
+        
+        aspects.push({
+          name: "Grading Company",
+          values: [gradingCompany]
+        });
+        
+        if (grade) {
+          aspects.push({
+            name: "Grade",
+            values: [grade]
+          });
+        }
+      } else if (condition && condition !== 'Graded') {
+        // Map condition to eBay condition values
+        const conditionMap = {
+          "Near Mint": "Near Mint",
+          "Lightly Played": "Lightly Played (Excellent)",
+          "Moderately Played": "Moderately Played (Good)",
+          "Heavily Played": "Heavily Played (Acceptable)",
+          "Damaged": "Damaged"
+        };
+        
+        const ebayCondition = conditionMap[condition] || condition;
+        
+        aspects.push({
+          name: "Card Condition",
+          values: [ebayCondition]
+        });
+      }
+      
+      // Add holographic status if detected
+      if (isHolo) {
+        aspects.push({
+          name: "Finish",
+          values: ["Holographic"]
+        });
+      }
+      
+      // Add aspects to request if we have any
+      if (aspects.length > 0) {
+        requestBody.aspect_filters = aspects;
+      }
+      
+      functions.logger.info('eBay API request payload:', JSON.stringify(requestBody));
+      
+      // Make the API call to Marketplace Insights
+      const apiResponse = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+          'X-EBAY-C-MARKETPLACE-ID': 'EBAY_AU' // Australia marketplace
+        },
+        body: JSON.stringify(requestBody)
+      });
+      
+      // Handle API response
+      let responseBody;
+      try {
+        responseBody = await apiResponse.text();
+        functions.logger.info('API response status:', apiResponse.status);
+        functions.logger.info('API response preview:', responseBody.substring(0, 500));
+        
+        if (!apiResponse.ok) {
+          functions.logger.error('eBay Marketplace Insights API error:', responseBody);
+          res.status(500).json({ error: `eBay API error: ${apiResponse.status}. ${responseBody.substring(0, 200)}` });
+          return;
+        }
+        
+        const salesData = JSON.parse(responseBody);
+        
+        // Get the current AUD to USD exchange rate if needed
+        let audToUsdRate = 1;
+        if (salesData.itemSales && salesData.itemSales.length > 0) {
+          try {
+            const exchangeResponse = await fetch('https://open.er-api.com/v6/latest/USD');
+            const exchangeData = await exchangeResponse.json();
+            audToUsdRate = exchangeData.rates.AUD || 1.5; // Default to 1.5 if rate not available
+            functions.logger.info('Exchange rate (AUD/USD):', audToUsdRate);
+          } catch (exchangeError) {
+            functions.logger.warn('Failed to get exchange rate:', exchangeError);
+            audToUsdRate = 1.5; // Fallback value
+          }
+        }
+        
+        // Process the sales data to calculate average price
+        const processedData = {
+          salesData: salesData.itemSales || [],
+          exchangeRate: audToUsdRate,
+          averagePrice: 0
+        };
+        
+        // Calculate average price if we have sales
+        if (processedData.salesData.length > 0) {
+          let totalPrice = 0;
+          let validSales = 0;
+          
+          processedData.salesData.forEach(sale => {
+            if (sale.price && sale.price.value) {
+              // Convert to AUD if necessary
+              let priceValue = parseFloat(sale.price.value);
+              if (sale.price.currency === 'USD') {
+                priceValue *= audToUsdRate;
+              }
+              totalPrice += priceValue;
+              validSales++;
+            }
+          });
+          
+          if (validSales > 0) {
+            processedData.averagePrice = Math.round((totalPrice / validSales) * 100) / 100;
+          }
+        }
+        
+        // Return the processed data
+        res.status(200).json(processedData);
+        
+      } catch (parseError) {
+        functions.logger.error('Failed to parse eBay response:', parseError, responseBody);
+        res.status(500).json({ error: 'Failed to parse eBay response' });
+      }
+      
+    } catch (error) {
+      functions.logger.error('Error in proxyEbayMarketplaceInsights:', error);
+      res.status(500).json({ error: `Error fetching eBay data: ${error.message}` });
+    }
+  });
 });
