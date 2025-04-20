@@ -253,55 +253,78 @@ const SettingsModal = ({
     }
 
     setIsCloudRestoring(true);
+    console.log('[CloudRestore] Starting...'); // Added log
 
     try {
       // Create a reference to the backup in Firebase Storage
       const backupRef = ref(storage, `users/${currentUser.uid}/backups/latest-backup.zip`);
+      console.log('[CloudRestore] Backup reference created:', backupRef.fullPath); // Added log
       
       // Show loading toast
       toastService.loading('Downloading backup from cloud...', { duration: 10000, id: 'cloud-restore' });
       
       // Get download URL
+      console.log('[CloudRestore] Getting download URL...'); // Added log
       const url = await getDownloadURL(backupRef);
+      console.log('[CloudRestore] Download URL obtained:', url); // Added log
       
       // Fetch the file
+      console.log('[CloudRestore] Starting fetch...'); // Added log
       const response = await fetch(url);
+      console.log('[CloudRestore] Fetch response received. Status:', response.status, 'OK:', response.ok); // Added log
       
       if (!response.ok) {
-        throw new Error('Failed to download backup from cloud');
+        // Try to get more error detail from the response if possible
+        let errorDetail = `HTTP status ${response.status}`;
+        try {
+          const errorText = await response.text();
+          errorDetail += `: ${errorText.substring(0, 100)}`; // Log first 100 chars
+        } catch (e) { /* Ignore if reading text fails */ }
+        console.error('[CloudRestore] Fetch failed:', errorDetail); // Added log
+        throw new Error(`Failed to download backup from cloud (${errorDetail})`);
       }
       
       // Convert to blob
+      console.log('[CloudRestore] Converting response to blob...'); // Added log
       const blob = await response.blob();
+      console.log('[CloudRestore] Response converted to blob. Size:', blob.size, 'Type:', blob.type); // Added log
       
       // Create a file object that can be passed to the import function
       const file = new File([blob], 'cloud-backup.zip', { type: 'application/zip' });
+      console.log('[CloudRestore] File object created from blob.'); // Added log
       
       // Update toast
       toastService.loading('Restoring data from cloud backup...', { duration: 10000, id: 'cloud-restore' });
       
       // Use the import function to handle the restore
       if (!onImportCollection) {
+         console.error('[CloudRestore] onImportCollection function is missing!'); // Added log
         throw new Error('Import functionality not available');
       }
       
+      console.log('[CloudRestore] Calling onImportCollection...'); // Added log
       await onImportCollection(file);
+      console.log('[CloudRestore] onImportCollection finished.'); // Added log
       
       // Update last sync timestamp
       localStorage.setItem('lastCloudSync', new Date().toISOString());
       
       // Refresh collections if needed
       if (refreshCollections) {
+        console.log('[CloudRestore] Refreshing collections...'); // Added log
         refreshCollections();
       }
       
       // Show success message
       toastService.success('Successfully restored from cloud backup', { id: 'cloud-restore' });
+      console.log('[CloudRestore] Restore successful.'); // Added log
     } catch (error) {
-      console.error('Error restoring from cloud:', error);
-      toastService.error(`Cloud restore failed: ${error.message}`);
+      // Log the detailed error object
+      console.error('[CloudRestore] Error during restore process:', error); // Enhanced log
+      toastService.error(`Cloud restore failed: ${error.message}`, { id: 'cloud-restore' }); // Use existing toast ID
     } finally {
       setIsCloudRestoring(false);
+      console.log('[CloudRestore] Finished.'); // Added log
     }
   };
 
