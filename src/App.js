@@ -185,6 +185,7 @@ function AppContent() {
     newProfit: 0
   });
   const [currentView, setCurrentView] = useState('cards'); // 'cards' or 'sold'
+  const [initialCardCollection, setInitialCardCollection] = useState(null); // State for initial collection
   const { registerSettingsCallback, checkAndStartTutorial } = useTutorial();
   const { user, logout } = useAuth();
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -204,6 +205,20 @@ function AppContent() {
     deleteCard,
     addCard
   } = useCardData();
+
+  // Memoized collection data for CardList
+  const collectionData = useMemo(() => {
+    if (selectedCollection === 'All Cards') {
+      // Combine cards from all collections, EXCLUDING 'sold'
+      return Object.entries(collections)
+        .filter(([name, cards]) => name.toLowerCase() !== 'sold' && Array.isArray(cards))
+        .map(([name, cards]) => cards) // Get just the card arrays
+        .flat() // Combine all card arrays into one
+        .filter(Boolean); // Remove any potential null/undefined entries
+    }
+    // Otherwise, return the cards for the selected collection or an empty array
+    return collections[selectedCollection] || [];
+  }, [collections, selectedCollection]);
 
   // Register the settings callback when component mounts
   // Using a ref to ensure we only register the callback once
@@ -254,127 +269,6 @@ function AppContent() {
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, []);
-
-  // Memoized collection data
-  const collectionData = useMemo(() => {
-    if (selectedCollection === 'All Cards') {
-      // Combine cards from all collections, filtering out any non-array values
-      return Object.values(collections)
-        .filter(Array.isArray)
-        .flat()
-        .filter(Boolean);
-    }
-    return collections[selectedCollection] || [];
-  }, [collections, selectedCollection]);
-
-  // Memoized callbacks
-  const handleAddCard = useCallback(async (cardData, imageFile, targetCollection) => {
-    try {
-      // Check if a card with this serial number already exists in any active collection (excluding sold)
-      const activeCollections = Object.entries(collections)
-        .filter(([name]) => name.toLowerCase() !== 'sold')
-        .map(([, cards]) => cards)
-        .flat();
-      
-      const existingCard = activeCollections.find(card => card.slabSerial === cardData.slabSerial);
-      
-      if (existingCard) {
-        throw new Error('A card with this serial number already exists in your active collections');
-      }
-
-      // Save the image if provided
-      if (imageFile) {
-        await db.saveImage(cardData.slabSerial, imageFile);
-      }
-
-      // Add card to the target collection
-      const updatedCollections = {
-        ...collections,
-        [targetCollection]: [
-          ...(collections[targetCollection] || []),
-          cardData
-        ]
-      };
-
-      // Save to database first
-      await db.saveCollections(updatedCollections);
-
-      // Update collections state
-      setCollections(updatedCollections);
-      
-      // Add to useCardData state
-      await addCard(cardData);
-
-      // Close the form
-      setShowNewCardForm(false);
-
-      // Show success message
-      toast.success('Card added successfully');
-    } catch (error) {
-      console.error('Error adding card:', error);
-      toast.error('Error adding card: ' + error.message);
-      throw error; // Re-throw to be handled by the form
-    }
-  }, [collections, addCard]);
-
-  const handleCardUpdate = useCallback(async (updatedCard) => {
-    // Handle the special case of "All Cards" view
-    if (selectedCollection === 'All Cards') {
-      // Find which collection this card actually belongs to
-      let cardCollection = null;
-      let cardFound = false;
-      
-      // Look through all collections to find the card
-      for (const [collName, cards] of Object.entries(collections)) {
-        if (Array.isArray(cards)) {
-          const cardIndex = cards.findIndex(c => c.slabSerial === updatedCard.slabSerial);
-          if (cardIndex !== -1) {
-            cardCollection = collName;
-            cardFound = true;
-            break;
-          }
-        }
-      }
-      
-      if (cardFound && cardCollection) {
-        // Update the card in its original collection
-        const updatedCollections = {
-          ...collections,
-          [cardCollection]: collections[cardCollection].map(card =>
-            card.slabSerial === updatedCard.slabSerial ? updatedCard : card
-          )
-        };
-        
-        // Save to database
-        await db.saveCollections(updatedCollections);
-        
-        // Update state
-        setCollections(updatedCollections);
-        
-        // Also update the card in the useCardData hook's state
-        updateCard(updatedCard);
-      } else {
-        console.warn('Could not find the card in any collection');
-      }
-    } else {
-      // Normal case - we're updating a card in the current collection
-      const updatedCollections = {
-        ...collections,
-        [selectedCollection]: collections[selectedCollection].map(card =>
-          card.slabSerial === updatedCard.slabSerial ? updatedCard : card
-        )
-      };
-      
-      // Save to database
-      await db.saveCollections(updatedCollections);
-      
-      // Update state
-      setCollections(updatedCollections);
-      
-      // Also update the card in the useCardData hook's state
-      updateCard(updatedCard);
-    }
-  }, [collections, selectedCollection, updateCard]);
 
   // Calculate total profit for a collection
   const calculateTotalProfit = useCallback((cards) => {
@@ -1178,9 +1072,7 @@ To import this backup:
             };
             
             // Save to database
-            await db.saveCollections(newCollections, true); // Explicitly preserve sold items
-            
-            // Update state
+            await db.saveCollections(newCollections);
             setCollections(newCollections);
             setSelectedCollection('Imported Collection');
             localStorage.setItem('selectedCollection', 'Imported Collection');
@@ -1303,6 +1195,144 @@ To import this backup:
       toast.error(`Error deleting card: ${error.message}`);
     }
   }, [deleteCard]); // Now depends only on the hook's deleteCard function again
+
+  const handleCloseDetailsModal = () => {
+    clearSelectedCard();
+    setInitialCardCollection(null); // Clear initial collection on close
+  };
+
+  const handleCardUpdate = useCallback(async (updatedCard) => {
+    if (!updatedCard || !updatedCard.slabSerial) {
+      console.error('[App] handleCardUpdate received invalid card data:', updatedCard);
+      toast.error('Failed to update card: Invalid data.');
+      return;
+    }
+
+    const cardId = updatedCard.slabSerial;
+    const originalCollectionName = initialCardCollection; // Get the original collection name from state
+    const newCollectionName = updatedCard.collectionId; // Get the new collection name from the updated card data
+
+    if (!newCollectionName) {
+      toast.error('Please select a collection before saving.');
+      return; // Don't proceed if no collection is selected
+    }
+
+    console.log(`[App] Updating card ${cardId}. Original Collection: '${originalCollectionName}', New Collection: '${newCollectionName}'`);
+
+    try {
+      // Step 1: Load current collections from DB
+      const currentCollections = await db.getCollections();
+      if (!currentCollections || typeof currentCollections !== 'object') {
+        throw new Error('Failed to load collections from database.');
+      }
+
+      const updatedCollections = { ...currentCollections };
+      let cardFound = false;
+
+      // Step 2: Determine if collection changed and update collections object
+      if (originalCollectionName && originalCollectionName !== newCollectionName) {
+        console.log(`[App] Collection changed for card ${cardId}. Moving from '${originalCollectionName}' to '${newCollectionName}'.`);
+        // Remove card from the original collection
+        if (updatedCollections[originalCollectionName] && Array.isArray(updatedCollections[originalCollectionName])) {
+          updatedCollections[originalCollectionName] = updatedCollections[originalCollectionName].filter(card => card.slabSerial !== cardId);
+          console.log(`[App] Removed card ${cardId} from old collection '${originalCollectionName}'.`);
+        } else {
+          console.warn(`[App] Original collection '${originalCollectionName}' not found or not an array.`);
+        }
+
+        // Add card to the new collection (create if it doesn't exist)
+        if (!updatedCollections[newCollectionName]) {
+          updatedCollections[newCollectionName] = [];
+          console.log(`[App] Created new collection '${newCollectionName}'.`);
+        }
+        // Ensure the target is an array before pushing
+        if (Array.isArray(updatedCollections[newCollectionName])) {
+           // Make sure not to add duplicates if moving within the same logical collection but name changed slightly
+          if (!updatedCollections[newCollectionName].some(c => c.slabSerial === cardId)) {
+            updatedCollections[newCollectionName].push(updatedCard);
+            console.log(`[App] Added card ${cardId} to new collection '${newCollectionName}'.`);
+          }
+        } else {
+          console.error(`[App] Target collection '${newCollectionName}' is not an array. Cannot add card.`);
+           throw new Error(`Target collection '${newCollectionName}' is not valid.`);
+        }
+         cardFound = true; // Assume successful move preparation
+      } else {
+        // Collection did not change, just update the card data within its current collection
+        const currentCollection = originalCollectionName || newCollectionName; // Use whichever is valid
+         console.log(`[App] Collection not changed for card ${cardId}. Updating in collection '${currentCollection}'.`);
+        if (updatedCollections[currentCollection] && Array.isArray(updatedCollections[currentCollection])) {
+          const cardIndex = updatedCollections[currentCollection].findIndex(card => card.slabSerial === cardId);
+          if (cardIndex !== -1) {
+            updatedCollections[currentCollection][cardIndex] = updatedCard;
+            cardFound = true;
+             console.log(`[App] Updated card ${cardId} data in collection '${currentCollection}'.`);
+          } else {
+             console.warn(`[App] Card ${cardId} not found in its expected collection '${currentCollection}' for update.`);
+             // Attempt to find and add it if it's missing but should be there
+             // This handles edge cases where state might be slightly out of sync
+             if (!updatedCollections[currentCollection].some(c => c.slabSerial === cardId)) {
+                 updatedCollections[currentCollection].push(updatedCard);
+                 console.log(`[App] Card ${cardId} was missing, added it to collection '${currentCollection}'.`);
+                 cardFound = true;
+             }
+          }
+        } else {
+          console.warn(`[App] Current collection '${currentCollection}' not found or not an array during update.`);
+        }
+      }
+
+      if (!cardFound) {
+         // If still not found after checks/attempts, something is wrong
+         console.error(`[App] Failed to locate or place card ${cardId} during update.`);
+         // Decide if we should still try to save or throw an error
+         // For now, let's try saving anyway, maybe the DB operation corrects it
+         // throw new Error(`Could not find or place card ${cardId} in any collection during update.`);
+      }
+
+      // Step 3: Save the potentially modified collections object back to DB
+      // Ensure 'sold' collection, if present, is explicitly preserved during save.
+      await db.saveCollections(updatedCollections, true); 
+      console.log(`[App] Saved updated collections to DB for card ${cardId}.`);
+
+      // Step 4: Update local state (collections and the hook's card state)
+      setCollections(updatedCollections); // Update local collections state
+      updateCard(updatedCard); // Update card state within useCardData hook
+
+      // Step 5: Clear selected card to close modal
+      handleCloseDetailsModal(); // Use the handler that clears both card and initial collection
+
+      // Step 6: Show success toast
+      toast.success('Card updated successfully!');
+
+    } catch (error) {
+      console.error('[App] Error updating card:', error);
+      toast.error(`Error updating card: ${error.message}`);
+    }
+  }, [initialCardCollection, updateCard, handleCloseDetailsModal, collections]); // Added collections to dependencies
+
+  const handleAddCard = useCallback(async (cardData, imageFile, targetCollection) => {
+    try {
+      // Save card data to IndexedDB
+      const newCard = await db.addCard(cardData, imageFile);
+      
+      // Add card to the useCardData hook's state
+      addCard(newCard);
+      
+      // Update local state
+      const newCollections = {
+        ...collections,
+        [targetCollection]: [...(collections[targetCollection] || []), newCard]
+      };
+      setCollections(newCollections);
+      
+      // Show success toast
+      toast.success('Card added successfully!');
+    } catch (error) {
+      console.error('Error adding card:', error);
+      toast.error(`Error adding card: ${error.message}`);
+    }
+  }, [addCard, collections]);
 
   const handleSettingsClick = () => {
     document.body.classList.add('settings-open'); 
@@ -1484,10 +1514,27 @@ To import this backup:
       <main className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-4 pb-20">
         {currentView === 'cards' ? (
           <CardList
-            cards={collectionData}
+            cards={collectionData} // Pass the memoized collection data
             exchangeRate={exchangeRate}
             onCardClick={(card) => {
+              let actualCollectionName = selectedCollection;
+              // If viewing 'All Cards', find the card's actual collection
+              if (selectedCollection === 'All Cards') {
+                for (const [collName, cardsInCollection] of Object.entries(collections)) {
+                  // Ensure it's an array and check if the card exists in it
+                  if (Array.isArray(cardsInCollection) && cardsInCollection.some(c => c.slabSerial === card.slabSerial)) {
+                    actualCollectionName = collName;
+                    break; // Found the collection, stop searching
+                  }
+                }
+                // If somehow not found (shouldn't happen if data is consistent), default to null
+                if (actualCollectionName === 'All Cards') {
+                  console.warn("Could not determine original collection for card: ", card.slabSerial);
+                  actualCollectionName = null; 
+                }
+              }
               selectCard(card);
+              setInitialCardCollection(actualCollectionName); // Set the determined collection name
             }}
             onDeleteCards={onDeleteCards}
             onUpdateCard={handleCardUpdate}
@@ -1605,11 +1652,12 @@ To import this backup:
       {selectedCard && (
         <CardDetails
           card={selectedCard}
-          onClose={clearSelectedCard}
-          onUpdate={handleCardUpdate}
-          onUpdateCard={handleCardUpdate}
+          onClose={handleCloseDetailsModal} // Use the new close handler
+          initialCollectionName={initialCardCollection} // Pass initial collection name
+          onUpdateCard={handleCardUpdate} // Pass the update handler
           onDelete={deleteCard}
           exchangeRate={exchangeRate}
+          collections={collections ? Object.keys(collections) : []}
         />
       )}
 

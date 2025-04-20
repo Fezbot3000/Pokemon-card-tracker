@@ -30,6 +30,15 @@ const Modal = ({
   const scrollPosRef = useRef(null);
   const [animationState, setAnimationState] = useState('closed');
   
+  // Utility: Defensive cleanup for modal overlays and .modal-open
+  function forceModalCleanup() {
+    document.body.classList.remove('modal-open');
+    // Remove any lingering modal overlays
+    document.querySelectorAll('.fixed.inset-0.z-50').forEach(el => {
+      if (el.parentNode) el.parentNode.removeChild(el);
+    });
+  }
+
   // Preserve scroll position and prevent background scrolling
   useEffect(() => {
     // Only prevent background scroll and restore scroll position
@@ -39,14 +48,25 @@ const Modal = ({
         y: window.scrollY
       };
       document.body.classList.add('modal-open');
+      console.log('[Modal] Opened, .modal-open added to <body>');
       return () => {
         document.body.classList.remove('modal-open');
         if (scrollPosRef.current) {
           window.scrollTo(scrollPosRef.current.x, scrollPosRef.current.y);
         }
+        console.log('[Modal] Closed, .modal-open removed from <body>');
       };
     }
   }, [isOpen, showAsStatic]);
+
+  // Defensive: Always cleanup on unmount
+  useEffect(() => {
+    return () => {
+      document.body.classList.remove('modal-open');
+      forceModalCleanup();
+      console.log('[Modal] Unmounted, .modal-open forcibly removed and overlays cleaned up');
+    };
+  }, []);
 
   // Handle animation cleanup
   useEffect(() => {
@@ -54,10 +74,12 @@ const Modal = ({
       setAnimationState('closing');
       const timer = setTimeout(() => {
         setAnimationState('closed');
+        console.log('[Modal] Animation closed, modal is now unmounted');
       }, 200);
       return () => clearTimeout(timer);
     } else if (isOpen && animationState === 'closed') {
       setAnimationState('open');
+      console.log('[Modal] Animation open, modal is now mounted');
     }
   }, [isOpen, animationState]);
   

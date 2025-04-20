@@ -140,38 +140,37 @@ const parsePSACardData = (psaData) => {
   if (!psaData || psaData.error) {
     throw new Error(psaData?.error || 'Invalid PSA data');
   }
-  
-  // Log the structure to help debug
-  console.log('Parsing PSA data with keys:', Object.keys(psaData));
-  
-  // Based on the console log screenshot, we're getting a specific structure
-  // with fields like brand, cardNumber, category, etc.
+  const cert = psaData.PSACert || {};
+
+  // Construct a more descriptive card name
+  const cardName = [
+    cert.Year,
+    cert.Brand,
+    cert.SetName, // If available, otherwise Brand/Title
+    cert.CardNumber ? `#${cert.CardNumber}` : '',
+    cert.Subject,
+    cert.Variety
+  ].filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
+
   const result = {
-    // Card details from PSA
-    cardName: psaData.PSACert?.Subject || '',
-    cardNumber: psaData.PSACert?.CardNumber || psaData.PSACert?.SpecNumber || '',
-    slabSerial: psaData.PSACert?.CertNumber || psaData.PSACert?.SpecId || '',
-    grade: psaData.PSACert?.GradeDescription || psaData.PSACert?.CardGrade || '',
-    setName: psaData.PSACert?.Brand || '',
-    year: psaData.PSACert?.Year || '',
-    cardType: psaData.PSACert?.Category || '',
-    psaImageUrl: psaData.PSACert?.ImageUrl || '',
-    population: psaData.PSACert?.TotalPopulation || 0,
-    populationHigher: psaData.PSACert?.TotalPopulationHigher || 0,
-    varietyType: psaData.PSACert?.Variety || '',
-    certificationDate: psaData.PSACert?.CertDate || '',
-    player: psaData.PSACert?.Subject || '',
-    
-    // Include the brand/manufacturer info which appears in your console log
-    brand: psaData.PSACert?.Brand || '',
-    
-    // PSA website URL for the card
-    psaUrl: `https://www.psacard.com/cert/${psaData.PSACert?.CertNumber || ''}`,
-    
-    // App-specific fields (default values, to be merged with existing data)
+    cardName,
+    cardNumber: cert.CardNumber || cert.SpecNumber || '',
+    slabSerial: cert.CertNumber || cert.SpecId || '',
+    grade: cert.GradeDescription || cert.CardGrade || '',
+    setName: cert.Brand || '',
+    year: cert.Year || '',
+    cardType: cert.Category || '',
+    psaImageUrl: cert.ImageUrl || '',
+    population: cert.TotalPopulation || 0,
+    populationHigher: cert.TotalPopulationHigher || 0,
+    varietyType: cert.Variety || '',
+    certificationDate: cert.CertDate || '',
+    player: cert.Subject || '', // Just the character/player
+    brand: cert.Brand || '',
+    psaUrl: `https://www.psacard.com/cert/${cert.CertNumber || ''}`,
     isPSAAuthenticated: true,
   };
-  
+
   console.log('Parsed PSA data into:', result);
   return result;
 };
@@ -227,10 +226,10 @@ const mergeWithExistingCard = (existingCardData, psaCardData) => {
     psaCardData.cardName, // Often contains player/character name
     psaCardData.setName // Set name might also indicate category
   ].filter(Boolean).join(' ').toLowerCase();
-  
+
   // Default category
   mergedData.category = 'Other';
-  
+
   if (combinedInfo) {
     // Prioritize Pokemon check
     if (combinedInfo.includes('pokemon') || combinedInfo.includes('pokémon')) {
@@ -241,7 +240,7 @@ const mergeWithExistingCard = (existingCardData, psaCardData) => {
     } else if (combinedInfo.includes('magic') || combinedInfo.includes('mtg')) {
       mergedData.category = 'MagicTheGathering';
     } else if (combinedInfo.includes('dragon ball')) {
-      mergedData.category = 'DragonBallSuper';
+      mergedData.category = 'Dragon Ball Z';
     // Check Sports (add more specific checks if needed, e.g., player names)
     } else if (combinedInfo.includes('basketball')) {
       mergedData.category = 'Sports-Basketball';

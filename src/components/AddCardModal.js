@@ -5,6 +5,7 @@ import Button from '../design-system/atoms/Button';
 import CardDetailsForm from '../design-system/components/CardDetailsForm';
 import { toast } from 'react-hot-toast';
 import PSADetailModal from './PSADetailModal';
+import NewCollectionModal from './NewCollectionModal';
 import { searchByCertNumber } from '../services/psaSearch';
 
 /**
@@ -60,6 +61,9 @@ const AddCardModal = ({
   const [saveMessage, setSaveMessage] = useState(null);
   const [animClass, setAnimClass] = useState('');
   
+  // State for new collection modal
+  const [showNewCollectionModal, setShowNewCollectionModal] = useState(false);
+
   // Refs
   const messageTimeoutRef = useRef(null);
 
@@ -325,22 +329,33 @@ const AddCardModal = ({
           {/* Collection Selection */}
           <div className="mb-6">
             <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">Select Collection</h3>
-            <select
-              value={selectedCollection}
-              onChange={(e) => setSelectedCollection(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg border border-[#ffffff33] dark:border-[#ffffff1a]
-                       bg-white dark:bg-[#0F0F0F] text-gray-900 dark:text-white
-                       focus:outline-none focus:ring-2 focus:ring-primary/20"
-            >
-              {collections
-                .filter(collection => collection.toLowerCase() !== 'sold')
-                .map(collection => (
-                  <option key={collection} value={collection}>
-                    {collection}
-                  </option>
-                ))
-              }
-            </select>
+            <div className="flex gap-2 items-center">
+              <select
+                value={selectedCollection}
+                onChange={(e) => setSelectedCollection(e.target.value)}
+                className="w-full px-3 py-2 rounded-lg border border-[#ffffff33] dark:border-[#ffffff1a]
+                         bg-white dark:bg-[#0F0F0F] text-gray-900 dark:text-white
+                         focus:outline-none focus:ring-2 focus:ring-primary/20"
+              >
+                {collections
+                  .filter(collection => collection.toLowerCase() !== 'sold')
+                  .map(collection => (
+                    <option key={collection} value={collection}>
+                      {collection}
+                    </option>
+                  ))
+                }
+              </select>
+              <Button
+                variant="primary"
+                type="button"
+                onClick={() => setShowNewCollectionModal(true)}
+                className="flex-shrink-0"
+                aria-label="Add new collection"
+              >
+                <span className="material-icons">add</span>
+              </Button>
+            </div>
             {errors.collection && (
               <p className="mt-1 text-sm text-red-600">{errors.collection}</p>
             )}
@@ -410,6 +425,42 @@ const AddCardModal = ({
         certNumber={psaSerial}
         currentCardData={newCard}
         onApplyDetails={handleApplyPsaDetails}
+      />
+      
+      {/* New Collection Modal */}
+      <NewCollectionModal
+        isOpen={showNewCollectionModal}
+        onClose={() => {
+          setShowNewCollectionModal(false);
+          // Defensive: forcibly clean up overlays
+          if (typeof window !== 'undefined' && window.document) {
+            document.body.classList.remove('modal-open');
+            document.querySelectorAll('.fixed.inset-0.z-50').forEach(el => {
+              if (el.parentNode) el.parentNode.removeChild(el);
+            });
+          }
+        }}
+        onCreate={(name) => {
+          setShowNewCollectionModal(false);
+          if (!collections.includes(name)) {
+            setSelectedCollection(name);
+            if (typeof window !== 'undefined') {
+              if (window.db && window.db.createEmptyCollection) {
+                window.db.createEmptyCollection(name);
+              }
+            }
+          } else {
+            setSelectedCollection(name);
+          }
+          // Defensive: forcibly clean up overlays
+          if (typeof window !== 'undefined' && window.document) {
+            document.body.classList.remove('modal-open');
+            document.querySelectorAll('.fixed.inset-0.z-50').forEach(el => {
+              if (el.parentNode) el.parentNode.removeChild(el);
+            });
+          }
+        }}
+        existingCollections={collections}
       />
     </>
   );

@@ -9,6 +9,14 @@ import PriceChartingButton from '../../components/PriceChartingButton';
 import SaleModal from '../../components/SaleModal'; // Import SaleModal
 import '../styles/animations.css';
 
+// Helper function to format date
+const formatDate = (dateString) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  // Check if the date is valid
+  return isNaN(date.getTime()) ? '' : date.toISOString().split('T')[0];
+};
+
 /**
  * CardDetailsModal Component
  * 
@@ -29,10 +37,11 @@ const CardDetailsModal = ({
   className = '',
   additionalHeaderContent,
   additionalValueContent,
-  additionalSerialContent
+  additionalSerialContent,
+  collections = [], // Expect collections as a prop
+  initialCollectionName // Accept initial collection name
 }) => {
   const [activeTab, setActiveTab] = useState('details');
-  const [editedCard, setEditedCard] = useState(card || {});
   const [cardImage, setCardImage] = useState(image);
   const [localImageLoadingState, setLocalImageLoadingState] = useState(imageLoadingState);
   const [showEnlargedImage, setShowEnlargedImage] = useState(false);
@@ -40,7 +49,7 @@ const CardDetailsModal = ({
   const [saveMessage, setSaveMessage] = useState('');
   const [errors, setErrors] = useState({});
   const [animClass, setAnimClass] = useState('fade-in');
-  
+
   // If the card has pricing data from PriceCharting, extract the product ID
   let priceChartingProductId = null;
   if (card?.priceChartingUrl) {
@@ -72,27 +81,9 @@ const CardDetailsModal = ({
     return 'loose';
   };
   
-  // Log whenever the category changes
-  useEffect(() => {
-    // console.log('[Debug] editedCard.category changed:', editedCard.category);
-  }, [editedCard.category]);
-  
   // Update local state when props change or modal opens
   useEffect(() => {
-    // console.log('[ModalEffect] Running. isOpen:', isOpen, 'Incoming card:', card);
-    // Only update state when the modal is open
     if (isOpen) {
-      // Ensure a completely fresh state for adding a new card
-      if (!card) {
-        setEditedCard({
-          category: '',
-          gradingCompany: '',
-          // Add other fields as needed for a blank form
-        });
-      } else {
-        setEditedCard(card); // Use the provided card data for 'edit' mode
-      }
-
       if (image) {
         setCardImage(image);
       } else {
@@ -102,24 +93,16 @@ const CardDetailsModal = ({
       setActiveTab('details'); // Reset to the details tab on open
       setErrors({}); // Clear any previous errors
     }
-  }, [card, image, imageLoadingState, isOpen]); // Add isOpen to dependency array
+  }, [image, imageLoadingState, isOpen]); // Simplified dependencies
   
-  // Handle card field changes
-  const handleCardChange = (updatedCard) => {
-    setEditedCard(updatedCard);
-    if (onChange) {
-      onChange(updatedCard);
-    }
-  };
-  
-  // Handle image changes
+  // Handle image changes (passed down to form)
   const handleImageChange = (file) => {
     if (onImageChange && file) {
       setLocalImageLoadingState('loading');
       onImageChange(file);
     }
   };
-  
+
   // Handle mark as sold action
   const handleMarkAsSold = () => {
     if (onMarkAsSold) {
@@ -132,7 +115,7 @@ const CardDetailsModal = ({
     setIsConfirmingSold(false);
     if (onMarkAsSold) {
       // Pass the saleData back to the parent (CardDetails)
-      onMarkAsSold({ ...editedCard, ...saleData });
+      onMarkAsSold({ ...card, ...saleData }); // Use card prop
     }
   };
 
@@ -143,7 +126,7 @@ const CardDetailsModal = ({
   // Handle save action
   const handleSave = () => {
     if (onSave) {
-      onSave(editedCard);
+      onSave(card); // Use card prop
     }
   };
   
@@ -231,18 +214,44 @@ const CardDetailsModal = ({
 
           {/* Tab Content */}
           {activeTab === 'details' && (
-            <CardDetailsForm 
-              key={card?.id || 'new-card-form'} // Add key here
-              card={editedCard}
-              cardImage={cardImage}
-              imageLoadingState={localImageLoadingState}
-              onChange={handleCardChange}
-              onImageChange={handleImageChange}
-              onImageRetry={onImageRetry}
-              onImageClick={() => setShowEnlargedImage(true)}
-              additionalValueContent={additionalValueContent}
-              additionalSerialContent={additionalSerialContent}
-            />
+            <div className="space-y-6 ">
+              {/* Collection Selector */}
+              <div className="w-full md:w-1/2">
+                <label htmlFor="modal-collection" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Collection
+                </label>
+                <select
+                  id="modal-collection"
+                  name="collectionId" // Assumes card data uses 'collectionId' to store the collection NAME
+                  value={card?.collectionId || ''} // Use card prop for value
+                  onChange={(e) => onChange({ ...card, collectionId: e.target.value })} // Call onChange prop directly
+                  className="w-full px-3 py-2 rounded-lg border border-[#ffffff33] dark:border-[#ffffff1a] bg-white dark:bg-[#0F0F0F] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  disabled={!collections || collections.length === 0}
+                >
+                  <option value="">Select Collection...</option>
+                  {/* Map over array of strings */} 
+                  {Array.isArray(collections) && collections.map((collectionName) => (
+                    <option key={collectionName} value={collectionName}>
+                      {collectionName}
+                    </option>
+                  ))}
+                </select>
+                {/* Optional: Add loading state or error message */}
+              </div>
+
+              <CardDetailsForm 
+                key={card?.id || 'new-card-form'} 
+                card={card} // Pass card prop
+                cardImage={cardImage}
+                imageLoadingState={localImageLoadingState}
+                onChange={onChange} // Pass onChange prop directly
+                onImageChange={handleImageChange}
+                onImageRetry={onImageRetry}
+                onImageClick={() => setShowEnlargedImage(true)}
+                additionalValueContent={additionalValueContent}
+                additionalSerialContent={additionalSerialContent}
+              />
+            </div>
           )}
 
           {activeTab === 'price-history' && priceChartingProductId && (
@@ -367,7 +376,7 @@ const CardDetailsModal = ({
         <SaleModal
           isOpen={isConfirmingSold}
           onClose={handleSaleModalClose}
-          selectedCards={[editedCard]}
+          selectedCards={[card]}
           onConfirm={handleSaleConfirm}
         />
       )}
@@ -390,7 +399,15 @@ CardDetailsModal.propTypes = {
   className: PropTypes.string,
   additionalHeaderContent: PropTypes.node,
   additionalValueContent: PropTypes.node,
-  additionalSerialContent: PropTypes.node
+  additionalSerialContent: PropTypes.node,
+  collections: PropTypes.arrayOf(PropTypes.string), // Expect an array of strings now
+  initialCollectionName: PropTypes.string // Add prop type
+};
+
+CardDetailsModal.defaultProps = {
+  card: null,
+  collections: [], // Default to empty array
+  initialCollectionName: null // Add default prop
 };
 
 export default CardDetailsModal;

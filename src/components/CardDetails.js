@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, memo } from 'react';
+import PropTypes from 'prop-types'; // Add this import
 import db from '../services/db';
 import { useTheme } from '../design-system';
 import { toast } from 'react-hot-toast';
@@ -15,7 +16,15 @@ const formatDate = (dateString) => {
   return isNaN(date.getTime()) ? '' : date.toISOString().split('T')[0];
 };
 
-const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchangeRate }) => {
+const CardDetails = memo(({
+  card,
+  onClose,
+  onUpdateCard,
+  onDelete,
+  exchangeRate,
+  collections = [],
+  initialCollectionName
+}) => {
   const [isOpen, setIsOpen] = useState(true);
   const [editedCard, setEditedCard] = useState({
     ...card,
@@ -33,8 +42,31 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
   const { isDarkMode } = useTheme();
   const messageTimeoutRef = useRef(null);
 
+  // Effect to update editedCard when card or initialCollectionName changes
+  useEffect(() => {
+    if (card) {
+      setEditedCard({
+        ...card,
+        id: card.id || card.slabSerial,
+        year: card.year ? String(card.year) : '',
+        investmentUSD: typeof card.investmentUSD === 'number' ? String(Number(card.investmentUSD.toFixed(2))) : '0',
+        currentValueUSD: typeof card.currentValueUSD === 'number' ? String(Number(card.currentValueUSD.toFixed(2))) : '0',
+        investmentAUD: typeof card.investmentAUD === 'number' ? String(Number(card.investmentAUD.toFixed(2))) : '0',
+        currentValueAUD: typeof card.currentValueAUD === 'number' ? String(Number(card.currentValueAUD.toFixed(2))) : '0',
+        datePurchased: formatDate(card.datePurchased) || '',
+        // Prioritize initialCollectionName if provided, otherwise use card's collectionId
+        collectionId: initialCollectionName || card.collectionId || '' 
+      });
+      // Also reset unsaved changes flag when the card prop changes
+      setHasUnsavedChanges(false);
+    } else {
+      // Handle case where card is null (e.g., adding new card - though this component might not be used for that)
+      setEditedCard({}); 
+    }
+  }, [card, initialCollectionName]); // Rerun when card or initialCollectionName changes
+
   // Use onUpdateCard if available, otherwise fall back to onUpdate for backward compatibility
-  const updateCard = onUpdateCard || onUpdate;
+  const updateCard = onUpdateCard;
 
   // Effect to load card image on mount
   useEffect(() => {
@@ -350,8 +382,26 @@ const CardDetails = ({ card, onClose, onUpdate, onUpdateCard, onDelete, exchange
           iconOnly={true}
         />
       }
+      collections={collections}
+      initialCollectionName={initialCollectionName}
     />
   );
+});
+
+CardDetails.propTypes = {
+  card: PropTypes.object,
+  onClose: PropTypes.func.isRequired,
+  onUpdateCard: PropTypes.func.isRequired,
+  onDelete: PropTypes.func.isRequired,
+  exchangeRate: PropTypes.number.isRequired,
+  collections: PropTypes.arrayOf(PropTypes.string),
+  initialCollectionName: PropTypes.string
 };
 
-export default memo(CardDetails);
+CardDetails.defaultProps = {
+  card: null,
+  collections: [],
+  initialCollectionName: null
+};
+
+export default CardDetails;
