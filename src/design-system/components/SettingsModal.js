@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
-import { storage } from '../../firebase';
+import { storage, functions } from '../../firebase';
 import { stripDebugProps } from '../../utils/stripDebugProps';
 import Icon from '../atoms/Icon';
 import { Modal, Button, ConfirmDialog } from '../';
@@ -10,6 +10,7 @@ import SettingsPanel from '../molecules/SettingsPanel';
 import SettingsNavItem from '../atoms/SettingsNavItem';
 import '../styles/animations.css';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { httpsCallable } from 'firebase/functions';
 import JSZip from 'jszip';
 import DataManagementSection from '../../components/DataManagementSection';
 import { useTheme } from '../contexts/ThemeContext';
@@ -295,63 +296,27 @@ const SettingsModal = ({
       // Show loading toast
       toastService.loading('Checking for backups... (10%)', { duration: 20000, id: 'cloud-restore' });
       
-      // Get a reference to the backup file in Firebase Storage
-      const backupRef = ref(storage, `users/${currentUser.uid}/backups/latest-backup.zip`);
-      
-      setCloudSyncProgress(20);
-      setCloudSyncStatus('Getting download URL...');
-      
-      // Get the download URL
+      // First try direct access - works on most browsers
       try {
+        setCloudSyncStatus('Getting download URL...');
+        
+        // Try the direct approach first (works on desktop browsers)
+        const backupRef = ref(storage, `users/${currentUser.uid}/backups/latest-backup.zip`);
         const downloadURL = await getDownloadURL(backupRef);
-        console.log('Got download URL:', downloadURL);
+        await continueDownloadProcess(downloadURL);
+      } catch (directError) {
+        console.log('Direct download failed, trying proxy function:', directError);
         
-        setCloudSyncProgress(40);
-        setCloudSyncStatus('Downloading backup...');
-        toastService.loading('Downloading backup... (40%)', { id: 'cloud-restore' });
+        // If direct approach fails (likely CORS on mobile), use the cloud function
+        setCloudSyncStatus('Using alternative download method...');
+        const getBackupDownloadUrl = httpsCallable(functions, 'getBackupDownloadUrl');
+        const result = await getBackupDownloadUrl({});
         
-        // Fetch the file
-        const response = await fetch(downloadURL);
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
+        if (!result.data || !result.data.downloadUrl) {
+          throw new Error('Failed to get download URL from backup service');
         }
         
-        // Get the data as a blob
-        const blob = await response.blob();
-        console.log(`Downloaded ${blob.size} bytes`);
-        
-        setCloudSyncProgress(70);
-        setCloudSyncStatus('Processing backup...');
-        toastService.loading('Processing backup... (70%)', { id: 'cloud-restore' });
-        
-        // Create a File object from the blob
-        const file = new File([blob], 'backup.zip', { type: 'application/zip' });
-        
-        // Use the import function to handle the restore
-        if (!onImportCollection) {
-          throw new Error('Import functionality not available');
-        }
-        
-        // Handle import with progress
-        await handleImportWithProgress(file);
-        
-        // Update last sync timestamp
-        localStorage.setItem('lastCloudSync', new Date().toISOString());
-        
-        // Refresh collections if needed
-        if (refreshCollections) {
-          refreshCollections();
-        }
-      } catch (downloadError) {
-        console.error('Download error:', downloadError);
-        
-        if (downloadError.code === 'storage/object-not-found') {
-          throw new Error('No backup found in cloud');
-        } else if (downloadError.code === 'storage/unauthorized') {
-          throw new Error('You do not have permission to access this backup');
-        } else {
-          throw downloadError;
-        }
+        await continueDownloadProcess(result.data.downloadUrl);
       }
     } catch (error) {
       console.error('Error restoring from cloud:', error);
@@ -376,6 +341,48 @@ const SettingsModal = ({
         setImportStep(0);
         setCloudSyncProgress(0);
       }, 3000);
+    }
+  };
+  
+  // Helper function to continue the download process after getting a valid URL
+  const continueDownloadProcess = async (downloadURL) => {
+    console.log('Got download URL, proceeding with download');
+    
+    setCloudSyncProgress(40);
+    setCloudSyncStatus('Downloading backup...');
+    toastService.loading('Downloading backup... (40%)', { id: 'cloud-restore' });
+    
+    // Fetch the file
+    const response = await fetch(downloadURL);
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    
+    // Get the data as a blob
+    const blob = await response.blob();
+    console.log(`Downloaded ${blob.size} bytes`);
+    
+    setCloudSyncProgress(70);
+    setCloudSyncStatus('Processing backup...');
+    toastService.loading('Processing backup... (70%)', { id: 'cloud-restore' });
+    
+    // Create a File object from the blob
+    const file = new File([blob], 'backup.zip', { type: 'application/zip' });
+    
+    // Use the import function to handle the restore
+    if (!onImportCollection) {
+      throw new Error('Import functionality not available');
+    }
+    
+    // Handle import with progress
+    await handleImportWithProgress(file);
+    
+    // Update last sync timestamp
+    localStorage.setItem('lastCloudSync', new Date().toISOString());
+    
+    // Refresh collections if needed
+    if (refreshCollections) {
+      refreshCollections();
     }
   };
 

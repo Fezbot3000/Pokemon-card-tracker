@@ -1309,3 +1309,42 @@ exports.proxyPriceCharting = functions.https.onCall(async (data, context) => {
     throw new functions.https.HttpsError('internal', 'An unexpected error occurred while calling the PriceCharting API.');
   }
 });
+
+// Generate a download URL for cloud backup that works across all devices
+exports.getBackupDownloadUrl = functions.https.onCall(async (data, context) => {
+  // Ensure user is authenticated
+  if (!context.auth) {
+    throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated to access backups');
+  }
+
+  try {
+    const userId = context.auth.uid;
+    const backupPath = `users/${userId}/backups/latest-backup.zip`;
+    
+    // Get Firebase Storage bucket reference using admin SDK
+    const bucket = admin.storage().bucket();
+    const file = bucket.file(backupPath);
+
+    // Check if file exists
+    const [exists] = await file.exists();
+    if (!exists) {
+      throw new functions.https.HttpsError('not-found', 'No backup file found for this user');
+    }
+
+    // Generate a signed URL that will work across browsers (including iOS)
+    const [signedUrl] = await file.getSignedUrl({
+      action: 'read',
+      expires: Date.now() + 15 * 60 * 1000, // 15 minutes
+      responseDisposition: 'attachment; filename="backup.zip"',
+      version: 'v4',
+    });
+    
+    // Return just the signed URL
+    return {
+      downloadUrl: signedUrl
+    };
+  } catch (error) {
+    functions.logger.error('Error generating download URL:', error);
+    throw new functions.https.HttpsError('internal', 'Failed to generate download URL: ' + error.message);
+  }
+});
