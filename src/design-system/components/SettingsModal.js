@@ -1,6 +1,7 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
-import { useTheme } from '../contexts/ThemeContext';
+import { storage } from '../../firebase';
+import { stripDebugProps } from '../../utils/stripDebugProps';
 import Icon from '../atoms/Icon';
 import { Modal, Button, ConfirmDialog } from '../';
 import FormField from '../molecules/FormField';
@@ -9,12 +10,10 @@ import SettingsPanel from '../molecules/SettingsPanel';
 import SettingsNavItem from '../atoms/SettingsNavItem';
 import '../styles/animations.css';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { storage } from '../../firebase';
-import { useAuth } from '../contexts/AuthContext';
 import JSZip from 'jszip';
-import { stripDebugProps } from '../../utils/stripDebugProps';
 import DataManagementSection from '../../components/DataManagementSection';
-import { httpsCallable } from 'firebase/functions';
+import { useTheme } from '../contexts/ThemeContext';
+import { useAuth } from '../contexts/AuthContext';
 
 /**
  * SettingsModal Component
@@ -293,146 +292,47 @@ const SettingsModal = ({
     setCloudSyncStatus('Preparing...');
 
     try {
-      // Log important debug info
-      console.log('Restore started. Current user UID:', currentUser.uid);
-      console.log('Storage bucket:', storage.app.options.storageBucket);
-      
       // Show loading toast
-      toastService.loading('Checking for backups... (10%)', { duration: 30000, id: 'cloud-restore' });
+      toastService.loading('Checking for backups... (10%)', { duration: 20000, id: 'cloud-restore' });
       
-      // Create a reference to the backup in Firebase Storage - ensure correct path
-      const backupPath = `users/${currentUser.uid}/backups/latest-backup.zip`;
-      const backupRef = ref(storage, backupPath);
+      // Get a reference to the backup file in Firebase Storage
+      const backupRef = ref(storage, `users/${currentUser.uid}/backups/latest-backup.zip`);
       
-      console.log('Attempting to access file at path:', backupRef.fullPath);
+      setCloudSyncProgress(20);
+      setCloudSyncStatus('Getting download URL...');
       
-      // Implementation with explicit retry logic and download streaming
-      let url;
-      let retryCount = 0;
-      const MAX_RETRIES = 5;
-      const RETRY_DELAY = 1000; // Start with 1 second
-
-      // Function to wait with exponential backoff
-      const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
-      
-      // Function to retry getting download URL with exponential backoff
-      async function getURLWithRetry() {
-        try {
-          return await getDownloadURL(backupRef);
-        } catch (error) {
-          if (error.code === 'storage/object-not-found') {
-            throw new Error('No backup found in cloud');
-          }
-          
-          if (retryCount < MAX_RETRIES) {
-            const delay = RETRY_DELAY * Math.pow(2, retryCount);
-            console.log(`Retry ${retryCount + 1}/${MAX_RETRIES} after ${delay}ms`);
-            setCloudSyncStatus(`Network issue, retrying (${retryCount + 1}/${MAX_RETRIES})...`);
-            await wait(delay);
-            retryCount++;
-            return getURLWithRetry();
-          } else {
-            console.error('Maximum retries reached:', error);
-            throw new Error(`Failed to download after ${MAX_RETRIES} attempts. Please check your connection and try again.`);
-          }
-        }
-      }
-      
+      // Get the download URL
       try {
-        setCloudSyncStatus('Getting download URL...');
-        url = await getURLWithRetry();
-        console.log('Download URL obtained successfully');
-        setCloudSyncProgress(30);
-        setCloudSyncStatus('Found backup, preparing download...');
-        toastService.loading('Found backup, preparing download... (30%)', { id: 'cloud-restore' });
-      } catch (urlError) {
-        console.error('Final URL error:', urlError);
-        throw urlError;
-      }
-      
-      // Stream download with progress using fetch
-      try {
-        setCloudSyncStatus('Starting download...');
+        const downloadURL = await getDownloadURL(backupRef);
+        console.log('Got download URL:', downloadURL);
         
-        const controller = new AbortController();
-        const signal = controller.signal;
+        setCloudSyncProgress(40);
+        setCloudSyncStatus('Downloading backup...');
+        toastService.loading('Downloading backup... (40%)', { id: 'cloud-restore' });
         
-        // Set timeout to abort if stuck
-        const timeoutId = setTimeout(() => {
-          console.log('Download timeout, aborting');
-          controller.abort();
-        }, 60000); // 1 minute timeout
-        
-        // Start fetch with abort controller
-        const response = await fetch(url, {
-          method: 'GET',
-          signal,
-          headers: {
-            'Cache-Control': 'no-cache',
-            'Pragma': 'no-cache'
-          },
-          mode: 'cors',
-          credentials: 'same-origin'
-        });
-        
-        // Clear timeout since request succeeded
-        clearTimeout(timeoutId);
-        
+        // Fetch the file
+        const response = await fetch(downloadURL);
         if (!response.ok) {
-          throw new Error(`Network error: ${response.status} ${response.statusText}`);
+          throw new Error(`HTTP error! Status: ${response.status}`);
         }
         
-        // Get total file size for progress calculation
-        const totalSize = Number(response.headers.get('content-length'));
-        console.log('File size from header:', totalSize, 'bytes');
+        // Get the data as a blob
+        const blob = await response.blob();
+        console.log(`Downloaded ${blob.size} bytes`);
         
-        // Create a reader to stream the response body
-        const reader = response.body.getReader();
-        let receivedLength = 0;
-        const chunks = [];
+        setCloudSyncProgress(70);
+        setCloudSyncStatus('Processing backup...');
+        toastService.loading('Processing backup... (70%)', { id: 'cloud-restore' });
         
-        // Stream download with progress updates
-        while (true) {
-          const { done, value } = await reader.read();
-          
-          if (done) {
-            console.log('Download stream complete');
-            break;
-          }
-          
-          chunks.push(value);
-          receivedLength += value.length;
-          
-          // Calculate and update progress
-          if (totalSize) {
-            const progress = Math.round((receivedLength / totalSize) * 40) + 30;
-            setCloudSyncProgress(progress);
-            setCloudSyncStatus(`Downloading: ${progress}%`);
-            toastService.loading(`Downloading backup... (${progress}%)`, { id: 'cloud-restore' });
-          }
-        }
-        
-        // Concatenate chunks into a single Uint8Array
-        const allChunks = new Uint8Array(receivedLength);
-        let position = 0;
-        for (const chunk of chunks) {
-          allChunks.set(chunk, position);
-          position += chunk.length;
-        }
-        
-        // Create blob and file from the downloaded data
-        setCloudSyncProgress(80);
-        setCloudSyncStatus('Processing downloaded data...');
-        toastService.loading('Processing downloaded data... (80%)', { id: 'cloud-restore' });
-        
-        const blob = new Blob([allChunks], { type: 'application/zip' });
-        const file = new File([blob], 'cloud-backup.zip', { type: 'application/zip' });
+        // Create a File object from the blob
+        const file = new File([blob], 'backup.zip', { type: 'application/zip' });
         
         // Use the import function to handle the restore
         if (!onImportCollection) {
           throw new Error('Import functionality not available');
         }
         
+        // Handle import with progress
         await handleImportWithProgress(file);
         
         // Update last sync timestamp
@@ -442,14 +342,13 @@ const SettingsModal = ({
         if (refreshCollections) {
           refreshCollections();
         }
-        
-        // Show success message
-        toastService.success('Successfully restored from cloud backup (100%)', { id: 'cloud-restore' });
       } catch (downloadError) {
-        console.error('Error during download or processing:', downloadError);
+        console.error('Download error:', downloadError);
         
-        if (downloadError.name === 'AbortError') {
-          throw new Error('Download timed out. Please check your internet connection and try again.');
+        if (downloadError.code === 'storage/object-not-found') {
+          throw new Error('No backup found in cloud');
+        } else if (downloadError.code === 'storage/unauthorized') {
+          throw new Error('You do not have permission to access this backup');
         } else {
           throw downloadError;
         }
@@ -462,8 +361,8 @@ const SettingsModal = ({
         toastService.error('No backup found in cloud. Please create a backup first.', { id: 'cloud-restore' });
       } else if (error.code === 'storage/quota-exceeded') {
         toastService.error('Storage quota exceeded. Please contact support.', { id: 'cloud-restore' });
-      } else if (error.name === 'AbortError' || error.message.includes('aborted')) {
-        toastService.error('Download was aborted due to timeout. Please check your internet connection and try again.', { id: 'cloud-restore', duration: 8000 });
+      } else if (error.message.includes('cors')) {
+        toastService.error('Browser security blocked access to cloud storage. Try using a different browser.', { id: 'cloud-restore', duration: 8000 });
       } else {
         toastService.error(`Cloud restore failed: ${error.message}`, { id: 'cloud-restore' });
       }
@@ -475,7 +374,7 @@ const SettingsModal = ({
         setIsCloudRestoring(false);
         setCloudSyncStatus('');
         setImportStep(0);
-        setImportProgress(0);
+        setCloudSyncProgress(0);
       }, 3000);
     }
   };

@@ -3,6 +3,7 @@ import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
+import { getFunctions } from 'firebase/functions';
 
 // Import the env validation
 import './env';
@@ -19,19 +20,18 @@ const firebaseConfig = {
 
 // Only log error if a required config is missing
 if (!firebaseConfig.apiKey || !firebaseConfig.authDomain || !firebaseConfig.projectId) {
-  // Removed: console.error('Missing required Firebase config keys:', firebaseConfig);
+  console.error('Firebase configuration is incomplete. Please check your environment variables.');
 }
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-
-// Initialize services
 const auth = getAuth(app);
+const googleProvider = new GoogleAuthProvider();
 const db = getFirestore(app);
 const storage = getStorage(app);
+const functions = getFunctions(app);
 
 // Configure Google provider
-const googleProvider = new GoogleAuthProvider();
 googleProvider.addScope('https://www.googleapis.com/auth/userinfo.email');
 googleProvider.addScope('https://www.googleapis.com/auth/userinfo.profile');
 
@@ -45,4 +45,5 @@ if (process.env.REACT_APP_FIREBASE_CLIENT_ID) {
   // Removed: console.error('Missing CLIENT_ID for Google provider');
 }
 
-export { app, auth, db, storage, googleProvider }; 
+// Export the Firebase services
+export { app, auth, googleProvider, db, storage, functions };
