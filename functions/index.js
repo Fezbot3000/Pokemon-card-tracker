@@ -1086,6 +1086,93 @@ exports.createCustomerPortalSession = functions.https.onCall(async (data, contex
   }
 }); 
 
+// Proxy for cloud backup download to resolve iOS download issues
+exports.proxyStorageDownload = functions.https.onCall(async (data, context) => {
+  // Ensure user is authenticated
+  if (!context.auth) {
+    throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated to download backups');
+  }
+
+  try {
+    const userId = context.auth.uid;
+    const backupPath = `users/${userId}/backups/latest-backup.zip`;
+    
+    functions.logger.info('Attempting to download backup for user:', userId);
+    functions.logger.info('Backup path:', backupPath);
+
+    // Get Firebase Storage bucket reference using admin SDK
+    const bucket = admin.storage().bucket();
+    const file = bucket.file(backupPath);
+
+    // Check if file exists
+    const [exists] = await file.exists();
+    if (!exists) {
+      throw new functions.https.HttpsError('not-found', 'No backup file found for this user');
+    }
+
+    // Get file metadata to check size
+    const [metadata] = await file.getMetadata();
+    functions.logger.info('Backup file size:', metadata.size, 'bytes');
+
+    // If file is too large (>10MB), throw an error (Cloud Functions has a 10MB response limit)
+    if (metadata.size > 10 * 1024 * 1024) {
+      throw new functions.https.HttpsError(
+        'resource-exhausted', 
+        'Backup file is too large to download through proxy. Please use the direct download method.'
+      );
+    }
+
+    // Download the file
+    const [fileContents] = await file.download();
+    
+    // Convert the file contents to base64 to safely transfer
+    const base64Contents = fileContents.toString('base64');
+    
+    functions.logger.info('Successfully downloaded backup for user:', userId);
+    
+    // Return the file with metadata
+    return {
+      success: true,
+      fileName: 'latest-backup.zip',
+      contentType: 'application/zip',
+      size: metadata.size,
+      content: base64Contents
+    };
+  } catch (error) {
+    functions.logger.error('Error in proxyStorageDownload:', error);
+    
+    if (error instanceof functions.https.HttpsError) {
+      throw error;
+    }
+    
+    throw new functions.https.HttpsError('internal', 'Failed to download backup: ' + error.message);
+  }
+});
+
+// Proxy for sending feedback email
+exports.sendFeedbackEmail = functions.https.onCall(async (data, context) => {
+  // Ensure the user is authenticated
+  if (!context.auth) {
+    throw new functions.https.HttpsError('unauthenticated', 'User must be logged in');
+  }
+
+  try {
+    const { email, message } = data;
+    if (!email || !message) {
+      throw new functions.https.HttpsError('invalid-argument', 'Email and message are required');
+    }
+
+    // Send the email using a mail service (e.g., Sendgrid, Mailgun)
+    // For this example, we'll just log the email and message
+    console.log(`Feedback email from ${email}: ${message}`);
+
+    return { success: true, message: 'Feedback email sent successfully' };
+  } catch (error) {
+    console.error('Error sending feedback email:', error);
+    throw new functions.https.HttpsError('internal', error.message);
+  }
+});
+
 // PSA Card Lookup Function
 exports.psaLookup = functions.https.onCall(async (data, context) => {
   // Log function invocation
@@ -1283,29 +1370,5 @@ exports.proxyPriceCharting = functions.https.onCall(async (data, context) => {
       throw error;
     }
     throw new functions.https.HttpsError('internal', 'An unexpected error occurred while calling the PriceCharting API.');
-  }
-});
-
-// Proxy for sending feedback email
-exports.sendFeedbackEmail = functions.https.onCall(async (data, context) => {
-  // Ensure the user is authenticated
-  if (!context.auth) {
-    throw new functions.https.HttpsError('unauthenticated', 'User must be logged in');
-  }
-
-  try {
-    const { email, message } = data;
-    if (!email || !message) {
-      throw new functions.https.HttpsError('invalid-argument', 'Email and message are required');
-    }
-
-    // Send the email using a mail service (e.g., Sendgrid, Mailgun)
-    // For this example, we'll just log the email and message
-    console.log(`Feedback email from ${email}: ${message}`);
-
-    return { success: true, message: 'Feedback email sent successfully' };
-  } catch (error) {
-    console.error('Error sending feedback email:', error);
-    throw new functions.https.HttpsError('internal', error.message);
   }
 });

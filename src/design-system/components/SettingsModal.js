@@ -4,7 +4,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import Icon from '../atoms/Icon';
 import { Modal, Button, ConfirmDialog } from '../';
 import FormField from '../molecules/FormField';
-import toastService from '../utils/toast';
+import toastService from '../../services/toastService';
 import SettingsPanel from '../molecules/SettingsPanel';
 import SettingsNavItem from '../atoms/SettingsNavItem';
 import '../styles/animations.css';
@@ -14,6 +14,7 @@ import { useAuth } from '../contexts/AuthContext';
 import JSZip from 'jszip';
 import { stripDebugProps } from '../../utils/stripDebugProps';
 import DataManagementSection from '../../components/DataManagementSection';
+import { httpsCallable } from 'firebase/functions';
 
 /**
  * SettingsModal Component
@@ -292,68 +293,48 @@ const SettingsModal = ({
     setCloudSyncStatus('Preparing...');
 
     try {
-      // Log important debug info
-      console.log('Current user UID:', currentUser.uid);
-      console.log('Storage bucket:', storage.app.options.storageBucket);
-
-      // Create a reference to the backup in Firebase Storage - ensure correct path
-      const backupPath = `users/${currentUser.uid}/backups/latest-backup.zip`;
-      const backupRef = ref(storage, backupPath);
-      
-      console.log('Attempting to access file at path:', backupRef.fullPath);
-      console.log('Full storage reference:', backupRef.toString());
-      
       // Show loading toast
       toastService.loading('Checking for backups... (10%)', { duration: 20000, id: 'cloud-restore' });
       
-      // Get download URL with improved error handling
-      let url;
-      try {
-        setCloudSyncStatus('Getting download URL...');
-        url = await getDownloadURL(backupRef);
-        console.log('Download URL obtained successfully');
-        setCloudSyncProgress(30);
-        setCloudSyncStatus('Found backup, starting download...');
-        toastService.loading('Found backup, starting download... (30%)', { id: 'cloud-restore' });
-      } catch (urlError) {
-        console.error('Error getting download URL:', urlError.code, urlError.message);
-        
-        if (urlError.code === 'storage/retry-limit-exceeded') {
-          throw new Error('Network issue accessing the backup. This may be due to limited connectivity or iOS restrictions. Try on WiFi or download from another device.');
-        } else if (urlError.code === 'storage/object-not-found') {
-          throw new Error('No backup found in cloud');
-        } else {
-          throw urlError;
-        }
-      }
+      // Use our Firebase proxy function instead of direct Storage download
+      // This is similar to how we fixed the PriceCharting API CORS issues
+      setCloudSyncStatus('Requesting backup through proxy...');
+      const proxyStorageDownload = httpsCallable(functions, 'proxyStorageDownload');
       
-      // Use a simpler fetch with blob approach instead of XHR
       try {
-        setCloudSyncStatus('Downloading file...');
-        const response = await fetch(url);
+        console.log('Calling proxyStorageDownload Firebase function');
+        const result = await proxyStorageDownload({});
+        console.log('proxyStorageDownload response received:', result.data.size, 'bytes');
         
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+        if (!result.data || !result.data.success) {
+          throw new Error('Proxy download failed: ' + (result.data?.message || 'Unknown error'));
         }
+        
+        setCloudSyncProgress(40);
+        setCloudSyncStatus('Backup received, processing data...');
+        toastService.loading('Processing backup data... (40%)', { id: 'cloud-restore' });
+        
+        // Convert the base64 content back to a blob
+        const binaryContent = atob(result.data.content);
+        const byteArray = new Uint8Array(binaryContent.length);
+        for (let i = 0; i < binaryContent.length; i++) {
+          byteArray[i] = binaryContent.charCodeAt(i);
+        }
+        
+        const blob = new Blob([byteArray], { type: result.data.contentType });
         
         setCloudSyncProgress(70);
-        setCloudSyncStatus('Download complete, processing data...');
-        toastService.loading('Processing downloaded data... (70%)', { id: 'cloud-restore' });
+        setCloudSyncStatus('Creating file from downloaded data...');
         
-        const blob = await response.blob();
-        setCloudSyncProgress(80);
-        setCloudSyncStatus('Creating file from download...');
-        
-        // Create a file object that can be passed to the import function
-        const file = new File([blob], 'cloud-backup.zip', { type: 'application/zip' });
+        // Create a File object from the blob data
+        const file = new File([blob], result.data.fileName, { type: result.data.contentType });
         
         // Use the import function to handle the restore
         if (!onImportCollection) {
           throw new Error('Import functionality not available');
         }
         
-        // Instead of passing directly to onImportCollection, handle it in this component
-        // This allows us to show the import progress without the separate overlay
+        // Handle import with progress
         await handleImportWithProgress(file);
         
         // Update last sync timestamp
@@ -366,9 +347,17 @@ const SettingsModal = ({
         
         // Show success message
         toastService.success('Successfully restored from cloud backup (100%)', { id: 'cloud-restore' });
-      } catch (downloadError) {
-        console.error('Error downloading or processing file:', downloadError);
-        throw downloadError;
+      } catch (proxyError) {
+        console.error('Error in proxy download:', proxyError);
+        
+        // Check for specific error types from the proxy function
+        if (proxyError.code === 'not-found' || (proxyError.details && proxyError.details.code === 'not-found')) {
+          throw new Error('No backup found in cloud');
+        } else if (proxyError.code === 'resource-exhausted' || (proxyError.details && proxyError.details.code === 'resource-exhausted')) {
+          throw new Error('Backup file is too large for proxy download. Please try on a desktop browser.');
+        } else {
+          throw new Error('Failed to download backup: ' + (proxyError.message || 'Unknown error'));
+        }
       }
     } catch (error) {
       console.error('Error restoring from cloud:', error);
