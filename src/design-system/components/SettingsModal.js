@@ -8,7 +8,7 @@ import SettingsPanel from '../molecules/SettingsPanel';
 import SettingsNavItem from '../atoms/SettingsNavItem';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { ref, uploadBytes, getDownloadURL, listAll } from 'firebase/storage';
 import JSZip from 'jszip';
 import db from '../../services/db';
 
@@ -309,104 +309,88 @@ const SettingsModal = ({
   // Handle cloud backup
   const handleCloudBackup = async () => {
     if (!currentUser) {
-      toastService.error('You must be logged in to use cloud backup');
+      toastService.error('You must be logged in to backup to cloud');
       return;
     }
 
     setIsCloudBackingUp(true);
-    setCloudSyncProgress(10);
-    setCloudSyncStatus('Backing up to cloud...');
+    setCloudSyncProgress(0);
+    setCloudSyncStatus('Starting cloud backup...');
     
     // Show a simple loading toast
     toastService.loading('Backing up to cloud...', { duration: 60000, id: 'cloud-backup' });
 
     try {
-      // Create the backup in the background
-      if (!onExportData) {
-        throw new Error('Export functionality not available');
+      // Get all collections
+      const collections = await db.getCollections();
+      const collectionNames = Object.keys(collections);
+      
+      // Get all images
+      const images = await db.getAllImages();
+      
+      // Total items to backup (collections + images)
+      const totalItems = collectionNames.length + images.length;
+      let processedItems = 0;
+      
+      // Get the user ID
+      const userId = currentUser.uid;
+      
+      // Create a metadata object with timestamp
+      const backupMetadata = {
+        timestamp: new Date().toISOString(),
+        userId: userId,
+        collectionCount: collectionNames.length,
+        imageCount: images.length,
+        version: '2.0' // Using version 2.0 for the new unzipped format
+      };
+      
+      // Upload metadata first
+      setCloudSyncStatus('Uploading backup metadata...');
+      const metadataRef = ref(storage, `users/${userId}/backups/metadata.json`);
+      await uploadBytes(metadataRef, new Blob([JSON.stringify(backupMetadata)], { type: 'application/json' }));
+      
+      // Upload collections one by one
+      for (let i = 0; i < collectionNames.length; i++) {
+        const collectionName = collectionNames[i];
+        const collectionData = collections[collectionName];
+        
+        setCloudSyncStatus(`Backing up collection: ${collectionName}...`);
+        
+        // Create a reference to the collection file
+        const collectionRef = ref(storage, `users/${userId}/backups/collections/${collectionName}.json`);
+        
+        // Upload the collection data
+        await uploadBytes(collectionRef, new Blob([JSON.stringify(collectionData)], { type: 'application/json' }));
+        
+        // Update progress
+        processedItems++;
+        setCloudSyncProgress(Math.floor((processedItems / totalItems) * 100));
       }
       
-      // Log for debugging
-      console.log('Starting cloud backup process...');
-      console.log('onExportData available:', !!onExportData);
-      console.log('Using direct Firebase Storage approach...');
-      
-      // Increment progress
-      setCloudSyncProgress(30);
-      
-      // Create backup without showing UI or download dialog
-      console.log('Calling onExportData with returnBlob: true');
-      const blob = await onExportData({ returnBlob: true });
-      
-      console.log('Received blob from onExportData:', !!blob);
-      
-      if (!blob) {
-        throw new Error('Failed to create backup file');
+      // Upload images one by one
+      for (let i = 0; i < images.length; i++) {
+        const image = images[i];
+        
+        setCloudSyncStatus(`Backing up image ${i+1} of ${images.length}...`);
+        
+        // Create a reference to the image file
+        const imageRef = ref(storage, `users/${userId}/backups/images/${image.id}.blob`);
+        
+        // Upload the image data
+        await uploadBytes(imageRef, image.blob);
+        
+        // Update progress
+        processedItems++;
+        setCloudSyncProgress(Math.floor((processedItems / totalItems) * 100));
       }
       
-      // Increment progress
-      setCloudSyncProgress(50);
+      // Update last sync timestamp
+      localStorage.setItem('lastCloudBackup', Date.now().toString());
       
-      try {
-        // Upload directly to Firebase Storage
-        console.log('Uploading directly to Firebase Storage...');
-        
-        // Create a reference to the backup file location
-        const userId = currentUser.uid;
-        const backupPath = `users/${userId}/backups/latest-backup.zip`;
-        const storageRef = ref(storage, backupPath);
-        
-        // Upload the blob
-        await uploadBytes(storageRef, blob, {
-          contentType: 'application/zip',
-          customMetadata: {
-            uploadTime: new Date().toISOString(),
-            userId: userId
-          }
-        });
-        
-        console.log('Upload completed successfully');
-        
-        // Update last sync timestamp
-        localStorage.setItem('lastCloudSync', new Date().toISOString());
-        
-        // Complete
-        setCloudSyncProgress(100);
-        toastService.success('Backup complete', { id: 'cloud-backup' });
-      } catch (uploadError) {
-        console.error('Error uploading to Firebase Storage:', uploadError);
-        
-        // If the upload fails, save locally as a fallback
-        if (process.env.NODE_ENV === 'development') {
-          console.log('Upload failed, saving locally as fallback in development mode');
-          
-          // Create a download link for the backup file
-          const link = document.createElement('a');
-          link.href = URL.createObjectURL(blob);
-          const timestamp = new Date().toISOString().split('T')[0];
-          link.download = `pokemon-card-tracker-backup-${timestamp}.zip`;
-          
-          // Trigger the download
-          document.body.appendChild(link);
-          link.click();
-          
-          // Clean up
-          setTimeout(() => {
-            URL.revokeObjectURL(link.href);
-            document.body.removeChild(link);
-          }, 100);
-          
-          // Update last sync timestamp
-          localStorage.setItem('lastCloudSync', new Date().toISOString());
-          
-          // Complete
-          setCloudSyncProgress(100);
-          toastService.success('Backup saved locally (cloud upload failed)', { id: 'cloud-backup' });
-        } else {
-          // In production, propagate the error
-          throw uploadError;
-        }
-      }
+      // Complete
+      setCloudSyncProgress(100);
+      setCloudSyncStatus('Backup complete!');
+      toastService.success('Backup complete!', { id: 'cloud-backup' });
     } catch (error) {
       console.error('Cloud backup error:', error);
       toastService.error(`Backup failed: ${error.message}`, { id: 'cloud-backup' });
@@ -427,8 +411,8 @@ const SettingsModal = ({
     }
 
     setIsCloudRestoring(true);
-    setCloudSyncProgress(10);
-    setCloudSyncStatus('Restoring from cloud...');
+    setCloudSyncProgress(0);
+    setCloudSyncStatus('Starting cloud restore...');
     
     // Show a simple loading toast
     toastService.loading('Restoring from cloud...', { duration: 60000, id: 'cloud-restore' });
@@ -441,90 +425,92 @@ const SettingsModal = ({
     }, 15000); // 15 seconds timeout
 
     try {
-      // Log for debugging
-      console.log('Starting cloud restore process...');
-      console.log('Using direct Firebase Storage approach...');
-      
-      // Get the download URL in the background
-      setCloudSyncProgress(30);
-      
-      // Create a reference to the backup file in Firebase Storage
+      // Get the user ID
       const userId = currentUser.uid;
-      const backupPath = `users/${userId}/backups/latest-backup.zip`;
-      const storageRef = ref(storage, backupPath);
+      
+      // Check if we have the new format (metadata.json exists)
+      const metadataRef = ref(storage, `users/${userId}/backups/metadata.json`);
+      let isNewFormat = false;
       
       try {
-        // Get the download URL directly from Firebase Storage
-        console.log('Getting download URL from Firebase Storage...');
+        // Try to get the download URL for metadata.json
+        await getDownloadURL(metadataRef);
+        isNewFormat = true;
+        console.log('Found new format backup (unzipped)');
+      } catch (error) {
+        console.log('No metadata.json found, assuming old format (zip)');
+        isNewFormat = false;
+      }
+      
+      if (isNewFormat) {
+        // --- NEW FORMAT RESTORE (UNZIPPED) ---
         
-        const downloadURL = await getDownloadURL(storageRef);
+        // Get the metadata
+        const metadataUrl = await getDownloadURL(metadataRef);
+        const metadataResponse = await fetch(metadataUrl);
+        const metadata = await metadataResponse.json();
         
-        console.log('Download URL generated successfully:', downloadURL);
+        console.log('Backup metadata:', metadata);
+        setCloudSyncStatus(`Found backup from ${new Date(metadata.timestamp).toLocaleString()}`);
+        setCloudSyncProgress(5);
         
-        // Increment progress
-        setCloudSyncProgress(50);
+        // First, get all collection names
+        const collectionsRef = ref(storage, `users/${userId}/backups/collections`);
+        const collectionsResult = await listAll(collectionsRef);
         
-        // Detect if we're on iOS
-        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-        if (isIOS) {
-          console.log('iOS device detected, using modified approach for better compatibility');
+        // Calculate total items to restore
+        const totalCollections = collectionsResult.items.length;
+        const totalImages = metadata.imageCount || 0;
+        const totalItems = totalCollections + totalImages;
+        let processedItems = 0;
+        
+        // Prepare collections object
+        const restoredCollections = {};
+        
+        // Restore collections one by one
+        for (const collectionRef of collectionsResult.items) {
+          const collectionName = collectionRef.name.replace('.json', '');
+          setCloudSyncStatus(`Restoring collection: ${collectionName}...`);
+          
+          // Get the download URL
+          const collectionUrl = await getDownloadURL(collectionRef);
+          
+          // Fetch the collection data
+          const collectionResponse = await fetch(collectionUrl);
+          const collectionData = await collectionResponse.json();
+          
+          // Add to restored collections
+          restoredCollections[collectionName] = collectionData;
+          
+          // Update progress
+          processedItems++;
+          setCloudSyncProgress(5 + Math.floor((processedItems / totalItems) * 90));
         }
         
-        // Fetch the file in the background
-        console.log('Fetching backup file...');
-        const response = await fetch(downloadURL);
-        if (!response.ok) {
-          throw new Error(`Download failed (${response.status})`);
-        }
+        // Save the collections to IndexedDB
+        await db.saveCollections(restoredCollections);
         
-        // Get the data as a blob
-        console.log('Converting response to blob...');
-        const blob = await response.blob();
+        // Now restore images one by one
+        const imagesRef = ref(storage, `users/${userId}/backups/images`);
+        const imagesResult = await listAll(imagesRef);
         
-        // Increment progress
-        setCloudSyncProgress(70);
-        
-        // Create a File object from the blob
-        console.log('Creating File object from blob...');
-        const file = new File([blob], 'backup.zip', { type: 'application/zip' });
-        
-        // Use the import function to handle the restore
-        if (!onImportCollection) {
-          throw new Error('Import functionality not available');
-        }
-        
-        // Clear the timeout since we're making progress
-        clearTimeout(timeoutId);
-        
-        // Set a new timeout for the import process
-        timeoutId = setTimeout(() => {
-          console.log('Import process taking longer than expected...');
-          setCloudSyncStatus('Import taking longer than expected. This is normal for large collections.');
-          toastService.loading('Processing large backup...', { duration: 60000, id: 'cloud-restore' });
-        }, 10000); // 10 seconds timeout
-        
-        // Import the backup with a progress callback
-        console.log('Calling onImportCollection with file...');
-        try {
-          await onImportCollection(file, (progress) => {
-            // This assumes onImportCollection accepts a progress callback
-            // If it doesn't, you'll need to modify that function too
-            if (progress) {
-              setCloudSyncProgress(70 + Math.floor(progress * 30)); // Scale from 70-100%
-              setCloudSyncStatus(`Importing data: ${Math.floor(progress * 100)}%`);
-            }
-          });
-          console.log('Import completed successfully');
-        } catch (importError) {
-          console.error('Error during import process:', importError);
-          // Check for specific iOS memory errors
-          if (isIOS && (importError.message.includes('memory') || 
-              importError.message.includes('quota') || 
-              importError.message.includes('storage') ||
-              importError.message.includes('allocation'))) {
-            throw new Error('iOS memory limit reached. Try restoring on a desktop browser for large backups.');
-          }
-          throw importError;
+        for (const imageRef of imagesResult.items) {
+          const imageId = imageRef.name.replace('.blob', '');
+          setCloudSyncStatus(`Restoring image: ${imageId}...`);
+          
+          // Get the download URL
+          const imageUrl = await getDownloadURL(imageRef);
+          
+          // Fetch the image data
+          const imageResponse = await fetch(imageUrl);
+          const imageBlob = await imageResponse.blob();
+          
+          // Save the image to IndexedDB
+          await db.saveImage(imageId, imageBlob);
+          
+          // Update progress
+          processedItems++;
+          setCloudSyncProgress(5 + Math.floor((processedItems / totalItems) * 90));
         }
         
         // Update last sync timestamp
@@ -539,9 +525,108 @@ const SettingsModal = ({
         // Complete
         setCloudSyncProgress(100);
         toastService.success('Restore complete', { id: 'cloud-restore' });
-      } catch (storageError) {
-        console.error('Firebase Storage error:', storageError);
-        throw new Error(`Firebase Storage error: ${storageError.message}`);
+        
+      } else {
+        // --- OLD FORMAT RESTORE (ZIP) ---
+        console.log('Using legacy zip format restore...');
+        setCloudSyncStatus('Using legacy format (zip)...');
+        
+        // Create a reference to the backup file in Firebase Storage
+        const backupPath = `users/${userId}/backups/latest-backup.zip`;
+        const storageRef = ref(storage, backupPath);
+        
+        try {
+          // Get the download URL directly from Firebase Storage
+          console.log('Getting download URL from Firebase Storage...');
+          
+          const downloadURL = await getDownloadURL(storageRef);
+          
+          console.log('Download URL generated successfully:', downloadURL);
+          
+          // Increment progress
+          setCloudSyncProgress(30);
+          
+          // Detect if we're on iOS
+          const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+          if (isIOS) {
+            console.log('iOS device detected, using modified approach for better compatibility');
+            toastService.error('Legacy zip backups are not supported on iOS. Please create a new backup first.', { id: 'cloud-restore' });
+            throw new Error('Legacy zip backups are not supported on iOS. Please create a new backup first.');
+          }
+          
+          // Fetch the file in the background
+          console.log('Fetching backup file...');
+          const response = await fetch(downloadURL);
+          if (!response.ok) {
+            throw new Error(`Download failed (${response.status})`);
+          }
+          
+          // Get the data as a blob
+          console.log('Converting response to blob...');
+          const blob = await response.blob();
+          
+          // Increment progress
+          setCloudSyncProgress(70);
+          
+          // Create a File object from the blob
+          console.log('Creating File object from blob...');
+          const file = new File([blob], 'backup.zip', { type: 'application/zip' });
+          
+          // Use the import function to handle the restore
+          if (!onImportCollection) {
+            throw new Error('Import functionality not available');
+          }
+          
+          // Clear the timeout since we're making progress
+          clearTimeout(timeoutId);
+          
+          // Set a new timeout for the import process
+          timeoutId = setTimeout(() => {
+            console.log('Import process taking longer than expected...');
+            setCloudSyncStatus('Import taking longer than expected. This is normal for large collections.');
+            toastService.loading('Processing large backup...', { duration: 60000, id: 'cloud-restore' });
+          }, 10000); // 10 seconds timeout
+          
+          // Import the backup with a progress callback
+          console.log('Calling onImportCollection with file...');
+          try {
+            await onImportCollection(file, (progress) => {
+              // This assumes onImportCollection accepts a progress callback
+              // If it doesn't, you'll need to modify that function too
+              if (progress) {
+                setCloudSyncProgress(70 + Math.floor(progress * 30)); // Scale from 70-100%
+                setCloudSyncStatus(`Importing data: ${Math.floor(progress * 100)}%`);
+              }
+            });
+            console.log('Import completed successfully');
+          } catch (importError) {
+            console.error('Error during import process:', importError);
+            // Check for specific iOS memory errors
+            if (isIOS && (importError.message.includes('memory') || 
+                importError.message.includes('quota') || 
+                importError.message.includes('storage') ||
+                importError.message.includes('allocation'))) {
+              throw new Error('iOS memory limit reached. Try restoring on a desktop browser for large backups.');
+            }
+            throw importError;
+          }
+          
+          // Update last sync timestamp
+          localStorage.setItem('lastCloudRestore', Date.now().toString());
+          
+          // Refresh collections if needed
+          if (refreshCollections) {
+            console.log('Refreshing collections...');
+            refreshCollections();
+          }
+          
+          // Complete
+          setCloudSyncProgress(100);
+          toastService.success('Restore complete', { id: 'cloud-restore' });
+        } catch (storageError) {
+          console.error('Firebase Storage error:', storageError);
+          throw new Error(`Firebase Storage error: ${storageError.message}`);
+        }
       }
       
     } catch (error) {

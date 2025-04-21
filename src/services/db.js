@@ -969,6 +969,42 @@ class DatabaseService {
       throw new Error('Failed to fix data security: ' + error.message);
     }
   }
+
+  /**
+   * Get all images for the current user
+   * @returns {Promise<Array>} Array of image objects with id and blob properties
+   */
+  async getAllImages() {
+    await this.ensureDB();
+    const userId = this.getCurrentUserId();
+    
+    return new Promise((resolve, reject) => {
+      try {
+        const transaction = this.db.transaction([IMAGES_STORE], 'readonly');
+        const store = transaction.objectStore(IMAGES_STORE);
+        
+        // Using an index range to get all images for the current user
+        const request = store.getAll(IDBKeyRange.bound(
+          [userId, ''], // Lower bound: current user, start of id range
+          [userId, '\uffff'] // Upper bound: current user, end of id range
+        ));
+
+        request.onsuccess = () => {
+          const images = request.result || [];
+          logger.debug(`Retrieved ${images.length} images for user ${userId}`);
+          resolve(images);
+        };
+
+        request.onerror = (event) => {
+          logger.error('Error fetching images:', event.target.error);
+          reject(new Error('Failed to fetch images'));
+        };
+      } catch (error) {
+        logger.error('Exception in getAllImages:', error);
+        reject(error);
+      }
+    });
+  }
 }
 
 const db = new DatabaseService();
