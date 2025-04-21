@@ -1322,7 +1322,8 @@ exports.getBackupDownloadUrl = functions.https.onCall(async (data, context) => {
 
   try {
     const userId = context.auth.uid;
-    const backupPath = `users/${userId}/backups/latest-backup.zip`;
+    // Updated path to match client-side code
+    const backupPath = `backups/${userId}/backup.zip`;
     
     // Get Firebase Storage bucket reference using admin SDK
     const bucket = admin.storage().bucket();
@@ -1331,7 +1332,18 @@ exports.getBackupDownloadUrl = functions.https.onCall(async (data, context) => {
     // Check if file exists
     const [exists] = await file.exists();
     if (!exists) {
-      throw new functions.https.HttpsError('not-found', 'No backup file found for this user');
+      // Also check for the new format (metadata.json)
+      const metadataFile = bucket.file(`backups/${userId}/metadata.json`);
+      const [metadataExists] = await metadataFile.exists();
+      
+      if (metadataExists) {
+        // If metadata exists, this is the new unzipped format
+        throw new functions.https.HttpsError('failed-precondition', 
+          'This backup is in the new unzipped format and should be restored directly from the client.');
+      } else {
+        // No backup found at all
+        throw new functions.https.HttpsError('not-found', 'No backup file found for this user');
+      }
     }
 
     // Generate a signed URL that will work across browsers (including iOS)
@@ -1361,7 +1373,8 @@ exports.uploadBackup = functions.https.onCall(async (data, context) => {
 
   try {
     const userId = context.auth.uid;
-    const backupPath = `users/${userId}/backups/latest-backup.zip`;
+    // Updated path to match client-side code
+    const backupPath = `backups/${userId}/backup.zip`;
     
     // Decode the base64 file data
     const fileBuffer = Buffer.from(data.file, 'base64');

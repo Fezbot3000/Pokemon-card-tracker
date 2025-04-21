@@ -1005,6 +1005,312 @@ class DatabaseService {
       }
     });
   }
+
+  /**
+   * Get all collections for the current user as an array of collection objects
+   * This is used for cloud backup functionality
+   * @returns {Promise<Array>} Array of collection objects with name, userId, and data properties
+   */
+  async getAllCollections() {
+    try {
+      await this.ensureDB();
+      const userId = this.getCurrentUserId();
+      
+      return new Promise((resolve, reject) => {
+        try {
+          const transaction = this.db.transaction([COLLECTIONS_STORE], 'readonly');
+          const store = transaction.objectStore(COLLECTIONS_STORE);
+          
+          // Using an index range to get all collections for the current user
+          const request = store.getAll(IDBKeyRange.bound(
+            [userId, ''], // Lower bound: current user, start of name range
+            [userId, '\uffff'] // Upper bound: current user, end of name range
+          ));
+
+          request.onsuccess = () => {
+            // Return the raw array of collection objects
+            const collections = request.result || [];
+            logger.debug(`Retrieved ${collections.length} collections for user ${userId}`);
+            resolve(collections);
+          };
+
+          request.onerror = (error) => {
+            logger.error('Error fetching collections:', error);
+            reject(new Error('Failed to fetch collections'));
+          };
+        } catch (error) {
+          logger.error('Transaction error in getAllCollections:', error);
+          reject(error);
+        }
+      });
+    } catch (error) {
+      logger.error('Unexpected error in getAllCollections:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Clear all collections for the current user
+   * @returns {Promise<void>}
+   */
+  async clearCollections() {
+    try {
+      await this.ensureDB();
+      const userId = this.getCurrentUserId();
+      
+      return new Promise((resolve, reject) => {
+        try {
+          const transaction = this.db.transaction([COLLECTIONS_STORE], 'readwrite');
+          const store = transaction.objectStore(COLLECTIONS_STORE);
+          
+          // Get all collections for the current user
+          const request = store.getAll(IDBKeyRange.bound(
+            [userId, ''], // Lower bound: current user, start of name range
+            [userId, '\uffff'] // Upper bound: current user, end of name range
+          ));
+
+          request.onsuccess = () => {
+            const collections = request.result || [];
+            logger.debug(`Clearing ${collections.length} collections for user ${userId}`);
+            
+            // Delete each collection
+            let deletedCount = 0;
+            if (collections.length === 0) {
+              resolve(); // No collections to delete
+              return;
+            }
+            
+            collections.forEach(collection => {
+              const deleteRequest = store.delete([userId, collection.name]);
+              deleteRequest.onsuccess = () => {
+                deletedCount++;
+                if (deletedCount === collections.length) {
+                  logger.debug(`Successfully cleared ${deletedCount} collections`);
+                  resolve();
+                }
+              };
+              deleteRequest.onerror = (error) => {
+                logger.error(`Error deleting collection ${collection.name}:`, error);
+                // Continue with other deletions
+              };
+            });
+          };
+
+          request.onerror = (error) => {
+            logger.error('Error fetching collections for deletion:', error);
+            reject(new Error('Failed to clear collections'));
+          };
+        } catch (error) {
+          logger.error('Transaction error in clearCollections:', error);
+          reject(error);
+        }
+      });
+    } catch (error) {
+      logger.error('Unexpected error in clearCollections:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Import collections from a backup
+   * @param {Array} collections - Array of collection objects to import
+   * @returns {Promise<void>}
+   */
+  async importCollections(collections) {
+    try {
+      await this.ensureDB();
+      const userId = this.getCurrentUserId();
+      
+      return new Promise((resolve, reject) => {
+        try {
+          const transaction = this.db.transaction([COLLECTIONS_STORE], 'readwrite');
+          const store = transaction.objectStore(COLLECTIONS_STORE);
+          
+          logger.debug(`Importing ${collections.length} collections for user ${userId}`);
+          
+          let importedCount = 0;
+          
+          // Import each collection
+          collections.forEach(collection => {
+            // Ensure the collection has the current user's ID
+            collection.userId = userId;
+            
+            const request = store.put(collection);
+            
+            request.onsuccess = () => {
+              importedCount++;
+              if (importedCount === collections.length) {
+                logger.debug(`Successfully imported ${importedCount} collections`);
+                resolve();
+              }
+            };
+            
+            request.onerror = (error) => {
+              logger.error(`Error importing collection ${collection.name}:`, error);
+              // Continue with other imports
+            };
+          });
+          
+          // Handle case where collections array is empty
+          if (collections.length === 0) {
+            logger.debug('No collections to import');
+            resolve();
+          }
+        } catch (error) {
+          logger.error('Transaction error in importCollections:', error);
+          reject(error);
+        }
+      });
+    } catch (error) {
+      logger.error('Unexpected error in importCollections:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Clear all images for the current user
+   * @returns {Promise<void>}
+   */
+  async clearImages() {
+    try {
+      await this.ensureDB();
+      const userId = this.getCurrentUserId();
+      
+      return new Promise((resolve, reject) => {
+        try {
+          const transaction = this.db.transaction([IMAGES_STORE], 'readwrite');
+          const store = transaction.objectStore(IMAGES_STORE);
+          
+          // Get all images for the current user
+          const request = store.getAll(IDBKeyRange.bound(
+            [userId, ''], // Lower bound: current user, start of id range
+            [userId, '\uffff'] // Upper bound: current user, end of id range
+          ));
+
+          request.onsuccess = () => {
+            const images = request.result || [];
+            logger.debug(`Clearing ${images.length} images for user ${userId}`);
+            
+            // Delete each image
+            let deletedCount = 0;
+            if (images.length === 0) {
+              resolve(); // No images to delete
+              return;
+            }
+            
+            images.forEach(image => {
+              const deleteRequest = store.delete([userId, image.id]);
+              deleteRequest.onsuccess = () => {
+                deletedCount++;
+                if (deletedCount === images.length) {
+                  logger.debug(`Successfully cleared ${deletedCount} images`);
+                  resolve();
+                }
+              };
+              deleteRequest.onerror = (error) => {
+                logger.error(`Error deleting image ${image.id}:`, error);
+                // Continue with other deletions
+              };
+            });
+          };
+
+          request.onerror = (error) => {
+            logger.error('Error fetching images for deletion:', error);
+            reject(new Error('Failed to clear images'));
+          };
+        } catch (error) {
+          logger.error('Transaction error in clearImages:', error);
+          reject(error);
+        }
+      });
+    } catch (error) {
+      logger.error('Unexpected error in clearImages:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Import an image from a backup
+   * @param {Object} imageData - Object containing image data (id, format, data)
+   * @returns {Promise<void>}
+   */
+  async importImage(imageData) {
+    try {
+      await this.ensureDB();
+      const userId = this.getCurrentUserId();
+      
+      return new Promise((resolve, reject) => {
+        try {
+          const transaction = this.db.transaction([IMAGES_STORE], 'readwrite');
+          const store = transaction.objectStore(IMAGES_STORE);
+          
+          // Determine which property to use as the blob
+          let imageBlob;
+          
+          if (imageData.blob instanceof Blob) {
+            // If blob property is a Blob, use it
+            imageBlob = imageData.blob;
+          } else if (imageData.data instanceof Blob) {
+            // If data property is a Blob, use it
+            imageBlob = imageData.data;
+          } else if (typeof imageData.data === 'string' && imageData.data.startsWith('data:')) {
+            // If data is a base64 string, convert it to a Blob
+            try {
+              const byteString = atob(imageData.data.split(',')[1]);
+              const mimeString = imageData.data.split(',')[0].split(':')[1].split(';')[0];
+              const ab = new ArrayBuffer(byteString.length);
+              const ia = new Uint8Array(ab);
+              for (let j = 0; j < byteString.length; j++) {
+                ia[j] = byteString.charCodeAt(j);
+              }
+              imageBlob = new Blob([ab], { type: mimeString });
+            } catch (error) {
+              logger.error(`Error converting base64 for image ${imageData.id}:`, error);
+              // Try to create a simple blob if conversion fails
+              imageBlob = new Blob([imageData.data], { type: 'image/png' });
+            }
+          } else if (imageData.blob) {
+            // If blob property exists but is not a Blob, create a Blob from it
+            imageBlob = new Blob([imageData.blob], { type: 'image/png' });
+          } else if (imageData.data) {
+            // If data property exists but is not a Blob or base64 string, create a Blob from it
+            imageBlob = new Blob([imageData.data], { type: 'image/png' });
+          } else {
+            // No usable data found
+            reject(new Error(`No usable image data found for image ${imageData.id}`));
+            return;
+          }
+          
+          // Create the image object with the correct structure
+          const image = {
+            userId: userId,
+            id: imageData.id,
+            format: imageData.format || 'png', // Default to png if format not provided
+            blob: imageBlob // Store as blob property for compatibility with existing code
+          };
+          
+          // Store the image using composite key [userId, id]
+          const request = store.put(image, [userId, image.id]);
+          
+          request.onsuccess = () => {
+            logger.debug(`Successfully imported image: ${image.id}`);
+            resolve();
+          };
+          
+          request.onerror = (error) => {
+            logger.error(`Error importing image ${image.id}:`, error);
+            reject(new Error(`Failed to import image ${image.id}: ${error.target?.error?.message || 'Unknown error'}`));
+          };
+        } catch (error) {
+          logger.error('Transaction error in importImage:', error);
+          reject(error);
+        }
+      });
+    } catch (error) {
+      logger.error('Unexpected error in importImage:', error);
+      throw error;
+    }
+  }
 }
 
 const db = new DatabaseService();

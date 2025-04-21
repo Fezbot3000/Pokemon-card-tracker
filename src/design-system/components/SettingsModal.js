@@ -373,37 +373,75 @@ const SettingsModal = ({
       setCloudSyncStatus(`Uploading ${imagesData.length} images...`);
       addLog(`Starting image uploads (${imagesData.length} total)...`);
       const totalImages = imagesData.length;
+      let successfulUploads = 0;
+      
       for (let i = 0; i < totalImages; i++) {
         const image = imagesData[i];
-        const imageName = `${image.id}.${image.format}`; // Assuming image object has id and format
+        const imageName = `${image.id}.${image.format || 'png'}`; // Use format or default to png
         const imageRef = ref(storage, `backups/${userId}/images/${imageName}`);
-        // Check if image.data is Blob or needs conversion
-        let imageBlob;
-        if (image.data instanceof Blob) {
-          imageBlob = image.data;
-        } else if (typeof image.data === 'string') { 
-          // Assuming base64 string, convert to Blob
-          const byteString = atob(image.data.split(',')[1]);
-          const mimeString = image.data.split(',')[0].split(':')[1].split(';')[0];
-          const ab = new ArrayBuffer(byteString.length);
-          const ia = new Uint8Array(ab);
-          for (let j = 0; j < byteString.length; j++) {
-            ia[j] = byteString.charCodeAt(j);
-          }
-          imageBlob = new Blob([ab], { type: mimeString });
-        } else {
-          addLog(`Skipping image ${image.id}: unsupported data type`);
-          continue;
-        }
         
-        addLog(`Uploading image ${i + 1}/${totalImages}: ${imageName}`);
-        await uploadBytes(imageRef, imageBlob);
-        const progress = 30 + Math.round(((i + 1) / totalImages) * 60); // Images take up 60% of progress
-        setCloudSyncProgress(progress);
-        setCloudSyncStatus(`Uploading image ${i + 1} of ${totalImages}`);
+        // Check what type of data we have and handle accordingly
+        let imageBlob;
+        
+        try {
+          // Check all possible image data formats
+          if (image.blob instanceof Blob) {
+            // If the image has a blob property that is a Blob
+            imageBlob = image.blob;
+            addLog(`Using blob property for image ${image.id}`);
+          } else if (image.data instanceof Blob) {
+            // If the image has a data property that is a Blob
+            imageBlob = image.data;
+            addLog(`Using data property (Blob) for image ${image.id}`);
+          } else if (typeof image.data === 'string' && image.data.startsWith('data:')) {
+            // If the image has a data property that is a base64 string
+            addLog(`Converting base64 string for image ${image.id}`);
+            try {
+              const byteString = atob(image.data.split(',')[1]);
+              const mimeString = image.data.split(',')[0].split(':')[1].split(';')[0];
+              const ab = new ArrayBuffer(byteString.length);
+              const ia = new Uint8Array(ab);
+              for (let j = 0; j < byteString.length; j++) {
+                ia[j] = byteString.charCodeAt(j);
+              }
+              imageBlob = new Blob([ab], { type: mimeString });
+            } catch (conversionError) {
+              addLog(`Error converting base64 for image ${image.id}: ${conversionError.message}`);
+              continue;
+            }
+          } else {
+            // Try to create a simple blob if we have any usable data
+            if (image.blob) {
+              // If blob is not a Blob but some other data
+              addLog(`Creating blob from non-Blob blob property for image ${image.id}`);
+              imageBlob = new Blob([image.blob], { type: 'image/png' });
+            } else if (image.data) {
+              // If data is not a Blob or string but some other data
+              addLog(`Creating blob from non-Blob data property for image ${image.id}`);
+              imageBlob = new Blob([image.data], { type: 'image/png' });
+            } else {
+              addLog(`Skipping image ${image.id}: no usable data found`);
+              continue;
+            }
+          }
+          
+          // Upload the image
+          addLog(`Uploading image ${i + 1}/${totalImages}: ${imageName}`);
+          await uploadBytes(imageRef, imageBlob);
+          successfulUploads++;
+          
+          // Update progress
+          const progress = 30 + Math.round(((i + 1) / totalImages) * 60); // Images take up 60% of progress
+          setCloudSyncProgress(progress);
+          setCloudSyncStatus(`Uploading image ${i + 1} of ${totalImages}`);
+        } catch (error) {
+          addLog(`Error processing image ${image.id}: ${error.message}`);
+          continue; // Skip this image and continue with the next one
+        }
       }
-      addLog('All images uploaded successfully.');
-
+      
+      addLog(`Images uploaded: ${successfulUploads}/${totalImages}`);
+      
       // Step 5: Finalize
       setCloudSyncProgress(100);
       setCloudSyncStatus('Backup complete!');
@@ -535,7 +573,9 @@ const SettingsModal = ({
             const imageData = {
               id: imageId,
               format: imageFormat,
-              data: imageBlob
+              data: imageBlob,
+              userId: userId,
+              blob: imageBlob // Add the blob property as well for compatibility
             };
             
             // Import image into IndexedDB
@@ -645,7 +685,9 @@ const SettingsModal = ({
               const imageData = {
                   id: imageId,
                   format: imageFormat,
-                  data: imageBlob
+                  data: imageBlob,
+                  userId: userId,
+                  blob: imageBlob // Add the blob property as well for compatibility
               };
               
               // Queue the import promise
