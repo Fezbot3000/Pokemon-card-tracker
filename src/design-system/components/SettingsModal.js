@@ -4,7 +4,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import Icon from '../atoms/Icon';
 import { Modal, Button, ConfirmDialog } from '../';
 import FormField from '../molecules/FormField';
-import toastService from '../../services/toastService';
+import toastService from '../utils/toast';
 import SettingsPanel from '../molecules/SettingsPanel';
 import SettingsNavItem from '../atoms/SettingsNavItem';
 import '../styles/animations.css';
@@ -293,48 +293,146 @@ const SettingsModal = ({
     setCloudSyncStatus('Preparing...');
 
     try {
-      // Show loading toast
-      toastService.loading('Checking for backups... (10%)', { duration: 20000, id: 'cloud-restore' });
+      // Log important debug info
+      console.log('Restore started. Current user UID:', currentUser.uid);
+      console.log('Storage bucket:', storage.app.options.storageBucket);
       
-      // Use our Firebase proxy function instead of direct Storage download
-      // This is similar to how we fixed the PriceCharting API CORS issues
-      setCloudSyncStatus('Requesting backup through proxy...');
-      const proxyStorageDownload = httpsCallable(functions, 'proxyStorageDownload');
+      // Show loading toast
+      toastService.loading('Checking for backups... (10%)', { duration: 30000, id: 'cloud-restore' });
+      
+      // Create a reference to the backup in Firebase Storage - ensure correct path
+      const backupPath = `users/${currentUser.uid}/backups/latest-backup.zip`;
+      const backupRef = ref(storage, backupPath);
+      
+      console.log('Attempting to access file at path:', backupRef.fullPath);
+      
+      // Implementation with explicit retry logic and download streaming
+      let url;
+      let retryCount = 0;
+      const MAX_RETRIES = 5;
+      const RETRY_DELAY = 1000; // Start with 1 second
+
+      // Function to wait with exponential backoff
+      const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+      
+      // Function to retry getting download URL with exponential backoff
+      async function getURLWithRetry() {
+        try {
+          return await getDownloadURL(backupRef);
+        } catch (error) {
+          if (error.code === 'storage/object-not-found') {
+            throw new Error('No backup found in cloud');
+          }
+          
+          if (retryCount < MAX_RETRIES) {
+            const delay = RETRY_DELAY * Math.pow(2, retryCount);
+            console.log(`Retry ${retryCount + 1}/${MAX_RETRIES} after ${delay}ms`);
+            setCloudSyncStatus(`Network issue, retrying (${retryCount + 1}/${MAX_RETRIES})...`);
+            await wait(delay);
+            retryCount++;
+            return getURLWithRetry();
+          } else {
+            console.error('Maximum retries reached:', error);
+            throw new Error(`Failed to download after ${MAX_RETRIES} attempts. Please check your connection and try again.`);
+          }
+        }
+      }
       
       try {
-        console.log('Calling proxyStorageDownload Firebase function');
-        const result = await proxyStorageDownload({});
-        console.log('proxyStorageDownload response received:', result.data.size, 'bytes');
+        setCloudSyncStatus('Getting download URL...');
+        url = await getURLWithRetry();
+        console.log('Download URL obtained successfully');
+        setCloudSyncProgress(30);
+        setCloudSyncStatus('Found backup, preparing download...');
+        toastService.loading('Found backup, preparing download... (30%)', { id: 'cloud-restore' });
+      } catch (urlError) {
+        console.error('Final URL error:', urlError);
+        throw urlError;
+      }
+      
+      // Stream download with progress using fetch
+      try {
+        setCloudSyncStatus('Starting download...');
         
-        if (!result.data || !result.data.success) {
-          throw new Error('Proxy download failed: ' + (result.data?.message || 'Unknown error'));
+        const controller = new AbortController();
+        const signal = controller.signal;
+        
+        // Set timeout to abort if stuck
+        const timeoutId = setTimeout(() => {
+          console.log('Download timeout, aborting');
+          controller.abort();
+        }, 60000); // 1 minute timeout
+        
+        // Start fetch with abort controller
+        const response = await fetch(url, {
+          method: 'GET',
+          signal,
+          headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          },
+          mode: 'cors',
+          credentials: 'same-origin'
+        });
+        
+        // Clear timeout since request succeeded
+        clearTimeout(timeoutId);
+        
+        if (!response.ok) {
+          throw new Error(`Network error: ${response.status} ${response.statusText}`);
         }
         
-        setCloudSyncProgress(40);
-        setCloudSyncStatus('Backup received, processing data...');
-        toastService.loading('Processing backup data... (40%)', { id: 'cloud-restore' });
+        // Get total file size for progress calculation
+        const totalSize = Number(response.headers.get('content-length'));
+        console.log('File size from header:', totalSize, 'bytes');
         
-        // Convert the base64 content back to a blob
-        const binaryContent = atob(result.data.content);
-        const byteArray = new Uint8Array(binaryContent.length);
-        for (let i = 0; i < binaryContent.length; i++) {
-          byteArray[i] = binaryContent.charCodeAt(i);
+        // Create a reader to stream the response body
+        const reader = response.body.getReader();
+        let receivedLength = 0;
+        const chunks = [];
+        
+        // Stream download with progress updates
+        while (true) {
+          const { done, value } = await reader.read();
+          
+          if (done) {
+            console.log('Download stream complete');
+            break;
+          }
+          
+          chunks.push(value);
+          receivedLength += value.length;
+          
+          // Calculate and update progress
+          if (totalSize) {
+            const progress = Math.round((receivedLength / totalSize) * 40) + 30;
+            setCloudSyncProgress(progress);
+            setCloudSyncStatus(`Downloading: ${progress}%`);
+            toastService.loading(`Downloading backup... (${progress}%)`, { id: 'cloud-restore' });
+          }
         }
         
-        const blob = new Blob([byteArray], { type: result.data.contentType });
+        // Concatenate chunks into a single Uint8Array
+        const allChunks = new Uint8Array(receivedLength);
+        let position = 0;
+        for (const chunk of chunks) {
+          allChunks.set(chunk, position);
+          position += chunk.length;
+        }
         
-        setCloudSyncProgress(70);
-        setCloudSyncStatus('Creating file from downloaded data...');
+        // Create blob and file from the downloaded data
+        setCloudSyncProgress(80);
+        setCloudSyncStatus('Processing downloaded data...');
+        toastService.loading('Processing downloaded data... (80%)', { id: 'cloud-restore' });
         
-        // Create a File object from the blob data
-        const file = new File([blob], result.data.fileName, { type: result.data.contentType });
+        const blob = new Blob([allChunks], { type: 'application/zip' });
+        const file = new File([blob], 'cloud-backup.zip', { type: 'application/zip' });
         
         // Use the import function to handle the restore
         if (!onImportCollection) {
           throw new Error('Import functionality not available');
         }
         
-        // Handle import with progress
         await handleImportWithProgress(file);
         
         // Update last sync timestamp
@@ -347,16 +445,13 @@ const SettingsModal = ({
         
         // Show success message
         toastService.success('Successfully restored from cloud backup (100%)', { id: 'cloud-restore' });
-      } catch (proxyError) {
-        console.error('Error in proxy download:', proxyError);
+      } catch (downloadError) {
+        console.error('Error during download or processing:', downloadError);
         
-        // Check for specific error types from the proxy function
-        if (proxyError.code === 'not-found' || (proxyError.details && proxyError.details.code === 'not-found')) {
-          throw new Error('No backup found in cloud');
-        } else if (proxyError.code === 'resource-exhausted' || (proxyError.details && proxyError.details.code === 'resource-exhausted')) {
-          throw new Error('Backup file is too large for proxy download. Please try on a desktop browser.');
+        if (downloadError.name === 'AbortError') {
+          throw new Error('Download timed out. Please check your internet connection and try again.');
         } else {
-          throw new Error('Failed to download backup: ' + (proxyError.message || 'Unknown error'));
+          throw downloadError;
         }
       }
     } catch (error) {
@@ -367,8 +462,8 @@ const SettingsModal = ({
         toastService.error('No backup found in cloud. Please create a backup first.', { id: 'cloud-restore' });
       } else if (error.code === 'storage/quota-exceeded') {
         toastService.error('Storage quota exceeded. Please contact support.', { id: 'cloud-restore' });
-      } else if (error.message.includes('Network issue accessing the backup')) {
-        toastService.error(error.message, { id: 'cloud-restore', duration: 8000 });
+      } else if (error.name === 'AbortError' || error.message.includes('aborted')) {
+        toastService.error('Download was aborted due to timeout. Please check your internet connection and try again.', { id: 'cloud-restore', duration: 8000 });
       } else {
         toastService.error(`Cloud restore failed: ${error.message}`, { id: 'cloud-restore' });
       }
