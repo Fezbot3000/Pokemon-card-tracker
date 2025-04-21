@@ -55,6 +55,7 @@ const SettingsModal = ({
   const [isFixingSecurity, setIsFixingSecurity] = useState(false);
   const [activeTab, setActiveTab] = useState('general');
   const [collectionToDelete, setCollectionToDelete] = useState('');
+  const [devLogs, setDevLogs] = useState([]); // Add state for logs
   const [profile, setProfile] = useState({
     firstName: '',
     lastName: '',
@@ -66,6 +67,14 @@ const SettingsModal = ({
   const [showSecurityFixConfirm, setShowSecurityFixConfirm] = useState(false);
   const fileInputRef = useRef(null);
   const importBaseDataRef = useRef(null);
+
+  // Function to add logs to the state and console
+  const addLog = (message) => {
+    const timestamp = new Date().toLocaleTimeString();
+    const logEntry = `[${timestamp}] ${message}`;
+    setDevLogs(prevLogs => [...prevLogs, logEntry]);
+    console.log(message); // Keep console logging as well
+  };
 
   // Initialize collection to rename 
   useEffect(() => {
@@ -309,338 +318,370 @@ const SettingsModal = ({
   // Handle cloud backup
   const handleCloudBackup = async () => {
     if (!currentUser) {
-      toastService.error('You must be logged in to backup to cloud');
+      addLog('User not signed in for cloud backup.');
+      toastService.error('You must be signed in to use cloud backup.');
       return;
     }
-
     setIsCloudBackingUp(true);
     setCloudSyncProgress(0);
-    setCloudSyncStatus('Starting cloud backup...');
-    
-    // Show a simple loading toast
-    toastService.loading('Backing up to cloud...', { duration: 60000, id: 'cloud-backup' });
+    setCloudSyncStatus('Starting backup...');
+    addLog('Starting cloud backup process...');
 
     try {
-      // Get all collections
-      const collections = await db.getCollections();
-      const collectionNames = Object.keys(collections);
-      
-      // Get all images
-      const images = await db.getAllImages();
-      
-      // Total items to backup (collections + images)
-      const totalItems = collectionNames.length + images.length;
-      let processedItems = 0;
-      
-      // Get the user ID
       const userId = currentUser.uid;
+      addLog(`User ID: ${userId}`);
+
+      // Step 1: Fetch collections and images
+      setCloudSyncStatus('Fetching local data...');
+      addLog('Fetching collections from IndexedDB...');
+      const collectionsData = await db.getAllCollections();
+      addLog(`Fetched ${collectionsData.length} collections.`);
       
-      // Create a metadata object with timestamp
+      addLog('Fetching images from IndexedDB...');
+      const imagesData = await db.getAllImages();
+      addLog(`Fetched ${imagesData.length} images.`);
+      setCloudSyncProgress(10);
+
+      // Step 2: Prepare metadata
+      setCloudSyncStatus('Preparing metadata...');
+      addLog('Preparing backup metadata...');
       const backupMetadata = {
         timestamp: new Date().toISOString(),
         userId: userId,
-        collectionCount: collectionNames.length,
-        imageCount: images.length,
-        version: '2.0' // Using version 2.0 for the new unzipped format
+        collectionCount: collectionsData.length,
+        imageCount: imagesData.length,
+        format: 'unzipped' // Indicate the new format
       };
-      
-      // Upload metadata first
-      setCloudSyncStatus('Uploading backup metadata...');
-      const metadataRef = ref(storage, `users/${userId}/backups/metadata.json`);
-      await uploadBytes(metadataRef, new Blob([JSON.stringify(backupMetadata)], { type: 'application/json' }));
-      
-      // Upload collections one by one
-      for (let i = 0; i < collectionNames.length; i++) {
-        const collectionName = collectionNames[i];
-        const collectionData = collections[collectionName];
+      const metadataBlob = new Blob([JSON.stringify(backupMetadata, null, 2)], { type: 'application/json' });
+      const metadataRef = ref(storage, `backups/${userId}/metadata.json`);
+      addLog('Uploading metadata.json...');
+      await uploadBytes(metadataRef, metadataBlob);
+      addLog('Metadata uploaded successfully.');
+      setCloudSyncProgress(20);
+
+      // Step 3: Upload collections data
+      setCloudSyncStatus('Uploading collections...');
+      addLog('Preparing collections data blob...');
+      const collectionsBlob = new Blob([JSON.stringify(collectionsData)], { type: 'application/json' });
+      const collectionsRef = ref(storage, `backups/${userId}/collections.json`);
+      addLog('Uploading collections.json...');
+      await uploadBytes(collectionsRef, collectionsBlob);
+      addLog('Collections data uploaded successfully.');
+      setCloudSyncProgress(30);
+
+      // Step 4: Upload images
+      setCloudSyncStatus(`Uploading ${imagesData.length} images...`);
+      addLog(`Starting image uploads (${imagesData.length} total)...`);
+      const totalImages = imagesData.length;
+      for (let i = 0; i < totalImages; i++) {
+        const image = imagesData[i];
+        const imageName = `${image.id}.${image.format}`; // Assuming image object has id and format
+        const imageRef = ref(storage, `backups/${userId}/images/${imageName}`);
+        // Check if image.data is Blob or needs conversion
+        let imageBlob;
+        if (image.data instanceof Blob) {
+          imageBlob = image.data;
+        } else if (typeof image.data === 'string') { 
+          // Assuming base64 string, convert to Blob
+          const byteString = atob(image.data.split(',')[1]);
+          const mimeString = image.data.split(',')[0].split(':')[1].split(';')[0];
+          const ab = new ArrayBuffer(byteString.length);
+          const ia = new Uint8Array(ab);
+          for (let j = 0; j < byteString.length; j++) {
+            ia[j] = byteString.charCodeAt(j);
+          }
+          imageBlob = new Blob([ab], { type: mimeString });
+        } else {
+          addLog(`Skipping image ${image.id}: unsupported data type`);
+          continue;
+        }
         
-        setCloudSyncStatus(`Backing up collection: ${collectionName}...`);
-        
-        // Create a reference to the collection file
-        const collectionRef = ref(storage, `users/${userId}/backups/collections/${collectionName}.json`);
-        
-        // Upload the collection data
-        await uploadBytes(collectionRef, new Blob([JSON.stringify(collectionData)], { type: 'application/json' }));
-        
-        // Update progress
-        processedItems++;
-        setCloudSyncProgress(Math.floor((processedItems / totalItems) * 100));
+        addLog(`Uploading image ${i + 1}/${totalImages}: ${imageName}`);
+        await uploadBytes(imageRef, imageBlob);
+        const progress = 30 + Math.round(((i + 1) / totalImages) * 60); // Images take up 60% of progress
+        setCloudSyncProgress(progress);
+        setCloudSyncStatus(`Uploading image ${i + 1} of ${totalImages}`);
       }
-      
-      // Upload images one by one
-      for (let i = 0; i < images.length; i++) {
-        const image = images[i];
-        
-        setCloudSyncStatus(`Backing up image ${i+1} of ${images.length}...`);
-        
-        // Create a reference to the image file
-        const imageRef = ref(storage, `users/${userId}/backups/images/${image.id}.blob`);
-        
-        // Upload the image data
-        await uploadBytes(imageRef, image.blob);
-        
-        // Update progress
-        processedItems++;
-        setCloudSyncProgress(Math.floor((processedItems / totalItems) * 100));
-      }
-      
-      // Update last sync timestamp
-      localStorage.setItem('lastCloudBackup', Date.now().toString());
-      
-      // Complete
+      addLog('All images uploaded successfully.');
+
+      // Step 5: Finalize
       setCloudSyncProgress(100);
       setCloudSyncStatus('Backup complete!');
-      toastService.success('Backup complete!', { id: 'cloud-backup' });
+      addLog('Cloud backup process completed successfully.');
+      toastService.success('Cloud backup completed successfully!');
+
     } catch (error) {
-      console.error('Cloud backup error:', error);
-      toastService.error(`Backup failed: ${error.message}`, { id: 'cloud-backup' });
-      setCloudSyncStatus('Failed');
+      console.error('Cloud backup failed:', error);
+      addLog(`Cloud backup failed: ${error.message}`);
+      setCloudSyncStatus(`Error: ${error.message}`);
+      toastService.error(`Cloud backup failed: ${error.message}`);
     } finally {
-      setTimeout(() => {
-        setIsCloudBackingUp(false);
-        setCloudSyncStatus('');
-      }, 2000); // Keep the status visible briefly after completion
+      setIsCloudBackingUp(false);
     }
   };
 
   // Handle cloud restore
   const handleCloudRestore = async () => {
     if (!currentUser) {
-      toastService.error('You must be logged in to restore from cloud');
+      addLog('User not signed in for cloud restore.');
+      toastService.error('You must be signed in to use cloud restore.');
+      return;
+    }
+
+    if (!window.confirm('Restoring from the cloud will overwrite your current local data. Are you sure you want to proceed?')) {
+      addLog('Cloud restore cancelled by user.');
       return;
     }
 
     setIsCloudRestoring(true);
     setCloudSyncProgress(0);
-    setCloudSyncStatus('Starting cloud restore...');
-    
-    // Show a simple loading toast
-    toastService.loading('Restoring from cloud...', { duration: 60000, id: 'cloud-restore' });
-
-    // Set up a timeout to detect if the process hangs
-    let timeoutId = setTimeout(() => {
-      console.log('Cloud restore process taking longer than expected...');
-      setCloudSyncStatus('Process taking longer than expected. Please wait...');
-      toastService.loading('Still working on restore...', { duration: 60000, id: 'cloud-restore' });
-    }, 15000); // 15 seconds timeout
+    setCloudSyncStatus('Starting restore...');
+    addLog('Starting cloud restore process...');
 
     try {
-      // Get the user ID
       const userId = currentUser.uid;
+      addLog(`User ID: ${userId}`);
+      const backupRef = ref(storage, `backups/${userId}`);
+
+      // List items in the user's backup directory
+      addLog('Listing backup files in Firebase Storage...');
+      const listResult = await listAll(backupRef);
       
-      // Check if we have the new format (metadata.json exists)
-      const metadataRef = ref(storage, `users/${userId}/backups/metadata.json`);
-      let isNewFormat = false;
-      
-      try {
-        // Try to get the download URL for metadata.json
-        await getDownloadURL(metadataRef);
-        isNewFormat = true;
-        console.log('Found new format backup (unzipped)');
-      } catch (error) {
-        console.log('No metadata.json found, assuming old format (zip)');
-        isNewFormat = false;
-      }
-      
+      // Check if metadata.json exists to determine backup format
+      const metadataFile = listResult.items.find(item => item.name === 'metadata.json');
+      let isNewFormat = !!metadataFile;
+      addLog(`Backup format detected: ${isNewFormat ? 'New (Unzipped)' : 'Old (Zip)'}`);
+
       if (isNewFormat) {
-        // --- NEW FORMAT RESTORE (UNZIPPED) ---
-        
-        // Get the metadata
-        const metadataUrl = await getDownloadURL(metadataRef);
+        // --- New Restore Logic (Unzipped Files) --- 
+        addLog('Starting restore using new unzipped format...');
+
+        // 1. Download and process metadata.json
+        setCloudSyncStatus('Downloading metadata...');
+        addLog('Downloading metadata.json...');
+        const metadataUrl = await getDownloadURL(metadataFile);
         const metadataResponse = await fetch(metadataUrl);
-        const metadata = await metadataResponse.json();
-        
-        console.log('Backup metadata:', metadata);
-        setCloudSyncStatus(`Found backup from ${new Date(metadata.timestamp).toLocaleString()}`);
-        setCloudSyncProgress(5);
-        
-        // First, get all collection names
-        const collectionsRef = ref(storage, `users/${userId}/backups/collections`);
-        const collectionsResult = await listAll(collectionsRef);
-        
-        // Calculate total items to restore
-        const totalCollections = collectionsResult.items.length;
-        const totalImages = metadata.imageCount || 0;
-        const totalItems = totalCollections + totalImages;
-        let processedItems = 0;
-        
-        // Prepare collections object
-        const restoredCollections = {};
-        
-        // Restore collections one by one
-        for (const collectionRef of collectionsResult.items) {
-          const collectionName = collectionRef.name.replace('.json', '');
-          setCloudSyncStatus(`Restoring collection: ${collectionName}...`);
+        if (!metadataResponse.ok) throw new Error('Failed to download metadata.json');
+        const backupMetadata = await metadataResponse.json();
+        addLog(`Metadata downloaded. Backup Timestamp: ${backupMetadata.timestamp}, Collections: ${backupMetadata.collectionCount}, Images: ${backupMetadata.imageCount}`);
+        setCloudSyncProgress(10);
+
+        // 2. Download and process collections.json
+        setCloudSyncStatus('Downloading collections data...');
+        addLog('Downloading collections.json...');
+        const collectionsFile = listResult.items.find(item => item.name === 'collections.json');
+        if (!collectionsFile) throw new Error('collections.json not found in backup.');
+        const collectionsUrl = await getDownloadURL(collectionsFile);
+        const collectionsResponse = await fetch(collectionsUrl);
+        if (!collectionsResponse.ok) throw new Error('Failed to download collections.json');
+        const collectionsData = await collectionsResponse.json();
+        addLog('Collections data downloaded.');
+        setCloudSyncProgress(20);
+
+        // 3. Clear existing local data (collections and images)
+        setCloudSyncStatus('Clearing local data...');
+        addLog('Clearing local collections...');
+        await db.clearCollections();
+        addLog('Clearing local images...');
+        await db.clearImages();
+        addLog('Local data cleared.');
+        setCloudSyncProgress(30);
+
+        // 4. Import collections into IndexedDB
+        setCloudSyncStatus('Importing collections...');
+        addLog(`Importing ${collectionsData.length} collections into IndexedDB...`);
+        await db.importCollections(collectionsData);
+        addLog('Collections imported successfully.');
+        setCloudSyncProgress(40);
+
+        // 5. List and download images
+        setCloudSyncStatus('Listing images...');
+        addLog('Listing images in backup...');
+        const imagesRef = ref(storage, `backups/${userId}/images`);
+        const imageListResult = await listAll(imagesRef);
+        const totalImagesToDownload = imageListResult.items.length;
+        addLog(`Found ${totalImagesToDownload} images to download.`);
+        setCloudSyncProgress(50);
+
+        // 6. Download and import images one by one
+        setCloudSyncStatus(`Downloading ${totalImagesToDownload} images...`);
+        addLog('Starting image downloads and import...');
+        let imagesImportedCount = 0;
+        const imageImportPromises = [];
+
+        for (let i = 0; i < totalImagesToDownload; i++) {
+          const imageItemRef = imageListResult.items[i];
+          const progress = 50 + Math.round(((i + 1) / totalImagesToDownload) * 45); // Images take 45% progress
+          setCloudSyncProgress(progress);
+          setCloudSyncStatus(`Downloading/Importing image ${i + 1} of ${totalImagesToDownload}`);
+          addLog(`Downloading image ${i + 1}/${totalImagesToDownload}: ${imageItemRef.name}`);
           
-          // Get the download URL
-          const collectionUrl = await getDownloadURL(collectionRef);
-          
-          // Fetch the collection data
-          const collectionResponse = await fetch(collectionUrl);
-          const collectionData = await collectionResponse.json();
-          
-          // Add to restored collections
-          restoredCollections[collectionName] = collectionData;
-          
-          // Update progress
-          processedItems++;
-          setCloudSyncProgress(5 + Math.floor((processedItems / totalItems) * 90));
-        }
-        
-        // Save the collections to IndexedDB
-        await db.saveCollections(restoredCollections);
-        
-        // Now restore images one by one
-        const imagesRef = ref(storage, `users/${userId}/backups/images`);
-        const imagesResult = await listAll(imagesRef);
-        
-        for (const imageRef of imagesResult.items) {
-          const imageId = imageRef.name.replace('.blob', '');
-          setCloudSyncStatus(`Restoring image: ${imageId}...`);
-          
-          // Get the download URL
-          const imageUrl = await getDownloadURL(imageRef);
-          
-          // Fetch the image data
-          const imageResponse = await fetch(imageUrl);
-          const imageBlob = await imageResponse.blob();
-          
-          // Save the image to IndexedDB
-          await db.saveImage(imageId, imageBlob);
-          
-          // Update progress
-          processedItems++;
-          setCloudSyncProgress(5 + Math.floor((processedItems / totalItems) * 90));
-        }
-        
-        // Update last sync timestamp
-        localStorage.setItem('lastCloudRestore', Date.now().toString());
-        
-        // Refresh collections if needed
-        if (refreshCollections) {
-          console.log('Refreshing collections...');
-          refreshCollections();
-        }
-        
-        // Complete
-        setCloudSyncProgress(100);
-        toastService.success('Restore complete', { id: 'cloud-restore' });
-        
-      } else {
-        // --- OLD FORMAT RESTORE (ZIP) ---
-        console.log('Using legacy zip format restore...');
-        setCloudSyncStatus('Using legacy format (zip)...');
-        
-        // Create a reference to the backup file in Firebase Storage
-        const backupPath = `users/${userId}/backups/latest-backup.zip`;
-        const storageRef = ref(storage, backupPath);
-        
-        try {
-          // Get the download URL directly from Firebase Storage
-          console.log('Getting download URL from Firebase Storage...');
-          
-          const downloadURL = await getDownloadURL(storageRef);
-          
-          console.log('Download URL generated successfully:', downloadURL);
-          
-          // Increment progress
-          setCloudSyncProgress(30);
-          
-          // Detect if we're on iOS
-          const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-          if (isIOS) {
-            console.log('iOS device detected, using modified approach for better compatibility');
-            toastService.error('Legacy zip backups are not supported on iOS. Please create a new backup first.', { id: 'cloud-restore' });
-            throw new Error('Legacy zip backups are not supported on iOS. Please create a new backup first.');
-          }
-          
-          // Fetch the file in the background
-          console.log('Fetching backup file...');
-          const response = await fetch(downloadURL);
-          if (!response.ok) {
-            throw new Error(`Download failed (${response.status})`);
-          }
-          
-          // Get the data as a blob
-          console.log('Converting response to blob...');
-          const blob = await response.blob();
-          
-          // Increment progress
-          setCloudSyncProgress(70);
-          
-          // Create a File object from the blob
-          console.log('Creating File object from blob...');
-          const file = new File([blob], 'backup.zip', { type: 'application/zip' });
-          
-          // Use the import function to handle the restore
-          if (!onImportCollection) {
-            throw new Error('Import functionality not available');
-          }
-          
-          // Clear the timeout since we're making progress
-          clearTimeout(timeoutId);
-          
-          // Set a new timeout for the import process
-          timeoutId = setTimeout(() => {
-            console.log('Import process taking longer than expected...');
-            setCloudSyncStatus('Import taking longer than expected. This is normal for large collections.');
-            toastService.loading('Processing large backup...', { duration: 60000, id: 'cloud-restore' });
-          }, 10000); // 10 seconds timeout
-          
-          // Import the backup with a progress callback
-          console.log('Calling onImportCollection with file...');
           try {
-            await onImportCollection(file, (progress) => {
-              // This assumes onImportCollection accepts a progress callback
-              // If it doesn't, you'll need to modify that function too
-              if (progress) {
-                setCloudSyncProgress(70 + Math.floor(progress * 30)); // Scale from 70-100%
-                setCloudSyncStatus(`Importing data: ${Math.floor(progress * 100)}%`);
-              }
-            });
-            console.log('Import completed successfully');
-          } catch (importError) {
-            console.error('Error during import process:', importError);
-            // Check for specific iOS memory errors
-            if (isIOS && (importError.message.includes('memory') || 
-                importError.message.includes('quota') || 
-                importError.message.includes('storage') ||
-                importError.message.includes('allocation'))) {
-              throw new Error('iOS memory limit reached. Try restoring on a desktop browser for large backups.');
+            const imageUrl = await getDownloadURL(imageItemRef);
+            const imageResponse = await fetch(imageUrl);
+            if (!imageResponse.ok) {
+              addLog(`Failed to download image: ${imageItemRef.name}, Status: ${imageResponse.status}`);
+              continue; // Skip this image if download fails
             }
-            throw importError;
+            const imageBlob = await imageResponse.blob();
+            addLog(`Image ${imageItemRef.name} downloaded (${(imageBlob.size / 1024).toFixed(2)} KB). Importing...`);
+            
+            // Extract ID and format from filename (e.g., 'cardId.png')
+            const nameParts = imageItemRef.name.split('.');
+            const imageId = nameParts.slice(0, -1).join('.'); // Handle potential dots in ID
+            const imageFormat = nameParts.pop();
+
+            // Create image object structure expected by db.importImage
+            const imageData = {
+              id: imageId,
+              format: imageFormat,
+              data: imageBlob
+            };
+            
+            // Import image into IndexedDB
+            await db.importImage(imageData); // Changed from batch to individual
+            imagesImportedCount++;
+            addLog(`Image ${imageItemRef.name} imported successfully.`);
+
+          } catch (imgError) {
+              addLog(`Error processing image ${imageItemRef.name}: ${imgError.message}`);
           }
-          
-          // Update last sync timestamp
-          localStorage.setItem('lastCloudRestore', Date.now().toString());
-          
-          // Refresh collections if needed
-          if (refreshCollections) {
-            console.log('Refreshing collections...');
-            refreshCollections();
-          }
-          
-          // Complete
-          setCloudSyncProgress(100);
-          toastService.success('Restore complete', { id: 'cloud-restore' });
-        } catch (storageError) {
-          console.error('Firebase Storage error:', storageError);
-          throw new Error(`Firebase Storage error: ${storageError.message}`);
         }
+
+        addLog(`Image download and import process finished. Successfully imported ${imagesImportedCount}/${totalImagesToDownload} images.`);
+        setCloudSyncProgress(95);
+
+        // 7. Finalize and refresh
+        setCloudSyncStatus('Finalizing restore...');
+        addLog('Finalizing restore process...');
+        await refreshCollections(); // Refresh collections in the UI
+        setCloudSyncProgress(100);
+        setCloudSyncStatus('Restore complete!');
+        addLog('Cloud restore completed successfully!');
+        toastService.success('Cloud restore completed successfully!');
+
+      } else {
+        // --- Legacy Restore Logic (Zip File) --- 
+        addLog('Starting restore using legacy zip format...');
+        const zipFile = listResult.items.find(item => item.name.endsWith('.zip'));
+        if (!zipFile) {
+          throw new Error('No backup zip file found.');
+        }
+        addLog(`Found backup zip file: ${zipFile.name}`);
+
+        // Step 1: Get Download URL for the zip file
+        setCloudSyncStatus('Getting backup download URL...');
+        addLog('Getting download URL for zip file...');
+        const url = await getDownloadURL(zipFile);
+        addLog('Download URL obtained.');
+        setCloudSyncProgress(10);
+
+        // Step 2: Download the zip file
+        setCloudSyncStatus('Downloading backup file...');
+        addLog('Downloading zip file...');
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`Failed to download backup file: ${response.statusText}`);
+        }
+        const zipBlob = await response.blob();
+        addLog(`Zip file downloaded (${(zipBlob.size / (1024*1024)).toFixed(2)} MB).`);
+        setCloudSyncProgress(30);
+
+        // Step 3: Unzip the file
+        setCloudSyncStatus('Unzipping backup file...');
+        addLog('Unzipping backup file...');
+        const zip = new JSZip();
+        const contents = await zip.loadAsync(zipBlob);
+        addLog('Zip file loaded into JSZip.');
+
+        // Assuming collections are in 'collections.json' and images in 'images/' directory within the zip
+        const collectionFile = contents.file('collections.json');
+        if (!collectionFile) {
+          throw new Error('collections.json not found in the zip file.');
+        }
+        addLog('Found collections.json in zip.');
+
+        const collectionsDataString = await collectionFile.async('string');
+        const collectionsData = JSON.parse(collectionsDataString);
+        addLog('Parsed collections data from zip.');
+        setCloudSyncProgress(50);
+
+        // Step 4: Clear existing local data
+        setCloudSyncStatus('Clearing local data...');
+        addLog('Clearing local collections and images...');
+        await db.clearCollections();
+        await db.clearImages();
+        addLog('Local data cleared.');
+        setCloudSyncProgress(60);
+
+        // Step 5: Import collections
+        setCloudSyncStatus('Importing collections...');
+        addLog('Importing collections into IndexedDB...');
+        await db.importCollections(collectionsData);
+        addLog('Collections imported.');
+        setCloudSyncProgress(70);
+
+        // Step 6: Import images from zip
+        setCloudSyncStatus('Importing images...');
+        addLog('Importing images from zip...');
+        const imageFiles = contents.folder('images').file(/\.(png|jpg|jpeg|gif|webp)$/i);
+        addLog(`Found ${imageFiles.length} images in zip's images/ folder.`);
+        let imagesImportedCount = 0;
+        const imageImportPromises = [];
+
+        for (let i = 0; i < imageFiles.length; i++) {
+          const imageFile = imageFiles[i];
+          const progress = 70 + Math.round(((i + 1) / imageFiles.length) * 25); // Images take 25% progress
+          setCloudSyncProgress(progress);
+          setCloudSyncStatus(`Importing image ${i + 1} of ${imageFiles.length}`);
+          addLog(`Processing image ${i+1}/${imageFiles.length}: ${imageFile.name}`);
+          
+          try {
+              const imageBlob = await imageFile.async('blob');
+              const fileNameParts = imageFile.name.split('/').pop().split('.'); // Get filename and split by dot
+              const imageId = fileNameParts.slice(0, -1).join('.'); // ID is everything before the last dot
+              const imageFormat = fileNameParts.pop(); // Format is after the last dot
+
+              const imageData = {
+                  id: imageId,
+                  format: imageFormat,
+                  data: imageBlob
+              };
+              
+              // Queue the import promise
+              imageImportPromises.push(db.importImage(imageData).then(() => {
+                  imagesImportedCount++;
+                  addLog(`Successfully imported image: ${imageFile.name}`);
+              }).catch(err => {
+                  addLog(`Failed to import image ${imageFile.name}: ${err.message}`);
+              }));
+          } catch (imgError) {
+              addLog(`Error processing image file ${imageFile.name} from zip: ${imgError.message}`);
+          }
+        }
+
+        // Wait for all image imports to complete
+        await Promise.all(imageImportPromises);
+        addLog(`Finished processing all images from zip. Imported ${imagesImportedCount}/${imageFiles.length}.`);
+        setCloudSyncProgress(95);
+
+        // Step 7: Finalize and refresh
+        setCloudSyncStatus('Finalizing restore...');
+        addLog('Finalizing restore process...');
+        await refreshCollections();
+        setCloudSyncProgress(100);
+        setCloudSyncStatus('Restore complete!');
+        addLog('Cloud restore completed successfully!');
+        toastService.success('Cloud restore completed successfully!');
       }
-      
+
     } catch (error) {
-      console.error('Cloud restore error:', error);
-      toastService.error(`Restore failed: ${error.message}`, { id: 'cloud-restore' });
-      setCloudSyncStatus('Failed');
+      console.error('Cloud restore failed:', error);
+      addLog(`Cloud restore failed: ${error.message}`);
+      setCloudSyncStatus(`Error: ${error.message}`);
+      toastService.error(`Cloud restore failed: ${error.message}`);
     } finally {
-      // Clear any remaining timeouts
-      clearTimeout(timeoutId);
-      
-      setTimeout(() => {
-        setIsCloudRestoring(false);
-        setCloudSyncStatus('');
-      }, 2000); // Keep the status visible briefly after completion
+      setIsCloudRestoring(false);
     }
   };
 
@@ -1074,6 +1115,29 @@ const SettingsModal = ({
                         Open Library
                       </Button>
                     </div>
+                  </div>
+                  
+                  {/* Log Viewer Section */}
+                  <div className="bg-white dark:bg-[#1B2131] rounded-lg p-4 border border-gray-200 dark:border-indigo-900/20 mt-4">
+                    <h4 className="font-medium text-gray-900 dark:text-white mb-2 flex items-center">
+                      <Icon name="description" className="text-indigo-400 mr-2" />
+                      Development Logs
+                    </h4>
+                    <textarea
+                      readOnly
+                      className="w-full h-48 p-2 border border-gray-300 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-800 text-xs font-mono text-gray-700 dark:text-gray-300 resize-none"
+                      value={devLogs.join('\n')}
+                      placeholder="Logs will appear here..."
+                    />
+                     <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setDevLogs([])} // Clear logs on click
+                        className="mt-2"
+                        iconLeft={<Icon name="delete" />}
+                      >
+                        Clear Logs
+                      </Button>
                   </div>
                 </SettingsPanel>
               </div>
