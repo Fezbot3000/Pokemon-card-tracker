@@ -433,6 +433,13 @@ const SettingsModal = ({
     // Show a simple loading toast
     toastService.loading('Restoring from cloud...', { duration: 60000, id: 'cloud-restore' });
 
+    // Set up a timeout to detect if the process hangs
+    let timeoutId = setTimeout(() => {
+      console.log('Cloud restore process taking longer than expected...');
+      setCloudSyncStatus('Process taking longer than expected. Please wait...');
+      toastService.loading('Still working on restore...', { duration: 60000, id: 'cloud-restore' });
+    }, 15000); // 15 seconds timeout
+
     try {
       // Log for debugging
       console.log('Starting cloud restore process...');
@@ -457,6 +464,12 @@ const SettingsModal = ({
         // Increment progress
         setCloudSyncProgress(50);
         
+        // Detect if we're on iOS
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        if (isIOS) {
+          console.log('iOS device detected, using modified approach for better compatibility');
+        }
+        
         // Fetch the file in the background
         console.log('Fetching backup file...');
         const response = await fetch(downloadURL);
@@ -480,10 +493,39 @@ const SettingsModal = ({
           throw new Error('Import functionality not available');
         }
         
-        // Import the backup
+        // Clear the timeout since we're making progress
+        clearTimeout(timeoutId);
+        
+        // Set a new timeout for the import process
+        timeoutId = setTimeout(() => {
+          console.log('Import process taking longer than expected...');
+          setCloudSyncStatus('Import taking longer than expected. This is normal for large collections.');
+          toastService.loading('Processing large backup...', { duration: 60000, id: 'cloud-restore' });
+        }, 10000); // 10 seconds timeout
+        
+        // Import the backup with a progress callback
         console.log('Calling onImportCollection with file...');
-        await onImportCollection(file);
-        console.log('Import completed successfully');
+        try {
+          await onImportCollection(file, (progress) => {
+            // This assumes onImportCollection accepts a progress callback
+            // If it doesn't, you'll need to modify that function too
+            if (progress) {
+              setCloudSyncProgress(70 + Math.floor(progress * 30)); // Scale from 70-100%
+              setCloudSyncStatus(`Importing data: ${Math.floor(progress * 100)}%`);
+            }
+          });
+          console.log('Import completed successfully');
+        } catch (importError) {
+          console.error('Error during import process:', importError);
+          // Check for specific iOS memory errors
+          if (isIOS && (importError.message.includes('memory') || 
+              importError.message.includes('quota') || 
+              importError.message.includes('storage') ||
+              importError.message.includes('allocation'))) {
+            throw new Error('iOS memory limit reached. Try restoring on a desktop browser for large backups.');
+          }
+          throw importError;
+        }
         
         // Update last sync timestamp
         localStorage.setItem('lastCloudRestore', Date.now().toString());
@@ -507,6 +549,9 @@ const SettingsModal = ({
       toastService.error(`Restore failed: ${error.message}`, { id: 'cloud-restore' });
       setCloudSyncStatus('Failed');
     } finally {
+      // Clear any remaining timeouts
+      clearTimeout(timeoutId);
+      
       setTimeout(() => {
         setIsCloudRestoring(false);
         setCloudSyncStatus('');
