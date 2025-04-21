@@ -785,6 +785,190 @@ class DatabaseService {
       }
     });
   }
+
+  /**
+   * Verify that all data is properly secured with the user's ID
+   * @param {string} userId - The current user's ID
+   * @returns {Promise<{secure: boolean, message: string, details: Object}>} - Result of the security check
+   */
+  async verifyDataSecurity(userId) {
+    try {
+      // Open the database
+      await this.ensureDB();
+      
+      // Check collections store
+      const collectionsStore = this.db.transaction(COLLECTIONS_STORE, 'readonly').objectStore(COLLECTIONS_STORE);
+      const collectionsRequest = collectionsStore.getAll();
+      
+      return new Promise((resolve, reject) => {
+        collectionsRequest.onsuccess = () => {
+          const collections = collectionsRequest.result;
+          
+          console.log(`Checking security for ${collections.length} collections with user ID: ${userId}`);
+          
+          // Check if any collections exist without a userId or with a different userId
+          const unsecuredCollections = collections.filter(collection => 
+            !collection.userId || collection.userId !== userId
+          );
+          
+          // Log detailed information about unsecured collections
+          if (unsecuredCollections.length > 0) {
+            console.log('Unsecured collections found:');
+            unsecuredCollections.forEach(collection => {
+              console.log(`- Collection ID: ${collection.id}, Name: ${collection.name || 'unnamed'}, Current userId: ${collection.userId || 'none'}`);
+            });
+          }
+          
+          if (unsecuredCollections.length > 0) {
+            resolve({
+              secure: false,
+              message: `Found ${unsecuredCollections.length} collections not properly secured with your user ID`,
+              details: {
+                unsecuredCollections: unsecuredCollections.map(c => ({
+                  id: c.id,
+                  name: c.name || 'unnamed',
+                  currentUserId: c.userId || 'none'
+                }))
+              }
+            });
+            return;
+          }
+          
+          // Check images store
+          const imagesStore = this.db.transaction(IMAGES_STORE, 'readonly').objectStore(IMAGES_STORE);
+          const imagesRequest = imagesStore.getAll();
+          
+          imagesRequest.onsuccess = () => {
+            const images = imagesRequest.result;
+            
+            console.log(`Checking security for ${images.length} images with user ID: ${userId}`);
+            
+            // Check if any images exist without a userId or with a different userId
+            const unsecuredImages = images.filter(image => 
+              !image.userId || image.userId !== userId
+            );
+            
+            // Log detailed information about unsecured images
+            if (unsecuredImages.length > 0) {
+              console.log('Unsecured images found:');
+              // Log the first 10 unsecured images to avoid console flooding
+              unsecuredImages.slice(0, 10).forEach(image => {
+                console.log(`- Image ID: ${image.id}, Current userId: ${image.userId || 'none'}, Card ID: ${image.cardId || 'unknown'}`);
+              });
+              if (unsecuredImages.length > 10) {
+                console.log(`... and ${unsecuredImages.length - 10} more`);
+              }
+            }
+            
+            if (unsecuredImages.length > 0) {
+              resolve({
+                secure: false,
+                message: `Found ${unsecuredImages.length} images not properly secured with your user ID`,
+                details: {
+                  unsecuredImages: unsecuredImages.slice(0, 20).map(img => ({
+                    id: img.id,
+                    cardId: img.cardId || 'unknown',
+                    currentUserId: img.userId || 'none'
+                  })),
+                  totalUnsecuredImages: unsecuredImages.length
+                }
+              });
+              return;
+            }
+            
+            // All data is secure
+            resolve({
+              secure: true,
+              message: 'All data is properly secured with your user ID',
+              details: {
+                totalCollections: collections.length,
+                totalImages: images.length
+              }
+            });
+          };
+          
+          imagesRequest.onerror = (event) => {
+            reject(new Error('Failed to check image security: ' + event.target.error));
+          };
+        };
+        
+        collectionsRequest.onerror = (event) => {
+          reject(new Error('Failed to check collection security: ' + event.target.error));
+        };
+      });
+    } catch (error) {
+      logger.error('Error verifying data security:', error);
+      throw new Error('Failed to verify data security: ' + error.message);
+    }
+  }
+
+  /**
+   * Fix data security by properly associating all data with the user's ID
+   * @param {string} userId - The current user's ID
+   * @returns {Promise<void>}
+   */
+  async fixDataSecurity(userId) {
+    try {
+      // Open the database
+      await this.ensureDB();
+      
+      // Fix collections
+      const collectionsStore = this.db.transaction(COLLECTIONS_STORE, 'readwrite').objectStore(COLLECTIONS_STORE);
+      const collectionsRequest = collectionsStore.getAll();
+      
+      return new Promise((resolve, reject) => {
+        collectionsRequest.onsuccess = () => {
+          const collections = collectionsRequest.result;
+          let fixedCount = 0;
+          
+          // Update each collection that doesn't have the correct userId
+          collections.forEach(collection => {
+            if (!collection.userId || collection.userId !== userId) {
+              collection.userId = userId;
+              collectionsStore.put(collection);
+              fixedCount++;
+            }
+          });
+          
+          console.log(`Fixed ${fixedCount} collections`);
+          
+          // Fix images
+          const imagesStore = this.db.transaction(IMAGES_STORE, 'readwrite').objectStore(IMAGES_STORE);
+          const imagesRequest = imagesStore.getAll();
+          
+          imagesRequest.onsuccess = () => {
+            const images = imagesRequest.result;
+            let fixedImagesCount = 0;
+            
+            // Update each image that doesn't have the correct userId
+            images.forEach(image => {
+              if (!image.userId || image.userId !== userId) {
+                image.userId = userId;
+                imagesStore.put(image);
+                fixedImagesCount++;
+              }
+            });
+            
+            console.log(`Fixed ${fixedImagesCount} images`);
+            
+            // All data is now secure
+            resolve();
+          };
+          
+          imagesRequest.onerror = (event) => {
+            reject(new Error('Failed to fix image security: ' + event.target.error));
+          };
+        };
+        
+        collectionsRequest.onerror = (event) => {
+          reject(new Error('Failed to fix collection security: ' + event.target.error));
+        };
+      });
+    } catch (error) {
+      logger.error('Error fixing data security:', error);
+      throw new Error('Failed to fix data security: ' + error.message);
+    }
+  }
 }
 
 const db = new DatabaseService();

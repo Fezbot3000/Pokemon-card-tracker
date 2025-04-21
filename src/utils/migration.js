@@ -115,7 +115,7 @@ export async function migrateToFirebase(userId) {
   }
 }
 
-export async function exportToZip(userId) {
+export async function exportToZip(userId, options = {}) {
   try {
     const repository = new CardRepository(userId);
     
@@ -133,42 +133,28 @@ export async function exportToZip(userId) {
     dataFolder.file('collections.json', JSON.stringify(collections, null, 2));
 
     // Add profile data
-    if (profile) {
-      dataFolder.file('profile.json', JSON.stringify(profile, null, 2));
-    }
-
-    // Add sold cards data
-    dataFolder.file('soldCards.json', JSON.stringify(soldCards, null, 2));
-
-    // Add README
-    const readme = `Pokemon Card Tracker Backup
-Created: ${new Date().toISOString()}
-
-This ZIP file contains:
-- /data/collections.json: All collections and card data
-- /data/profile.json: User profile data
-- /data/soldCards.json: Sold cards history
-- /images/: All card images
-
-To import this backup:
-1. Use the "Import Backup" button in the app settings
-2. Select this ZIP file
-3. All your data will be restored`;
+    dataFolder.file('profile.json', JSON.stringify(profile, null, 2));
     
-    zip.file('README.txt', readme);
+    // Add sold cards data
+    dataFolder.file('sold-cards.json', JSON.stringify(soldCards, null, 2));
 
     // Generate ZIP file
-    const content = await zip.generateAsync({
+    const blob = await zip.generateAsync({
       type: 'blob',
       compression: 'DEFLATE',
       compressionOptions: {
-        level: 9
+        level: 6 // Balanced between size and speed
       }
     });
 
+    // If returnBlob option is set, return the blob directly
+    if (options.returnBlob) {
+      return blob;
+    }
+
     // Create download link
     const link = document.createElement('a');
-    link.href = URL.createObjectURL(content);
+    link.href = URL.createObjectURL(blob);
     const timestamp = new Date().toISOString().split('T')[0];
     link.download = `pokemon-card-tracker-backup-${timestamp}.zip`;
     document.body.appendChild(link);
@@ -182,7 +168,8 @@ To import this backup:
 
     return {
       success: true,
-      message: 'Backup created successfully'
+      message: 'Backup created successfully',
+      blob: blob
     };
   } catch (error) {
     console.error('Export error:', error);

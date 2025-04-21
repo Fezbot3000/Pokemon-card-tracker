@@ -6,8 +6,11 @@ const fetch = require('node-fetch'); // Use node-fetch v2 syntax
 // Configure CORS: Allow requests from local dev and production domain
 const allowedOrigins = [
   'http://localhost:3000', 
+  'http://localhost:3001', 
   'http://localhost:51999', // Allow local dev server origin
   'http://127.0.0.1:51999', // Allow local dev server origin
+  'http://127.0.0.1:3000',
+  'http://127.0.0.1:3001',
   'https://mycardtracker-c8479.web.app', 
   'https://mycardtracker.com.au'
 ];
@@ -1346,5 +1349,47 @@ exports.getBackupDownloadUrl = functions.https.onCall(async (data, context) => {
   } catch (error) {
     functions.logger.error('Error generating download URL:', error);
     throw new functions.https.HttpsError('internal', 'Failed to generate download URL: ' + error.message);
+  }
+});
+
+// Upload backup function for cloud storage
+exports.uploadBackup = functions.https.onCall(async (data, context) => {
+  // Ensure user is authenticated
+  if (!context.auth) {
+    throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated to upload backups');
+  }
+
+  try {
+    const userId = context.auth.uid;
+    const backupPath = `users/${userId}/backups/latest-backup.zip`;
+    
+    // Decode the base64 file data
+    const fileBuffer = Buffer.from(data.file, 'base64');
+    
+    // Get Firebase Storage bucket reference using admin SDK
+    const bucket = admin.storage().bucket();
+    const file = bucket.file(backupPath);
+    
+    // Upload the file to Firebase Storage
+    await file.save(fileBuffer, {
+      contentType: 'application/zip',
+      metadata: {
+        contentType: 'application/zip',
+        metadata: {
+          uploadTime: new Date().toISOString(),
+          userId: userId
+        }
+      }
+    });
+    
+    functions.logger.info(`User ${userId} successfully uploaded backup file`);
+    
+    return {
+      success: true,
+      message: 'Backup file uploaded successfully'
+    };
+  } catch (error) {
+    functions.logger.error('Error uploading backup:', error);
+    throw new functions.https.HttpsError('internal', 'Failed to upload backup: ' + error.message);
   }
 });
