@@ -12,14 +12,17 @@ import '../env';
 // console.log("Services - API Key available:", !!process.env.REACT_APP_FIREBASE_API_KEY);
 // console.log("Services - Auth Domain available:", !!process.env.REACT_APP_FIREBASE_AUTH_DOMAIN);
 
-// Your web app's Firebase configuration
+// IMPORTANT: For production use, these values should be properly secured
+// This configuration is using hardcoded values to ensure consistent behavior across all environments
+// Firebase config is generally considered safe to include in client-side code
+// as Firebase uses security rules to control access to data
 const firebaseConfig = {
-  apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
-  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.REACT_APP_FIREBASE_APP_ID
+  apiKey: "AIzaSyDIxG9wMoOm0xO72YCAs4RO9YVrGjRcvLQ",
+  authDomain: "mycardtracker-c8479.firebaseapp.com",
+  projectId: "mycardtracker-c8479",
+  storageBucket: "mycardtracker-c8479.appspot.com",
+  messagingSenderId: "726820232287",
+  appId: "1:726820232287:web:fc27495f506950a78dcfea"
 };
 
 // Check if Firebase app is already initialized to prevent multiple instances
@@ -32,7 +35,7 @@ try {
   db = getFirestore(app);
   
   if (process.env.NODE_ENV === 'development') {
-    // console.log("Firestore initialized for services module");
+    console.log("Firestore initialized successfully");
   }
 } catch (error) {
   console.error('Failed to initialize Firestore:', error);
@@ -57,8 +60,8 @@ googleProvider.addScope('https://www.googleapis.com/auth/userinfo.profile');
 
 // Set custom parameters
 googleProvider.setCustomParameters({
-  // Use environment variable for client ID
-  client_id: process.env.REACT_APP_FIREBASE_CLIENT_ID,
+  // Use hardcoded client ID for consistency across environments
+  client_id: "726820232287-qcmvs1a9u5g5vf5rjb5uf8c7m7i7qdnv.apps.googleusercontent.com",
   // Allow user to select account every time
   prompt: 'select_account'
 });

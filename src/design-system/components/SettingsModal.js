@@ -65,6 +65,8 @@ const SettingsModal = ({
   });
   const [collectionToRename, setCollectionToRename] = useState('');
   const [showSecurityFixConfirm, setShowSecurityFixConfirm] = useState(false);
+  const [showRestoreConfirm, setShowRestoreConfirm] = useState(false); // Add state for restore confirmation
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
   const fileInputRef = useRef(null);
   const importBaseDataRef = useRef(null);
 
@@ -290,8 +292,6 @@ const SettingsModal = ({
   };
 
   // --- State for custom reset confirmation dialog ---
-  const [showResetConfirm, setShowResetConfirm] = useState(false);
-
   const handleResetData = () => {
     setShowResetConfirm(true);
   };
@@ -466,11 +466,15 @@ const SettingsModal = ({
       return;
     }
 
-    if (!window.confirm('Restoring from the cloud will overwrite your current local data. Are you sure you want to proceed?')) {
-      addLog('Cloud restore cancelled by user.');
-      return;
-    }
+    // Show custom confirmation dialog instead of using window.confirm
+    setShowRestoreConfirm(true);
+  };
 
+  // This function will be called when the user confirms the restore
+  const handleConfirmRestore = async () => {
+    setShowRestoreConfirm(false); // Close the dialog
+    addLog('Cloud restore confirmed by user.');
+    
     setIsCloudRestoring(true);
     setCloudSyncProgress(0);
     setCloudSyncStatus('Starting restore...');
@@ -1103,16 +1107,16 @@ const SettingsModal = ({
                     <input 
                       type="file" 
                       ref={fileInputRef} 
-                      style={{ display: 'none' }} 
                       onChange={handleFileChange}
                       accept=".zip,.json"
+                      className="hidden"
                     />
                     <input 
                       type="file" 
                       ref={importBaseDataRef} 
-                      style={{ display: 'none' }} 
                       onChange={handleImportBaseDataChange}
                       accept=".json"
+                      className="hidden"
                     />
                   </div>
                 </SettingsPanel>
@@ -1204,6 +1208,18 @@ const SettingsModal = ({
         onConfirm={handleFixDataSecurity}
         title="Fix Data Security"
         message="Are you sure you want to fix the data security issue? This will re-associate your data with your user ID."
+      />
+
+      {/* Custom ConfirmDialog for Cloud Restore */}
+      <ConfirmDialog
+        isOpen={showRestoreConfirm}
+        onClose={() => {
+          setShowRestoreConfirm(false);
+          addLog('Cloud restore cancelled by user.');
+        }}
+        onConfirm={handleConfirmRestore}
+        title="Restore from Cloud"
+        message="Restoring from the cloud will overwrite your current local data. Are you sure you want to proceed?"
       />
 
       {/* Hidden file inputs */}
