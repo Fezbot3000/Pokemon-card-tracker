@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import { storage, functions } from '../../firebase';
-import { stripDebugProps } from '../../utils/stripDebugProps';
+import { useTheme } from '../contexts/ThemeContext';
 import Icon from '../atoms/Icon';
 import { Modal, Button, ConfirmDialog } from '../';
 import FormField from '../molecules/FormField';
@@ -10,11 +9,12 @@ import SettingsPanel from '../molecules/SettingsPanel';
 import SettingsNavItem from '../atoms/SettingsNavItem';
 import '../styles/animations.css';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { httpsCallable } from 'firebase/functions';
-import JSZip from 'jszip';
-import DataManagementSection from '../../components/DataManagementSection';
-import { useTheme } from '../contexts/ThemeContext';
+import { storage } from '../../firebase';
 import { useAuth } from '../contexts/AuthContext';
+import JSZip from 'jszip';
+import { stripDebugProps } from '../../utils/stripDebugProps';
+import DataManagementSection from '../../components/DataManagementSection';
+import CloudSync from '../../components/CloudSync';
 
 /**
  * SettingsModal Component
@@ -47,14 +47,6 @@ const SettingsModal = ({
   const [isRenaming, setIsRenaming] = useState(false);
   const [newCollectionName, setNewCollectionName] = useState('');
   const [isExporting, setIsExporting] = useState(false);
-  const [isCloudBackingUp, setIsCloudBackingUp] = useState(false);
-  const [isCloudRestoring, setIsCloudRestoring] = useState(false);
-  const [cloudSyncProgress, setCloudSyncProgress] = useState(0);
-  const [cloudSyncStatus, setCloudSyncStatus] = useState('');
-  const [importStep, setImportStep] = useState(0); // 0 = not importing, 1-4 = import steps
-  const [importProgress, setImportProgress] = useState(0);
-  const [isUpdatingPrices, setIsUpdatingPrices] = useState(false);
-  const [isImportingBaseData, setIsImportingBaseData] = useState(false);
   const [activeTab, setActiveTab] = useState('general');
   const [collectionToDelete, setCollectionToDelete] = useState('');
   const [profile, setProfile] = useState({
@@ -150,21 +142,17 @@ const SettingsModal = ({
   };
 
   const handleUpdatePrices = async () => {
-    setIsUpdatingPrices(true);
     try {
       await onUpdatePrices();
       toastService.success('Prices updated successfully!');
     } catch (error) {
       toastService.error('Failed to update prices: ' + error.message);
-    } finally {
-      setIsUpdatingPrices(false);
     }
   };
 
   const handleImportBaseDataChange = (e) => {
     const file = e.target.files?.[0];
     if (file) {
-      setIsImportingBaseData(true);
       onImportBaseData(file)
         .then(() => {
           toastService.success('Base data imported successfully!');
@@ -173,7 +161,6 @@ const SettingsModal = ({
           toastService.error('Failed to import base data: ' + error.message);
         })
         .finally(() => {
-          setIsImportingBaseData(false);
           e.target.value = '';
         });
     }
@@ -203,221 +190,6 @@ const SettingsModal = ({
 
   const handleCancelReset = () => {
     setShowResetConfirm(false);
-  };
-
-  // Handle cloud backup
-  const handleCloudBackup = async () => {
-    if (!currentUser) {
-      toastService.error('You must be logged in to use cloud backup');
-      return;
-    }
-
-    setIsCloudBackingUp(true);
-    setCloudSyncProgress(10);
-    setCloudSyncStatus('Preparing...');
-
-    try {
-      // Show uploading toast with percentage
-      toastService.loading('Creating cloud backup... (10%)', { duration: 20000, id: 'cloud-backup' });
-      
-      // Get the exportData function that handles the ZIP creation
-      if (!onExportData) {
-        throw new Error('Export functionality not available');
-      }
-      
-      // Update status
-      setCloudSyncStatus('Creating backup...');
-      
-      // Call the export function with returnBlob option to get the data without triggering a download
-      const blob = await onExportData({ 
-        returnBlob: true,
-        optimizeForMobile: true // Add optimization hint
-      });
-      
-      if (!blob) {
-        throw new Error('Failed to generate backup data');
-      }
-      
-      // Update progress
-      setCloudSyncProgress(50);
-      setCloudSyncStatus('Uploading to cloud...');
-      
-      // Update toast
-      toastService.loading('Uploading backup to cloud... (50%)', { duration: 20000, id: 'cloud-backup' });
-      
-      // Upload to Firebase Storage with simple uploadBytes for better mobile compatibility
-      const backupRef = ref(storage, `users/${currentUser.uid}/backups/latest-backup.zip`);
-      await uploadBytes(backupRef, blob);
-      
-      // Update progress
-      setCloudSyncProgress(100);
-      setCloudSyncStatus('Complete!');
-      
-      // Update last backup timestamp in localStorage
-      const timestamp = new Date().toISOString();
-      localStorage.setItem('lastCloudSync', timestamp);
-      
-      // Show success message
-      toastService.success('Backup successfully uploaded to cloud (100%)', { id: 'cloud-backup' });
-    } catch (error) {
-      console.error('Error backing up to cloud:', error);
-      
-      // More specific error messages
-      if (error.code === 'storage/retry-limit-exceeded') {
-        toastService.error('Backup file too large for mobile. Try on desktop or reduce collection size.', 
-          { id: 'cloud-backup' });
-      } else if (error.code === 'storage/unauthorized') {
-        toastService.error('Unauthorized: Please log in again.', { id: 'cloud-backup' });
-      } else {
-        toastService.error(`Cloud backup failed: ${error.message}`, { id: 'cloud-backup' });
-      }
-      
-      setCloudSyncStatus('Failed');
-    } finally {
-      setTimeout(() => {
-        setIsCloudBackingUp(false);
-        setCloudSyncStatus('');
-      }, 3000); // Keep the status visible briefly after completion
-    }
-  };
-
-  // Handle cloud restore
-  const handleCloudRestore = async () => {
-    if (!currentUser) {
-      toastService.error('You must be logged in to restore from cloud');
-      return;
-    }
-
-    setIsCloudRestoring(true);
-    setCloudSyncProgress(10);
-    setCloudSyncStatus('Preparing...');
-
-    try {
-      // Show loading toast
-      toastService.loading('Checking for backups... (10%)', { duration: 20000, id: 'cloud-restore' });
-      
-      // First try direct access - works on most browsers
-      try {
-        setCloudSyncStatus('Getting download URL...');
-        
-        // Try the direct approach first (works on desktop browsers)
-        const backupRef = ref(storage, `users/${currentUser.uid}/backups/latest-backup.zip`);
-        const downloadURL = await getDownloadURL(backupRef);
-        await continueDownloadProcess(downloadURL);
-      } catch (directError) {
-        console.log('Direct download failed, trying proxy function:', directError);
-        
-        // If direct approach fails (likely CORS on mobile), use the cloud function
-        setCloudSyncStatus('Using alternative download method...');
-        const getBackupDownloadUrl = httpsCallable(functions, 'getBackupDownloadUrl');
-        const result = await getBackupDownloadUrl({});
-        
-        if (!result.data || !result.data.downloadUrl) {
-          throw new Error('Failed to get download URL from backup service');
-        }
-        
-        await continueDownloadProcess(result.data.downloadUrl);
-      }
-    } catch (error) {
-      console.error('Error restoring from cloud:', error);
-      
-      // More specific error messages
-      if (error.message === 'No backup found in cloud') {
-        toastService.error('No backup found in cloud. Please create a backup first.', { id: 'cloud-restore' });
-      } else if (error.code === 'storage/quota-exceeded') {
-        toastService.error('Storage quota exceeded. Please contact support.', { id: 'cloud-restore' });
-      } else if (error.message.includes('cors')) {
-        toastService.error('Browser security blocked access to cloud storage. Try using a different browser.', { id: 'cloud-restore', duration: 8000 });
-      } else {
-        toastService.error(`Cloud restore failed: ${error.message}`, { id: 'cloud-restore' });
-      }
-      
-      setCloudSyncStatus('Failed');
-    } finally {
-      // Don't reset right away - allow time to see the completion or error state
-      setTimeout(() => {
-        setIsCloudRestoring(false);
-        setCloudSyncStatus('');
-        setImportStep(0);
-        setCloudSyncProgress(0);
-      }, 3000);
-    }
-  };
-  
-  // Helper function to continue the download process after getting a valid URL
-  const continueDownloadProcess = async (downloadURL) => {
-    console.log('Got download URL, proceeding with download');
-    
-    setCloudSyncProgress(40);
-    setCloudSyncStatus('Downloading backup...');
-    toastService.loading('Downloading backup... (40%)', { id: 'cloud-restore' });
-    
-    // Fetch the file
-    const response = await fetch(downloadURL);
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
-    
-    // Get the data as a blob
-    const blob = await response.blob();
-    console.log(`Downloaded ${blob.size} bytes`);
-    
-    setCloudSyncProgress(70);
-    setCloudSyncStatus('Processing backup...');
-    toastService.loading('Processing backup... (70%)', { id: 'cloud-restore' });
-    
-    // Create a File object from the blob
-    const file = new File([blob], 'backup.zip', { type: 'application/zip' });
-    
-    // Use the import function to handle the restore
-    if (!onImportCollection) {
-      throw new Error('Import functionality not available');
-    }
-    
-    // Handle import with progress
-    await handleImportWithProgress(file);
-    
-    // Update last sync timestamp
-    localStorage.setItem('lastCloudSync', new Date().toISOString());
-    
-    // Refresh collections if needed
-    if (refreshCollections) {
-      refreshCollections();
-    }
-  };
-
-  // Function to handle import with progress tracking
-  const handleImportWithProgress = async (file) => {
-    try {
-      // Set import status to step 1
-      setImportStep(1);
-      setImportProgress(10);
-      setCloudSyncProgress(80); // Continue from cloud download progress
-      setCloudSyncStatus('Processing download...');
-      
-      // Call the import function but tell it NOT to show the overlay
-      await onImportCollection(file, {
-        noOverlay: true, // Critical flag to prevent the full-page overlay
-        // Define callbacks for progress tracking
-        onProgress: (step, percent, message) => {
-          // Map the import steps (1-4) to the 80-100% range of our progress bar
-          const mappedPercent = 80 + (percent / 100) * 20;
-          setCloudSyncProgress(mappedPercent);
-          setCloudSyncStatus(message || `Step ${step} of 4: ${percent}%`);
-        }
-      });
-      
-      // After successful import
-      setCloudSyncProgress(100);
-      setCloudSyncStatus('Import completed successfully!');
-      
-      // Show success message
-      toastService.success('Data imported successfully!');
-    } catch (error) {
-      console.error('Import error:', error);
-      toastService.error(`Import failed: ${error.message}`);
-      setCloudSyncStatus('Import failed: ' + error.message);
-    }
   };
 
   return (
@@ -524,10 +296,9 @@ const SettingsModal = ({
                       variant="outline"
                       iconLeft={<Icon name="attach_money" />}
                       onClick={handleUpdatePrices}
-                      disabled={isUpdatingPrices}
                       fullWidth
                     >
-                      {isUpdatingPrices ? 'Updating Prices...' : 'Update Card Prices'}
+                      Update Card Prices
                     </Button>
                     
                     {onStartTutorial && (
@@ -699,64 +470,13 @@ const SettingsModal = ({
                 </SettingsPanel>
 
                 <SettingsPanel
-                  title="Data Backup & Restore"
-                  description="Backup and restore your card collection data."
+                  title="Cloud Backup & Restore"
+                  description="Back up and restore your collections data to and from the cloud"
                 >
-                  <div className="space-y-4">
-                    <div className="flex flex-col gap-3">
-                      <Button
-                        variant="outline"
-                        iconLeft={<Icon name="cloud_download" />}
-                        fullWidth
-                        onClick={handleCloudRestore}
-                        disabled={isCloudRestoring || !currentUser}
-                      >
-                        {isCloudRestoring ? 'Restoring...' : 'Restore from Cloud'}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        iconLeft={<Icon name="cloud_upload" />}
-                        fullWidth
-                        onClick={handleCloudBackup}
-                        disabled={isCloudBackingUp || !currentUser}
-                      >
-                        {isCloudBackingUp ? 'Backing up...' : 'Backup to Cloud'}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        iconLeft={<Icon name="restore" />}
-                        onClick={handleImport}
-                        disabled={isExporting}
-                        fullWidth
-                      >
-                        Restore from File
-                      </Button>
-                      <Button
-                        variant="outline"
-                        iconLeft={<Icon name="backup" />}
-                        onClick={handleExport}
-                        disabled={isExporting}
-                        fullWidth
-                      >
-                        {isExporting ? 'Backing up...' : 'Backup to File'}
-                      </Button>
-                    </div>
-                    
-                    {(isCloudBackingUp || isCloudRestoring) && (
-                      <div className="mt-4">
-                        <div className="flex justify-between text-sm mb-1">
-                          <span>{cloudSyncStatus}</span>
-                          <span>{Math.round(cloudSyncProgress)}%</span>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2 dark:bg-gray-700">
-                          <div 
-                            className="bg-blue-600 h-2 rounded-full" 
-                            style={{ width: `${cloudSyncProgress}%` }}
-                          ></div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                  <CloudSync 
+                    onExportData={onExportData}
+                    onImportCollection={onImportCollection}
+                  />
                 </SettingsPanel>
 
                 <SettingsPanel
