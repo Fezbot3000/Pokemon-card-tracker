@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { storage, functions, httpsCallable } from '../../services/firebase';
 import { stripDebugProps } from '../../utils/stripDebugProps';
@@ -169,21 +169,17 @@ const SettingsModal = ({
   };
 
   const handleUpdatePrices = async () => {
-    setIsUpdatingPrices(true);
     try {
       await onUpdatePrices();
       toastService.success('Prices updated successfully!');
     } catch (error) {
       toastService.error('Failed to update prices: ' + error.message);
-    } finally {
-      setIsUpdatingPrices(false);
     }
   };
 
   const handleImportBaseDataChange = (e) => {
     const file = e.target.files?.[0];
     if (file) {
-      setIsImportingBaseData(true);
       onImportBaseData(file)
         .then(() => {
           toastService.success('Base data imported successfully!');
@@ -192,7 +188,6 @@ const SettingsModal = ({
           toastService.error('Failed to import base data: ' + error.message);
         })
         .finally(() => {
-          setIsImportingBaseData(false);
           e.target.value = '';
         });
     }
@@ -623,10 +618,9 @@ const SettingsModal = ({
                       variant="outline"
                       iconLeft={<Icon name="attach_money" />}
                       onClick={handleUpdatePrices}
-                      disabled={isUpdatingPrices}
                       fullWidth
                     >
-                      {isUpdatingPrices ? 'Updating Prices...' : 'Update Card Prices'}
+                      Update Card Prices
                     </Button>
                     
                     {onStartTutorial && (
