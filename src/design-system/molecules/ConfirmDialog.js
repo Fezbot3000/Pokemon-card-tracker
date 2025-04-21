@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import PropTypes from 'prop-types';
 import Modal from './Modal';
 import Button from '../atoms/Button';
@@ -19,27 +19,51 @@ const ConfirmDialog = ({
   cancelText = 'Cancel',
   variant = 'danger'
 }) => {
+  // Effect to ensure UI is reset if the dialog is closed unexpectedly
+  useEffect(() => {
+    // Cleanup function to ensure UI is unlocked if dialog is unmounted
+    return () => {
+      // Remove any lingering focus traps or body classes
+      document.body.classList.remove('modal-open');
+      
+      // Ensure any "blocked" UI elements are re-enabled
+      const blockers = document.querySelectorAll('.modal-backdrop, .modal-overlay');
+      blockers.forEach(el => el.parentNode?.removeChild(el));
+    };
+  }, []);
+  
   // Handle confirm action
   const handleConfirm = async () => {
     try {
       // Call onConfirm and wait for it to complete
       await onConfirm();
       // Only close if onConfirm succeeds
-      onClose();
+      handleClose();
     } catch (error) {
       console.error('Error in confirmation action:', error);
       // Still close the dialog on error to prevent UI from getting stuck
-      onClose();
+      handleClose();
     }
+  };
+  
+  // Centralized close handler to ensure proper cleanup
+  const handleClose = () => {
+    // Explicitly remove any overlay classes or elements that might be blocking UI
+    document.body.classList.remove('modal-open');
+    const overlays = document.querySelectorAll('.modal-backdrop, .modal-overlay');
+    overlays.forEach(el => el.parentNode?.removeChild(el));
+    
+    // Finally, call the provided onClose callback
+    onClose();
   };
 
   return (
     <Modal
       isOpen={isOpen}
-      onClose={onClose}
+      onClose={handleClose}
       title={title}
       size="sm"
-      closeOnClickOutside={false}
+      closeOnClickOutside={true}
     >
       <div className="p-6">
         <p className="text-gray-700 dark:text-gray-300 mb-6">
@@ -48,7 +72,7 @@ const ConfirmDialog = ({
         <div className="flex justify-end gap-3">
           <Button
             variant="secondary"
-            onClick={onClose}
+            onClick={handleClose}
             className="min-w-[80px]"
           >
             {cancelText}
@@ -71,10 +95,10 @@ ConfirmDialog.propTypes = {
   onClose: PropTypes.func.isRequired,
   onConfirm: PropTypes.func.isRequired,
   title: PropTypes.string,
-  message: PropTypes.string,
+  message: PropTypes.node,
   confirmText: PropTypes.string,
   cancelText: PropTypes.string,
-  variant: PropTypes.oneOf(['primary', 'secondary', 'danger'])
+  variant: PropTypes.string
 };
 
 export default ConfirmDialog;

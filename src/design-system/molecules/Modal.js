@@ -16,32 +16,22 @@ const Modal = ({
   children,
   footer,
   size = 'md',
-  closeOnClickOutside = false, // Set closeOnClickOutside to false by default
+  closeOnClickOutside = false,
   position = 'center',
   className = '',
   forceDarkMode = false,
   showOverlay = true,
   showAsStatic = false,
   maxWidth = 'max-w-2xl',
-  ariaLabel, // Extract ariaLabel here
+  ariaLabel,
   ...props
 }) => {
   const modalRef = useRef(null);
   const scrollPosRef = useRef(null);
-  const [animationState, setAnimationState] = useState('closed');
   
-  // Utility: Defensive cleanup for modal overlays and .modal-open
-  function forceModalCleanup() {
-    document.body.classList.remove('modal-open');
-    // Remove any lingering modal overlays
-    document.querySelectorAll('.fixed.inset-0.z-50').forEach(el => {
-      if (el.parentNode) el.parentNode.removeChild(el);
-    });
-  }
-
   // Preserve scroll position and prevent background scrolling
   useEffect(() => {
-    // Only prevent background scroll and restore scroll position
+    // Only prevent background scroll if modal is open
     if (isOpen && !showAsStatic) {
       scrollPosRef.current = {
         x: window.scrollX,
@@ -57,43 +47,45 @@ const Modal = ({
     }
   }, [isOpen, showAsStatic]);
 
-  // Defensive: Always cleanup on unmount
-  useEffect(() => {
-    return () => {
-      document.body.classList.remove('modal-open');
-      forceModalCleanup();
-    };
-  }, []);
-
-  // Handle animation cleanup
-  useEffect(() => {
-    if (!isOpen && animationState === 'open') {
-      setAnimationState('closing');
-      const timer = setTimeout(() => {
-        setAnimationState('closed');
-      }, 200);
-      return () => clearTimeout(timer);
-    } else if (isOpen && animationState === 'closed') {
-      setAnimationState('open');
+  // Handle outside clicks to close modal if enabled
+  const handleBackdropClick = (e) => {
+    if (closeOnClickOutside && modalRef.current && !modalRef.current.contains(e.target)) {
+      e.stopPropagation();
+      if (onClose) onClose();
     }
-  }, [isOpen, animationState]);
+  };
   
-  // Return null if modal is closed
-  if (animationState === 'closed') return null;
+  // Handle escape key to close modal if closeOnClickOutside is true
+  useEffect(() => {
+    const handleEscapeKey = (e) => {
+      if (isOpen && closeOnClickOutside && e.key === 'Escape') {
+        if (onClose) onClose();
+      }
+    };
+    
+    document.addEventListener('keydown', handleEscapeKey);
+    return () => {
+      document.removeEventListener('keydown', handleEscapeKey);
+    };
+  }, [isOpen, closeOnClickOutside, onClose]);
+  
+  // Return null if modal is not open
+  if (!isOpen) return null;
   
   // Size variations
   const sizeClasses = {
-    sm: 'max-w-sm',
-    md: 'max-w-md',
-    lg: 'max-w-lg',
-    xl: 'max-w-xl',
-    '2xl': 'max-w-2xl',
-    '3xl': 'max-w-3xl',
-    '4xl': 'max-w-4xl',
-    '5xl': 'max-w-5xl',
+    sm: 'max-w-sm', // ~384px
+    md: 'max-w-md', // ~448px
+    lg: 'max-w-lg', // ~512px
+    xl: 'max-w-xl', // ~576px
+    '2xl': 'max-w-2xl', // ~672px
+    '3xl': 'max-w-3xl', // ~768px
+    '4xl': 'max-w-4xl', // ~896px
+    '5xl': 'max-w-5xl', // ~1024px
+    'modal-width': 'w-[55%]', // exactly 55% width
     full: 'max-w-full',
   };
-
+  
   // Mobile full width override
   const mobileFullWidth = window.innerWidth < 640 ? 'w-screen max-w-none h-screen min-h-screen rounded-none m-0 fixed top-0 left-0 right-0 bottom-0 z-[9999]' : '';
 
@@ -103,25 +95,12 @@ const Modal = ({
     right: 'flex items-start justify-end'
   };
   
-  // Get animation class based on position and state
-  const getAnimationClass = () => {
-    if (animationState === 'closing') {
-      return position === 'right' ? 'animate-modal-exit-right' : 'animate-modal-exit';
-    }
-    return position === 'right' ? 'animate-modal-slide-in-right' : 'animate-modal-scale-in';
-  };
-  
-  // Get backdrop animation class
-  const getBackdropAnimationClass = () => {
-    return animationState === 'closing' ? 'animate-backdrop-fade-out' : 'animate-backdrop-fade-in';
-  };
-  
   // Build the classes based on theme
-  const backdropClasses = `fixed inset-0 z-50 ${positionClasses[position]} bg-black/50 backdrop-blur-sm ${getBackdropAnimationClass()}`;
+  const backdropClasses = `fixed inset-0 z-50 ${positionClasses[position]} bg-black/50 backdrop-blur-sm`;
   
   const modalClasses = forceDarkMode 
-    ? `bg-[#0F0F0F]/95 backdrop-blur-sm rounded-md shadow-xl text-white ${getAnimationClass()}` 
-    : `bg-white/95 dark:bg-[#0F0F0F]/95 backdrop-blur-sm rounded-md shadow-xl ${getAnimationClass()}`;
+    ? `bg-[#0F0F0F]/95 backdrop-blur-sm rounded-md shadow-xl text-white` 
+    : `bg-white/95 dark:bg-[#0F0F0F]/95 backdrop-blur-sm rounded-md shadow-xl`;
     
   const headerClasses = forceDarkMode
     ? 'sticky top-0 z-10 flex items-center justify-between p-6 border-b border-gray-700/50 bg-[#0F0F0F]/95 backdrop-blur-sm'
@@ -157,19 +136,19 @@ const Modal = ({
               className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 focus:outline-none"
               aria-label="Close"
             >
-              <span className="material-icons">close</span>
+              <Icon name="close" size="md" />
             </button>
           )}
         </div>
         
-        {/* Content */}
-        <div>
+        {/* Body */}
+        <div className="p-6">
           {children}
         </div>
         
         {/* Footer */}
         {footer && (
-          <div className="flex justify-center gap-2 p-6 border-t border-gray-200 dark:border-gray-800">
+          <div className="border-t border-gray-200 dark:border-gray-800 px-6 py-4">
             {footer}
           </div>
         )}
@@ -179,38 +158,49 @@ const Modal = ({
 
   // Regular modal with backdrop and positioning
   return (
-    <div className={`${backdropClasses} ${darkModeClass}`}>
+    <div 
+      className={`${backdropClasses} ${darkModeClass}`}
+      onClick={handleBackdropClick}
+    >
       <div 
         ref={modalRef}
-        className={`${modalClasses} ${window.innerWidth < 640 ? '' : 'w-full mx-4'} flex flex-col ${position === 'right' ? (window.innerWidth < 640 ? 'w-screen max-w-none h-screen min-h-screen rounded-none m-0 fixed top-0 left-0 right-0 bottom-0 z-[9999]' : 'h-full rounded-l-md rounded-r-none max-w-2xl mr-0') : (mobileFullWidth || sizeClasses[size])} ${className}`}
-        aria-label={ariaLabel} // Apply as aria-label
-        {...stripDebugProps(props)} // props now excludes ariaLabel
+        className={`${modalClasses} flex flex-col ${
+          position === 'right' 
+            ? (window.innerWidth < 640 
+                ? 'w-screen max-w-none h-screen min-h-screen rounded-none m-0 fixed top-0 left-0 right-0 bottom-0 z-[9999]' 
+                : 'w-[55%] h-full rounded-l-md rounded-r-none mr-0')
+            : (mobileFullWidth || (size === 'custom' ? maxWidth : sizeClasses[size] || 'w-[55%]'))
+        } ${className}`}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={title ? 'modal-title' : undefined}
+        aria-label={ariaLabel}
+        {...stripDebugProps(props)}
       >
         {/* Modal Header - Sticky */}
         {title && (
           <div className={headerClasses}>
-            <h2 className={titleClasses}>{title}</h2>
+            <h2 id="modal-title" className={titleClasses}>{title}</h2>
             <button 
-              className={closeButtonClasses}
               onClick={onClose}
-              aria-label="Close"
+              className={closeButtonClasses}
+              aria-label="Close modal"
+              type="button"
             >
               <span className="material-icons text-xl">close</span>
             </button>
           </div>
         )}
-        
-        {/* Modal Body */}
-        <div className="p-6 flex-1 overflow-y-auto scrollbar-hide pb-[env(safe-area-inset-bottom)]">
+
+        {/* Modal Content - Scrollable */}
+        <div className={`flex-1 overflow-y-auto px-6 ${title ? 'pb-0' : 'pt-6 pb-0'}`}>
           {children}
         </div>
-        
-        {/* Modal Footer - Sticky */}
+
+        {/* Modal Footer - Sticky, only shown if footer content is provided */}
         {footer && (
-          <div className="sticky bottom-0 z-10 flex items-center justify-end border-t border-gray-200 dark:border-gray-700/50 bg-white/95 dark:bg-[#0F0F0F]/95 backdrop-blur-sm">
-            <div className="w-full px-6 py-3">
-              {footer}
-            </div>
+          <div className={footerClasses}>
+            {footer}
           </div>
         )}
       </div>
@@ -220,11 +210,11 @@ const Modal = ({
 
 Modal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
-  onClose: PropTypes.func.isRequired,
+  onClose: PropTypes.func,
   title: PropTypes.node,
-  children: PropTypes.node.isRequired,
+  children: PropTypes.node,
   footer: PropTypes.node,
-  size: PropTypes.oneOf(['sm', 'md', 'lg', 'xl', '2xl', '3xl', '4xl', '5xl', 'full']),
+  size: PropTypes.string,
   closeOnClickOutside: PropTypes.bool,
   position: PropTypes.oneOf(['center', 'right']),
   className: PropTypes.string,
@@ -232,7 +222,7 @@ Modal.propTypes = {
   showOverlay: PropTypes.bool,
   showAsStatic: PropTypes.bool,
   maxWidth: PropTypes.string,
-  ariaLabel: PropTypes.string, // Add propType for ariaLabel
+  ariaLabel: PropTypes.string
 };
 
 export default Modal;
