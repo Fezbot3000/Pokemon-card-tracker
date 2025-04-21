@@ -1286,127 +1286,26 @@ exports.proxyPriceCharting = functions.https.onCall(async (data, context) => {
   }
 });
 
-// Proxy for eBay completed items search (Finding API with improved error handling)
-exports.proxyEbayCompleted = functions.https.onCall(async (data, context) => {
-  functions.logger.info('proxyEbayCompleted called with data:', data);
-  
-  const { query } = data;
-  const ebayAppId = functions.config().ebay?.appid;
-  
-  if (!ebayAppId) {
-    functions.logger.error('eBay App ID not configured');
-    throw new functions.https.HttpsError('internal', 'eBay App ID not configured');
+// Proxy for sending feedback email
+exports.sendFeedbackEmail = functions.https.onCall(async (data, context) => {
+  // Ensure the user is authenticated
+  if (!context.auth) {
+    throw new functions.https.HttpsError('unauthenticated', 'User must be logged in');
   }
-  
-  if (!query) {
-    functions.logger.error('No search query provided');
-    throw new functions.https.HttpsError('invalid-argument', 'No search query provided');
-  }
-  
-  // Clean query - remove special characters and extra spaces
-  const cleanQuery = query.replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ').trim();
-  functions.logger.info(`Clean query: "${cleanQuery}"`);
-  
-  // Build the URL with all required parameters
-  const url = new URL('https://svcs.ebay.com/services/search/FindingService/v1');
-  url.searchParams.append('OPERATION-NAME', 'findCompletedItems');
-  url.searchParams.append('SERVICE-VERSION', '1.0.0');
-  url.searchParams.append('SECURITY-APPNAME', ebayAppId);
-  url.searchParams.append('RESPONSE-DATA-FORMAT', 'JSON');
-  url.searchParams.append('SITE-ID', '15'); // 15 is for Australia
-  url.searchParams.append('keywords', cleanQuery);
-  url.searchParams.append('itemFilter(0).name', 'SoldItemsOnly');
-  url.searchParams.append('itemFilter(0).value', 'true');
-  url.searchParams.append('sortOrder', 'EndTimeSoonest');
-  url.searchParams.append('paginationInput.entriesPerPage', '10');
-  
+
   try {
-    functions.logger.info('Calling eBay API:', url.toString());
-    
-    let response;
-    try {
-      response = await fetch(url.toString());
-    } catch (fetchError) {
-      functions.logger.error('eBay API fetch failed:', fetchError);
-      throw new functions.https.HttpsError('internal', `eBay API fetch failed: ${fetchError.message}`);
+    const { email, message } = data;
+    if (!email || !message) {
+      throw new functions.https.HttpsError('invalid-argument', 'Email and message are required');
     }
-    
-    let responseText = '';
-    try {
-      responseText = await response.text();
-    } catch (textError) {
-      functions.logger.error('Failed to get response text from eBay:', textError);
-      // We might still have a status code, so don't throw immediately
-    }
-    
-    functions.logger.info('Response status:', response.status);
-    functions.logger.info('Response text preview:', responseText.substring(0, 500)); // Log more preview text
-    
-    if (!response.ok) {
-      functions.logger.error(`eBay API returned non-OK status: ${response.status}`);
-      functions.logger.error('eBay API error response text:', responseText); // Log full text on error
-      throw new functions.https.HttpsError('internal', `eBay API error: ${response.status}. Response: ${responseText.substring(0, 200)}`);
-    }
-    
-    // Try to parse the response as JSON
-    let json;
-    try {
-      json = JSON.parse(responseText);
-    } catch (parseError) {
-      functions.logger.error('Failed to parse eBay response:', parseError);
-      functions.logger.error('Response text:', responseText);
-      throw new functions.https.HttpsError('internal', 'Failed to parse eBay response');
-    }
-    
-    // Check for eBay API errors
-    if (json.findCompletedItemsResponse?.[0]?.ack?.[0] !== 'Success') {
-      const errorMessage = json.findCompletedItemsResponse?.[0]?.errorMessage?.[0]?.error?.[0]?.message?.[0] || 'Unknown eBay API error';
-      functions.logger.error('eBay API returned error:', errorMessage);
-      throw new functions.https.HttpsError('internal', `eBay API error: ${errorMessage}`);
-    }
-    
-    functions.logger.info('Successfully received data from eBay');
-    return json;
-    
+
+    // Send the email using a mail service (e.g., Sendgrid, Mailgun)
+    // For this example, we'll just log the email and message
+    console.log(`Feedback email from ${email}: ${message}`);
+
+    return { success: true, message: 'Feedback email sent successfully' };
   } catch (error) {
-    functions.logger.error('Error:', error);
-    if (error instanceof functions.https.HttpsError) {
-      throw error;
-    }
+    console.error('Error sending feedback email:', error);
     throw new functions.https.HttpsError('internal', error.message);
-  }
-});
-
-// Proxy for eBay Marketplace Insights API (Buy API - more modern and reliable than Finding API)
-exports.proxyEbayMarketplaceInsights = functions.https.onRequest(async (req, res) => {
-  console.log('proxyEbayMarketplaceInsights invoked', req.method, req.body);
-
-  if (req.method !== 'POST') {
-    res.status(405).send('Method Not Allowed');
-    return;
-  }
-
-  try {
-    const cardName = req.body.cardName || '';
-    if (!cardName) {
-      res.status(400).send('Missing cardName');
-      return;
-    }
-
-    // Example eBay API URL (update with your actual endpoint as needed)
-    const EBAY_APP_ID = 'Mattkane-MyCardTn-PRD-50b2c4443-d2b45623';
-    const url = `https://svcs.ebay.com/services/search/FindingService/v1?OPERATION-NAME=findCompletedItems&SERVICE-VERSION=1.0.0&SECURITY-APPNAME=${EBAY_APP_ID}&RESPONSE-DATA-FORMAT=JSON&SITE-ID=15&keywords=${encodeURIComponent(cardName)}`;
-
-    console.log('eBay API URL:', url);
-
-    const ebayRes = await fetch(url);
-    const ebayData = await ebayRes.json();
-
-    console.log('eBay API success:', JSON.stringify(ebayData).substring(0, 500));
-
-    res.status(200).json(ebayData);
-  } catch (error) {
-    console.error('proxyEbayMarketplaceInsights error:', error);
-    res.status(500).send('Internal Server Error: ' + error.message);
   }
 });

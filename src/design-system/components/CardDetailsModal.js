@@ -3,10 +3,8 @@ import PropTypes from 'prop-types';
 import { Modal, Button, Icon } from '../';
 import CardDetailsForm from './CardDetailsForm';
 import PriceHistoryGraph from '../../components/PriceHistoryGraph';
-import RecentSales from '../../components/RecentSales';
-import EbaySales from '../../components/EbaySales';
 import PriceChartingButton from '../../components/PriceChartingButton';
-import SaleModal from '../../components/SaleModal'; // Import SaleModal
+import SaleModal from '../../components/SaleModal'; 
 import '../styles/animations.css';
 
 // Helper function to format date
@@ -196,20 +194,6 @@ const CardDetailsModal = ({
                 Price History
               </button>
             )}
-            {priceChartingProductId && (
-              <button
-                className={`px-4 py-2 ${activeTab === 'recent-sales' ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'}`}
-                onClick={() => setActiveTab('recent-sales')}
-              >
-                Recent Sales
-              </button>
-            )}
-            <button
-              className={`px-4 py-2 ${activeTab === 'ebay-sales' ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'}`}
-              onClick={() => setActiveTab('ebay-sales')}
-            >
-              eBay Sales
-            </button>
           </div>
 
           {/* Tab Content */}
@@ -254,92 +238,14 @@ const CardDetailsModal = ({
             </div>
           )}
 
-          {activeTab === 'price-history' && priceChartingProductId && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold">Price History</h3>
-                {card.priceChartingUrl && (
-                  <a 
-                    href={card.priceChartingUrl} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-blue-500 hover:text-blue-700 flex items-center"
-                  >
-                    View on PriceCharting <span className="ml-1">↗</span>
-                  </a>
-                )}
-              </div>
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-                <PriceHistoryGraph 
-                  productId={priceChartingProductId} 
-                  condition={getPriceConditionType()}
-                />
-              </div>
-              <div className="text-sm text-gray-500 dark:text-gray-400">
-                <p>Price data provided by PriceCharting.com. Last updated: {card.lastPriceUpdate ? new Date(card.lastPriceUpdate).toLocaleString() : 'Unknown'}</p>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'recent-sales' && priceChartingProductId && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold">Recent Sales</h3>
-                {card.priceChartingUrl && (
-                  <a 
-                    href={card.priceChartingUrl} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-blue-500 hover:text-blue-700 flex items-center"
-                  >
-                    View on PriceCharting <span className="ml-1">↗</span>
-                  </a>
-                )}
-              </div>
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
-                <RecentSales 
-                  productId={priceChartingProductId} 
-                  productName={card?.priceChartingName || card?.name} 
-                />
-              </div>
-              <div className="text-sm text-gray-500 dark:text-gray-400">
-                <p>Sales data provided by PriceCharting.com. These are verified recent sales from various marketplaces.</p>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'ebay-sales' && card && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold">Recent eBay Sales</h3>
-              </div>
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
-                {/* Pass the full card object and onUpdateValue callback */}
-                <EbaySales 
-                  card={card} 
-                  onUpdateValue={(newValue) => {
-                    // Update the card's value and trigger onChange
-                    if (onChange) {
-                      const updatedCard = {
-                        ...card,
-                        value: newValue.toString() // Ensure it's stored as string to match existing format
-                      };
-                      onChange(updatedCard);
-                      setSaveMessage(`Card value updated to $${newValue} AUD`);
-                      
-                      // Clear message after 3 seconds
-                      setTimeout(() => {
-                        if (saveMessage === `Card value updated to $${newValue} AUD`) {
-                          setSaveMessage('');
-                        }
-                      }, 3000);
-                    }
-                  }}
-                />
-              </div>
-              <div className="text-sm text-gray-500 dark:text-gray-400">
-                <p>Sales data provided by eBay. These are recent completed listings matching your card details.</p>
-              </div>
+          {activeTab === 'price-history' && (
+            <div className="mt-4">
+              <h3 className="text-lg font-semibold">Price History (PriceCharting)</h3>
+              {card.priceCharting?.productId ? (
+                <PriceHistoryGraph productId={card.priceCharting.productId} />
+              ) : (
+                <p className="text-gray-500 dark:text-gray-400 mt-2">No PriceCharting data available for this card.</p>
+              )}
             </div>
           )}
           
@@ -348,7 +254,7 @@ const CardDetailsModal = ({
             <div className={`mt-4 px-4 py-2 rounded-lg text-sm transition-all ${
               saveMessage.startsWith('Error') || saveMessage.startsWith('Please fix')
                 ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' 
-                : saveMessage === 'No changes to save'
+                : saveMessage.startsWith('No changes to save')
                   ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
                   : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
             }`}>

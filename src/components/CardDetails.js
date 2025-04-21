@@ -7,7 +7,6 @@ import CardDetailsModal from '../design-system/components/CardDetailsModal';
 import PSALookupButton from './PSALookupButton';
 import PriceChartingButton from './PriceChartingButton';
 import PriceHistoryGraph from './PriceHistoryGraph';
-import RecentSales from './RecentSales';
 
 // Helper function to format date
 const formatDate = (dateString) => {
