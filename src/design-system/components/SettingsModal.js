@@ -562,7 +562,7 @@ const SettingsModal = ({
               id: imageId,
               format: imageFormat,
               data: imageBlob,
-              userId: userId,
+              userId: userId, // Ensure we use the current user's ID
               blob: imageBlob // Add the blob property as well for compatibility
             };
             
@@ -699,7 +699,7 @@ const SettingsModal = ({
               id: imageId,
               format: imageFormat,
               data: imageBlob,
-              userId: userId,
+              userId: userId, // Ensure we use the current user's ID
               blob: imageBlob // Add the blob property as well for compatibility
             };
             

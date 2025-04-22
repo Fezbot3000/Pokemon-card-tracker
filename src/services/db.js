@@ -1619,7 +1619,7 @@ class DatabaseService {
           
           // Create the image object with the correct structure
           const image = {
-            userId: userId,
+            userId: userId, // Always use the current user's ID, not the one from the backup
             id: imageData.id,
             format: imageData.format || 'png', // Default to png if format not provided
             blob: imageBlob // Store as blob property for compatibility with existing code
