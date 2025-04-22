@@ -74,6 +74,7 @@ const CardList = ({
   exchangeRate, 
   onCardClick, 
   onDeleteCard, 
+  onDeleteCards, 
   onUpdateCard, 
   onAddCard,
   selectedCollection,
@@ -595,9 +596,14 @@ const CardList = ({
       
       // Update state in parent first - wrap in try/catch to prevent errors here from failing the whole operation
       try {
-        if (onDeleteCard) {
-          // Call onDeleteCard once with the full array of IDs instead of looping
-          await onDeleteCard(cardIds);
+        if (onDeleteCards) {
+          // Call onDeleteCards with the full array of IDs
+          await onDeleteCards(cardIds);
+        } else if (onDeleteCard) {
+          // For backward compatibility, call onDeleteCard for each ID if onDeleteCards is not available
+          for (const cardId of cardIds) {
+            await onDeleteCard(cardId);
+          }
         }
       } catch (innerError) {
         // Log error but don't fail the operation - the database update already succeeded
@@ -677,46 +683,98 @@ const CardList = ({
       // Get the cards to move
       const cardsToMove = cards.filter(card => selectedCards.has(card.slabSerial));
       
+      // When in "All Cards" view, we need to find the actual collection each card belongs to
+      const isAllCardsView = selectedCollection === 'All Cards';
+      
+      // Create a copy of collections to update
+      const updatedCollections = { ...collections };
+      
+      // Ensure target collection exists
+      if (!updatedCollections[targetCollection]) {
+        updatedCollections[targetCollection] = [];
+      }
+      
+      // Track moved cards for verification
+      const movedCards = [];
+      
       // Update each card's collection
       for (const card of cardsToMove) {
         // Set both collection and collectionId properties for compatibility
         const updatedCard = { 
           ...card, 
           collection: targetCollection,
-          collectionId: targetCollection 
+          collectionId: targetCollection,
+          lastMoved: new Date().toISOString() // Add timestamp for verification
         };
         
-        await db.saveCollections({
-          ...collections,
-          [targetCollection]: [...(collections[targetCollection] || []), updatedCard],
-          [selectedCollection]: collections[selectedCollection].filter(c => c.slabSerial !== card.slabSerial)
+        // Add card to target collection
+        updatedCollections[targetCollection].push(updatedCard);
+        
+        // Remove card from source collection
+        if (isAllCardsView) {
+          // In "All Cards" view, find which collection the card is actually in
+          Object.keys(updatedCollections).forEach(collectionName => {
+            if (collectionName !== targetCollection) {
+              updatedCollections[collectionName] = updatedCollections[collectionName].filter(
+                c => c.slabSerial !== card.slabSerial
+              );
+            }
+          });
+        } else {
+          // Normal case: remove from selected collection
+          updatedCollections[selectedCollection] = updatedCollections[selectedCollection].filter(
+            c => c.slabSerial !== card.slabSerial
+          );
+        }
+
+        // Track this card for verification
+        movedCards.push({
+          id: card.slabSerial,
+          name: card.card || 'Unnamed Card',
+          from: isAllCardsView ? 'Unknown Collection' : selectedCollection,
+          to: targetCollection
         });
+
+        // Sync to Firestore if feature flag is enabled
+        try {
+          const shadowSync = await import('../services/shadowSync').then(module => module.default);
+          await shadowSync.shadowWriteCard(card.slabSerial, updatedCard, targetCollection);
+          console.log(`[CardList] Successfully synced card ${card.slabSerial} to Firestore in collection ${targetCollection}`);
+        } catch (syncError) {
+          // Log but don't fail the operation
+          console.error(`[CardList] Error syncing card ${card.slabSerial} to Firestore:`, syncError);
+        }
       }
+      
+      // Save updated collections to database
+      await db.saveCollections(updatedCollections);
 
       // Update state
       setShowMoveModal(false);
       setSelectedCardsToMove([]);
       setSelectedCards(new Set());
       
+      // Store move verification data in localStorage for later verification
+      localStorage.setItem('lastCardMove', JSON.stringify({
+        timestamp: new Date().toISOString(),
+        cards: movedCards,
+        targetCollection
+      }));
+      
       // Show success message
       toast.success(`Successfully moved ${cardsToMove.length} card${cardsToMove.length > 1 ? 's' : ''} to ${targetCollection}`);
       
       // Update collections in parent component
       if (setCollections) {
-        const updatedCollections = { ...collections };
-        // Update with both collection and collectionId properties
-        const updatedCardsToMove = cardsToMove.map(card => ({
-          ...card,
-          collection: targetCollection,
-          collectionId: targetCollection
-        }));
-        updatedCollections[targetCollection] = [...(collections[targetCollection] || []), ...updatedCardsToMove];
-        updatedCollections[selectedCollection] = collections[selectedCollection].filter(card => !selectedCards.has(card.slabSerial));
         setCollections(updatedCollections);
       }
+      
+      // Return true to indicate success
+      return true;
     } catch (error) {
       console.error('Error moving cards:', error);
       toast.error('Error moving cards. Please try again.');
+      return false;
     }
   };
 

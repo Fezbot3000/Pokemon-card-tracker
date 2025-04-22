@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import FormField from '../molecules/FormField';
+import FormLabel from '../atoms/FormLabel';
 import SelectField from '../atoms/SelectField';
 import ImageUpload from '../atoms/ImageUpload';
 import ImageUploadButton from '../atoms/ImageUploadButton';
@@ -25,7 +26,9 @@ const CardDetailsForm = ({
   errors = {},
   className = '',
   additionalValueContent,
-  additionalSerialContent
+  additionalSerialContent,
+  collections = [],
+  initialCollectionName = '' // Use initialCollectionName from modal if available
 }) => {
   
   const [selectedCompany, setSelectedCompany] = useState('');
@@ -38,7 +41,17 @@ const CardDetailsForm = ({
       const company = parts[0]?.toUpperCase();
       const grade = parts.slice(1).join(' '); // Join remaining parts for grade
 
-      if (gradingCompanies.some(c => c.value === company)) {
+      // Define grading companies here to ensure they're available
+      const gradingCompaniesArray = [
+        { value: '', label: 'Select Company...' },
+        { value: 'RAW', label: 'Raw/Ungraded' },
+        { value: 'PSA', label: 'PSA' },
+        { value: 'BGS', label: 'BGS' },
+        { value: 'CGC', label: 'CGC' },
+        { value: 'SGC', label: 'SGC' },
+      ];
+
+      if (gradingCompaniesArray.some(c => c.value === company)) {
         setSelectedCompany(company);
         setSelectedGrade(grade || '');
       } else {
@@ -174,6 +187,17 @@ const CardDetailsForm = ({
     }
     
     onChange({ ...card, condition: newConditionString });
+  };
+
+  // Handle collection change
+  const handleCollectionChange = (e) => {
+    const { name, value } = e.target;
+    if (onChange) {
+      onChange({
+        ...card,
+        collectionId: value // Change to collectionId instead of collectionName
+      });
+    }
   };
 
   return (
@@ -314,6 +338,32 @@ const CardDetailsForm = ({
               required
             />
             
+            {/* Collection Selector */}
+            <div className="w-full">
+              <FormLabel htmlFor="collectionName">Collection</FormLabel>
+              <SelectField
+                id="collectionName" // Add id for label association
+                name="collectionId" // Change to collectionId instead of collectionName
+                value={card.collectionId || initialCollectionName || ''} // Change to collectionId
+                onChange={(e) => {
+                  const { name, value } = e.target;
+                  console.log(`[CardDetailsForm] Collection changed to: ${value}`);
+                  // Ensure both collection and collectionId are set for compatibility
+                  onChange({
+                    ...card,
+                    collection: value,
+                    collectionId: value
+                  });
+                }}
+                options={[
+                  { value: '', label: 'Select Collection...' },
+                  ...collections.map(name => ({ value: name, label: name }))
+                ]}
+                error={errors.collectionId} // Change to collectionId
+                className="w-full mt-1" // Add margin-top for spacing from label
+              />
+            </div>
+
             {/* Condition Dropdowns */}
             <SelectField
               label="Grading Company"
@@ -457,6 +507,7 @@ CardDetailsForm.propTypes = {
     priceChartingProductId: PropTypes.string,
     lastPriceUpdate: PropTypes.string,
     quantity: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+    collectionId: PropTypes.string // Change to collectionId instead of collectionName
   }).isRequired,
   cardImage: PropTypes.string,
   imageLoadingState: PropTypes.oneOf(['idle', 'loading', 'error']),
@@ -467,7 +518,9 @@ CardDetailsForm.propTypes = {
   errors: PropTypes.object,
   className: PropTypes.string,
   additionalValueContent: PropTypes.node,
-  additionalSerialContent: PropTypes.node
+  additionalSerialContent: PropTypes.node,
+  collections: PropTypes.arrayOf(PropTypes.string),
+  initialCollectionName: PropTypes.string
 };
 
 export default CardDetailsForm;

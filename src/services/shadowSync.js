@@ -23,6 +23,7 @@ class ShadowSyncService {
     this.userId = null;
     this.isInitialized = false;
     this.listenerUnsubscribe = null;
+    this.onlineStatus = navigator.onLine;
 
     // Track migration status
     this.migrationInProgress = false;
@@ -105,9 +106,17 @@ class ShadowSyncService {
       inProgress: this.syncInProgress,
       operationsCount: this.syncOperationsCount,
       lastSyncTime: this.lastSyncTime,
-      isOnline: navigator.onLine,
+      isOnline: this.isOnline(),
       isInitialized: this.isInitialized
     };
+  }
+
+  /**
+   * Checks if the browser is currently online
+   * @returns {boolean} - True if online, false otherwise
+   */
+  isOnline() {
+    return this.onlineStatus;
   }
 
   /**
@@ -128,7 +137,7 @@ class ShadowSyncService {
     this._notifySyncStarted();
     try {
       // Check if online before attempting to write
-      if (!navigator.onLine) {
+      if (!this.isOnline()) {
         logger.debug('[ShadowSync] Device is offline, skipping shadow write');
         this._notifySyncCompleted(false);
         return false;
@@ -154,28 +163,24 @@ class ShadowSyncService {
   /**
    * Shadow write a card to Firestore
    * 
+   * @param {string} cardId - The card ID
    * @param {Object} card - The full card object to write
    * @param {string} collectionName - The name of the collection the card belongs to
    * @returns {Promise<boolean>} - Whether the operation was successful
    */
-  async shadowWriteCard(card, collectionName) {
-    // Skip if feature flag is disabled or not initialized
-    if (!featureFlags.enableFirestoreSync || !this.isInitialized) {
+  async shadowWriteCard(cardId, card, collectionName) {
+    if (!featureFlags.enableFirestoreSync) {
       logger.debug('[ShadowSync] Skipping shadow write for card, feature flag disabled');
       return false;
     }
-
-    this._notifySyncStarted();
+    
     try {
-      // Check if online before attempting to write
-      if (!navigator.onLine) {
+      if (!this.isOnline()) {
         logger.debug('[ShadowSync] Device is offline, skipping shadow write');
         this._notifySyncCompleted(false);
         return false;
       }
-
-      // Extract cardId and prepare data object
-      const cardId = card.id;
+      
       if (!cardId) {
         logger.error('[ShadowSync] Card object missing ID for shadow write.');
         this._notifySyncCompleted(false);
@@ -185,33 +190,64 @@ class ShadowSyncService {
       // Ensure collectionId is included in the data to be written
       const cardDataToWrite = {
         ...card,
-        collectionId: collectionName // Explicitly add collectionId
+        collectionId: collectionName, // Explicitly add collectionId
+        collection: collectionName     // Add collection property for backward compatibility
       };
       // Remove the id property from the data itself if it exists, as it's the document key
       delete cardDataToWrite.id; 
 
-      logger.debug(`[ShadowSync] Shadow writing card ${cardId} to Firestore in collection ${collectionName}`);
+      // Check if the card exists in Firestore first (using cardId and userId)
+      const existingCard = await this.repository.getCard(cardId);
+      
+      // Determine if the card is moving between collections
+      const isMovingCollections = existingCard && 
+                                 existingCard.collectionId && 
+                                 existingCard.collectionId !== collectionName;
+      
+      if (isMovingCollections) {
+        logger.debug(`[ShadowSync] Card ${cardId} is moving from collection "${existingCard.collectionId}" to "${collectionName}"`);
+      }
       
       if (cardId && cardDataToWrite) {
-        // Check if the card exists in Firestore first (using cardId and userId)
-        const existingCard = await this.repository.getCard(cardId);
-        
         if (existingCard) {
-          // Pass the full data including collectionId for update
-          await this.repository.updateCard(cardId, cardDataToWrite);
+          // Check if card is changing collections
+          if (isMovingCollections) {
+            try {
+              // Preserve the image URL when moving between collections
+              if (existingCard.imageUrl && !cardDataToWrite.imageUrl) {
+                cardDataToWrite.imageUrl = existingCard.imageUrl;
+              }
+              
+              // First delete from the old location to avoid duplicates
+              // Pass preserveImage: true to prevent image deletion during collection move
+              await this.repository.deleteCard(cardId, { preserveImage: true });
+              logger.debug(`[ShadowSync] Successfully removed card ${cardId} from its previous collection "${existingCard.collectionId}"`);
+              
+              // Then create in the new location with the preserved image URL
+              await this.repository.createCard(cardDataToWrite, null);
+              logger.debug(`[ShadowSync] Successfully created card ${cardId} in new collection "${collectionName}"`);
+            } catch (moveError) {
+              logger.error(`[ShadowSync] Error moving card ${cardId} between collections:`, moveError);
+              // Fall back to standard update if the move approach fails
+              await this.repository.updateCard(cardId, cardDataToWrite);
+            }
+          } else {
+            // Standard update if not changing collections - no need to log
+            await this.repository.updateCard(cardId, cardDataToWrite);
+          }
         } else {
-          // If card doesn't exist, we might still want to update fields if it's a partial sync scenario
-          // Ensure updateCardFields also handles/expects collectionId if needed
-          // Forcing a full update might be safer if create isn't handled separately.
-          // Let's assume updateCard can handle creating if not exists, or handle appropriately.
-          // Reverting to updateCard as updateCardFields might not be suitable for full object sync.
-          await this.repository.updateCard(cardId, cardDataToWrite); 
+          // If card doesn't exist in cloud, create it
+          await this.repository.createCard(cardDataToWrite, null);
+          logger.debug(`[ShadowSync] Created new card ${cardId} in collection "${collectionName}"`);
         }
         
-        logger.debug(`[ShadowSync] Successfully shadow wrote card ${cardId}`);
+        if (isMovingCollections) {
+          logger.debug(`[ShadowSync] Successfully shadow wrote card ${cardId}`);
+        }
         this._notifySyncCompleted(true);
         return true;
       }
+      
       this._notifySyncCompleted(false);
       return false;
     } catch (error) {
@@ -237,7 +273,7 @@ class ShadowSyncService {
     this._notifySyncStarted();
     try {
       // Check if online before attempting to write
-      if (!navigator.onLine) {
+      if (!this.isOnline()) {
         logger.debug('[ShadowSync] Device is offline, skipping shadow write');
         this._notifySyncCompleted(false);
         return false;
@@ -277,7 +313,7 @@ class ShadowSyncService {
     this._notifySyncStarted();
     try {
       // Check if online before attempting to write
-      if (!navigator.onLine) {
+      if (!this.isOnline()) {
         logger.debug('[ShadowSync] Device is offline, skipping shadow delete');
         this._notifySyncCompleted(false);
         return false;
@@ -317,7 +353,7 @@ class ShadowSyncService {
     this._notifySyncStarted();
     try {
       // Check if online before attempting to write
-      if (!navigator.onLine) {
+      if (!this.isOnline()) {
         logger.debug('[ShadowSync] Device is offline, skipping field update');
         this._notifySyncCompleted(false);
         return false;

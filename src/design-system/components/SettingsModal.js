@@ -17,6 +17,7 @@ import cloudSync from '../../services/cloudSync';
 import featureFlags, { updateFeatureFlag, resetFeatureFlags, getAllFeatureFlags } from '../../utils/featureFlags';
 import logger from '../../utils/logger';
 import shadowSync from '../../services/shadowSync'; // Import the shadowSync service directly
+import { CardRepository } from '../../repositories/CardRepository'; // Import CardRepository
 
 /**
  * SettingsModal Component
@@ -47,7 +48,7 @@ const SettingsModal = ({
 }) => {
   const { theme, toggleTheme } = useTheme();
   const isDarkMode = theme === 'dark';
-  const { currentUser } = useAuth();
+  const { user } = useAuth();
   const { 
     isRestoring, 
     restoreProgress, 
@@ -100,6 +101,18 @@ const SettingsModal = ({
   const fileInputRef = useRef(null);
   const importBaseDataRef = useRef(null);
   const imageUploadRef = useRef(null); // Add ref for image upload
+  
+  // Create a CardRepository instance at component level
+  const cardRepositoryRef = useRef(null);
+  
+  // Initialize the CardRepository when user changes
+  useEffect(() => {
+    if (user) {
+      cardRepositoryRef.current = new CardRepository(user.uid);
+    } else {
+      cardRepositoryRef.current = null;
+    }
+  }, [user]);
 
   // Function to add logs to the state and console
   const addLog = (message) => {
@@ -111,9 +124,12 @@ const SettingsModal = ({
 
   // Initialize collection to rename 
   useEffect(() => {
-    if (collections.length > 0) {
-      const firstCollection = collections.find(c => c !== 'All Cards') || collections[0];
-      setCollectionToRename(firstCollection);
+    if (collections && typeof collections === 'object') {
+      const collectionNames = Object.keys(collections);
+      if (collectionNames.length > 0) {
+        const firstCollection = collectionNames.find(c => c !== 'All Cards') || collectionNames[0];
+        setCollectionToRename(firstCollection);
+      }
     }
   }, [collections]);
 
@@ -617,45 +633,35 @@ const SettingsModal = ({
     });
   };
 
-  // Handle cloud backup verification - Modified to accept parameters
-  const handleVerifyCloudBackup = async (user, currentRepo) => {
-    // Log initial state using passed parameters
-    console.log('handleVerifyCloudBackup called. User:', user, 'Repo:', currentRepo, 'Verifying:', isVerifyingBackup);
-
+  // Handle cloud backup verification
+  const handleVerifyCloudBackup = async () => {
+    // Get the cardRepository from ref
+    const cardRepository = cardRepositoryRef.current;
+    
     // Check if user and repo exist AND we are not already verifying
-    // Use passed parameters for the check
-    if (!user || !currentRepo || isVerifyingBackup) {
-       console.error('Verification prerequisites not met. Aborting.');
-       // It's possible isVerifyingBackup state update hasn't propagated yet,
-       // but the check should still prevent double clicks if currentUser/currentRepo are null.
-       return;
+    if (!user || !cardRepository || isVerifyingBackup) {
+      console.error('Verification prerequisites not met. User:', user, 'Repo:', cardRepository, 'Verifying:', isVerifyingBackup);
+      return;
     }
 
     setIsVerifyingBackup(true);
     setVerificationStatus('Fetching local data...');
 
     try {
-      // Fetch local data (db doesn't depend on user directly here)
+      // Fetch local data
       const localCollections = await db.getCollections();
-      const localCards = await db.getAllCards(); // Assumes db service knows the current user context if needed
-      const localCollectionCount = localCollections.length;
-      const localCardCount = localCards.length;
+      const localCards = await db.getAllCards(); 
+      const localCollectionCount = Object.keys(localCollections).length;
+      const localCardCount = Array.isArray(localCards) ? localCards.length : 0;
       setVerificationStatus(`Local: ${localCollectionCount} collections, ${localCardCount} cards. Fetching cloud data...`);
-      console.log('Local data fetched. Fetching cloud data...');
 
-      // Explicitly log repo and user before using them
-      console.log('Using currentRepo:', currentRepo);
-      console.log('Using user object:', user); 
-
-      // Fetch cloud data using passed repo
-      const cloudCollections = await currentRepo.getAllCollections();
-      console.log('Cloud collections fetched. Fetching cloud cards...');
-      const cloudCards = await currentRepo.getAllCards();
-      console.log('Cloud cards fetched. Comparing...');
-
+      // Fetch cloud data
+      const cloudCollections = await cardRepository.getAllCollections();
+      const cloudCards = await cardRepository.getAllCards();
+      
       // Compare counts
-      const cloudCollectionCount = cloudCollections.length;
-      const cloudCardCount = cloudCards.length;
+      const cloudCollectionCount = Array.isArray(cloudCollections) ? cloudCollections.length : 0;
+      const cloudCardCount = Array.isArray(cloudCards) ? cloudCards.length : 0;
       let statusMessage = 'Verification Complete: ';
       let issuesFound = false;
 
@@ -670,8 +676,6 @@ const SettingsModal = ({
 
       if (!issuesFound) {
         statusMessage += `OK (Local: ${localCollectionCount} coll, ${localCardCount} cards | Cloud: ${cloudCollectionCount} coll, ${cloudCardCount} cards).`;
-      } else {
-        // Optionally provide more details about discrepancies here in the future
       }
       
       setVerificationStatus(statusMessage);
@@ -682,8 +686,7 @@ const SettingsModal = ({
       }
 
     } catch (error) {
-      console.error('Error during verification process:', error); // Log the actual error object
-      logger.error('Error during cloud backup verification:', error);
+      console.error('Error during verification process:', error);
       toastService.error(`Verification failed: ${error.message}`);
       setVerificationStatus(`Error: ${error.message}`);
     } finally {
@@ -829,12 +832,13 @@ const SettingsModal = ({
                   </div>
                 </SettingsPanel>
 
-                {(collections.length > 1 || collections.some(c => c !== 'All Cards')) && (
+                {(Array.isArray(collections) ? collections.length > 1 : Object.keys(collections).length > 1 || 
+                  (Array.isArray(collections) ? collections.some(c => c !== 'All Cards') : Object.keys(collections).some(c => c !== 'All Cards'))) && (
                 <SettingsPanel
                   title="Manage Collections"
                   description="Delete a collection (must have at least one)."
                 >
-                  {collections.length <= 1 ? (
+                  {Array.isArray(collections) ? collections.length <= 1 : Object.keys(collections).length <= 1 ? (
                     <p className={`text-center py-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                       No collections available to delete.
                     </p>
@@ -850,14 +854,15 @@ const SettingsModal = ({
                         onChange={(e) => setCollectionToDelete(e.target.value)}
                       >
                         <option value="">Select Collection...</option>
-                        {collections
-                          .filter(name => name !== 'All Cards')
-                          .map((collection) => (
-                            <option key={collection} value={collection}>
-                              {collection}
-                            </option>
-                          ))
-                        }
+                        {Array.isArray(collections) ? collections.filter(name => name !== 'All Cards').map((collection) => (
+                          <option key={collection} value={collection}>
+                            {collection}
+                          </option>
+                        )) : Object.keys(collections).filter(name => name !== 'All Cards').map((collection) => (
+                          <option key={collection} value={collection}>
+                            {collection}
+                          </option>
+                        ))}
                       </select>
                       <Button
                         variant="danger"
@@ -956,7 +961,7 @@ const SettingsModal = ({
                           {userData.firstName} {userData.lastName}
                         </div>
                         <div className="text-gray-400 text-sm">
-                          {currentUser ? currentUser.email : 'Not signed in'}
+                          {user ? user.email : 'Not signed in'}
                         </div>
                       </div>
                     </div>
@@ -1021,7 +1026,7 @@ const SettingsModal = ({
                   </div>
 
                   {/* Cloud Sync (Manual Trigger) */}
-                  {currentUser && featureFlags.enableFirestoreSync && (
+                  {user && featureFlags.enableFirestoreSync && (
                     <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
                       <h4 className="text-md font-semibold mb-3 text-gray-700 dark:text-gray-300">Cloud Sync</h4>
                       <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
@@ -1031,7 +1036,7 @@ const SettingsModal = ({
                         variant="primary"
                         iconLeft={<Icon name="cloud_sync" />}
                         onClick={handleForceSyncToCloud}
-                        disabled={isForceSyncing || isBackingUp || !currentUser}
+                        disabled={isForceSyncing || isBackingUp || !user}
                         isLoading={isForceSyncing || isBackingUp}
                         loadingText="Syncing to Cloud..."
                         fullWidth
@@ -1054,7 +1059,7 @@ const SettingsModal = ({
                   )}
 
                   {/* Cloud Backup Verification */}
-                  {currentUser && (
+                  {user && (
                     <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
                       <h4 className="text-md font-semibold mb-3 text-gray-700 dark:text-gray-300">Cloud Backup Verification</h4>
                       <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
@@ -1063,8 +1068,8 @@ const SettingsModal = ({
                       <Button 
                         variant="primary" 
                         iconLeft={<Icon name="cloud_sync" />}
-                        onClick={() => handleVerifyCloudBackup(user, cardRepository)}
-                        disabled={isVerifyingBackup || !user}
+                        onClick={handleVerifyCloudBackup}
+                        disabled={isVerifyingBackup || !user} 
                         isLoading={isVerifyingBackup}
                         loadingText="Verifying..."
                         fullWidth
@@ -1085,14 +1090,14 @@ const SettingsModal = ({
                       variant="primary" 
                       iconLeft={<Icon name="cloud_upload" />}
                       onClick={handleCloudMigration}
-                      disabled={isCloudMigrating || !currentUser}
+                      disabled={isCloudMigrating || !user}
                       isLoading={isCloudMigrating}
                       loadingText="Migrating to Cloud..."
                       fullWidth
                     >
                       Migrate Backup to Cloud
                     </Button>
-                    {!currentUser && (
+                    {!user && (
                       <p className="text-xs text-amber-500 mt-2">
                         You must be logged in to use cloud migration.
                       </p>
@@ -1109,14 +1114,14 @@ const SettingsModal = ({
                       variant="primary" 
                       iconLeft={<Icon name="image" />}
                       onClick={handleImageUpload}
-                      disabled={isUploadingImages || !currentUser}
+                      disabled={isUploadingImages || !user}
                       isLoading={isUploadingImages}
                       loadingText="Uploading Images..."
                       fullWidth
                     >
                       Upload Images Only
                     </Button>
-                    {!currentUser && (
+                    {!user && (
                       <p className="text-xs text-amber-500 mt-2">
                         You must be logged in to use image upload.
                       </p>

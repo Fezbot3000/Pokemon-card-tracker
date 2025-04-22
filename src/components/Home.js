@@ -216,12 +216,12 @@ function Home() {
           <div className="flex flex-col md:flex-row items-center gap-8">
             <div className="w-48 h-48 flex-shrink-0">
               <img 
-                src="/swap-itt-logo-vertical.webp" 
+                src="/swapit-logo.svg" 
                 alt="SwapITT Logo" 
                 className="w-full h-full object-contain"
                 onError={(e) => {
                   console.error('Failed to load SwapITT logo:', e);
-                  e.target.src = '/swapit-logo.svg';
+                  e.target.style.display = 'none';
                   e.target.onerror = null;
                 }}
               />

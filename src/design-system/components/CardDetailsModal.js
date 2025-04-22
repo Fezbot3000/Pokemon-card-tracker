@@ -123,8 +123,37 @@ const CardDetailsModal = ({
   
   // Handle save action
   const handleSave = () => {
+    console.log('[CardDetailsModal] Saving card with:');
+    console.log(' - Current collection ID:', card.collectionId);
+    console.log(' - Initial collection name:', initialCollectionName);
+    
+    // Make sure the card has the current collection ID from the form
+    const cardToSave = {
+      ...card,
+      // Ensure both properties exist for backward compatibility
+      collection: card.collectionId || card.collection,
+      collectionId: card.collectionId || card.collection,
+      // Preserve the image URL if it exists
+      imageUrl: card.imageUrl || null,
+      lastUpdated: new Date().toISOString() // Add timestamp for verification
+    };
+    
+    console.log('[CardDetailsModal] Prepared card to save:', cardToSave);
+    
+    // Store verification data in localStorage
+    if (initialCollectionName !== cardToSave.collectionId) {
+      localStorage.setItem('lastCollectionChange', JSON.stringify({
+        timestamp: new Date().toISOString(),
+        cardId: cardToSave.slabSerial,
+        cardName: cardToSave.card || 'Unnamed Card',
+        from: initialCollectionName || 'Unknown Collection',
+        to: cardToSave.collectionId,
+        imageUrl: cardToSave.imageUrl // Include image URL in verification data
+      }));
+    }
+    
     if (onSave) {
-      onSave(card); // Use card prop
+      onSave(cardToSave, initialCollectionName);
     }
   };
   
@@ -234,6 +263,8 @@ const CardDetailsModal = ({
                 onImageClick={() => setShowEnlargedImage(true)}
                 additionalValueContent={additionalValueContent}
                 additionalSerialContent={additionalSerialContent}
+                collections={collections}
+                initialCollectionName={initialCollectionName}
               />
             </div>
           )}

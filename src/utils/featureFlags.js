@@ -13,7 +13,7 @@
 
 // Default flag values (all disabled by default)
 const defaultFlags = {
-  enableFirestoreSync: false,        // Controls shadow writes to Firestore
+  enableFirestoreSync: true,        // Controls shadow writes to Firestore
   enableFirestoreReads: false,       // Controls reading from Firestore when online
   enableRealtimeListeners: false,    // Controls real-time Firestore listeners
   enableBackgroundMigration: false,  // Controls background migration to Firestore

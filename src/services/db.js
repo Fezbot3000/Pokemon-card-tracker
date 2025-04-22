@@ -556,82 +556,128 @@ class DatabaseService {
     }
   }
 
-  async saveCollections(collections, preserveSold = true) {
-    await this.ensureDB();
-    const userId = this.getCurrentUserId();
+  async saveCollections(collections = {}, preserveSold = true) {
+    logger.debug(`DB: Saving collections: ${Object.keys(collections)}`);
     
-    return new Promise(async (resolve, reject) => {
-      try {
-        logger.debug("DB: Saving collections:", Object.keys(collections));
-        
-        // If preserveSold is true, retrieve sold items first
-        let soldItems = [];
-        if (preserveSold) {
-          try {
-            soldItems = await this.getSoldCards();
-            logger.debug(`DB: Retrieved ${soldItems.length} sold items to preserve during collection save`);
-          } catch (error) {
-            logger.warn("DB: Could not retrieve sold items to preserve:", error);
-            // Continue anyway as this is not fatal
-          }
-        }
-        
-        const transaction = this.db.transaction([COLLECTIONS_STORE], 'readwrite');
-        const store = transaction.objectStore(COLLECTIONS_STORE);
-        
-        // Clear existing collections for this user
-        const range = IDBKeyRange.bound(
-          [userId, ''], // Lower bound: current user, start of name range
-          [userId, '\uffff'] // Upper bound: current user, end of name range
-        );
-        
-        const clearRequest = store.clear(range);
-        
-        clearRequest.onsuccess = () => {
-          logger.debug('DB: Cleared existing collections for user:', userId);
-          
-          // Add new collections
-          Object.entries(collections).forEach(([name, data]) => {
-            logger.debug(`DB: Saving collection: ${name} with ${Array.isArray(data) ? data.length : 0} cards`);
-            const request = store.put({ userId, name, data });
-            request.onerror = (e) => {
-              logger.error(`Error saving collection ${name}:`, e.target.error);
-            };
-          });
-          
-          // Re-add sold items if they were preserved and exist
-          if (preserveSold && soldItems.length > 0) {
-            logger.debug(`DB: Re-saving ${soldItems.length} preserved sold items`);
-            store.put({ 
-              userId, 
-              name: 'sold', 
-              data: soldItems 
-            });
-          }
-          
-          transaction.oncomplete = () => {
-            logger.debug('DB: Successfully saved all collections:', Object.keys(collections));
-            if (preserveSold && soldItems.length > 0) {
-              logger.debug('DB: Successfully preserved sold items');
-            }
-            resolve();
-          };
-        };
-        
-        clearRequest.onerror = (error) => {
-          logger.error('DB: Error clearing collections:', error);
-          reject('Error clearing collections');
-        };
-        
-        transaction.onerror = (error) => {
-          logger.error('DB: Error saving collections:', error);
-          reject('Error saving collections');
-        };
-      } catch (error) {
-        logger.error('DB: Error in saveCollections:', error);
-        reject(error);
+    try {
+      const userId = this.getCurrentUserId();
+      if (!userId) {
+        throw new Error('No user ID available, cannot save collections');
       }
-    });
+
+      // Optional: Preserve sold items if requested
+      let soldItems = [];
+      if (preserveSold) {
+        try {
+          soldItems = await this.getSoldCards() || [];
+          logger.debug(`DB: Retrieved ${soldItems.length} sold items to preserve during collection save`);
+        } catch (err) {
+          logger.warn('No sold collection found or invalid format, returning empty array');
+          soldItems = [];
+        }
+      }
+
+      // First, clear all existing collections for the user
+      await this._clearExistingCollections(userId);
+      logger.debug(`DB: Cleared existing collections for user: ${userId}`);
+
+      const savedCollections = {};
+      const collectionPromises = [];
+
+      // Process each collection
+      for (const [name, cards] of Object.entries(collections)) {
+        if (!name) continue; // Skip unnamed collections
+        
+        const cardArray = Array.isArray(cards) ? cards : [];
+        logger.debug(`DB: Saving collection: ${name} with ${cardArray.length} cards`);
+
+        // Save to IndexedDB
+        const collectionPromise = new Promise((resolve, reject) => {
+          const db = this.db;
+          const transaction = db.transaction(['collections'], 'readwrite');
+          const store = transaction.objectStore('collections');
+          
+          // Create collection object with user ID to ensure data isolation
+          const collection = {
+            userId,
+            name,
+            data: cardArray || []
+          };
+          
+          const request = store.put(collection);
+          
+          request.onsuccess = async () => { // Add async back here
+            logger.debug(`Collection '${name}' saved successfully for user ${userId}`);
+            
+            // Improved Firestore sync for collections
+            if (featureFlags.enableFirestoreSync) {
+              try {
+                // First, ensure the collection exists in Firestore
+                await shadowSync.shadowWriteCollection(name, {
+                  name: name,
+                  cardCount: cardArray?.length || 0,
+                  description: '',
+                  updatedAt: new Date()
+                });
+                
+                // Then, for each card in the collection, ensure it has the correct collection property
+                // and sync it to Firestore
+                for (const card of cardArray) {
+                  // Skip cards without proper ID
+                  if (!card.id && !card.slabSerial) continue;
+                  
+                  // Ensure card has the correct collection properties
+                  const cardWithCollection = {
+                    ...card,
+                    collection: name,
+                    collectionId: name
+                  };
+                  
+                  // Use shadowWriteCard with cardId and correct collection
+                  const cardId = card.id || card.slabSerial;
+                  try {
+                    await shadowSync.shadowWriteCard(cardId, cardWithCollection, name);
+                  } catch (cardError) {
+                    logger.error(`Failed to sync card ${cardId} to Firestore:`, cardError);
+                    // Continue with other cards even if one fails
+                  }
+                }
+                
+                logger.debug(`Successfully synced collection ${name} with Firestore`);
+              } catch (syncError) {
+                // Log but don't affect the main operation's success
+                logger.error(`Failed to sync collection ${name} with Firestore:`, syncError);
+              }
+            }
+            
+            savedCollections[name] = collection;
+            resolve(collection);
+          };
+          
+          request.onerror = (event) => {
+            const errorMsg = `Error saving collection '${name}': ${event.target.error}`;
+            logger.error(errorMsg);
+            reject(new Error(errorMsg));
+          };
+        });
+
+        collectionPromises.push(collectionPromise);
+      }
+
+      // Wait for all collections to be saved
+      await Promise.all(collectionPromises);
+      logger.debug(`DB: Successfully saved all collections: ${Object.keys(collections)}`);
+
+      // Re-save sold items if we preserved them
+      if (preserveSold && soldItems.length > 0) {
+        await this.saveSoldCards(soldItems);
+      }
+
+      return savedCollections;
+    } catch (error) {
+      logger.error('Failed to save collections:', error);
+      throw error;
+    }
   }
 
   async saveImage(cardId, imageFile, options = {}) {
@@ -2168,7 +2214,7 @@ class DatabaseService {
               }
             }
           };
-          
+
           request.onerror = (error) => {
             logger.error(`Error fetching collection '${collectionName}':`, error);
             reject(error);
@@ -2604,6 +2650,42 @@ class DatabaseService {
       return false;
     }
   };
+
+  /**
+   * Helper to clear existing collections for a user
+   * @param {string} userId - The ID of the user whose collections should be cleared
+   * @returns {Promise<void>}
+   */
+  async _clearExistingCollections(userId) {
+    await this.ensureDB();
+    return new Promise((resolve, reject) => {
+      try {
+        const transaction = this.db.transaction([COLLECTIONS_STORE], 'readwrite');
+        const store = transaction.objectStore(COLLECTIONS_STORE);
+        
+        // Create a range for the specific user ID
+        // Use IDBKeyRange.bound to target all collections for the specific user
+        const lowerBound = [userId, '']; // Start range for this user
+        const upperBound = [userId, '\uffff']; // End range for this user
+        const range = IDBKeyRange.bound(lowerBound, upperBound);
+        
+        const request = store.delete(range);
+
+        request.onsuccess = () => {
+          logger.debug(`Successfully cleared existing collections for user ${userId}`);
+          resolve();
+        };
+
+        request.onerror = (event) => {
+          logger.error(`Error clearing collections for user ${userId}:`, event.target.error);
+          reject(new Error(`Error clearing collections: ${event.target.error}`));
+        };
+      } catch (error) {
+        logger.error('Transaction error in _clearExistingCollections:', error);
+        reject(error);
+      }
+    });
+  }
 }
 
 const db = new DatabaseService();

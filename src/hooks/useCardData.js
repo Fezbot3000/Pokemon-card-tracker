@@ -47,12 +47,24 @@ const useCardData = () => {
       const repository = new CardRepository(currentUser.uid);
       console.log(`Setting up Firestore listener for user: ${currentUser.uid}`);
 
-      const unsubscribe = repository.subscribeToAllCards((firestoreCards) => {
-        console.log('Received card update from Firestore:', firestoreCards);
-        setCards(firestoreCards);
-        setLoading(false);
-        setError(null); // Clear any previous error on successful fetch
-      }, (err) => { // Add error handling for the subscription
+      // Debounce the updates to reduce console spam
+      let updateTimeout = null;
+      const processFirestoreUpdate = (firestoreCards) => {
+        // Clear any existing timeout
+        if (updateTimeout) {
+          clearTimeout(updateTimeout);
+        }
+        
+        // Set a new timeout to batch updates
+        updateTimeout = setTimeout(() => {
+          console.log('Received card update from Firestore:', firestoreCards);
+          setCards(firestoreCards);
+          setLoading(false);
+          setError(null); // Clear any previous error on successful fetch
+        }, 500); // 500ms debounce time
+      };
+
+      const unsubscribe = repository.subscribeToAllCards(processFirestoreUpdate, (err) => {
         console.error("Error subscribing to Firestore cards:", err);
         setError("Failed to load cards from cloud.");
         setLoading(false);
@@ -61,6 +73,9 @@ const useCardData = () => {
       // Cleanup subscription on unmount or user change
       return () => {
         console.log(`Cleaning up Firestore listener for user: ${currentUser.uid}`);
+        if (updateTimeout) {
+          clearTimeout(updateTimeout);
+        }
         unsubscribe();
       };
     } else {
@@ -132,8 +147,11 @@ const useCardData = () => {
 
   // Update a card - Wrapped in useCallback
   const updateCard = useCallback(async (updatedCard) => { // Make async
-    if (!updatedCard || !updatedCard.id) { // Use .id for Firestore documents
-      console.error("Update card failed: Invalid card data or missing ID.");
+    // Check for either id or slabSerial as the card identifier
+    const cardId = updatedCard?.id || updatedCard?.slabSerial;
+    
+    if (!updatedCard || !cardId) {
+      console.error("Update card failed: Invalid card data or missing ID.", updatedCard);
       setError("Failed to update card: Invalid data.");
       return;
     }
@@ -144,21 +162,33 @@ const useCardData = () => {
     try {
       if (currentUser) {
         const repository = new CardRepository(currentUser.uid);
-        // Prepare data for Firestore (remove id, handle timestamps if needed by repo)
-        const { id, ...dataToUpdate } = updatedCard;
-        await repository.updateCard(id, dataToUpdate);
-        console.log(`Card ${id} updated in Firestore.`);
+        
+        // Create a normalized copy of the card with both id properties
+        const normalizedCard = {
+          ...updatedCard,
+          id: cardId, // Ensure id is set
+          slabSerial: cardId // Ensure slabSerial is set
+        };
+        
+        // Remove id field as it's passed separately to updateCard
+        const { id, ...dataToUpdate } = normalizedCard;
+        
+        console.log(`Updating card in Firestore: ID=${cardId}, Collection=${dataToUpdate.collection || dataToUpdate.collectionId}`);
+        await repository.updateCard(cardId, dataToUpdate);
+        console.log(`Card ${cardId} updated in Firestore.`);
       }
 
       // Optimistic UI update (or update after successful Firestore operation)
       setCards(prevCards => 
         prevCards.map(card => 
-          card.id === updatedCard.id ? updatedCard : card // Match by Firestore ID
+          (card.id === cardId || card.slabSerial === cardId) ? updatedCard : card
         )
       );
 
       setSelectedCard(prevSelected => 
-        prevSelected && prevSelected.id === updatedCard.id ? updatedCard : prevSelected
+        (prevSelected && (prevSelected.id === cardId || prevSelected.slabSerial === cardId)) 
+          ? updatedCard 
+          : prevSelected
       );
 
     } catch (err) {

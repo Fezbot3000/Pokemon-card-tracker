@@ -16,13 +16,13 @@ const formatDate = (dateString) => {
 };
 
 const CardDetails = memo(({
-  card,
+  card = null,
   onClose,
   onUpdateCard,
   onDelete,
   exchangeRate,
   collections = [],
-  initialCollectionName
+  initialCollectionName = null
 }) => {
   const [isOpen, setIsOpen] = useState(true);
   const [editedCard, setEditedCard] = useState({
@@ -495,12 +495,6 @@ CardDetails.propTypes = {
   exchangeRate: PropTypes.number.isRequired,
   collections: PropTypes.arrayOf(PropTypes.string),
   initialCollectionName: PropTypes.string
-};
-
-CardDetails.defaultProps = {
-  card: null,
-  collections: [],
-  initialCollectionName: null
 };
 
 export default CardDetails;

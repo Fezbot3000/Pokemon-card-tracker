@@ -55,6 +55,7 @@ import RestoreListener from './components/RestoreListener';
 import SyncStatusIndicator from './components/SyncStatusIndicator'; // Import the SyncStatusIndicator
 import featureFlags from './utils/featureFlags'; // Import feature flags
 import { CardRepository } from './repositories/CardRepository';
+import MoveVerification from './components/MoveVerification'; // Import the MoveVerification component
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db as firestoreDb, storage } from './services/firebase';
@@ -1208,13 +1209,13 @@ To import this backup:
     try {
       // Delete images from IndexedDB
       for (const cardId of cardIds) {
-        await db.deleteImage(cardId);
+        // Make sure we're working with string IDs, not objects
+        const id = typeof cardId === 'object' ? cardId.slabSerial : cardId;
+        await db.deleteImage(id);
+        
+        // Delete card from the useCardData hook's state
+        deleteCard({ slabSerial: id });
       }
-
-      // Delete cards from the useCardData hook's state
-      cardIds.forEach(cardId => {
-        deleteCard({ slabSerial: cardId });
-      });
     } catch (error) {
       logger.error('Error deleting cards:', error);
       toast.error('Failed to delete cards');
@@ -1321,112 +1322,123 @@ To import this backup:
 
     try {
       // Step 1: Load current collections from DB
-      const currentCollections = await db.getCollections();
+      let currentCollections = await db.getCollections();
       if (!currentCollections) {
         logger.warn('[App] No collections found in database, creating new collections object');
         currentCollections = {};
       }
 
       const updatedCollections = { ...currentCollections };
-      let cardFound = false;
-
-      // Step 2: Determine if collection changed and update collections object
-      if (originalCollectionName && originalCollectionName !== newCollectionName) {
-        logger.log(`[App] Collection changed for card ${cardId}. Moving from '${originalCollectionName}' to '${newCollectionName}'.`);
-        // Remove card from the original collection
-        if (updatedCollections[originalCollectionName] && Array.isArray(updatedCollections[originalCollectionName])) {
-          updatedCollections[originalCollectionName] = updatedCollections[originalCollectionName].filter(card => card.slabSerial !== cardId);
-          logger.log(`[App] Removed card ${cardId} from old collection '${originalCollectionName}'.`);
-        } else {
-          logger.warn(`[App] Original collection '${originalCollectionName}' not found or not an array.`);
-        }
-
-        // Add card to the new collection (create if it doesn't exist)
-        if (!updatedCollections[newCollectionName]) {
-          updatedCollections[newCollectionName] = [];
-          logger.log(`[App] Created new collection '${newCollectionName}'.`);
-        }
-        // Ensure the target is an array before pushing
-        if (Array.isArray(updatedCollections[newCollectionName])) {
-           // Make sure not to add duplicates if moving within the same logical collection but name changed slightly
-          if (!updatedCollections[newCollectionName].some(c => c.slabSerial === cardId)) {
-            updatedCollections[newCollectionName].push(updatedCard);
-            logger.log(`[App] Added card ${cardId} to new collection '${newCollectionName}'.`);
-          }
-        } else {
-          logger.error(`[App] Target collection '${newCollectionName}' is not an array. Cannot add card.`);
-           throw new Error(`Target collection '${newCollectionName}' is not valid.`);
-        }
-         cardFound = true; // Assume successful move preparation
-      } else {
-        // Collection did not change, just update the card data within its current collection
-        const currentCollection = originalCollectionName || newCollectionName; // Use whichever is valid
-         logger.log(`[App] Collection not changed for card ${cardId}. Updating in collection '${currentCollection}'.`);
-        
-        // Create the collection if it doesn't exist
-        if (!updatedCollections[currentCollection]) {
-          updatedCollections[currentCollection] = [];
-          logger.log(`[App] Created new collection '${currentCollection}' since it didn't exist.`);
-        }
-        
-        if (updatedCollections[currentCollection] && Array.isArray(updatedCollections[currentCollection])) {
-          const cardIndex = updatedCollections[currentCollection].findIndex(card => card.slabSerial === cardId);
-          if (cardIndex !== -1) {
-            updatedCollections[currentCollection][cardIndex] = updatedCard;
-            cardFound = true;
-             logger.log(`[App] Updated card ${cardId} data in collection '${currentCollection}'.`);
-          } else {
-             logger.warn(`[App] Card ${cardId} not found in its expected collection '${currentCollection}' for update.`);
-             // Attempt to find and add it if it's missing but should be there
-             // This handles edge cases where state might be slightly out of sync
-             if (!updatedCollections[currentCollection].some(c => c.slabSerial === cardId)) {
-                 updatedCollections[currentCollection].push(updatedCard);
-                 logger.log(`[App] Card ${cardId} was missing, added it to collection '${currentCollection}'.`);
-                 cardFound = true;
-             }
-          }
-        } else {
-          logger.warn(`[App] Current collection '${currentCollection}' not found or not an array during update.`);
-        }
-      }
-
-      if (!cardFound) {
-         // If still not found after checks/attempts, something is wrong
-         logger.error(`[App] Failed to locate or place card ${cardId} during update.`);
-         // Decide if we should still try to save or throw an error
-         // For now, let's try saving anyway, maybe the DB operation corrects it
-         // throw new Error(`Could not find or place card ${cardId} in any collection during update.`);
-      }
-
-      // Step 3: Save the potentially modified collections object back to DB
-      // Ensure 'sold' collection, if present, is explicitly preserved during save.
-      await db.saveCollections(updatedCollections, true); 
-      logger.log(`[App] Saved updated collections to DB for card ${cardId}.`);
-
-      // Step 4: Update local state (collections and the hook's card state)
-      setCollections(updatedCollections); // Update local collections state
       
-      // Make sure the card has the correct collection name before updating in Firestore
-      const cardForFirestore = {
-        ...updatedCard,
+      // Step 2: Find and remove the card from its original collection
+      let foundCard = null;
+      
+      // Try to find the card in its original collection if we know it
+      if (originalCollectionName && updatedCollections[originalCollectionName]) {
+        const cardIndex = updatedCollections[originalCollectionName].findIndex(
+          card => card.slabSerial === cardId
+        );
+        
+        if (cardIndex !== -1) {
+          // Save the card before removing it
+          foundCard = updatedCollections[originalCollectionName][cardIndex];
+          // Remove from original collection
+          updatedCollections[originalCollectionName].splice(cardIndex, 1);
+          logger.log(`[App] Removed card ${cardId} from its original collection '${originalCollectionName}'`);
+        } else {
+          logger.warn(`[App] Card ${cardId} not found in its expected original collection '${originalCollectionName}'`);
+        }
+      }
+      
+      // If we didn't find it in the original collection or don't know the original,
+      // search through all collections
+      if (!foundCard) {
+        for (const [collName, cards] of Object.entries(updatedCollections)) {
+          if (collName !== newCollectionName && Array.isArray(cards)) {
+            const cardIndex = cards.findIndex(card => card.slabSerial === cardId);
+            if (cardIndex !== -1) {
+              // Found the card in this collection
+              foundCard = cards[cardIndex];
+              // Remove it from this collection
+              cards.splice(cardIndex, 1);
+              logger.log(`[App] Found and removed card ${cardId} from collection '${collName}'`);
+              break;
+            }
+          }
+        }
+      }
+      
+      // Step 3: Now add the card to its new collection
+      // Create the new collection if it doesn't exist
+      if (!updatedCollections[newCollectionName]) {
+        updatedCollections[newCollectionName] = [];
+        logger.log(`[App] Created new collection '${newCollectionName}'`);
+      }
+      
+      // Preserve all original card data that wasn't explicitly changed
+      const cardToAdd = {
+        ...(foundCard || {}),  // Base it on the found card if available
+        ...updatedCard,        // Apply the updates
         collection: newCollectionName,
-        collectionName: newCollectionName
+        collectionId: newCollectionName,
+        // Explicitly preserve the image URL to prevent it from being lost during moves
+        imageUrl: updatedCard.imageUrl || (foundCard ? foundCard.imageUrl : null)
       };
       
-      // Update card state within useCardData hook - this will trigger Firestore update
+      // Add to the new collection
+      // Check if it already exists in the target collection (could happen if moving to same collection)
+      const existingIndex = updatedCollections[newCollectionName].findIndex(
+        card => card.slabSerial === cardId
+      );
+      
+      if (existingIndex !== -1) {
+        // Update in place if already exists
+        updatedCollections[newCollectionName][existingIndex] = cardToAdd;
+        logger.log(`[App] Updated existing card ${cardId} in collection '${newCollectionName}'`);
+      } else {
+        // Add as new if doesn't exist
+        updatedCollections[newCollectionName].push(cardToAdd);
+        logger.log(`[App] Added card ${cardId} to collection '${newCollectionName}'`);
+      }
+      
+      // Step 4: Save the updated collections to DB
+      await db.saveCollections(updatedCollections, true);
+      logger.log(`[App] Saved updated collections to DB for card ${cardId}.`);
+
+      // Step 5: Update local state
+      setCollections(updatedCollections);
+      
+      // Step 6: Update card in Firestore via the useCardData hook and shadowSync
+      const cardForFirestore = {
+        ...cardToAdd,
+        collection: newCollectionName,
+        collectionId: newCollectionName
+      };
+      
+      // Update in useCardData hook (which triggers UI updates)
       updateCard(cardForFirestore);
+      
+      // Explicitly sync to Firestore if feature flag is enabled
+      if (featureFlags.enableFirestoreSync && user) {
+        try {
+          const shadowSyncService = await import('./services/shadowSync').then(module => module.default);
+          await shadowSyncService.shadowWriteCard(cardId, cardForFirestore, newCollectionName);
+          logger.log(`[App] Successfully shadow synced card ${cardId} to Firestore`);
+        } catch (syncError) {
+          // Log but don't fail the operation
+          logger.error(`[App] Error syncing card ${cardId} to Firestore:`, syncError);
+        }
+      }
 
-      // Step 5: Clear selected card to close modal
-      handleCloseDetailsModal(); // Use the handler that clears both card and initial collection
-
-      // Step 6: Show success toast
+      // Step 7: Close modal and show success
+      handleCloseDetailsModal();
       toast.success('Card updated successfully!');
 
     } catch (error) {
       logger.error('[App] Error updating card:', error);
       toast.error(`Error updating card: ${error.message}`);
     }
-  }, [initialCardCollection, updateCard, handleCloseDetailsModal, collections]); // Added collections to dependencies
+  }, [initialCardCollection, updateCard, handleCloseDetailsModal, setCollections, user]);
 
   const handleAddCard = useCallback(async (cardData, imageFile, targetCollection) => {
     try {
@@ -1674,15 +1686,29 @@ To import this backup:
                 `images/${cardId}.png`,
                 `data/images/${cardId}.jpg`,
                 `data/images/${cardId}.jpeg`,
-                `data/images/${cardId}.png`
+                `data/images/${cardId}.png`,
+                `${cardId}.jpg`,
+                `${cardId}.jpeg`,
+                `${cardId}.png`,
+                `cards/${cardId}.jpg`,
+                `cards/${cardId}.jpeg`,
+                `cards/${cardId}.png`,
+                `data/cards/${cardId}.jpg`,
+                `data/cards/${cardId}.jpeg`,
+                `data/cards/${cardId}.png`
               ];
               
               for (const path of possibleImagePaths) {
                 const imageZipFile = zipContent.file(path);
                 if (imageZipFile) {
-                  const blob = await imageZipFile.async("blob");
-                  imageFile = new File([blob], `${cardId}.jpg`, { type: "image/jpeg" });
-                  break;
+                  try {
+                    const blob = await imageZipFile.async("blob");
+                    imageFile = new File([blob], `${cardId}.jpg`, { type: "image/jpeg" });
+                    console.log(`[CloudMigrate] Image ready for card ${cardId}, size: ${blob.size}, type: ${blob.type}`);
+                    break;
+                  } catch (extractError) {
+                    console.error(`[CloudMigrate] Error extracting image from path ${path}:`, extractError);
+                  }
                 }
               }
             }
@@ -1703,14 +1729,17 @@ To import this backup:
             let imageBlob = null;
             if (imageFile) {
               try {
-                // Read image as blob
-                imageBlob = await imageFile.async('blob');
-                console.log(`[CloudMigrate] Image blob created for card ${cardId}, size: ${imageBlob?.size}`);
+                // Get blob directly from File object since it's already been extracted
+                // File objects are already Blob-like and can be used directly
+                imageBlob = imageFile;
+                console.log(`[CloudMigrate] Image ready for card ${cardId}, size: ${imageBlob.size}, type: ${imageBlob.type}`);
               } catch (imgError) {
-                console.error(`[CloudMigrate] Error reading image for card ${cardId}:`, imgError);
+                console.error(`[CloudMigrate] Error processing image for card ${cardId}:`, imgError);
               }
+            } else {
+              console.log(`[CloudMigrate] No image found for card ${cardId} in zip file`);
             }
-
+            
             const createdCardResult = await repository.createCard(processedCard, imageBlob); 
             console.log(`[CloudMigrate] Result from createCard for ${cardId}:`, createdCardResult);
 
@@ -1846,7 +1875,7 @@ To import this backup:
             imageFiles.push({
               path: relativePath,
               entry: zipEntry,
-              id: relativePath.split('/').pop().split('.')[0] // Extract the ID from the filename
+              id: relativePath.split("/").pop().split('.')[0] // Extract the ID from the filename
             });
           }
         }
@@ -1963,19 +1992,11 @@ To import this backup:
             });
           }}
           onRenameCollection={(oldName, newName) => {
-            if (oldName && newName && oldName !== newName) {
-              const newCollections = { ...collections };
-              newCollections[newName] = newCollections[oldName];
-              delete newCollections[oldName];
-              
-              db.saveCollections(newCollections).then(() => {
-                setCollections(newCollections);
-                if (selectedCollection === oldName) {
-                  setSelectedCollection(newName);
-                  localStorage.setItem('selectedCollection', newName);
-                }
-              });
-            }
+            const newCollections = { ...collections };
+            newCollections[newName] = newCollections[oldName];
+            delete newCollections[oldName];
+            setCollections(newCollections);
+            setSelectedCollection(newName);
           }}
           onDeleteCollection={async (name) => {
             try {
@@ -1991,8 +2012,6 @@ To import this backup:
               if (Object.keys(currentCollections).length <= 1) {
                 throw new Error("Cannot delete the last collection");
               }
-              
-              const collectionId = currentCollections[name].id;
               
               toast.loading(`Deleting collection "${name}" and all its cards...`, { id: 'delete-collection' });
               
@@ -2054,11 +2073,11 @@ To import this backup:
                 logger.error("Error revoking blob URLs:", blobError);
               }
               
-              if (collectionId && user) {
+              if (currentCollections[name].id && user) {
                 try {
                   const cardRepo = new CardRepository(user.uid);
                   
-                  await cardRepo.deleteCollection(collectionId);
+                  await cardRepo.deleteCollection(currentCollections[name].id);
                   logger.log(`Collection "${name}" and all its cards deleted from Firestore`);
                 } catch (firestoreError) {
                   logger.error("Error deleting collection from Firestore:", firestoreError);
@@ -2115,34 +2134,211 @@ To import this backup:
       
       <main className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-4 pb-20">
         {currentView === 'cards' ? (
-          <CardList
-            cards={collectionData} 
-            exchangeRate={exchangeRate}
-            onCardClick={(card) => {
-              let actualCollectionName = selectedCollection;
-              if (selectedCollection === 'All Cards') {
-                for (const [collName, cardsInCollection] of Object.entries(collections)) {
-                  if (Array.isArray(cardsInCollection) && cardsInCollection.some(c => c.slabSerial === card.slabSerial)) {
-                    actualCollectionName = collName;
-                    break; 
-                  }
-                }
-                if (actualCollectionName === 'All Cards') {
-                  logger.warn("Could not determine original collection for card: ", card.slabSerial);
-                  actualCollectionName = null; 
-                }
-              }
-              selectCard(card);
-              setInitialCardCollection(actualCollectionName); 
-            }}
-            onDeleteCards={onDeleteCards}
-            onUpdateCard={handleCardUpdate}
-            onAddCard={() => setShowNewCardForm(true)}
-            selectedCollection={selectedCollection}
-            collections={collections}
-            setCollections={setCollections}
-            onDeleteCard={handleCardDelete}
-          />
+          <div className="flex-1 overflow-y-auto">
+            {/* Main content */}
+            <div className={`${selectedCard ? 'hidden lg:block' : ''}`}>
+              {/* Show settings modal when settings is selected */}
+              {showSettings ? (
+                <SettingsModal
+                  isOpen={showSettings}
+                  onClose={handleCloseSettings}
+                  selectedCollection={selectedCollection}
+                  collections={collections}
+                  onRenameCollection={(oldName, newName) => {
+                    const newCollections = { ...collections };
+                    newCollections[newName] = newCollections[oldName];
+                    delete newCollections[oldName];
+                    setCollections(newCollections);
+                    setSelectedCollection(newName);
+                  }}
+                  onDeleteCollection={async (name) => {
+                    try {
+                      logger.log("App.js: Attempting to delete collection:", name);
+                      
+                      const currentCollections = { ...collections };
+                      
+                      if (!currentCollections[name]) {
+                        logger.error(`Collection "${name}" does not exist in:`, Object.keys(currentCollections));
+                        throw new Error(`Collection "${name}" does not exist`);
+                      }
+                      
+                      if (Object.keys(currentCollections).length <= 1) {
+                        throw new Error("Cannot delete the last collection");
+                      }
+                      
+                      toast.loading(`Deleting collection "${name}" and all its cards...`, { id: 'delete-collection' });
+                      
+                      let cardsInCollection = [];
+                      
+                      try {
+                        Object.values(collections).forEach(collectionCards => {
+                          if (Array.isArray(collectionCards)) {
+                            const matchingCards = collectionCards.filter(card => 
+                              card.collectionName === name || card.collection === name
+                            );
+                            cardsInCollection = [...cardsInCollection, ...matchingCards];
+                          }
+                        });
+                        
+                        logger.log(`Found ${cardsInCollection.length} cards in collection "${name}" from app state`);
+                      } catch (stateError) {
+                        logger.error("Error finding cards in collection from state:", stateError);
+                      }
+                      
+                      if (cardsInCollection.length === 0) {
+                        try {
+                          const allCollections = await db.getCollections();
+                          if (allCollections && allCollections[name] && Array.isArray(allCollections[name])) {
+                            cardsInCollection = allCollections[name];
+                            logger.log(`Found ${cardsInCollection.length} cards in collection "${name}" from database`);
+                          }
+                        } catch (dbError) {
+                          logger.error("Error finding cards in collection from database:", dbError);
+                        }
+                      }
+                      
+                      try {
+                        logger.log(`Revoking blob URLs for ${cardsInCollection.length} cards in collection "${name}"`);
+                        
+                        cardsInCollection.forEach(card => {
+                          if (card.imageUrl && card.imageUrl.startsWith('blob:')) {
+                            try {
+                              URL.revokeObjectURL(card.imageUrl);
+                              logger.debug(`Revoked blob URL for card ${card.id || card.slabSerial}`);
+                            } catch (revokeError) {
+                              logger.error(`Error revoking blob URL for card ${card.id || card.slabSerial}:`, revokeError);
+                            }
+                          }
+                        });
+                        
+                        for (const card of cardsInCollection) {
+                          const cardId = card.id || card.slabSerial;
+                          if (cardId) {
+                            try {
+                              await db.deleteImage(cardId);
+                              logger.debug(`Deleted image for card ${cardId} from IndexedDB`);
+                            } catch (deleteError) {
+                              logger.error(`Error deleting image for card ${cardId} from IndexedDB:`, deleteError);
+                            }
+                          }
+                        }
+                      } catch (blobError) {
+                        logger.error("Error revoking blob URLs:", blobError);
+                      }
+                      
+                      if (currentCollections[name].id && user) {
+                        try {
+                          const cardRepo = new CardRepository(user.uid);
+                          
+                          await cardRepo.deleteCollection(currentCollections[name].id);
+                          logger.log(`Collection "${name}" and all its cards deleted from Firestore`);
+                        } catch (firestoreError) {
+                          logger.error("Error deleting collection from Firestore:", firestoreError);
+                        }
+                      }
+                      
+                      delete currentCollections[name];
+                      logger.log("Collection removed from object, saving to DB...");
+                      
+                      await db.saveCollections(currentCollections);
+                      
+                      setCollections(currentCollections);
+                      
+                      if (selectedCollection === name) {
+                        const newSelection = Object.keys(currentCollections)[0];
+                        setSelectedCollection(newSelection);
+                        localStorage.setItem('selectedCollection', newSelection);
+                        logger.log("Selected new collection:", newSelection);
+                      }
+                      
+                      toast.success(`Collection "${name}" and all its cards deleted successfully`, { id: 'delete-collection' });
+                      
+                      return true;
+                    } catch (error) {
+                      logger.error("Error deleting collection:", error);
+                      toast.error(`Failed to delete collection: ${error.message}`, { id: 'delete-collection' });
+                      throw error;
+                    }
+                  }}
+                  refreshCollections={async () => {
+                    try {
+                      const loadedCollections = await db.getCollections();
+                      setCollections(loadedCollections);
+                      return loadedCollections;
+                    } catch (error) {
+                      console.error("Error loading collections:", error);
+                      toast.error("Failed to refresh collections");
+                      return null;
+                    }
+                  }}
+                  onExportData={handleExportData}
+                  onImportCollection={handleImportCollection}
+                  onUpdatePrices={() => {
+                    return new Promise((resolve) => {
+                      handleImportClick('priceUpdate');
+                      setShowSettings(false);
+                      resolve();
+                    });
+                  }}
+                  onImportBaseData={() => {
+                    return new Promise((resolve) => {
+                      handleImportClick('baseData');
+                      setShowSettings(false);
+                      resolve();
+                    });
+                  }}
+                  userData={user}
+                  onSignOut={logout}
+                  onStartTutorial={checkAndStartTutorial}
+                  onResetData={handleResetData}
+                  onImportAndCloudMigrate={importAndCloudMigrate}
+                  onUploadImagesFromZip={uploadImagesFromZip}
+                />
+              ) : (
+                <>
+                  {/* Show card list when no card is selected */}
+                  {currentView === 'cards' && (
+                    <>
+                      {/* Add MoveVerification component for debugging */}
+                      {featureFlags.enableFirestoreSync && (
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-4">
+                          <MoveVerification />
+                        </div>
+                      )}
+                      <CardList
+                        cards={collectionData} 
+                        exchangeRate={exchangeRate}
+                        onCardClick={(card) => {
+                          let actualCollectionName = selectedCollection;
+                          if (selectedCollection === 'All Cards') {
+                            for (const [collName, cardsInCollection] of Object.entries(collections)) {
+                              if (Array.isArray(cardsInCollection) && cardsInCollection.some(c => c.slabSerial === card.slabSerial)) {
+                                actualCollectionName = collName;
+                                break; 
+                              }
+                            }
+                            if (actualCollectionName === 'All Cards') {
+                              logger.warn("Could not determine original collection for card: ", card.slabSerial);
+                              actualCollectionName = null; 
+                            }
+                          }
+                          selectCard(card);
+                          setInitialCardCollection(actualCollectionName); 
+                        }}
+                        onDeleteCards={onDeleteCards}
+                        onDeleteCard={handleCardDelete}
+                        onUpdateCard={handleCardUpdate}
+                        onAddCard={() => setShowNewCardForm(true)}
+                        selectedCollection={selectedCollection}
+                        collections={collections}
+                        setCollections={setCollections}
+                      />
+                    </>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
         ) : currentView === 'settings' && isMobile ? (
           <MobileSettingsModal
             isOpen={showSettings}
@@ -2353,8 +2549,6 @@ To import this backup:
                 throw new Error("Cannot delete the last collection");
               }
               
-              const collectionId = currentCollections[name].id;
-              
               toast.loading(`Deleting collection "${name}" and all its cards...`, { id: 'delete-collection' });
               
               let cardsInCollection = [];
@@ -2415,11 +2609,11 @@ To import this backup:
                 logger.error("Error revoking blob URLs:", blobError);
               }
               
-              if (collectionId && user) {
+              if (currentCollections[name].id && user) {
                 try {
                   const cardRepo = new CardRepository(user.uid);
                   
-                  await cardRepo.deleteCollection(collectionId);
+                  await cardRepo.deleteCollection(currentCollections[name].id);
                   logger.log(`Collection "${name}" and all its cards deleted from Firestore`);
                 } catch (firestoreError) {
                   logger.error("Error deleting collection from Firestore:", firestoreError);
@@ -2452,14 +2646,14 @@ To import this backup:
           onExportData={handleExportData}
           onImportCollection={handleImportCollection}
           onUpdatePrices={() => {
-            return new Promise((resolve, reject) => {
+            return new Promise((resolve) => {
               handleImportClick('priceUpdate');
               setShowSettings(false);
               resolve();
             });
           }}
           onImportBaseData={() => {
-            return new Promise((resolve, reject) => {
+            return new Promise((resolve) => {
               handleImportClick('baseData');
               setShowSettings(false);
               resolve();
