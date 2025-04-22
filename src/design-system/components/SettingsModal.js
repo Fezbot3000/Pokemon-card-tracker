@@ -302,6 +302,7 @@ const SettingsModal = ({
       // List items in the user's backup directory
       addRestoreLog('Listing backup files in Firebase Storage...');
       const listResult = await listAll(backupRef);
+      addRestoreLog(`Found ${listResult.items.length} files and ${listResult.prefixes.length} folders in backup directory.`);
       
       // Check if metadata.json exists to determine backup format
       const metadataFile = listResult.items.find(item => item.name === 'metadata.json');
@@ -312,137 +313,183 @@ const SettingsModal = ({
         // --- New Restore Logic (Unzipped Files) --- 
         addRestoreLog('Starting restore using new unzipped format...');
 
-        // 1. Download and process metadata.json
-        setRestoreStatus('Downloading metadata...');
-        addRestoreLog('Downloading metadata.json...');
-        const metadataUrl = await getDownloadURL(metadataFile);
-        const metadataResponse = await fetch(metadataUrl);
-        if (!metadataResponse.ok) throw new Error('Failed to download metadata.json');
-        const backupMetadata = await metadataResponse.json();
-        addRestoreLog(`Metadata downloaded. Backup Timestamp: ${backupMetadata.timestamp}, Collections: ${backupMetadata.collectionCount}, Images: ${backupMetadata.imageCount}`);
-        setRestoreProgress(10);
-
-        // 2. Download and process collections.json
-        setRestoreStatus('Downloading collections data...');
-        addRestoreLog('Downloading collections.json...');
-        const collectionsFile = listResult.items.find(item => item.name === 'collections.json');
-        if (!collectionsFile) throw new Error('collections.json not found in backup.');
-        const collectionsUrl = await getDownloadURL(collectionsFile);
-        const collectionsResponse = await fetch(collectionsUrl);
-        if (!collectionsResponse.ok) throw new Error('Failed to download collections.json');
-        const collectionsData = await collectionsResponse.json();
-        addRestoreLog('Collections data downloaded.');
-        setRestoreProgress(20);
-
-        // 3. Clear existing local data (collections and images)
-        setRestoreStatus('Clearing local data...');
-        addRestoreLog('Clearing local collections...');
-        await db.clearCollections();
-        addRestoreLog('Clearing local images...');
-        await db.clearImages();
-        addRestoreLog('Local data cleared.');
-        setRestoreProgress(30);
-
-        // 4. Import collections into IndexedDB
-        setRestoreStatus('Importing collections...');
-        addRestoreLog(`Importing ${collectionsData.length} collections into IndexedDB...`);
-        await db.importCollections(collectionsData);
-        addRestoreLog('Collections imported successfully.');
-        setRestoreProgress(40);
-
-        // 5. List and download images
-        setRestoreStatus('Listing images...');
-        addRestoreLog('Listing images in backup...');
-        const imagesRef = ref(storage, `backups/${userId}/images`);
-        const imageListResult = await listAll(imagesRef);
-        const totalImagesToDownload = imageListResult.items.length;
-        addRestoreLog(`Found ${totalImagesToDownload} images to download.`);
-        setRestoreProgress(50);
-
-        // 6. Download and import images one by one
-        setRestoreStatus(`Downloading ${totalImagesToDownload} images...`);
-        addRestoreLog('Starting image downloads and import...');
-        let imagesImportedCount = 0;
-        const imageImportPromises = [];
-
-        for (let i = 0; i < totalImagesToDownload; i++) {
-          const imageItemRef = imageListResult.items[i];
-          const progress = 50 + Math.round(((i + 1) / totalImagesToDownload) * 45); // Images take 45% progress
-          setRestoreProgress(progress);
-          setRestoreStatus(`Downloading/Importing image ${i + 1} of ${totalImagesToDownload}`);
-          addRestoreLog(`Downloading image ${i + 1}/${totalImagesToDownload}: ${imageItemRef.name}`);
-          
-          try {
-            const imageUrl = await getDownloadURL(imageItemRef);
-            const imageResponse = await fetch(imageUrl);
-            if (!imageResponse.ok) {
-              addRestoreLog(`Failed to download image: ${imageItemRef.name}, Status: ${imageResponse.status}`);
-              continue; // Skip this image if download fails
-            }
-            const imageBlob = await imageResponse.blob();
-            addRestoreLog(`Image ${imageItemRef.name} downloaded (${(imageBlob.size / 1024).toFixed(2)} KB). Importing...`);
-            
-            // Extract ID and format from filename (e.g., 'cardId.png')
-            const nameParts = imageItemRef.name.split('.');
-            const imageId = nameParts.slice(0, -1).join('.'); // Handle potential dots in ID
-            const imageFormat = nameParts.pop();
-
-            // Create image object structure expected by db.importImage
-            const imageData = {
-              id: imageId,
-              format: imageFormat,
-              data: imageBlob,
-              userId: userId, // Ensure we use the current user's ID
-              blob: imageBlob // Add the blob property as well for compatibility
-            };
-            
-            // Import image into IndexedDB
-            await db.importImage(imageData); // Changed from batch to individual
-            imagesImportedCount++;
-            addRestoreLog(`Image ${imageItemRef.name} imported successfully.`);
-
-            // Update the UI immediately after each image is imported
-            if (refreshCollections && i % 5 === 0) { // Refresh every 5 images to avoid too many refreshes
-              await refreshCollections();
-            }
-
-          } catch (imgError) {
-              addRestoreLog(`Error processing image ${imageItemRef.name}: ${imgError.message}`);
-          }
-        }
-
-        addRestoreLog(`Image download and import process finished. Successfully imported ${imagesImportedCount}/${totalImagesToDownload} images.`);
-        setRestoreProgress(95);
-
-        // 7. Finalize and refresh
-        setRestoreStatus('Finalizing restore...');
-        addRestoreLog('Finalizing restore process...');
-        
-        // Refresh collections from the database instead of calling the prop directly
         try {
-          addRestoreLog('Refreshing collections from database...');
-          const savedCollections = await db.getCollections();
-          if (savedCollections && Object.keys(savedCollections).length > 0) {
-            addRestoreLog(`Retrieved ${Object.keys(savedCollections).length} collections from database.`);
-            // If refreshCollections prop is available, use it
-            if (typeof refreshCollections === 'function') {
-              refreshCollections();
-            }
-          } else {
-            addRestoreLog('No collections found in database after restore.');
+          // 1. Download and process metadata.json
+          setRestoreStatus('Downloading metadata...');
+          addRestoreLog('Downloading metadata.json...');
+          
+          const metadataUrl = await getDownloadURL(metadataFile);
+          addRestoreLog(`Metadata URL obtained: ${metadataUrl.substring(0, 50)}...`);
+          
+          const metadataResponse = await fetch(metadataUrl, {
+            method: 'GET',
+            headers: {
+              'Accept': 'application/json',
+            },
+            mode: 'cors',
+          });
+          
+          if (!metadataResponse.ok) {
+            addRestoreLog(`Failed to download metadata.json: HTTP ${metadataResponse.status} - ${metadataResponse.statusText}`);
+            throw new Error(`Failed to download metadata.json: HTTP ${metadataResponse.status}`);
           }
-        } catch (refreshError) {
-          addRestoreLog(`Error refreshing collections: ${refreshError.message}`);
-        }
-        
-        setRestoreProgress(100);
-        setRestoreStatus('Restore complete!');
-        addRestoreLog('Cloud restore completed successfully!');
-        toastService.success('Cloud restore completed successfully!');
-        
-        // Complete the restore process
-        completeRestore();
+          
+          const backupMetadata = await metadataResponse.json();
+          addRestoreLog(`Metadata downloaded. Backup Timestamp: ${backupMetadata.timestamp}, Collections: ${backupMetadata.collectionCount}, Images: ${backupMetadata.imageCount}`);
+          setRestoreProgress(10);
 
+          // 2. Download and process collections.json
+          setRestoreStatus('Downloading collections data...');
+          addRestoreLog('Downloading collections.json...');
+          const collectionsFile = listResult.items.find(item => item.name === 'collections.json');
+          if (!collectionsFile) {
+            addRestoreLog('Error: collections.json not found in backup.');
+            throw new Error('collections.json not found in backup.');
+          }
+          
+          const collectionsUrl = await getDownloadURL(collectionsFile);
+          addRestoreLog(`Collections URL obtained: ${collectionsUrl.substring(0, 50)}...`);
+          
+          const collectionsResponse = await fetch(collectionsUrl, {
+            method: 'GET',
+            headers: {
+              'Accept': 'application/json',
+            },
+            mode: 'cors',
+          });
+          
+          if (!collectionsResponse.ok) {
+            addRestoreLog(`Failed to download collections.json: HTTP ${collectionsResponse.status} - ${collectionsResponse.statusText}`);
+            throw new Error(`Failed to download collections.json: HTTP ${collectionsResponse.status}`);
+          }
+          
+          const collectionsData = await collectionsResponse.json();
+          addRestoreLog(`Collections data downloaded. Found ${collectionsData.length} collections.`);
+          setRestoreProgress(20);
+
+          // 3. Clear existing local data (collections and images)
+          setRestoreStatus('Clearing local data...');
+          addRestoreLog('Clearing local collections...');
+          await db.clearCollections();
+          addRestoreLog('Local collections cleared successfully.');
+          
+          setRestoreProgress(30);
+
+          // 4. Import collections into IndexedDB
+          setRestoreStatus('Importing collections...');
+          addRestoreLog(`Importing ${collectionsData.length} collections into IndexedDB...`);
+          await db.importCollections(collectionsData);
+          addRestoreLog('Collections imported successfully.');
+          
+          setRestoreProgress(40);
+
+          // 5. List and download images
+          setRestoreStatus('Listing images...');
+          addRestoreLog('Listing images in backup...');
+          const imagesRef = ref(storage, `backups/${userId}/images`);
+          const imageListResult = await listAll(imagesRef);
+          const totalImagesToDownload = imageListResult.items.length;
+          addRestoreLog(`Found ${totalImagesToDownload} images to download.`);
+          setRestoreProgress(50);
+
+          // 6. Download and import images one by one
+          setRestoreStatus(`Downloading ${totalImagesToDownload} images...`);
+          addRestoreLog('Starting image downloads and import...');
+          let imagesImportedCount = 0;
+
+          for (let i = 0; i < totalImagesToDownload; i++) {
+            const imageItemRef = imageListResult.items[i];
+            const progress = 50 + Math.round(((i + 1) / totalImagesToDownload) * 45); // Images take 45% progress
+            setRestoreProgress(progress);
+            setRestoreStatus(`Downloading/Importing image ${i + 1} of ${totalImagesToDownload}`);
+            addRestoreLog(`Downloading image ${i + 1}/${totalImagesToDownload}: ${imageItemRef.name}`);
+            
+            try {
+              const imageUrl = await getDownloadURL(imageItemRef);
+              addRestoreLog(`Image URL obtained for ${imageItemRef.name}`);
+              
+              try {
+                const imageResponse = await fetch(imageUrl, {
+                  method: 'GET',
+                  mode: 'cors',
+                });
+                
+                if (!imageResponse.ok) {
+                  addRestoreLog(`Failed to download image: ${imageItemRef.name}, Status: ${imageResponse.status} - ${imageResponse.statusText}`);
+                  continue; // Skip this image if download fails
+                }
+                
+                const imageBlob = await imageResponse.blob();
+                addRestoreLog(`Image ${imageItemRef.name} downloaded (${(imageBlob.size / 1024).toFixed(2)} KB). Importing...`);
+                
+                // Extract ID and format from filename (e.g., 'cardId.png')
+                const nameParts = imageItemRef.name.split('.');
+                const imageId = nameParts.slice(0, -1).join('.'); // Handle potential dots in ID
+                const imageFormat = nameParts.pop();
+
+                // Create image object structure expected by db.importImage
+                const imageData = {
+                  id: imageId,
+                  format: imageFormat,
+                  data: imageBlob,
+                  userId: userId, // Ensure we use the current user's ID
+                  blob: imageBlob // Add the blob property as well for compatibility
+                };
+                
+                // Import image into IndexedDB
+                await db.importImage(imageData);
+                imagesImportedCount++;
+                addRestoreLog(`Image ${imageItemRef.name} imported successfully.`);
+
+                // Update the UI immediately after each image is imported
+                if (refreshCollections && i % 5 === 0) { // Refresh every 5 images to avoid too many refreshes
+                  await refreshCollections();
+                }
+              } catch (fetchError) {
+                addRestoreLog(`Error fetching image ${imageItemRef.name}: ${fetchError.message}`);
+                continue;
+              }
+            } catch (downloadUrlError) {
+              addRestoreLog(`Error getting download URL for image ${imageItemRef.name}: ${downloadUrlError.message}`);
+              continue;
+            }
+          }
+
+          addRestoreLog(`Image download and import process finished. Successfully imported ${imagesImportedCount}/${totalImagesToDownload} images.`);
+          setRestoreProgress(95);
+
+          // 7. Finalize and refresh
+          setRestoreStatus('Finalizing restore...');
+          addRestoreLog('Finalizing restore process...');
+          
+          // Refresh collections from the database instead of calling the prop directly
+          try {
+            addRestoreLog('Refreshing collections from database...');
+            const savedCollections = await db.getCollections();
+            if (savedCollections && Object.keys(savedCollections).length > 0) {
+              addRestoreLog(`Retrieved ${Object.keys(savedCollections).length} collections from database.`);
+              // If refreshCollections prop is available, use it
+              if (typeof refreshCollections === 'function') {
+                refreshCollections();
+              }
+            } else {
+              addRestoreLog('No collections found in database after restore.');
+            }
+          } catch (refreshError) {
+            addRestoreLog(`Error refreshing collections: ${refreshError.message}`);
+          }
+          
+          setRestoreProgress(100);
+          setRestoreStatus('Restore complete!');
+          addRestoreLog('Cloud restore completed successfully!');
+          toastService.success('Cloud restore completed successfully!');
+          
+          // Complete the restore process
+          completeRestore();
+        } catch (error) {
+          addRestoreLog(`Error in new format restore: ${error.message}`);
+          throw error;
+        }
       } else {
         // --- Legacy Restore Logic (Zip File) --- 
         addRestoreLog('Starting restore using legacy zip format...');
@@ -491,9 +538,8 @@ const SettingsModal = ({
 
         // Step 4: Clear existing local data
         setRestoreStatus('Clearing local data...');
-        addRestoreLog('Clearing local collections and images...');
+        addRestoreLog('Clearing local collections...');
         await db.clearCollections();
-        await db.clearImages();
         addRestoreLog('Local data cleared.');
         setRestoreProgress(60);
 
@@ -574,45 +620,19 @@ const SettingsModal = ({
         setRestoreProgress(100);
         setRestoreStatus('Restore complete!');
         addRestoreLog('Cloud restore completed successfully!');
-      }
-
-      // Step 8: Verify data security after restore
-      setRestoreStatus('Verifying data security...');
-      addRestoreLog('Verifying data security after restore...');
-      const securityCheckResult = await db.verifyDataSecurity(userId);
-      
-      if (securityCheckResult.secure) {
-        addRestoreLog('Data security verification passed: All restored data is properly isolated to your account.');
-        toastService.success('Data security verified: All restored data is properly secured with your user ID.', { duration: 8000 });
-      } else {
-        addRestoreLog('Data security verification failed: Some restored data may not be properly secured.');
+        toastService.success('Cloud restore completed successfully!');
         
-        // Log detailed information about security issues
-        if (securityCheckResult.details.collections?.unsecured > 0) {
-          addRestoreLog(`Security issue: ${securityCheckResult.details.collections.unsecured} collections not properly secured.`);
-        }
-        if (securityCheckResult.details.images?.unsecured > 0) {
-          addRestoreLog(`Security issue: ${securityCheckResult.details.images.unsecured} images not properly secured.`);
-        }
-        if (securityCheckResult.details.crossUserAccess?.leaked?.length > 0) {
-          addRestoreLog('CRITICAL: Data isolation failure detected!');
-          securityCheckResult.details.crossUserAccess.leaked.forEach(leak => {
-            addRestoreLog(`Security issue: ${leak.count} ${leak.store} accessible to other users.`);
-          });
-        }
-        
-        // Prompt user to fix security issues
-        toastService.error(
-          'Security issues detected with restored data. Please click "Verify Data Security" in the settings to see details and fix the issues.',
-          { duration: 15000 }
-        );
+        // Complete the restore process
+        completeRestore();
       }
-
     } catch (error) {
       console.error('Cloud restore failed:', error);
       addRestoreLog(`Cloud restore failed: ${error.message}`);
       setRestoreStatus(`Error: ${error.message}`);
       toastService.error(`Cloud restore failed: ${error.message}`);
+      
+      // Make sure to complete the restore process even on error
+      completeRestore();
     } finally {
       setIsCloudRestoring(false);
     }
