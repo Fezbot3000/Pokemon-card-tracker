@@ -1541,3 +1541,74 @@ exports.uploadBackup = functions.https.onCall(async (data, context) => {
     throw new functions.https.HttpsError('internal', 'Failed to upload backup: ' + error.message);
   }
 });
+
+// List backup files function
+exports.listBackupFiles = functions.https.onCall(async (data, context) => {
+  // Ensure user is authenticated
+  if (!context.auth) {
+    throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated to list backups');
+  }
+
+  try {
+    const userId = context.auth.uid;
+    const backupDir = `backups/${userId}/`;
+    
+    // Get Firebase Storage bucket reference using admin SDK
+    const bucket = admin.storage().bucket();
+    
+    // List files in the backup directory
+    const [files] = await bucket.getFiles({ prefix: backupDir });
+    
+    // Format the results
+    const fileList = files.map(file => {
+      const name = file.name.replace(backupDir, '');
+      return {
+        name: name,
+        path: file.name,
+        updated: file.metadata.updated,
+        size: file.metadata.size
+      };
+    });
+    
+    return { files: fileList };
+  } catch (error) {
+    functions.logger.error('Error listing backup files:', error);
+    throw new functions.https.HttpsError('internal', 'Failed to list backup files: ' + error.message);
+  }
+});
+
+// Get backup file content function
+exports.getBackupFileContent = functions.https.onCall(async (data, context) => {
+  // Ensure user is authenticated
+  if (!context.auth) {
+    throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated to access backup content');
+  }
+
+  try {
+    const userId = context.auth.uid;
+    const fileName = data.fileName || 'backup.zip';
+    const filePath = `backups/${userId}/${fileName}`;
+    
+    // Get Firebase Storage bucket reference using admin SDK
+    const bucket = admin.storage().bucket();
+    const file = bucket.file(filePath);
+    
+    // Check if file exists
+    const [exists] = await file.exists();
+    if (!exists) {
+      throw new functions.https.HttpsError('not-found', `Backup file ${fileName} not found`);
+    }
+    
+    // Get file content
+    const [fileContent] = await file.download();
+    
+    // Return file content as base64
+    return {
+      content: fileContent.toString('base64'),
+      fileName: fileName
+    };
+  } catch (error) {
+    functions.logger.error('Error getting backup file content:', error);
+    throw new functions.https.HttpsError('internal', 'Failed to get backup file content: ' + error.message);
+  }
+});

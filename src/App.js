@@ -55,7 +55,6 @@ import RestoreListener from './components/RestoreListener';
 import SyncStatusIndicator from './components/SyncStatusIndicator'; // Import the SyncStatusIndicator
 import featureFlags from './utils/featureFlags'; // Import feature flags
 import { CardRepository } from './repositories/CardRepository';
-import MoveVerification from './components/MoveVerification'; // Import the MoveVerification component
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db as firestoreDb, storage } from './services/firebase';
@@ -2110,14 +2109,14 @@ To import this backup:
           onExportData={handleExportData}
           onImportCollection={handleImportCollection}
           onUpdatePrices={() => {
-            return new Promise((resolve, reject) => {
+            return new Promise((resolve) => {
               handleImportClick('priceUpdate');
               setShowSettings(false);
               resolve();
             });
           }}
           onImportBaseData={() => {
-            return new Promise((resolve, reject) => {
+            return new Promise((resolve) => {
               handleImportClick('baseData');
               setShowSettings(false);
               resolve();
@@ -2260,17 +2259,6 @@ To import this backup:
                       throw error;
                     }
                   }}
-                  refreshCollections={async () => {
-                    try {
-                      const loadedCollections = await db.getCollections();
-                      setCollections(loadedCollections);
-                      return loadedCollections;
-                    } catch (error) {
-                      console.error("Error loading collections:", error);
-                      toast.error("Failed to refresh collections");
-                      return null;
-                    }
-                  }}
                   onExportData={handleExportData}
                   onImportCollection={handleImportCollection}
                   onUpdatePrices={() => {
@@ -2298,42 +2286,34 @@ To import this backup:
                 <>
                   {/* Show card list when no card is selected */}
                   {currentView === 'cards' && (
-                    <>
-                      {/* Add MoveVerification component for debugging */}
-                      {featureFlags.enableFirestoreSync && (
-                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-4">
-                          <MoveVerification />
-                        </div>
-                      )}
-                      <CardList
-                        cards={collectionData} 
-                        exchangeRate={exchangeRate}
-                        onCardClick={(card) => {
-                          let actualCollectionName = selectedCollection;
-                          if (selectedCollection === 'All Cards') {
-                            for (const [collName, cardsInCollection] of Object.entries(collections)) {
-                              if (Array.isArray(cardsInCollection) && cardsInCollection.some(c => c.slabSerial === card.slabSerial)) {
-                                actualCollectionName = collName;
-                                break; 
-                              }
-                            }
-                            if (actualCollectionName === 'All Cards') {
-                              logger.warn("Could not determine original collection for card: ", card.slabSerial);
-                              actualCollectionName = null; 
+                    <CardList
+                      cards={collectionData} 
+                      exchangeRate={exchangeRate}
+                      onCardClick={(card) => {
+                        let actualCollectionName = selectedCollection;
+                        if (selectedCollection === 'All Cards') {
+                          for (const [collName, cardsInCollection] of Object.entries(collections)) {
+                            if (Array.isArray(cardsInCollection) && cardsInCollection.some(c => c.slabSerial === card.slabSerial)) {
+                              actualCollectionName = collName;
+                              break; 
                             }
                           }
-                          selectCard(card);
-                          setInitialCardCollection(actualCollectionName); 
-                        }}
-                        onDeleteCards={onDeleteCards}
-                        onDeleteCard={handleCardDelete}
-                        onUpdateCard={handleCardUpdate}
-                        onAddCard={() => setShowNewCardForm(true)}
-                        selectedCollection={selectedCollection}
-                        collections={collections}
-                        setCollections={setCollections}
-                      />
-                    </>
+                          if (actualCollectionName === 'All Cards') {
+                            logger.warn("Could not determine original collection for card: ", card.slabSerial);
+                            actualCollectionName = null; 
+                          }
+                        }
+                        selectCard(card);
+                        setInitialCardCollection(actualCollectionName); 
+                      }}
+                      onDeleteCards={onDeleteCards}
+                      onDeleteCard={handleCardDelete}
+                      onUpdateCard={handleCardUpdate}
+                      onAddCard={() => setShowNewCardForm(true)}
+                      selectedCollection={selectedCollection}
+                      collections={collections}
+                      setCollections={setCollections}
+                    />
                   )}
                 </>
               )}
