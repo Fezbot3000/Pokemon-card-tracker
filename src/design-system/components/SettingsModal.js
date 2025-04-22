@@ -832,56 +832,49 @@ const SettingsModal = ({
                   </div>
                 </SettingsPanel>
 
-                {(Array.isArray(collections) ? collections.length > 1 : Object.keys(collections).length > 1 || 
-                  (Array.isArray(collections) ? collections.some(c => c !== 'All Cards') : Object.keys(collections).some(c => c !== 'All Cards'))) && (
                 <SettingsPanel
                   title="Manage Collections"
                   description="Delete a collection (must have at least one)."
                 >
-                  {Array.isArray(collections) ? collections.length <= 1 : Object.keys(collections).length <= 1 ? (
-                    <p className={`text-center py-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                      No collections available to delete.
-                    </p>
-                  ) : (
-                    <div className="space-y-3">
-                      <select 
-                        className={`w-full rounded-lg p-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
-                          isDarkMode 
-                            ? 'bg-[#0F0F0F] text-white border border-[#ffffff1a]' 
-                            : 'bg-white text-gray-800 border border-gray-300'
-                        }`}
-                        value={collectionToDelete}
-                        onChange={(e) => setCollectionToDelete(e.target.value)}
-                      >
-                        <option value="">Select Collection...</option>
-                        {Array.isArray(collections) ? collections.filter(name => name !== 'All Cards').map((collection) => (
-                          <option key={collection} value={collection}>
-                            {collection}
-                          </option>
-                        )) : Object.keys(collections).filter(name => name !== 'All Cards').map((collection) => (
-                          <option key={collection} value={collection}>
-                            {collection}
-                          </option>
-                        ))}
-                      </select>
-                      <Button
-                        variant="danger"
-                        onClick={() => {
-                          if (collectionToDelete) {
-                            onDeleteCollection(collectionToDelete);
-                            setCollectionToDelete('');
-                            refreshCollections?.();
-                          }
-                        }}
-                        disabled={!collectionToDelete}
-                        fullWidth
-                      >
-                        Delete Selected Collection
-                      </Button>
-                    </div>
-                  )}
+                  <div className="space-y-3">
+                    <select 
+                      className={`w-full rounded-lg p-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
+                        isDarkMode 
+                          ? 'bg-[#0F0F0F] text-white border border-[#ffffff1a]' 
+                          : 'bg-white text-gray-800 border border-gray-300'
+                      }`}
+                      value={collectionToDelete}
+                      onChange={(e) => setCollectionToDelete(e.target.value)}
+                    >
+                      <option value="">Select Collection...</option>
+                      {Array.isArray(collections) 
+                        ? collections.filter(name => name !== 'All Cards').map((collection) => (
+                            <option key={collection} value={collection}>
+                              {collection}
+                            </option>
+                          ))
+                        : Object.keys(collections).filter(name => name !== 'All Cards' && name !== 'Sold').map((collection) => (
+                            <option key={collection} value={collection}>
+                              {collection}
+                            </option>
+                          ))
+                      }
+                    </select>
+                    <Button
+                      variant="danger"
+                      onClick={() => {
+                        if (collectionToDelete) {
+                          onDeleteCollection(collectionToDelete);
+                          setCollectionToDelete('');
+                        }
+                      }}
+                      disabled={!collectionToDelete}
+                      fullWidth
+                    >
+                      Delete Selected Collection
+                    </Button>
+                  </div>
                 </SettingsPanel>
-                )}
               </div>
             )}
             
