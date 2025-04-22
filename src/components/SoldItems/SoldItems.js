@@ -532,7 +532,23 @@ const SoldItems = () => {
   // Format date for display
   const formatDate = (dateStr) => {
     if (!dateStr) return '';
-    const date = new Date(dateStr);
+    
+    let date;
+    // Check if this is a Firestore Timestamp object
+    if (dateStr && typeof dateStr === 'object' && 'seconds' in dateStr && 'nanoseconds' in dateStr) {
+      // Convert Firestore Timestamp to JavaScript Date
+      date = new Date(dateStr.seconds * 1000);
+    } else {
+      // Regular date string
+      date = new Date(dateStr);
+    }
+    
+    // Check if date is valid before formatting
+    if (isNaN(date.getTime())) {
+      console.warn('Invalid date:', dateStr);
+      return 'Invalid date';
+    }
+    
     return date.toLocaleDateString(undefined, {
       year: 'numeric',
       month: 'long',

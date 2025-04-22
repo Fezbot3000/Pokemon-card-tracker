@@ -136,28 +136,50 @@ const CardDetails = memo(({
   const loadCardImage = async () => {
     setImageLoadingState('loading');
     try {
-      // Use the appropriate ID for the image
-      const id = editedCard.id || editedCard.slabSerial || card.id || card.slabSerial;
-      // console.log('[CardDetails] Loading image for ID:', id);
-      const imageBlob = await db.getImage(id);
-      
-      if (imageBlob) {
-        // Revoke any existing object URL to prevent memory leaks
-        if (cardImage) {
+      // Prioritize Firestore image URL if available in the current card data
+      if (editedCard.imageUrl) {
+        // console.log('[CardDetails] Using Firestore image URL:', editedCard.imageUrl);
+        // Revoke existing blob URL if necessary before setting the new URL
+        if (cardImage && cardImage.startsWith('blob:')) {
           URL.revokeObjectURL(cardImage);
         }
-        
-        const imageUrl = URL.createObjectURL(imageBlob);
-        // console.log('[CardDetails] Image loaded successfully, URL:', imageUrl);
-        setCardImage(imageUrl);
+        setCardImage(editedCard.imageUrl);
         setImageLoadingState('idle');
       } else {
-        // console.log('[CardDetails] No image found for ID:', id);
-        setCardImage(null);
-        setImageLoadingState('idle');
+        // Fallback: Try loading from IndexedDB if no Firestore URL
+        const id = editedCard.id || editedCard.slabSerial || card.id || card.slabSerial;
+        // console.log('[CardDetails] No Firestore URL, attempting to load image from IndexedDB for ID:', id);
+        const imageBlob = await db.getImage(id);
+        
+        if (imageBlob) {
+          // Revoke any existing object URL (could be blob or previous Firestore URL)
+          if (cardImage) {
+            // Only revoke if it's a blob URL
+            if (cardImage.startsWith('blob:')) {
+              URL.revokeObjectURL(cardImage);
+            }
+          }
+          
+          const blobUrl = URL.createObjectURL(imageBlob);
+          // console.log('[CardDetails] Image loaded from IndexedDB, Blob URL:', blobUrl);
+          setCardImage(blobUrl);
+          setImageLoadingState('idle');
+        } else {
+          // console.log('[CardDetails] No image found in IndexedDB for ID:', id);
+          // Ensure any previous image (blob or Firestore URL) is cleared
+          if (cardImage && cardImage.startsWith('blob:')) {
+            URL.revokeObjectURL(cardImage);
+          }
+          setCardImage(null);
+          setImageLoadingState('idle');
+        }
       }
     } catch (error) {
       console.error('Error loading card image:', error);
+      // Ensure any previous image (blob or Firestore URL) is cleared on error
+      if (cardImage && cardImage.startsWith('blob:')) {
+        URL.revokeObjectURL(cardImage);
+      }
       setCardImage(null);
       setImageLoadingState('error');
     }
@@ -165,13 +187,16 @@ const CardDetails = memo(({
 
   // Handle image update
   const handleImageChange = async (file) => {
-    if (file) {
+    if (file && (file instanceof Blob || file instanceof File)) {
       try {
         // Show loading state
         setImageLoadingState('loading');
         
         // Use the appropriate ID for the image
         const id = card.id || card.slabSerial;
+        
+        // Log for debugging
+        console.log(`Processing image for card ${id}, file type: ${file.type}, size: ${file.size} bytes`);
         
         // Save image to database
         await db.saveImage(id, file);
@@ -183,7 +208,8 @@ const CardDetails = memo(({
         // Update the edited card with the image URL
         setEditedCard(prev => ({
           ...prev,
-          imageUrl: imageUrl
+          imageUrl: imageUrl,
+          hasImage: true
         }));
         
         setImageLoadingState('idle');
@@ -230,6 +256,17 @@ const CardDetails = memo(({
         
         return null;
       }
+    } else {
+      console.warn(`Invalid image file provided: ${file ? 'not a valid Blob/File' : 'null or undefined'}`);
+      setImageLoadingState('error');
+      
+      try {
+        toast.error('Invalid image file. Please try another image.');
+      } catch (toastError) {
+        console.error('Toast notification error:', toastError);
+      }
+      
+      return null;
     }
   };
 
@@ -259,6 +296,30 @@ const CardDetails = memo(({
     try {
       // console.log('[CardDetails] Saving card with data:', updatedCard);
       
+      // Process date properly - keep as string or convert to string in ISO format
+      let processedDate = null;
+      if (updatedCard.datePurchased) {
+        // If it's already a string in YYYY-MM-DD format, keep it
+        if (typeof updatedCard.datePurchased === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(updatedCard.datePurchased)) {
+          processedDate = updatedCard.datePurchased;
+        } 
+        // If it's a Date object, convert to string
+        else if (updatedCard.datePurchased instanceof Date) {
+          processedDate = updatedCard.datePurchased.toISOString().split('T')[0];
+        }
+        // Otherwise try to parse it as a date and convert to string
+        else {
+          try {
+            const dateObj = new Date(updatedCard.datePurchased);
+            if (!isNaN(dateObj.getTime())) {
+              processedDate = dateObj.toISOString().split('T')[0];
+            }
+          } catch (e) {
+            console.error('Error parsing date:', e);
+          }
+        }
+      }
+      
       // Convert string values to appropriate types
       const processedCard = {
         ...updatedCard,
@@ -267,8 +328,13 @@ const CardDetails = memo(({
         currentValueUSD: updatedCard.currentValueUSD ? parseFloat(updatedCard.currentValueUSD) : 0,
         investmentAUD: updatedCard.investmentAUD ? parseFloat(updatedCard.investmentAUD) : 0,
         currentValueAUD: updatedCard.currentValueAUD ? parseFloat(updatedCard.currentValueAUD) : 0,
-        datePurchased: updatedCard.datePurchased ? new Date(updatedCard.datePurchased) : null
+        datePurchased: processedDate, // Use the processed date
+        // Ensure both collection properties are set for compatibility
+        collection: updatedCard.collectionId || updatedCard.collection || initialCollectionName,
+        collectionId: updatedCard.collectionId || updatedCard.collection || initialCollectionName
       };
+      
+      console.log('[CardDetails] Saving processed card with collection:', processedCard.collection, 'and date:', processedCard.datePurchased);
       
       // Update the card in the database
       await updateCard(processedCard);

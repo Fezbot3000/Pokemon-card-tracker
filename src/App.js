@@ -47,12 +47,18 @@ import './styles/ios-fixes.css';
 import SoldItems from './components/SoldItems/SoldItems';
 import BottomNavBar from './components/BottomNavBar';
 import CloudSync from './components/CloudSync';
-import JSZip from 'jszip';
 import DashboardPricing from './components/DashboardPricing';
 import ComponentLibrary from './pages/ComponentLibrary';
 import logger from './utils/logger'; // Import the logger utility
 import DataMigrationModal from './components/DataMigrationModal'; // Import the DataMigrationModal component
 import RestoreListener from './components/RestoreListener';
+import SyncStatusIndicator from './components/SyncStatusIndicator'; // Import the SyncStatusIndicator
+import featureFlags from './utils/featureFlags'; // Import feature flags
+import { CardRepository } from './repositories/CardRepository';
+import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { db as firestoreDb, storage } from './services/firebase';
+import JSZip from 'jszip'; // Import JSZip for handling zip files
 
 // Helper function to generate a unique ID for cards without one
 const generateUniqueId = () => {
@@ -114,7 +120,7 @@ function NewUserRoute() {
 function Dashboard() {
   const { currentUser, loading: authLoading } = useAuth();
   const location = useLocation();
-  const { refreshSubscriptionStatus } = useSubscription();
+  const { subscriptionStatus, isLoading: subscriptionLoading, refreshSubscriptionStatus } = useSubscription();
   const hasRefreshed = useRef(false);
   const navigate = useNavigate();
 
@@ -164,16 +170,31 @@ function Dashboard() {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
   
-  // Render the dashboard content if authenticated
+  // Show loading indicator while subscription status is being determined
+  if (subscriptionLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+  
+  // Redirect to pricing if subscription is not active (and not loading)
+  // Add check to avoid redirect loop if already on pricing page
+  if (subscriptionStatus?.status !== 'active' && location.pathname !== '/dashboard/pricing') {
+    logger.debug('Dashboard Gate: User needs subscription, redirecting to pricing');
+    return <Navigate to="/dashboard/pricing" replace />;
+  }
+  
+  // Render the dashboard content if authenticated and subscription is active
   return (
     <Outlet />
   );
 }
 
-// Wrapper for dashboard index route (NewUserRoute + AppContent)
+// Wrapper for dashboard index route (AppContent)
 function DashboardIndex() {
   return <>
-    <NewUserRoute />
     <AppContent />
   </>;
 }
@@ -182,8 +203,8 @@ function AppContent() {
   const [showNewCardForm, setShowNewCardForm] = useState(false);
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [importMode, setImportMode] = useState('priceUpdate');
-  const [selectedCollection, setSelectedCollection] = useState('Default Collection');
-  const [collections, setCollections] = useState({ 'Default Collection': [] });
+  const [selectedCollection, setSelectedCollection] = useState('All Cards'); // Set initial state to 'All Cards'
+  const [collections, setCollections] = useState({}); // Don't initialize with Default Collection
   const [isLoading, setIsLoading] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
   const [showProfitChangeModal, setShowProfitChangeModal] = useState(false);
@@ -195,9 +216,10 @@ function AppContent() {
   const [initialCardCollection, setInitialCardCollection] = useState(null); // State for initial collection
   const { registerSettingsCallback, checkAndStartTutorial } = useTutorial();
   const { user, logout } = useAuth();
+  const { subscriptionStatus } = useSubscription();
+  const { currentUser } = useAuth();
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const location = useLocation();
-  const { refreshSubscriptionStatus } = useSubscription();
   
   const {
     cards,
@@ -212,6 +234,47 @@ function AppContent() {
     deleteCard,
     addCard
   } = useCardData();
+
+  // Effect to sync Firestore cards (from useCardData) with local collections state
+  useEffect(() => {
+    if (cards && Array.isArray(cards)) { // Check if cards data is available and is an array
+      // Group cards by their collection property
+      const groupedByCollection = cards.reduce((acc, card) => {
+        // Don't force Default Collection as a fallback
+        const collectionName = card.collection || card.collectionName;
+        
+        // Only add the card to a collection if it has a valid collection name
+        if (collectionName) {
+          if (!acc[collectionName]) {
+            acc[collectionName] = [];
+          }
+          acc[collectionName].push(card);
+        }
+        return acc;
+      }, {});
+
+      // Update the 'collections' state by merging existing and new grouped data
+      setCollections(prevCollections => {
+        const newCollectionsState = { ...prevCollections };
+        // Add or update collections from the grouped data
+        Object.keys(groupedByCollection).forEach(collectionName => {
+          newCollectionsState[collectionName] = groupedByCollection[collectionName];
+        });
+        // Ensure collections that exist in prevCollections but not in groupedByCollection 
+        // (like an empty 'Sold' or a newly created empty collection) are preserved
+        Object.keys(prevCollections).forEach(collectionName => {
+          if (!newCollectionsState[collectionName]) {
+            // Only preserve non-Default collections that are empty
+            if (collectionName !== 'Default Collection') {
+              newCollectionsState[collectionName] = prevCollections[collectionName]; // Preserve existing (potentially empty) collections
+            }
+          }
+        });
+        
+        return newCollectionsState;
+      });
+    }
+  }, [cards]); // Dependency: Run whenever the cards array from useCardData changes
 
   // Memoized collection data for CardList
   const collectionData = useMemo(() => {
@@ -230,7 +293,6 @@ function AppContent() {
   // Register the settings callback when component mounts
   // Using a ref to ensure we only register the callback once
   const callbackRegistered = useRef(false);
-  const { subscriptionStatus } = useSubscription();
   
   useEffect(() => {
     if (!callbackRegistered.current) {
@@ -265,12 +327,26 @@ function AppContent() {
   // Add keyboard shortcut for settings (press 's' key)
   useEffect(() => {
     const handleKeyDown = (e) => {
-      // When 's' key is pressed, open settings
+      // Check if the event target is an input, textarea, or select element
+      const targetTagName = e.target.tagName.toLowerCase();
+      if (targetTagName === 'input' || targetTagName === 'textarea' || targetTagName === 'select' || e.target.isContentEditable) {
+        // Ignore keypresses within form elements or content-editable areas
+        return;
+      }
+
+      // When 's' key is pressed (outside of form elements), open settings
       if (e.key === 's' && !e.ctrlKey && !e.altKey && !e.metaKey) {
+        // Prevent default browser behavior for 's' if necessary (e.g., saving page)
+        // e.preventDefault(); // Uncomment if needed
         setShowSettings(true);
       }
+      
+      // You could add other global shortcuts here, e.g.:
+      // if (e.key === 'a' && !e.ctrlKey && !e.altKey && !e.metaKey) {
+      //   setShowNewCardForm(true);
+      // }
     };
-    
+
     window.addEventListener('keydown', handleKeyDown);
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
@@ -497,33 +573,38 @@ function AppContent() {
         
         // Get saved collection from localStorage
         const savedSelectedCollection = localStorage.getItem('selectedCollection');
-        
+
         if (Object.keys(savedCollections).length > 0) {
           setCollections(savedCollections);
-          
-          // Handle both regular collections and "All Cards" special case
+
+          // Decide which collection to select on load
           if (savedSelectedCollection) {
+            // If a collection was saved in localStorage
             if (savedSelectedCollection === 'All Cards' || savedCollections[savedSelectedCollection]) {
-              setSelectedCollection(savedSelectedCollection);
+              // And it's valid ('All Cards' or an existing collection key)
+              setSelectedCollection(savedSelectedCollection); // Use the saved one
+              logger.debug(`Loaded saved collection selection: ${savedSelectedCollection}`);
             } else {
-              // Fall back to first collection if saved one doesn't exist
-              setSelectedCollection(Object.keys(savedCollections)[0]);
+              // Saved collection name is invalid (doesn't exist anymore)
+              const fallbackCollection = Object.keys(savedCollections)[0];
+              logger.warn(`Saved collection '${savedSelectedCollection}' not found, defaulting to first collection: ${fallbackCollection}.`);
+              setSelectedCollection(fallbackCollection); // Fallback to the first actual collection
+              localStorage.setItem('selectedCollection', fallbackCollection); // Update localStorage
             }
-          } else if (!savedCollections[selectedCollection]) {
-            // Fall back if current selection doesn't exist
-            setSelectedCollection(Object.keys(savedCollections)[0]);
+          } else {
+            // No collection saved in localStorage, default to 'All Cards'
+            logger.debug('No saved collection found in localStorage, defaulting to All Cards.');
+            setSelectedCollection('All Cards');
+            // Optionally save 'All Cards' to localStorage for next time
+            // localStorage.setItem('selectedCollection', 'All Cards'); 
           }
         } else {
+          // No collections found in DB at all
+          logger.debug('No collections found in DB, setting up Default Collection.');
           const defaultCollections = { 'Default Collection': [] };
           setCollections(defaultCollections);
           setSelectedCollection('Default Collection');
-          
-          // Try to save the default collection, but don't fail if it errors
-          try {
-            await db.saveCollections(defaultCollections);
-          } catch (saveError) {
-            logger.debug('Could not save default collection, will try again later');
-          }
+          localStorage.setItem('selectedCollection', 'Default Collection');
         }
       } catch (error) {
         logger.debug('Error during initialization, using default collections');
@@ -810,8 +891,7 @@ To import this backup:
       // Process ZIP file
       const zipContent = await zip.loadAsync(file);
       
-      // Check if collections.json exists in data/collections.json (new format)
-      // or directly in the root (old format)
+      // Check if collections.json exists in the expected locations
       let collectionsFile = zipContent.file("data/collections.json");
       if (!collectionsFile) {
         // Try the old format (root level)
@@ -1190,6 +1270,7 @@ To import this backup:
         logger.warn(`[App] Card ${slabSerialToDelete} not found in any collection in the database. Assuming already deleted or state mismatch.`);
       } else {
         // Step 3: Save updated collections back to DB
+        // Ensure 'sold' collection, if present, is explicitly preserved during save.
         await db.saveCollections(updatedCollections, true); // Explicitly preserve sold items
         
         // Update state - make sure to preserve the 'All Cards' entry if it exists
@@ -1213,14 +1294,14 @@ To import this backup:
       logger.error('[App] Error during card deletion process:', error);
       toast.error(`Error deleting card: ${error.message}`);
     }
-  }, [deleteCard]); // Now depends only on the hook's deleteCard function again
+  }, [deleteCard]);
 
   const handleCloseDetailsModal = () => {
     clearSelectedCard();
     setInitialCardCollection(null); // Clear initial collection on close
   };
 
-  const handleCardUpdate = useCallback(async (updatedCard) => {
+  const handleCardUpdate = useCallback(async (updatedCard, initialCardCollection) => {
     if (!updatedCard || !updatedCard.slabSerial) {
       logger.error('[App] handleCardUpdate received invalid card data:', updatedCard);
       toast.error('Failed to update card: Invalid data.');
@@ -1229,7 +1310,7 @@ To import this backup:
 
     const cardId = updatedCard.slabSerial;
     const originalCollectionName = initialCardCollection; // Get the original collection name from state
-    const newCollectionName = updatedCard.collectionId; // Get the new collection name from the updated card data
+    const newCollectionName = updatedCard.collectionId || updatedCard.collection; // Check both property names for compatibility
 
     if (!newCollectionName) {
       toast.error('Please select a collection before saving.');
@@ -1241,8 +1322,9 @@ To import this backup:
     try {
       // Step 1: Load current collections from DB
       const currentCollections = await db.getCollections();
-      if (!currentCollections || typeof currentCollections !== 'object') {
-        throw new Error('Failed to load collections from database.');
+      if (!currentCollections) {
+        logger.warn('[App] No collections found in database, creating new collections object');
+        currentCollections = {};
       }
 
       const updatedCollections = { ...currentCollections };
@@ -1280,6 +1362,13 @@ To import this backup:
         // Collection did not change, just update the card data within its current collection
         const currentCollection = originalCollectionName || newCollectionName; // Use whichever is valid
          logger.log(`[App] Collection not changed for card ${cardId}. Updating in collection '${currentCollection}'.`);
+        
+        // Create the collection if it doesn't exist
+        if (!updatedCollections[currentCollection]) {
+          updatedCollections[currentCollection] = [];
+          logger.log(`[App] Created new collection '${currentCollection}' since it didn't exist.`);
+        }
+        
         if (updatedCollections[currentCollection] && Array.isArray(updatedCollections[currentCollection])) {
           const cardIndex = updatedCollections[currentCollection].findIndex(card => card.slabSerial === cardId);
           if (cardIndex !== -1) {
@@ -1316,7 +1405,16 @@ To import this backup:
 
       // Step 4: Update local state (collections and the hook's card state)
       setCollections(updatedCollections); // Update local collections state
-      updateCard(updatedCard); // Update card state within useCardData hook
+      
+      // Make sure the card has the correct collection name before updating in Firestore
+      const cardForFirestore = {
+        ...updatedCard,
+        collection: newCollectionName,
+        collectionName: newCollectionName
+      };
+      
+      // Update card state within useCardData hook - this will trigger Firestore update
+      updateCard(cardForFirestore);
 
       // Step 5: Clear selected card to close modal
       handleCloseDetailsModal(); // Use the handler that clears both card and initial collection
@@ -1332,11 +1430,14 @@ To import this backup:
 
   const handleAddCard = useCallback(async (cardData, imageFile, targetCollection) => {
     try {
-      // Save card data to IndexedDB
-      const newCard = await db.addCard(cardData, imageFile);
+      // Save card data to IndexedDB with parameters in correct order
+      const newCard = await db.addCard(cardData, imageFile, targetCollection);
       
-      // Add card to the useCardData hook's state
-      addCard(newCard);
+      // Add card to the useCardData hook's state with allowOverwrite option
+      addCard(newCard, { 
+        overwrite: true, 
+        fromFirebase: featureFlags.enableFirestoreSync 
+      });
       
       // Update local state
       const newCollections = {
@@ -1380,18 +1481,31 @@ To import this backup:
   const handleResetData = async () => {
     try {
       // Show loading toast
-      toast.loading('Resetting all data...', { duration: 5000, id: 'reset-data' });
+      toast.loading('Resetting all data...', { duration: 10000, id: 'reset-data' });
+      
+      // Delete cloud data if user is logged in
+      if (user) {
+        try {
+          logger.debug('Deleting cloud data for user:', user.uid);
+          const repository = new CardRepository(user.uid);
+          await repository.deleteAllUserData();
+          logger.debug('Successfully deleted cloud data');
+        } catch (cloudError) {
+          logger.error('Error deleting cloud data:', cloudError);
+          // Continue with local data reset even if cloud deletion fails
+        }
+      }
       
       // Call the database service to reset all data
       await db.resetAllData();
       
       // Show success toast
-      toast.success('All data has been reset successfully', { id: 'reset-data' });
+      toast.success('All data has been reset successfully (local and cloud)', { id: 'reset-data' });
       
       // Reset the application state
-      setCollections({ 'Default Collection': [] });
-      setSelectedCollection('Default Collection');
-      localStorage.setItem('selectedCollection', 'Default Collection');
+      setCollections({}); // Reset collections to empty object
+      setSelectedCollection('All Cards');
+      localStorage.setItem('selectedCollection', 'All Cards');
       
       // Reload the page to ensure all components refresh properly
       window.location.reload();
@@ -1414,6 +1528,406 @@ To import this backup:
       window.removeEventListener('modalOpen', handleModalOpenEvent);
     };
   }, []);
+
+  const handleNewCollectionCreation = useCallback(async (newCollectionName) => {
+    if (!newCollectionName || collections[newCollectionName]) {
+      logger.warn('Attempted to create an existing or empty collection:', newCollectionName);
+      return; // Don't create if it already exists or is empty
+    }
+    try {
+      logger.log(`Creating new collection: ${newCollectionName}`);
+      await db.createEmptyCollection(newCollectionName);
+      // Update the collections state
+      setCollections(prevCollections => ({
+        ...prevCollections,
+        [newCollectionName]: [] // Add the new collection with an empty array
+      }));
+      toast.success(`Collection '${newCollectionName}' created!`);
+      // Optionally, select the newly created collection
+      // setSelectedCollection(newCollectionName);
+      // localStorage.setItem('selectedCollection', newCollectionName);
+    } catch (error) {
+      logger.error('Error creating new collection:', error);
+      toast.error(`Failed to create collection: ${error.message}`);
+    }
+  }, [collections, setCollections]);
+
+  // Function to import a zip file and migrate cards directly to the cloud
+  const importAndCloudMigrate = async (file, options = {}) => {
+    try {
+      // Create a loading overlay
+      const loadingEl = document.createElement('div');
+      loadingEl.className = 'fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[100]';
+      loadingEl.innerHTML = `
+        <div class="bg-white dark:bg-[#1B2131] p-6 rounded-lg shadow-lg text-center max-w-md">
+          <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+          <p class="text-gray-700 dark:text-gray-300 font-medium mb-1">Cloud Migration...</p>
+          <p class="text-gray-500 dark:text-gray-400 text-sm" id="import-status">Processing file... (Step 1 of 5)</p>
+          <div class="mt-3 w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+            <div id="import-progress" class="bg-primary h-2 rounded-full" style="width: 10%"></div>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(loadingEl);
+
+      // Function to update progress
+      const updateProgress = (message, percent, step) => {
+        const progressEl = loadingEl.querySelector('#import-progress');
+        const messageEl = loadingEl.querySelector('#import-status');
+        if (progressEl) progressEl.style.width = `${percent}%`;
+        if (messageEl) messageEl.textContent = message;
+        
+        // Call the onProgress callback if provided (for SettingsModal integration)
+        if (options.onProgress && typeof options.onProgress === 'function') {
+          options.onProgress(step || 1, percent, message);
+        }
+      };
+
+      // Set initial progress
+      updateProgress('Extracting zip file... (Step 1 of 5)', 10, 1);
+      
+      // Create a JSZip instance and load the file
+      const zip = new JSZip();
+      const zipContent = await zip.loadAsync(file);
+      
+      // Check for collections.json in the expected locations
+      let collectionsFile = zipContent.file("data/collections.json");
+      if (!collectionsFile) {
+        // Try the old format (root level)
+        collectionsFile = zipContent.file("collections.json");
+        
+        if (!collectionsFile) {
+          throw new Error("Invalid backup file: missing collections.json");
+        }
+      }
+      
+      // Load collections data
+      const collectionsJson = await collectionsFile.async("string");
+      let collectionsData;
+      
+      try {
+        collectionsData = JSON.parse(collectionsJson);
+      } catch (jsonError) {
+        logger.error('Error parsing JSON:', jsonError);
+        throw new Error("Invalid backup format: JSON parsing failed");
+      }
+      
+      // Get all collections and cards
+      const collections = {};
+      let allCards = [];
+      
+      // Process collections structure
+      updateProgress('Processing collections... (Step 3 of 5)', 30, 3);
+      
+      // Handle different backup formats
+      if (collectionsData.collections) {
+        // New format with collections property
+        Object.entries(collectionsData.collections).forEach(([name, cards]) => {
+          if (Array.isArray(cards)) {
+            collections[name] = { cards: cards, count: cards.length };
+            allCards = [...allCards, ...cards.map(card => ({ ...card, collection: name, collectionId: name }))];
+          }
+        });
+      } else {
+        // Old format with direct collection names
+        Object.entries(collectionsData).forEach(([name, value]) => {
+          if (typeof value === 'object' && !Array.isArray(value) && name !== 'profile' && name !== 'soldCards') {
+            const cards = value;
+            collections[name] = { cards: cards, count: Object.keys(cards).length };
+            allCards = [...allCards, ...Object.values(cards).map(card => ({ ...card, collection: name, collectionId: name }))];
+          }
+        });
+      }
+      
+      // Check if we have a user to upload to
+      if (!user) {
+        throw new Error("You must be logged in to migrate cards to the cloud");
+      }
+      
+      // Initialize CardRepository
+      const repository = new CardRepository(user.uid);
+      
+      // Process and upload cards
+      updateProgress('Uploading cards to cloud... (Step 4 of 5)', 40, 4);
+      
+      let successCount = 0;
+      let errorCount = 0;
+      const totalCards = allCards.length;
+      
+      // Process cards in batches to avoid overwhelming Firebase
+      const batchSize = 5;
+      for (let i = 0; i < allCards.length; i += batchSize) {
+        const batch = allCards.slice(i, i + batchSize);
+        
+        // Process each card in the batch concurrently
+        await Promise.all(batch.map(async (card) => {
+          try {
+            // Check if card has an image in the zip
+            let imageFile = null;
+            const cardId = card.id || card.slabSerial;
+            
+            if (cardId) {
+              // Look for image in various possible locations
+              const possibleImagePaths = [
+                `images/${cardId}.jpg`,
+                `images/${cardId}.jpeg`,
+                `images/${cardId}.png`,
+                `data/images/${cardId}.jpg`,
+                `data/images/${cardId}.jpeg`,
+                `data/images/${cardId}.png`
+              ];
+              
+              for (const path of possibleImagePaths) {
+                const imageZipFile = zipContent.file(path);
+                if (imageZipFile) {
+                  const blob = await imageZipFile.async("blob");
+                  imageFile = new File([blob], `${cardId}.jpg`, { type: "image/jpeg" });
+                  break;
+                }
+              }
+            }
+            
+            // Ensure card has required fields
+            const processedCard = {
+              ...card,
+              // Ensure collection is set
+              collection: card.collection || card.collectionId || "Default Collection",
+              collectionId: card.collectionId || card.collection || "Default Collection",
+              // Convert any Firestore timestamps to strings
+              datePurchased: card.datePurchased && typeof card.datePurchased === 'object' && 'seconds' in card.datePurchased 
+                ? new Date(card.datePurchased.seconds * 1000).toISOString().split('T')[0]
+                : card.datePurchased || new Date().toISOString().split('T')[0]
+            };
+            
+            // Create the card in Firestore
+            let imageBlob = null;
+            if (imageFile) {
+              try {
+                // Read image as blob
+                imageBlob = await imageFile.async('blob');
+                console.log(`[CloudMigrate] Image blob created for card ${cardId}, size: ${imageBlob?.size}`);
+              } catch (imgError) {
+                console.error(`[CloudMigrate] Error reading image for card ${cardId}:`, imgError);
+              }
+            }
+
+            const createdCardResult = await repository.createCard(processedCard, imageBlob); 
+            console.log(`[CloudMigrate] Result from createCard for ${cardId}:`, createdCardResult);
+
+            if (createdCardResult && createdCardResult.id) {
+              successCount++;
+            } else {
+              errorCount++;
+            }
+            
+            // Update progress
+            const progress = 40 + Math.floor((successCount + errorCount) / totalCards * 50);
+            updateProgress(`Uploading cards to cloud (${successCount + errorCount}/${totalCards})... (Step 4 of 5)`, progress, 4);
+          } catch (error) {
+            logger.error("Error uploading card to cloud:", error);
+            errorCount++;
+            
+            // Update progress even on error
+            const progress = 40 + Math.floor((successCount + errorCount) / totalCards * 50);
+            updateProgress(`Uploading cards to cloud (${successCount + errorCount}/${totalCards})... (Step 4 of 5)`, progress, 4);
+          }
+        }));
+      }
+      
+      // Create collections in Firestore if they don't exist
+      updateProgress('Creating collections in cloud... (Step 5 of 5)', 90, 5);
+      
+      for (const [name, collectionData] of Object.entries(collections)) {
+        try {
+          // Skip the "All Cards" collection
+          if (name === "All Cards") continue;
+          
+          // Check if collection exists
+          const collectionRef = doc(repository.collectionsRef, name);
+          const collectionDoc = await getDoc(collectionRef);
+          
+          if (!collectionDoc.exists()) {
+            // Create the collection
+            await setDoc(collectionRef, {
+              name: name,
+              cardCount: collectionData.count,
+              createdAt: serverTimestamp(),
+              updatedAt: serverTimestamp()
+            });
+          }
+        } catch (error) {
+          logger.error(`Error creating collection ${name}:`, error);
+        }
+      }
+      
+      // Final update
+      updateProgress('Migration complete!', 100, 5);
+      
+      // Show success message
+      toast.success(`Cloud migration complete! ${successCount} cards uploaded, ${errorCount} errors.`);
+      
+      // Trigger a refresh of the card data
+      if (window.dispatchEvent) {
+        window.dispatchEvent(new CustomEvent('import-complete'));
+      }
+      
+      // Remove the loading overlay after a delay
+      setTimeout(() => {
+        if (loadingEl && loadingEl.parentNode) {
+          loadingEl.parentNode.removeChild(loadingEl);
+        }
+      }, 2000);
+      
+      return { success: true, successCount, errorCount };
+    } catch (error) {
+      logger.error("Error in cloud migration:", error);
+      toast.error(`Cloud migration failed: ${error.message}`);
+      
+      // Remove the loading overlay if it exists
+      const loadingEl = document.querySelector('.fixed.inset-0.bg-black.bg-opacity-70');
+      if (loadingEl && loadingEl.parentNode) {
+        loadingEl.parentNode.removeChild(loadingEl);
+      }
+      
+      return { success: false, error: error.message };
+    }
+  };
+
+  // Function to upload only images from a zip file to Firebase Storage
+  const uploadImagesFromZip = async (file, options = {}) => {
+    try {
+      // Create a loading overlay
+      const loadingEl = document.createElement('div');
+      loadingEl.className = 'fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[100]';
+      loadingEl.innerHTML = `
+        <div class="bg-white dark:bg-[#1B2131] p-6 rounded-lg shadow-lg text-center max-w-md">
+          <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+          <p class="text-gray-700 dark:text-gray-300 font-medium mb-1">Image Upload...</p>
+          <p class="text-gray-500 dark:text-gray-400 text-sm" id="import-status">Processing file... (Step 1 of 3)</p>
+          <div class="mt-3 w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+            <div id="import-progress" class="bg-primary h-2 rounded-full" style="width: 10%"></div>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(loadingEl);
+
+      // Function to update progress
+      const updateProgress = (message, percent, step) => {
+        const progressEl = loadingEl.querySelector('#import-progress');
+        const messageEl = loadingEl.querySelector('#import-status');
+        if (progressEl) progressEl.style.width = `${percent}%`;
+        if (messageEl) messageEl.textContent = message;
+        
+        // Call the onProgress callback if provided
+        if (options.onProgress && typeof options.onProgress === 'function') {
+          options.onProgress(step || 1, percent, message);
+        }
+      };
+
+      // Set initial progress
+      updateProgress('Extracting zip file... (Step 1 of 3)', 10, 1);
+      
+      // Create a JSZip instance and load the file
+      const zip = new JSZip();
+      const zipContent = await zip.loadAsync(file);
+      
+      // Check for images folder in the expected locations
+      const imageFiles = [];
+      
+      // Find all image files in the zip
+      updateProgress('Finding images in zip file... (Step 2 of 3)', 30, 2);
+      
+      // Look for images in both root/images and data/images folders
+      zipContent.forEach((relativePath, zipEntry) => {
+        if (!zipEntry.dir) {
+          // Check if it's an image file in one of the expected locations
+          if ((relativePath.startsWith('images/') || relativePath.startsWith('data/images/')) && 
+              (relativePath.endsWith('.jpg') || relativePath.endsWith('.jpeg') || relativePath.endsWith('.png'))) {
+            imageFiles.push({
+              path: relativePath,
+              entry: zipEntry,
+              id: relativePath.split('/').pop().split('.')[0] // Extract the ID from the filename
+            });
+          }
+        }
+      });
+      
+      // Check if we have a user to upload to
+      if (!user) {
+        throw new Error("You must be logged in to upload images to the cloud");
+      }
+      
+      // Initialize CardRepository
+      const repository = new CardRepository(user.uid);
+      
+      // Process and upload images one by one
+      updateProgress(`Uploading images to cloud (0/${imageFiles.length})... (Step 3 of 3)`, 40, 3);
+      
+      let successCount = 0;
+      let errorCount = 0;
+      const totalImages = imageFiles.length;
+      
+      // Process images one at a time
+      for (let i = 0; i < imageFiles.length; i++) {
+        try {
+          const imageFile = imageFiles[i];
+          
+          // Extract the blob from the zip entry
+          const blob = await imageFile.entry.async("blob");
+          const file = new File([blob], `${imageFile.id}.jpg`, { type: "image/jpeg" });
+          
+          // Upload the image to Firebase Storage
+          const storageRef = ref(storage, `users/${user.uid}/cards/${imageFile.id}.jpg`);
+          await uploadBytes(storageRef, file);
+          
+          // Get the download URL (optional, for verification)
+          const downloadURL = await getDownloadURL(storageRef);
+          
+          // Update progress
+          successCount++;
+          const progress = 40 + Math.floor((i + 1) / totalImages * 60);
+          updateProgress(`Uploading images to cloud (${i + 1}/${totalImages})... (Step 3 of 3)`, progress, 3);
+          
+          // Add a small delay to avoid overwhelming Firebase
+          await new Promise(resolve => setTimeout(resolve, 300));
+          
+        } catch (error) {
+          logger.error("Error uploading image to cloud:", error);
+          errorCount++;
+          
+          // Update progress even on error
+          const progress = 40 + Math.floor((i + 1) / totalImages * 60);
+          updateProgress(`Uploading images to cloud (${i + 1}/${totalImages})... (Step 3 of 3)`, progress, 3);
+        }
+      }
+      
+      // Final update
+      updateProgress('Image upload complete!', 100, 3);
+      
+      // Show success message
+      toast.success(`Image upload complete! ${successCount} images uploaded, ${errorCount} errors.`);
+      
+      // Remove the loading overlay after a delay
+      setTimeout(() => {
+        if (loadingEl && loadingEl.parentNode) {
+          loadingEl.parentNode.removeChild(loadingEl);
+        }
+      }, 2000);
+      
+      return { success: true, successCount, errorCount };
+    } catch (error) {
+      logger.error("Error in image upload:", error);
+      toast.error(`Image upload failed: ${error.message}`);
+      
+      // Remove the loading overlay if it exists
+      const loadingEl = document.querySelector('.fixed.inset-0.bg-black.bg-opacity-70');
+      if (loadingEl && loadingEl.parentNode) {
+        loadingEl.parentNode.removeChild(loadingEl);
+      }
+      
+      return { success: false, error: error.message };
+    }
+  };
 
   if (isLoading) {
     return null;
@@ -1540,9 +2054,9 @@ To import this backup:
                 logger.error("Error revoking blob URLs:", blobError);
               }
               
-              if (collectionId && currentUser) {
+              if (collectionId && user) {
                 try {
-                  const cardRepo = new CardRepository(currentUser.uid);
+                  const cardRepo = new CardRepository(user.uid);
                   
                   await cardRepo.deleteCollection(collectionId);
                   logger.log(`Collection "${name}" and all its cards deleted from Firestore`);
@@ -1594,6 +2108,8 @@ To import this backup:
           onSignOut={logout}
           onStartTutorial={checkAndStartTutorial}
           onResetData={handleResetData}
+          onImportAndCloudMigrate={importAndCloudMigrate}
+          onUploadImagesFromZip={uploadImagesFromZip}
         />
       )}
       
@@ -1717,9 +2233,9 @@ To import this backup:
                   logger.error("Error revoking blob URLs:", blobError);
                 }
                 
-                if (collectionId && currentUser) {
+                if (collectionId && user) {
                   try {
-                    const cardRepo = new CardRepository(currentUser.uid);
+                    const cardRepo = new CardRepository(user.uid);
                     
                     await cardRepo.deleteCollection(collectionId);
                     logger.log(`Collection "${name}" and all its cards deleted from Firestore`);
@@ -1783,6 +2299,7 @@ To import this backup:
           onClose={() => setShowNewCardForm(false)}
           onSave={(cardData, imageFile, targetCollection) => handleAddCard(cardData, imageFile, targetCollection)}
           collections={Object.keys(collections)}
+          onNewCollectionCreated={handleNewCollectionCreation}
         />
       )}
 
@@ -1898,9 +2415,9 @@ To import this backup:
                 logger.error("Error revoking blob URLs:", blobError);
               }
               
-              if (collectionId && currentUser) {
+              if (collectionId && user) {
                 try {
-                  const cardRepo = new CardRepository(currentUser.uid);
+                  const cardRepo = new CardRepository(user.uid);
                   
                   await cardRepo.deleteCollection(collectionId);
                   logger.log(`Collection "${name}" and all its cards deleted from Firestore`);
@@ -1952,6 +2469,8 @@ To import this backup:
           onSignOut={logout}
           onStartTutorial={checkAndStartTutorial}
           onResetData={handleResetData}
+          onImportAndCloudMigrate={importAndCloudMigrate}
+          onUploadImagesFromZip={uploadImagesFromZip}
         />
       )}
 
@@ -2013,6 +2532,7 @@ To import this backup:
       />
 
       <TutorialModal />
+      <SyncStatusIndicator />
     </div>
   );
 }

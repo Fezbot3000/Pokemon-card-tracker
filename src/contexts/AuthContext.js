@@ -13,9 +13,12 @@ import {
   connectAuthEmulator
 } from 'firebase/auth';
 import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
-import { auth, db, googleProvider } from '../firebase'; // Use the simplified firebase.js file
+import { auth, db as firestoreDb, googleProvider } from '../firebase'; // Rename to firestoreDb
 import { toast } from 'react-hot-toast';
 import { useAutoSync } from './AutoSyncContext';
+import databaseService from '../services/db'; // Import as databaseService instead
+import logger from '../utils/logger';
+import featureFlags from '../utils/featureFlags';
 
 const AuthContext = createContext();
 
@@ -74,20 +77,44 @@ export function AuthProvider({ children }) {
     // }
   }, []);
 
-  // Set up the auth state listener
+  // Setup auth state listener to handle when user signs in/out
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      setCurrentUser(user);
+      setError(null);
+
       if (user) {
-        try {
-          // Just set the current user without attempting to fetch or create Firestore documents yet
-          setCurrentUser(user);
-        } catch (err) {
-          console.error("Error handling user:", err);
-          setCurrentUser(user);
+        // User is signed in
+        // Use localStorage to check if we've already synced for this user session
+        const syncKey = `cloud_sync_completed_${user.uid}`;
+        const hasSynced = localStorage.getItem(syncKey);
+        
+        if ((!hasSynced || window.location.href.includes('force_sync=true')) && featureFlags.enableFirestoreSync) {
+          try {
+            // Attempt to sync data from the cloud with force=true to ensure we get the latest data
+            logger.debug('Login detected, forcing cloud data sync to ensure cross-browser compatibility...');
+            const syncResult = await databaseService.syncFromCloud({ force: true });
+            
+            if (syncResult) {
+              logger.debug('Successfully synced data from cloud');
+              toast.success('Your cards have been synced from the cloud');
+            } else {
+              logger.debug('No cloud data sync was needed or available');
+            }
+            
+            // Mark that we've completed sync for this session
+            localStorage.setItem(syncKey, 'true');
+          } catch (syncError) {
+            logger.error('Error syncing from cloud:', syncError);
+            toast.error('Could not sync your cards from the cloud. Please try again later.');
+          }
         }
       } else {
-        setCurrentUser(null);
+        // User signed out, clear sync markers
+        const userSyncKeys = Object.keys(localStorage).filter(key => key.startsWith('cloud_sync_completed_'));
+        userSyncKeys.forEach(key => localStorage.removeItem(key));
       }
+      
       setLoading(false);
     });
 
@@ -120,7 +147,7 @@ export function AuthProvider({ children }) {
     if (!user) return null;
 
     try {
-      const userRef = doc(db, 'users', user.uid);
+      const userRef = doc(firestoreDb, 'users', user.uid);
       const userData = {
         email: user.email,
         displayName: user.displayName || user.email?.split('@')[0] || 'User',

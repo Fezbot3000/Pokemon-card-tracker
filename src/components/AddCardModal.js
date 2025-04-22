@@ -6,7 +6,7 @@ import CardDetailsForm from '../design-system/components/CardDetailsForm';
 import { toast } from 'react-hot-toast';
 import PSADetailModal from './PSADetailModal';
 import NewCollectionModal from './NewCollectionModal';
-import { searchByCertNumber } from '../services/psaSearch';
+import { searchByCertNumber, fetchPSACardImage } from '../services/psaSearch';
 
 /**
  * AddCardModal Component
@@ -18,7 +18,8 @@ const AddCardModal = ({
   onClose,
   onSave,
   collections = [],
-  className = ''
+  className = '',
+  onNewCollectionCreated
 }) => {
   // Initial card data
   const emptyCard = {
@@ -47,6 +48,7 @@ const AddCardModal = ({
   
   // State for image handling
   const [cardImage, setCardImage] = useState(null);
+  const [imageFile, setImageFile] = useState(null);
   const [imageLoadingState, setImageLoadingState] = useState('idle');
   const [showEnlargedImage, setShowEnlargedImage] = useState(false);
   
@@ -74,6 +76,7 @@ const AddCardModal = ({
       // Reset form when opening
       setNewCard({...emptyCard});
       setCardImage(null);
+      setImageFile(null);
       setErrors({});
       setSaveMessage(null);
       setPsaSerial('');
@@ -96,6 +99,7 @@ const AddCardModal = ({
       }
       
       setCardImage(imageUrl);
+      setImageFile(file);
       setImageLoadingState('idle');
       
       return file; // Return the file for saving by parent component
@@ -167,11 +171,12 @@ const AddCardModal = ({
       };
 
       // Try to save the card
-      await onSave(cardToSave, cardImage, selectedCollection);
+      await onSave(cardToSave, imageFile, selectedCollection);
       
       // Clear form on success
       setNewCard({...emptyCard});
       setCardImage(null);
+      setImageFile(null);
       setErrors({});
       setSaveMessage('Card saved successfully');
       
@@ -219,6 +224,21 @@ const AddCardModal = ({
       // Capture the PSA data
       setPsaData(data);
       
+      // Try to fetch the PSA card image in parallel
+      let psaImage = null;
+      try {
+        psaImage = await fetchPSACardImage(psaSerial);
+        if (psaImage) {
+          console.log(`PSA image fetched successfully: ${psaImage.size} bytes`);
+          setCardImage(URL.createObjectURL(psaImage));
+          setImageFile(psaImage);
+        } else {
+          console.log('No PSA image found or image fetch failed');
+        }
+      } catch (imageError) {
+        console.error('Error fetching PSA image:', imageError);
+      }
+      
       // Parse the data received from PSA
       // Check if we have a PSACert object, which seems to be the structure from the console logs
       if (data && data.PSACert) {
@@ -234,6 +254,7 @@ const AddCardModal = ({
           condition: psaInfo.GradeDescription || psaInfo.CardGrade || '',
           slabSerial: psaInfo.CertNumber || psaInfo.SpecNumber || '',
           category: psaInfo.Category || 'Pokemon',
+          hasImage: !!psaImage, // Mark that we have an image if we fetched one
         });
       }
       
@@ -430,19 +451,13 @@ const AddCardModal = ({
       {/* New Collection Modal */}
       <NewCollectionModal
         isOpen={showNewCollectionModal}
-        onClose={() => {
-          setShowNewCollectionModal(false);
-          // Defensive: forcibly clean up overlays
-          if (typeof window !== 'undefined' && window.document) {
-            document.body.classList.remove('modal-open');
-            document.querySelectorAll('.fixed.inset-0.z-50').forEach(el => {
-              if (el.parentNode) el.parentNode.removeChild(el);
-            });
-          }
-        }}
+        onClose={() => setShowNewCollectionModal(false)}
         onCreate={(name) => {
           setShowNewCollectionModal(false);
           if (!collections.includes(name)) {
+            if (onNewCollectionCreated) {
+              onNewCollectionCreated(name);
+            }
             setSelectedCollection(name);
             if (typeof window !== 'undefined') {
               if (window.db && window.db.createEmptyCollection) {
@@ -451,13 +466,6 @@ const AddCardModal = ({
             }
           } else {
             setSelectedCollection(name);
-          }
-          // Defensive: forcibly clean up overlays
-          if (typeof window !== 'undefined' && window.document) {
-            document.body.classList.remove('modal-open');
-            document.querySelectorAll('.fixed.inset-0.z-50').forEach(el => {
-              if (el.parentNode) el.parentNode.removeChild(el);
-            });
           }
         }}
         existingCollections={collections}
@@ -471,7 +479,8 @@ AddCardModal.propTypes = {
   onClose: PropTypes.func.isRequired,
   onSave: PropTypes.func.isRequired,
   collections: PropTypes.array,
-  className: PropTypes.string
+  className: PropTypes.string,
+  onNewCollectionCreated: PropTypes.func
 };
 
 export default AddCardModal;

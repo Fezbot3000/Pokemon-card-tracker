@@ -16,5 +16,27 @@ service firebase.storage {
     match /backups/{userId} {
       allow list: if request.auth != null;
     }
+    
+    // Allow users to access only their own card images
+    match /images/{userId}/{cardId} {
+      // Allow read/write access to authenticated users for their own images
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Allow users to list their own image collection
+    match /images/{userId} {
+      allow list: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Add specific rule for users/userId/cards path
+    match /users/{userId}/cards/{cardId} {
+      // Allow read/write access to authenticated users for their own card images
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Allow general access to user's own storage paths
+    match /users/{userId}/{allPaths=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
   }
 }

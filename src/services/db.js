@@ -1,6 +1,8 @@
 import { compressImage } from '../utils/imageCompression';
 import { auth } from './firebase'; // Import Firebase auth to get the current user
 import logger from '../utils/logger';
+import shadowSync from './shadowSync'; // Import shadow sync service
+import featureFlags from '../utils/featureFlags'; // Import feature flags
 
 const DB_NAME = 'pokemonCardTracker';
 const DB_VERSION = 1;
@@ -8,6 +10,7 @@ const COLLECTIONS_STORE = 'collections';
 const IMAGES_STORE = 'images';
 const PROFILE_STORE = 'profile';
 const SUBSCRIPTION_STORE = 'subscription';
+const CARDS_STORE = 'cards';
 
 class DatabaseService {
   constructor() {
@@ -120,7 +123,7 @@ class DatabaseService {
   async ensureDB() {
     // If we already have a valid database connection, return immediately
     if (this.db && this.db.version > 0 && !this.db.closed) {
-      return;
+      return this.db;
     }
     
     // If the database promise doesn't exist or the connection was closed, reinitialize
@@ -136,6 +139,8 @@ class DatabaseService {
       
       // Ensure all expected collections exist for the user
       await this.ensureCollections();
+      
+      return this.db;
     } catch (error) {
       logger.debug('Error ensuring database:', error);
       
@@ -156,6 +161,7 @@ class DatabaseService {
         await this.resetDatabaseSilently();
         // After reset, try to ensure collections again
         await this.ensureCollections();
+        return this.db;
       } catch (resetError) {
         logger.debug('Error resetting database:', resetError);
         // Just continue - we'll create default collections if needed
@@ -164,6 +170,15 @@ class DatabaseService {
     
     // Reset retry flag after successful connection
     this._retried = false;
+    
+    // If we got here and still don't have a valid DB, initialize it one more time
+    if (!this.db || this.db.closed) {
+      logger.debug('Last attempt to initialize database after all recovery attempts failed');
+      this.dbPromise = this.initDatabase();
+      this.db = await this.dbPromise;
+    }
+    
+    return this.db;
   }
   
   // Ensure all expected collections exist for the current user
@@ -286,34 +301,112 @@ class DatabaseService {
     // Create collections store with compound key for user isolation
     if (!db.objectStoreNames.contains(COLLECTIONS_STORE)) {
       logger.debug("Creating collections store");
-      db.createObjectStore(COLLECTIONS_STORE, { keyPath: ['userId', 'name'] });
+      const collectionsStore = db.createObjectStore(COLLECTIONS_STORE, { keyPath: ['userId', 'name'] });
+      // Add userId index for faster lookups
+      collectionsStore.createIndex('userId', 'userId', { unique: false });
     } else {
-      // If upgrading from version 2 to 3, we need to recreate the object store
-      // with the new compound key structure
-      db.deleteObjectStore(COLLECTIONS_STORE);
-      db.createObjectStore(COLLECTIONS_STORE, { keyPath: ['userId', 'name'] });
+      try {
+        // Get the existing store to check if it has the userId index
+        const transaction = event.target.transaction;
+        const store = transaction.objectStore(COLLECTIONS_STORE);
+        
+        // Check if the index exists, if not create it
+        if (!store.indexNames.contains('userId')) {
+          store.createIndex('userId', 'userId', { unique: false });
+          logger.debug("Added missing userId index to collections store");
+        }
+      } catch (error) {
+        // If there's an error, recreate the store with the proper index
+        logger.debug("Error checking collections store, recreating it:", error);
+        db.deleteObjectStore(COLLECTIONS_STORE);
+        const collectionsStore = db.createObjectStore(COLLECTIONS_STORE, { keyPath: ['userId', 'name'] });
+        collectionsStore.createIndex('userId', 'userId', { unique: false });
+      }
     }
 
     // Create images store with compound key for user isolation
     if (!db.objectStoreNames.contains(IMAGES_STORE)) {
       logger.debug("Creating images store");
-      db.createObjectStore(IMAGES_STORE, { keyPath: ['userId', 'id'] });
+      const imagesStore = db.createObjectStore(IMAGES_STORE, { keyPath: ['userId', 'id'] });
+      // Add userId index for faster lookups
+      imagesStore.createIndex('userId', 'userId', { unique: false });
     } else {
-      // If upgrading from version 2 to 3, we need to recreate the object store
-      // with the new compound key structure
-      db.deleteObjectStore(IMAGES_STORE);
-      db.createObjectStore(IMAGES_STORE, { keyPath: ['userId', 'id'] });
+      try {
+        // Get the existing store to check if it has the userId index
+        const transaction = event.target.transaction;
+        const store = transaction.objectStore(IMAGES_STORE);
+        
+        // Check if the index exists, if not create it
+        if (!store.indexNames.contains('userId')) {
+          store.createIndex('userId', 'userId', { unique: false });
+          logger.debug("Added missing userId index to images store");
+        }
+      } catch (error) {
+        // If there's an error, recreate the store with the proper index
+        logger.debug("Error checking images store, recreating it:", error);
+        db.deleteObjectStore(IMAGES_STORE);
+        const imagesStore = db.createObjectStore(IMAGES_STORE, { keyPath: ['userId', 'id'] });
+        imagesStore.createIndex('userId', 'userId', { unique: false });
+      }
     }
 
     // Create profile store with compound key for user isolation
     if (!db.objectStoreNames.contains(PROFILE_STORE)) {
       logger.debug("Creating profile store");
-      db.createObjectStore(PROFILE_STORE, { keyPath: ['userId', 'id'] });
+      const profileStore = db.createObjectStore(PROFILE_STORE, { keyPath: ['userId', 'id'] });
+      // Add userId index for faster lookups
+      profileStore.createIndex('userId', 'userId', { unique: false });
     } else {
-      // If upgrading from version 2 to 3, we need to recreate the object store
-      // with the new compound key structure
-      db.deleteObjectStore(PROFILE_STORE);
-      db.createObjectStore(PROFILE_STORE, { keyPath: ['userId', 'id'] });
+      try {
+        // Get the existing store to check if it has the userId index
+        const transaction = event.target.transaction;
+        const store = transaction.objectStore(PROFILE_STORE);
+        
+        // Check if the index exists, if not create it
+        if (!store.indexNames.contains('userId')) {
+          store.createIndex('userId', 'userId', { unique: false });
+          logger.debug("Added missing userId index to profile store");
+        }
+      } catch (error) {
+        // If there's an error, recreate the store with the proper index
+        logger.debug("Error checking profile store, recreating it:", error);
+        db.deleteObjectStore(PROFILE_STORE);
+        const profileStore = db.createObjectStore(PROFILE_STORE, { keyPath: ['userId', 'id'] });
+        profileStore.createIndex('userId', 'userId', { unique: false });
+      }
+    }
+
+    // Create cards store with compound key for user isolation
+    if (!db.objectStoreNames.contains(CARDS_STORE)) {
+      logger.debug("Creating cards store");
+      const cardsStore = db.createObjectStore(CARDS_STORE, { keyPath: ['userId', 'id'] });
+      // Add userId index for faster lookups
+      cardsStore.createIndex('userId', 'userId', { unique: false });
+      cardsStore.createIndex('collectionId', 'collectionId', { unique: false });
+    } else {
+      try {
+        // Get the existing store to check if it has the userId index
+        const transaction = event.target.transaction;
+        const store = transaction.objectStore(CARDS_STORE);
+        
+        // Check if the index exists, if not create it
+        if (!store.indexNames.contains('userId')) {
+          store.createIndex('userId', 'userId', { unique: false });
+          logger.debug("Added missing userId index to cards store");
+        }
+        
+        if (!store.indexNames.contains('collectionId')) {
+          store.createIndex('collectionId', 'collectionId', { unique: false });
+          logger.debug("Added missing collectionId index to cards store");
+        }
+      } catch (error) {
+        // If there's an error, recreate the store with the proper index
+        logger.debug("Error checking cards store, recreating it:", error);
+        db.deleteObjectStore(CARDS_STORE);
+        const cardsStore = db.createObjectStore(CARDS_STORE, { keyPath: ['userId', 'id'] });
+        cardsStore.createIndex('userId', 'userId', { unique: false });
+        cardsStore.createIndex('collectionId', 'collectionId', { unique: false });
+      }
     }
 
     // Subscription store already uses userId as the key, so it's already isolated
@@ -327,7 +420,7 @@ class DatabaseService {
   verifyObjectStores() {
     if (!this.db) return;
     
-    const requiredStores = [COLLECTIONS_STORE, IMAGES_STORE, PROFILE_STORE, SUBSCRIPTION_STORE];
+    const requiredStores = [COLLECTIONS_STORE, IMAGES_STORE, PROFILE_STORE, SUBSCRIPTION_STORE, CARDS_STORE];
     const existingStores = Array.from(this.db.objectStoreNames);
     
     const missingStores = requiredStores.filter(store => !existingStores.includes(store));
@@ -404,8 +497,8 @@ class DatabaseService {
         try {
           // Check if database is valid
           if (!this.db || this.db.closed) {
-            logger.debug('Database connection invalid in getCollections, returning default');
-            resolve({ 'Default Collection': [] });
+            logger.debug('Database connection invalid in getCollections, returning empty object');
+            resolve({});
             return;
           }
           
@@ -430,40 +523,36 @@ class DatabaseService {
               });
             }
             
-            // Ensure there's at least a Default Collection
-            if (Object.keys(collections).length === 0) {
-              collections['Default Collection'] = [];
-            }
-            
+            // Return collections as is without forcing Default Collection
             resolve(collections);
           };
 
           request.onerror = (error) => {
-            logger.debug('Error fetching collections:', error);
-            // Return empty collections object with Default Collection
-            resolve({ 'Default Collection': [] });
+            logger.error('Error fetching collections:', error);
+            // Return empty collections object without forcing Default Collection
+            resolve({});
           };
           
           // Add transaction error handler
           transaction.onerror = (error) => {
-            logger.debug('Transaction error in getCollections:', error);
-            resolve({ 'Default Collection': [] });
+            logger.error('Transaction error in getCollections:', error);
+            resolve({});
           };
           
           // Add transaction abort handler
           transaction.onabort = (event) => {
-            logger.debug('Transaction aborted in getCollections:', event);
-            resolve({ 'Default Collection': [] });
+            logger.error('Transaction aborted in getCollections:', event);
+            resolve({});
           };
         } catch (error) {
-          logger.debug('Transaction error in getCollections:', error);
-          // Return empty collections object with Default Collection
-          resolve({ 'Default Collection': [] });
+          logger.error('Transaction error in getCollections:', error);
+          // Return empty collections object without forcing Default Collection
+          resolve({});
         }
       });
     } catch (error) {
-      logger.debug('Fatal error in getCollections:', error);
-      return { 'Default Collection': [] };
+      logger.error('Fatal error in getCollections:', error);
+      return {};
     }
   }
 
@@ -496,7 +585,7 @@ class DatabaseService {
           [userId, '\uffff'] // Upper bound: current user, end of name range
         );
         
-        const clearRequest = store.delete(range);
+        const clearRequest = store.clear(range);
         
         clearRequest.onsuccess = () => {
           logger.debug('DB: Cleared existing collections for user:', userId);
@@ -545,7 +634,7 @@ class DatabaseService {
     });
   }
 
-  async saveImage(cardId, imageFile) {
+  async saveImage(cardId, imageFile, options = {}) {
     await this.ensureDB();
     const userId = this.getCurrentUserId();
     
@@ -557,14 +646,51 @@ class DatabaseService {
         quality: 0.8
       });
 
-      return new Promise((resolve, reject) => {
-        const transaction = this.db.transaction([IMAGES_STORE], 'readwrite');
-        const store = transaction.objectStore(IMAGES_STORE);
-        const request = store.put({ userId, id: cardId, blob: compressedImage });
+      // Save to IndexedDB first (always do this as a fallback/cache)
+      await new Promise((resolve, reject) => {
+        try {
+          const transaction = this.db.transaction([IMAGES_STORE], 'readwrite');
+          const store = transaction.objectStore(IMAGES_STORE);
+          const request = store.put({ userId, id: cardId, blob: compressedImage });
 
-        request.onsuccess = () => resolve();
-        request.onerror = () => reject('Error saving image');
+          request.onsuccess = () => resolve();
+          request.onerror = (error) => {
+            logger.error(`Error saving image to IndexedDB: ${error}`);
+            reject('Error saving image to IndexedDB');
+          };
+        } catch (error) {
+          logger.error('Transaction error in saveImage:', error);
+          reject(error);
+        }
       });
+      
+      // If Firestore sync is enabled, save to Firebase Storage
+      let downloadURL = null;
+      if (featureFlags.enableFirestoreSync) {
+        try {
+          // Import here to avoid circular dependencies
+          const { saveImageToCloud } = await import('./cloudStorage');
+          
+          // Upload to Firebase Storage and get the download URL
+          downloadURL = await saveImageToCloud(compressedImage, userId, cardId, options);
+          
+          // Update the card in Firestore with the image URL
+          shadowSync.updateCardField(cardId, { 
+            imageUrl: downloadURL,
+            hasImage: true,
+            imageUpdatedAt: new Date()
+          }).catch(error => {
+            logger.error(`Failed to update card in Firestore with image URL: ${error}`);
+          });
+          
+          logger.debug(`Image uploaded to cloud for card ${cardId}, URL: ${downloadURL}`);
+        } catch (cloudError) {
+          logger.error(`Failed to save image to cloud: ${cloudError}`);
+          // Continue with the local-only image, don't rethrow the error
+        }
+      }
+      
+      return downloadURL;
     } catch (error) {
       logger.error('Error compressing image:', error);
       throw error;
@@ -572,26 +698,36 @@ class DatabaseService {
   }
 
   async getImage(cardId) {
+    if (!cardId) {
+      logger.warn('No cardId provided to getImage');
+      return null;
+    }
+
     await this.ensureDB();
     const userId = this.getCurrentUserId();
     
     return new Promise((resolve, reject) => {
-      const transaction = this.db.transaction([IMAGES_STORE], 'readonly');
-      const store = transaction.objectStore(IMAGES_STORE);
-      const request = store.get([userId, cardId]);
-
-      request.onsuccess = () => {
-        const result = request.result?.blob || null;
-        if (result) {
-          // Create a new blob with the same content but different object identity
-          // This prevents browser caching when the same image is retrieved again
-          const newBlob = result.slice(0, result.size, result.type);
-          resolve(newBlob);
-        } else {
-          resolve(null);
-        }
-      };
-      request.onerror = () => reject('Error fetching image');
+      try {
+        const transaction = this.db.transaction([IMAGES_STORE], 'readonly');
+        const store = transaction.objectStore(IMAGES_STORE);
+        const request = store.get([userId, cardId]);
+        
+        request.onsuccess = () => {
+          if (request.result && request.result.blob) {
+            resolve(request.result.blob);
+          } else {
+            resolve(null);
+          }
+        };
+        
+        request.onerror = (error) => {
+          logger.error(`Error fetching image for card ${cardId}:`, error);
+          reject(error);
+        };
+      } catch (error) {
+        logger.error(`Transaction error in getImage for card ${cardId}:`, error);
+        reject(error);
+      }
     });
   }
 
@@ -738,84 +874,56 @@ class DatabaseService {
 
   async resetAllData() {
     try {
-      logger.debug("Resetting all application data for current user...");
+      await this.ensureDB();
       const userId = this.getCurrentUserId();
       
-      // Clear localStorage
-      localStorage.removeItem('soldCards');
-      localStorage.removeItem('cardListSortField');
-      localStorage.removeItem('cardListSortDirection');
-      localStorage.removeItem('cardListDisplayMetric');
-      localStorage.removeItem('theme');
+      // Get all object stores in the database
+      const storeNames = Array.from(this.db.objectStoreNames);
       
-      // Clear IndexedDB for current user only
-      await this.ensureDB();
+      // Create a transaction for all stores
+      const transaction = this.db.transaction(storeNames, 'readwrite');
       
-      return new Promise((resolve, reject) => {
-        try {
-          // Clear collections for current user
-          const collectionsTransaction = this.db.transaction([COLLECTIONS_STORE], 'readwrite');
-          const collectionsStore = collectionsTransaction.objectStore(COLLECTIONS_STORE);
-          const collectionsRange = IDBKeyRange.bound(
-            [userId, ''], // Lower bound: current user, start of name range
-            [userId, '\uffff'] // Upper bound: current user, end of name range
-          );
-          const clearCollectionsRequest = collectionsStore.delete(collectionsRange);
+      // Clear each store
+      const clearPromises = storeNames.map(storeName => {
+        return new Promise((resolve, reject) => {
+          logger.debug(`Clearing store: ${storeName}`);
+          const store = transaction.objectStore(storeName);
+          const request = store.clear();
           
-          // Clear images for current user
-          const imagesTransaction = this.db.transaction([IMAGES_STORE], 'readwrite');
-          const imagesStore = imagesTransaction.objectStore(IMAGES_STORE);
-          const imagesRange = IDBKeyRange.bound(
-            [userId, ''], // Lower bound: current user, start of id range
-            [userId, '\uffff'] // Upper bound: current user, end of id range
-          );
-          const clearImagesRequest = imagesStore.delete(imagesRange);
-          
-          // Clear profile for current user
-          const profileTransaction = this.db.transaction([PROFILE_STORE], 'readwrite');
-          const profileStore = profileTransaction.objectStore(PROFILE_STORE);
-          const profileRange = IDBKeyRange.bound(
-            [userId, ''], // Lower bound: current user, start of id range
-            [userId, '\uffff'] // Upper bound: current user, end of id range
-          );
-          const clearProfileRequest = profileStore.delete(profileRange);
-          
-          // Wait for transactions to complete
-          collectionsTransaction.oncomplete = () => {
-            logger.debug("Collections cleared for user:", userId);
+          request.onsuccess = () => {
+            logger.debug(`Successfully cleared store: ${storeName}`);
+            resolve();
           };
           
-          imagesTransaction.oncomplete = () => {
-            logger.debug("Images cleared for user:", userId);
+          request.onerror = (event) => {
+            logger.error(`Error clearing store ${storeName}:`, event.target.error);
+            reject(event.target.error);
           };
-          
-          profileTransaction.oncomplete = () => {
-            logger.debug("Profile cleared for user:", userId);
-          };
-          
-          // When all are done
-          Promise.all([
-            new Promise(r => { clearCollectionsRequest.onsuccess = r; }),
-            new Promise(r => { clearImagesRequest.onsuccess = r; }),
-            new Promise(r => { clearProfileRequest.onsuccess = r; })
-          ]).then(() => {
-            logger.debug("All data reset successfully for user:", userId);
-            resolve(true);
-          }).catch(error => {
-            logger.error("Error during reset:", error);
-            reject(error);
-          });
-        } catch (error) {
-          logger.error("Error in resetAllData transaction:", error);
-          reject(error);
-        }
+        });
       });
+      
+      // Wait for all stores to be cleared
+      await Promise.all(clearPromises);
+      
+      // Create a default collection only if no other collections exist
+      const collections = await this.getCollections();
+      if (Object.keys(collections).length === 0) {
+        await this.createEmptyCollection('Default Collection');
+      }
+      
+      logger.debug('All local data has been reset successfully');
+      return true;
     } catch (error) {
-      logger.error("Unexpected error in resetAllData:", error);
-      throw error;
+      logger.error('Error resetting all data:', error);
+      return false;
     }
   };
 
+  /**
+   * Migrate and compress images in the database
+   * @param {Function} progressCallback - A callback to report progress
+   * @returns {Promise<Object>} - A promise that resolves to the migration stats
+   */
   async migrateAndCompressImages(progressCallback = () => {}) {
     await this.ensureDB();
     return new Promise(async (resolve, reject) => {
@@ -889,47 +997,58 @@ class DatabaseService {
   }
 
   async saveSoldCards(soldCards) {
-    await this.ensureDB();
-    const userId = this.getCurrentUserId();
-    
-    return new Promise((resolve, reject) => {
-      try {
-        if (!this.db.objectStoreNames.contains(COLLECTIONS_STORE)) {
-          logger.error('Collections store does not exist');
-          reject('Collections store does not exist');
-          return;
-        }
-        
-        const transaction = this.db.transaction([COLLECTIONS_STORE], 'readwrite');
+    try {
+      const userId = this.getCurrentUserId();
+      const db = await this.ensureDB();
+      
+      return new Promise((resolve, reject) => {
+        const transaction = db.transaction([COLLECTIONS_STORE], 'readwrite');
         const store = transaction.objectStore(COLLECTIONS_STORE);
         
-        // Create or update the 'sold' collection without any transformations
-        const request = store.put({
-          userId,
-          name: 'sold',
-          data: soldCards
-        });
+        const request = store.put({ userId, name: 'sold', data: soldCards });
         
-        request.onsuccess = () => {
-          resolve();
+        request.onsuccess = async () => {
+          logger.debug(`Sold cards saved successfully for user ${userId}`);
+          
+          // Shadow write to Firestore if feature flag is enabled
+          if (featureFlags.enableFirestoreSync) {
+            // Shadow write each sold card individually
+            const shadowWritePromises = soldCards.map(soldCard => {
+              // Ensure each card has the necessary fields
+              const soldCardData = {
+                ...soldCard,
+                userId: userId,
+                updatedAt: new Date()
+              };
+              
+              // Use shadowSync service to write to Firestore
+              return shadowSync.shadowWriteSoldCard(soldCard.id || soldCard.cardId, soldCardData)
+                .catch(error => {
+                  // Log but don't affect the main operation's success
+                  logger.error(`Shadow write of sold card to Firestore failed:`, error);
+                  // Continue with other cards even if one fails
+                  return null;
+                });
+            });
+            
+            // Wait for all shadow writes to complete, but don't block the main operation
+            Promise.all(shadowWritePromises).catch(error => {
+              logger.error('Error during batch shadow write of sold cards:', error);
+            });
+          }
+          
+          resolve(soldCards);
         };
         
         request.onerror = (event) => {
           logger.error('Error saving sold cards:', event.target.error);
-          reject('Error saving sold cards');
+          reject(event.target.error);
         };
-        
-        transaction.oncomplete = () => {
-        };
-        
-        transaction.onerror = (event) => {
-          logger.error('Transaction error for saving sold cards:', event.target.error);
-        };
-      } catch (error) {
-        logger.error('Exception in saveSoldCards:', error);
-        reject(error);
-      }
-    });
+      });
+    } catch (error) {
+      logger.error('Error in saveSoldCards:', error);
+      throw error;
+    }
   }
   
   async getSoldCards() {
@@ -1454,7 +1573,7 @@ class DatabaseService {
   async setupRequiredStores() {
     if (!this.db) return;
     
-    const requiredStores = [COLLECTIONS_STORE, IMAGES_STORE, PROFILE_STORE, SUBSCRIPTION_STORE];
+    const requiredStores = [COLLECTIONS_STORE, IMAGES_STORE, PROFILE_STORE, SUBSCRIPTION_STORE, CARDS_STORE];
     const existingStores = Array.from(this.db.objectStoreNames);
     
     const missingStores = requiredStores.filter(store => !existingStores.includes(store));
@@ -1538,7 +1657,7 @@ class DatabaseService {
       this.db = await this.dbPromise;
       
       // Check if all required object stores exist
-      const requiredStores = [COLLECTIONS_STORE, IMAGES_STORE, PROFILE_STORE, SUBSCRIPTION_STORE];
+      const requiredStores = [COLLECTIONS_STORE, IMAGES_STORE, PROFILE_STORE, SUBSCRIPTION_STORE, CARDS_STORE];
       const existingStores = Array.from(this.db.objectStoreNames);
       const missingStores = requiredStores.filter(store => !existingStores.includes(store));
       
@@ -1689,6 +1808,802 @@ class DatabaseService {
       this._resetInProgress = false;
     }
   }
+
+  /**
+   * Save a collection to IndexedDB
+   * @param {string} name - The name of the collection
+   * @param {Array} cards - The cards in the collection
+   * @returns {Promise<Object>} - A promise that resolves to the saved collection
+   */
+  async saveCollection(name, cards = []) {
+    try {
+      const userId = this.getCurrentUserId();
+      
+      // Ensure we have a valid DB connection
+      const db = await this.ensureDB();
+      
+      // Additional sanity check to prevent "Cannot read properties of undefined (reading 'transaction')" error
+      if (!db || db.closed) {
+        logger.error("Database is not available for saveCollection");
+        throw new Error("Database connection is not available");
+      }
+      
+      // Verify the required store exists
+      if (!db.objectStoreNames.contains(COLLECTIONS_STORE)) {
+        logger.error(`Required store ${COLLECTIONS_STORE} does not exist`);
+        // Try to create the store by forcing a database upgrade
+        await this.resetDatabaseSilently();
+        // Get the new DB instance after reset
+        const newDb = await this.ensureDB();
+        if (!newDb || !newDb.objectStoreNames.contains(COLLECTIONS_STORE)) {
+          throw new Error(`Cannot save collection - ${COLLECTIONS_STORE} store does not exist`);
+        }
+      }
+      
+      return new Promise((resolve, reject) => {
+        try {
+          const transaction = db.transaction([COLLECTIONS_STORE], 'readwrite');
+          const store = transaction.objectStore(COLLECTIONS_STORE);
+          
+          // Normalize collection name
+          name = (name || 'Default Collection').trim();
+          
+          // Create collection object with user ID to ensure data isolation
+          const collection = {
+            userId,
+            name,
+            data: cards || []
+          };
+          
+          const request = store.put(collection);
+          
+          request.onsuccess = () => {
+            logger.debug(`Collection '${name}' saved successfully for user ${userId}`);
+            
+            // Shadow write to Firestore if feature flag is enabled
+            if (featureFlags.enableFirestoreSync) {
+              shadowSync.shadowWriteCollection(name, {
+                name: name,
+                cardCount: cards?.length || 0,
+                description: '',
+                createdAt: new Date(),
+                updatedAt: new Date()
+              }).catch(error => {
+                // Log but don't affect the main operation's success
+                logger.error('Shadow write to Firestore failed:', error);
+              });
+            }
+            
+            resolve(collection);
+          };
+          
+          request.onerror = (event) => {
+            const errorMsg = `Error saving collection '${name}': ${event.target.error}`;
+            logger.error(errorMsg);
+            reject(new Error(errorMsg));
+          };
+          
+          transaction.onerror = (event) => {
+            const errorMsg = `Transaction error saving collection '${name}': ${event.target.error}`;
+            logger.error(errorMsg);
+            reject(new Error(errorMsg));
+          };
+          
+          transaction.onabort = (event) => {
+            const errorMsg = `Transaction aborted saving collection '${name}': ${event.target.error}`;
+            logger.error(errorMsg);
+            reject(new Error(errorMsg));
+          };
+        } catch (innerError) {
+          logger.error(`Internal error in saveCollection promise: ${innerError}`);
+          reject(innerError);
+        }
+      });
+    } catch (error) {
+      logger.error(`Error in saveCollection: ${error}`);
+      // Try to save to localStorage as a fallback
+      try {
+        // Create a fallback entry in localStorage as last resort
+        const storageKey = `collection_${name}_${this.getCurrentUserId()}`;
+        localStorage.setItem(storageKey, JSON.stringify({
+          userId: this.getCurrentUserId(),
+          name,
+          data: cards || []
+        }));
+        logger.debug(`Saved collection '${name}' to localStorage as fallback`);
+      } catch (storageError) {
+        logger.error(`Failed to save collection even to localStorage: ${storageError}`);
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Save a card to a collection
+   * @param {Object} card - The card to save
+   * @param {File} imageFile - The image file to associate with the card
+   * @param {string} collectionName - The name of the collection
+   * @returns {Promise<Object>} - The saved card
+   */
+  async saveCard(card, imageFile, collectionName) {
+    try {
+      // First, get the collection
+      const collection = await this.getCollection(collectionName);
+      if (!collection) {
+        throw new Error(`Collection '${collectionName}' not found`);
+      }
+      
+      // If no ID, generate one
+      if (!card.id) {
+        card.id = this.generateId();
+      }
+      
+      // Find index of card in collection if it exists
+      const cardIndex = collection.data.findIndex(c => c.id === card.id);
+      
+      // Handle image file if provided and is a valid Blob or File
+      if (imageFile && (imageFile instanceof Blob || imageFile instanceof File)) {
+        try {
+          // Compress the image before saving
+          const compressedImage = await compressImage(imageFile);
+          
+          // Save the image to IndexedDB
+          await this.saveImage(card.id, compressedImage);
+          
+          // Update card with placeholder for image URL
+          card.hasImage = true;
+        } catch (imageError) {
+          logger.error(`Error processing image for card ${card.id}:`, imageError);
+          // Continue without image if there's an error
+          card.hasImage = false;
+        }
+      } else if (cardIndex >= 0) {
+        // If no new image but card exists, preserve existing image status
+        card.hasImage = collection.data[cardIndex].hasImage;
+      }
+      
+      // Update or add the card
+      if (cardIndex >= 0) {
+        // Preserve any fields not included in the update
+        collection.data[cardIndex] = { ...collection.data[cardIndex], ...card };
+      } else {
+        // Add new card
+        collection.data.push(card);
+      }
+      
+      // Save the updated collection
+      await this.saveCollection(collectionName, collection.data);
+      
+      // Shadow write to Firestore if feature flag is enabled
+      if (featureFlags.enableFirestoreSync) {
+        const userId = this.getCurrentUserId();
+        // Prepare card data with the collection reference
+        const firestoreCardData = {
+          ...card,
+          userId: userId,
+          updatedAt: new Date()
+        };
+        
+        // Use shadowSync service to write to Firestore
+        shadowSync.shadowWriteCard(card.id, firestoreCardData)
+          .catch(error => {
+            // Log but don't affect the main operation's success
+            logger.error(`Shadow write of card ${card.id} to Firestore failed:`, error);
+          });
+      }
+      
+      return card;
+    } catch (error) {
+      logger.error('Error saving card:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Delete a card from a collection
+   * @param {string} cardId - The ID of the card to delete
+   * @param {string} collectionName - The name of the collection
+   * @returns {Promise<Array>} - A promise that resolves to the updated collection
+   */
+  async deleteCard(cardId, collectionName) {
+    try {
+      // Get the collection
+      const collection = await this.getCollection(collectionName);
+      if (!collection) {
+        throw new Error(`Collection '${collectionName}' not found`);
+      }
+      
+      // Find the card in the collection
+      const cardIndex = collection.data.findIndex(card => card.id === cardId);
+      if (cardIndex === -1) {
+        throw new Error(`Card with ID ${cardId} not found in collection '${collectionName}'`);
+      }
+      
+      // Remove the card from the collection
+      collection.data.splice(cardIndex, 1);
+      
+      // Save the updated collection
+      await this.saveCollection(collectionName, collection.data);
+      
+      // Delete the card image from IndexedDB
+      try {
+        await this.deleteImage(cardId);
+      } catch (error) {
+        logger.warn(`Error deleting image for card ${cardId}:`, error);
+        // Continue even if image deletion fails
+      }
+      
+      // Shadow delete from Firestore if feature flag is enabled
+      if (featureFlags.enableFirestoreSync) {
+        shadowSync.shadowDeleteCard(cardId)
+          .catch(error => {
+            // Log but don't affect the main operation's success
+            logger.error(`Shadow delete of card ${cardId} from Firestore failed:`, error);
+          });
+      }
+      
+      return collection.data;
+    } catch (error) {
+      logger.error('Error deleting card:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Add a new card to a collection
+   * @param {Object} card - The card data to add
+   * @param {File} imageFile - The image file to associate with the card
+   * @param {string} collectionName - The name of the collection
+   * @returns {Promise<Object>} - The added card
+   */
+  async addCard(card, imageFile, collectionName) {
+    try {
+      const userId = this.getCurrentUserId();
+      
+      // Generate a unique ID for the card if it doesn't have one
+      const cardId = card.slabSerial || `card-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+      
+      // Process the image if provided
+      let imageUrl = null;
+      if (imageFile) {
+        imageUrl = await this.saveImage(cardId, imageFile);
+      }
+      
+      // Use the provided collection name, don't default to 'Default Collection'
+      const targetCollection = collectionName || '';
+      
+      // Get existing collections
+      const collections = await this.getCollections();
+      
+      // Check if the collection exists
+      if (!collections[targetCollection]) {
+        // If no collection is specified or the collection doesn't exist, create it
+        if (targetCollection) {
+          await this.createEmptyCollection(targetCollection);
+          collections[targetCollection] = [];
+          logger.debug(`Creating new collection "${targetCollection}" since it did not exist`);
+        } else {
+          // No collection specified and no Default Collection exists
+          // Let's handle this case by returning an error
+          throw new Error('No collection specified and no default collection exists');
+        }
+      }
+      
+      // Create the card object
+      const cardData = {
+        ...card,
+        id: cardId,
+        slabSerial: cardId,
+        imageUrl,
+        userId,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        collection: targetCollection,
+        collectionName: targetCollection
+      };
+      
+      // Save the card to the database
+      await this.saveCard(cardData);
+      
+      // Add the card to the collection
+      if (targetCollection) {
+        collections[targetCollection].push(cardData);
+        await this.saveCollections(collections);
+      }
+      
+      return cardData;
+    } catch (error) {
+      logger.error('Error adding card:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Generate a unique ID for new cards
+   * @returns {string} - A unique ID
+   */
+  generateId() {
+    return `card_${Date.now()}_${Math.floor(Math.random() * 10000)}`;
+  }
+
+  /**
+   * Get a specific collection by name
+   * @param {string} collectionName - The name of the collection to retrieve
+   * @returns {Promise<Object|null>} - The collection or null if not found
+   */
+  async getCollection(collectionName) {
+    try {
+      if (!collectionName) {
+        collectionName = 'Default Collection';
+      }
+      
+      const userId = this.getCurrentUserId();
+      await this.ensureDB();
+      
+      return new Promise((resolve, reject) => {
+        try {
+          const transaction = this.db.transaction([COLLECTIONS_STORE], 'readonly');
+          const store = transaction.objectStore(COLLECTIONS_STORE);
+          
+          // Query for the specific collection by its name and user ID
+          const request = store.get([userId, collectionName.trim()]);
+          
+          request.onsuccess = () => {
+            if (request.result) {
+              resolve(request.result);
+            } else {
+              // Create a default empty collection object if none exists
+              const defaultCollection = {
+                userId,
+                name: collectionName,
+                data: []
+              };
+              
+              if (collectionName === 'Default Collection') {
+                // For Default Collection, auto-create it
+                resolve(defaultCollection);
+              } else {
+                // For other collections, return null to indicate not found
+                resolve(null);
+              }
+            }
+          };
+          
+          request.onerror = (error) => {
+            logger.error(`Error fetching collection '${collectionName}':`, error);
+            reject(error);
+          };
+        } catch (innerError) {
+          logger.error('Transaction error in getCollection:', innerError);
+          reject(innerError);
+        }
+      });
+    } catch (error) {
+      logger.error(`Error in getCollection('${collectionName}'):`, error);
+      return null;
+    }
+  }
+
+  /**
+   * Get all cards for a specific collection
+   * @param {string} collectionName - The name of the collection
+   * @returns {Promise<Array>} - A promise that resolves to the cards in the collection
+   */
+  async getCardsInCollection(collectionName) {
+    await this.ensureDB();
+    const userId = this.getCurrentUserId();
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db.transaction([CARDS_STORE], 'readonly');
+      const store = transaction.objectStore(CARDS_STORE);
+      const index = store.index('collectionId'); // Assuming 'collectionId' index exists
+      const cards = [];
+
+      // Query using the collectionId index
+      const request = index.openCursor(IDBKeyRange.only(collectionName));
+
+      request.onsuccess = (event) => {
+        const cursor = event.target.result;
+        if (cursor) {
+          // Check if the card belongs to the current user
+          if (cursor.value.userId === userId) { 
+            cards.push(cursor.value);
+          }
+          cursor.continue();
+        } else {
+          // No more entries
+          logger.debug(`Retrieved ${cards.length} cards for collection '${collectionName}' from DB`);
+          resolve(cards);
+        }
+      };
+
+      request.onerror = (event) => {
+        logger.error(`Error getting cards for collection ${collectionName}:`, event.target.error);
+        reject(event.target.error);
+      };
+
+      // Add transaction error handler
+      transaction.onerror = (error) => {
+        logger.error(`Transaction error getting cards for collection ${collectionName}:`, error);
+        reject(error);
+      };
+    });
+  }
+
+  /**
+   * Get all cards for the current user from IndexedDB
+   * @returns {Promise<Array>} - A promise that resolves to an array of card objects
+   */
+  async getAllCards() {
+    await this.ensureDB();
+    const userId = this.getCurrentUserId();
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db.transaction([CARDS_STORE], 'readonly');
+      const store = transaction.objectStore(CARDS_STORE);
+      const index = store.index('userId'); // Use the userId index
+      const cards = [];
+
+      // Query using the userId index
+      const request = index.openCursor(IDBKeyRange.only(userId));
+
+      request.onsuccess = (event) => {
+        const cursor = event.target.result;
+        if (cursor) {
+          // Add the card to the list
+          cards.push(cursor.value);
+          cursor.continue();
+        } else {
+          // No more entries
+          logger.debug(`Retrieved ${cards.length} cards for user ${userId} from DB`);
+          resolve(cards);
+        }
+      };
+
+      request.onerror = (event) => {
+        logger.error(`Error getting all cards for user ${userId}:`, event.target.error);
+        reject(event.target.error);
+      };
+
+      // Add transaction error handler
+      transaction.onerror = (error) => {
+        logger.error(`Transaction error getting all cards for user ${userId}:`, error);
+        reject(error);
+      };
+    });
+  }
+
+  async syncFromCloud(onProgress) {
+    try {
+      const { force = false } = onProgress;
+      
+      // Skip if Firestore sync is not enabled
+      if (!featureFlags.enableFirestoreSync) {
+        logger.debug('Skipping cloud sync, Firestore sync is disabled');
+        return false;
+      }
+      
+      // Ensure shadow sync service is initialized
+      if (!this.shadowSync || !this.shadowSync.isInitialized) {
+        logger.debug('Shadow sync service not initialized, skipping cloud sync');
+        return false;
+      }
+      
+      // ALWAYS force sync on a new browser for better cross-browser compatibility
+      const browserKey = 'browser_id';
+      const storedBrowserId = localStorage.getItem(browserKey);
+      const isNewBrowser = !storedBrowserId;
+      
+      if (isNewBrowser) {
+        // Create and store a unique browser ID for future reference
+        const browserId = Math.random().toString(36).substring(2, 15);
+        localStorage.setItem(browserKey, browserId);
+        logger.debug('New browser detected, will check for cloud data');
+        
+        // Force sync for new browsers
+        force = true;
+      }
+      
+      // Check if user has any local data
+      if (!force) {
+        await this.ensureDB();
+        const hasLocalData = await this.hasLocalData();
+        
+        // If we have local data and not forcing, skip sync
+        if (hasLocalData) {
+          logger.debug('Local data exists and not a new browser, skipping cloud sync');
+          return false;
+        }
+      }
+      
+      // Check if user has cloud data
+      const hasCloudData = await this.shadowSync.hasCloudData();
+      if (!hasCloudData) {
+        logger.debug('No cloud data found, skipping sync');
+        return false;
+      }
+      
+      // Fetch cloud data
+      logger.debug('Fetching data from cloud...');
+      const { collections, cards } = await this.shadowSync.fetchCloudData();
+      
+      logger.debug(`Received from cloud: ${collections.length} collections and ${cards.length} cards`);
+      
+      if (collections.length === 0 && cards.length === 0) {
+        logger.debug('No cloud data fetched, skipping sync');
+        return false;
+      }
+      
+      // Group cards by collection for proper association
+      const cardsByCollection = {};
+      
+      // Organize cards by collection
+      for (const card of cards) {
+        const collectionId = card.collectionId || 'Default Collection';
+        if (!cardsByCollection[collectionId]) {
+          cardsByCollection[collectionId] = [];
+        }
+        cardsByCollection[collectionId].push(card);
+      }
+      
+      logger.debug(`Organized cards by collection: ${Object.keys(cardsByCollection).join(', ')}`);
+      
+      // Create a "Default Collection" if we have cards but no matching collection
+      if (cards.length > 0 && collections.length === 0) {
+        logger.debug('Creating Default Collection since it was not found in cloud data');
+        await this.createEmptyCollection('Default Collection');
+      }
+      
+      // First, save all collections to local storage
+      for (const collection of collections) {
+        try {
+          // Create or update the collection
+          logger.debug(`Syncing collection ${collection.name || collection.id} from cloud`);
+          
+          // Initialize the collection data structure
+          const collectionData = {
+            name: collection.name || 'Unknown Collection',
+            description: collection.description || '',
+            cardCount: collection.cardCount || 0,
+            // Ensure we have required fields
+            ...collection
+          };
+          
+          // Save collection to local database
+          await this.saveCollection(collectionData.name, collectionData);
+          
+          logger.debug(`Saved collection ${collectionData.name} to local database`);
+        } catch (collectionError) {
+          logger.error(`Error syncing collection from cloud:`, collectionError);
+        }
+      }
+      
+      // Now save all cards to local storage
+      for (const [collectionName, collectionCards] of Object.entries(cardsByCollection)) {
+        try {
+          logger.debug(`Processing ${collectionCards.length} cards for collection ${collectionName}`);
+          
+          // Ensure the collection exists
+          let collection = await this.getCollection(collectionName);
+          if (!collection) {
+            logger.debug(`Collection ${collectionName} not found locally, creating it`);
+            await this.createEmptyCollection(collectionName);
+            collection = await this.getCollection(collectionName);
+          }
+          
+          // Track the local cards we'll add to the collection
+          const localCards = [];
+          
+          // Add each card to local storage
+          for (const card of collectionCards) {
+            try {
+              // Prepare the card data for local storage
+              const cardData = {
+                ...card,
+                // Convert Firestore timestamps to Date objects if needed
+                createdAt: card.createdAt instanceof Date ? card.createdAt : new Date(card.createdAt || Date.now()),
+                updatedAt: card.updatedAt instanceof Date ? card.updatedAt : new Date(card.updatedAt || Date.now()),
+                // Make sure we have an id
+                id: card.id || card.slabSerial || Math.random().toString(36).substring(2, 15)
+              };
+              
+              // Add explicit collection reference to ensure association
+              cardData.collectionId = collectionName;
+              
+              // Add card to local storage
+              await this.addCard(cardData, null, collectionName);
+              logger.debug(`Added card ${cardData.id} to collection ${collectionName}`);
+              
+              // If card has an image URL, fetch and save the image
+              if (card.imageUrl) {
+                try {
+                  // Fetch the image from the URL
+                  logger.debug(`Fetching image from URL: ${card.imageUrl} for card ${card.id || card.slabSerial}`);
+                  const response = await fetch(card.imageUrl);
+                  if (response.ok) {
+                    const blob = await response.blob();
+                    // Save the image to local storage AND sync to cloud
+                    await this.saveImage(card.id || card.slabSerial, blob, { syncToCloud: true });
+                    logger.debug(`Synced image for card ${card.id || card.slabSerial} to local and cloud storage`);
+                  } else {
+                    logger.error(`Failed to fetch image from URL: ${card.imageUrl}, status: ${response.status}`);
+                  }
+                } catch (imageError) {
+                  logger.error(`Error fetching image for card ${card.id || card.slabSerial}:`, imageError);
+                }
+              } else if (card.hasImage === true) {
+                // If card has hasImage flag but no URL, try to generate dummy image for testing
+                try {
+                  logger.debug(`Card ${card.id || card.slabSerial} has hasImage flag but no URL, creating placeholder`);
+                  // Create a canvas element to generate a placeholder image
+                  const canvas = document.createElement('canvas');
+                  canvas.width = 400;
+                  canvas.height = 550;
+                  const ctx = canvas.getContext('2d');
+                  
+                  // Fill background
+                  ctx.fillStyle = '#f0f0f0';
+                  ctx.fillRect(0, 0, canvas.width, canvas.height);
+                  
+                  // Draw card details
+                  ctx.fillStyle = '#333';
+                  ctx.font = '24px Arial';
+                  ctx.fillText(card.name || 'Unknown Card', 20, 40);
+                  ctx.font = '18px Arial';
+                  ctx.fillText(card.set || 'Unknown Set', 20, 70);
+                  ctx.fillText(`Value: $${card.value || '0.00'}`, 20, 100);
+                  
+                  // Convert to blob and save
+                  canvas.toBlob(async (blob) => {
+                    await this.saveImage(card.id || card.slabSerial, blob, { syncToCloud: true });
+                    logger.debug(`Created and synced placeholder image for card ${card.id || card.slabSerial}`);
+                  }, 'image/jpeg', 0.8);
+                } catch (placeholderError) {
+                  logger.error(`Error creating placeholder image:`, placeholderError);
+                }
+              }
+            } catch (cardError) {
+              logger.error(`Error adding card to local storage:`, cardError);
+            }
+          }
+          
+          // Update the collection with the synced cards
+          if (collection && localCards.length > 0) {
+            // Ensure we're adding to any existing cards, not replacing them
+            const existingCards = collection.cards || [];
+            const updatedCards = [...existingCards];
+            
+            // Add new cards from cloud, avoiding duplicates
+            for (const card of localCards) {
+              const cardId = card.id || card.slabSerial;
+              const existingIndex = updatedCards.findIndex(c => (c.id || c.slabSerial) === cardId);
+              
+              if (existingIndex >= 0) {
+                // Update existing card
+                updatedCards[existingIndex] = { ...updatedCards[existingIndex], ...card };
+              } else {
+                // Add new card
+                updatedCards.push(card);
+              }
+            }
+            
+            // Save the updated collection with all cards
+            await this.saveCollection(collectionName, {
+              ...collection,
+              cards: updatedCards,
+              cardCount: updatedCards.length,
+              updatedAt: new Date()
+            });
+            
+            logger.debug(`Updated collection ${collectionName} with ${updatedCards.length} total cards`);
+          }
+        } catch (collectionError) {
+          logger.error(`Error processing collection ${collectionName}:`, collectionError);
+        }
+      }
+      
+      // Force a page reload to show the synced data
+      logger.debug('Cloud sync completed successfully, reloading page to reflect changes');
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+      
+      return true;
+    } catch (error) {
+      logger.error('Error syncing from cloud:', error);
+      return false;
+    }
+  }
+  
+  /**
+   * Check if user has any local data
+   * @returns {Promise<boolean>} - Whether user has any local data
+   */
+  async hasLocalData() {
+    try {
+      await this.ensureDB();
+      const userId = this.getCurrentUserId();
+      
+      // Check collections
+      const collections = await this.getCollections();
+      if (collections.length > 0) {
+        return true;
+      }
+      
+      // Check if any cards exist
+      return new Promise((resolve) => {
+        const transaction = this.db.transaction([CARDS_STORE], 'readonly');
+        const store = transaction.objectStore(CARDS_STORE);
+        
+        // Use IDBKeyRange to find cards for the current user
+        const range = IDBKeyRange.bound([userId, ''], [userId, '\uffff']);
+        const countRequest = store.count(range);
+        
+        countRequest.onsuccess = () => {
+          resolve(countRequest.result > 0);
+        };
+        
+        countRequest.onerror = () => {
+          resolve(false);
+        };
+      });
+    } catch (error) {
+      logger.error('Error checking for local data:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Reset all data in the database
+   * This deletes all collections, cards, and other user data
+   * @returns {Promise<boolean>} - Whether the reset was successful
+   */
+  async resetAllData() {
+    try {
+      await this.ensureDB();
+      const userId = this.getCurrentUserId();
+      
+      // Get all object stores in the database
+      const storeNames = Array.from(this.db.objectStoreNames);
+      
+      // Create a transaction for all stores
+      const transaction = this.db.transaction(storeNames, 'readwrite');
+      
+      // Clear each store
+      const clearPromises = storeNames.map(storeName => {
+        return new Promise((resolve, reject) => {
+          logger.debug(`Clearing store: ${storeName}`);
+          const store = transaction.objectStore(storeName);
+          const request = store.clear();
+          
+          request.onsuccess = () => {
+            logger.debug(`Successfully cleared store: ${storeName}`);
+            resolve();
+          };
+          
+          request.onerror = (event) => {
+            logger.error(`Error clearing store ${storeName}:`, event.target.error);
+            reject(event.target.error);
+          };
+        });
+      });
+      
+      // Wait for all stores to be cleared
+      await Promise.all(clearPromises);
+      
+      // Create a default collection only if no other collections exist
+      const collections = await this.getCollections();
+      if (Object.keys(collections).length === 0) {
+        await this.createEmptyCollection('Default Collection');
+      }
+      
+      logger.debug('All local data has been reset successfully');
+      return true;
+    } catch (error) {
+      logger.error('Error resetting all data:', error);
+      return false;
+    }
+  };
 }
 
 const db = new DatabaseService();

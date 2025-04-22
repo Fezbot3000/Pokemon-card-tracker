@@ -24,6 +24,39 @@ const SoldItemsView = ({
   const [expandedYears, setExpandedYears] = useState(new Set());
   const [expandedInvoices, setExpandedInvoices] = useState(new Set());
 
+  // Helper function to safely format dates, handling Firestore Timestamp objects
+  const formatDateSafely = (dateValue) => {
+    if (!dateValue) return '';
+    
+    // If formatDate function is provided, use it
+    if (formatDate) {
+      return formatDate(dateValue);
+    }
+    
+    // Otherwise, handle it ourselves
+    let date;
+    // Check if this is a Firestore Timestamp object
+    if (dateValue && typeof dateValue === 'object' && 'seconds' in dateValue && 'nanoseconds' in dateValue) {
+      // Convert Firestore Timestamp to JavaScript Date
+      date = new Date(dateValue.seconds * 1000);
+    } else {
+      // Regular date string or Date object
+      date = new Date(dateValue);
+    }
+    
+    // Check if date is valid before formatting
+    if (isNaN(date.getTime())) {
+      console.warn('Invalid date:', dateValue);
+      return 'Invalid date';
+    }
+    
+    return date.toLocaleDateString(undefined, {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
   // Filter out invalid or empty invoice entries
   const validItems = useMemo(() => {
     return items.filter(invoice => 
@@ -42,7 +75,23 @@ const SoldItemsView = ({
     // Helper to determine financial year
     const getFinancialYear = (dateStr) => {
       try {
-        const date = new Date(dateStr);
+        let date;
+        
+        // Check if this is a Firestore Timestamp object
+        if (dateStr && typeof dateStr === 'object' && 'seconds' in dateStr && 'nanoseconds' in dateStr) {
+          // Convert Firestore Timestamp to JavaScript Date
+          date = new Date(dateStr.seconds * 1000);
+        } else {
+          // Regular date string
+          date = new Date(dateStr);
+        }
+        
+        // Check if date is valid
+        if (isNaN(date.getTime())) {
+          console.warn('Invalid date in getFinancialYear:', dateStr);
+          return "Unknown Year";
+        }
+        
         const month = date.getMonth();
         const year = date.getFullYear();
         
@@ -85,7 +134,21 @@ const SoldItemsView = ({
     // Sort invoices by date (newest first)
     Object.values(grouped).forEach(yearGroup => {
       yearGroup.invoices.sort((a, b) => {
-        return new Date(b.dateSold) - new Date(a.dateSold);
+        // Helper function to safely convert any date format to milliseconds
+        const getDateMillis = (dateValue) => {
+          if (!dateValue) return 0;
+          
+          // Handle Firestore Timestamp objects
+          if (dateValue && typeof dateValue === 'object' && 'seconds' in dateValue && 'nanoseconds' in dateValue) {
+            return dateValue.seconds * 1000;
+          }
+          
+          // Handle regular date strings or Date objects
+          const date = new Date(dateValue);
+          return isNaN(date.getTime()) ? 0 : date.getTime();
+        };
+        
+        return getDateMillis(b.dateSold) - getDateMillis(a.dateSold);
       });
     });
     
@@ -220,7 +283,7 @@ const SoldItemsView = ({
                             {/* Invoice Header */}
                             <InvoiceHeader
                               title={invoice.buyer || 'Unknown Buyer'}
-                              subtitle={formatDate ? formatDate(invoice.dateSold) : invoice.dateSold}
+                              subtitle={formatDateSafely(invoice.dateSold)}
                               totalInvestment={invoice.totalInvestment}
                               totalSale={invoice.totalSale}
                               totalProfit={invoice.totalProfit}

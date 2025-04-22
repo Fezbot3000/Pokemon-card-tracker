@@ -1226,6 +1226,141 @@ exports.psaLookup = functions.https.onCall(async (data, context) => {
   }
 });
 
+// Function to look up PSA card data and cert details by certification number
+// This avoids CORS issues when calling PSA API from client-side code
+exports.psaLookup = functions.https.onCall(async (data, context) => {
+  try {
+    // Check if the request is authenticated (optional)
+    if (!context.auth) {
+      // Allowing anonymous access for now
+      console.log('Anonymous PSA lookup request');
+    } else {
+      console.log('Authenticated PSA lookup from:', context.auth.uid);
+    }
+
+    // Extract cert number from request
+    const { certNumber, includeImage } = data;
+    if (!certNumber) {
+      throw new Error('No certification number provided');
+    }
+
+    console.log(`Looking up PSA cert #${certNumber}`);
+
+    // Prepare the request to PSA API
+    const url = `https://www.psacard.com/cert/${certNumber}`;
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+      }
+    });
+
+    // If PSA site didn't respond with 200 OK
+    if (!response.ok) {
+      console.error(`PSA API responded with status ${response.status}`);
+      return { success: false, error: `PSA API returned status ${response.status}` };
+    }
+
+    // Extract data from the response HTML
+    const html = await response.text();
+    
+    // Very simple HTML parsing to extract the PSA certificate data
+    const dataRegex = /<script.*?var\s+psaApiData\s*=\s*({.*?});<\/script>/s;
+    const match = html.match(dataRegex);
+    
+    let psaData = { PSACert: {} };
+    if (match && match[1]) {
+      try {
+        psaData = JSON.parse(match[1]);
+      } catch (e) {
+        console.error('Failed to parse PSA data:', e);
+      }
+    }
+    
+    // If includeImage is true, we'll try to find image URLs in the response
+    let imageUrl = null;
+    if (includeImage) {
+      // Look for image URLs in the HTML
+      const imageRegex = /<img[^>]*src="([^"]*psacard[^"]*\/lg\/[^"]*)"[^>]*>/i;
+      const imageMatch = html.match(imageRegex);
+      
+      if (imageMatch && imageMatch[1]) {
+        imageUrl = imageMatch[1];
+        console.log(`Found PSA image URL: ${imageUrl}`);
+      }
+    }
+    
+    // Return the data
+    return {
+      success: true,
+      data: psaData,
+      imageUrl
+    };
+  } catch (error) {
+    console.error('Error in PSA lookup:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+// Function to store images in Firebase Storage
+exports.storeCardImage = functions.https.onCall(async (data, context) => {
+  // Require authentication
+  if (!context.auth) {
+    throw new functions.https.HttpsError(
+      'unauthenticated',
+      'User must be authenticated to store images'
+    );
+  }
+  
+  try {
+    const { imageBase64, cardId } = data;
+    const userId = context.auth.uid;
+    
+    // Validate inputs
+    if (!imageBase64 || !cardId) {
+      throw new functions.https.HttpsError(
+        'invalid-argument',
+        'Missing required fields: imageBase64, cardId'
+      );
+    }
+    
+    // Convert base64 to buffer
+    const imageBuffer = Buffer.from(imageBase64, 'base64');
+    
+    // Create a reference to the image location in Firebase Storage
+    const imagePath = `images/${userId}/${cardId}.jpeg`;
+    const storageRef = admin.storage().bucket().file(imagePath);
+    
+    // Upload the image
+    await storageRef.save(imageBuffer, {
+      metadata: {
+        contentType: 'image/jpeg',
+        metadata: {
+          uploadedBy: userId,
+          cardId: cardId
+        }
+      }
+    });
+    
+    // Get a signed URL for the image
+    const [url] = await storageRef.getSignedUrl({
+      action: 'read',
+      expires: '03-01-2500' // Far future expiration
+    });
+    
+    console.log(`Image stored for user ${userId}, card ${cardId}`);
+    
+    return {
+      success: true,
+      downloadUrl: url,
+      path: imagePath
+    };
+  } catch (error) {
+    console.error('Error storing image:', error);
+    throw new functions.https.HttpsError('internal', error.message);
+  }
+});
+
 // --- PriceCharting Proxy Function --- 
 
 exports.proxyPriceCharting = functions.https.onCall(async (data, context) => {

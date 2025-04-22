@@ -35,15 +35,26 @@ const StatCard = memo(({ label, value, isProfit = false }) => {
 });
 
 // Helper function to format date
-const formatDate = (dateString) => {
-  if (!dateString) return 'N/A';
+const formatDate = (dateValue) => {
+  if (!dateValue) return 'N/A';
   
   try {
-    // Try to parse the date
-    const date = new Date(dateString);
+    let date;
+    
+    // Check if this is a Firestore Timestamp object
+    if (dateValue && typeof dateValue === 'object' && 'seconds' in dateValue && 'nanoseconds' in dateValue) {
+      // Convert Firestore Timestamp to JavaScript Date
+      date = new Date(dateValue.seconds * 1000);
+    } else {
+      // Regular date string or Date object
+      date = new Date(dateValue);
+    }
     
     // Check if valid date
-    if (isNaN(date.getTime())) return dateString;
+    if (isNaN(date.getTime())) {
+      console.warn('Invalid date in CardList:', dateValue);
+      return 'Invalid date';
+    }
     
     // Format as DD/MM/YYYY
     return date.toLocaleDateString('en-AU', {
@@ -52,8 +63,9 @@ const formatDate = (dateString) => {
       year: 'numeric'
     });
   } catch (error) {
-    // Return original string if parsing fails
-    return dateString;
+    console.error('Error formatting date:', error, dateValue);
+    // Return a fallback string if parsing fails
+    return 'Date error';
   }
 };
 
@@ -143,25 +155,40 @@ const CardList = ({
     setSelectedCards(new Set());
   }, [cards]);
 
-  // Load card images
+  // Effect to load card images when the component mounts or cards change
   useEffect(() => {
     const loadCardImages = async () => {
-      // Clear previous object URLs to prevent memory leaks
+      // Clean up existing blob URLs before loading new ones
       Object.values(cardImages).forEach(url => {
-        URL.revokeObjectURL(url);
+        if (url && url.startsWith('blob:')) {
+          try {
+            URL.revokeObjectURL(url);
+          } catch (error) {
+            console.warn('Failed to revoke potential blob URL:', url, error);
+          }
+        }
       });
       
       const images = {};
       for (const card of cards) {
-        try {
-          // Add a timestamp parameter to force refresh when the card has an imageUpdatedAt flag
-          const imageBlob = await db.getImage(card.slabSerial);
-          if (imageBlob) {
-            const imageUrl = URL.createObjectURL(imageBlob);
-            images[card.slabSerial] = imageUrl;
+        if (card.imageUrl) {
+          // Prioritize Firestore image URL if available
+          images[card.slabSerial] = card.imageUrl; 
+        } else {
+          // Fallback: Try loading from IndexedDB if no Firestore URL
+          try {
+            const imageBlob = await db.getImage(card.slabSerial);
+            if (imageBlob) {
+              const blobUrl = URL.createObjectURL(imageBlob);
+              images[card.slabSerial] = blobUrl;
+            } else {
+              // Explicitly set to null or undefined if not found anywhere
+              images[card.slabSerial] = null; 
+            }
+          } catch (error) {
+            console.error(`Error loading image for card ${card.slabSerial} from IndexedDB:`, error);
+            images[card.slabSerial] = null; // Ensure it's null on error
           }
-        } catch (error) {
-          // Return original string if parsing fails
         }
       }
       setCardImages(images);
@@ -169,76 +196,55 @@ const CardList = ({
 
     loadCardImages();
 
-    // Cleanup URLs when component unmounts or cards change
+    // Cleanup logic remains complex due to potential blob URLs
     return () => {
-      Object.values(cardImages).forEach(url => {
-        URL.revokeObjectURL(url);
-      });
-    };
-  }, [cards]);
-
-  // Listen for card-images-cleanup event to revoke blob URLs when collections are deleted
-  useEffect(() => {
-    const handleCardImagesCleanup = (event) => {
-      const { cardIds } = event.detail;
-      
-      // Revoke blob URLs for the specified card IDs
-      cardIds.forEach(cardId => {
-        if (cardImages[cardId]) {
+      Object.entries(cardImages).forEach(([key, url]) => {
+        if (url && url.startsWith('blob:')) {
           try {
-            URL.revokeObjectURL(cardImages[cardId]);
-            console.log(`Revoked blob URL for card ${cardId} in CardList component`);
+            URL.revokeObjectURL(url);
           } catch (error) {
-            console.error(`Error revoking blob URL for card ${cardId}:`, error);
+            console.warn('Failed to revoke potential blob URL during cleanup:', url, error);
           }
         }
       });
-      
-      // Update the cardImages state to remove the revoked URLs
-      setCardImages(prev => {
-        const newImages = { ...prev };
-        cardIds.forEach(cardId => {
-          delete newImages[cardId];
-        });
-        return newImages;
-      });
     };
-    
-    // Add event listener
-    window.addEventListener('card-images-cleanup', handleCardImagesCleanup);
-    
-    // Clean up event listener on component unmount
-    return () => {
-      window.removeEventListener('card-images-cleanup', handleCardImagesCleanup);
-    };
-  }, [cardImages]);
+  }, [cards]); // Dependency remains on 'cards'
 
   // Function to refresh a single card's image
   const refreshCardImage = async (cardId) => {
+    const card = cards.find(c => c.slabSerial === cardId);
+    if (!card) return; // Card not found
+
     try {
-      // Revoke the old object URL if it exists
-      if (cardImages[cardId]) {
+      // Revoke the old object URL if it exists and is a blob URL
+      if (cardImages[cardId] && cardImages[cardId].startsWith('blob:')) {
         URL.revokeObjectURL(cardImages[cardId]);
       }
       
-      // Load the updated image
-      const imageBlob = await db.getImage(cardId);
-      if (imageBlob) {
-        const imageUrl = URL.createObjectURL(imageBlob);
-        setCardImages(prev => ({
-          ...prev,
-          [cardId]: imageUrl
-        }));
+      let newImageUrl = null;
+      if (card.imageUrl) {
+        // Prioritize updated Firestore URL
+        newImageUrl = card.imageUrl;
       } else {
-        // Remove the image if it no longer exists
-        setCardImages(prev => {
-          const newImages = { ...prev };
-          delete newImages[cardId];
-          return newImages;
-        });
+        // Fallback: Load the updated image from IndexedDB
+        const imageBlob = await db.getImage(cardId);
+        if (imageBlob) {
+          newImageUrl = URL.createObjectURL(imageBlob);
+        } 
       }
+
+      setCardImages(prev => ({
+        ...prev,
+        [cardId]: newImageUrl // Store the new URL (Firestore or Blob)
+      }));
+
     } catch (error) {
-      // Return original string if parsing fails
+      console.error(`Error refreshing image for card ${cardId}:`, error);
+      // Optionally set to null or keep the old image on error
+      setCardImages(prev => ({
+        ...prev,
+        [cardId]: prev[cardId] // Keep existing on error, or set to null
+      }));
     }
   };
 
@@ -673,7 +679,13 @@ const CardList = ({
       
       // Update each card's collection
       for (const card of cardsToMove) {
-        const updatedCard = { ...card, collection: targetCollection };
+        // Set both collection and collectionId properties for compatibility
+        const updatedCard = { 
+          ...card, 
+          collection: targetCollection,
+          collectionId: targetCollection 
+        };
+        
         await db.saveCollections({
           ...collections,
           [targetCollection]: [...(collections[targetCollection] || []), updatedCard],
@@ -692,11 +704,18 @@ const CardList = ({
       // Update collections in parent component
       if (setCollections) {
         const updatedCollections = { ...collections };
-        updatedCollections[targetCollection] = [...(collections[targetCollection] || []), ...cardsToMove];
+        // Update with both collection and collectionId properties
+        const updatedCardsToMove = cardsToMove.map(card => ({
+          ...card,
+          collection: targetCollection,
+          collectionId: targetCollection
+        }));
+        updatedCollections[targetCollection] = [...(collections[targetCollection] || []), ...updatedCardsToMove];
         updatedCollections[selectedCollection] = collections[selectedCollection].filter(card => !selectedCards.has(card.slabSerial));
         setCollections(updatedCollections);
       }
     } catch (error) {
+      console.error('Error moving cards:', error);
       toast.error('Error moving cards. Please try again.');
     }
   };

@@ -232,7 +232,7 @@ const CardDetailsForm = ({
             {/* Separate Upload Button */}
             <div className="flex flex-col space-y-2 mt-3">
               <ImageUploadButton
-                onChange={onImageChange}
+                onImageChange={onImageChange}
                 className="w-full"
               >
                 Replace Image

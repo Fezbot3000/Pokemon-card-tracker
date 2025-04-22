@@ -16,7 +16,7 @@ import {
   serverTimestamp,
   Timestamp
 } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import { ref, uploadBytes, getDownloadURL, deleteObject, listAll } from 'firebase/storage';
 import { db as firestoreDb, storage } from '../services/firebase';
 import db from '../services/db';
 
@@ -213,23 +213,39 @@ class CardRepository {
   // Card Operations
   async createCard(cardData, imageFile) {
     try {
+      // Check for either collectionId or collection property
+      const collectionId = cardData.collectionId || cardData.collection;
+      
       // Validate required fields
-      if (!cardData.collectionId) {
+      if (!collectionId) {
         throw new Error("Collection ID is required");
       }
+      
+      // Create a new card object with both collection properties for compatibility
+      const processedCardData = {
+        ...cardData,
+        collectionId: collectionId,
+        collection: collectionId
+      };
       
       const cardRef = doc(this.cardsRef);
       let imageUrl = null;
 
+      // Try to upload the image, but continue even if it fails
       if (imageFile) {
-        const storageRef = ref(storage, `users/${this.userId}/cards/${cardRef.id}.jpg`);
-        await uploadBytes(storageRef, imageFile);
-        imageUrl = await getDownloadURL(storageRef);
+        try {
+          const storageRef = ref(storage, `users/${this.userId}/cards/${cardRef.id}.jpg`);
+          await uploadBytes(storageRef, imageFile);
+          imageUrl = await getDownloadURL(storageRef);
+        } catch (imageError) {
+          console.warn("Failed to upload image, continuing with card creation:", imageError);
+          // Continue with card creation even if image upload fails
+        }
       }
 
       const card = {
-        ...cardData,
-        imageUrl,
+        ...processedCardData,
+        imageUrl, // This might be null if upload failed
         updatedAt: serverTimestamp(),
         createdAt: serverTimestamp()
       };
@@ -238,7 +254,7 @@ class CardRepository {
       
       // Update collection card count
       try {
-        const collectionRef = doc(this.collectionsRef, cardData.collectionId);
+        const collectionRef = doc(this.collectionsRef, collectionId);
         const collectionDoc = await getDoc(collectionRef);
         
         if (collectionDoc.exists()) {
@@ -263,7 +279,7 @@ class CardRepository {
       throw error;
     }
   }
-
+  
   async getCard(cardId) {
     const cardRef = doc(this.cardsRef, cardId);
     const docSnap = await getDoc(cardRef);
@@ -298,12 +314,126 @@ class CardRepository {
     }
   }
 
+  async getAllCards() {
+    if (!this.userId) {
+      console.error('CardRepository: Cannot get all cards without a user ID');
+      return [];
+    }
+
+    try {
+      // Create a query that gets all cards for the current user
+      // Order by updatedAt descending to get the most recently updated cards first
+      // Limit to 1000 cards as a safeguard against excessive data transfer
+      const q = query(
+        this.cardsRef,
+        where('userId', '==', this.userId),
+        orderBy('updatedAt', 'desc'),
+        limit(1000)
+      );
+
+      console.log(`CardRepository: Getting all cards for user ${this.userId}`);
+      
+      // Execute the query
+      const querySnapshot = await getDocs(q);
+      
+      // Convert query snapshot to an array of card objects
+      const cards = [];
+      querySnapshot.forEach((doc) => {
+        const cardData = doc.data();
+        
+        // Add the document ID as the card ID
+        cardData.id = doc.id;
+        
+        // Ensure timestamps are converted to Date objects
+        if (cardData.createdAt && cardData.createdAt.toDate) {
+          cardData.createdAt = cardData.createdAt.toDate();
+        }
+        if (cardData.updatedAt && cardData.updatedAt.toDate) {
+          cardData.updatedAt = cardData.updatedAt.toDate();
+        }
+        
+        cards.push(cardData);
+      });
+      
+      console.log(`CardRepository: Found ${cards.length} cards for user ${this.userId}`);
+      
+      // Return the array of cards
+      return cards;
+    } catch (error) {
+      console.error('CardRepository: Error getting all cards:', error);
+      throw error;
+    }
+  }
+
   async updateCard(cardId, data) {
-    const cardRef = doc(this.cardsRef, cardId);
-    await updateDoc(cardRef, {
-      ...data,
-      updatedAt: serverTimestamp()
-    });
+    try {
+      const cardRef = doc(this.cardsRef, cardId);
+      
+      // First check if the document exists
+      const docSnap = await getDoc(cardRef);
+      
+      // Get the collection information
+      const newCollection = data.collection || data.collectionName;
+      
+      // Ensure we have a collection specified
+      if (!newCollection) {
+        console.error(`No collection specified for card ${cardId}`);
+        throw new Error('No collection specified for card update');
+      }
+      
+      // Check if this card exists in Firestore
+      if (docSnap.exists()) {
+        const cardData = docSnap.data();
+        const originalCollection = cardData.collection || cardData.collectionName;
+        
+        // If collection has changed, we need to handle this specially
+        if (originalCollection && newCollection && originalCollection !== newCollection) {
+          console.log(`Collection changed for card ${cardId} from '${originalCollection}' to '${newCollection}'`);
+          
+          try {
+            // First, create a new document in the new collection
+            const newCardData = {
+              ...data,
+              id: cardId,
+              collection: newCollection,
+              collectionName: newCollection,
+              updatedAt: serverTimestamp()
+            };
+            
+            // Create a new document with the updated collection
+            await setDoc(cardRef, newCardData);
+            
+            console.log(`Card ${cardId} successfully moved to collection '${newCollection}'`);
+            return;
+          } catch (error) {
+            console.error(`Error moving card ${cardId} to new collection:`, error);
+            throw error;
+          }
+        }
+        
+        // Update the existing document (no collection change)
+        await updateDoc(cardRef, {
+          ...data,
+          collection: newCollection,
+          collectionName: newCollection,
+          updatedAt: serverTimestamp()
+        });
+      } else {
+        // Document doesn't exist, create it instead
+        console.log(`Card ${cardId} doesn't exist in Firestore yet, creating it`);
+        await setDoc(cardRef, {
+          ...data,
+          id: cardId,
+          collection: newCollection,
+          collectionName: newCollection,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        });
+      }
+    } catch (error) {
+      console.error("Error updating card in Firestore:", error);
+      throw error;
+    }
   }
 
   async updateCardImage(cardId, imageFile) {
@@ -358,6 +488,90 @@ class CardRepository {
     
     // Delete card document from Firestore
     await deleteDoc(cardRef);
+  }
+
+  /**
+   * Update specific fields on a card document
+   * @param {string} cardId - ID of the card to update 
+   * @param {Object} fields - Fields to update
+   * @returns {Promise<boolean>} - True if successful
+   */
+  async updateCardFields(cardId, fields) {
+    try {
+      if (!cardId) {
+        throw new Error('Card ID is required for field updates');
+      }
+      
+      const cardRef = doc(this.cardsRef, cardId);
+      
+      // Ensure the card exists before updating
+      const cardDoc = await getDoc(cardRef);
+      if (!cardDoc.exists()) {
+        // Document doesn't exist, create it instead of updating
+        console.log(`Card ${cardId} doesn't exist yet, creating it with the fields`);
+        
+        // Add timestamps to the new document
+        const newDocData = {
+          ...fields,
+          id: cardId, // Ensure ID is set
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        };
+        
+        // Use setDoc to create the document
+        await setDoc(cardRef, newDocData);
+        return true;
+      }
+      
+      // Document exists, proceed with update
+      // Add timestamps to the update
+      const updateData = {
+        ...fields,
+        updatedAt: serverTimestamp()
+      };
+      
+      await updateDoc(cardRef, updateData);
+      
+      return true;
+    } catch (error) {
+      console.error(`Error updating fields for card ${cardId}:`, error);
+      throw error;
+    }
+  }
+
+  async getCardsForCollection(collectionId) {
+    try {
+      if (!collectionId) {
+        console.error('Collection ID is required to get cards');
+        return [];
+      }
+      
+      // Create a query against the cards collection
+      const q = query(
+        this.cardsRef,
+        where('userId', '==', this.userId),
+        where('collectionId', '==', collectionId),
+        orderBy('updatedAt', 'desc')
+      );
+      
+      const querySnapshot = await getDocs(q);
+      const cards = [];
+      
+      querySnapshot.forEach(doc => {
+        const data = doc.data();
+        cards.push({
+          id: doc.id,
+          ...data,
+          createdAt: data.createdAt?.toDate() || new Date(),
+          updatedAt: data.updatedAt?.toDate() || new Date()
+        });
+      });
+      
+      return cards;
+    } catch (error) {
+      console.error(`Error getting cards for collection ${collectionId}:`, error);
+      return [];
+    }
   }
 
   // Sold Cards Operations
@@ -938,7 +1152,7 @@ class CardRepository {
               await db.deleteImage(cardId);
             } catch (indexedDbError) {
               console.warn(`Error deleting image from IndexedDB for card ${cardId}:`, indexedDbError);
-              // Continue with deletion even if IndexedDB delete fails
+              // Continue with deletion even if IndexedDB image deletion fails
             }
             
             // Also try to delete the card image if it exists in Firebase Storage
@@ -990,11 +1204,11 @@ class CardRepository {
 
   async deleteCollection(collectionId) {
     try {
-      logger.log(`CardRepository: Deleting collection ${collectionId}`);
+      console.log(`CardRepository: Deleting collection ${collectionId}`);
       
       // Get all cards in the collection first
       const cards = await this.getCardsForCollection(collectionId);
-      logger.log(`Found ${cards.length} cards to delete in collection ${collectionId}`);
+      console.log(`Found ${cards.length} cards to delete in collection ${collectionId}`);
       
       // Extract card IDs for image cleanup
       const cardIds = cards.map(card => card.id || card.slabSerial).filter(Boolean);
@@ -1002,17 +1216,17 @@ class CardRepository {
       // Delete all images for these cards from IndexedDB
       try {
         const { deleted, failed } = await db.deleteImagesForCards(cardIds);
-        logger.log(`Deleted ${deleted} images, ${failed} failed during collection deletion`);
+        console.log(`Deleted ${deleted} images, ${failed} failed during collection deletion`);
         
         // Dispatch event to notify components to clean up blob URLs
         if (cardIds.length > 0) {
-          logger.log(`Dispatching card-images-cleanup event for ${cardIds.length} cards`);
+          console.log(`Dispatching card-images-cleanup event for ${cardIds.length} cards`);
           window.dispatchEvent(new CustomEvent('card-images-cleanup', { 
             detail: { cardIds } 
           }));
         }
       } catch (imageError) {
-        logger.error('Error cleaning up images during collection deletion:', imageError);
+        console.error('Error cleaning up images during collection deletion:', imageError);
         // Continue with deletion even if image cleanup fails
       }
       
@@ -1034,12 +1248,72 @@ class CardRepository {
         await batch.commit();
       }
       
-      logger.log(`Successfully deleted collection ${collectionId} and all its cards`);
+      console.log(`Successfully deleted collection ${collectionId} and all its cards`);
     } catch (error) {
-      logger.error(`Error deleting collection ${collectionId}:`, error);
+      console.error(`Error deleting collection ${collectionId}:`, error);
+      throw error;
+    }
+  }
+
+  // Delete all cloud data for the current user
+  async deleteAllUserData() {
+    try {
+      // 1. Delete all cards in Firestore
+      const cardsSnapshot = await getDocs(this.cardsRef);
+      const deleteCardPromises = [];
+      
+      cardsSnapshot.forEach(doc => {
+        deleteCardPromises.push(deleteDoc(doc.ref));
+      });
+      
+      await Promise.all(deleteCardPromises);
+      
+      // 2. Delete all collections in Firestore
+      const collectionsSnapshot = await getDocs(this.collectionsRef);
+      const deleteCollectionPromises = [];
+      
+      collectionsSnapshot.forEach(doc => {
+        deleteCollectionPromises.push(deleteDoc(doc.ref));
+      });
+      
+      await Promise.all(deleteCollectionPromises);
+      
+      // 3. Delete all images in Firebase Storage
+      try {
+        const storageRef = ref(storage, `users/${this.userId}`);
+        const listResult = await listAll(storageRef);
+        
+        // Delete all items in the directory
+        const deleteImagePromises = [];
+        
+        // Delete all files in the main directory
+        listResult.items.forEach(itemRef => {
+          deleteImagePromises.push(deleteObject(itemRef));
+        });
+        
+        // Delete all files in the cards subdirectory if it exists
+        const cardsRef = ref(storage, `users/${this.userId}/cards`);
+        try {
+          const cardsListResult = await listAll(cardsRef);
+          cardsListResult.items.forEach(itemRef => {
+            deleteImagePromises.push(deleteObject(itemRef));
+          });
+        } catch (error) {
+          // Cards directory might not exist, which is fine
+          console.log("No cards directory found or error listing it:", error);
+        }
+        
+        await Promise.all(deleteImagePromises);
+      } catch (storageError) {
+        console.warn("Error deleting storage items, continuing with reset:", storageError);
+      }
+      
+      return { success: true };
+    } catch (error) {
+      console.error("Error deleting all user data:", error);
       throw error;
     }
   }
 }
 
-export default CardRepository; 
+export { CardRepository }; 

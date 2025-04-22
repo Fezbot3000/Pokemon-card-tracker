@@ -48,7 +48,11 @@ const ImageUploadButton = ({
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       const file = e.dataTransfer.files[0];
       if (file.type.match('image.*')) {
-        onImageChange(file);
+        if (typeof onImageChange === 'function') {
+          onImageChange(file);
+        } else {
+          console.warn('ImageUploadButton: onImageChange prop is not a function');
+        }
       }
     }
   };
@@ -56,7 +60,11 @@ const ImageUploadButton = ({
   // Handle file input change
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
-      onImageChange(e.target.files[0]);
+      if (typeof onImageChange === 'function') {
+        onImageChange(e.target.files[0]);
+      } else {
+        console.warn('ImageUploadButton: onImageChange prop is not a function');
+      }
     }
   };
   

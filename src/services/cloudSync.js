@@ -2,7 +2,7 @@ import { ref, uploadBytes, getDownloadURL, listAll, deleteObject } from 'firebas
 import { storage } from './firebase';
 import db from './db';
 import logger from '../utils/logger';
-import CardRepository from '../repositories/CardRepository';
+import { CardRepository } from '../repositories/CardRepository';
 
 /**
  * CloudSync service for handling incremental cloud backups and restores
