@@ -20,6 +20,7 @@ const InvoiceHeader = ({
   isExpanded = false,
   onToggle,
   onPrint,
+  onDelete,
   cardCount = 0,
   className = '',
   ...props
@@ -92,6 +93,20 @@ const InvoiceHeader = ({
             </Button>
           )}
           
+          {onDelete && (
+            <Button 
+              variant="text" 
+              size="sm" 
+              iconLeft={<CleanIcon name="delete" size="sm" />}
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete();
+              }}
+              className="!p-1 text-red-500 hover:text-red-600"
+              title="Delete receipt"
+            />
+          )}
+          
           <CleanIcon 
             name={isExpanded ? "expand_less" : "expand_more"} 
             size="sm"
@@ -120,6 +135,8 @@ InvoiceHeader.propTypes = {
   onToggle: PropTypes.func.isRequired,
   /** Callback when the print button is clicked */
   onPrint: PropTypes.func,
+  /** Callback when the delete button is clicked */
+  onDelete: PropTypes.func,
   /** Number of cards in this invoice */
   cardCount: PropTypes.number,
   /** Additional classes */

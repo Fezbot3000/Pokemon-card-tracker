@@ -16,6 +16,7 @@ const SoldItemsView = ({
   items = [], 
   getCardImageUrl,
   onPrintInvoice,
+  onDeleteInvoice,
   formatDate,
   className = ''
 }) => {
@@ -149,6 +150,13 @@ const SoldItemsView = ({
       onPrintInvoice(invoice);
     }
   };
+  
+  // Handle deleting an invoice
+  const handleDeleteInvoice = (invoice) => {
+    if (onDeleteInvoice) {
+      onDeleteInvoice(invoice.id);
+    }
+  };
 
   return (
     <div className={`min-h-screen pt-20 px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-[#0F0F0F] text-gray-900 dark:text-white ${className}`}>
@@ -219,6 +227,7 @@ const SoldItemsView = ({
                               isExpanded={expandedInvoices.has(invoice.id)}
                               onToggle={() => toggleInvoice(invoice.id)}
                               onPrint={() => handlePrintInvoice(invoice)}
+                              onDelete={() => handleDeleteInvoice(invoice)}
                               cardCount={cards.length}
                             />
                             
@@ -273,6 +282,8 @@ SoldItemsView.propTypes = {
   getCardImageUrl: PropTypes.func,
   /** Handler for printing an invoice */
   onPrintInvoice: PropTypes.func,
+  /** Handler for deleting an invoice */
+  onDeleteInvoice: PropTypes.func,
   /** Function to format dates */
   formatDate: PropTypes.func,
   /** Additional class names */

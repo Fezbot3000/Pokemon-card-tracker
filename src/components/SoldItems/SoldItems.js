@@ -634,6 +634,45 @@ const SoldItems = () => {
     }
   };
 
+  // Delete a specific invoice/receipt
+  const handleDeleteInvoice = async (invoiceId) => {
+    try {
+      // Confirm deletion
+      if (!window.confirm('Are you sure you want to delete this receipt? This action cannot be undone.')) {
+        return;
+      }
+
+      // Filter out the cards from the invoice to be deleted
+      const updatedSoldCards = soldCards.filter(card => {
+        // For cards with invoiceId property
+        if (card.invoiceId) {
+          return card.invoiceId !== invoiceId;
+        }
+        // For legacy cards using the key format
+        const legacyKey = `${card.buyer}_${card.dateSold}_${card.id || card.slabSerial}`;
+        return legacyKey !== invoiceId;
+      });
+
+      // Save the updated sold cards list
+      await db.saveSoldCards(updatedSoldCards);
+      
+      // Update local state
+      setSoldCards(updatedSoldCards);
+      
+      // Remove from expanded invoices if it was expanded
+      if (expandedInvoices.has(invoiceId)) {
+        const newExpandedInvoices = new Set(expandedInvoices);
+        newExpandedInvoices.delete(invoiceId);
+        setExpandedInvoices(newExpandedInvoices);
+      }
+      
+      toast.success('Receipt deleted successfully');
+    } catch (error) {
+      console.error('Error deleting invoice:', error);
+      toast.error('Failed to delete receipt');
+    }
+  };
+
   // Add a test sold item for debugging
   const addTestSoldItem = async () => {
     try {
@@ -684,6 +723,7 @@ const SoldItems = () => {
             items={displayData}
             getCardImageUrl={(card) => cardImages[card.slabSerial || card.id] || null}
             onPrintInvoice={handlePrintInvoice}
+            onDeleteInvoice={handleDeleteInvoice}
             formatDate={formatDate}
           />
         </div>

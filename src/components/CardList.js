@@ -590,10 +590,8 @@ const CardList = ({
       // Update state in parent first - wrap in try/catch to prevent errors here from failing the whole operation
       try {
         if (onDeleteCard) {
-          // Process each card ID individually instead of passing the array
-          for (const cardId of cardIds) {
-            await onDeleteCard(cardId); // Pass single ID string
-          }
+          // Call onDeleteCard once with the full array of IDs instead of looping
+          await onDeleteCard(cardIds);
         }
       } catch (innerError) {
         // Log error but don't fail the operation - the database update already succeeded

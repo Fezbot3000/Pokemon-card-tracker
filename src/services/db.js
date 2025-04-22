@@ -978,335 +978,6 @@ class DatabaseService {
   }
 
   /**
-   * Verify that all data is properly secured with the user's ID
-   * @param {string} userId - The current user's ID
-   * @returns {Promise<{secure: boolean, message: string, details: Object}>} - Result of the security check
-   */
-  async verifyDataSecurity(userId) {
-    try {
-      // Open the database
-      await this.ensureDB();
-      
-      // Results object to track all security checks
-      const results = {
-        collections: { total: 0, secured: 0, unsecured: [] },
-        images: { total: 0, secured: 0, unsecured: [] },
-        crossUserAccess: { attempted: 0, blocked: 0, leaked: [] }
-      };
-      
-      // Step 1: Check collections store for proper user ID association
-      const collectionsStore = this.db.transaction(COLLECTIONS_STORE, 'readonly').objectStore(COLLECTIONS_STORE);
-      const collectionsRequest = collectionsStore.getAll();
-      
-      return new Promise((resolve, reject) => {
-        collectionsRequest.onsuccess = async () => {
-          const collections = collectionsRequest.result;
-          results.collections.total = collections.length;
-          
-          logger.debug(`Checking security for ${collections.length} collections with user ID: ${userId}`);
-          
-          // Check if any collections exist without a userId or with a different userId
-          const unsecuredCollections = collections.filter(collection => 
-            !collection.userId || collection.userId !== userId
-          );
-          
-          results.collections.secured = collections.length - unsecuredCollections.length;
-          
-          // Log detailed information about unsecured collections
-          if (unsecuredCollections.length > 0) {
-            logger.debug('Unsecured collections found:');
-            unsecuredCollections.forEach(collection => {
-              logger.debug(`- Collection ID: ${collection.id}, Name: ${collection.name || 'unnamed'}, Current userId: ${collection.userId || 'none'}`);
-            });
-            
-            results.collections.unsecured = unsecuredCollections.map(c => ({
-              id: c.id,
-              name: c.name || 'unnamed',
-              currentUserId: c.userId || 'none'
-            }));
-          }
-          
-          // Step 2: Check images store for proper user ID association
-          const imagesStore = this.db.transaction(IMAGES_STORE, 'readonly').objectStore(IMAGES_STORE);
-          const imagesRequest = imagesStore.getAll();
-          
-          imagesRequest.onsuccess = async () => {
-            const images = imagesRequest.result;
-            results.images.total = images.length;
-            
-            logger.debug(`Checking security for ${images.length} images with user ID: ${userId}`);
-            
-            // Check if any images exist without a userId or with a different userId
-            const unsecuredImages = images.filter(image => 
-              !image.userId || image.userId !== userId
-            );
-            
-            results.images.secured = images.length - unsecuredImages.length;
-            
-            // Log detailed information about unsecured images
-            if (unsecuredImages.length > 0) {
-              logger.debug('Unsecured images found:');
-              // Log the first 10 unsecured images to avoid console flooding
-              unsecuredImages.slice(0, 10).forEach(image => {
-                logger.debug(`- Image ID: ${image.id}, Current userId: ${image.userId || 'none'}, Card ID: ${image.cardId || 'unknown'}`);
-              });
-              
-              if (unsecuredImages.length > 10) {
-                logger.debug(`... and ${unsecuredImages.length - 10} more`);
-              }
-              
-              results.images.unsecured = unsecuredImages.slice(0, 20).map(img => ({
-                id: img.id,
-                cardId: img.cardId || 'unknown',
-                currentUserId: img.userId || 'none'
-              }));
-            }
-            
-            // Step 3: Test cross-user data isolation
-            // Create a fake user ID to test isolation
-            const fakeUserId = 'test-user-' + Date.now();
-            logger.debug(`Testing cross-user data isolation with fake user ID: ${fakeUserId}`);
-            
-            // Try to access collections with a different user ID
-            try {
-              results.crossUserAccess.attempted++;
-              const fakeUserCollections = await this.testCrossUserAccess(COLLECTIONS_STORE, fakeUserId);
-              if (fakeUserCollections.length > 0) {
-                logger.warn(`SECURITY ISSUE: Able to access ${fakeUserCollections.length} collections with fake user ID`);
-                results.crossUserAccess.leaked.push({
-                  store: 'collections',
-                  count: fakeUserCollections.length,
-                  items: fakeUserCollections.slice(0, 5).map(c => c.name || 'unnamed')
-                });
-              } else {
-                results.crossUserAccess.blocked++;
-                logger.debug('Cross-user collection access properly blocked');
-              }
-            } catch (error) {
-              // This is actually good - it means access was blocked
-              results.crossUserAccess.blocked++;
-              logger.debug('Cross-user collection access properly blocked with error:', error.message);
-            }
-            
-            // Try to access images with a different user ID
-            try {
-              results.crossUserAccess.attempted++;
-              const fakeUserImages = await this.testCrossUserAccess(IMAGES_STORE, fakeUserId);
-              if (fakeUserImages.length > 0) {
-                logger.warn(`SECURITY ISSUE: Able to access ${fakeUserImages.length} images with fake user ID`);
-                results.crossUserAccess.leaked.push({
-                  store: 'images',
-                  count: fakeUserImages.length,
-                  items: fakeUserImages.slice(0, 5).map(img => img.id)
-                });
-              } else {
-                results.crossUserAccess.blocked++;
-                logger.debug('Cross-user image access properly blocked');
-              }
-            } catch (error) {
-              // This is actually good - it means access was blocked
-              results.crossUserAccess.blocked++;
-              logger.debug('Cross-user image access properly blocked with error:', error.message);
-            }
-            
-            // Determine overall security status
-            const isSecure = 
-              results.collections.unsecured.length === 0 && 
-              results.images.unsecured.length === 0 &&
-              results.crossUserAccess.leaked.length === 0;
-            
-            // Generate detailed report
-            const securityReport = {
-              secure: isSecure,
-              message: isSecure 
-                ? 'All data is properly secured and isolated with your user ID' 
-                : 'Security issues detected with data isolation',
-              details: {
-                collections: {
-                  total: results.collections.total,
-                  secured: results.collections.secured,
-                  unsecured: results.collections.unsecured.length
-                },
-                images: {
-                  total: results.images.total,
-                  secured: results.images.secured,
-                  unsecured: results.images.unsecured.length,
-                  totalUnsecuredImages: results.images.unsecured.length
-                },
-                crossUserAccess: {
-                  attempted: results.crossUserAccess.attempted,
-                  blocked: results.crossUserAccess.blocked,
-                  leaked: results.crossUserAccess.leaked
-                },
-                unsecuredCollections: results.collections.unsecured,
-                unsecuredImages: results.images.unsecured.slice(0, 20)
-              }
-            };
-            
-            logger.debug('Security verification complete:', securityReport);
-            resolve(securityReport);
-          };
-          
-          imagesRequest.onerror = (event) => {
-            reject(new Error('Failed to check image security: ' + event.target.error));
-          };
-        };
-        
-        collectionsRequest.onerror = (event) => {
-          reject(new Error('Failed to check collection security: ' + event.target.error));
-        };
-      });
-    } catch (error) {
-      logger.error('Error verifying data security:', error);
-      throw new Error('Failed to verify data security: ' + error.message);
-    }
-  }
-
-  /**
-   * Test cross-user data access to verify isolation
-   * @param {string} storeName - The name of the object store to test
-   * @param {string} fakeUserId - A fake user ID to test with
-   * @returns {Promise<Array>} - Any data that was accessible (should be empty)
-   * @private
-   */
-  async testCrossUserAccess(storeName, fakeUserId) {
-    return new Promise((resolve, reject) => {
-      try {
-        const transaction = this.db.transaction([storeName], 'readonly');
-        const store = transaction.objectStore(storeName);
-        
-        // Try to get all items for the fake user ID
-        // This should return an empty array if security is working correctly
-        const range = IDBKeyRange.bound(
-          [fakeUserId, ''], // Lower bound: fake user, start of name range
-          [fakeUserId, '\uffff'] // Upper bound: fake user, end of name range
-        );
-        
-        const request = store.getAll(range);
-        
-        request.onsuccess = () => {
-          resolve(request.result || []);
-        };
-        
-        request.onerror = (event) => {
-          // This might happen if the store is properly secured
-          reject(new Error(`Access denied to ${storeName} for fake user: ${event.target.error}`));
-        };
-      } catch (error) {
-        reject(error);
-      }
-    });
-  }
-
-  /**
-   * Fix data security by properly associating all data with the user's ID
-   * @param {string} userId - The current user's ID
-   * @returns {Promise<{fixed: {collections: number, images: number}, total: {collections: number, images: number}}>}
-   */
-  async fixDataSecurity(userId) {
-    try {
-      // Open the database
-      await this.ensureDB();
-      
-      // Results object to track fixes
-      const results = {
-        fixed: { collections: 0, images: 0 },
-        total: { collections: 0, images: 0 }
-      };
-      
-      // Fix collections
-      const collectionsStore = this.db.transaction(COLLECTIONS_STORE, 'readwrite').objectStore(COLLECTIONS_STORE);
-      const collectionsRequest = collectionsStore.getAll();
-      
-      return new Promise((resolve, reject) => {
-        collectionsRequest.onsuccess = () => {
-          const collections = collectionsRequest.result;
-          results.total.collections = collections.length;
-          
-          // Update each collection that doesn't have the correct userId
-          collections.forEach(collection => {
-            if (!collection.userId || collection.userId !== userId) {
-              // Create a new object with the correct structure
-              const fixedCollection = {
-                ...collection,
-                userId: userId
-              };
-              
-              // Delete the old entry if it exists
-              if (collection.userId) {
-                try {
-                  collectionsStore.delete([collection.userId, collection.name]);
-                } catch (error) {
-                  logger.warn(`Could not delete old collection entry: ${error.message}`);
-                }
-              }
-              
-              // Add the fixed entry
-              collectionsStore.put(fixedCollection);
-              results.fixed.collections++;
-              
-              logger.debug(`Fixed collection: ${collection.name}`);
-            }
-          });
-          
-          logger.debug(`Fixed ${results.fixed.collections} of ${results.total.collections} collections`);
-          
-          // Fix images
-          const imagesStore = this.db.transaction(IMAGES_STORE, 'readwrite').objectStore(IMAGES_STORE);
-          const imagesRequest = imagesStore.getAll();
-          
-          imagesRequest.onsuccess = () => {
-            const images = imagesRequest.result;
-            results.total.images = images.length;
-            
-            // Update each image that doesn't have the correct userId
-            images.forEach(image => {
-              if (!image.userId || image.userId !== userId) {
-                // Create a new object with the correct structure
-                const fixedImage = {
-                  ...image,
-                  userId: userId
-                };
-                
-                // Delete the old entry if it exists
-                if (image.userId) {
-                  try {
-                    imagesStore.delete([image.userId, image.id]);
-                  } catch (error) {
-                    logger.warn(`Could not delete old image entry: ${error.message}`);
-                  }
-                }
-                
-                // Add the fixed entry
-                imagesStore.put(fixedImage);
-                results.fixed.images++;
-                
-                logger.debug(`Fixed image: ${image.id}`);
-              }
-            });
-            
-            logger.debug(`Fixed ${results.fixed.images} of ${results.total.images} images`);
-            
-            // All data is now secure
-            resolve(results);
-          };
-          
-          imagesRequest.onerror = (event) => {
-            reject(new Error('Failed to fix image security: ' + event.target.error));
-          };
-        };
-        
-        collectionsRequest.onerror = (event) => {
-          reject(new Error('Failed to fix collection security: ' + event.target.error));
-        };
-      });
-    } catch (error) {
-      logger.error('Error fixing data security:', error);
-      throw new Error('Failed to fix data security: ' + error.message);
-    }
-  }
-
-  /**
    * Get all images for the current user
    * @returns {Promise<Array>} Array of image objects with id and blob properties
    */
@@ -1392,52 +1063,34 @@ class DatabaseService {
   async clearCollections() {
     try {
       await this.ensureDB();
-      const userId = this.getCurrentUserId();
+      const userId = this.getCurrentUserId(); // Keep userId for logging
       
       return new Promise((resolve, reject) => {
         try {
           const transaction = this.db.transaction([COLLECTIONS_STORE], 'readwrite');
           const store = transaction.objectStore(COLLECTIONS_STORE);
           
-          // Get all collections for the current user
-          const request = store.getAll(IDBKeyRange.bound(
-            [userId, ''], // Lower bound: current user, start of name range
-            [userId, '\uffff'] // Upper bound: current user, end of name range
-          ));
+          // Clear the entire object store
+          const request = store.clear();
 
-          request.onsuccess = () => {
-            const collections = request.result || [];
-            logger.debug(`Clearing ${collections.length} collections for user ${userId}`);
-            
-            // Delete each collection
-            let deletedCount = 0;
-            if (collections.length === 0) {
-              resolve(); // No collections to delete
-              return;
-            }
-            
-            collections.forEach(collection => {
-              const deleteRequest = store.delete([userId, collection.name]);
-              deleteRequest.onsuccess = () => {
-                deletedCount++;
-                if (deletedCount === collections.length) {
-                  logger.debug(`Successfully cleared ${deletedCount} collections`);
-                  resolve();
-                }
-              };
-              deleteRequest.onerror = (error) => {
-                logger.error(`Error deleting collection ${collection.name}:`, error);
-                // Continue with other deletions
-              };
-            });
+          // We mainly rely on the transaction's success/failure
+          request.onerror = (event) => {
+             // Log the specific request error, but the transaction error handler will reject the promise
+             logger.warn('Error during store.clear() in collections:', event.target.error);
           };
 
-          request.onerror = (error) => {
-            logger.error('Error fetching collections for deletion:', error);
-            reject(new Error('Failed to clear collections'));
+          transaction.oncomplete = () => {
+             logger.debug(`Transaction complete: Cleared ALL collections (triggered by user ${userId})`);
+             resolve(); 
           };
+
+          transaction.onerror = (event) => {
+            logger.error('Transaction error during clearCollections:', event.target.error);
+            reject(event.target.error);
+          };
+
         } catch (error) {
-          logger.error('Transaction error in clearCollections:', error);
+          logger.error('Error initiating clearCollections transaction:', error);
           reject(error);
         }
       });
@@ -1446,7 +1099,7 @@ class DatabaseService {
       throw error;
     }
   }
-
+  
   /**
    * Import collections from a backup
    * @param {Array} collections - Array of collection objects to import
@@ -1499,68 +1152,6 @@ class DatabaseService {
       });
     } catch (error) {
       logger.error('Unexpected error in importCollections:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Clear all images for the current user
-   * @returns {Promise<void>}
-   */
-  async clearImages() {
-    try {
-      await this.ensureDB();
-      const userId = this.getCurrentUserId();
-      
-      return new Promise((resolve, reject) => {
-        try {
-          const transaction = this.db.transaction([IMAGES_STORE], 'readwrite');
-          const store = transaction.objectStore(IMAGES_STORE);
-          
-          // Get all images for the current user
-          const request = store.getAll(IDBKeyRange.bound(
-            [userId, ''], // Lower bound: current user, start of id range
-            [userId, '\uffff'] // Upper bound: current user, end of id range
-          ));
-
-          request.onsuccess = () => {
-            const images = request.result || [];
-            logger.debug(`Clearing ${images.length} images for user ${userId}`);
-            
-            // Delete each image
-            let deletedCount = 0;
-            if (images.length === 0) {
-              resolve(); // No images to delete
-              return;
-            }
-            
-            images.forEach(image => {
-              const deleteRequest = store.delete([userId, image.id]);
-              deleteRequest.onsuccess = () => {
-                deletedCount++;
-                if (deletedCount === images.length) {
-                  logger.debug(`Successfully cleared ${deletedCount} images`);
-                  resolve();
-                }
-              };
-              deleteRequest.onerror = (error) => {
-                logger.error(`Error deleting image ${image.id}:`, error);
-                // Continue with other deletions
-              };
-            });
-          };
-
-          request.onerror = (error) => {
-            logger.error('Error fetching images for deletion:', error);
-            reject(new Error('Failed to clear images'));
-          };
-        } catch (error) {
-          logger.error('Transaction error in clearImages:', error);
-          reject(error);
-        }
-      });
-    } catch (error) {
-      logger.error('Unexpected error in clearImages:', error);
       throw error;
     }
   }

@@ -70,7 +70,6 @@ const SettingsModal = ({
   const [isExporting, setIsExporting] = useState(false);
   const [isCloudBackingUp, setIsCloudBackingUp] = useState(false);
   const [isCloudRestoring, setIsCloudRestoring] = useState(false);
-  const [isCleaningImages, setIsCleaningImages] = useState(false);
   const [cloudSyncProgress, setCloudSyncProgress] = useState(0);
   const [cloudSyncStatus, setCloudSyncStatus] = useState('');
   const [importStep, setImportStep] = useState(0); // 0 = not importing, 1-4 = import steps
@@ -78,7 +77,6 @@ const SettingsModal = ({
   const [isUpdatingPrices, setIsUpdatingPrices] = useState(false);
   const [isImportingBaseData, setIsImportingBaseData] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
-  const [isFixingSecurity, setIsFixingSecurity] = useState(false);
   const [activeTab, setActiveTab] = useState('general');
   const [collectionToDelete, setCollectionToDelete] = useState('');
   const [devLogs, setDevLogs] = useState([]); // Add state for logs
@@ -90,7 +88,6 @@ const SettingsModal = ({
     companyName: ''
   });
   const [collectionToRename, setCollectionToRename] = useState('');
-  const [showSecurityFixConfirm, setShowSecurityFixConfirm] = useState(false);
   const [showRestoreConfirm, setShowRestoreConfirm] = useState(false); // Add state for restore confirmation
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const fileInputRef = useRef(null);
@@ -228,173 +225,6 @@ const SettingsModal = ({
           e.target.value = '';
         });
     }
-  };
-
-  // Verify data security
-  const handleVerifyDataSecurity = async () => {
-    setIsImportingBaseData(true);
-    try {
-      // Show a loading toast
-      toastService.loading('Checking data security...', { duration: 10000, id: 'security-check' });
-      
-      // Get the current user ID
-      const userId = currentUser?.uid;
-      if (!userId) {
-        throw new Error('User not logged in');
-      }
-      
-      // Add log entry for verification
-      addLog(`Starting data security verification for user: ${userId}`);
-      
-      // Check if collections are stored with user ID
-      const securityCheckResult = await db.verifyDataSecurity(userId);
-      
-      // Log detailed results to console for debugging
-      console.log('Security check complete:', securityCheckResult);
-      addLog(`Security check complete: ${securityCheckResult.secure ? 'PASSED' : 'FAILED'}`);
-      
-      if (securityCheckResult.secure) {
-        // All data is secure - show success message with details
-        const { collections, images } = securityCheckResult.details;
-        const crossUserTests = securityCheckResult.details.crossUserAccess.attempted;
-        
-        // Add more detailed logs
-        addLog(`Verified ${collections.total} collections: All properly secured with user ID`);
-        addLog(`Verified ${images.total} images: All properly secured with user ID`);
-        addLog(`Cross-user isolation tests: ${crossUserTests} tests passed`);
-        
-        toastService.success(
-          `Data security verified: All data is properly isolated to your account. ` +
-          `(${collections.total} collections, ${images.total} images, ${crossUserTests} isolation tests passed)`, 
-          { id: 'security-check', duration: 8000 }
-        );
-      } else {
-        // If data is not secure, show a warning with details and offer to fix it
-        let detailMessage = '';
-        
-        // Collection issues
-        if (securityCheckResult.details.collections?.unsecured > 0) {
-          detailMessage += `Collections: ${securityCheckResult.details.collections.unsecured} not properly secured. `;
-          addLog(`SECURITY ISSUE: ${securityCheckResult.details.collections.unsecured} collections not properly secured with user ID`);
-          
-          // Log details of unsecured collections
-          if (securityCheckResult.details.unsecuredCollections?.length > 0) {
-            addLog(`Unsecured collections: ${securityCheckResult.details.unsecuredCollections.map(c => c.name).join(', ')}`);
-          }
-        }
-        
-        // Image issues
-        if (securityCheckResult.details.images?.unsecured > 0) {
-          detailMessage += `Images: ${securityCheckResult.details.images.unsecured} not properly secured. `;
-          addLog(`SECURITY ISSUE: ${securityCheckResult.details.images.unsecured} images not properly secured with user ID`);
-          
-          // Log details of unsecured images (limited to first few)
-          if (securityCheckResult.details.unsecuredImages?.length > 0) {
-            addLog(`Sample of unsecured images: ${securityCheckResult.details.unsecuredImages.slice(0, 5).map(img => img.id).join(', ')}`);
-          }
-        }
-        
-        // Cross-user access issues (most serious)
-        if (securityCheckResult.details.crossUserAccess?.leaked?.length > 0) {
-          const leakedData = securityCheckResult.details.crossUserAccess.leaked;
-          detailMessage += `CRITICAL: Data isolation failure detected! `;
-          addLog('CRITICAL SECURITY ISSUE: Data isolation failure detected!');
-          
-          leakedData.forEach(leak => {
-            detailMessage += `${leak.count} ${leak.store} accessible to other users. `;
-            addLog(`Data leak: ${leak.count} ${leak.store} accessible to other users`);
-            if (leak.items?.length > 0) {
-              addLog(`Leaked items sample: ${leak.items.join(', ')}`);
-            }
-          });
-        }
-        
-        toastService.error(
-          `Security issue detected: ${securityCheckResult.message}. ${detailMessage} Click "Fix Security" to secure your data.`, 
-          { 
-            id: 'security-check',
-            duration: 15000
-          }
-        );
-        
-        // Show confirmation dialog to fix security
-        setShowSecurityFixConfirm(true);
-      }
-    } catch (error) {
-      console.error('Error verifying data security:', error);
-      addLog(`Error during security verification: ${error.message}`);
-      toastService.error(`Security check failed: ${error.message}`, { id: 'security-check' });
-    } finally {
-      setIsImportingBaseData(false);
-    }
-  };
-
-  // Fix data security issues
-  const handleFixDataSecurity = async () => {
-    setShowSecurityFixConfirm(false);
-    setIsImportingBaseData(true);
-    
-    try {
-      // Show a loading toast
-      toastService.loading('Fixing data security issues...', { duration: 10000, id: 'security-fix' });
-      
-      // Get the current user ID
-      const userId = currentUser?.uid;
-      if (!userId) {
-        throw new Error('User not logged in');
-      }
-      
-      // Fix security issues
-      const fixResult = await db.fixDataSecurity(userId);
-      
-      // Log detailed results to console for debugging
-      console.log('Security fix complete:', fixResult);
-      
-      // Show success message with details
-      toastService.success(
-        `Data security fixed: ${fixResult.fixed.collections} collections and ${fixResult.fixed.images} images secured to your account.`, 
-        { id: 'security-fix' }
-      );
-      
-      // Run another verification to confirm the fix worked
-      setTimeout(async () => {
-        const verifyResult = await db.verifyDataSecurity(userId);
-        if (verifyResult.secure) {
-          toastService.success('Verification confirms all data is now properly secured.', { duration: 5000 });
-        } else {
-          toastService.error('Some security issues could not be fixed. Please contact support.', { duration: 10000 });
-        }
-      }, 2000);
-    } catch (error) {
-      console.error('Error fixing data security:', error);
-      toastService.error(`Failed to fix security issues: ${error.message}`, { id: 'security-fix' });
-    } finally {
-      setIsImportingBaseData(false);
-    }
-  };
-
-  // --- State for custom reset confirmation dialog ---
-  const handleResetData = () => {
-    setShowResetConfirm(true);
-  };
-
-  const handleConfirmReset = async () => {
-    console.log('[SettingsModal] handleConfirmReset called');
-    setShowResetConfirm(false);
-    if (onResetData) {
-      try {
-        await onResetData();
-        console.log('[SettingsModal] onResetData completed');
-      } catch (err) {
-        console.error('[SettingsModal] Error in onResetData:', err);
-      }
-    } else {
-      console.warn('[SettingsModal] onResetData is not defined');
-    }
-  };
-
-  const handleCancelReset = () => {
-    setShowResetConfirm(false);
   };
 
   // Handle cloud backup
@@ -788,49 +618,20 @@ const SettingsModal = ({
     }
   };
 
-  // Handle image cleanup
-  const handleCleanupImages = async () => {
-    if (!currentUser) {
-      addLog('User not signed in for image cleanup.');
-      toastService.error('You must be signed in to clean up images.');
-      return;
-    }
+  // Handle reset data
+  const handleResetData = () => {
+    setShowResetConfirm(true);
+  };
 
-    try {
-      setIsCleaningImages(true);
-      addLog('Starting image cleanup process...');
-      
-      // Get all card IDs from all collections
-      addLog('Fetching collections to identify valid card IDs...');
-      const collections = await db.getAllCollections();
-      
-      // Extract all card IDs from all collections
-      const validCardIds = [];
-      for (const collection of collections) {
-        if (collection.cards && Array.isArray(collection.cards)) {
-          for (const card of collection.cards) {
-            if (card.id) {
-              validCardIds.push(card.id);
-            }
-          }
-        }
-      }
-      
-      addLog(`Found ${validCardIds.length} valid card IDs across ${collections.length} collections.`);
-      
-      // Run the cleanup
-      const result = await db.cleanupOrphanedImages(validCardIds);
-      
-      addLog(`Image cleanup completed: Removed ${result.removed} orphaned images out of ${result.total} total images.`);
-      toastService.success(`Cleanup completed: Removed ${result.removed} orphaned images.`);
-      
-    } catch (error) {
-      console.error('Image cleanup failed:', error);
-      addLog(`Image cleanup failed: ${error.message}`);
-      toastService.error(`Image cleanup failed: ${error.message}`);
-    } finally {
-      setIsCleaningImages(false);
+  const handleConfirmReset = () => {
+    setShowResetConfirm(false);
+    if (onResetData) {
+      onResetData();
     }
+  };
+
+  const handleCancelReset = () => {
+    setShowResetConfirm(false);
   };
 
   return (
@@ -1117,7 +918,7 @@ const SettingsModal = ({
                       <div className="grid grid-cols-1 gap-2">
                         <Button
                           onClick={() => handleCloudBackup()}
-                          disabled={isBackingUp || isCloudRestoring || isCleaningImages}
+                          disabled={isBackingUp || isCloudRestoring}
                           variant="outline"
                           size="md"
                           className="w-full"
@@ -1128,7 +929,7 @@ const SettingsModal = ({
                         
                         <Button
                           onClick={() => handleCloudRestore()}
-                          disabled={isBackingUp || isCloudRestoring || isCleaningImages}
+                          disabled={isBackingUp || isCloudRestoring}
                           variant="outline"
                           size="md"
                           className="w-full"
@@ -1173,73 +974,6 @@ const SettingsModal = ({
                         </div>
                       )}
                     </div>
-                    
-                    {/* Advanced Data Management */}
-                    <div>
-                      <h4 className="font-medium mb-2">Security & Maintenance</h4>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                        Tools for data security verification and maintenance.
-                      </p>
-                      <div className="grid grid-cols-1 gap-2">
-                        <Button
-                          onClick={handleVerifyDataSecurity}
-                          disabled={isImportingBaseData}
-                          variant="outline"
-                          size="md"
-                          className="w-full"
-                          leftIcon={<Icon name="security" />}
-                        >
-                          {isImportingBaseData ? 'Checking...' : 'Verify Data Security'}
-                        </Button>
-                        
-                        <Button
-                          onClick={handleUpdatePrices}
-                          disabled={isUpdatingPrices}
-                          variant="outline"
-                          size="md"
-                          className="w-full"
-                          leftIcon={<Icon name="update" />}
-                        >
-                          {isUpdatingPrices ? 'Updating...' : 'Update Prices'}
-                        </Button>
-                      </div>
-                    </div>
-                    
-                    {/* Image Cleanup */}
-                    <div>
-                      <h4 className="font-medium mb-2">Image Cleanup</h4>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                        Remove orphaned images from storage.
-                      </p>
-                      <div className="grid grid-cols-1 gap-2">
-                        <Button
-                          onClick={handleCleanupImages}
-                          disabled={isBackingUp || isCloudRestoring || isCleaningImages}
-                          variant="outline"
-                          size="md"
-                          className="w-full"
-                          leftIcon={<Icon name="delete_forever" />}
-                        >
-                          {isCleaningImages ? 'Cleaning...' : 'Clean Up Orphaned Images'}
-                        </Button>
-                      </div>
-                    </div>
-                    
-                    {/* Hidden file inputs */}
-                    <input 
-                      type="file" 
-                      ref={fileInputRef} 
-                      onChange={handleFileChange}
-                      accept=".zip,.json"
-                      className="hidden"
-                    />
-                    <input 
-                      type="file" 
-                      ref={importBaseDataRef} 
-                      onChange={handleImportBaseDataChange}
-                      accept=".json"
-                      className="hidden"
-                    />
                   </div>
                 </SettingsPanel>
 
@@ -1321,15 +1055,6 @@ const SettingsModal = ({
         onConfirm={handleConfirmReset}
         title="Reset All Data"
         message="Are you sure you want to reset all data? This action cannot be undone."
-      />
-
-      {/* Custom ConfirmDialog for Fix Data Security */}
-      <ConfirmDialog
-        isOpen={showSecurityFixConfirm}
-        onClose={() => setShowSecurityFixConfirm(false)}
-        onConfirm={handleFixDataSecurity}
-        title="Fix Data Security"
-        message="Are you sure you want to fix the data security issue? This will re-associate your data with your user ID."
       />
 
       {/* Custom ConfirmDialog for Cloud Restore */}
