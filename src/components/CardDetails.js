@@ -98,6 +98,40 @@ const CardDetails = memo(({
     };
   }, []);
 
+  // Listen for card-images-cleanup event to revoke blob URLs when collections are deleted
+  useEffect(() => {
+    const handleCardImagesCleanup = (event) => {
+      const { cardIds } = event.detail;
+      
+      // If our current card's ID is in the list of cards being deleted
+      if (cardIds.includes(card.id) || cardIds.includes(card.slabSerial)) {
+        // Clean up any created object URLs to prevent memory leaks
+        if (cardImage) {
+          try {
+            URL.revokeObjectURL(cardImage);
+            console.log(`Revoked blob URL for card ${card.id || card.slabSerial} in CardDetails component`);
+          } catch (error) {
+            console.error(`Error revoking blob URL for card ${card.id || card.slabSerial}:`, error);
+          }
+          
+          // Clear the cardImage state
+          setCardImage(null);
+        }
+        
+        // Close the modal since the card is being deleted
+        handleClose();
+      }
+    };
+    
+    // Add event listener
+    window.addEventListener('card-images-cleanup', handleCardImagesCleanup);
+    
+    // Clean up event listener on component unmount
+    return () => {
+      window.removeEventListener('card-images-cleanup', handleCardImagesCleanup);
+    };
+  }, [card.id, card.slabSerial, cardImage]);
+
   // Load the card image
   const loadCardImage = async () => {
     setImageLoadingState('loading');

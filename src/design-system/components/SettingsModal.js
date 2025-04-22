@@ -8,9 +8,12 @@ import SettingsPanel from '../molecules/SettingsPanel';
 import SettingsNavItem from '../atoms/SettingsNavItem';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
-import { ref, uploadBytes, getDownloadURL, listAll } from 'firebase/storage';
+import { useRestore } from '../contexts/RestoreContext';
+import { useBackup } from '../contexts/BackupContext';
+import { ref, uploadBytes, getDownloadURL, listAll, deleteObject } from 'firebase/storage';
 import JSZip from 'jszip';
 import db from '../../services/db';
+import cloudSync from '../../services/cloudSync';
 
 /**
  * SettingsModal Component
@@ -40,11 +43,34 @@ const SettingsModal = ({
   const { theme, toggleTheme } = useTheme();
   const isDarkMode = theme === 'dark';
   const { currentUser } = useAuth();
+  const { 
+    isRestoring, 
+    restoreProgress, 
+    restoreStatus, 
+    addRestoreLog, 
+    startRestore, 
+    completeRestore, 
+    cancelRestore,
+    setRestoreProgress,
+    setRestoreStatus
+  } = useRestore();
+  const {
+    isBackingUp,
+    backupProgress,
+    backupStatus,
+    startBackup,
+    completeBackup,
+    cancelBackup,
+    setBackupProgress,
+    setBackupStatus,
+    addBackupLog
+  } = useBackup();
   const [isRenaming, setIsRenaming] = useState(false);
   const [newCollectionName, setNewCollectionName] = useState('');
   const [isExporting, setIsExporting] = useState(false);
   const [isCloudBackingUp, setIsCloudBackingUp] = useState(false);
   const [isCloudRestoring, setIsCloudRestoring] = useState(false);
+  const [isCleaningImages, setIsCleaningImages] = useState(false);
   const [cloudSyncProgress, setCloudSyncProgress] = useState(0);
   const [cloudSyncStatus, setCloudSyncStatus] = useState('');
   const [importStep, setImportStep] = useState(0); // 0 = not importing, 1-4 = import steps
@@ -217,25 +243,70 @@ const SettingsModal = ({
         throw new Error('User not logged in');
       }
       
+      // Add log entry for verification
+      addLog(`Starting data security verification for user: ${userId}`);
+      
       // Check if collections are stored with user ID
       const securityCheckResult = await db.verifyDataSecurity(userId);
       
       // Log detailed results to console for debugging
       console.log('Security check complete:', securityCheckResult);
+      addLog(`Security check complete: ${securityCheckResult.secure ? 'PASSED' : 'FAILED'}`);
       
       if (securityCheckResult.secure) {
-        toastService.success(`Data security verified: All data is properly secured with your user ID. (${securityCheckResult.details.totalCollections} collections, ${securityCheckResult.details.totalImages} images)`, { id: 'security-check' });
+        // All data is secure - show success message with details
+        const { collections, images } = securityCheckResult.details;
+        const crossUserTests = securityCheckResult.details.crossUserAccess.attempted;
+        
+        // Add more detailed logs
+        addLog(`Verified ${collections.total} collections: All properly secured with user ID`);
+        addLog(`Verified ${images.total} images: All properly secured with user ID`);
+        addLog(`Cross-user isolation tests: ${crossUserTests} tests passed`);
+        
+        toastService.success(
+          `Data security verified: All data is properly isolated to your account. ` +
+          `(${collections.total} collections, ${images.total} images, ${crossUserTests} isolation tests passed)`, 
+          { id: 'security-check', duration: 8000 }
+        );
       } else {
         // If data is not secure, show a warning with details and offer to fix it
         let detailMessage = '';
         
-        if (securityCheckResult.details.unsecuredCollections?.length > 0) {
-          detailMessage += `Collections: ${securityCheckResult.details.unsecuredCollections.map(c => c.name).join(', ')}. `;
+        // Collection issues
+        if (securityCheckResult.details.collections?.unsecured > 0) {
+          detailMessage += `Collections: ${securityCheckResult.details.collections.unsecured} not properly secured. `;
+          addLog(`SECURITY ISSUE: ${securityCheckResult.details.collections.unsecured} collections not properly secured with user ID`);
+          
+          // Log details of unsecured collections
+          if (securityCheckResult.details.unsecuredCollections?.length > 0) {
+            addLog(`Unsecured collections: ${securityCheckResult.details.unsecuredCollections.map(c => c.name).join(', ')}`);
+          }
         }
         
-        if (securityCheckResult.details.unsecuredImages?.length > 0) {
-          const imageCount = securityCheckResult.details.totalUnsecuredImages;
-          detailMessage += `Images: ${imageCount} image${imageCount !== 1 ? 's' : ''} not secured.`;
+        // Image issues
+        if (securityCheckResult.details.images?.unsecured > 0) {
+          detailMessage += `Images: ${securityCheckResult.details.images.unsecured} not properly secured. `;
+          addLog(`SECURITY ISSUE: ${securityCheckResult.details.images.unsecured} images not properly secured with user ID`);
+          
+          // Log details of unsecured images (limited to first few)
+          if (securityCheckResult.details.unsecuredImages?.length > 0) {
+            addLog(`Sample of unsecured images: ${securityCheckResult.details.unsecuredImages.slice(0, 5).map(img => img.id).join(', ')}`);
+          }
+        }
+        
+        // Cross-user access issues (most serious)
+        if (securityCheckResult.details.crossUserAccess?.leaked?.length > 0) {
+          const leakedData = securityCheckResult.details.crossUserAccess.leaked;
+          detailMessage += `CRITICAL: Data isolation failure detected! `;
+          addLog('CRITICAL SECURITY ISSUE: Data isolation failure detected!');
+          
+          leakedData.forEach(leak => {
+            detailMessage += `${leak.count} ${leak.store} accessible to other users. `;
+            addLog(`Data leak: ${leak.count} ${leak.store} accessible to other users`);
+            if (leak.items?.length > 0) {
+              addLog(`Leaked items sample: ${leak.items.join(', ')}`);
+            }
+          });
         }
         
         toastService.error(
@@ -251,6 +322,7 @@ const SettingsModal = ({
       }
     } catch (error) {
       console.error('Error verifying data security:', error);
+      addLog(`Error during security verification: ${error.message}`);
       toastService.error(`Security check failed: ${error.message}`, { id: 'security-check' });
     } finally {
       setIsImportingBaseData(false);
@@ -259,10 +331,12 @@ const SettingsModal = ({
 
   // Fix data security issues
   const handleFixDataSecurity = async () => {
-    setIsFixingSecurity(true);
+    setShowSecurityFixConfirm(false);
+    setIsImportingBaseData(true);
+    
     try {
       // Show a loading toast
-      toastService.loading('Fixing data security...', { duration: 10000, id: 'security-fix' });
+      toastService.loading('Fixing data security issues...', { duration: 10000, id: 'security-fix' });
       
       // Get the current user ID
       const userId = currentUser?.uid;
@@ -270,24 +344,32 @@ const SettingsModal = ({
         throw new Error('User not logged in');
       }
       
-      // Fix security by properly associating data with user ID
-      await db.fixDataSecurity(userId);
+      // Fix security issues
+      const fixResult = await db.fixDataSecurity(userId);
       
-      // Close the confirmation dialog
-      setShowSecurityFixConfirm(false);
+      // Log detailed results to console for debugging
+      console.log('Security fix complete:', fixResult);
       
-      // Show success message
-      toastService.success('Data security has been fixed. Your data is now properly secured.', { id: 'security-fix' });
+      // Show success message with details
+      toastService.success(
+        `Data security fixed: ${fixResult.fixed.collections} collections and ${fixResult.fixed.images} images secured to your account.`, 
+        { id: 'security-fix' }
+      );
       
-      // Refresh collections if needed
-      if (refreshCollections) {
-        refreshCollections();
-      }
+      // Run another verification to confirm the fix worked
+      setTimeout(async () => {
+        const verifyResult = await db.verifyDataSecurity(userId);
+        if (verifyResult.secure) {
+          toastService.success('Verification confirms all data is now properly secured.', { duration: 5000 });
+        } else {
+          toastService.error('Some security issues could not be fixed. Please contact support.', { duration: 10000 });
+        }
+      }, 2000);
     } catch (error) {
       console.error('Error fixing data security:', error);
-      toastService.error(`Failed to fix security: ${error.message}`, { id: 'security-fix' });
+      toastService.error(`Failed to fix security issues: ${error.message}`, { id: 'security-fix' });
     } finally {
-      setIsFixingSecurity(false);
+      setIsImportingBaseData(false);
     }
   };
 
@@ -322,137 +404,38 @@ const SettingsModal = ({
       toastService.error('You must be signed in to use cloud backup.');
       return;
     }
-    setIsCloudBackingUp(true);
-    setCloudSyncProgress(0);
-    setCloudSyncStatus('Starting backup...');
-    addLog('Starting cloud backup process...');
 
     try {
+      // Use the global backup context instead of local state
+      startBackup();
+      addBackupLog('Starting cloud backup process...');
+      
+      // Get the current user ID
       const userId = currentUser.uid;
-      addLog(`User ID: ${userId}`);
-
-      // Step 1: Fetch collections and images
-      setCloudSyncStatus('Fetching local data...');
-      addLog('Fetching collections from IndexedDB...');
-      const collectionsData = await db.getAllCollections();
-      addLog(`Fetched ${collectionsData.length} collections.`);
+      addBackupLog(`User ID: ${userId}`);
       
-      addLog('Fetching images from IndexedDB...');
-      const imagesData = await db.getAllImages();
-      addLog(`Fetched ${imagesData.length} images.`);
-      setCloudSyncProgress(10);
+      // Inform the user they can close the settings modal
+      toastService.success('Backup process started. You can close this window and the backup will continue in the background.');
 
-      // Step 2: Prepare metadata
-      setCloudSyncStatus('Preparing metadata...');
-      addLog('Preparing backup metadata...');
-      const backupMetadata = {
-        timestamp: new Date().toISOString(),
-        userId: userId,
-        collectionCount: collectionsData.length,
-        imageCount: imagesData.length,
-        format: 'unzipped' // Indicate the new format
-      };
-      const metadataBlob = new Blob([JSON.stringify(backupMetadata, null, 2)], { type: 'application/json' });
-      const metadataRef = ref(storage, `backups/${userId}/metadata.json`);
-      addLog('Uploading metadata.json...');
-      await uploadBytes(metadataRef, metadataBlob);
-      addLog('Metadata uploaded successfully.');
-      setCloudSyncProgress(20);
+      // Use the new incremental backup service
+      const result = await cloudSync.incrementalBackup(
+        userId,
+        setBackupProgress,
+        setBackupStatus,
+        addBackupLog
+      );
 
-      // Step 3: Upload collections data
-      setCloudSyncStatus('Uploading collections...');
-      addLog('Preparing collections data blob...');
-      const collectionsBlob = new Blob([JSON.stringify(collectionsData)], { type: 'application/json' });
-      const collectionsRef = ref(storage, `backups/${userId}/collections.json`);
-      addLog('Uploading collections.json...');
-      await uploadBytes(collectionsRef, collectionsBlob);
-      addLog('Collections data uploaded successfully.');
-      setCloudSyncProgress(30);
-
-      // Step 4: Upload images
-      setCloudSyncStatus(`Uploading ${imagesData.length} images...`);
-      addLog(`Starting image uploads (${imagesData.length} total)...`);
-      const totalImages = imagesData.length;
-      let successfulUploads = 0;
-      
-      for (let i = 0; i < totalImages; i++) {
-        const image = imagesData[i];
-        const imageName = `${image.id}.${image.format || 'png'}`; // Use format or default to png
-        const imageRef = ref(storage, `backups/${userId}/images/${imageName}`);
-        
-        // Check what type of data we have and handle accordingly
-        let imageBlob;
-        
-        try {
-          // Check all possible image data formats
-          if (image.blob instanceof Blob) {
-            // If the image has a blob property that is a Blob
-            imageBlob = image.blob;
-            addLog(`Using blob property for image ${image.id}`);
-          } else if (image.data instanceof Blob) {
-            // If the image has a data property that is a Blob
-            imageBlob = image.data;
-            addLog(`Using data property (Blob) for image ${image.id}`);
-          } else if (typeof image.data === 'string' && image.data.startsWith('data:')) {
-            // If the image has a data property that is a base64 string
-            addLog(`Converting base64 string for image ${image.id}`);
-            try {
-              const byteString = atob(image.data.split(',')[1]);
-              const mimeString = image.data.split(',')[0].split(':')[1].split(';')[0];
-              const ab = new ArrayBuffer(byteString.length);
-              const ia = new Uint8Array(ab);
-              for (let j = 0; j < byteString.length; j++) {
-                ia[j] = byteString.charCodeAt(j);
-              }
-              imageBlob = new Blob([ab], { type: mimeString });
-            } catch (conversionError) {
-              addLog(`Error converting base64 for image ${image.id}: ${conversionError.message}`);
-              continue;
-            }
-          } else {
-            // Try to create a simple blob if we have any usable data
-            if (image.blob) {
-              // If blob is not a Blob but some other data
-              addLog(`Creating blob from non-Blob blob property for image ${image.id}`);
-              imageBlob = new Blob([image.blob], { type: 'image/png' });
-            } else if (image.data) {
-              // If data is not a Blob or string but some other data
-              addLog(`Creating blob from non-Blob data property for image ${image.id}`);
-              imageBlob = new Blob([image.data], { type: 'image/png' });
-            } else {
-              addLog(`Skipping image ${image.id}: no usable data found`);
-              continue;
-            }
-          }
-          
-          // Upload the image
-          addLog(`Uploading image ${i + 1}/${totalImages}: ${imageName}`);
-          await uploadBytes(imageRef, imageBlob);
-          successfulUploads++;
-          
-          // Update progress
-          const progress = 30 + Math.round(((i + 1) / totalImages) * 60); // Images take up 60% of progress
-          setCloudSyncProgress(progress);
-          setCloudSyncStatus(`Uploading image ${i + 1} of ${totalImages}`);
-        } catch (error) {
-          addLog(`Error processing image ${image.id}: ${error.message}`);
-          continue; // Skip this image and continue with the next one
-        }
+      if (result.success) {
+        toastService.success('Cloud backup completed successfully!');
+        addBackupLog(`Backup completed: ${result.collections} collections, ${result.addedImages} new images uploaded, ${result.removedImages} deleted images removed.`);
+        completeBackup();
       }
-      
-      addLog(`Images uploaded: ${successfulUploads}/${totalImages}`);
-      
-      // Step 5: Finalize
-      setCloudSyncProgress(100);
-      setCloudSyncStatus('Backup complete!');
-      addLog('Cloud backup process completed successfully.');
-      toastService.success('Cloud backup completed successfully!');
-
     } catch (error) {
       console.error('Cloud backup failed:', error);
-      addLog(`Cloud backup failed: ${error.message}`);
-      setCloudSyncStatus(`Error: ${error.message}`);
+      addBackupLog(`Cloud backup failed: ${error.message}`);
+      setBackupStatus(`Error: ${error.message}`);
       toastService.error(`Cloud backup failed: ${error.message}`);
+      cancelBackup();
     } finally {
       setIsCloudBackingUp(false);
     }
@@ -473,100 +456,101 @@ const SettingsModal = ({
   // This function will be called when the user confirms the restore
   const handleConfirmRestore = async () => {
     setShowRestoreConfirm(false); // Close the dialog
-    addLog('Cloud restore confirmed by user.');
+    addRestoreLog('Cloud restore confirmed by user.');
     
-    setIsCloudRestoring(true);
-    setCloudSyncProgress(0);
-    setCloudSyncStatus('Starting restore...');
-    addLog('Starting cloud restore process...');
-
+    // Start the restore process using the global context
+    startRestore();
+    
+    // Inform the user they can close the settings modal
+    toastService.success('Restore process started. You can close this window and the restore will continue in the background.');
+    
     try {
       const userId = currentUser.uid;
-      addLog(`User ID: ${userId}`);
+      addRestoreLog(`User ID: ${userId}`);
       const backupRef = ref(storage, `backups/${userId}`);
 
       // List items in the user's backup directory
-      addLog('Listing backup files in Firebase Storage...');
+      addRestoreLog('Listing backup files in Firebase Storage...');
       const listResult = await listAll(backupRef);
       
       // Check if metadata.json exists to determine backup format
       const metadataFile = listResult.items.find(item => item.name === 'metadata.json');
       let isNewFormat = !!metadataFile;
-      addLog(`Backup format detected: ${isNewFormat ? 'New (Unzipped)' : 'Old (Zip)'}`);
+      addRestoreLog(`Backup format detected: ${isNewFormat ? 'New (Unzipped)' : 'Old (Zip)'}`);
 
       if (isNewFormat) {
         // --- New Restore Logic (Unzipped Files) --- 
-        addLog('Starting restore using new unzipped format...');
+        addRestoreLog('Starting restore using new unzipped format...');
 
         // 1. Download and process metadata.json
-        setCloudSyncStatus('Downloading metadata...');
-        addLog('Downloading metadata.json...');
+        setRestoreStatus('Downloading metadata...');
+        addRestoreLog('Downloading metadata.json...');
         const metadataUrl = await getDownloadURL(metadataFile);
         const metadataResponse = await fetch(metadataUrl);
         if (!metadataResponse.ok) throw new Error('Failed to download metadata.json');
         const backupMetadata = await metadataResponse.json();
-        addLog(`Metadata downloaded. Backup Timestamp: ${backupMetadata.timestamp}, Collections: ${backupMetadata.collectionCount}, Images: ${backupMetadata.imageCount}`);
-        setCloudSyncProgress(10);
+        addRestoreLog(`Metadata downloaded. Backup Timestamp: ${backupMetadata.timestamp}, Collections: ${backupMetadata.collectionCount}, Images: ${backupMetadata.imageCount}`);
+        setRestoreProgress(10);
 
         // 2. Download and process collections.json
-        setCloudSyncStatus('Downloading collections data...');
-        addLog('Downloading collections.json...');
+        setRestoreStatus('Downloading collections data...');
+        addRestoreLog('Downloading collections.json...');
         const collectionsFile = listResult.items.find(item => item.name === 'collections.json');
         if (!collectionsFile) throw new Error('collections.json not found in backup.');
         const collectionsUrl = await getDownloadURL(collectionsFile);
         const collectionsResponse = await fetch(collectionsUrl);
         if (!collectionsResponse.ok) throw new Error('Failed to download collections.json');
         const collectionsData = await collectionsResponse.json();
-        addLog('Collections data downloaded.');
-        setCloudSyncProgress(20);
+        addRestoreLog('Collections data downloaded.');
+        setRestoreProgress(20);
 
         // 3. Clear existing local data (collections and images)
-        setCloudSyncStatus('Clearing local data...');
-        addLog('Clearing local collections...');
+        setRestoreStatus('Clearing local data...');
+        addRestoreLog('Clearing local collections...');
         await db.clearCollections();
-        addLog('Clearing local images...');
+        addRestoreLog('Clearing local images...');
         await db.clearImages();
-        addLog('Local data cleared.');
-        setCloudSyncProgress(30);
+        addRestoreLog('Local data cleared.');
+        setRestoreProgress(30);
 
         // 4. Import collections into IndexedDB
-        setCloudSyncStatus('Importing collections...');
-        addLog(`Importing ${collectionsData.length} collections into IndexedDB...`);
+        setRestoreStatus('Importing collections...');
+        addRestoreLog(`Importing ${collectionsData.length} collections into IndexedDB...`);
         await db.importCollections(collectionsData);
-        addLog('Collections imported successfully.');
-        setCloudSyncProgress(40);
+        addRestoreLog('Collections imported successfully.');
+        setRestoreProgress(40);
 
         // 5. List and download images
-        setCloudSyncStatus('Listing images...');
-        addLog('Listing images in backup...');
+        setRestoreStatus('Listing images...');
+        addRestoreLog('Listing images in backup...');
         const imagesRef = ref(storage, `backups/${userId}/images`);
         const imageListResult = await listAll(imagesRef);
         const totalImagesToDownload = imageListResult.items.length;
-        addLog(`Found ${totalImagesToDownload} images to download.`);
-        setCloudSyncProgress(50);
+        addRestoreLog(`Found ${totalImagesToDownload} images to download.`);
+        setRestoreProgress(50);
 
         // 6. Download and import images one by one
-        setCloudSyncStatus(`Downloading ${totalImagesToDownload} images...`);
-        addLog('Starting image downloads and import...');
+        setRestoreStatus(`Downloading ${totalImagesToDownload} images...`);
+        addRestoreLog('Starting image downloads and import...');
         let imagesImportedCount = 0;
         const imageImportPromises = [];
 
         for (let i = 0; i < totalImagesToDownload; i++) {
           const imageItemRef = imageListResult.items[i];
           const progress = 50 + Math.round(((i + 1) / totalImagesToDownload) * 45); // Images take 45% progress
-          setCloudSyncProgress(progress);
-          setCloudSyncStatus(`Downloading/Importing image ${i + 1} of ${totalImagesToDownload}`);
-          addLog(`Downloading image ${i + 1}/${totalImagesToDownload}: ${imageItemRef.name}`);
+          setRestoreProgress(progress);
+          setRestoreStatus(`Downloading/Importing image ${i + 1} of ${totalImagesToDownload}`);
+          addRestoreLog(`Downloading image ${i + 1}/${totalImagesToDownload}: ${imageItemRef.name}`);
           
           try {
             const imageUrl = await getDownloadURL(imageItemRef);
             const imageResponse = await fetch(imageUrl);
             if (!imageResponse.ok) {
-              addLog(`Failed to download image: ${imageItemRef.name}, Status: ${imageResponse.status}`);
+              addRestoreLog(`Failed to download image: ${imageItemRef.name}, Status: ${imageResponse.status}`);
               continue; // Skip this image if download fails
             }
             const imageBlob = await imageResponse.blob();
-            addLog(`Image ${imageItemRef.name} downloaded (${(imageBlob.size / 1024).toFixed(2)} KB). Importing...`);
+            addRestoreLog(`Image ${imageItemRef.name} downloaded (${(imageBlob.size / 1024).toFixed(2)} KB). Importing...`);
             
             // Extract ID and format from filename (e.g., 'cardId.png')
             const nameParts = imageItemRef.name.split('.');
@@ -585,149 +569,267 @@ const SettingsModal = ({
             // Import image into IndexedDB
             await db.importImage(imageData); // Changed from batch to individual
             imagesImportedCount++;
-            addLog(`Image ${imageItemRef.name} imported successfully.`);
+            addRestoreLog(`Image ${imageItemRef.name} imported successfully.`);
+
+            // Update the UI immediately after each image is imported
+            if (refreshCollections && i % 5 === 0) { // Refresh every 5 images to avoid too many refreshes
+              await refreshCollections();
+            }
 
           } catch (imgError) {
-              addLog(`Error processing image ${imageItemRef.name}: ${imgError.message}`);
+              addRestoreLog(`Error processing image ${imageItemRef.name}: ${imgError.message}`);
           }
         }
 
-        addLog(`Image download and import process finished. Successfully imported ${imagesImportedCount}/${totalImagesToDownload} images.`);
-        setCloudSyncProgress(95);
+        addRestoreLog(`Image download and import process finished. Successfully imported ${imagesImportedCount}/${totalImagesToDownload} images.`);
+        setRestoreProgress(95);
 
         // 7. Finalize and refresh
-        setCloudSyncStatus('Finalizing restore...');
-        addLog('Finalizing restore process...');
-        await refreshCollections(); // Refresh collections in the UI
-        setCloudSyncProgress(100);
-        setCloudSyncStatus('Restore complete!');
-        addLog('Cloud restore completed successfully!');
+        setRestoreStatus('Finalizing restore...');
+        addRestoreLog('Finalizing restore process...');
+        
+        // Refresh collections from the database instead of calling the prop directly
+        try {
+          addRestoreLog('Refreshing collections from database...');
+          const savedCollections = await db.getCollections();
+          if (savedCollections && Object.keys(savedCollections).length > 0) {
+            addRestoreLog(`Retrieved ${Object.keys(savedCollections).length} collections from database.`);
+            // If refreshCollections prop is available, use it
+            if (typeof refreshCollections === 'function') {
+              refreshCollections();
+            }
+          } else {
+            addRestoreLog('No collections found in database after restore.');
+          }
+        } catch (refreshError) {
+          addRestoreLog(`Error refreshing collections: ${refreshError.message}`);
+        }
+        
+        setRestoreProgress(100);
+        setRestoreStatus('Restore complete!');
+        addRestoreLog('Cloud restore completed successfully!');
         toastService.success('Cloud restore completed successfully!');
+        
+        // Complete the restore process
+        completeRestore();
 
       } else {
         // --- Legacy Restore Logic (Zip File) --- 
-        addLog('Starting restore using legacy zip format...');
+        addRestoreLog('Starting restore using legacy zip format...');
         const zipFile = listResult.items.find(item => item.name.endsWith('.zip'));
         if (!zipFile) {
           throw new Error('No backup zip file found.');
         }
-        addLog(`Found backup zip file: ${zipFile.name}`);
+        addRestoreLog(`Found backup zip file: ${zipFile.name}`);
 
         // Step 1: Get Download URL for the zip file
-        setCloudSyncStatus('Getting backup download URL...');
-        addLog('Getting download URL for zip file...');
+        setRestoreStatus('Getting backup download URL...');
+        addRestoreLog('Getting download URL for zip file...');
         const url = await getDownloadURL(zipFile);
-        addLog('Download URL obtained.');
-        setCloudSyncProgress(10);
+        addRestoreLog('Download URL obtained.');
+        setRestoreProgress(10);
 
         // Step 2: Download the zip file
-        setCloudSyncStatus('Downloading backup file...');
-        addLog('Downloading zip file...');
+        setRestoreStatus('Downloading backup file...');
+        addRestoreLog('Downloading zip file...');
         const response = await fetch(url);
         if (!response.ok) {
           throw new Error(`Failed to download backup file: ${response.statusText}`);
         }
         const zipBlob = await response.blob();
-        addLog(`Zip file downloaded (${(zipBlob.size / (1024*1024)).toFixed(2)} MB).`);
-        setCloudSyncProgress(30);
+        addRestoreLog(`Zip file downloaded (${(zipBlob.size / (1024*1024)).toFixed(2)} MB).`);
+        setRestoreProgress(30);
 
         // Step 3: Unzip the file
-        setCloudSyncStatus('Unzipping backup file...');
-        addLog('Unzipping backup file...');
+        setRestoreStatus('Unzipping backup file...');
+        addRestoreLog('Unzipping backup file...');
         const zip = new JSZip();
         const contents = await zip.loadAsync(zipBlob);
-        addLog('Zip file loaded into JSZip.');
+        addRestoreLog('Zip file loaded into JSZip.');
 
         // Assuming collections are in 'collections.json' and images in 'images/' directory within the zip
         const collectionFile = contents.file('collections.json');
         if (!collectionFile) {
           throw new Error('collections.json not found in the zip file.');
         }
-        addLog('Found collections.json in zip.');
+        addRestoreLog('Found collections.json in zip.');
 
         const collectionsDataString = await collectionFile.async('string');
         const collectionsData = JSON.parse(collectionsDataString);
-        addLog('Parsed collections data from zip.');
-        setCloudSyncProgress(50);
+        addRestoreLog('Parsed collections data from zip.');
+        setRestoreProgress(50);
 
         // Step 4: Clear existing local data
-        setCloudSyncStatus('Clearing local data...');
-        addLog('Clearing local collections and images...');
+        setRestoreStatus('Clearing local data...');
+        addRestoreLog('Clearing local collections and images...');
         await db.clearCollections();
         await db.clearImages();
-        addLog('Local data cleared.');
-        setCloudSyncProgress(60);
+        addRestoreLog('Local data cleared.');
+        setRestoreProgress(60);
 
         // Step 5: Import collections
-        setCloudSyncStatus('Importing collections...');
-        addLog('Importing collections into IndexedDB...');
+        setRestoreStatus('Importing collections...');
+        addRestoreLog('Importing collections into IndexedDB...');
         await db.importCollections(collectionsData);
-        addLog('Collections imported.');
-        setCloudSyncProgress(70);
+        addRestoreLog('Collections imported.');
+        setRestoreProgress(70);
 
         // Step 6: Import images from zip
-        setCloudSyncStatus('Importing images...');
-        addLog('Importing images from zip...');
+        setRestoreStatus('Importing images...');
+        addRestoreLog('Importing images from zip...');
         const imageFiles = contents.folder('images').file(/\.(png|jpg|jpeg|gif|webp)$/i);
-        addLog(`Found ${imageFiles.length} images in zip's images/ folder.`);
+        addRestoreLog(`Found ${imageFiles.length} images in zip's images/ folder.`);
         let imagesImportedCount = 0;
         const imageImportPromises = [];
 
         for (let i = 0; i < imageFiles.length; i++) {
           const imageFile = imageFiles[i];
           const progress = 70 + Math.round(((i + 1) / imageFiles.length) * 25); // Images take 25% progress
-          setCloudSyncProgress(progress);
-          setCloudSyncStatus(`Importing image ${i + 1} of ${imageFiles.length}`);
-          addLog(`Processing image ${i+1}/${imageFiles.length}: ${imageFile.name}`);
+          setRestoreProgress(progress);
+          setRestoreStatus(`Importing image ${i + 1} of ${imageFiles.length}`);
+          addRestoreLog(`Processing image ${i+1}/${imageFiles.length}: ${imageFile.name}`);
           
           try {
-              const imageBlob = await imageFile.async('blob');
-              const fileNameParts = imageFile.name.split('/').pop().split('.'); // Get filename and split by dot
-              const imageId = fileNameParts.slice(0, -1).join('.'); // ID is everything before the last dot
-              const imageFormat = fileNameParts.pop(); // Format is after the last dot
+            const imageBlob = await imageFile.async('blob');
+            const fileNameParts = imageFile.name.split('/').pop().split('.'); // Get filename and split by dot
+            const imageId = fileNameParts.slice(0, -1).join('.'); // ID is everything before the last dot
+            const imageFormat = fileNameParts.pop(); // Format is after the last dot
 
-              const imageData = {
-                  id: imageId,
-                  format: imageFormat,
-                  data: imageBlob,
-                  userId: userId,
-                  blob: imageBlob // Add the blob property as well for compatibility
-              };
-              
-              // Queue the import promise
-              imageImportPromises.push(db.importImage(imageData).then(() => {
-                  imagesImportedCount++;
-                  addLog(`Successfully imported image: ${imageFile.name}`);
-              }).catch(err => {
-                  addLog(`Failed to import image ${imageFile.name}: ${err.message}`);
-              }));
+            const imageData = {
+              id: imageId,
+              format: imageFormat,
+              data: imageBlob,
+              userId: userId,
+              blob: imageBlob // Add the blob property as well for compatibility
+            };
+            
+            // Queue the import promise
+            imageImportPromises.push(db.importImage(imageData).then(() => {
+              imagesImportedCount++;
+              addRestoreLog(`Successfully imported image: ${imageFile.name}`);
+            }).catch(err => {
+              addRestoreLog(`Failed to import image ${imageFile.name}: ${err.message}`);
+            }));
           } catch (imgError) {
-              addLog(`Error processing image file ${imageFile.name} from zip: ${imgError.message}`);
+            addRestoreLog(`Error processing image file ${imageFile.name} from zip: ${imgError.message}`);
           }
         }
 
         // Wait for all image imports to complete
         await Promise.all(imageImportPromises);
-        addLog(`Finished processing all images from zip. Imported ${imagesImportedCount}/${imageFiles.length}.`);
-        setCloudSyncProgress(95);
+        addRestoreLog(`Finished processing all images from zip. Imported ${imagesImportedCount}/${imageFiles.length}.`);
+        setRestoreProgress(95);
 
         // Step 7: Finalize and refresh
-        setCloudSyncStatus('Finalizing restore...');
-        addLog('Finalizing restore process...');
-        await refreshCollections();
-        setCloudSyncProgress(100);
-        setCloudSyncStatus('Restore complete!');
-        addLog('Cloud restore completed successfully!');
-        toastService.success('Cloud restore completed successfully!');
+        setRestoreStatus('Finalizing restore...');
+        addRestoreLog('Finalizing restore process...');
+        
+        // Refresh collections from the database instead of calling the prop directly
+        try {
+          addRestoreLog('Refreshing collections from database...');
+          const savedCollections = await db.getCollections();
+          if (savedCollections && Object.keys(savedCollections).length > 0) {
+            addRestoreLog(`Retrieved ${Object.keys(savedCollections).length} collections from database.`);
+            // If refreshCollections prop is available, use it
+            if (typeof refreshCollections === 'function') {
+              refreshCollections();
+            }
+          } else {
+            addRestoreLog('No collections found in database after restore.');
+          }
+        } catch (refreshError) {
+          addRestoreLog(`Error refreshing collections: ${refreshError.message}`);
+        }
+        
+        setRestoreProgress(100);
+        setRestoreStatus('Restore complete!');
+        addRestoreLog('Cloud restore completed successfully!');
+      }
+
+      // Step 8: Verify data security after restore
+      setRestoreStatus('Verifying data security...');
+      addRestoreLog('Verifying data security after restore...');
+      const securityCheckResult = await db.verifyDataSecurity(userId);
+      
+      if (securityCheckResult.secure) {
+        addRestoreLog('Data security verification passed: All restored data is properly isolated to your account.');
+        toastService.success('Data security verified: All restored data is properly secured with your user ID.', { duration: 8000 });
+      } else {
+        addRestoreLog('Data security verification failed: Some restored data may not be properly secured.');
+        
+        // Log detailed information about security issues
+        if (securityCheckResult.details.collections?.unsecured > 0) {
+          addRestoreLog(`Security issue: ${securityCheckResult.details.collections.unsecured} collections not properly secured.`);
+        }
+        if (securityCheckResult.details.images?.unsecured > 0) {
+          addRestoreLog(`Security issue: ${securityCheckResult.details.images.unsecured} images not properly secured.`);
+        }
+        if (securityCheckResult.details.crossUserAccess?.leaked?.length > 0) {
+          addRestoreLog('CRITICAL: Data isolation failure detected!');
+          securityCheckResult.details.crossUserAccess.leaked.forEach(leak => {
+            addRestoreLog(`Security issue: ${leak.count} ${leak.store} accessible to other users.`);
+          });
+        }
+        
+        // Prompt user to fix security issues
+        toastService.error(
+          'Security issues detected with restored data. Please click "Verify Data Security" in the settings to see details and fix the issues.',
+          { duration: 15000 }
+        );
       }
 
     } catch (error) {
       console.error('Cloud restore failed:', error);
-      addLog(`Cloud restore failed: ${error.message}`);
-      setCloudSyncStatus(`Error: ${error.message}`);
+      addRestoreLog(`Cloud restore failed: ${error.message}`);
+      setRestoreStatus(`Error: ${error.message}`);
       toastService.error(`Cloud restore failed: ${error.message}`);
     } finally {
       setIsCloudRestoring(false);
+    }
+  };
+
+  // Handle image cleanup
+  const handleCleanupImages = async () => {
+    if (!currentUser) {
+      addLog('User not signed in for image cleanup.');
+      toastService.error('You must be signed in to clean up images.');
+      return;
+    }
+
+    try {
+      setIsCleaningImages(true);
+      addLog('Starting image cleanup process...');
+      
+      // Get all card IDs from all collections
+      addLog('Fetching collections to identify valid card IDs...');
+      const collections = await db.getAllCollections();
+      
+      // Extract all card IDs from all collections
+      const validCardIds = [];
+      for (const collection of collections) {
+        if (collection.cards && Array.isArray(collection.cards)) {
+          for (const card of collection.cards) {
+            if (card.id) {
+              validCardIds.push(card.id);
+            }
+          }
+        }
+      }
+      
+      addLog(`Found ${validCardIds.length} valid card IDs across ${collections.length} collections.`);
+      
+      // Run the cleanup
+      const result = await db.cleanupOrphanedImages(validCardIds);
+      
+      addLog(`Image cleanup completed: Removed ${result.removed} orphaned images out of ${result.total} total images.`);
+      toastService.success(`Cleanup completed: Removed ${result.removed} orphaned images.`);
+      
+    } catch (error) {
+      console.error('Image cleanup failed:', error);
+      addLog(`Image cleanup failed: ${error.message}`);
+      toastService.error(`Image cleanup failed: ${error.message}`);
+    } finally {
+      setIsCleaningImages(false);
     }
   };
 
@@ -1014,25 +1116,25 @@ const SettingsModal = ({
                       </p>
                       <div className="grid grid-cols-1 gap-2">
                         <Button
+                          onClick={() => handleCloudBackup()}
+                          disabled={isBackingUp || isCloudRestoring || isCleaningImages}
+                          variant="outline"
+                          size="md"
+                          className="w-full"
+                          leftIcon={<Icon name="cloud_upload" />}
+                        >
+                          {isBackingUp ? 'Backing up...' : 'Backup to Cloud'}
+                        </Button>
+                        
+                        <Button
                           onClick={() => handleCloudRestore()}
-                          disabled={isCloudRestoring}
+                          disabled={isBackingUp || isCloudRestoring || isCleaningImages}
                           variant="outline"
                           size="md"
                           className="w-full"
                           leftIcon={<Icon name="cloud_download" />}
                         >
                           {isCloudRestoring ? 'Restoring...' : 'Restore from Cloud'}
-                        </Button>
-                        
-                        <Button
-                          onClick={() => handleCloudBackup()}
-                          disabled={isCloudBackingUp}
-                          variant="outline"
-                          size="md"
-                          className="w-full"
-                          leftIcon={<Icon name="cloud_upload" />}
-                        >
-                          {isCloudBackingUp ? 'Backing up...' : 'Backup to Cloud'}
                         </Button>
                         
                         <Button
@@ -1059,15 +1161,15 @@ const SettingsModal = ({
                       </div>
                       
                       {/* Progress bar for cloud operations */}
-                      {(isCloudBackingUp || isCloudRestoring) && (
+                      {(isBackingUp || isCloudRestoring) && (
                         <div className="mt-4">
                           <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 mb-1">
                             <div 
                               className="bg-blue-600 h-2.5 rounded-full transition-all duration-300" 
-                              style={{ width: `${cloudSyncProgress}%` }}
+                              style={{ width: `${backupProgress}%` }}
                             ></div>
                           </div>
-                          <p className="text-xs text-gray-600 dark:text-gray-400">{cloudSyncStatus}</p>
+                          <p className="text-xs text-gray-600 dark:text-gray-400">{backupStatus}</p>
                         </div>
                       )}
                     </div>
@@ -1099,6 +1201,26 @@ const SettingsModal = ({
                           leftIcon={<Icon name="update" />}
                         >
                           {isUpdatingPrices ? 'Updating...' : 'Update Prices'}
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    {/* Image Cleanup */}
+                    <div>
+                      <h4 className="font-medium mb-2">Image Cleanup</h4>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                        Remove orphaned images from storage.
+                      </p>
+                      <div className="grid grid-cols-1 gap-2">
+                        <Button
+                          onClick={handleCleanupImages}
+                          disabled={isBackingUp || isCloudRestoring || isCleaningImages}
+                          variant="outline"
+                          size="md"
+                          className="w-full"
+                          leftIcon={<Icon name="delete_forever" />}
+                        >
+                          {isCleaningImages ? 'Cleaning...' : 'Clean Up Orphaned Images'}
                         </Button>
                       </div>
                     </div>
@@ -1215,7 +1337,7 @@ const SettingsModal = ({
         isOpen={showRestoreConfirm}
         onClose={() => {
           setShowRestoreConfirm(false);
-          addLog('Cloud restore cancelled by user.');
+          addRestoreLog('Cloud restore cancelled by user.');
         }}
         onConfirm={handleConfirmRestore}
         title="Restore from Cloud"

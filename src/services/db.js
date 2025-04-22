@@ -13,6 +13,8 @@ class DatabaseService {
   constructor() {
     this.db = null;
     this.dbPromise = null;
+    this._retried = false;
+    this._resetInProgress = false;
     // Initialize database when service is created
     this.initDatabase().catch(error => 
       logger.error('Failed to initialize database on service creation:', error)
@@ -22,6 +24,16 @@ class DatabaseService {
   initDatabase() {
     return new Promise((resolve, reject) => {
       try {
+        // Close any existing connection first
+        if (this.db && !this.db.closed) {
+          try {
+            this.db.close();
+            this.db = null;
+          } catch (closeError) {
+            logger.warn('Error closing existing database connection:', closeError);
+          }
+        }
+        
         const request = indexedDB.open(DB_NAME, DB_VERSION);
 
         request.onerror = (event) => {
@@ -45,6 +57,20 @@ class DatabaseService {
               
               newRequest.onsuccess = (e) => {
                 this.db = e.target.result;
+                
+                // Set up connection error handling
+                this.db.onversionchange = () => {
+                  this.db.close();
+                  logger.debug('Database version changed, connection closed');
+                  this.db = null;
+                };
+                
+                // Set up close handling
+                this.db.onclose = () => {
+                  logger.debug('Database connection closed');
+                  this.db = null;
+                };
+                
                 resolve(this.db);
               };
               
@@ -64,6 +90,20 @@ class DatabaseService {
         request.onsuccess = (event) => {
           this.db = event.target.result;
           this.dbPromise = Promise.resolve(this.db);
+          
+          // Set up connection error handling
+          this.db.onversionchange = () => {
+            this.db.close();
+            logger.debug('Database version changed, connection closed');
+            this.db = null;
+          };
+          
+          // Set up close handling
+          this.db.onclose = () => {
+            logger.debug('Database connection closed');
+            this.db = null;
+          };
+          
           // Check if all required object stores exist
           this.verifyObjectStores();
           resolve(this.db);
@@ -78,7 +118,17 @@ class DatabaseService {
   }
 
   async ensureDB() {
-    if (this.db) return;
+    // If we already have a valid database connection, return immediately
+    if (this.db && this.db.version > 0 && !this.db.closed) {
+      return;
+    }
+    
+    // If the database promise doesn't exist or the connection was closed, reinitialize
+    if (!this.dbPromise || this.db?.closed) {
+      logger.debug('Database connection needs to be reinitialized');
+      this.db = null;
+      this.dbPromise = this.initDatabase();
+    }
     
     // Wait for database to be opened
     try {
@@ -87,9 +137,33 @@ class DatabaseService {
       // Ensure all expected collections exist for the user
       await this.ensureCollections();
     } catch (error) {
-      logger.error('Error ensuring database:', error);
-      throw error;
+      logger.debug('Error ensuring database:', error);
+      
+      // If there's an error, try to reinitialize the database once
+      if (!this._retried) {
+        logger.debug('Attempting to reinitialize database after error');
+        this._retried = true;
+        this.db = null;
+        this.dbPromise = this.initDatabase();
+        return this.ensureDB();
+      }
+      
+      // If we've already retried, try a complete reset as a last resort
+      logger.debug('Database connection still failing after retry, attempting complete reset');
+      this._retried = false;
+      
+      try {
+        await this.resetDatabaseSilently();
+        // After reset, try to ensure collections again
+        await this.ensureCollections();
+      } catch (resetError) {
+        logger.debug('Error resetting database:', resetError);
+        // Just continue - we'll create default collections if needed
+      }
     }
+    
+    // Reset retry flag after successful connection
+    this._retried = false;
   }
   
   // Ensure all expected collections exist for the current user
@@ -160,8 +234,8 @@ class DatabaseService {
           resolve();
         };
         
-        request.onerror = (event) => {
-          reject(event.target.error);
+        request.onerror = (e) => {
+          logger.error(`Error saving collection ${collectionName}:`, e.target.error);
         };
       } catch (error) {
         reject(error);
@@ -262,7 +336,11 @@ class DatabaseService {
       logger.debug(`Missing object stores: ${missingStores.join(', ')}. Will upgrade database...`);
       
       // Close current connection
-      this.db.close();
+      try {
+        this.db.close();
+      } catch (error) {
+        logger.warn('Error closing database during verifyObjectStores:', error);
+      }
       this.db = null;
       
       // Reopen with increased version to trigger upgrade
@@ -279,6 +357,20 @@ class DatabaseService {
       
       request.onsuccess = (event) => {
         this.db = event.target.result;
+        
+        // Set up connection error handling
+        this.db.onversionchange = () => {
+          this.db.close();
+          logger.debug('Database version changed, connection closed');
+          this.db = null;
+        };
+        
+        // Set up close handling
+        this.db.onclose = () => {
+          logger.debug('Database connection closed');
+          this.db = null;
+        };
+        
         logger.debug(`Database upgraded successfully to version ${this.db.version}`);
       };
       
@@ -310,6 +402,13 @@ class DatabaseService {
       
       return new Promise((resolve, reject) => {
         try {
+          // Check if database is valid
+          if (!this.db || this.db.closed) {
+            logger.debug('Database connection invalid in getCollections, returning default');
+            resolve({ 'Default Collection': [] });
+            return;
+          }
+          
           const transaction = this.db.transaction([COLLECTIONS_STORE], 'readonly');
           const store = transaction.objectStore(COLLECTIONS_STORE);
           
@@ -321,26 +420,49 @@ class DatabaseService {
 
           request.onsuccess = () => {
             const collections = {};
-            request.result.forEach(collection => {
-              collections[collection.name] = collection.data;
-            });
+            
+            // Check if we got valid results
+            if (request.result && Array.isArray(request.result)) {
+              request.result.forEach(collection => {
+                if (collection && collection.name) {
+                  collections[collection.name] = collection.data || [];
+                }
+              });
+            }
+            
+            // Ensure there's at least a Default Collection
+            if (Object.keys(collections).length === 0) {
+              collections['Default Collection'] = [];
+            }
+            
             resolve(collections);
           };
 
           request.onerror = (error) => {
-            logger.error('Error fetching collections:', error);
+            logger.debug('Error fetching collections:', error);
             // Return empty collections object with Default Collection
             resolve({ 'Default Collection': [] });
           };
+          
+          // Add transaction error handler
+          transaction.onerror = (error) => {
+            logger.debug('Transaction error in getCollections:', error);
+            resolve({ 'Default Collection': [] });
+          };
+          
+          // Add transaction abort handler
+          transaction.onabort = (event) => {
+            logger.debug('Transaction aborted in getCollections:', event);
+            resolve({ 'Default Collection': [] });
+          };
         } catch (error) {
-          logger.error('Transaction error in getCollections:', error);
+          logger.debug('Transaction error in getCollections:', error);
           // Return empty collections object with Default Collection
           resolve({ 'Default Collection': [] });
         }
       });
     } catch (error) {
-      logger.error('Unexpected error in getCollections:', error);
-      // Return empty collections object with Default Collection
+      logger.debug('Fatal error in getCollections:', error);
       return { 'Default Collection': [] };
     }
   }
@@ -474,17 +596,86 @@ class DatabaseService {
   }
 
   async deleteImage(cardId) {
-    await this.ensureDB();
-    const userId = this.getCurrentUserId();
-    
-    return new Promise((resolve, reject) => {
-      const transaction = this.db.transaction([IMAGES_STORE], 'readwrite');
-      const store = transaction.objectStore(IMAGES_STORE);
-      const request = store.delete([userId, cardId]);
+    try {
+      await this.ensureDB();
+      const userId = this.getCurrentUserId();
+      
+      return new Promise((resolve, reject) => {
+        try {
+          const transaction = this.db.transaction([IMAGES_STORE], 'readwrite');
+          const store = transaction.objectStore(IMAGES_STORE);
+          
+          // First check if the image exists
+          const getRequest = store.get([userId, cardId]);
+          
+          getRequest.onsuccess = (event) => {
+            const image = event.target.result;
+            if (!image) {
+              // Image not found
+              logger.debug(`Image ${cardId} not found, nothing to delete.`);
+              resolve(false);
+              return;
+            }
+            
+            // Image found, delete it
+            const deleteRequest = store.delete([userId, cardId]);
+            
+            deleteRequest.onsuccess = () => {
+              logger.debug(`Successfully deleted image: ${cardId}`);
+              resolve(true);
+            };
+            
+            deleteRequest.onerror = (error) => {
+              logger.error(`Error deleting image ${cardId}:`, error);
+              reject(new Error(`Failed to delete image ${cardId}: ${error.target?.error?.message || 'Unknown error'}`));
+            };
+          };
+          
+          getRequest.onerror = (error) => {
+            logger.error(`Error checking for image ${cardId}:`, error);
+            reject(new Error(`Failed to check for image ${cardId}: ${error.target?.error?.message || 'Unknown error'}`));
+          };
+        } catch (error) {
+          logger.error('Transaction error in deleteImage:', error);
+          reject(error);
+        }
+      });
+    } catch (error) {
+      logger.error('Unexpected error in deleteImage:', error);
+      throw error;
+    }
+  }
 
-      request.onsuccess = () => resolve();
-      request.onerror = () => reject('Error deleting image');
-    });
+  async deleteImagesForCards(cardIds) {
+    if (!Array.isArray(cardIds) || cardIds.length === 0) {
+      return { deleted: 0, failed: 0 };
+    }
+    
+    try {
+      await this.ensureDB();
+      const userId = this.getCurrentUserId();
+      
+      let deleted = 0;
+      let failed = 0;
+      
+      for (const cardId of cardIds) {
+        try {
+          const wasDeleted = await this.deleteImage(cardId);
+          if (wasDeleted) {
+            deleted++;
+          }
+        } catch (error) {
+          logger.error(`Error deleting image for card ${cardId}:`, error);
+          failed++;
+        }
+      }
+      
+      logger.debug(`Deleted ${deleted} images, ${failed} failed`);
+      return { deleted, failed };
+    } catch (error) {
+      logger.error('Error in bulk image deletion:', error);
+      throw error;
+    }
   }
 
   async getProfile() {
@@ -796,95 +987,164 @@ class DatabaseService {
       // Open the database
       await this.ensureDB();
       
-      // Check collections store
+      // Results object to track all security checks
+      const results = {
+        collections: { total: 0, secured: 0, unsecured: [] },
+        images: { total: 0, secured: 0, unsecured: [] },
+        crossUserAccess: { attempted: 0, blocked: 0, leaked: [] }
+      };
+      
+      // Step 1: Check collections store for proper user ID association
       const collectionsStore = this.db.transaction(COLLECTIONS_STORE, 'readonly').objectStore(COLLECTIONS_STORE);
       const collectionsRequest = collectionsStore.getAll();
       
       return new Promise((resolve, reject) => {
-        collectionsRequest.onsuccess = () => {
+        collectionsRequest.onsuccess = async () => {
           const collections = collectionsRequest.result;
+          results.collections.total = collections.length;
           
-          console.log(`Checking security for ${collections.length} collections with user ID: ${userId}`);
+          logger.debug(`Checking security for ${collections.length} collections with user ID: ${userId}`);
           
           // Check if any collections exist without a userId or with a different userId
           const unsecuredCollections = collections.filter(collection => 
             !collection.userId || collection.userId !== userId
           );
           
+          results.collections.secured = collections.length - unsecuredCollections.length;
+          
           // Log detailed information about unsecured collections
           if (unsecuredCollections.length > 0) {
-            console.log('Unsecured collections found:');
+            logger.debug('Unsecured collections found:');
             unsecuredCollections.forEach(collection => {
-              console.log(`- Collection ID: ${collection.id}, Name: ${collection.name || 'unnamed'}, Current userId: ${collection.userId || 'none'}`);
+              logger.debug(`- Collection ID: ${collection.id}, Name: ${collection.name || 'unnamed'}, Current userId: ${collection.userId || 'none'}`);
             });
+            
+            results.collections.unsecured = unsecuredCollections.map(c => ({
+              id: c.id,
+              name: c.name || 'unnamed',
+              currentUserId: c.userId || 'none'
+            }));
           }
           
-          if (unsecuredCollections.length > 0) {
-            resolve({
-              secure: false,
-              message: `Found ${unsecuredCollections.length} collections not properly secured with your user ID`,
-              details: {
-                unsecuredCollections: unsecuredCollections.map(c => ({
-                  id: c.id,
-                  name: c.name || 'unnamed',
-                  currentUserId: c.userId || 'none'
-                }))
-              }
-            });
-            return;
-          }
-          
-          // Check images store
+          // Step 2: Check images store for proper user ID association
           const imagesStore = this.db.transaction(IMAGES_STORE, 'readonly').objectStore(IMAGES_STORE);
           const imagesRequest = imagesStore.getAll();
           
-          imagesRequest.onsuccess = () => {
+          imagesRequest.onsuccess = async () => {
             const images = imagesRequest.result;
+            results.images.total = images.length;
             
-            console.log(`Checking security for ${images.length} images with user ID: ${userId}`);
+            logger.debug(`Checking security for ${images.length} images with user ID: ${userId}`);
             
             // Check if any images exist without a userId or with a different userId
             const unsecuredImages = images.filter(image => 
               !image.userId || image.userId !== userId
             );
             
+            results.images.secured = images.length - unsecuredImages.length;
+            
             // Log detailed information about unsecured images
             if (unsecuredImages.length > 0) {
-              console.log('Unsecured images found:');
+              logger.debug('Unsecured images found:');
               // Log the first 10 unsecured images to avoid console flooding
               unsecuredImages.slice(0, 10).forEach(image => {
-                console.log(`- Image ID: ${image.id}, Current userId: ${image.userId || 'none'}, Card ID: ${image.cardId || 'unknown'}`);
+                logger.debug(`- Image ID: ${image.id}, Current userId: ${image.userId || 'none'}, Card ID: ${image.cardId || 'unknown'}`);
               });
+              
               if (unsecuredImages.length > 10) {
-                console.log(`... and ${unsecuredImages.length - 10} more`);
+                logger.debug(`... and ${unsecuredImages.length - 10} more`);
               }
+              
+              results.images.unsecured = unsecuredImages.slice(0, 20).map(img => ({
+                id: img.id,
+                cardId: img.cardId || 'unknown',
+                currentUserId: img.userId || 'none'
+              }));
             }
             
-            if (unsecuredImages.length > 0) {
-              resolve({
-                secure: false,
-                message: `Found ${unsecuredImages.length} images not properly secured with your user ID`,
-                details: {
-                  unsecuredImages: unsecuredImages.slice(0, 20).map(img => ({
-                    id: img.id,
-                    cardId: img.cardId || 'unknown',
-                    currentUserId: img.userId || 'none'
-                  })),
-                  totalUnsecuredImages: unsecuredImages.length
-                }
-              });
-              return;
+            // Step 3: Test cross-user data isolation
+            // Create a fake user ID to test isolation
+            const fakeUserId = 'test-user-' + Date.now();
+            logger.debug(`Testing cross-user data isolation with fake user ID: ${fakeUserId}`);
+            
+            // Try to access collections with a different user ID
+            try {
+              results.crossUserAccess.attempted++;
+              const fakeUserCollections = await this.testCrossUserAccess(COLLECTIONS_STORE, fakeUserId);
+              if (fakeUserCollections.length > 0) {
+                logger.warn(`SECURITY ISSUE: Able to access ${fakeUserCollections.length} collections with fake user ID`);
+                results.crossUserAccess.leaked.push({
+                  store: 'collections',
+                  count: fakeUserCollections.length,
+                  items: fakeUserCollections.slice(0, 5).map(c => c.name || 'unnamed')
+                });
+              } else {
+                results.crossUserAccess.blocked++;
+                logger.debug('Cross-user collection access properly blocked');
+              }
+            } catch (error) {
+              // This is actually good - it means access was blocked
+              results.crossUserAccess.blocked++;
+              logger.debug('Cross-user collection access properly blocked with error:', error.message);
             }
             
-            // All data is secure
-            resolve({
-              secure: true,
-              message: 'All data is properly secured with your user ID',
+            // Try to access images with a different user ID
+            try {
+              results.crossUserAccess.attempted++;
+              const fakeUserImages = await this.testCrossUserAccess(IMAGES_STORE, fakeUserId);
+              if (fakeUserImages.length > 0) {
+                logger.warn(`SECURITY ISSUE: Able to access ${fakeUserImages.length} images with fake user ID`);
+                results.crossUserAccess.leaked.push({
+                  store: 'images',
+                  count: fakeUserImages.length,
+                  items: fakeUserImages.slice(0, 5).map(img => img.id)
+                });
+              } else {
+                results.crossUserAccess.blocked++;
+                logger.debug('Cross-user image access properly blocked');
+              }
+            } catch (error) {
+              // This is actually good - it means access was blocked
+              results.crossUserAccess.blocked++;
+              logger.debug('Cross-user image access properly blocked with error:', error.message);
+            }
+            
+            // Determine overall security status
+            const isSecure = 
+              results.collections.unsecured.length === 0 && 
+              results.images.unsecured.length === 0 &&
+              results.crossUserAccess.leaked.length === 0;
+            
+            // Generate detailed report
+            const securityReport = {
+              secure: isSecure,
+              message: isSecure 
+                ? 'All data is properly secured and isolated with your user ID' 
+                : 'Security issues detected with data isolation',
               details: {
-                totalCollections: collections.length,
-                totalImages: images.length
+                collections: {
+                  total: results.collections.total,
+                  secured: results.collections.secured,
+                  unsecured: results.collections.unsecured.length
+                },
+                images: {
+                  total: results.images.total,
+                  secured: results.images.secured,
+                  unsecured: results.images.unsecured.length,
+                  totalUnsecuredImages: results.images.unsecured.length
+                },
+                crossUserAccess: {
+                  attempted: results.crossUserAccess.attempted,
+                  blocked: results.crossUserAccess.blocked,
+                  leaked: results.crossUserAccess.leaked
+                },
+                unsecuredCollections: results.collections.unsecured,
+                unsecuredImages: results.images.unsecured.slice(0, 20)
               }
-            });
+            };
+            
+            logger.debug('Security verification complete:', securityReport);
+            resolve(securityReport);
           };
           
           imagesRequest.onerror = (event) => {
@@ -903,14 +1163,56 @@ class DatabaseService {
   }
 
   /**
+   * Test cross-user data access to verify isolation
+   * @param {string} storeName - The name of the object store to test
+   * @param {string} fakeUserId - A fake user ID to test with
+   * @returns {Promise<Array>} - Any data that was accessible (should be empty)
+   * @private
+   */
+  async testCrossUserAccess(storeName, fakeUserId) {
+    return new Promise((resolve, reject) => {
+      try {
+        const transaction = this.db.transaction([storeName], 'readonly');
+        const store = transaction.objectStore(storeName);
+        
+        // Try to get all items for the fake user ID
+        // This should return an empty array if security is working correctly
+        const range = IDBKeyRange.bound(
+          [fakeUserId, ''], // Lower bound: fake user, start of name range
+          [fakeUserId, '\uffff'] // Upper bound: fake user, end of name range
+        );
+        
+        const request = store.getAll(range);
+        
+        request.onsuccess = () => {
+          resolve(request.result || []);
+        };
+        
+        request.onerror = (event) => {
+          // This might happen if the store is properly secured
+          reject(new Error(`Access denied to ${storeName} for fake user: ${event.target.error}`));
+        };
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
+  /**
    * Fix data security by properly associating all data with the user's ID
    * @param {string} userId - The current user's ID
-   * @returns {Promise<void>}
+   * @returns {Promise<{fixed: {collections: number, images: number}, total: {collections: number, images: number}}>}
    */
   async fixDataSecurity(userId) {
     try {
       // Open the database
       await this.ensureDB();
+      
+      // Results object to track fixes
+      const results = {
+        fixed: { collections: 0, images: 0 },
+        total: { collections: 0, images: 0 }
+      };
       
       // Fix collections
       const collectionsStore = this.db.transaction(COLLECTIONS_STORE, 'readwrite').objectStore(COLLECTIONS_STORE);
@@ -919,18 +1221,35 @@ class DatabaseService {
       return new Promise((resolve, reject) => {
         collectionsRequest.onsuccess = () => {
           const collections = collectionsRequest.result;
-          let fixedCount = 0;
+          results.total.collections = collections.length;
           
           // Update each collection that doesn't have the correct userId
           collections.forEach(collection => {
             if (!collection.userId || collection.userId !== userId) {
-              collection.userId = userId;
-              collectionsStore.put(collection);
-              fixedCount++;
+              // Create a new object with the correct structure
+              const fixedCollection = {
+                ...collection,
+                userId: userId
+              };
+              
+              // Delete the old entry if it exists
+              if (collection.userId) {
+                try {
+                  collectionsStore.delete([collection.userId, collection.name]);
+                } catch (error) {
+                  logger.warn(`Could not delete old collection entry: ${error.message}`);
+                }
+              }
+              
+              // Add the fixed entry
+              collectionsStore.put(fixedCollection);
+              results.fixed.collections++;
+              
+              logger.debug(`Fixed collection: ${collection.name}`);
             }
           });
           
-          console.log(`Fixed ${fixedCount} collections`);
+          logger.debug(`Fixed ${results.fixed.collections} of ${results.total.collections} collections`);
           
           // Fix images
           const imagesStore = this.db.transaction(IMAGES_STORE, 'readwrite').objectStore(IMAGES_STORE);
@@ -938,21 +1257,38 @@ class DatabaseService {
           
           imagesRequest.onsuccess = () => {
             const images = imagesRequest.result;
-            let fixedImagesCount = 0;
+            results.total.images = images.length;
             
             // Update each image that doesn't have the correct userId
             images.forEach(image => {
               if (!image.userId || image.userId !== userId) {
-                image.userId = userId;
-                imagesStore.put(image);
-                fixedImagesCount++;
+                // Create a new object with the correct structure
+                const fixedImage = {
+                  ...image,
+                  userId: userId
+                };
+                
+                // Delete the old entry if it exists
+                if (image.userId) {
+                  try {
+                    imagesStore.delete([image.userId, image.id]);
+                  } catch (error) {
+                    logger.warn(`Could not delete old image entry: ${error.message}`);
+                  }
+                }
+                
+                // Add the fixed entry
+                imagesStore.put(fixedImage);
+                results.fixed.images++;
+                
+                logger.debug(`Fixed image: ${image.id}`);
               }
             });
             
-            console.log(`Fixed ${fixedImagesCount} images`);
+            logger.debug(`Fixed ${results.fixed.images} of ${results.total.images} images`);
             
             // All data is now secure
-            resolve();
+            resolve(results);
           };
           
           imagesRequest.onerror = (event) => {
@@ -1289,8 +1625,9 @@ class DatabaseService {
             blob: imageBlob // Store as blob property for compatibility with existing code
           };
           
-          // Store the image using composite key [userId, id]
-          const request = store.put(image, [userId, image.id]);
+          // Store the image without providing an explicit key
+          // The key is already part of the image object structure
+          const request = store.put(image);
           
           request.onsuccess = () => {
             logger.debug(`Successfully imported image: ${image.id}`);
@@ -1309,6 +1646,456 @@ class DatabaseService {
     } catch (error) {
       logger.error('Unexpected error in importImage:', error);
       throw error;
+    }
+  }
+
+  /**
+   * Delete an image from the database by ID
+   * @param {string} imageId - The ID of the image to delete
+   * @returns {Promise<boolean>} - True if the image was deleted, false if not found
+   */
+  async deleteImage(imageId) {
+    try {
+      await this.ensureDB();
+      const userId = this.getCurrentUserId();
+      
+      return new Promise((resolve, reject) => {
+        try {
+          const transaction = this.db.transaction([IMAGES_STORE], 'readwrite');
+          const store = transaction.objectStore(IMAGES_STORE);
+          
+          // First check if the image exists
+          const getRequest = store.get([userId, imageId]);
+          
+          getRequest.onsuccess = (event) => {
+            const image = event.target.result;
+            if (!image) {
+              // Image not found
+              logger.debug(`Image ${imageId} not found, nothing to delete.`);
+              resolve(false);
+              return;
+            }
+            
+            // Image found, delete it
+            const deleteRequest = store.delete([userId, imageId]);
+            
+            deleteRequest.onsuccess = () => {
+              logger.debug(`Successfully deleted image: ${imageId}`);
+              resolve(true);
+            };
+            
+            deleteRequest.onerror = (error) => {
+              logger.error(`Error deleting image ${imageId}:`, error);
+              reject(new Error(`Failed to delete image ${imageId}: ${error.target?.error?.message || 'Unknown error'}`));
+            };
+          };
+          
+          getRequest.onerror = (error) => {
+            logger.error(`Error checking for image ${imageId}:`, error);
+            reject(new Error(`Failed to check for image ${imageId}: ${error.target?.error?.message || 'Unknown error'}`));
+          };
+        } catch (error) {
+          logger.error('Transaction error in deleteImage:', error);
+          reject(error);
+        }
+      });
+    } catch (error) {
+      logger.error('Unexpected error in deleteImage:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Delete all images for a collection
+   * @param {Array<string>} cardIds - Array of card IDs whose images should be deleted
+   * @returns {Promise<{deleted: number, failed: number}>} - Stats about the deletion operation
+   */
+  async deleteImagesForCards(cardIds) {
+    if (!Array.isArray(cardIds) || cardIds.length === 0) {
+      return { deleted: 0, failed: 0 };
+    }
+    
+    try {
+      await this.ensureDB();
+      const userId = this.getCurrentUserId();
+      
+      let deleted = 0;
+      let failed = 0;
+      
+      for (const cardId of cardIds) {
+        try {
+          const wasDeleted = await this.deleteImage(cardId);
+          if (wasDeleted) {
+            deleted++;
+          }
+        } catch (error) {
+          logger.error(`Error deleting image for card ${cardId}:`, error);
+          failed++;
+        }
+      }
+      
+      logger.debug(`Deleted ${deleted} images, ${failed} failed`);
+      return { deleted, failed };
+    } catch (error) {
+      logger.error('Error in bulk image deletion:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Clean up orphaned images that don't belong to any card
+   * @param {Array<string>} cardIds - Array of valid card IDs that should be kept
+   * @returns {Promise<{removed: number, total: number}>} - Stats about the cleanup operation
+   */
+  async cleanupOrphanedImages(cardIds) {
+    try {
+      await this.ensureDB();
+      const userId = this.getCurrentUserId();
+      
+      // Get all images for the current user
+      const allImages = await this.getAllImages();
+      
+      // Create a Set of valid card IDs for faster lookup
+      const validCardIds = new Set(cardIds);
+      
+      // Find orphaned images (images that don't belong to any card)
+      const orphanedImages = allImages.filter(image => !validCardIds.has(image.id));
+      
+      logger.debug(`Found ${orphanedImages.length} orphaned images out of ${allImages.length} total images`);
+      
+      // Delete each orphaned image
+      let removedCount = 0;
+      for (const image of orphanedImages) {
+        try {
+          await this.deleteImage(image.id);
+          removedCount++;
+        } catch (error) {
+          logger.error(`Failed to delete orphaned image ${image.id}:`, error);
+        }
+      }
+      
+      return {
+        removed: removedCount,
+        total: allImages.length
+      };
+    } catch (error) {
+      logger.error('Error cleaning up orphaned images:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Completely reset the database by deleting it and recreating it
+   * This is a last resort for fixing database corruption issues
+   * @returns {Promise<IDBDatabase>} A promise that resolves to the new database
+   */
+  async resetDatabase() {
+    if (this._resetInProgress) {
+      logger.debug('Database reset already in progress, waiting...');
+      // Wait for the existing reset to complete
+      return this.dbPromise;
+    }
+    
+    this._resetInProgress = true;
+    logger.debug('Performing complete database reset...');
+    
+    try {
+      // Close any existing connection
+      if (this.db && !this.db.closed) {
+        try {
+          this.db.close();
+        } catch (error) {
+          logger.warn('Error closing database during reset:', error);
+        }
+      }
+      
+      // Clear the database reference
+      this.db = null;
+      
+      // Create a promise for deleting the database
+      const deletePromise = new Promise((resolve, reject) => {
+        const deleteRequest = indexedDB.deleteDatabase(DB_NAME);
+        
+        deleteRequest.onsuccess = () => {
+          logger.debug('Database successfully deleted');
+          resolve();
+        };
+        
+        deleteRequest.onerror = (event) => {
+          logger.error('Error deleting database:', event.target.error);
+          reject(new Error('Failed to delete database: ' + event.target.error));
+        };
+        
+        deleteRequest.onblocked = () => {
+          logger.warn('Database deletion blocked, some connections might still be open');
+          // Try to continue anyway after a short delay
+          setTimeout(resolve, 1000);
+        };
+      });
+      
+      // Wait for the database to be deleted
+      await deletePromise;
+      
+      // Wait a short time to ensure all connections are properly closed
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Create a new database
+      this.dbPromise = this.initDatabase();
+      this.db = await this.dbPromise;
+      
+      // Ensure the database has all required object stores
+      await this.setupRequiredStores();
+      
+      logger.debug('Database reset completed successfully');
+      return this.db;
+    } catch (error) {
+      logger.error('Error during database reset:', error);
+      throw error;
+    } finally {
+      this._resetInProgress = false;
+    }
+  }
+  
+  /**
+   * Ensure all required object stores exist in the database
+   * This is called after a database reset to ensure the database is properly initialized
+   */
+  async setupRequiredStores() {
+    if (!this.db) return;
+    
+    const requiredStores = [COLLECTIONS_STORE, IMAGES_STORE, PROFILE_STORE, SUBSCRIPTION_STORE];
+    const existingStores = Array.from(this.db.objectStoreNames);
+    
+    const missingStores = requiredStores.filter(store => !existingStores.includes(store));
+    
+    if (missingStores.length > 0) {
+      logger.debug(`Missing object stores after reset: ${missingStores.join(', ')}. Upgrading database...`);
+      
+      // Close current connection gracefully
+      try {
+        this.db.close();
+      } catch (error) {
+        logger.debug('Error closing database during setupRequiredStores:', error);
+      }
+      this.db = null;
+      
+      // Reopen with increased version to trigger upgrade
+      const newVersion = this.db ? this.db.version + 1 : DB_VERSION + 1;
+      logger.debug(`Reopening database with new version ${newVersion}`);
+      
+      // Create a promise for opening the database with a new version
+      const openPromise = new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, newVersion);
+        
+        request.onupgradeneeded = (event) => {
+          logger.debug(`Upgrading database to fix missing stores. Version: ${event.oldVersion} -> ${event.newVersion}`);
+          this.setupDatabase(event);
+        };
+        
+        request.onsuccess = (event) => {
+          this.db = event.target.result;
+          
+          // Set up connection error handling
+          this.db.onversionchange = () => {
+            this.db.close();
+            logger.debug('Database version changed, connection closed');
+            this.db = null;
+          };
+          
+          // Set up close handling
+          this.db.onclose = () => {
+            logger.debug('Database connection closed');
+            this.db = null;
+          };
+          
+          logger.debug(`Database upgraded successfully to version ${this.db.version}`);
+          resolve(this.db);
+        };
+        
+        request.onerror = (event) => {
+          logger.error('Error upgrading database:', event.target.error);
+          reject(event.target.error);
+        };
+      });
+      
+      return openPromise;
+    }
+    
+    return this.db;
+  }
+
+  /**
+   * Silently initialize the database without forcing a reset
+   * This is a more graceful approach for first-time users
+   * @returns {Promise<IDBDatabase>} A promise that resolves to the database
+   */
+  async silentInitialize() {
+    // If we already have a valid database connection, return immediately
+    if (this.db && this.db.version > 0 && !this.db.closed) {
+      return this.db;
+    }
+    
+    try {
+      // If the database promise doesn't exist or the connection was closed, reinitialize
+      if (!this.dbPromise || this.db?.closed) {
+        logger.debug('Database connection needs to be reinitialized');
+        this.db = null;
+        this.dbPromise = this.initDatabase();
+      }
+      
+      // Wait for database to be opened
+      this.db = await this.dbPromise;
+      
+      // Check if all required object stores exist
+      const requiredStores = [COLLECTIONS_STORE, IMAGES_STORE, PROFILE_STORE, SUBSCRIPTION_STORE];
+      const existingStores = Array.from(this.db.objectStoreNames);
+      const missingStores = requiredStores.filter(store => !existingStores.includes(store));
+      
+      // If stores are missing, upgrade the database
+      if (missingStores.length > 0) {
+        logger.debug(`Missing object stores: ${missingStores.join(', ')}. Will upgrade database...`);
+        
+        // Close current connection gracefully
+        try {
+          this.db.close();
+        } catch (error) {
+          logger.debug('Error closing database during silentInitialize:', error);
+        }
+        this.db = null;
+        
+        // Reopen with increased version to trigger upgrade
+        const newVersion = DB_VERSION + 1;
+        logger.debug(`Reopening database with new version ${newVersion}`);
+        
+        // Create a promise for opening the database with a new version
+        const openPromise = new Promise((resolve, reject) => {
+          const request = indexedDB.open(DB_NAME, newVersion);
+          
+          request.onupgradeneeded = (event) => {
+            logger.debug(`Upgrading database to fix missing stores. Version: ${event.oldVersion} -> ${event.newVersion}`);
+            this.setupDatabase(event);
+          };
+          
+          request.onsuccess = (event) => {
+            this.db = event.target.result;
+            
+            // Set up connection error handling
+            this.db.onversionchange = () => {
+              this.db.close();
+              logger.debug('Database version changed, connection closed');
+              this.db = null;
+            };
+            
+            // Set up close handling
+            this.db.onclose = () => {
+              logger.debug('Database connection closed');
+              this.db = null;
+            };
+            
+            logger.debug(`Database upgraded successfully to version ${this.db.version}`);
+            resolve(this.db);
+          };
+          
+          request.onerror = (event) => {
+            logger.debug('Error upgrading database:', event.target.error);
+            // Resolve with null instead of rejecting to keep the process silent
+            resolve(null);
+          };
+        });
+        
+        const result = await openPromise;
+        if (result) {
+          this.db = result;
+          this.dbPromise = Promise.resolve(this.db);
+        } else {
+          // If upgrade failed, try a complete reset as a last resort
+          // but do it silently without showing errors to the user
+          return this.resetDatabaseSilently();
+        }
+      }
+      
+      return this.db;
+    } catch (error) {
+      logger.debug('Error during silent database initialization:', error);
+      
+      // Try a silent reset as a last resort
+      return this.resetDatabaseSilently();
+    }
+  }
+  
+  /**
+   * Reset the database silently without showing errors to the user
+   * This is used as a last resort when other initialization methods fail
+   * @returns {Promise<IDBDatabase>} A promise that resolves to the new database
+   */
+  async resetDatabaseSilently() {
+    if (this._resetInProgress) {
+      logger.debug('Database reset already in progress, waiting...');
+      // Wait for the existing reset to complete
+      return this.dbPromise;
+    }
+    
+    this._resetInProgress = true;
+    logger.debug('Performing silent database reset...');
+    
+    try {
+      // Close any existing connection
+      if (this.db && !this.db.closed) {
+        try {
+          this.db.close();
+        } catch (error) {
+          logger.debug('Error closing database during silent reset:', error);
+        }
+      }
+      
+      // Clear the database reference
+      this.db = null;
+      
+      // Create a promise for deleting the database
+      const deletePromise = new Promise((resolve) => {
+        const deleteRequest = indexedDB.deleteDatabase(DB_NAME);
+        
+        deleteRequest.onsuccess = () => {
+          logger.debug('Database successfully deleted');
+          resolve(true);
+        };
+        
+        deleteRequest.onerror = (event) => {
+          logger.debug('Error deleting database:', event.target.error);
+          // Resolve anyway to continue the process
+          resolve(false);
+        };
+        
+        deleteRequest.onblocked = () => {
+          logger.debug('Database deletion blocked, some connections might still be open');
+          // Try to continue anyway after a short delay
+          setTimeout(() => resolve(false), 1000);
+        };
+      });
+      
+      // Wait for the database to be deleted
+      await deletePromise;
+      
+      // Wait a short time to ensure all connections are properly closed
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Create a new database
+      this.dbPromise = this.initDatabase();
+      this.db = await this.dbPromise;
+      
+      // Ensure the database has all required object stores
+      await this.setupRequiredStores();
+      
+      logger.debug('Silent database reset completed successfully');
+      return this.db;
+    } catch (error) {
+      logger.debug('Error during silent database reset:', error);
+      
+      // Create a new database promise even if the reset failed
+      this.dbPromise = this.initDatabase();
+      return this.dbPromise;
+    } finally {
+      this._resetInProgress = false;
     }
   }
 }

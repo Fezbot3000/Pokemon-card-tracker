@@ -8,14 +8,17 @@ const Button = ({
   children, 
   variant = 'primary', 
   size = 'md', 
-  iconLeft, 
-  iconRight, 
+  iconLeft,
+  iconRight,
+  leftIcon, 
+  rightIcon, 
   fullWidth = false,
   disabled = false,
   onClick,
   type = 'button',
   className = '',
-  isLoading, // Extract isLoading here
+  isLoading,
+  loadingText = 'Processing...', 
   ...props
 }) => {
   // Base styles that apply to all buttons
@@ -49,14 +52,25 @@ const Button = ({
   // Check if the button has a rounded-full class
   const hasRoundedFull = className.includes('rounded-full');
   
+  // Use leftIcon/rightIcon if provided, otherwise fall back to iconLeft/iconRight
+  const finalIconLeft = leftIcon || iconLeft;
+  const finalIconRight = rightIcon || iconRight;
+  
+  // Remove props that shouldn't be passed to the DOM element
+  const {
+    leftIcon: _leftIcon,
+    rightIcon: _rightIcon,
+    ...domProps
+  } = props;
+  
   return (
     <button
       type={type}
       className={buttonClasses}
       onClick={onClick}
-      disabled={disabled || isLoading} // Use isLoading here if needed for disabling
+      disabled={disabled || isLoading}
       style={hasRoundedFull ? { borderRadius: '9999px' } : undefined}
-      {...props} // props now excludes isLoading
+      {...domProps}
     >
       {isLoading ? (
         <>
@@ -64,13 +78,13 @@ const Button = ({
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
-          Processing...
+          {loadingText}
         </>
       ) : (
         <>
-          {iconLeft && <span className="mr-2">{iconLeft}</span>}
+          {finalIconLeft && <span className="mr-2">{finalIconLeft}</span>}
           {children}
-          {iconRight && <span className="ml-2">{iconRight}</span>}
+          {finalIconRight && <span className="ml-2">{finalIconRight}</span>}
         </>
       )}
     </button>
@@ -83,12 +97,15 @@ Button.propTypes = {
   size: PropTypes.oneOf(['sm', 'md', 'lg']),
   iconLeft: PropTypes.node,
   iconRight: PropTypes.node,
+  leftIcon: PropTypes.node,
+  rightIcon: PropTypes.node,
   fullWidth: PropTypes.bool,
   disabled: PropTypes.bool,
   onClick: PropTypes.func,
   type: PropTypes.oneOf(['button', 'submit', 'reset']),
   className: PropTypes.string,
-  isLoading: PropTypes.bool, // Add isLoading prop type
+  isLoading: PropTypes.bool,
+  loadingText: PropTypes.string,
 };
 
 export default Button;

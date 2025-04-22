@@ -69,17 +69,25 @@ export const getAnonymousData = async () => {
 const getAnonymousCollections = async () => {
   return new Promise((resolve, reject) => {
     try {
-      // Open the database directly to access anonymous data
-      const request = indexedDB.open('pokemonCardTracker', 1);
+      // Open the database directly to access anonymous data - don't specify version to use the current version
+      const request = indexedDB.open('pokemonCardTracker');
       
       request.onerror = (event) => {
         logger.error('Error opening database:', event.target.error);
-        reject(event.target.error);
+        // Return empty collections instead of rejecting
+        resolve({});
       };
       
       request.onsuccess = (event) => {
         const db = event.target.result;
         try {
+          // Check if the collections store exists
+          if (!db.objectStoreNames.contains('collections')) {
+            logger.warn('Collections store not found in database');
+            resolve({});
+            return;
+          }
+          
           // Access the collections store 
           const transaction = db.transaction(['collections'], 'readonly');
           const store = transaction.objectStore('collections');
@@ -94,24 +102,50 @@ const getAnonymousCollections = async () => {
           
           request.onsuccess = () => {
             const collections = {};
-            request.result.forEach(collection => {
-              collections[collection.name] = collection.data;
-            });
+            if (request.result && Array.isArray(request.result)) {
+              request.result.forEach(collection => {
+                if (collection && collection.name) {
+                  collections[collection.name] = collection.data || [];
+                }
+              });
+            }
             resolve(collections);
           };
           
           request.onerror = (event) => {
             logger.error('Error getting anonymous collections:', event.target.error);
-            reject(event.target.error);
+            // Return empty collections instead of rejecting
+            resolve({});
+          };
+          
+          // Add transaction error handler
+          transaction.onerror = (error) => {
+            logger.error('Transaction error in getAnonymousCollections:', error);
+            resolve({});
+          };
+          
+          // Add transaction abort handler
+          transaction.onabort = (event) => {
+            logger.error('Transaction aborted in getAnonymousCollections:', event);
+            resolve({});
           };
         } catch (error) {
           logger.error('Error in transaction:', error);
-          reject(error);
+          // Return empty collections instead of rejecting
+          resolve({});
+        } finally {
+          // Always close the database connection when done
+          try {
+            db.close();
+          } catch (e) {
+            logger.warn('Error closing database in getAnonymousCollections:', e);
+          }
         }
       };
     } catch (error) {
-      logger.error('Error accessing IndexedDB:', error);
-      reject(error);
+      logger.error('Unexpected error in getAnonymousCollections:', error);
+      // Return empty collections instead of rejecting
+      resolve({});
     }
   });
 };
@@ -123,7 +157,7 @@ const getAnonymousCollections = async () => {
 const getAnonymousImages = async () => {
   return new Promise((resolve, reject) => {
     try {
-      const request = indexedDB.open('pokemonCardTracker', 1);
+      const request = indexedDB.open('pokemonCardTracker');
       
       request.onerror = (event) => {
         logger.error('Error opening database:', event.target.error);
@@ -171,7 +205,7 @@ const getAnonymousImages = async () => {
 const getAnonymousProfile = async () => {
   return new Promise((resolve, reject) => {
     try {
-      const request = indexedDB.open('pokemonCardTracker', 1);
+      const request = indexedDB.open('pokemonCardTracker');
       
       request.onerror = (event) => {
         logger.error('Error opening database:', event.target.error);
@@ -213,7 +247,7 @@ const getAnonymousProfile = async () => {
 const getAnonymousSoldCards = async () => {
   return new Promise((resolve, reject) => {
     try {
-      const request = indexedDB.open('pokemonCardTracker', 1);
+      const request = indexedDB.open('pokemonCardTracker');
       
       request.onerror = (event) => {
         logger.error('Error opening database:', event.target.error);
@@ -277,7 +311,7 @@ export const getUserData = async (userId) => {
 const getUserCollections = async (userId) => {
   return new Promise((resolve, reject) => {
     try {
-      const request = indexedDB.open('pokemonCardTracker', 1);
+      const request = indexedDB.open('pokemonCardTracker');
       
       request.onerror = (event) => {
         logger.error('Error opening database:', event.target.error);
@@ -440,7 +474,7 @@ const markAnonymousDataAsMigrated = async () => {
  */
 const clearAnonymousData = async () => {
   try {
-    const request = indexedDB.open('pokemonCardTracker', 1);
+    const request = indexedDB.open('pokemonCardTracker');
     
     return new Promise((resolve, reject) => {
       request.onerror = (event) => {
@@ -548,23 +582,25 @@ const deleteAnonymousStoreData = (db, storeName) => {
  */
 export const anonymousUserHasData = async () => {
   try {
+    // Get anonymous collections
     const collections = await getAnonymousCollections();
-    // Return true if there are collections other than just Default Collection with no cards
     
-    if (!collections || Object.keys(collections).length === 0) {
-      return false;
+    // Check if there are any collections with data
+    const hasCollections = Object.keys(collections).length > 0;
+    
+    if (hasCollections) {
+      // Check if any collection has cards
+      const hasCards = Object.values(collections).some(cards => 
+        Array.isArray(cards) && cards.length > 0
+      );
+      
+      return hasCards;
     }
     
-    // If there's only Default Collection and it's empty, return false
-    if (Object.keys(collections).length === 1 && 
-        collections['Default Collection'] && 
-        collections['Default Collection'].length === 0) {
-      return false;
-    }
-    
-    return true;
+    return false;
   } catch (error) {
     logger.error('Error checking if anonymous user has data:', error);
+    // Assume no data in case of error
     return false;
   }
 };

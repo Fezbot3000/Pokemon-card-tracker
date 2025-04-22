@@ -18,7 +18,10 @@ export * from './utils/formatters';
 export { subscribeToNotifications } from './utils/notifications';
 
 // Contexts
-export { AuthProvider, useAuth } from './contexts/AuthContext';
+export { default as ThemeContext } from './contexts/ThemeContext';
+export { default as AuthContext, AuthProvider, useAuth } from './contexts/AuthContext';
+export { default as RestoreContext, RestoreProvider, useRestore } from './contexts/RestoreContext';
+export { default as BackupContext, BackupProvider, useBackup } from './contexts/BackupContext';
 
 // Atoms
 export { default as Button } from './atoms/Button';
@@ -58,3 +61,5 @@ export { default as CardDetailsModal } from './components/CardDetailsModal';
 export { default as LoginModal } from './components/LoginModal';
 export { default as SoldItemsView } from './components/SoldItemsView';
 export { default as SettingsModal } from './components/SettingsModal';
+export { default as RestoreProgressBar } from './components/RestoreProgressBar';
+export { default as BackupProgressBar } from './components/BackupProgressBar';

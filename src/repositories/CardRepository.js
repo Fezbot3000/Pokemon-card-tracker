@@ -17,14 +17,15 @@ import {
   Timestamp
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
-import { db, storage } from '../services/firebase';
+import { db as firestoreDb, storage } from '../services/firebase';
+import db from '../services/db';
 
 class CardRepository {
   constructor(userId) {
     this.userId = userId;
-    this.collectionsRef = collection(db, 'users', userId, 'collections');
-    this.cardsRef = collection(db, 'users', userId, 'cards');
-    this.soldCardsRef = collection(db, 'users', userId, 'soldCards');
+    this.collectionsRef = collection(firestoreDb, 'users', userId, 'collections');
+    this.cardsRef = collection(firestoreDb, 'users', userId, 'cards');
+    this.soldCardsRef = collection(firestoreDb, 'users', userId, 'soldCards');
   }
 
   // Collection Operations
@@ -158,8 +159,55 @@ class CardRepository {
   }
 
   async deleteCollection(collectionId) {
-    const collectionRef = doc(this.collectionsRef, collectionId);
-    await deleteDoc(collectionRef);
+    try {
+      // First, get all cards in this collection
+      const cardsQuery = query(this.cardsRef, where('collectionId', '==', collectionId));
+      const querySnapshot = await getDocs(cardsQuery);
+      
+      // If there are cards, delete them and their images
+      if (!querySnapshot.empty) {
+        const cardIds = querySnapshot.docs.map(doc => doc.id);
+        console.log(`Deleting ${cardIds.length} cards from collection ${collectionId}`);
+        
+        // Get card data before deleting to ensure we have all information needed for cleanup
+        const cardData = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        
+        // Emit an event that can be captured by components to clean up blob URLs
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('card-images-cleanup', {
+            detail: { cardIds }
+          }));
+        }
+        
+        // Delete all cards and their images
+        await this.deleteCards(cardIds);
+        
+        // Also ensure images are deleted from IndexedDB
+        // This is important because deleteCards might not properly clean up IndexedDB images
+        for (const cardId of cardIds) {
+          try {
+            await db.deleteImage(cardId);
+            console.log(`Successfully deleted image for card ${cardId} from IndexedDB`);
+          } catch (imageError) {
+            console.warn(`Error deleting image for card ${cardId} from IndexedDB:`, imageError);
+            // Continue with deletion even if individual image deletion fails
+          }
+        }
+      }
+      
+      // Finally, delete the collection itself
+      const collectionRef = doc(this.collectionsRef, collectionId);
+      await deleteDoc(collectionRef);
+      
+      console.log(`Collection ${collectionId} deleted successfully with all associated data`);
+      return true;
+    } catch (error) {
+      console.error(`Error deleting collection ${collectionId}:`, error);
+      throw error;
+    }
   }
 
   // Card Operations
@@ -292,10 +340,23 @@ class CardRepository {
     const cardRef = doc(this.cardsRef, cardId);
     const storageRef = ref(storage, `users/${this.userId}/cards/${cardId}.jpg`);
     
-    // Delete image from storage
-    await deleteObject(storageRef);
+    // Delete image from Firebase storage
+    try {
+      await deleteObject(storageRef);
+    } catch (error) {
+      console.log('Error deleting image from Firebase storage:', error);
+      // Continue with deletion even if image deletion fails
+    }
     
-    // Delete card document
+    // Delete image from IndexedDB
+    try {
+      await db.deleteImage(cardId);
+    } catch (error) {
+      console.log('Error deleting image from IndexedDB:', error);
+      // Continue with deletion even if IndexedDB image deletion fails
+    }
+    
+    // Delete card document from Firestore
     await deleteDoc(cardRef);
   }
 
@@ -519,7 +580,7 @@ class CardRepository {
   // Profile Operations
   async getUserProfile() {
     try {
-      const profileRef = doc(db, 'users', this.userId, 'profile', 'userData');
+      const profileRef = doc(firestoreDb, 'users', this.userId, 'profile', 'userData');
       const docSnap = await getDoc(profileRef);
       
       if (docSnap.exists()) {
@@ -535,7 +596,7 @@ class CardRepository {
 
   async updateUserProfile(profileData) {
     try {
-      const profileRef = doc(db, 'users', this.userId, 'profile', 'userData');
+      const profileRef = doc(firestoreDb, 'users', this.userId, 'profile', 'userData');
       
       // Check if profile document exists
       const profileDoc = await getDoc(profileRef);
@@ -597,7 +658,7 @@ class CardRepository {
       }
       
       // Create batch for Firestore operations
-      const batch = writeBatch(db);
+      const batch = writeBatch(firestoreDb);
       let batchCount = 0;
       let totalBatches = 0;
       
@@ -692,7 +753,7 @@ class CardRepository {
       const beforeCount = await this.getCardCount(collectionId);
       
       // Create batch for Firestore operations
-      let batch = writeBatch(db);
+      let batch = writeBatch(firestoreDb);
       let batchCount = 0;
       let totalBatches = 0;
       let importedCount = 0;
@@ -846,7 +907,7 @@ class CardRepository {
     
     try {
       // Create batch for Firestore operations
-      let batch = writeBatch(db);
+      let batch = writeBatch(firestoreDb);
       let batchCount = 0;
       let totalBatches = 0;
       let deletedCount = 0;
@@ -872,7 +933,15 @@ class CardRepository {
             batchCount++;
             deletedCount++;
             
-            // Also try to delete the card image if it exists
+            // Delete the image from IndexedDB
+            try {
+              await db.deleteImage(cardId);
+            } catch (indexedDbError) {
+              console.warn(`Error deleting image from IndexedDB for card ${cardId}:`, indexedDbError);
+              // Continue with deletion even if IndexedDB delete fails
+            }
+            
+            // Also try to delete the card image if it exists in Firebase Storage
             try {
               const storageRef = ref(storage, `users/${this.userId}/cards/${cardId}.jpg`);
               await deleteObject(storageRef);
@@ -915,6 +984,59 @@ class CardRepository {
       return { success: true, count: deletedCount, errorCount: errorCount };
     } catch (error) {
       console.error('Error deleting cards:', error);
+      throw error;
+    }
+  }
+
+  async deleteCollection(collectionId) {
+    try {
+      logger.log(`CardRepository: Deleting collection ${collectionId}`);
+      
+      // Get all cards in the collection first
+      const cards = await this.getCardsForCollection(collectionId);
+      logger.log(`Found ${cards.length} cards to delete in collection ${collectionId}`);
+      
+      // Extract card IDs for image cleanup
+      const cardIds = cards.map(card => card.id || card.slabSerial).filter(Boolean);
+      
+      // Delete all images for these cards from IndexedDB
+      try {
+        const { deleted, failed } = await db.deleteImagesForCards(cardIds);
+        logger.log(`Deleted ${deleted} images, ${failed} failed during collection deletion`);
+        
+        // Dispatch event to notify components to clean up blob URLs
+        if (cardIds.length > 0) {
+          logger.log(`Dispatching card-images-cleanup event for ${cardIds.length} cards`);
+          window.dispatchEvent(new CustomEvent('card-images-cleanup', { 
+            detail: { cardIds } 
+          }));
+        }
+      } catch (imageError) {
+        logger.error('Error cleaning up images during collection deletion:', imageError);
+        // Continue with deletion even if image cleanup fails
+      }
+      
+      // Delete the collection document from Firestore
+      const collectionRef = doc(this.db, 'collections', collectionId);
+      await deleteDoc(collectionRef);
+      
+      // Delete all cards in the collection from Firestore
+      const batch = writeBatch(this.db);
+      for (const card of cards) {
+        if (card.id) {
+          const cardRef = doc(this.db, 'cards', card.id);
+          batch.delete(cardRef);
+        }
+      }
+      
+      // Commit the batch delete operation
+      if (cards.length > 0) {
+        await batch.commit();
+      }
+      
+      logger.log(`Successfully deleted collection ${collectionId} and all its cards`);
+    } catch (error) {
+      logger.error(`Error deleting collection ${collectionId}:`, error);
       throw error;
     }
   }

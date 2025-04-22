@@ -177,6 +177,42 @@ const CardList = ({
     };
   }, [cards]);
 
+  // Listen for card-images-cleanup event to revoke blob URLs when collections are deleted
+  useEffect(() => {
+    const handleCardImagesCleanup = (event) => {
+      const { cardIds } = event.detail;
+      
+      // Revoke blob URLs for the specified card IDs
+      cardIds.forEach(cardId => {
+        if (cardImages[cardId]) {
+          try {
+            URL.revokeObjectURL(cardImages[cardId]);
+            console.log(`Revoked blob URL for card ${cardId} in CardList component`);
+          } catch (error) {
+            console.error(`Error revoking blob URL for card ${cardId}:`, error);
+          }
+        }
+      });
+      
+      // Update the cardImages state to remove the revoked URLs
+      setCardImages(prev => {
+        const newImages = { ...prev };
+        cardIds.forEach(cardId => {
+          delete newImages[cardId];
+        });
+        return newImages;
+      });
+    };
+    
+    // Add event listener
+    window.addEventListener('card-images-cleanup', handleCardImagesCleanup);
+    
+    // Clean up event listener on component unmount
+    return () => {
+      window.removeEventListener('card-images-cleanup', handleCardImagesCleanup);
+    };
+  }, [cardImages]);
+
   // Function to refresh a single card's image
   const refreshCardImage = async (cardId) => {
     try {

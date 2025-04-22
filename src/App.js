@@ -15,7 +15,11 @@ import {
   toast,
   Toast, 
   SettingsModal, 
-  Icon 
+  Icon,
+  RestoreProvider, useRestore,
+  RestoreProgressBar,
+  BackupProvider, useBackup,
+  BackupProgressBar
 } from './design-system';
 import DesignSystemProvider from './design-system/providers/DesignSystemProvider';
 import MobileSettingsModal from './components/MobileSettingsModal'; 
@@ -48,6 +52,7 @@ import DashboardPricing from './components/DashboardPricing';
 import ComponentLibrary from './pages/ComponentLibrary';
 import logger from './utils/logger'; // Import the logger utility
 import DataMigrationModal from './components/DataMigrationModal'; // Import the DataMigrationModal component
+import RestoreListener from './components/RestoreListener';
 
 // Helper function to generate a unique ID for cards without one
 const generateUniqueId = () => {
@@ -468,13 +473,25 @@ function AppContent() {
 
   // Load collections from IndexedDB on mount
   useEffect(() => {
-    const loadCollections = async () => {
+    const initializeDatabaseAndLoadCollections = async () => {
       try {
         setIsLoading(true);
         
+        // Use a silent initialization approach for first login
+        try {
+          logger.debug('Initializing database on app startup');
+          
+          // Instead of forcing a reset immediately, first try to open the database normally
+          await db.silentInitialize();
+          logger.debug('Database initialization complete');
+        } catch (initError) {
+          logger.debug('Silent initialization failed, will try normal operations', initError);
+          // Continue anyway - we'll try to recover with normal operations
+        }
+        
         // Attempt to load collections from IndexedDB
         const savedCollections = await db.getCollections().catch(error => {
-          logger.error('Failed to load collections:', error);
+          logger.debug('Failed to load collections, using default collection');
           return { 'Default Collection': [] };
         });
         
@@ -505,11 +522,11 @@ function AppContent() {
           try {
             await db.saveCollections(defaultCollections);
           } catch (saveError) {
-            logger.error('Could not save default collection:', saveError);
+            logger.debug('Could not save default collection, will try again later');
           }
         }
       } catch (error) {
-        logger.error('Error loading collections:', error);
+        logger.debug('Error during initialization, using default collections');
         
         // Set default collections as fallback
         const defaultCollections = { 'Default Collection': [] };
@@ -520,7 +537,7 @@ function AppContent() {
       }
     };
 
-    loadCollections();
+    initializeDatabaseAndLoadCollections();
   }, []);
 
   // Function to export all collection data as a ZIP file
@@ -1415,28 +1432,12 @@ To import this backup:
           onSettingsClick={handleSettingsClick}
           currentView={currentView}
           onViewChange={setCurrentView}
-          refreshCollections={() => {
-            // Refresh collections data from the database
-            db.getCollections().then(savedCollections => {
-              if (Object.keys(savedCollections).length > 0) {
-                setCollections(savedCollections);
-                // Only switch collection if current isn't "All Cards" and doesn't exist
-                if (selectedCollection !== 'All Cards' && !savedCollections[selectedCollection]) {
-                  const newCollection = Object.keys(savedCollections)[0];
-                  setSelectedCollection(newCollection);
-                  localStorage.setItem('selectedCollection', newCollection);
-                }
-              }
-            });
-          }}
           onAddCollection={(name) => {
-            // Prevent adding "All Cards" as a normal collection
             if (name === 'All Cards') {
               toast.error('Cannot create a collection named "All Cards" - this is a reserved name');
               return;
             }
             
-            // Create new collection
             const newCollections = {
               ...collections,
               [name]: []
@@ -1449,17 +1450,12 @@ To import this backup:
           }}
           onRenameCollection={(oldName, newName) => {
             if (oldName && newName && oldName !== newName) {
-              // Create new collection
               const newCollections = { ...collections };
-              // Copy cards to the new collection
               newCollections[newName] = newCollections[oldName];
-              // Remove old collection
               delete newCollections[oldName];
               
-              // Save to database
               db.saveCollections(newCollections).then(() => {
                 setCollections(newCollections);
-                // Update selected collection if it was renamed
                 if (selectedCollection === oldName) {
                   setSelectedCollection(newName);
                   localStorage.setItem('selectedCollection', newName);
@@ -1471,31 +1467,97 @@ To import this backup:
             try {
               logger.log("App.js: Attempting to delete collection:", name);
               
-              // Get current collections
               const currentCollections = { ...collections };
               
-              // Check if collection exists
               if (!currentCollections[name]) {
                 logger.error(`Collection "${name}" does not exist in:`, Object.keys(currentCollections));
                 throw new Error(`Collection "${name}" does not exist`);
               }
               
-              // Check if it's the last collection
               if (Object.keys(currentCollections).length <= 1) {
                 throw new Error("Cannot delete the last collection");
               }
               
-              // Remove the collection
+              const collectionId = currentCollections[name].id;
+              
+              toast.loading(`Deleting collection "${name}" and all its cards...`, { id: 'delete-collection' });
+              
+              let cardsInCollection = [];
+              
+              try {
+                Object.values(collections).forEach(collectionCards => {
+                  if (Array.isArray(collectionCards)) {
+                    const matchingCards = collectionCards.filter(card => 
+                      card.collectionName === name || card.collection === name
+                    );
+                    cardsInCollection = [...cardsInCollection, ...matchingCards];
+                  }
+                });
+                
+                logger.log(`Found ${cardsInCollection.length} cards in collection "${name}" from app state`);
+              } catch (stateError) {
+                logger.error("Error finding cards in collection from state:", stateError);
+              }
+              
+              if (cardsInCollection.length === 0) {
+                try {
+                  const allCollections = await db.getCollections();
+                  if (allCollections && allCollections[name] && Array.isArray(allCollections[name])) {
+                    cardsInCollection = allCollections[name];
+                    logger.log(`Found ${cardsInCollection.length} cards in collection "${name}" from database`);
+                  }
+                } catch (dbError) {
+                  logger.error("Error finding cards in collection from database:", dbError);
+                }
+              }
+              
+              try {
+                logger.log(`Revoking blob URLs for ${cardsInCollection.length} cards in collection "${name}"`);
+                
+                cardsInCollection.forEach(card => {
+                  if (card.imageUrl && card.imageUrl.startsWith('blob:')) {
+                    try {
+                      URL.revokeObjectURL(card.imageUrl);
+                      logger.debug(`Revoked blob URL for card ${card.id || card.slabSerial}`);
+                    } catch (revokeError) {
+                      logger.error(`Error revoking blob URL for card ${card.id || card.slabSerial}:`, revokeError);
+                    }
+                  }
+                });
+                
+                for (const card of cardsInCollection) {
+                  const cardId = card.id || card.slabSerial;
+                  if (cardId) {
+                    try {
+                      await db.deleteImage(cardId);
+                      logger.debug(`Deleted image for card ${cardId} from IndexedDB`);
+                    } catch (deleteError) {
+                      logger.error(`Error deleting image for card ${cardId} from IndexedDB:`, deleteError);
+                    }
+                  }
+                }
+              } catch (blobError) {
+                logger.error("Error revoking blob URLs:", blobError);
+              }
+              
+              if (collectionId && currentUser) {
+                try {
+                  const cardRepo = new CardRepository(currentUser.uid);
+                  
+                  await cardRepo.deleteCollection(collectionId);
+                  logger.log(`Collection "${name}" and all its cards deleted from Firestore`);
+                } catch (firestoreError) {
+                  logger.error("Error deleting collection from Firestore:", firestoreError);
+                }
+              }
+              
               delete currentCollections[name];
               logger.log("Collection removed from object, saving to DB...");
               
-              // Save updated collections to database
-              await db.saveCollections(currentCollections, true); // Explicitly preserve sold items
+              await db.saveCollections(currentCollections);
               
-              // Update state
               setCollections(currentCollections);
               
-              // Switch to another collection if the deleted one was selected
               if (selectedCollection === name) {
                 const newSelection = Object.keys(currentCollections)[0];
                 setSelectedCollection(newSelection);
@@ -1503,40 +1565,59 @@ To import this backup:
                 logger.log("Selected new collection:", newSelection);
               }
               
+              toast.success(`Collection "${name}" and all its cards deleted successfully`, { id: 'delete-collection' });
+              
               return true;
             } catch (error) {
               logger.error("Error deleting collection:", error);
-              toast.error(`Failed to delete collection: ${error.message}`);
+              toast.error(`Failed to delete collection: ${error.message}`, { id: 'delete-collection' });
               throw error;
             }
           }}
+          onExportData={handleExportData}
+          onImportCollection={handleImportCollection}
+          onUpdatePrices={() => {
+            return new Promise((resolve, reject) => {
+              handleImportClick('priceUpdate');
+              setShowSettings(false);
+              resolve();
+            });
+          }}
+          onImportBaseData={() => {
+            return new Promise((resolve, reject) => {
+              handleImportClick('baseData');
+              setShowSettings(false);
+              resolve();
+            });
+          }}
+          userData={user}
+          onSignOut={logout}
+          onStartTutorial={checkAndStartTutorial}
+          onResetData={handleResetData}
         />
       )}
       
       <main className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-4 pb-20">
         {currentView === 'cards' ? (
           <CardList
-            cards={collectionData} // Pass the memoized collection data
+            cards={collectionData} 
             exchangeRate={exchangeRate}
             onCardClick={(card) => {
               let actualCollectionName = selectedCollection;
-              // If viewing 'All Cards', find the card's actual collection
               if (selectedCollection === 'All Cards') {
                 for (const [collName, cardsInCollection] of Object.entries(collections)) {
-                  // Ensure it's an array and check if the card exists in it
                   if (Array.isArray(cardsInCollection) && cardsInCollection.some(c => c.slabSerial === card.slabSerial)) {
                     actualCollectionName = collName;
-                    break; // Found the collection, stop searching
+                    break; 
                   }
                 }
-                // If somehow not found (shouldn't happen if data is consistent), default to null
                 if (actualCollectionName === 'All Cards') {
                   logger.warn("Could not determine original collection for card: ", card.slabSerial);
                   actualCollectionName = null; 
                 }
               }
               selectCard(card);
-              setInitialCardCollection(actualCollectionName); // Set the determined collection name
+              setInitialCardCollection(actualCollectionName); 
             }}
             onDeleteCards={onDeleteCards}
             onUpdateCard={handleCardUpdate}
@@ -1547,7 +1628,6 @@ To import this backup:
             onDeleteCard={handleCardDelete}
           />
         ) : currentView === 'settings' && isMobile ? (
-          // The SettingsModal component will handle rendering for mobile view
           <MobileSettingsModal
             isOpen={showSettings}
             onClose={handleCloseSettings}
@@ -1564,71 +1644,126 @@ To import this backup:
               try {
                 logger.log("App.js: Attempting to delete collection:", name);
                 
-                // Get current collections
                 const currentCollections = { ...collections };
                 
-                // Check if collection exists
                 if (!currentCollections[name]) {
                   logger.error(`Collection "${name}" does not exist in:`, Object.keys(currentCollections));
                   throw new Error(`Collection "${name}" does not exist`);
                 }
                 
-                // Check if it's the last collection
                 if (Object.keys(currentCollections).length <= 1) {
                   throw new Error("Cannot delete the last collection");
                 }
                 
-                // Remove the collection
+                const collectionId = currentCollections[name].id;
+                
+                toast.loading(`Deleting collection "${name}" and all its cards...`, { id: 'delete-collection' });
+                
+                let cardsInCollection = [];
+                
+                try {
+                  Object.values(collections).forEach(collectionCards => {
+                    if (Array.isArray(collectionCards)) {
+                      const matchingCards = collectionCards.filter(card => 
+                        card.collectionName === name || card.collection === name
+                      );
+                      cardsInCollection = [...cardsInCollection, ...matchingCards];
+                    }
+                  });
+                  
+                  logger.log(`Found ${cardsInCollection.length} cards in collection "${name}" from app state`);
+                } catch (stateError) {
+                  logger.error("Error finding cards in collection from state:", stateError);
+                }
+                
+                if (cardsInCollection.length === 0) {
+                  try {
+                    const allCollections = await db.getCollections();
+                    if (allCollections && allCollections[name] && Array.isArray(allCollections[name])) {
+                      cardsInCollection = allCollections[name];
+                      logger.log(`Found ${cardsInCollection.length} cards in collection "${name}" from database`);
+                    }
+                  } catch (dbError) {
+                    logger.error("Error finding cards in collection from database:", dbError);
+                  }
+                }
+                
+                try {
+                  logger.log(`Revoking blob URLs for ${cardsInCollection.length} cards in collection "${name}"`);
+                  
+                  cardsInCollection.forEach(card => {
+                    if (card.imageUrl && card.imageUrl.startsWith('blob:')) {
+                      try {
+                        URL.revokeObjectURL(card.imageUrl);
+                        logger.debug(`Revoked blob URL for card ${card.id || card.slabSerial}`);
+                      } catch (revokeError) {
+                        logger.error(`Error revoking blob URL for card ${card.id || card.slabSerial}:`, revokeError);
+                      }
+                    }
+                  });
+                  
+                  for (const card of cardsInCollection) {
+                    const cardId = card.id || card.slabSerial;
+                    if (cardId) {
+                      try {
+                        await db.deleteImage(cardId);
+                        logger.debug(`Deleted image for card ${cardId} from IndexedDB`);
+                      } catch (deleteError) {
+                        logger.error(`Error deleting image for card ${cardId} from IndexedDB:`, deleteError);
+                      }
+                    }
+                  }
+                } catch (blobError) {
+                  logger.error("Error revoking blob URLs:", blobError);
+                }
+                
+                if (collectionId && currentUser) {
+                  try {
+                    const cardRepo = new CardRepository(currentUser.uid);
+                    
+                    await cardRepo.deleteCollection(collectionId);
+                    logger.log(`Collection "${name}" and all its cards deleted from Firestore`);
+                  } catch (firestoreError) {
+                    logger.error("Error deleting collection from Firestore:", firestoreError);
+                  }
+                }
+                
                 delete currentCollections[name];
                 logger.log("Collection removed from object, saving to DB...");
                 
-                // Save updated collections to database
-                await db.saveCollections(currentCollections, true); // Explicitly preserve sold items
+                await db.saveCollections(currentCollections);
                 
-                // Update state
                 setCollections(currentCollections);
                 
-                // Switch to another collection if the deleted one was selected
                 if (selectedCollection === name) {
                   const newSelection = Object.keys(currentCollections)[0];
                   setSelectedCollection(newSelection);
                   localStorage.setItem('selectedCollection', newSelection);
+                  logger.log("Selected new collection:", newSelection);
                 }
+                
+                toast.success(`Collection "${name}" and all its cards deleted successfully`, { id: 'delete-collection' });
                 
                 return true;
               } catch (error) {
                 logger.error("Error deleting collection:", error);
-                toast.error(`Failed to delete collection: ${error.message}`);
+                toast.error(`Failed to delete collection: ${error.message}`, { id: 'delete-collection' });
                 throw error;
               }
-            }}
-            refreshCollections={() => {
-              // Refresh collections data
-              db.getCollections().then(savedCollections => {
-                if (Object.keys(savedCollections).length > 0) {
-                  setCollections(savedCollections);
-                }
-              });
             }}
             onExportData={handleExportData}
             onImportCollection={handleImportCollection}
             onUpdatePrices={() => {
               return new Promise((resolve, reject) => {
                 handleImportClick('priceUpdate');
-                // Close the settings modal
                 setShowSettings(false);
-                // This is just triggering the modal to open, so we resolve
-                // The actual update will happen when user selects a file in the import modal
                 resolve();
               });
             }}
             onImportBaseData={() => {
               return new Promise((resolve, reject) => {
                 handleImportClick('baseData');
-                // Close the settings modal
                 setShowSettings(false);
-                // This is just triggering the modal to open, so we resolve
-                // The actual import will happen when user selects a file in the import modal
                 resolve();
               });
             }}
@@ -1654,9 +1789,9 @@ To import this backup:
       {selectedCard && (
         <CardDetails
           card={selectedCard}
-          onClose={handleCloseDetailsModal} // Use the new close handler
-          initialCollectionName={initialCardCollection} // Pass initial collection name
-          onUpdateCard={handleCardUpdate} // Pass the update handler
+          onClose={handleCloseDetailsModal} 
+          initialCollectionName={initialCardCollection} 
+          onUpdateCard={handleCardUpdate} 
           onDelete={deleteCard}
           exchangeRate={exchangeRate}
           collections={collections ? Object.keys(collections) : []}
@@ -1690,71 +1825,126 @@ To import this backup:
             try {
               logger.log("App.js: Attempting to delete collection:", name);
               
-              // Get current collections
               const currentCollections = { ...collections };
               
-              // Check if collection exists
               if (!currentCollections[name]) {
                 logger.error(`Collection "${name}" does not exist in:`, Object.keys(currentCollections));
                 throw new Error(`Collection "${name}" does not exist`);
               }
               
-              // Check if it's the last collection
               if (Object.keys(currentCollections).length <= 1) {
                 throw new Error("Cannot delete the last collection");
               }
               
-              // Remove the collection
+              const collectionId = currentCollections[name].id;
+              
+              toast.loading(`Deleting collection "${name}" and all its cards...`, { id: 'delete-collection' });
+              
+              let cardsInCollection = [];
+              
+              try {
+                Object.values(collections).forEach(collectionCards => {
+                  if (Array.isArray(collectionCards)) {
+                    const matchingCards = collectionCards.filter(card => 
+                      card.collectionName === name || card.collection === name
+                    );
+                    cardsInCollection = [...cardsInCollection, ...matchingCards];
+                  }
+                });
+                
+                logger.log(`Found ${cardsInCollection.length} cards in collection "${name}" from app state`);
+              } catch (stateError) {
+                logger.error("Error finding cards in collection from state:", stateError);
+              }
+              
+              if (cardsInCollection.length === 0) {
+                try {
+                  const allCollections = await db.getCollections();
+                  if (allCollections && allCollections[name] && Array.isArray(allCollections[name])) {
+                    cardsInCollection = allCollections[name];
+                    logger.log(`Found ${cardsInCollection.length} cards in collection "${name}" from database`);
+                  }
+                } catch (dbError) {
+                  logger.error("Error finding cards in collection from database:", dbError);
+                }
+              }
+              
+              try {
+                logger.log(`Revoking blob URLs for ${cardsInCollection.length} cards in collection "${name}"`);
+                
+                cardsInCollection.forEach(card => {
+                  if (card.imageUrl && card.imageUrl.startsWith('blob:')) {
+                    try {
+                      URL.revokeObjectURL(card.imageUrl);
+                      logger.debug(`Revoked blob URL for card ${card.id || card.slabSerial}`);
+                    } catch (revokeError) {
+                      logger.error(`Error revoking blob URL for card ${card.id || card.slabSerial}:`, revokeError);
+                    }
+                  }
+                });
+                
+                for (const card of cardsInCollection) {
+                  const cardId = card.id || card.slabSerial;
+                  if (cardId) {
+                    try {
+                      await db.deleteImage(cardId);
+                      logger.debug(`Deleted image for card ${cardId} from IndexedDB`);
+                    } catch (deleteError) {
+                      logger.error(`Error deleting image for card ${cardId} from IndexedDB:`, deleteError);
+                    }
+                  }
+                }
+              } catch (blobError) {
+                logger.error("Error revoking blob URLs:", blobError);
+              }
+              
+              if (collectionId && currentUser) {
+                try {
+                  const cardRepo = new CardRepository(currentUser.uid);
+                  
+                  await cardRepo.deleteCollection(collectionId);
+                  logger.log(`Collection "${name}" and all its cards deleted from Firestore`);
+                } catch (firestoreError) {
+                  logger.error("Error deleting collection from Firestore:", firestoreError);
+                }
+              }
+              
               delete currentCollections[name];
               logger.log("Collection removed from object, saving to DB...");
               
-              // Save updated collections to database
-              await db.saveCollections(currentCollections, true); // Explicitly preserve sold items
+              await db.saveCollections(currentCollections);
               
-              // Update state
               setCollections(currentCollections);
               
-              // Switch to another collection if the deleted one was selected
               if (selectedCollection === name) {
                 const newSelection = Object.keys(currentCollections)[0];
                 setSelectedCollection(newSelection);
                 localStorage.setItem('selectedCollection', newSelection);
+                logger.log("Selected new collection:", newSelection);
               }
+              
+              toast.success(`Collection "${name}" and all its cards deleted successfully`, { id: 'delete-collection' });
               
               return true;
             } catch (error) {
               logger.error("Error deleting collection:", error);
-              toast.error(`Failed to delete collection: ${error.message}`);
+              toast.error(`Failed to delete collection: ${error.message}`, { id: 'delete-collection' });
               throw error;
             }
-          }}
-          refreshCollections={() => {
-            // Refresh collections data
-            db.getCollections().then(savedCollections => {
-              if (Object.keys(savedCollections).length > 0) {
-                setCollections(savedCollections);
-              }
-            });
           }}
           onExportData={handleExportData}
           onImportCollection={handleImportCollection}
           onUpdatePrices={() => {
             return new Promise((resolve, reject) => {
               handleImportClick('priceUpdate');
-              // Close the settings modal
               setShowSettings(false);
-              // This is just triggering the modal to open, so we resolve
-              // The actual update will happen when user selects a file in the import modal
               resolve();
             });
           }}
           onImportBaseData={() => {
             return new Promise((resolve, reject) => {
               handleImportClick('baseData');
-              // Close the settings modal
               setShowSettings(false);
-              // This is just triggering the modal to open, so we resolve
-              // The actual import will happen when user selects a file in the import modal
               resolve();
             });
           }}
@@ -1786,11 +1976,9 @@ To import this backup:
           currentView={currentView || location.pathname.split('/').pop() || 'cards'}
           onViewChange={(view) => {
             setCurrentView(view);
-            // If switching to a view other than settings, hide settings modal
             if (view !== 'settings' && showSettings) {
               setShowSettings(false);
             }
-            // If switching to settings view, show settings modal
             if (view === 'settings' && !showSettings) {
               setShowSettings(true);
             }
@@ -1800,6 +1988,29 @@ To import this backup:
           isModalOpen={selectedCard !== null || showNewCardForm || isAnyModalOpen}
         />
       </div>
+
+      {/* Add RestoreListener at the App component level where state setters are in scope */}
+      <RestoreListener 
+        onRefreshData={() => {
+          logger.log('App: Refreshing data after restore/backup');
+          // Refresh collections from the database
+          db.getCollections().then(savedCollections => {
+            if (Object.keys(savedCollections).length > 0) {
+              setCollections(savedCollections);
+              // If there are collections but none is selected, select the first one
+              if (!selectedCollection || (selectedCollection !== 'All Cards' && !savedCollections[selectedCollection])) {
+                const newCollection = Object.keys(savedCollections)[0];
+                setSelectedCollection(newCollection);
+                localStorage.setItem('selectedCollection', newCollection);
+                logger.log(`App: Selected new collection after restore: ${newCollection}`);
+              }
+              toast.success('Data restored successfully! Your collections are now available.');
+            }
+          }).catch(error => {
+            logger.error('Error refreshing collections after restore:', error);
+          });
+        }}
+      />
 
       <TutorialModal />
     </div>
@@ -1811,21 +2022,27 @@ const RootProviders = () => (
     <DesignSystemProvider>
       <SubscriptionProvider>
         <TutorialProvider>
-          <Toast
-            position="top-center"
-            toastOptions={{
-              duration: 3000,
-              style: {
-                background: '#1B2131',
-                color: '#FFFFFF',
-                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                borderRadius: '12px',
-                padding: '12px 24px',
-                fontWeight: '500'
-              }
-            }}
-          />
-          <Outlet />
+          <BackupProvider>
+            <BackupProgressBar />
+            <RestoreProvider>
+              <RestoreProgressBar />
+              <Toast
+                position="top-center"
+                toastOptions={{
+                  duration: 3000,
+                  style: {
+                    background: '#1B2131',
+                    color: '#FFFFFF',
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                    borderRadius: '12px',
+                    padding: '12px 24px',
+                    fontWeight: '500'
+                  }
+                }}
+              />
+              <Outlet />
+            </RestoreProvider>
+          </BackupProvider>
         </TutorialProvider>
       </SubscriptionProvider>
     </DesignSystemProvider>
@@ -1889,6 +2106,5 @@ export const router = createBrowserRouter([
 });
 
 function App() {
-  // Legacy default export for compatibility, but not used in index.js
   return null;
 }
