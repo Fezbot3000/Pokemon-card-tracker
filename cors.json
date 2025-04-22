@@ -2,30 +2,14 @@
   {
     "origin": [
       "https://mycardtracker.com.au", 
-      "http://mycardtracker.com.au",
       "https://www.mycardtracker.com.au", 
-      "http://www.mycardtracker.com.au",
       "https://mycardtracker-c8479.web.app", 
       "https://mycardtracker-c8479.firebaseapp.com",
       "http://localhost:3000", 
-      "http://localhost:3001",
-      "http://127.0.0.1:3000",
-      "http://127.0.0.1:3001"
+      "http://localhost:3001"
     ],
-    "method": ["GET", "HEAD", "PUT", "POST", "DELETE", "OPTIONS"],
+    "method": ["GET", "PUT", "POST", "DELETE", "HEAD"],
     "maxAgeSeconds": 3600,
-    "responseHeader": [
-      "Content-Type", 
-      "Content-Length", 
-      "Content-Disposition", 
-      "Content-Encoding", 
-      "Accept", 
-      "Authorization", 
-      "Origin", 
-      "X-Requested-With",
-      "Access-Control-Allow-Origin",
-      "Access-Control-Allow-Methods",
-      "Access-Control-Allow-Headers"
-    ]
+    "responseHeader": ["Content-Type", "Content-Length", "Content-Disposition"]
   }
 ]

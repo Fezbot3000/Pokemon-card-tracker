@@ -7,20 +7,23 @@ import { getFunctions, httpsCallable } from 'firebase/functions';
 // Import environment validation to ensure all variables are loaded
 import '../env';
 
-// IMPORTANT: Use environment variables if available, fall back to hardcoded values
-// This ensures consistent behavior across environments while still allowing for
-// environment-specific configuration when needed
-const firebaseConfig = {
-  apiKey: process.env.REACT_APP_FIREBASE_API_KEY || "AIzaSyDIxG9wMoOm0xO72YCAs4RO9YVrGjRcvLQ",
-  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN || "mycardtracker-c8479.firebaseapp.com",
-  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID || "mycardtracker-c8479",
-  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET || "mycardtracker-c8479.appspot.com",
-  messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID || "726820232287",
-  appId: process.env.REACT_APP_FIREBASE_APP_ID || "1:726820232287:web:fc27495f506950a78dcfea"
-};
+// Log environment variables for debugging (remove in production)
+// REMOVE DEBUG LOGS
+// console.log("Services - API Key available:", !!process.env.REACT_APP_FIREBASE_API_KEY);
+// console.log("Services - Auth Domain available:", !!process.env.REACT_APP_FIREBASE_AUTH_DOMAIN);
 
-// Log which configuration is being used (for debugging)
-console.log("Firebase config source:", process.env.REACT_APP_FIREBASE_API_KEY ? "Environment Variables" : "Hardcoded Values");
+// IMPORTANT: For production use, these values should be properly secured
+// This configuration is using hardcoded values to ensure consistent behavior across all environments
+// Firebase config is generally considered safe to include in client-side code
+// as Firebase uses security rules to control access to data
+const firebaseConfig = {
+  apiKey: "AIzaSyDIxG9wMoOm0xO72YCAs4RO9YVrGjRcvLQ",
+  authDomain: "mycardtracker-c8479.firebaseapp.com",
+  projectId: "mycardtracker-c8479",
+  storageBucket: "mycardtracker-c8479.appspot.com",
+  messagingSenderId: "726820232287",
+  appId: "1:726820232287:web:fc27495f506950a78dcfea"
+};
 
 // Check if Firebase app is already initialized to prevent multiple instances
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
@@ -57,10 +60,10 @@ googleProvider.addScope('https://www.googleapis.com/auth/userinfo.profile');
 
 // Set custom parameters
 googleProvider.setCustomParameters({
-  // Use environment variable for client ID if available, otherwise fall back to hardcoded value
-  client_id: process.env.REACT_APP_FIREBASE_CLIENT_ID || "726820232287-qcmvs1a9u5g5vf5rjb5uf8c7m7i7qdnv.apps.googleusercontent.com",
+  // Use hardcoded client ID for consistency across environments
+  client_id: "726820232287-qcmvs1a9u5g5vf5rjb5uf8c7m7i7qdnv.apps.googleusercontent.com",
   // Allow user to select account every time
   prompt: 'select_account'
 });
 
-export { db, storage, auth, googleProvider, functions, httpsCallable };
+export { db, storage, auth, googleProvider, functions, httpsCallable }; 
