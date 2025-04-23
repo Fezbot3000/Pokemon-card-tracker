@@ -8,9 +8,15 @@ import { PDFDownloadLink } from '@react-pdf/renderer';
 import InvoicePDF from '../InvoicePDF';
 import { StatisticsSummary } from '../../design-system';
 import { toast } from 'react-hot-toast';
+import { useAuth } from '../../design-system';
+import { collection, getDocs } from 'firebase/firestore';
+import { db as firestoreDb, storage } from '../../services/firebase';
+import { ref, getDownloadURL } from 'firebase/storage';
+import logger from '../../utils/logger';
 
 const SoldItems = () => {
   const { isDarkMode } = useTheme();
+  const { user } = useAuth();
   const [soldCards, setSoldCards] = useState([]);
   const [sortField, setSortField] = useState('dateSold');
   const [sortDirection, setSortDirection] = useState('desc');
@@ -22,25 +28,48 @@ const SoldItems = () => {
   const [profile, setProfile] = useState(null);
   const [expandedYears, setExpandedYears] = useState(new Set());
   const [expandedInvoices, setExpandedInvoices] = useState(new Set());
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Load card images
+  // Load card images from local IndexedDB and Firebase Storage
   useEffect(() => {
     const loadCardImages = async () => {
       // Clear previous object URLs to prevent memory leaks
       Object.values(cardImages).forEach(url => {
-        URL.revokeObjectURL(url);
+        if (url && url.startsWith('blob:')) {
+          URL.revokeObjectURL(url);
+        }
       });
       
       const images = {};
       for (const card of soldCards) {
+        const cardId = card.slabSerial || card.id;
+        if (!cardId) continue;
+        
         try {
-          const imageBlob = await db.getImage(card.slabSerial);
+          // First try to get image from local database
+          const imageBlob = await db.getImage(cardId);
           if (imageBlob) {
             const imageUrl = URL.createObjectURL(imageBlob);
-            images[card.slabSerial] = imageUrl;
+            images[cardId] = imageUrl;
+            continue;
+          }
+          
+          // If not in local database and user is logged in, try Firebase Storage
+          if (user && card.imageUrl) {
+            // If the card already has an imageUrl from Firestore, use it directly
+            images[cardId] = card.imageUrl;
+          } else if (user) {
+            // Try to get from Firebase Storage
+            try {
+              const storageRef = ref(storage, `users/${user.uid}/card-images/${cardId}`);
+              const imageUrl = await getDownloadURL(storageRef);
+              images[cardId] = imageUrl;
+            } catch (storageError) {
+              // Image not found in Firebase Storage, that's okay
+            }
           }
         } catch (error) {
-          console.error('Error loading image for card:', card.slabSerial, error);
+          console.error('Error loading image for card:', cardId, error);
         }
       }
       setCardImages(images);
@@ -51,10 +80,12 @@ const SoldItems = () => {
     // Cleanup URLs when component unmounts or cards change
     return () => {
       Object.values(cardImages).forEach(url => {
-        URL.revokeObjectURL(url);
+        if (url && url.startsWith('blob:')) {
+          URL.revokeObjectURL(url);
+        }
       });
     };
-  }, [soldCards]);
+  }, [soldCards, user]);
 
   // Load profile data
   useEffect(() => {
@@ -70,15 +101,65 @@ const SoldItems = () => {
     loadProfile();
   }, []);
 
-  // Load sold cards from IndexedDB
+  // Load sold cards from IndexedDB and Firestore
   useEffect(() => {
     const loadSoldCards = async () => {
+      setIsLoading(true);
       try {
-        const soldCardsData = await db.getSoldCards();
-        setSoldCards(soldCardsData || []);
+        // Get local sold cards from IndexedDB
+        const localSoldCards = await db.getSoldCards() || [];
+        
+        // Create a map of existing cards by ID to avoid duplicates
+        const existingCardsMap = new Map();
+        localSoldCards.forEach(card => {
+          const cardId = card.id || card.slabSerial;
+          if (cardId) {
+            existingCardsMap.set(cardId, card);
+          }
+        });
+        
+        // If user is logged in, fetch sold items from Firestore as well
+        if (user) {
+          try {
+            logger.log('Fetching sold items from Firestore');
+            const soldItemsRef = collection(firestoreDb, `users/${user.uid}/sold-items`);
+            const soldItemsSnapshot = await getDocs(soldItemsRef);
+            
+            // Process Firestore sold items
+            soldItemsSnapshot.forEach(doc => {
+              const soldItem = doc.data();
+              const cardId = soldItem.id || soldItem.slabSerial;
+              
+              // Only add if not already in the local database or if the cloud version is newer
+              if (cardId && (!existingCardsMap.has(cardId) || 
+                  (soldItem.updatedAt && 
+                   (!existingCardsMap.get(cardId).updatedAt || 
+                    soldItem.updatedAt > existingCardsMap.get(cardId).updatedAt)))) {
+                existingCardsMap.set(cardId, soldItem);
+              }
+            });
+            
+            logger.log(`Found ${soldItemsSnapshot.size} sold items in Firestore`);
+          } catch (firestoreError) {
+            console.error('Error fetching sold items from Firestore:', firestoreError);
+          }
+        }
+        
+        // Convert map back to array
+        const mergedSoldCards = Array.from(existingCardsMap.values());
+        
+        // Update state with merged data
+        setSoldCards(mergedSoldCards);
+        
+        // Also update local database with the merged data to keep it in sync
+        if (mergedSoldCards.length > localSoldCards.length) {
+          await db.saveSoldCards(mergedSoldCards);
+        }
       } catch (error) {
         console.error('Error loading sold cards:', error);
         setSoldCards([]);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -102,7 +183,7 @@ const SoldItems = () => {
       window.removeEventListener('import-complete', handleImportComplete);
       window.removeEventListener('sold-items-updated', handleSoldItemsUpdated);
     };
-  }, []);
+  }, [user]);
 
   // Group cards by invoice ID instead of buyer+date
   const groupCardsByInvoice = (cards) => {
@@ -703,6 +784,16 @@ const SoldItems = () => {
       toast.error('Error adding test sold item');
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="text-center py-8 sm:py-12">
+        <span className="material-icons text-4xl sm:text-5xl mb-3 sm:mb-4 text-gray-400 dark:text-gray-600">inventory_2</span>
+        <h3 className="text-sm sm:text-base font-medium text-gray-900 dark:text-white mb-1 sm:mb-2">Loading sold items...</h3>
+        <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-6">Please wait while we load your sold items.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="pt-16 sm:pt-32 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

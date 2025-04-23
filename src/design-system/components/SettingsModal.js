@@ -43,6 +43,7 @@ const SettingsModal = ({
   onStartTutorial,
   onImportAndCloudMigrate, // Add this new prop
   onUploadImagesFromZip, // Add new prop for image upload
+  onImportSoldItemsFromZip, // Add new prop for sold items import from zip
   className = '',
   ...props 
 }) => {
@@ -86,7 +87,6 @@ const SettingsModal = ({
   const [isUploadingImages, setIsUploadingImages] = useState(false); // Add state for image upload
   const [activeTab, setActiveTab] = useState('general');
   const [collectionToDelete, setCollectionToDelete] = useState('');
-  const [devLogs, setDevLogs] = useState([]); // Add state for logs
   const [profile, setProfile] = useState({
     firstName: '',
     lastName: '',
@@ -113,14 +113,6 @@ const SettingsModal = ({
       cardRepositoryRef.current = null;
     }
   }, [user]);
-
-  // Function to add logs to the state and console
-  const addLog = (message) => {
-    const timestamp = new Date().toLocaleTimeString();
-    const logEntry = `[${timestamp}] ${message}`;
-    setDevLogs(prevLogs => [...prevLogs, logEntry]);
-    console.log(message); // Keep console logging as well
-  };
 
   // Initialize collection to rename 
   useEffect(() => {
@@ -710,6 +702,29 @@ const SettingsModal = ({
     setShowResetConfirm(false);
   };
 
+  const handleImportSoldItems = () => {
+    // Create an input element to select the backup file
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = '.zip';
+    
+    fileInput.onchange = async (e) => {
+      if (e.target.files.length > 0) {
+        const file = e.target.files[0];
+        
+        // Import the sold items directly to the cloud
+        onImportSoldItemsFromZip(file, {
+          onProgress: (step, percent, message) => {
+            // You could update UI here if needed
+            console.log(`Import progress: ${message} (${percent}%)`);
+          }
+        });
+      }
+    };
+    
+    fileInput.click();
+  };
+
   return (
     <>
       <Modal
@@ -829,6 +844,33 @@ const SettingsModal = ({
                         Start Tutorial
                       </Button>
                     )}
+                    
+                    {/* Feature Flag Toggle - Moved from Developer Settings */}
+                    <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800">
+                      <div className="flex items-center justify-between py-2">
+                        <div>
+                          <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Cloud Sync</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            Enable automatic cloud synchronization for your data
+                          </p>
+                        </div>
+                        <Button
+                          variant={featureFlags.enableFirestoreSync ? "primary" : "outline"}
+                          size="sm"
+                          onClick={() => {
+                            updateFeatureFlag('enableFirestoreSync', !featureFlags.enableFirestoreSync);
+                            if (!featureFlags.enableFirestoreSync) {
+                              // Also enable related flags for full cloud functionality
+                              updateFeatureFlag('enableFirestoreReads', true);
+                              updateFeatureFlag('enableRealtimeListeners', true);
+                            }
+                            toastService.success(`Cloud Sync ${!featureFlags.enableFirestoreSync ? 'enabled' : 'disabled'}`);
+                          }}
+                        >
+                          {featureFlags.enableFirestoreSync ? 'Enabled' : 'Disabled'}
+                        </Button>
+                      </div>
+                    </div>
                   </div>
                 </SettingsPanel>
 
@@ -983,7 +1025,7 @@ const SettingsModal = ({
                     Manage your collection data. Use file backups for bulk operations or migrating between devices.
                   </p>
                     
-                  {/* Local Backup/Restore */}
+                  {/* File Backup/Restore */}
                   <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
                     <h4 className="text-md font-semibold mb-3 text-gray-700 dark:text-gray-300">File Backup / Restore</h4>
                     <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
@@ -1015,109 +1057,6 @@ const SettingsModal = ({
                       <div className="mt-2 text-sm text-blue-600 dark:text-blue-400">
                         Importing... {importProgress}%
                       </div>
-                    )}
-                  </div>
-
-                  {/* Cloud Sync (Manual Trigger) */}
-                  {user && featureFlags.enableFirestoreSync && (
-                    <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-                      <h4 className="text-md font-semibold mb-3 text-gray-700 dark:text-gray-300">Cloud Sync</h4>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-                        Manually trigger a synchronization with the cloud. This usually happens automatically.
-                      </p>
-                      <Button
-                        variant="primary"
-                        iconLeft={<Icon name="cloud_sync" />}
-                        onClick={handleForceSyncToCloud}
-                        disabled={isForceSyncing || isBackingUp || !user}
-                        isLoading={isForceSyncing || isBackingUp}
-                        loadingText="Syncing to Cloud..."
-                        fullWidth
-                      >
-                        Sync to Cloud
-                      </Button>
-                      {/* Display Backup Progress if Backing Up */}
-                      {(isForceSyncing || isBackingUp) && backupProgress > 0 && (
-                        <div className="mt-2">
-                          <div className="w-full bg-gray-200 rounded-full h-2 dark:bg-gray-700">
-                            <div 
-                              className="bg-primary h-2 rounded-full transition-width duration-300 ease-linear" 
-                              style={{ width: `${backupProgress}%` }}
-                            ></div>
-                          </div>
-                          <p className="text-xs text-center mt-1 text-gray-600 dark:text-gray-400">{backupStatus || `Syncing... ${Math.round(backupProgress)}%`}</p>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Cloud Backup Verification */}
-                  {user && (
-                    <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-                      <h4 className="text-md font-semibold mb-3 text-gray-700 dark:text-gray-300">Cloud Backup Verification</h4>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-                        Verify the integrity of your cloud backup.
-                      </p>
-                      <Button 
-                        variant="primary" 
-                        iconLeft={<Icon name="cloud_sync" />}
-                        onClick={handleVerifyCloudBackup}
-                        disabled={isVerifyingBackup || !user} 
-                        isLoading={isVerifyingBackup}
-                        loadingText="Verifying..."
-                        fullWidth
-                      >
-                        Verify Cloud Backup
-                      </Button>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">Status: {verificationStatus}</p>
-                    </div>
-                  )}
-
-                  {/* Cloud Migration */}
-                  <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-                    <h4 className="text-md font-semibold mb-3 text-gray-700 dark:text-gray-300">Cloud Migration</h4>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-                      Upload a backup ZIP file directly to the cloud, extracting and processing all cards and images.
-                    </p>
-                    <Button 
-                      variant="primary" 
-                      iconLeft={<Icon name="cloud_upload" />}
-                      onClick={handleCloudMigration}
-                      disabled={isCloudMigrating || !user}
-                      isLoading={isCloudMigrating}
-                      loadingText="Migrating to Cloud..."
-                      fullWidth
-                    >
-                      Migrate Backup to Cloud
-                    </Button>
-                    {!user && (
-                      <p className="text-xs text-amber-500 mt-2">
-                        You must be logged in to use cloud migration.
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Image Upload */}
-                  <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-                    <h4 className="text-md font-semibold mb-3 text-gray-700 dark:text-gray-300">Upload Images Only</h4>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-                      Upload only images from a backup ZIP file to the cloud.
-                    </p>
-                    <Button 
-                      variant="primary" 
-                      iconLeft={<Icon name="image" />}
-                      onClick={handleImageUpload}
-                      disabled={isUploadingImages || !user}
-                      isLoading={isUploadingImages}
-                      loadingText="Uploading Images..."
-                      fullWidth
-                    >
-                      Upload Images Only
-                    </Button>
-                    {!user && (
-                      <p className="text-xs text-amber-500 mt-2">
-                        You must be logged in to use image upload.
-                      </p>
                     )}
                   </div>
 
@@ -1167,91 +1106,26 @@ const SettingsModal = ({
                         </Button>
                       </div>
                     </div>
-                    
-                    {/* Log Viewer Section */}
+
+                    {/* Import Sold Items Section */}
                     <div className="bg-white dark:bg-[#1B2131] rounded-lg p-4 border border-gray-200 dark:border-indigo-900/20 mt-4">
                       <h4 className="font-medium text-gray-900 dark:text-white mb-2 flex items-center">
-                        <Icon name="description" className="text-indigo-400 mr-2" />
-                        Development Logs
+                        <Icon name="receipt_long" className="text-indigo-400 mr-2" />
+                        Import Sold Items
                       </h4>
-                      <textarea
-                        readOnly
-                        className="w-full h-48 p-2 border border-gray-300 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-800 text-xs font-mono text-gray-700 dark:text-gray-300 resize-none"
-                        value={devLogs.join('\n')}
-                        placeholder="Logs will appear here..."
-                      />
-                       <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setDevLogs([])} // Clear logs on click
-                          className="mt-2"
-                          iconLeft={<Icon name="delete" />}
-                        >
-                          Clear Logs
-                        </Button>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+                        Import sold items from a backup ZIP file without affecting your existing card collection.
+                      </p>
+                      <Button
+                        variant="primary"
+                        onClick={handleImportSoldItems}
+                        iconLeft={<Icon name="upload_file" />}
+                        fullWidth
+                      >
+                        Import Sold Items
+                      </Button>
                     </div>
                   </SettingsPanel>
-
-                  {/* Developer Settings Panel */}
-                  {featureFlags.isDeveloperMode && (
-                    <SettingsPanel
-                      title="Developer Settings"
-                      description="Configure developer-specific settings for testing new features."
-                    >
-                      <div className="bg-white dark:bg-[#1B2131] rounded-lg p-4 border border-gray-200 dark:border-indigo-900/20">
-                        <h4 className="font-medium text-gray-900 dark:text-white mb-2 flex items-center">
-                          <Icon name="build" className="text-indigo-400 mr-2" />
-                          Firestore Integration
-                        </h4>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                          Control Firestore integration features. These settings are for testing only and should be managed carefully.
-                        </p>
-                        <div className="space-y-4">
-                          {Object.entries(getAllFeatureFlags()).map(([flagName, value]) => (
-                            <div key={flagName} className="flex items-center justify-between py-2 border-t border-gray-100 dark:border-gray-800">
-                              <div>
-                                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">{flagName}</p>
-                                <p className="text-xs text-gray-500 dark:text-gray-400">
-                                  {flagName === 'enableFirestoreSync' && 'Write data to Firestore (shadow writes)'}
-                                  {flagName === 'enableFirestoreReads' && 'Read data from Firestore when online'}
-                                  {flagName === 'enableRealtimeListeners' && 'Enable real-time data synchronization'}
-                                  {flagName === 'enableBackgroundMigration' && 'Migrate existing data to Firestore in background'}
-                                  {flagName === 'isDeveloperMode' && 'Developer testing mode with advanced settings'}
-                                </p>
-                              </div>
-                              <Button
-                                variant={value ? "primary" : "outline"}
-                                size="sm"
-                                onClick={() => {
-                                  updateFeatureFlag(flagName, !value);
-                                  addLog(`Feature flag "${flagName}" ${!value ? 'enabled' : 'disabled'}`);
-                                  toastService.success(`${flagName} ${!value ? 'enabled' : 'disabled'}`);
-                                  setDevLogs([...devLogs]);  // Force refresh
-                                }}
-                              >
-                                {value ? 'Enabled' : 'Disabled'}
-                              </Button>
-                            </div>
-                          ))}
-                        </div>
-                        <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800">
-                          <Button
-                            variant="danger"
-                            size="sm"
-                            onClick={() => {
-                              resetFeatureFlags();
-                              addLog('All feature flags reset to defaults');
-                              toastService.success('Feature flags reset to defaults');
-                              setDevLogs([...devLogs]);  // Force refresh
-                            }}
-                            fullWidth
-                          >
-                            Reset All Feature Flags
-                          </Button>
-                        </div>
-                      </div>
-                    </SettingsPanel>
-                  )}
                 </SettingsPanel>
               </div>
             )}
@@ -1312,6 +1186,7 @@ SettingsModal.propTypes = {
   onStartTutorial: PropTypes.func,
   onImportAndCloudMigrate: PropTypes.func,
   onUploadImagesFromZip: PropTypes.func, // Add prop type for image upload
+  onImportSoldItemsFromZip: PropTypes.func, // Add prop type for sold items import from zip
   className: PropTypes.string
 };
 

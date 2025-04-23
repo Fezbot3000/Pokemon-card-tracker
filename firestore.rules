@@ -40,6 +40,14 @@ service cloud.firestore {
       allow write: if isOwner(userId);
     }
     
+    // Sold Items: Only the owner can read/write their sold items data (new collection name).
+    match /users/{userId}/sold-items/{document=**} { 
+      // Separate read into get and list
+      allow get, list: if isOwner(userId);
+      // Allow owner to write
+      allow write: if isOwner(userId);
+    }
+    
     // --- Add Rule for Cards Subcollection ---
     match /users/{userId}/cards/{document=**} {
       // Allow owner to get, list, and write cards

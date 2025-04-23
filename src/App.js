@@ -19,7 +19,8 @@ import {
   RestoreProvider, useRestore,
   RestoreProgressBar,
   BackupProvider, useBackup,
-  BackupProgressBar
+  BackupProgressBar,
+  toastService // Import toastService
 } from './design-system';
 import DesignSystemProvider from './design-system/providers/DesignSystemProvider';
 import MobileSettingsModal from './components/MobileSettingsModal'; 
@@ -55,7 +56,7 @@ import RestoreListener from './components/RestoreListener';
 import SyncStatusIndicator from './components/SyncStatusIndicator'; // Import the SyncStatusIndicator
 import featureFlags from './utils/featureFlags'; // Import feature flags
 import { CardRepository } from './repositories/CardRepository';
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc, serverTimestamp, collection, getDocs } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db as firestoreDb, storage } from './services/firebase';
 import JSZip from 'jszip'; // Import JSZip for handling zip files
@@ -576,35 +577,20 @@ function AppContent() {
 
         if (Object.keys(savedCollections).length > 0) {
           setCollections(savedCollections);
-
-          // Decide which collection to select on load
-          if (savedSelectedCollection) {
-            // If a collection was saved in localStorage
-            if (savedSelectedCollection === 'All Cards' || savedCollections[savedSelectedCollection]) {
-              // And it's valid ('All Cards' or an existing collection key)
-              setSelectedCollection(savedSelectedCollection); // Use the saved one
-              logger.debug(`Loaded saved collection selection: ${savedSelectedCollection}`);
-            } else {
-              // Saved collection name is invalid (doesn't exist anymore)
-              const fallbackCollection = Object.keys(savedCollections)[0];
-              logger.warn(`Saved collection '${savedSelectedCollection}' not found, defaulting to first collection: ${fallbackCollection}.`);
-              setSelectedCollection(fallbackCollection); // Fallback to the first actual collection
-              localStorage.setItem('selectedCollection', fallbackCollection); // Update localStorage
-            }
-          } else {
-            // No collection saved in localStorage, default to 'All Cards'
-            logger.debug('No saved collection found in localStorage, defaulting to All Cards.');
-            setSelectedCollection('All Cards');
-            // Optionally save 'All Cards' to localStorage for next time
-            // localStorage.setItem('selectedCollection', 'All Cards'); 
-          }
+          
+          // Always default to 'All Cards' when the app loads, regardless of what's in localStorage
+          setSelectedCollection('All Cards');
+          localStorage.setItem('selectedCollection', 'All Cards');
+          logger.debug('Setting collection to All Cards by default');
         } else {
           // No collections found in DB at all
           logger.debug('No collections found in DB, setting up Default Collection.');
           const defaultCollections = { 'Default Collection': [] };
           setCollections(defaultCollections);
-          setSelectedCollection('Default Collection');
-          localStorage.setItem('selectedCollection', 'Default Collection');
+          
+          // Even with a new default collection, we want to start with All Cards view
+          setSelectedCollection('All Cards');
+          localStorage.setItem('selectedCollection', 'All Cards');
         }
       } catch (error) {
         logger.debug('Error during initialization, using default collections');
@@ -1957,6 +1943,222 @@ To import this backup:
     }
   };
 
+  // Function to import sold items from a zip file directly to the cloud
+  const importSoldItemsFromZip = async (file, options = {}) => {
+    try {
+      // Check if user is authenticated
+      if (!user) {
+        toastService.error('You must be logged in to import sold items');
+        return;
+      }
+
+      // Create a loading overlay
+      const loadingEl = document.createElement('div');
+      loadingEl.className = 'fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[100]';
+      loadingEl.innerHTML = `
+        <div class="bg-white dark:bg-[#1B2131] p-6 rounded-lg shadow-lg text-center max-w-md">
+          <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+          <p class="text-gray-700 dark:text-gray-300 font-medium mb-1">Sold Items Import...</p>
+          <p class="text-gray-500 dark:text-gray-400 text-sm" id="import-status">Processing file... (Step 1 of 3)</p>
+          <div class="mt-3 w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+            <div id="import-progress" class="bg-primary h-2 rounded-full" style="width: 10%"></div>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(loadingEl);
+
+      // Function to update progress
+      const updateProgress = (message, percent, step) => {
+        const progressEl = loadingEl.querySelector('#import-progress');
+        const messageEl = loadingEl.querySelector('#import-status');
+        if (progressEl) progressEl.style.width = `${percent}%`;
+        if (messageEl) messageEl.textContent = message;
+        
+        // Call the onProgress callback if provided (for SettingsModal integration)
+        if (options.onProgress && typeof options.onProgress === 'function') {
+          options.onProgress(step || 1, percent, message);
+        }
+      };
+
+      // Set initial progress
+      updateProgress('Extracting zip file... (Step 1 of 3)', 10, 1);
+      
+      // Create a JSZip instance and load the file
+      const zip = new JSZip();
+      const zipContent = await zip.loadAsync(file);
+      
+      // Check for collections.json in the expected locations
+      let collectionsFile = zipContent.file("data/collections.json");
+      if (!collectionsFile) {
+        // Try the old format (root level)
+        collectionsFile = zipContent.file("collections.json");
+        
+        if (!collectionsFile) {
+          throw new Error("Invalid backup file: missing collections.json");
+        }
+      }
+      
+      // Load collections data
+      const collectionsJson = await collectionsFile.async("string");
+      let collectionsData;
+      
+      try {
+        collectionsData = JSON.parse(collectionsJson);
+      } catch (jsonError) {
+        logger.error('Error parsing JSON:', jsonError);
+        throw new Error("Invalid backup format: JSON parsing failed");
+      }
+      
+      updateProgress('Extracting sold items... (Step 2 of 3)', 30, 2);
+      
+      // Look for sold items in different possible locations
+      let soldItems = [];
+      
+      // Check for soldCards array at top level
+      if (collectionsData.soldCards && Array.isArray(collectionsData.soldCards)) {
+        soldItems.push(...collectionsData.soldCards);
+      }
+      
+      // Check for sold items in collections
+      if (collectionsData.collections && typeof collectionsData.collections === 'object') {
+        Object.entries(collectionsData.collections).forEach(([collectionName, cards]) => {
+          if (collectionName.toLowerCase() === 'sold' && Array.isArray(cards)) {
+            soldItems.push(...cards);
+          }
+        });
+      }
+      
+      if (soldItems.length === 0) {
+        throw new Error("No sold items found in backup file");
+      }
+      
+      updateProgress(`Found ${soldItems.length} sold items. Uploading to cloud... (Step 3 of 3)`, 50, 3);
+      
+      // Process the sold items
+      const processedSoldItems = soldItems.map(item => ({
+        ...item,
+        soldDate: item.soldDate || item.dateSold || new Date().toISOString(),
+        buyer: item.buyer || "Import",
+        finalValueAUD: parseFloat(item.finalValueAUD) || parseFloat(item.currentValueAUD) || 0,
+        finalProfitAUD: parseFloat(item.finalProfitAUD) || 
+          (parseFloat(item.finalValueAUD || item.currentValueAUD || 0) - parseFloat(item.investmentAUD || 0))
+      }));
+      
+      // Check for existing sold items in Firestore to avoid duplicates
+      const soldItemsRef = collection(firestoreDb, `users/${user.uid}/sold-items`);
+      const existingSoldItemsSnapshot = await getDocs(soldItemsRef);
+      const existingSoldItemIds = new Set();
+      
+      existingSoldItemsSnapshot.forEach(doc => {
+        existingSoldItemIds.add(doc.id);
+      });
+      
+      // Filter out duplicates
+      const newSoldItems = processedSoldItems.filter(
+        item => !existingSoldItemIds.has(item.slabSerial || item.id)
+      );
+      
+      if (newSoldItems.length === 0) {
+        updateProgress('No new sold items to import. All items already exist.', 100, 3);
+        setTimeout(() => {
+          document.body.removeChild(loadingEl);
+          toastService.warning('No new sold items to import. All items already exist.');
+        }, 1500);
+        return;
+      }
+      
+      // Upload sold items to Firestore
+      let successCount = 0;
+      let errorCount = 0;
+      const totalItems = newSoldItems.length;
+      
+      // Process sold items in batches to avoid overwhelming Firebase
+      const batchSize = 5;
+      for (let i = 0; i < newSoldItems.length; i += batchSize) {
+        const batch = newSoldItems.slice(i, i + batchSize);
+        
+        // Process each sold item in the batch concurrently
+        await Promise.all(batch.map(async (soldItem) => {
+          try {
+            // Check if card has an image in the zip
+            let imageFile = null;
+            const cardId = soldItem.id || soldItem.slabSerial;
+            
+            if (cardId) {
+              // Look for image in various possible locations
+              const possibleImagePaths = [
+                `images/${cardId}.jpg`,
+                `images/${cardId}.jpeg`,
+                `images/${cardId}.png`,
+                `data/images/${cardId}.jpg`,
+                `data/images/${cardId}.jpeg`,
+                `data/images/${cardId}.png`
+              ];
+              
+              for (const path of possibleImagePaths) {
+                const imgFile = zipContent.file(path);
+                if (imgFile) {
+                  imageFile = imgFile;
+                  break;
+                }
+              }
+            }
+            
+            // Upload image if found
+            let imageUrl = null;
+            if (imageFile) {
+              const imageBlob = await imageFile.async("blob");
+              const storageRef = ref(storage, `users/${user.uid}/card-images/${cardId}`);
+              await uploadBytes(storageRef, imageBlob);
+              imageUrl = await getDownloadURL(storageRef);
+            }
+            
+            // Add to Firestore
+            const soldItemRef = doc(firestoreDb, `users/${user.uid}/sold-items/${cardId}`);
+            await setDoc(soldItemRef, {
+              ...soldItem,
+              imageUrl,
+              updatedAt: serverTimestamp()
+            });
+            
+            successCount++;
+            
+            // Update progress
+            const progress = Math.round(50 + (successCount + errorCount) / totalItems * 50);
+            updateProgress(`Uploading sold items: ${successCount}/${totalItems} complete`, progress, 3);
+            
+          } catch (cardError) {
+            console.error(`Error uploading sold item ${soldItem.id || soldItem.slabSerial}:`, cardError);
+            errorCount++;
+          }
+        }));
+      }
+      
+      // Final progress update
+      updateProgress(`Completed! ${successCount} sold items uploaded to cloud, ${errorCount} errors`, 100, 3);
+      
+      // Remove loading overlay after a delay
+      setTimeout(() => {
+        document.body.removeChild(loadingEl);
+        toastService.success(`Imported ${successCount} sold items to the cloud`);
+        
+        // Dispatch event to notify SoldItems component to refresh
+        window.dispatchEvent(new CustomEvent('sold-items-updated'));
+      }, 1500);
+      
+    } catch (error) {
+      console.error('Error importing sold items:', error);
+      
+      // Remove loading overlay if it exists
+      const loadingEl = document.querySelector('.fixed.inset-0.bg-black.bg-opacity-70');
+      if (loadingEl) {
+        document.body.removeChild(loadingEl);
+      }
+      
+      toastService.error(`Error importing sold items: ${error.message}`);
+    }
+  };
+
   if (isLoading) {
     return null;
   }
@@ -2128,6 +2330,7 @@ To import this backup:
           onResetData={handleResetData}
           onImportAndCloudMigrate={importAndCloudMigrate}
           onUploadImagesFromZip={uploadImagesFromZip}
+          onImportSoldItemsFromZip={importSoldItemsFromZip}
         />
       )}
       
@@ -2281,6 +2484,7 @@ To import this backup:
                   onResetData={handleResetData}
                   onImportAndCloudMigrate={importAndCloudMigrate}
                   onUploadImagesFromZip={uploadImagesFromZip}
+                  onImportSoldItemsFromZip={importSoldItemsFromZip}
                 />
               ) : (
                 <>
@@ -2645,6 +2849,7 @@ To import this backup:
           onResetData={handleResetData}
           onImportAndCloudMigrate={importAndCloudMigrate}
           onUploadImagesFromZip={uploadImagesFromZip}
+          onImportSoldItemsFromZip={importSoldItemsFromZip}
         />
       )}
 
