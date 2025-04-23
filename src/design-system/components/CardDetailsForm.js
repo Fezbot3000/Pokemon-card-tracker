@@ -338,32 +338,6 @@ const CardDetailsForm = ({
               required
             />
             
-            {/* Collection Selector */}
-            <div className="w-full">
-              <FormLabel htmlFor="collectionName">Collection</FormLabel>
-              <SelectField
-                id="collectionName" // Add id for label association
-                name="collectionId" // Change to collectionId instead of collectionName
-                value={card.collectionId || initialCollectionName || ''} // Change to collectionId
-                onChange={(e) => {
-                  const { name, value } = e.target;
-                  console.log(`[CardDetailsForm] Collection changed to: ${value}`);
-                  // Ensure both collection and collectionId are set for compatibility
-                  onChange({
-                    ...card,
-                    collection: value,
-                    collectionId: value
-                  });
-                }}
-                options={[
-                  { value: '', label: 'Select Collection...' },
-                  ...collections.map(name => ({ value: name, label: name }))
-                ]}
-                error={errors.collectionId} // Change to collectionId
-                className="w-full mt-1" // Add margin-top for spacing from label
-              />
-            </div>
-
             {/* Condition Dropdowns */}
             <SelectField
               label="Grading Company"

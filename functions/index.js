@@ -1115,30 +1115,30 @@ exports.sendFeedbackEmail = functions.https.onCall(async (data, context) => {
 
 // PSA Card Lookup Function
 exports.psaLookup = functions.https.onCall(async (data, context) => {
-  // Log function invocation
-  console.log('PSA Lookup function called with data:', data);
-  
-  // Validate input data
-  if (!data || !data.certNumber) {
-    console.error('Missing certNumber in request');
-    throw new functions.https.HttpsError(
-      'invalid-argument', 
-      'The function must be called with a certNumber.'
-    );
-  }
-  
-  const certNumber = data.certNumber;
-  console.log(`Looking up PSA certificate: ${certNumber}`);
-  
   try {
-    // Get PSA API token from Firebase config
+    // Check if the request is authenticated (optional)
+    if (!context.auth) {
+      // Allowing anonymous access for now
+      console.log('Anonymous PSA lookup request');
+    } else {
+      console.log('Authenticated PSA lookup from:', context.auth.uid);
+    }
+
+    // Extract cert number from request
+    const { certNumber, includeImage } = data;
+    if (!certNumber) {
+      throw new Error('No certification number provided');
+    }
+
+    console.log(`Looking up PSA cert #${certNumber}`);
+
+    // Get PSA API token from Firebase config or use fallback
     let psaToken;
     try {
       // Try to get token from Firebase environment config
       psaToken = functions.config().psa?.token;
       if (!psaToken) {
-        // Fallback to hardcoded token in this example
-        // In production, always use environment variables
+        // Fallback to hardcoded token
         psaToken = "A_aNeEjOmhbwHJNcpcEuOdlZOtXv5OJ0PqA535oKF0eoDleejRMRVCEEOTfSe-hACCLK-pidDO3KarjNpx6JT8kvY-SsnbWBhzjLYRE-awKISKdUYqI0SvT7UJ0EeNX8AVNNNZbTFWmse-oUVocMVd-UC8FLbXyMo_gT1nVp3JpBbCLpL43dYSUDIqi3QLtB41IZcTPAHvLOnahZ5bJp8MoeL-xKHWepqhzgxjrZluTMHglicaL5sTurL7sfffANewJjAmCo8kcaLtwbGLjZ6SEenzCZwAwF3fYx5GNQ7_Kkq0um";
         console.log('Using fallback PSA token');
       } else {
@@ -1146,14 +1146,16 @@ exports.psaLookup = functions.https.onCall(async (data, context) => {
       }
     } catch (error) {
       console.error('Error getting PSA token from config:', error);
-      throw new functions.https.HttpsError('internal', 'Error accessing PSA credentials');
+      throw new Error('Error accessing PSA credentials');
     }
     
-    // Make request to PSA API using the correct URL format and method (GET)
+    // Use the official PSA API endpoint instead of scraping the website
     const url = `https://www.psacard.com/publicapi/cert/GetByCertNumber/${encodeURIComponent(certNumber)}`;
     console.log(`Making GET request to PSA API: ${url}`);
     
-    // Use GET request instead of POST based on working implementation
+    // Log token for debugging (first 10 chars only for security)
+    console.log(`Using token: ${psaToken.substring(0, 10)}...`);
+    
     const response = await fetch(url, {
       method: 'GET',
       headers: {
@@ -1193,108 +1195,26 @@ exports.psaLookup = functions.https.onCall(async (data, context) => {
         }
       }
       
-      throw new functions.https.HttpsError(
-        'unknown', 
-        `PSA API returned error: ${response.status} ${response.statusText}`
-      );
+      return { success: false, error: `PSA API returned error: ${response.status} ${response.statusText}` };
     }
     
     // Parse the response
     const responseText = await response.text();
     console.log('Raw API response:', responseText.substring(0, 200) + '...');
     
-    let data;
+    let responseData;
     try {
-      data = JSON.parse(responseText);
-      console.log('PSA API response data:', JSON.stringify(data).substring(0, 200) + '...');
+      responseData = JSON.parse(responseText);
+      console.log('PSA API response data:', JSON.stringify(responseData).substring(0, 200) + '...');
     } catch (error) {
       console.error('Error parsing PSA API response:', error);
-      throw new functions.https.HttpsError('internal', 'Invalid JSON response from PSA API');
+      return { success: false, error: 'Invalid JSON response from PSA API' };
     }
     
     // Return the PSA data
     return {
       success: true,
-      data: data
-    };
-  } catch (error) {
-    console.error('Error in PSA lookup:', error);
-    throw new functions.https.HttpsError(
-      'internal',
-      `Error looking up PSA certificate: ${error.message}`
-    );
-  }
-});
-
-// Function to look up PSA card data and cert details by certification number
-// This avoids CORS issues when calling PSA API from client-side code
-exports.psaLookup = functions.https.onCall(async (data, context) => {
-  try {
-    // Check if the request is authenticated (optional)
-    if (!context.auth) {
-      // Allowing anonymous access for now
-      console.log('Anonymous PSA lookup request');
-    } else {
-      console.log('Authenticated PSA lookup from:', context.auth.uid);
-    }
-
-    // Extract cert number from request
-    const { certNumber, includeImage } = data;
-    if (!certNumber) {
-      throw new Error('No certification number provided');
-    }
-
-    console.log(`Looking up PSA cert #${certNumber}`);
-
-    // Prepare the request to PSA API
-    const url = `https://www.psacard.com/cert/${certNumber}`;
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-      }
-    });
-
-    // If PSA site didn't respond with 200 OK
-    if (!response.ok) {
-      console.error(`PSA API responded with status ${response.status}`);
-      return { success: false, error: `PSA API returned status ${response.status}` };
-    }
-
-    // Extract data from the response HTML
-    const html = await response.text();
-    
-    // Very simple HTML parsing to extract the PSA certificate data
-    const dataRegex = /<script.*?var\s+psaApiData\s*=\s*({.*?});<\/script>/s;
-    const match = html.match(dataRegex);
-    
-    let psaData = { PSACert: {} };
-    if (match && match[1]) {
-      try {
-        psaData = JSON.parse(match[1]);
-      } catch (e) {
-        console.error('Failed to parse PSA data:', e);
-      }
-    }
-    
-    // If includeImage is true, we'll try to find image URLs in the response
-    let imageUrl = null;
-    if (includeImage) {
-      // Look for image URLs in the HTML
-      const imageRegex = /<img[^>]*src="([^"]*psacard[^"]*\/lg\/[^"]*)"[^>]*>/i;
-      const imageMatch = html.match(imageRegex);
-      
-      if (imageMatch && imageMatch[1]) {
-        imageUrl = imageMatch[1];
-        console.log(`Found PSA image URL: ${imageUrl}`);
-      }
-    }
-    
-    // Return the data
-    return {
-      success: true,
-      data: psaData,
-      imageUrl
+      data: responseData
     };
   } catch (error) {
     console.error('Error in PSA lookup:', error);

@@ -270,12 +270,12 @@ const Header = ({
       >
         <div className="p-4">
           <div className="mb-4">
-            <label htmlFor="collectionName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label htmlFor="newCollectionName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Collection Name
             </label>
             <input
               type="text"
-              id="collectionName"
+              id="newCollectionName"
               value={newCollectionName}
               onChange={(e) => setNewCollectionName(e.target.value)}
               className="w-full px-3 py-2 border border-[#ffffff33] dark:border-[#ffffff1a] rounded-md shadow-sm focus:outline-none focus:ring-[var(--primary-default)] focus:border-[var(--primary-default)] dark:bg-gray-800 dark:text-white"

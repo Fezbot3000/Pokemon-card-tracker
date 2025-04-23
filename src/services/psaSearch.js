@@ -121,8 +121,12 @@ const searchByCertNumber = async (certNumber) => {
       return result.data.data;
     } else {
       console.error('PSA lookup failed:', result.data);
+      // Add more detailed logging for debugging
+      if (result.data && result.data.error) {
+        console.error('Error details:', result.data.error);
+      }
       toast.error('PSA lookup failed. Please check the certification number and try again.');
-      return { error: 'Failed to fetch PSA data' };
+      return { error: result.data?.error || 'Failed to fetch PSA data' };
     }
   } catch (error) {
     console.error('Error searching PSA card by cert number:', error);
