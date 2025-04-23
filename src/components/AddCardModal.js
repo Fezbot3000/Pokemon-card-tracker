@@ -34,6 +34,7 @@ const AddCardModal = ({
     datePurchased: new Date().toISOString().split('T')[0],
     investmentAUD: '',
     currentValueAUD: '',
+    quantity: 1, // Add default quantity of 1
   };
   
   // State for card data

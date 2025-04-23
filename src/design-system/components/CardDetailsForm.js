@@ -146,6 +146,7 @@ const CardDetailsForm = ({
     { value: 'YuGiOh', label: 'Yu-Gi-Oh!' },
     { value: 'MagicTheGathering', label: 'Magic: The Gathering' },
     { value: 'DragonBallZ', label: 'Dragon Ball Z' },
+    { value: 'OnePiece', label: 'One Piece' },
     { value: 'NHL', label: 'NHL' },
     { value: 'NBL', label: 'NBL' },
     { value: 'EPL', label: 'EPL' },

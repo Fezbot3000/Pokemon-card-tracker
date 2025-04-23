@@ -228,43 +228,112 @@ const mergeWithExistingCard = (existingCardData, psaCardData) => {
     psaCardData.cardType,
     psaCardData.brand,
     psaCardData.cardName, // Often contains player/character name
-    psaCardData.setName // Set name might also indicate category
+    psaCardData.setName, // Set name might also indicate category
+    psaCardData.player    // Player/character name is often useful for category detection
   ].filter(Boolean).join(' ').toLowerCase();
+
+  console.log('Category detection combined info:', combinedInfo);
 
   // Default category
   mergedData.category = 'Other';
 
   if (combinedInfo) {
-    // Prioritize Pokemon check
-    if (combinedInfo.includes('pokemon') || combinedInfo.includes('pokémon')) {
+    // Dragon Ball Z - check this first as it's more specific
+    if (combinedInfo.includes('dragon ball') || 
+        combinedInfo.includes('dragonball') || 
+        combinedInfo.includes('dbz') ||
+        /goku|vegeta|piccolo|gohan|trunks|frieza|cell|buu/i.test(combinedInfo)) {
+      mergedData.category = 'DragonBallZ';
+    }
+    // One Piece
+    else if (combinedInfo.includes('one piece') || 
+             /luffy|zoro|sanji|nami|usopp|chopper|robin|franky|brook|jinbe/i.test(combinedInfo)) {
+      mergedData.category = 'OnePiece';
+    }
+    // Pokémon check
+    else if (combinedInfo.includes('pokemon') || 
+             combinedInfo.includes('pokémon') ||
+             /pikachu|charizard|blastoise|venusaur|mewtwo/i.test(combinedInfo)) {
       mergedData.category = 'Pokemon';
-    // Check other TCGs
-    } else if (combinedInfo.includes('yu-gi-oh') || combinedInfo.includes('yugioh')) {
+    }
+    // Yu-Gi-Oh
+    else if (combinedInfo.includes('yu-gi-oh') || 
+             combinedInfo.includes('yugioh') ||
+             combinedInfo.includes('yu gi oh') ||
+             /kaiba|yugi|exodia|blue-eyes|dark magician/i.test(combinedInfo)) {
       mergedData.category = 'YuGiOh';
-    } else if (combinedInfo.includes('magic') || combinedInfo.includes('mtg')) {
+    }
+    // Magic: The Gathering
+    else if (combinedInfo.includes('magic') || 
+             combinedInfo.includes('mtg') ||
+             combinedInfo.includes('gathering') ||
+             /planeswalker|mana|wizards of the coast|mythic rare/i.test(combinedInfo)) {
       mergedData.category = 'MagicTheGathering';
-    } else if (combinedInfo.includes('dragon ball')) {
-      mergedData.category = 'Dragon Ball Z';
-    // Check Sports (add more specific checks if needed, e.g., player names)
-    } else if (combinedInfo.includes('basketball')) {
-      mergedData.category = 'Sports-Basketball';
-    } else if (combinedInfo.includes('football')) {
-      mergedData.category = 'Sports-Football';
-    } else if (combinedInfo.includes('baseball')) {
-      mergedData.category = 'Sports-Baseball';
-    } else if (combinedInfo.includes('hockey')) {
-      mergedData.category = 'Sports-Hockey';
-    } else if (combinedInfo.includes('soccer')) {
-      mergedData.category = 'Sports-Soccer';
-    // Check WWE
-    } else if (combinedInfo.includes('wwe') || combinedInfo.includes('wrestling')) {
+    }
+    // Sports cards - NHL
+    else if (combinedInfo.includes('hockey') || 
+             combinedInfo.includes('nhl') ||
+             /gretzky|ovechkin|crosby|mcdavid/i.test(combinedInfo)) {
+      mergedData.category = 'NHL';
+    }
+    // NBL (National Basketball League)
+    else if (combinedInfo.includes('nbl') || 
+             combinedInfo.includes('national basketball league') && !combinedInfo.includes('nba')) {
+      mergedData.category = 'NBL';
+    }
+    // Sports cards - Basketball
+    else if (combinedInfo.includes('basketball') || 
+             combinedInfo.includes('nba') ||
+             /lebron|jordan|kobe|curry|durant/i.test(combinedInfo)) {
+      mergedData.category = 'Other';
+    }
+    // Sports cards - Football
+    else if (combinedInfo.includes('football') || 
+             combinedInfo.includes('nfl') ||
+             /quarterback|touchdown|brady|mahomes|rodgers/i.test(combinedInfo)) {
+      mergedData.category = 'Other';
+    }
+    // Sports cards - Baseball
+    else if (combinedInfo.includes('baseball') || 
+             combinedInfo.includes('mlb') ||
+             /pitcher|batter|trout|ruth|aaron|bonds/i.test(combinedInfo)) {
+      mergedData.category = 'Other';
+    }
+    // Sports cards - Soccer
+    else if (combinedInfo.includes('soccer') || 
+             (combinedInfo.includes('football') && !combinedInfo.includes('nfl')) ||
+             combinedInfo.includes('fifa') ||
+             /messi|ronaldo|pele|maradona|mbappe/i.test(combinedInfo)) {
+      // If it's EPL related, that will be caught in the EPL check
+      // Otherwise categorize as Other
+      mergedData.category = 'Other';
+    }
+    // EPL (English Premier League)
+    else if (combinedInfo.includes('premier league') || 
+             combinedInfo.includes('epl') ||
+             /manchester united|liverpool|chelsea|arsenal/i.test(combinedInfo)) {
+      mergedData.category = 'EPL';
+    }
+    // F1
+    else if (combinedInfo.includes('formula 1') || 
+             combinedInfo.includes('f1') ||
+             /hamilton|verstappen|schumacher|grand prix|ferrari|mclaren/i.test(combinedInfo)) {
+      mergedData.category = 'F1';
+    }
+    // WWE
+    else if (combinedInfo.includes('wwe') || 
+             combinedInfo.includes('wrestling') ||
+             combinedInfo.includes('wwf') ||
+             /undertaker|cena|rock|austin|hogan/i.test(combinedInfo)) {
       mergedData.category = 'WWE';
     }
-    // If it's still 'Other', maybe a final check for generic TCG terms?
-    // else if (mergedData.category === 'Other' && (combinedInfo.includes('trading card') || combinedInfo.includes('game card'))) {
-    //   mergedData.category = 'Other'; // Keep as Other TCG for now
-    // }
+    // Default to Other if no specific category is detected
+    else {
+      mergedData.category = 'Other';
+    }
   }
+  
+  console.log('Detected category:', mergedData.category);
   
   // Preserve existing financial data and image
   // We don't modify: investmentUSD, currentValueUSD, investmentAUD, currentValueAUD, datePurchased, notes, etc.
