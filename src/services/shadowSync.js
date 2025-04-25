@@ -190,9 +190,14 @@ class ShadowSyncService {
       // Ensure collectionId is included in the data to be written
       const cardDataToWrite = {
         ...card,
-        collectionId: collectionName, // Explicitly add collectionId
-        collection: collectionName     // Add collection property for backward compatibility
       };
+      
+      // Only add collection fields if collectionName is valid
+      if (collectionName) {
+        cardDataToWrite.collectionId = collectionName; // Explicitly add collectionId
+        cardDataToWrite.collection = collectionName; // Add collection property for backward compatibility
+      }
+      
       // Remove the id property from the data itself if it exists, as it's the document key
       delete cardDataToWrite.id; 
 
@@ -282,8 +287,25 @@ class ShadowSyncService {
       logger.debug(`[ShadowSync] Shadow writing sold card ${cardId} to Firestore`);
       
       if (cardId && soldData) {
+        // Ensure soldPrice is a valid number
+        const processedSoldData = { ...soldData };
+        if (processedSoldData.soldPrice !== undefined) {
+          // Convert to number if it's a string
+          if (typeof processedSoldData.soldPrice === 'string') {
+            processedSoldData.soldPrice = parseFloat(processedSoldData.soldPrice);
+          }
+          
+          // If still not a valid number after conversion, set a default value
+          if (isNaN(processedSoldData.soldPrice) || typeof processedSoldData.soldPrice !== 'number') {
+            processedSoldData.soldPrice = 0;
+          }
+        } else {
+          // Default value if soldPrice is missing
+          processedSoldData.soldPrice = 0;
+        }
+        
         // Mark card as sold in Firestore
-        await this.repository.markCardAsSold(cardId, soldData);
+        await this.repository.markCardAsSold(cardId, processedSoldData);
         logger.debug(`[ShadowSync] Successfully shadow wrote sold card ${cardId}`);
         this._notifySyncCompleted(true);
         return true;
@@ -291,8 +313,7 @@ class ShadowSyncService {
       this._notifySyncCompleted(false);
       return false;
     } catch (error) {
-      // Log but don't disrupt app flow
-      logger.error('[ShadowSync] Error shadow writing sold card:', error);
+      logger.error(`[ShadowSync] Error writing sold card ${cardId} to Firestore:`, error);
       this._notifySyncCompleted(false);
       return false;
     }

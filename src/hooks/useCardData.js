@@ -3,6 +3,7 @@ import { parseCSVFile, processImportedData, validateCSVStructure } from '../util
 import { getUsdToAudRate } from '../utils/currencyAPI';
 import { useAuth } from '../design-system/contexts/AuthContext';
 import { CardRepository } from '../repositories/CardRepository';
+import logger from '../utils/logger';
 
 const useCardData = () => {
   // State for cards and UI
@@ -20,24 +21,12 @@ const useCardData = () => {
         const rate = await getUsdToAudRate();
         setExchangeRate(rate);
       } catch (error) {
-        console.error('Error fetching exchange rate:', error);
+        logger.error('Error fetching exchange rate:', error);
         // Keep the default rate if fetch fails
       }
     };
 
     fetchExchangeRate();
-
-    // Initial data load logic moved to Firestore listener effect
-    // // Load cards from localStorage if available (Fallback logic removed for now)
-    // const savedCards = localStorage.getItem('pokemonCards');
-    // if (savedCards) {
-    //   try {
-    //     setCards(JSON.parse(savedCards));
-    //   } catch (error) {
-    //     console.error('Error parsing saved cards:', error);
-    //   }
-    // }
-    // setLoading(false); // Loading state managed by Firestore listener
   }, []);
 
   // Firestore Listener for Real-time Card Updates
@@ -45,7 +34,7 @@ const useCardData = () => {
     if (currentUser) {
       setLoading(true);
       const repository = new CardRepository(currentUser.uid);
-      console.log(`Setting up Firestore listener for user: ${currentUser.uid}`);
+      logger.debug(`Setting up Firestore listener for user: ${currentUser.uid}`);
 
       // Debounce the updates to reduce console spam
       let updateTimeout = null;
@@ -57,7 +46,7 @@ const useCardData = () => {
         
         // Set a new timeout to batch updates
         updateTimeout = setTimeout(() => {
-          console.log('Received card update from Firestore:', firestoreCards);
+          logger.debug(`Received card update: ${firestoreCards.length} cards`);
           setCards(firestoreCards);
           setLoading(false);
           setError(null); // Clear any previous error on successful fetch
@@ -65,14 +54,14 @@ const useCardData = () => {
       };
 
       const unsubscribe = repository.subscribeToAllCards(processFirestoreUpdate, (err) => {
-        console.error("Error subscribing to Firestore cards:", err);
+        logger.error("Error subscribing to Firestore cards:", err);
         setError("Failed to load cards from cloud.");
         setLoading(false);
       });
 
       // Cleanup subscription on unmount or user change
       return () => {
-        console.log(`Cleaning up Firestore listener for user: ${currentUser.uid}`);
+        logger.debug(`Cleaning up Firestore listener for user: ${currentUser.uid}`);
         if (updateTimeout) {
           clearTimeout(updateTimeout);
         }
@@ -80,7 +69,7 @@ const useCardData = () => {
       };
     } else {
       // No user logged in, clear cards and potentially load from localStorage (optional)
-      console.log('No user logged in, clearing cards.');
+      logger.debug('No user logged in, clearing cards.');
       setCards([]);
       setLoading(false);
       // Optional: Load from localStorage as fallback
@@ -151,7 +140,7 @@ const useCardData = () => {
     const cardId = updatedCard?.id || updatedCard?.slabSerial;
     
     if (!updatedCard || !cardId) {
-      console.error("Update card failed: Invalid card data or missing ID.", updatedCard);
+      logger.error("Update card failed: Invalid card data or missing ID.", updatedCard);
       setError("Failed to update card: Invalid data.");
       return;
     }
@@ -173,9 +162,9 @@ const useCardData = () => {
         // Remove id field as it's passed separately to updateCard
         const { id, ...dataToUpdate } = normalizedCard;
         
-        console.log(`Updating card in Firestore: ID=${cardId}, Collection=${dataToUpdate.collection || dataToUpdate.collectionId}`);
+        logger.debug(`Updating card in Firestore: ID=${cardId}, Collection=${dataToUpdate.collection || dataToUpdate.collectionId}`);
         await repository.updateCard(cardId, dataToUpdate);
-        console.log(`Card ${cardId} updated in Firestore.`);
+        logger.debug(`Card ${cardId} updated in Firestore.`);
       }
 
       // Optimistic UI update (or update after successful Firestore operation)
@@ -192,7 +181,7 @@ const useCardData = () => {
       );
 
     } catch (err) {
-      console.error("Error updating card:", err);
+      logger.error("Error updating card:", err);
       setError("Failed to save card update.");
       // Optionally revert optimistic update here if needed
     } finally {
@@ -203,7 +192,7 @@ const useCardData = () => {
   // Add a new card - Wrapped in useCallback
   const addCard = useCallback(async (newCardData, imageFile = null) => { // Make async, accept imageFile
     if (!newCardData) { 
-      console.error("Add card failed: Invalid card data.");
+      logger.error("Add card failed: Invalid card data.");
       setError("Failed to add card: Invalid data.");
       return;
     }
@@ -218,16 +207,16 @@ const useCardData = () => {
         try {
           // CardRepository.createCard handles adding timestamps and returns the full card object
           const createdCard = await repository.createCard(newCardData, imageFile);
-          console.log('Card created in Firestore:', createdCard);
+          logger.debug('Card created in Firestore');
           
           // Return the created card to the caller
           return createdCard;
         } catch (storageError) {
           // If the error is specifically a storage permission error, try again without the image
           if (imageFile && storageError.code === 'storage/unauthorized') {
-            console.warn('Storage permission denied, creating card without image');
+            logger.warn('Storage permission denied, creating card without image');
             const createdCard = await repository.createCard(newCardData, null);
-            console.log('Card created in Firestore without image:', createdCard);
+            logger.debug('Card created in Firestore without image');
             
             // Return the created card to the caller
             return createdCard;
@@ -243,7 +232,7 @@ const useCardData = () => {
         return localCard;
       }
     } catch (err) {
-      console.error("Error adding card:", err);
+      logger.error("Error adding card:", err);
       setError("Failed to save new card.");
       // Optionally revert optimistic update here
       return null;
@@ -255,7 +244,7 @@ const useCardData = () => {
   // Delete a card - Wrapped in useCallback
   const deleteCard = useCallback(async (cardId) => { // Make async
     if (!cardId) {
-      console.error("Delete card failed: Invalid card ID.");
+      logger.error("Delete card failed: Invalid card ID.");
       setError("Failed to delete card: Invalid ID.");
       return;
     }
@@ -276,14 +265,14 @@ const useCardData = () => {
       if (currentUser) {
         const repository = new CardRepository(currentUser.uid);
         await repository.deleteCard(cardId);
-        console.log(`Card ${cardId} deleted from Firestore.`);
+        logger.debug(`Card ${cardId} deleted from Firestore.`);
         // Firestore listener should confirm the deletion in the state eventually
       } else {
         // Local storage is already updated by the optimistic removal via setCards
       }
 
     } catch (err) {
-      console.error("Error deleting card:", err);
+      logger.error("Error deleting card:", err);
       setError("Failed to delete card from cloud.");
       // Revert optimistic update if Firestore delete failed
       if (cardToDelete) {

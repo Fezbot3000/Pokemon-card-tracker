@@ -1,6 +1,7 @@
 import { getFunctions, httpsCallable, connectFunctionsEmulator } from 'firebase/functions';
 import { getAuth } from 'firebase/auth';
 import db from './db';
+import logger from '../utils/logger';
 
 // Subscription cache to avoid too many API calls
 const subscriptionCache = {
@@ -41,20 +42,20 @@ export const checkSubscriptionStatus = async () => {
         return localSubscription;
       }
     } catch (err) {
-      console.log('No local subscription data found or database error:', err);
+      logger.debug('No local subscription data found or database error:', err);
       // Continue to server check on error
     }
 
     // If local data is missing or expired, check with the server
     // Explicitly specify the region for Firebase Functions
     const functions = getFunctions(undefined, 'us-central1');
-    console.log('Calling checkSubscriptionStatus function for user:', currentUser.uid);
+    logger.debug('Calling checkSubscriptionStatus function for user:', currentUser.uid);
     
     try {
       const checkSubscription = httpsCallable(functions, 'checkSubscriptionStatus');
       const result = await checkSubscription({ userId: currentUser.uid });
       const subscriptionStatus = result.data;
-      console.log('Received subscription status:', subscriptionStatus);
+      logger.debug('Received subscription status:', subscriptionStatus);
 
       // Add timestamp and user info to the subscription data
       subscriptionStatus.lastVerified = Date.now();
@@ -64,7 +65,7 @@ export const checkSubscriptionStatus = async () => {
       try {
         await db.saveSubscription(subscriptionStatus);
       } catch (dbError) {
-        console.warn('Could not save subscription to local database:', dbError);
+        logger.warn('Could not save subscription to local database:', dbError);
       }
       
       // Update memory cache
@@ -73,7 +74,7 @@ export const checkSubscriptionStatus = async () => {
       
       return subscriptionStatus;
     } catch (functionError) {
-      console.error('Error calling subscription function:', functionError);
+      logger.error('Error calling subscription function:', functionError);
       
       // If server check fails, fall back to a reasonable default
       // This prevents the app from hanging on subscription errors
@@ -86,7 +87,7 @@ export const checkSubscriptionStatus = async () => {
       return fallbackStatus;
     }
   } catch (error) {
-    console.error('Unexpected error checking subscription status:', error);
+    logger.error('Unexpected error checking subscription status:', error);
     // Return error status for handling in UI
     return { status: 'error', message: 'Subscription check failed' };
   }
@@ -127,13 +128,13 @@ export const fixSubscriptionStatus = async () => {
     
     // Call the cloud function to fix the subscription
     const functions = getFunctions(undefined, 'us-central1');
-    console.log('Calling fixSubscriptionStatus function for user:', currentUser.uid);
+    logger.debug('Calling fixSubscriptionStatus function for user:', currentUser.uid);
     
     const fixSubscription = httpsCallable(functions, 'fixSubscriptionStatus');
     const result = await fixSubscription({ userId: currentUser.uid });
     const fixResult = result.data;
     
-    console.log('Fix subscription result:', fixResult);
+    logger.debug('Fix subscription result:', fixResult);
     
     // Update local cache with the fixed status
     if (fixResult.updated && fixResult.subscription) {
@@ -154,7 +155,7 @@ export const fixSubscriptionStatus = async () => {
       try {
         await db.saveSubscription(subscriptionStatus);
       } catch (dbError) {
-        console.warn('Could not save fixed subscription to local database:', dbError);
+        logger.warn('Could not save fixed subscription to local database:', dbError);
       }
       
       return {
@@ -168,7 +169,7 @@ export const fixSubscriptionStatus = async () => {
     // If fix wasn't successful with normal approach, try one more time with a direct check
     // This is similar to what the manual check button does
     if (!fixResult.updated || fixResult.status !== 'active') {
-      console.log('First fix attempt unsuccessful, trying direct check...');
+      logger.debug('First fix attempt unsuccessful, trying direct check...');
       
       // Make another call to specifically look for the user by email
       // This is more likely to find the subscription after a recent payment
@@ -180,7 +181,7 @@ export const fixSubscriptionStatus = async () => {
         });
         
         const directFixResult = directResult.data;
-        console.log('Direct check result:', directFixResult);
+        logger.debug('Direct check result:', directFixResult);
         
         if (directFixResult.success && directFixResult.subscription) {
           const directSubscriptionStatus = {
@@ -200,7 +201,7 @@ export const fixSubscriptionStatus = async () => {
           try {
             await db.saveSubscription(directSubscriptionStatus);
           } catch (dbError) {
-            console.warn('Could not save direct subscription to local database:', dbError);
+            logger.warn('Could not save direct subscription to local database:', dbError);
           }
           
           return {
@@ -211,14 +212,14 @@ export const fixSubscriptionStatus = async () => {
           };
         }
       } catch (directError) {
-        console.error('Error during direct subscription check:', directError);
+        logger.error('Error during direct subscription check:', directError);
         // Continue with the original result - we'll handle this below
       }
     }
     
     return fixResult;
   } catch (error) {
-    console.error('Error fixing subscription status:', error);
+    logger.error('Error fixing subscription status:', error);
     return { 
       status: 'error', 
       updated: false, 

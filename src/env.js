@@ -7,14 +7,12 @@ const requiredEnvVars = [
 ];
 
 const validateEnvironment = () => {
-  // Log the environment for debugging
-  if (typeof process !== 'undefined' && process.env) {
-    console.log('Current NODE_ENV:', process.env.NODE_ENV);
-    console.log('Browser environment detected:', typeof window !== 'undefined');
-  }
+  // Environment validation is now simplified since we use hardcoded Firebase config
   
-  // Firebase configuration is now hardcoded in firebase.js
-  console.log('✓ Using hardcoded Firebase configuration for consistent behavior');
+  // Only log in development mode and not in production
+  if (process.env.NODE_ENV !== 'production') {
+    // No console logs for production readiness
+  }
   
   return true;
 };

@@ -7,14 +7,18 @@
 // Determine if we're in production environment
 const isProduction = process.env.NODE_ENV === 'production';
 
+// Force silence certain logs even in development mode
+// This can be set to true when preparing for production
+const forceSilence = true;
+
 // Configure logging levels
 // Set to true to show that type of log, false to hide
 const config = {
-  showDebugLogs: !isProduction,   // Hide debug logs in production
-  showInfoLogs: !isProduction,    // Hide info logs in production  
-  showWarnLogs: true,             // Show warnings in all environments
-  showErrorLogs: true,            // Show errors in all environments
-  showCriticalLogs: true,         // Show critical logs in all environments
+  showDebugLogs: !isProduction && !forceSilence,   // Hide debug logs in production and when forceSilence is true
+  showInfoLogs: !isProduction && !forceSilence,    // Hide info logs in production and when forceSilence is true
+  showWarnLogs: !forceSilence,                    // Show warnings unless forceSilence is true
+  showErrorLogs: true,                            // Always show errors
+  showCriticalLogs: true,                         // Always show critical logs
 };
 
 // Silence ALL console logs except errors in production by overriding console methods

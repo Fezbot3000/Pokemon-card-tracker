@@ -35,7 +35,6 @@ const SettingsModal = ({
   refreshCollections,
   onExportData,
   onImportCollection,
-  onUpdatePrices,
   onImportBaseData,
   userData = null,
   onSignOut,
@@ -79,7 +78,6 @@ const SettingsModal = ({
   const [cloudSyncStatus, setCloudSyncStatus] = useState('');
   const [importStep, setImportStep] = useState(0); // 0 = not importing, 1-4 = import steps
   const [importProgress, setImportProgress] = useState(0);
-  const [isUpdatingPrices, setIsUpdatingPrices] = useState(false);
   const [isImportingBaseData, setIsImportingBaseData] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [isForceSyncing, setIsForceSyncing] = useState(false); // Add state for force syncing
@@ -215,15 +213,6 @@ const SettingsModal = ({
       setIsImporting(false);
       // Reset the file input
       e.target.value = '';
-    }
-  };
-
-  const handleUpdatePrices = async () => {
-    try {
-      await onUpdatePrices();
-      toastService.success('Prices updated successfully!');
-    } catch (error) {
-      toastService.error('Failed to update prices: ' + error.message);
     }
   };
 
@@ -825,14 +814,6 @@ const SettingsModal = ({
                   description="Configure general application settings."
                 >
                   <div className="space-y-4">
-                    <Button
-                      variant="outline"
-                      iconLeft={<Icon name="attach_money" />}
-                      onClick={handleUpdatePrices}
-                      fullWidth
-                    >
-                      Update Card Prices
-                    </Button>
                     
                     {onStartTutorial && (
                       <Button
@@ -1178,7 +1159,6 @@ SettingsModal.propTypes = {
   refreshCollections: PropTypes.func,
   onExportData: PropTypes.func,
   onImportCollection: PropTypes.func,
-  onUpdatePrices: PropTypes.func,
   onImportBaseData: PropTypes.func,
   userData: PropTypes.object,
   onSignOut: PropTypes.func,

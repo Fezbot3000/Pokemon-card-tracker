@@ -5,7 +5,6 @@ import { useTheme } from '../design-system';
 import { toast } from 'react-hot-toast';
 import CardDetailsModal from '../design-system/components/CardDetailsModal';
 import PSALookupButton from './PSALookupButton';
-import PriceChartingButton from './PriceChartingButton';
 import PriceHistoryGraph from './PriceHistoryGraph';
 
 // Helper function to format date
@@ -434,30 +433,6 @@ const CardDetails = memo(({
             toast.success("Card details updated from PSA data");
           }}
           buttonText="Lookup PSA Data"
-        />
-      }
-      additionalValueContent={
-        <PriceChartingButton
-          currentCardData={editedCard}
-          onCardUpdate={(updatedData) => {
-            // console.log('[CardDetails] Received updated data from PriceCharting:', updatedData);
-            // console.log('[CardDetails] Current edited card before update:', editedCard);
-            
-            setEditedCard(prev => {
-              const newData = {
-                ...prev,
-                ...updatedData
-              };
-              // console.log('[CardDetails] New card data after update:', newData);
-              return newData;
-            });
-            
-            setHasUnsavedChanges(true);
-            // console.log('[CardDetails] Set hasUnsavedChanges to true');
-            toast.success("Card price updated from PriceCharting");
-          }}
-          buttonText="Update Price"
-          className="ml-2"
         />
       }
       additionalSerialContent={

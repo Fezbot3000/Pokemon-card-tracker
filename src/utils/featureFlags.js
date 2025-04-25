@@ -9,6 +9,7 @@
  * - enableFirestoreReads: Controls whether data is read from Firestore when online
  * - enableRealtimeListeners: Controls whether real-time listeners are active
  * - enableBackgroundMigration: Controls automatic background migration to Firestore
+ * - enableCardValueUpdates: Controls whether card value updates feature is enabled
  */
 
 // Default flag values (all disabled by default)
@@ -17,6 +18,7 @@ const defaultFlags = {
   enableFirestoreReads: false,       // Controls reading from Firestore when online
   enableRealtimeListeners: false,    // Controls real-time Firestore listeners
   enableBackgroundMigration: false,  // Controls background migration to Firestore
+  enableCardValueUpdates: false,     // Controls card value updating feature (disabled)
   isDeveloperMode: false,            // Special mode for developer testing
 };
 

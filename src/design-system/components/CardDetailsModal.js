@@ -3,7 +3,6 @@ import PropTypes from 'prop-types';
 import { Modal, Button, Icon } from '../';
 import CardDetailsForm from './CardDetailsForm';
 import PriceHistoryGraph from '../../components/PriceHistoryGraph';
-import PriceChartingButton from '../../components/PriceChartingButton';
 import SaleModal from '../../components/SaleModal'; 
 import '../styles/animations.css';
 
