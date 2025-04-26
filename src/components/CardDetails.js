@@ -293,7 +293,8 @@ const CardDetails = memo(({
   // Handle save action
   const handleSave = async (updatedCard) => {
     try {
-      // console.log('[CardDetails] Saving card with data:', updatedCard);
+      console.log('=========== CARD SAVE FLOW START ===========');
+      console.log('[CardDetails] handleSave called with card:', updatedCard.id);
       
       // Process date properly - keep as string or convert to string in ISO format
       let processedDate = null;
@@ -330,13 +331,24 @@ const CardDetails = memo(({
         datePurchased: processedDate, // Use the processed date
         // Ensure both collection properties are set for compatibility
         collection: updatedCard.collectionId || updatedCard.collection || initialCollectionName,
-        collectionId: updatedCard.collectionId || updatedCard.collection || initialCollectionName
+        collectionId: updatedCard.collectionId || updatedCard.collection || initialCollectionName,
+        // Add a debug flag
+        _saveDebug: true
       };
       
-      console.log('[CardDetails] Saving processed card with collection:', processedCard.collection, 'and date:', processedCard.datePurchased);
+      console.log('[CardDetails] Saving processed card:', {
+        id: processedCard.id,
+        collection: processedCard.collection,
+        date: processedCard.datePurchased,
+        timestamp: new Date().toISOString()
+      });
       
       // Update the card in the database
+      console.log('[CardDetails] Calling updateCard...');
+      const saveStart = performance.now();
       await updateCard(processedCard);
+      const saveEnd = performance.now();
+      console.log(`[CardDetails] updateCard finished in ${(saveEnd - saveStart).toFixed(2)}ms`);
       
       // Show success message
       toast.success('Card saved successfully!');
@@ -345,10 +357,14 @@ const CardDetails = memo(({
       setHasUnsavedChanges(false);
       
       // Close the modal
+      console.log('[CardDetails] Closing modal after successful save');
       handleClose(true); // Pass true to indicate a successful save
+      console.log('=========== CARD SAVE FLOW END ===========');
     } catch (error) {
+      console.error('=========== CARD SAVE ERROR ===========');
       console.error('Error saving card:', error);
       toast.error('Error saving card: ' + error.message);
+      console.error('=========== CARD SAVE ERROR END ===========');
     }
   };
 

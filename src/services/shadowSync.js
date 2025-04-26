@@ -35,6 +35,19 @@ class ShadowSyncService {
     this.syncOperationsCount = 0;
     this.lastSyncTime = null;
     
+    // Track card queue processing
+    this._processingQueue = false;
+    this._cardQueue = [];
+    this._lastSaveTimestamp = null;
+    this._updateInProgress = false;
+    
+    // Track cards that have been recently updated
+    this._recentlyUpdatedCards = new Set();
+    
+    // Track skipped card counts to reduce log spam
+    this._skippedCardCount = 0;
+    this._lastLogTimestamp = 0;
+    
     // Initialize when auth state changes
     this._authListener = auth.onAuthStateChanged(user => {
       if (user) {
@@ -120,6 +133,278 @@ class ShadowSyncService {
   }
 
   /**
+   * Process cards from the cache and write them to Firestore
+   * @returns {Promise<void>}
+   */
+  async _processCardQueue() {
+    if (!this.isInitialized || !this.isOnline() || this._processingQueue || !featureFlags.enableFirestoreSync) {
+      return;
+    }
+
+    // Skip process if we just saved a card - prevents mass update cascades from a single save
+    const now = Date.now();
+    if (this._lastSaveTimestamp && (now - this._lastSaveTimestamp < 3000)) {
+      console.log(`[ShadowSync] Skipping queue processing - recent save detected (${now - this._lastSaveTimestamp}ms ago)`);
+      return;
+    }
+
+    // Skip if queue is empty
+    if (this._cardQueue.length === 0) {
+      return;
+    }
+
+    // Set processing flag to prevent concurrent processing
+    this._processingQueue = true;
+    logger.debug(`[ShadowSync] Processing card queue with ${this._cardQueue.length} items...`);
+
+    // Create a local copy of the queue and clear the global queue
+    const queueCopy = [...this._cardQueue];
+    this._cardQueue = [];
+
+    try {
+      // If queue is too large (over 5 cards), only process the first card to prevent performance issues
+      const itemsToProcess = queueCopy.length > 5 ? [queueCopy[0]] : queueCopy;
+      
+      if (queueCopy.length > 5) {
+        console.log(`[ShadowSync] Queue has ${queueCopy.length} items - limiting to only process first item to prevent performance issues`);
+      }
+
+      // Only process if we're not in the middle of a save
+      if (!this._updateInProgress) {
+        for (const item of itemsToProcess) {
+          try {
+            await this.shadowWriteCard(item.id, item.card, item.collectionName);
+          } catch (error) {
+            logger.error(`[ShadowSync] Error processing queue item for card ${item?.id}:`, error);
+          }
+        }
+      } else {
+        console.log(`[ShadowSync] Skipping queue processing - update already in progress`);
+      }
+      
+      // Clear the rest of the queue if we limited processing
+      if (queueCopy.length > itemsToProcess.length) {
+        console.log(`[ShadowSync] Cleared remaining ${queueCopy.length - itemsToProcess.length} items from queue`);
+      }
+    } catch (error) {
+      logger.error('[ShadowSync] Error processing card queue:', error);
+    } finally {
+      this._processingQueue = false;
+    }
+  }
+
+  /**
+   * Queue a card to be written to Firestore
+   * 
+   * @param {string} cardId - The card ID
+   * @param {Object} card - The card data
+   * @param {string} collectionName - The collection name
+   */
+  queueCardForUpdate(cardId, card, collectionName) {
+    // Skip if we're already in a save operation (prevents cascading updates)
+    if (this._updateInProgress) {
+      console.log(`[ShadowSync] Skipping queue add for ${cardId} - update already in progress`);
+      return;
+    }
+
+    // Skip if not initialized or offline
+    if (!this.isInitialized || !this.isOnline()) {
+      return;
+    }
+    
+    // Skip if we're in a cooling-off period after a save
+    const now = Date.now();
+    if (this._lastSaveTimestamp && (now - this._lastSaveTimestamp < 3000)) {
+      console.log(`[ShadowSync] Skipping queue add - in cooling period (${now - this._lastSaveTimestamp}ms since last save)`);
+      return;
+    }
+
+    // Only queue if we have all required data
+    if (!cardId || !card) {
+      return;
+    }
+
+    // Check if card already exists in queue
+    const existingIndex = this._cardQueue.findIndex(item => item.id === cardId);
+    if (existingIndex !== -1) {
+      // Update existing card in queue
+      this._cardQueue[existingIndex] = {
+        id: cardId,
+        card,
+        collectionName
+      };
+    } else {
+      // Add new card to queue
+      this._cardQueue.push({
+        id: cardId,
+        card,
+        collectionName
+      });
+    }
+  }
+
+  /**
+   * Shadow write a card to Firestore
+   * 
+   * @param {string} cardId - The card ID
+   * @param {Object} card - The full card object to write
+   * @param {string} collectionName - The name of the collection the card belongs to
+   * @returns {Promise<boolean>} - Whether the operation was successful
+   */
+  async shadowWriteCard(cardId, card, collectionName) {
+    // Skip if feature flag is disabled or not initialized
+    if (!featureFlags.enableFirestoreSync || !this.isInitialized || !this.isOnline()) {
+      logger.debug('[ShadowSync] Skipping shadow write for card, feature flag disabled or offline');
+      return false;
+    }
+
+    const now = Date.now();
+    const isInBatchMode = this._skippedCardCount > 0;
+
+    // Only log the initial shadowWriteCard call for the active card being saved
+    // Reduce log spam from bulk operations
+    if (card._saveDebug || !isInBatchMode) {
+      console.log(`[ShadowSync] shadowWriteCard called for ${cardId}`, {
+        timestamp: new Date().toISOString(),
+        collection: collectionName,
+        hasDebugFlag: card._saveDebug || false
+      });
+    }
+
+    // Skip processing if card has no ID
+    if (!cardId) {
+      logger.error('[ShadowSync] Card object missing ID for shadow write.');
+      return false;
+    }
+    
+    // Skip if user is saving a card directly (_saveDebug flag set)
+    if (card._saveDebug) {
+      console.log(`[ShadowSync] Skipping shadow write for card ${cardId} - card is being saved directly`);
+      this._lastSaveTimestamp = now;
+      
+      // Add to recently updated cards set
+      this._recentlyUpdatedCards.add(cardId);
+      
+      // Reset skipped card counter when a direct card save happens
+      if (this._skippedCardCount > 0) {
+        console.log(`[ShadowSync] Skipped shadow write for ${this._skippedCardCount} cards in previous batch`);
+        this._skippedCardCount = 0;
+      }
+      
+      return true;
+    }
+    
+    // Check if this is already part of a managed update flow
+    // If _lastUpdateTime exists, this card is being handled by the updateCard function directly
+    if (card._lastUpdateTime) {
+      // Only log individual skips for non-batch operations or the first few cards
+      if (!isInBatchMode || this._skippedCardCount < 5) {
+        console.log(`[ShadowSync] Skipping shadow write for card ${cardId} - already part of tracked update flow (${card._lastUpdateTime})`);
+      }
+      
+      this._lastSaveTimestamp = now;
+      this._skippedCardCount++;
+      
+      // Add to recently updated cards set
+      this._recentlyUpdatedCards.add(cardId);
+      
+      return true; // Return true to indicate "success" (we're intentionally skipping)
+    }
+    
+    // Skip if this card has been recently updated
+    if (this._recentlyUpdatedCards.has(cardId)) {
+      // Only log individual skips for non-batch operations or the first few cards
+      if (!isInBatchMode || this._skippedCardCount < 5) {
+        console.log(`[ShadowSync] Skipping shadow write for card ${cardId} - recently updated`);
+      }
+      
+      this._skippedCardCount++;
+      return true;
+    }
+    
+    // Skip if we're in an update cooldown period
+    if (this._lastSaveTimestamp && (now - this._lastSaveTimestamp < 3000)) {
+      // Only log individual skips for non-batch operations or the first few cards
+      if (!isInBatchMode || this._skippedCardCount < 5) {
+        console.log(`[ShadowSync] Skipping shadow write for card ${cardId} - in cooldown period (${now - this._lastSaveTimestamp}ms since last save)`);
+      }
+      
+      this._skippedCardCount++;
+      
+      // Periodically log summary of skipped cards to reduce spam but still provide info
+      if (this._skippedCardCount > 0 && now - this._lastLogTimestamp > 1000) {
+        console.log(`[ShadowSync] Skipped shadow write for ${this._skippedCardCount} cards due to cooldown`);
+        this._lastLogTimestamp = now;
+      }
+      
+      return true;
+    }
+    
+    // Mark that we're in the middle of an update
+    this._updateInProgress = true;
+    
+    // Reset skipped card counter when doing an actual write
+    if (this._skippedCardCount > 0) {
+      console.log(`[ShadowSync] Skipped shadow write for ${this._skippedCardCount} cards in previous batch`);
+      this._skippedCardCount = 0;
+    }
+    
+    // Track start time for performance monitoring
+    const startTime = performance.now();
+    this._notifySyncStarted();
+    
+    try {
+      console.log(`[ShadowSync] Preparing to write card ${cardId} to collection ${collectionName || 'unknown'}`);
+      
+      // Ensure collectionId is included in the data to be written
+      const cardDataToWrite = {
+        ...card
+      };
+      
+      // Only add collection fields if collectionName is valid
+      if (collectionName) {
+        cardDataToWrite.collectionId = collectionName; // Explicitly add collectionId
+        cardDataToWrite.collection = collectionName;  // Add collection property for backward compatibility
+      }
+      
+      // Remove the id property from the data itself if it exists, as it's the document key
+      delete cardDataToWrite.id; 
+
+      // Directly update the card without extensive checks (our getCard optimization will handle this)
+      console.log(`[ShadowSync] Calling repository.updateCard for ${cardId}`);
+      const repoStart = performance.now();
+      await this.repository.updateCard(cardId, cardDataToWrite, collectionName);
+      const repoEnd = performance.now();
+      
+      // Log performance metrics
+      const endTime = performance.now();
+      console.log(`[ShadowSync] Repository update took ${(repoEnd - repoStart).toFixed(2)}ms`);
+      console.log(`[ShadowSync] Total shadow write operation for ${cardId} completed in ${(endTime - startTime).toFixed(2)}ms`);
+      
+      // Remember when we last wrote a card - helps prevent mass update cascades
+      this._lastSaveTimestamp = Date.now();
+      
+      // Add to recently updated cards set
+      this._recentlyUpdatedCards.add(cardId);
+      
+      // Clean up old entries from recentlyUpdatedCards after 10 seconds
+      setTimeout(() => {
+        this._recentlyUpdatedCards.delete(cardId);
+      }, 10000);
+      
+      this._notifySyncCompleted(true);
+      return true;
+    } catch (error) {
+      console.error(`[ShadowSync] Error writing card ${cardId} to Firestore:`, error);
+      this._notifySyncCompleted(false);
+      return false;
+    } finally {
+      // Mark that we're done with the update
+      this._updateInProgress = false;
+    }
+  }
+
+  /**
    * Shadow write a collection to Firestore
    * This doesn't affect the normal app flow but writes data to Firestore in the background
    * 
@@ -155,108 +440,6 @@ class ShadowSyncService {
     } catch (error) {
       // Log but don't disrupt app flow
       logger.error('[ShadowSync] Error shadow writing collection:', error);
-      this._notifySyncCompleted(false);
-      return false;
-    }
-  }
-
-  /**
-   * Shadow write a card to Firestore
-   * 
-   * @param {string} cardId - The card ID
-   * @param {Object} card - The full card object to write
-   * @param {string} collectionName - The name of the collection the card belongs to
-   * @returns {Promise<boolean>} - Whether the operation was successful
-   */
-  async shadowWriteCard(cardId, card, collectionName) {
-    if (!featureFlags.enableFirestoreSync) {
-      logger.debug('[ShadowSync] Skipping shadow write for card, feature flag disabled');
-      return false;
-    }
-    
-    try {
-      if (!this.isOnline()) {
-        logger.debug('[ShadowSync] Device is offline, skipping shadow write');
-        this._notifySyncCompleted(false);
-        return false;
-      }
-      
-      if (!cardId) {
-        logger.error('[ShadowSync] Card object missing ID for shadow write.');
-        this._notifySyncCompleted(false);
-        return false;
-      }
-      
-      // Ensure collectionId is included in the data to be written
-      const cardDataToWrite = {
-        ...card,
-      };
-      
-      // Only add collection fields if collectionName is valid
-      if (collectionName) {
-        cardDataToWrite.collectionId = collectionName; // Explicitly add collectionId
-        cardDataToWrite.collection = collectionName; // Add collection property for backward compatibility
-      }
-      
-      // Remove the id property from the data itself if it exists, as it's the document key
-      delete cardDataToWrite.id; 
-
-      // Check if the card exists in Firestore first (using cardId and userId)
-      const existingCard = await this.repository.getCard(cardId);
-      
-      // Determine if the card is moving between collections
-      const isMovingCollections = existingCard && 
-                                 existingCard.collectionId && 
-                                 existingCard.collectionId !== collectionName;
-      
-      if (isMovingCollections) {
-        logger.debug(`[ShadowSync] Card ${cardId} is moving from collection "${existingCard.collectionId}" to "${collectionName}"`);
-      }
-      
-      if (cardId && cardDataToWrite) {
-        if (existingCard) {
-          // Check if card is changing collections
-          if (isMovingCollections) {
-            try {
-              // Preserve the image URL when moving between collections
-              if (existingCard.imageUrl && !cardDataToWrite.imageUrl) {
-                cardDataToWrite.imageUrl = existingCard.imageUrl;
-              }
-              
-              // First delete from the old location to avoid duplicates
-              // Pass preserveImage: true to prevent image deletion during collection move
-              await this.repository.deleteCard(cardId, { preserveImage: true });
-              logger.debug(`[ShadowSync] Successfully removed card ${cardId} from its previous collection "${existingCard.collectionId}"`);
-              
-              // Then create in the new location with the preserved image URL
-              await this.repository.createCard(cardDataToWrite, null);
-              logger.debug(`[ShadowSync] Successfully created card ${cardId} in new collection "${collectionName}"`);
-            } catch (moveError) {
-              logger.error(`[ShadowSync] Error moving card ${cardId} between collections:`, moveError);
-              // Fall back to standard update if the move approach fails
-              await this.repository.updateCard(cardId, cardDataToWrite);
-            }
-          } else {
-            // Standard update if not changing collections - no need to log
-            await this.repository.updateCard(cardId, cardDataToWrite);
-          }
-        } else {
-          // If card doesn't exist in cloud, create it
-          await this.repository.createCard(cardDataToWrite, null);
-          logger.debug(`[ShadowSync] Created new card ${cardId} in collection "${collectionName}"`);
-        }
-        
-        if (isMovingCollections) {
-          logger.debug(`[ShadowSync] Successfully shadow wrote card ${cardId}`);
-        }
-        this._notifySyncCompleted(true);
-        return true;
-      }
-      
-      this._notifySyncCompleted(false);
-      return false;
-    } catch (error) {
-      logger.error(`[ShadowSync] Error writing card ${cardId} to Firestore:`, error);
       this._notifySyncCompleted(false);
       return false;
     }

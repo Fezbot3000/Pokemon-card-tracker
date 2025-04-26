@@ -139,6 +139,11 @@ const useCardData = () => {
     // Check for either id or slabSerial as the card identifier
     const cardId = updatedCard?.id || updatedCard?.slabSerial;
     
+    console.log(`[useCardData] updateCard called for card: ${cardId}`, {
+      debug: updatedCard._saveDebug || false,
+      timestamp: new Date().toISOString()
+    });
+    
     if (!updatedCard || !cardId) {
       logger.error("Update card failed: Invalid card data or missing ID.", updatedCard);
       setError("Failed to update card: Invalid data.");
@@ -149,6 +154,16 @@ const useCardData = () => {
     setError(null);
 
     try {
+      // Track if we're already updating this card to prevent loops
+      const updateStartTime = Date.now();
+      logger.debug(`Starting card update for ${cardId} at ${updateStartTime}`);
+      console.log(`[useCardData] Starting Firestore update for ${cardId}`);
+      
+      // Find the existing card to compare for real changes
+      const existingCard = cards.find(card => 
+        card.id === cardId || card.slabSerial === cardId
+      );
+
       if (currentUser) {
         const repository = new CardRepository(currentUser.uid);
         
@@ -156,18 +171,22 @@ const useCardData = () => {
         const normalizedCard = {
           ...updatedCard,
           id: cardId, // Ensure id is set
-          slabSerial: cardId // Ensure slabSerial is set
+          slabSerial: cardId, // Ensure slabSerial is set
+          _lastUpdateTime: updateStartTime // Add timestamp to track this specific update
         };
         
         // Remove id field as it's passed separately to updateCard
         const { id, ...dataToUpdate } = normalizedCard;
         
-        logger.debug(`Updating card in Firestore: ID=${cardId}, Collection=${dataToUpdate.collection || dataToUpdate.collectionId}`);
+        console.log(`[useCardData] Calling repository.updateCard for card: ${cardId}`);
+        const repoStart = performance.now();
         await repository.updateCard(cardId, dataToUpdate);
-        logger.debug(`Card ${cardId} updated in Firestore.`);
+        const repoEnd = performance.now();
+        console.log(`[useCardData] repository.updateCard completed in ${(repoEnd - repoStart).toFixed(2)}ms`);
       }
 
       // Optimistic UI update (or update after successful Firestore operation)
+      console.log(`[useCardData] Updating local state for card: ${cardId}`);
       setCards(prevCards => 
         prevCards.map(card => 
           (card.id === cardId || card.slabSerial === cardId) ? updatedCard : card
@@ -179,15 +198,18 @@ const useCardData = () => {
           ? updatedCard 
           : prevSelected
       );
+      
+      console.log(`[useCardData] Card update for ${cardId} completed successfully`);
 
     } catch (err) {
+      console.error(`[useCardData] Error updating card ${cardId}:`, err);
       logger.error("Error updating card:", err);
       setError("Failed to save card update.");
       // Optionally revert optimistic update here if needed
     } finally {
       setLoading(false);
     }
-  }, [currentUser, setCards, setSelectedCard, setLoading, setError]); // Add dependencies
+  }, [currentUser, cards, setCards, setSelectedCard, setLoading, setError]); // Add dependencies
 
   // Add a new card - Wrapped in useCallback
   const addCard = useCallback(async (newCardData, imageFile = null) => { // Make async, accept imageFile
