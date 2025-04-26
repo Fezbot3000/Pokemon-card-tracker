@@ -10,6 +10,7 @@ import { getFunctions, httpsCallable } from 'firebase/functions';
  * @param {string} cardId - The card ID to associate with the image
  * @param {Object} options - Additional options
  * @param {Function} options.onProgress - Optional progress callback
+ * @param {boolean} options.isReplacement - Whether this is replacing an existing image
  * @returns {Promise<string>} - The download URL for the uploaded image
  */
 export const saveImageToCloud = async (imageBlob, userId, cardId, options = {}) => {
@@ -28,7 +29,6 @@ export const saveImageToCloud = async (imageBlob, userId, cardId, options = {}) 
     const imagePath = `images/${userId}/${cardId}.jpeg`;
     logger.debug(`Uploading image to path: ${imagePath}`);
     
-    // Skip direct uploads to Firebase Storage and use Cloud Function immediately
     // Convert blob to base64 for the function call
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -42,10 +42,11 @@ export const saveImageToCloud = async (imageBlob, userId, cardId, options = {}) 
           const functions = getFunctions();
           const storeCardImageFn = httpsCallable(functions, 'storeCardImage');
           
-          logger.debug(`Calling storeCardImage Cloud Function for card ${cardId}`);
+          logger.debug(`Calling storeCardImage Cloud Function for card ${cardId}${options.isReplacement ? ' (replacing existing image)' : ''}`);
           const result = await storeCardImageFn({ 
             imageBase64: base64Data, 
-            cardId 
+            cardId,
+            isReplacement: options.isReplacement || false
           });
           
           if (result.data.success) {

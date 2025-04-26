@@ -171,16 +171,20 @@ const useCardData = () => {
         const normalizedCard = {
           ...updatedCard,
           id: cardId, // Ensure id is set
-          slabSerial: cardId, // Ensure slabSerial is set
           _lastUpdateTime: updateStartTime // Add timestamp to track this specific update
         };
         
-        // Remove id field as it's passed separately to updateCard
-        const { id, ...dataToUpdate } = normalizedCard;
+        // Make sure slabSerial is included only when it exists
+        if (updatedCard.slabSerial) {
+          normalizedCard.slabSerial = updatedCard.slabSerial;
+        }
         
         console.log(`[useCardData] Calling repository.updateCard for card: ${cardId}`);
         const repoStart = performance.now();
-        await repository.updateCard(cardId, dataToUpdate);
+        
+        // Pass the entire normalized card object to match the repository's function signature
+        await repository.updateCard(normalizedCard);
+        
         const repoEnd = performance.now();
         console.log(`[useCardData] repository.updateCard completed in ${(repoEnd - repoStart).toFixed(2)}ms`);
       }

@@ -620,30 +620,41 @@ class DatabaseService {
                   updatedAt: new Date()
                 });
                 
-                // Then, for each card in the collection, ensure it has the correct collection property
-                // and sync it to Firestore
-                for (const card of cardArray) {
-                  // Skip cards without proper ID
-                  if (!card.id && !card.slabSerial) continue;
-                  
-                  // Ensure card has the correct collection properties
-                  const cardWithCollection = {
-                    ...card,
-                    collection: name,
-                    collectionId: name
-                  };
-                  
-                  // Use shadowWriteCard with cardId and correct collection
-                  const cardId = card.id || card.slabSerial;
-                  try {
-                    await shadowSync.shadowWriteCard(cardId, cardWithCollection, name);
-                  } catch (cardError) {
-                    logger.error(`Failed to sync card ${cardId} to Firestore:`, cardError);
-                    // Continue with other cards even if one fails
-                  }
-                }
+                // If we're syncing as part of a single card update, we should only
+                // sync the cards that have the _saveDebug flag set
+                // This prevents unnecessarily processing all cards when just saving one
+                const cardsToSync = cardArray.filter(card => card._saveDebug === true);
                 
-                logger.debug(`Successfully synced collection ${name} with Firestore`);
+                if (cardsToSync.length > 0) {
+                  // Only sync cards that are being directly saved
+                  logger.debug(`Only syncing ${cardsToSync.length} cards with _saveDebug flag`);
+                  
+                  for (const card of cardsToSync) {
+                    // Skip cards without proper ID
+                    if (!card.id && !card.slabSerial) continue;
+                    
+                    // Ensure card has the correct collection properties
+                    const cardWithCollection = {
+                      ...card,
+                      collection: name,
+                      collectionId: name
+                    };
+                    
+                    // Use shadowWriteCard with cardId and correct collection
+                    const cardId = card.id || card.slabSerial;
+                    try {
+                      await shadowSync.shadowWriteCard(cardId, cardWithCollection, name);
+                    } catch (cardError) {
+                      logger.error(`Failed to sync card ${cardId} to Firestore:`, cardError);
+                      // Continue with other cards even if one fails
+                    }
+                  }
+                } else {
+                  // If no cards have _saveDebug flag, this is likely a full collection sync
+                  // In this case, the shadowSync might be processing all cards in a different context
+                  // For example, when a user imports cards or performs a bulk operation
+                  logger.debug(`No cards with _saveDebug flag found, skipping individual card syncing`);
+                }
               } catch (syncError) {
                 // Log but don't affect the main operation's success
                 logger.error(`Failed to sync collection ${name} with Firestore:`, syncError);
@@ -717,17 +728,49 @@ class DatabaseService {
           // Import here to avoid circular dependencies
           const { saveImageToCloud } = await import('./cloudStorage');
           
-          // Upload to Firebase Storage and get the download URL
-          downloadURL = await saveImageToCloud(compressedImage, userId, cardId, options);
+          // Check if this is a replacement (card already has an image)
+          let isReplacement = options.isReplacement || false;
           
-          // Update the card in Firestore with the image URL
-          shadowSync.updateCardField(cardId, { 
-            imageUrl: downloadURL,
-            hasImage: true,
-            imageUpdatedAt: new Date()
-          }).catch(error => {
-            logger.error(`Failed to update card in Firestore with image URL: ${error}`);
-          });
+          try {
+            // Try to get the card directly from the cache first
+            const card = this.getCardFromCache(cardId);
+            isReplacement = card?.hasImage === true;
+          } catch (e) {
+            // Just continue with the isReplacement value we have
+            logger.debug(`Couldn't check card cache, using isReplacement=${isReplacement}`);
+          }
+          
+          // Upload to Firebase Storage and get the download URL
+          downloadURL = await saveImageToCloud(
+            compressedImage, 
+            userId, 
+            cardId, 
+            {...options, isReplacement}
+          );
+          
+          // Silently update the card in Firestore with the image URL
+          // Doing this without triggering shadow sync to reduce noise
+          try {
+            // Get a direct Firestore reference to avoid shadow sync
+            const db = getFirestore();
+            const cardRef = doc(db, 'users', userId, 'cards', cardId);
+            await updateDoc(cardRef, {
+              imageUrl: downloadURL,
+              hasImage: true,
+              imageUpdatedAt: new Date()
+            });
+            logger.debug(`Directly updated Firestore with image URL for card ${cardId}`);
+          } catch (firestoreError) {
+            // Fall back to shadow sync if direct update fails
+            logger.warn(`Direct Firestore update failed, falling back to shadowSync: ${firestoreError}`);
+            shadowSync.updateCardField(cardId, { 
+              imageUrl: downloadURL,
+              hasImage: true,
+              imageUpdatedAt: new Date()
+            }, true).catch(error => {
+              logger.error(`Failed to update card in Firestore with image URL: ${error}`);
+            });
+          }
           
           logger.debug(`Image uploaded to cloud for card ${cardId}, URL: ${downloadURL}`);
         } catch (cloudError) {
@@ -735,7 +778,7 @@ class DatabaseService {
           // Continue with the local-only image, don't rethrow the error
         }
       }
-      
+    
       return downloadURL;
     } catch (error) {
       logger.error('Error compressing image:', error);
@@ -2685,6 +2728,24 @@ class DatabaseService {
         reject(error);
       }
     });
+  }
+
+  async checkCardHasImage(cardId) {
+    try {
+      const card = await this.getCardFromCache(cardId);
+      return card && card.hasImage === true;
+    } catch (error) {
+      logger.error(`Error checking if card has image: ${error}`);
+      return false; // Default to false if we can't determine
+    }
+  }
+
+  // Helper to get a card directly from the cache without triggering sync operations
+  getCardFromCache(cardId) {
+    if (!this.cache.cards || !this.cache.cards[cardId]) {
+      return null;
+    }
+    return this.cache.cards[cardId];
   }
 }
 

@@ -546,9 +546,10 @@ class ShadowSyncService {
    * 
    * @param {string} cardId - The card ID
    * @param {Object} fieldsToUpdate - Object containing the fields to update
+   * @param {boolean} silent - If true, suppresses most logging for this update
    * @returns {Promise<boolean>} - Whether the operation was successful
    */
-  async updateCardField(cardId, fieldsToUpdate) {
+  async updateCardField(cardId, fieldsToUpdate, silent = false) {
     // Skip if feature flag is disabled or not initialized
     if (!featureFlags.enableFirestoreSync || !this.isInitialized) {
       return false;
@@ -568,14 +569,13 @@ class ShadowSyncService {
       if (cardId && fieldsToUpdate && Object.keys(fieldsToUpdate).length > 0) {
         // Update only the specified fields
         await this.repository.updateCardFields(cardId, fieldsToUpdate);
-        logger.debug(`[ShadowSync] Successfully updated fields for card ${cardId}`);
+        if (!silent) logger.debug(`[ShadowSync] Successfully updated fields for card ${cardId}`);
         this._notifySyncCompleted(true);
         return true;
       }
       this._notifySyncCompleted(false);
       return false;
     } catch (error) {
-      // Log but don't disrupt app flow
       logger.error('[ShadowSync] Error updating card fields:', error);
       this._notifySyncCompleted(false);
       return false;

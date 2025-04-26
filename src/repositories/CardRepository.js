@@ -430,40 +430,60 @@ class CardRepository {
 
   /**
    * Update a card in Firestore
-   * @param {string} cardId - The ID of the card to update
-   * @param {Object} data - The updated card data
-   * @param {string} [newCollection] - The new collection for the card (optional)
-   * @returns {Promise<void>}
+   * @param {Object} data - The card data to update, including ID
+   * @returns {Promise<boolean>} - Whether the update was successful
    */
-  async updateCard(cardId, data, newCollection = null) {
+  async updateCard(data) {
     try {
+      // Safety check - create a copy of the data to avoid modifying the original
+      const dataCopy = {...data};
+      
+      // Extract cardId from data using multiple possible ID fields
+      let cardId = dataCopy.id || dataCopy.slabSerial;
+      
+      // If both are missing but we have _sourceId, use that as a fallback
+      if (!cardId && dataCopy._sourceId) {
+        cardId = dataCopy._sourceId;
+        dataCopy.id = cardId; // Set the ID field in the data
+      }
+
       // Skip if no cardId
       if (!cardId) {
-        console.error("Cannot update card: No card ID provided");
+        console.error("Cannot update card: No card ID provided", dataCopy);
         return false;
       }
       
-      const startTime = performance.now();
-      console.log(`[CardRepository] updateCard called for ${cardId}`, {
-        timestamp: new Date().toISOString(),
-        collection: newCollection || data.collection || data.collectionId,
-        hasDebugFlag: data._saveDebug || false
-      });
+      // Ensure ID is consistently set in the data object
+      dataCopy.id = cardId;
       
-      // Check for _lastUpdateTime to track this as a managed update rather than recursive
-      const isTrackedUpdate = data._lastUpdateTime ? true : false;
-      if (isTrackedUpdate) {
-        console.log(`[CardRepository] Processing tracked card update for ${cardId} (${data._lastUpdateTime})`);
+      const startTime = performance.now();
+      
+      // Check for silent flag to reduce logging
+      const isSilentUpdate = dataCopy._silentUpdate === true;
+      if (!isSilentUpdate) {
+        console.log(`[CardRepository] updateCard called for ${cardId}`, {
+          timestamp: dataCopy.timestamp || new Date().toISOString(),
+          collection: dataCopy.collection || dataCopy.collectionId,
+          hasDebugFlag: dataCopy._saveDebug || false
+        });
       }
       
-      // Determine the collection - use the one from data if not explicitly provided
-      const targetCollection = newCollection || data.collection || data.collectionId;
+      // Check for _lastUpdateTime to track this as a managed update rather than recursive
+      const isTrackedUpdate = dataCopy._lastUpdateTime ? true : false;
+      if (isTrackedUpdate && !isSilentUpdate) {
+        console.log(`[CardRepository] Processing tracked card update for ${cardId} (${dataCopy._lastUpdateTime})`);
+      }
       
-      if (!targetCollection) {
+      // Determine the collection
+      const targetCollection = dataCopy.collection || dataCopy.collectionId;
+      
+      if (!targetCollection && !isSilentUpdate) {
         console.warn("[CardRepository] No collection specified for card update");
       }
       
-      console.log(`[CardRepository] Checking if card ${cardId} exists in Firestore`);
+      if (!isSilentUpdate) {
+        console.log(`[CardRepository] Checking if card ${cardId} exists in Firestore`);
+      }
       
       // Reference to the card in Firestore
       const cardRef = doc(this.cardsRef, cardId);
@@ -472,18 +492,26 @@ class CardRepository {
       const docSnap = await getDoc(cardRef);
       
       if (docSnap.exists()) {
-        console.log(`[CardRepository] Card ${cardId} found in Firestore, updating...`);
+        if (!isSilentUpdate) {
+          console.log(`[CardRepository] Card ${cardId} found in Firestore, updating...`);
+        }
         
         const existingData = docSnap.data();
         const oldCollection = existingData.collection || existingData.collectionId;
         
         // Ensure we preserve the image URL if it's not in the update data
-        if (existingData.imageUrl && !data.imageUrl) {
-          data.imageUrl = existingData.imageUrl;
+        if (existingData.imageUrl && !dataCopy.imageUrl) {
+          dataCopy.imageUrl = existingData.imageUrl;
         }
         
         // Prepare update data with non-undefined values
-        let updateData = { ...data };
+        let updateData = { ...dataCopy };
+        
+        // Remove internal fields that shouldn't be saved to Firestore
+        delete updateData._silentUpdate;
+        delete updateData._saveDebug;
+        delete updateData._lastUpdateTime;
+        
         Object.keys(updateData).forEach(key => {
           if (updateData[key] === undefined) {
             delete updateData[key];
@@ -508,7 +536,9 @@ class CardRepository {
         
         // Check if collection has changed
         if (targetCollection && oldCollection && targetCollection !== oldCollection) {
-          console.log(`[CardRepository] Card ${cardId} is moving from collection '${oldCollection}' to '${targetCollection}'`);
+          if (!isSilentUpdate) {
+            console.log(`[CardRepository] Card ${cardId} is moving from collection '${oldCollection}' to '${targetCollection}'`);
+          }
           
           // Track the previous collection
           updateData.previousCollection = oldCollection;
@@ -517,26 +547,37 @@ class CardRepository {
           await updateDoc(cardRef, updateData);
           const updateEnd = performance.now();
           
-          console.log(`[CardRepository] Card ${cardId} moved to collection '${targetCollection}' in ${(updateEnd - updateStart).toFixed(2)}ms`);
+          if (!isSilentUpdate) {
+            console.log(`[CardRepository] Card ${cardId} moved to collection '${targetCollection}' in ${(updateEnd - updateStart).toFixed(2)}ms`);
+          }
         } else {
           // Standard update (no collection change)
           const updateStart = performance.now();
           await updateDoc(cardRef, updateData);
           const updateEnd = performance.now();
           
-          console.log(`[CardRepository] Card ${cardId} updated (no collection change) in ${(updateEnd - updateStart).toFixed(2)}ms`);
+          if (!isSilentUpdate) {
+            console.log(`[CardRepository] Card ${cardId} updated (no collection change) in ${(updateEnd - updateStart).toFixed(2)}ms`);
+          }
         }
       } else {
         // Document doesn't exist, create it instead
-        console.log(`[CardRepository] Card ${cardId} doesn't exist, creating it...`);
+        if (!isSilentUpdate) {
+          console.log(`[CardRepository] Card ${cardId} doesn't exist, creating it...`);
+        }
         
         // Prepare create data
         const createData = {
-          ...data,
+          ...dataCopy,
           id: cardId, // Ensure ID is set
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp()
         };
+        
+        // Remove internal fields
+        delete createData._silentUpdate;
+        delete createData._saveDebug;
+        delete createData._lastUpdateTime;
         
         // Only include collection fields if targetCollection is defined
         if (targetCollection) {
@@ -547,16 +588,21 @@ class CardRepository {
         const createStart = performance.now();
         await setDoc(cardRef, createData);
         const createEnd = performance.now();
-        console.log(`[CardRepository] Card ${cardId} created in ${(createEnd - createStart).toFixed(2)}ms`);
+        
+        if (!isSilentUpdate) {
+          console.log(`[CardRepository] Card ${cardId} created in ${(createEnd - createStart).toFixed(2)}ms`);
+        }
       }
       
       const endTime = performance.now();
-      console.log(`[CardRepository] Total updateCard operation for ${cardId} completed in ${(endTime - startTime).toFixed(2)}ms`);
+      if (!isSilentUpdate) {
+        console.log(`[CardRepository] Total updateCard operation for ${cardId} completed in ${(endTime - startTime).toFixed(2)}ms`);
+      }
       
       return true;
     } catch (error) {
-      console.error(`[CardRepository] Error updating card ${cardId} in Firestore:`, error);
-      throw error;
+      console.error(`[CardRepository] Error updating card:`, error);
+      return false;
     }
   }
 
@@ -1028,7 +1074,7 @@ class CardRepository {
         
         const cardData = {
           ...card,
-          collectionId,
+          collectionId, // Ensure correct collection ID
           updatedAt: serverTimestamp()
         };
         

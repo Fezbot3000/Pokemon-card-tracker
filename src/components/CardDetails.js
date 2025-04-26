@@ -89,10 +89,15 @@ const CardDetails = memo(({
         clearTimeout(messageTimeoutRef.current);
       }
       
-      // Clean up any created object URLs to prevent memory leaks
-      if (cardImage) {
-        // console.log('[CardDetails] Cleaning up image URL on unmount:', cardImage);
-        URL.revokeObjectURL(cardImage);
+      // Properly clean up any blob URLs when unmounting
+      if (cardImage && cardImage.startsWith('blob:')) {
+        try {
+          URL.revokeObjectURL(cardImage);
+          // Set cardImage to null to prevent future references
+          setCardImage(null);
+        } catch (e) {
+          console.warn('Failed to revoke cardImage blob URL on unmount:', e);
+        }
       }
     };
   }, []);
@@ -197,58 +202,48 @@ const CardDetails = memo(({
         // Log for debugging
         console.log(`Processing image for card ${id}, file type: ${file.type}, size: ${file.size} bytes`);
         
-        // Save image to database
-        await db.saveImage(id, file);
-        
-        // Create URL for local display
-        const imageUrl = URL.createObjectURL(file);
-        setCardImage(imageUrl);
-        
-        // Update the edited card with the image URL
-        setEditedCard(prev => ({
-          ...prev,
-          imageUrl: imageUrl,
-          hasImage: true
-        }));
-        
-        setImageLoadingState('idle');
-        
-        // Create a unique timestamp for this update
-        const timestamp = new Date().toISOString();
-        
-        try {
-          // Notify parent component that image has been updated
-          await updateCard({
-            ...card,
-            hasImage: true,
-            imageUpdatedAt: timestamp
-          });
-          
-          // Try toast, but don't let it break the app
+        // Check if there's already a blob URL to revoke
+        if (editedCard._blobUrl) {
           try {
-            toast.success('Image uploaded successfully');
-          } catch (toastError) {
-            console.error('Toast notification error:', toastError);
-          }
-        } catch (updateError) {
-          console.error('Error updating card after image upload:', updateError);
-          
-          // Try toast, but don't let it break the app
-          try {
-            toast.success('Image saved, but there was a problem updating the card');
-          } catch (toastError) {
-            console.error('Toast notification error:', toastError);
+            URL.revokeObjectURL(editedCard._blobUrl);
+            console.log('Revoked previous blob URL');
+          } catch (e) {
+            console.warn('Failed to revoke previous blob URL', e);
           }
         }
         
+        // Create a local URL for the image preview that's stable
+        const localImageUrl = URL.createObjectURL(file);
+        
+        // Set card image directly from current scope
+        setCardImage(localImageUrl);
+        
+        // Update the edited card with the pending image
+        setEditedCard(prev => ({
+          ...prev,
+          imageUrl: localImageUrl,
+          hasImage: true,
+          _pendingImageFile: file, // Store the file for later upload
+          _blobUrl: localImageUrl // Store the blob URL for cleanup
+        }));
+        
+        // Mark that we have unsaved changes
+        setHasUnsavedChanges(true);
+        
+        // Update the loading state
+        setImageLoadingState('idle');
+        
+        // Show a toast to let the user know they need to save
+        toast.success('Image staged - Click Save to upload to the server');
+        
         return file;
       } catch (error) {
-        console.error('Error saving image:', error);
+        console.error('Error processing image:', error);
         setImageLoadingState('error');
         
         // Try toast, but don't let it break the app
         try {
-          toast.error(`Failed to upload image: ${error.message || 'Unknown error'}`);
+          toast.error(`Failed to process image: ${error.message || 'Unknown error'}`);
         } catch (toastError) {
           console.error('Toast notification error:', toastError);
         }
@@ -269,72 +264,89 @@ const CardDetails = memo(({
     }
   };
 
-  // Check if the card has been edited
-  const hasCardBeenEdited = () => {
-    return Object.keys(editedCard).some(key => {
-      // Skip comparing functions, undefined values, and image-related fields
-      if (
-        typeof editedCard[key] === 'function' || 
-        editedCard[key] === undefined ||
-        key === 'imageUrl' ||
-        key === 'hasImage' ||
-        key === 'imageUpdatedAt'
-      ) {
-        return false;
-      }
-      // For numbers, compare with a small epsilon to handle floating point precision
-      if (typeof editedCard[key] === 'number') {
-        return Math.abs(editedCard[key] - (card[key] || 0)) > 0.001;
-      }
-      return editedCard[key] !== (card[key] || '');
-    });
-  };
-
   // Handle save action
-  const handleSave = async (updatedCard) => {
+  const handleSave = async () => {
+    console.log('=========== CARD SAVE FLOW START ===========');
+    console.log('[CardDetails] handleSave called with card:', card.id);
+    
     try {
-      console.log('=========== CARD SAVE FLOW START ===========');
-      console.log('[CardDetails] handleSave called with card:', updatedCard.id);
+      // Prepare the final card data
+      let finalCardData = { ...editedCard };
       
-      // Process date properly - keep as string or convert to string in ISO format
-      let processedDate = null;
-      if (updatedCard.datePurchased) {
-        // If it's already a string in YYYY-MM-DD format, keep it
-        if (typeof updatedCard.datePurchased === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(updatedCard.datePurchased)) {
-          processedDate = updatedCard.datePurchased;
-        } 
-        // If it's a Date object, convert to string
-        else if (updatedCard.datePurchased instanceof Date) {
-          processedDate = updatedCard.datePurchased.toISOString().split('T')[0];
-        }
-        // Otherwise try to parse it as a date and convert to string
-        else {
-          try {
-            const dateObj = new Date(updatedCard.datePurchased);
-            if (!isNaN(dateObj.getTime())) {
-              processedDate = dateObj.toISOString().split('T')[0];
+      // Check if this card has a pending image to upload
+      if (editedCard._pendingImageFile) {
+        console.log('[CardDetails] Uploading pending image before saving card');
+        
+        try {
+          // Store the old blob URL for cleanup
+          const oldBlobUrl = editedCard._blobUrl;
+          
+          // Now actually upload the image to Firebase
+          const imageUrl = await db.saveImage(
+            card.id || card.slabSerial, 
+            editedCard._pendingImageFile, 
+            { 
+              isReplacement: card.hasImage === true, 
+              silent: true 
             }
-          } catch (e) {
-            console.error('Error parsing date:', e);
+          );
+          
+          // Update the finalCardData directly
+          finalCardData = {
+            ...finalCardData,
+            imageUrl: imageUrl,
+            hasImage: true,
+            _pendingImageFile: null,
+            _blobUrl: null
+          };
+          
+          // Update the card image state
+          setCardImage(imageUrl);
+          
+          // We don't use the blob URL anymore since we have the Firebase URL
+          // Revoke the blob URL after we've updated all references
+          if (oldBlobUrl && oldBlobUrl.startsWith('blob:')) {
+            try {
+              URL.revokeObjectURL(oldBlobUrl);
+            } catch (e) {
+              console.warn('Failed to revoke blob URL during save:', e);
+            }
           }
+          
+          console.log('[CardDetails] Image uploaded successfully with URL:', imageUrl);
+        } catch (imageError) {
+          console.error('[CardDetails] Error uploading image:', imageError);
+          toast.error('Error uploading image. Card save will continue without the image.');
         }
       }
       
-      // Convert string values to appropriate types
+      // Process the date value
+      let processedDate = finalCardData.date || finalCardData.datePurchased;
+      
+      // Process the card data for saving and remove non-Firestore-compatible fields
       const processedCard = {
-        ...updatedCard,
-        year: updatedCard.year ? parseInt(updatedCard.year, 10) : null,
-        investmentUSD: updatedCard.investmentUSD ? parseFloat(updatedCard.investmentUSD) : 0,
-        currentValueUSD: updatedCard.currentValueUSD ? parseFloat(updatedCard.currentValueUSD) : 0,
-        investmentAUD: updatedCard.investmentAUD ? parseFloat(updatedCard.investmentAUD) : 0,
-        currentValueAUD: updatedCard.currentValueAUD ? parseFloat(updatedCard.currentValueAUD) : 0,
+        ...finalCardData,
+        year: finalCardData.year ? parseInt(finalCardData.year, 10) : null,
+        investmentUSD: finalCardData.investmentUSD ? parseFloat(finalCardData.investmentUSD) : 0,
+        currentValueUSD: finalCardData.currentValueUSD ? parseFloat(finalCardData.currentValueUSD) : 0,
+        investmentAUD: finalCardData.investmentAUD ? parseFloat(finalCardData.investmentAUD) : 0,
+        currentValueAUD: finalCardData.currentValueAUD ? parseFloat(finalCardData.currentValueAUD) : 0,
         datePurchased: processedDate, // Use the processed date
         // Ensure both collection properties are set for compatibility
-        collection: updatedCard.collectionId || updatedCard.collection || initialCollectionName,
-        collectionId: updatedCard.collectionId || updatedCard.collection || initialCollectionName,
+        collection: finalCardData.collectionId || finalCardData.collection || initialCollectionName,
+        collectionId: finalCardData.collectionId || finalCardData.collection || initialCollectionName,
         // Add a debug flag
         _saveDebug: true
       };
+      
+      // Make sure ID is explicitly set as a string
+      if (card.id || card.slabSerial) {
+        processedCard.id = String(card.id || card.slabSerial);
+      }
+      
+      // Remove fields that shouldn't be saved to Firestore
+      delete processedCard._pendingImageFile; // Remove the file object before saving to Firestore
+      delete processedCard._blobUrl; // Remove the blob URL reference
       
       console.log('[CardDetails] Saving processed card:', {
         id: processedCard.id,
@@ -349,6 +361,9 @@ const CardDetails = memo(({
       await updateCard(processedCard);
       const saveEnd = performance.now();
       console.log(`[CardDetails] updateCard finished in ${(saveEnd - saveStart).toFixed(2)}ms`);
+      
+      // Now update the editedCard state to match what we saved
+      setEditedCard(finalCardData);
       
       // Show success message
       toast.success('Card saved successfully!');
@@ -370,30 +385,107 @@ const CardDetails = memo(({
 
   // Handle close action with confirmation for unsaved changes
   const handleClose = (skipConfirmation = false) => {
-    if (skipConfirmation || !hasUnsavedChanges) {
-      // If skipConfirmation is true or there are no unsaved changes, close without confirmation
-      setIsOpen(false);
-      setTimeout(() => {
-        onClose();
-      }, 300);
-    } else {
-      // Otherwise, show confirmation dialog
-      setIsOpen(false);
-      // Wait for the close animation to finish
-      setTimeout(() => {
-        if (window.confirm('You have unsaved changes. Are you sure you want to close?')) {
-          onClose();
-        } else {
-          setIsOpen(true);
-        }
-      }, 300);
+    // Check if there are unsaved changes and we're not skipping confirmation
+    if (hasUnsavedChanges && !skipConfirmation) {
+      // TODO: Implement a dialog for confirmation
+      if (!window.confirm('You have unsaved changes. Are you sure you want to close?')) {
+        return;
+      }
     }
+    
+    // Clean up any blob URLs before closing
+    if (editedCard && editedCard._blobUrl && editedCard._blobUrl.startsWith('blob:')) {
+      try {
+        URL.revokeObjectURL(editedCard._blobUrl);
+        console.log('Cleaned up blob URL on close');
+      } catch (e) {
+        console.warn('Failed to revoke blob URL on close:', e);
+      }
+    }
+    
+    // Also clean up cardImage if it's a blob URL
+    if (cardImage && cardImage.startsWith('blob:')) {
+      try {
+        URL.revokeObjectURL(cardImage);
+        // Set to null before closing to prevent invalid references
+        setCardImage(null);
+      } catch (e) {
+        console.warn('Failed to revoke cardImage blob URL on close:', e);
+      }
+    }
+    
+    // Close the modal
+    setIsOpen(false);
+    
+    // Execute onClose callback after a short delay to allow animations
+    setTimeout(() => {
+      onClose();
+    }, 100);
   };
 
   // Handle card field changes and track if there are unsaved changes
   const handleCardChange = (updatedCard) => {
     setEditedCard(updatedCard);
     setHasUnsavedChanges(true);
+  };
+
+  // Clean up blob URLs when component unmounts or card changes
+  useEffect(() => {
+    return () => {
+      // Cleanup function when component unmounts
+      if (editedCard && editedCard._blobUrl && editedCard._blobUrl.startsWith('blob:')) {
+        try {
+          URL.revokeObjectURL(editedCard._blobUrl);
+          console.log('Cleaned up blob URL on unmount');
+        } catch (e) {
+          console.warn('Failed to revoke blob URL on unmount:', e);
+        }
+      }
+    };
+  }, [editedCard]);
+
+  // Additional effect to ensure blob URLs are properly managed
+  useEffect(() => {
+    // When editedCard's imageUrl changes and is a blob URL
+    if (editedCard.imageUrl && editedCard.imageUrl.startsWith('blob:')) {
+      // Store the current blob URL
+      const currentBlobUrl = editedCard.imageUrl;
+      
+      // Clean up function for when this blob URL is no longer needed
+      return () => {
+        try {
+          // Only revoke if the current blob URL is different than the one in editedCard
+          // This check prevents revoking a URL that might still be in use
+          if (currentBlobUrl && currentBlobUrl !== editedCard.imageUrl) {
+            URL.revokeObjectURL(currentBlobUrl);
+            console.log('Cleaned up stale blob URL');
+          }
+        } catch (e) {
+          console.warn('Failed to revoke stale blob URL:', e);
+        }
+      };
+    }
+  }, [editedCard.imageUrl]);
+
+  // Check if the card has been edited
+  const hasCardBeenEdited = () => {
+    return Object.keys(editedCard).some(key => {
+      // Skip comparing functions, undefined values, and image-related fields
+      if (
+        typeof editedCard[key] === 'function' || 
+        editedCard[key] === undefined ||
+        key === 'imageUrl' ||
+        key === 'hasImage' ||
+        key === 'imageUpdatedAt'
+      ) {
+        return false;
+      }
+      // For numbers, compare with a small epsilon to handle floating point precision
+      if (typeof editedCard[key] === 'number') {
+        return Math.abs(editedCard[key] - (card[key] || 0)) > 0.001;
+      }
+      return editedCard[key] !== (card[key] || '');
+    });
   };
 
   return (
@@ -441,10 +533,22 @@ const CardDetails = memo(({
         <PSALookupButton 
           currentCardData={editedCard}
           onCardUpdate={(updatedData) => {
-            setEditedCard(prev => ({
-              ...prev,
-              ...updatedData
-            }));
+            // Store reference to any existing blob URL before updating
+            const existingBlobUrl = editedCard._blobUrl;
+            
+            setEditedCard(prev => {
+              const newData = {
+                ...prev,
+                ...updatedData,
+                // Preserve image-related properties from the previous state
+                imageUrl: prev.imageUrl,
+                _pendingImageFile: prev._pendingImageFile,
+                _blobUrl: prev._blobUrl,
+                hasImage: prev.hasImage
+              };
+              return newData;
+            });
+            
             setHasUnsavedChanges(true);
             toast.success("Card details updated from PSA data");
           }}
@@ -455,14 +559,19 @@ const CardDetails = memo(({
         <PSALookupButton 
           currentCardData={editedCard}
           onCardUpdate={(updatedData) => {
-            // console.log('[CardDetails] Received updated data from PSA lookup:', updatedData);
+            // Store reference to any existing blob URL before updating
+            const existingBlobUrl = editedCard._blobUrl;
             
             setEditedCard(prev => {
               const newData = {
                 ...prev,
-                ...updatedData
+                ...updatedData,
+                // Preserve image-related properties from the previous state
+                imageUrl: prev.imageUrl,
+                _pendingImageFile: prev._pendingImageFile,
+                _blobUrl: prev._blobUrl,
+                hasImage: prev.hasImage
               };
-              // console.log('[CardDetails] New card data after PSA update:', newData);
               return newData;
             });
             

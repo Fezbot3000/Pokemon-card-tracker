@@ -1313,7 +1313,7 @@ exports.uploadBackup = functions.https.onCall(async (data, context) => {
         }
       }
     });
-    
+
     functions.logger.info(`User ${userId} successfully uploaded backup file`);
     
     return {
@@ -1463,7 +1463,7 @@ exports.storeCardImage = functions.https.onCall(async (data, context) => {
   }
   
   try {
-    const { imageBase64, cardId } = data;
+    const { imageBase64, cardId, isReplacement = false } = data;
     const userId = context.auth.uid;
     
     // Validate inputs
@@ -1482,12 +1482,28 @@ exports.storeCardImage = functions.https.onCall(async (data, context) => {
     const bucket = admin.storage().bucket();
     const file = bucket.file(imagePath);
     
+    // Check if the file exists already (for replacements)
+    if (isReplacement) {
+      try {
+        const [exists] = await file.exists();
+        if (exists) {
+          console.log(`Deleting existing image at ${imagePath} before replacement`);
+          await file.delete();
+        }
+      } catch (deleteError) {
+        console.warn(`Could not delete existing image: ${deleteError.message}`);
+        // Continue with the upload even if deletion fails
+      }
+    }
+    
     // Set the metadata for the file
     const metadata = {
       contentType: 'image/jpeg',
       metadata: {
         uploadedBy: userId,
-        cardId: cardId
+        cardId: cardId,
+        uploadTimestamp: new Date().toISOString(),
+        isReplacement: isReplacement ? 'true' : 'false'
       }
     };
     
