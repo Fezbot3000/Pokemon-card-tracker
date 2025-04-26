@@ -26,64 +26,41 @@ export const saveImageToCloud = async (imageBlob, userId, cardId, options = {}) 
   try {
     // Create a reference to the image location in Firebase Storage
     const imagePath = `images/${userId}/${cardId}.jpeg`;
-    const storageRef = ref(storage, imagePath);
+    logger.debug(`Uploading image to path: ${imagePath}`);
     
-    // Log upload start
-    logger.debug(`Starting upload to Firebase Storage: ${imagePath}`);
-    
-    try {
-      // Try direct upload to Firebase Storage first
-      const uploadResult = await uploadBytes(storageRef, imageBlob, {
-        contentType: 'image/jpeg' // Force JPEG content type for consistency
-      });
-      
-      // Log upload success
-      logger.debug(`Image uploaded successfully: ${uploadResult.metadata.fullPath}`);
-      
-      // Get the download URL for the image
-      const downloadURL = await getDownloadURL(uploadResult.ref);
-      
-      // Log download URL
-      logger.debug(`Generated download URL: ${downloadURL}`);
-      
-      return downloadURL;
-    } catch (directUploadError) {
-      // If direct upload fails, try using the Cloud Function as a fallback
-      logger.warn(`Direct upload to Firebase Storage failed, using Cloud Function fallback:`, directUploadError);
-      
-      // Convert blob to base64 for the function call
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(imageBlob);
-        reader.onloadend = async () => {
-          try {
-            // Remove data URL prefix (e.g., "data:image/jpeg;base64,")
-            const base64Data = reader.result.split(',')[1];
-            
-            // Call the Cloud Function
-            const functions = getFunctions();
-            const storeCardImageFn = httpsCallable(functions, 'storeCardImage');
-            
-            logger.debug(`Calling storeCardImage Cloud Function for card ${cardId}`);
-            const result = await storeCardImageFn({ 
-              imageBase64: base64Data, 
-              cardId 
-            });
-            
-            if (result.data.success) {
-              logger.debug(`Cloud Function image upload succeeded with URL: ${result.data.downloadUrl}`);
-              resolve(result.data.downloadUrl);
-            } else {
-              throw new Error('Cloud Function failed to upload image');
-            }
-          } catch (fnError) {
-            logger.error('Error in Cloud Function image upload:', fnError);
-            reject(fnError);
+    // Skip direct uploads to Firebase Storage and use Cloud Function immediately
+    // Convert blob to base64 for the function call
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(imageBlob);
+      reader.onloadend = async () => {
+        try {
+          // Remove data URL prefix (e.g., "data:image/jpeg;base64,")
+          const base64Data = reader.result.split(',')[1];
+          
+          // Call the Cloud Function
+          const functions = getFunctions();
+          const storeCardImageFn = httpsCallable(functions, 'storeCardImage');
+          
+          logger.debug(`Calling storeCardImage Cloud Function for card ${cardId}`);
+          const result = await storeCardImageFn({ 
+            imageBase64: base64Data, 
+            cardId 
+          });
+          
+          if (result.data.success) {
+            logger.debug(`Cloud Function image upload succeeded with URL: ${result.data.downloadUrl}`);
+            resolve(result.data.downloadUrl);
+          } else {
+            throw new Error('Cloud Function failed to upload image');
           }
-        };
-        reader.onerror = (error) => reject(error);
-      });
-    }
+        } catch (fnError) {
+          logger.error('Error in Cloud Function image upload:', fnError);
+          reject(fnError);
+        }
+      };
+      reader.onerror = (error) => reject(error);
+    });
   } catch (error) {
     logger.error(`Error uploading image to Firebase Storage:`, error);
     throw error;

@@ -1149,33 +1149,28 @@ exports.psaLookup = functions.https.onCall(async (data, context) => {
       throw new Error('Error accessing PSA credentials');
     }
     
-    // Use the official PSA API endpoint instead of scraping the website
-    const url = `https://www.psacard.com/publicapi/cert/GetByCertNumber/${encodeURIComponent(certNumber)}`;
-    console.log(`Making GET request to PSA API: ${url}`);
+    // Define multiple possible URL formats to try
+    const urlFormats = [
+      // Original format that worked before
+      `https://www.psacard.com/publicapi/cert/GetByCertNumber/${encodeURIComponent(certNumber)}`,
+      // Alternative format 1
+      `https://api.psacard.com/publicapi/cert/GetByCertNumber/${encodeURIComponent(certNumber)}`,
+      // Alternative format 2
+      `https://api.psacard.com/publicapi/cert/${encodeURIComponent(certNumber)}`,
+      // Alternative format 3
+      `https://www.psacard.com/cert/${encodeURIComponent(certNumber)}/json`
+    ];
     
-    // Log token for debugging (first 10 chars only for security)
-    console.log(`Using token: ${psaToken.substring(0, 10)}...`);
+    // Try each URL format in sequence until one works
+    let success = false;
+    let responseData = null;
+    let lastError = null;
     
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-        'Authorization': `Bearer ${psaToken}`
-      }
-    });
-    
-    console.log(`PSA API response status: ${response.status}`);
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('PSA API error response:', errorText);
+    for (const url of urlFormats) {
+      console.log(`Trying PSA API URL: ${url}`);
       
-      // Try fallback URL if first attempt fails
-      if (response.status === 404) {
-        console.log('Trying alternative PSA API endpoint...');
-        const fallbackUrl = `https://api.psacard.com/publicapi/cert/GetByCertNumber/${encodeURIComponent(certNumber)}`;
-        
-        const fallbackResponse = await fetch(fallbackUrl, {
+      try {
+        const response = await fetch(url, {
           method: 'GET',
           headers: {
             'Accept': 'application/json',
@@ -1183,35 +1178,50 @@ exports.psaLookup = functions.https.onCall(async (data, context) => {
           }
         });
         
-        if (fallbackResponse.ok) {
-          console.log('Fallback endpoint succeeded');
-          const fallbackData = await fallbackResponse.json();
-          return {
-            success: true,
-            data: fallbackData
-          };
+        console.log(`PSA API response status for ${url}: ${response.status}`);
+        
+        if (response.ok) {
+          // Get the text response first
+          const responseText = await response.text();
+          console.log('Raw API response preview:', responseText.substring(0, 100) + '...');
+          
+          try {
+            // Parse the JSON response
+            responseData = JSON.parse(responseText);
+            console.log('PSA API response parsed successfully');
+            success = true;
+            break; // Exit the loop if we got a successful response
+          } catch (parseError) {
+            console.error(`Error parsing response from ${url}:`, parseError);
+            lastError = parseError;
+          }
         } else {
-          console.error(`Fallback endpoint also failed: ${fallbackResponse.status}`);
+          console.error(`Error response from ${url}: ${response.status} ${response.statusText}`);
+          lastError = new Error(`PSA API returned error: ${response.status} ${response.statusText}`);
         }
+      } catch (fetchError) {
+        console.error(`Network error with ${url}:`, fetchError);
+        lastError = fetchError;
       }
-      
-      return { success: false, error: `PSA API returned error: ${response.status} ${response.statusText}` };
     }
     
-    // Parse the response
-    const responseText = await response.text();
-    console.log('Raw API response:', responseText.substring(0, 200) + '...');
-    
-    let responseData;
-    try {
-      responseData = JSON.parse(responseText);
-      console.log('PSA API response data:', JSON.stringify(responseData).substring(0, 200) + '...');
-    } catch (error) {
-      console.error('Error parsing PSA API response:', error);
-      return { success: false, error: 'Invalid JSON response from PSA API' };
+    if (!success) {
+      console.error('All PSA API attempts failed');
+      return { 
+        success: false, 
+        error: lastError ? lastError.message : 'All PSA API endpoints failed' 
+      };
     }
     
-    // Return the PSA data
+    // If we get here, we have a successful response
+    // Handle image URL if requested
+    if (includeImage && responseData) {
+      // Try to find or construct an image URL
+      responseData.imageUrl = responseData.imageUrl || 
+                             `https://www.psacard.com/cert/${certNumber}/PSAcert`;
+    }
+    
+    // Return the successful response
     return {
       success: true,
       data: responseData
@@ -1219,152 +1229,6 @@ exports.psaLookup = functions.https.onCall(async (data, context) => {
   } catch (error) {
     console.error('Error in PSA lookup:', error);
     return { success: false, error: error.message };
-  }
-});
-
-// Function to store images in Firebase Storage
-exports.storeCardImage = functions.https.onCall(async (data, context) => {
-  // Require authentication
-  if (!context.auth) {
-    throw new functions.https.HttpsError(
-      'unauthenticated',
-      'User must be authenticated to store images'
-    );
-  }
-  
-  try {
-    const { imageBase64, cardId } = data;
-    const userId = context.auth.uid;
-    
-    // Validate inputs
-    if (!imageBase64 || !cardId) {
-      throw new functions.https.HttpsError(
-        'invalid-argument',
-        'Missing required fields: imageBase64, cardId'
-      );
-    }
-    
-    // Convert base64 to buffer
-    const imageBuffer = Buffer.from(imageBase64, 'base64');
-    
-    // Create a reference to the image location in Firebase Storage
-    const imagePath = `images/${userId}/${cardId}.jpeg`;
-    const storageRef = admin.storage().bucket().file(imagePath);
-    
-    // Upload the image
-    await storageRef.save(imageBuffer, {
-      metadata: {
-        contentType: 'image/jpeg',
-        metadata: {
-          uploadedBy: userId,
-          cardId: cardId
-        }
-      }
-    });
-    
-    // Get a signed URL for the image
-    const [url] = await storageRef.getSignedUrl({
-      action: 'read',
-      expires: '03-01-2500' // Far future expiration
-    });
-    
-    console.log(`Image stored for user ${userId}, card ${cardId}`);
-    
-    return {
-      success: true,
-      downloadUrl: url,
-      path: imagePath
-    };
-  } catch (error) {
-    console.error('Error storing image:', error);
-    throw new functions.https.HttpsError('internal', error.message);
-  }
-});
-
-// --- PriceCharting Proxy Function --- 
-
-exports.proxyPriceCharting = functions.https.onCall(async (data, context) => {
-  const { endpoint, params } = data;
-  functions.logger.info('PriceCharting function called with endpoint:', endpoint);
-  const apiKey = functions.config().pricecharting?.key;
-
-  if (!apiKey) {
-    functions.logger.error('PriceCharting API key not configured');
-    throw new functions.https.HttpsError('internal', 'PriceCharting API key not configured');
-  }
-
-  functions.logger.info('PriceCharting API key found, proceeding with request');
-  
-  // Build the base URL with the API key
-  const baseUrl = 'https://www.pricecharting.com/api/products';
-  let url;
-
-  // Handle different endpoints
-  if (endpoint === 'product-prices') {
-    // For price history, we need to use a different endpoint
-    // The correct URL format for price history is /api/product/{id}/price-history
-    url = new URL(`https://www.pricecharting.com/api/product/${params.id}/price-history`);
-    // Remove the id from params since it's in the URL path
-    delete params.id;
-    // Remove format param if present, as /price-history may not support it
-    if ('format' in params) {
-      delete params.format;
-    }
-  } else if (endpoint === 'search' || endpoint === 'products') {
-    url = new URL(baseUrl);
-  } else if (endpoint === 'product') {
-    // Handle single product lookup - use the correct endpoint structure
-    url = new URL(`https://www.pricecharting.com/api/product`);
-  } else {
-    throw new functions.https.HttpsError('invalid-argument', 'Invalid endpoint specified');
-  }
-
-  // Add API key
-  url.searchParams.append('t', apiKey);
-  
-  // Append remaining parameters from the frontend call
-  for (const [key, value] of Object.entries(params)) {
-    url.searchParams.append(key, value);
-  }
-
-  functions.logger.info(`Calling PriceCharting API: ${url.toString()}`);
-
-  try {
-    const response = await fetch(url.toString(), { method: 'GET' });
-    const responseText = await response.text();
-    
-    functions.logger.info('Response status:', response.status);
-    functions.logger.info('Response preview:', responseText.substring(0, 200));
-
-    if (!response.ok) {
-      functions.logger.error(`PriceCharting API error response (${response.status}): ${responseText}`);
-      throw new functions.https.HttpsError('internal', 
-        `Failed to fetch data from PriceCharting. Status: ${response.status}`);
-    }
-
-    // --- ADD LOGGING FOR HISTORY RESPONSE --- 
-    if(endpoint === 'product-prices') {
-      functions.logger.info('Full Price History Response Text:', responseText);
-    }
-    // ----------------------------------------
-
-    const responseData = JSON.parse(responseText);
-    functions.logger.info('Successfully received data from PriceCharting');
-
-    // Check PriceCharting's internal status
-    if (responseData.status === 'error') {
-      functions.logger.error(`PriceCharting returned error: ${responseData['error-message']}`);
-      throw new functions.https.HttpsError('internal', responseData['error-message'] || 'PriceCharting API returned an error.');
-    }
-
-    return responseData;
-
-  } catch (error) {
-    functions.logger.error("Error calling PriceCharting API:", error);
-    if (error instanceof functions.https.HttpsError) {
-      throw error;
-    }
-    throw new functions.https.HttpsError('internal', 'An unexpected error occurred while calling the PriceCharting API.');
   }
 });
 
@@ -1584,6 +1448,68 @@ exports.getCarValueFromAdmin = functions.https.onCall(async (data, context) => {
     };
   } catch (error) {
     console.error('Error in getCarValueFromAdmin function:', error);
+    throw new functions.https.HttpsError('internal', error.message);
+  }
+});
+
+// Function to store images in Firebase Storage
+exports.storeCardImage = functions.https.onCall(async (data, context) => {
+  // Require authentication
+  if (!context.auth) {
+    throw new functions.https.HttpsError(
+      'unauthenticated',
+      'User must be authenticated to store images'
+    );
+  }
+  
+  try {
+    const { imageBase64, cardId } = data;
+    const userId = context.auth.uid;
+    
+    // Validate inputs
+    if (!imageBase64 || !cardId) {
+      throw new functions.https.HttpsError(
+        'invalid-argument',
+        'Missing required fields: imageBase64, cardId'
+      );
+    }
+    
+    // Convert base64 to buffer
+    const imageBuffer = Buffer.from(imageBase64, 'base64');
+    
+    // Create a reference to the image location in Firebase Storage
+    const imagePath = `images/${userId}/${cardId}.jpeg`;
+    const bucket = admin.storage().bucket();
+    const file = bucket.file(imagePath);
+    
+    // Set the metadata for the file
+    const metadata = {
+      contentType: 'image/jpeg',
+      metadata: {
+        uploadedBy: userId,
+        cardId: cardId
+      }
+    };
+    
+    // Upload the image with a public read access
+    await file.save(imageBuffer, {
+      metadata: metadata,
+      public: true, // Make the file publicly accessible to avoid signing URLs
+      validation: false
+    });
+
+    // Get the public URL (no signing needed)
+    const publicUrl = `https://storage.googleapis.com/${bucket.name}/${imagePath}`;
+    
+    console.log(`Image stored for user ${userId}, card ${cardId}`);
+    
+    return {
+      success: true,
+      downloadUrl: publicUrl,
+      path: imagePath
+    };
+  } catch (error) {
+    console.error('Error storing image:', error);
     throw new functions.https.HttpsError('internal', error.message);
   }
 });
