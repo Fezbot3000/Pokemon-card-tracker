@@ -1534,14 +1534,14 @@ exports.getBackupFileContent = functions.https.onCall(async (data, context) => {
 });
 
 // Add the missing functions that exist in the Firebase project
-exports["getCar@Price"] = functions.https.onCall(async (data, context) => {
+exports.getCarPrice = functions.https.onCall(async (data, context) => {
   // Ensure the user is authenticated
   if (!context.auth) {
     throw new functions.https.HttpsError('unauthenticated', 'User must be logged in');
   }
 
   try {
-    console.log('getCar@Price function called (renamed from getCardPrice)');
+    console.log('getCarPrice function called (renamed from getCar@Price)');
     // This function likely gets the price of a card
     // Since this is just to fix deployment, we'll implement minimal functionality
     // that matches what the existing deployed function probably does
@@ -1557,19 +1557,19 @@ exports["getCar@Price"] = functions.https.onCall(async (data, context) => {
       price: data.defaultPrice || 0
     };
   } catch (error) {
-    console.error('Error in getCar@Price function:', error);
+    console.error('Error in getCarPrice function:', error);
     throw new functions.https.HttpsError('internal', error.message);
   }
 });
 
-exports["getCar@ValueFromAdmin"] = functions.https.onCall(async (data, context) => {
+exports.getCarValueFromAdmin = functions.https.onCall(async (data, context) => {
   // Ensure the user is authenticated
   if (!context.auth) {
     throw new functions.https.HttpsError('unauthenticated', 'User must be logged in');
   }
 
   try {
-    console.log('getCar@ValueFromAdmin function called (renamed from getCardValueFromAdmin)');
+    console.log('getCarValueFromAdmin function called (renamed from getCar@ValueFromAdmin)');
     // This function likely gets the admin-set value of a card
     // Since this is just to fix deployment, we'll implement minimal functionality
     
@@ -1583,7 +1583,7 @@ exports["getCar@ValueFromAdmin"] = functions.https.onCall(async (data, context) 
       value: data.defaultValue || 0
     };
   } catch (error) {
-    console.error('Error in getCar@ValueFromAdmin function:', error);
+    console.error('Error in getCarValueFromAdmin function:', error);
     throw new functions.https.HttpsError('internal', error.message);
   }
 });
