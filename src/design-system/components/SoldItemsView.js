@@ -23,6 +23,18 @@ const SoldItemsView = ({
   const { isDarkMode } = useTheme();
   const [expandedYears, setExpandedYears] = useState(new Set());
   const [expandedInvoices, setExpandedInvoices] = useState(new Set());
+  const [loadedInvoiceImages, setLoadedInvoiceImages] = useState(new Set()); // Track which invoice images have been loaded
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  // Handle window resize to detect mobile/desktop
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Helper function to safely format dates, handling Firestore Timestamp objects
   const formatDateSafely = (dateValue) => {
@@ -170,16 +182,33 @@ const SoldItemsView = ({
 
   // Toggle expanded state for invoices
   const toggleInvoice = (invoiceId) => {
-    setExpandedInvoices(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(invoiceId)) {
-        newSet.delete(invoiceId);
-      } else {
-        newSet.add(invoiceId);
+    const newExpandedInvoices = new Set(expandedInvoices);
+    if (expandedInvoices.has(invoiceId)) {
+      newExpandedInvoices.delete(invoiceId);
+    } else {
+      newExpandedInvoices.add(invoiceId);
+      
+      // Mark this invoice's images as needing to be loaded
+      if (isMobile) {
+        setLoadedInvoiceImages(prev => new Set([...prev, invoiceId]));
       }
-      return newSet;
-    });
+    }
+    setExpandedInvoices(newExpandedInvoices);
   };
+
+  // On desktop, we'll pre-load all invoice images
+  useEffect(() => {
+    if (!isMobile) {
+      // On desktop, mark all invoices as loaded
+      const allInvoiceIds = new Set();
+      validItems.forEach(invoice => {
+        if (invoice && invoice.id) {
+          allInvoiceIds.add(invoice.id);
+        }
+      });
+      setLoadedInvoiceImages(allInvoiceIds);
+    }
+  }, [validItems, isMobile]);
 
   // Expand 'current' financial year by default on first render
   useEffect(() => {
@@ -298,11 +327,13 @@ const SoldItemsView = ({
                             <div className={`accordion-content ${expandedInvoices.has(invoice.id) ? 'open' : ''}`}>
                               {expandedInvoices.has(invoice.id) && (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4 sm:p-6">
+                                  {/* Only load images if this invoice has been marked for loading */}
                                   {cards.map((card) => (
                                     <InvoiceCard
                                       key={card.id || card.slabSerial || Math.random().toString(36).substring(2, 11)}
                                       card={card}
-                                      getImageUrl={getCardImageUrl}
+                                      getImageUrl={loadedInvoiceImages.has(invoice.id) ? getCardImageUrl : null}
+                                      lazyLoad={true}
                                     />
                                   ))}
                                 </div>

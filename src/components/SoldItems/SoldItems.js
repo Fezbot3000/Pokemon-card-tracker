@@ -41,41 +41,73 @@ const SoldItems = () => {
       });
       
       const images = {};
+      
+      // Log the number of cards we're trying to load images for
+      console.log(`Attempting to load images for ${soldCards.length} sold cards`);
+      
       for (const card of soldCards) {
         const cardId = card.slabSerial || card.id;
-        if (!cardId) continue;
+        if (!cardId) {
+          console.log('Card missing ID:', card);
+          continue;
+        }
         
         try {
-          // First try to get image from local database
+          // First check if the card already has direct image URLs
+          if (card.imageUrl) {
+            console.log(`Using direct imageUrl for card ${cardId}`);
+            images[cardId] = card.imageUrl;
+            continue;
+          }
+          
+          if (card.cloudImageUrl) {
+            console.log(`Using cloudImageUrl for card ${cardId}`);
+            images[cardId] = card.cloudImageUrl;
+            continue;
+          }
+          
+          // Try to get image from local database
           const imageBlob = await db.getImage(cardId);
           if (imageBlob) {
+            console.log(`Created blob URL for card ${cardId} from IndexedDB`);
             const imageUrl = URL.createObjectURL(imageBlob);
             images[cardId] = imageUrl;
             continue;
           }
           
           // If not in local database and user is logged in, try Firebase Storage
-          if (user && card.imageUrl) {
-            // If the card already has an imageUrl from Firestore, use it directly
-            images[cardId] = card.imageUrl;
-          } else if (user) {
-            // Try to get from Firebase Storage
+          if (user) {
             try {
+              // Try with card ID
               const storageRef = ref(storage, `users/${user.uid}/card-images/${cardId}`);
               const imageUrl = await getDownloadURL(storageRef);
+              console.log(`Retrieved Firebase Storage image for card ${cardId}`);
               images[cardId] = imageUrl;
             } catch (storageError) {
-              // Image not found in Firebase Storage, that's okay
+              // Try alternative paths if the main one fails
+              try {
+                // Some cards might be stored with different paths
+                const altStorageRef = ref(storage, `users/${user.uid}/images/${cardId}`);
+                const altImageUrl = await getDownloadURL(altStorageRef);
+                console.log(`Retrieved Firebase Storage image from alternate path for card ${cardId}`);
+                images[cardId] = altImageUrl;
+              } catch (altError) {
+                console.log(`No image found for card ${cardId} in Firebase Storage`);
+              }
             }
           }
         } catch (error) {
           console.error('Error loading image for card:', cardId, error);
         }
       }
+      
+      console.log(`Successfully loaded ${Object.keys(images).length} images out of ${soldCards.length} cards`);
       setCardImages(images);
     };
 
-    loadCardImages();
+    if (soldCards.length > 0) {
+      loadCardImages();
+    }
 
     // Cleanup URLs when component unmounts or cards change
     return () => {
@@ -639,27 +671,29 @@ const SoldItems = () => {
 
   // Get card image URL function for SoldItemsView
   const getCardImageUrl = (card) => {
-    // First try to get the image using slabSerial (if available)
-    if (card.slabSerial && cardImages[card.slabSerial]) {
-      return cardImages[card.slabSerial];
-    }
+    // Add debug logging
+    console.log('Getting image for card:', card.id || card.slabSerial);
     
-    // Then try using the card ID
-    if (card.id && cardImages[card.id]) {
-      return cardImages[card.id];
-    }
-    
-    // Check if the card has an imageUrl property directly
+    // First check if the card has direct image URLs
     if (card.imageUrl) {
+      console.log('Using direct imageUrl');
       return card.imageUrl;
     }
     
-    // Finally, check if there's a cloudImageUrl
     if (card.cloudImageUrl) {
+      console.log('Using cloudImageUrl');
       return card.cloudImageUrl;
     }
     
-    // Return null if no image is found
+    // Then try using the card identifiers to find the image
+    const cardId = card.slabSerial || card.id;
+    if (cardId && cardImages[cardId]) {
+      console.log('Found image in cardImages map');
+      return cardImages[cardId];
+    }
+    
+    // If we reach here, no image was found
+    console.log('No image found for card');
     return null;
   };
 
@@ -849,10 +883,11 @@ const SoldItems = () => {
           
           <SoldItemsView
             items={displayData}
-            getCardImageUrl={(card) => cardImages[card.slabSerial || card.id] || null}
+            getCardImageUrl={getCardImageUrl}
             onPrintInvoice={handlePrintInvoice}
             onDeleteInvoice={handleDeleteInvoice}
             formatDate={formatDate}
+            className="mt-4"
           />
         </div>
       ) : (
