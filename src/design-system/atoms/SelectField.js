@@ -6,6 +6,7 @@ import FormLabel from './FormLabel'; // Assuming FormLabel is in the same direct
  * SelectField Component
  *
  * Renders a styled HTML <select> element with a label.
+ * Supports both options prop and direct children (option elements)
  */
 const SelectField = ({
   id,
@@ -13,12 +14,13 @@ const SelectField = ({
   name,
   value,
   onChange,
-  options = [], // Expects array of { value: string, label: string }
+  options, // Expects array of { value: string, label: string }
   required = false,
   disabled = false,
   className = '',
   placeholder, // Optional placeholder text
   error, // Optional error message/indicator
+  children, // Support direct option elements as children
   ...props
 }) => {
   const fieldId = id || `field-${name}`;
@@ -54,11 +56,14 @@ const SelectField = ({
           {...props}
         >
           {placeholder && <option value="" disabled>{placeholder}</option>}
-          {options.map((option) => (
+          {/* Render options from props if provided */}
+          {options && options.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
             </option>
           ))}
+          {/* Or render children directly */}
+          {children}
         </select>
         {/* Custom dropdown arrow */}
         <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
@@ -83,12 +88,13 @@ SelectField.propTypes = {
       value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
       label: PropTypes.string.isRequired,
     })
-  ).isRequired,
+  ),
   required: PropTypes.bool,
   disabled: PropTypes.bool,
   className: PropTypes.string,
   placeholder: PropTypes.string,
   error: PropTypes.string,
+  children: PropTypes.node,
 };
 
 export default SelectField;

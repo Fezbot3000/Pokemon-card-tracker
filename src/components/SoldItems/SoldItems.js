@@ -639,7 +639,28 @@ const SoldItems = () => {
 
   // Get card image URL function for SoldItemsView
   const getCardImageUrl = (card) => {
-    return cardImages[card.slabSerial] || null;
+    // First try to get the image using slabSerial (if available)
+    if (card.slabSerial && cardImages[card.slabSerial]) {
+      return cardImages[card.slabSerial];
+    }
+    
+    // Then try using the card ID
+    if (card.id && cardImages[card.id]) {
+      return cardImages[card.id];
+    }
+    
+    // Check if the card has an imageUrl property directly
+    if (card.imageUrl) {
+      return card.imageUrl;
+    }
+    
+    // Finally, check if there's a cloudImageUrl
+    if (card.cloudImageUrl) {
+      return card.cloudImageUrl;
+    }
+    
+    // Return null if no image is found
+    return null;
   };
 
   // Handle printing an invoice

@@ -202,262 +202,181 @@ const CardDetailsForm = ({
   };
 
   return (
-    <div className={`space-y-6 ${className}`}>
-      <div className="flex flex-col md:flex-row md:gap-6">
-        {/* Card Image Section */}
-        <div className="w-full md:w-1/3 mb-6 md:mb-0">
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">Card Image</h3>
-          <div className="flex flex-col items-center">
-            <div className="w-full max-w-[240px] h-[280px] mx-auto border border-[#ffffff33] dark:border-[#ffffff1a] rounded-lg overflow-hidden mb-3">
-              {imageLoadingState === 'loading' ? (
-                <div className="w-full h-full flex items-center justify-center bg-gray-50 dark:bg-[#1A1A1A] rounded-lg">
-                  <div className="flex flex-col items-center justify-center">
-                    <div className="animate-spin h-8 w-8 border-4 border-[#ef4444] border-t-transparent rounded-full mb-2"></div>
-                    <span className="text-sm text-gray-500 dark:text-gray-400">Loading image...</span>
-                  </div>
-                </div>
-              ) : imageLoadingState === 'error' ? (
-                <div className="w-full h-full flex flex-col items-center justify-center bg-gray-50 dark:bg-[#1A1A1A] rounded-lg">
-                  <Icon name="error_outline" size="lg" className="text-red-500 mb-2" />
-                  <span className="text-sm text-gray-500 dark:text-gray-400 mb-3">Failed to load image</span>
-                  <button 
-                    onClick={onImageRetry}
-                    className="px-4 py-2 bg-gradient-to-r from-[#ef4444] to-[#db2777] text-white rounded-full text-sm hover:opacity-90 transition-colors"
-                  >
-                    Retry
-                  </button>
-                </div>
-              ) : cardImage ? (
-                <div 
-                  className="w-full h-full cursor-pointer flex items-center justify-center bg-gray-50 dark:bg-[#1A1A1A]" 
-                  onClick={onImageClick}
-                >
-                  <img
-                    src={cardImage}
-                    alt="Card"
-                    className="max-w-full max-h-full object-contain"
-                    onError={(e) => {
-                      // Try to reload the image
-                      const src = e.target.src;
-                      e.target.src = '';
-                      setTimeout(() => {
-                        e.target.src = src;
-                      }, 100);
-                    }}
-                  />
-                </div>
-              ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center bg-gray-50 dark:bg-[#1A1A1A] rounded-lg">
-                  <Icon name="image" size="xl" className="text-gray-400 dark:text-gray-500 mb-3" />
-                  <span className="text-sm text-gray-500 dark:text-gray-400 mb-2">No image available</span>
-                </div>
-              )}
+    <div className={`w-full ${className}`}>
+      <div className="space-y-4">
+        {/* Card Image Upload */}
+        <div className="mb-4">
+          <FormLabel>Card Image</FormLabel>
+          <div className="flex flex-col sm:flex-row items-center gap-4">
+            <div className="w-full sm:w-auto max-w-[200px] mx-auto sm:mx-0">
+              <ImageUpload
+                imageUrl={cardImage}
+                loadingState={imageLoadingState}
+                onImageChange={onImageChange}
+                onRetry={onImageRetry}
+                onClick={onImageClick}
+                className="w-full h-auto aspect-[2/3] rounded-lg overflow-hidden"
+              />
             </div>
             
-            {/* Separate Upload Button */}
-            <div className="flex flex-col space-y-2 mt-3">
-              <ImageUploadButton
-                onImageChange={onImageChange}
-                className="w-full"
-              >
-                Replace Image
-              </ImageUploadButton>
-              <PSALookupButton
-                currentCardData={card}
-                onCardUpdate={onChange}
-              />
-              {card.psaUrl && (
-                <a 
-                  href={card.psaUrl} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="w-full flex items-center justify-center px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-700 text-white rounded-lg text-sm font-medium hover:opacity-90 transition-colors"
+            <div className="flex-1 w-full">
+              {/* Collection Selection - Moved up for better mobile visibility */}
+              <div className="mb-4">
+                <FormLabel htmlFor="collection">Collection</FormLabel>
+                <SelectField
+                  id="collection"
+                  name="collection"
+                  value={card.collectionId || initialCollectionName || ''}
+                  onChange={handleCollectionChange}
+                  error={errors.collection}
                 >
-                  <span className="mr-2">View PSA Card</span>
-                  <Icon name="open_in_new" size="sm" />
-                </a>
-              )}
+                  <option value="">Select Collection...</option>
+                  {collections.map(collection => (
+                    <option key={collection} value={collection}>{collection}</option>
+                  ))}
+                </SelectField>
+              </div>
               
-              {card.priceChartingUrl && (
-                <a 
-                  href={card.priceChartingUrl} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="w-full flex items-center justify-center px-4 py-2 bg-gradient-to-r from-green-500 to-green-700 text-white rounded-lg text-sm font-medium hover:opacity-90 transition-colors"
-                >
-                  <span className="mr-2">View Price Data</span>
-                  <Icon name="open_in_new" size="sm" />
-                </a>
-              )}
+              {/* Card Name & Player - Stacked vertically on mobile */}
+              <div className="grid grid-cols-1 gap-4 mb-4">
+                <FormField
+                  label="Card Name"
+                  name="card"
+                  value={card.card || ''}
+                  onChange={handleInputChange}
+                  error={errors.card}
+                  required
+                />
+                
+                <FormField
+                  label="Player/Character"
+                  name="player"
+                  value={card.player || ''}
+                  onChange={handleInputChange}
+                  error={errors.player}
+                />
+              </div>
             </div>
           </div>
         </div>
-
-        {/* Card Information Section */}
-        <div className="w-full md:w-2/3">
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">Card Information</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              label="Player"
-              name="player"
-              value={card.player || ''}
-              onChange={handleInputChange}
-              error={errors.player}
-            />
-            
-            <FormField
-              label="Card Name"
-              name="card"
-              value={card.card || ''}
-              onChange={handleInputChange}
-              error={errors.card}
-            />
-            
-            <FormField
-              label="Set"
-              name="set"
-              value={card.set || ''}
-              onChange={handleInputChange}
-              error={errors.set}
-            />
-            
-            <FormField
-              label="Year"
-              name="year"
-              value={card.year || ''}
-              onChange={handleInputChange}
-              error={errors.year}
-            />
-            
+        
+        {/* Card Details - Always single column on mobile */}
+        <div className="grid grid-cols-1 gap-4 mb-4">
+          <FormField
+            label="Set"
+            name="set"
+            value={card.set || ''}
+            onChange={handleInputChange}
+            error={errors.set}
+          />
+          
+          <FormField
+            label="Year"
+            name="year"
+            value={card.year || ''}
+            onChange={handleInputChange}
+            error={errors.year}
+          />
+          
+          <FormField
+            label="Category"
+            name="category"
+            value={card.category || ''}
+            onChange={handleInputChange}
+            error={errors.category}
+          />
+        </div>
+        
+        {/* Condition Selection - Improved mobile layout */}
+        <div className="mb-4">
+          <FormLabel>Condition</FormLabel>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <SelectField
-              label="Category"
-              name="category"
-              value={card.category ?? ''}
-              onChange={handleInputChange}
-              options={cardCategories}
-              error={errors.category}
-              required
-            />
-            
-            {/* Condition Dropdowns */}
-            <SelectField
-              label="Grading Company"
               name="gradingCompany"
-              value={card.gradingCompany ?? ''}
-              onChange={handleInputChange}
-              options={gradingCompanies}
-              error={errors.gradingCompany}
-              required
-            />
+              value={selectedCompany}
+              onChange={handleCompanyChange}
+              error={errors.condition}
+            >
+              {gradingCompanies.map(option => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </SelectField>
             
             <SelectField
-              label={selectedCompany === 'RAW' ? 'Condition' : 'Grade'}
               name="grade"
               value={selectedGrade}
               onChange={handleGradeChange}
-              options={currentGradeOptions}
-              disabled={!selectedCompany || currentGradeOptions.length === 0}
-              error={errors.condition} // Reuse condition error state for now
-            />
-            
-            <FormField
-              label="Population"
-              name="population"
-              value={card.population || ''}
-              onChange={handleInputChange}
-              error={errors.population}
-              type="number"
-              placeholder="Card population count"
-            />
-            
-            {/* Serial Number Field - Removed additionalContent */}
-            <FormField
-              label="Serial Number"
-              name="slabSerial"
-              value={card.slabSerial || ''}
-              onChange={handleInputChange}
-              error={errors.slabSerial}
-            />
-            
-            <FormField
-              label="Date Purchased"
-              name="datePurchased"
-              type="date"
-              value={card.datePurchased || ''}
-              onChange={handleInputChange}
-              error={errors.datePurchased}
-            />
-            
-            <FormField
-              label="Quantity"
-              name="quantity"
-              type="number"
-              step="1"
-              value={card.quantity || ''}
-              onChange={handleInputChange}
-              error={errors.quantity}
-              placeholder="Number of identical cards"
-            />
+              error={errors.grade}
+              disabled={!selectedCompany}
+            >
+              {selectedCompany === 'RAW' 
+                ? rawConditions.map(option => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))
+                : gradedConditions.map(option => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))
+              }
+            </SelectField>
           </div>
-
-          {/* Financial Details Section */}
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3 mt-6">Financial Details</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        </div>
+        
+        {/* Financial Details - Always single column on mobile */}
+        <div className="grid grid-cols-1 gap-4 mb-4">
+          <FormField
+            label="Paid (AUD)"
+            name="investmentAUD"
+            type="number"
+            prefix="$"
+            value={card.investmentAUD}
+            onChange={handleNumberChange}
+            error={errors.investmentAUD}
+          />
+          
+          <div className="relative">
             <FormField
-              label="Paid (AUD)"
-              name="investmentAUD"
+              label="Current Value (AUD)"
+              name="currentValueAUD"
               type="number"
               prefix="$"
-              value={card.investmentAUD}
+              value={card.currentValueAUD}
               onChange={handleNumberChange}
-              error={errors.investmentAUD}
+              error={errors.currentValueAUD}
             />
-            
-            <div className="relative">
-              <FormField
-                label="Current Value (AUD)"
-                name="currentValueAUD"
-                type="number"
-                prefix="$"
-                value={card.currentValueAUD}
-                onChange={handleNumberChange}
-                error={errors.currentValueAUD}
-              />
-              {additionalValueContent && (
-                <div className="mt-2">
-                  {additionalValueContent}
-                </div>
-              )}
-            </div>
+            {additionalValueContent && (
+              <div className="mt-2">
+                {additionalValueContent}
+              </div>
+            )}
           </div>
-
-          {(typeof card.investmentAUD === 'number' || typeof card.investmentAUD === 'string') && 
-           (typeof card.currentValueAUD === 'number' || typeof card.currentValueAUD === 'string') && (
-            <div className="bg-white dark:bg-[#0F0F0F] rounded-lg p-3 border border-[#ffffff33] dark:border-[#ffffff1a] flex items-center justify-between">
-              <span className="text-sm text-gray-700 dark:text-gray-300">Profit/Loss:</span>
-              <span className={`font-medium ${getProfit() >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                ${Math.abs(getProfit()).toFixed(2)}
-                {getProfit() >= 0 ? ' profit' : ' loss'}
-              </span>
+        </div>
+        
+        {(typeof card.investmentAUD === 'number' || typeof card.investmentAUD === 'string') && 
+         (typeof card.currentValueAUD === 'number' || typeof card.currentValueAUD === 'string') && (
+          <div className="bg-white dark:bg-[#0F0F0F] rounded-lg p-3 border border-[#ffffff33] dark:border-[#ffffff1a] flex items-center justify-between">
+            <span className="text-sm text-gray-700 dark:text-gray-300">Profit/Loss:</span>
+            <span className={`font-medium ${getProfit() >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+              ${Math.abs(getProfit()).toFixed(2)}
+              {getProfit() >= 0 ? ' profit' : ' loss'}
+            </span>
+          </div>
+        )}
+        
+        {/* Price History Chart - directly below profit/loss */}
+        <div className="mt-4">
+          {card.priceChartingProductId && (
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-2">
+              <PriceHistoryGraph 
+                productId={card.priceChartingProductId} 
+                condition={selectedCompany === 'RAW' ? 'loose' : 'graded'} // Adjust condition based on selected company
+              />
             </div>
           )}
-          
-          {/* Price History Chart - directly below profit/loss */}
-          <div className="mt-4">
-            {card.priceChartingProductId && (
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-2">
-                <PriceHistoryGraph 
-                  productId={card.priceChartingProductId} 
-                  condition={selectedCompany === 'RAW' ? 'loose' : 'graded'} // Adjust condition based on selected company
-                />
-              </div>
-            )}
-            {card.priceChartingUrl && (
-              <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">
-                <p>Price data provided by PriceCharting.com. Last updated: {card.lastPriceUpdate ? new Date(card.lastPriceUpdate).toLocaleString() : 'Unknown'}</p>
-              </div>
-            )}
-          </div>
+          {card.priceChartingUrl && (
+            <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+              <p>Price data provided by PriceCharting.com. Last updated: {card.lastPriceUpdate ? new Date(card.lastPriceUpdate).toLocaleString() : 'Unknown'}</p>
+            </div>
+          )}
         </div>
       </div>
     </div>
