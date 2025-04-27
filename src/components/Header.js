@@ -6,6 +6,7 @@ import JSZip from 'jszip';
 import CollectionSelector from './CollectionSelector';
 import { toast } from 'react-hot-toast';
 import { Link, useNavigate } from 'react-router-dom';
+import PropTypes from 'prop-types';
 
 const Header = ({ 
   selectedCollection, 
@@ -266,6 +267,10 @@ const Header = ({
       )}
     </>
   );
+};
+
+Header.propTypes = {
+  currentView: PropTypes.oneOf(['cards', 'sold']).isRequired,
 };
 
 export default Header;

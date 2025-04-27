@@ -692,6 +692,30 @@ const SoldItems = () => {
       return cardImages[cardId];
     }
     
+    // If we reach here, try to load the image directly from Firebase Storage
+    if (cardId && user) {
+      // We'll return a placeholder and trigger an async load
+      // This ensures the component doesn't wait for the image to load
+      const loadImageAsync = async () => {
+        try {
+          const storageRef = ref(storage, `users/${user.uid}/card-images/${cardId}`);
+          const imageUrl = await getDownloadURL(storageRef);
+          console.log(`Async loaded Firebase Storage image for card ${cardId}`);
+          
+          // Update the cardImages state with the new URL
+          setCardImages(prev => ({
+            ...prev,
+            [cardId]: imageUrl
+          }));
+        } catch (error) {
+          console.error(`Failed to async load image for card ${cardId}:`, error);
+        }
+      };
+      
+      // Start the async loading process
+      loadImageAsync();
+    }
+    
     // If we reach here, no image was found
     console.log('No image found for card');
     return null;

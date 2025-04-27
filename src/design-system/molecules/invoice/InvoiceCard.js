@@ -25,9 +25,16 @@ const InvoiceCard = ({
   // Load image when component becomes visible or when getImageUrl changes
   useEffect(() => {
     if (isVisible && getImageUrl && !imageLoaded) {
-      const url = getImageUrl(card);
-      setImageUrl(url);
-      setImageLoaded(true);
+      try {
+        const url = getImageUrl(card);
+        if (url) {
+          setImageUrl(url);
+          setImageLoaded(true);
+        }
+      } catch (error) {
+        console.error('Error loading image for card:', card.id || card.slabSerial, error);
+        setImageLoaded(true); // Mark as loaded to prevent infinite retries
+      }
     }
   }, [isVisible, getImageUrl, card, imageLoaded]);
 

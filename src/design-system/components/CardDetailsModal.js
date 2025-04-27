@@ -116,155 +116,129 @@ const CardDetailsModal = ({
     } else {
       // When modal closes, reset content loaded state for next open
       setContentLoaded(false);
+      setSaveMessage('');
     }
-  }, [image, imageLoadingState, isOpen, isMobile]);
+  }, [isOpen, image, imageLoadingState, isMobile]);
+  
+  // Update image state when image prop changes
+  useEffect(() => {
+    if (image) {
+      setCardImage(image);
+    }
+    setLocalImageLoadingState(imageLoadingState);
+  }, [image, imageLoadingState]);
   
   // Handle image changes (passed down to form)
   const handleImageChange = (file) => {
-    if (onImageChange && file) {
-      setLocalImageLoadingState('loading');
+    if (onImageChange) {
       onImageChange(file);
     }
   };
-
+  
   // Handle mark as sold action
   const handleMarkAsSold = () => {
     if (onMarkAsSold) {
       setIsConfirmingSold(true);
     }
   };
-
+  
   // SaleModal integration for single card
   const handleSaleConfirm = (saleData) => {
-    setIsConfirmingSold(false);
     if (onMarkAsSold) {
-      // Pass the saleData back to the parent (CardDetails)
-      onMarkAsSold({ ...card, ...saleData }); // Use card prop
+      onMarkAsSold({...card, ...saleData});
     }
+    setIsConfirmingSold(false);
   };
-
+  
   const handleSaleModalClose = () => {
     setIsConfirmingSold(false);
   };
   
   // Handle save action
   const handleSave = () => {
-    console.log('[CardDetailsModal] Saving card with:');
-    console.log(' - Current collection ID:', card.collectionId);
-    console.log(' - Initial collection name:', initialCollectionName);
+    // Validate required fields
+    const newErrors = {};
     
-    // Make sure the card has the current collection ID from the form
-    const cardToSave = {
-      ...card,
-      // Ensure both properties exist for backward compatibility
-      collection: card.collectionId || card.collection,
-      collectionId: card.collectionId || card.collection,
-      // Preserve the image URL if it exists
-      imageUrl: card.imageUrl || null,
-      lastUpdated: new Date().toISOString() // Add timestamp for verification
-    };
-    
-    console.log('[CardDetailsModal] Prepared card to save:', cardToSave);
-    
-    // Store verification data in localStorage
-    if (initialCollectionName !== cardToSave.collectionId) {
-      localStorage.setItem('lastCollectionChange', JSON.stringify({
-        timestamp: new Date().toISOString(),
-        cardId: cardToSave.slabSerial,
-        cardName: cardToSave.card || 'Unnamed Card',
-        from: initialCollectionName || 'Unknown Collection',
-        to: cardToSave.collectionId,
-        imageUrl: cardToSave.imageUrl // Include image URL in verification data
-      }));
+    if (!card.card) {
+      newErrors.card = 'Card name is required';
     }
     
+    if (!card.set) {
+      newErrors.set = 'Set is required';
+    }
+    
+    if (!card.collectionId) {
+      newErrors.collectionId = 'Collection is required';
+    }
+    
+    // Add validation for numeric fields
+    if (card.investmentAUD && isNaN(parseFloat(card.investmentAUD))) {
+      newErrors.investmentAUD = 'Must be a valid number';
+    }
+    
+    if (card.currentValueAUD && isNaN(parseFloat(card.currentValueAUD))) {
+      newErrors.currentValueAUD = 'Must be a valid number';
+    }
+    
+    // Check if there are any validation errors
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      setSaveMessage('Please fix the errors before saving');
+      return;
+    }
+    
+    // Clear any previous errors
+    setErrors({});
+    
+    // Call the onSave callback with the updated card data
     if (onSave) {
-      onSave(cardToSave, initialCollectionName);
+      onSave(card);
     }
   };
-  
-  // Create modal footer with action buttons
-  const modalFooter = (
-    <div className="flex justify-between w-full">
-      <Button 
-        variant="secondary" 
-        onClick={onClose}
-        className="mr-2"
-      >
-        Cancel
-      </Button>
-      <div className="flex space-x-2">
-        {card && onDelete && (
-          <Button 
-            variant="danger" 
-            onClick={() => {
-              if (window.confirm('Are you sure you want to delete this card?')) {
-                onDelete(card);
-              }
-            }}
-            className="mr-2"
-          >
-            <Icon name="delete" className="mr-1" />
-            Delete
-          </Button>
-        )}
-        {card && onMarkAsSold && (
-          <Button 
-            variant="secondary" 
-            onClick={handleMarkAsSold}
-            className="mr-2"
-          >
-            <Icon name="sell" className="mr-1" />
-            Mark as Sold
-          </Button>
-        )}
-        {onSave && (
-          <Button 
-            variant="primary" 
-            onClick={handleSave}
-          >
-            <Icon name="save" className="mr-1" />
-            Save
-          </Button>
-        )}
-      </div>
-    </div>
-  );
-  
+
   return (
     <>
       <Modal
         isOpen={isOpen}
         onClose={onClose}
-        title={
-          <div className="flex items-center justify-between w-full">
-            <div className="flex-1 min-w-0">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white truncate">
-                {card?.card || 'New Card'}
-              </h2>
-              {card?.player && (
-                <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
-                  {card.player}
-                </p>
+        title="Card Details"
+        position="right"
+        closeOnClickOutside={false}
+        className={`${className} ${animClass}`}
+        footer={
+          <div className="flex justify-between w-full">
+            <Button 
+              variant="secondary" 
+              onClick={onClose}
+            >
+              Cancel
+            </Button>
+            <div className="flex space-x-2">
+              {onMarkAsSold && (
+                <Button 
+                  variant="secondary" 
+                  onClick={handleMarkAsSold}
+                  leftIcon={<Icon name="tag" />}
+                >
+                  Mark as Sold
+                </Button>
               )}
+              <Button 
+                variant="primary" 
+                onClick={handleSave}
+              >
+                Save
+              </Button>
             </div>
-            {additionalHeaderContent && (
-              <div className="ml-4 flex-shrink-0">
-                {additionalHeaderContent}
-              </div>
-            )}
           </div>
         }
-        footer={modalFooter}
-        className={`max-w-4xl w-full ${className}`}
-        contentClassName="max-h-[80vh] overflow-y-auto pb-4 px-4 sm:px-6" // Add max height and overflow for mobile
       >
-        <div className={`transition-opacity duration-300 ${animClass}`}>
+        <div className="flex flex-col h-full">
           {/* Tabs */}
-          <div className="border-b border-gray-200 dark:border-gray-700 mb-4">
-            <div className="flex space-x-4">
+          <div className="border-b border-gray-200 dark:border-gray-700">
+            <div className="flex">
               <button
-                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                className={`py-2 px-4 font-medium text-sm border-b-2 ${
                   activeTab === 'details'
                     ? 'border-blue-500 text-blue-600 dark:text-blue-400'
                     : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
@@ -273,9 +247,9 @@ const CardDetailsModal = ({
               >
                 Card Details
               </button>
-              {card?.priceChartingUrl && (
+              {priceChartingProductId && (
                 <button
-                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  className={`py-2 px-4 font-medium text-sm border-b-2 ${
                     activeTab === 'price-history'
                       ? 'border-blue-500 text-blue-600 dark:text-blue-400'
                       : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
@@ -287,24 +261,26 @@ const CardDetailsModal = ({
               )}
             </div>
           </div>
-          
-          {/* Tab Content - Only render when contentLoaded is true */}
+
+          {/* Main Content */}
           {contentLoaded && activeTab === 'details' && (
-            <div className="space-y-4">
-              <CardDetailsForm 
-                key={card?.id || 'new-card-form'} 
-                card={card} // Pass card prop
-                cardImage={cardImage}
-                imageLoadingState={localImageLoadingState}
-                onChange={onChange} // Pass onChange prop directly
-                onImageChange={handleImageChange}
-                onImageRetry={onImageRetry}
-                onImageClick={() => setShowEnlargedImage(true)}
-                additionalValueContent={additionalValueContent}
-                additionalSerialContent={additionalSerialContent}
-                collections={collections}
-                initialCollectionName={initialCollectionName}
-              />
+            <div className="flex-1 overflow-y-auto">
+              <div className="py-4">
+                <CardDetailsForm
+                  card={card}
+                  cardImage={cardImage}
+                  imageLoadingState={localImageLoadingState}
+                  onChange={onChange}
+                  onImageChange={handleImageChange}
+                  onImageRetry={onImageRetry}
+                  onImageClick={() => setShowEnlargedImage(true)}
+                  errors={errors}
+                  additionalValueContent={additionalValueContent}
+                  additionalSerialContent={additionalSerialContent}
+                  collections={collections}
+                  initialCollectionName={initialCollectionName}
+                />
+              </div>
             </div>
           )}
 

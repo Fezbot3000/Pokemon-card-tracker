@@ -167,8 +167,8 @@ const Modal = ({
         className={`${modalClasses} flex flex-col ${
           position === 'right' 
             ? (window.innerWidth < 640 
-                ? 'w-screen max-w-none h-screen min-h-screen rounded-none m-0 fixed top-0 left-0 right-0 bottom-0 z-[9999]' 
-                : 'w-[55%] h-full rounded-l-md rounded-r-none mr-0')
+                ? 'w-screen max-w-none h-screen min-h-screen rounded-none m-0 fixed top-0 left-0 right-0 bottom-0 z-[9999] overflow-auto' 
+                : 'w-[55%] h-screen min-h-screen rounded-l-md rounded-r-none mr-0 fixed top-0 right-0 z-[9999]')
             : (mobileFullWidth || (size === 'custom' ? maxWidth : sizeClasses[size] || 'w-[55%]'))
         } ${className}`}
         role="dialog"

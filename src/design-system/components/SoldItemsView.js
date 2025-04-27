@@ -183,16 +183,15 @@ const SoldItemsView = ({
   // Toggle expanded state for invoices
   const toggleInvoice = (invoiceId) => {
     const newExpandedInvoices = new Set(expandedInvoices);
+    
     if (expandedInvoices.has(invoiceId)) {
       newExpandedInvoices.delete(invoiceId);
     } else {
       newExpandedInvoices.add(invoiceId);
-      
-      // Mark this invoice's images as needing to be loaded
-      if (isMobile) {
-        setLoadedInvoiceImages(prev => new Set([...prev, invoiceId]));
-      }
+      // Add to loaded invoice images when expanding
+      setLoadedInvoiceImages(prev => new Set([...prev, invoiceId]));
     }
+    
     setExpandedInvoices(newExpandedInvoices);
   };
 

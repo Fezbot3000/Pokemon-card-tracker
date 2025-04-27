@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import Icon from './Icon';
 
@@ -14,14 +14,20 @@ const CardImage = ({
   width = 'w-16 h-20 sm:w-20 sm:h-24',
   ...props 
 }) => {
+  const [imageError, setImageError] = useState(false);
+
   return (
     <div className={`${width} flex-shrink-0 ${className}`}>
-      {src ? (
+      {src && !imageError ? (
         <img
           src={src}
           alt={alt}
           className="w-full h-full object-contain rounded-lg"
           loading="lazy"
+          onError={() => {
+            console.error(`Failed to load image: ${src}`);
+            setImageError(true);
+          }}
           {...props}
         />
       ) : (
