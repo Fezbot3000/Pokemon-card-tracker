@@ -28,9 +28,12 @@ const Modal = ({
 }) => {
   const modalRef = useRef(null);
   const scrollPosRef = useRef(null);
+  const [isMounted, setIsMounted] = useState(false);
   
   // Preserve scroll position and prevent background scrolling
   useEffect(() => {
+    setIsMounted(true);
+    
     // Only prevent background scroll if modal is open
     if (isOpen && !showAsStatic) {
       scrollPosRef.current = {
@@ -46,6 +49,22 @@ const Modal = ({
       };
     }
   }, [isOpen, showAsStatic]);
+
+  // Add iOS viewport height fix - always call this hook regardless of conditions
+  useEffect(() => {
+    // Fix for iOS viewport height issues
+    const setIOSHeight = () => {
+      const vh = window.innerHeight * 0.01;
+      document.documentElement.style.setProperty('--vh', `${vh}px`);
+    };
+    
+    setIOSHeight();
+    window.addEventListener('resize', setIOSHeight);
+    
+    return () => {
+      window.removeEventListener('resize', setIOSHeight);
+    };
+  }, []);
 
   // Handle outside clicks to close modal if enabled
   const handleBackdropClick = (e) => {
@@ -88,7 +107,7 @@ const Modal = ({
   
   // Mobile full width override
   const mobileFullWidth = window.innerWidth < 640 ? 'w-screen max-w-none h-screen min-h-screen rounded-none m-0 fixed top-0 left-0 right-0 bottom-0 z-[9999]' : '';
-
+  
   // Position variations
   const positionClasses = {
     center: 'flex items-center justify-center',
@@ -115,8 +134,8 @@ const Modal = ({
     : 'text-2xl text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors';
     
   const footerClasses = forceDarkMode
-    ? 'sticky bottom-0 z-10 flex items-center justify-end gap-2 p-6 border-t border-gray-700/50 bg-[#0F0F0F]/95 backdrop-blur-sm'
-    : 'sticky bottom-0 z-10 flex items-center justify-end gap-2 p-6 border-t border-gray-200 dark:border-gray-700/50 bg-white/95 dark:bg-[#0F0F0F]/95 backdrop-blur-sm';
+    ? 'sticky bottom-0 z-10 flex items-center justify-end gap-2 p-6 border-t border-gray-700/50 bg-[#0F0F0F]/95 backdrop-blur-sm pb-safe'
+    : 'sticky bottom-0 z-10 flex items-center justify-end gap-2 p-6 border-t border-gray-200 dark:border-gray-700/50 bg-white/95 dark:bg-[#0F0F0F]/95 backdrop-blur-sm pb-safe';
   
   // Force the dark class if needed
   const darkModeClass = forceDarkMode ? 'dark' : '';
@@ -175,6 +194,11 @@ const Modal = ({
         aria-modal="true"
         aria-labelledby={title ? 'modal-title' : undefined}
         aria-label={ariaLabel}
+        style={window.innerWidth < 640 ? {
+          height: 'calc(var(--vh, 1vh) * 100)',
+          maxHeight: 'calc(var(--vh, 1vh) * 100)',
+          paddingBottom: 'env(safe-area-inset-bottom)'
+        } : {}}
         {...stripDebugProps(props)}
       >
         {/* Modal Header - Sticky */}
@@ -193,7 +217,7 @@ const Modal = ({
         )}
 
         {/* Modal Content - Scrollable */}
-        <div className={`flex-1 overflow-y-auto px-6 ${title ? 'pb-0' : 'pt-6 pb-0'}`}>
+        <div className={`flex-1 overflow-y-auto px-6 modal-content ${title ? 'pb-0' : 'pt-6 pb-0'}`}>
           {children}
         </div>
 

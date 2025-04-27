@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import { storage, functions, httpsCallable } from '../../services/firebase';
+import { storage, functions, httpsCallable, db as firestoreDb } from '../../services/firebase';
 import { stripDebugProps } from '../../utils/stripDebugProps';
 import { Modal, Button, ConfirmDialog, Icon, toast as toastService } from '../';
 import FormField from '../molecules/FormField';
@@ -11,6 +11,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useRestore } from '../contexts/RestoreContext';
 import { useBackup } from '../contexts/BackupContext';
 import { ref, uploadBytes, getDownloadURL, listAll, deleteObject } from 'firebase/storage';
+import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import JSZip from 'jszip';
 import db from '../../services/db';
 import cloudSync from '../../services/cloudSync';
@@ -123,12 +124,17 @@ const SettingsModal = ({
     }
   }, [collections]);
 
-  // Load profile data from props
+  // Load profile data from Firestore
   useEffect(() => {
-    if (userData) {
-      setProfile(userData);
+    if (user) {
+      const profileRef = doc(firestoreDb, 'users', user.uid);
+      getDoc(profileRef).then((doc) => {
+        if (doc.exists()) {
+          setProfile(doc.data());
+        }
+      });
     }
-  }, [userData]);
+  }, [user]);
 
   // Handle profile changes
   const handleProfileChange = (e) => {
@@ -139,12 +145,14 @@ const SettingsModal = ({
     }));
   };
 
-  // Save profile
+  // Save profile to Firestore
   const handleProfileSave = async () => {
     try {
-      // This would call a provided callback for saving the profile
-      // For now, we'll just show a toast
-      toastService.success('Profile saved successfully');
+      if (user) {
+        const profileRef = doc(firestoreDb, 'users', user.uid);
+        await setDoc(profileRef, profile);
+        toastService.success('Profile saved successfully');
+      }
     } catch (error) {
       console.error('Error saving profile:', error);
       toastService.error('Failed to save profile');

@@ -39,12 +39,34 @@
   textarea,
   select {
     -webkit-appearance: none;
+    appearance: none;
     border-radius: 4px;
   }
   
   /* Fix for iOS Safari double-tap zoom */
   a, button {
     touch-action: manipulation;
+  }
+  
+  /* Fix for iOS modal bottom navigation */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom) !important;
+  }
+  
+  /* Fix for iOS modal height issues */
+  .h-screen {
+    height: calc(var(--vh, 1vh) * 100);
+  }
+  
+  .min-h-screen {
+    min-height: calc(var(--vh, 1vh) * 100);
+  }
+  
+  /* Fix for iOS modal content scrolling */
+  .modal-content {
+    -webkit-overflow-scrolling: touch;
+    overflow-y: auto;
+    max-height: calc(var(--vh, 1vh) * 100 - 120px); /* Account for header and footer */
   }
 }
 
@@ -53,4 +75,9 @@
   body.keyboard-open .fixed-bottom {
     position: absolute;
   }
+}
+
+/* Add CSS variable for viewport height - used by JS */
+:root {
+  --vh: 1vh;
 }
