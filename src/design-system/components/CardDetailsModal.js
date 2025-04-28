@@ -5,6 +5,9 @@ import CardDetailsForm from './CardDetailsForm';
 import PriceHistoryGraph from '../../components/PriceHistoryGraph';
 import SaleModal from '../../components/SaleModal'; 
 import '../styles/animations.css';
+import { toast } from 'react-hot-toast';
+import { searchByCertNumber, fetchPSACardImage, parsePSACardData, mergeWithExistingCard } from '../../services/psaSearch';
+import PSADetailModal from '../../components/PSADetailModal';
 
 // Helper function to format date
 const formatDate = (dateString) => {
@@ -48,6 +51,9 @@ const CardDetailsModal = ({
   const [animClass, setAnimClass] = useState('fade-in');
   const [contentLoaded, setContentLoaded] = useState(false); // Track if content has been loaded
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [isPsaSearching, setIsPsaSearching] = useState(false);
+  const [psaDetailModalOpen, setPsaDetailModalOpen] = useState(false);
+  const [psaData, setPsaData] = useState(null);
 
   // If the card has pricing data from PriceCharting, extract the product ID
   let priceChartingProductId = null;
@@ -133,6 +139,68 @@ const CardDetailsModal = ({
     if (onImageChange) {
       onImageChange(file);
     }
+  };
+  
+  // Handle PSA search
+  const handlePsaSearch = async (serialNumber) => {
+    if (!serialNumber) {
+      toast.error('Please enter a PSA serial number');
+      return;
+    }
+    
+    setIsPsaSearching(true);
+    setSaveMessage('Searching PSA database...');
+    
+    try {
+      const data = await searchByCertNumber(serialNumber);
+      console.log('PSA data received:', data);
+      
+      // Capture the PSA data
+      setPsaData(data);
+      
+      // Try to fetch the PSA card image in parallel
+      let psaImage = null;
+      try {
+        psaImage = await fetchPSACardImage(serialNumber);
+        if (psaImage) {
+          console.log(`PSA image fetched successfully: ${psaImage.size} bytes`);
+          setCardImage(URL.createObjectURL(psaImage));
+          
+          // Notify parent of image change if handler is provided
+          if (onImageChange) {
+            onImageChange(psaImage);
+          }
+        } else {
+          console.log('No PSA image found or image fetch failed');
+        }
+      } catch (imageError) {
+        console.error('Error fetching PSA image:', imageError);
+      }
+      
+      // Open the PSADetailModal with the data
+      if (data && data.PSACert) {
+        setPsaDetailModalOpen(true);
+      } else {
+        toast.error('No valid PSA data found for this serial number');
+      }
+      
+      setSaveMessage(null);
+    } catch (error) {
+      console.error('Error looking up PSA certificate:', error);
+      toast.error(`Failed to find PSA certificate: ${error.message}`);
+      setSaveMessage('Failed to find PSA certificate. Please check the number and try again.');
+    } finally {
+      setIsPsaSearching(false);
+    }
+  };
+  
+  // Handle applying PSA details to the card
+  const handleApplyPsaDetails = (updatedCardData) => {
+    if (onChange) {
+      onChange(updatedCardData);
+    }
+    setPsaDetailModalOpen(false);
+    toast.success('PSA card details applied');
   };
   
   // Handle mark as sold action
@@ -279,6 +347,8 @@ const CardDetailsModal = ({
                   additionalSerialContent={additionalSerialContent}
                   collections={collections}
                   initialCollectionName={initialCollectionName}
+                  onPsaSearch={handlePsaSearch}
+                  isPsaSearching={isPsaSearching}
                 />
               </div>
             </div>
@@ -350,6 +420,16 @@ const CardDetailsModal = ({
           </div>
         </div>
       )}
+      
+      {/* PSA Detail Modal */}
+      <PSADetailModal
+        isOpen={psaDetailModalOpen}
+        onClose={() => setPsaDetailModalOpen(false)}
+        certNumber={card?.slabSerial || ''}
+        currentCardData={card}
+        psaData={psaData}
+        onApplyDetails={handleApplyPsaDetails}
+      />
       
       {/* SaleModal for single card sale */}
       {isConfirmingSold && (

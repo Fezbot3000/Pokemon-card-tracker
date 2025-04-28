@@ -144,7 +144,7 @@ class ShadowSyncService {
     // Skip process if we just saved a card - prevents mass update cascades from a single save
     const now = Date.now();
     if (this._lastSaveTimestamp && (now - this._lastSaveTimestamp < 3000)) {
-      console.log(`[ShadowSync] Skipping queue processing - recent save detected (${now - this._lastSaveTimestamp}ms ago)`);
+      logger.debug(`[ShadowSync] Skipping queue processing - recent save detected (${now - this._lastSaveTimestamp}ms ago)`);
       return;
     }
 
@@ -166,7 +166,7 @@ class ShadowSyncService {
       const itemsToProcess = queueCopy.length > 5 ? [queueCopy[0]] : queueCopy;
       
       if (queueCopy.length > 5) {
-        console.log(`[ShadowSync] Queue has ${queueCopy.length} items - limiting to only process first item to prevent performance issues`);
+        logger.debug(`[ShadowSync] Queue has ${queueCopy.length} items - limiting to only process first item to prevent performance issues`);
       }
 
       // Only process if we're not in the middle of a save
@@ -179,12 +179,12 @@ class ShadowSyncService {
           }
         }
       } else {
-        console.log(`[ShadowSync] Skipping queue processing - update already in progress`);
+        logger.debug(`[ShadowSync] Skipping queue processing - update already in progress`);
       }
       
       // Clear the rest of the queue if we limited processing
       if (queueCopy.length > itemsToProcess.length) {
-        console.log(`[ShadowSync] Cleared remaining ${queueCopy.length - itemsToProcess.length} items from queue`);
+        logger.debug(`[ShadowSync] Cleared remaining ${queueCopy.length - itemsToProcess.length} items from queue`);
       }
     } catch (error) {
       logger.error('[ShadowSync] Error processing card queue:', error);
@@ -203,7 +203,7 @@ class ShadowSyncService {
   queueCardForUpdate(cardId, card, collectionName) {
     // Skip if we're already in a save operation (prevents cascading updates)
     if (this._updateInProgress) {
-      console.log(`[ShadowSync] Skipping queue add for ${cardId} - update already in progress`);
+      logger.debug(`[ShadowSync] Skipping queue add for ${cardId} - update already in progress`);
       return;
     }
 
@@ -215,7 +215,7 @@ class ShadowSyncService {
     // Skip if we're in a cooling-off period after a save
     const now = Date.now();
     if (this._lastSaveTimestamp && (now - this._lastSaveTimestamp < 3000)) {
-      console.log(`[ShadowSync] Skipping queue add - in cooling period (${now - this._lastSaveTimestamp}ms since last save)`);
+      logger.debug(`[ShadowSync] Skipping queue add - in cooling period (${now - this._lastSaveTimestamp}ms since last save)`);
       return;
     }
 
@@ -264,7 +264,7 @@ class ShadowSyncService {
     // Only log the initial shadowWriteCard call for the active card being saved
     // Reduce log spam from bulk operations
     if (card._saveDebug || !isInBatchMode) {
-      console.log(`[ShadowSync] shadowWriteCard called for ${cardId}`, {
+      logger.debug(`[ShadowSync] shadowWriteCard called for ${cardId}`, {
         timestamp: new Date().toISOString(),
         collection: collectionName,
         hasDebugFlag: card._saveDebug || false
@@ -279,7 +279,7 @@ class ShadowSyncService {
     
     // Skip if user is saving a card directly (_saveDebug flag set)
     if (card._saveDebug) {
-      console.log(`[ShadowSync] Skipping shadow write for card ${cardId} - card is being saved directly`);
+      logger.debug(`[ShadowSync] Skipping shadow write for card ${cardId} - card is being saved directly`);
       this._lastSaveTimestamp = now;
       
       // Add to recently updated cards set
@@ -287,7 +287,7 @@ class ShadowSyncService {
       
       // Reset skipped card counter when a direct card save happens
       if (this._skippedCardCount > 0) {
-        console.log(`[ShadowSync] Skipped shadow write for ${this._skippedCardCount} cards in previous batch`);
+        logger.debug(`[ShadowSync] Skipped shadow write for ${this._skippedCardCount} cards in previous batch`);
         this._skippedCardCount = 0;
       }
       
@@ -299,7 +299,7 @@ class ShadowSyncService {
     if (card._lastUpdateTime) {
       // Only log individual skips for non-batch operations or the first few cards
       if (!isInBatchMode || this._skippedCardCount < 5) {
-        console.log(`[ShadowSync] Skipping shadow write for card ${cardId} - already part of tracked update flow (${card._lastUpdateTime})`);
+        logger.debug(`[ShadowSync] Skipping shadow write for card ${cardId} - already part of tracked update flow (${card._lastUpdateTime})`);
       }
       
       this._lastSaveTimestamp = now;
@@ -315,7 +315,7 @@ class ShadowSyncService {
     if (this._recentlyUpdatedCards.has(cardId)) {
       // Only log individual skips for non-batch operations or the first few cards
       if (!isInBatchMode || this._skippedCardCount < 5) {
-        console.log(`[ShadowSync] Skipping shadow write for card ${cardId} - recently updated`);
+        logger.debug(`[ShadowSync] Skipping shadow write for card ${cardId} - recently updated`);
       }
       
       this._skippedCardCount++;
@@ -326,14 +326,14 @@ class ShadowSyncService {
     if (this._lastSaveTimestamp && (now - this._lastSaveTimestamp < 3000)) {
       // Only log individual skips for non-batch operations or the first few cards
       if (!isInBatchMode || this._skippedCardCount < 5) {
-        console.log(`[ShadowSync] Skipping shadow write for card ${cardId} - in cooldown period (${now - this._lastSaveTimestamp}ms since last save)`);
+        logger.debug(`[ShadowSync] Skipping shadow write for card ${cardId} - in cooldown period (${now - this._lastSaveTimestamp}ms since last save)`);
       }
       
       this._skippedCardCount++;
       
       // Periodically log summary of skipped cards to reduce spam but still provide info
       if (this._skippedCardCount > 0 && now - this._lastLogTimestamp > 1000) {
-        console.log(`[ShadowSync] Skipped shadow write for ${this._skippedCardCount} cards due to cooldown`);
+        logger.debug(`[ShadowSync] Skipped shadow write for ${this._skippedCardCount} cards due to cooldown`);
         this._lastLogTimestamp = now;
       }
       
@@ -345,7 +345,7 @@ class ShadowSyncService {
     
     // Reset skipped card counter when doing an actual write
     if (this._skippedCardCount > 0) {
-      console.log(`[ShadowSync] Skipped shadow write for ${this._skippedCardCount} cards in previous batch`);
+      logger.debug(`[ShadowSync] Skipped shadow write for ${this._skippedCardCount} cards in previous batch`);
       this._skippedCardCount = 0;
     }
     
@@ -354,7 +354,7 @@ class ShadowSyncService {
     this._notifySyncStarted();
     
     try {
-      console.log(`[ShadowSync] Preparing to write card ${cardId} to collection ${collectionName || 'unknown'}`);
+      logger.debug(`[ShadowSync] Preparing to write card ${cardId} to collection ${collectionName || 'unknown'}`);
       
       // Ensure collectionId is included in the data to be written
       const cardDataToWrite = {
@@ -371,15 +371,15 @@ class ShadowSyncService {
       delete cardDataToWrite.id; 
 
       // Directly update the card without extensive checks (our getCard optimization will handle this)
-      console.log(`[ShadowSync] Calling repository.updateCard for ${cardId}`);
+      logger.debug(`[ShadowSync] Calling repository.updateCard for ${cardId}`);
       const repoStart = performance.now();
       await this.repository.updateCard(cardId, cardDataToWrite, collectionName);
       const repoEnd = performance.now();
       
       // Log performance metrics
       const endTime = performance.now();
-      console.log(`[ShadowSync] Repository update took ${(repoEnd - repoStart).toFixed(2)}ms`);
-      console.log(`[ShadowSync] Total shadow write operation for ${cardId} completed in ${(endTime - startTime).toFixed(2)}ms`);
+      logger.debug(`[ShadowSync] Repository update took ${(repoEnd - repoStart).toFixed(2)}ms`);
+      logger.debug(`[ShadowSync] Total shadow write operation for ${cardId} completed in ${(endTime - startTime).toFixed(2)}ms`);
       
       // Remember when we last wrote a card - helps prevent mass update cascades
       this._lastSaveTimestamp = Date.now();
@@ -395,7 +395,7 @@ class ShadowSyncService {
       this._notifySyncCompleted(true);
       return true;
     } catch (error) {
-      console.error(`[ShadowSync] Error writing card ${cardId} to Firestore:`, error);
+      logger.error(`[ShadowSync] Error writing card ${cardId} to Firestore:`, error);
       this._notifySyncCompleted(false);
       return false;
     } finally {

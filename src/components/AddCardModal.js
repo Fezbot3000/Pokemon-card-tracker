@@ -393,6 +393,8 @@ const AddCardModal = ({
             onImageRetry={() => setImageLoadingState('idle')}
             onImageClick={() => cardImage && setShowEnlargedImage(true)}
             errors={errors}
+            hideCollectionField={true}
+            hidePsaSearchButton={true}
           />
           
           {/* Status message */}

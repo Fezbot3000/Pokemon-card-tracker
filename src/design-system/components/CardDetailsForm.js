@@ -28,7 +28,11 @@ const CardDetailsForm = ({
   additionalValueContent,
   additionalSerialContent,
   collections = [],
-  initialCollectionName = '' // Use initialCollectionName from modal if available
+  initialCollectionName = '', // Use initialCollectionName from modal if available
+  hideCollectionField = false,
+  onPsaSearch,
+  isPsaSearching = false,
+  hidePsaSearchButton = false
 }) => {
   
   const [selectedCompany, setSelectedCompany] = useState('');
@@ -133,6 +137,24 @@ const CardDetailsForm = ({
     { value: 'A', label: 'A (Authentic)' },
   ];
 
+  // Define card categories
+  const cardCategories = [
+    { value: '', label: 'Select Category...' },
+    { value: 'Pokemon', label: 'Pokémon' },
+    { value: 'YuGiOh', label: 'Yu-Gi-Oh!' },
+    { value: 'MagicTheGathering', label: 'Magic: The Gathering' },
+    { value: 'DragonBallZ', label: 'Dragon Ball Z' },
+    { value: 'OnePiece', label: 'One Piece' },
+    { value: 'NHL', label: 'NHL' },
+    { value: 'NBL', label: 'NBL' },
+    { value: 'EPL', label: 'EPL' },
+    { value: 'F1', label: 'F1' },
+    { value: 'WWE', label: 'WWE' },
+    { value: 'Trainer', label: 'Trainer' },
+    { value: 'Energy', label: 'Energy' },
+    { value: 'Other', label: 'Other TCG/CCG' },
+  ];
+
   // --- Dropdown Handlers ---
   const handleCompanyChange = (e) => {
     const company = e.target.value;
@@ -184,23 +206,25 @@ const CardDetailsForm = ({
   return (
     <div className={`card-details-form ${className}`}>
       {/* Collection Dropdown - Always at the top */}
-      <div className="mb-6">
-        <SelectField
-          label="Collection"
-          name="collectionId"
-          value={card.collectionId || ''}
-          onChange={handleCollectionChange}
-          error={errors.collectionId}
-          required
-        >
-          <option value="">Select Collection...</option>
-          {collections.map(collection => (
-            <option key={collection} value={collection}>
-              {collection}
-            </option>
-          ))}
-        </SelectField>
-      </div>
+      {!hideCollectionField && (
+        <div className="mb-6">
+          <SelectField
+            label="Collection"
+            name="collectionId"
+            value={card.collectionId || ''}
+            onChange={handleCollectionChange}
+            error={errors.collectionId}
+            required
+          >
+            <option value="">Select Collection...</option>
+            {collections.map(collection => (
+              <option key={collection} value={collection}>
+                {collection}
+              </option>
+            ))}
+          </SelectField>
+        </div>
+      )}
 
       {/* Card Image and Information Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
@@ -257,15 +281,43 @@ const CardDetailsForm = ({
             </div>
             
             {/* PSA Lookup Button */}
-            <div className="mt-3">
-              <button 
-                onClick={() => {}} 
-                className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700"
-              >
-                <Icon name="search" className="mr-2" />
-                Search PSA
-              </button>
-            </div>
+            {!hidePsaSearchButton && (
+              <div className="mt-3 space-y-2">
+                <button 
+                  onClick={() => onPsaSearch && onPsaSearch(card.slabSerial)} 
+                  className="w-full inline-flex items-center justify-center font-medium rounded-lg transition-colors focus:outline-none px-4 py-2 text-base bg-[#0F0F0F] text-gray-300 border border-gray-700 hover:opacity-90 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={isPsaSearching}
+                >
+                  {isPsaSearching ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Searching...
+                    </>
+                  ) : (
+                    <>
+                      <Icon name="search" className="mr-2" />
+                      Search PSA
+                    </>
+                  )}
+                </button>
+                
+                {/* PSA Website Link - Show if PSA URL exists */}
+                {card.psaUrl && (
+                  <a
+                    href={card.psaUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full inline-flex items-center justify-center font-medium rounded-lg transition-colors focus:outline-none px-4 py-2 text-base bg-gradient-to-r from-blue-500 to-blue-700 text-white hover:opacity-90 shadow-sm"
+                  >
+                    <Icon name="open_in_new" className="mr-2" />
+                    View on PSA Website
+                  </a>
+                )}
+              </div>
+            )}
             
             {/* Profit/Loss Display - Moved under the image */}
             {(typeof card.investmentAUD === 'number' || typeof card.investmentAUD === 'string') && 
@@ -333,26 +385,9 @@ const CardDetailsForm = ({
                 error={errors.category}
                 required
               >
-                <option value="">Select Category...</option>
-                <option value="Pokémon">Pokémon</option>
-                <option value="Trainer">Trainer</option>
-                <option value="Energy">Energy</option>
-                <option value="Other">Other</option>
-              </SelectField>
-            </div>
-            <div>
-              <SelectField
-                label="Collection"
-                name="collectionId"
-                value={card.collectionId || ''}
-                onChange={handleCollectionChange}
-                error={errors.collectionId}
-                required
-              >
-                <option value="">Select Collection...</option>
-                {collections.map(collection => (
-                  <option key={collection} value={collection}>
-                    {collection}
+                {cardCategories.map(option => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
                   </option>
                 ))}
               </SelectField>
@@ -503,7 +538,11 @@ CardDetailsForm.propTypes = {
   additionalValueContent: PropTypes.node,
   additionalSerialContent: PropTypes.node,
   collections: PropTypes.arrayOf(PropTypes.string),
-  initialCollectionName: PropTypes.string
+  initialCollectionName: PropTypes.string,
+  hideCollectionField: PropTypes.bool,
+  onPsaSearch: PropTypes.func,
+  isPsaSearching: PropTypes.bool,
+  hidePsaSearchButton: PropTypes.bool
 };
 
 export default CardDetailsForm;

@@ -156,8 +156,11 @@ const parsePSACardData = (psaData) => {
     cert.Variety
   ].filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
 
+  // Clean card name for the app - just extract the actual card name without year/brand prefix
+  const cleanCardName = cert.Subject || cert.Title || '';
+
   const result = {
-    cardName,
+    cardName: cleanCardName,
     cardNumber: cert.CardNumber || cert.SpecNumber || '',
     slabSerial: cert.CertNumber || cert.SpecId || '',
     grade: cert.GradeDescription || cert.CardGrade || '',
