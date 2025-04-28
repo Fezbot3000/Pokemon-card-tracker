@@ -75,10 +75,10 @@ const SearchToolbar = ({
           value={searchValue}
           onChange={(e) => onSearchChange?.(e.target.value)}
           placeholder="Search by name, set, or serial number..."
-          className="w-full pl-10 pr-4 py-2 bg-gray-100 dark:bg-[#181C27] border-0 
+          className="w-full pl-10 pr-4 py-2 bg-[#000] border-0 
                    rounded-lg text-gray-900 dark:text-white placeholder-gray-500 
                    dark:placeholder-gray-400 focus:ring-2 focus:ring-[var(--primary-light)]/20 
-                   focus:bg-white dark:focus:bg-[#181C27]"
+                   focus:bg-[#000]"
         />
       </div>
 

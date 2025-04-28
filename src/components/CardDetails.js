@@ -296,6 +296,7 @@ const CardDetails = memo(({
             ...finalCardData,
             imageUrl: imageUrl,
             hasImage: true,
+            imageUpdatedAt: new Date().toISOString(), // Add timestamp to force refresh
             _pendingImageFile: null,
             _blobUrl: null
           };
@@ -335,6 +336,9 @@ const CardDetails = memo(({
         // Ensure both collection properties are set for compatibility
         collection: finalCardData.collectionId || finalCardData.collection || initialCollectionName,
         collectionId: finalCardData.collectionId || finalCardData.collection || initialCollectionName,
+        hasImage: finalCardData.hasImage || false, // Make sure hasImage is explicitly set
+        imageUrl: finalCardData.imageUrl || null, // Make sure imageUrl is explicitly set
+        imageUpdatedAt: finalCardData.imageUpdatedAt || new Date().toISOString(),
         // Add a debug flag
         _saveDebug: true
       };

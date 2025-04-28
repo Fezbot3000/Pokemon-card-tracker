@@ -136,6 +136,19 @@ const CardDetailsModal = ({
   
   // Handle image changes (passed down to form)
   const handleImageChange = (file) => {
+    // First update our local state
+    setLocalImageLoadingState('loading');
+    try {
+      // Create a preview URL for immediate feedback
+      const imageUrl = URL.createObjectURL(file);
+      setCardImage(imageUrl);
+      setLocalImageLoadingState('idle');
+    } catch (error) {
+      console.error('Error creating image preview:', error);
+      setLocalImageLoadingState('error');
+    }
+    
+    // Then pass to parent component
     if (onImageChange) {
       onImageChange(file);
     }
@@ -161,17 +174,22 @@ const CardDetailsModal = ({
       // Try to fetch the PSA card image in parallel
       let psaImage = null;
       try {
-        psaImage = await fetchPSACardImage(serialNumber);
-        if (psaImage) {
-          console.log(`PSA image fetched successfully: ${psaImage.size} bytes`);
-          setCardImage(URL.createObjectURL(psaImage));
-          
-          // Notify parent of image change if handler is provided
-          if (onImageChange) {
-            onImageChange(psaImage);
+        // Only fetch and apply PSA image if the card doesn't already have an image
+        if (!card.hasImage || !cardImage) {
+          psaImage = await fetchPSACardImage(serialNumber);
+          if (psaImage) {
+            console.log(`PSA image fetched successfully: ${psaImage.size} bytes`);
+            setCardImage(URL.createObjectURL(psaImage));
+            
+            // Notify parent of image change if handler is provided
+            if (onImageChange) {
+              onImageChange(psaImage);
+            }
+          } else {
+            console.log('No PSA image found or image fetch failed');
           }
         } else {
-          console.log('No PSA image found or image fetch failed');
+          console.log('Card already has an image, preserving existing image');
         }
       } catch (imageError) {
         console.error('Error fetching PSA image:', imageError);

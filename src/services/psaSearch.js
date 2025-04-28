@@ -8,6 +8,7 @@
 import { toast } from 'react-hot-toast';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { auth } from './firebase';
+import { getPokemonSetsByYear, getAllPokemonSets } from '../data/pokemonSets';
 
 // Access token storage
 let accessToken = null;
@@ -195,7 +196,13 @@ const mergeWithExistingCard = (existingCardData, psaCardData) => {
   // Map PSA data to our card data structure
   if (psaCardData.cardName) mergedData.card = psaCardData.cardName;
   if (psaCardData.player) mergedData.player = psaCardData.player;
-  if (psaCardData.setName) mergedData.set = psaCardData.setName;
+  
+  // Find best matching set from dropdown options
+  if (psaCardData.setName) {
+    const matchedSet = findBestMatchingSet(psaCardData.setName, psaCardData.year);
+    mergedData.set = matchedSet;
+  }
+  
   if (psaCardData.year) mergedData.year = psaCardData.year;
   
   // Format condition string correctly for CardDetailsForm dropdowns
@@ -341,8 +348,166 @@ const mergeWithExistingCard = (existingCardData, psaCardData) => {
   // Preserve existing financial data and image
   // We don't modify: investmentUSD, currentValueUSD, investmentAUD, currentValueAUD, datePurchased, notes, etc.
   
+  // Preserve any existing card image if it exists
+  if (existingCardData?.hasImage && existingCardData?.imageUrl) {
+    console.log('Preserving existing card image:', existingCardData.imageUrl);
+    mergedData.hasImage = existingCardData.hasImage;
+    mergedData.imageUrl = existingCardData.imageUrl;
+    // Also keep any image-related metadata
+    if (existingCardData.imageUpdatedAt) {
+      mergedData.imageUpdatedAt = existingCardData.imageUpdatedAt;
+    }
+  }
+  
   console.log('Merged card data:', mergedData);
   return mergedData;
+};
+
+// Function to find the best matching set from our dropdown options
+const findBestMatchingSet = (setName, year) => {
+  // First try to get sets for the specific year
+  let availableSets = [];
+  if (year) {
+    const parsedYear = parseInt(year, 10);
+    if (!isNaN(parsedYear)) {
+      availableSets = getPokemonSetsByYear(parsedYear);
+    }
+  }
+  
+  // If no sets found for the year, use all sets
+  if (availableSets.length === 0) {
+    availableSets = getAllPokemonSets();
+  }
+  
+  // If we have a set name, try to find the best match
+  if (setName && availableSets.length > 0) {
+    // Try for exact match first
+    const exactMatch = availableSets.find(set => 
+      set.value.toLowerCase() === setName.toLowerCase()
+    );
+    
+    if (exactMatch) {
+      return exactMatch.value;
+    }
+    
+    // Try for partial match
+    const partialMatch = availableSets.find(set => 
+      set.value.toLowerCase().includes(setName.toLowerCase()) ||
+      setName.toLowerCase().includes(set.value.toLowerCase())
+    );
+    
+    if (partialMatch) {
+      return partialMatch.value;
+    }
+  }
+  
+  // If no match found, return original value
+  return setName;
+};
+
+/**
+ * Create a placeholder image for a PSA card
+ * @param {string} certNumber - The PSA certification number
+ * @returns {File} - A File object containing a simple canvas-generated image
+ */
+const createPlaceholderImage = (certNumber) => {
+  // Create a canvas element to generate a nicer placeholder image
+  const canvas = document.createElement('canvas');
+  canvas.width = 600;
+  canvas.height = 900;
+  
+  const ctx = canvas.getContext('2d');
+  
+  // Card background - light gray
+  ctx.fillStyle = '#f5f5f5';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  
+  // PSA slab outer border
+  ctx.strokeStyle = '#222222';
+  ctx.lineWidth = 12;
+  ctx.strokeRect(15, 15, canvas.width - 30, canvas.height - 30);
+  
+  // Inner border with shadow effect
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(30, 30, canvas.width - 60, canvas.height - 60);
+  
+  // Add drop shadow effect
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+  ctx.shadowBlur = 15;
+  ctx.shadowOffsetX = 5;
+  ctx.shadowOffsetY = 5;
+  
+  // PSA Header area
+  ctx.shadowColor = 'transparent'; // Turn off shadow for header
+  ctx.fillStyle = '#222222';
+  ctx.fillRect(40, 40, canvas.width - 80, 90);
+  
+  // PSA Logo text
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 60px Arial, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('PSA', canvas.width / 2, 100);
+  
+  // Cert Number with styling
+  ctx.fillStyle = '#222222';
+  ctx.font = '30px Arial, sans-serif';
+  ctx.fillText(`Cert #${certNumber}`, canvas.width / 2, 170);
+  
+  // Add Pokemon logo/branding
+  ctx.fillStyle = '#ffcb05'; // Pokemon yellow
+  ctx.beginPath();
+  ctx.arc(canvas.width / 2, canvas.height / 2 - 100, 100, 0, Math.PI * 2);
+  ctx.fill();
+  
+  ctx.fillStyle = '#3c5aa6'; // Pokemon blue
+  ctx.beginPath();
+  ctx.arc(canvas.width / 2, canvas.height / 2 - 100, 80, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Card information
+  ctx.fillStyle = '#222222';
+  ctx.font = 'bold 40px Arial, sans-serif';
+  ctx.fillText('PSA CARD', canvas.width / 2, canvas.height / 2 + 50);
+  
+  // Add stylized information about image pending
+  ctx.font = '28px Arial, sans-serif';
+  ctx.fillText('Image will be available', canvas.width / 2, canvas.height / 2 + 120);
+  ctx.fillText('after card verification', canvas.width / 2, canvas.height / 2 + 160);
+  
+  // Add a camera icon
+  ctx.fillStyle = '#666666';
+  ctx.beginPath();
+  const cameraX = canvas.width / 2;
+  const cameraY = canvas.height / 2 + 230;
+  const cameraWidth = 80;
+  const cameraHeight = 60;
+  
+  // Camera body
+  ctx.fillRect(cameraX - cameraWidth/2, cameraY - cameraHeight/2, cameraWidth, cameraHeight);
+  
+  // Camera lens
+  ctx.beginPath();
+  ctx.arc(cameraX, cameraY, 25, 0, Math.PI * 2);
+  ctx.fillStyle = '#444444';
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(cameraX, cameraY, 15, 0, Math.PI * 2);
+  ctx.fillStyle = '#222222';
+  ctx.fill();
+  
+  // Add info text at bottom
+  ctx.fillStyle = '#666666';
+  ctx.font = '24px Arial, sans-serif';
+  ctx.fillText(`Search complete - Card #${certNumber}`, canvas.width / 2, canvas.height - 60);
+  
+  // Convert canvas to blob
+  return new Promise((resolve) => {
+    canvas.toBlob((blob) => {
+      const file = new File([blob], `psa-card-${certNumber}.png`, { type: 'image/png' });
+      console.log(`Created enhanced placeholder image for cert #${certNumber}, size: ${file.size} bytes`);
+      resolve(file);
+    }, 'image/png', 0.9);
+  });
 };
 
 /**
@@ -388,58 +553,6 @@ const fetchPSACardImage = async (certNumber) => {
     console.error('Error fetching PSA card image:', error);
     return null;
   }
-};
-
-/**
- * Create a placeholder image for a PSA card
- * @param {string} certNumber - The PSA certification number
- * @returns {File} - A File object containing a simple canvas-generated image
- */
-const createPlaceholderImage = (certNumber) => {
-  // Create a canvas element to generate a simple placeholder image
-  const canvas = document.createElement('canvas');
-  canvas.width = 600;
-  canvas.height = 900;
-  
-  const ctx = canvas.getContext('2d');
-  
-  // Background
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  
-  // Border
-  ctx.strokeStyle = '#000000';
-  ctx.lineWidth = 10;
-  ctx.strokeRect(10, 10, canvas.width - 20, canvas.height - 20);
-  
-  // PSA Logo area
-  ctx.fillStyle = '#222222';
-  ctx.fillRect(40, 40, canvas.width - 80, 100);
-  
-  // Text for PSA logo
-  ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 60px Arial';
-  ctx.textAlign = 'center';
-  ctx.fillText('PSA', canvas.width / 2, 100);
-  
-  // Cert Number
-  ctx.fillStyle = '#000000';
-  ctx.font = '40px Arial';
-  ctx.fillText(`Cert #${certNumber}`, canvas.width / 2, 200);
-  
-  // Placeholder text
-  ctx.font = '30px Arial';
-  ctx.fillText('Pokemon Card', canvas.width / 2, canvas.height / 2);
-  ctx.fillText('Image Placeholder', canvas.width / 2, canvas.height / 2 + 50);
-  
-  // Convert canvas to blob
-  return new Promise((resolve) => {
-    canvas.toBlob((blob) => {
-      const file = new File([blob], `psa-placeholder-${certNumber}.png`, { type: 'image/png' });
-      console.log(`Created placeholder image for cert #${certNumber}, size: ${file.size} bytes`);
-      resolve(file);
-    }, 'image/png', 0.9);
-  });
 };
 
 // Get reference to Firebase Functions

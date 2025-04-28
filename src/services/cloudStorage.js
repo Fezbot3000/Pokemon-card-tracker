@@ -1,7 +1,6 @@
 import { storage } from './firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import logger from '../utils/logger';
-import { getFunctions, httpsCallable } from 'firebase/functions';
 
 /**
  * Upload an image to Firebase Storage
@@ -29,39 +28,27 @@ export const saveImageToCloud = async (imageBlob, userId, cardId, options = {}) 
     const imagePath = `images/${userId}/${cardId}.jpeg`;
     logger.debug(`Uploading image to path: ${imagePath}`);
     
-    // Convert blob to base64 for the function call
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(imageBlob);
-      reader.onloadend = async () => {
-        try {
-          // Remove data URL prefix (e.g., "data:image/jpeg;base64,")
-          const base64Data = reader.result.split(',')[1];
-          
-          // Call the Cloud Function
-          const functions = getFunctions();
-          const storeCardImageFn = httpsCallable(functions, 'storeCardImage');
-          
-          logger.debug(`Calling storeCardImage Cloud Function for card ${cardId}${options.isReplacement ? ' (replacing existing image)' : ''}`);
-          const result = await storeCardImageFn({ 
-            imageBase64: base64Data, 
-            cardId,
-            isReplacement: options.isReplacement || false
-          });
-          
-          if (result.data.success) {
-            logger.debug(`Cloud Function image upload succeeded with URL: ${result.data.downloadUrl}`);
-            resolve(result.data.downloadUrl);
-          } else {
-            throw new Error('Cloud Function failed to upload image');
-          }
-        } catch (fnError) {
-          logger.error('Error in Cloud Function image upload:', fnError);
-          reject(fnError);
-        }
-      };
-      reader.onerror = (error) => reject(error);
-    });
+    // Added direct upload method since Cloud Function appears unreliable
+    // Create a storage reference
+    const storageRef = ref(storage, imagePath);
+    
+    // Set metadata to force cache refresh
+    const metadata = {
+      contentType: 'image/jpeg',
+      customMetadata: {
+        updateTimestamp: new Date().toISOString(),
+        cardId: cardId
+      }
+    };
+    
+    // Upload the image directly
+    logger.debug(`Uploading image directly to Firebase Storage: ${imagePath}`);
+    const snapshot = await uploadBytes(storageRef, imageBlob, metadata);
+    
+    // Get the download URL
+    const downloadURL = await getDownloadURL(snapshot.ref);
+    logger.debug(`Direct upload succeeded with URL: ${downloadURL}`);
+    return downloadURL;
   } catch (error) {
     logger.error(`Error uploading image to Firebase Storage:`, error);
     throw error;

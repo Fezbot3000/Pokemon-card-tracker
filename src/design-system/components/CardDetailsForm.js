@@ -8,7 +8,8 @@ import ImageUploadButton from '../atoms/ImageUploadButton';
 import Icon from '../atoms/Icon';
 import { gradients } from '../styles/colors';
 import PriceHistoryGraph from '../../components/PriceHistoryGraph';
-import PSALookupButton from '../../components/PSALookupButton'; // Import PSALookupButton
+import PSALookupButton from '../../components/PSALookupButton'; 
+import { getPokemonSetsByYear, getAllPokemonSets } from '../../data/pokemonSets';
 
 /**
  * CardDetailsForm Component
@@ -37,7 +38,8 @@ const CardDetailsForm = ({
   
   const [selectedCompany, setSelectedCompany] = useState('');
   const [selectedGrade, setSelectedGrade] = useState('');
-
+  const [availableSets, setAvailableSets] = useState([]);
+  
   // Parse condition string on load/change
   useEffect(() => {
     if (card?.condition) {
@@ -68,6 +70,25 @@ const CardDetailsForm = ({
       setSelectedGrade('');
     }
   }, [card?.condition]);
+
+  // Effect to update available sets when year or category changes
+  useEffect(() => {
+    // Only filter sets for Pokémon cards
+    if (card.category === 'Pokemon' && card.year) {
+      // Try to parse the year as a number
+      const year = parseInt(card.year, 10);
+      if (!isNaN(year)) {
+        const sets = getPokemonSetsByYear(year);
+        if (sets.length > 0) {
+          setAvailableSets(sets);
+          return;
+        }
+      }
+    }
+    
+    // Default to empty set list for non-Pokémon cards or when year is invalid
+    setAvailableSets([]);
+  }, [card.year, card.category]);
 
   // Handle text field changes
   const handleInputChange = (e) => {
@@ -203,6 +224,17 @@ const CardDetailsForm = ({
     }
   };
 
+  // Custom styles for select options
+  const selectStyles = {
+    option: {
+      display: 'block',
+      whiteSpace: 'nowrap',
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
+      padding: '8px 12px'
+    }
+  };
+
   return (
     <div className={`card-details-form ${className}`}>
       {/* Collection Dropdown - Always at the top */}
@@ -277,7 +309,7 @@ const CardDetailsForm = ({
             </div>
             
             <div className="mt-3 flex justify-center">
-              <ImageUploadButton onChange={onImageChange} />
+              <ImageUploadButton onImageChange={onImageChange} />
             </div>
             
             {/* PSA Lookup Button */}
@@ -337,7 +369,7 @@ const CardDetailsForm = ({
           <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Card Information</h3>
           
           {/* Two-column grid for card details */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4">
             <div>
               <FormField
                 label="Player"
@@ -347,6 +379,9 @@ const CardDetailsForm = ({
                 error={errors.player}
               />
             </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 mt-4">
             <div>
               <FormField
                 label="Card Name"
@@ -357,16 +392,31 @@ const CardDetailsForm = ({
                 required
               />
             </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 mt-4">
             <div>
-              <FormField
+              <SelectField
                 label="Set"
                 name="set"
                 value={card.set || ''}
                 onChange={handleInputChange}
                 error={errors.set}
                 required
-              />
+              >
+                <option value="">Select Set...</option>
+                {availableSets.length > 0 ? (
+                  availableSets.map(set => (
+                    <option key={set.value} value={set.value}>
+                      {set.label}
+                    </option>
+                  ))
+                ) : null}
+              </SelectField>
             </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 mt-4">
             <div>
               <FormField
                 label="Year"
@@ -374,8 +424,12 @@ const CardDetailsForm = ({
                 value={card.year || ''}
                 onChange={handleInputChange}
                 error={errors.year}
+                required
               />
             </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 mt-4">
             <div>
               <SelectField
                 label="Category"
@@ -392,6 +446,9 @@ const CardDetailsForm = ({
                 ))}
               </SelectField>
             </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
             <div>
               <SelectField
                 label="Grading Company"
@@ -399,7 +456,6 @@ const CardDetailsForm = ({
                 value={selectedCompany}
                 onChange={handleCompanyChange}
                 error={errors.condition}
-                required
               >
                 {gradingCompanies.map(option => (
                   <option key={option.value} value={option.value}>
@@ -415,7 +471,7 @@ const CardDetailsForm = ({
                 value={selectedGrade}
                 onChange={handleGradeChange}
                 error={errors.condition}
-                disabled={!selectedCompany}
+                disabled={selectedCompany === ''}
               >
                 {(selectedCompany === 'RAW' ? rawConditions : gradedConditions).map(option => (
                   <option key={option.value} value={option.value}>
@@ -424,15 +480,9 @@ const CardDetailsForm = ({
                 ))}
               </SelectField>
             </div>
-            <div>
-              <FormField
-                label="Population"
-                name="population"
-                value={card.population ? String(card.population) : ''}
-                onChange={handleInputChange}
-                error={errors.population}
-              />
-            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
             <div className="relative">
               <FormField
                 label="Serial Number"
@@ -447,6 +497,18 @@ const CardDetailsForm = ({
                 </div>
               )}
             </div>
+            <div>
+              <FormField
+                label="Population"
+                name="population"
+                value={card.population || ''}
+                onChange={handleInputChange}
+                error={errors.population}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
             <div>
               <FormField
                 label="Date Purchased"
@@ -471,7 +533,7 @@ const CardDetailsForm = ({
           </div>
           
           {/* Financial Details Section */}
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white mt-6 mb-4">Financial Details</h3>
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white mt-8 mb-4">Financial Details</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <FormField

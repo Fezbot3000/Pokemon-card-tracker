@@ -164,6 +164,13 @@ const AddCardModal = ({
       return;
     }
 
+    // Check if we have an image file
+    if (!imageFile) {
+      setSaveMessage('Please add an image for the card');
+      setErrors({ image: 'Card image is required' });
+      return;
+    }
+
     try {
       // Prepare card data
       const cardToSave = {
