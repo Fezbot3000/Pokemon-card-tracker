@@ -9,7 +9,7 @@ import Icon from '../atoms/Icon';
 import { gradients } from '../styles/colors';
 import PriceHistoryGraph from '../../components/PriceHistoryGraph';
 import PSALookupButton from '../../components/PSALookupButton'; 
-import { getPokemonSetsByYear, getAllPokemonSets } from '../../data/pokemonSets';
+import { getPokemonSetsByYear, getAllPokemonSets, addCustomSet } from '../../data/pokemonSets';
 
 /**
  * CardDetailsForm Component
@@ -73,22 +73,13 @@ const CardDetailsForm = ({
 
   // Effect to update available sets when year or category changes
   useEffect(() => {
-    // Only filter sets for Pokémon cards
-    if (card.category === 'Pokemon' && card.year) {
-      // Try to parse the year as a number
-      const year = parseInt(card.year, 10);
-      if (!isNaN(year)) {
-        const sets = getPokemonSetsByYear(year);
-        if (sets.length > 0) {
-          setAvailableSets(sets);
-          return;
-        }
-      }
+    if (card.year) {
+      const sets = getPokemonSetsByYear(card.year);
+      setAvailableSets(sets);
+    } else {
+      setAvailableSets(getAllPokemonSets());
     }
-    
-    // Default to empty set list for non-Pokémon cards or when year is invalid
-    setAvailableSets([]);
-  }, [card.year, card.category]);
+  }, [card.year]);
 
   // Handle text field changes
   const handleInputChange = (e) => {
@@ -235,6 +226,20 @@ const CardDetailsForm = ({
     }
   };
 
+  // Handle the addition of a new custom set
+  const handleAddCustomSet = (newSet) => {
+    console.log('Adding new custom set:', newSet);
+    
+    // Update available sets with the new option
+    const newOption = { value: newSet, label: newSet };
+    setAvailableSets(prev => [...prev, newOption]);
+    
+    // Save the custom set to the year in our data store
+    if (card.year) {
+      addCustomSet(newSet, card.year);
+    }
+  };
+
   return (
     <div className={`card-details-form ${className}`}>
       {/* Collection Dropdown - Always at the top */}
@@ -249,11 +254,14 @@ const CardDetailsForm = ({
             required
           >
             <option value="">Select Collection...</option>
-            {collections.map(collection => (
-              <option key={collection} value={collection}>
-                {collection}
-              </option>
-            ))}
+            {collections
+              .filter(collection => collection !== 'sold') // Filter out the 'sold' collection
+              .map(collection => (
+                <option key={collection} value={collection}>
+                  {collection}
+                </option>
+              ))
+            }
           </SelectField>
         </div>
       )}
@@ -403,6 +411,8 @@ const CardDetailsForm = ({
                 onChange={handleInputChange}
                 error={errors.set}
                 required
+                allowCustomOptions={true}
+                onAddOption={handleAddCustomSet}
               >
                 <option value="">Select Set...</option>
                 {availableSets.length > 0 ? (

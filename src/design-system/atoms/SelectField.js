@@ -21,6 +21,8 @@ const SelectField = ({
   placeholder, // Optional placeholder text
   error, // Optional error message/indicator
   children, // Support direct option elements as children
+  allowCustomOptions = false, // Allow user to add custom options
+  onAddOption = null, // Callback for adding a new option
   ...props
 }) => {
   const fieldId = id || `field-${name}`;
@@ -37,6 +39,27 @@ const SelectField = ({
     pr-8 // Add padding for custom arrow space
   `;
 
+  // Handler for adding custom option
+  const handleAddCustomOption = () => {
+    const newOption = prompt('Enter new value:');
+    if (newOption && newOption.trim() !== '') {
+      if (onAddOption) {
+        onAddOption(newOption.trim());
+      }
+      // Set the new value in the select
+      const event = { target: { name, value: newOption.trim() } };
+      onChange(event);
+    }
+  };
+
+  const handleChange = (event) => {
+    if (event.target.value === '__add_new__') {
+      handleAddCustomOption();
+    } else {
+      onChange(event);
+    }
+  };
+
   return (
     <div className={`w-full ${className}`}>
       {label && (
@@ -49,7 +72,7 @@ const SelectField = ({
           id={fieldId}
           name={name}
           value={value}
-          onChange={onChange}
+          onChange={handleChange}
           required={required}
           disabled={disabled}
           className={selectClasses}
@@ -64,6 +87,8 @@ const SelectField = ({
           ))}
           {/* Or render children directly */}
           {children}
+          {/* Add a special option for adding a new item */}
+          {allowCustomOptions && <option value="__add_new__">+ Add new...</option>}
         </select>
         {/* Custom dropdown arrow */}
         <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
@@ -95,6 +120,8 @@ SelectField.propTypes = {
   placeholder: PropTypes.string,
   error: PropTypes.string,
   children: PropTypes.node,
+  allowCustomOptions: PropTypes.bool,
+  onAddOption: PropTypes.func,
 };
 
 export default SelectField;

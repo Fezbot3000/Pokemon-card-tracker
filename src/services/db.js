@@ -2747,6 +2747,118 @@ class DatabaseService {
     }
     return this.cache.cards[cardId];
   }
+
+  /**
+   * Save custom Pokemon set to Firestore
+   * @param {string} setName - Name of the set to save
+   * @param {string} year - Year the set belongs to
+   * @returns {Promise} - Promise resolving to success status
+   */
+  async saveCustomSet(setName, year) {
+    if (!featureFlags.enableFirestoreSync) {
+      logger.debug('Firestore sync disabled, not saving custom set');
+      return false;
+    }
+
+    try {
+      const userId = this.getCurrentUserId();
+      if (!userId) {
+        logger.error('No user ID available, cannot save custom set');
+        return false;
+      }
+
+      // Import Firebase
+      const { db } = await import('./firebase');
+      const { doc, getDoc, setDoc, arrayUnion } = await import('firebase/firestore');
+
+      // Get the reference to the user's custom sets doc
+      const customSetsRef = doc(db, 'userSettings', userId);
+      
+      // Get current custom sets or create new structure
+      let customSetsDoc;
+      try {
+        customSetsDoc = await getDoc(customSetsRef);
+      } catch (error) {
+        logger.error('Error fetching custom sets:', error);
+        return false;
+      }
+
+      if (customSetsDoc.exists()) {
+        // Update existing document
+        const customSets = customSetsDoc.data().customSets || {};
+        
+        // Check if this year exists in the custom sets
+        if (!customSets[year]) {
+          customSets[year] = [];
+        }
+        
+        // Check if set already exists for this year
+        if (!customSets[year].includes(setName)) {
+          // Add to the array for this year
+          await setDoc(customSetsRef, {
+            customSets: {
+              ...customSets,
+              [year]: [...customSets[year], setName]
+            }
+          }, { merge: true });
+        }
+      } else {
+        // Create new document
+        await setDoc(customSetsRef, {
+          customSets: {
+            [year]: [setName]
+          }
+        });
+      }
+      
+      logger.debug(`Custom set ${setName} for year ${year} saved to Firestore`);
+      return true;
+    } catch (error) {
+      logger.error('Error saving custom set to Firestore:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Load custom Pokemon sets from Firestore
+   * @returns {Promise<Object>} - Promise resolving to custom sets by year
+   */
+  async loadCustomSets() {
+    if (!featureFlags.enableFirestoreSync) {
+      logger.debug('Firestore sync disabled, not loading custom sets');
+      return {};
+    }
+
+    try {
+      const userId = this.getCurrentUserId();
+      if (!userId) {
+        logger.error('No user ID available, cannot load custom sets');
+        return {};
+      }
+
+      // Import Firebase
+      const { db } = await import('./firebase');
+      const { doc, getDoc } = await import('firebase/firestore');
+
+      // Get the reference to the user's custom sets doc
+      const customSetsRef = doc(db, 'userSettings', userId);
+      
+      try {
+        const customSetsDoc = await getDoc(customSetsRef);
+        if (customSetsDoc.exists()) {
+          const data = customSetsDoc.data();
+          return data.customSets || {};
+        }
+      } catch (error) {
+        logger.error('Error fetching custom sets:', error);
+      }
+      
+      return {};
+    } catch (error) {
+      logger.error('Error loading custom sets from Firestore:', error);
+      return {};
+    }
+  }
 }
 
 const db = new DatabaseService();

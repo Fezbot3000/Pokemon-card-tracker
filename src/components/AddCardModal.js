@@ -361,11 +361,18 @@ const AddCardModal = ({
             <div className="flex gap-2 items-center">
               <select
                 value={selectedCollection}
-                onChange={(e) => setSelectedCollection(e.target.value)}
+                onChange={(e) => {
+                  if (e.target.value === 'new') {
+                    setShowNewCollectionModal(true);
+                  } else {
+                    setSelectedCollection(e.target.value);
+                  }
+                }}
                 className="w-full px-3 py-2 rounded-lg border border-[#ffffff33] dark:border-[#ffffff1a]
                          bg-white dark:bg-[#0F0F0F] text-gray-900 dark:text-white
                          focus:outline-none focus:ring-2 focus:ring-primary/20"
               >
+                <option value="">Select Collection...</option>
                 {collections
                   .filter(collection => collection.toLowerCase() !== 'sold')
                   .map(collection => (
@@ -374,6 +381,7 @@ const AddCardModal = ({
                     </option>
                   ))
                 }
+                <option value="new">+ Create New Collection</option>
               </select>
               <Button
                 variant="primary"

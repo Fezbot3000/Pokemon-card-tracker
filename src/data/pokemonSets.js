@@ -3,6 +3,8 @@
  * Organized by year and era for dynamic filtering in the card forms
  */
 
+import db from '../services/db';
+
 const POKEMON_SETS = {
   // Base Era
   1999: [
@@ -180,14 +182,99 @@ const POKEMON_SETS = {
   ],
 };
 
-// Utility function to get sets by year
-export const getPokemonSetsByYear = (year) => {
-  // If no year provided or not a valid year, return an empty array
-  if (!year || !POKEMON_SETS[year]) {
-    return [];
+// Store for custom sets that users have added
+let userCustomSets = {};
+
+// Load custom sets from both localStorage and Firestore
+const loadCustomSets = async () => {
+  try {
+    // First load from localStorage for immediate display
+    const savedSets = localStorage.getItem('pokemonCustomSets');
+    if (savedSets) {
+      userCustomSets = JSON.parse(savedSets);
+    }
+    
+    // Then load from Firestore (this will take precedence)
+    const firestoreSets = await db.loadCustomSets();
+    
+    // Merge the sets, with Firestore taking precedence
+    Object.keys(firestoreSets).forEach(year => {
+      if (!userCustomSets[year]) {
+        userCustomSets[year] = [];
+      }
+      
+      // Convert array of set names to proper set objects
+      firestoreSets[year].forEach(setName => {
+        // Check if this set already exists
+        const exists = userCustomSets[year].some(set => set.value === setName);
+        if (!exists) {
+          userCustomSets[year].push({ value: setName, label: setName });
+        }
+      });
+    });
+    
+    // Save the merged sets back to localStorage
+    localStorage.setItem('pokemonCustomSets', JSON.stringify(userCustomSets));
+  } catch (error) {
+    console.error('Failed to load custom sets:', error);
   }
-  
-  return POKEMON_SETS[year];
+};
+
+// Initialize loading of custom sets
+loadCustomSets();
+
+/**
+ * Add a custom set to a specific year
+ * @param {string} setName - The name of the set to add
+ * @param {string} year - The year to add the set to (as a string)
+ */
+export const addCustomSet = async (setName, year) => {
+  if (!year) return; // Must have a year
+
+  // Initialize the year if it doesn't exist
+  if (!userCustomSets[year]) {
+    userCustomSets[year] = [];
+  }
+
+  // Check if the set already exists in this year
+  const setExists = userCustomSets[year].some(set => set.value === setName);
+  if (!setExists) {
+    userCustomSets[year].push({ value: setName, label: setName });
+    
+    // Save to localStorage
+    try {
+      localStorage.setItem('pokemonCustomSets', JSON.stringify(userCustomSets));
+    } catch (error) {
+      console.error('Failed to save custom sets to localStorage:', error);
+    }
+    
+    // Save to Firestore
+    try {
+      await db.saveCustomSet(setName, year);
+    } catch (error) {
+      console.error('Failed to save custom set to Firestore:', error);
+    }
+  }
+};
+
+/**
+ * Get all custom sets for a specific year
+ * @param {string} year - The year to get sets for
+ * @returns {Array} - Array of sets for that year
+ */
+export const getCustomSetsForYear = (year) => {
+  return userCustomSets[year] || [];
+};
+
+/**
+ * Get all Pokemon sets for a specific year, including custom sets
+ * @param {string} year - The year to get sets for
+ * @returns {Array} - Array of all sets for that year
+ */
+export const getPokemonSetsByYear = (year) => {
+  const standardSets = POKEMON_SETS[year] || [];
+  const customSets = getCustomSetsForYear(year) || [];
+  return [...standardSets, ...customSets];
 };
 
 // Utility function to get all Pokemon sets (flattened)
