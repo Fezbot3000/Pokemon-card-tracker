@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import Button from '../atoms/Button';
 import Icon from '../atoms/Icon';
+import Button from '../atoms/Button';
 import Dropdown, { DropdownItem } from '../molecules/Dropdown';
 import { baseColors } from '../styles/colors';
 import { useTheme } from '../contexts/ThemeContext';
@@ -21,6 +21,8 @@ const SearchToolbar = ({
   sortOption = 'Current Value',
   sortOptions = ['Current Value', 'Name', 'Date Added', 'Number'],
   onSortChange,
+  sortDirection = 'asc',
+  onSortDirectionChange,
   onAddCard,
   className = '',
   ...props
@@ -30,6 +32,12 @@ const SearchToolbar = ({
   const [isSortDropdownOpen, setIsSortDropdownOpen] = React.useState(false);
   const [previousViewMode, setPreviousViewMode] = React.useState(viewMode);
   const [isAnimating, setIsAnimating] = React.useState(false);
+  const [currentSortDirection, setCurrentSortDirection] = React.useState(sortDirection);
+
+  // Sync state if prop changes
+  React.useEffect(() => {
+    setCurrentSortDirection(sortDirection);
+  }, [sortDirection]);
 
   // Handle view mode change with animation
   const handleViewModeChange = (newMode) => {
@@ -47,15 +55,46 @@ const SearchToolbar = ({
     }
   };
 
+  // Toggle sort direction function
+  const toggleSortDirection = (e) => {
+    if (e) e.stopPropagation();
+    const newDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+    setCurrentSortDirection(newDirection);
+    // Update local storage directly for immediate feedback & persistence
+    localStorage.setItem('cardListSortDirection', newDirection);
+    // Call the parent component's handler if provided
+    if (typeof onSortDirectionChange === 'function') {
+      onSortDirectionChange(newDirection);
+    }
+  };
+
   // Sort dropdown trigger
   const sortDropdownTrigger = (
-    <Button 
-      variant="text" 
-      className="w-full sm:w-56 flex items-center gap-1 text-sm sm:text-base"
-      iconRight={<Icon name="expand_more" size="sm" />}
+    <div 
+      className="inline-flex items-center justify-center font-medium rounded-lg transition-colors focus:outline-none px-4 py-2 text-base bg-[#000] text-white cursor-pointer"
+      onClick={() => setIsSortDropdownOpen(!isSortDropdownOpen)}
     >
-      <span className="truncate">Sort: {sortOption}</span>
-    </Button>
+      <div className="flex items-center">
+        <Icon name="sort" size="sm" className="text-white" />
+        {/* Arrow Button */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation(); // Prevent dropdown opening
+            toggleSortDirection(e);
+          }}
+          className="ml-1 bg-transparent border-0 p-0 cursor-pointer"
+        >
+          <Icon 
+            name={currentSortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward'} 
+            size="sm" 
+            className="text-white"
+          />
+        </button>
+      </div>
+      {/* Screen reader text */}
+      <span className="sr-only">{sortOption} ({currentSortDirection === 'asc' ? 'ascending' : 'descending'})</span>
+    </div>
   );
 
   const toolbarClass = `w-full bg-white dark:bg-[#1B2131] py-3 px-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 ${isDarkMode ? 'shadow-sm' : ''} rounded-md border border-[#ffffff33] dark:border-[#ffffff1a] ${className}`;
@@ -139,7 +178,9 @@ const SearchToolbar = ({
               }}
               className={sortOption === option ? 'bg-gray-100 dark:bg-black' : ''}
             >
-              {option}
+              <div className="flex items-center justify-between w-full">
+                <span>{option}</span>
+              </div>
             </DropdownItem>
           ))}
         </Dropdown>
@@ -166,6 +207,8 @@ SearchToolbar.propTypes = {
   sortOption: PropTypes.string,
   sortOptions: PropTypes.arrayOf(PropTypes.string),
   onSortChange: PropTypes.func,
+  sortDirection: PropTypes.oneOf(['asc', 'desc']),
+  onSortDirectionChange: PropTypes.func,
   onAddCard: PropTypes.func,
   className: PropTypes.string
 };

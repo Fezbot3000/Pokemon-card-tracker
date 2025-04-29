@@ -1,5 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import PropTypes from 'prop-types';
+import { toast } from 'react-hot-toast';
+import db from '../../services/db';
+import cardRepo from '../../services/cardRepo';
 import FormField from '../molecules/FormField';
 import FormLabel from '../atoms/FormLabel';
 import SelectField from '../atoms/SelectField';
@@ -9,7 +12,8 @@ import Icon from '../atoms/Icon';
 import { gradients } from '../styles/colors';
 import PriceHistoryGraph from '../../components/PriceHistoryGraph';
 import PSALookupButton from '../../components/PSALookupButton'; 
-import { getPokemonSetsByYear, getAllPokemonSets, addCustomSet } from '../../data/pokemonSets';
+import { getAllPokemonSets, getPokemonSetsByYear, addCustomSet } from '../../data/pokemonSets';
+import '../styles/formFixes.css'; // Import the new CSS fixes
 
 /**
  * CardDetailsForm Component
@@ -99,7 +103,7 @@ const CardDetailsForm = ({
       // Store the raw value in the card object, conversion will happen when needed
       onChange({
         ...card,
-        [name]: value === '' ? '' : parseFloat(value)
+        [name]: value === '' ? '' : value
       });
     }
   };
@@ -131,7 +135,64 @@ const CardDetailsForm = ({
     { value: 'Poor', label: 'Poor (P)' },
   ];
 
-  const gradedConditions = [
+  const psaGrades = [
+    { value: '', label: 'Select Grade...' },
+    { value: '10', label: '10' },
+    { value: '9.5', label: '9.5' },
+    { value: '9', label: '9' },
+    { value: '8.5', label: '8.5' },
+    { value: '8', label: '8' },
+    { value: '7.5', label: '7.5' },
+    { value: '7', label: '7' },
+    { value: '6', label: '6' },
+    { value: '5', label: '5' },
+    { value: '4', label: '4' },
+    { value: '3', label: '3' },
+    { value: '2', label: '2' },
+    { value: '1', label: '1' },
+    { value: 'A', label: 'A (Authentic)' },
+  ];
+
+  const bgsGrades = [
+    { value: '', label: 'Select Grade...' },
+    { value: '10', label: '10' },
+    { value: '9.5', label: '9.5' },
+    { value: '9', label: '9' },
+    { value: '8.5', label: '8.5' },
+    { value: '8', label: '8' },
+    { value: '7.5', label: '7.5' },
+    { value: '7', label: '7' },
+    { value: '6', label: '6' },
+    { value: '5', label: '5' },
+    { value: '4', label: '4' },
+    { value: '3', label: '3' },
+    { value: '2', label: '2' },
+    { value: '1', label: '1' },
+    { value: 'A', label: 'A (Authentic)' },
+  ];
+
+  const cgcGrades = [
+    { value: '', label: 'Select Grade...' },
+    { value: '10', label: '10' },
+    { value: '9.8', label: '9.8' },
+    { value: '9.6', label: '9.6' },
+    { value: '9.4', label: '9.4' },
+    { value: '9.2', label: '9.2' },
+    { value: '9', label: '9' },
+    { value: '8.5', label: '8.5' },
+    { value: '8', label: '8' },
+    { value: '7.5', label: '7.5' },
+    { value: '7', label: '7' },
+    { value: '6', label: '6' },
+    { value: '5', label: '5' },
+    { value: '4', label: '4' },
+    { value: '3', label: '3' },
+    { value: '2', label: '2' },
+    { value: '1', label: '1' },
+    { value: 'A', label: 'A (Authentic)' },
+  ];
+
+  const sgcGrades = [
     { value: '', label: 'Select Grade...' },
     { value: '10', label: '10' },
     { value: '9.5', label: '9.5' },
@@ -228,15 +289,24 @@ const CardDetailsForm = ({
 
   // Handle the addition of a new custom set
   const handleAddCustomSet = (newSet) => {
-    console.log('Adding new custom set:', newSet);
+    if (!newSet || newSet.trim() === '') return;
     
-    // Update available sets with the new option
-    const newOption = { value: newSet, label: newSet };
-    setAvailableSets(prev => [...prev, newOption]);
+    // Add the custom set
+    addCustomSet(newSet);
     
-    // Save the custom set to the year in our data store
+    // Update available sets
     if (card.year) {
-      addCustomSet(newSet, card.year);
+      setAvailableSets(getPokemonSetsByYear(card.year));
+    } else {
+      setAvailableSets(getAllPokemonSets());
+    }
+    
+    // Update the card with the new set
+    if (onChange) {
+      onChange({
+        ...card,
+        setName: newSet
+      });
     }
   };
 
@@ -362,8 +432,8 @@ const CardDetailsForm = ({
             {/* Profit/Loss Display - Moved under the image */}
             {(typeof card.investmentAUD === 'number' || typeof card.investmentAUD === 'string') && 
              (typeof card.currentValueAUD === 'number' || typeof card.currentValueAUD === 'string') && (
-              <div className="mt-4 bg-gray-50 dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700 flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Profit/Loss:</span>
+              <div className="mt-4 bg-[#000] rounded-lg p-3 border border-gray-700 flex items-center justify-between" data-component-name="CardDetailsForm">
+                <span className="text-sm font-medium text-gray-300">Profit/Loss:</span>
                 <span className={`font-medium ${getProfit() >= 0 ? 'text-green-500' : 'text-red-500'}`}>
                   ${Math.abs(getProfit()).toFixed(2)} {getProfit() >= 0 ? 'profit' : 'loss'}
                 </span>
@@ -404,25 +474,30 @@ const CardDetailsForm = ({
 
           <div className="grid grid-cols-1 gap-4 mt-4">
             <div>
-              <SelectField
-                label="Set"
-                name="set"
-                value={card.set || ''}
-                onChange={handleInputChange}
-                error={errors.set}
-                required
-                allowCustomOptions={true}
-                onAddOption={handleAddCustomSet}
-              >
-                <option value="">Select Set...</option>
-                {availableSets.length > 0 ? (
-                  availableSets.map(set => (
-                    <option key={set.value} value={set.value}>
-                      {set.label}
-                    </option>
-                  ))
-                ) : null}
-              </SelectField>
+              <FormLabel htmlFor="setName">Set</FormLabel>
+              <div className="relative">
+                <select
+                  id="setName"
+                  name="setName"
+                  value={card.setName || ''}
+                  onChange={handleInputChange}
+                  className={`w-full px-4 py-2 border rounded-md ${
+                    errors.setName ? 'border-red-500' : 'border-[#ffffff33] dark:border-[#ffffff1a]'
+                  } bg-white dark:bg-[#0F0F0F] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none pr-10`}
+                  data-component-name="CardDetailsForm"
+                >
+                  <option value="">Select Set...</option>
+                  {availableSets.map(set => (
+                    <option key={set} value={set}>{set}</option>
+                  ))}
+                </select>
+                {/* Custom dropdown arrow */}
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 dark:text-gray-300">
+                  <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                    <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                  </svg>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -460,47 +535,86 @@ const CardDetailsForm = ({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
             <div>
-              <SelectField
-                label="Grading Company"
-                name="gradingCompany"
-                value={selectedCompany}
-                onChange={handleCompanyChange}
-                error={errors.condition}
-              >
-                {gradingCompanies.map(option => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </SelectField>
+              <div className="form-label-nowrap">
+                <FormLabel htmlFor="gradingCompany">Grading Company</FormLabel>
+                <div className="relative">
+                  <select
+                    id="gradingCompany"
+                    value={selectedCompany}
+                    onChange={handleCompanyChange}
+                    className="w-full px-4 py-2 border rounded-md border-[#ffffff33] dark:border-[#ffffff1a] bg-white dark:bg-[#0F0F0F] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none pr-10"
+                    data-component-name="CardDetailsForm"
+                  >
+                    {gradingCompanies.map(company => (
+                      <option key={company.value} value={company.value}>{company.label}</option>
+                    ))}
+                  </select>
+                  {/* Custom dropdown arrow */}
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 dark:text-gray-300">
+                    <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                      <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
             </div>
             <div>
-              <SelectField
-                label="Grade"
-                name="grade"
-                value={selectedGrade}
-                onChange={handleGradeChange}
-                error={errors.condition}
-                disabled={selectedCompany === ''}
-              >
-                {(selectedCompany === 'RAW' ? rawConditions : gradedConditions).map(option => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </SelectField>
+              <div className="form-label-nowrap">
+                <FormLabel htmlFor="grade">Grade</FormLabel>
+                <div className="relative">
+                  <select
+                    id="grade"
+                    value={selectedGrade}
+                    onChange={handleGradeChange}
+                    className="w-full px-4 py-2 border rounded-md border-[#ffffff33] dark:border-[#ffffff1a] bg-white dark:bg-[#0F0F0F] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none pr-10"
+                    data-component-name="CardDetailsForm"
+                  >
+                    {selectedCompany === 'RAW' ? (
+                      rawConditions.map(condition => (
+                        <option key={condition.value} value={condition.value}>{condition.label}</option>
+                      ))
+                    ) : selectedCompany === 'PSA' ? (
+                      psaGrades.map(grade => (
+                        <option key={grade.value} value={grade.value}>{grade.label}</option>
+                      ))
+                    ) : selectedCompany === 'BGS' ? (
+                      bgsGrades.map(grade => (
+                        <option key={grade.value} value={grade.value}>{grade.label}</option>
+                      ))
+                    ) : selectedCompany === 'CGC' ? (
+                      cgcGrades.map(grade => (
+                        <option key={grade.value} value={grade.value}>{grade.label}</option>
+                      ))
+                    ) : selectedCompany === 'SGC' ? (
+                      sgcGrades.map(grade => (
+                        <option key={grade.value} value={grade.value}>{grade.label}</option>
+                      ))
+                    ) : (
+                      <option value="">Select Grade...</option>
+                    )}
+                  </select>
+                  {/* Custom dropdown arrow */}
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 dark:text-gray-300">
+                    <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                      <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-            <div className="relative">
-              <FormField
-                label="Serial Number"
-                name="slabSerial"
-                value={card.slabSerial || ''}
-                onChange={handleInputChange}
-                error={errors.slabSerial}
-              />
+            <div>
+              <div className="form-label-nowrap">
+                <FormField
+                  label="Serial Number"
+                  name="slabSerial"
+                  value={card.slabSerial || ''}
+                  onChange={handleInputChange}
+                  error={errors.slabSerial}
+                />
+              </div>
               {additionalSerialContent && (
                 <div className="absolute right-2 top-8">
                   {additionalSerialContent}
@@ -508,64 +622,74 @@ const CardDetailsForm = ({
               )}
             </div>
             <div>
-              <FormField
-                label="Population"
-                name="population"
-                value={card.population || ''}
-                onChange={handleInputChange}
-                error={errors.population}
-              />
+              <div className="form-label-nowrap">
+                <FormField
+                  label="Population"
+                  name="population"
+                  value={typeof card.population === 'number' ? String(card.population) : (card.population || '')}
+                  onChange={handleInputChange}
+                  error={errors.population}
+                />
+              </div>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
             <div>
-              <FormField
-                label="Date Purchased"
-                name="datePurchased"
-                type="date"
-                value={card.datePurchased || ''}
-                onChange={handleInputChange}
-                error={errors.datePurchased}
-              />
+              <div className="form-label-nowrap">
+                <FormField
+                  label="Date Purchased"
+                  name="datePurchased"
+                  type="date"
+                  value={card.datePurchased || ''}
+                  onChange={handleInputChange}
+                  error={errors.datePurchased}
+                />
+              </div>
             </div>
             <div>
-              <FormField
-                label="Quantity"
-                name="quantity"
-                type="number"
-                value={card.quantity ? String(card.quantity) : '1'}
-                onChange={handleInputChange}
-                error={errors.quantity}
-                min={1}
-              />
+              <div className="form-label-nowrap">
+                <FormField
+                  label="Quantity"
+                  name="quantity"
+                  type="number"
+                  value={card.quantity ? String(card.quantity) : '1'}
+                  onChange={handleInputChange}
+                  error={errors.quantity}
+                  min={1}
+                />
+              </div>
             </div>
           </div>
           
           {/* Financial Details Section */}
           <h3 className="text-lg font-medium text-gray-900 dark:text-white mt-8 mb-4">Financial Details</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="financial-details-grid">
             <div>
-              <FormField
-                label="Paid (AUD)"
-                name="investmentAUD"
-                type="number"
-                prefix="$"
-                value={card.investmentAUD || ''}
-                onChange={handleNumberChange}
-                error={errors.investmentAUD}
-              />
+              <div className="form-label-nowrap">
+                <FormField
+                  label="Paid (AUD)"
+                  name="investmentAUD"
+                  type="number"
+                  prefix="$"
+                  value={typeof card.investmentAUD === 'number' ? String(card.investmentAUD) : (card.investmentAUD || '')}
+                  onChange={handleNumberChange}
+                  error={errors.investmentAUD}
+                />
+              </div>
             </div>
             <div>
-              <FormField
-                label="Current Value (AUD)"
-                name="currentValueAUD"
-                type="number"
-                prefix="$"
-                value={card.currentValueAUD || ''}
-                onChange={handleNumberChange}
-                error={errors.currentValueAUD}
-              />
+              <div className="form-label-nowrap">
+                <FormField
+                  label="Current Value (AUD)"
+                  name="currentValueAUD"
+                  type="number"
+                  prefix="$"
+                  value={typeof card.currentValueAUD === 'number' ? String(card.currentValueAUD) : (card.currentValueAUD || '')}
+                  onChange={handleNumberChange}
+                  error={errors.currentValueAUD}
+                />
+              </div>
               {additionalValueContent && (
                 <div className="mt-2">
                   {additionalValueContent}

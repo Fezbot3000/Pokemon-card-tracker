@@ -380,24 +380,26 @@ const findBestMatchingSet = (setName, year) => {
   }
   
   // If we have a set name, try to find the best match
-  if (setName && availableSets.length > 0) {
+  if (setName && typeof setName === 'string' && availableSets.length > 0) {
     // Try for exact match first
     const exactMatch = availableSets.find(set => 
-      set.value.toLowerCase() === setName.toLowerCase()
+      typeof set === 'string' && set.toLowerCase() === setName.toLowerCase()
     );
     
     if (exactMatch) {
-      return exactMatch.value;
+      return exactMatch;
     }
     
     // Try for partial match
     const partialMatch = availableSets.find(set => 
-      set.value.toLowerCase().includes(setName.toLowerCase()) ||
-      setName.toLowerCase().includes(set.value.toLowerCase())
+      typeof set === 'string' && (
+        set.toLowerCase().includes(setName.toLowerCase()) ||
+        setName.toLowerCase().includes(set.toLowerCase())
+      )
     );
     
     if (partialMatch) {
-      return partialMatch.value;
+      return partialMatch;
     }
   }
   

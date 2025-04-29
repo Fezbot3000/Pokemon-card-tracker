@@ -23,9 +23,38 @@ function PremiumFeatures() {
   }
 
   // Redirect to pricing if subscription is not active
-  if (subscriptionStatus.status !== 'active') {
+  if (!subscriptionLoading && subscriptionStatus.status !== 'active') {
+    // Force a refresh if we land here and are not active
+    if (
+      currentUser &&
+      typeof subscriptionStatus.refreshSubscriptionStatus === 'function'
+    ) {
+      subscriptionStatus.refreshSubscriptionStatus();
+    }
     return <Navigate to="/pricing" state={{ from: location }} replace />;
   }
+
+  React.useEffect(() => {
+    // If subscription status is not loading and not active, force a refresh
+    if (
+      currentUser &&
+      !authLoading &&
+      !subscriptionLoading &&
+      subscriptionStatus.status !== 'active'
+    ) {
+      // Try to refresh subscription status if the user just signed in
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const lastUser = window.localStorage.getItem('lastUserId');
+        if (lastUser !== currentUser.uid) {
+          // User has changed, force a refresh
+          if (typeof subscriptionStatus.refreshSubscriptionStatus === 'function') {
+            subscriptionStatus.refreshSubscriptionStatus();
+          }
+          window.localStorage.setItem('lastUserId', currentUser.uid);
+        }
+      }
+    }
+  }, [currentUser, authLoading, subscriptionLoading, subscriptionStatus]);
 
   // Render the premium content if authenticated and subscribed
   return (
@@ -42,8 +71,8 @@ function PremiumFeatures() {
             <p className="text-center text-gray-500 dark:text-gray-400">Your premium features will appear here.</p>
         </div>
         <div className="flex justify-center mt-6">
-          <Link to="/dashboard" className="bg-primary text-white px-6 py-2 rounded-lg hover:bg-primary-dark transition-colors">
-            Back to Dashboard
+          <Link to="/signup" className="bg-primary text-white px-6 py-2 rounded-lg hover:bg-primary-dark transition-colors">
+            Back to Sign Up
           </Link>
         </div>
       </div>

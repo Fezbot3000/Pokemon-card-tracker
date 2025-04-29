@@ -1,0 +1,18 @@
+/* Form layout fixes */
+.form-label-nowrap {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.financial-details-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+@media (max-width: 640px) {
+  .financial-details-grid {
+    grid-template-columns: 1fr;
+  }
+}

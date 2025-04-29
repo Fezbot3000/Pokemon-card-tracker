@@ -4,287 +4,282 @@
  */
 
 import db from '../services/db';
+import logger from '../utils/logger'; // Import logger for consistent error handling
 
+// Pokemon TCG Sets
 const POKEMON_SETS = {
   // Base Era
+  1996: [
+    { value: 'Base Set (JP)', label: 'Base Set (JP)' },
+  ],
+  1997: [
+    { value: 'Jungle (JP)', label: 'Jungle (JP)' },
+    { value: 'Fossil (JP)', label: 'Fossil (JP)' },
+    { value: 'Team Rocket (JP)', label: 'Team Rocket (JP)' },
+  ],
+  1998: [
+    { value: 'Gym Heroes (JP)', label: 'Gym Heroes (JP)' },
+    { value: 'Gym Challenge (JP)', label: 'Gym Challenge (JP)' },
+  ],
   1999: [
-    { value: 'Base Set', label: 'Base Set' },
-    { value: 'Jungle', label: 'Jungle' },
-    { value: 'Fossil', label: 'Fossil' },
+    { value: 'Base Set', label: 'Base Set (EN)' },
+    { value: 'Jungle', label: 'Jungle (EN)' },
+    { value: 'Fossil', label: 'Fossil (EN)' },
+    { value: 'Neo Genesis (JP)', label: 'Neo Genesis (JP)' },
   ],
   2000: [
-    { value: 'Base Set 2', label: 'Base Set 2' },
-    { value: 'Team Rocket', label: 'Team Rocket' },
-    { value: 'Gym Heroes', label: 'Gym Heroes' },
-    { value: 'Gym Challenge', label: 'Gym Challenge' },
-    { value: 'Neo Genesis', label: 'Neo Genesis' },
+    { value: 'Base Set 2', label: 'Base Set 2 (EN)' },
+    { value: 'Team Rocket', label: 'Team Rocket (EN)' },
+    { value: 'Gym Heroes', label: 'Gym Heroes (EN)' },
+    { value: 'Gym Challenge', label: 'Gym Challenge (EN)' },
+    { value: 'Neo Genesis', label: 'Neo Genesis (EN)' },
+    { value: 'Neo Discovery (JP)', label: 'Neo Discovery (JP)' },
+    { value: 'Neo Revelation (JP)', label: 'Neo Revelation (JP)' },
   ],
   // Neo Era
   2001: [
-    { value: 'Neo Discovery', label: 'Neo Discovery' },
-    { value: 'Neo Revelation', label: 'Neo Revelation' },
+    { value: 'Neo Discovery', label: 'Neo Discovery (EN)' },
+    { value: 'Neo Revelation', label: 'Neo Revelation (EN)' },
+    { value: 'Neo Destiny (JP)', label: 'Neo Destiny (JP)' },
+    { value: 'Expedition Base Set (JP)', label: 'Expedition Base Set (JP)' },
+    { value: 'Aquapolis (JP)', label: 'Aquapolis (JP)' },
+    { value: 'Skyridge (JP)', label: 'Skyridge (JP)' },
   ],
   2002: [
-    { value: 'Neo Destiny', label: 'Neo Destiny' },
-    { value: 'Legendary Collection', label: 'Legendary Collection' },
-    { value: 'Expedition Base Set', label: 'Expedition Base Set' },
+    { value: 'Neo Destiny', label: 'Neo Destiny (EN)' },
+    { value: 'Legendary Collection', label: 'Legendary Collection (EN)' },
+    { value: 'Expedition Base Set', label: 'Expedition Base Set (EN)' },
   ],
   // E-Reader Era
   2003: [
-    { value: 'Aquapolis', label: 'Aquapolis' },
-    { value: 'Skyridge', label: 'Skyridge' },
-    { value: 'EX Ruby & Sapphire', label: 'EX Ruby & Sapphire' },
-    { value: 'EX Sandstorm', label: 'EX Sandstorm' },
-    { value: 'EX Dragon', label: 'EX Dragon' },
+    { value: 'Aquapolis', label: 'Aquapolis (EN)' },
+    { value: 'Skyridge', label: 'Skyridge (EN)' },
+    { value: 'EX Ruby & Sapphire', label: 'EX Ruby & Sapphire (EN)' },
+    { value: 'EX Sandstorm', label: 'EX Sandstorm (EN)' },
+    { value: 'EX Dragon', label: 'EX Dragon (EN)' },
   ],
   // EX Era
   2004: [
-    { value: 'EX Team Magma vs Team Aqua', label: 'EX Team Magma vs Team Aqua' },
-    { value: 'EX Hidden Legends', label: 'EX Hidden Legends' },
-    { value: 'EX FireRed & LeafGreen', label: 'EX FireRed & LeafGreen' },
-    { value: 'EX Team Rocket Returns', label: 'EX Team Rocket Returns' },
+    { value: 'EX Team Magma vs Team Aqua', label: 'EX Team Magma vs Team Aqua (EN)' },
+    { value: 'EX Hidden Legends', label: 'EX Hidden Legends (EN)' },
+    { value: 'EX FireRed & LeafGreen', label: 'EX FireRed & LeafGreen (EN)' },
+    { value: 'EX Team Rocket Returns', label: 'EX Team Rocket Returns (EN)' },
   ],
   2005: [
-    { value: 'EX Deoxys', label: 'EX Deoxys' },
-    { value: 'EX Emerald', label: 'EX Emerald' },
-    { value: 'EX Unseen Forces', label: 'EX Unseen Forces' },
-    { value: 'EX Delta Species', label: 'EX Delta Species' },
+    { value: 'EX Deoxys', label: 'EX Deoxys (EN)' },
+    { value: 'EX Emerald', label: 'EX Emerald (EN)' },
+    { value: 'EX Unseen Forces', label: 'EX Unseen Forces (EN)' },
+    { value: 'EX Delta Species', label: 'EX Delta Species (EN)' },
   ],
   2006: [
-    { value: 'EX Legend Maker', label: 'EX Legend Maker' },
-    { value: 'EX Holon Phantoms', label: 'EX Holon Phantoms' },
-    { value: 'EX Crystal Guardians', label: 'EX Crystal Guardians' },
-    { value: 'EX Dragon Frontiers', label: 'EX Dragon Frontiers' },
+    { value: 'EX Legend Maker', label: 'EX Legend Maker (EN)' },
+    { value: 'EX Holon Phantoms', label: 'EX Holon Phantoms (EN)' },
+    { value: 'EX Crystal Guardians', label: 'EX Crystal Guardians (EN)' },
+    { value: 'EX Dragon Frontiers', label: 'EX Dragon Frontiers (EN)' },
   ],
   2007: [
-    { value: 'EX Power Keepers', label: 'EX Power Keepers' },
-    { value: 'Diamond & Pearl', label: 'Diamond & Pearl' },
-    { value: 'Mysterious Treasures', label: 'Mysterious Treasures' },
-    { value: 'Secret Wonders', label: 'Secret Wonders' },
+    { value: 'EX Power Keepers', label: 'EX Power Keepers (EN)' },
+    { value: 'Diamond & Pearl', label: 'Diamond & Pearl (EN)' },
+    { value: 'Mysterious Treasures', label: 'Mysterious Treasures (EN)' },
+    { value: 'Secret Wonders', label: 'Secret Wonders (EN)' },
   ],
-  // Diamond & Pearl Era
   2008: [
-    { value: 'Great Encounters', label: 'Great Encounters' },
-    { value: 'Majestic Dawn', label: 'Majestic Dawn' },
-    { value: 'Legends Awakened', label: 'Legends Awakened' },
-    { value: 'Stormfront', label: 'Stormfront' },
+    { value: 'Great Encounters', label: 'Great Encounters (EN)' },
+    { value: 'Majestic Dawn', label: 'Majestic Dawn (EN)' },
+    { value: 'Legends Awakened', label: 'Legends Awakened (EN)' },
+    { value: 'Stormfront', label: 'Stormfront (EN)' },
   ],
   2009: [
-    { value: 'Platinum', label: 'Platinum' },
-    { value: 'Rising Rivals', label: 'Rising Rivals' },
-    { value: 'Supreme Victors', label: 'Supreme Victors' },
-    { value: 'Arceus', label: 'Arceus' },
+    { value: 'Platinum', label: 'Platinum (EN)' },
+    { value: 'Rising Rivals', label: 'Rising Rivals (EN)' },
+    { value: 'Supreme Victors', label: 'Supreme Victors (EN)' },
+    { value: 'Arceus', label: 'Arceus (EN)' },
   ],
-  // HeartGold & SoulSilver Era
   2010: [
-    { value: 'HeartGold & SoulSilver', label: 'HeartGold & SoulSilver' },
-    { value: 'Unleashed', label: 'Unleashed' },
-    { value: 'Undaunted', label: 'Undaunted' },
-    { value: 'Triumphant', label: 'Triumphant' },
+    { value: 'HeartGold & SoulSilver', label: 'HeartGold & SoulSilver (EN)' },
+    { value: 'Unleashed', label: 'Unleashed (EN)' },
+    { value: 'Undaunted', label: 'Undaunted (EN)' },
+    { value: 'Triumphant', label: 'Triumphant (EN)' },
   ],
   // Black & White Era
   2011: [
-    { value: 'Call of Legends', label: 'Call of Legends' },
-    { value: 'Black & White', label: 'Black & White' },
-    { value: 'Emerging Powers', label: 'Emerging Powers' },
-    { value: 'Noble Victories', label: 'Noble Victories' },
+    { value: 'Call of Legends', label: 'Call of Legends (EN)' },
+    { value: 'Black & White', label: 'Black & White (EN)' },
+    { value: 'Emerging Powers', label: 'Emerging Powers (EN)' },
+    { value: 'Noble Victories', label: 'Noble Victories (EN)' },
   ],
   2012: [
-    { value: 'Next Destinies', label: 'Next Destinies' },
-    { value: 'Dark Explorers', label: 'Dark Explorers' },
-    { value: 'Dragons Exalted', label: 'Dragons Exalted' },
-    { value: 'Boundaries Crossed', label: 'Boundaries Crossed' },
+    { value: 'Next Destinies', label: 'Next Destinies (EN)' },
+    { value: 'Dark Explorers', label: 'Dark Explorers (EN)' },
+    { value: 'Dragons Exalted', label: 'Dragons Exalted (EN)' },
+    { value: 'Boundaries Crossed', label: 'Boundaries Crossed (EN)' },
   ],
   2013: [
-    { value: 'Plasma Storm', label: 'Plasma Storm' },
-    { value: 'Plasma Freeze', label: 'Plasma Freeze' },
-    { value: 'Plasma Blast', label: 'Plasma Blast' },
-    { value: 'Legendary Treasures', label: 'Legendary Treasures' },
+    { value: 'Plasma Storm', label: 'Plasma Storm (EN)' },
+    { value: 'Plasma Freeze', label: 'Plasma Freeze (EN)' },
+    { value: 'Plasma Blast', label: 'Plasma Blast (EN)' },
+    { value: 'Legendary Treasures', label: 'Legendary Treasures (EN)' },
   ],
   // XY Era
   2014: [
-    { value: 'XY', label: 'XY' },
-    { value: 'Flashfire', label: 'Flashfire' },
-    { value: 'Furious Fists', label: 'Furious Fists' },
-    { value: 'Phantom Forces', label: 'Phantom Forces' },
+    { value: 'XY', label: 'XY (EN)' },
+    { value: 'Flashfire', label: 'Flashfire (EN)' },
+    { value: 'Furious Fists', label: 'Furious Fists (EN)' },
+    { value: 'Phantom Forces', label: 'Phantom Forces (EN)' },
   ],
   2015: [
-    { value: 'Primal Clash', label: 'Primal Clash' },
-    { value: 'Roaring Skies', label: 'Roaring Skies' },
-    { value: 'Ancient Origins', label: 'Ancient Origins' },
-    { value: 'BREAKthrough', label: 'BREAKthrough' },
+    { value: 'Primal Clash', label: 'Primal Clash (EN)' },
+    { value: 'Roaring Skies', label: 'Roaring Skies (EN)' },
+    { value: 'Ancient Origins', label: 'Ancient Origins (EN)' },
+    { value: 'BREAKthrough', label: 'BREAKthrough (EN)' },
   ],
   2016: [
-    { value: 'BREAKpoint', label: 'BREAKpoint' },
-    { value: 'Fates Collide', label: 'Fates Collide' },
-    { value: 'Steam Siege', label: 'Steam Siege' },
-    { value: 'Evolutions', label: 'Evolutions' },
+    { value: 'BREAKpoint', label: 'BREAKpoint (EN)' },
+    { value: 'Fates Collide', label: 'Fates Collide (EN)' },
+    { value: 'Steam Siege', label: 'Steam Siege (EN)' },
+    { value: 'Evolutions', label: 'Evolutions (EN)' },
   ],
   // Sun & Moon Era
   2017: [
-    { value: 'Sun & Moon', label: 'Sun & Moon' },
-    { value: 'Guardians Rising', label: 'Guardians Rising' },
-    { value: 'Burning Shadows', label: 'Burning Shadows' },
-    { value: 'Crimson Invasion', label: 'Crimson Invasion' },
+    { value: 'Sun & Moon', label: 'Sun & Moon (EN)' },
+    { value: 'Guardians Rising', label: 'Guardians Rising (EN)' },
+    { value: 'Burning Shadows', label: 'Burning Shadows (EN)' },
+    { value: 'Crimson Invasion', label: 'Crimson Invasion (EN)' },
   ],
   2018: [
-    { value: 'Ultra Prism', label: 'Ultra Prism' },
-    { value: 'Forbidden Light', label: 'Forbidden Light' },
-    { value: 'Celestial Storm', label: 'Celestial Storm' },
-    { value: 'Lost Thunder', label: 'Lost Thunder' },
+    { value: 'Ultra Prism', label: 'Ultra Prism (EN)' },
+    { value: 'Forbidden Light', label: 'Forbidden Light (EN)' },
+    { value: 'Celestial Storm', label: 'Celestial Storm (EN)' },
+    { value: 'Lost Thunder', label: 'Lost Thunder (EN)' },
   ],
   2019: [
-    { value: 'Team Up', label: 'Team Up' },
-    { value: 'Unbroken Bonds', label: 'Unbroken Bonds' },
-    { value: 'Unified Minds', label: 'Unified Minds' },
-    { value: 'Cosmic Eclipse', label: 'Cosmic Eclipse' },
-    { value: 'Pokémon TCG: Detective Pikachu', label: 'Detective Pikachu' },
-    { value: 'Hidden Fates', label: 'Hidden Fates' },
+    { value: 'Team Up', label: 'Team Up (EN)' },
+    { value: 'Unbroken Bonds', label: 'Unbroken Bonds (EN)' },
+    { value: 'Unified Minds', label: 'Unified Minds (EN)' },
+    { value: 'Cosmic Eclipse', label: 'Cosmic Eclipse (EN)' },
   ],
   // Sword & Shield Era
   2020: [
-    { value: 'Sword & Shield', label: 'Sword & Shield' },
-    { value: 'Rebel Clash', label: 'Rebel Clash' },
-    { value: 'Darkness Ablaze', label: 'Darkness Ablaze' },
-    { value: 'Vivid Voltage', label: 'Vivid Voltage' },
-    { value: 'Champion\'s Path', label: 'Champion\'s Path' },
+    { value: 'Sword & Shield', label: 'Sword & Shield (EN)' },
+    { value: 'Rebel Clash', label: 'Rebel Clash (EN)' },
+    { value: 'Darkness Ablaze', label: 'Darkness Ablaze (EN)' },
+    { value: 'Vivid Voltage', label: 'Vivid Voltage (EN)' },
   ],
   2021: [
-    { value: 'Battle Styles', label: 'Battle Styles' },
-    { value: 'Chilling Reign', label: 'Chilling Reign' },
-    { value: 'Evolving Skies', label: 'Evolving Skies' },
-    { value: 'Fusion Strike', label: 'Fusion Strike' },
-    { value: 'Shining Fates', label: 'Shining Fates' },
-    { value: 'Celebrations', label: 'Celebrations' },
+    { value: 'Battle Styles', label: 'Battle Styles (EN)' },
+    { value: 'Chilling Reign', label: 'Chilling Reign (EN)' },
+    { value: 'Evolving Skies', label: 'Evolving Skies (EN)' },
+    { value: 'Fusion Strike', label: 'Fusion Strike (EN)' },
   ],
   2022: [
-    { value: 'Brilliant Stars', label: 'Brilliant Stars' },
-    { value: 'Astral Radiance', label: 'Astral Radiance' },
-    { value: 'Lost Origin', label: 'Lost Origin' },
-    { value: 'Silver Tempest', label: 'Silver Tempest' },
+    { value: 'Brilliant Stars', label: 'Brilliant Stars (EN)' },
+    { value: 'Astral Radiance', label: 'Astral Radiance (EN)' },
+    { value: 'Lost Origin', label: 'Lost Origin (EN)' },
+    { value: 'Silver Tempest', label: 'Silver Tempest (EN)' },
   ],
   // Scarlet & Violet Era
   2023: [
-    { value: 'Crown Zenith', label: 'Crown Zenith' },
-    { value: 'Scarlet & Violet', label: 'Scarlet & Violet' },
-    { value: 'Paldea Evolved', label: 'Paldea Evolved' },
-    { value: 'Obsidian Flames', label: 'Obsidian Flames' },
-    { value: 'Paradox Rift', label: 'Paradox Rift' },
+    { value: 'Scarlet & Violet', label: 'Scarlet & Violet (EN)' },
+    { value: 'Paldea Evolved', label: 'Paldea Evolved (EN)' },
+    { value: 'Obsidian Flames', label: 'Obsidian Flames (EN)' },
+    { value: 'Paradox Rift', label: 'Paradox Rift (EN)' },
   ],
   2024: [
-    { value: 'Temporal Forces', label: 'Temporal Forces' },
-    { value: 'Twilight Masquerade', label: 'Twilight Masquerade' },
-    { value: 'Stellar Crown', label: 'Stellar Crown' },
-    { value: 'Shrouded Fable', label: 'Shrouded Fable' },
-  ],
-  2025: [
-    { value: 'Upcoming 2025 Set', label: 'Upcoming 2025 Set' }, // Placeholder for future sets
+    { value: 'Temporal Forces', label: 'Temporal Forces (EN)' },
+    { value: 'Twilight Masquerade', label: 'Twilight Masquerade (EN)' },
+    { value: 'Stellar Crown', label: 'Stellar Crown (EN)' },
+    { value: 'Shrouded Fable', label: 'Shrouded Fable (EN)' },
   ],
 };
 
 // Store for custom sets that users have added
 let userCustomSets = {};
 
-// Load custom sets from both localStorage and Firestore
-const loadCustomSets = async () => {
+// Load custom sets from localStorage if available
+const loadCustomSets = () => {
   try {
-    // First load from localStorage for immediate display
-    const savedSets = localStorage.getItem('pokemonCustomSets');
-    if (savedSets) {
-      userCustomSets = JSON.parse(savedSets);
+    const storedSets = localStorage.getItem('pokemonCustomSets');
+    if (storedSets) {
+      userCustomSets = JSON.parse(storedSets);
     }
-    
-    // Then load from Firestore (this will take precedence)
-    const firestoreSets = await db.loadCustomSets();
-    
-    // Merge the sets, with Firestore taking precedence
-    Object.keys(firestoreSets).forEach(year => {
-      if (!userCustomSets[year]) {
-        userCustomSets[year] = [];
-      }
-      
-      // Convert array of set names to proper set objects
-      firestoreSets[year].forEach(setName => {
-        // Check if this set already exists
-        const exists = userCustomSets[year].some(set => set.value === setName);
-        if (!exists) {
-          userCustomSets[year].push({ value: setName, label: setName });
-        }
-      });
-    });
-    
-    // Save the merged sets back to localStorage
-    localStorage.setItem('pokemonCustomSets', JSON.stringify(userCustomSets));
   } catch (error) {
-    console.error('Failed to load custom sets:', error);
+    logger.error('Failed to load custom sets from localStorage:', error);
   }
 };
 
-// Initialize loading of custom sets
+// Load custom sets on module initialization
 loadCustomSets();
 
 /**
- * Add a custom set to a specific year
+ * Get all Pokemon sets
+ * @returns {Array} Array of set values
+ */
+const getAllPokemonSets = () => {
+  const allSets = [];
+  Object.keys(POKEMON_SETS).forEach(year => {
+    POKEMON_SETS[year].forEach(set => {
+      allSets.push(set.value);
+    });
+  });
+  return allSets;
+};
+
+/**
+ * Get Pokemon sets filtered by year
+ * @param {string} year - Year to filter by
+ * @returns {Array} Array of set values for the specified year
+ */
+const getPokemonSetsByYear = (year) => {
+  if (!POKEMON_SETS[year]) return [];
+  return POKEMON_SETS[year].map(set => set.value);
+};
+
+/**
+ * Add a custom set to the database
  * @param {string} setName - The name of the set to add
  * @param {string} year - The year to add the set to (as a string)
+ * @returns {string} The name of the added set
  */
-export const addCustomSet = async (setName, year) => {
-  if (!year) return; // Must have a year
+const addCustomSet = (setName, year = "2024") => {
+  if (!setName) return; // Must have a set name
+  
+  // Default to current year if no year provided
+  const targetYear = year || "2024";
 
   // Initialize the year if it doesn't exist
-  if (!userCustomSets[year]) {
-    userCustomSets[year] = [];
+  if (!userCustomSets[targetYear]) {
+    userCustomSets[targetYear] = [];
   }
 
   // Check if the set already exists in this year
-  const setExists = userCustomSets[year].some(set => set.value === setName);
+  const setExists = userCustomSets[targetYear].some(set => set.value === setName);
   if (!setExists) {
-    userCustomSets[year].push({ value: setName, label: setName });
+    userCustomSets[targetYear].push({ value: setName, label: setName });
     
     // Save to localStorage
     try {
       localStorage.setItem('pokemonCustomSets', JSON.stringify(userCustomSets));
     } catch (error) {
-      console.error('Failed to save custom sets to localStorage:', error);
-    }
-    
-    // Save to Firestore
-    try {
-      await db.saveCustomSet(setName, year);
-    } catch (error) {
-      console.error('Failed to save custom set to Firestore:', error);
+      logger.error('Failed to save custom sets to localStorage:', error);
     }
   }
+  
+  return setName;
 };
 
 /**
- * Get all custom sets for a specific year
- * @param {string} year - The year to get sets for
- * @returns {Array} - Array of sets for that year
+ * Get all available years for filtering
+ * @returns {Array} Array of year strings
  */
-export const getCustomSetsForYear = (year) => {
-  return userCustomSets[year] || [];
+const getAvailableYears = () => {
+  return Object.keys(POKEMON_SETS).sort();
 };
 
-/**
- * Get all Pokemon sets for a specific year, including custom sets
- * @param {string} year - The year to get sets for
- * @returns {Array} - Array of all sets for that year
- */
-export const getPokemonSetsByYear = (year) => {
-  const standardSets = POKEMON_SETS[year] || [];
-  const customSets = getCustomSetsForYear(year) || [];
-  return [...standardSets, ...customSets];
-};
-
-// Utility function to get all Pokemon sets (flattened)
-export const getAllPokemonSets = () => {
-  return Object.values(POKEMON_SETS).flat();
-};
-
-// Get years with available sets
-export const getAvailableYears = () => {
-  return Object.keys(POKEMON_SETS).map(year => parseInt(year, 10)).sort();
+export {
+  getAllPokemonSets,
+  getPokemonSetsByYear,
+  addCustomSet,
+  getAvailableYears
 };
 
 export default POKEMON_SETS;

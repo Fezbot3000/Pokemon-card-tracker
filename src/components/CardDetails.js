@@ -1,18 +1,13 @@
 import React, { useState, useEffect, useRef, memo } from 'react';
-import PropTypes from 'prop-types'; // Add this import
+import PropTypes from 'prop-types'; 
 import db from '../services/db';
+import cardRepo from '../services/cardRepo';
 import { useTheme } from '../design-system';
 import { toast } from 'react-hot-toast';
+import { formatDate } from '../utils/dateUtils';
 import CardDetailsModal from '../design-system/components/CardDetailsModal';
 import PSALookupButton from './PSALookupButton';
 import PriceHistoryGraph from './PriceHistoryGraph';
-
-// Helper function to format date
-const formatDate = (dateString) => {
-  if (!dateString) return '';
-  const date = new Date(dateString);
-  return isNaN(date.getTime()) ? '' : date.toISOString().split('T')[0];
-};
 
 const CardDetails = memo(({
   card = null,

@@ -250,10 +250,10 @@ const SoldItemsView = ({
   };
 
   return (
-    <div className={`min-h-screen pt-20 px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-[#0F0F0F] text-gray-900 dark:text-white ${className}`}>
+    <>
       {
         validItems.length > 0 ? (
-          <div className="space-y-6 sm:space-y-8">
+          <div className={`space-y-6 sm:space-y-8 ${className}`}>
             {Object.entries(groupedByYear).map(([year, yearGroup]) => (
               <div key={year} className="mb-6">
                 <button 
@@ -356,7 +356,7 @@ const SoldItemsView = ({
           </div>
         )
       }
-    </div>
+    </>
   );
 };
 
