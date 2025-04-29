@@ -212,14 +212,7 @@ function DashboardPricing() {
   // Show the pricing section for non-subscribers
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="flex justify-between items-center mb-4">
-        <button
-          onClick={goToDashboard}
-          className="inline-flex items-center justify-center bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-white font-medium py-2 px-4 rounded-lg transition-colors"
-        >
-          <span className="material-icons text-sm mr-1">arrow_back</span>
-          Back to Dashboard
-        </button>
+      <div className="flex justify-end items-center mb-4">
         <button
           onClick={handleSignOut}
           className="inline-flex items-center justify-center bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded-lg transition-colors"
@@ -240,40 +233,43 @@ function DashboardPricing() {
         </div>
 
         <div className="max-w-2xl mx-auto">
-          <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-6 mb-6">
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-xl font-semibold text-gray-900 dark:text-white">Premium Plan</span>
-              <span className="text-2xl font-bold text-gray-900 dark:text-white">$12.99<span className="text-sm font-normal text-gray-600 dark:text-gray-400">/month</span></span>
+          <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800/50 dark:to-gray-700/30 rounded-lg p-8 mb-6 shadow-sm border border-gray-200 dark:border-gray-700">
+            <div className="flex items-center justify-between mb-6">
+              <span className="text-2xl font-semibold text-gray-900 dark:text-white">Premium Plan</span>
+              <div className="text-right">
+                <span className="text-3xl font-bold text-gray-900 dark:text-white">$12.99</span>
+                <span className="text-sm font-normal text-gray-600 dark:text-gray-400">/month</span>
+              </div>
             </div>
-            <ul className="space-y-3 mb-6">
+            <ul className="space-y-4 mb-8">
               <li className="flex items-center">
-                <span className="material-icons text-green-500 mr-2">check_circle</span>
+                <span className="material-icons text-green-500 mr-3">check_circle</span>
                 <span className="text-gray-700 dark:text-gray-300">Track unlimited cards</span>
               </li>
               <li className="flex items-center">
-                <span className="material-icons text-green-500 mr-2">check_circle</span>
+                <span className="material-icons text-green-500 mr-3">check_circle</span>
                 <span className="text-gray-700 dark:text-gray-300">Advanced analytics</span>
               </li>
               <li className="flex items-center">
-                <span className="material-icons text-green-500 mr-2">check_circle</span>
+                <span className="material-icons text-green-500 mr-3">check_circle</span>
                 <span className="text-gray-700 dark:text-gray-300">Unlimited collections</span>
               </li>
               <li className="flex items-center">
-                <span className="material-icons text-green-500 mr-2">check_circle</span>
+                <span className="material-icons text-green-500 mr-3">check_circle</span>
                 <span className="text-gray-700 dark:text-gray-300">Automatic cloud backup</span>
               </li>
               <li className="flex items-center">
-                <span className="material-icons text-green-500 mr-2">check_circle</span>
+                <span className="material-icons text-green-500 mr-3">check_circle</span>
                 <span className="text-gray-700 dark:text-gray-300">Sync across all devices</span>
               </li>
               <li className="flex items-center">
-                <span className="material-icons text-green-500 mr-2">check_circle</span>
+                <span className="material-icons text-green-500 mr-3">check_circle</span>
                 <span className="text-gray-700 dark:text-gray-300">Priority customer support</span>
               </li>
             </ul>
             <button
               onClick={handleSubscribeClick}
-              className="w-full bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-medium py-3 px-6 rounded-lg transition-colors"
+              className="w-full bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-gray-900 font-bold py-4 px-6 rounded-lg transition-all shadow-md hover:shadow-lg transform hover:-translate-y-1"
             >
               Subscribe Now
             </button>

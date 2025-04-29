@@ -5,10 +5,95 @@
  * Uses Firebase Cloud Functions to make the API calls to avoid CORS issues.
  */
 
-import { toast } from 'react-hot-toast';
 import { getFunctions, httpsCallable } from 'firebase/functions';
-import { auth } from './firebase';
+import { getAuth } from 'firebase/auth';
+import db from './db';
+import logger from '../utils/logger';
+import { toast } from 'react-hot-toast';
 import { getPokemonSetsByYear, getAllPokemonSets } from '../data/pokemonSets';
+
+// Initialize Firebase Functions
+const functions = getFunctions();
+const psaLookupFunction = httpsCallable(functions, 'psaLookup');
+
+// Subscription cache to avoid too many API calls
+const subscriptionCache = {
+  userId: null,
+  status: null,
+  lastChecked: null,
+  cacheExpiry: 2 * 60 * 1000, // Reduce cache time to 2 minutes for more frequent checks
+};
+
+// PSA search result cache
+const psaCache = {
+  results: {},  // Store results by cert number
+  expiry: 24 * 60 * 60 * 1000  // Cache PSA results for 24 hours
+};
+
+// Initialize IndexedDB store for PSA results if needed
+const initPSAStore = () => {
+  if (!db.db) return; // If db is not initialized yet, return
+  
+  if (!db.savePSAResult) {
+    db.savePSAResult = async (certNumber, data) => {
+      try {
+        const tx = db.db.transaction('psaResults', 'readwrite');
+        const store = tx.objectStore('psaResults');
+        await store.put({
+          certNumber,
+          data,
+          timestamp: Date.now()
+        });
+        return tx.complete;
+      } catch (error) {
+        console.error('Error saving PSA result to IndexedDB:', error);
+        // Create the object store if it doesn't exist
+        if (error.name === 'NotFoundError') {
+          try {
+            const version = db.db.version + 1;
+            db.db.close();
+            const request = indexedDB.open('pokemonCardTracker', version);
+            request.onupgradeneeded = (event) => {
+              const db = event.target.result;
+              if (!db.objectStoreNames.contains('psaResults')) {
+                db.createObjectStore('psaResults', { keyPath: 'certNumber' });
+                console.log('Created psaResults object store');
+              }
+            };
+            request.onsuccess = () => {
+              request.result.close();
+              console.log('Database upgraded to include psaResults store');
+            };
+          } catch (upgradeError) {
+            console.error('Error upgrading database:', upgradeError);
+          }
+        }
+      }
+    };
+  }
+
+  if (!db.getPSAResult) {
+    db.getPSAResult = async (certNumber) => {
+      try {
+        const tx = db.db.transaction('psaResults', 'readonly');
+        const store = tx.objectStore('psaResults');
+        return await store.get(certNumber);
+      } catch (error) {
+        console.warn('Error getting PSA result from IndexedDB:', error);
+        return null;
+      }
+    };
+  }
+};
+
+// Initialize the PSA store when the module loads
+setTimeout(() => {
+  try {
+    initPSAStore();
+  } catch (error) {
+    console.warn('Could not initialize PSA store:', error);
+  }
+}, 1000); // Delay initialization to ensure db is ready
 
 // Access token storage
 let accessToken = null;
@@ -104,12 +189,92 @@ const testPSAConnection = async (certNumber = '10249374') => {
 };
 
 /**
+ * Get cached PSA result if available
+ * @param {string} certNumber - PSA certification number
+ * @returns {Object|null} - Cached result or null if not found/expired
+ */
+const getCachedPSAResult = (certNumber) => {
+  if (!certNumber) return null;
+  
+  const cachedResult = psaCache.results[certNumber];
+  if (cachedResult && (Date.now() - cachedResult.timestamp < psaCache.expiry)) {
+    console.log(`Using cached PSA result for cert number: ${certNumber}`);
+    return cachedResult.data;
+  }
+  
+  return null;
+};
+
+/**
+ * Cache PSA search result
+ * @param {string} certNumber - PSA certification number
+ * @param {Object} data - PSA search result data
+ */
+const cachePSAResult = (certNumber, data) => {
+  if (!certNumber || !data) return;
+  
+  psaCache.results[certNumber] = {
+    data,
+    timestamp: Date.now()
+  };
+  
+  console.log(`Cached PSA result for cert number: ${certNumber}`);
+  
+  // Also save to IndexedDB for persistence
+  try {
+    if (db.savePSAResult) {
+      db.savePSAResult(certNumber, data);
+    }
+  } catch (error) {
+    console.warn('Failed to save PSA result to IndexedDB:', error);
+  }
+};
+
+/**
+ * Clear PSA cache for a specific cert number or all
+ * @param {string} certNumber - Optional specific cert number to clear
+ */
+const clearPSACache = (certNumber = null) => {
+  if (certNumber) {
+    delete psaCache.results[certNumber];
+    console.log(`Cleared PSA cache for cert number: ${certNumber}`);
+  } else {
+    psaCache.results = {};
+    console.log('Cleared all PSA cache');
+  }
+};
+
+/**
  * Search for PSA graded card by certification number
  * @param {string} certNumber - PSA certification number
+ * @param {boolean} forceRefresh - Force a fresh lookup bypassing cache
  * @returns {Promise<Object>} - Card details from PSA
  */
-const searchByCertNumber = async (certNumber) => {
+const searchByCertNumber = async (certNumber, forceRefresh = false) => {
   try {
+    // Check cache first if not forcing refresh
+    if (!forceRefresh) {
+      const cachedResult = getCachedPSAResult(certNumber);
+      if (cachedResult) {
+        return cachedResult;
+      }
+      
+      // Try to get from IndexedDB if not in memory cache
+      try {
+        if (db.getPSAResult) {
+          const dbResult = await db.getPSAResult(certNumber);
+          if (dbResult && (Date.now() - dbResult.timestamp < psaCache.expiry)) {
+            console.log(`Using PSA result from IndexedDB for cert number: ${certNumber}`);
+            // Update memory cache
+            psaCache.results[certNumber] = dbResult;
+            return dbResult.data;
+          }
+        }
+      } catch (dbError) {
+        console.warn('Failed to get PSA result from IndexedDB:', dbError);
+      }
+    }
+    
     console.log(`Searching PSA for cert number: ${certNumber}`);
     
     // Call the Firebase Cloud Function
@@ -119,7 +284,12 @@ const searchByCertNumber = async (certNumber) => {
     
     // Extract the data from the Cloud Function response
     if (result.data && result.data.success) {
-      return result.data.data;
+      const psaData = result.data.data;
+      
+      // Cache the successful result
+      cachePSAResult(certNumber, psaData);
+      
+      return psaData;
     } else {
       console.error('PSA lookup failed:', result.data);
       // Add more detailed logging for debugging
@@ -557,15 +727,12 @@ const fetchPSACardImage = async (certNumber) => {
   }
 };
 
-// Get reference to Firebase Functions
-const functions = getFunctions();
-const psaLookupFunction = httpsCallable(functions, 'psaLookup');
-
 export {
   searchByCertNumber,
   parsePSACardData,
   mergeWithExistingCard,
   getAccessToken,
   testPSAConnection,
-  fetchPSACardImage
+  fetchPSACardImage,
+  clearPSACache
 };

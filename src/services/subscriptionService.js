@@ -5,9 +5,10 @@ import logger from '../utils/logger';
 
 // Subscription cache to avoid too many API calls
 const subscriptionCache = {
+  userId: null, // Add user ID to track which user the cache belongs to
   status: null,
   lastChecked: null,
-  cacheExpiry: 5 * 60 * 1000, // 5 minutes
+  cacheExpiry: 2 * 60 * 1000, // Reduce cache time to 2 minutes for more frequent checks
 };
 
 /**
@@ -22,8 +23,14 @@ export const checkSubscriptionStatus = async () => {
     return { status: 'inactive' };
   }
 
-  // Check if we have a valid cached result
-  if (subscriptionCache.status && 
+  // Clear cache if it belongs to a different user
+  if (subscriptionCache.userId && subscriptionCache.userId !== currentUser.uid) {
+    clearSubscriptionCache();
+  }
+
+  // Check if we have a valid cached result for the current user
+  if (subscriptionCache.userId === currentUser.uid &&
+      subscriptionCache.status && 
       subscriptionCache.lastChecked && 
       (Date.now() - subscriptionCache.lastChecked) < subscriptionCache.cacheExpiry) {
     return subscriptionCache.status;
@@ -39,6 +46,7 @@ export const checkSubscriptionStatus = async () => {
         // Use locally stored subscription info if recently verified
         subscriptionCache.status = localSubscription;
         subscriptionCache.lastChecked = Date.now();
+        subscriptionCache.userId = currentUser.uid; // Store the user ID with the cache
         return localSubscription;
       }
     } catch (err) {
@@ -71,6 +79,7 @@ export const checkSubscriptionStatus = async () => {
       // Update memory cache
       subscriptionCache.status = subscriptionStatus;
       subscriptionCache.lastChecked = Date.now();
+      subscriptionCache.userId = currentUser.uid; // Store the user ID with the cache
       
       return subscriptionStatus;
     } catch (functionError) {
@@ -83,6 +92,7 @@ export const checkSubscriptionStatus = async () => {
       // Update memory cache with the error status
       subscriptionCache.status = fallbackStatus;
       subscriptionCache.lastChecked = Date.now();
+      subscriptionCache.userId = currentUser.uid; // Store the user ID with the cache
       
       return fallbackStatus;
     }
@@ -106,8 +116,10 @@ export const hasPremiumAccess = async () => {
  * Clear the subscription cache (useful after purchasing)
  */
 export const clearSubscriptionCache = () => {
+  subscriptionCache.userId = null;
   subscriptionCache.status = null;
   subscriptionCache.lastChecked = null;
+  logger.debug('Subscription cache cleared');
 };
 
 /**
@@ -150,6 +162,7 @@ export const fixSubscriptionStatus = async () => {
       // Update cache
       subscriptionCache.status = subscriptionStatus;
       subscriptionCache.lastChecked = Date.now();
+      subscriptionCache.userId = currentUser.uid; // Store the user ID with the cache
       
       // Try to save to local database
       try {
@@ -196,6 +209,7 @@ export const fixSubscriptionStatus = async () => {
           // Update cache
           subscriptionCache.status = directSubscriptionStatus;
           subscriptionCache.lastChecked = Date.now();
+          subscriptionCache.userId = currentUser.uid; // Store the user ID with the cache
           
           // Try to save to local database
           try {

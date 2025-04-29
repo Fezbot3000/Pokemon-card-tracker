@@ -94,7 +94,6 @@ function Login() {
         setSignupSuccess(true);
         // Instead of navigating directly to pricing, set isNewUser flag and go to dashboard
         localStorage.setItem('isNewUser', 'true');
-        // NewUserRoute component will handle subscription check and redirect if needed
         navigate('/dashboard', { replace: true });
         setIsLoading(false);
       }
