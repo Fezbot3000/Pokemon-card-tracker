@@ -9,8 +9,9 @@ import { getFunctions, httpsCallable } from 'firebase/functions';
 import { getAuth } from 'firebase/auth';
 import db from './db';
 import logger from '../utils/logger';
-import { toast } from 'react-hot-toast';
+import PSANotifications from '../components/PSANotifications';
 import { getPokemonSetsByYear, getAllPokemonSets } from '../data/pokemonSets';
+import { getPSACardFromDatabase, savePSACardToDatabase } from './psaDatabase';
 
 // Initialize Firebase Functions
 const functions = getFunctions();
@@ -32,11 +33,10 @@ const psaCache = {
 
 // Initialize IndexedDB store for PSA results if needed
 const initPSAStore = () => {
-  if (!db.db) return; // If db is not initialized yet, return
-  
   if (!db.savePSAResult) {
     db.savePSAResult = async (certNumber, data) => {
       try {
+        // Try to save to the store, but gracefully handle errors
         const tx = db.db.transaction('psaResults', 'readwrite');
         const store = tx.objectStore('psaResults');
         await store.put({
@@ -46,28 +46,8 @@ const initPSAStore = () => {
         });
         return tx.complete;
       } catch (error) {
-        console.error('Error saving PSA result to IndexedDB:', error);
-        // Create the object store if it doesn't exist
-        if (error.name === 'NotFoundError') {
-          try {
-            const version = db.db.version + 1;
-            db.db.close();
-            const request = indexedDB.open('pokemonCardTracker', version);
-            request.onupgradeneeded = (event) => {
-              const db = event.target.result;
-              if (!db.objectStoreNames.contains('psaResults')) {
-                db.createObjectStore('psaResults', { keyPath: 'certNumber' });
-                console.log('Created psaResults object store');
-              }
-            };
-            request.onsuccess = () => {
-              request.result.close();
-              console.log('Database upgraded to include psaResults store');
-            };
-          } catch (upgradeError) {
-            console.error('Error upgrading database:', upgradeError);
-          }
-        }
+        console.warn('Could not save PSA result to IndexedDB (store may not exist yet):', error);
+        return false;
       }
     };
   }
@@ -75,11 +55,12 @@ const initPSAStore = () => {
   if (!db.getPSAResult) {
     db.getPSAResult = async (certNumber) => {
       try {
+        // Try to get from the store, but gracefully handle errors
         const tx = db.db.transaction('psaResults', 'readonly');
         const store = tx.objectStore('psaResults');
         return await store.get(certNumber);
       } catch (error) {
-        console.warn('Error getting PSA result from IndexedDB:', error);
+        console.warn('Could not get PSA result from IndexedDB (store may not exist yet):', error);
         return null;
       }
     };
@@ -89,9 +70,11 @@ const initPSAStore = () => {
 // Initialize the PSA store when the module loads
 setTimeout(() => {
   try {
+    // Simply initialize the store methods without trying to create the store
     initPSAStore();
+    console.log('PSA store methods initialized');
   } catch (error) {
-    console.warn('Could not initialize PSA store:', error);
+    console.warn('Could not initialize PSA store methods:', error);
   }
 }, 1000); // Delay initialization to ensure db is ready
 
@@ -133,7 +116,7 @@ const getAccessToken = async () => {
     
     // Here you would implement the actual token acquisition using the credentials
     // For now, we'll show a toast that we're falling back
-    toast.info('Using PSA API credentials from environment variables');
+    PSANotifications.showLookupNotification('AUTH_ERROR');
     
     // This is a placeholder for the actual token acquisition
     throw new Error('Token acquisition from environment variables not implemented');
@@ -184,6 +167,7 @@ const testPSAConnection = async (certNumber = '10249374') => {
     return data;
   } catch (error) {
     console.error('PSA connection test failed:', error);
+    PSANotifications.showLookupNotification('FETCH_ERROR', { details: error });
     return { error: error.message };
   }
 };
@@ -244,6 +228,88 @@ const clearPSACache = (certNumber = null) => {
   }
 };
 
+// Track API rate limiting
+const apiRateLimit = {
+  isLimited: false,
+  limitResetTime: null,
+  dailyLimit: 100,
+  remainingCalls: 100,
+  setLimited: function(resetTimeMs = 24 * 60 * 60 * 1000) {
+    this.isLimited = true;
+    this.limitResetTime = Date.now() + resetTimeMs;
+    this.remainingCalls = 0;
+    
+    // Store in localStorage to persist between page reloads
+    try {
+      localStorage.setItem('psaApiRateLimit', JSON.stringify({
+        isLimited: this.isLimited,
+        limitResetTime: this.limitResetTime,
+        remainingCalls: this.remainingCalls
+      }));
+    } catch (e) {
+      console.warn('Failed to save PSA API rate limit to localStorage:', e);
+    }
+    
+    console.warn(`PSA API rate limit reached. Limit will reset in ${Math.round(resetTimeMs / (60 * 60 * 1000))} hours.`);
+  },
+  checkStatus: function() {
+    // Check if we need to restore state from localStorage
+    try {
+      const stored = localStorage.getItem('psaApiRateLimit');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        this.isLimited = parsed.isLimited;
+        this.limitResetTime = parsed.limitResetTime;
+        this.remainingCalls = parsed.remainingCalls;
+      }
+    } catch (e) {
+      console.warn('Failed to load PSA API rate limit from localStorage:', e);
+    }
+    
+    // Check if the limit has reset
+    if (this.isLimited && this.limitResetTime && Date.now() > this.limitResetTime) {
+      this.isLimited = false;
+      this.limitResetTime = null;
+      this.remainingCalls = this.dailyLimit;
+      
+      // Update localStorage
+      try {
+        localStorage.removeItem('psaApiRateLimit');
+      } catch (e) {
+        console.warn('Failed to clear PSA API rate limit from localStorage:', e);
+      }
+      
+      console.log('PSA API rate limit has reset. You can now make API calls again.');
+    }
+    
+    return {
+      isLimited: this.isLimited,
+      limitResetTime: this.limitResetTime,
+      remainingCalls: this.remainingCalls,
+      timeUntilReset: this.limitResetTime ? this.limitResetTime - Date.now() : 0
+    };
+  },
+  decrementCalls: function() {
+    if (this.remainingCalls > 0) {
+      this.remainingCalls--;
+      
+      // Update localStorage
+      try {
+        localStorage.setItem('psaApiRateLimit', JSON.stringify({
+          isLimited: this.isLimited,
+          limitResetTime: this.limitResetTime,
+          remainingCalls: this.remainingCalls
+        }));
+      } catch (e) {
+        console.warn('Failed to save PSA API rate limit to localStorage:', e);
+      }
+    }
+  }
+};
+
+// Initialize rate limit status from localStorage
+apiRateLimit.checkStatus();
+
 /**
  * Search for PSA graded card by certification number
  * @param {string} certNumber - PSA certification number
@@ -252,7 +318,35 @@ const clearPSACache = (certNumber = null) => {
  */
 const searchByCertNumber = async (certNumber, forceRefresh = false) => {
   try {
-    // Check cache first if not forcing refresh
+    // Show loading notification
+    PSANotifications.showLoadingNotification();
+    
+    // Check if we've hit the API rate limit
+    const rateLimitStatus = apiRateLimit.checkStatus();
+    if (rateLimitStatus.isLimited) {
+      const hoursRemaining = Math.round(rateLimitStatus.timeUntilReset / (60 * 60 * 1000));
+      const minutesRemaining = Math.round(rateLimitStatus.timeUntilReset / (60 * 1000)) % 60;
+      
+      const timeMessage = hoursRemaining > 0 
+        ? `${hoursRemaining} hours and ${minutesRemaining} minutes` 
+        : `${minutesRemaining} minutes`;
+      
+      console.warn(`PSA API rate limit reached. Limit will reset in ${timeMessage}.`);
+      
+      // Use our centralized notification system
+      PSANotifications.showLookupNotification('RATE_LIMITED');
+      
+      // Return a special error that the UI can handle
+      return { 
+        error: 'RATE_LIMITED',
+        message: `PSA lookup temporarily unavailable.`,
+        certNumber: certNumber,
+        // Include a placeholder image URL
+        placeholderImage: await createPlaceholderImage(certNumber)
+      };
+    }
+    
+    // Check local cache first if not forcing refresh
     if (!forceRefresh) {
       const cachedResult = getCachedPSAResult(certNumber);
       if (cachedResult) {
@@ -273,9 +367,25 @@ const searchByCertNumber = async (certNumber, forceRefresh = false) => {
       } catch (dbError) {
         console.warn('Failed to get PSA result from IndexedDB:', dbError);
       }
+      
+      // Check shared database
+      try {
+        const sharedDbResult = await getPSACardFromDatabase(certNumber);
+        if (sharedDbResult) {
+          console.log(`Using PSA result from shared database for cert number: ${certNumber}`);
+          // Update local cache
+          cachePSAResult(certNumber, sharedDbResult);
+          return sharedDbResult;
+        }
+      } catch (sharedDbError) {
+        console.warn('Failed to get PSA result from shared database:', sharedDbError);
+      }
     }
     
-    console.log(`Searching PSA for cert number: ${certNumber}`);
+    console.log(`PSA Search: Not found in any cache, calling PSA API for cert #${certNumber}`);
+    
+    // Decrement remaining API calls
+    apiRateLimit.decrementCalls();
     
     // Call the Firebase Cloud Function
     const result = await psaLookupFunction({ certNumber });
@@ -286,8 +396,15 @@ const searchByCertNumber = async (certNumber, forceRefresh = false) => {
     if (result.data && result.data.success) {
       const psaData = result.data.data;
       
-      // Cache the successful result
+      // Cache the successful result locally
       cachePSAResult(certNumber, psaData);
+      
+      // Save to shared database
+      try {
+        await savePSACardToDatabase(certNumber, psaData);
+      } catch (saveError) {
+        console.warn('Failed to save PSA result to shared database:', saveError);
+      }
       
       return psaData;
     } else {
@@ -296,13 +413,34 @@ const searchByCertNumber = async (certNumber, forceRefresh = false) => {
       if (result.data && result.data.error) {
         console.error('Error details:', result.data.error);
       }
-      toast.error('PSA lookup failed. Please check the certification number and try again.');
-      return { error: result.data?.error || 'Failed to fetch PSA data' };
+      
+      // Check if this is a rate limit error (403 Forbidden)
+      if (result.data?.error && result.data.error.includes('403 Forbidden')) {
+        // Set the rate limit flag
+        apiRateLimit.setLimited();
+        
+        // Use our centralized notification system
+        PSANotifications.showLookupNotification('RATE_LIMITED');
+        
+        // Return a special error that the UI can handle
+        return { 
+          error: 'RATE_LIMITED',
+          message: 'PSA lookup temporarily unavailable.',
+          certNumber: certNumber,
+          // Include a placeholder image URL
+          placeholderImage: await createPlaceholderImage(certNumber)
+        };
+      }
+      
+      // Use our centralized notification system
+      PSANotifications.showLookupNotification('NOT_FOUND');
+      return { error: 'NOT_FOUND' };
     }
   } catch (error) {
     console.error('Error searching PSA card by cert number:', error);
-    toast.error(`PSA search failed: ${error.message}`);
-    return { error: error.message };
+    // Use our centralized notification system
+    PSANotifications.showLookupNotification('FETCH_ERROR', { details: error });
+    return { error: 'FETCH_ERROR' };
   }
 };
 

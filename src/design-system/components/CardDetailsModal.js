@@ -8,6 +8,7 @@ import '../styles/animations.css';
 import { toast } from 'react-hot-toast';
 import { searchByCertNumber, fetchPSACardImage, parsePSACardData, mergeWithExistingCard } from '../../services/psaSearch';
 import PSADetailModal from '../../components/PSADetailModal';
+import PSANotifications from '../../components/PSANotifications';
 
 // Helper function to format date
 const formatDate = (dateString) => {
@@ -157,56 +158,43 @@ const CardDetailsModal = ({
   // Handle PSA search
   const handlePsaSearch = async (serialNumber) => {
     if (!serialNumber) {
-      toast.error('Please enter a PSA serial number');
+      PSANotifications.showLookupNotification('NO_DATA');
       return;
     }
     
     setIsPsaSearching(true);
-    setSaveMessage('Searching PSA database...');
     
     try {
       const data = await searchByCertNumber(serialNumber);
-      console.log('PSA data received:', data);
       
-      // Capture the PSA data
-      setPsaData(data);
+      console.log('PSA search result:', data);
       
-      // Try to fetch the PSA card image in parallel
-      let psaImage = null;
-      try {
-        // Only fetch and apply PSA image if the card doesn't already have an image
-        if (!card.hasImage || !cardImage) {
-          psaImage = await fetchPSACardImage(serialNumber);
-          if (psaImage) {
-            console.log(`PSA image fetched successfully: ${psaImage.size} bytes`);
-            setCardImage(URL.createObjectURL(psaImage));
-            
-            // Notify parent of image change if handler is provided
-            if (onImageChange) {
-              onImageChange(psaImage);
-            }
-          } else {
-            console.log('No PSA image found or image fetch failed');
-          }
-        } else {
-          console.log('Card already has an image, preserving existing image');
-        }
-      } catch (imageError) {
-        console.error('Error fetching PSA image:', imageError);
-      }
-      
-      // Open the PSADetailModal with the data
-      if (data && data.PSACert) {
-        setPsaDetailModalOpen(true);
+      if (data.error) {
+        console.error('PSA search error:', data.error);
+        setPsaData(null);
       } else {
-        toast.error('No valid PSA data found for this serial number');
+        try {
+          const parsedData = parsePSACardData(data);
+          
+          const hasData = parsedData.cardName || parsedData.setName || parsedData.grade;
+          
+          if (hasData) {
+            setPsaData(parsedData);
+            handleApplyPsaDetails(parsedData);
+          } else {
+            console.log('No meaningful PSA data found');
+            setPsaData(null);
+          }
+        } catch (parseError) {
+          console.error('Error parsing PSA data:', parseError);
+          setPsaData(null);
+          PSANotifications.showLookupNotification('PARSE_ERROR', { details: parseError });
+        }
       }
-      
-      setSaveMessage(null);
     } catch (error) {
-      console.error('Error looking up PSA certificate:', error);
-      toast.error(`Failed to find PSA certificate: ${error.message}`);
-      setSaveMessage('Failed to find PSA certificate. Please check the number and try again.');
+      console.error('Error searching PSA:', error);
+      setPsaData(null);
+      PSANotifications.showLookupNotification('FETCH_ERROR', { details: error });
     } finally {
       setIsPsaSearching(false);
     }
@@ -483,3 +471,4 @@ CardDetailsModal.propTypes = {
 };
 
 export default CardDetailsModal;
+
