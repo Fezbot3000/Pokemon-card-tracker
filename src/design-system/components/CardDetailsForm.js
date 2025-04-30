@@ -75,6 +75,16 @@ const CardDetailsForm = ({
     }
   }, [card?.condition]);
 
+  // Handle direct updates to gradingCompany and grade fields
+  useEffect(() => {
+    // If both gradingCompany and grade are set directly, update the dropdowns
+    if (card?.gradingCompany && card?.grade) {
+      console.log('Direct update to gradingCompany and grade:', card.gradingCompany, card.grade);
+      setSelectedCompany(card.gradingCompany);
+      setSelectedGrade(card.grade);
+    }
+  }, [card?.gradingCompany, card?.grade]);
+
   // Effect to update available sets when year or category changes
   useEffect(() => {
     if (card.year) {
@@ -396,7 +406,8 @@ const CardDetailsForm = ({
                 <button 
                   onClick={() => onPsaSearch && onPsaSearch(card.slabSerial)} 
                   className="w-full inline-flex items-center justify-center font-medium rounded-lg transition-colors focus:outline-none px-4 py-2 text-base bg-[#0F0F0F] text-gray-300 border border-gray-700 hover:opacity-90 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={isPsaSearching}
+                  disabled={isPsaSearching || !card.slabSerial}
+                  title={!card.slabSerial ? "Enter a serial number first" : "Search PSA database"}
                 >
                   {isPsaSearching ? (
                     <>

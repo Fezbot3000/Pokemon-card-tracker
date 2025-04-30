@@ -282,7 +282,7 @@ const CardDetails = memo(({
             editedCard._pendingImageFile, 
             { 
               isReplacement: card.hasImage === true, 
-              silent: true 
+              silent: true // Don't show toast for image upload
             }
           );
           
@@ -370,9 +370,8 @@ const CardDetails = memo(({
       // Reset unsaved changes flag
       setHasUnsavedChanges(false);
       
-      // Close the modal
-      console.log('[CardDetails] Closing modal after successful save');
-      handleClose(true); // Pass true to indicate a successful save
+      // Keep the modal open - don't close it
+      console.log('[CardDetails] Card saved successfully, keeping modal open');
       console.log('=========== CARD SAVE FLOW END ===========');
     } catch (error) {
       console.error('=========== CARD SAVE ERROR ===========');

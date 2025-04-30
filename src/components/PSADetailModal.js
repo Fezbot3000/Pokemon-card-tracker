@@ -45,6 +45,7 @@ const PSADetailModal = ({
           toast.error(`PSA search error: ${data.error}`);
         } else {
           try {
+            // Parse the PSA data into our app's format
             const parsed = parsePSACardData(data);
             console.log('Parsed PSA data:', parsed);
             setParsedData(parsed);
@@ -76,15 +77,39 @@ const PSADetailModal = ({
     if (isOpen && certNumber) {
       fetchPSAData();
     }
-  }, [isOpen, certNumber, autoApply, currentCardData, onApplyDetails]);
+  }, [isOpen, certNumber, autoApply]);
 
   // Function to apply PSA details to card
   const applyPSADetails = (data) => {
     if (!data) return;
     
     try {
-      // Merge PSA data with existing card data
-      const mergedData = mergeWithExistingCard(currentCardData, data);
+      console.log('Applying PSA data to card:', data);
+      console.log('Current card data:', currentCardData);
+      
+      // Create a direct mapping of PSA data to card fields
+      // This ensures we don't lose any existing data while adding PSA data
+      const mergedData = {
+        ...currentCardData,
+        card: data.cardName || currentCardData.card || '',
+        player: data.player || currentCardData.player || '',
+        set: data.setName || currentCardData.set || '',
+        year: data.year || currentCardData.year || '',
+        category: 'Pokemon', // Default to Pokemon for PSA cards
+        condition: `PSA ${data.grade}`,
+        gradingCompany: 'PSA',
+        grade: data.grade || '',
+        slabSerial: data.slabSerial || currentCardData.slabSerial || '',
+        population: data.population || currentCardData.population || '',
+        // Preserve financial data
+        datePurchased: currentCardData?.datePurchased || new Date().toISOString().split('T')[0],
+        investmentAUD: currentCardData?.investmentAUD || '',
+        currentValueAUD: currentCardData?.currentValueAUD || '',
+        quantity: currentCardData?.quantity || 1
+      };
+      
+      console.log('Merged card data:', mergedData);
+      
       onApplyDetails(mergedData);
       toast.success('PSA data applied successfully!');
       onClose();

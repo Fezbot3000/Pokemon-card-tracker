@@ -340,9 +340,7 @@ const searchByCertNumber = async (certNumber, forceRefresh = false) => {
       return { 
         error: 'RATE_LIMITED',
         message: `PSA lookup temporarily unavailable.`,
-        certNumber: certNumber,
-        // Include a placeholder image URL
-        placeholderImage: await createPlaceholderImage(certNumber)
+        certNumber: certNumber
       };
     }
     
@@ -426,9 +424,7 @@ const searchByCertNumber = async (certNumber, forceRefresh = false) => {
         return { 
           error: 'RATE_LIMITED',
           message: 'PSA lookup temporarily unavailable.',
-          certNumber: certNumber,
-          // Include a placeholder image URL
-          placeholderImage: await createPlaceholderImage(certNumber)
+          certNumber: certNumber
         };
       }
       
@@ -453,7 +449,11 @@ const parsePSACardData = (psaData) => {
   if (!psaData || psaData.error) {
     throw new Error(psaData?.error || 'Invalid PSA data');
   }
-  const cert = psaData.PSACert || {};
+  
+  console.log('Parsing PSA data:', psaData);
+  
+  // Handle different PSA API response structures
+  const cert = psaData.PSACert || psaData.data?.PSACert || psaData;
 
   // Construct a more descriptive card name
   const cardName = [
@@ -473,7 +473,7 @@ const parsePSACardData = (psaData) => {
     cardNumber: cert.CardNumber || cert.SpecNumber || '',
     slabSerial: cert.CertNumber || cert.SpecId || '',
     grade: cert.GradeDescription || cert.CardGrade || '',
-    setName: cert.Brand || '',
+    setName: cert.Brand || cert.SetName || '',
     year: cert.Year || '',
     cardType: cert.Category || '',
     psaImageUrl: cert.ImageUrl || '',
@@ -498,8 +498,19 @@ const parsePSACardData = (psaData) => {
  * @returns {Object} - Merged card data
  */
 const mergeWithExistingCard = (existingCardData, psaCardData) => {
+  console.log('Merging PSA data:', psaCardData);
+  console.log('With existing data:', existingCardData);
+  
   // Create a new object with existing card data as the base
-  const mergedData = { ...existingCardData };
+  // Preserve existing values that should not be overwritten
+  const mergedData = { 
+    ...existingCardData,
+    // Preserve these fields if they exist
+    datePurchased: existingCardData.datePurchased || new Date().toISOString().split('T')[0],
+    investmentAUD: existingCardData.investmentAUD || '',
+    currentValueAUD: existingCardData.currentValueAUD || '',
+    quantity: existingCardData.quantity || 1
+  };
   
   // Map PSA data to our card data structure
   if (psaCardData.cardName) mergedData.card = psaCardData.cardName;
@@ -508,14 +519,17 @@ const mergeWithExistingCard = (existingCardData, psaCardData) => {
   // Find best matching set from dropdown options
   if (psaCardData.setName) {
     const matchedSet = findBestMatchingSet(psaCardData.setName, psaCardData.year);
+    console.log('Found matching set:', matchedSet, 'from', psaCardData.setName);
     mergedData.set = matchedSet;
   }
   
   if (psaCardData.year) mergedData.year = psaCardData.year;
   
+  // Always set grading company to PSA for PSA searches
+  mergedData.gradingCompany = "PSA";
+  
   // Format condition string correctly for CardDetailsForm dropdowns
   if (psaCardData.grade) {
-    const company = "PSA";
     let gradeValue = psaCardData.grade.trim();
     
     // Try to extract numeric grade (e.g., from "GEM MINT 10" or "MINT 9")
@@ -532,8 +546,10 @@ const mergeWithExistingCard = (existingCardData, psaCardData) => {
         .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
         .join(' ');
     }
-    mergedData.condition = `${company} ${gradeValue}`; // e.g., "PSA 10", "PSA Authentic"
-    mergedData.gradingCompany = company; // Ensure grading company is set for dropdown
+    
+    // Set both condition and grade fields
+    mergedData.condition = `PSA ${gradeValue}`; // e.g., "PSA 10", "PSA Authentic"
+    mergedData.grade = gradeValue; // Just the grade value
   }
   
   if (psaCardData.slabSerial) mergedData.slabSerial = psaCardData.slabSerial;
@@ -553,7 +569,7 @@ const mergeWithExistingCard = (existingCardData, psaCardData) => {
   console.log('Category detection combined info:', combinedInfo);
 
   // Default category
-  mergedData.category = 'Other';
+  mergedData.category = 'Pokemon'; // Default to Pokemon for PSA searches
 
   if (combinedInfo) {
     // Dragon Ball Z - check this first as it's more specific
@@ -611,213 +627,101 @@ const mergeWithExistingCard = (existingCardData, psaCardData) => {
              /quarterback|touchdown|brady|mahomes|rodgers/i.test(combinedInfo)) {
       mergedData.category = 'Other';
     }
-    // Sports cards - Baseball
-    else if (combinedInfo.includes('baseball') || 
-             combinedInfo.includes('mlb') ||
-             /pitcher|batter|trout|ruth|aaron|bonds/i.test(combinedInfo)) {
-      mergedData.category = 'Other';
-    }
-    // Sports cards - Soccer
-    else if (combinedInfo.includes('soccer') || 
-             (combinedInfo.includes('football') && !combinedInfo.includes('nfl')) ||
-             combinedInfo.includes('fifa') ||
-             /messi|ronaldo|pele|maradona|mbappe/i.test(combinedInfo)) {
-      // If it's EPL related, that will be caught in the EPL check
-      // Otherwise categorize as Other
-      mergedData.category = 'Other';
-    }
-    // EPL (English Premier League)
-    else if (combinedInfo.includes('premier league') || 
-             combinedInfo.includes('epl') ||
-             /manchester united|liverpool|chelsea|arsenal/i.test(combinedInfo)) {
-      mergedData.category = 'EPL';
-    }
-    // F1
-    else if (combinedInfo.includes('formula 1') || 
-             combinedInfo.includes('f1') ||
-             /hamilton|verstappen|schumacher|grand prix|ferrari|mclaren/i.test(combinedInfo)) {
-      mergedData.category = 'F1';
-    }
-    // WWE
-    else if (combinedInfo.includes('wwe') || 
-             combinedInfo.includes('wrestling') ||
-             combinedInfo.includes('wwf') ||
-             /undertaker|cena|rock|austin|hogan/i.test(combinedInfo)) {
-      mergedData.category = 'WWE';
-    }
-    // Default to Other if no specific category is detected
-    else {
-      mergedData.category = 'Other';
-    }
   }
   
-  console.log('Detected category:', mergedData.category);
-  
-  // Preserve existing financial data and image
-  // We don't modify: investmentUSD, currentValueUSD, investmentAUD, currentValueAUD, datePurchased, notes, etc.
-  
-  // Preserve any existing card image if it exists
-  if (existingCardData?.hasImage && existingCardData?.imageUrl) {
-    console.log('Preserving existing card image:', existingCardData.imageUrl);
-    mergedData.hasImage = existingCardData.hasImage;
-    mergedData.imageUrl = existingCardData.imageUrl;
-    // Also keep any image-related metadata
-    if (existingCardData.imageUpdatedAt) {
-      mergedData.imageUpdatedAt = existingCardData.imageUpdatedAt;
-    }
-  }
-  
-  console.log('Merged card data:', mergedData);
+  console.log('Final merged data:', mergedData);
   return mergedData;
 };
 
 // Function to find the best matching set from our dropdown options
 const findBestMatchingSet = (setName, year) => {
+  console.log('Finding best matching set for:', setName, 'year:', year);
+  
   // First try to get sets for the specific year
   let availableSets = [];
   if (year) {
     const parsedYear = parseInt(year, 10);
     if (!isNaN(parsedYear)) {
       availableSets = getPokemonSetsByYear(parsedYear);
+      console.log(`Found ${availableSets.length} sets for year ${parsedYear}`);
     }
   }
   
   // If no sets found for the year, use all sets
   if (availableSets.length === 0) {
     availableSets = getAllPokemonSets();
+    console.log(`Using all sets (${availableSets.length} total)`);
   }
   
   // If we have a set name, try to find the best match
   if (setName && typeof setName === 'string' && availableSets.length > 0) {
+    // Clean up the set name for better matching
+    const cleanSetName = setName.toLowerCase().trim();
+    console.log('Cleaned set name for matching:', cleanSetName);
+    
     // Try for exact match first
     const exactMatch = availableSets.find(set => 
-      typeof set === 'string' && set.toLowerCase() === setName.toLowerCase()
+      typeof set === 'string' && set.toLowerCase() === cleanSetName
     );
     
     if (exactMatch) {
+      console.log('Found exact match:', exactMatch);
       return exactMatch;
     }
     
-    // Try for partial match
-    const partialMatch = availableSets.find(set => 
-      typeof set === 'string' && (
-        set.toLowerCase().includes(setName.toLowerCase()) ||
-        setName.toLowerCase().includes(set.toLowerCase())
+    // Try for partial match with more aggressive matching
+    // Sort by match quality - longer matches are better
+    const partialMatches = availableSets
+      .filter(set => 
+        typeof set === 'string' && (
+          set.toLowerCase().includes(cleanSetName) ||
+          cleanSetName.includes(set.toLowerCase())
+        )
       )
-    );
+      .sort((a, b) => {
+        // Prefer sets that contain the search term over sets contained in the search term
+        const aContainsSearch = a.toLowerCase().includes(cleanSetName);
+        const bContainsSearch = b.toLowerCase().includes(cleanSetName);
+        
+        if (aContainsSearch && !bContainsSearch) return -1;
+        if (!aContainsSearch && bContainsSearch) return 1;
+        
+        // If both contain or are contained, prefer the closer length match
+        const aLengthDiff = Math.abs(a.length - cleanSetName.length);
+        const bLengthDiff = Math.abs(b.length - cleanSetName.length);
+        return aLengthDiff - bLengthDiff;
+      });
     
-    if (partialMatch) {
-      return partialMatch;
+    if (partialMatches.length > 0) {
+      console.log('Found partial matches, best match:', partialMatches[0]);
+      console.log('All partial matches:', partialMatches);
+      return partialMatches[0];
+    }
+    
+    // Try word-by-word matching as a last resort
+    const words = cleanSetName.split(/\s+/);
+    if (words.length > 1) {
+      console.log('Trying word-by-word matching with words:', words);
+      
+      // Try to match with individual words from the set name
+      for (const word of words) {
+        if (word.length < 3) continue; // Skip very short words
+        
+        const wordMatches = availableSets
+          .filter(set => typeof set === 'string' && set.toLowerCase().includes(word))
+          .sort((a, b) => a.length - b.length); // Prefer shorter matches
+        
+        if (wordMatches.length > 0) {
+          console.log(`Found match using word "${word}":`, wordMatches[0]);
+          return wordMatches[0];
+        }
+      }
     }
   }
   
   // If no match found, return original value
+  console.log('No matching set found, returning original:', setName);
   return setName;
-};
-
-/**
- * Create a placeholder image for a PSA card
- * @param {string} certNumber - The PSA certification number
- * @returns {File} - A File object containing a simple canvas-generated image
- */
-const createPlaceholderImage = (certNumber) => {
-  // Create a canvas element to generate a nicer placeholder image
-  const canvas = document.createElement('canvas');
-  canvas.width = 600;
-  canvas.height = 900;
-  
-  const ctx = canvas.getContext('2d');
-  
-  // Card background - light gray
-  ctx.fillStyle = '#f5f5f5';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  
-  // PSA slab outer border
-  ctx.strokeStyle = '#222222';
-  ctx.lineWidth = 12;
-  ctx.strokeRect(15, 15, canvas.width - 30, canvas.height - 30);
-  
-  // Inner border with shadow effect
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(30, 30, canvas.width - 60, canvas.height - 60);
-  
-  // Add drop shadow effect
-  ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
-  ctx.shadowBlur = 15;
-  ctx.shadowOffsetX = 5;
-  ctx.shadowOffsetY = 5;
-  
-  // PSA Header area
-  ctx.shadowColor = 'transparent'; // Turn off shadow for header
-  ctx.fillStyle = '#222222';
-  ctx.fillRect(40, 40, canvas.width - 80, 90);
-  
-  // PSA Logo text
-  ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 60px Arial, sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillText('PSA', canvas.width / 2, 100);
-  
-  // Cert Number with styling
-  ctx.fillStyle = '#222222';
-  ctx.font = '30px Arial, sans-serif';
-  ctx.fillText(`Cert #${certNumber}`, canvas.width / 2, 170);
-  
-  // Add Pokemon logo/branding
-  ctx.fillStyle = '#ffcb05'; // Pokemon yellow
-  ctx.beginPath();
-  ctx.arc(canvas.width / 2, canvas.height / 2 - 100, 100, 0, Math.PI * 2);
-  ctx.fill();
-  
-  ctx.fillStyle = '#3c5aa6'; // Pokemon blue
-  ctx.beginPath();
-  ctx.arc(canvas.width / 2, canvas.height / 2 - 100, 80, 0, Math.PI * 2);
-  ctx.fill();
-  
-  // Card information
-  ctx.fillStyle = '#222222';
-  ctx.font = 'bold 40px Arial, sans-serif';
-  ctx.fillText('PSA CARD', canvas.width / 2, canvas.height / 2 + 50);
-  
-  // Add stylized information about image pending
-  ctx.font = '28px Arial, sans-serif';
-  ctx.fillText('Image will be available', canvas.width / 2, canvas.height / 2 + 120);
-  ctx.fillText('after card verification', canvas.width / 2, canvas.height / 2 + 160);
-  
-  // Add a camera icon
-  ctx.fillStyle = '#666666';
-  ctx.beginPath();
-  const cameraX = canvas.width / 2;
-  const cameraY = canvas.height / 2 + 230;
-  const cameraWidth = 80;
-  const cameraHeight = 60;
-  
-  // Camera body
-  ctx.fillRect(cameraX - cameraWidth/2, cameraY - cameraHeight/2, cameraWidth, cameraHeight);
-  
-  // Camera lens
-  ctx.beginPath();
-  ctx.arc(cameraX, cameraY, 25, 0, Math.PI * 2);
-  ctx.fillStyle = '#444444';
-  ctx.fill();
-  ctx.beginPath();
-  ctx.arc(cameraX, cameraY, 15, 0, Math.PI * 2);
-  ctx.fillStyle = '#222222';
-  ctx.fill();
-  
-  // Add info text at bottom
-  ctx.fillStyle = '#666666';
-  ctx.font = '24px Arial, sans-serif';
-  ctx.fillText(`Search complete - Card #${certNumber}`, canvas.width / 2, canvas.height - 60);
-  
-  // Convert canvas to blob
-  return new Promise((resolve) => {
-    canvas.toBlob((blob) => {
-      const file = new File([blob], `psa-card-${certNumber}.png`, { type: 'image/png' });
-      console.log(`Created enhanced placeholder image for cert #${certNumber}, size: ${file.size} bytes`);
-      resolve(file);
-    }, 'image/png', 0.9);
-  });
 };
 
 /**
@@ -825,44 +729,11 @@ const createPlaceholderImage = (certNumber) => {
  * @param {string} certNumber - PSA certification number
  * @returns {Promise<File|null>} - The image file or null if not found
  */
-const fetchPSACardImage = async (certNumber) => {
-  if (!certNumber) return null;
-  
-  try {
-    // Use PSA's main site image URL format instead
-    // Try multiple URL patterns to increase chances of finding an image
-    const imageUrls = [
-      // URL pattern from PSA website
-      `https://www.psacard.com/cert/${certNumber}/PSAcert`, 
-      // Old pattern as fallback
-      `https://imgs.collectors.com/psacard/lg/${certNumber}.jpg`
-    ];
-    
-    // Create a placeholder image as fallback 
-    const placeholderImage = createPlaceholderImage(certNumber);
-    
-    // Try to fetch image from PSA using a Cloud Function - this avoids CORS issues
-    console.log(`Attempting to fetch PSA image for cert #${certNumber}`);
-    
-    try {
-      // Call the PSA lookup function to get any image URLs that might be in the response
-      const psaData = await psaLookupFunction({ certNumber, includeImage: true });
-      
-      // Check if we got image data in the response
-      if (psaData.data?.imageUrl) {
-        imageUrls.unshift(psaData.data.imageUrl); // Add to the front of our attempt list
-      }
-    } catch (lookupError) {
-      console.warn('Could not get image URL from PSA lookup function:', lookupError);
-    }
-    
-    // Return the placeholder image - we'll skip the network fetch attempts since they're failing
-    console.log('Using placeholder image for PSA card');
-    return placeholderImage;
-  } catch (error) {
-    console.error('Error fetching PSA card image:', error);
-    return null;
-  }
+// COMPLETELY DISABLED - DO NOT USE
+// This function has been intentionally disabled to prevent any image fetching
+// If you need this functionality, please implement it differently.
+const fetchPSACardImage = async () => {
+  return null;
 };
 
 export {
@@ -871,6 +742,5 @@ export {
   mergeWithExistingCard,
   getAccessToken,
   testPSAConnection,
-  fetchPSACardImage,
   clearPSACache
 };

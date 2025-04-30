@@ -6,7 +6,7 @@ import CardDetailsForm from '../design-system/components/CardDetailsForm';
 import { toast } from 'react-hot-toast';
 import PSADetailModal from './PSADetailModal';
 import NewCollectionModal from './NewCollectionModal';
-import { searchByCertNumber, fetchPSACardImage } from '../services/psaSearch';
+import { searchByCertNumber } from '../services/psaSearch';
 
 /**
  * AddCardModal Component
@@ -232,41 +232,8 @@ const AddCardModal = ({
       // Capture the PSA data
       setPsaData(data);
       
-      // Try to fetch the PSA card image in parallel
-      let psaImage = null;
-      try {
-        psaImage = await fetchPSACardImage(psaSerial);
-        if (psaImage) {
-          console.log(`PSA image fetched successfully: ${psaImage.size} bytes`);
-          setCardImage(URL.createObjectURL(psaImage));
-          setImageFile(psaImage);
-        } else {
-          console.log('No PSA image found or image fetch failed');
-        }
-      } catch (imageError) {
-        console.error('Error fetching PSA image:', imageError);
-      }
-      
-      // Parse the data received from PSA
-      // Check if we have a PSACert object, which seems to be the structure from the console logs
-      if (data && data.PSACert) {
-        const psaInfo = data.PSACert;
-        
-        // Update the card with PSA data
-        setNewCard({
-          ...newCard,
-          player: psaInfo.Subject || '',
-          card: psaInfo.Subject || '',  // Often the subject is the card name
-          set: psaInfo.Brand || '',
-          year: psaInfo.Year || '',
-          condition: psaInfo.GradeDescription || psaInfo.CardGrade || '',
-          slabSerial: psaInfo.CertNumber || psaInfo.SpecNumber || '',
-          category: psaInfo.Category || 'Pokemon',
-          hasImage: !!psaImage, // Mark that we have an image if we fetched one
-        });
-      }
-      
-      // Show the modal with the PSA details
+      // Show the modal with the PSA details - always show the modal
+      // This will let the mergeWithExistingCard function handle the data processing
       setPsaDetailModalOpen(true);
       
       toast.success('PSA certificate details loaded');

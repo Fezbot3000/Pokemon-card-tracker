@@ -4,11 +4,9 @@ import { Modal, Button, Icon } from '../';
 import CardDetailsForm from './CardDetailsForm';
 import PriceHistoryGraph from '../../components/PriceHistoryGraph';
 import SaleModal from '../../components/SaleModal'; 
-import '../styles/animations.css';
+import { searchByCertNumber, parsePSACardData } from '../../services/psaSearch';
 import { toast } from 'react-hot-toast';
-import { searchByCertNumber, fetchPSACardImage, parsePSACardData, mergeWithExistingCard } from '../../services/psaSearch';
-import PSADetailModal from '../../components/PSADetailModal';
-import PSANotifications from '../../components/PSANotifications';
+import '../styles/animations.css';
 
 // Helper function to format date
 const formatDate = (dateString) => {
@@ -53,8 +51,7 @@ const CardDetailsModal = ({
   const [contentLoaded, setContentLoaded] = useState(false); // Track if content has been loaded
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [isPsaSearching, setIsPsaSearching] = useState(false);
-  const [psaDetailModalOpen, setPsaDetailModalOpen] = useState(false);
-  const [psaData, setPsaData] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   // If the card has pricing data from PriceCharting, extract the product ID
   let priceChartingProductId = null;
@@ -137,76 +134,9 @@ const CardDetailsModal = ({
   
   // Handle image changes (passed down to form)
   const handleImageChange = (file) => {
-    // First update our local state
-    setLocalImageLoadingState('loading');
-    try {
-      // Create a preview URL for immediate feedback
-      const imageUrl = URL.createObjectURL(file);
-      setCardImage(imageUrl);
-      setLocalImageLoadingState('idle');
-    } catch (error) {
-      console.error('Error creating image preview:', error);
-      setLocalImageLoadingState('error');
-    }
-    
-    // Then pass to parent component
     if (onImageChange) {
       onImageChange(file);
     }
-  };
-  
-  // Handle PSA search
-  const handlePsaSearch = async (serialNumber) => {
-    if (!serialNumber) {
-      PSANotifications.showLookupNotification('NO_DATA');
-      return;
-    }
-    
-    setIsPsaSearching(true);
-    
-    try {
-      const data = await searchByCertNumber(serialNumber);
-      
-      console.log('PSA search result:', data);
-      
-      if (data.error) {
-        console.error('PSA search error:', data.error);
-        setPsaData(null);
-      } else {
-        try {
-          const parsedData = parsePSACardData(data);
-          
-          const hasData = parsedData.cardName || parsedData.setName || parsedData.grade;
-          
-          if (hasData) {
-            setPsaData(parsedData);
-            handleApplyPsaDetails(parsedData);
-          } else {
-            console.log('No meaningful PSA data found');
-            setPsaData(null);
-          }
-        } catch (parseError) {
-          console.error('Error parsing PSA data:', parseError);
-          setPsaData(null);
-          PSANotifications.showLookupNotification('PARSE_ERROR', { details: parseError });
-        }
-      }
-    } catch (error) {
-      console.error('Error searching PSA:', error);
-      setPsaData(null);
-      PSANotifications.showLookupNotification('FETCH_ERROR', { details: error });
-    } finally {
-      setIsPsaSearching(false);
-    }
-  };
-  
-  // Handle applying PSA details to the card
-  const handleApplyPsaDetails = (updatedCardData) => {
-    if (onChange) {
-      onChange(updatedCardData);
-    }
-    setPsaDetailModalOpen(false);
-    toast.success('PSA card details applied');
   };
   
   // Handle mark as sold action
@@ -229,7 +159,7 @@ const CardDetailsModal = ({
   };
   
   // Handle save action
-  const handleSave = () => {
+  const handleSave = async () => {
     // Validate required fields
     const newErrors = {};
     
@@ -254,19 +184,109 @@ const CardDetailsModal = ({
       newErrors.currentValueAUD = 'Must be a valid number';
     }
     
-    // Check if there are any validation errors
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       setSaveMessage('Please fix the errors before saving');
       return;
     }
     
-    // Clear any previous errors
+    // Clear errors and save
     setErrors({});
     
-    // Call the onSave callback with the updated card data
     if (onSave) {
-      onSave(card);
+      // Set saving state to true
+      setIsSaving(true);
+      
+      try {
+        // Format the card data before saving
+        const formattedCard = {
+          ...card,
+          // Format date if it exists
+          datePurchased: card.datePurchased ? formatDate(card.datePurchased) : '',
+          // Convert numeric fields to numbers
+          investmentAUD: card.investmentAUD ? parseFloat(card.investmentAUD) : '',
+          currentValueAUD: card.currentValueAUD ? parseFloat(card.currentValueAUD) : '',
+          quantity: card.quantity ? parseInt(card.quantity, 10) : 1,
+        };
+        
+        // Call onSave and wait for it to complete
+        await onSave(formattedCard);
+        
+        // Don't show a success toast here - it will be shown by the parent component
+        // toast.success('Card saved successfully!');
+      } catch (error) {
+        console.error('Error saving card:', error);
+        toast.error(`Failed to save card: ${error.message}`);
+      } finally {
+        // Reset saving state
+        setIsSaving(false);
+      }
+    }
+  };
+
+  // Handle PSA search
+  const handlePsaSearch = async (serialNumber) => {
+    if (!serialNumber) {
+      toast.error('Please enter a PSA certificate number');
+      return;
+    }
+
+    setIsPsaSearching(true);
+    setSaveMessage('Searching for PSA certificate...');
+
+    try {
+      const data = await searchByCertNumber(serialNumber);
+      console.log('PSA data received:', data);
+      
+      if (data && !data.error) {
+        try {
+          // Parse the PSA data into our app's format
+          const parsedData = parsePSACardData(data);
+          console.log('Parsed PSA data:', parsedData);
+          
+          // Create a direct mapping of PSA data to card fields
+          const updatedCardData = {
+            ...card,
+            card: parsedData.cardName || card.card || '',
+            player: parsedData.player || card.player || '',
+            set: parsedData.setName || card.set || '',
+            year: parsedData.year || card.year || '',
+            category: 'Pokemon', // Default to Pokemon for PSA cards
+            condition: `PSA ${parsedData.grade}`,
+            gradingCompany: 'PSA', // Explicitly set the grading company
+            // Extract just the numeric part of the grade if it's in format "GEM MT 10"
+            grade: parsedData.grade ? parsedData.grade.replace(/^.*?(\d+(?:\.\d+)?)$/, '$1') : '',
+            slabSerial: parsedData.slabSerial || card.slabSerial || '',
+            population: parsedData.population || card.population || '',
+            psaUrl: parsedData.psaUrl || card.psaUrl || '',
+            // Preserve financial data
+            datePurchased: card?.datePurchased || new Date().toISOString().split('T')[0],
+            investmentAUD: card?.investmentAUD || '',
+            currentValueAUD: card?.currentValueAUD || '',
+            quantity: card?.quantity || 1
+          };
+          
+          console.log('Updated card data:', updatedCardData);
+          
+          // Update the card data
+          if (onChange) {
+            onChange(updatedCardData);
+            toast.success('PSA data applied successfully!');
+          }
+        } catch (parseError) {
+          console.error('Error parsing PSA data:', parseError);
+          toast.error('Error parsing PSA data: ' + parseError.message);
+        }
+      } else {
+        console.error('PSA lookup failed:', data);
+        toast.error(`PSA search error: ${data?.error || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Error looking up PSA certificate:', error);
+      toast.error(`Failed to find PSA certificate: ${error.message}`);
+    } finally {
+      setIsPsaSearching(false);
+      setSaveMessage('');
     }
   };
 
@@ -284,6 +304,7 @@ const CardDetailsModal = ({
             <Button 
               variant="secondary" 
               onClick={onClose}
+              disabled={isPsaSearching || isSaving}
             >
               Cancel
             </Button>
@@ -293,6 +314,7 @@ const CardDetailsModal = ({
                   variant="secondary" 
                   onClick={handleMarkAsSold}
                   leftIcon={<Icon name="tag" />}
+                  disabled={isPsaSearching || isSaving}
                 >
                   Mark as Sold
                 </Button>
@@ -300,8 +322,17 @@ const CardDetailsModal = ({
               <Button 
                 variant="primary" 
                 onClick={handleSave}
+                disabled={isPsaSearching || isSaving}
               >
-                Save
+                {isSaving ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Saving...
+                  </>
+                ) : 'Save'}
               </Button>
             </div>
           </div>
@@ -427,16 +458,6 @@ const CardDetailsModal = ({
         </div>
       )}
       
-      {/* PSA Detail Modal */}
-      <PSADetailModal
-        isOpen={psaDetailModalOpen}
-        onClose={() => setPsaDetailModalOpen(false)}
-        certNumber={card?.slabSerial || ''}
-        currentCardData={card}
-        psaData={psaData}
-        onApplyDetails={handleApplyPsaDetails}
-      />
-      
       {/* SaleModal for single card sale */}
       {isConfirmingSold && (
         <SaleModal
@@ -471,4 +492,3 @@ CardDetailsModal.propTypes = {
 };
 
 export default CardDetailsModal;
-
