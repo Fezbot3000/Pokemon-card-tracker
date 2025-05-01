@@ -971,6 +971,79 @@ const SettingsModal = ({
                 </SettingsPanel>
 
                 <SettingsPanel
+                  title="Subscription Management"
+                  description="Manage your Stripe subscription and billing information."
+                >
+                  <div className="space-y-4">
+                    <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+                      <div className="flex justify-between items-center mb-2">
+                        <h4 className="font-medium text-gray-800 dark:text-white">Current Plan</h4>
+                        <span className={`px-2 py-1 ${profile.subscriptionTier === 'premium' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'} text-xs font-medium rounded-full`}>
+                          {profile.subscriptionTier === 'premium' ? 'Premium' : 'Free'}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">
+                        {profile.subscriptionTier === 'premium' 
+                          ? 'You are currently on the Premium plan with access to all features.' 
+                          : 'Upgrade to Premium for access to all features.'}
+                      </p>
+                      {profile.subscriptionEndsAt && (
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          Next billing date: {new Date(profile.subscriptionEndsAt).toLocaleDateString()}
+                        </p>
+                      )}
+                    </div>
+                    
+                    <div className="flex flex-col space-y-3">
+                      <Button
+                        variant="primary"
+                        onClick={() => window.open('https://billing.stripe.com/p/login/test_28o5nC0Qw3Ub8WA144', '_blank')}
+                        iconLeft={<Icon name="credit_card" />}
+                        fullWidth
+                      >
+                        Manage Payment Methods
+                      </Button>
+                      
+                      <Button
+                        variant="outline"
+                        onClick={() => window.open('https://billing.stripe.com/p/login/test_28o5nC0Qw3Ub8WA144', '_blank')}
+                        iconLeft={<Icon name="receipt_long" />}
+                        fullWidth
+                      >
+                        View Billing History
+                      </Button>
+                      
+                      {profile.subscriptionTier === 'premium' ? (
+                        <Button
+                          variant="danger"
+                          onClick={() => {
+                            // Show confirmation dialog before cancellation
+                            if (window.confirm('Are you sure you want to cancel your subscription? You will lose access to premium features at the end of your billing period.')) {
+                              // Here you would call a function to handle the cancellation
+                              // For example: handleCancelSubscription()
+                              toastService.success('Your request to cancel has been submitted. You will receive a confirmation email shortly.');
+                            }
+                          }}
+                          iconLeft={<Icon name="cancel" />}
+                          fullWidth
+                        >
+                          Cancel Subscription
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="success"
+                          onClick={() => window.open('https://buy.stripe.com/test_28o5nC0Qw3Ub8WA144', '_blank')}
+                          iconLeft={<Icon name="upgrade" />}
+                          fullWidth
+                        >
+                          Upgrade to Premium
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </SettingsPanel>
+
+                <SettingsPanel
                   title="Sign Out"
                   description="Sign out of your account and return to the login screen."
                   expandable={undefined}

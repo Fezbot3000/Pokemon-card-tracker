@@ -32,6 +32,10 @@ const SoldItems = () => {
 
   // Load card images from local IndexedDB and Firebase Storage
   useEffect(() => {
+    // Disable image loading completely to prevent CORS errors
+    return;
+    
+    /* Original image loading code commented out
     const loadCardImages = async () => {
       // Clear previous object URLs to prevent memory leaks
       Object.values(cardImages).forEach(url => {
@@ -107,6 +111,7 @@ const SoldItems = () => {
     if (soldCards.length > 0) {
       loadCardImages();
     }
+    */
     
     // Cleanup function
     return () => {
@@ -671,46 +676,13 @@ const SoldItems = () => {
 
   // Get card image URL function for SoldItemsView
   const getCardImageUrl = (card) => {
-    // First check if the card has direct image URLs
-    if (card.imageUrl) {
-      return card.imageUrl;
+    try {
+      // Always return null to prevent images from loading on the sold page
+      return null;
+    } catch (error) {
+      console.error('Error getting card image:', error);
+      return null;
     }
-    
-    if (card.cloudImageUrl) {
-      return card.cloudImageUrl;
-    }
-    
-    // Then try using the card identifiers to find the image
-    const cardId = card.slabSerial || card.id;
-    if (cardId && cardImages[cardId]) {
-      return cardImages[cardId];
-    }
-    
-    // If we reach here, try to load the image directly from Firebase Storage
-    if (cardId && user) {
-      // We'll return a placeholder and trigger an async load
-      // This ensures the component doesn't wait for the image to load
-      const loadImageAsync = async () => {
-        try {
-          const storageRef = ref(storage, `users/${user.uid}/card-images/${cardId}`);
-          const imageUrl = await getDownloadURL(storageRef);
-          
-          // Update the cardImages state with the new URL
-          setCardImages(prev => ({
-            ...prev,
-            [cardId]: imageUrl
-          }));
-        } catch (error) {
-          // Silent fail - no need to log every missing image
-        }
-      };
-      
-      // Start the async loading process
-      loadImageAsync();
-    }
-    
-    // If we reach here, no image was found
-    return null;
   };
 
   // Handle printing an invoice

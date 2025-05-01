@@ -1,42 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import CardImage from '../../atoms/CardImage';
-import ImageModal from '../../atoms/ImageModal';
 import { stripDebugProps } from '../../../utils/stripDebugProps';
 
 /**
  * InvoiceCard Component
  * 
- * A card component displaying a sold Pokemon card with its details
- * and profit/loss amounts. Supports lazy loading of images.
+ * A simplified card component displaying a sold Pokemon card with its details
+ * and profit/loss amounts.
  */
 const InvoiceCard = ({
   card,
   getImageUrl,
   lazyLoad = false,
   className = '',
+  hideSoldImages = true,
   ...props
 }) => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [imageUrl, setImageUrl] = useState(null);
-  const [imageLoaded, setImageLoaded] = useState(false);
   const [isVisible, setIsVisible] = useState(!lazyLoad);
-
-  // Load image when component becomes visible or when getImageUrl changes
-  useEffect(() => {
-    if (isVisible && getImageUrl && !imageLoaded) {
-      try {
-        const url = getImageUrl(card);
-        if (url) {
-          setImageUrl(url);
-          setImageLoaded(true);
-        }
-      } catch (error) {
-        console.error('Error loading image for card:', card.id || card.slabSerial, error);
-        setImageLoaded(true); // Mark as loaded to prevent infinite retries
-      }
-    }
-  }, [isVisible, getImageUrl, card, imageLoaded]);
 
   // Set up intersection observer for lazy loading
   useEffect(() => {
@@ -69,70 +49,63 @@ const InvoiceCard = ({
   const paid = parseFloat(card.investmentAUD) || 0;
   const sold = parseFloat(card.finalValueAUD) || 0;
 
+  // Format the card name to be more compact
+  const formatCardName = (name) => {
+    if (!name) return 'Unknown Card';
+    
+    // Extract PSA grade if present
+    const psaMatch = name.match(/PSA\s*(\d+)/i);
+    const psaGrade = psaMatch ? psaMatch[1] : '';
+    
+    // Remove common prefixes and suffixes
+    let cleanName = name
+      .replace(/\d{4}\s+Pokemon\s+/i, '')
+      .replace(/\s+PSA\s*\d+\s*$/i, '')
+      .replace(/\s+#\d+\s+PSA\s*\d+\s*$/i, '')
+      .trim();
+    
+    // Extract card number if present
+    const cardNumberMatch = name.match(/#(\d+)/);
+    const cardNumber = cardNumberMatch ? `#${cardNumberMatch[1]}` : '';
+    
+    // Combine the important parts
+    return `${cleanName} ${cardNumber} ${psaGrade ? `PSA ${psaGrade}` : ''}`.trim();
+  };
+
   return (
     <div
       id={`invoice-card-${card.id || card.slabSerial}`}
       className={`flex flex-col bg-white dark:bg-[#1B2131] rounded-md border border-gray-200 dark:border-[#ffffff1a] overflow-hidden ${className}`}
       {...stripDebugProps(props)}
     >
-      {/* Card Header with Image and Title */}
-      <div className="flex items-center p-2 border-b border-gray-200 dark:border-[#ffffff1a]">
-        <button
-          onClick={() => imageUrl && setIsModalOpen(true)}
-          className="w-12 h-16 flex-shrink-0 hover:opacity-75 transition-opacity rounded overflow-hidden bg-white"
-        >
-          {isVisible ? (
-            <CardImage 
-              src={imageUrl} 
-              alt={`${card.player || ''} - ${card.card || ''}`}
-              width="w-full h-full"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center bg-gray-100 dark:bg-gray-800">
-              <svg className="w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14" />
-              </svg>
-            </div>
-          )}
-        </button>
-        <div className="ml-2 flex-1 min-w-0">
-          <div className="text-sm font-medium text-gray-900 dark:text-white line-clamp-2">
-            {card.card}
-          </div>
+      {/* Card Title - Optimized format */}
+      <div className="p-3 border-b border-gray-200 dark:border-[#ffffff1a]">
+        <div className="text-sm font-medium text-gray-900 dark:text-white truncate" title={card.card}>
+          {formatCardName(card.card)}
         </div>
       </div>
 
-      {/* Financial Details */}
-      <div className="grid grid-cols-3 p-2 gap-2">
-        <div className="text-center">
+      {/* Financial Details - Simplified and better aligned */}
+      <div className="grid grid-cols-3 p-3">
+        <div className="flex flex-col items-center">
           <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Paid</div>
           <div className="text-xs font-medium text-gray-900 dark:text-white">
             ${paid.toFixed(2)}
           </div>
         </div>
-        <div className="text-center">
+        <div className="flex flex-col items-center border-x border-gray-200 dark:border-[#ffffff1a]">
           <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Sold</div>
           <div className="text-xs font-medium text-gray-900 dark:text-white">
             ${sold.toFixed(2)}
           </div>
         </div>
-        <div className="text-center">
+        <div className="flex flex-col items-center">
           <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Profit</div>
           <div className={`text-xs font-medium ${profit >= 0 ? 'text-green-500' : 'text-red-500'}`}>
             {profit >= 0 ? '' : '-'}${Math.abs(profit).toFixed(2)}
           </div>
         </div>
       </div>
-
-      {/* Image Modal */}
-      {imageUrl && (
-        <ImageModal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          imageUrl={imageUrl}
-          alt={`${card.player || ''} - ${card.card || ''}`}
-        />
-      )}
     </div>
   );
 };
@@ -157,6 +130,8 @@ InvoiceCard.propTypes = {
   getImageUrl: PropTypes.func,
   /** Whether to lazy load the image */
   lazyLoad: PropTypes.bool,
+  /** Whether to hide images on the sold page */
+  hideSoldImages: PropTypes.bool,
   /** Additional classes */
   className: PropTypes.string,
 };

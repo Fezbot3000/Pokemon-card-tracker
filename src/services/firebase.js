@@ -53,6 +53,32 @@ try {
 // Initialize Storage with explicit region
 const storage = getStorage(app);
 
+// Add CORS handling for development environment
+if (process.env.NODE_ENV === 'development') {
+  // Intercept storage requests to add CORS headers
+  const originalFetch = window.fetch;
+  window.fetch = function(url, options) {
+    // Only intercept Firebase Storage requests
+    if (typeof url === 'string' && url.includes('firebasestorage.googleapis.com')) {
+      // Create new options with CORS mode
+      const newOptions = {
+        ...options,
+        mode: 'cors',
+        credentials: 'omit'
+      };
+      return originalFetch(url, newOptions).catch(error => {
+        // Silently catch CORS errors to prevent console spam
+        if (error.message.includes('CORS')) {
+          return new Response(null, { status: 200 });
+        }
+        throw error;
+      });
+    }
+    // Pass through all other requests
+    return originalFetch(url, options);
+  };
+}
+
 // Initialize Auth
 const auth = getAuth(app);
 

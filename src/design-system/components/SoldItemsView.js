@@ -325,7 +325,7 @@ const SoldItemsView = ({
                             {/* Invoice Cards */}
                             <div className={`accordion-content ${expandedInvoices.has(invoice.id) ? 'open' : ''}`}>
                               {expandedInvoices.has(invoice.id) && (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4 sm:p-6">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-4 sm:p-6">
                                   {/* Only load images if this invoice has been marked for loading */}
                                   {cards.map((card) => (
                                     <InvoiceCard
@@ -333,6 +333,7 @@ const SoldItemsView = ({
                                       card={card}
                                       getImageUrl={loadedInvoiceImages.has(invoice.id) ? getCardImageUrl : null}
                                       lazyLoad={true}
+                                      hideSoldImages={true}
                                     />
                                   ))}
                                 </div>

@@ -1,14 +1,13 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import Icon from '../../atoms/Icon';
-import AmountLabel from '../../atoms/AmountLabel';
 import Button from '../../atoms/Button';
 import { stripDebugProps } from '../../../utils/stripDebugProps';
 
 /**
  * InvoiceHeader Component
  * 
- * A collapsible header component for invoices that displays
+ * A simplified collapsible header component for invoices that displays
  * a summary of the invoice and allows toggling its expanded state.
  */
 const InvoiceHeader = ({
@@ -27,11 +26,17 @@ const InvoiceHeader = ({
 }) => {
   const headerClasses = `
     flex items-center justify-between w-full 
-    p-4 bg-white dark:bg-[#1B2131] 
+    p-4 sm:p-5 bg-white dark:bg-[#1B2131] 
     ${isExpanded ? 'border-b border-gray-200 dark:border-borde-gray-700' : ''}
     cursor-pointer hover:bg-gray-50 dark:hover:bg-[#252B3B] transition-colors
     ${className}
   `;
+
+  // Format currency
+  const formatCurrency = (amount) => {
+    const value = parseFloat(amount);
+    return `$${Math.abs(value).toFixed(2)}`;
+  };
 
   // Clean wrapper for Icon component
   const CleanIcon = (iconProps) => {
@@ -52,7 +57,7 @@ const InvoiceHeader = ({
             {title}
           </h3>
         </div>
-        <p className="text-sm text-gray-600 dark:text-gray-400">{subtitle}</p>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{subtitle}</p>
         <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
           {cardCount} {cardCount === 1 ? 'card' : 'cards'}
         </p>
@@ -60,19 +65,25 @@ const InvoiceHeader = ({
       
       {/* Right side with financial summary and actions */}
       <div className="flex flex-col items-end">
-        {/* Financial summary */}
-        <div className="flex flex-col items-end gap-1 mb-2">
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-600 dark:text-gray-400">Investment:</span>
-            <AmountLabel amount={totalInvestment} size="sm" type="default" />
+        {/* Financial summary - Simplified and better aligned */}
+        <div className="grid grid-cols-3 gap-4 mb-3">
+          <div className="flex flex-col items-center">
+            <span className="text-xs text-gray-500 dark:text-gray-400">Paid</span>
+            <span className="text-sm font-medium text-gray-900 dark:text-white">
+              {formatCurrency(totalInvestment)}
+            </span>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-600 dark:text-gray-400">Sale:</span>
-            <AmountLabel amount={totalSale} size="sm" type="default" />
+          <div className="flex flex-col items-center">
+            <span className="text-xs text-gray-500 dark:text-gray-400">Sale</span>
+            <span className="text-sm font-medium text-gray-900 dark:text-white">
+              {formatCurrency(totalSale)}
+            </span>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-600 dark:text-gray-400">Profit:</span>
-            <AmountLabel amount={totalProfit} size="sm" />
+          <div className="flex flex-col items-center">
+            <span className="text-xs text-gray-500 dark:text-gray-400">Profit</span>
+            <span className={`text-sm font-medium ${totalProfit >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+              {totalProfit >= 0 ? '' : '-'}{formatCurrency(totalProfit)}
+            </span>
           </div>
         </div>
         
