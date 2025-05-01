@@ -5,12 +5,13 @@ import shadowSync from './shadowSync'; // Import shadow sync service
 import featureFlags from '../utils/featureFlags'; // Import feature flags
 
 const DB_NAME = 'pokemonCardTracker';
-const DB_VERSION = 1;
+const DB_VERSION = 1; // Revert to original version
 const COLLECTIONS_STORE = 'collections';
 const IMAGES_STORE = 'images';
 const PROFILE_STORE = 'profile';
 const SUBSCRIPTION_STORE = 'subscription';
 const CARDS_STORE = 'cards';
+const PSA_RESULTS_STORE = 'psaResults'; // Add PSA results store
 
 class DatabaseService {
   constructor() {
@@ -409,6 +410,32 @@ class DatabaseService {
       }
     }
 
+    // Create PSA results store with compound key for user isolation
+    if (!db.objectStoreNames.contains(PSA_RESULTS_STORE)) {
+      logger.debug("Creating PSA results store");
+      const psaResultsStore = db.createObjectStore(PSA_RESULTS_STORE, { keyPath: ['userId', 'id'] });
+      // Add userId index for faster lookups
+      psaResultsStore.createIndex('userId', 'userId', { unique: false });
+    } else {
+      try {
+        // Get the existing store to check if it has the userId index
+        const transaction = event.target.transaction;
+        const store = transaction.objectStore(PSA_RESULTS_STORE);
+        
+        // Check if the index exists, if not create it
+        if (!store.indexNames.contains('userId')) {
+          store.createIndex('userId', 'userId', { unique: false });
+          logger.debug("Added missing userId index to PSA results store");
+        }
+      } catch (error) {
+        // If there's an error, recreate the store with the proper index
+        logger.debug("Error checking PSA results store, recreating it:", error);
+        db.deleteObjectStore(PSA_RESULTS_STORE);
+        const psaResultsStore = db.createObjectStore(PSA_RESULTS_STORE, { keyPath: ['userId', 'id'] });
+        psaResultsStore.createIndex('userId', 'userId', { unique: false });
+      }
+    }
+
     // Subscription store already uses userId as the key, so it's already isolated
     if (!db.objectStoreNames.contains(SUBSCRIPTION_STORE)) {
       logger.debug("Creating subscription store");
@@ -420,7 +447,7 @@ class DatabaseService {
   verifyObjectStores() {
     if (!this.db) return;
     
-    const requiredStores = [COLLECTIONS_STORE, IMAGES_STORE, PROFILE_STORE, SUBSCRIPTION_STORE, CARDS_STORE];
+    const requiredStores = [COLLECTIONS_STORE, IMAGES_STORE, PROFILE_STORE, SUBSCRIPTION_STORE, CARDS_STORE, PSA_RESULTS_STORE];
     const existingStores = Array.from(this.db.objectStoreNames);
     
     const missingStores = requiredStores.filter(store => !existingStores.includes(store));
@@ -1662,7 +1689,7 @@ class DatabaseService {
   async setupRequiredStores() {
     if (!this.db) return;
     
-    const requiredStores = [COLLECTIONS_STORE, IMAGES_STORE, PROFILE_STORE, SUBSCRIPTION_STORE, CARDS_STORE];
+    const requiredStores = [COLLECTIONS_STORE, IMAGES_STORE, PROFILE_STORE, SUBSCRIPTION_STORE, CARDS_STORE, PSA_RESULTS_STORE];
     const existingStores = Array.from(this.db.objectStoreNames);
     
     const missingStores = requiredStores.filter(store => !existingStores.includes(store));
@@ -1746,7 +1773,7 @@ class DatabaseService {
       this.db = await this.dbPromise;
       
       // Check if all required object stores exist
-      const requiredStores = [COLLECTIONS_STORE, IMAGES_STORE, PROFILE_STORE, SUBSCRIPTION_STORE, CARDS_STORE];
+      const requiredStores = [COLLECTIONS_STORE, IMAGES_STORE, PROFILE_STORE, SUBSCRIPTION_STORE, CARDS_STORE, PSA_RESULTS_STORE];
       const existingStores = Array.from(this.db.objectStoreNames);
       const missingStores = requiredStores.filter(store => !existingStores.includes(store));
       

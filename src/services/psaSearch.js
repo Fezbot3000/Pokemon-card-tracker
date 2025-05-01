@@ -31,53 +31,6 @@ const psaCache = {
   expiry: 24 * 60 * 60 * 1000  // Cache PSA results for 24 hours
 };
 
-// Initialize IndexedDB store for PSA results if needed
-const initPSAStore = () => {
-  if (!db.savePSAResult) {
-    db.savePSAResult = async (certNumber, data) => {
-      try {
-        // Try to save to the store, but gracefully handle errors
-        const tx = db.db.transaction('psaResults', 'readwrite');
-        const store = tx.objectStore('psaResults');
-        await store.put({
-          certNumber,
-          data,
-          timestamp: Date.now()
-        });
-        return tx.complete;
-      } catch (error) {
-        console.warn('Could not save PSA result to IndexedDB (store may not exist yet):', error);
-        return false;
-      }
-    };
-  }
-
-  if (!db.getPSAResult) {
-    db.getPSAResult = async (certNumber) => {
-      try {
-        // Try to get from the store, but gracefully handle errors
-        const tx = db.db.transaction('psaResults', 'readonly');
-        const store = tx.objectStore('psaResults');
-        return await store.get(certNumber);
-      } catch (error) {
-        console.warn('Could not get PSA result from IndexedDB (store may not exist yet):', error);
-        return null;
-      }
-    };
-  }
-};
-
-// Initialize the PSA store when the module loads
-setTimeout(() => {
-  try {
-    // Simply initialize the store methods without trying to create the store
-    initPSAStore();
-    console.log('PSA store methods initialized');
-  } catch (error) {
-    console.warn('Could not initialize PSA store methods:', error);
-  }
-}, 1000); // Delay initialization to ensure db is ready
-
 // Access token storage
 let accessToken = null;
 let tokenExpiry = null;
@@ -204,13 +157,11 @@ const cachePSAResult = (certNumber, data) => {
   
   console.log(`Cached PSA result for cert number: ${certNumber}`);
   
-  // Also save to IndexedDB for persistence
+  // Save to Firestore
   try {
-    if (db.savePSAResult) {
-      db.savePSAResult(certNumber, data);
-    }
+    savePSACardToDatabase(certNumber, data);
   } catch (error) {
-    console.warn('Failed to save PSA result to IndexedDB:', error);
+    console.warn('Failed to save PSA result to Firestore:', error);
   }
 };
 
@@ -351,32 +302,17 @@ const searchByCertNumber = async (certNumber, forceRefresh = false) => {
         return cachedResult;
       }
       
-      // Try to get from IndexedDB if not in memory cache
+      // Check Firestore
       try {
-        if (db.getPSAResult) {
-          const dbResult = await db.getPSAResult(certNumber);
-          if (dbResult && (Date.now() - dbResult.timestamp < psaCache.expiry)) {
-            console.log(`Using PSA result from IndexedDB for cert number: ${certNumber}`);
-            // Update memory cache
-            psaCache.results[certNumber] = dbResult;
-            return dbResult.data;
-          }
+        const dbResult = await getPSACardFromDatabase(certNumber);
+        if (dbResult) {
+          console.log(`Using PSA result from Firestore for cert number: ${certNumber}`);
+          // Update memory cache
+          psaCache.results[certNumber] = dbResult;
+          return dbResult;
         }
       } catch (dbError) {
-        console.warn('Failed to get PSA result from IndexedDB:', dbError);
-      }
-      
-      // Check shared database
-      try {
-        const sharedDbResult = await getPSACardFromDatabase(certNumber);
-        if (sharedDbResult) {
-          console.log(`Using PSA result from shared database for cert number: ${certNumber}`);
-          // Update local cache
-          cachePSAResult(certNumber, sharedDbResult);
-          return sharedDbResult;
-        }
-      } catch (sharedDbError) {
-        console.warn('Failed to get PSA result from shared database:', sharedDbError);
+        console.warn('Failed to get PSA result from Firestore:', dbError);
       }
     }
     
@@ -396,13 +332,6 @@ const searchByCertNumber = async (certNumber, forceRefresh = false) => {
       
       // Cache the successful result locally
       cachePSAResult(certNumber, psaData);
-      
-      // Save to shared database
-      try {
-        await savePSACardToDatabase(certNumber, psaData);
-      } catch (saveError) {
-        console.warn('Failed to save PSA result to shared database:', saveError);
-      }
       
       return psaData;
     } else {
