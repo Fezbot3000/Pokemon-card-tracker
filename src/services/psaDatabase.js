@@ -4,7 +4,7 @@ import logger from '../utils/logger';
 
 // Get Firestore instance
 const db = getFirestore();
-const PSA_COLLECTION = 'psa_cards';
+const PSA_COLLECTION = 'psa-cards';
 
 /**
  * Get PSA card data from the shared database

@@ -11,7 +11,7 @@ import db from './db';
 import logger from '../utils/logger';
 import PSANotifications from '../components/PSANotifications';
 import { getPokemonSetsByYear, getAllPokemonSets } from '../data/pokemonSets';
-import { getPSACardFromDatabase, savePSACardToDatabase } from './psaDatabase';
+import psaDataService from './psaDataService';
 
 // Initialize Firebase Functions
 const functions = getFunctions();
@@ -159,7 +159,7 @@ const cachePSAResult = (certNumber, data) => {
   
   // Save to Firestore
   try {
-    savePSACardToDatabase(certNumber, data);
+    psaDataService.saveCardToCache(certNumber, data);
   } catch (error) {
     console.warn('Failed to save PSA result to Firestore:', error);
   }
@@ -304,7 +304,7 @@ const searchByCertNumber = async (certNumber, forceRefresh = false) => {
       
       // Check Firestore
       try {
-        const dbResult = await getPSACardFromDatabase(certNumber);
+        const dbResult = await psaDataService.getCardFromCache(certNumber);
         if (dbResult) {
           console.log(`Using PSA result from Firestore for cert number: ${certNumber}`);
           // Update memory cache
