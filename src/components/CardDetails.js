@@ -276,15 +276,21 @@ const CardDetails = memo(({
           // Store the old blob URL for cleanup
           const oldBlobUrl = editedCard._blobUrl;
           
+          // Show a loading toast
+          const loadingToast = toast.loading('Uploading image...');
+          
           // Now actually upload the image to Firebase
           const imageUrl = await db.saveImage(
             card.id || card.slabSerial, 
             editedCard._pendingImageFile, 
             { 
               isReplacement: card.hasImage === true, 
-              silent: true // Don't show toast for image upload
+              silent: false // Show toast for image upload
             }
           );
+          
+          // Dismiss the loading toast
+          toast.dismiss(loadingToast);
           
           // Update the finalCardData directly
           finalCardData = {
@@ -310,9 +316,12 @@ const CardDetails = memo(({
           }
           
           console.log('[CardDetails] Image uploaded successfully with URL:', imageUrl);
+          toast.success('Image uploaded successfully');
         } catch (imageError) {
           console.error('[CardDetails] Error uploading image:', imageError);
-          toast.error('Error uploading image. Card save will continue without the image.');
+          toast.error(`Error uploading image: ${imageError.message}`);
+          // Don't proceed with saving if image upload fails
+          return;
         }
       }
       

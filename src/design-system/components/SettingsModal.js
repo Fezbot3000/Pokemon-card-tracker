@@ -97,9 +97,11 @@ const SettingsModal = ({
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [isVerifyingBackup, setIsVerifyingBackup] = useState(false); // Add state for cloud backup verification
   const [verificationStatus, setVerificationStatus] = useState('Idle'); // Add state for verification status
+  const [isCreatingPortalSession, setIsCreatingPortalSession] = useState(false);
   const fileInputRef = useRef(null);
   const importBaseDataRef = useRef(null);
   const imageUploadRef = useRef(null); // Add ref for image upload
+  const soldItemsRef = useRef(null);
   
   // Create a CardRepository instance at component level
   const cardRepositoryRef = useRef(null);
@@ -722,6 +724,62 @@ const SettingsModal = ({
     fileInput.click();
   };
 
+  // Handle subscription management
+  const handleManageSubscription = async () => {
+    setIsCreatingPortalSession(true);
+    try {
+      const functions = getFunctions(undefined, 'us-central1');
+      const createPortalSession = httpsCallable(functions, 'createCustomerPortalSession');
+      
+      // Get the current URL origin for the return URL
+      const baseUrl = window.location.origin;
+      
+      // Call the Cloud Function to get a fresh session URL with the baseUrl
+      const { data } = await createPortalSession({ 
+        baseUrl,
+        returnUrl: `${baseUrl}/dashboard`
+      });
+      
+      if (data && data.url) {
+        // Redirect to the Stripe Customer Portal
+        window.open(data.url, '_blank');
+      } else {
+        toastService.error('Could not access subscription management portal');
+      }
+    } catch (error) {
+      console.error('Error creating portal session:', error);
+      toastService.error(`Failed to access subscription portal: ${error.message}`);
+    } finally {
+      setIsCreatingPortalSession(false);
+    }
+  };
+
+  // Handle subscription cancellation
+  const handleCancelSubscription = async () => {
+    // Show confirmation dialog before cancellation
+    if (window.confirm('Are you sure you want to cancel your subscription? You will lose access to premium features at the end of your billing period.')) {
+      try {
+        // Redirect to the Stripe Customer Portal with cancel_subscription=true parameter
+        await handleManageSubscription();
+        toastService.success('Please complete cancellation in the Stripe portal.');
+      } catch (error) {
+        console.error('Error initiating cancellation:', error);
+        toastService.error(`Failed to initiate cancellation: ${error.message}`);
+      }
+    }
+  };
+
+  // Handle subscription upgrade
+  const handleUpgradeSubscription = () => {
+    if (!user) {
+      toastService.error('You must be logged in to subscribe');
+      return;
+    }
+    
+    // Redirect to Stripe checkout
+    window.location.href = `https://buy.stripe.com/bIY2aL2oC2kBaXe9AA?client_reference_id=${user.uid}&prefilled_email=${user.email}`;
+  };
+
   return (
     <>
       <Modal
@@ -982,7 +1040,7 @@ const SettingsModal = ({
                           {profile.subscriptionTier === 'premium' ? 'Premium' : 'Free'}
                         </span>
                       </div>
-                      <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
                         {profile.subscriptionTier === 'premium' 
                           ? 'You are currently on the Premium plan with access to all features.' 
                           : 'Upgrade to Premium for access to all features.'}
@@ -995,44 +1053,30 @@ const SettingsModal = ({
                     </div>
                     
                     <div className="flex flex-col space-y-3">
-                      <Button
-                        variant="primary"
-                        onClick={() => window.open('https://billing.stripe.com/p/login/test_28o5nC0Qw3Ub8WA144', '_blank')}
-                        iconLeft={<Icon name="credit_card" />}
-                        fullWidth
-                      >
-                        Manage Payment Methods
-                      </Button>
-                      
-                      <Button
-                        variant="outline"
-                        onClick={() => window.open('https://billing.stripe.com/p/login/test_28o5nC0Qw3Ub8WA144', '_blank')}
-                        iconLeft={<Icon name="receipt_long" />}
-                        fullWidth
-                      >
-                        View Billing History
-                      </Button>
-                      
                       {profile.subscriptionTier === 'premium' ? (
-                        <Button
-                          variant="danger"
-                          onClick={() => {
-                            // Show confirmation dialog before cancellation
-                            if (window.confirm('Are you sure you want to cancel your subscription? You will lose access to premium features at the end of your billing period.')) {
-                              // Here you would call a function to handle the cancellation
-                              // For example: handleCancelSubscription()
-                              toastService.success('Your request to cancel has been submitted. You will receive a confirmation email shortly.');
-                            }
-                          }}
-                          iconLeft={<Icon name="cancel" />}
-                          fullWidth
-                        >
-                          Cancel Subscription
-                        </Button>
+                        <>
+                          <Button
+                            variant="primary"
+                            onClick={handleManageSubscription}
+                            iconLeft={<Icon name="settings" />}
+                            fullWidth
+                          >
+                            Manage Subscription
+                          </Button>
+                          
+                          <Button
+                            variant="danger"
+                            onClick={handleCancelSubscription}
+                            iconLeft={<Icon name="cancel" />}
+                            fullWidth
+                          >
+                            Cancel Subscription
+                          </Button>
+                        </>
                       ) : (
                         <Button
                           variant="success"
-                          onClick={() => window.open('https://buy.stripe.com/test_28o5nC0Qw3Ub8WA144', '_blank')}
+                          onClick={handleUpgradeSubscription}
                           iconLeft={<Icon name="upgrade" />}
                           fullWidth
                         >
