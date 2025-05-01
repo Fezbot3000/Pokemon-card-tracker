@@ -44,7 +44,7 @@ export const getFirebaseConfig = () => {
     apiKey: process.env.REACT_APP_FIREBASE_API_KEY || "AIzaSyDIxG9wMoOm0xO72YCAs4RO9YVrGjRcvLQ",
     authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN || "mycardtracker-c8479.firebaseapp.com",
     projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID || "mycardtracker-c8479",
-    storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET || "mycardtracker-c8479.appspot.com",
+    storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET || "mycardtracker-c8479.firebasestorage.app",
     messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID || "726820232287",
     appId: process.env.REACT_APP_FIREBASE_APP_ID || "1:726820232287:web:fc27495f506950a78dcfea"
   };

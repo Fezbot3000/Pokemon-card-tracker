@@ -14,7 +14,7 @@ const devFallbackConfig = {
   apiKey: "AIzaSyCVy6jUYutMLSyTCVBww38JNdKbAS6W9ak",
   authDomain: "mycardtracker-c8479.firebaseapp.com",
   projectId: "mycardtracker-c8479",
-  storageBucket: "mycardtracker-c8479.appspot.com",
+  storageBucket: "mycardtracker-c8479.firebasestorage.app",
   messagingSenderId: "726820232287",
   appId: "1:726820232287:web:fc2749f506950a78dcfea"
 };
