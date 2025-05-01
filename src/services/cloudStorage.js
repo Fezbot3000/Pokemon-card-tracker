@@ -1,6 +1,31 @@
 import { storage } from './firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import logger from '../utils/logger';
+import { fixStorageUrl } from './storageUrlFix';
+
+/**
+ * Get the correct Firebase Storage bucket name
+ * This handles the transition from .appspot.com to .firebasestorage.app
+ * @returns {string} The correct storage bucket name
+ */
+function getCorrectBucketName() {
+  // Get the storage bucket from the environment
+  const storageBucket = process.env.REACT_APP_FIREBASE_STORAGE_BUCKET || '';
+  
+  // If it's already using the new format, return it
+  if (storageBucket.includes('.firebasestorage.app')) {
+    return storageBucket;
+  }
+  
+  // If it's using the old format, convert it
+  if (storageBucket.includes('.appspot.com')) {
+    const projectId = storageBucket.split('.')[0];
+    return `${projectId}.firebasestorage.app`;
+  }
+  
+  // Return whatever we have
+  return storageBucket;
+}
 
 /**
  * Upload an image to Firebase Storage
@@ -36,7 +61,8 @@ export const saveImageToCloud = async (imageBlob, userId, cardId, options = {}) 
       contentType: 'image/jpeg',
       customMetadata: {
         updateTimestamp: new Date().toISOString(),
-        cardId: cardId
+        cardId: cardId,
+        bucketName: getCorrectBucketName() // Add bucket name to metadata for debugging
       }
     };
     
@@ -45,7 +71,11 @@ export const saveImageToCloud = async (imageBlob, userId, cardId, options = {}) 
     const snapshot = await uploadBytes(storageRef, imageBlob, metadata);
     
     // Get the download URL
-    const downloadURL = await getDownloadURL(snapshot.ref);
+    let downloadURL = await getDownloadURL(snapshot.ref);
+    
+    // Fix the URL if needed
+    downloadURL = fixStorageUrl(downloadURL);
+    
     logger.debug(`Direct upload succeeded with URL: ${downloadURL}`);
     return downloadURL;
   } catch (error) {

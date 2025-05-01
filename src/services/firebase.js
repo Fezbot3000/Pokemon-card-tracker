@@ -50,10 +50,34 @@ try {
   db = getFirestore(app);
 }
 
-// Initialize Storage with explicit region
+// Helper function to get the correct storage bucket name
+function getCorrectStorageBucket() {
+  const storageBucket = firebaseConfig.storageBucket || '';
+  
+  // If it's already using the new format, return it
+  if (storageBucket.includes('.firebasestorage.app')) {
+    return storageBucket;
+  }
+  
+  // If it's using the old format, convert it
+  if (storageBucket.includes('.appspot.com')) {
+    const projectId = storageBucket.split('.')[0];
+    return `${projectId}.firebasestorage.app`;
+  }
+  
+  return storageBucket;
+}
+
+// Initialize Storage with explicit region and correct bucket
 const storage = getStorage(app);
 
-// Remove all CORS workarounds - we'll use proper Firebase Storage CORS configuration
+// Log storage bucket information in development
+if (process.env.NODE_ENV === 'development') {
+  logger.log("Storage bucket:", firebaseConfig.storageBucket);
+  if (firebaseConfig.storageBucket.includes('.appspot.com')) {
+    logger.warn("Using old .appspot.com storage bucket format. Consider updating to .firebasestorage.app");
+  }
+}
 
 // Initialize Auth
 const auth = getAuth(app);
