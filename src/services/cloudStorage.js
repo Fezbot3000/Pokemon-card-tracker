@@ -28,7 +28,6 @@ export const saveImageToCloud = async (imageBlob, userId, cardId, options = {}) 
     const imagePath = `images/${userId}/${cardId}.jpeg`;
     logger.debug(`Uploading image to path: ${imagePath}`);
     
-    // Added direct upload method since Cloud Function appears unreliable
     // Create a storage reference
     const storageRef = ref(storage, imagePath);
     

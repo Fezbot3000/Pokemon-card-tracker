@@ -1,8 +1,8 @@
 [
   {
-    "origin": ["https://mycardtracker.com.au", "https://*.mycardtracker.com.au", "http://localhost:3000"],
+    "origin": ["*"],
     "method": ["GET", "PUT", "POST", "DELETE", "HEAD"],
     "maxAgeSeconds": 3600,
-    "responseHeader": ["Content-Type", "Content-Length", "Content-Encoding", "Content-Disposition", "Cache-Control", "Access-Control-Allow-Origin"]
+    "responseHeader": ["Content-Type", "Content-Length", "Content-Encoding", "Content-Disposition", "Cache-Control", "x-goog-meta-filename"]
   }
 ]

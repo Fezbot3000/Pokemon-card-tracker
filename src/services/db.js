@@ -5,7 +5,7 @@ import shadowSync from './shadowSync'; // Import shadow sync service
 import featureFlags from '../utils/featureFlags'; // Import feature flags
 
 const DB_NAME = 'pokemonCardTracker';
-const DB_VERSION = 1; // Revert to original version
+const DB_VERSION = 2; // Use version 2 to match existing database
 const COLLECTIONS_STORE = 'collections';
 const IMAGES_STORE = 'images';
 const PROFILE_STORE = 'profile';

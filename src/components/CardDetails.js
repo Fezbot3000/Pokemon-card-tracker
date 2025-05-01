@@ -292,11 +292,15 @@ const CardDetails = memo(({
           // Dismiss the loading toast
           toast.dismiss(loadingToast);
           
+          // Check if we got a data URL (fallback for development)
+          const isDataUrl = imageUrl && imageUrl.startsWith('data:');
+          
           // Update the finalCardData directly
           finalCardData = {
             ...finalCardData,
             imageUrl: imageUrl,
             hasImage: true,
+            _isDataUrl: isDataUrl, // Flag to indicate this is a data URL
             imageUpdatedAt: new Date().toISOString(), // Add timestamp to force refresh
             _pendingImageFile: null,
             _blobUrl: null
@@ -315,7 +319,7 @@ const CardDetails = memo(({
             }
           }
           
-          console.log('[CardDetails] Image uploaded successfully with URL:', imageUrl);
+          console.log('[CardDetails] Image uploaded successfully with URL:', isDataUrl ? 'data:URL (truncated)' : imageUrl);
           toast.success('Image uploaded successfully');
         } catch (imageError) {
           console.error('[CardDetails] Error uploading image:', imageError);
