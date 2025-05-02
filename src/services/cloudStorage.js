@@ -1,6 +1,7 @@
 import { storage } from './firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import logger from '../utils/logger';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 
 /**
  * Fix Firebase Storage URL to use the correct domain
@@ -54,8 +55,8 @@ function getCorrectBucketName() {
 }
 
 /**
- * Upload an image to Firebase Storage with direct URL construction
- * This is a workaround for CORS issues with Firebase Storage
+ * Upload an image to Firebase Storage using Cloud Functions
+ * This approach avoids CORS issues by using server-side uploads
  * @param {Blob|File} imageBlob - The image blob to upload
  * @param {string} userId - The user ID to associate with the image
  * @param {string} cardId - The card ID to associate with the image
@@ -74,152 +75,60 @@ export const saveImageToCloud = async (imageBlob, userId, cardId, options = {}) 
   }
 
   try {
-    // Create a reference to the image location in Firebase Storage
-    const imagePath = `images/${userId}/${cardId}.jpeg`;
-    logger.debug(`Uploading image to path: ${imagePath}`);
+    logger.debug(`Starting image upload for user ${userId}, card ${cardId}`);
     
-    // Create a storage reference
-    const storageRef = ref(storage, imagePath);
+    // Convert the image blob to base64
+    const reader = new FileReader();
     
-    // Set metadata to force cache refresh
-    const metadata = {
-      contentType: 'image/jpeg',
-      customMetadata: {
-        updateTimestamp: new Date().toISOString(),
-        cardId: cardId
-      }
-    };
-    
-    // Upload the image directly
-    logger.debug(`Uploading image directly to Firebase Storage: ${imagePath}`);
-    
-    // Use a direct fetch approach if the standard method fails
-    let uploadSuccessful = false;
-    let downloadURL = '';
-    
-    try {
-      // Try the standard Firebase SDK approach first
-      const snapshot = await uploadBytes(storageRef, imageBlob, metadata);
-      downloadURL = await getDownloadURL(snapshot.ref);
-      uploadSuccessful = true;
-    } catch (uploadError) {
-      logger.warn('Standard upload failed, trying direct approach:', uploadError);
-      
-      // If that fails, we'll try a direct fetch approach
-      uploadSuccessful = false;
-    }
-    
-    // If the standard approach failed, try a direct fetch
-    if (!uploadSuccessful) {
-      try {
-        logger.debug('Trying direct upload with fetch API and CORS bypass');
-        
-        // Create a Base64 representation of the image
-        const reader = new FileReader();
-        const base64Promise = new Promise((resolve, reject) => {
-          reader.onload = () => resolve(reader.result);
-          reader.onerror = reject;
-          reader.readAsDataURL(imageBlob);
-        });
-        
-        const base64Data = await base64Promise;
-        
-        // Create a timestamp for cache busting
-        const timestamp = new Date().getTime();
-        
-        // Use a serverless function or API endpoint that can handle the upload
-        // This bypasses CORS completely by using your own domain
-        const response = await fetch('/api/upload-image', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            imageData: base64Data,
-            path: imagePath,
-            userId,
-            cardId,
-            timestamp
-          })
-        });
-        
-        if (!response.ok) {
-          throw new Error(`Server upload failed: ${response.status} ${response.statusText}`);
-        }
-        
-        const data = await response.json();
-        downloadURL = data.downloadURL;
-        
-        if (!downloadURL) {
-          throw new Error('No download URL returned from server');
-        }
-        
-        logger.debug('Server-side upload successful');
-      } catch (serverError) {
-        logger.error('Server-side upload failed, falling back to direct Firebase Storage upload', serverError);
-        
-        // Final fallback: Try a direct upload with a simple URL that should work
-        // This is our last resort attempt
+    // Create a promise to handle the FileReader async operation
+    const base64Promise = new Promise((resolve, reject) => {
+      reader.onload = () => {
         try {
-          // This is a fallback approach using direct fetch to the correct URL
-          const formData = new FormData();
-          formData.append('file', imageBlob);
-          
-          // Try both bucket formats to see which one works
-          const bucketNames = [
-            'mycardtracker-c8479.firebasestorage.app',
-            'mycardtracker-c8479.firebaseapp.com',
-            'mycardtracker-c8479.appspot.com'
-          ];
-          
-          let uploadSuccess = false;
-          let uploadError = null;
-          
-          // Try each bucket name until one works
-          for (const bucketName of bucketNames) {
-            if (uploadSuccess) break;
-            
-            try {
-              const uploadUrl = `https://firebasestorage.googleapis.com/v0/b/${bucketName}/o?name=${encodeURIComponent(imagePath)}`;
-              
-              logger.debug(`Trying upload with bucket: ${bucketName}`);
-              
-              const response = await fetch(uploadUrl, {
-                method: 'POST',
-                body: formData,
-                mode: 'cors',
-                headers: {
-                  'Origin': window.location.origin
-                }
-              });
-              
-              if (response.ok) {
-                const data = await response.json();
-                downloadURL = `https://firebasestorage.googleapis.com/v0/b/${bucketName}/o/${encodeURIComponent(imagePath)}?alt=media&token=${data.downloadTokens}`;
-                uploadSuccess = true;
-                logger.debug(`Upload succeeded with bucket: ${bucketName}`);
-              }
-            } catch (error) {
-              uploadError = error;
-              logger.warn(`Upload failed with bucket ${bucketName}:`, error);
-            }
-          }
-          
-          if (!uploadSuccess) {
-            throw uploadError || new Error('All upload attempts failed');
-          }
-        } catch (finalError) {
-          logger.error('All upload methods failed:', finalError);
-          throw finalError;
+          // Get the base64 string from the result
+          const base64String = reader.result;
+          // Extract just the base64 data part (remove the data:image/jpeg;base64, prefix)
+          const base64Data = base64String.split(',')[1];
+          resolve(base64Data);
+        } catch (error) {
+          reject(error);
         }
-      }
+      };
+      reader.onerror = (error) => reject(error);
+    });
+    
+    // Start reading the blob as a data URL
+    reader.readAsDataURL(imageBlob);
+    
+    // Wait for the base64 conversion to complete
+    const base64Data = await base64Promise;
+    
+    // Get a reference to Firebase Functions
+    const functions = getFunctions();
+    
+    // Get a reference to the storeCardImage function
+    const storeCardImageFn = httpsCallable(functions, 'storeCardImage');
+    
+    // Call the Cloud Function to store the image
+    logger.debug('Calling storeCardImage Cloud Function');
+    const result = await storeCardImageFn({
+      userId,
+      cardId,
+      imageBase64: base64Data,
+      isReplacement: options.isReplacement || false
+    });
+    
+    // Get the download URL from the result
+    const downloadURL = result.data.downloadUrl;
+    
+    if (!downloadURL) {
+      throw new Error('No download URL returned from Cloud Function');
     }
     
     // Fix the URL if needed
-    downloadURL = fixStorageUrl(downloadURL);
+    const fixedUrl = fixStorageUrl(downloadURL);
     
-    logger.debug(`Upload succeeded with URL: ${downloadURL}`);
-    return downloadURL;
+    logger.debug(`Image upload successful, URL: ${fixedUrl.substring(0, 30)}...`);
+    return fixedUrl;
   } catch (error) {
     logger.error('Error uploading image to Firebase Storage:', error);
     throw error;

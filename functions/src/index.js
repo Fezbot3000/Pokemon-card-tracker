@@ -9,6 +9,103 @@ admin.initializeApp();
 exports.cleanupPSADatabase = psaDatabase.cleanupPSADatabase;
 exports.getPSADatabaseStats = psaDatabase.getPSADatabaseStats;
 
+// Cloud Function to store card images in Firebase Storage
+exports.storeCardImage = functions.https.onCall(async (data, context) => {
+  // Check if user is authenticated
+  if (!context.auth) {
+    throw new functions.https.HttpsError(
+      'unauthenticated',
+      'You must be logged in to use this function'
+    );
+  }
+  
+  const { userId, cardId, imageBase64, isReplacement = false } = data;
+  
+  if (!userId || !cardId || !imageBase64) {
+    throw new functions.https.HttpsError(
+      'invalid-argument',
+      'Missing required parameters: userId, cardId, or imageBase64'
+    );
+  }
+  
+  // Verify that the authenticated user matches the requested userId
+  if (context.auth.uid !== userId) {
+    throw new functions.https.HttpsError(
+      'permission-denied',
+      'You can only upload images for your own user ID'
+    );
+  }
+  
+  try {
+    // Get a reference to the Firebase Storage bucket
+    const bucket = admin.storage().bucket();
+    
+    // Define the path where the image will be stored
+    const imagePath = `images/${userId}/${cardId}.jpeg`;
+    
+    // Create a buffer from the base64 string
+    const imageBuffer = Buffer.from(imageBase64, 'base64');
+    
+    // Create a file in the bucket
+    const file = bucket.file(imagePath);
+    
+    // Check if the file exists and if we should replace it
+    if (!isReplacement) {
+      try {
+        const [exists] = await file.exists();
+        if (exists) {
+          console.log(`File ${imagePath} already exists and isReplacement is false`);
+          
+          // Get the download URL for the existing file
+          const [url] = await file.getSignedUrl({
+            action: 'read',
+            expires: '03-01-2500', // Far future expiration
+          });
+          
+          return {
+            success: true,
+            downloadUrl: url,
+            message: 'File already exists, returning existing URL'
+          };
+        }
+      } catch (existsError) {
+        console.error('Error checking if file exists:', existsError);
+        // Continue with upload if we can't check existence
+      }
+    }
+    
+    // Upload the file
+    await file.save(imageBuffer, {
+      metadata: {
+        contentType: 'image/jpeg',
+        metadata: {
+          userId: userId,
+          cardId: cardId,
+          uploadTimestamp: Date.now().toString(),
+          isReplacement: isReplacement.toString()
+        }
+      }
+    });
+    
+    console.log(`Successfully uploaded image to ${imagePath}`);
+    
+    // Get a download URL for the file
+    const [url] = await file.getSignedUrl({
+      action: 'read',
+      expires: '03-01-2500', // Far future expiration
+    });
+    
+    return {
+      success: true,
+      downloadUrl: url,
+      path: imagePath
+    };
+  } catch (error) {
+    console.error('Error uploading image to Firebase Storage:', error);
+    throw new functions.https.HttpsError('internal', error.message);
+  }
+});
+
 // Add a function to handle PSA lookups with caching
 exports.psaLookupWithCache = functions.https.onCall(async (data, context) => {
   // Check if user is authenticated
