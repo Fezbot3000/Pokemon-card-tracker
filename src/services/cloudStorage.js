@@ -1,7 +1,30 @@
 import { storage } from './firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import logger from '../utils/logger';
-import { fixStorageUrl } from './storageUrlFix';
+
+/**
+ * Fix Firebase Storage URL to use the correct domain
+ * @param {string} url - The original URL
+ * @returns {string} - The fixed URL
+ */
+function fixStorageUrl(url) {
+  if (!url) return url;
+  
+  try {
+    // Check if this is a Firebase Storage URL with the old domain
+    if (url.includes('appspot.com')) {
+      // Replace the old domain with the new one
+      const fixedUrl = url.replace('mycardtracker-c8479.appspot.com', 'mycardtracker-c8479.firebasestorage.app');
+      logger.debug(`Fixed Storage URL: ${url.substring(0, 30)}... -> ${fixedUrl.substring(0, 30)}...`);
+      return fixedUrl;
+    }
+    
+    return url;
+  } catch (error) {
+    logger.error('Error fixing Storage URL:', error);
+    return url; // Return the original URL in case of error
+  }
+}
 
 /**
  * Get the correct Firebase Storage bucket name
