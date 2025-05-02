@@ -98,11 +98,11 @@ const SubscriptionManagement = ({ isMobile, onClose }) => {
             
             <div>
               <h4 className="font-medium text-gray-800 dark:text-gray-300">
-                Free Plan
+                Subscription Required
               </h4>
               
               <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                Upgrade to access premium features like cloud backup and multi-device sync
+                A premium subscription is required to access features like cloud backup and multi-device sync.
               </p>
 
               {subscriptionStatus.status === 'error' && (
@@ -155,9 +155,9 @@ const SubscriptionManagement = ({ isMobile, onClose }) => {
             </div>
             
             <div className="flex-grow">
-              <h4 className="text-lg font-semibold mb-1">Premium Feature</h4>
+              <h4 className="text-lg font-semibold mb-1">Premium Features</h4>
               <p className="text-sm opacity-90 mb-3">
-                Cloud backup requires a premium subscription. Upgrade to access cloud backup and more!
+                Cloud backup and other premium features require an active subscription. Upgrade to unlock full access!
               </p>
               
               <button

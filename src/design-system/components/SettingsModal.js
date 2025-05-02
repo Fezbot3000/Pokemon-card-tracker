@@ -19,6 +19,7 @@ import featureFlags, { updateFeatureFlag, resetFeatureFlags, getAllFeatureFlags 
 import logger from '../../utils/logger';
 import shadowSync from '../../services/shadowSync'; // Import the shadowSync service directly
 import { CardRepository } from '../../repositories/CardRepository'; // Import CardRepository
+import SubscriptionManagement from '../../components/SubscriptionManagement'; // Import the SubscriptionManagement component
 
 /**
  * SettingsModal Component
@@ -1033,64 +1034,13 @@ const SettingsModal = ({
                   description="Manage your Stripe subscription and billing information."
                 >
                   <div className="space-y-4">
-                    <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
-                      <div className="flex justify-between items-center mb-2">
-                        <h4 className="font-medium text-gray-800 dark:text-white">Current Plan</h4>
-                        <span className={`px-2 py-1 ${profile.subscriptionTier === 'premium' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'} text-xs font-medium rounded-full`}>
-                          {profile.subscriptionTier === 'premium' ? 'Premium' : 'Free'}
-                        </span>
-                      </div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                        {profile.subscriptionTier === 'premium' 
-                          ? 'You are currently on the Premium plan with access to all features.' 
-                          : 'Upgrade to Premium for access to all features.'}
-                      </p>
-                      {profile.subscriptionEndsAt && (
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                          Next billing date: {new Date(profile.subscriptionEndsAt).toLocaleDateString()}
-                        </p>
-                      )}
-                    </div>
-                    
-                    <div className="flex flex-col space-y-3">
-                      {profile.subscriptionTier === 'premium' ? (
-                        <>
-                          <Button
-                            variant="primary"
-                            onClick={handleManageSubscription}
-                            iconLeft={<Icon name="settings" />}
-                            fullWidth
-                          >
-                            Manage Subscription
-                          </Button>
-                          
-                          <Button
-                            variant="danger"
-                            onClick={handleCancelSubscription}
-                            iconLeft={<Icon name="cancel" />}
-                            fullWidth
-                          >
-                            Cancel Subscription
-                          </Button>
-                        </>
-                      ) : (
-                        <Button
-                          variant="success"
-                          onClick={handleUpgradeSubscription}
-                          iconLeft={<Icon name="upgrade" />}
-                          fullWidth
-                        >
-                          Upgrade to Premium
-                        </Button>
-                      )}
-                    </div>
+                    <SubscriptionManagement isMobile={false} onClose={onClose} />
                   </div>
                 </SettingsPanel>
 
                 <SettingsPanel
                   title="Sign Out"
                   description="Sign out of your account and return to the login screen."
-                  expandable={undefined}
                 >
                   {userData && (
                     <div className="flex items-center space-x-4 mb-6 bg-[#0a101c] p-4 rounded-lg">

@@ -240,7 +240,8 @@ export function SubscriptionProvider({ children }) {
     refreshSubscriptionStatus,
     fixSubscription,
     isPremium: subscriptionStatus.status === 'active',
-    isFree: subscriptionStatus.status === 'free' || subscriptionStatus.status === 'inactive',
+    // Update isFree logic: only 'inactive' means no active paid plan
+    isFree: subscriptionStatus.status === 'inactive',
   };
 
   return (
