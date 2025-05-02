@@ -251,12 +251,12 @@ const CardDetailsModal = ({
             player: parsedData.player || card.player || '',
             set: parsedData.setName || card.set || '',
             year: parsedData.year || card.year || '',
-            category: 'Pokemon', // Default to Pokemon for PSA cards
-            condition: `PSA ${parsedData.grade}`,
+            category: parsedData.category || 'Pokemon', // Default to Pokemon for PSA cards
+            condition: parsedData.grade ? `PSA ${parsedData.grade}` : card.condition || '',
             gradingCompany: 'PSA', // Explicitly set the grading company
             // Extract just the numeric part of the grade if it's in format "GEM MT 10"
-            grade: parsedData.grade ? parsedData.grade.replace(/^.*?(\d+(?:\.\d+)?)$/, '$1') : '',
-            slabSerial: parsedData.slabSerial || card.slabSerial || '',
+            grade: parsedData.grade ? parsedData.grade.replace(/^.*?(\d+(?:\.\d+)?)$/, '$1') : card.grade || '',
+            slabSerial: parsedData.slabSerial || serialNumber || card.slabSerial || '',
             population: parsedData.population || card.population || '',
             psaUrl: parsedData.psaUrl || card.psaUrl || '',
             // Preserve financial data

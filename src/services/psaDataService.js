@@ -42,12 +42,9 @@ class PSADataService {
         const data = docSnap.data();
         logger.debug(`Found PSA card in Firestore cache: ${certNumber}`);
         
-        // Return the cached data
-        return {
-          certNumber,
-          cardData: data.cardData,
-          lastUpdated: data.lastUpdated?.toDate() || new Date()
-        };
+        // Return the cached data in a format consistent with the PSA API response
+        // This ensures it can be processed the same way as a direct API response
+        return data.cardData;
       }
       
       logger.debug(`PSA card not found in Firestore cache: ${certNumber}`);

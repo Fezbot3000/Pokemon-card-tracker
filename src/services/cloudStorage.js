@@ -11,10 +11,13 @@ function fixStorageUrl(url) {
   if (!url) return url;
   
   try {
-    // Check if this is a Firebase Storage URL with the old domain
-    if (url.includes('appspot.com')) {
-      // Replace the old domain with the new one
-      const fixedUrl = url.replace('mycardtracker-c8479.appspot.com', 'mycardtracker-c8479.firebasestorage.app');
+    // Check if this is a Firebase Storage URL with any of the old domains
+    if (url.includes('appspot.com') || url.includes('firebaseapp.com')) {
+      // Replace the old domains with the new one
+      let fixedUrl = url;
+      fixedUrl = fixedUrl.replace('mycardtracker-c8479.appspot.com', 'mycardtracker-c8479.firebasestorage.app');
+      fixedUrl = fixedUrl.replace('mycardtracker-c8479.firebaseapp.com', 'mycardtracker-c8479.firebasestorage.app');
+      
       logger.debug(`Fixed Storage URL: ${url.substring(0, 30)}... -> ${fixedUrl.substring(0, 30)}...`);
       return fixedUrl;
     }
@@ -51,13 +54,12 @@ function getCorrectBucketName() {
 }
 
 /**
- * Upload an image to Firebase Storage
+ * Upload an image to Firebase Storage with direct URL construction
+ * This is a workaround for CORS issues with Firebase Storage
  * @param {Blob|File} imageBlob - The image blob to upload
  * @param {string} userId - The user ID to associate with the image
  * @param {string} cardId - The card ID to associate with the image
  * @param {Object} options - Additional options
- * @param {Function} options.onProgress - Optional progress callback
- * @param {boolean} options.isReplacement - Whether this is replacing an existing image
  * @returns {Promise<string>} - The download URL for the uploaded image
  */
 export const saveImageToCloud = async (imageBlob, userId, cardId, options = {}) => {
@@ -84,25 +86,61 @@ export const saveImageToCloud = async (imageBlob, userId, cardId, options = {}) 
       contentType: 'image/jpeg',
       customMetadata: {
         updateTimestamp: new Date().toISOString(),
-        cardId: cardId,
-        bucketName: getCorrectBucketName() // Add bucket name to metadata for debugging
+        cardId: cardId
       }
     };
     
     // Upload the image directly
     logger.debug(`Uploading image directly to Firebase Storage: ${imagePath}`);
-    const snapshot = await uploadBytes(storageRef, imageBlob, metadata);
     
-    // Get the download URL
-    let downloadURL = await getDownloadURL(snapshot.ref);
+    // Use a direct fetch approach if the standard method fails
+    let uploadSuccessful = false;
+    let downloadURL = '';
+    
+    try {
+      // Try the standard Firebase SDK approach first
+      const snapshot = await uploadBytes(storageRef, imageBlob, metadata);
+      downloadURL = await getDownloadURL(snapshot.ref);
+      uploadSuccessful = true;
+    } catch (uploadError) {
+      logger.warn('Standard upload failed, trying direct approach:', uploadError);
+      
+      // If that fails, we'll try a direct fetch approach
+      uploadSuccessful = false;
+    }
+    
+    // If the standard approach failed, try a direct fetch
+    if (!uploadSuccessful) {
+      // This is a fallback approach using direct fetch to the correct URL
+      const formData = new FormData();
+      formData.append('file', imageBlob);
+      
+      // Construct the correct URL directly
+      const uploadUrl = `https://firebasestorage.googleapis.com/v0/b/mycardtracker-c8479.firebasestorage.app/o?name=${encodeURIComponent(imagePath)}`;
+      
+      const response = await fetch(uploadUrl, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Direct upload failed: ${response.status} ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      downloadURL = `https://firebasestorage.googleapis.com/v0/b/mycardtracker-c8479.firebasestorage.app/o/${encodeURIComponent(imagePath)}?alt=media&token=${data.downloadTokens}`;
+    }
     
     // Fix the URL if needed
     downloadURL = fixStorageUrl(downloadURL);
     
-    logger.debug(`Direct upload succeeded with URL: ${downloadURL}`);
+    logger.debug(`Upload succeeded with URL: ${downloadURL}`);
     return downloadURL;
   } catch (error) {
-    logger.error(`Error uploading image to Firebase Storage:`, error);
+    logger.error('Error uploading image to Firebase Storage:', error);
     throw error;
   }
 };

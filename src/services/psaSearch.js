@@ -307,7 +307,7 @@ const searchByCertNumber = async (certNumber, forceRefresh = false) => {
         const dbResult = await psaDataService.getCardFromCache(certNumber);
         if (dbResult) {
           console.log(`Using PSA result from Firestore for cert number: ${certNumber}`);
-          // Update memory cache
+          // Update memory cache with the same structure as direct API results
           psaCache.results[certNumber] = dbResult;
           return dbResult;
         }
