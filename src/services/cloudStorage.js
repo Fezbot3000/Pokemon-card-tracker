@@ -116,7 +116,8 @@ export const saveImageToCloud = async (imageBlob, userId, cardId, options = {}) 
       formData.append('file', imageBlob);
       
       // Construct the correct URL directly
-      const uploadUrl = `https://firebasestorage.googleapis.com/v0/b/mycardtracker-c8479.firebasestorage.app/o?name=${encodeURIComponent(imagePath)}`;
+      const bucketName = 'mycardtracker-c8479.firebasestorage.app';
+      const uploadUrl = `https://firebasestorage.googleapis.com/v0/b/${bucketName}/o?name=${encodeURIComponent(imagePath)}`;
       
       const response = await fetch(uploadUrl, {
         method: 'POST',
@@ -131,7 +132,7 @@ export const saveImageToCloud = async (imageBlob, userId, cardId, options = {}) 
       }
       
       const data = await response.json();
-      downloadURL = `https://firebasestorage.googleapis.com/v0/b/mycardtracker-c8479.firebasestorage.app/o/${encodeURIComponent(imagePath)}?alt=media&token=${data.downloadTokens}`;
+      downloadURL = `https://firebasestorage.googleapis.com/v0/b/${bucketName}/o/${encodeURIComponent(imagePath)}?alt=media&token=${data.downloadTokens}`;
     }
     
     // Fix the URL if needed

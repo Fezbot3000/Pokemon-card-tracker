@@ -23,7 +23,8 @@
       "Access-Control-Allow-Headers",
       "Access-Control-Max-Age",
       "Origin",
-      "Accept"
+      "Accept",
+      "X-Requested-With"
     ]
   }
 ]
