@@ -2310,13 +2310,6 @@ To import this backup:
           }}
           onExportData={handleExportData}
           onImportCollection={handleImportCollection}
-          onUpdatePrices={() => {
-            return new Promise((resolve) => {
-              handleImportClick('priceUpdate');
-              setShowSettings(false);
-              resolve();
-            });
-          }}
           onImportBaseData={() => {
             return new Promise((resolve) => {
               handleImportClick('baseData');
@@ -2464,13 +2457,6 @@ To import this backup:
                   }}
                   onExportData={handleExportData}
                   onImportCollection={handleImportCollection}
-                  onUpdatePrices={() => {
-                    return new Promise((resolve) => {
-                      handleImportClick('priceUpdate');
-                      setShowSettings(false);
-                      resolve();
-                    });
-                  }}
                   onImportBaseData={() => {
                     return new Promise((resolve) => {
                       handleImportClick('baseData');
@@ -2649,13 +2635,6 @@ To import this backup:
             }}
             onExportData={handleExportData}
             onImportCollection={handleImportCollection}
-            onUpdatePrices={() => {
-              return new Promise((resolve, reject) => {
-                handleImportClick('priceUpdate');
-                setShowSettings(false);
-                resolve();
-              });
-            }}
             onImportBaseData={() => {
               return new Promise((resolve, reject) => {
                 handleImportClick('baseData');
@@ -2829,13 +2808,6 @@ To import this backup:
           }}
           onExportData={handleExportData}
           onImportCollection={handleImportCollection}
-          onUpdatePrices={() => {
-            return new Promise((resolve) => {
-              handleImportClick('priceUpdate');
-              setShowSettings(false);
-              resolve();
-            });
-          }}
           onImportBaseData={() => {
             return new Promise((resolve) => {
               handleImportClick('baseData');

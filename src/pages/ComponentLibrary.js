@@ -1551,39 +1551,17 @@ toastService.dismissAll(); // Dismiss all toasts`}
                   console.log(`Delete collection ${name}`);
                   toastService.success(`Collection "${name}" deleted`);
                 }}
-                onExportData={() => {
-                  return new Promise(resolve => {
-                    setTimeout(() => {
-                      console.log('Exporting data...');
-                      resolve();
-                    }, 1500);
-                  });
-                }}
-                onImportCollection={(file) => {
-                  console.log(`Importing collection from file: ${file.name}`);
-                  toastService.success(`Imported collection from ${file.name}`);
-                }}
-                onUpdatePrices={() => {
-                  return new Promise(resolve => {
-                    setTimeout(() => {
-                      console.log('Updating prices...');
-                      resolve();
-                    }, 2000);
-                  });
-                }}
-                onImportBaseData={(file) => {
-                  return new Promise((resolve) => {
-                    setTimeout(() => {
-                      console.log(`Importing base data from file: ${file.name}`);
-                      resolve();
-                    }, 1500);
-                  });
-                }}
+                refreshCollections={() => console.log('Refresh collections')}
+                onExportData={() => console.log('Export data')}
+                onImportCollection={() => console.log('Import collection')}
+                onImportBaseData={() => console.log('Import base data')}
                 userData={mockUserData}
-                onSignOut={() => {
-                  console.log('Signing out...');
-                  toastService.success('Signed out successfully');
-                }}
+                onSignOut={() => console.log('Sign out')}
+                onResetData={() => console.log('Reset data')}
+                onStartTutorial={() => console.log('Start tutorial')}
+                onImportAndCloudMigrate={() => console.log('Import and cloud migrate')}
+                onUploadImagesFromZip={() => console.log('Upload images from zip')}
+                onImportSoldItemsFromZip={() => console.log('Import sold items from zip')}
               />
             </div>
           </div>
@@ -1606,7 +1584,6 @@ const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   onDeleteCollection={handleDeleteCollection}
   onExportData={handleExportData}
   onImportCollection={handleImportCollection}
-  onUpdatePrices={handleUpdatePrices}
   onImportBaseData={handleImportBaseData}
   userData={currentUser}
   onSignOut={handleSignOut}
