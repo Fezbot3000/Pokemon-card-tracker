@@ -1,7 +1,7 @@
 // Basic Firebase initialization without any extra complexity
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { getFirestore, enableIndexedDbPersistence, doc, getDoc } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { getFunctions } from 'firebase/functions';
 
@@ -48,10 +48,10 @@ if (!firebaseConfig.apiKey || !firebaseConfig.authDomain || !firebaseConfig.proj
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const googleProvider = new GoogleAuthProvider();
 const db = getFirestore(app);
 const storage = getStorage(app);
+const auth = getAuth(app);
+const googleProvider = new GoogleAuthProvider();
 const functions = getFunctions(app);
 
 // Configure Google provider
@@ -67,6 +67,49 @@ if (process.env.REACT_APP_FIREBASE_CLIENT_ID) {
 } else {
   // Removed: console.error('Missing CLIENT_ID for Google provider');
 }
+
+// Add this section to handle ad blockers that might block Firestore
+const handleFirestoreBlocking = () => {
+  // Check if Firestore is being blocked
+  const testFirestore = async () => {
+    try {
+      // Try a simple Firestore operation
+      const testDoc = doc(db, '_test_connection', 'test');
+      await getDoc(testDoc);
+      return true; // Firestore is working
+    } catch (error) {
+      // Check if the error is related to being blocked
+      if (error.message && (
+        error.message.includes('Failed to fetch') || 
+        error.message.includes('Network Error') ||
+        error.message.includes('blocked') ||
+        error.message.includes('ERR_BLOCKED_BY_CLIENT')
+      )) {
+        console.warn('Firestore appears to be blocked by a browser extension. Enabling offline mode.');
+        return false;
+      }
+      // Other errors might not be related to blocking
+      return true;
+    }
+  };
+
+  // Test Firestore and enable offline persistence if needed
+  testFirestore().then(isWorking => {
+    if (!isWorking) {
+      // Enable offline persistence to work around blocking
+      enableIndexedDbPersistence(db)
+        .then(() => {
+          console.log('Offline persistence enabled as a fallback');
+        })
+        .catch(err => {
+          console.error('Error enabling offline persistence:', err);
+        });
+    }
+  });
+};
+
+// Call the handler to check for Firestore blocking
+handleFirestoreBlocking();
 
 // Export the Firebase services
 export { app, auth, googleProvider, db, storage, functions };
