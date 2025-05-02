@@ -383,7 +383,8 @@ export function CardProvider({ children }) {
   const updateCard = useCallback(async (cardId, data) => {
     try {
       setSyncStatus('syncing');
-      await repository.updateCard(cardId, data);
+      // Combine cardId and data into a single payload object
+      await repository.updateCard({ id: cardId, ...data });
       setCards(prev => 
         prev.map(card => 
           card.id === cardId ? { ...card, ...data } : card

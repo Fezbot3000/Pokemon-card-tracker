@@ -234,7 +234,12 @@ class CardRepository {
             }
           }
           
-          return this.updateCard(existingCardById.id, cardData);
+          // Combine the new data with the existing card's ID into one payload
+          const updatePayload = {
+            ...cardData,        // Keep the new data from PSA/form
+            id: existingCardById.id // Ensure the ID of the card to update is present
+          };
+          return this.updateCard(updatePayload); // Pass a single object
         }
       }
 

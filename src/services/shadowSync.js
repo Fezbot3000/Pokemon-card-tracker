@@ -370,10 +370,18 @@ class ShadowSyncService {
       // Remove the id property from the data itself if it exists, as it's the document key
       delete cardDataToWrite.id; 
 
+      // Combine ID, data, and collection into a single payload object
+      const updatePayload = {
+        ...cardDataToWrite,
+        id: cardId, // Ensure the ID is included
+        collection: collectionName, // Use the collection name passed
+        collectionId: collectionName // Also set collectionId for consistency
+      };
+
       // Directly update the card without extensive checks (our getCard optimization will handle this)
       logger.debug(`[ShadowSync] Calling repository.updateCard for ${cardId}`);
       const repoStart = performance.now();
-      await this.repository.updateCard(cardId, cardDataToWrite, collectionName);
+      await this.repository.updateCard(updatePayload);
       const repoEnd = performance.now();
       
       // Log performance metrics
