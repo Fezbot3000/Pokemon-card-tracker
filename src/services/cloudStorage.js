@@ -111,28 +111,108 @@ export const saveImageToCloud = async (imageBlob, userId, cardId, options = {}) 
     
     // If the standard approach failed, try a direct fetch
     if (!uploadSuccessful) {
-      // This is a fallback approach using direct fetch to the correct URL
-      const formData = new FormData();
-      formData.append('file', imageBlob);
-      
-      // Construct the correct URL directly
-      const bucketName = 'mycardtracker-c8479.firebasestorage.app';
-      const uploadUrl = `https://firebasestorage.googleapis.com/v0/b/${bucketName}/o?name=${encodeURIComponent(imagePath)}`;
-      
-      const response = await fetch(uploadUrl, {
-        method: 'POST',
-        body: formData,
-        headers: {
-          'Content-Type': 'multipart/form-data',
+      try {
+        logger.debug('Trying direct upload with fetch API and CORS bypass');
+        
+        // Create a Base64 representation of the image
+        const reader = new FileReader();
+        const base64Promise = new Promise((resolve, reject) => {
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(imageBlob);
+        });
+        
+        const base64Data = await base64Promise;
+        
+        // Create a timestamp for cache busting
+        const timestamp = new Date().getTime();
+        
+        // Use a serverless function or API endpoint that can handle the upload
+        // This bypasses CORS completely by using your own domain
+        const response = await fetch('/api/upload-image', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            imageData: base64Data,
+            path: imagePath,
+            userId,
+            cardId,
+            timestamp
+          })
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Server upload failed: ${response.status} ${response.statusText}`);
         }
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Direct upload failed: ${response.status} ${response.statusText}`);
+        
+        const data = await response.json();
+        downloadURL = data.downloadURL;
+        
+        if (!downloadURL) {
+          throw new Error('No download URL returned from server');
+        }
+        
+        logger.debug('Server-side upload successful');
+      } catch (serverError) {
+        logger.error('Server-side upload failed, falling back to direct Firebase Storage upload', serverError);
+        
+        // Final fallback: Try a direct upload with a simple URL that should work
+        // This is our last resort attempt
+        try {
+          // This is a fallback approach using direct fetch to the correct URL
+          const formData = new FormData();
+          formData.append('file', imageBlob);
+          
+          // Try both bucket formats to see which one works
+          const bucketNames = [
+            'mycardtracker-c8479.firebasestorage.app',
+            'mycardtracker-c8479.firebaseapp.com',
+            'mycardtracker-c8479.appspot.com'
+          ];
+          
+          let uploadSuccess = false;
+          let uploadError = null;
+          
+          // Try each bucket name until one works
+          for (const bucketName of bucketNames) {
+            if (uploadSuccess) break;
+            
+            try {
+              const uploadUrl = `https://firebasestorage.googleapis.com/v0/b/${bucketName}/o?name=${encodeURIComponent(imagePath)}`;
+              
+              logger.debug(`Trying upload with bucket: ${bucketName}`);
+              
+              const response = await fetch(uploadUrl, {
+                method: 'POST',
+                body: formData,
+                mode: 'cors',
+                headers: {
+                  'Origin': window.location.origin
+                }
+              });
+              
+              if (response.ok) {
+                const data = await response.json();
+                downloadURL = `https://firebasestorage.googleapis.com/v0/b/${bucketName}/o/${encodeURIComponent(imagePath)}?alt=media&token=${data.downloadTokens}`;
+                uploadSuccess = true;
+                logger.debug(`Upload succeeded with bucket: ${bucketName}`);
+              }
+            } catch (error) {
+              uploadError = error;
+              logger.warn(`Upload failed with bucket ${bucketName}:`, error);
+            }
+          }
+          
+          if (!uploadSuccess) {
+            throw uploadError || new Error('All upload attempts failed');
+          }
+        } catch (finalError) {
+          logger.error('All upload methods failed:', finalError);
+          throw finalError;
+        }
       }
-      
-      const data = await response.json();
-      downloadURL = `https://firebasestorage.googleapis.com/v0/b/${bucketName}/o/${encodeURIComponent(imagePath)}?alt=media&token=${data.downloadTokens}`;
     }
     
     // Fix the URL if needed
