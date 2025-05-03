@@ -864,7 +864,7 @@ const SettingsModal = ({
                       onClick={() => toggleTheme('dark')}
                     >
                       <div className="flex items-center justify-between mb-2">
-                        <h4 className="font-medium text-white">Dark Mode</h4>
+                        <h4 className="font-medium text-gray-900 dark:text-white">Dark Mode</h4>
                         {isDarkMode && <Icon name="check_circle" className="text-blue-500" />}
                       </div>
                       <div className="bg-gray-900 border border-gray-700 rounded-md p-2">
@@ -1043,17 +1043,16 @@ const SettingsModal = ({
                   description="Sign out of your account and return to the login screen."
                 >
                   {userData && (
-                    <div className="flex items-center space-x-4 mb-6 bg-[#0a101c] p-4 rounded-lg">
+                    <div 
+                      className="flex items-center space-x-4 mb-6 bg-gray-100 dark:bg-gray-800 p-4 rounded-lg"
+                      data-component-name="SettingsModal"
+                    >
                       <div className="w-12 h-12 bg-indigo-600 rounded-full flex items-center justify-center text-white font-medium">
                         {userData.firstName ? userData.firstName.charAt(0) : '?'}
                       </div>
                       <div>
-                        <div className="text-white font-medium">
-                          {userData.firstName} {userData.lastName}
-                        </div>
-                        <div className="text-gray-400 text-sm">
-                          {user ? user.email : 'Not signed in'}
-                        </div>
+                        <div className="text-gray-900 dark:text-white font-medium">{userData.firstName} {userData.lastName}</div>
+                        <div className="text-gray-600 dark:text-gray-400 text-sm">{user ? user.email : 'Not signed in'}</div>
                       </div>
                     </div>
                   )}

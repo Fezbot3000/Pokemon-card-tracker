@@ -266,6 +266,20 @@ const PSADetailModal = ({
             </div>
           )}
 
+          {certNumber && (
+            <div className="mt-4">
+              <a
+                href={`https://www.psacard.com/cert/${certNumber}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:underline text-sm"
+              >
+                View on PSA Website
+                <span className="material-icons ml-1 text-xs">open_in_new</span>
+              </a>
+            </div>
+          )}
+
           {!isLoading && !parsedData && !error && (
             <div className="text-center py-8">
               <p>No PSA data available for this certification number.</p>

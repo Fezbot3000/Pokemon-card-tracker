@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import Modal from '../design-system/molecules/Modal';
 import Button from '../design-system/atoms/Button';
@@ -7,6 +7,7 @@ import { toast } from 'react-hot-toast';
 import PSADetailModal from './PSADetailModal';
 import NewCollectionModal from './NewCollectionModal';
 import { searchByCertNumber } from '../services/psaSearch';
+// import Spinner from './Spinner'; // Import Spinner for loading state
 
 /**
  * AddCardModal Component
@@ -63,6 +64,7 @@ const AddCardModal = ({
   const [errors, setErrors] = useState({});
   const [saveMessage, setSaveMessage] = useState(null);
   const [animClass, setAnimClass] = useState('');
+  const [isSaving, setIsSaving] = useState(false); // Add saving state
   
   // State for new collection modal
   const [showNewCollectionModal, setShowNewCollectionModal] = useState(false);
@@ -155,12 +157,14 @@ const AddCardModal = ({
     // Clear any previous error messages
     setSaveMessage(null);
     setErrors({});
+    setIsSaving(true); // Set saving state to true
 
     // Validate form
     const validationErrors = validateForm();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       setSaveMessage('Please fix the errors before saving');
+      setIsSaving(false); // Reset saving state
       return;
     }
 
@@ -168,6 +172,7 @@ const AddCardModal = ({
     if (!imageFile) {
       setSaveMessage('Please add an image for the card');
       setErrors({ image: 'Card image is required' });
+      setIsSaving(false); // Reset saving state
       return;
     }
 
@@ -212,6 +217,8 @@ const AddCardModal = ({
         // Generic error handling
         setSaveMessage(`Error: ${error.message}`);
       }
+    } finally {
+      setIsSaving(false); // Reset saving state regardless of success/failure
     }
   };
 
@@ -249,10 +256,17 @@ const AddCardModal = ({
 
   // Handle applying PSA details to the card
   const handleApplyPsaDetails = (updatedCardData) => {
-    setNewCard(prev => ({
-      ...prev,
-      ...updatedCardData
-    }));
+    setNewCard(prev => {
+      // Ensure the original serial number used for the search is preserved
+      const originalSerial = prev.slabSerial;
+
+      const mergedData = {
+        ...prev, // Start with previous state
+        ...updatedCardData, // Merge PSA data
+        slabSerial: originalSerial || updatedCardData.slabSerial || '', // Always prioritize the original user-entered serial
+      };
+      return mergedData;
+    });
     toast.success('PSA card details applied');
     setPsaDetailModalOpen(false);
   };
@@ -276,8 +290,13 @@ const AddCardModal = ({
         <Button
           variant="primary"
           onClick={handleSave}
+          disabled={isSaving} // Disable button when saving
         >
-          Add Card
+          {isSaving ? (
+            'Saving...'
+          ) : (
+            'Add Card'
+          )}
         </Button>
       </div>
     </div>

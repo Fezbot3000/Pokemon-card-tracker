@@ -405,7 +405,7 @@ const CardDetailsForm = ({
               <div className="mt-3 space-y-2">
                 <button 
                   onClick={() => onPsaSearch && onPsaSearch(card.slabSerial)} 
-                  className="w-full inline-flex items-center justify-center font-medium rounded-lg transition-colors focus:outline-none px-4 py-2 text-base bg-[#0F0F0F] text-gray-300 border border-gray-700 hover:opacity-90 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full inline-flex items-center justify-center font-medium rounded-lg transition-colors focus:outline-none px-4 py-2 text-base bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={isPsaSearching || !card.slabSerial}
                   title={!card.slabSerial ? "Enter a serial number first" : "Search PSA database"}
                 >
@@ -443,9 +443,15 @@ const CardDetailsForm = ({
             {/* Profit/Loss Display - Moved under the image */}
             {(typeof card.investmentAUD === 'number' || typeof card.investmentAUD === 'string') && 
              (typeof card.currentValueAUD === 'number' || typeof card.currentValueAUD === 'string') && (
-              <div className="mt-4 bg-[#000] rounded-lg p-3 border border-gray-700 flex items-center justify-between" data-component-name="CardDetailsForm">
-                <span className="text-sm font-medium text-gray-300">Profit/Loss:</span>
-                <span className={`font-medium ${getProfit() >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+              <div 
+                className="mt-4 bg-gray-50 dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700 flex items-center justify-between"
+                data-component-name="CardDetailsForm"
+              >
+                <span className="text-sm font-medium text-gray-600 dark:text-gray-300">Profit/Loss:</span>
+                <span 
+                  className={`font-medium ${getProfit() >= 0 ? 'text-green-600 dark:text-green-500' : 'text-red-600 dark:text-red-500'}`}
+                  data-component-name="CardDetailsForm"
+                >
                   ${Math.abs(getProfit()).toFixed(2)} {getProfit() >= 0 ? 'profit' : 'loss'}
                 </span>
               </div>

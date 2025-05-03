@@ -397,11 +397,23 @@ const parsePSACardData = (psaData) => {
   // Clean card name for the app - just extract the actual card name without year/brand prefix
   const cleanCardName = cert.Subject || cert.Title || '';
 
+  // Extract the numerical grade or 'A' for Authentic to match dropdown values
+  const rawGrade = cert.GradeDescription || cert.CardGrade || '';
+  let parsedGradeValue = '';
+  const numericMatch = rawGrade.match(/(\d+(\.\d)?)/); // Find first number (e.g., 9, 10, 8.5)
+  const authenticMatch = rawGrade.match(/Authentic/i);
+
+  if (numericMatch) {
+    parsedGradeValue = numericMatch[1];
+  } else if (authenticMatch) {
+    parsedGradeValue = 'A';
+  }
+
   const result = {
     cardName: cleanCardName,
     cardNumber: cert.CardNumber || cert.SpecNumber || '',
     slabSerial: cert.CertNumber || cert.SpecId || '',
-    grade: cert.GradeDescription || cert.CardGrade || '',
+    grade: parsedGradeValue, // Use the extracted numerical/Authentic value
     setName: cert.Brand || cert.SetName || '',
     year: cert.Year || '',
     cardType: cert.Category || '',

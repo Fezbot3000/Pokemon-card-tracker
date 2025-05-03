@@ -322,24 +322,6 @@ class ShadowSyncService {
       return true;
     }
     
-    // Skip if we're in an update cooldown period
-    if (this._lastSaveTimestamp && (now - this._lastSaveTimestamp < 3000)) {
-      // Only log individual skips for non-batch operations or the first few cards
-      if (!isInBatchMode || this._skippedCardCount < 5) {
-        logger.debug(`[ShadowSync] Skipping shadow write for card ${cardId} - in cooldown period (${now - this._lastSaveTimestamp}ms since last save)`);
-      }
-      
-      this._skippedCardCount++;
-      
-      // Periodically log summary of skipped cards to reduce spam but still provide info
-      if (this._skippedCardCount > 0 && now - this._lastLogTimestamp > 1000) {
-        logger.debug(`[ShadowSync] Skipped shadow write for ${this._skippedCardCount} cards due to cooldown`);
-        this._lastLogTimestamp = now;
-      }
-      
-      return true;
-    }
-    
     // Mark that we're in the middle of an update
     this._updateInProgress = true;
     

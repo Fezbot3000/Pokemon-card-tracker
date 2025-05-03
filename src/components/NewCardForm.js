@@ -452,504 +452,239 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
     <>
       {/* Semi-transparent overlay that covers the entire screen */}
       <div 
-        className={`card-details-overlay ${isOpen ? 'open' : ''}`}
-        onClick={handleClose}
-      />
-      
-      {/* Modal content positioned on the right side */}
+        className={`fixed inset-0 z-40 transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'} bg-black/40 dark:bg-black/60`}
+        aria-hidden="true"
+      ></div>
+
+      {/* Modal container */}
       <div
-        className={`new-card-modal-content ${isOpen ? 'open' : ''}`}
-        onWheel={preventPropagation}
-        onTouchMove={preventPropagation}
+        className={`fixed inset-0 z-50 flex items-center justify-center p-4 ${isMobile ? 'items-end' : ''}`}
+        onClick={isMobile ? undefined : handleClose} // Only allow outside click close on desktop
       >
-        {/* Modal Header */}
-        <div className={`sticky top-0 z-10 border-b ${isDarkMode ? 'bg-[#1B2131] border-gray-700/50' : 'bg-white border-gray-200'}`}>
-          <div className="flex items-center justify-between p-4">
-            <div className="flex items-center">
-              <h2 className={`text-xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                {activeTab === 'single' ? 'Add New Card' : 'Batch Import'}
-              </h2>
-            </div>
-            <button 
-              onClick={handleClose}
-              className={`p-2 rounded-full ${isDarkMode ? 'hover:bg-gray-800' : 'hover:bg-gray-100'}`}
-            >
-              <span className={`material-icons ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>close</span>
+        {/* Modal content with transition */}
+        <div
+          className={`new-card-modal-content w-full max-w-4xl mx-auto flex flex-col overflow-hidden rounded-lg shadow-xl transition-all duration-300 ease-out 
+            bg-white text-gray-900 dark:bg-[#1B2131] dark:text-gray-200 
+           ${ 
+            isOpen 
+              ? (isMobile ? 'translate-y-0 opacity-100' : 'scale-100 opacity-100') 
+              : (isMobile ? 'translate-y-full opacity-0' : 'scale-95 opacity-0') 
+          }`}
+          style={{ maxHeight: '90vh' }} // Limit height to 90% of viewport height
+          onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside content
+        >
+          {/* Header */}
+          <div className={`flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700/50`}>
+            <h2 className={`text-lg font-semibold text-gray-900 dark:text-white`}>Add New Card</h2>
+            <button onClick={handleClose} className={`p-1 rounded-full text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white`}>
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
           </div>
-          
-          {/* Tabs */}
-          <div className="px-4 pt-1">
-            <div className="flex border-b space-x-6 overflow-x-auto">
-              <button
-                className={`pb-3 font-medium text-base border-b-2 transition-colors ${
-                  activeTab === 'single' 
-                    ? (isDarkMode ? 'text-white border-primary' : 'text-gray-900 border-primary')
-                    : (isDarkMode ? 'text-gray-400 border-transparent' : 'text-gray-500 border-transparent')
-                }`}
+
+          {/* Tabs */} 
+          <div className={`border-b border-gray-200 dark:border-gray-700/50`}>
+            <nav className="-mb-px flex space-x-6 px-4" aria-label="Tabs">
+              <button 
                 onClick={() => setActiveTab('single')}
+                className={`whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm ${activeTab === 'single' 
+                  ? 'border-primary text-primary' 
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:border-gray-500'}`}
               >
-                Single Card
+                Single Card Entry
               </button>
-              <button
-                className={`pb-3 font-medium text-base border-b-2 transition-colors ${
-                  activeTab === 'batch' 
-                    ? (isDarkMode ? 'text-white border-primary' : 'text-gray-900 border-primary')
-                    : (isDarkMode ? 'text-gray-400 border-transparent' : 'text-gray-500 border-transparent')
-                }`}
+              <button 
                 onClick={() => setActiveTab('batch')}
+                className={`whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm ${activeTab === 'batch' 
+                  ? 'border-primary text-primary' 
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:border-gray-500'}`}
               >
-                Batch Import
+                Batch Import from CSV
               </button>
-            </div>
+            </nav>
           </div>
-        </div>
-
-        {activeTab === 'single' ? (
-          <>
-            {/* Single Card Content */}
-            {/* Scrollable Content Area */}
-            <div className="flex-1 overflow-y-auto p-6">
-              <form id="cardForm" onSubmit={handleSubmit}>
-                {/* Image upload area */}
-                <div
-                  ref={dropZoneRef}
-                  className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800/30 mb-4 max-w-[180px] max-h-[250px] aspect-[2/3] relative mx-auto cursor-pointer"
-                  onClick={() => imagePreview && setShowEnlargedImage(true)}
-                >
-                  {imagePreview ? (
-                    <div className="w-full h-full">
-                      <img 
-                        src={imagePreview} 
-                        alt="Card preview" 
-                        className="w-full h-full object-contain" 
-                      />
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/0 hover:bg-black/20 transition-all">
-                        <span className="material-icons text-white opacity-0 hover:opacity-100 scale-75 hover:scale-100 transition-all">zoom_in</span>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center h-full p-4 text-center">
-                      <span className="material-icons text-gray-400 dark:text-gray-600 text-4xl mb-2">
-                        add_photo_alternate
-                      </span>
-                      <p className="text-sm text-gray-500 dark:text-gray-300 mb-1">
-                        No image yet
-                      </p>
-                    </div>
-                  )}
-                </div>
-                
-                {/* Enlarged Image Modal */}
-                {showEnlargedImage && imagePreview && (
-                  <div className="fixed inset-0 z-[200] bg-black/80 flex items-center justify-center p-4" onClick={() => setShowEnlargedImage(false)}>
-                    <div className="relative max-h-[90vh] max-w-[90vw] overflow-hidden">
-                      <img 
-                        src={imagePreview} 
-                        alt="Card preview (enlarged)" 
-                        className="max-h-[90vh] max-w-[90vw] object-contain" 
-                      />
-                      <button 
-                        className="absolute top-2 right-2 bg-black/50 text-white p-1 rounded-full"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setShowEnlargedImage(false);
-                        }}
-                      >
-                        <span className="material-icons">close</span>
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {/* Upload Image Button */}
-                <div 
-                  className="flex justify-center mb-6 relative"
-                  onDragEnter={handleDragEnter}
-                  onDragLeave={handleDragLeave}
-                  onDragOver={handleDragOver}
-                  onDrop={handleDrop}
-                >
-                  {isDragging && (
-                    <div className="absolute inset-0 -m-4 border-2 border-dashed border-purple-500 rounded-lg bg-purple-900/10 flex items-center justify-center z-0">
-                      <p className="text-purple-300 font-medium">Drop image here</p>
-                    </div>
-                  )}
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      fileInputRef.current?.click();
-                    }}
-                    className="flex items-center space-x-2 text-white bg-gray-800/70 px-4 py-2 rounded-lg relative z-10"
+          
+          {/* Conditional Content based on activeTab */} 
+          {activeTab === 'single' && (
+            <form id="cardForm" onSubmit={handleSubmit} className="overflow-y-auto flex-grow" onScroll={preventPropagation}>
+              {/* Form content */}
+              <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Card Image Section */}
+                <div className="md:col-span-1 space-y-4">
+                  <label className={`block text-sm font-medium text-gray-700 dark:text-gray-300`}>Card Image</label>
+                  <div 
+                    ref={dropZoneRef}
+                    className={`relative border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors 
+                      border-gray-300 hover:border-gray-400 text-gray-500 dark:border-gray-600 dark:hover:border-gray-500 dark:text-gray-400
+                      ${isDragging ? 'border-primary bg-purple-50 dark:border-primary dark:bg-[#2a3042]' : ''}
+                      `}
+                    onClick={() => fileInputRef.current?.click()}
+                    onDragEnter={handleDragEnter}
+                    onDragLeave={handleDragLeave}
+                    onDragOver={handleDragOver}
+                    onDrop={handleDrop}
                   >
-                    <span className="material-icons text-sm">photo_camera</span>
-                    <span>{imagePreview ? 'Change Image' : 'Upload Image'}</span>
                     <input
                       type="file"
                       accept="image/*"
                       onChange={handleImageChange}
-                      ref={fileInputRef}
                       className="hidden"
+                      ref={fileInputRef}
                     />
-                  </button>
-                </div>
-
-                {/* Card Information */}
-                <div className="mb-6">
-                  <h4 className={`text-lg font-medium mb-4 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>Card Information</h4>
-                  
-                  {/* PSA Lookup Button */}
-                  <div className="mb-4">
-                    <PSALookupButton 
-                      currentCardData={formData} 
-                      onCardUpdate={(updatedData) => {
-                        setFormData(prev => ({
-                          ...prev,
-                          ...updatedData
-                        }));
-                        toast.success("Card details updated from PSA data");
-                      }}
-                      buttonText="Lookup PSA Card"
-                    />
-                  </div>
-
-                  {/* Collection Selection */}
-                  <div className="mb-4">
-                    <label htmlFor="collection" className={`block text-sm font-medium mb-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                      Collection
-                    </label>
-                    <div className="relative">
-                      <button
-                        type="button"
-                        className={`w-full px-3 py-2 border rounded-lg text-left ${
-                          isDarkMode 
-                            ? 'border-gray-700 bg-[#252B3B] text-white' 
-                            : 'border-gray-300 bg-white text-gray-900'
-                        }`}
-                        onClick={() => setShowCollectionDropdown(!showCollectionDropdown)}
-                      >
-                        {targetCollection || 'Select a collection'}
-                      </button>
-                      {showCollectionDropdown && (
-                        <div className={`absolute z-10 mt-1 w-full border rounded-lg shadow-lg max-h-48 overflow-y-auto ${
-                          isDarkMode 
-                            ? 'bg-[#1B2131] border-gray-700' 
-                            : 'bg-white border-gray-200'
-                        }`}>
-                          {Object.keys(collections).filter(c => c !== 'All Cards').map(collection => (
-                            <button
-                              key={collection}
-                              type="button"
-                              className={`w-full px-3 py-2 text-left ${
-                                isDarkMode 
-                                  ? 'hover:bg-[#252B3B] text-white' 
-                                  : 'hover:bg-gray-50 text-gray-900'
-                              }`}
-                              onClick={() => {
-                                setTargetCollection(collection);
-                                setShowCollectionDropdown(false);
-                              }}
-                            >
-                              {collection}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  
-                  {/* Player and Card Name Row */}
-                  <div className="grid grid-cols-2 gap-4 mb-4">
-                    <div>
-                      <label htmlFor="player" className={`block text-sm font-medium mb-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                        Player
-                      </label>
-                      <input
-                        type="text"
-                        id="player"
-                        name="player"
-                        value={formData.player}
-                        onChange={handleInputChange}
-                        className={`w-full px-3 py-2 border rounded-lg ${
-                          isDarkMode 
-                            ? 'border-gray-700 bg-[#252B3B] text-white' 
-                            : 'border-gray-300 bg-white text-gray-900'
-                        }`}
-                        placeholder="e.g., Charizard"
+                    {imagePreview ? (
+                      <img 
+                        src={imagePreview} 
+                        alt="Card Preview" 
+                        className="mx-auto h-48 w-auto object-contain rounded"
+                        onClick={(e) => { e.stopPropagation(); setShowEnlargedImage(true); }} // Prevent click opening file dialog
                       />
-                    </div>
-                    <div>
-                      <label htmlFor="card" className={`block text-sm font-medium mb-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                        Card Name
-                      </label>
-                      <input
-                        type="text"
-                        id="card"
-                        name="card"
-                        value={formData.card}
-                        onChange={handleInputChange}
-                        className={`w-full px-3 py-2 border rounded-lg ${
-                          isDarkMode 
-                            ? 'border-gray-700 bg-[#252B3B] text-white' 
-                            : 'border-gray-300 bg-white text-gray-900'
-                        }`}
-                        placeholder="e.g., Base Set"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Set and Year Row */}
-                  <div className="grid grid-cols-2 gap-4 mb-4">
-                    <div>
-                      <label htmlFor="set" className={`block text-sm font-medium mb-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                        Set
-                      </label>
-                      <input
-                        type="text"
-                        id="set"
-                        name="set"
-                        value={formData.set}
-                        onChange={handleInputChange}
-                        className={`w-full px-3 py-2 border rounded-lg ${
-                          isDarkMode 
-                            ? 'border-gray-700 bg-[#252B3B] text-white' 
-                            : 'border-gray-300 bg-white text-gray-900'
-                        }`}
-                        placeholder="e.g., Base Set"
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="year" className={`block text-sm font-medium mb-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                        Year
-                      </label>
-                      <input
-                        type="text"
-                        id="year"
-                        name="year"
-                        value={formData.year}
-                        onChange={handleInputChange}
-                        className={`w-full px-3 py-2 border rounded-lg ${
-                          isDarkMode 
-                            ? 'border-gray-700 bg-[#252B3B] text-white' 
-                            : 'border-gray-300 bg-white text-gray-900'
-                        }`}
-                        placeholder="e.g., 1999"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Category and Condition Row */}
-                  <div className="grid grid-cols-2 gap-4 mb-4">
-                    <div>
-                      <label htmlFor="category" className={`block text-sm font-medium mb-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                        Category
-                      </label>
-                      <input
-                        type="text"
-                        id="category"
-                        name="category"
-                        value={formData.category}
-                        onChange={handleInputChange}
-                        className={`w-full px-3 py-2 border rounded-lg ${
-                          isDarkMode 
-                            ? 'border-gray-700 bg-[#252B3B] text-white' 
-                            : 'border-gray-300 bg-white text-gray-900'
-                        }`}
-                        placeholder="e.g., Pokemon"
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="condition" className={`block text-sm font-medium mb-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                        Condition
-                      </label>
-                      <input
-                        type="text"
-                        id="condition"
-                        name="condition"
-                        value={formData.condition}
-                        onChange={handleInputChange}
-                        className={`w-full px-3 py-2 border rounded-lg ${
-                          isDarkMode 
-                            ? 'border-gray-700 bg-[#252B3B] text-white' 
-                            : 'border-gray-300 bg-white text-gray-900'
-                        }`}
-                        placeholder="e.g., PSA 10"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Serial Number and Date Purchased Row */}
-                  <div className="grid grid-cols-2 gap-4 mb-4">
-                    <div>
-                      <label htmlFor="slabSerial" className={`block text-sm font-medium mb-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                        Serial Number
-                      </label>
-                      <input
-                        type="text"
-                        id="slabSerial"
-                        name="slabSerial"
-                        value={formData.slabSerial}
-                        onChange={handleInputChange}
-                        className={`w-full px-3 py-2 border rounded-lg ${
-                          isDarkMode 
-                            ? 'border-gray-700 bg-[#252B3B] text-white' 
-                            : 'border-gray-300 bg-white text-gray-900'
-                        }`}
-                        placeholder="e.g., 12345678"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="datePurchased" className={`block text-sm font-medium mb-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                        Date Purchased
-                      </label>
-                      <input
-                        type="date"
-                        id="datePurchased"
-                        name="datePurchased"
-                        value={formData.datePurchased}
-                        onChange={handleInputChange}
-                        className={`w-full px-3 py-2 border rounded-lg ${
-                          isDarkMode 
-                            ? 'border-gray-700 bg-[#252B3B] text-white' 
-                            : 'border-gray-300 bg-white text-gray-900'
-                        }`}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Price Section */}
-                <div className="mb-6">
-                  <h4 className={`text-lg font-medium mb-4 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>Investment Details</h4>
-                  
-                  {/* Currency Toggle */}
-                  <div className="flex justify-end mb-3">
-                    <div className="inline-flex rounded-md shadow-sm">
-                      <button
-                        type="button"
-                        onClick={() => setInputCurrency('USD')}
-                        className={`px-4 py-2 text-sm font-medium rounded-l-lg border ${
-                          inputCurrency === 'USD'
-                            ? (isDarkMode ? 'bg-purple-700 text-white border-purple-700' : 'bg-purple-600 text-white border-purple-600')
-                            : (isDarkMode ? 'bg-gray-800 text-gray-300 border-gray-700' : 'bg-gray-100 text-gray-700 border-gray-300')
-                        }`}
-                      >
-                        USD
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setInputCurrency('AUD')}
-                        className={`px-4 py-2 text-sm font-medium rounded-r-lg border ${
-                          inputCurrency === 'AUD'
-                            ? (isDarkMode ? 'bg-purple-700 text-white border-purple-700' : 'bg-purple-600 text-white border-purple-600')
-                            : (isDarkMode ? 'bg-gray-800 text-gray-300 border-gray-700' : 'bg-gray-100 text-gray-700 border-gray-300')
-                        }`}
-                      >
-                        AUD
-                      </button>
-                    </div>
-                  </div>
-                  
-                  {/* Paid Value */}
-                  <div className="grid grid-cols-2 gap-4 mb-4">
-                    <div>
-                      <label htmlFor={inputCurrency === 'AUD' ? 'investmentAUD' : 'investmentUSD'} className={`block text-sm font-medium mb-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                        Paid ({inputCurrency})
-                      </label>
-                      <div className="relative">
-                        <div className={`absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                          {inputCurrency === 'AUD' ? 'A$' : '$'}
-                        </div>
-                        <input
-                          type="number"
-                          step="0.01"
-                          id={inputCurrency === 'AUD' ? 'investmentAUD' : 'investmentUSD'}
-                          name={inputCurrency === 'AUD' ? 'investmentAUD' : 'investmentUSD'}
-                          value={inputCurrency === 'AUD' ? formData.investmentAUD : formData.investmentUSD}
-                          onChange={handleNumberInputChange}
-                          className={`w-full pl-10 pr-3 py-2 border rounded-lg ${
-                            isDarkMode 
-                              ? 'border-gray-700 bg-[#252B3B] text-white' 
-                              : 'border-gray-300 bg-white text-gray-900'
-                          }`}
-                          placeholder="0.00"
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <label htmlFor={inputCurrency === 'AUD' ? 'currentValueAUD' : 'currentValueUSD'} className={`block text-sm font-medium mb-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                        Current Value ({inputCurrency})
-                      </label>
-                      <div className="relative">
-                        <div className={`absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                          {inputCurrency === 'AUD' ? 'A$' : '$'}
-                        </div>
-                        <input
-                          type="number"
-                          step="0.01"
-                          id={inputCurrency === 'AUD' ? 'currentValueAUD' : 'currentValueUSD'}
-                          name={inputCurrency === 'AUD' ? 'currentValueAUD' : 'currentValueUSD'}
-                          value={inputCurrency === 'AUD' ? formData.currentValueAUD : formData.currentValueUSD}
-                          onChange={handleNumberInputChange}
-                          className={`w-full pl-10 pr-3 py-2 border rounded-lg ${
-                            isDarkMode 
-                              ? 'border-gray-700 bg-[#252B3B] text-white' 
-                              : 'border-gray-300 bg-white text-gray-900'
-                          }`}
-                          placeholder="0.00"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Conversion Info */}
-                  <div className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'} mb-4`}>
-                    <p>Exchange Rate: 1 USD = {exchangeRate.toFixed(2)} AUD</p>
-                    {inputCurrency === 'AUD' ? (
-                      <p>USD values are calculated automatically</p>
                     ) : (
-                      <p>AUD values are calculated automatically</p>
+                      <div className="flex flex-col items-center justify-center h-48">
+                        <svg className={`mx-auto h-12 w-12 text-gray-400 dark:text-gray-500`} stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                          <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                        <span className="mt-2 block text-sm font-medium">{isDragging ? 'Drop image here' : 'No image available'}</span>
+                        <span className="mt-1 block text-xs">Click or drag & drop</span>
+                      </div>
                     )}
                   </div>
+                  {imagePreview && (
+                    <button 
+                      type="button"
+                      onClick={(e) => { 
+                        e.stopPropagation(); // Prevent triggering file input click
+                        fileInputRef.current?.click();
+                      }}
+                      className={`w-full flex items-center justify-center px-4 py-2 border rounded-md shadow-sm text-sm font-medium transition-colors 
+                        border-gray-300 text-gray-700 bg-white hover:bg-gray-50 
+                        dark:border-gray-600 dark:text-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600`}
+                    >
+                      <svg className="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+                      </svg>
+                      Replace Image
+                    </button>
+                  )}
+                  {/* Profit/Loss Display */} 
+                  <div className={`rounded-lg p-3 text-center bg-gray-100 dark:bg-[#252B3B]`}>
+                    <span className={`block text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400`}>Profit/Loss</span>
+                    <span className={`block text-xl font-bold mt-1 ${profit >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'}`}>
+                      {formatValue(profit, 'AUD', exchangeRate)}
+                    </span>
+                  </div>
                 </div>
-              </form>
-            </div>
-            
-            {/* Sticky Footer */}
-            <div className={`sticky bottom-0 p-4 border-t z-10 flex justify-end space-x-3 ${
-              isDarkMode 
-                ? 'bg-[#1B2131] border-gray-700/50'
-                : 'bg-white border-gray-200'
-            }`}>
-              <button
-                type="button"
-                onClick={handleClose}
-                className={`px-4 py-2 rounded-lg ${
-                  isDarkMode 
-                    ? 'bg-gray-800 text-gray-200 hover:bg-gray-700'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                form="cardForm"
-                className={`px-4 py-2 rounded-lg text-white ${
-                  isDarkMode 
-                    ? 'bg-primary hover:bg-primary-dark' 
-                    : 'bg-primary hover:bg-primary-dark'
-                }`}
-              >
-                Add Card
-              </button>
-            </div>
-          </>
-        ) : (
-          <>
-            {/* Batch Import Content */}
+
+                {/* Card Information Section */}
+                <div className="md:col-span-2 space-y-4">
+                  {['player', 'card', 'set', 'year', 'category', 'condition', 'slabSerial', 'datePurchased', 'investmentUSD', 'currentValueUSD', 'investmentAUD', 'currentValueAUD'].map((field) => {
+                    const isRequired = ['card', 'set', 'year', 'category'].includes(field);
+                    const isNumeric = ['year'].includes(field);
+                    const isCurrency = ['investment', 'currentValue'].some(prefix => field.startsWith(prefix));
+                    const labelMap = {
+                      player: 'Player',
+                      card: 'Card Name',
+                      set: 'Set',
+                      year: 'Year',
+                      category: 'Category',
+                      condition: 'Condition',
+                      slabSerial: 'Serial Number',
+                      datePurchased: 'Date Purchased',
+                      investmentAUD: 'Purchase Price (AUD)',
+                      currentValueAUD: 'Current Value (AUD)',
+                      investmentUSD: 'Purchase Price (USD)',
+                      currentValueUSD: 'Current Value (USD)'
+                    };
+                    const currencyField = field.startsWith('investment') ? 'investment' : field.startsWith('currentValue') ? 'currentValue' : null;
+                    const fieldName = currencyField ? `${currencyField}${inputCurrency}` : field;
+
+                    // Skip rendering the non-active currency fields
+                    if (isCurrency && !field.endsWith(inputCurrency)) {
+                      return null;
+                    }
+                    
+                    const commonInputClasses = `block w-full sm:text-sm rounded-md shadow-sm focus:ring-primary focus:border-primary 
+                                              bg-white border-gray-300 text-gray-900 placeholder-gray-400 
+                                              dark:bg-[#252B3B] dark:border-gray-600 dark:text-gray-200 dark:placeholder-gray-500`;
+                    const commonLabelClasses = `block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300`;
+
+                    // Render Select or Input based on field type
+                    return (
+                      <div key={fieldName}>
+                        <label htmlFor={fieldName} className={commonLabelClasses}>
+                          {labelMap[fieldName]}
+                          {isRequired && <span className="text-red-500 ml-1">*</span>}
+                        </label>
+                        {field === 'set' ? (
+                          <select
+                            id={fieldName}
+                            name={fieldName}
+                            value={formData[fieldName]}
+                            onChange={handleInputChange}
+                            required={isRequired}
+                            className={commonInputClasses}
+                          >
+                            <option value="">Select Set...</option>
+                            {/* Add set options here */}
+                          </select>
+                        ) : field === 'category' ? (
+                          <select
+                            id={fieldName}
+                            name={fieldName}
+                            value={formData[fieldName]}
+                            onChange={handleInputChange}
+                            required={isRequired}
+                            className={commonInputClasses}
+                          >
+                            <option value="">Select Category...</option>
+                            {/* Add category options here */}
+                          </select>
+                        ) : (
+                          <input
+                            type={isNumeric ? 'number' : isCurrency ? 'text' : field === 'datePurchased' ? 'date' : 'text'}
+                            id={fieldName}
+                            name={fieldName}
+                            value={formData[fieldName]}
+                            onChange={isNumeric || isCurrency ? handleNumberInputChange : handleInputChange}
+                            required={isRequired}
+                            className={commonInputClasses}
+                            step={isCurrency ? "0.01" : undefined}
+                            min={isNumeric && field !== 'year' ? "0" : undefined} // Allow negative years?
+                          />
+                        )}
+                        {/* PSA Lookup Button for slabSerial */}
+                        {field === 'slabSerial' && formData.slabSerial && (
+                            <PSALookupButton 
+                                serialNumber={formData.slabSerial} 
+                                onDataFetched={(data) => {
+                                    // Update form data with fetched PSA data
+                                    // Be careful not to overwrite user input unless intended
+                                    console.log("PSA Data Fetched:", data);
+                                    // Example: setFormData(prev => ({ ...prev, population: data.population || prev.population }));
+                                    // toast.success('PSA data fetched!');
+                                }}
+                                onError={(errorMsg) => {
+                                    // toast.error(`PSA Lookup Error: ${errorMsg}`);
+                                }}
+                                className="mt-2"
+                            />
+                        )}
+                        {/* Currency Toggle Button */}
+                        {isCurrency && (
+                          <button
+                            type="button"
+                            onClick={handleCurrencyToggle}
+                            className={`mt-2 text-xs px-2 py-1 rounded bg-gray-200 text-gray-600 hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-300 dark:hover:bg-gray-500`}
+                          >
+                            Switch to {inputCurrency === 'AUD' ? 'USD' : 'AUD'}
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </form>
+          )}
+          {activeTab === 'batch' && (
             <div className="flex-1 overflow-y-auto p-6">
               <div className={`rounded-lg p-6 mb-6 ${
                 isDarkMode 
@@ -1093,40 +828,8 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
                 </ul>
               </div>
             </div>
-            
-            {/* Footer with action buttons */}
-            <div className={`sticky bottom-0 p-4 border-t z-10 flex justify-end space-x-3 ${
-              isDarkMode 
-                ? 'bg-[#1B2131] border-gray-700/50'
-                : 'bg-white border-gray-200'
-            }`}>
-              <button
-                type="button"
-                onClick={handleClose}
-                className={`px-4 py-2 rounded-lg ${
-                  isDarkMode 
-                    ? 'bg-gray-800 text-gray-200 hover:bg-gray-700'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                Cancel
-              </button>
-              {activeTab === 'single' && (
-                <button
-                  type="submit"
-                  form="cardForm"
-                  className={`px-4 py-2 rounded-lg text-white ${
-                    isDarkMode 
-                      ? 'bg-primary hover:bg-primary-dark' 
-                      : 'bg-primary hover:bg-primary-dark'
-                  }`}
-                >
-                  Add Card
-                </button>
-              )}
-            </div>
-          </>
-        )}
+          )}
+        </div>
       </div>
     </>
   );
