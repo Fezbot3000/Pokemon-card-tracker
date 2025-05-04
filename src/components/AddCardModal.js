@@ -234,7 +234,10 @@ const AddCardModal = ({
 
     try {
       const data = await searchByCertNumber(psaSerial);
-      console.log('PSA data received:', data);
+      // Only log in development environment
+      if (process.env.NODE_ENV === 'development') {
+        console.log('PSA data received:', data);
+      }
       
       // Capture the PSA data
       setPsaData(data);
@@ -246,6 +249,7 @@ const AddCardModal = ({
       toast.success('PSA certificate details loaded');
       setSaveMessage(null);
     } catch (error) {
+      // Keep error logging for troubleshooting
       console.error('Error looking up PSA certificate:', error);
       toast.error(`Failed to find PSA certificate: ${error.message}`);
       setSaveMessage('Failed to find PSA certificate. Please check the number and try again.');

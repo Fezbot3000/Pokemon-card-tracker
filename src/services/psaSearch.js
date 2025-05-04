@@ -306,17 +306,24 @@ const searchByCertNumber = async (certNumber, forceRefresh = false) => {
       try {
         const dbResult = await psaDataService.getCardFromCache(certNumber);
         if (dbResult) {
-          console.log(`Using PSA result from Firestore for cert number: ${certNumber}`);
+          // Only log in development environment
+          if (process.env.NODE_ENV === 'development') {
+            console.log(`Using PSA result from Firestore for cert number: ${certNumber}`);
+          }
           // Update memory cache with the same structure as direct API results
           psaCache.results[certNumber] = dbResult;
           return dbResult;
         }
       } catch (dbError) {
+        // Keep error logging for troubleshooting
         console.warn('Failed to get PSA result from Firestore:', dbError);
       }
     }
     
-    console.log(`PSA Search: Not found in any cache, calling PSA API for cert #${certNumber}`);
+    // Only log in development environment
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`PSA Search: Not found in any cache, calling PSA API for cert #${certNumber}`);
+    }
     
     // Decrement remaining API calls
     apiRateLimit.decrementCalls();
@@ -324,7 +331,10 @@ const searchByCertNumber = async (certNumber, forceRefresh = false) => {
     // Call the Firebase Cloud Function
     const result = await psaLookupFunction({ certNumber });
     
-    console.log('PSA API response via Cloud Function:', result);
+    // Only log in development environment
+    if (process.env.NODE_ENV === 'development') {
+      console.log('PSA API response via Cloud Function:', result);
+    }
     
     // Extract the data from the Cloud Function response
     if (result.data && result.data.success) {
@@ -335,6 +345,7 @@ const searchByCertNumber = async (certNumber, forceRefresh = false) => {
       
       return psaData;
     } else {
+      // Keep error logging for PSA search since these are important for troubleshooting
       console.error('PSA lookup failed:', result.data);
       // Add more detailed logging for debugging
       if (result.data && result.data.error) {

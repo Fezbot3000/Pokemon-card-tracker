@@ -32,11 +32,15 @@ const PSADetailModal = ({
       setError(null);
       
       try {
-        // Log the cert number being searched
-        console.log(`Fetching PSA data for cert number: ${certNumber}`);
+        // Log the cert number being searched only in development
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`Fetching PSA data for cert number: ${certNumber}`);
+        }
         
         const data = await searchByCertNumber(certNumber);
-        console.log('Raw PSA API response:', data);
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Raw PSA API response:', data);
+        }
         
         setPsaData(data);
         
@@ -47,7 +51,9 @@ const PSADetailModal = ({
           try {
             // Parse the PSA data into our app's format
             const parsed = parsePSACardData(data);
-            console.log('Parsed PSA data:', parsed);
+            if (process.env.NODE_ENV === 'development') {
+              console.log('Parsed PSA data:', parsed);
+            }
             setParsedData(parsed);
             
             // Check if we have meaningful data
@@ -84,8 +90,10 @@ const PSADetailModal = ({
     if (!data) return;
     
     try {
-      console.log('Applying PSA data to card:', data);
-      console.log('Current card data:', currentCardData);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Applying PSA data to card:', data);
+        console.log('Current card data:', currentCardData);
+      }
       
       // Create a direct mapping of PSA data to card fields
       // This ensures we don't lose any existing data while adding PSA data
@@ -108,7 +116,9 @@ const PSADetailModal = ({
         quantity: currentCardData?.quantity || 1
       };
       
-      console.log('Merged card data:', mergedData);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Merged card data:', mergedData);
+      }
       
       onApplyDetails(mergedData);
       toast.success('PSA data applied successfully!');

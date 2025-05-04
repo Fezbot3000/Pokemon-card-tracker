@@ -465,7 +465,10 @@ class CardRepository {
       
       // Check for silent flag to reduce logging
       const isSilentUpdate = dataCopy._silentUpdate === true;
-      if (!isSilentUpdate) {
+      const isDebugMode = dataCopy._saveDebug === true;
+      
+      // Only log in debug mode
+      if (isDebugMode) {
         console.log(`[CardRepository] updateCard called for ${cardId}`, {
           timestamp: dataCopy.timestamp || new Date().toISOString(),
           collection: dataCopy.collection || dataCopy.collectionId,
@@ -475,18 +478,18 @@ class CardRepository {
       
       // Check for _lastUpdateTime to track this as a managed update rather than recursive
       const isTrackedUpdate = dataCopy._lastUpdateTime ? true : false;
-      if (isTrackedUpdate && !isSilentUpdate) {
+      if (isTrackedUpdate && isDebugMode) {
         console.log(`[CardRepository] Processing tracked card update for ${cardId} (${dataCopy._lastUpdateTime})`);
       }
       
       // Determine the collection
       const targetCollection = dataCopy.collection || dataCopy.collectionId;
       
-      if (!targetCollection && !isSilentUpdate) {
+      if (!targetCollection && isDebugMode) {
         console.warn("[CardRepository] No collection specified for card update");
       }
       
-      if (!isSilentUpdate) {
+      if (isDebugMode) {
         console.log(`[CardRepository] Checking if card ${cardId} exists in Firestore`);
       }
       
@@ -497,7 +500,7 @@ class CardRepository {
       const docSnap = await getDoc(cardRef);
       
       if (docSnap.exists()) {
-        if (!isSilentUpdate) {
+        if (isDebugMode) {
           console.log(`[CardRepository] Card ${cardId} found in Firestore, updating...`);
         }
         
@@ -541,7 +544,7 @@ class CardRepository {
         
         // Check if collection has changed
         if (targetCollection && oldCollection && targetCollection !== oldCollection) {
-          if (!isSilentUpdate) {
+          if (isDebugMode) {
             console.log(`[CardRepository] Card ${cardId} is moving from collection '${oldCollection}' to '${targetCollection}'`);
           }
           
@@ -552,7 +555,7 @@ class CardRepository {
           await updateDoc(cardRef, updateData);
           const updateEnd = performance.now();
           
-          if (!isSilentUpdate) {
+          if (isDebugMode) {
             console.log(`[CardRepository] Card ${cardId} moved to collection '${targetCollection}' in ${(updateEnd - updateStart).toFixed(2)}ms`);
           }
         } else {
@@ -561,13 +564,13 @@ class CardRepository {
           await updateDoc(cardRef, updateData);
           const updateEnd = performance.now();
           
-          if (!isSilentUpdate) {
+          if (isDebugMode) {
             console.log(`[CardRepository] Card ${cardId} updated (no collection change) in ${(updateEnd - updateStart).toFixed(2)}ms`);
           }
         }
       } else {
         // Document doesn't exist, create it instead
-        if (!isSilentUpdate) {
+        if (isDebugMode) {
           console.log(`[CardRepository] Card ${cardId} doesn't exist, creating it...`);
         }
         
@@ -601,7 +604,7 @@ class CardRepository {
           delete createData.collectionId;
         }
         
-        if (!isSilentUpdate) {
+        if (isDebugMode) {
           console.log(`Card ${cardId} doesn't exist yet, creating it with the fields`, 
             Object.keys(createData).filter(k => !k.startsWith('_')));
         }
@@ -618,7 +621,7 @@ class CardRepository {
       }
       
       const endTime = performance.now();
-      if (!isSilentUpdate) {
+      if (isDebugMode) {
         console.log(`[CardRepository] Total updateCard operation for ${cardId} completed in ${(endTime - startTime).toFixed(2)}ms`);
       }
       

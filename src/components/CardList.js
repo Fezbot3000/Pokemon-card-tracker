@@ -578,35 +578,41 @@ const CardList = ({
 
   const handleBulkDelete = async (cardsToDelete) => {
     try {
-      // Add detailed logging
-      console.log('%c DELETION DEBUG - STARTING DELETION PROCESS', 'background: #ff0000; color: white; font-size: 14px;');
-      console.log('Cards to delete:', cardsToDelete);
+      // Only add detailed logging in development mode
+      const isDevMode = process.env.NODE_ENV === 'development';
+      
+      if (isDevMode) {
+        console.log('%c DELETION DEBUG - STARTING DELETION PROCESS', 'background: #ff0000; color: white; font-size: 14px;');
+        console.log('Cards to delete:', cardsToDelete);
+      }
       
       // Create a copy of the collections
       const updatedCollections = { ...collections };
       const cardIds = Array.isArray(cardsToDelete) ? cardsToDelete : [cardsToDelete];
       
-      console.log('Card IDs for deletion:', cardIds);
-      console.log('Current collections before deletion:', JSON.parse(JSON.stringify(collections)));
-      
-      // Log each card's properties to check ID consistency
-      cardIds.forEach(cardId => {
-        const cardInCollection = Object.values(collections)
-          .flat()
-          .find(card => card.slabSerial === cardId || card.id === cardId);
+      if (isDevMode) {
+        console.log('Card IDs for deletion:', cardIds);
+        console.log('Current collections before deletion:', JSON.parse(JSON.stringify(collections)));
         
-        if (cardInCollection) {
-          console.log('Found card to delete:', {
-            cardId,
-            slabSerial: cardInCollection.slabSerial,
-            id: cardInCollection.id,
-            card: cardInCollection.card,
-            collection: cardInCollection.collection
-          });
-        } else {
-          console.warn('Card not found in any collection:', cardId);
-        }
-      });
+        // Log each card's properties to check ID consistency
+        cardIds.forEach(cardId => {
+          const cardInCollection = Object.values(collections)
+            .flat()
+            .find(card => card.slabSerial === cardId || card.id === cardId);
+          
+          if (cardInCollection) {
+            console.log('Found card to delete:', {
+              cardId,
+              slabSerial: cardInCollection.slabSerial,
+              id: cardInCollection.id,
+              card: cardInCollection.card,
+              collection: cardInCollection.collection
+            });
+          } else {
+            console.warn('Card not found in any collection:', cardId);
+          }
+        });
+      }
 
       // Remove the cards from all collections
       Object.keys(updatedCollections).forEach(collectionName => {
@@ -616,16 +622,26 @@ const CardList = ({
             card => !cardIds.includes(card.slabSerial)
           );
           const afterCount = updatedCollections[collectionName].length;
-          console.log(`Collection "${collectionName}": removed ${beforeCount - afterCount} cards`);
+          
+          if (isDevMode) {
+            console.log(`Collection "${collectionName}": removed ${beforeCount - afterCount} cards`);
+          }
         }
       });
 
       // Save to database
-      console.log('Saving updated collections to database...');
+      if (isDevMode) {
+        console.log('Saving updated collections to database...');
+      }
+      
       try {
         await db.saveCollections(updatedCollections);
-        console.log('Database save successful');
+        
+        if (isDevMode) {
+          console.log('Database save successful');
+        }
       } catch (dbError) {
+        // Always log errors, even in production
         console.error('Database save failed:', dbError);
         throw dbError; // Re-throw to be caught by outer try/catch
       }
@@ -633,20 +649,36 @@ const CardList = ({
       // Update state in parent first
       try {
         if (onDeleteCards) {
-          console.log('Calling onDeleteCards with:', cardIds);
+          if (isDevMode) {
+            console.log('Calling onDeleteCards with:', cardIds);
+          }
+          
           await onDeleteCards(cardIds);
-          console.log('onDeleteCards completed successfully');
+          
+          if (isDevMode) {
+            console.log('onDeleteCards completed successfully');
+          }
         } else if (onDeleteCard) {
-          console.log('Using onDeleteCard for each card');
+          if (isDevMode) {
+            console.log('Using onDeleteCard for each card');
+          }
+          
           for (const cardId of cardIds) {
-            console.log('Deleting individual card:', cardId);
+            if (isDevMode) {
+              console.log('Deleting individual card:', cardId);
+            }
+            
             await onDeleteCard(cardId);
           }
-          console.log('All individual deletions completed');
+          
+          if (isDevMode) {
+            console.log('All individual deletions completed');
+          }
         } else {
           console.warn('No deletion handler provided (onDeleteCards or onDeleteCard)');
         }
       } catch (innerError) {
+        // Always log errors, even in production
         console.error('Error updating app state after deletion:', innerError);
         console.warn('Warning: Error updating app state after deletion, but database was updated successfully.');
       }
@@ -662,21 +694,13 @@ const CardList = ({
       // This ensures the user sees success and gets a fresh state
       toast.success(`${cardIds.length} card${cardIds.length > 1 ? 's' : ''} deleted`, {
         id: 'delete-success', // Add an ID to prevent duplicate toasts
-        duration: 5000, // Increased to 5 seconds to give more time to see logs
+        duration: 3000,
       });
       
-      // TEMPORARILY DISABLE AUTO-REFRESH FOR DEBUGGING
-      console.log('%c DELETION DEBUG - AUTO REFRESH DISABLED FOR DEBUGGING', 'background: #ff0000; color: white; font-size: 14px;');
-      console.log('Deletion process completed. Page refresh disabled for debugging.');
-      console.log('Please check the logs above to identify any issues with the deletion process.');
-      console.log('To manually refresh the page, press F5 or reload the browser.');
-      
-      // Comment out the auto-refresh for debugging
-      /*
+      // Re-enable auto-refresh for production
       setTimeout(() => {
         window.location.reload();
       }, 500);
-      */
     } catch (error) {
       console.error('Deletion failed with error:', error);
       toast.error('Failed to delete cards');
