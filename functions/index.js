@@ -1161,59 +1161,64 @@ exports.psaLookup = functions.https.onCall(async (data, context) => {
       `https://www.psacard.com/cert/${encodeURIComponent(certNumber)}/json`
     ];
     
-    // Try each URL format in sequence until one works
-    let success = false;
-    let responseData = null;
-    let lastError = null;
-    
-    for (const url of urlFormats) {
-      console.log(`Trying PSA API URL: ${url}`);
-      
-      try {
-        const response = await fetch(url, {
-          method: 'GET',
-          headers: {
-            'Accept': 'application/json',
-            'Authorization': `Bearer ${psaToken}`
-          }
-        });
-        
+    // Try all URL formats in parallel instead of sequentially
+    console.log(`Trying all PSA API endpoints in parallel for cert #${certNumber}`);
+
+    const fetchPromises = urlFormats.map(url => {
+      console.log(`Creating fetch promise for PSA API URL: ${url}`);
+      return fetch(url, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${psaToken}`
+        }
+      })
+      .then(async response => {
         console.log(`PSA API response status for ${url}: ${response.status}`);
         
         if (response.ok) {
           // Get the text response first
           const responseText = await response.text();
-          console.log('Raw API response preview:', responseText.substring(0, 100) + '...');
+          console.log(`Raw API response preview for ${url}:`, responseText.substring(0, 100) + '...');
           
-          try {
-            // Parse the JSON response
-            responseData = JSON.parse(responseText);
-            console.log('PSA API response parsed successfully');
-            success = true;
-            break; // Exit the loop if we got a successful response
-          } catch (parseError) {
-            console.error(`Error parsing response from ${url}:`, parseError);
-            lastError = parseError;
-          }
+          // Parse the JSON response
+          const responseData = JSON.parse(responseText);
+          console.log(`PSA API response from ${url} parsed successfully`);
+          return { success: true, url, data: responseData };
         } else {
           console.error(`Error response from ${url}: ${response.status} ${response.statusText}`);
-          lastError = new Error(`PSA API returned error: ${response.status} ${response.statusText}`);
+          return { 
+            success: false, 
+            url, 
+            error: `PSA API returned error: ${response.status} ${response.statusText}` 
+          };
         }
-      } catch (fetchError) {
-        console.error(`Network error with ${url}:`, fetchError);
-        lastError = fetchError;
-      }
-    }
-    
-    if (!success) {
+      })
+      .catch(error => {
+        console.error(`Network error with ${url}:`, error);
+        return { success: false, url, error: error.message };
+      });
+    });
+
+    // Use Promise.race to get the first successful response
+    // But also track all responses for logging purposes
+    const allResults = await Promise.all(fetchPromises);
+    const successfulResults = allResults.filter(result => result.success);
+
+    if (successfulResults.length === 0) {
       console.error('All PSA API attempts failed');
+      const errors = allResults.map(result => `${result.url}: ${result.error}`).join('; ');
       return { 
         success: false, 
-        error: lastError ? lastError.message : 'All PSA API endpoints failed' 
+        error: `All PSA API endpoints failed: ${errors}` 
       };
     }
-    
-    // If we get here, we have a successful response
+
+    // Use the first successful result
+    const firstSuccess = successfulResults[0];
+    console.log(`Using successful response from ${firstSuccess.url}`);
+    responseData = firstSuccess.data;
+
     // Handle image URL if requested
     if (includeImage && responseData) {
       // Try to find or construct an image URL

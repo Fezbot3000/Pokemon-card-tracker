@@ -584,19 +584,37 @@ class CardRepository {
         delete createData._saveDebug;
         delete createData._lastUpdateTime;
         
+        // Remove any undefined fields to prevent Firestore errors
+        Object.keys(createData).forEach(key => {
+          if (createData[key] === undefined) {
+            delete createData[key];
+          }
+        });
+        
         // Only include collection fields if targetCollection is defined
         if (targetCollection) {
           createData.collection = targetCollection;
           createData.collectionId = targetCollection;
+        } else {
+          // Ensure collection fields are not undefined
+          delete createData.collection;
+          delete createData.collectionId;
         }
-        
-        const createStart = performance.now();
-        await setDoc(cardRef, createData);
-        const createEnd = performance.now();
         
         if (!isSilentUpdate) {
-          console.log(`[CardRepository] Card ${cardId} created in ${(createEnd - createStart).toFixed(2)}ms`);
+          console.log(`Card ${cardId} doesn't exist yet, creating it with the fields`, 
+            Object.keys(createData).filter(k => !k.startsWith('_')));
         }
+        
+        // Create the card document
+        await setDoc(cardRef, createData);
+        
+        // Return the created card data (with local timestamp instead of server timestamp)
+        return {
+          ...createData,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        };
       }
       
       const endTime = performance.now();

@@ -180,12 +180,7 @@ const AddCardModal = ({
       // Prepare card data
       const cardToSave = {
         ...newCard,
-        collection: selectedCollection,
-        // Ensure financial values are properly formatted as numbers
-        investmentAUD: parseFloat(newCard.investmentAUD) || 0,
-        currentValueAUD: parseFloat(newCard.currentValueAUD) || 0,
-        investmentUSD: parseFloat(newCard.investmentUSD) || 0,
-        currentValueUSD: parseFloat(newCard.currentValueUSD) || 0
+        collection: selectedCollection
       };
 
       // Try to save the card
@@ -269,11 +264,6 @@ const AddCardModal = ({
         ...prev, // Start with previous state
         ...updatedCardData, // Merge PSA data
         slabSerial: originalSerial || updatedCardData.slabSerial || '', // Always prioritize the original user-entered serial
-        // Store PSA data and set psaSearched flag
-        psaData: updatedCardData.psaData || psaData,
-        psaSearched: true,
-        // Add the PSA URL for the "View on PSA Website" button
-        psaUrl: `https://www.psacard.com/cert/${originalSerial || updatedCardData.slabSerial}`
       };
       return mergedData;
     });
