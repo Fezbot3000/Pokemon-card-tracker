@@ -16,3 +16,35 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Hide scrollbar but maintain scroll functionality */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* Internet Explorer and Edge */
+  scrollbar-width: none;     /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari, and Opera */
+}
+
+/* Specific fix for collections dropdown */
+.collection-selector .absolute {
+  max-height: 300px;
+  overflow-y: auto;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.collection-selector .absolute::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, and Opera */
+}
+
+/* Fix for header collections dropdown */
+header .max-h-60.overflow-y-auto {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+header .max-h-60.overflow-y-auto::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, and Opera */
+}

@@ -128,62 +128,65 @@ const Header = ({
                 </button>
                 
                 {isDropdownOpen && (
-                  <div className="absolute left-0 mt-2 w-56 rounded-md shadow-lg bg-white dark:bg-[#1B2131] ring-1 ring-black ring-opacity-5 z-50">
-                    <div className="py-1">
-                      <div className="px-4 py-2 text-xs text-gray-500 dark:text-gray-400 border-b border-gray-100 dark:border-gray-700">
-                        Collections
+                  <>
+                    <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40" onClick={() => setIsDropdownOpen(false)}></div>
+                    <div className="absolute left-0 mt-2 w-56 rounded-md shadow-lg bg-white dark:bg-[#1B2131] ring-1 ring-black ring-opacity-5 z-50">
+                      <div className="py-1">
+                        <div className="px-4 py-2 text-xs text-gray-500 dark:text-gray-400 border-b border-gray-100 dark:border-gray-700">
+                          Collections
+                        </div>
+                          
+                          {/* Collection list */}
+                          <div className="max-h-60 overflow-y-auto">
+                            {collections.map((collection) => (
+                              <button
+                                key={collection}
+                                className={`w-full text-left px-4 py-2 text-sm ${
+                                  selectedCollection === collection
+                                    ? 'bg-gradient-to-r from-[#ef4444] to-[#db2777] text-white'
+                                    : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'
+                                }`}
+                                onClick={() => {
+                                  onCollectionChange(collection);
+                                  setIsDropdownOpen(false);
+                                }}
+                              >
+                                {collection}
+                              </button>
+                            ))}
+                          </div>
+                          
+                          {/* Actions */}
+                          <div className="border-t border-gray-100 dark:border-gray-700">
+                            <button
+                              className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center"
+                              onClick={() => {
+                                setIsNewCollectionModalOpen(true);
+                                setIsDropdownOpen(false);
+                              }}
+                            >
+                              <Icon name="add" className="mr-2 text-gray-500 dark:text-gray-400" />
+                              New Collection
+                            </button>
+                            
+                            {refreshCollections && (
+                              <button
+                                className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center"
+                                onClick={() => {
+                                  refreshCollections();
+                                  setIsDropdownOpen(false);
+                                  toast.success('Collections refreshed');
+                                }}
+                              >
+                                <Icon name="refresh" className="mr-2 text-gray-500 dark:text-gray-400" />
+                                Refresh Collections
+                              </button>
+                            )}
+                          </div>
+                        </div>
                       </div>
-                      
-                      {/* Collection list */}
-                      <div className="max-h-60 overflow-y-auto">
-                        {collections.map((collection) => (
-                          <button
-                            key={collection}
-                            className={`w-full text-left px-4 py-2 text-sm ${
-                              selectedCollection === collection
-                                ? 'bg-gradient-to-r from-[#ef4444] to-[#db2777] text-white'
-                                : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'
-                            }`}
-                            onClick={() => {
-                              onCollectionChange(collection);
-                              setIsDropdownOpen(false);
-                            }}
-                          >
-                            {collection}
-                          </button>
-                        ))}
-                      </div>
-                      
-                      {/* Actions */}
-                      <div className="border-t border-gray-100 dark:border-gray-700">
-                        <button
-                          className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center"
-                          onClick={() => {
-                            setIsNewCollectionModalOpen(true);
-                            setIsDropdownOpen(false);
-                          }}
-                        >
-                          <Icon name="add" className="mr-2 text-gray-500 dark:text-gray-400" />
-                          New Collection
-                        </button>
-                        
-                        {refreshCollections && (
-                          <button
-                            className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center"
-                            onClick={() => {
-                              refreshCollections();
-                              setIsDropdownOpen(false);
-                              toast.success('Collections refreshed');
-                            }}
-                          >
-                            <Icon name="refresh" className="mr-2 text-gray-500 dark:text-gray-400" />
-                            Refresh Collections
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
+                    </>
+                  )}
               </div>
             )}
           </div>

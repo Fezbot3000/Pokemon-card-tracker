@@ -830,7 +830,7 @@ const SettingsModal = ({
           </nav>
 
           {/* Content area */}
-          <div className="w-full lg:flex-1 overflow-y-auto p-6 sm:p-8 bg-gray-50 dark:bg-[#1A1A1A]" {...stripDebugProps(props)}>
+          <div className="w-full lg:flex-1 overflow-y-auto scrollbar-hide p-6 sm:p-8 bg-gray-50 dark:bg-[#1A1A1A]" {...stripDebugProps(props)}>
             {activeTab === 'general' && (
               <div className="space-y-6">
                 <SettingsPanel

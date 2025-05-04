@@ -12,7 +12,6 @@ import './env';
 // Import app initialization
 import { initializeApp } from './services/appInitialization';
 import logger from './utils/logger';
-import { detectAdBlocker, applyAdBlockWorkarounds } from './utils/adBlockDetector';
 
 // Enable Firebase debug logging in development
 if (process.env.NODE_ENV === 'development') {
@@ -27,14 +26,6 @@ initializeApp()
   .catch(error => {
     logger.error('Error during app initialization:', error);
   });
-
-// Detect ad blockers and apply workarounds
-detectAdBlocker().then(adBlockerDetected => {
-  if (adBlockerDetected) {
-    console.warn('Ad blocker detected - applying workarounds for Firebase connectivity');
-    applyAdBlockWorkarounds(adBlockerDetected);
-  }
-});
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(

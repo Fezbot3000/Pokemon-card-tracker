@@ -86,11 +86,11 @@ const Dropdown = ({
         <div 
           className={`absolute z-50 mt-1 ${widthClasses[width]} ${alignClasses[align]} 
                      bg-white dark:bg-[#1B2131] shadow-lg rounded-md 
-                     border border-gray-200 dark:border-gray-700/50 py-1`}
+                     border border-gray-200 dark:border-gray-700/50 py-1 scrollbar-hide`}
           style={{ 
-            maxHeight: 'none', 
-            overflowY: 'visible',
-            overflowX: 'visible',
+            maxHeight: '300px', 
+            overflowY: 'auto',
+            overflowX: 'hidden',
             display: 'block'
           }}
           {...stripDebugProps(props)}

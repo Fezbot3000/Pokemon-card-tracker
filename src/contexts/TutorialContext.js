@@ -7,9 +7,12 @@ const ONBOARDING_KEY = 'pokemon_tracker_onboarding_complete';
 
 export const tutorialSteps = {
   COLLECTIONS: 'collections',
-  ADD_CARD: 'add_card',
-  IMPORT_UPDATE: 'import_update',
-  DATA_MANAGEMENT: 'data_management',
+  CARD_LISTS: 'card_lists',
+  CARD_DETAILS: 'card_details',
+  MARK_AS_SOLD: 'mark_as_sold',
+  SOLD_ITEMS: 'sold_items',
+  DASHBOARD: 'dashboard',
+  DATA_MANAGEMENT: 'data_management'
 };
 
 export function TutorialProvider({ children }) {
@@ -34,12 +37,21 @@ export function TutorialProvider({ children }) {
   const nextStep = useCallback(() => {
     switch (currentStep) {
       case tutorialSteps.COLLECTIONS:
-        setCurrentStep(tutorialSteps.ADD_CARD);
+        setCurrentStep(tutorialSteps.CARD_LISTS);
         break;
-      case tutorialSteps.ADD_CARD:
-        setCurrentStep(tutorialSteps.IMPORT_UPDATE);
+      case tutorialSteps.CARD_LISTS:
+        setCurrentStep(tutorialSteps.CARD_DETAILS);
         break;
-      case tutorialSteps.IMPORT_UPDATE:
+      case tutorialSteps.CARD_DETAILS:
+        setCurrentStep(tutorialSteps.MARK_AS_SOLD);
+        break;
+      case tutorialSteps.MARK_AS_SOLD:
+        setCurrentStep(tutorialSteps.SOLD_ITEMS);
+        break;
+      case tutorialSteps.SOLD_ITEMS:
+        setCurrentStep(tutorialSteps.DASHBOARD);
+        break;
+      case tutorialSteps.DASHBOARD:
         setCurrentStep(tutorialSteps.DATA_MANAGEMENT);
         // When moving to data management step, open settings
         if (onSettingsOpen) onSettingsOpen();
@@ -100,4 +112,4 @@ export function useTutorial() {
     throw new Error('useTutorial must be used within a TutorialProvider');
   }
   return context;
-} 
+}

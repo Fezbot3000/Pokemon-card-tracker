@@ -1007,8 +1007,8 @@ const CardList = ({
 
       {/* Selected Cards Actions */}
       {selectedCards.size > 0 && (
-        <div className={`fixed bottom-0 left-0 w-full flex items-center gap-1 px-2 py-2 rounded-t-md shadow-2xl bg-white dark:bg-[#1B2131] border-t border-gray-200 dark:border-gray-700 z-50
-          ${window.innerWidth >= 640 ? 'left-1/2 transform -translate-x-1/2 w-auto rounded-md border justify-center gap-3 py-3 px-6 min-h-[64px] h-auto' : ''}
+        <div className={`fixed bottom-0 sm:bottom-[56px] left-0 w-full flex items-center gap-1 px-2 py-2 rounded-t-md shadow-2xl bg-white dark:bg-[#1B2131] border-t border-gray-200 dark:border-gray-700 z-50 sm:z-40
+          ${window.innerWidth >= 640 ? 'left-1/2 transform -translate-x-1/2 w-auto rounded-md border justify-center gap-3 py-3 px-6 min-h-[64px] h-auto' : 'mb-[60px]'}
         `}>
           <span className="text-xs sm:text-sm text-gray-900 dark:text-white mr-2 min-w-max">{selectedCards.size} selected</span>
           <button

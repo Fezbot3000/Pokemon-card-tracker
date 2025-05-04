@@ -370,7 +370,7 @@ const CardDetailsModal = ({
 
           {/* Main Content */}
           {contentLoaded && activeTab === 'details' && (
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto scrollbar-hide">
               <div className="py-2"> 
                 <CardDetailsForm
                   card={card}

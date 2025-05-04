@@ -217,7 +217,7 @@ const Modal = ({
         )}
 
         {/* Modal Content - Scrollable */}
-        <div className={`flex-1 overflow-y-auto px-6 modal-content ${title ? 'pb-0' : 'pt-6 pb-0'}`}>
+        <div className={`flex-1 overflow-y-auto scrollbar-hide px-6 modal-content ${title ? 'pb-0' : 'pt-6 pb-0'}`}>
           {children}
         </div>
 

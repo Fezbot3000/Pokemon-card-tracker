@@ -215,7 +215,7 @@ function AppContent() {
   });
   const [currentView, setCurrentView] = useState('cards'); // 'cards' or 'sold'
   const [initialCardCollection, setInitialCardCollection] = useState(null); // State for initial collection
-  const { registerSettingsCallback, checkAndStartTutorial } = useTutorial();
+  const { registerSettingsCallback, checkAndStartTutorial, startTutorial } = useTutorial();
   const { user, logout } = useAuth();
   const { subscriptionStatus } = useSubscription();
   const { currentUser } = useAuth();
@@ -2319,7 +2319,7 @@ To import this backup:
           }}
           userData={user}
           onSignOut={logout}
-          onStartTutorial={checkAndStartTutorial}
+          onStartTutorial={startTutorial}
           onResetData={handleResetData}
           onImportAndCloudMigrate={importAndCloudMigrate}
           onUploadImagesFromZip={uploadImagesFromZip}
@@ -2339,6 +2339,7 @@ To import this backup:
                   onClose={handleCloseSettings}
                   selectedCollection={selectedCollection}
                   collections={collections}
+                  onStartTutorial={startTutorial}
                   onRenameCollection={(oldName, newName) => {
                     const newCollections = { ...collections };
                     newCollections[newName] = newCollections[oldName];
@@ -2466,7 +2467,7 @@ To import this backup:
                   }}
                   userData={user}
                   onSignOut={logout}
-                  onStartTutorial={checkAndStartTutorial}
+                  onStartTutorial={startTutorial}
                   onResetData={handleResetData}
                   onImportAndCloudMigrate={importAndCloudMigrate}
                   onUploadImagesFromZip={uploadImagesFromZip}
@@ -2644,7 +2645,7 @@ To import this backup:
             }}
             userData={user}
             onSignOut={logout}
-            onStartTutorial={checkAndStartTutorial}
+            onStartTutorial={startTutorial}
             onResetData={handleResetData}
           />
         ) : (
@@ -2702,6 +2703,7 @@ To import this backup:
           onClose={handleCloseSettings}
           selectedCollection={selectedCollection}
           collections={Object.keys(collections).filter(name => name.toLowerCase() !== 'sold')}
+          onStartTutorial={startTutorial}
           onRenameCollection={(oldName, newName) => {
             const newCollections = { ...collections };
             newCollections[newName] = newCollections[oldName];
@@ -2829,7 +2831,7 @@ To import this backup:
           }}
           userData={user}
           onSignOut={logout}
-          onStartTutorial={checkAndStartTutorial}
+          onStartTutorial={startTutorial}
           onResetData={handleResetData}
           onImportAndCloudMigrate={importAndCloudMigrate}
           onUploadImagesFromZip={uploadImagesFromZip}
