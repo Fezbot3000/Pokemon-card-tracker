@@ -27,7 +27,9 @@ const CardDetails = memo(({
     currentValueUSD: typeof card.currentValueUSD === 'number' ? String(Number(card.currentValueUSD.toFixed(2))) : '0',
     investmentAUD: typeof card.investmentAUD === 'number' ? String(Number(card.investmentAUD.toFixed(2))) : '0',
     currentValueAUD: typeof card.currentValueAUD === 'number' ? String(Number(card.currentValueAUD.toFixed(2))) : '0',
-    datePurchased: formatDate(card.datePurchased) || ''
+    datePurchased: formatDate(card.datePurchased) || '',
+    psaData: card.psaData || null,
+    psaSearched: card.psaSearched || false
   });
   const [cardImage, setCardImage] = useState(null);
   const [imageLoadingState, setImageLoadingState] = useState('loading');
@@ -38,18 +40,30 @@ const CardDetails = memo(({
   // Effect to update editedCard when card or initialCollectionName changes
   useEffect(() => {
     if (card) {
-      setEditedCard({
+      // Create a complete copy of the card with all necessary fields
+      const completeCard = {
         ...card,
         id: card.id || card.slabSerial,
         year: card.year ? String(card.year) : '',
+        // Ensure financial values are properly formatted
         investmentUSD: typeof card.investmentUSD === 'number' ? String(Number(card.investmentUSD.toFixed(2))) : '0',
         currentValueUSD: typeof card.currentValueUSD === 'number' ? String(Number(card.currentValueUSD.toFixed(2))) : '0',
         investmentAUD: typeof card.investmentAUD === 'number' ? String(Number(card.investmentAUD.toFixed(2))) : '0',
         currentValueAUD: typeof card.currentValueAUD === 'number' ? String(Number(card.currentValueAUD.toFixed(2))) : '0',
         datePurchased: formatDate(card.datePurchased) || '',
-        // Prioritize initialCollectionName if provided, otherwise use card's collectionId
-        collectionId: initialCollectionName || card.collectionId || '' 
-      });
+        // Ensure collection fields are properly set
+        collection: initialCollectionName || card.collection || card.collectionId || '',
+        collectionId: initialCollectionName || card.collectionId || card.collection || '',
+        // Ensure set fields are properly set
+        set: card.set || card.setName || '',
+        setName: card.setName || card.set || '',
+        // Preserve PSA data
+        psaData: card.psaData || null,
+        psaSearched: card.psaSearched || false
+      };
+      
+      console.log('Setting edited card with complete data:', completeCard);
+      setEditedCard(completeCard);
       // Also reset unsaved changes flag when the card prop changes
       setHasUnsavedChanges(false);
     } else {

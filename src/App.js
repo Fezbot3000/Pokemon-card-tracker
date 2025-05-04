@@ -2664,7 +2664,19 @@ To import this backup:
 
       {selectedCard && (
         <CardDetails
-          card={selectedCard}
+          card={{
+            ...selectedCard,
+            // Ensure these fields are explicitly set to avoid undefined values
+            collection: selectedCard.collection || initialCardCollection,
+            collectionId: selectedCard.collectionId || selectedCard.collection || initialCardCollection,
+            set: selectedCard.set || selectedCard.setName || '',
+            setName: selectedCard.setName || selectedCard.set || '',
+            // Ensure numeric fields are properly formatted
+            investmentUSD: selectedCard.investmentUSD || 0,
+            currentValueUSD: selectedCard.currentValueUSD || 0,
+            investmentAUD: parseFloat(selectedCard.investmentAUD) || 0,
+            currentValueAUD: parseFloat(selectedCard.currentValueAUD) || 0,
+          }}
           onClose={handleCloseDetailsModal} 
           initialCollectionName={initialCardCollection} 
           onUpdateCard={handleCardUpdate} 

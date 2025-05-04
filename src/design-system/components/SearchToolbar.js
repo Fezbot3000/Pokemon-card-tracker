@@ -71,8 +71,9 @@ const SearchToolbar = ({
   // Sort dropdown trigger
   const sortDropdownTrigger = (
     <div 
-      className="inline-flex items-center justify-center font-medium rounded-lg transition-colors focus:outline-none px-4 py-2 text-base bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
+      className="inline-flex items-center justify-center font-medium rounded-lg transition-colors focus:outline-none px-4 py-2 text-base bg-white dark:bg-[#000] text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[#111] cursor-pointer"
       onClick={() => setIsSortDropdownOpen(!isSortDropdownOpen)}
+      data-component-name="SearchToolbar"
     >
       <div className="flex items-center">
         <Icon name="sort" size="sm" className="text-white" />
@@ -114,7 +115,8 @@ const SearchToolbar = ({
           value={searchValue}
           onChange={(e) => onSearchChange?.(e.target.value)}
           placeholder="Search by name, set, or serial number..."
-          className="w-full pl-10 pr-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-[var(--primary-light)]/20 focus:outline-none dark:focus:bg-gray-700"
+          className="w-full pl-10 pr-4 py-2 bg-white dark:bg-[#000] border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-[var(--primary-light)]/20 focus:outline-none dark:focus:bg-[#000]"
+          data-component-name="SearchToolbar"
         />
       </div>
 

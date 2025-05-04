@@ -94,6 +94,7 @@ const PSADetailModal = ({
         card: data.cardName || currentCardData.card || '',
         player: data.player || currentCardData.player || '',
         set: data.setName || currentCardData.set || '',
+        setName: data.setName || currentCardData.setName || currentCardData.set || '',
         year: data.year || currentCardData.year || '',
         category: 'Pokemon', // Default to Pokemon for PSA cards
         condition: `PSA ${data.grade}`,
@@ -105,7 +106,12 @@ const PSADetailModal = ({
         datePurchased: currentCardData?.datePurchased || new Date().toISOString().split('T')[0],
         investmentAUD: currentCardData?.investmentAUD || '',
         currentValueAUD: currentCardData?.currentValueAUD || '',
-        quantity: currentCardData?.quantity || 1
+        quantity: currentCardData?.quantity || 1,
+        // Store PSA data for future reference
+        psaData: data,
+        psaSearched: true,
+        // Add the PSA URL for the "View on PSA Website" button
+        psaUrl: `https://www.psacard.com/cert/${data.slabSerial}`
       };
       
       console.log('Merged card data:', mergedData);

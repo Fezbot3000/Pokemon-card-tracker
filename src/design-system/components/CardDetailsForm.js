@@ -44,36 +44,39 @@ const CardDetailsForm = ({
   const [selectedGrade, setSelectedGrade] = useState('');
   const [availableSets, setAvailableSets] = useState([]);
   
+  // Update available sets when year changes
+  useEffect(() => {
+    if (card?.year) {
+      const yearSets = getPokemonSetsByYear(card.year);
+      console.log(`Loading sets for year ${card.year}:`, yearSets);
+      setAvailableSets(yearSets);
+    } else {
+      const allSets = getAllPokemonSets();
+      console.log('Loading all sets:', allSets);
+      setAvailableSets(allSets);
+    }
+  }, [card?.year]);
+
   // Parse condition string on load/change
   useEffect(() => {
     if (card?.condition) {
       const parts = card.condition.split(/\s+-\s+|\s+/); // Split by ' - ' or space
       const company = parts[0]?.toUpperCase();
-      const grade = parts.slice(1).join(' '); // Join remaining parts for grade
-
-      // Define grading companies here to ensure they're available
-      const gradingCompaniesArray = [
-        { value: '', label: 'Select Company...' },
-        { value: 'RAW', label: 'Raw/Ungraded' },
-        { value: 'PSA', label: 'PSA' },
-        { value: 'BGS', label: 'BGS' },
-        { value: 'CGC', label: 'CGC' },
-        { value: 'SGC', label: 'SGC' },
-      ];
-
-      if (gradingCompaniesArray.some(c => c.value === company)) {
-        setSelectedCompany(company);
-        setSelectedGrade(grade || '');
-      } else {
-        // Handle cases where company might not be standard (e.g., just 'Mint')
-        setSelectedCompany('RAW'); // Assume Raw if no standard company prefix
-        setSelectedGrade(card.condition);
-      }
-    } else {
-      setSelectedCompany('RAW'); // Default to Raw
-      setSelectedGrade('');
+      const grade = parts[1] || '';
+      
+      setSelectedCompany(company || '');
+      setSelectedGrade(grade || '');
     }
   }, [card?.condition]);
+
+  // Ensure set name is properly set
+  useEffect(() => {
+    // If card has setName but it's not in availableSets, add it
+    if (card?.setName && availableSets.length > 0 && !availableSets.includes(card.setName)) {
+      console.log(`Adding missing set "${card.setName}" to available sets`);
+      setAvailableSets(prev => [...prev, card.setName]);
+    }
+  }, [card?.setName, availableSets]);
 
   // Handle direct updates to gradingCompany and grade fields
   useEffect(() => {
@@ -84,16 +87,6 @@ const CardDetailsForm = ({
       setSelectedGrade(card.grade);
     }
   }, [card?.gradingCompany, card?.grade]);
-
-  // Effect to update available sets when year or category changes
-  useEffect(() => {
-    if (card.year) {
-      const sets = getPokemonSetsByYear(card.year);
-      setAvailableSets(sets);
-    } else {
-      setAvailableSets(getAllPokemonSets());
-    }
-  }, [card.year]);
 
   // Handle input changes for all form fields
   const handleInputChange = (e) => {
@@ -451,40 +444,46 @@ const CardDetailsForm = ({
             {/* PSA Lookup Button */}
             {!hidePsaSearchButton && (
               <div className="mt-3 space-y-2">
-                <button 
-                  onClick={() => onPsaSearch && onPsaSearch(card.slabSerial)} 
-                  className="w-full inline-flex items-center justify-center font-medium rounded-lg transition-colors focus:outline-none px-4 py-2 text-base bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={isPsaSearching || !card.slabSerial}
-                  title={!card.slabSerial ? "Enter a serial number first" : "Search PSA database"}
-                >
-                  {isPsaSearching ? (
-                    <>
-                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      Searching...
-                    </>
-                  ) : (
-                    <>
-                      <Icon name="search" className="mr-2" />
-                      Search PSA
-                    </>
+                <div className="flex flex-col space-y-2 w-full">
+                  {/* PSA Search Button - Only show if PSA URL doesn't exist */}
+                  {!card.psaUrl && (
+                    <button
+                      onClick={() => onPsaSearch && onPsaSearch(card.slabSerial)}
+                      disabled={!card.slabSerial || isPsaSearching}
+                      className="w-full inline-flex items-center justify-center font-medium rounded-lg transition-colors focus:outline-none px-4 py-2 text-base bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                      data-component-name="CardDetailsForm"
+                      title={!card.slabSerial ? "Enter a serial number first" : "Search PSA database"}
+                    >
+                      {isPsaSearching ? (
+                        <>
+                          <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Searching...
+                        </>
+                      ) : (
+                        <>
+                          <Icon name="search" className="mr-2" />
+                          Search PSA
+                        </>
+                      )}
+                    </button>
                   )}
-                </button>
-                
-                {/* PSA Website Link - Show if PSA URL exists */}
-                {card.psaUrl && (
-                  <a
-                    href={card.psaUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full inline-flex items-center justify-center font-medium rounded-lg transition-colors focus:outline-none px-4 py-2 text-base bg-gradient-to-r from-blue-500 to-blue-700 text-white hover:opacity-90 shadow-sm"
-                  >
-                    <Icon name="open_in_new" className="mr-2" />
-                    View on PSA Website
-                  </a>
-                )}
+                  
+                  {/* PSA Website Link - Show if PSA URL exists */}
+                  {card.psaUrl && (
+                    <a
+                      href={card.psaUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full inline-flex items-center justify-center font-medium rounded-lg transition-colors focus:outline-none px-4 py-2 text-base bg-gradient-to-r from-blue-500 to-blue-700 text-white hover:opacity-90 shadow-sm"
+                    >
+                      <Icon name="open_in_new" className="mr-2" />
+                      View on PSA Website
+                    </a>
+                  )}
+                </div>
               </div>
             )}
             
@@ -492,7 +491,7 @@ const CardDetailsForm = ({
             {(typeof card.investmentAUD === 'number' || typeof card.investmentAUD === 'string') && 
              (typeof card.currentValueAUD === 'number' || typeof card.currentValueAUD === 'string') && (
               <div 
-                className="mt-4 bg-gray-50 dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700 flex items-center justify-between"
+                className="mt-4 bg-gray-50 dark:bg-[#000] rounded-lg p-3 border border-gray-200 dark:border-gray-700 flex items-center justify-between"
                 data-component-name="CardDetailsForm"
               >
                 <span className="text-sm font-medium text-gray-600 dark:text-gray-300">Profit/Loss:</span>

@@ -2215,7 +2215,15 @@ class DatabaseService {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         collection: targetCollection,
-        collectionName: targetCollection
+        collectionName: targetCollection,
+        // Ensure PSA data is preserved
+        psaData: card.psaData || null,
+        psaSearched: card.psaSearched || false,
+        // Ensure financial values are properly formatted as numbers
+        investmentAUD: parseFloat(card.investmentAUD) || 0,
+        currentValueAUD: parseFloat(card.currentValueAUD) || 0,
+        investmentUSD: parseFloat(card.investmentUSD) || 0,
+        currentValueUSD: parseFloat(card.currentValueUSD) || 0
       };
       
       // Save the card to the database
@@ -2339,9 +2347,9 @@ class DatabaseService {
       };
 
       // Add transaction error handler
-      transaction.onerror = (error) => {
-        logger.error(`Transaction error getting cards for collection ${collectionName}:`, error);
-        reject(error);
+      transaction.onerror = (event) => {
+        logger.error(`Transaction error getting cards for collection ${collectionName}:`, event.target.error);
+        reject(event.target.error);
       };
     });
   }
@@ -2382,9 +2390,9 @@ class DatabaseService {
       };
 
       // Add transaction error handler
-      transaction.onerror = (error) => {
-        logger.error(`Transaction error getting all cards for user ${userId}:`, error);
-        reject(error);
+      transaction.onerror = (event) => {
+        logger.error(`Transaction error getting all cards for user ${userId}:`, event.target.error);
+        reject(event.target.error);
       };
     });
   }
