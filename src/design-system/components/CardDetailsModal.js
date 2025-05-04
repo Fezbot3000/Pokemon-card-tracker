@@ -295,9 +295,10 @@ const CardDetailsModal = ({
       <Modal
         isOpen={isOpen}
         onClose={onClose}
-        title="Card Details"
+        title={null}
         position="right"
         closeOnClickOutside={false}
+        size="2xl"
         className={`${className} ${animClass}`}
         footer={
           <div className="flex justify-between w-full">
@@ -339,8 +340,8 @@ const CardDetailsModal = ({
         }
       >
         <div className="flex flex-col h-full">
-          {/* Tabs */}
-          <div className="border-b border-gray-200 dark:border-gray-700">
+          {/* Tabs - Moved to the top to replace the modal title */}
+          <div className="border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10 bg-white dark:bg-[#0F0F0F] py-2 -mt-6 -mx-6 px-6">
             <div className="flex">
               <button
                 className={`py-2 px-4 font-medium text-sm border-b-2 ${
@@ -370,7 +371,7 @@ const CardDetailsModal = ({
           {/* Main Content */}
           {contentLoaded && activeTab === 'details' && (
             <div className="flex-1 overflow-y-auto">
-              <div className="py-4">
+              <div className="py-2"> 
                 <CardDetailsForm
                   card={card}
                   cardImage={cardImage}

@@ -95,9 +95,55 @@ const CardDetailsForm = ({
     }
   }, [card.year]);
 
-  // Handle text field changes
+  // Handle input changes for all form fields
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    
+    // Handle the special case for adding a custom set
+    if (name === 'setName' && value === '__add_custom__') {
+      const customSet = prompt('Enter the name of the custom set:');
+      if (customSet && customSet.trim() !== '') {
+        // Get the current year from the form
+        const currentYear = card.year || "2024"; // Default to 2024 if no year is selected
+        
+        // Add the custom set to the database with the current year
+        const newSet = handleAddCustomSet(customSet.trim(), currentYear);
+        
+        // Update the card with the new set
+        if (onChange) {
+          onChange({
+            ...card,
+            [name]: newSet
+          });
+        }
+        
+        // Force refresh the available sets list to include the new set
+        setTimeout(() => {
+          if (card.year) {
+            const updatedSets = getPokemonSetsByYear(card.year);
+            console.log('Updated sets for year', card.year, ':', updatedSets);
+            setAvailableSets(updatedSets);
+          } else {
+            const allSets = getAllPokemonSets();
+            console.log('All updated sets:', allSets);
+            setAvailableSets(allSets);
+          }
+        }, 100);
+      } else {
+        // If the user cancels or enters an empty string, revert to previous value
+        e.target.value = card.setName || '';
+      }
+      return;
+    }
+    
+    // Special handling for year changes to update available sets
+    if (name === 'year' && value) {
+      // Update available sets when year changes
+      const yearSets = getPokemonSetsByYear(value);
+      console.log(`Sets for year ${value}:`, yearSets);
+      setAvailableSets(yearSets);
+    }
+    
     if (onChange) {
       onChange({
         ...card,
@@ -298,33 +344,35 @@ const CardDetailsForm = ({
   };
 
   // Handle the addition of a new custom set
-  const handleAddCustomSet = (newSet) => {
-    if (!newSet || newSet.trim() === '') return;
+  const handleAddCustomSet = (newSet, year) => {
+    if (!newSet || newSet.trim() === '') return '';
+    
+    console.log(`Adding custom set "${newSet}" for year ${year}`);
     
     // Add the custom set
-    addCustomSet(newSet);
+    const addedSet = addCustomSet(newSet, year);
+    console.log(`Custom set added: ${addedSet}`);
     
     // Update available sets
     if (card.year) {
-      setAvailableSets(getPokemonSetsByYear(card.year));
+      const updatedSets = getPokemonSetsByYear(card.year);
+      console.log(`Updated sets for year ${card.year} after adding:`, updatedSets);
+      setAvailableSets(updatedSets);
     } else {
-      setAvailableSets(getAllPokemonSets());
+      const allSets = getAllPokemonSets();
+      console.log('All sets after adding:', allSets);
+      setAvailableSets(allSets);
     }
     
-    // Update the card with the new set
-    if (onChange) {
-      onChange({
-        ...card,
-        setName: newSet
-      });
-    }
+    // Return the added set name
+    return addedSet;
   };
 
   return (
     <div className={`card-details-form ${className}`}>
       {/* Collection Dropdown - Always at the top */}
       {!hideCollectionField && (
-        <div className="mb-6">
+        <div className="mb-6 mt-12"> {/* Added significant top margin (mt-12) to create space below the header tabs */}
           <SelectField
             label="Collection"
             name="collectionId"
@@ -461,7 +509,42 @@ const CardDetailsForm = ({
         
         {/* Card Information Column */}
         <div>
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Card Information</h3>
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Financial Details</h3>
+          <div className="financial-details-grid">
+            <div>
+              <div className="form-label-nowrap">
+                <FormField
+                  label="Paid (AUD)"
+                  name="investmentAUD"
+                  type="number"
+                  prefix="$"
+                  value={typeof card.investmentAUD === 'number' ? String(card.investmentAUD) : (card.investmentAUD || '')}
+                  onChange={handleNumberChange}
+                  error={errors.investmentAUD}
+                />
+              </div>
+            </div>
+            <div>
+              <div className="form-label-nowrap">
+                <FormField
+                  label="Current Value (AUD)"
+                  name="currentValueAUD"
+                  type="number"
+                  prefix="$"
+                  value={typeof card.currentValueAUD === 'number' ? String(card.currentValueAUD) : (card.currentValueAUD || '')}
+                  onChange={handleNumberChange}
+                  error={errors.currentValueAUD}
+                />
+              </div>
+              {additionalValueContent && (
+                <div className="mt-2">
+                  {additionalValueContent}
+                </div>
+              )}
+            </div>
+          </div>
+          
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white mt-8 mb-4">Card Details</h3>
           
           {/* Two-column grid for card details */}
           <div className="grid grid-cols-1 gap-4">
@@ -507,6 +590,7 @@ const CardDetailsForm = ({
                   {availableSets.map(set => (
                     <option key={set} value={set}>{set}</option>
                   ))}
+                  <option value="__add_custom__">+ Add Custom Set...</option>
                 </select>
                 {/* Custom dropdown arrow */}
                 <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 dark:text-gray-300">
@@ -676,42 +760,6 @@ const CardDetailsForm = ({
                   min={1}
                 />
               </div>
-            </div>
-          </div>
-          
-          {/* Financial Details Section */}
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white mt-8 mb-4">Financial Details</h3>
-          <div className="financial-details-grid">
-            <div>
-              <div className="form-label-nowrap">
-                <FormField
-                  label="Paid (AUD)"
-                  name="investmentAUD"
-                  type="number"
-                  prefix="$"
-                  value={typeof card.investmentAUD === 'number' ? String(card.investmentAUD) : (card.investmentAUD || '')}
-                  onChange={handleNumberChange}
-                  error={errors.investmentAUD}
-                />
-              </div>
-            </div>
-            <div>
-              <div className="form-label-nowrap">
-                <FormField
-                  label="Current Value (AUD)"
-                  name="currentValueAUD"
-                  type="number"
-                  prefix="$"
-                  value={typeof card.currentValueAUD === 'number' ? String(card.currentValueAUD) : (card.currentValueAUD || '')}
-                  onChange={handleNumberChange}
-                  error={errors.currentValueAUD}
-                />
-              </div>
-              {additionalValueContent && (
-                <div className="mt-2">
-                  {additionalValueContent}
-                </div>
-              )}
             </div>
           </div>
         </div>

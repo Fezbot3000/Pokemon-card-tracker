@@ -230,8 +230,13 @@ const getAllPokemonSets = () => {
  * @returns {Array} Array of set values for the specified year
  */
 const getPokemonSetsByYear = (year) => {
-  if (!POKEMON_SETS[year]) return [];
-  return POKEMON_SETS[year].map(set => set.value);
+  if (!year) return getAllPokemonSets();
+  
+  const standardSets = POKEMON_SETS[year] ? POKEMON_SETS[year].map(set => set.value) : [];
+  const customSets = userCustomSets[year] ? userCustomSets[year].map(set => set.value) : [];
+  
+  // Combine standard and custom sets
+  return [...standardSets, ...customSets];
 };
 
 /**
@@ -259,6 +264,8 @@ const addCustomSet = (setName, year = "2024") => {
     // Save to localStorage
     try {
       localStorage.setItem('pokemonCustomSets', JSON.stringify(userCustomSets));
+      console.log(`Added custom set "${setName}" to year ${targetYear}`);
+      console.log('Updated userCustomSets:', userCustomSets);
     } catch (error) {
       logger.error('Failed to save custom sets to localStorage:', error);
     }
