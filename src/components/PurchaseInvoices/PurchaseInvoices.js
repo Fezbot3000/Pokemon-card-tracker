@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import ReactDOM from 'react-dom';
 import { useAuth } from '../../design-system';
 import db from '../../services/db';
 import { toast } from 'react-hot-toast';
 import CreateInvoiceModal from './CreateInvoiceModal';
+import { PDFDownloadLink } from '@react-pdf/renderer';
+import PurchaseInvoicePDF from '../PurchaseInvoicePDF';
+import { formatDateForDisplay } from '../../utils/dateUtils';
 
 /**
  * PurchaseInvoices component
@@ -13,7 +17,99 @@ const PurchaseInvoices = () => {
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [profile, setProfile] = useState(null);
   const { currentUser } = useAuth();
+  
+  // Handle downloading an invoice as PDF
+  const handleDownloadInvoice = (invoice) => {
+    // Debug profile data
+    console.log('Profile when downloading invoice:', profile);
+    
+    // Create a unique filename for the invoice
+    const fileName = `purchase-invoice-${invoice.invoiceNumber || invoice.id}-${invoice.date.replace(/\//g, '-')}.pdf`;
+    
+    // Create a fake anchor element to trigger the download
+    const link = document.createElement('a');
+    link.href = `#/purchase-invoice/${invoice.id}`; // This doesn't actually matter for our purpose
+    link.download = fileName;
+    link.className = 'pdf-download-link';
+    
+    // Add the PDFDownloadLink to a hidden div
+    const container = document.createElement('div');
+    container.style.display = 'none';
+    container.className = 'pdf-container';
+    document.body.appendChild(container);
+    
+    // Get detailed card information for the invoice
+    const getCardDetails = async () => {
+      try {
+        // If we have card IDs, fetch the full card details
+        if (invoice.cards && invoice.cards.length > 0) {
+          // Use the existing card info from the invoice
+          return invoice.cards;
+        }
+        return [];
+      } catch (error) {
+        console.error('Error fetching card details:', error);
+        return [];
+      }
+    };
+    
+    // Get card details and render PDF
+    getCardDetails().then(cardDetails => {
+      // Render the PDF link element which will automatically trigger download
+      const pdfLinkElement = (
+        <PDFDownloadLink
+          document={
+            <PurchaseInvoicePDF 
+              seller={invoice.seller} 
+              date={formatDateForDisplay(invoice.date)}
+              cards={cardDetails} 
+              invoiceNumber={invoice.invoiceNumber}
+              notes={invoice.notes}
+              totalAmount={invoice.totalAmount}
+              profile={profile}
+            />
+          }
+          fileName={fileName}
+        >
+          {({ blob, url, loading, error }) => {
+            if (loading) {
+              return 'Loading document...';
+            }
+            
+            if (error) {
+              console.error('Error generating PDF:', error);
+              toast.error('Error generating PDF');
+              return 'Error';
+            }
+            
+            // When PDF is ready, trigger download programmatically
+            if (blob) {
+              const fileURL = URL.createObjectURL(blob);
+              link.href = fileURL;
+              link.click();
+              
+              // Clean up
+              setTimeout(() => {
+                URL.revokeObjectURL(fileURL);
+                if (container.parentNode) {
+                  document.body.removeChild(container);
+                }
+              }, 100);
+              
+              toast.success('Invoice downloaded successfully');
+            }
+            
+            return null;
+          }}
+        </PDFDownloadLink>
+      );
+      
+      // Render and cleanup
+      ReactDOM.render(pdfLinkElement, container);
+    });
+  };
 
   // Load purchase invoices
   useEffect(() => {
@@ -40,8 +136,19 @@ const PurchaseInvoices = () => {
       }
     };
 
+    const loadProfile = async () => {
+      try {
+        const userProfile = await db.getProfile();
+        console.log('Profile loaded:', userProfile);
+        setProfile(userProfile);
+      } catch (error) {
+        console.error('Error loading profile:', error);
+      }
+    };
+
     if (currentUser) {
       loadInvoices();
+      loadProfile();
     } else {
       setLoading(false);
     }
@@ -116,12 +223,9 @@ const PurchaseInvoices = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                       <button 
                         className="text-primary hover:text-primary/80 transition-colors mr-3"
-                        onClick={() => {
-                          // Open a modal to view invoice details (to be implemented)
-                          toast.success('View invoice feature coming soon!');
-                        }}
+                        onClick={() => handleDownloadInvoice(invoice)}
                       >
-                        View
+                        Download PDF
                       </button>
                       <button 
                         className="text-red-500 hover:text-red-700 transition-colors"
