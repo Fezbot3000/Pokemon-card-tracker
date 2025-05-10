@@ -177,7 +177,7 @@ const PurchaseInvoicePDF = ({ seller, date, cards, invoiceNumber, notes, totalAm
           {cards.map((card) => (
             <View key={card.id} style={styles.tableRow}>
               <View style={[styles.col1, styles.tableCell]}>
-                <Text>{card.name || 'Unnamed Card'}</Text>
+                <Text>{card.name || (card.player ? card.player : 'Unnamed Card')}</Text>
                 {card.set && <Text style={{ fontSize: 9, color: '#6b7280', marginTop: 2 }}>{card.year} {card.set} #{card.cardNumber}</Text>}
                 {card.grade && <Text style={{ fontSize: 9, color: '#6b7280', marginTop: 2 }}>{card.gradeVendor || 'PSA'} {card.grade}</Text>}
               </View>

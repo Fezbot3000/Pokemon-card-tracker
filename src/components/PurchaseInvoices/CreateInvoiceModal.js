@@ -162,6 +162,7 @@ const CreateInvoiceModal = ({ isOpen, onClose, onSave, preSelectedCards = [] }) 
         cards: selectedCards.map(card => ({
           id: card.id,
           name: card.name,
+          player: card.player,
           set: card.set || card.setName,
           year: card.year,
           cardNumber: card.cardNumber,
@@ -477,7 +478,7 @@ const CreateInvoiceModal = ({ isOpen, onClose, onSave, preSelectedCards = [] }) 
                             <tr key={card.id}>
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <div className="text-sm font-medium text-gray-900 dark:text-white">
-                                  {card.name}
+                                  {card.name || card.player || 'Unnamed Card'}
                                 </div>
                                 <div className="text-sm text-gray-500 dark:text-gray-400">
                                   #{card.cardNumber}

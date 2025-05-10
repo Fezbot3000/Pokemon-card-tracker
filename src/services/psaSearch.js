@@ -671,8 +671,28 @@ const findBestMatchingSet = (setName, year) => {
     }
   }
   
-  // If no match found, return original value
-  console.log('No matching set found, returning original:', setName);
+  // If no match found, add it to custom sets and return the original value
+  console.log('No matching set found, adding to custom sets:', setName);
+  
+  try {
+    // Add the set to custom sets for the specified year or default to current year
+    const targetYear = year || new Date().getFullYear().toString();
+    const { addCustomSet } = require('../data/pokemonSets');
+    
+    // Add the set to custom sets
+    addCustomSet(setName, targetYear);
+    console.log(`Added "${setName}" to custom sets for year ${targetYear}`);
+    
+    // Also save to Firestore if available
+    if (db && typeof db.saveCustomSet === 'function') {
+      db.saveCustomSet(setName, targetYear)
+        .then(() => console.log(`Saved custom set "${setName}" to Firestore`))
+        .catch(err => console.error('Error saving custom set to Firestore:', err));
+    }
+  } catch (error) {
+    console.error('Error adding custom set:', error);
+  }
+  
   return setName;
 };
 
