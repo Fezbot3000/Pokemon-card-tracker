@@ -114,6 +114,7 @@ const CardList = ({
   const [selectedCard, setSelectedCard] = useState(null);
   const [showPurchaseInvoiceModal, setShowPurchaseInvoiceModal] = useState(false);
   const [selectedCardsForPurchase, setSelectedCardsForPurchase] = useState([]);
+  const [selectedAction, setSelectedAction] = useState('');  // For dropdown selection
 
   const valueDropdownRef = useRef(null);
   const metricDropdownRef = useRef(null);
@@ -1010,58 +1011,63 @@ const CardList = ({
 
       {/* Selected Cards Actions */}
       {selectedCards.size > 0 && (
-        <div className={`fixed bottom-0 sm:bottom-[56px] left-0 w-full flex items-center gap-1 px-2 py-2 rounded-t-md shadow-2xl bg-white dark:bg-[#1B2131] border-t border-gray-200 dark:border-gray-700 z-50 sm:z-40
-          ${window.innerWidth >= 640 ? 'left-1/2 transform -translate-x-1/2 w-auto rounded-md border justify-center gap-3 py-3 px-6 min-h-[64px] h-auto' : 'mb-[60px]'}
+        <div className={`fixed bottom-0 sm:bottom-[56px] left-0 w-full flex items-center justify-between px-4 py-3 rounded-t-md shadow-2xl bg-white dark:bg-[#1B2131] border-t border-gray-200 dark:border-gray-700 z-50 sm:z-40
+          ${window.innerWidth >= 640 ? 'left-1/2 transform -translate-x-1/2 w-auto rounded-md border min-h-[64px] h-auto' : 'mb-[60px]'}
         `}>
-          <span className="text-xs sm:text-sm text-gray-900 dark:text-white mr-2 min-w-max">{selectedCards.size} selected</span>
-          <button
-            onClick={() => {
-              setSelectedCardsForSale(cards.filter(card => selectedCards.has(card.id)));
-              setShowSaleModal(true);
-            }}
-            className={`${window.innerWidth < 640 ? 'flex flex-col items-center gap-0.5 px-2 py-1 rounded-md bg-white dark:bg-[#252B3B] hover:bg-gray-100 dark:hover:bg-[#323B4B] text-gray-900 dark:text-white text-xs min-w-[48px]' : 'flex flex-row items-center gap-2 px-4 py-2 rounded-md bg-white dark:bg-[#252B3B] hover:bg-gray-100 dark:hover:bg-[#323B4B] text-gray-900 dark:text-white text-base min-w-[96px]'}`}
-          >
-            <span className="material-icons text-base text-yellow-400">sell</span>
-            <span className={`${window.innerWidth < 640 ? 'hidden sm:inline' : 'inline ml-1'}`}>Sell</span>
-          </button>
-          <button
-            onClick={() => {
-              setSelectedCardsForPurchase(cards.filter(card => selectedCards.has(card.id)));
-              setShowPurchaseInvoiceModal(true);
-            }}
-            className={`${window.innerWidth < 640 ? 'flex flex-col items-center gap-0.5 px-2 py-1 rounded-md bg-white dark:bg-[#252B3B] hover:bg-gray-100 dark:hover:bg-[#323B4B] text-gray-900 dark:text-white text-xs min-w-[48px]' : 'flex flex-row items-center gap-2 px-4 py-2 rounded-md bg-white dark:bg-[#252B3B] hover:bg-gray-100 dark:hover:bg-[#323B4B] text-gray-900 dark:text-white text-base min-w-[96px]'}`}
-          >
-            <span className="material-icons text-base text-green-400">receipt</span>
-            <span className={`${window.innerWidth < 640 ? 'hidden sm:inline' : 'inline ml-1'}`}>Purchase Invoice</span>
-          </button>
-          <button
-            onClick={handleMoveCards}
-            className={`${window.innerWidth < 640 ? 'flex flex-col items-center gap-0.5 px-2 py-1 rounded-md bg-white dark:bg-[#252B3B] hover:bg-gray-100 dark:hover:bg-[#323B4B] text-gray-900 dark:text-white text-xs min-w-[48px]' : 'flex flex-row items-center gap-2 px-4 py-2 rounded-md bg-white dark:bg-[#252B3B] hover:bg-gray-100 dark:hover:bg-[#323B4B] text-gray-900 dark:text-white text-base min-w-[96px]'}`}
-          >
-            <span className="material-icons text-base text-[#60a5fa]">drive_file_move</span>
-            <span className={`${window.innerWidth < 640 ? 'hidden sm:inline' : 'inline ml-1'}`}>Move</span>
-          </button>
-          <button
-            onClick={handleDeleteClick}
-            className={`${window.innerWidth < 640 ? 'flex flex-col items-center gap-0.5 px-2 py-1 rounded-md bg-white dark:bg-[#252B3B] hover:bg-gray-100 dark:hover:bg-[#323B4B] text-gray-900 dark:text-white text-xs min-w-[48px]' : 'flex flex-row items-center gap-2 px-4 py-2 rounded-md bg-white dark:bg-[#252B3B] hover:bg-gray-100 dark:hover:bg-[#323B4B] text-gray-900 dark:text-white text-base min-w-[64px]'}`}
-          >
-            <span className="material-icons text-base text-red-400">delete</span>
-            <span className={`${window.innerWidth < 640 ? 'hidden sm:inline' : 'inline ml-1'}`}>Delete</span>
-          </button>
-          <button
-            onClick={handleSelectAll}
-            className={`${window.innerWidth < 640 ? 'flex flex-col items-center gap-0.5 px-2 py-1 rounded-md bg-white dark:bg-[#252B3B] hover:bg-gray-100 dark:hover:bg-[#323B4B] text-gray-900 dark:text-white text-xs min-w-[48px]' : 'flex flex-row items-center gap-2 px-4 py-2 rounded-md bg-white dark:bg-[#252B3B] hover:bg-gray-100 dark:hover:bg-[#323B4B] text-gray-900 dark:text-white text-base min-w-[96px]'}`}
-          >
-            <span className="material-icons text-base text-[#60a5fa]">done_all</span>
-            <span className={`${window.innerWidth < 640 ? 'hidden sm:inline' : 'inline ml-1'}`}>Select All</span>
-          </button>
-          <button
-            onClick={() => setSelectedCards(new Set())}
-            className={`${window.innerWidth < 640 ? 'flex flex-col items-center gap-0.5 px-2 py-1 rounded-md bg-white dark:bg-[#252B3B] hover:bg-gray-100 dark:hover:bg-[#323B4B] text-gray-900 dark:text-white text-xs min-w-[48px]' : 'flex flex-row items-center gap-2 px-4 py-2 rounded-md bg-white dark:bg-[#252B3B] hover:bg-gray-100 dark:hover:bg-[#323B4B] text-gray-900 dark:text-white text-base min-w-[64px]'}`}
-          >
-            <span className="material-icons text-base">close</span>
-            <span className={`${window.innerWidth < 640 ? 'hidden sm:inline' : 'inline ml-1'}`}>Clear</span>
-          </button>
+          <span className="text-sm sm:text-base text-gray-900 dark:text-white font-medium">{selectedCards.size} selected</span>
+          
+          <div className="flex items-center gap-3">
+            <select 
+              value={selectedAction}
+              onChange={(e) => setSelectedAction(e.target.value)}
+              className="px-3 py-2 rounded-md bg-white dark:bg-[#252B3B] border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Select action...</option>
+              <option value="sell">Sell</option>
+              <option value="purchase">Purchase Invoice</option>
+              <option value="move">Move</option>
+              <option value="delete">Delete</option>
+              <option value="selectAll">Select All</option>
+              <option value="clear">Clear Selection</option>
+            </select>
+            
+            <button
+              onClick={() => {
+                switch(selectedAction) {
+                  case 'sell':
+                    setSelectedCardsForSale(cards.filter(card => selectedCards.has(card.id)));
+                    setShowSaleModal(true);
+                    break;
+                  case 'purchase':
+                    setSelectedCardsForPurchase(cards.filter(card => selectedCards.has(card.id)));
+                    setShowPurchaseInvoiceModal(true);
+                    break;
+                  case 'move':
+                    handleMoveCards();
+                    break;
+                  case 'delete':
+                    handleDeleteClick();
+                    break;
+                  case 'selectAll':
+                    handleSelectAll();
+                    break;
+                  case 'clear':
+                    setSelectedCards(new Set());
+                    break;
+                  default:
+                    // No action selected
+                    break;
+                }
+                // Reset the dropdown after action
+                setSelectedAction('');
+              }}
+              disabled={!selectedAction}
+              className={`px-4 py-2 rounded-md ${selectedAction ? 'bg-blue-500 hover:bg-blue-600' : 'bg-blue-300 cursor-not-allowed'} text-white font-medium transition-colors flex items-center gap-2`}
+            >
+              <span className="material-icons text-base">navigate_next</span>
+              <span>Next</span>
+            </button>
+          </div>
         </div>
       )}
 
