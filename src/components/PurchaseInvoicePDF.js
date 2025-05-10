@@ -19,7 +19,7 @@ const styles = StyleSheet.create({
   },
   companyHeader: {
     marginBottom: 20,
-    textAlign: 'right',
+    textAlign: 'left',
     fontSize: 11,
   },
   companyName: {
@@ -128,17 +128,6 @@ const PurchaseInvoicePDF = ({ seller, date, cards, invoiceNumber, notes, totalAm
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        {/* Company Header */}
-        {profile && (
-          <View style={styles.companyHeader}>
-            {profile.companyName && <Text style={styles.companyName}>{profile.companyName}</Text>}
-            <Text style={styles.infoText}>{`${profile.firstName || ''} ${profile.lastName || ''}`}</Text>
-            {profile.address && <Text style={styles.infoText}>{profile.address}</Text>}
-            {profile.mobileNumber && <Text style={styles.infoText}>{profile.mobileNumber}</Text>}
-            {profile.email && <Text style={styles.infoText}>{profile.email}</Text>}
-          </View>
-        )}
-
         <Text style={styles.header}>Pokemon Card Purchase</Text>
         
         <View style={styles.invoiceInfo}>
@@ -156,6 +145,18 @@ const PurchaseInvoicePDF = ({ seller, date, cards, invoiceNumber, notes, totalAm
             <Text style={styles.infoLabel}>Purchased From:</Text>
             <Text style={styles.infoText}>{seller}</Text>
           </View>
+          
+          {/* Buyer Information (Your Company) */}
+          {profile && (
+            <View style={styles.infoBlock}>
+              <Text style={styles.infoLabel}>Purchased By:</Text>
+              {profile.companyName && <Text style={styles.infoText}>{profile.companyName}</Text>}
+              <Text style={styles.infoText}>{`${profile.firstName || ''} ${profile.lastName || ''}`}</Text>
+              {profile.address && <Text style={styles.infoText}>{profile.address}</Text>}
+              {profile.mobileNumber && <Text style={styles.infoText}>{profile.mobileNumber}</Text>}
+              {profile.email && <Text style={styles.infoText}>{profile.email}</Text>}
+            </View>
+          )}
         </View>
 
         <View style={styles.table}>

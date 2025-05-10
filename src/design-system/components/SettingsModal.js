@@ -148,12 +148,17 @@ const SettingsModal = ({
     }));
   };
 
-  // Save profile to Firestore
+  // Save profile to Firestore and IndexedDB
   const handleProfileSave = async () => {
     try {
       if (user) {
+        // Save to Firestore
         const profileRef = doc(firestoreDb, 'users', user.uid);
         await setDoc(profileRef, profile);
+        
+        // Save to IndexedDB for local access
+        await db.saveProfile(profile);
+        
         toastService.success('Profile saved successfully');
       }
     } catch (error) {

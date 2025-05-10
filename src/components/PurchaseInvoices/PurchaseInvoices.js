@@ -7,6 +7,8 @@ import CreateInvoiceModal from './CreateInvoiceModal';
 import { PDFDownloadLink } from '@react-pdf/renderer';
 import PurchaseInvoicePDF from '../PurchaseInvoicePDF';
 import { formatDateForDisplay } from '../../utils/dateUtils';
+import { doc, getDoc } from 'firebase/firestore';
+import { db as firestoreDb } from '../../services/firebase';
 
 /**
  * PurchaseInvoices component
@@ -138,9 +140,32 @@ const PurchaseInvoices = () => {
 
     const loadProfile = async () => {
       try {
+        // First try to load from IndexedDB
         const userProfile = await db.getProfile();
-        console.log('Profile loaded:', userProfile);
-        setProfile(userProfile);
+        console.log('Profile loaded from IndexedDB:', userProfile);
+        
+        if (userProfile) {
+          setProfile(userProfile);
+        } else {
+          // If not found in IndexedDB, try loading from Firestore
+          console.log('Profile not found in IndexedDB, trying Firestore...');
+          if (currentUser && currentUser.uid) {
+            const profileRef = doc(firestoreDb, 'users', currentUser.uid);
+            const profileDoc = await getDoc(profileRef);
+            
+            if (profileDoc.exists()) {
+              const firestoreProfile = profileDoc.data();
+              console.log('Profile loaded from Firestore:', firestoreProfile);
+              
+              // Save to IndexedDB for future use
+              await db.saveProfile(firestoreProfile);
+              
+              setProfile(firestoreProfile);
+            } else {
+              console.log('No profile found in Firestore');
+            }
+          }
+        }
       } catch (error) {
         console.error('Error loading profile:', error);
       }
