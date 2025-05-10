@@ -83,5 +83,14 @@ service cloud.firestore {
       // This prevents anonymous users from spamming the database
       allow write: if request.auth != null;
     }
+    
+    // --- Purchase Invoices ---
+    // Only the owner can read/write their purchase invoice data
+    match /users/{userId}/purchaseInvoices/{document=**} { 
+      // Allow owner to get and list their own purchase invoices
+      allow get, list: if isOwner(userId);
+      // Allow owner to write their own purchase invoices
+      allow write: if isOwner(userId);
+    }
   }
 }

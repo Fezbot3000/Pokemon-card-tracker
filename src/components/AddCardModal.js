@@ -268,13 +268,16 @@ const AddCardModal = ({
         ...prev, // Start with previous state
         ...updatedCardData, // Merge PSA data
         slabSerial: originalSerial || updatedCardData.slabSerial || '', // Always prioritize the original user-entered serial
+        // Ensure psaUrl is set correctly
+        psaUrl: updatedCardData.psaUrl || `https://www.psacard.com/cert/${originalSerial || updatedCardData.slabSerial || ''}`,
       };
+      console.log('Applied PSA details with URL:', mergedData.psaUrl);
       return mergedData;
     });
     toast.success('PSA card details applied');
     setPsaDetailModalOpen(false);
   };
-  
+
   // Create modal footer with action buttons
   const modalFooter = (
     <div className="flex flex-wrap items-center justify-between gap-2 w-full">
@@ -388,6 +391,21 @@ const AddCardModal = ({
             )}
           </div>
 
+          {/* PSA Website Link - Show if PSA URL exists */}
+          {newCard.psaUrl && (
+            <div className="mb-4">
+              <a
+                href={newCard.psaUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full inline-flex items-center justify-center font-medium rounded-lg transition-colors focus:outline-none px-4 py-2 text-base bg-gradient-to-r from-blue-500 to-blue-700 text-white hover:opacity-90 shadow-sm"
+              >
+                <span className="material-icons mr-2">open_in_new</span>
+                View on PSA Website
+              </a>
+            </div>
+          )}
+          
           {/* Card Details Form */}
           <CardDetailsForm
             card={newCard}

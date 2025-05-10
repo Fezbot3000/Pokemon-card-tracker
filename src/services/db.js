@@ -1845,26 +1845,29 @@ class DatabaseService {
               this.db = null;
             };
             
+            // Verify that all required object stores exist
+            this.verifyObjectStores().catch(error => {
+              logger.error('Error verifying object stores:', error);
+            });
+            
+            // Sync purchase invoices from Firestore if enabled
+            if (featureFlags.enableFirestoreSync && featureFlags.enableFirestoreReads) {
+              this.syncPurchaseInvoicesFromFirestore().catch(error => {
+                logger.error('Error syncing purchase invoices from Firestore:', error);
+              });
+            }
+            
             logger.debug(`Database upgraded successfully to version ${this.db.version}`);
             resolve(this.db);
           };
           
           request.onerror = (event) => {
-            logger.debug('Error upgrading database:', event.target.error);
-            // Resolve with null instead of rejecting to keep the process silent
-            resolve(null);
+            logger.error('Error upgrading database:', event.target.error);
+            reject(event.target.error);
           };
         });
         
-        const result = await openPromise;
-        if (result) {
-          this.db = result;
-          this.dbPromise = Promise.resolve(this.db);
-        } else {
-          // If upgrade failed, try a complete reset as a last resort
-          // but do it silently without showing errors to the user
-          return this.resetDatabaseSilently();
-        }
+        return openPromise;
       }
       
       return this.db;
@@ -2817,6 +2820,7 @@ class DatabaseService {
   async getPurchaseInvoices() {
     try {
       await this.ensureDB();
+      const userId = this.getCurrentUserId();
       
       // Check if the purchase invoices store exists
       if (!this.db.objectStoreNames.contains(PURCHASE_INVOICES_STORE)) {
@@ -2828,7 +2832,10 @@ class DatabaseService {
         try {
           const transaction = this.db.transaction([PURCHASE_INVOICES_STORE], 'readonly');
           const store = transaction.objectStore(PURCHASE_INVOICES_STORE);
-          const request = store.getAll();
+          
+          // Use the userId index to get only the current user's invoices
+          const index = store.index('userId');
+          const request = index.getAll(userId);
           
           request.onsuccess = () => {
             const invoices = request.result || [];
@@ -2859,6 +2866,7 @@ class DatabaseService {
   async savePurchaseInvoice(invoice) {
     try {
       await this.ensureDB();
+      const userId = this.getCurrentUserId();
       
       // Generate an ID if one doesn't exist
       if (!invoice.id) {
@@ -2870,9 +2878,13 @@ class DatabaseService {
         invoice.timestamp = Date.now();
       }
       
+      // Add userId to the invoice for the compound key
+      invoice.userId = userId;
+      
       return new Promise((resolve, reject) => {
         const transaction = this.db.transaction([PURCHASE_INVOICES_STORE], 'readwrite');
         const store = transaction.objectStore(PURCHASE_INVOICES_STORE);
+        // The store expects the object to have userId and id properties that match the keyPath
         const request = store.put(invoice);
         
         request.onsuccess = () => {
@@ -2914,11 +2926,13 @@ class DatabaseService {
   async deletePurchaseInvoice(invoiceId) {
     try {
       await this.ensureDB();
+      const userId = this.getCurrentUserId();
       
       return new Promise((resolve, reject) => {
         const transaction = this.db.transaction([PURCHASE_INVOICES_STORE], 'readwrite');
         const store = transaction.objectStore(PURCHASE_INVOICES_STORE);
-        const request = store.delete(invoiceId);
+        // Use the compound key [userId, invoiceId] to delete the invoice
+        const request = store.delete([userId, invoiceId]);
         
         request.onsuccess = () => {
           logger.debug(`Deleted purchase invoice with ID: ${invoiceId}`);

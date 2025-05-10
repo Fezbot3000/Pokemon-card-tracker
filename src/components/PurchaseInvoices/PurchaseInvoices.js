@@ -20,6 +20,15 @@ const PurchaseInvoices = () => {
     const loadInvoices = async () => {
       try {
         setLoading(true);
+        
+        // First try to sync invoices from Firebase
+        try {
+          await db.syncPurchaseInvoicesFromFirestore();
+          console.log('Synced purchase invoices from Firebase');
+        } catch (syncError) {
+          console.error('Error syncing invoices from Firebase:', syncError);
+        }
+        
         // Get purchase invoices from database
         const purchaseInvoices = await db.getPurchaseInvoices() || [];
         setInvoices(purchaseInvoices);

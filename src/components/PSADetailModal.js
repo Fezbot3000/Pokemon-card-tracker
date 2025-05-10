@@ -109,6 +109,8 @@ const PSADetailModal = ({
         grade: data.grade || '',
         slabSerial: data.slabSerial || currentCardData.slabSerial || '',
         population: data.population || currentCardData.population || '',
+        // Ensure PSA URL is set correctly
+        psaUrl: data.psaUrl || `https://www.psacard.com/cert/${data.slabSerial || certNumber}`,
         // Preserve financial data
         datePurchased: currentCardData?.datePurchased || new Date().toISOString().split('T')[0],
         investmentAUD: currentCardData?.investmentAUD || '',
