@@ -6,6 +6,7 @@ import { toast } from 'react-hot-toast';
 import { StatisticsSummary, SearchToolbar, Card, ConfirmDialog } from '../design-system';
 import SaleModal from './SaleModal';
 import MoveCardsModal from './MoveCardsModal';
+import CreateInvoiceModal from './PurchaseInvoices/CreateInvoiceModal';
 
 // Replace FinancialSummary component with individual stat cards
 const StatCard = memo(({ label, value, isProfit = false }) => {
@@ -111,6 +112,8 @@ const CardList = ({
   const [selectedCardsToMove, setSelectedCardsToMove] = useState([]);
   const [showCardDetails, setShowCardDetails] = useState(false);
   const [selectedCard, setSelectedCard] = useState(null);
+  const [showPurchaseInvoiceModal, setShowPurchaseInvoiceModal] = useState(false);
+  const [selectedCardsForPurchase, setSelectedCardsForPurchase] = useState([]);
 
   const valueDropdownRef = useRef(null);
   const metricDropdownRef = useRef(null);
@@ -1022,6 +1025,16 @@ const CardList = ({
             <span className={`${window.innerWidth < 640 ? 'hidden sm:inline' : 'inline ml-1'}`}>Sell</span>
           </button>
           <button
+            onClick={() => {
+              setSelectedCardsForPurchase(cards.filter(card => selectedCards.has(card.id)));
+              setShowPurchaseInvoiceModal(true);
+            }}
+            className={`${window.innerWidth < 640 ? 'flex flex-col items-center gap-0.5 px-2 py-1 rounded-md bg-white dark:bg-[#252B3B] hover:bg-gray-100 dark:hover:bg-[#323B4B] text-gray-900 dark:text-white text-xs min-w-[48px]' : 'flex flex-row items-center gap-2 px-4 py-2 rounded-md bg-white dark:bg-[#252B3B] hover:bg-gray-100 dark:hover:bg-[#323B4B] text-gray-900 dark:text-white text-base min-w-[96px]'}`}
+          >
+            <span className="material-icons text-base text-green-400">receipt</span>
+            <span className={`${window.innerWidth < 640 ? 'hidden sm:inline' : 'inline ml-1'}`}>Purchase Invoice</span>
+          </button>
+          <button
             onClick={handleMoveCards}
             className={`${window.innerWidth < 640 ? 'flex flex-col items-center gap-0.5 px-2 py-1 rounded-md bg-white dark:bg-[#252B3B] hover:bg-gray-100 dark:hover:bg-[#323B4B] text-gray-900 dark:text-white text-xs min-w-[48px]' : 'flex flex-row items-center gap-2 px-4 py-2 rounded-md bg-white dark:bg-[#252B3B] hover:bg-gray-100 dark:hover:bg-[#323B4B] text-gray-900 dark:text-white text-base min-w-[96px]'}`}
           >
@@ -1107,6 +1120,24 @@ const CardList = ({
                  !lowerCase.includes('sold');
         })}
         currentCollection={selectedCollection}
+      />
+      
+      {/* Purchase Invoice Modal */}
+      {/* Purchase Invoice Modal */}
+      <CreateInvoiceModal
+        isOpen={showPurchaseInvoiceModal}
+        onClose={() => {
+          setShowPurchaseInvoiceModal(false);
+          setSelectedCardsForPurchase([]);
+          setSelectedCards(new Set());
+        }}
+        onSave={(newInvoice) => {
+          toast.success('Purchase invoice created successfully!');
+          setShowPurchaseInvoiceModal(false);
+          setSelectedCardsForPurchase([]);
+          setSelectedCards(new Set());
+        }}
+        preSelectedCards={selectedCardsForPurchase}
       />
     </div>
   );

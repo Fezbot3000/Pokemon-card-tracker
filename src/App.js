@@ -46,6 +46,7 @@ import './styles/main.css';
 import './styles/black-background.css'; 
 import './styles/ios-fixes.css'; 
 import SoldItems from './components/SoldItems/SoldItems';
+import PurchaseInvoices from './components/PurchaseInvoices/PurchaseInvoices';
 import BottomNavBar from './components/BottomNavBar';
 import CloudSync from './components/CloudSync';
 import DashboardPricing from './components/DashboardPricing';
@@ -2510,6 +2511,8 @@ To import this backup:
               )}
             </div>
           </div>
+        ) : currentView === 'purchase-invoices' ? (
+          <PurchaseInvoices />
         ) : currentView === 'settings' && isMobile ? (
           <MobileSettingsModal
             isOpen={showSettings}

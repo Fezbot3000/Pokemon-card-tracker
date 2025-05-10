@@ -244,6 +244,24 @@ const Header = ({
               </button>
               {/* Small gap */}
               <div className="w-1"></div>
+              {/* Purchase Invoices Button */}
+              <button
+                onClick={() => handleViewChange('purchase-invoices')}
+                className={`px-4 py-1.5 flex items-center justify-center rounded-full relative transition-colors duration-200 ${
+                  currentView === 'purchase-invoices' 
+                    ? 'bg-gradient-to-r from-[#ef4444] to-[#db2777] text-white' 
+                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200/50 dark:hover:bg-gray-700/50'
+                }`}
+              >
+                <Icon 
+                  name="receipt" 
+                  className="mr-1 hidden xs:inline" 
+                  color={currentView === 'purchase-invoices' ? 'white' : 'default'} 
+                />
+                <span>Purchase Invoices</span>
+              </button>
+              {/* Small gap */}
+              <div className="w-1"></div>
               {/* Sold Items Button */}
               <button
                 onClick={() => handleViewChange('sold-items')}
@@ -319,7 +337,7 @@ Header.propTypes = {
   onCollectionChange: PropTypes.func,
   onImportClick: PropTypes.func,
   onSettingsClick: PropTypes.func,
-  currentView: PropTypes.oneOf(['cards', 'sold-items', 'grid', 'list']),
+  currentView: PropTypes.oneOf(['cards', 'sold-items', 'purchase-invoices', 'grid', 'list']),
   onViewChange: PropTypes.func,
   refreshCollections: PropTypes.func,
   onAddCollection: PropTypes.func,
