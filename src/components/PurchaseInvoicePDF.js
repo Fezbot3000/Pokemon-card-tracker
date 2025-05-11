@@ -125,6 +125,8 @@ const styles = StyleSheet.create({
 });
 
 const PurchaseInvoicePDF = ({ seller, date, cards, invoiceNumber, notes, totalAmount, profile }) => {
+  // Debug log the cards data
+  console.log('Cards data received in PDF component:', cards);
   return (
     <Document>
       <Page size="A4" style={styles.page}>
@@ -174,21 +176,32 @@ const PurchaseInvoicePDF = ({ seller, date, cards, invoiceNumber, notes, totalAm
           </View>
 
           {/* Table Body */}
-          {cards.map((card) => (
-            <View key={card.id} style={styles.tableRow}>
-              <View style={[styles.col1, styles.tableCell]}>
-                <Text>{card.name || (card.player ? card.player : 'Unnamed Card')}</Text>
-                {card.set && <Text style={{ fontSize: 9, color: '#6b7280', marginTop: 2 }}>{card.year} {card.set} #{card.cardNumber}</Text>}
-                {card.grade && <Text style={{ fontSize: 9, color: '#6b7280', marginTop: 2 }}>{card.gradeVendor || 'PSA'} {card.grade}</Text>}
+          {cards.map((card) => {
+            // Create a display name for the card dynamically from its properties
+            const cardDisplayName = card.name || card.player || card.card || 
+              (card.set ? `${card.set} Card` : 'Unnamed Card');
+            
+            console.log('Processing card for PDF:', card);
+            console.log('Using display name:', cardDisplayName);
+            
+            return (
+              <View key={card.id} style={styles.tableRow}>
+                <View style={[styles.col1, styles.tableCell]}>
+                  <Text style={styles.boldText}>
+                    {cardDisplayName}
+                  </Text>
+                  {card.set && <Text style={{ fontSize: 9, color: '#6b7280', marginTop: 2 }}>{card.year} {card.set} #{card.cardNumber}</Text>}
+                  {card.grade && <Text style={{ fontSize: 9, color: '#6b7280', marginTop: 2 }}>{card.gradeVendor || 'PSA'} {card.grade}</Text>}
+                </View>
+                <View style={[styles.col2, styles.tableCell]}>
+                  <Text>{card.slabSerial || 'N/A'}</Text>
+                </View>
+                <View style={[styles.col3, styles.tableCell]}>
+                  <Text>{card.investmentAUD ? formatCurrency(card.investmentAUD) : 'N/A'}</Text>
+                </View>
               </View>
-              <View style={[styles.col2, styles.tableCell]}>
-                <Text>{card.slabSerial || 'N/A'}</Text>
-              </View>
-              <View style={[styles.col3, styles.tableCell]}>
-                <Text>{card.investmentAUD ? formatCurrency(card.investmentAUD) : 'N/A'}</Text>
-              </View>
-            </View>
-          ))}
+            );
+          })}
         </View>
 
         {/* Summary */}

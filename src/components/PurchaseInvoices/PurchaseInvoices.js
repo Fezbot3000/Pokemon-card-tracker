@@ -47,8 +47,27 @@ const PurchaseInvoices = () => {
       try {
         // If we have card IDs, fetch the full card details
         if (invoice.cards && invoice.cards.length > 0) {
-          // Use the existing card info from the invoice
-          return invoice.cards;
+          // Log the card data for debugging
+          console.log('Card data from invoice:', invoice.cards);
+          
+          // Process cards to ensure they have proper display names
+          const processedCards = invoice.cards.map(card => {
+            // Create a copy of the card to avoid modifying the original
+            const processedCard = {...card};
+            
+            // If the card doesn't have a name property but has a set property,
+            // create a display name using the set
+            if (!processedCard.name && !processedCard.player && processedCard.set) {
+              processedCard.displayName = `${processedCard.set} Card`;
+            } else {
+              processedCard.displayName = processedCard.name || processedCard.player || 'Unnamed Card';
+            }
+            
+            return processedCard;
+          });
+          
+          console.log('Processed cards for PDF:', processedCards);
+          return processedCards;
         }
         return [];
       } catch (error) {

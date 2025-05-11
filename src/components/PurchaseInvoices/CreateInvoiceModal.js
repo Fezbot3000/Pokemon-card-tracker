@@ -25,6 +25,12 @@ const CreateInvoiceModal = ({ isOpen, onClose, onSave, preSelectedCards = [] }) 
   useEffect(() => {
     if (preSelectedCards && preSelectedCards.length > 0) {
       setSelectedCards(preSelectedCards);
+      
+      // Pre-populate the purchase date from the first card's datePurchased field
+      if (preSelectedCards[0].datePurchased) {
+        setDate(preSelectedCards[0].datePurchased);
+      }
+      
       setStep(2); // Skip to invoice details
     }
   }, [preSelectedCards]);
