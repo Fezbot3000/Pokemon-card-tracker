@@ -270,7 +270,8 @@ const CardList = ({
     { field: 'investmentAUD', label: 'Paid' },
     { field: 'potentialProfit', label: 'Profit' },
     { field: 'datePurchased', label: 'Purchase Date' },
-    { field: 'player', label: 'Player Name' }
+    { field: 'player', label: 'Player Name' },
+    { field: 'cardNumber', label: 'Card Number' }
   ];
 
   // Function to get the label for a sort field
@@ -856,7 +857,7 @@ const CardList = ({
   };
 
   return (
-    <div className="pt-16 sm:pt-32 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="pt-16 sm:pt-32 w-full px-1 sm:px-2">
       {/* Stats Section */}
       <StatisticsSummary 
         statistics={[
@@ -912,7 +913,7 @@ const CardList = ({
           <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Try adjusting your search or filters</p>
         </div>
       ) : viewMode === 'grid' ? (
-        <div className={`grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4`}>
+        <div className={`grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-1 sm:gap-2`}>
           {filteredCards.map(card => (
             <Card
               key={card._uniqueKey}

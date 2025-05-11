@@ -4,9 +4,9 @@ import db from '../../services/db';
 import { useAuth } from '../../design-system';
 
 /**
- * Modal component for creating a new purchase invoice
+ * Modal component for creating or editing a purchase invoice
  */
-const CreateInvoiceModal = ({ isOpen, onClose, onSave, preSelectedCards = [] }) => {
+const CreateInvoiceModal = ({ isOpen, onClose, onSave, preSelectedCards = [], editingInvoice = null }) => {
   const [selectedCards, setSelectedCards] = useState(preSelectedCards || []);
   const [collections, setCollections] = useState({});
   const [loading, setLoading] = useState(true);
@@ -21,9 +21,18 @@ const CreateInvoiceModal = ({ isOpen, onClose, onSave, preSelectedCards = [] }) 
   const [selectedCollection, setSelectedCollection] = useState('All Collections');
   const { currentUser } = useAuth();
   
-  // Set pre-selected cards when they change
+  // Initialize form with editing invoice data or pre-selected cards
   useEffect(() => {
-    if (preSelectedCards && preSelectedCards.length > 0) {
+    if (editingInvoice) {
+      // We're in edit mode - populate form with invoice data
+      setSelectedCards(editingInvoice.cards || []);
+      setSeller(editingInvoice.seller || '');
+      setDate(editingInvoice.date || new Date().toISOString().split('T')[0]);
+      setInvoiceNumber(editingInvoice.invoiceNumber || '');
+      setNotes(editingInvoice.notes || '');
+      setStep(2); // Skip to invoice details in edit mode
+    } else if (preSelectedCards && preSelectedCards.length > 0) {
+      // Using pre-selected cards for a new invoice
       setSelectedCards(preSelectedCards);
       
       // Pre-populate the purchase date from the first card's datePurchased field
@@ -33,7 +42,7 @@ const CreateInvoiceModal = ({ isOpen, onClose, onSave, preSelectedCards = [] }) 
       
       setStep(2); // Skip to invoice details
     }
-  }, [preSelectedCards]);
+  }, [preSelectedCards, editingInvoice]);
 
   // Load collections and cards
   useEffect(() => {
@@ -158,40 +167,79 @@ const CreateInvoiceModal = ({ isOpen, onClose, onSave, preSelectedCards = [] }) 
     }
     
     try {
-      // Create invoice object
-      const invoice = {
-        id: `invoice_${Date.now()}`,
-        invoiceNumber,
-        date,
-        seller,
-        notes,
-        cards: selectedCards.map(card => ({
-          id: card.id,
-          name: card.name,
-          player: card.player,
-          set: card.set || card.setName,
-          year: card.year,
-          cardNumber: card.cardNumber,
-          grade: card.grade,
-          gradeVendor: card.gradeVendor,
-          slabSerial: card.slabSerial,
-          investmentAUD: parseFloat(card.investmentAUD) || 0
-        })),
-        totalAmount: totalInvestment,
-        cardCount: selectedCards.length,
-        timestamp: Date.now(),
-        userId: currentUser.uid
-      };
+      // Prepare the card data
+      const cardData = selectedCards.map(card => ({
+        id: card.id,
+        name: card.name,
+        player: card.player,
+        set: card.set || card.setName,
+        year: card.year,
+        cardNumber: card.cardNumber,
+        grade: card.grade,
+        gradeVendor: card.gradeVendor,
+        slabSerial: card.slabSerial,
+        investmentAUD: parseFloat(card.investmentAUD) || 0
+      }));
       
-      // Save invoice to database
-      await db.savePurchaseInvoice(invoice);
+      // Calculate total investment
+      const totalAmount = cardData.reduce((sum, card) => sum + (card.investmentAUD || 0), 0);
       
-      toast.success('Purchase invoice created successfully!');
+      let invoice;
+      
+      if (editingInvoice) {
+        // Update existing invoice
+        invoice = {
+          ...editingInvoice,
+          invoiceNumber,
+          date,
+          seller,
+          notes,
+          cards: cardData,
+          totalAmount,
+          cardCount: selectedCards.length,
+          lastUpdated: Date.now()
+        };
+        
+        // Save updated invoice to database
+        await db.savePurchaseInvoice(invoice);
+        toast.success('Purchase invoice updated successfully!');
+      } else {
+        // Create new invoice
+        invoice = {
+          id: `invoice_${Date.now()}`,
+          invoiceNumber,
+          date,
+          seller,
+          notes,
+          cards: cardData,
+          totalAmount,
+          cardCount: selectedCards.length,
+          timestamp: Date.now(),
+          userId: currentUser.uid
+        };
+        
+        // Save new invoice to database
+        await db.savePurchaseInvoice(invoice);
+        toast.success('Purchase invoice created successfully!');
+      }
+      
+      // Pass the invoice back to the parent component
       onSave(invoice);
+      
+      // Reset form state before closing
+      setSelectedCards([]);
+      setSeller('');
+      setDate(new Date().toISOString().split('T')[0]);
+      setInvoiceNumber('');
+      setNotes('');
+      setStep(1);
+      setSearchQuery('');
+      
+      // Close the modal
       onClose();
     } catch (error) {
-      console.error('Error creating purchase invoice:', error);
-      toast.error('Failed to create purchase invoice');
+      console.error(`Error ${editingInvoice ? 'updating' : 'creating'} purchase invoice:`, error);
+      toast.error(`Failed to ${editingInvoice ? 'update' : 'create'} purchase invoice`);
     }
   };
   

@@ -129,6 +129,7 @@ const Header = ({
                     </div>
                     {collections
                       .filter(collection => collection !== 'All Cards')
+                      .sort((a, b) => a.localeCompare(b)) // Sort alphabetically
                       .map((collection) => (
                         <div
                           key={collection}

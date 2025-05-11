@@ -233,7 +233,8 @@ const CardDetails = memo(({
           imageUrl: localImageUrl,
           hasImage: true,
           _pendingImageFile: file, // Store the file for later upload
-          _blobUrl: localImageUrl // Store the blob URL for cleanup
+          _blobUrl: localImageUrl, // Store the blob URL for cleanup
+          imageUpdatedAt: new Date().toISOString() // Add timestamp to force refresh
         }));
         
         // Mark that we have unsaved changes
@@ -391,13 +392,12 @@ const CardDetails = memo(({
       // Now update the editedCard state to match what we saved
       setEditedCard(finalCardData);
       
-      // Show success message
-      toast.success('Card saved successfully!');
-      
       // Reset unsaved changes flag
       setHasUnsavedChanges(false);
       
-      // Keep the modal open - don't close it
+      // Show success message
+      toast.success('Card saved successfully!');
+      
       console.log('[CardDetails] Card saved successfully, keeping modal open');
       console.log('=========== CARD SAVE FLOW END ===========');
     } catch (error) {

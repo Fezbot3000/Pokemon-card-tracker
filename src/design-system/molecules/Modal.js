@@ -36,16 +36,17 @@ const Modal = ({
     
     // Only prevent background scroll if modal is open
     if (isOpen && !showAsStatic) {
+      // Store current scroll position when modal opens
       scrollPosRef.current = {
         x: window.scrollX,
         y: window.scrollY
       };
       document.body.classList.add('modal-open');
+      
       return () => {
+        // When modal closes, remove the class but don't force scroll
         document.body.classList.remove('modal-open');
-        if (scrollPosRef.current) {
-          window.scrollTo(scrollPosRef.current.x, scrollPosRef.current.y);
-        }
+        // Don't restore scroll position - let the page stay where it is
       };
     }
   }, [isOpen, showAsStatic]);

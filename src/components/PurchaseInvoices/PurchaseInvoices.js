@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
-import { useAuth } from '../../design-system';
+import { useAuth, StatisticsSummary } from '../../design-system';
 import db from '../../services/db';
 import { toast } from 'react-hot-toast';
 import CreateInvoiceModal from './CreateInvoiceModal';
@@ -9,6 +9,8 @@ import PurchaseInvoicePDF from '../PurchaseInvoicePDF';
 import { formatDateForDisplay } from '../../utils/dateUtils';
 import { doc, getDoc } from 'firebase/firestore';
 import { db as firestoreDb } from '../../services/firebase';
+import JSZip from 'jszip';
+import { saveAs } from 'file-saver';
 
 /**
  * PurchaseInvoices component
@@ -19,8 +21,155 @@ const PurchaseInvoices = () => {
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editingInvoice, setEditingInvoice] = useState(null);
   const [profile, setProfile] = useState(null);
+  const [sortField, setSortField] = useState('timestamp');
+  const [sortDirection, setSortDirection] = useState('desc'); // 'asc' or 'desc'
   const { currentUser } = useAuth();
+  
+  // Handle editing an invoice
+  const handleEditInvoice = (invoice) => {
+    setEditingInvoice(invoice);
+    setShowCreateModal(true);
+  };
+  
+  // Handle sorting
+  const handleSort = (field) => {
+    if (sortField === field) {
+      // If already sorting by this field, toggle direction
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      // New field, set default direction based on field type
+      setSortField(field);
+      // Default to descending for dates and numbers, ascending for text
+      if (field === 'date' || field === 'timestamp' || field === 'totalAmount' || field === 'cardCount') {
+        setSortDirection('desc');
+      } else {
+        setSortDirection('asc');
+      }
+    }
+  };
+  
+  // Format date to "17th Feb 25" format
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return dateString; // Return original if invalid
+    
+    // Get day with ordinal suffix
+    const day = date.getDate();
+    const ordinalSuffix = getOrdinalSuffix(day);
+    
+    // Get month abbreviation
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const month = monthNames[date.getMonth()];
+    
+    // Get 2-digit year
+    const year = date.getFullYear().toString().slice(-2);
+    
+    return `${day}${ordinalSuffix} ${month} ${year}`;
+  };
+  
+  // Format currency with commas and 2 decimal places
+  const formatCurrency = (amount) => {
+    // Convert to number and handle invalid values
+    const num = parseFloat(amount || 0);
+    if (isNaN(num)) return '$0.00';
+    
+    // Format with commas and 2 decimal places
+    return '$' + num.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  };
+  
+  // Get ordinal suffix for a number (1st, 2nd, 3rd, etc.)
+  const getOrdinalSuffix = (day) => {
+    if (day > 3 && day < 21) return 'th';
+    switch (day % 10) {
+      case 1: return 'st';
+      case 2: return 'nd';
+      case 3: return 'rd';
+      default: return 'th';
+    }
+  };
+  
+  // Get sorted invoices
+  const getSortedInvoices = () => {
+    return [...invoices].sort((a, b) => {
+      let aValue = a[sortField];
+      let bValue = b[sortField];
+      
+      // Handle special cases
+      if (sortField === 'totalAmount') {
+        aValue = parseFloat(a.totalAmount || 0);
+        bValue = parseFloat(b.totalAmount || 0);
+      } else if (sortField === 'date') {
+        aValue = new Date(a.date || 0).getTime();
+        bValue = new Date(b.date || 0).getTime();
+      } else if (sortField === 'timestamp') {
+        aValue = a.timestamp || 0;
+        bValue = b.timestamp || 0;
+      }
+      
+      // Compare based on direction
+      if (sortDirection === 'asc') {
+        return aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
+      } else {
+        return aValue < bValue ? 1 : aValue > bValue ? -1 : 0;
+      }
+    });
+  };
+  
+  // Calculate statistics for the summary
+  const getInvoiceStatistics = () => {
+    // Skip calculation if no invoices
+    if (!invoices || invoices.length === 0) {
+      return [];
+    }
+    
+    // Calculate total spent
+    const totalSpent = invoices.reduce((sum, invoice) => {
+      return sum + parseFloat(invoice.totalAmount || 0);
+    }, 0);
+    
+    // Calculate total cards
+    const totalCards = invoices.reduce((sum, invoice) => {
+      return sum + (invoice.cardCount || 0);
+    }, 0);
+    
+    // Calculate average cost per card
+    const avgCostPerCard = totalCards > 0 ? totalSpent / totalCards : 0;
+    
+    // Count unique sellers
+    const uniqueSellers = new Set(invoices.map(invoice => invoice.seller)).size;
+    
+    return [
+      {
+        label: 'Total Spent',
+        value: totalSpent,
+        formattedValue: formatCurrency(totalSpent),
+        isProfit: false
+      },
+      {
+        label: 'Cards Purchased',
+        value: totalCards,
+        icon: 'style'
+      },
+      {
+        label: 'Avg Cost/Card',
+        value: avgCostPerCard,
+        formattedValue: formatCurrency(avgCostPerCard),
+        isProfit: false
+      },
+      {
+        label: 'Sellers',
+        value: uniqueSellers,
+        icon: 'person'
+      }
+    ];
+  };
   
   // Handle downloading an invoice as PDF
   const handleDownloadInvoice = (invoice) => {
@@ -201,9 +350,14 @@ const PurchaseInvoices = () => {
   return (
     <div className="container mx-auto px-4 py-8 mt-16 sm:mt-20">
       <div className="bg-white dark:bg-[#1B2131] rounded-xl shadow-md p-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
           Purchase Invoices
         </h1>
+        
+        {/* Statistics Summary */}
+        {!loading && invoices.length > 0 && (
+          <StatisticsSummary statistics={getInvoiceStatistics()} />
+        )}
         
         {loading ? (
           <div className="flex justify-center items-center py-12">
@@ -223,56 +377,108 @@ const PurchaseInvoices = () => {
           </div>
         ) : (
           <div className="overflow-x-auto">
+            <div className="flex justify-between items-center mb-4">
+              <div className="text-sm text-gray-500 dark:text-gray-400">
+                {invoices.length} {invoices.length === 1 ? 'invoice' : 'invoices'} found
+              </div>
+              <button 
+                className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+                onClick={() => setShowCreateModal(true)}
+              >
+                Create New Invoice
+              </button>
+            </div>
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead className="bg-gray-50 dark:bg-gray-800">
                 <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Invoice #
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                    onClick={() => handleSort('invoiceNumber')}
+                  >
+                    Invoice # {sortField === 'invoiceNumber' && (
+                      <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                    )}
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Date
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                    onClick={() => handleSort('date')}
+                  >
+                    Date {sortField === 'date' && (
+                      <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                    )}
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Seller
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                    onClick={() => handleSort('seller')}
+                  >
+                    Seller {sortField === 'seller' && (
+                      <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                    )}
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Total Amount
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                    onClick={() => handleSort('totalAmount')}
+                  >
+                    Total Amount {sortField === 'totalAmount' && (
+                      <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                    )}
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    # of Cards
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                    onClick={() => handleSort('cardCount')}
+                  >
+                    # of Cards {sortField === 'cardCount' && (
+                      <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                    )}
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                  >
                     Actions
                   </th>
                 </tr>
               </thead>
               <tbody className="bg-white dark:bg-[#1B2131] divide-y divide-gray-200 dark:divide-gray-700">
-                {invoices.map((invoice) => (
+                {getSortedInvoices().map((invoice) => (
                   <tr key={invoice.id}>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                       {invoice.invoiceNumber}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                      {invoice.date}
+                      {formatDate(invoice.date)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                       {invoice.seller}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                      ${invoice.totalAmount.toFixed(2)}
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white text-right">
+                      {formatCurrency(invoice.totalAmount)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                       {invoice.cardCount}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 flex">
                       <button 
-                        className="text-primary hover:text-primary/80 transition-colors mr-3"
+                        className="text-primary hover:text-primary/80 transition-colors mr-3 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
                         onClick={() => handleDownloadInvoice(invoice)}
+                        title="Download PDF"
                       >
-                        Download PDF
+                        <span className="material-icons text-xl">download</span>
                       </button>
                       <button 
-                        className="text-red-500 hover:text-red-700 transition-colors"
+                        className="text-blue-500 hover:text-blue-700 transition-colors mr-3 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
+                        onClick={() => handleEditInvoice(invoice)}
+                        title="Edit Invoice"
+                      >
+                        <span className="material-icons text-xl">edit</span>
+                      </button>
+                      <button 
+                        className="text-red-500 hover:text-red-700 transition-colors p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
                         onClick={async () => {
                           if (window.confirm('Are you sure you want to delete this invoice?')) {
                             try {
@@ -285,8 +491,9 @@ const PurchaseInvoices = () => {
                             }
                           }
                         }}
+                        title="Delete Invoice"
                       >
-                        Delete
+                        <span className="material-icons text-xl">delete</span>
                       </button>
                     </td>
                   </tr>
@@ -297,14 +504,27 @@ const PurchaseInvoices = () => {
         )}
       </div>
       
-      {/* Create Invoice Modal */}
+      {/* Create/Edit Invoice Modal */}
       <CreateInvoiceModal
         isOpen={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
-        onSave={(newInvoice) => {
-          // Add the new invoice to the list
-          setInvoices(prev => [newInvoice, ...prev]);
+        onClose={() => {
+          setShowCreateModal(false);
+          setEditingInvoice(null); // Reset editing state when closing
         }}
+        onSave={(newInvoice) => {
+          if (editingInvoice) {
+            // Update existing invoice
+            setInvoices(prev => prev.map(inv => 
+              inv.id === newInvoice.id ? newInvoice : inv
+            ));
+          } else {
+            // Add new invoice
+            setInvoices(prev => [newInvoice, ...prev]);
+          }
+          setShowCreateModal(false);
+          setEditingInvoice(null);
+        }}
+        editingInvoice={editingInvoice}
       />
     </div>
   );
