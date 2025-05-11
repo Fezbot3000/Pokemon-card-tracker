@@ -413,7 +413,7 @@ const PurchaseInvoices = () => {
   }, [currentUser]);
 
   return (
-    <div className="container mx-auto px-4 py-8 mt-16 sm:mt-20">
+    <div className="pt-16 sm:pt-32 w-full px-1 sm:px-2">
       <div className="bg-white dark:bg-[#1B2131] rounded-xl shadow-md p-6">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
           Purchase Invoices
