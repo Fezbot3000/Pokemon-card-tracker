@@ -337,7 +337,7 @@ const CreateInvoiceModal = ({ isOpen, onClose, onSave, preSelectedCards = [], ed
                   <div className="overflow-y-auto max-h-96">
                     <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                       <thead className="bg-gray-50 dark:bg-gray-800 sticky top-0">
-                        <tr>
+                        <tr key="card-selection-header-row">
                           <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                             Select
                           </th>
@@ -515,7 +515,7 @@ const CreateInvoiceModal = ({ isOpen, onClose, onSave, preSelectedCards = [], ed
                     <div className="overflow-y-auto max-h-60">
                       <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                         <thead className="bg-gray-50 dark:bg-gray-800 sticky top-0">
-                          <tr>
+                          <tr key="header-row">
                             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                               Card
                             </th>

@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import ReactDOM from 'react-dom';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth, StatisticsSummary } from '../../design-system';
 import db from '../../services/db';
 import { toast } from 'react-hot-toast';
 import CreateInvoiceModal from './CreateInvoiceModal';
-import { PDFDownloadLink } from '@react-pdf/renderer';
+import { PDFDownloadLink, pdf } from '@react-pdf/renderer';
 import PurchaseInvoicePDF from '../PurchaseInvoicePDF';
 import { formatDateForDisplay } from '../../utils/dateUtils';
 import { doc, getDoc } from 'firebase/firestore';
@@ -25,12 +24,76 @@ const PurchaseInvoices = () => {
   const [profile, setProfile] = useState(null);
   const [sortField, setSortField] = useState('timestamp');
   const [sortDirection, setSortDirection] = useState('desc'); // 'asc' or 'desc'
+  const [searchQuery, setSearchQuery] = useState('');
   const { currentUser } = useAuth();
   
   // Handle editing an invoice
   const handleEditInvoice = (invoice) => {
     setEditingInvoice(invoice);
     setShowCreateModal(true);
+  };
+  
+  // Handle exporting all invoices as a zip file
+  const handleExportAllInvoices = async () => {
+    if (invoices.length === 0) {
+      toast.error('No invoices to export');
+      return;
+    }
+    
+    try {
+      toast.loading('Preparing invoices for export...', { id: 'export-zip' });
+      
+      const zip = new JSZip();
+      
+      // Create a folder for the invoices
+      const invoicesFolder = zip.folder('purchase-invoices');
+      
+      // Process each invoice
+      for (const invoice of invoices) {
+        try {
+          // Ensure cards array exists
+          const cards = invoice.cards || [];
+          
+          // Create the PDF document
+          const pdfDocument = (
+            <PurchaseInvoicePDF 
+              seller={invoice.seller || ''}
+              date={invoice.date || ''}
+              cards={cards}
+              invoiceNumber={invoice.invoiceNumber || ''}
+              notes={invoice.notes || ''}
+              totalAmount={invoice.totalAmount || 0}
+              profile={profile}
+            />
+          );
+          
+          // Generate the PDF blob using @react-pdf/renderer's pdf function
+          const pdfBlob = await pdf(pdfDocument).toBlob();
+          
+          if (pdfBlob) {
+            // Generate a filename based on invoice details
+            const fileName = `Invoice-${invoice.invoiceNumber || invoice.id}.pdf`;
+            
+            // Add the PDF to the zip file
+            invoicesFolder.file(fileName, pdfBlob);
+          }
+        } catch (invoiceError) {
+          console.error(`Error processing invoice ${invoice.id}:`, invoiceError);
+          // Continue with other invoices even if one fails
+        }
+      }
+      
+      // Generate the zip file
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+      
+      // Save the zip file
+      saveAs(zipBlob, `Purchase-Invoices-${new Date().toISOString().split('T')[0]}.zip`);
+      
+      toast.success('All invoices exported successfully!', { id: 'export-zip' });
+    } catch (error) {
+      console.error('Error exporting invoices:', error);
+      toast.error('Failed to export invoices', { id: 'export-zip' });
+    }
   };
   
   // Handle sorting
@@ -95,9 +158,35 @@ const PurchaseInvoices = () => {
     }
   };
   
+  // Filter invoices based on search query
+  const filteredInvoices = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return invoices;
+    }
+    
+    const query = searchQuery.toLowerCase();
+    return invoices.filter(invoice => {
+      return (
+        // Search in invoice number
+        (invoice.invoiceNumber && invoice.invoiceNumber.toLowerCase().includes(query)) ||
+        // Search in seller
+        (invoice.seller && invoice.seller.toLowerCase().includes(query)) ||
+        // Search in date
+        (invoice.date && invoice.date.toLowerCase().includes(query)) ||
+        // Search in notes
+        (invoice.notes && invoice.notes.toLowerCase().includes(query)) ||
+        // Search in card names (if available)
+        (invoice.cards && Array.isArray(invoice.cards) && invoice.cards.some(card => 
+          (card.name && card.name.toLowerCase().includes(query)) ||
+          (card.set && card.set.toLowerCase().includes(query))
+        ))
+      );
+    });
+  }, [invoices, searchQuery]);
+
   // Get sorted invoices
   const getSortedInvoices = () => {
-    return [...invoices].sort((a, b) => {
+    return [...filteredInvoices].sort((a, b) => {
       let aValue = a[sortField];
       let bValue = b[sortField];
       
@@ -172,113 +261,89 @@ const PurchaseInvoices = () => {
   };
   
   // Handle downloading an invoice as PDF
-  const handleDownloadInvoice = (invoice) => {
+  const handleDownloadInvoice = async (invoice) => {
     // Debug profile data
     console.log('Profile when downloading invoice:', profile);
     
     // Create a unique filename for the invoice
     const fileName = `purchase-invoice-${invoice.invoiceNumber || invoice.id}-${invoice.date.replace(/\//g, '-')}.pdf`;
     
-    // Create a fake anchor element to trigger the download
-    const link = document.createElement('a');
-    link.href = `#/purchase-invoice/${invoice.id}`; // This doesn't actually matter for our purpose
-    link.download = fileName;
-    link.className = 'pdf-download-link';
-    
-    // Add the PDFDownloadLink to a hidden div
-    const container = document.createElement('div');
-    container.style.display = 'none';
-    container.className = 'pdf-container';
-    document.body.appendChild(container);
-    
-    // Get detailed card information for the invoice
-    const getCardDetails = async () => {
-      try {
-        // If we have card IDs, fetch the full card details
-        if (invoice.cards && invoice.cards.length > 0) {
-          // Log the card data for debugging
-          console.log('Card data from invoice:', invoice.cards);
-          
-          // Process cards to ensure they have proper display names
-          const processedCards = invoice.cards.map(card => {
-            // Create a copy of the card to avoid modifying the original
-            const processedCard = {...card};
-            
-            // If the card doesn't have a name property but has a set property,
-            // create a display name using the set
-            if (!processedCard.name && !processedCard.player && processedCard.set) {
-              processedCard.displayName = `${processedCard.set} Card`;
-            } else {
-              processedCard.displayName = processedCard.name || processedCard.player || 'Unnamed Card';
-            }
-            
-            return processedCard;
-          });
-          
-          console.log('Processed cards for PDF:', processedCards);
-          return processedCards;
-        }
-        return [];
-      } catch (error) {
-        console.error('Error fetching card details:', error);
-        return [];
-      }
-    };
-    
-    // Get card details and render PDF
-    getCardDetails().then(cardDetails => {
-      // Render the PDF link element which will automatically trigger download
-      const pdfLinkElement = (
-        <PDFDownloadLink
-          document={
-            <PurchaseInvoicePDF 
-              seller={invoice.seller} 
-              date={formatDateForDisplay(invoice.date)}
-              cards={cardDetails} 
-              invoiceNumber={invoice.invoiceNumber}
-              notes={invoice.notes}
-              totalAmount={invoice.totalAmount}
-              profile={profile}
-            />
-          }
-          fileName={fileName}
-        >
-          {({ blob, url, loading, error }) => {
-            if (loading) {
-              return 'Loading document...';
-            }
-            
-            if (error) {
-              console.error('Error generating PDF:', error);
-              toast.error('Error generating PDF');
-              return 'Error';
-            }
-            
-            // When PDF is ready, trigger download programmatically
-            if (blob) {
-              const fileURL = URL.createObjectURL(blob);
-              link.href = fileURL;
-              link.click();
-              
-              // Clean up
-              setTimeout(() => {
-                URL.revokeObjectURL(fileURL);
-                if (container.parentNode) {
-                  document.body.removeChild(container);
-                }
-              }, 100);
-              
-              toast.success('Invoice downloaded successfully');
-            }
-            
-            return null;
-          }}
-        </PDFDownloadLink>
+    try {
+      // Show loading toast
+      toast.loading('Generating PDF...', { id: 'pdf-download' });
+      
+      // Get detailed card information for the invoice
+      const cardDetails = await getCardDetails(invoice);
+      
+      // Create the PDF document
+      const pdfDocument = (
+        <PurchaseInvoicePDF 
+          seller={invoice.seller} 
+          date={formatDateForDisplay(invoice.date)}
+          cards={cardDetails} 
+          invoiceNumber={invoice.invoiceNumber}
+          notes={invoice.notes}
+          totalAmount={invoice.totalAmount}
+          profile={profile}
+        />
       );
       
-      // Render and cleanup
-      ReactDOM.render(pdfLinkElement, container);
-    });
+      // Generate the PDF blob using @react-pdf/renderer's pdf function
+      const pdfBlob = await pdf(pdfDocument).toBlob();
+      
+      // Create a download link and trigger it
+      const fileURL = URL.createObjectURL(pdfBlob);
+      const link = document.createElement('a');
+      link.href = fileURL;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      
+      // Clean up
+      setTimeout(() => {
+        URL.revokeObjectURL(fileURL);
+        document.body.removeChild(link);
+      }, 100);
+      
+      toast.success('Invoice downloaded successfully', { id: 'pdf-download' });
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast.error('Error generating PDF', { id: 'pdf-download' });
+    }
+  };
+  
+  // Get detailed card information for the invoice
+  const getCardDetails = async (invoice) => {
+    try {
+      // If we have card IDs, fetch the full card details
+      if (invoice.cards && invoice.cards.length > 0) {
+        // Log the card data for debugging
+        console.log('Card data from invoice:', invoice.cards);
+        
+        // Process cards to ensure they have proper display names
+        const processedCards = invoice.cards.map(card => {
+          // Create a copy of the card to avoid modifying the original
+          const processedCard = {...card};
+          
+          // If the card doesn't have a name property but has a set property,
+          // create a display name using the set
+          if (!processedCard.name && !processedCard.player && processedCard.set) {
+            processedCard.displayName = `${processedCard.set} Card`;
+          } else {
+            processedCard.displayName = processedCard.name || processedCard.player || 'Unnamed Card';
+          }
+          
+          return processedCard;
+        });
+        
+        console.log('Processed cards for PDF:', processedCards);
+        return processedCards;
+      }
+      return [];
+    } catch (error) {
+      console.error('Error fetching card details:', error);
+      return [];
+    }
   };
 
   // Load purchase invoices
@@ -377,16 +442,45 @@ const PurchaseInvoices = () => {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <div className="flex justify-between items-center mb-4">
-              <div className="text-sm text-gray-500 dark:text-gray-400">
-                {invoices.length} {invoices.length === 1 ? 'invoice' : 'invoices'} found
+            <div className="flex flex-col sm:flex-row justify-between items-center mb-4 gap-4">
+              <div className="w-full sm:w-1/2">
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Search invoices..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full px-4 py-2 pl-10 rounded-lg 
+                            border border-gray-200 dark:border-gray-700/50 
+                            bg-white dark:bg-[#252B3B]
+                            text-gray-900 dark:text-white
+                            focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary
+                            placeholder-gray-500 dark:placeholder-gray-400"
+                  />
+                  <span className="material-icons absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                    search
+                  </span>
+                </div>
+                <div className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                  {filteredInvoices.length} of {invoices.length} {invoices.length === 1 ? 'invoice' : 'invoices'} found
+                </div>
               </div>
-              <button 
-                className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
-                onClick={() => setShowCreateModal(true)}
-              >
-                Create New Invoice
-              </button>
+              <div className="flex gap-3">
+                <button 
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                  onClick={handleExportAllInvoices}
+                  title="Export all invoices as a zip file"
+                >
+                  <span className="material-icons text-sm">archive</span>
+                  Export All
+                </button>
+                <button 
+                  className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+                  onClick={() => setShowCreateModal(true)}
+                >
+                  Create New Invoice
+                </button>
+              </div>
             </div>
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead className="bg-gray-50 dark:bg-gray-800">
@@ -464,21 +558,21 @@ const PurchaseInvoices = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 flex">
                       <button 
-                        className="text-primary hover:text-primary/80 transition-colors mr-3 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
+                        className="text-white hover:text-gray-300 transition-colors mr-3 p-2"
                         onClick={() => handleDownloadInvoice(invoice)}
                         title="Download PDF"
                       >
                         <span className="material-icons text-xl">download</span>
                       </button>
                       <button 
-                        className="text-blue-500 hover:text-blue-700 transition-colors mr-3 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
+                        className="text-white hover:text-gray-300 transition-colors mr-3 p-2"
                         onClick={() => handleEditInvoice(invoice)}
                         title="Edit Invoice"
                       >
                         <span className="material-icons text-xl">edit</span>
                       </button>
                       <button 
-                        className="text-red-500 hover:text-red-700 transition-colors p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
+                        className="text-white hover:text-gray-300 transition-colors p-2"
                         onClick={async () => {
                           if (window.confirm('Are you sure you want to delete this invoice?')) {
                             try {

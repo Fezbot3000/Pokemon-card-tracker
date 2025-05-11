@@ -3120,6 +3120,281 @@ class DatabaseService {
   }
 
   /**
+   * Get all purchase invoices from the database
+   * @returns {Promise<Array>} - Promise resolving to an array of purchase invoices
+   */
+  async getPurchaseInvoices() {
+    try {
+      const db = await this.ensureDB();
+      return new Promise((resolve, reject) => {
+        const transaction = db.transaction([PURCHASE_INVOICES_STORE], 'readonly');
+        const store = transaction.objectStore(PURCHASE_INVOICES_STORE);
+        const request = store.getAll();
+        
+        request.onsuccess = () => {
+          resolve(request.result || []);
+        };
+        
+        request.onerror = (event) => {
+          logger.error('Error getting purchase invoices:', event.target.error);
+          reject(event.target.error);
+        };
+      });
+    } catch (error) {
+      logger.error('Error in getPurchaseInvoices:', error);
+      return [];
+    }
+  }
+  
+  /**
+   * Get a purchase invoice by ID
+   * @param {string} id - ID of the invoice to get
+   * @returns {Promise<Object|null>} - Promise resolving to the invoice or null if not found
+   */
+  async getPurchaseInvoice(id) {
+    try {
+      const db = await this.ensureDB();
+      return new Promise((resolve, reject) => {
+        const transaction = db.transaction([PURCHASE_INVOICES_STORE], 'readonly');
+        const store = transaction.objectStore(PURCHASE_INVOICES_STORE);
+        const request = store.get(id);
+        
+        request.onsuccess = () => {
+          resolve(request.result || null);
+        };
+        
+        request.onerror = (event) => {
+          logger.error(`Error getting purchase invoice ${id}:`, event.target.error);
+          reject(event.target.error);
+        };
+      });
+    } catch (error) {
+      logger.error(`Error in getPurchaseInvoice for ID ${id}:`, error);
+      return null;
+    }
+  }
+  
+  /**
+   * Save a purchase invoice to the database
+   * @param {Object} invoice - The invoice to save
+   * @returns {Promise<Object>} - Promise resolving to the saved invoice
+   */
+  async savePurchaseInvoice(invoice) {
+    try {
+      const db = await this.ensureDB();
+      return new Promise((resolve, reject) => {
+        const transaction = db.transaction([PURCHASE_INVOICES_STORE], 'readwrite');
+        const store = transaction.objectStore(PURCHASE_INVOICES_STORE);
+        
+        // Ensure the invoice has an ID
+        if (!invoice.id) {
+          invoice.id = `invoice_${Date.now()}_${Math.floor(Math.random() * 10000)}`;
+        }
+        
+        // Add timestamp if not present
+        if (!invoice.timestamp) {
+          invoice.timestamp = Date.now();
+        }
+        
+        // Count the cards if not already counted
+        if (!invoice.cardCount && invoice.cards && Array.isArray(invoice.cards)) {
+          invoice.cardCount = invoice.cards.length;
+        }
+        
+        const request = store.put(invoice);
+        
+        request.onsuccess = () => {
+          // If Firestore sync is enabled, also save to Firestore
+          if (featureFlags.enableFirestoreSync) {
+            this.savePurchaseInvoiceToFirestore(invoice).catch(error => {
+              logger.error(`Error saving purchase invoice ${invoice.id} to Firestore:`, error);
+            });
+          }
+          
+          resolve(invoice);
+        };
+        
+        request.onerror = (event) => {
+          logger.error('Error saving purchase invoice:', event.target.error);
+          reject(event.target.error);
+        };
+      });
+    } catch (error) {
+      logger.error('Error in savePurchaseInvoice:', error);
+      throw error;
+    }
+  }
+  
+  /**
+   * Delete a purchase invoice from the database
+   * @param {string} id - ID of the invoice to delete
+   * @returns {Promise<boolean>} - Promise resolving to true if successful
+   */
+  async deletePurchaseInvoice(id) {
+    try {
+      const db = await this.ensureDB();
+      return new Promise((resolve, reject) => {
+        const transaction = db.transaction([PURCHASE_INVOICES_STORE], 'readwrite');
+        const store = transaction.objectStore(PURCHASE_INVOICES_STORE);
+        const request = store.delete(id);
+        
+        request.onsuccess = () => {
+          // If Firestore sync is enabled, also delete from Firestore
+          if (featureFlags.enableFirestoreSync) {
+            this.deletePurchaseInvoiceFromFirestore(id).catch(error => {
+              logger.error(`Error deleting purchase invoice ${id} from Firestore:`, error);
+            });
+          }
+          
+          resolve(true);
+        };
+        
+        request.onerror = (event) => {
+          logger.error(`Error deleting purchase invoice ${id}:`, event.target.error);
+          reject(event.target.error);
+        };
+      });
+    } catch (error) {
+      logger.error(`Error in deletePurchaseInvoice for ID ${id}:`, error);
+      throw error;
+    }
+  }
+  
+  /**
+   * Save a purchase invoice to Firestore
+   * @param {Object} invoice - The invoice to save
+   * @returns {Promise<boolean>} - Promise resolving to true if successful
+   */
+  async savePurchaseInvoiceToFirestore(invoice) {
+    if (!featureFlags.enableFirestoreSync) {
+      logger.debug('Firestore sync disabled, not saving purchase invoice');
+      return false;
+    }
+    
+    try {
+      const userId = this.getCurrentUserId();
+      if (!userId) {
+        logger.error('No user ID available, cannot save purchase invoice to Firestore');
+        return false;
+      }
+      
+      // Import Firebase
+      const { db } = await import('./firebase');
+      const { doc, setDoc } = await import('firebase/firestore');
+      
+      // Create a document reference
+      const invoiceRef = doc(db, 'users', userId, 'purchaseInvoices', invoice.id);
+      
+      // Clean the invoice object to remove undefined values
+      const cleanedInvoice = {};
+      Object.keys(invoice).forEach(key => {
+        if (invoice[key] !== undefined) {
+          cleanedInvoice[key] = invoice[key];
+        }
+      });
+      
+      // Save the invoice
+      await setDoc(invoiceRef, {
+        ...cleanedInvoice,
+        updatedAt: new Date()
+      });
+      
+      logger.debug(`Purchase invoice ${invoice.id} saved to Firestore`);
+      return true;
+    } catch (error) {
+      logger.error(`Error saving purchase invoice ${invoice.id} to Firestore:`, error);
+      return false;
+    }
+  }
+  
+  /**
+   * Delete a purchase invoice from Firestore
+   * @param {string} id - ID of the invoice to delete
+   * @returns {Promise<boolean>} - Promise resolving to true if successful
+   */
+  async deletePurchaseInvoiceFromFirestore(id) {
+    if (!featureFlags.enableFirestoreSync) {
+      logger.debug('Firestore sync disabled, not deleting purchase invoice');
+      return false;
+    }
+    
+    try {
+      const userId = this.getCurrentUserId();
+      if (!userId) {
+        logger.error('No user ID available, cannot delete purchase invoice from Firestore');
+        return false;
+      }
+      
+      // Import Firebase
+      const { db } = await import('./firebase');
+      const { doc, deleteDoc } = await import('firebase/firestore');
+      
+      // Create a document reference
+      const invoiceRef = doc(db, 'users', userId, 'purchaseInvoices', id);
+      
+      // Delete the invoice
+      await deleteDoc(invoiceRef);
+      
+      logger.debug(`Purchase invoice ${id} deleted from Firestore`);
+      return true;
+    } catch (error) {
+      logger.error(`Error deleting purchase invoice ${id} from Firestore:`, error);
+      return false;
+    }
+  }
+  
+  /**
+   * Sync purchase invoices from Firestore to local database
+   * @returns {Promise<number>} - Promise resolving to the number of synced invoices
+   */
+  async syncPurchaseInvoicesFromFirestore() {
+    if (!featureFlags.enableFirestoreSync) {
+      logger.debug('Firestore sync disabled, not syncing purchase invoices');
+      return 0;
+    }
+    
+    try {
+      const userId = this.getCurrentUserId();
+      if (!userId) {
+        logger.error('No user ID available, cannot sync purchase invoices from Firestore');
+        return 0;
+      }
+      
+      // Import Firebase
+      const { db } = await import('./firebase');
+      const { collection, getDocs } = await import('firebase/firestore');
+      
+      // Get all purchase invoices from Firestore
+      const invoicesRef = collection(db, 'users', userId, 'purchaseInvoices');
+      const querySnapshot = await getDocs(invoicesRef);
+      
+      let syncCount = 0;
+      const syncPromises = [];
+      
+      querySnapshot.forEach((doc) => {
+        const invoice = doc.data();
+        syncPromises.push(
+          this.savePurchaseInvoice(invoice)
+            .then(() => {
+              syncCount++;
+            })
+            .catch((error) => {
+              logger.error(`Error syncing purchase invoice ${invoice.id}:`, error);
+            })
+        );
+      });
+      
+      await Promise.all(syncPromises);
+      logger.debug(`Synced ${syncCount} purchase invoices from Firestore`);
+      
+      return syncCount;
+    } catch (error) {
+      logger.error('Error syncing purchase invoices from Firestore:', error);
+      return 0;
+    }
+  }
+  
+  /**
    * Save custom Pokemon set to Firestore
    * @param {string} setName - Name of the set to save
    * @param {string} year - Year the set belongs to

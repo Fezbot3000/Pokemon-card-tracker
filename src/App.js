@@ -39,6 +39,7 @@ import { processImportedData } from './utils/dataProcessor';
 import db from './services/db';
 import { TutorialProvider, useTutorial } from './contexts/TutorialContext';
 import { SubscriptionProvider, useSubscription } from './contexts/SubscriptionContext';
+import InvoiceProvider from './contexts/InvoiceContext';
 import TutorialModal from './components/TutorialModal';
 import ErrorBoundary from './components/ErrorBoundary';
 import PremiumFeatures from './components/PremiumFeatures';
@@ -2914,21 +2915,23 @@ const RootProviders = () => (
             <BackupProgressBar />
             <RestoreProvider>
               <RestoreProgressBar />
-              <Toast
-                position="top-center"
-                toastOptions={{
-                  duration: 3000,
-                  style: {
-                    background: '#1B2131',
-                    color: '#FFFFFF',
-                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                    borderRadius: '12px',
-                    padding: '12px 24px',
-                    fontWeight: '500'
-                  }
-                }}
-              />
-              <Outlet />
+              <InvoiceProvider>
+                <Toast
+                  position="top-center"
+                  toastOptions={{
+                    duration: 3000,
+                    style: {
+                      background: '#1B2131',
+                      color: '#FFFFFF',
+                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                      borderRadius: '12px',
+                      padding: '12px 24px',
+                      fontWeight: '500'
+                    }
+                  }}
+                />
+                <Outlet />
+              </InvoiceProvider>
             </RestoreProvider>
           </BackupProvider>
         </TutorialProvider>

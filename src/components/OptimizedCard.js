@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, memo } from 'react';
 import ImagePersistenceManager from '../utils/ImagePersistenceManager';
 import db from '../services/db';
 import logger from '../utils/logger';
+import { useInvoiceContext } from '../contexts/InvoiceContext';
 
 /**
  * OptimizedCard - Performance optimized card component
@@ -13,6 +14,7 @@ const OptimizedCard = memo(({ card, onCardClick, ...props }) => {
   const [isImageLoading, setIsImageLoading] = useState(true);
   const imageRef = useRef(null);
   const hasLoadedRef = useRef(false);
+  const { isCardInInvoice } = useInvoiceContext();
   
   // Load card image with caching
   useEffect(() => {
@@ -110,7 +112,17 @@ const OptimizedCard = memo(({ card, onCardClick, ...props }) => {
       </div>
       
       <div className="card-details">
-        <h3 className="card-title">{card.pokemonName || 'Unnamed Card'}</h3>
+        <div className="flex justify-between items-start">
+          <h3 className="card-title">{card.pokemonName || 'Unnamed Card'}</h3>
+          {isCardInInvoice && card.id && isCardInInvoice(card.id) && (
+            <span 
+              className="material-icons text-sm text-blue-500 dark:text-blue-400 ml-1" 
+              title="This card is attached to a purchase invoice"
+            >
+              receipt
+            </span>
+          )}
+        </div>
         <div className="card-metadata">
           <p className="card-set">{card.setName || 'Unknown Set'}</p>
           <p className="card-number">{card.cardNumber || 'No #'}</p>
