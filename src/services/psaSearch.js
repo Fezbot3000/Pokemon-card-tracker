@@ -433,7 +433,8 @@ const parsePSACardData = (psaData) => {
     populationHigher: cert.TotalPopulationHigher || 0,
     varietyType: cert.Variety || '',
     certificationDate: cert.CertDate || '',
-    player: cert.Subject || '', // Just the character/player
+    // Show edition info (e.g., '1st Edition', 'Unlimited') in player field if present, otherwise fallback to character/player
+    player: (cert.Variety && /(Edition|Unlimited|1st)/i.test(cert.Variety)) ? cert.Variety : (cert.Subject || ''),
     brand: cert.Brand || '',
     psaUrl: `https://www.psacard.com/cert/${cert.CertNumber || ''}`,
     isPSAAuthenticated: true,
