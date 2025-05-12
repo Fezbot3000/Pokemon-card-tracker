@@ -1130,7 +1130,6 @@ const CardList = ({
       />
       
       {/* Purchase Invoice Modal */}
-      {/* Purchase Invoice Modal */}
       <CreateInvoiceModal
         isOpen={showPurchaseInvoiceModal}
         onClose={() => {
@@ -1143,6 +1142,12 @@ const CardList = ({
           setShowPurchaseInvoiceModal(false);
           setSelectedCardsForPurchase([]);
           setSelectedCards(new Set());
+          
+          // Navigate to Purchase Invoices page after successful save
+          setTimeout(() => {
+            // Use window.location to navigate to the Purchase Invoices page
+            window.location.href = '/#/purchase-invoices';
+          }, 300); // Short delay to ensure toast is visible
         }}
         preSelectedCards={selectedCardsForPurchase}
       />

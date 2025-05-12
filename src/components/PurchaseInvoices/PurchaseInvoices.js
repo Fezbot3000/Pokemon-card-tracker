@@ -10,6 +10,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db as firestoreDb } from '../../services/firebase';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
+import featureFlags from '../../utils/featureFlags';
 
 /**
  * PurchaseInvoices component
@@ -346,26 +347,75 @@ const PurchaseInvoices = () => {
     }
   };
 
-  // Load purchase invoices
+  // Load purchase invoices with improved cloud synchronization
   useEffect(() => {
     const loadInvoices = async () => {
       try {
         setLoading(true);
         
-        // First try to sync invoices from Firebase
-        try {
-          await db.syncPurchaseInvoicesFromFirestore();
-          console.log('Synced purchase invoices from Firebase');
-        } catch (syncError) {
-          console.error('Error syncing invoices from Firebase:', syncError);
+        // First try to fetch directly from Firestore if online
+        let firestoreInvoices = [];
+        let loadedFromFirestore = false;
+        
+        if (currentUser && navigator.onLine && featureFlags.enableFirestoreSync) {
+          try {
+            // Import Firebase modules
+            const { collection, query, getDocs } = await import('firebase/firestore');
+            
+            // Create a reference to the user's purchase invoices collection
+            const invoicesRef = collection(firestoreDb, 'users', currentUser.uid, 'purchaseInvoices');
+            const q = query(invoicesRef);
+            
+            // Get all purchase invoices for the current user
+            const querySnapshot = await getDocs(q);
+            
+            if (!querySnapshot.empty) {
+              firestoreInvoices = querySnapshot.docs.map(doc => {
+                const data = doc.data();
+                // Ensure the ID is set correctly
+                return { ...data, id: doc.id };
+              });
+              
+              // Update local database with Firestore data
+              for (const invoice of firestoreInvoices) {
+                // Clean the invoice object to remove undefined values
+                const cleanedInvoice = {};
+                Object.entries(invoice).forEach(([key, value]) => {
+                  if (value !== undefined) {
+                    cleanedInvoice[key] = value;
+                  }
+                });
+                await db.savePurchaseInvoice(cleanedInvoice);
+              }
+              
+              // Set invoices from Firestore
+              setInvoices(firestoreInvoices);
+              loadedFromFirestore = true;
+              console.log(`Loaded ${firestoreInvoices.length} invoices directly from Firestore`);
+            }
+          } catch (firestoreError) {
+            console.error('Error loading invoices from Firestore:', firestoreError);
+          }
         }
         
-        // Get purchase invoices from database
-        const purchaseInvoices = await db.getPurchaseInvoices() || [];
-        setInvoices(purchaseInvoices);
+        // If we couldn't load from Firestore, fall back to local database
+        if (!loadedFromFirestore) {
+          // Try to sync invoices from Firebase first
+          try {
+            await db.syncPurchaseInvoicesFromFirestore();
+            console.log('Synced purchase invoices from Firebase');
+          } catch (syncError) {
+            console.error('Error syncing invoices from Firebase:', syncError);
+          }
+          
+          // Get purchase invoices from local database
+          const purchaseInvoices = await db.getPurchaseInvoices() || [];
+          setInvoices(purchaseInvoices);
+          console.log(`Loaded ${purchaseInvoices.length} invoices from local database`);
+        }
       } catch (error) {
-        // Handle error silently - the database might be initializing
-        console.log('Note: Purchase invoices store might be initializing');
+        console.error('Error loading purchase invoices:', error);
+        toast.error('Failed to load purchase invoices');
       } finally {
         setLoading(false);
       }
@@ -606,17 +656,65 @@ const PurchaseInvoices = () => {
           setEditingInvoice(null); // Reset editing state when closing
         }}
         onSave={(newInvoice) => {
-          if (editingInvoice) {
-            // Update existing invoice
-            setInvoices(prev => prev.map(inv => 
-              inv.id === newInvoice.id ? newInvoice : inv
-            ));
-          } else {
-            // Add new invoice
-            setInvoices(prev => [newInvoice, ...prev]);
+          // Prevent default navigation behavior
+          try {
+            if (editingInvoice) {
+              // Update existing invoice
+              setInvoices(prev => prev.map(inv => 
+                inv.id === newInvoice.id ? newInvoice : inv
+              ));
+            } else {
+              // Add new invoice
+              setInvoices(prev => [newInvoice, ...prev]);
+            }
+            
+            // Refresh the invoice list from Firestore
+            setTimeout(() => {
+              // Reload invoices to ensure we have the latest data
+              const loadInvoices = async () => {
+                try {
+                  if (currentUser && navigator.onLine && featureFlags.enableFirestoreSync) {
+                    // Import Firebase modules
+                    const { collection, query, getDocs } = await import('firebase/firestore');
+                    
+                    // Create a reference to the user's purchase invoices collection
+                    const invoicesRef = collection(firestoreDb, 'users', currentUser.uid, 'purchaseInvoices');
+                    const q = query(invoicesRef);
+                    
+                    // Get all purchase invoices for the current user
+                    const querySnapshot = await getDocs(q);
+                    
+                    if (!querySnapshot.empty) {
+                      const firestoreInvoices = querySnapshot.docs.map(doc => {
+                        const data = doc.data();
+                        // Ensure the ID is set correctly
+                        return { ...data, id: doc.id };
+                      });
+                      
+                      // Set invoices from Firestore
+                      setInvoices(firestoreInvoices);
+                      console.log(`Refreshed ${firestoreInvoices.length} invoices from Firestore after save`);
+                    }
+                  }
+                } catch (error) {
+                  console.error('Error refreshing invoices after save:', error);
+                }
+              };
+              
+              loadInvoices();
+            }, 500); // Small delay to ensure Firestore has time to update
+            
+            setShowCreateModal(false);
+            setEditingInvoice(null);
+          } catch (error) {
+            console.error('Error handling invoice save:', error);
+            // Still close the modal even if there's an error
+            setShowCreateModal(false);
+            setEditingInvoice(null);
           }
-          setShowCreateModal(false);
-          setEditingInvoice(null);
+          
+          // Prevent event propagation
+          return false;
         }}
         editingInvoice={editingInvoice}
       />

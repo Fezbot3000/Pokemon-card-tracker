@@ -3285,13 +3285,40 @@ class DatabaseService {
       // Create a document reference
       const invoiceRef = doc(db, 'users', userId, 'purchaseInvoices', invoice.id);
       
-      // Clean the invoice object to remove undefined values
-      const cleanedInvoice = {};
-      Object.keys(invoice).forEach(key => {
-        if (invoice[key] !== undefined) {
-          cleanedInvoice[key] = invoice[key];
-        }
-      });
+      // Deep clean the invoice object to remove undefined values and handle nested objects
+      const deepCleanObject = (obj) => {
+        const cleaned = {};
+        
+        Object.entries(obj).forEach(([key, value]) => {
+          // Skip undefined values
+          if (value === undefined) return;
+          
+          // Handle arrays
+          if (Array.isArray(value)) {
+            cleaned[key] = value.map(item => {
+              if (item === null || item === undefined) return null;
+              return typeof item === 'object' ? deepCleanObject(item) : item;
+            }).filter(item => item !== undefined);
+          }
+          // Handle objects (but not dates or null)
+          else if (value !== null && typeof value === 'object' && !(value instanceof Date)) {
+            cleaned[key] = deepCleanObject(value);
+          }
+          // Handle primitive values
+          else {
+            cleaned[key] = value;
+          }
+        });
+        
+        return cleaned;
+      };
+      
+      const cleanedInvoice = deepCleanObject(invoice);
+      
+      // Add timestamp if not present
+      if (!cleanedInvoice.timestamp) {
+        cleanedInvoice.timestamp = Date.now();
+      }
       
       // Save the invoice
       await setDoc(invoiceRef, {

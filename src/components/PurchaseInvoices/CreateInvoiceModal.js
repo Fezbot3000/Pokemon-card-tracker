@@ -167,19 +167,34 @@ const CreateInvoiceModal = ({ isOpen, onClose, onSave, preSelectedCards = [], ed
     }
     
     try {
-      // Prepare the card data
-      const cardData = selectedCards.map(card => ({
-        id: card.id,
-        name: card.name,
-        player: card.player,
-        set: card.set || card.setName,
-        year: card.year,
-        cardNumber: card.cardNumber,
-        grade: card.grade,
-        gradeVendor: card.gradeVendor,
-        slabSerial: card.slabSerial,
-        investmentAUD: parseFloat(card.investmentAUD) || 0
-      }));
+      // Prevent default form submission behavior that might cause navigation
+      e.stopPropagation();
+      
+      // Prepare the card data - ensure all values are defined
+      const cardData = selectedCards.map(card => {
+        // Create a clean card object with no undefined values
+        const cleanCard = {
+          id: card.id || `card_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          name: card.name || '',
+          player: card.player || '',
+          set: card.set || card.setName || '',
+          year: card.year || '',
+          cardNumber: card.cardNumber || '',
+          grade: card.grade || '',
+          gradeVendor: card.gradeVendor || '',
+          slabSerial: card.slabSerial || '',
+          investmentAUD: parseFloat(card.investmentAUD) || 0
+        };
+        
+        // Remove any remaining undefined values
+        Object.keys(cleanCard).forEach(key => {
+          if (cleanCard[key] === undefined) {
+            cleanCard[key] = '';
+          }
+        });
+        
+        return cleanCard;
+      });
       
       // Calculate total investment
       const totalAmount = cardData.reduce((sum, card) => sum + (card.investmentAUD || 0), 0);
@@ -190,12 +205,12 @@ const CreateInvoiceModal = ({ isOpen, onClose, onSave, preSelectedCards = [], ed
         // Update existing invoice
         invoice = {
           ...editingInvoice,
-          invoiceNumber,
-          date,
-          seller,
-          notes,
+          invoiceNumber: invoiceNumber || '',
+          date: date || new Date().toISOString().split('T')[0],
+          seller: seller || '',
+          notes: notes || '',
           cards: cardData,
-          totalAmount,
+          totalAmount: totalAmount || 0,
           cardCount: selectedCards.length,
           lastUpdated: Date.now()
         };
@@ -207,12 +222,12 @@ const CreateInvoiceModal = ({ isOpen, onClose, onSave, preSelectedCards = [], ed
         // Create new invoice
         invoice = {
           id: `invoice_${Date.now()}`,
-          invoiceNumber,
-          date,
-          seller,
-          notes,
+          invoiceNumber: invoiceNumber || '',
+          date: date || new Date().toISOString().split('T')[0],
+          seller: seller || '',
+          notes: notes || '',
           cards: cardData,
-          totalAmount,
+          totalAmount: totalAmount || 0,
           cardCount: selectedCards.length,
           timestamp: Date.now(),
           userId: currentUser.uid
@@ -224,7 +239,9 @@ const CreateInvoiceModal = ({ isOpen, onClose, onSave, preSelectedCards = [], ed
       }
       
       // Pass the invoice back to the parent component
-      onSave(invoice);
+      if (typeof onSave === 'function') {
+        onSave(invoice);
+      }
       
       // Reset form state before closing
       setSelectedCards([]);
@@ -237,9 +254,24 @@ const CreateInvoiceModal = ({ isOpen, onClose, onSave, preSelectedCards = [], ed
       
       // Close the modal
       onClose();
+      
+      // Navigate to Purchase Invoices page after successful save
+      // Only navigate if we're not already on the Purchase Invoices page
+      if (!window.location.href.includes('/purchase-invoices')) {
+        setTimeout(() => {
+          // Use window.location to navigate to the Purchase Invoices page
+          window.location.href = '/#/purchase-invoices';
+        }, 300); // Short delay to ensure toast is visible
+      }
+      
+      // Prevent any default navigation
+      return false;
     } catch (error) {
       console.error(`Error ${editingInvoice ? 'updating' : 'creating'} purchase invoice:`, error);
       toast.error(`Failed to ${editingInvoice ? 'update' : 'create'} purchase invoice`);
+      
+      // Prevent any default navigation on error
+      return false;
     }
   };
   
