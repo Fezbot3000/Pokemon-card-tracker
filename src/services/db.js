@@ -610,7 +610,7 @@ class DatabaseService {
     }
   }
 
-  async saveCollections(collections = {}, preserveSold = true) {
+  async saveCollections(collections = {}, preserveSold = true, options = {}) {
     logger.debug(`DB: Saving collections: ${Object.keys(collections)}`);
     
     try {
@@ -637,6 +637,12 @@ class DatabaseService {
 
       const savedCollections = {};
       const collectionPromises = [];
+
+      // Check if this is a card movement operation
+      const isCardMovement = options?.operationType === 'moveCards';
+      if (isCardMovement) {
+        logger.debug('DB: This is a card movement operation, ensuring proper sync');
+      }
 
       // Process each collection
       for (const [name, cards] of Object.entries(collections)) {
@@ -674,14 +680,38 @@ class DatabaseService {
                   updatedAt: new Date()
                 });
                 
-                // If we're syncing as part of a single card update, we should only
-                // sync the cards that have the _saveDebug flag set
-                // This prevents unnecessarily processing all cards when just saving one
-                const cardsToSync = cardArray.filter(card => card._saveDebug === true);
+                // Determine which cards to sync
+                let cardsToSync = [];
+                
+                if (isCardMovement) {
+                  // For card movement operations, sync all cards with _saveDebug flag
+                  // AND also sync cards with lastMoved timestamp that's recent
+                  const now = Date.now();
+                  const fiveMinutesAgo = now - (5 * 60 * 1000); // 5 minutes ago
+                  
+                  cardsToSync = cardArray.filter(card => {
+                    // Include cards with _saveDebug flag
+                    if (card._saveDebug === true) return true;
+                    
+                    // Include recently moved cards
+                    if (card.lastMoved) {
+                      const movedTime = new Date(card.lastMoved).getTime();
+                      return movedTime > fiveMinutesAgo;
+                    }
+                    
+                    return false;
+                  });
+                  
+                  logger.debug(`DB: Found ${cardsToSync.length} cards to sync for movement operation`);
+                } else {
+                  // Normal case: only sync cards with _saveDebug flag
+                  cardsToSync = cardArray.filter(card => card._saveDebug === true);
+                  logger.debug(`DB: Found ${cardsToSync.length} cards with _saveDebug flag`);
+                }
                 
                 if (cardsToSync.length > 0) {
-                  // Only sync cards that are being directly saved
-                  logger.debug(`Only syncing ${cardsToSync.length} cards with _saveDebug flag`);
+                  // Sync the identified cards
+                  logger.debug(`DB: Syncing ${cardsToSync.length} cards to Firestore`);
                   
                   for (const card of cardsToSync) {
                     // Skip cards without proper ID
@@ -698,16 +728,16 @@ class DatabaseService {
                     const cardId = card.id || card.slabSerial;
                     try {
                       await shadowSync.shadowWriteCard(cardId, cardWithCollection, name);
+                      logger.debug(`DB: Successfully synced card ${cardId} to collection ${name}`);
                     } catch (cardError) {
                       logger.error(`Failed to sync card ${cardId} to Firestore:`, cardError);
                       // Continue with other cards even if one fails
                     }
                   }
                 } else {
-                  // If no cards have _saveDebug flag, this is likely a full collection sync
+                  // If no cards to sync, this is likely a full collection sync
                   // In this case, the shadowSync might be processing all cards in a different context
-                  // For example, when a user imports cards or performs a bulk operation
-                  logger.debug(`No cards with _saveDebug flag found, skipping individual card syncing`);
+                  logger.debug(`No cards to sync found for collection ${name}`);
                 }
               } catch (syncError) {
                 // Log but don't affect the main operation's success
@@ -781,6 +811,7 @@ class DatabaseService {
         try {
           // Import here to avoid circular dependencies
           const { saveImageToCloud } = await import('./cloudStorage');
+          const { getFirestore, doc, updateDoc } = await import('firebase/firestore');
           
           // Check if this is a replacement (card already has an image)
           let isReplacement = options.isReplacement || false;
@@ -802,28 +833,67 @@ class DatabaseService {
             {...options, isReplacement}
           );
           
-          // Silently update the card in Firestore with the image URL
-          // Doing this without triggering shadow sync to reduce noise
-          try {
-            // Get a direct Firestore reference to avoid shadow sync
-            const db = getFirestore();
-            const cardRef = doc(db, 'users', userId, 'cards', cardId);
-            await updateDoc(cardRef, {
-              imageUrl: downloadURL,
-              hasImage: true,
-              imageUpdatedAt: new Date()
-            });
-            logger.debug(`Directly updated Firestore with image URL for card ${cardId}`);
-          } catch (firestoreError) {
-            // Fall back to shadow sync if direct update fails
-            logger.warn(`Direct Firestore update failed, falling back to shadowSync: ${firestoreError}`);
-            shadowSync.updateCardField(cardId, { 
-              imageUrl: downloadURL,
-              hasImage: true,
-              imageUpdatedAt: new Date()
-            }, true).catch(error => {
-              logger.error(`Failed to update card in Firestore with image URL: ${error}`);
-            });
+          // Make sure we have a valid download URL before updating the card
+          if (downloadURL) {
+            // We don't need to update the local card here - the CardDetails component will handle this
+            // when it saves the card with the new image URL
+            logger.debug(`Image URL ready for card ${cardId}: ${downloadURL}`);
+            
+            // Store the image URL in IndexedDB's images store for caching
+            try {
+              const transaction = this.db.transaction([CARDS_STORE], 'readwrite');
+              const store = transaction.objectStore(CARDS_STORE);
+              const getRequest = store.get(cardId);
+              
+              getRequest.onsuccess = async () => {
+                if (getRequest.result) {
+                  const card = getRequest.result;
+                  card.imageUrl = downloadURL;
+                  card.hasImage = true;
+                  card.imageUpdatedAt = new Date().toISOString();
+                  
+                  const putRequest = store.put(card);
+                  putRequest.onsuccess = () => {
+                    logger.debug(`Updated local card cache with new image URL for card ${cardId}`);
+                  };
+                  putRequest.onerror = (error) => {
+                    logger.error(`Error updating local card cache: ${error}`);
+                  };
+                }
+              };
+              
+              getRequest.onerror = (error) => {
+                logger.error(`Error getting card from local cache: ${error}`);
+              };
+            } catch (localUpdateError) {
+              logger.error(`Failed to update local card cache with image URL: ${localUpdateError}`);
+            }
+            
+            // Silently update the card in Firestore with the image URL
+            // Doing this without triggering shadow sync to reduce noise
+            try {
+              // Get a direct Firestore reference to avoid shadow sync
+              const db = getFirestore();
+              const cardRef = doc(db, 'users', userId, 'cards', cardId);
+              await updateDoc(cardRef, {
+                imageUrl: downloadURL,
+                hasImage: true,
+                imageUpdatedAt: new Date()
+              });
+              logger.debug(`Directly updated Firestore with image URL for card ${cardId}`);
+            } catch (firestoreError) {
+              // Fall back to shadow sync if direct update fails
+              logger.warn(`Direct Firestore update failed, falling back to shadowSync: ${firestoreError}`);
+              shadowSync.updateCardField(cardId, { 
+                imageUrl: downloadURL,
+                hasImage: true,
+                imageUpdatedAt: new Date()
+              }, true).catch(error => {
+                logger.error(`Failed to update card in Firestore with image URL: ${error}`);
+              });
+            }
+          } else {
+            logger.error(`No download URL received for card ${cardId} image upload`);
           }
           
           logger.debug(`Image uploaded to cloud for card ${cardId}, URL: ${downloadURL}`);

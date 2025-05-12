@@ -23,7 +23,7 @@ const PurchaseInvoices = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingInvoice, setEditingInvoice] = useState(null);
   const [profile, setProfile] = useState(null);
-  const [sortField, setSortField] = useState('timestamp');
+  const [sortField, setSortField] = useState('date');
   const [sortDirection, setSortDirection] = useState('desc'); // 'asc' or 'desc'
   const [searchQuery, setSearchQuery] = useState('');
   const { currentUser } = useAuth();
@@ -670,60 +670,29 @@ const PurchaseInvoices = () => {
           setShowCreateModal(false);
           setEditingInvoice(null); // Reset editing state when closing
         }}
-        onSave={(newInvoice) => {
-          // Prevent default navigation behavior
+        onSave={async (newInvoice) => {
+          if (!newInvoice) return;
+          
           try {
             if (editingInvoice) {
-              // Update existing invoice
+              console.log('Updating invoice in local state:', newInvoice);
+              
+              // Update existing invoice in local state immediately
+              // This ensures the UI reflects the changes without needing to refresh from Firestore
               setInvoices(prev => prev.map(inv => 
                 inv.id === newInvoice.id ? newInvoice : inv
               ));
             } else {
-              // Add new invoice
+              console.log('Adding new invoice to local state:', newInvoice);
+              
+              // For new invoices, add to local state immediately
               setInvoices(prev => [newInvoice, ...prev]);
             }
-            
-            // Refresh the invoice list from Firestore
-            setTimeout(() => {
-              // Reload invoices to ensure we have the latest data
-              const loadInvoices = async () => {
-                try {
-                  if (currentUser && navigator.onLine && featureFlags.enableFirestoreSync) {
-                    // Import Firebase modules
-                    const { collection, query, getDocs } = await import('firebase/firestore');
-                    
-                    // Create a reference to the user's purchase invoices collection
-                    const invoicesRef = collection(firestoreDb, 'users', currentUser.uid, 'purchaseInvoices');
-                    const q = query(invoicesRef);
-                    
-                    // Get all purchase invoices for the current user
-                    const querySnapshot = await getDocs(q);
-                    
-                    if (!querySnapshot.empty) {
-                      const firestoreInvoices = querySnapshot.docs.map(doc => {
-                        const data = doc.data();
-                        // Ensure the ID is set correctly
-                        return { ...data, id: doc.id };
-                      });
-                      
-                      // Set invoices from Firestore
-                      setInvoices(firestoreInvoices);
-                      console.log(`Refreshed ${firestoreInvoices.length} invoices from Firestore after save`);
-                    }
-                  }
-                } catch (error) {
-                  console.error('Error refreshing invoices after save:', error);
-                }
-              };
-              
-              loadInvoices();
-            }, 500); // Small delay to ensure Firestore has time to update
             
             setShowCreateModal(false);
             setEditingInvoice(null);
           } catch (error) {
             console.error('Error handling invoice save:', error);
-            // Still close the modal even if there's an error
             setShowCreateModal(false);
             setEditingInvoice(null);
           }

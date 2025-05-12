@@ -24,16 +24,24 @@ const CreateInvoiceModal = ({ isOpen, onClose, onSave, editingInvoice = null, pr
   
   // Initialize form with editing invoice data or pre-selected cards
   useEffect(() => {
-    if (editingInvoice) {
+    // Only initialize the form when the modal is first opened or when switching between edit/create modes
+    if (!isOpen) return;
+    
+    // Create a flag to track if this is the initial load
+    const isInitialLoad = !seller && !invoiceNumber;
+    
+    if (editingInvoice && isInitialLoad) {
       // We're in edit mode - populate form with invoice data
+      console.log('Initializing form with editing invoice data:', editingInvoice);
       setSelectedCards(editingInvoice.cards || []);
       setSeller(editingInvoice.seller || '');
       setDate(editingInvoice.date || new Date().toISOString().split('T')[0]);
       setInvoiceNumber(editingInvoice.invoiceNumber || '');
       setNotes(editingInvoice.notes || '');
       setStep(2); // Skip to invoice details in edit mode
-    } else if (preSelectedCards && preSelectedCards.length > 0) {
+    } else if (preSelectedCards && preSelectedCards.length > 0 && isInitialLoad) {
       // Using pre-selected cards for a new invoice
+      console.log('Initializing form with pre-selected cards');
       setSelectedCards(preSelectedCards);
       
       // Pre-populate the purchase date from the first card's datePurchased field
@@ -43,7 +51,7 @@ const CreateInvoiceModal = ({ isOpen, onClose, onSave, editingInvoice = null, pr
       
       setStep(2); // Skip to invoice details
     }
-  }, [preSelectedCards, editingInvoice]);
+  }, [isOpen, editingInvoice, preSelectedCards]);
 
   // Load collections and cards
   useEffect(() => {
@@ -171,6 +179,9 @@ const CreateInvoiceModal = ({ isOpen, onClose, onSave, editingInvoice = null, pr
       // Prevent default form submission behavior that might cause navigation
       e.stopPropagation();
       
+      // Show loading toast
+      const loadingToast = toast.loading(editingInvoice ? 'Updating invoice...' : 'Creating invoice...');
+      
       // Prepare the card data - ensure all values are defined
       const cardData = selectedCards.map(card => {
         // Create a clean card object with no undefined values
@@ -203,9 +214,10 @@ const CreateInvoiceModal = ({ isOpen, onClose, onSave, editingInvoice = null, pr
       let invoice;
       
       if (editingInvoice) {
-        // Update existing invoice
+        // Update existing invoice - preserve the original ID
         invoice = {
           ...editingInvoice,
+          id: editingInvoice.id, // Ensure we keep the original ID
           invoiceNumber: invoiceNumber || '',
           date: date || new Date().toISOString().split('T')[0],
           seller: seller || '',
@@ -216,8 +228,11 @@ const CreateInvoiceModal = ({ isOpen, onClose, onSave, editingInvoice = null, pr
           lastUpdated: Date.now()
         };
         
+        console.log('Saving updated invoice:', invoice);
+        
         // Save updated invoice to database
         await db.savePurchaseInvoice(invoice);
+        toast.dismiss(loadingToast);
         toast.success('Purchase invoice updated successfully!');
       } else {
         // Create new invoice
@@ -234,8 +249,11 @@ const CreateInvoiceModal = ({ isOpen, onClose, onSave, editingInvoice = null, pr
           userId: currentUser.uid
         };
         
+        console.log('Saving new invoice:', invoice);
+        
         // Save new invoice to database
         await db.savePurchaseInvoice(invoice);
+        toast.dismiss(loadingToast);
         toast.success('Purchase invoice created successfully!');
       }
       
@@ -255,16 +273,6 @@ const CreateInvoiceModal = ({ isOpen, onClose, onSave, editingInvoice = null, pr
       
       // Close the modal
       onClose();
-      
-      // Navigate to Purchase Invoices page after successful save
-      // Only navigate if we're not already on the Purchase Invoices page
-      if (!window.location.pathname.includes('/purchase-invoices')) {
-        // Use React Router's navigate function for a smooth transition
-        // Small delay to ensure toast is visible before navigation
-        setTimeout(() => {
-          navigate('/purchase-invoices');
-        }, 300);
-      }
       
       // Prevent any default navigation
       return false;
@@ -621,7 +629,7 @@ const CreateInvoiceModal = ({ isOpen, onClose, onSave, editingInvoice = null, pr
                              hover:bg-primary/90
                              transition-colors"
                   >
-                    Create Invoice
+                    {editingInvoice ? 'Save Changes' : 'Create Invoice'}
                   </button>
                 </div>
               </form>

@@ -77,6 +77,9 @@ export const saveImageToCloud = async (imageBlob, userId, cardId, options = {}) 
   try {
     logger.debug(`Starting image upload for user ${userId}, card ${cardId}`);
     
+    // Always treat this as a replacement to force deletion of the old image
+    const isReplacement = true;
+    
     // Convert the image blob to base64
     const reader = new FileReader();
     
@@ -105,6 +108,19 @@ export const saveImageToCloud = async (imageBlob, userId, cardId, options = {}) 
     // Get a reference to Firebase Functions
     const functions = getFunctions();
     
+    // First, try to delete the existing image if it exists
+    try {
+      const deleteCardImageFn = httpsCallable(functions, 'deleteCardImage');
+      await deleteCardImageFn({
+        userId,
+        cardId
+      });
+      logger.debug(`Successfully requested deletion of existing image for card ${cardId}`);
+    } catch (deleteError) {
+      // Don't fail if deletion fails, just log it
+      logger.warn(`Failed to delete existing image for card ${cardId}:`, deleteError);
+    }
+    
     // Get a reference to the storeCardImage function
     const storeCardImageFn = httpsCallable(functions, 'storeCardImage');
     
@@ -114,7 +130,7 @@ export const saveImageToCloud = async (imageBlob, userId, cardId, options = {}) 
       userId,
       cardId,
       imageBase64: base64Data,
-      isReplacement: options.isReplacement || false
+      isReplacement: isReplacement // Always force replacement
     });
     
     // Get the download URL from the result
@@ -127,8 +143,11 @@ export const saveImageToCloud = async (imageBlob, userId, cardId, options = {}) 
     // Fix the URL if needed
     const fixedUrl = fixStorageUrl(downloadURL);
     
-    logger.debug(`Image upload successful, URL: ${fixedUrl.substring(0, 30)}...`);
-    return fixedUrl;
+    // Add a cache-busting parameter to the URL to force refresh
+    const cacheBustUrl = `${fixedUrl}?t=${Date.now()}`;
+    
+    logger.debug(`Image upload successful, URL: ${cacheBustUrl.substring(0, 30)}...`);
+    return cacheBustUrl;
   } catch (error) {
     logger.error('Error uploading image to Firebase Storage:', error);
     throw error;

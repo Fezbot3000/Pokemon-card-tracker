@@ -780,16 +780,39 @@ const CardList = ({
       
       // Update each card's collection
       for (const card of cardsToMove) {
-        // Set both collection and collectionId properties for compatibility
-        const updatedCard = { 
-          ...card, 
+        // Prepare card data for the *explicit Firestore write* for the move operation
+        const cardDataForFirestoreWrite = {
+          ...card,
           collection: targetCollection,
           collectionId: targetCollection,
-          lastMoved: new Date().toISOString() // Add timestamp for verification
+          lastMoved: new Date().toISOString(), // Add timestamp for verification
+          // IMPORTANT: Do NOT set _saveDebug or _lastUpdateTime here, so shadowWriteCard attempts the write
+        };
+        // Ensure any pre-existing skip flags from the original card object are removed for this specific write
+        delete cardDataForFirestoreWrite._saveDebug;
+        delete cardDataForFirestoreWrite._lastUpdateTime;
+
+        // Sync to Firestore if feature flag is enabled
+        try {
+          const shadowSync = await import('../services/shadowSync').then(module => module.default);
+          // This call should now make shadowWriteCard proceed to the actual repository.updateCard
+          await shadowSync.shadowWriteCard(card.slabSerial, cardDataForFirestoreWrite, targetCollection);
+          console.log(`[CardList] Successfully synced card ${card.slabSerial} (move op) to Firestore in collection ${targetCollection}`);
+        } catch (syncError) {
+          // Log but don't fail the operation
+          console.error(`[CardList] Error syncing card ${card.slabSerial} (move op) to Firestore:`, syncError);
+        }
+
+        // Now prepare the card object for updatedCollections (local state and for IndexedDB via saveCollections)
+        // This version is flagged to indicate it has just been processed.
+        const updatedCardForLocalStateAndIndexedDB = {
+          ...cardDataForFirestoreWrite, // Base it on what was sent to Firestore
+          _saveDebug: true, // Flag for db.saveCollections to know it was just handled
+          _lastUpdateTime: new Date().toISOString() // Standard update tracking timestamp
         };
         
-        // Add card to target collection
-        updatedCollections[targetCollection].push(updatedCard);
+        // Add card to target collection in local state
+        updatedCollections[targetCollection].push(updatedCardForLocalStateAndIndexedDB);
         
         // Remove card from source collection
         if (isAllCardsView) {
@@ -819,7 +842,8 @@ const CardList = ({
         // Sync to Firestore if feature flag is enabled
         try {
           const shadowSync = await import('../services/shadowSync').then(module => module.default);
-          await shadowSync.shadowWriteCard(card.slabSerial, updatedCard, targetCollection);
+          // Make sure to pass the updated card with _saveDebug flag
+          await shadowSync.shadowWriteCard(card.slabSerial, updatedCardForLocalStateAndIndexedDB, targetCollection);
           console.log(`[CardList] Successfully synced card ${card.slabSerial} to Firestore in collection ${targetCollection}`);
         } catch (syncError) {
           // Log but don't fail the operation
@@ -827,8 +851,14 @@ const CardList = ({
         }
       }
       
-      // Save updated collections to database
-      await db.saveCollections(updatedCollections);
+      // Save updated collections to database with explicit flags
+      // Mark that we're doing a collection move operation
+      const saveOptions = {
+        preserveSold: true,
+        operationType: 'moveCards'
+      };
+      
+      await db.saveCollections(updatedCollections, saveOptions.preserveSold, saveOptions);
 
       // Update state
       setShowMoveModal(false);

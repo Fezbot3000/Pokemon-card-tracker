@@ -295,11 +295,12 @@ const CardDetails = memo(({
           const loadingToast = toast.loading('Uploading image...');
           
           // Now actually upload the image to Firebase
+          // Always force replacement to ensure old image is deleted
           const imageUrl = await db.saveImage(
             card.id || card.slabSerial, 
             editedCard._pendingImageFile, 
             { 
-              isReplacement: card.hasImage === true, 
+              isReplacement: true, // Always force replacement
               silent: false // Show toast for image upload
             }
           );
@@ -310,19 +311,30 @@ const CardDetails = memo(({
           // Check if we got a data URL (fallback for development)
           const isDataUrl = imageUrl && imageUrl.startsWith('data:');
           
+          // Force a unique timestamp to prevent caching issues
+          const timestamp = new Date().toISOString();
+          
           // Update the finalCardData directly
           finalCardData = {
             ...finalCardData,
             imageUrl: imageUrl,
             hasImage: true,
             _isDataUrl: isDataUrl, // Flag to indicate this is a data URL
-            imageUpdatedAt: new Date().toISOString(), // Add timestamp to force refresh
+            imageUpdatedAt: timestamp, // Add timestamp to force refresh
             _pendingImageFile: null,
-            _blobUrl: null
+            _blobUrl: null,
+            _forceImageRefresh: Date.now() // Add a unique timestamp to force refresh
           };
           
-          // Update the card image state
+          // Update the card image state with the new URL
           setCardImage(imageUrl);
+          
+          // Force a refresh of the image by creating an image element
+          const img = new Image();
+          img.src = imageUrl;
+          img.onload = () => {
+            console.log('[CardDetails] Image preloaded successfully');
+          };
           
           // We don't use the blob URL anymore since we have the Firebase URL
           // Revoke the blob URL after we've updated all references
@@ -385,7 +397,15 @@ const CardDetails = memo(({
       // Update the card in the database
       console.log('[CardDetails] Calling updateCard...');
       const saveStart = performance.now();
-      await updateCard(processedCard);
+      
+      // Make sure we're using the function from props
+      if (typeof onUpdateCard !== 'function') {
+        throw new Error('onUpdateCard function is not provided to CardDetails component');
+      }
+      
+      // Pass the processed card to the parent component's update function
+      await onUpdateCard(processedCard);
+      
       const saveEnd = performance.now();
       console.log(`[CardDetails] updateCard finished in ${(saveEnd - saveStart).toFixed(2)}ms`);
       
