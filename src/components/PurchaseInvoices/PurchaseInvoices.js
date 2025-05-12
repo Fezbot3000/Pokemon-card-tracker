@@ -235,27 +235,42 @@ const PurchaseInvoices = () => {
     // Count unique sellers
     const uniqueSellers = new Set(invoices.map(invoice => invoice.seller)).size;
     
+    // Format currency without abbreviations
+    const formatFullCurrency = (amount) => {
+      // Convert to number and handle invalid values
+      const num = parseFloat(amount || 0);
+      if (isNaN(num)) return '$0.00';
+      
+      // Format with commas and 2 decimal places, no abbreviations
+      return '$' + num.toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+    };
+    
     return [
       {
         label: 'Total Spent',
         value: totalSpent,
-        formattedValue: formatCurrency(totalSpent),
+        formattedValue: formatFullCurrency(totalSpent),
         isProfit: false
       },
       {
         label: 'Cards Purchased',
         value: totalCards,
+        formattedValue: totalCards.toString(), // Ensure it's a string with no abbreviations
         icon: 'style'
       },
       {
         label: 'Avg Cost/Card',
         value: avgCostPerCard,
-        formattedValue: formatCurrency(avgCostPerCard),
+        formattedValue: formatFullCurrency(avgCostPerCard),
         isProfit: false
       },
       {
         label: 'Sellers',
         value: uniqueSellers,
+        formattedValue: uniqueSellers.toString(), // Ensure it's a string with no abbreviations
         icon: 'person'
       }
     ];

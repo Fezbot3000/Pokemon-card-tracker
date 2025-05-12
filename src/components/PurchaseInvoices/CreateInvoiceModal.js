@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { toast } from 'react-hot-toast';
-import db from '../../services/db';
 import { useAuth } from '../../design-system';
+import { toast } from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
+import db from '../../services/db';
 
 /**
  * Modal component for creating or editing a purchase invoice
  */
-const CreateInvoiceModal = ({ isOpen, onClose, onSave, preSelectedCards = [], editingInvoice = null }) => {
+const CreateInvoiceModal = ({ isOpen, onClose, onSave, editingInvoice = null, preSelectedCards = [] }) => {
   const [selectedCards, setSelectedCards] = useState(preSelectedCards || []);
   const [collections, setCollections] = useState({});
   const [loading, setLoading] = useState(true);
@@ -14,12 +15,12 @@ const CreateInvoiceModal = ({ isOpen, onClose, onSave, preSelectedCards = [], ed
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [invoiceNumber, setInvoiceNumber] = useState('');
   const [notes, setNotes] = useState('');
-  // If preSelectedCards are provided, start at step 2 (invoice details)
   const [step, setStep] = useState(preSelectedCards && preSelectedCards.length > 0 ? 2 : 1); // 1: Select Cards, 2: Invoice Details
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredCards, setFilteredCards] = useState([]);
   const [selectedCollection, setSelectedCollection] = useState('All Collections');
   const { currentUser } = useAuth();
+  const navigate = useNavigate();
   
   // Initialize form with editing invoice data or pre-selected cards
   useEffect(() => {
@@ -257,11 +258,12 @@ const CreateInvoiceModal = ({ isOpen, onClose, onSave, preSelectedCards = [], ed
       
       // Navigate to Purchase Invoices page after successful save
       // Only navigate if we're not already on the Purchase Invoices page
-      if (!window.location.href.includes('/purchase-invoices')) {
+      if (!window.location.pathname.includes('/purchase-invoices')) {
+        // Use React Router's navigate function for a smooth transition
+        // Small delay to ensure toast is visible before navigation
         setTimeout(() => {
-          // Use window.location to navigate to the Purchase Invoices page
-          window.location.href = '/#/purchase-invoices';
-        }, 300); // Short delay to ensure toast is visible
+          navigate('/purchase-invoices');
+        }, 300);
       }
       
       // Prevent any default navigation

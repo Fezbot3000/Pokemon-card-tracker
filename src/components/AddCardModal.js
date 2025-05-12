@@ -20,7 +20,8 @@ const AddCardModal = ({
   onSave,
   collections = [],
   className = '',
-  onNewCollectionCreated
+  onNewCollectionCreated,
+  defaultCollection = ''
 }) => {
   // Initial card data
   const emptyCard = {
@@ -43,7 +44,11 @@ const AddCardModal = ({
   
   // State for collection selection
   const [selectedCollection, setSelectedCollection] = useState(() => {
-    // Filter out "Sold" collection from the initial selection
+    // Use defaultCollection if provided and it exists in collections
+    if (defaultCollection && collections.includes(defaultCollection) && defaultCollection.toLowerCase() !== 'sold') {
+      return defaultCollection;
+    }
+    // Otherwise filter out "Sold" collection from the initial selection
     const availableCollections = collections.filter(c => c.toLowerCase() !== 'sold');
     return availableCollections[0] || '';
   });
@@ -506,7 +511,8 @@ AddCardModal.propTypes = {
   onSave: PropTypes.func.isRequired,
   collections: PropTypes.array,
   className: PropTypes.string,
-  onNewCollectionCreated: PropTypes.func
+  onNewCollectionCreated: PropTypes.func,
+  defaultCollection: PropTypes.string
 };
 
 export default AddCardModal;

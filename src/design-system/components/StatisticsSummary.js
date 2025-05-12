@@ -34,10 +34,11 @@ const StatisticsSummary = ({
               <div className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 sm:mb-2 uppercase">
                 {stat.label}
               </div>
-              <div className={`text-xl sm:text-3xl md:text-4xl font-medium flex items-center gap-1 
+              <div className={`text-xl sm:text-3xl md:text-4xl font-medium flex items-center gap-1 whitespace-normal break-words overflow-visible max-w-full
                 ${stat.isProfit && stat.value > 0 ? 'text-green-500' : ''}
                 ${stat.isProfit && stat.value < 0 ? 'text-red-500' : ''}
                 ${!stat.isProfit ? 'text-gray-900 dark:text-white' : ''}`}
+                style={{ wordBreak: 'break-word', textOverflow: 'clip' }}
               >
                 {stat.icon && (
                   <span className="text-gray-500 dark:text-gray-400">

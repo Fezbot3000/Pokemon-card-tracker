@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback, memo, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../design-system';
 import db from '../services/db';
 import { formatCurrency, formatCondensed } from '../utils/formatters';
@@ -82,6 +83,8 @@ const CardList = ({
   collections,
   setCollections
 }) => {
+  // Initialize navigate function from React Router
+  const navigate = useNavigate();
 
   const [filter, setFilter] = useState('');
   const [sortField, setSortField] = useState(
@@ -1138,15 +1141,15 @@ const CardList = ({
           setSelectedCards(new Set());
         }}
         onSave={(newInvoice) => {
-          toast.success('Purchase invoice created successfully!');
+          // Toast is already shown in the CreateInvoiceModal component
           setShowPurchaseInvoiceModal(false);
           setSelectedCardsForPurchase([]);
           setSelectedCards(new Set());
           
-          // Navigate to Purchase Invoices page after successful save
+          // Navigate to Purchase Invoices page after successful save using React Router
           setTimeout(() => {
-            // Use window.location to navigate to the Purchase Invoices page
-            window.location.href = '/#/purchase-invoices';
+            // Use React Router's navigate function for a smooth transition
+            navigate('/purchase-invoices');
           }, 300); // Short delay to ensure toast is visible
         }}
         preSelectedCards={selectedCardsForPurchase}

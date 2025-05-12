@@ -2664,6 +2664,7 @@ To import this backup:
           onSave={(cardData, imageFile, targetCollection) => handleAddCard(cardData, imageFile, targetCollection)}
           collections={Object.keys(collections)}
           onNewCollectionCreated={handleNewCollectionCreation}
+          defaultCollection={selectedCollection !== 'All Cards' && selectedCollection !== 'Sold' ? selectedCollection : ''}
         />
       )}
 
