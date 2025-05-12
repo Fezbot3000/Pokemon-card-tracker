@@ -88,8 +88,8 @@ const Dropdown = ({
                      bg-white dark:bg-[#1B2131] shadow-lg rounded-md 
                      border border-gray-200 dark:border-gray-700/50 py-1 scrollbar-hide`}
           style={{ 
-            maxHeight: '300px', 
-            overflowY: 'auto',
+            maxHeight: 'none', // Allow dropdown to grow as tall as needed
+            overflowY: 'visible', // No vertical scroll
             overflowX: 'hidden',
             display: 'block'
           }}

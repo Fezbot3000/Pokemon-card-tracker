@@ -137,7 +137,7 @@ const Header = ({
                         </div>
                           
                           {/* Collection list */}
-                          <div className="max-h-60 overflow-y-auto">
+                          <div>
                             {collections.map((collection) => (
                               <button
                                 key={collection}
