@@ -113,7 +113,7 @@ const OptimizedCard = memo(({ card, onCardClick, ...props }) => {
       
       <div className="card-details">
         <div className="flex justify-between items-start">
-          <h3 className="card-title">{card.pokemonName || 'Unnamed Card'}</h3>
+          <h3 className="card-title">{card.cardName || card.pokemonName || 'Unnamed Card'}</h3>
           {isCardInInvoice && card.id && isCardInInvoice(card.id) && (
             <span 
               className="material-icons text-sm text-blue-500 dark:text-blue-400 ml-1" 
