@@ -1,0 +1,80 @@
+{
+  "version": "1.0",
+  "exportDate": "2025-05-13T21:52:35.003Z",
+  "collections": {
+    "Gengar collection": [
+      {
+        "id": "83465776",
+        "category": "Pokemon",
+        "year": 2014,
+        "set": "POKEMON JAPANESE XY PHANTOM GATE",
+        "quantity": 1,
+        "lastMoved": "2025-04-25T22:54:02.220Z",
+        "hasImage": true,
+        "updatedAt": {
+          "seconds": 1745897705,
+          "nanoseconds": 210000000
+        },
+        "currentValueAUD": 760,
+        "imageUpdatedAt": {
+          "nanoseconds": 660000000,
+          "seconds": 1745620998
+        },
+        "investmentUSD": 0,
+        "setName": "XY",
+        "collectionId": "Gengar collection",
+        "gradingCompany": "PSA",
+        "player": "M GENGAR EX",
+        "lastUpdated": "2025-04-25T22:43:40.501Z",
+        "collection": "Gengar collection",
+        "_uniqueKey": "83465776-Gengar collection-0",
+        "card": "2014 POKEMON JAPANESE XY PHANTOM GATE #034 M GENGAR EX PHANTOM GATE-1ST ED",
+        "investmentAUD": 760,
+        "psaUrl": "https://www.psacard.com/cert/83465776",
+        "createdAt": "2025-04-25T22:43:18.663Z",
+        "collectionName": "Cards I want to buy",
+        "currentValueUSD": 0,
+        "slabSerial": "83465776",
+        "condition": "PSA 10",
+        "userId": "fToCVlMmDmg918hzPinbUlV9EwU2",
+        "population": 600,
+        "imageUrl": "https://firebasestorage.googleapis.com/v0/b/mycardtracker-c8479.firebasestorage.app/o/images%2FfToCVlMmDmg918hzPinbUlV9EwU2%2F83465776.jpeg?alt=media&token=8521686c-08cf-4f2a-bd42-909b873bbe56",
+        "datePurchased": "2025-04-25",
+        "investment": {
+          "value": 760,
+          "currency": "AUD",
+          "date": "2025-04-25"
+        },
+        "currentValue": {
+          "value": 484.08,
+          "currency": "USD",
+          "lastUpdated": "2025-05-13T20:34:53.258Z"
+        },
+        "psaData": null,
+        "psaSearched": false,
+        "_saveDebug": true
+      }
+    ]
+  },
+  "settings": {
+    "defaultCollection": "All Cards"
+  },
+  "profile": {
+    "authProvider": "password",
+    "lastLogin": {
+      "seconds": 1743477396,
+      "nanoseconds": 805000000
+    },
+    "photoURL": null,
+    "displayName": "matthewjakekane",
+    "email": "matthewjakekane@icloud.com",
+    "collections": {
+      "Default Collection": []
+    },
+    "createdAt": {
+      "seconds": 1743477396,
+      "nanoseconds": 805000000
+    }
+  },
+  "soldCards": []
+}
