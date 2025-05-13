@@ -213,8 +213,20 @@ class CardRepository {
   // Card Operations
   async createCard(cardData, imageFile = null) {
     try {
-      // Check if card already exists by slabSerial or id to prevent duplicates
-      const cardId = cardData.id || cardData.slabSerial;
+      // Check if this is a raw card by looking at the condition field
+      const isRawCard = cardData.condition?.startsWith('RAW');
+      
+      // For raw cards, we don't require a slabSerial, but we'll use it if provided
+      // For graded cards, we'll use the slabSerial or id as the card ID
+      let cardId;
+      
+      if (isRawCard) {
+        // For raw cards, use the provided ID or generate a new one
+        cardId = cardData.id || doc(collection(firestoreDb, 'temp')).id;
+      } else {
+        // For graded cards, use the slabSerial or provided ID
+        cardId = cardData.id || cardData.slabSerial;
+      }
       
       if (cardId) {
         // Check both id and slabSerial for existing card
@@ -244,7 +256,7 @@ class CardRepository {
       }
 
       // Generate a new ID if not provided
-      const finalCardId = cardId || doc(collection(this.db, 'temp')).id;
+      const finalCardId = cardId || doc(collection(firestoreDb, 'temp')).id;
       
       // Create a reference to the new card document
       const cardRef = doc(this.cardsRef, finalCardId);
@@ -272,7 +284,9 @@ class CardRepository {
       const newCardData = {
         ...cardData,
         id: finalCardId,
-        slabSerial: cardData.slabSerial || finalCardId, // Ensure slabSerial is set
+        // For raw cards, don't set slabSerial if not provided
+        // For graded cards, ensure slabSerial is set to either the provided value or the card ID
+        slabSerial: isRawCard ? (cardData.slabSerial || '') : (cardData.slabSerial || finalCardId),
         imageUrl,
         userId: this.userId,
         createdAt: serverTimestamp(),

@@ -141,9 +141,12 @@ const AddCardModal = ({
       newErrors.card = 'Card name is required';
     }
     
-    // Serial number is required - we call it slabSerial
-    if (!newCard.slabSerial?.trim()) {
-      newErrors.slabSerial = 'Serial number is required';
+    // Check if this is a raw card by looking at the condition field
+    const isRawCard = newCard.condition?.startsWith('RAW');
+    
+    // Serial number is required for graded cards only
+    if (!isRawCard && !newCard.slabSerial?.trim()) {
+      newErrors.slabSerial = 'Serial number is required for graded cards';
     }
     
     // Selected collection is required and cannot be "Sold"

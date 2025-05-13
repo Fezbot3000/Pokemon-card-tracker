@@ -708,11 +708,12 @@ const CardDetailsForm = ({
             <div>
               <div className="form-label-nowrap">
                 <FormField
-                  label="Serial Number"
+                  label={selectedCompany === 'RAW' ? "Serial Number (Optional)" : "Serial Number"}
                   name="slabSerial"
                   value={card.slabSerial || ''}
                   onChange={handleInputChange}
                   error={errors.slabSerial}
+                  required={selectedCompany !== 'RAW'}
                 />
               </div>
               {additionalSerialContent && (
