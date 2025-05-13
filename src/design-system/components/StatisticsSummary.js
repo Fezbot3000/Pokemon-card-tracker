@@ -26,29 +26,52 @@ const StatisticsSummary = ({
     >
       <div className="rounded-md p-4 sm:p-6">
         <div className="grid grid-cols-2 sm:grid-cols-4">
-          {statistics.map((stat, index) => (
-            <div
-              key={index}
-              className="flex flex-col items-center justify-center p-4 py-6 sm:p-6 sm:py-8 border-none"
-            >
-              <div className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 sm:mb-2 uppercase">
-                {stat.label}
-              </div>
-              <div className={`text-xl sm:text-3xl md:text-4xl font-medium flex items-center gap-1 whitespace-normal break-words overflow-visible max-w-full
-                ${stat.isProfit && stat.value > 0 ? 'text-green-500' : ''}
-                ${stat.isProfit && stat.value < 0 ? 'text-red-500' : ''}
-                ${!stat.isProfit ? 'text-gray-900 dark:text-white' : ''}`}
-                style={{ wordBreak: 'break-word', textOverflow: 'clip' }}
+          {statistics.map((stat, index) => {
+            let valueToRender = stat.formattedValue || stat.value;
+            const isMonetaryStat = ['PAID', 'VALUE', 'PROFIT'].includes(stat.label.toUpperCase());
+
+            if (isMonetaryStat) {
+              const rawValueString = String(valueToRender).replace(/,/g, ''); // Remove existing commas for parsing
+              const num = parseFloat(rawValueString);
+              if (!isNaN(num)) {
+                // Truncate and then re-format with locale-specific thousands separators and no decimals
+                valueToRender = Math.trunc(num).toLocaleString(undefined, {
+                  minimumFractionDigits: 0,
+                  maximumFractionDigits: 0,
+                });
+              }
+              // If num is NaN, valueToRender remains as its original string form (e.g., an error message or "N/A")
+            }
+
+            return (
+              <div
+                key={index}
+                className="flex flex-col items-center justify-center p-4 py-6 sm:p-6 sm:py-8 border-none"
               >
-                {stat.icon && (
-                  <span className="text-gray-500 dark:text-gray-400">
-                    <Icon name={stat.icon} size="sm" />
-                  </span>
-                )}
-                {stat.formattedValue || stat.value}
+                <div className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 sm:mb-2 uppercase">
+                  {stat.label}
+                </div>
+                <div className={`font-medium flex items-center gap-1 whitespace-nowrap max-w-full
+                  ${stat.isProfit && stat.value > 0 ? 'text-green-500' : ''}
+                  ${stat.isProfit && stat.value < 0 ? 'text-red-500' : ''}
+                  ${!stat.isProfit ? 'text-gray-900 dark:text-white' : ''}`}
+                  style={{
+                    fontSize: 'clamp(1.125rem, calc(0.75rem + 2.5vw), 2.25rem)',
+                    wordBreak: 'break-word',
+                    textOverflow: 'clip',
+                  }}
+                >
+                  {stat.icon && (
+                    <span className="text-gray-500 dark:text-gray-400">
+                      <Icon name={stat.icon} size="sm" />
+                    </span>
+                  )}
+                  {isMonetaryStat && '$'}
+                  {valueToRender}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>
