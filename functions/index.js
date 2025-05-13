@@ -52,6 +52,8 @@ try {
   console.error('Error initializing Firebase Admin SDK:', error);
 }
 
+
+
 // Check subscription status function
 exports.checkSubscriptionStatus = functions.https.onCall(async (data, context) => {
   // Ensure the user is authenticated
