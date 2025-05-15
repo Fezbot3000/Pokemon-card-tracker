@@ -609,10 +609,13 @@ function AppContent() {
     initializeDatabaseAndLoadCollections();
   }, []);
 
-  // Function to export all collection data as a ZIP file
+  // Function to export all data as a ZIP file
   const handleExportData = async (options = {}) => {
     return new Promise(async (resolve, reject) => {
       try {
+        // Show loading toast
+        toast.loading('Preparing backup...', { id: 'export-data' });
+        
         // Create a new ZIP file
         const zip = new JSZip();
         
@@ -625,10 +628,39 @@ function AppContent() {
         // Get sold cards data
         const soldCardsData = await db.getSoldCards();
         
+        // Get purchase invoices data
+        const purchaseInvoicesData = await db.getPurchaseInvoices();
+        
+        // Get user preferences from localStorage
+        const userPreferences = {
+          theme: localStorage.getItem('theme') || 'light',
+          cardListSortField: localStorage.getItem('cardListSortField') || 'name',
+          cardListSortDirection: localStorage.getItem('cardListSortDirection') || 'asc',
+          cardListDisplayMetric: localStorage.getItem('cardListDisplayMetric') || 'value',
+          featureFlags: JSON.parse(localStorage.getItem('appFeatureFlags') || '{}')
+        };
+        
         // Create a data folder in the ZIP
         const dataFolder = zip.folder("data");
         
-        // Add collections data as JSON - include ALL collections
+        // Create a comprehensive data file that includes everything
+        const completeBackupData = {
+          version: '2.0',
+          exportDate: new Date().toISOString(),
+          collections: allCollections,
+          settings: {
+            defaultCollection: selectedCollection
+          },
+          profile: profileData,
+          soldCards: soldCardsData,
+          purchaseInvoices: purchaseInvoicesData,
+          userPreferences: userPreferences
+        };
+        
+        // Add the comprehensive data file
+        dataFolder.file("pokemon-card-tracker-data.json", JSON.stringify(completeBackupData, null, 2));
+        
+        // Add legacy collections.json for backward compatibility
         const collectionsData = {
           version: '1.0',
           exportDate: new Date().toISOString(),
@@ -639,8 +671,6 @@ function AppContent() {
           profile: profileData,
           soldCards: soldCardsData
         };
-
-        // Add collections.json to the data folder
         dataFolder.file("collections.json", JSON.stringify(collectionsData, null, 2));
         
         // Create an images folder in the ZIP
@@ -680,9 +710,16 @@ function AppContent() {
         for (const soldCard of soldCardsData) {
           const promise = (async () => {
             try {
+              // Try to get image from database
               const imageBlob = await db.getImage(soldCard.slabSerial);
               
-              if (!imageBlob) return;
+              if (!imageBlob) {
+                logger.debug(`No image found for card ${soldCard.slabSerial}`);
+                return;
+              }
+              
+              // Log successful image retrieval
+              logger.debug(`Retrieved image for card ${soldCard.slabSerial}, type: ${imageBlob.type}, size: ${imageBlob.size} bytes`);
               
               // Add image to ZIP with slab serial as filename
               const extension = imageBlob.type.split('/')[1] || 'jpg';
@@ -691,9 +728,10 @@ function AppContent() {
               
               // Update card with image path
               soldCard.imagePath = `images/${filename}`;
+              logger.debug(`Added image ${filename} to ZIP for card ${soldCard.slabSerial}`);
             } catch (error) {
-              // Silent fail for individual images
-              logger.error(`Failed to export image for sold card ${soldCard.slabSerial}:`, error);
+              // Log detailed error for debugging
+              logger.error(`Failed to export image for card ${soldCard.slabSerial}:`, error);
             }
           })();
           imagePromises.push(promise);
@@ -703,21 +741,38 @@ function AppContent() {
           // Wait for all images to be processed
           await Promise.all(imagePromises);
           
-          // Update collections data with image paths
+          // Log how many images were processed
+          const imageCount = imagePromises.length;
+          logger.debug(`Processed ${imageCount} image promises for export`);
+          
+          // Update data files with image paths
+          dataFolder.file("pokemon-card-tracker-data.json", JSON.stringify(completeBackupData, null, 2));
           dataFolder.file("collections.json", JSON.stringify(collectionsData, null, 2));
+          
+          // Add a debug file with information about the export process
+          const debugInfo = {
+            timestamp: new Date().toISOString(),
+            collectionsCount: Object.keys(allCollections).length,
+            cardsCount: Object.values(allCollections).reduce((count, cards) => count + (Array.isArray(cards) ? cards.length : 0), 0),
+            soldCardsCount: soldCardsData.length,
+            purchaseInvoicesCount: purchaseInvoicesData.length,
+            imagePromisesCount: imageCount
+          };
+          dataFolder.file("debug-info.json", JSON.stringify(debugInfo, null, 2));
           
           // Add a README file
           const readme = `Pokemon Card Tracker Backup
 Created: ${new Date().toISOString()}
 
 This ZIP file contains:
-- /data/collections.json: All collections, card data, profile data, and sold items
-- /images/: All card images referenced in collections.json
+- /data/pokemon-card-tracker-data.json: Complete backup including all collections, cards, sold items, purchase invoices, and user preferences
+- /data/collections.json: Legacy format for backward compatibility
+- /images/: All card images referenced in the data files
 
 To import this backup:
 1. Use the "Import Backup" button in the app settings
 2. Select this ZIP file
-3. All your collections, profile, sold items and images will be restored`;
+3. All your data will be restored including collections, cards, sold items, purchase invoices, and user preferences`;
           
           zip.file("README.txt", readme);
           
@@ -729,6 +784,9 @@ To import this backup:
               level: 9
             }
           });
+          
+          // Update toast to success
+          toast.success('Backup created successfully!', { id: 'export-data' });
           
           // If returnBlob option is true, return the blob directly instead of downloading
           if (options.returnBlob) {
