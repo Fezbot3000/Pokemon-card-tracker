@@ -28,10 +28,7 @@ import { getFirebaseConfig, getGoogleClientId, getConfigSources } from '../confi
 // Get Firebase config from centralized secrets manager
 const firebaseConfig = getFirebaseConfig();
 
-// Log configured source (environment or fallback) in development mode only
-if (process.env.NODE_ENV === 'development') {
-  logger.log("Firebase config sources:", getConfigSources().firebase);
-}
+// Logging disabled for production readiness
 
 // Check if Firebase app is already initialized to prevent multiple instances
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
@@ -42,9 +39,7 @@ try {
   // Always use getFirestore to avoid conflicts with multiple initialization
   db = getFirestore(app);
   
-  if (process.env.NODE_ENV === 'development') {
-    logger.log("Firestore initialized successfully");
-  }
+  // Logging disabled for production readiness
 } catch (error) {
   logger.error('Failed to initialize Firestore:', error);
   db = getFirestore(app);
@@ -71,13 +66,7 @@ function getCorrectStorageBucket() {
 // Initialize Storage with explicit region and correct bucket
 const storage = getStorage(app);
 
-// Log storage bucket information in development
-if (process.env.NODE_ENV === 'development') {
-  logger.log("Storage bucket:", firebaseConfig.storageBucket);
-  if (firebaseConfig.storageBucket.includes('.appspot.com')) {
-    logger.warn("Using old .appspot.com storage bucket format. Consider updating to .firebasestorage.app");
-  }
-}
+// Logging disabled for production readiness
 
 // Initialize Auth
 const auth = getAuth(app);

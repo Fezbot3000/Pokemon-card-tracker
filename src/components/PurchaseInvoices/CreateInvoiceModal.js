@@ -620,7 +620,7 @@ const CreateInvoiceModal = ({ isOpen, onClose, onSave, editingInvoice = null, pr
                              transition-colors"
                     onClick={handleBack}
                   >
-                    Back
+                    Close
                   </button>
                   <button
                     type="submit"

@@ -67,8 +67,8 @@ const StatisticsSummary = ({
                     </span>
                   )}
                   {/* Only add $ if not already present in valueToRender */}
-                  {isMonetaryStat && !String(valueToRender).startsWith('$') && '$'}
-                  {valueToRender}
+                  {isMonetaryStat && !String(valueToRender).includes('$') && '$'}
+                  {isMonetaryStat && String(valueToRender).startsWith('$') ? String(valueToRender).substring(1) : valueToRender}
                 </div>
               </div>
             );

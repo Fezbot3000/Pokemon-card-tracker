@@ -8,7 +8,7 @@
 const isProduction = process.env.NODE_ENV === 'production';
 
 // Force silence certain logs even in development mode
-// This can be set to true when preparing for production
+// This is set to true for production readiness
 const forceSilence = true;
 
 // Configure logging levels
@@ -22,7 +22,8 @@ const config = {
 };
 
 // Silence ALL console logs except errors in production by overriding console methods
-if (isProduction) {
+// We're also applying this in development when forceSilence is true
+if (isProduction || forceSilence) {
   // Store original console methods
   const originalConsole = {
     log: console.log,

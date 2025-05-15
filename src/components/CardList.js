@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback, memo, useMemo } from 'react';
+import { useInView } from 'react-intersection-observer';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../design-system';
 import db from '../services/db';
@@ -120,6 +121,12 @@ const CardList = ({
   const [showPurchaseInvoiceModal, setShowPurchaseInvoiceModal] = useState(false);
   const [selectedCardsForPurchase, setSelectedCardsForPurchase] = useState([]);
   const [selectedAction, setSelectedAction] = useState('');  // For dropdown selection
+  const [visibleCardCount, setVisibleCardCount] = useState(24); // Initial number of cards to show (4 rows of 6 cards)
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const { ref: loadMoreRef, inView } = useInView({
+    threshold: 0.1,
+    triggerOnce: false
+  });
 
   const valueDropdownRef = useRef(null);
   const metricDropdownRef = useRef(null);
@@ -406,6 +413,11 @@ const CardList = ({
     // Ensure uniqueness by combining slabSerial and collection as fallback key
     return filtered.map((card, idx) => ({ ...card, _uniqueKey: `${card.slabSerial || 'unknown'}-${card.collection || 'none'}-${idx}` }));
   }, [cards, filter, sortField, sortDirection]);
+  
+  // Paginated cards - only show the number of cards specified by visibleCardCount
+  const paginatedCards = useMemo(() => {
+    return filteredCards.slice(0, visibleCardCount);
+  }, [filteredCards, visibleCardCount]);
 
   // Calculate totals
   const totals = useMemo(() => {
@@ -424,7 +436,34 @@ const CardList = ({
     setShowSaleModal(false);
     setBuyer('');
     setFilter('');
+    setVisibleCardCount(24); // Reset pagination when collection changes
   }, [selectedCollection]);
+  
+  // Load more cards when user scrolls to the bottom
+  useEffect(() => {
+    if (inView && !isLoadingMore && paginatedCards.length < filteredCards.length) {
+      setIsLoadingMore(true);
+      // Simulate loading delay for better UX
+      setTimeout(() => {
+        setVisibleCardCount(prevCount => {
+          // Calculate cards per row based on screen size
+          const cardsPerRow = window.innerWidth < 640 ? 2 : // mobile
+                             window.innerWidth < 768 ? 3 : // sm
+                             window.innerWidth < 1024 ? 5 : // md
+                             window.innerWidth < 1280 ? 6 : 7; // lg and xl
+          
+          // Load 2 more rows of cards
+          return prevCount + (cardsPerRow * 2);
+        });
+        setIsLoadingMore(false);
+      }, 300);
+    }
+  }, [inView, isLoadingMore, paginatedCards.length, filteredCards.length]);
+  
+  // Reset pagination when filter changes
+  useEffect(() => {
+    setVisibleCardCount(24);
+  }, [filter]);
 
   const handleMarkAsSold = () => {
     if (selectedCards.size === 0) {
@@ -915,7 +954,8 @@ const CardList = ({
           {
             label: 'Cards',
             value: filteredCards.length,
-            icon: 'style'
+            icon: 'style',
+            subtitle: paginatedCards.length < filteredCards.length ? `Showing ${paginatedCards.length} of ${filteredCards.length}` : undefined
           }
         ]}
         className="mb-3 sm:mb-4"
@@ -942,7 +982,13 @@ const CardList = ({
 
       <CollectionSelector
         selectedCollection={selectedCollection}
-        collections={Object.keys(collections)}
+        collections={[
+          'All Cards', 
+          ...Object.keys(collections).filter(collection => {
+            const lowerCase = collection.toLowerCase();
+            return lowerCase !== 'sold' && !lowerCase.includes('sold');
+          })
+        ]}
         onCollectionChange={onCollectionChange}
         onAddCollection={(newCollectionName) => {
           // Create a new collection
@@ -970,26 +1016,46 @@ const CardList = ({
           <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Try adjusting your search or filters</p>
         </div>
       ) : viewMode === 'grid' ? (
-        <div className={`grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-1 sm:gap-2`}>
-          {filteredCards.map(card => (
-            <Card
-              key={card._uniqueKey}
-              card={card}
-              cardImage={cardImages[card.slabSerial]}
-              onClick={() => onCardClick(card)} 
-              isSelected={selectedCards.has(card.slabSerial)}
-              onSelect={(selected) => handleSelectCard(selected, card.slabSerial)}
-              className=""
-            />
-          ))}
+        <div className="flex flex-col">
+          <div className={`grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-1 sm:gap-2`}>
+            {paginatedCards.map(card => (
+              <Card
+                key={card._uniqueKey}
+                card={card}
+                cardImage={cardImages[card.slabSerial]}
+                onClick={() => onCardClick(card)} 
+                isSelected={selectedCards.has(card.slabSerial)}
+                onSelect={(selected) => handleSelectCard(selected, card.slabSerial)}
+                className=""
+              />
+            ))}
+          </div>
+          
+          {/* Load more indicator */}
+          {paginatedCards.length < filteredCards.length && (
+            <div 
+              ref={loadMoreRef}
+              className="flex justify-center items-center py-4 mt-2"
+            >
+              {isLoadingMore ? (
+                <div className="flex items-center space-x-2">
+                  <div className="w-5 h-5 border-t-2 border-b-2 border-blue-500 rounded-full animate-spin"></div>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">Loading more cards...</span>
+                </div>
+              ) : (
+                <span className="text-sm text-gray-600 dark:text-gray-400">Scroll to load more</span>
+              )}
+            </div>
+          )}
         </div>
       ) : (
-        <div className="space-y-3">
-          {filteredCards.map(card => (
-            <div
-              key={card._uniqueKey}
-              className={`bg-white dark:bg-[#0F0F0F] rounded-2xl overflow-hidden transition-all duration-200 hover:shadow-md ${selectedCards.has(card.slabSerial) ? 'ring-2 ring-[#E6185C]' : 'border border-[#ffffff33] dark:border-[#ffffff1a]'}`}
-            >
+        <div className="flex flex-col">
+          <div className="space-y-3">
+            {paginatedCards.map(card => (
+              <div
+                key={card._uniqueKey}
+                className={`bg-white dark:bg-[#0F0F0F] rounded-2xl overflow-hidden transition-all duration-200 hover:shadow-md ${selectedCards.has(card.slabSerial) ? 'ring-2 ring-[#E6185C]' : 'border border-[#ffffff33] dark:border-[#ffffff1a]'}`}
+              >
               <div className="flex p-4 items-center">
                 {/* Card selection checkbox */}
                 <div className="mr-4">
@@ -1063,7 +1129,25 @@ const CardList = ({
                 </div>
               </div>
             </div>
-          ))}
+            ))}
+          </div>
+          
+          {/* Load more indicator for list view */}
+          {paginatedCards.length < filteredCards.length && (
+            <div 
+              ref={loadMoreRef}
+              className="flex justify-center items-center py-4 mt-2"
+            >
+              {isLoadingMore ? (
+                <div className="flex items-center space-x-2">
+                  <div className="w-5 h-5 border-t-2 border-b-2 border-blue-500 rounded-full animate-spin"></div>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">Loading more cards...</span>
+                </div>
+              ) : (
+                <span className="text-sm text-gray-600 dark:text-gray-400">Scroll to load more</span>
+              )}
+            </div>
+          )}
         </div>
       )}
 

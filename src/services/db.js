@@ -3209,32 +3209,222 @@ class DatabaseService {
   }
 
   /**
-   * Get all purchase invoices from the database
-   * @returns {Promise<Array>} - Promise resolving to an array of purchase invoices
+   * Sync a purchase invoice to Firestore
+   * @param {Object} invoice - The invoice to sync
+   * @returns {Promise<boolean>} - Promise resolving to success status
    */
-  async getPurchaseInvoices() {
+  async syncPurchaseInvoiceToFirestore(invoice) {
+    if (!featureFlags.enableFirestoreSync) {
+      logger.debug('Firestore sync disabled, not syncing purchase invoice');
+      return false;
+    }
+    
     try {
-      const db = await this.ensureDB();
-      return new Promise((resolve, reject) => {
-        const transaction = db.transaction([PURCHASE_INVOICES_STORE], 'readonly');
-        const store = transaction.objectStore(PURCHASE_INVOICES_STORE);
+      const userId = this.getCurrentUserId();
+      if (!userId) {
+        logger.debug('No user ID available, cannot sync purchase invoice');
+        return false;
+    }
+    
+    // Import Firebase
+    const { db } = await import('./firebase');
+    const { doc, setDoc } = await import('firebase/firestore');
+    
+    // Create a reference to the invoice document
+    const invoiceRef = doc(db, 'users', userId, 'purchaseInvoices', invoice.id);
+    
+    // Clean the invoice object to remove any undefined values
+    // Firebase doesn't accept undefined values
+    const cleanInvoice = JSON.parse(JSON.stringify(invoice));
+    
+    // Add sync metadata
+    const invoiceWithMeta = {
+      ...cleanInvoice,
+      lastSynced: Date.now(),
+      userId
+    };
+    
+    try {
+      // Save to Firestore
+      await setDoc(invoiceRef, invoiceWithMeta);
+      logger.debug(`Purchase invoice ${invoice.id} synced to Firestore`);
+      return true;
+    } catch (firestoreError) {
+      // Handle permission errors gracefully
+      if (firestoreError.code === 'permission-denied') {
+        logger.debug('Firestore permission denied, invoice saved locally only');
+      } else {
+        logger.error('Error syncing purchase invoice to Firestore:', firestoreError);
+      }
+      return false;
+    }
+  } catch (error) {
+    // Log the error but don't throw it further
+    logger.error('Error in syncPurchaseInvoiceToFirestore:', error);
+    return false;
+  }
+}
+
+/**
+ * Delete a purchase invoice from Firestore
+ * @param {string} invoiceId - The ID of the invoice to delete
+ * @returns {Promise<boolean>} - Promise resolving to success status
+ */
+async deletePurchaseInvoiceFromFirestore(invoiceId) {
+  if (!featureFlags.enableFirestoreSync) {
+    logger.debug('Firestore sync disabled, not deleting purchase invoice from Firestore');
+    return false;
+  }
+  
+  try {
+    const userId = this.getCurrentUserId();
+    if (!userId) {
+      logger.debug('No user ID available, cannot delete purchase invoice from Firestore');
+      return false;
+    }
+    
+    // Import Firebase
+    const { db } = await import('./firebase');
+    const { doc, deleteDoc } = await import('firebase/firestore');
+    
+    // Create a reference to the invoice document
+    const invoiceRef = doc(db, 'users', userId, 'purchaseInvoices', invoiceId);
+    
+    try {
+      // Delete from Firestore
+      await deleteDoc(invoiceRef);
+      logger.debug(`Purchase invoice ${invoiceId} deleted from Firestore`);
+      return true;
+    } catch (firestoreError) {
+      // Handle permission errors gracefully
+      if (firestoreError.code === 'permission-denied') {
+        logger.debug('Firestore permission denied, invoice deleted locally only');
+      } else {
+        logger.error('Error deleting purchase invoice from Firestore:', firestoreError);
+      }
+      return false;
+    }
+  } catch (error) {
+    // Log the error but don't throw it further
+    logger.error('Error in deletePurchaseInvoiceFromFirestore:', error);
+    return false;
+  }
+}
+
+/**
+ * Sync purchase invoices from Firestore to local database
+ * @returns {Promise<number>} - Promise resolving to the number of synced invoices
+ */
+async syncPurchaseInvoicesFromFirestore() {
+  if (!featureFlags.enableFirestoreSync) {
+    logger.debug('Firestore sync disabled, not syncing purchase invoices from Firestore');
+    return 0;
+  }
+  
+  try {
+    const userId = this.getCurrentUserId();
+    if (!userId) {
+      logger.error('No user ID available, cannot sync purchase invoices from Firestore');
+      return 0;
+    }
+    
+    // Import Firebase
+    const { db } = await import('./firebase');
+    const { collection, getDocs } = await import('firebase/firestore');
+    
+    // Get all purchase invoices for the user
+    const invoicesRef = collection(db, 'users', userId, 'purchaseInvoices');
+    const querySnapshot = await getDocs(invoicesRef);
+    
+    let syncCount = 0;
+    const syncPromises = [];
+    
+    querySnapshot.forEach((doc) => {
+      const invoice = doc.data();
+      syncPromises.push(
+        this.savePurchaseInvoice(invoice)
+          .then(() => {
+            syncCount++;
+          })
+          .catch((error) => {
+            logger.error(`Error syncing purchase invoice ${invoice.id}:`, error);
+          })
+      );
+    });
+    
+    await Promise.all(syncPromises);
+    logger.debug(`Synced ${syncCount} purchase invoices from Firestore`);
+    
+    return syncCount;
+  } catch (error) {
+    logger.error('Error syncing purchase invoices from Firestore:', error);
+    return 0;
+  }
+}
+
+/**
+ * Get all purchase invoices from the database for a specific user
+ * @param {string} userId - The user ID to get purchase invoices for
+ * @returns {Promise<Array>} - Promise resolving to an array of purchase invoices
+ */
+async getPurchaseInvoices(userId) {
+  try {
+    const db = await this.ensureDB();
+    
+    // If no userId is provided, use the current user ID
+    if (!userId) {
+      userId = this.getCurrentUserId();
+    }
+    
+    // If still no userId, return empty array (not logged in)
+    if (!userId) {
+      logger.debug('No user ID available, returning empty purchase invoices array');
+      return [];
+    }
+    
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction([PURCHASE_INVOICES_STORE], 'readonly');
+      const store = transaction.objectStore(PURCHASE_INVOICES_STORE);
+      
+      // Check if the userId index exists
+      if (store.indexNames.contains('userId')) {
+        // Use the userId index to filter by the current user
+        const index = store.index('userId');
+        const request = index.getAll(userId);
+        
+        request.onsuccess = () => {
+          const invoices = request.result || [];
+          logger.debug(`Retrieved ${invoices.length} purchase invoices for user ${userId}`);
+          resolve(invoices);
+        };
+        
+        request.onerror = (event) => {
+          logger.error('Error getting purchase invoices by userId:', event.target.error);
+          reject(event.target.error);
+        };
+      } else {
+        // If no userId index exists, get all and filter manually (fallback)
         const request = store.getAll();
         
         request.onsuccess = () => {
-          resolve(request.result || []);
+          const allInvoices = request.result || [];
+          const userInvoices = allInvoices.filter(invoice => invoice.userId === userId);
+          logger.debug(`Manually filtered ${userInvoices.length} purchase invoices for user ${userId} from ${allInvoices.length} total`);
+          resolve(userInvoices);
         };
         
         request.onerror = (event) => {
           logger.error('Error getting purchase invoices:', event.target.error);
           reject(event.target.error);
         };
-      });
-    } catch (error) {
-      logger.error('Error in getPurchaseInvoices:', error);
-      return [];
-    }
+      }
+    });
+  } catch (error) {
+    logger.error('Error in getPurchaseInvoices:', error);
+    return [];
   }
-  
+}
+
   /**
    * Get a purchase invoice by ID
    * @param {string} id - ID of the invoice to get
@@ -3507,6 +3697,69 @@ class DatabaseService {
     } catch (error) {
       logger.error('Error syncing purchase invoices from Firestore:', error);
       return 0;
+    }
+  }
+
+  /**
+   * Get all purchase invoices from the database for a specific user
+   * @param {string} userId - The user ID to get purchase invoices for
+   * @returns {Promise<Array>} - Promise resolving to an array of purchase invoices
+   */
+  async getPurchaseInvoices(userId) {
+    try {
+      const db = await this.ensureDB();
+      
+      // If no userId is provided, use the current user ID
+      if (!userId) {
+        userId = this.getCurrentUserId();
+      }
+      
+      // If still no userId, return empty array (not logged in)
+      if (!userId) {
+        logger.debug('No user ID available, returning empty purchase invoices array');
+        return [];
+      }
+      
+      return new Promise((resolve, reject) => {
+        const transaction = db.transaction([PURCHASE_INVOICES_STORE], 'readonly');
+        const store = transaction.objectStore(PURCHASE_INVOICES_STORE);
+        
+        // Check if the userId index exists
+        if (store.indexNames.contains('userId')) {
+          // Use the userId index to filter by the current user
+          const index = store.index('userId');
+          const request = index.getAll(userId);
+          
+          request.onsuccess = () => {
+            const invoices = request.result || [];
+            logger.debug(`Retrieved ${invoices.length} purchase invoices for user ${userId}`);
+            resolve(invoices);
+          };
+          
+          request.onerror = (event) => {
+            logger.error('Error getting purchase invoices by userId:', event.target.error);
+            reject(event.target.error);
+          };
+        } else {
+          // If no userId index exists, get all and filter manually (fallback)
+          const request = store.getAll();
+          
+          request.onsuccess = () => {
+            const allInvoices = request.result || [];
+            const userInvoices = allInvoices.filter(invoice => invoice.userId === userId);
+            logger.debug(`Manually filtered ${userInvoices.length} purchase invoices for user ${userId} from ${allInvoices.length} total`);
+            resolve(userInvoices);
+          };
+          
+          request.onerror = (event) => {
+            logger.error('Error getting purchase invoices:', event.target.error);
+            reject(event.target.error);
+          };
+        }
+      });
+    } catch (error) {
+      logger.error('Error in getPurchaseInvoices:', error);
+      return [];
     }
   }
   

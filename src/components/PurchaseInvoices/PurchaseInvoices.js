@@ -423,10 +423,10 @@ const PurchaseInvoices = () => {
             console.error('Error syncing invoices from Firebase:', syncError);
           }
           
-          // Get purchase invoices from local database
-          const purchaseInvoices = await db.getPurchaseInvoices() || [];
+          // Get purchase invoices from local database for the current user only
+          const purchaseInvoices = await db.getPurchaseInvoices(currentUser?.uid) || [];
           setInvoices(purchaseInvoices);
-          console.log(`Loaded ${purchaseInvoices.length} invoices from local database`);
+          console.log(`Loaded ${purchaseInvoices.length} invoices from local database for user ${currentUser?.uid}`);
         }
       } catch (error) {
         console.error('Error loading purchase invoices:', error);
@@ -609,7 +609,9 @@ const PurchaseInvoices = () => {
                       {formatDate(invoice.date)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                      {invoice.seller}
+                      <div className="max-w-[150px] truncate" title={invoice.seller}>
+                        {invoice.seller}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white text-right">
                       {formatCurrency(invoice.totalAmount)}
