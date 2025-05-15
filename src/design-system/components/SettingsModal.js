@@ -1185,6 +1185,30 @@ const SettingsModal = ({
                         Import Sold Items
                       </Button>
                     </div>
+
+                    {/* Update Card Data Section */}
+                    <div className="bg-white dark:bg-[#1B2131] rounded-lg p-4 border border-gray-200 dark:border-indigo-900/20 mt-4">
+                      <h4 className="font-medium text-gray-900 dark:text-white mb-2 flex items-center">
+                        <Icon name="upload" className="text-indigo-400 mr-2" />
+                        Update Card Data
+                      </h4>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+                        Update card values and metadata by importing CSV files with updated information.
+                      </p>
+                      <Button
+                        variant="primary"
+                        onClick={() => {
+                          if (onImportCollection) {
+                            onImportCollection(null, { mode: 'priceUpdate' });
+                          }
+                          onClose();
+                        }}
+                        iconLeft={<Icon name="upload" />}
+                        fullWidth
+                      >
+                        Update Card Data
+                      </Button>
+                    </div>
                   </SettingsPanel>
                 </SettingsPanel>
               </div>

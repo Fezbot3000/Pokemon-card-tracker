@@ -839,7 +839,7 @@ const SoldItems = () => {
   }
 
   return (
-    <div className="pt-16 sm:pt-32 w-full px-1 sm:px-2">
+    <div className="pt-16 sm:pt-20 w-full px-1 sm:px-2">
       {displayData && displayData.length > 0 ? (
         <div className="space-y-6">
           <StatisticsSummary

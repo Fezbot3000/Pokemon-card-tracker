@@ -5,6 +5,7 @@ import db from '../services/db';
 import { formatCurrency, formatCondensed } from '../utils/formatters';
 import { toast } from 'react-hot-toast';
 import { StatisticsSummary, SearchToolbar, Card, ConfirmDialog } from '../design-system';
+import CollectionSelector from '../design-system/components/CollectionSelector';
 import SaleModal from './SaleModal';
 import MoveCardsModal from './MoveCardsModal';
 import CreateInvoiceModal from './PurchaseInvoices/CreateInvoiceModal';
@@ -81,7 +82,8 @@ const CardList = ({
   onAddCard,
   selectedCollection,
   collections,
-  setCollections
+  setCollections,
+  onCollectionChange
 }) => {
   // Initialize navigate function from React Router
   const navigate = useNavigate();
@@ -890,7 +892,7 @@ const CardList = ({
   };
 
   return (
-    <div className="pt-16 sm:pt-32 w-full px-1 sm:px-2">
+    <div className="pt-16 sm:pt-20 w-full px-1 sm:px-2">
       {/* Stats Section */}
       <StatisticsSummary 
         statistics={[
@@ -937,6 +939,28 @@ const CardList = ({
           onAddCard={onAddCard}
         />
       </div>
+
+      <CollectionSelector
+        selectedCollection={selectedCollection}
+        collections={Object.keys(collections)}
+        onCollectionChange={onCollectionChange}
+        onAddCollection={(newCollectionName) => {
+          // Create a new collection
+          const updatedCollections = {
+            ...collections,
+            [newCollectionName]: []
+          };
+          setCollections(updatedCollections);
+          // Save to database
+          db.saveCollections(updatedCollections);
+          
+          // After creating a new collection, select it
+          if (typeof onCollectionChange === 'function') {
+            onCollectionChange(newCollectionName);
+          }
+        }}
+        className="mb-2"
+      />
 
       {/* Cards Display */}
       {filteredCards.length === 0 ? (

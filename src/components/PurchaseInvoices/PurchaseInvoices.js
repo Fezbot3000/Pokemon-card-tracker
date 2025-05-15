@@ -478,16 +478,13 @@ const PurchaseInvoices = () => {
   }, [currentUser]);
 
   return (
-    <div className="pt-16 sm:pt-32 w-full px-1 sm:px-2">
+    <div className="pt-16 sm:pt-20 w-full px-1 sm:px-2">
+      {/* Statistics Summary */}
+      {!loading && invoices.length > 0 && (
+        <StatisticsSummary statistics={getInvoiceStatistics()} className="mb-4" />
+      )}
+      
       <div className="bg-white dark:bg-[#1B2131] rounded-xl shadow-md p-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-          Purchase Invoices
-        </h1>
-        
-        {/* Statistics Summary */}
-        {!loading && invoices.length > 0 && (
-          <StatisticsSummary statistics={getInvoiceStatistics()} />
-        )}
         
         {loading ? (
           <div className="flex justify-center items-center py-12">
@@ -517,8 +514,7 @@ const PurchaseInvoices = () => {
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full px-4 py-2 pl-10 rounded-lg 
                             border border-gray-200 dark:border-gray-700/50 
-                            bg-white dark:bg-[#252B3B]
-                            text-gray-900 dark:text-white
+                            bg-white dark:bg-[#000000] text-gray-900 dark:text-white
                             focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary
                             placeholder-gray-500 dark:placeholder-gray-400"
                   />
@@ -548,7 +544,7 @@ const PurchaseInvoices = () => {
               </div>
             </div>
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-              <thead className="bg-gray-50 dark:bg-gray-800">
+              <thead className="bg-gray-50 dark:bg-[#000000]">
                 <tr>
                   <th
                     scope="col"
@@ -561,7 +557,7 @@ const PurchaseInvoices = () => {
                   </th>
                   <th
                     scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 dark:bg-[#000000]"
                     onClick={() => handleSort('date')}
                   >
                     Date {sortField === 'date' && (

@@ -195,36 +195,55 @@ class DatabaseService {
     const expectedCollections = ['Default Collection', 'sold'];
     
     try {
-      const transaction = this.db.transaction([COLLECTIONS_STORE], 'readonly');
-      const store = transaction.objectStore(COLLECTIONS_STORE);
-      
-      // Check each expected collection
+      // Check each expected collection with a separate transaction for each
       for (const collectionName of expectedCollections) {
-        const request = store.get([userId, collectionName]);
-        
-        await new Promise((resolve) => {
-          request.onsuccess = async () => {
-            if (!request.result) {
-              logger.debug(`Collection "${collectionName}" not found for user, creating it`);
-              
-              // Create the missing collection in a new transaction
-              try {
-                await this.createEmptyCollection(collectionName);
-                logger.debug(`Created empty "${collectionName}" collection`);
-              } catch (error) {
-                logger.error(`Error creating "${collectionName}" collection:`, error);
-              }
-            } else {
-              logger.debug(`Collection "${collectionName}" exists for user`);
-            }
-            resolve();
-          };
+        try {
+          // Create a new transaction for each collection check
+          const readTransaction = this.db.transaction([COLLECTIONS_STORE], 'readonly');
+          const store = readTransaction.objectStore(COLLECTIONS_STORE);
           
-          request.onerror = (event) => {
-            logger.error(`Error checking for "${collectionName}" collection:`, event.target.error);
-            resolve();
-          };
-        });
+          const collectionExists = await new Promise((resolve, reject) => {
+            const request = store.get([userId, collectionName]);
+            
+            request.onsuccess = () => {
+              resolve(!!request.result);
+            };
+            
+            request.onerror = (event) => {
+              logger.error(`Error checking for collection "${collectionName}":`, event.target.error);
+              resolve(false); // Assume it doesn't exist if there's an error
+            };
+          });
+          
+          // If collection doesn't exist, create it in a new transaction
+          if (!collectionExists) {
+            logger.debug(`Collection "${collectionName}" not found for user, creating it`);
+            
+            await new Promise((resolve, reject) => {
+              const writeTransaction = this.db.transaction([COLLECTIONS_STORE], 'readwrite');
+              const writeStore = writeTransaction.objectStore(COLLECTIONS_STORE);
+              
+              const writeRequest = writeStore.put({
+                userId,
+                name: collectionName,
+                cards: []
+              });
+              
+              writeTransaction.oncomplete = () => {
+                logger.debug(`Collection "${collectionName}" created successfully`);
+                resolve();
+              };
+              
+              writeTransaction.onerror = (event) => {
+                logger.error(`Error creating collection "${collectionName}":`, event.target.error);
+                resolve(); // Resolve anyway to continue with other collections
+              };
+            });
+          }
+        } catch (collectionError) {
+          logger.error(`Error processing collection "${collectionName}":`, collectionError);
+          // Continue with other collections
+        }
       }
     } catch (error) {
       logger.error('Error ensuring collections:', error);

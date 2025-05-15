@@ -66,7 +66,8 @@ const StatisticsSummary = ({
                       <Icon name={stat.icon} size="sm" />
                     </span>
                   )}
-                  {isMonetaryStat && '$'}
+                  {/* Only add $ if not already present in valueToRender */}
+                  {isMonetaryStat && !String(valueToRender).startsWith('$') && '$'}
                   {valueToRender}
                 </div>
               </div>

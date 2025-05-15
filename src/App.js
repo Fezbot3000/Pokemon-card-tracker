@@ -2506,6 +2506,10 @@ To import this backup:
                       selectedCollection={selectedCollection}
                       collections={collections}
                       setCollections={setCollections}
+                      onCollectionChange={(collection) => {
+                        setSelectedCollection(collection);
+                        localStorage.setItem('selectedCollection', collection);
+                      }}
                     />
                   )}
                 </>

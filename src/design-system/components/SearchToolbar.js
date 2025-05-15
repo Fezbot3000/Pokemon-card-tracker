@@ -76,7 +76,7 @@ const SearchToolbar = ({
       data-component-name="SearchToolbar"
     >
       <div className="flex items-center">
-        <Icon name="sort" size="sm" className="text-white" />
+        <Icon name="sort" size="sm" className="text-gray-600 dark:text-gray-300" />
         {/* Arrow Button */}
         <button
           type="button"
@@ -89,7 +89,7 @@ const SearchToolbar = ({
           <Icon 
             name={currentSortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward'} 
             size="sm" 
-            className="text-white"
+            className="text-gray-600 dark:text-gray-300"
           />
         </button>
       </div>
