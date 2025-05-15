@@ -25,11 +25,6 @@ class ShadowSyncService {
     this.listenerUnsubscribe = null;
     this.onlineStatus = navigator.onLine;
 
-    // Track migration status
-    this.migrationInProgress = false;
-    this.migrationProgress = 0;
-    this.migrationError = null;
-    
     // Track sync activity
     this.syncInProgress = false;
     this.syncOperationsCount = 0;
@@ -642,18 +637,6 @@ class ShadowSyncService {
       logger.error('[ShadowSync] Error checking for cloud data:', error);
       return false;
     }
-  }
-
-  /**
-   * Get the current migration status
-   * @returns {Object} Migration status object
-   */
-  getMigrationStatus() {
-    return {
-      inProgress: this.migrationInProgress,
-      progress: this.migrationProgress,
-      error: this.migrationError
-    };
   }
 
   // Additional methods will be implemented in future phases:

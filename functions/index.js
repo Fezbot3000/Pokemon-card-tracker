@@ -722,6 +722,63 @@ exports.createCheckoutSession = functions.https.onCall(async (data, context) => 
   }
 });
 
+// Cloud Function to delete card images from Firebase Storage
+exports.deleteCardImage = functions.https.onCall(async (data, context) => {
+  // Ensure the user is authenticated
+  if (!context.auth) {
+    throw new functions.https.HttpsError(
+      'unauthenticated',
+      'You must be logged in to use this function'
+    );
+  }
+  
+  const { userId, cardId } = data;
+  
+  if (!userId || !cardId) {
+    throw new functions.https.HttpsError(
+      'invalid-argument',
+      'Missing required parameters: userId, cardId'
+    );
+  }
+  
+  // Verify that the authenticated user matches the requested userId
+  if (context.auth.uid !== userId) {
+    throw new functions.https.HttpsError(
+      'permission-denied',
+      'You can only delete images for your own user ID'
+    );
+  }
+  
+  try {
+    // Get a reference to the Firebase Storage bucket
+    const bucket = admin.storage().bucket();
+    
+    // Define the path where the image is stored
+    const imagePath = `images/${userId}/${cardId}.jpeg`;
+    
+    // Check if the file exists
+    const [exists] = await bucket.file(imagePath).exists();
+    
+    if (!exists) {
+      console.log(`Image ${imagePath} does not exist`);
+      return { success: true, message: 'Image not found' };
+    }
+    
+    // Delete the file
+    await bucket.file(imagePath).delete();
+    console.log(`Successfully deleted image: ${imagePath}`);
+    
+    return { success: true };
+  } catch (error) {
+    console.error('Error deleting image:', error);
+    throw new functions.https.HttpsError(
+      'internal',
+      'Failed to delete image',
+      error.message
+    );
+  }
+});
+
 // Add a test function to check the Stripe price
 exports.testStripePrice = functions.https.onCall(async (data, context) => {
   // Ensure the user is authenticated

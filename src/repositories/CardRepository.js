@@ -1063,7 +1063,6 @@ class CardRepository {
     try {
       // Import utilities
       const { parseCSVFile, processImportedData, validateCSVStructure } = await import('../utils/dataProcessor');
-      const { getUsdToAudRate } = await import('../utils/currencyAPI');
       
       // Parse CSV file
       const parsedData = await parseCSVFile(file);
@@ -1074,8 +1073,8 @@ class CardRepository {
         throw new Error(validation.error);
       }
       
-      // Get current exchange rate
-      const exchangeRate = await getUsdToAudRate();
+      // Use a default exchange rate
+      const exchangeRate = 1.5;
       
       // For price update mode, get existing cards
       let existingCards = [];

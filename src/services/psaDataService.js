@@ -97,20 +97,47 @@ class PSADataService {
    * This should be called during app initialization
    */
   async initializeCollection() {
-    try {
-      // Check if collection exists by trying to get a document
-      const testDoc = doc(db, PSA_COLLECTION, 'test-doc');
-      await setDoc(testDoc, { 
-        initialized: true,
-        timestamp: serverTimestamp()
-      });
-      
-      logger.debug('PSA collection initialized successfully');
-      return true;
-    } catch (error) {
-      logger.error('Failed to initialize PSA collection:', error);
-      return false;
+    const MAX_RETRIES = 3;
+    let attempt = 0;
+    
+    while (attempt < MAX_RETRIES) {
+      try {
+        // Check if collection exists by trying to get a document
+        const testDoc = doc(db, PSA_COLLECTION, 'test-doc');
+        await setDoc(testDoc, { 
+          initialized: true,
+          timestamp: serverTimestamp()
+        }, { merge: true }); // Added merge option for idempotency
+        
+        logger.debug('PSA collection initialized successfully');
+        return true;
+      } catch (error) {
+        attempt++;
+        
+        if (error.code === 'failed-precondition' || 
+            error.message?.includes('network') || 
+            error.message?.includes('blocked')) {
+          logger.warn(`Firestore connection blocked (attempt ${attempt}/${MAX_RETRIES}):`, error);
+          // Show user-friendly message on first attempt
+          if (attempt === 1) {
+            // Import toast only if needed to avoid circular dependencies
+            const { toast } = require('react-hot-toast');
+            toast.error('Connection to Firebase blocked. If you use an ad blocker, please whitelist this site.');
+          }
+        } else {
+          logger.error('Failed to initialize PSA collection:', error);
+        }
+        
+        if (attempt >= MAX_RETRIES) {
+          logger.error('Max retries reached for PSA collection initialization');
+          return false;
+        }
+        
+        // Exponential backoff
+        await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, attempt)));
+      }
     }
+    return false;
   }
 }
 
