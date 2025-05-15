@@ -488,21 +488,7 @@ const CardDetailsForm = ({
             )}
             
             {/* Profit/Loss Display - Moved under the image */}
-            {(typeof card.investmentAUD === 'number' || typeof card.investmentAUD === 'string') && 
-             (typeof card.currentValueAUD === 'number' || typeof card.currentValueAUD === 'string') && (
-              <div 
-                className="mt-4 bg-gray-50 dark:bg-[#000] rounded-lg p-3 border border-gray-200 dark:border-gray-700 flex items-center justify-between"
-                data-component-name="CardDetailsForm"
-              >
-                <span className="text-sm font-medium text-gray-600 dark:text-gray-300">Profit/Loss:</span>
-                <span 
-                  className={`font-medium ${getProfit() >= 0 ? 'text-green-600 dark:text-green-500' : 'text-red-600 dark:text-red-500'}`}
-                  data-component-name="CardDetailsForm"
-                >
-                  ${Math.abs(getProfit()).toFixed(2)} {getProfit() >= 0 ? 'profit' : 'loss'}
-                </span>
-              </div>
-            )}
+            {/* Profit/Loss section removed - now displayed in CardDetailsModal top bar */}
           </div>
         </div>
         

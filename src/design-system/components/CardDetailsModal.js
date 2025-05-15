@@ -88,6 +88,14 @@ const CardDetailsModal = ({
     return 'loose';
   };
   
+  // Calculate profit safely
+  const getProfit = () => {
+    if (!card) return 0;
+    const investment = card.investmentAUD === '' ? 0 : parseFloat(card.investmentAUD) || 0;
+    const currentValue = card.currentValueAUD === '' ? 0 : parseFloat(card.currentValueAUD) || 0;
+    return currentValue - investment;
+  };
+  
   // Update local state when props change or modal opens
   useEffect(() => {
     if (isOpen) {
@@ -342,12 +350,12 @@ const CardDetailsModal = ({
         <div className="flex flex-col h-full">
           {/* Tabs - Moved to the top to replace the modal title */}
           <div className="border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10 bg-white dark:bg-[#0F0F0F] py-2 -mt-6 -mx-6 px-6">
-            <div className="flex">
+            <div className="flex border-b border-gray-200 dark:border-gray-700 mt-2">
               <button
-                className={`py-2 px-4 font-medium text-sm border-b-2 ${
+                className={`py-2 px-4 font-medium text-sm ${
                   activeTab === 'details'
-                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+                    ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400'
+                    : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
                 }`}
                 onClick={() => setActiveTab('details')}
               >
@@ -355,16 +363,27 @@ const CardDetailsModal = ({
               </button>
               {priceChartingProductId && (
                 <button
-                  className={`py-2 px-4 font-medium text-sm border-b-2 ${
+                  className={`py-2 px-4 font-medium text-sm ${
                     activeTab === 'price-history'
-                      ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+                      ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400'
+                      : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
                   }`}
                   onClick={() => setActiveTab('price-history')}
                 >
                   Price History
                 </button>
               )}
+              
+              {/* Profit/Loss Display */}
+              <div className="ml-auto flex items-center">
+                <span className="text-sm font-medium text-gray-600 dark:text-gray-300 mr-2">Profit/Loss:</span>
+                <span
+                  className={`font-medium ${getProfit() >= 0 ? 'text-green-600 dark:text-green-500' : 'text-red-600 dark:text-red-500'}`}
+                  data-component-name="CardDetailsModal"
+                >
+                  ${Math.abs(getProfit()).toFixed(2)} {getProfit() >= 0 ? 'profit' : 'loss'}
+                </span>
+              </div>
             </div>
           </div>
 
