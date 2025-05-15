@@ -1,6 +1,5 @@
 import React from 'react';
 import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
-import { formatCurrency } from '../utils/currencyAPI';
 
 // Create styles
 const styles = StyleSheet.create({
@@ -197,7 +196,7 @@ const PurchaseInvoicePDF = ({ seller, date, cards, invoiceNumber, notes, totalAm
                   <Text>{card.slabSerial || 'N/A'}</Text>
                 </View>
                 <View style={[styles.col3, styles.tableCell]}>
-                  <Text>{card.investmentAUD ? formatCurrency(card.investmentAUD) : 'N/A'}</Text>
+                  <Text>{card.investmentAUD ? card.investmentAUD.toFixed(2) : 'N/A'}</Text>
                 </View>
               </View>
             );
@@ -208,7 +207,7 @@ const PurchaseInvoicePDF = ({ seller, date, cards, invoiceNumber, notes, totalAm
         <View style={styles.summary}>
           <View style={styles.summaryRow}>
             <Text style={[styles.summaryLabel, styles.totalAmount]}>Total Amount:</Text>
-            <Text style={[styles.summaryValue, styles.totalAmount]}>{formatCurrency(totalAmount)}</Text>
+            <Text style={[styles.summaryValue, styles.totalAmount]}>{totalAmount.toFixed(2)}</Text>
           </View>
         </View>
 

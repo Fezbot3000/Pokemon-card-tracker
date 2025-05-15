@@ -34,8 +34,6 @@ const SettingsModal = ({
   collections = [],
   onRenameCollection, 
   onDeleteCollection,
-  refreshCollections,
-  onExportData,
   onImportCollection,
   onImportBaseData,
   userData = null,
@@ -44,7 +42,6 @@ const SettingsModal = ({
   onStartTutorial,
   onImportAndCloudMigrate, // Add this new prop
   onUploadImagesFromZip, // Add new prop for image upload
-  onImportSoldItemsFromZip, // Add new prop for sold items import from zip
   className = '',
   ...props 
 }) => {
@@ -75,13 +72,9 @@ const SettingsModal = ({
   } = useBackup();
   const [isRenaming, setIsRenaming] = useState(false);
   const [newCollectionName, setNewCollectionName] = useState('');
-  const [isExporting, setIsExporting] = useState(false);
   const [cloudSyncProgress, setCloudSyncProgress] = useState(0);
   const [cloudSyncStatus, setCloudSyncStatus] = useState('');
-  const [importStep, setImportStep] = useState(0); // 0 = not importing, 1-4 = import steps
-  const [importProgress, setImportProgress] = useState(0);
   const [isImportingBaseData, setIsImportingBaseData] = useState(false);
-  const [isImporting, setIsImporting] = useState(false);
   const [isForceSyncing, setIsForceSyncing] = useState(false); // Add state for force syncing
   const [isCloudMigrating, setIsCloudMigrating] = useState(false); // Add state for cloud migration
   const [isUploadingImages, setIsUploadingImages] = useState(false); // Add state for image upload
@@ -99,7 +92,6 @@ const SettingsModal = ({
   const [isVerifyingBackup, setIsVerifyingBackup] = useState(false); // Add state for cloud backup verification
   const [verificationStatus, setVerificationStatus] = useState('Idle'); // Add state for verification status
   const [isCreatingPortalSession, setIsCreatingPortalSession] = useState(false);
-  const fileInputRef = useRef(null);
   const importBaseDataRef = useRef(null);
   const imageUploadRef = useRef(null); // Add ref for image upload
   const soldItemsRef = useRef(null);
@@ -180,24 +172,6 @@ const SettingsModal = ({
     setIsRenaming(true);
   };
 
-  const handleExport = async () => {
-    setIsExporting(true);
-    try {
-      await onExportData();
-      toastService.success('Data exported successfully!');
-    } catch (error) {
-      toastService.error('Failed to export data: ' + error.message);
-    } finally {
-      setIsExporting(false);
-    }
-  };
-
-  const handleImport = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
-    }
-  };
-
   const handleImportBaseData = () => {
     if (importBaseDataRef.current) {
       importBaseDataRef.current.click();
@@ -205,33 +179,6 @@ const SettingsModal = ({
   };
 
   // Handle file import
-  const handleFileChange = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    
-    try {
-      setIsImporting(true);
-      
-      if (onImportCollection) {
-        // Call the import function
-        await onImportCollection(file);
-        toastService.success('Data imported successfully!');
-        
-        // Refresh collections if needed
-        if (refreshCollections) {
-          refreshCollections();
-        }
-      }
-    } catch (error) {
-      console.error('Import error:', error);
-      toastService.error(`Import failed: ${error.message}`);
-    } finally {
-      setIsImporting(false);
-      // Reset the file input
-      e.target.value = '';
-    }
-  };
-
   const handleImportBaseDataChange = (e) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -707,29 +654,6 @@ const SettingsModal = ({
     setShowResetConfirm(false);
   };
 
-  const handleImportSoldItems = () => {
-    // Create an input element to select the backup file
-    const fileInput = document.createElement('input');
-    fileInput.type = 'file';
-    fileInput.accept = '.zip';
-    
-    fileInput.onchange = async (e) => {
-      if (e.target.files.length > 0) {
-        const file = e.target.files[0];
-        
-        // Import the sold items directly to the cloud
-        onImportSoldItemsFromZip(file, {
-          onProgress: (step, percent, message) => {
-            // You could update UI here if needed
-            console.log(`Import progress: ${message} (${percent}%)`);
-          }
-        });
-      }
-    };
-    
-    fileInput.click();
-  };
-
   // Handle subscription management
   const handleManageSubscription = async () => {
     setIsCreatingPortalSession(true);
@@ -1077,117 +1001,14 @@ const SettingsModal = ({
             
             {activeTab === 'development' && (
               <div className="space-y-6">
+                {/* Development Tools Section */}
                 <SettingsPanel
-                  title="Data Operations"
-                  description="Analyze and manage your card data storage to ensure everything is up to date."
+                  title="Development Tools"
+                  description="Manage your card data and perform maintenance operations."
                 >
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                    Manage your collection data. Use file backups for bulk operations or migrating between devices.
-                  </p>
-                    
-                  {/* File Backup/Restore */}
-                  <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-                    <h4 className="text-md font-semibold mb-3 text-gray-700 dark:text-gray-300">File Backup / Restore</h4>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-                      Save a copy of your entire collection locally or restore from a previous backup file. Useful for transferring data or large imports.
-                    </p>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                      <Button
-                        variant="outline"
-                        iconLeft={<Icon name="file_download" />}
-                        onClick={handleExport}
-                        disabled={isExporting}
-                        isLoading={isExporting}
-                        fullWidth
-                      >
-                        Export Data
-                      </Button>
-                      <Button
-                        variant="outline"
-                        iconLeft={<Icon name="file_upload" />}
-                        onClick={handleImport}
-                        disabled={isImporting || importStep > 0}
-                        isLoading={isImporting}
-                        fullWidth
-                      >
-                        Import Data
-                      </Button>
-                    </div>
-                    {isImporting && (
-                      <div className="mt-2 text-sm text-blue-600 dark:text-blue-400">
-                        Importing... {importProgress}%
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Reset Data Section */}
-                  <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-                    <h4 className="text-md font-semibold mb-3 text-gray-700 dark:text-gray-300">Reset Data</h4>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-                      This will permanently delete all your data from both local storage and the cloud.
-                    </p>
-                    <Button 
-                      variant="danger" 
-                      iconLeft={<Icon name="delete" />}
-                      onClick={handleResetData}
-                      fullWidth
-                    >
-                      Reset All Data
-                    </Button>
-                  </div>
-
-                  {/* Advanced Actions */}
                   <div className="space-y-4">
-                  </div>
-
-                  {/* Development Resources */}
-                  <SettingsPanel
-                    title="Development Resources"
-                    description="Access development tools and resources for the Pokemon Card Tracker app."
-                  >
-                    <div className="bg-white dark:bg-[#1B2131] rounded-lg p-4 border border-gray-200 dark:border-indigo-900/20">
-                      <h4 className="font-medium text-gray-900 dark:text-white mb-2 flex items-center">
-                        <Icon name="widgets" className="text-indigo-400 mr-2" />
-                        Component Library
-                      </h4>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
-                        View and reference all design system components used throughout the application.
-                      </p>
-                      <div className="flex justify-end">
-                        <Button
-                          variant="outline"
-                          onClick={() => {
-                            window.location.href = '/component-library';
-                            onClose();
-                          }}
-                          iconLeft={<Icon name="launch" />}
-                        >
-                          Open Library
-                        </Button>
-                      </div>
-                    </div>
-
-                    {/* Import Sold Items Section */}
-                    <div className="bg-white dark:bg-[#1B2131] rounded-lg p-4 border border-gray-200 dark:border-indigo-900/20 mt-4">
-                      <h4 className="font-medium text-gray-900 dark:text-white mb-2 flex items-center">
-                        <Icon name="receipt_long" className="text-indigo-400 mr-2" />
-                        Import Sold Items
-                      </h4>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
-                        Import sold items from a backup ZIP file without affecting your existing card collection.
-                      </p>
-                      <Button
-                        variant="primary"
-                        onClick={handleImportSoldItems}
-                        iconLeft={<Icon name="upload_file" />}
-                        fullWidth
-                      >
-                        Import Sold Items
-                      </Button>
-                    </div>
-
                     {/* Update Card Data Section */}
-                    <div className="bg-white dark:bg-[#1B2131] rounded-lg p-4 border border-gray-200 dark:border-indigo-900/20 mt-4">
+                    <div className="bg-white dark:bg-[#1B2131] rounded-lg p-4 border border-gray-200 dark:border-indigo-900/20">
                       <h4 className="font-medium text-gray-900 dark:text-white mb-2 flex items-center">
                         <Icon name="upload" className="text-indigo-400 mr-2" />
                         Update Card Data
@@ -1209,7 +1030,26 @@ const SettingsModal = ({
                         Update Card Data
                       </Button>
                     </div>
-                  </SettingsPanel>
+                    
+                    {/* Reset Data Section */}
+                    <div className="bg-white dark:bg-[#1B2131] rounded-lg p-4 border border-gray-200 dark:border-indigo-900/20">
+                      <h4 className="font-medium text-gray-900 dark:text-white mb-2 flex items-center">
+                        <Icon name="delete_forever" className="text-red-500 mr-2" />
+                        Reset Data
+                      </h4>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+                        This will permanently delete all your data from both local storage and the cloud.
+                      </p>
+                      <Button 
+                        variant="danger" 
+                        iconLeft={<Icon name="delete" />}
+                        onClick={handleResetData}
+                        fullWidth
+                      >
+                        Reset All Data
+                      </Button>
+                    </div>
+                  </div>
                 </SettingsPanel>
               </div>
             )}
@@ -1227,13 +1067,6 @@ const SettingsModal = ({
       />
 
       {/* Hidden file inputs */}
-      <input
-        type="file"
-        ref={fileInputRef}
-        onChange={handleFileChange}
-        accept=".zip,.json"
-        className="hidden"
-      />
       <input
         type="file"
         ref={importBaseDataRef}
@@ -1259,8 +1092,6 @@ SettingsModal.propTypes = {
   collections: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
   onRenameCollection: PropTypes.func,
   onDeleteCollection: PropTypes.func,
-  refreshCollections: PropTypes.func,
-  onExportData: PropTypes.func,
   onImportCollection: PropTypes.func,
   onImportBaseData: PropTypes.func,
   userData: PropTypes.object,
@@ -1269,7 +1100,6 @@ SettingsModal.propTypes = {
   onStartTutorial: PropTypes.func,
   onImportAndCloudMigrate: PropTypes.func,
   onUploadImagesFromZip: PropTypes.func, // Add prop type for image upload
-  onImportSoldItemsFromZip: PropTypes.func, // Add prop type for sold items import from zip
   className: PropTypes.string
 };
 

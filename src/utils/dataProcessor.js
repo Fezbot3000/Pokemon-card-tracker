@@ -1,5 +1,4 @@
 import Papa from 'papaparse';
-import { convertUsdToAud } from './currencyAPI';
 
 /**
  * Parse a CSV file
@@ -56,14 +55,12 @@ export const parseMultipleCSVFiles = async (files) => {
  * Process imported data, merging with existing data and updating values
  * @param {Array} importedData - Data imported from CSV
  * @param {Array} existingCards - Existing card data for the current collection
- * @param {number} exchangeRate - Current USD to AUD exchange rate
  * @param {Object} options - Import options
  * @returns {Array} Processed card data
  */
-export const processImportedData = (importedData, existingCards, exchangeRate, options = {}) => {
+export const processImportedData = (importedData, existingCards, options = {}) => {
   // Default options
   const {
-    currency = 'USD',
     fillMissingFields = true,
     updateExistingValues = true,
     importMode = 'priceUpdate'
@@ -80,22 +77,10 @@ export const processImportedData = (importedData, existingCards, exchangeRate, o
     }
   });
   
-  // Define conversion rates for different currencies to AUD
-  const conversionRates = {
-    USD: exchangeRate,
-    AUD: 1.0,
-    EUR: exchangeRate * 1.1, // Example rate: 1 EUR = 1.1 USD * USD to AUD rate
-    GBP: exchangeRate * 1.25, // Example rate: 1 GBP = 1.25 USD * USD to AUD rate
-    JPY: exchangeRate / 150 // Example rate: 150 JPY = 1 USD * USD to AUD rate
-  };
-  
-  // Get the appropriate conversion rate
-  const conversionRate = conversionRates[currency] || exchangeRate;
-  
   // Helper function to convert value to AUD
   const convertToAUD = (value) => {
     if (value === null || value === undefined || isNaN(value)) return 0;
-    return Number((parseFloat(value) * conversionRate).toFixed(2));
+    return Number((parseFloat(value)).toFixed(2));
   };
   
   // Update existing cards with imported data
@@ -115,9 +100,6 @@ export const processImportedData = (importedData, existingCards, exchangeRate, o
         // Only update if we should update existing values or the field is empty
         if (updateExistingValues || !updatedCard.currentValueAUD) {
           updatedCard.currentValueAUD = convertToAUD(newValueInSourceCurrency);
-          
-          // Calculate USD value based on the current exchange rate
-          updatedCard.currentValueUSD = Number((updatedCard.currentValueAUD / exchangeRate).toFixed(2));
           
           // Update potential profit
           updatedCard.potentialProfit = Number((updatedCard.currentValueAUD - (updatedCard.investmentAUD || 0)).toFixed(2));
@@ -159,11 +141,10 @@ export const processImportedData = (importedData, existingCards, exchangeRate, o
  * Process imported data across all collections based on Slab Serial #
  * @param {Array} importedData - Data imported from multiple CSV files
  * @param {Object} allCollections - All collections containing cards
- * @param {number} exchangeRate - Current USD to AUD exchange rate
  * @param {Object} options - Import options
  * @returns {Object} Updated collections object with modified cards
  */
-export const processMultipleCollectionsUpdate = (importedData, allCollections, exchangeRate, options = {}) => {
+export const processMultipleCollectionsUpdate = (importedData, allCollections, options = {}) => {
   // Create a map of imported data for faster lookup
   const importedDataMap = new Map();
   importedData.forEach(item => {
@@ -174,27 +155,14 @@ export const processMultipleCollectionsUpdate = (importedData, allCollections, e
   
   // Default options
   const {
-    currency = 'USD',
     fillMissingFields = true,
     updateExistingValues = true
   } = options;
   
-  // Define conversion rates for different currencies to AUD
-  const conversionRates = {
-    USD: exchangeRate,
-    AUD: 1.0,
-    EUR: exchangeRate * 1.1, // Example rate: 1 EUR = 1.1 USD * USD to AUD rate
-    GBP: exchangeRate * 1.25, // Example rate: 1 GBP = 1.25 USD * USD to AUD rate
-    JPY: exchangeRate / 150 // Example rate: 150 JPY = 1 USD * USD to AUD rate
-  };
-  
-  // Get the appropriate conversion rate
-  const conversionRate = conversionRates[currency] || exchangeRate;
-  
   // Helper function to convert value to AUD
   const convertToAUD = (value) => {
     if (value === null || value === undefined || isNaN(value)) return 0;
-    return Number((parseFloat(value) * conversionRate).toFixed(2));
+    return Number((parseFloat(value)).toFixed(2));
   };
   
   // Track updates for reporting
@@ -246,9 +214,6 @@ export const processMultipleCollectionsUpdate = (importedData, allCollections, e
           // Only update if we should update existing values or the field is empty
           if (updateExistingValues || !updatedCard.currentValueAUD) {
             updatedCard.currentValueAUD = convertToAUD(newValueInSourceCurrency);
-            
-            // Calculate USD value based on the current exchange rate
-            updatedCard.currentValueUSD = Number((updatedCard.currentValueAUD / exchangeRate).toFixed(2));
             
             // Update potential profit
             updatedCard.potentialProfit = Number((updatedCard.currentValueAUD - (updatedCard.investmentAUD || 0)).toFixed(2));

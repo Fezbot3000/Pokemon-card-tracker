@@ -40,7 +40,6 @@ import db from './services/db';
 import { TutorialProvider, useTutorial } from './contexts/TutorialContext';
 import { SubscriptionProvider, useSubscription } from './contexts/SubscriptionContext';
 import InvoiceProvider from './contexts/InvoiceContext';
-import TutorialModal from './components/TutorialModal';
 import ErrorBoundary from './components/ErrorBoundary';
 import PremiumFeatures from './components/PremiumFeatures';
 import './styles/main.css';
@@ -53,7 +52,6 @@ import CloudSync from './components/CloudSync';
 import DashboardPricing from './components/DashboardPricing';
 import ComponentLibrary from './pages/ComponentLibrary';
 import logger from './utils/logger'; // Import the logger utility
-import DataMigrationModal from './components/DataMigrationModal'; // Import the DataMigrationModal component
 import RestoreListener from './components/RestoreListener';
 import SyncStatusIndicator from './components/SyncStatusIndicator'; // Import the SyncStatusIndicator
 import featureFlags from './utils/featureFlags'; // Import feature flags
@@ -62,6 +60,7 @@ import { doc, getDoc, setDoc, serverTimestamp, collection, getDocs } from 'fireb
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db as firestoreDb, storage } from './services/firebase';
 import JSZip from 'jszip'; // Import JSZip for handling zip files
+import TutorialModal from './components/TutorialModal'; // Add back this import
 
 // Helper function to generate a unique ID for cards without one
 const generateUniqueId = () => {
@@ -1797,6 +1796,7 @@ To import this backup:
             // Update progress
             const progress = 40 + Math.floor((successCount + errorCount) / totalCards * 50);
             updateProgress(`Uploading cards to cloud (${successCount + errorCount}/${totalCards})... (Step 4 of 5)`, progress, 4);
+            
           } catch (error) {
             logger.error("Error uploading card to cloud:", error);
             errorCount++;
@@ -2916,8 +2916,6 @@ To import this backup:
           }}
         />
       )}
-
-      <DataMigrationModal />
 
       {/* Mobile Bottom Navigation */}
       <div

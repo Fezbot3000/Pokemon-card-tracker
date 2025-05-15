@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { formatCurrency } from '../utils/currencyAPI';
 
 const SaleModal = ({ isOpen, onClose, selectedCards, onConfirm }) => {
   const [buyer, setBuyer] = useState('');
@@ -180,7 +179,7 @@ const SaleModal = ({ isOpen, onClose, selectedCards, onConfirm }) => {
                           {card.card}
                         </h4>
                         <p className="text-xs text-gray-700 dark:text-gray-400">
-                          Investment: {formatCurrency(investment)}
+                          Investment: {investment.toFixed(2)}
                         </p>
                       </div>
                       <div className="w-full sm:w-40">
@@ -205,7 +204,7 @@ const SaleModal = ({ isOpen, onClose, selectedCards, onConfirm }) => {
                         <div className="text-xs mt-1">
                           Profit: {' '}
                           <span className={profit >= 0 ? 'text-green-600 dark:text-green-500' : 'text-red-600 dark:text-red-500'}>
-                            {formatCurrency(profit)}
+                            {profit.toFixed(2)}
                           </span>
                         </div>
                       </div>
@@ -221,7 +220,7 @@ const SaleModal = ({ isOpen, onClose, selectedCards, onConfirm }) => {
                 <div>
                   <span className="text-gray-700 dark:text-gray-400 text-xs md:text-sm">Total Sale Price:</span>
                   <span className="float-right font-medium text-gray-900 dark:text-white text-xs md:text-sm">
-                    {formatCurrency(totalSalePrice)}
+                    {totalSalePrice.toFixed(2)}
                   </span>
                 </div>
                 <div>
@@ -229,7 +228,7 @@ const SaleModal = ({ isOpen, onClose, selectedCards, onConfirm }) => {
                   <span className={`float-right font-medium text-xs md:text-sm ${
                     totalProfit >= 0 ? 'text-green-600 dark:text-green-500' : 'text-red-600 dark:text-red-500'
                   }`}>
-                    {formatCurrency(totalProfit)}
+                    {totalProfit.toFixed(2)}
                   </span>
                 </div>
               </div>

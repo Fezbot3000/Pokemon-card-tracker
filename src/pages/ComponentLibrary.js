@@ -1551,8 +1551,6 @@ toastService.dismissAll(); // Dismiss all toasts`}
                   console.log(`Delete collection ${name}`);
                   toastService.success(`Collection "${name}" deleted`);
                 }}
-                refreshCollections={() => console.log('Refresh collections')}
-                onExportData={() => console.log('Export data')}
                 onImportCollection={() => console.log('Import collection')}
                 onImportBaseData={() => console.log('Import base data')}
                 userData={mockUserData}
@@ -1582,7 +1580,6 @@ const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   selectedCollection={selectedCollection}
   onRenameCollection={handleRenameCollection}
   onDeleteCollection={handleDeleteCollection}
-  onExportData={handleExportData}
   onImportCollection={handleImportCollection}
   onImportBaseData={handleImportBaseData}
   userData={currentUser}

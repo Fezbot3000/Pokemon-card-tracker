@@ -1,6 +1,5 @@
 import React from 'react';
 import { Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer';
-import { formatCurrency } from '../utils/currencyAPI';
 
 // Create styles
 const styles = StyleSheet.create({
@@ -182,13 +181,13 @@ const InvoicePDF = ({ buyer, date, cards, invoiceId, profile }) => {
                 </Text>
               </View>
               <View style={[styles.col2, styles.tableCell]}>
-                <Text>{formatCurrency(card.investmentAUD)}</Text>
+                <Text>{card.investmentAUD.toFixed(2)}</Text>
               </View>
               <View style={[styles.col3, styles.tableCell]}>
-                <Text>{formatCurrency(card.finalValueAUD)}</Text>
+                <Text>{card.finalValueAUD.toFixed(2)}</Text>
               </View>
               <View style={[styles.col4, styles.tableCell]}>
-                <Text>{formatCurrency(card.finalProfitAUD)}</Text>
+                <Text>{card.finalProfitAUD.toFixed(2)}</Text>
               </View>
             </View>
           ))}
@@ -198,15 +197,15 @@ const InvoicePDF = ({ buyer, date, cards, invoiceId, profile }) => {
         <View style={styles.summary}>
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>Total Investment:</Text>
-            <Text style={styles.summaryValue}>{formatCurrency(totalInvestment)}</Text>
+            <Text style={styles.summaryValue}>{totalInvestment.toFixed(2)}</Text>
           </View>
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>Total Sale:</Text>
-            <Text style={styles.summaryValue}>{formatCurrency(totalSale)}</Text>
+            <Text style={styles.summaryValue}>{totalSale.toFixed(2)}</Text>
           </View>
           <View style={styles.summaryRow}>
             <Text style={[styles.summaryLabel, styles.totalProfit]}>Total Profit:</Text>
-            <Text style={[styles.summaryValue, styles.totalProfit]}>{formatCurrency(totalProfit)}</Text>
+            <Text style={[styles.summaryValue, styles.totalProfit]}>{totalProfit.toFixed(2)}</Text>
           </View>
         </View>
 

@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import ReactDOM from 'react-dom';
 import { useTheme, SoldItemsView } from '../../design-system'; 
-import { formatCurrency } from '../../utils/currencyAPI';
 import { formatCondensed } from '../../utils/formatters';
 import db from '../../services/db';
 import { PDFDownloadLink } from '@react-pdf/renderer';
@@ -847,17 +846,17 @@ const SoldItems = () => {
               {
                 label: 'Paid',
                 value: totals.totalInvestment,
-                formattedValue: formatCondensed(totals.totalInvestment)
+                formattedValue: totals.totalInvestment.toFixed(2)
               },
               {
                 label: 'Value',
                 value: totals.totalValue,
-                formattedValue: formatCondensed(totals.totalValue)
+                formattedValue: totals.totalValue.toFixed(2)
               },
               {
                 label: 'Profit',
                 value: totals.totalProfit,
-                formattedValue: formatCondensed(totals.totalProfit),
+                formattedValue: totals.totalProfit.toFixed(2),
                 isProfit: true
               },
               {

@@ -1,5 +1,4 @@
 import React from 'react';
-import { formatCurrency } from '../utils/currencyAPI';
 
 const ProfitChangeModal = ({ isOpen, onClose, profitChangeData, oldProfit, newProfit }) => {
   if (!isOpen) return null;
@@ -21,21 +20,21 @@ const ProfitChangeModal = ({ isOpen, onClose, profitChangeData, oldProfit, newPr
             <div>
               <div className="text-sm text-gray-500 dark:text-gray-400">Previous Profit</div>
               <div className="text-lg font-medium text-gray-900 dark:text-white">
-                {formatCurrency(previousProfit)}
+                {previousProfit.toFixed(2)}
               </div>
             </div>
             
             <div>
               <div className="text-sm text-gray-500 dark:text-gray-400">New Profit</div>
               <div className="text-lg font-medium text-gray-900 dark:text-white">
-                {formatCurrency(currentProfit)}
+                {currentProfit.toFixed(2)}
               </div>
             </div>
             
             <div>
               <div className="text-sm text-gray-500 dark:text-gray-400">Difference</div>
               <div className={`text-lg font-medium ${difference >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                {difference >= 0 ? '+' : ''}{formatCurrency(difference)}
+                {difference >= 0 ? '+' : ''}{difference.toFixed(2)}
               </div>
             </div>
           </div>

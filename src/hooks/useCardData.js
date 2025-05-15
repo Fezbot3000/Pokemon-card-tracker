@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import { parseCSVFile, processImportedData, validateCSVStructure } from '../utils/dataProcessor';
-import { getUsdToAudRate } from '../utils/currencyAPI';
 import { useAuth } from '../design-system/contexts/AuthContext';
 import { CardRepository } from '../repositories/CardRepository';
 import logger from '../utils/logger';
@@ -18,7 +17,7 @@ const useCardData = () => {
   useEffect(() => {
     const fetchExchangeRate = async () => {
       try {
-        const rate = await getUsdToAudRate();
+        const rate = 1.5; // Default rate
         setExchangeRate(rate);
       } catch (error) {
         logger.error('Error fetching exchange rate:', error);
