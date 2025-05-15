@@ -668,7 +668,10 @@ const CardList = ({
         if (Array.isArray(updatedCollections[collectionName])) {
           const beforeCount = updatedCollections[collectionName].length;
           updatedCollections[collectionName] = updatedCollections[collectionName].filter(
-            card => !cardIds.includes(card.slabSerial)
+            card => {
+              // Check both id and slabSerial to ensure we catch all cards
+              return !(cardIds.includes(card.id) || cardIds.includes(card.slabSerial));
+            }
           );
           const afterCount = updatedCollections[collectionName].length;
           
@@ -739,17 +742,12 @@ const CardList = ({
       setShowCardDetails(false);
       setSelectedCard(null);
       
-      // Always show success message and refresh page, even if there were non-critical errors
-      // This ensures the user sees success and gets a fresh state
+      // Always show success message, but don't refresh the page
       toast.success(`${cardIds.length} card${cardIds.length > 1 ? 's' : ''} deleted`, {
         id: 'delete-success', // Add an ID to prevent duplicate toasts
         duration: 3000,
       });
       
-      // Re-enable auto-refresh for production
-      setTimeout(() => {
-        window.location.reload();
-      }, 500);
     } catch (error) {
       console.error('Deletion failed with error:', error);
       toast.error('Failed to delete cards');
