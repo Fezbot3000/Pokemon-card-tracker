@@ -1,4 +1,5 @@
 import React from 'react';
+import logger from '../utils/logger';
 
 const ErrorFallback = ({ error, resetErrorBoundary }) => {
   // Instead of using useTheme, we'll check the document class directly
@@ -64,8 +65,22 @@ class ErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    // Log the error to an error reporting service
-    console.error('Error caught by boundary:', error, errorInfo);
+    // Log the error to our custom logger instead of console.error
+    // This prevents errors from showing in production console
+    if (process.env.NODE_ENV === 'development') {
+      logger.error('Error caught by boundary:', error);
+      logger.debug('Error details:', errorInfo);
+    } else {
+      // In production, only log to a monitoring service if available
+      // or use a minimal console output that doesn't expose implementation details
+      const errorMessage = error?.message || 'An unexpected error occurred';
+      logger.error(`UI Error: ${errorMessage}`);
+      
+      // Here you could add integration with error monitoring services like Sentry
+      // if (window.Sentry) {
+      //   window.Sentry.captureException(error);
+      // }
+    }
   }
 
   resetErrorBoundary = () => {

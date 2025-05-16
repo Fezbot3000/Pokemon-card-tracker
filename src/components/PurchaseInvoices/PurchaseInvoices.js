@@ -621,21 +621,21 @@ const PurchaseInvoices = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 flex">
                       <button 
-                        className="text-white hover:text-gray-300 transition-colors mr-3 p-2"
+                        className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors mr-3 p-2"
                         onClick={() => handleDownloadInvoice(invoice)}
                         title="Download PDF"
                       >
                         <span className="material-icons text-xl">download</span>
                       </button>
                       <button 
-                        className="text-white hover:text-gray-300 transition-colors mr-3 p-2"
+                        className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors mr-3 p-2"
                         onClick={() => handleEditInvoice(invoice)}
                         title="Edit Invoice"
                       >
                         <span className="material-icons text-xl">edit</span>
                       </button>
                       <button 
-                        className="text-white hover:text-gray-300 transition-colors p-2"
+                        className="text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 transition-colors p-2"
                         onClick={async () => {
                           if (window.confirm('Are you sure you want to delete this invoice?')) {
                             try {

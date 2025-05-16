@@ -15,16 +15,23 @@ import logger from './utils/logger';
 // Import error suppression utilities
 import { initErrorSuppression } from './utils/errorHandler';
 import initNetworkErrorSuppression from './utils/networkErrorSuppressor';
+import initAdvancedErrorSuppression from './utils/consoleErrorSuppressor';
+import initNetworkInterceptors from './utils/networkInterceptor';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // Disable Firebase debug logging for production readiness
 window.localStorage.removeItem('debug');
 
 
-// Initialize error suppression to clean up console logs
+// Initialize all error suppression mechanisms to clean up console logs
 initErrorSuppression();
-
-// Initialize network error suppression to handle Firestore connection issues
 initNetworkErrorSuppression();
+
+// Initialize advanced error suppression for a professional, clean console
+initAdvancedErrorSuppression();
+
+// Initialize network interceptors to prevent network errors from showing in console
+initNetworkInterceptors();
 
 // Initialize the application
 initializeApp()
@@ -38,7 +45,9 @@ initializeApp()
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <RouterProvider router={router} />
+    <ErrorBoundary>
+      <RouterProvider router={router} />
+    </ErrorBoundary>
   </React.StrictMode>
 );
 
