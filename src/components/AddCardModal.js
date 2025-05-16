@@ -286,22 +286,22 @@ const AddCardModal = ({
     setPsaDetailModalOpen(false);
   };
 
-  // Create modal footer with action buttons
+  // Create modal footer with buttons
   const modalFooter = (
     <div className="flex flex-wrap items-center justify-between gap-2 w-full">
+      {/* Cancel button - left aligned */}
       <div>
-        {/* Space reserved for potential future buttons */}
-      </div>
-      
-      <div className="flex items-center justify-end space-x-3">
-        {/* Cancel and Save buttons - right aligned */}
         <Button
           variant="secondary"
           onClick={onClose}
         >
           Cancel
         </Button>
-        
+      </div>
+      
+      {/* Save button - right aligned */}
+      <div className="flex items-center justify-end space-x-3">
+        {/* Save button */}
         <Button
           variant="primary"
           onClick={handleSave}

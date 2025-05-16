@@ -573,8 +573,11 @@ const CardList = ({
   };
 
   // Toggle sort direction
-  const toggleSortDirection = () => {
-    setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+  const toggleSortDirection = (newDirection) => {
+    // If a direction is provided, use it; otherwise toggle the current direction
+    const direction = newDirection || (sortDirection === 'asc' ? 'desc' : 'asc');
+    setSortDirection(direction);
+    localStorage.setItem('cardListSortDirection', direction);
   };
   
   // Sort dropdown toggle
@@ -974,6 +977,8 @@ const CardList = ({
               handleSortChange(option.field);
             }
           }}
+          sortDirection={sortDirection}
+          onSortDirectionChange={toggleSortDirection}
           onAddCard={onAddCard}
         />
       </div>

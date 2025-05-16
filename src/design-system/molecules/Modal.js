@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import Button from '../atoms/Button';
 import Icon from '../atoms/Icon';
 import { stripDebugProps } from '../../utils/stripDebugProps';
+import '../styles/animations.css';
 
 /**
  * Modal component
@@ -29,27 +30,41 @@ const Modal = ({
   const modalRef = useRef(null);
   const scrollPosRef = useRef(null);
   const [isMounted, setIsMounted] = useState(false);
+  const [isAnimatingOut, setIsAnimatingOut] = useState(false);
+  const [animationClass, setAnimationClass] = useState('');
   
   // Preserve scroll position and prevent background scrolling
   useEffect(() => {
-    setIsMounted(true);
-    
-    // Only prevent background scroll if modal is open
-    if (isOpen && !showAsStatic) {
-      // Store current scroll position when modal opens
-      scrollPosRef.current = {
-        x: window.scrollX,
-        y: window.scrollY
-      };
-      document.body.classList.add('modal-open');
+    if (isOpen) {
+      setIsMounted(true);
+      setIsAnimatingOut(false);
       
-      return () => {
+      // Apply the appropriate animation class based on position
+      if (position === 'right') {
+        setAnimationClass('animate-modal-slide-in-right');
+      } else {
+        setAnimationClass('animate-modal-scale-in');
+      }
+      
+      // Only prevent background scroll if modal is open and not static
+      if (!showAsStatic) {
+        // Store current scroll position when modal opens
+        scrollPosRef.current = {
+          x: window.scrollX,
+          y: window.scrollY
+        };
+        document.body.classList.add('modal-open');
+      }
+    }
+    
+    return () => {
+      if (isOpen) {
         // When modal closes, remove the class but don't force scroll
         document.body.classList.remove('modal-open');
         // Don't restore scroll position - let the page stay where it is
-      };
-    }
-  }, [isOpen, showAsStatic]);
+      }
+    };
+  }, [isOpen, position, showAsStatic]);
 
   // Add iOS viewport height fix - always call this hook regardless of conditions
   useEffect(() => {
@@ -67,11 +82,31 @@ const Modal = ({
     };
   }, []);
 
+  // Custom close handler with animation
+  const handleClose = () => {
+    if (!onClose) return;
+    
+    // Start exit animation
+    setIsAnimatingOut(true);
+    
+    // Apply the appropriate exit animation class based on position
+    if (position === 'right') {
+      setAnimationClass('animate-modal-exit-right');
+    } else {
+      setAnimationClass('animate-modal-exit');
+    }
+    
+    // Wait for animation to complete before actually closing
+    setTimeout(() => {
+      onClose();
+    }, 200); // Match this with the animation duration
+  };
+  
   // Handle outside clicks to close modal if enabled
   const handleBackdropClick = (e) => {
     if (closeOnClickOutside && modalRef.current && !modalRef.current.contains(e.target)) {
       e.stopPropagation();
-      if (onClose) onClose();
+      handleClose();
     }
   };
   
@@ -79,7 +114,7 @@ const Modal = ({
   useEffect(() => {
     const handleEscapeKey = (e) => {
       if (isOpen && closeOnClickOutside && e.key === 'Escape') {
-        if (onClose) onClose();
+        handleClose();
       }
     };
     
@@ -87,7 +122,7 @@ const Modal = ({
     return () => {
       document.removeEventListener('keydown', handleEscapeKey);
     };
-  }, [isOpen, closeOnClickOutside, onClose]);
+  }, [isOpen, closeOnClickOutside]);
   
   // Return null if modal is not open
   if (!isOpen) return null;
@@ -179,12 +214,12 @@ const Modal = ({
   // Regular modal with backdrop and positioning
   return (
     <div 
-      className={`${backdropClasses} ${darkModeClass}`}
+      className={`${backdropClasses} ${darkModeClass} ${isAnimatingOut ? 'animate-backdrop-fade-out' : 'animate-backdrop-fade-in'}`}
       onClick={handleBackdropClick}
     >
       <div 
         ref={modalRef}
-        className={`${modalClasses} flex flex-col ${
+        className={`${modalClasses} flex flex-col ${animationClass} ${
           position === 'right' 
             ? (window.innerWidth < 640 
                 ? 'w-screen max-w-none h-screen min-h-screen rounded-none m-0 fixed top-0 left-0 right-0 bottom-0 z-[9999] overflow-auto' 
@@ -207,7 +242,7 @@ const Modal = ({
           <div className={headerClasses}>
             <h2 id="modal-title" className={titleClasses}>{title}</h2>
             <button 
-              onClick={onClose}
+              onClick={handleClose}
               className={closeButtonClasses}
               aria-label="Close modal"
               type="button"

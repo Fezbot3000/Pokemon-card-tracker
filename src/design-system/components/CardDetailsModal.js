@@ -349,7 +349,7 @@ const CardDetailsModal = ({
       >
         <div className="flex flex-col h-full">
           {/* Tabs - Moved to the top to replace the modal title */}
-          <div className="border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10 bg-white dark:bg-[#0F0F0F] py-2 -mt-6 -mx-6 px-6">
+          <div className="sticky top-0 z-10 bg-white dark:bg-[#0F0F0F] py-2 -mt-6 -mx-6 px-6">
             <div className="flex border-b border-gray-200 dark:border-gray-700 mt-2">
               <button
                 className={`py-2 px-4 font-medium text-sm ${
@@ -376,7 +376,6 @@ const CardDetailsModal = ({
               
               {/* Profit/Loss Display */}
               <div className="ml-auto flex items-center">
-                <span className="text-sm font-medium text-gray-600 dark:text-gray-300 mr-2">Profit/Loss:</span>
                 <span
                   className={`font-medium ${getProfit() >= 0 ? 'text-green-600 dark:text-green-500' : 'text-red-600 dark:text-red-500'}`}
                   data-component-name="CardDetailsModal"
