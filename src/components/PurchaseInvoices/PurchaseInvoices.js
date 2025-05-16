@@ -54,16 +54,24 @@ const PurchaseInvoices = () => {
       const result = await generateBatchFn({ invoiceIds });
       
       if (result.data && result.data.success) {
-        // Success - provide download link
+        // Success - export the data as JSON file
         toast.success(`Successfully exported ${result.data.invoiceCount} invoices!`, { id: 'server-batch' });
+        
+        // Convert the data to a downloadable JSON file
+        const jsonData = JSON.stringify(result.data.data, null, 2);
+        const blob = new Blob([jsonData], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
         
         // Create a temporary link to download the file
         const downloadLink = document.createElement('a');
-        downloadLink.href = result.data.url;
-        downloadLink.download = result.data.filename;
+        downloadLink.href = url;
+        downloadLink.download = `purchase-invoices-export-${new Date().toISOString().split('T')[0]}.json`;
         document.body.appendChild(downloadLink);
         downloadLink.click();
         document.body.removeChild(downloadLink);
+        
+        // Clean up the URL object
+        URL.revokeObjectURL(url);
         
         // Show message about generating PDFs in browser
         if (result.data.message) {

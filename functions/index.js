@@ -1620,11 +1620,6 @@ exports.generateInvoiceBatch = functions.runWith({
 
     console.log(`Processing ${invoiceIds.length} invoices for batch export`);
     
-    // Create a file in Firebase Storage for the JSON data
-    const bucket = admin.storage().bucket();
-    const exportPath = `exports/${userId}/${Date.now()}/purchase-invoices-export.json`;
-    const file = bucket.file(exportPath);
-    
     // Collect all invoice data
     const allInvoicesData = [];
     
@@ -1675,32 +1670,14 @@ exports.generateInvoiceBatch = functions.runWith({
       allInvoicesData.push(invoice);
     }
     
-    // Save the JSON data to Firebase Storage
-    await file.save(JSON.stringify(allInvoicesData, null, 2), {
-      contentType: 'application/json',
-      metadata: {
-        contentType: 'application/json',
-        metadata: {
-          createdBy: userId,
-          timestamp: new Date().toISOString(),
-          invoiceCount: allInvoicesData.length
-        }
-      }
-    });
+    console.log(`Batch invoice export completed successfully with ${allInvoicesData.length} invoices`);
     
-    // Generate a signed URL for the file
-    const [signedUrl] = await file.getSignedUrl({
-      action: 'read',
-      expires: Date.now() + 24 * 60 * 60 * 1000 // 24 hours
-    });
-    
-    console.log(`Batch invoice export completed successfully`);
-    
+    // Return the data directly in the response
+    // Note: There's a 10MB limit on the response size for Cloud Functions
     return {
       success: true,
-      url: signedUrl,
-      filename: 'purchase-invoices-export.json',
       invoiceCount: allInvoicesData.length,
+      data: allInvoicesData,
       message: 'Invoice data exported successfully. You can generate PDFs from this data in the browser.'
     };
   } catch (error) {
