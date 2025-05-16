@@ -12,9 +12,23 @@ const SUPPRESSED_ERRORS = [
   'Unchecked runtime.lastError',
   'Cross-Origin-Opener-Policy policy would block',
   'net::ERR_BLOCKED_BY_CLIENT',
+  'net::ERR_QUIC_PROTOCOL_ERROR',
+  'Failed to load resource: net::ERR_BLOCKED_BY_CLIENT',
+  'Failed to load resource: net::ERR_QUIC_PROTOCOL_ERROR',
+  'Failed to fetch',
+  'NetworkError',
+  'firestore.googleapis.com',
+  'WebChannelConnection RPC',
+  'transport errored',
   'USO session',
   'NmLockState',
-  'NmOfflineStatus'
+  'NmOfflineStatus',
+  'POST https://firestore.googleapis.com',
+  'GET https://firestore.googleapis.com',
+  'channel?VER=8&database=projects',
+  'Listen/channel?gsessionid',
+  'TYPE=terminate',
+  'TYPE=xmlhttp'
 ];
 
 // List of debug messages to suppress

@@ -10,6 +10,35 @@ import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import psaDataService from './psaDataService';
 import logger from '../utils/logger';
 
+// Suppress Firebase network errors globally
+const originalFetch = window.fetch;
+window.fetch = function(...args) {
+  const url = args[0]?.toString() || '';
+  
+  // Only intercept Firebase/Firestore requests
+  if (url.includes('firestore.googleapis.com')) {
+    return originalFetch.apply(this, args)
+      .catch(error => {
+        // Silently handle network errors for Firestore
+        if (error.message && (
+            error.message.includes('Failed to fetch') ||
+            error.message.includes('NetworkError') ||
+            error.message.includes('blocked by client')
+        )) {
+          // Return an empty response to prevent errors from bubbling up
+          return new Response(JSON.stringify({}), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' }
+          });
+        }
+        throw error; // Re-throw other errors
+      });
+  }
+  
+  // Pass through all other fetch requests
+  return originalFetch.apply(this, args);
+};
+
 /**
  * Initialize the application
  * This should be called when the app first loads

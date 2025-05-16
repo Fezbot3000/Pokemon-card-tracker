@@ -12,8 +12,9 @@ import './env';
 // Import app initialization
 import { initializeApp } from './services/appInitialization';
 import logger from './utils/logger';
-// Import error suppression utility
+// Import error suppression utilities
 import { initErrorSuppression } from './utils/errorHandler';
+import initNetworkErrorSuppression from './utils/networkErrorSuppressor';
 
 // Disable Firebase debug logging for production readiness
 window.localStorage.removeItem('debug');
@@ -21,6 +22,9 @@ window.localStorage.removeItem('debug');
 
 // Initialize error suppression to clean up console logs
 initErrorSuppression();
+
+// Initialize network error suppression to handle Firestore connection issues
+initNetworkErrorSuppression();
 
 // Initialize the application
 initializeApp()

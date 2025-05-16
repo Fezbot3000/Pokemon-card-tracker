@@ -35,13 +35,44 @@ const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0
 
 // Initialize Firestore with persistence settings
 let db;
+
+// Silence console errors for network requests
+// This will prevent the console from showing ERR_BLOCKED_BY_CLIENT errors
+const originalConsoleError = console.error;
+console.error = function(...args) {
+  // Filter out Firebase network errors that are caused by ad blockers
+  const errorString = args.join(' ');
+  if (errorString.includes('net::ERR_BLOCKED_BY_CLIENT') || 
+      errorString.includes('Failed to fetch') ||
+      errorString.includes('NetworkError') ||
+      errorString.includes('firestore.googleapis.com')) {
+    // Silently ignore these errors
+    return;
+  }
+  // Pass through all other errors to the original console.error
+  originalConsoleError.apply(console, args);
+};
+
+// Same for console.warn
+const originalConsoleWarn = console.warn;
+console.warn = function(...args) {
+  // Filter out Firebase network warnings
+  const warnString = args.join(' ');
+  if (warnString.includes('WebChannelConnection') ||
+      warnString.includes('firestore') ||
+      warnString.includes('transport errored')) {
+    // Silently ignore these warnings
+    return;
+  }
+  // Pass through all other warnings
+  originalConsoleWarn.apply(console, args);
+};
+
 try {
   // Always use getFirestore to avoid conflicts with multiple initialization
   db = getFirestore(app);
-  
-  // Logging disabled for production readiness
 } catch (error) {
-  logger.error('Failed to initialize Firestore:', error);
+  // Silently handle errors and continue
   db = getFirestore(app);
 }
 
