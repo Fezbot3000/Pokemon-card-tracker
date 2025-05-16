@@ -19,10 +19,7 @@
     "node-fetch": "^2.7.0",
     "pokemon-card-tracker": "file:..",
     "stripe": "^13.2.0",
-    "xml2js": "^0.6.2",
-    "puppeteer": "^21.6.1",
-    "archiver": "^6.0.1",
-    "pdf-lib": "^1.17.1"
+    "xml2js": "^0.6.2"
   },
   "devDependencies": {
     "firebase-functions-test": "^3.1.0"

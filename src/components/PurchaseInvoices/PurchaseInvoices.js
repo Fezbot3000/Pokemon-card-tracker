@@ -34,7 +34,7 @@ const PurchaseInvoices = () => {
     setShowCreateModal(true);
   };
   
-  // Handle server-side batch PDF generation
+  // Handle server-side batch data export
   const handleServerBatchGeneration = async () => {
     if (invoices.length === 0) {
       toast.error('No invoices to export');
@@ -43,7 +43,7 @@ const PurchaseInvoices = () => {
     
     try {
       // Show loading toast
-      toast.loading('Preparing server-side batch generation...', { id: 'server-batch' });
+      toast.loading('Preparing invoice data export...', { id: 'server-batch' });
       setIsGeneratingBatch(true);
       
       // Get all invoice IDs from filtered invoices
@@ -55,7 +55,7 @@ const PurchaseInvoices = () => {
       
       if (result.data && result.data.success) {
         // Success - provide download link
-        toast.success(`Successfully generated ${result.data.invoiceCount} invoices!`, { id: 'server-batch' });
+        toast.success(`Successfully exported ${result.data.invoiceCount} invoices!`, { id: 'server-batch' });
         
         // Create a temporary link to download the file
         const downloadLink = document.createElement('a');
@@ -64,11 +64,18 @@ const PurchaseInvoices = () => {
         document.body.appendChild(downloadLink);
         downloadLink.click();
         document.body.removeChild(downloadLink);
+        
+        // Show message about generating PDFs in browser
+        if (result.data.message) {
+          setTimeout(() => {
+            toast.success(result.data.message, { duration: 6000 });
+          }, 1000);
+        }
       } else {
-        toast.error('Failed to generate batch invoices', { id: 'server-batch' });
+        toast.error('Failed to export invoice data', { id: 'server-batch' });
       }
     } catch (error) {
-      console.error('Error in server batch generation:', error);
+      console.error('Error in server batch export:', error);
       toast.error(`Error: ${error.message || 'Unknown error'}`, { id: 'server-batch' });
     } finally {
       setIsGeneratingBatch(false);
@@ -529,10 +536,10 @@ const PurchaseInvoices = () => {
                     className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center gap-2"
                     onClick={handleServerBatchGeneration}
                     disabled={invoices.length === 0}
-                    title="Generate all invoices as PDFs on the server and download as a single ZIP file"
+                    title="Export all invoice data as a JSON file from the server"
                   >
                     <span className="material-icons">cloud_download</span>
-                    <span>Export All (Server-side)</span>
+                    <span>Export All Data</span>
                   </button>
                 )}
                 <button
