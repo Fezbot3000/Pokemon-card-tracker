@@ -7,10 +7,9 @@ import { PDFDownloadLink, pdf } from '@react-pdf/renderer';
 import PurchaseInvoicePDF from '../PurchaseInvoicePDF';
 import { formatDateForDisplay } from '../../utils/dateUtils';
 import { doc, getDoc } from 'firebase/firestore';
-import { db as firestoreDb } from '../../services/firebase';
-import JSZip from 'jszip';
-import { saveAs } from 'file-saver';
+import { db as firestoreDb, functions, httpsCallable } from '../../services/firebase';
 import featureFlags from '../../utils/featureFlags';
+import logger from '../../utils/logger';
 
 /**
  * PurchaseInvoices component
@@ -26,6 +25,7 @@ const PurchaseInvoices = () => {
   const [sortField, setSortField] = useState('date');
   const [sortDirection, setSortDirection] = useState('desc'); // 'asc' or 'desc'
   const [searchQuery, setSearchQuery] = useState('');
+  const [isGeneratingBatch, setIsGeneratingBatch] = useState(false);
   const { currentUser } = useAuth();
   
   // Handle editing an invoice
@@ -34,66 +34,44 @@ const PurchaseInvoices = () => {
     setShowCreateModal(true);
   };
   
-  // Handle exporting all invoices as a zip file
-  const handleExportAllInvoices = async () => {
+  // Handle server-side batch PDF generation
+  const handleServerBatchGeneration = async () => {
     if (invoices.length === 0) {
       toast.error('No invoices to export');
       return;
     }
     
     try {
-      toast.loading('Preparing invoices for export...', { id: 'export-zip' });
+      // Show loading toast
+      toast.loading('Preparing server-side batch generation...', { id: 'server-batch' });
+      setIsGeneratingBatch(true);
       
-      const zip = new JSZip();
+      // Get all invoice IDs from filtered invoices
+      const invoiceIds = filteredInvoices.map(invoice => invoice.id);
       
-      // Create a folder for the invoices
-      const invoicesFolder = zip.folder('purchase-invoices');
+      // Call the Cloud Function
+      const generateBatchFn = httpsCallable(functions, 'generateInvoiceBatch');
+      const result = await generateBatchFn({ invoiceIds });
       
-      // Process each invoice
-      for (const invoice of invoices) {
-        try {
-          // Ensure cards array exists
-          const cards = invoice.cards || [];
-          
-          // Create the PDF document
-          const pdfDocument = (
-            <PurchaseInvoicePDF 
-              seller={invoice.seller || ''}
-              date={invoice.date || ''}
-              cards={cards}
-              invoiceNumber={invoice.invoiceNumber || ''}
-              notes={invoice.notes || ''}
-              totalAmount={invoice.totalAmount || 0}
-              profile={profile}
-            />
-          );
-          
-          // Generate the PDF blob using @react-pdf/renderer's pdf function
-          const pdfBlob = await pdf(pdfDocument).toBlob();
-          
-          if (pdfBlob) {
-            // Generate a filename based on invoice details
-            const fileName = `Invoice-${invoice.invoiceNumber || invoice.id}.pdf`;
-            
-            // Add the PDF to the zip file
-            invoicesFolder.file(fileName, pdfBlob);
-          }
-        } catch (invoiceError) {
-          console.error(`Error processing invoice ${invoice.id}:`, invoiceError);
-          // Continue with other invoices even if one fails
-        }
+      if (result.data && result.data.success) {
+        // Success - provide download link
+        toast.success(`Successfully generated ${result.data.invoiceCount} invoices!`, { id: 'server-batch' });
+        
+        // Create a temporary link to download the file
+        const downloadLink = document.createElement('a');
+        downloadLink.href = result.data.url;
+        downloadLink.download = result.data.filename;
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+      } else {
+        toast.error('Failed to generate batch invoices', { id: 'server-batch' });
       }
-      
-      // Generate the zip file
-      const zipBlob = await zip.generateAsync({ type: 'blob' });
-      
-      // Save the zip file
-      saveAs(zipBlob, `Purchase-Invoices-${new Date().toISOString().split('T')[0]}.zip`);
-      
-      toast.success('All invoices exported successfully!', { id: 'export-zip' });
     } catch (error) {
-      console.error('Error exporting invoices:', error);
-      toast.error('Failed to export invoices', { id: 'export-zip' });
+      console.error('Error in server batch generation:', error);
+      toast.error(`Error: ${error.message || 'Unknown error'}`, { id: 'server-batch' });
+    } finally {
+      setIsGeneratingBatch(false);
     }
   };
   
@@ -277,16 +255,18 @@ const PurchaseInvoices = () => {
   };
   
   // Handle downloading an invoice as PDF
-  const handleDownloadInvoice = async (invoice) => {
-    // Debug profile data
-    console.log('Profile when downloading invoice:', profile);
+  const handleDownloadInvoice = async (invoice, options = {}) => {
+    // Debug profile data if needed
+    logger.debug('Profile when downloading invoice:', profile);
     
     // Create a unique filename for the invoice
     const fileName = `purchase-invoice-${invoice.invoiceNumber || invoice.id}-${invoice.date.replace(/\//g, '-')}.pdf`;
     
     try {
-      // Show loading toast
-      toast.loading('Generating PDF...', { id: 'pdf-download' });
+      // Show loading toast if not part of a batch download
+      if (!options.silent) {
+        toast.loading('Generating PDF...', { id: options.toastId || 'pdf-download' });
+      }
       
       // Get detailed card information for the invoice
       const cardDetails = await getCardDetails(invoice);
@@ -321,10 +301,21 @@ const PurchaseInvoices = () => {
         document.body.removeChild(link);
       }, 100);
       
-      toast.success('Invoice downloaded successfully', { id: 'pdf-download' });
+      if (!options.silent) {
+        toast.success('Invoice downloaded successfully', { id: options.toastId || 'pdf-download' });
+      }
+      
+      // Return success for sequential downloads
+      return { success: true, fileName };
     } catch (error) {
-      console.error('Error generating PDF:', error);
-      toast.error('Error generating PDF', { id: 'pdf-download' });
+      logger.error('Error generating PDF:', error);
+      
+      if (!options.silent) {
+        toast.error('Error generating PDF', { id: options.toastId || 'pdf-download' });
+      }
+      
+      // Return error for sequential downloads
+      return { success: false, error, fileName };
     }
   };
   
@@ -526,20 +517,30 @@ const PurchaseInvoices = () => {
                   {filteredInvoices.length} of {invoices.length} {invoices.length === 1 ? 'invoice' : 'invoices'} found
                 </div>
               </div>
-              <div className="flex gap-3">
-                <button 
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-                  onClick={handleExportAllInvoices}
-                  title="Export all invoices as a zip file"
-                >
-                  <span className="material-icons text-sm">archive</span>
-                  Export All
-                </button>
-                <button 
-                  className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+              
+              <div className="flex flex-wrap gap-2">
+                {isGeneratingBatch ? (
+                  <div className="px-4 py-2 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 flex items-center gap-2">
+                    <span className="material-icons animate-spin">autorenew</span>
+                    <span>Generating PDFs on server...</span>
+                  </div>
+                ) : (
+                  <button
+                    className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center gap-2"
+                    onClick={handleServerBatchGeneration}
+                    disabled={invoices.length === 0}
+                    title="Generate all invoices as PDFs on the server and download as a single ZIP file"
+                  >
+                    <span className="material-icons">cloud_download</span>
+                    <span>Export All (Server-side)</span>
+                  </button>
+                )}
+                <button
+                  className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary/90 transition-colors flex items-center gap-2"
                   onClick={() => setShowCreateModal(true)}
                 >
-                  Create New Invoice
+                  <span className="material-icons">add</span>
+                  <span>Create New Invoice</span>
                 </button>
               </div>
             </div>

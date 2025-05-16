@@ -2,6 +2,9 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 const fetch = require('node-fetch'); // Use node-fetch v2 syntax
+const archiver = require('archiver');
+const { PDFDocument, rgb, StandardFonts } = require('pdf-lib');
+const puppeteer = require('puppeteer');
 
 // Configure CORS: Allow requests from local dev and production domain
 const allowedOrigins = [
@@ -1591,5 +1594,339 @@ exports.storeCardImage = functions.https.onCall(async (data, context) => {
   } catch (error) {
     console.error('Error storing image:', error);
     throw new functions.https.HttpsError('internal', error.message);
+  }
+});
+
+// Generate batch PDF invoices on the server
+exports.generateInvoiceBatch = functions.runWith({
+  timeoutSeconds: 540, // 9 minutes (max is 9 minutes for standard functions)
+  memory: '2GB' // Increase memory for PDF generation
+}).https.onCall(async (data, context) => {
+  // Ensure the user is authenticated
+  if (!context.auth) {
+    throw new functions.https.HttpsError('unauthenticated', 'User must be logged in');
+  }
+
+  const userId = context.auth.uid;
+  console.log(`Starting batch invoice generation for user: ${userId}`);
+
+  try {
+    // Get the invoice IDs from the request
+    const { invoiceIds } = data;
+    
+    if (!invoiceIds || !Array.isArray(invoiceIds) || invoiceIds.length === 0) {
+      throw new functions.https.HttpsError(
+        'invalid-argument',
+        'Missing or invalid invoiceIds parameter'
+      );
+    }
+
+    console.log(`Processing ${invoiceIds.length} invoices for batch generation`);
+    
+    // Get user profile data for the invoice headers
+    const userProfileDoc = await admin.firestore().collection('profiles').doc(userId).get();
+    let profile = null;
+    if (userProfileDoc.exists) {
+      profile = userProfileDoc.data();
+      console.log('Retrieved user profile for invoices');
+    } else {
+      console.log('No user profile found, proceeding without profile data');
+    }
+
+    // Create a temporary directory for the PDFs
+    const tempBucket = admin.storage().bucket();
+    const tempDir = `temp/${userId}/${Date.now()}`;
+    const zipFilename = `purchase-invoices-${new Date().toISOString().split('T')[0]}.zip`;
+    const zipPath = `${tempDir}/${zipFilename}`;
+    
+    // Create a write stream for the zip file
+    const zipFile = tempBucket.file(zipPath);
+    const zipStream = zipFile.createWriteStream({
+      metadata: {
+        contentType: 'application/zip',
+        metadata: {
+          createdBy: userId,
+          timestamp: new Date().toISOString()
+        }
+      }
+    });
+    
+    // Create a zip archive
+    const archive = archiver('zip', {
+      zlib: { level: 6 } // Compression level
+    });
+    
+    // Pipe the archive to the file stream
+    archive.pipe(zipStream);
+    
+    // Add a JSON file with all invoice data for backup
+    const allInvoicesData = [];
+    
+    // Process each invoice
+    for (const invoiceId of invoiceIds) {
+      console.log(`Processing invoice: ${invoiceId}`);
+      
+      // Get the invoice data from Firestore
+      const invoiceDoc = await admin.firestore()
+        .collection('users')
+        .doc(userId)
+        .collection('purchaseInvoices')
+        .doc(invoiceId)
+        .get();
+      
+      if (!invoiceDoc.exists) {
+        console.warn(`Invoice ${invoiceId} not found, skipping`);
+        continue;
+      }
+      
+      const invoice = invoiceDoc.data();
+      invoice.id = invoiceDoc.id; // Add the document ID to the data
+      
+      // Add to the all invoices data array for JSON backup
+      allInvoicesData.push(invoice);
+      
+      // Get card details for the invoice
+      const cards = [];
+      if (invoice.cards && Array.isArray(invoice.cards)) {
+        for (const cardRef of invoice.cards) {
+          try {
+            // Get the card data
+            const cardDoc = await admin.firestore().doc(cardRef.path).get();
+            if (cardDoc.exists) {
+              const card = cardDoc.data();
+              card.id = cardDoc.id;
+              card.price = cardRef.price || 0;
+              card.quantity = cardRef.quantity || 1;
+              cards.push(card);
+            }
+          } catch (cardError) {
+            console.warn(`Error getting card data for ${cardRef.path}:`, cardError);
+          }
+        }
+      }
+      
+      // Create a simple PDF using pdf-lib
+      const pdfDoc = await PDFDocument.create();
+      const page = pdfDoc.addPage();
+      const { width, height } = page.getSize();
+      
+      // Get the standard font
+      const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+      const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+      
+      // Set up some basic dimensions
+      const margin = 50;
+      let y = height - margin;
+      const lineHeight = 20;
+      
+      // Add invoice header
+      page.drawText('PURCHASE INVOICE', {
+        x: margin,
+        y,
+        size: 24,
+        font: boldFont,
+        color: rgb(0, 0, 0)
+      });
+      y -= lineHeight * 2;
+      
+      // Add invoice details
+      page.drawText(`Invoice Number: ${invoice.invoiceNumber || invoice.id}`, {
+        x: margin,
+        y,
+        size: 12,
+        font,
+        color: rgb(0, 0, 0)
+      });
+      y -= lineHeight;
+      
+      page.drawText(`Date: ${invoice.date || new Date().toISOString().split('T')[0]}`, {
+        x: margin,
+        y,
+        size: 12,
+        font,
+        color: rgb(0, 0, 0)
+      });
+      y -= lineHeight;
+      
+      page.drawText(`Seller: ${invoice.seller || 'N/A'}`, {
+        x: margin,
+        y,
+        size: 12,
+        font,
+        color: rgb(0, 0, 0)
+      });
+      y -= lineHeight * 2;
+      
+      // Add table header
+      const colWidths = [250, 100, 50, 100];
+      const colX = [margin, margin + colWidths[0], margin + colWidths[0] + colWidths[1], margin + colWidths[0] + colWidths[1] + colWidths[2]];
+      
+      page.drawText('Card Name', {
+        x: colX[0],
+        y,
+        size: 12,
+        font: boldFont,
+        color: rgb(0, 0, 0)
+      });
+      
+      page.drawText('Set', {
+        x: colX[1],
+        y,
+        size: 12,
+        font: boldFont,
+        color: rgb(0, 0, 0)
+      });
+      
+      page.drawText('Qty', {
+        x: colX[2],
+        y,
+        size: 12,
+        font: boldFont,
+        color: rgb(0, 0, 0)
+      });
+      
+      page.drawText('Price', {
+        x: colX[3],
+        y,
+        size: 12,
+        font: boldFont,
+        color: rgb(0, 0, 0)
+      });
+      
+      y -= lineHeight;
+      
+      // Add card rows
+      for (const card of cards) {
+        const cardName = card.card || card.name || card.player || 'Unnamed Card';
+        const setName = card.set || card.setName || 'Unknown Set';
+        const quantity = card.quantity || 1;
+        const price = card.price || 0;
+        
+        // Check if we need a new page
+        if (y < margin + lineHeight) {
+          // Add a new page
+          const newPage = pdfDoc.addPage();
+          y = newPage.getSize().height - margin;
+        }
+        
+        page.drawText(cardName.substring(0, 30), {
+          x: colX[0],
+          y,
+          size: 10,
+          font,
+          color: rgb(0, 0, 0)
+        });
+        
+        page.drawText(setName.substring(0, 15), {
+          x: colX[1],
+          y,
+          size: 10,
+          font,
+          color: rgb(0, 0, 0)
+        });
+        
+        page.drawText(quantity.toString(), {
+          x: colX[2],
+          y,
+          size: 10,
+          font,
+          color: rgb(0, 0, 0)
+        });
+        
+        page.drawText(`$${price.toFixed(2)}`, {
+          x: colX[3],
+          y,
+          size: 10,
+          font,
+          color: rgb(0, 0, 0)
+        });
+        
+        y -= lineHeight;
+      }
+      
+      // Add total
+      y -= lineHeight;
+      page.drawText(`Total Amount: $${invoice.totalAmount ? invoice.totalAmount.toFixed(2) : '0.00'}`, {
+        x: colX[3] - 50,
+        y,
+        size: 12,
+        font: boldFont,
+        color: rgb(0, 0, 0)
+      });
+      
+      // Add notes if available
+      if (invoice.notes) {
+        y -= lineHeight * 2;
+        page.drawText('Notes:', {
+          x: margin,
+          y,
+          size: 12,
+          font: boldFont,
+          color: rgb(0, 0, 0)
+        });
+        y -= lineHeight;
+        
+        // Split notes into lines
+        const noteLines = invoice.notes.split('\n');
+        for (const line of noteLines) {
+          // Check if we need a new page
+          if (y < margin + lineHeight) {
+            // Add a new page
+            const newPage = pdfDoc.addPage();
+            y = newPage.getSize().height - margin;
+          }
+          
+          page.drawText(line, {
+            x: margin,
+            y,
+            size: 10,
+            font,
+            color: rgb(0, 0, 0)
+          });
+          y -= lineHeight;
+        }
+      }
+      
+      // Save the PDF
+      const pdfBytes = await pdfDoc.save();
+      
+      // Add the PDF to the zip archive
+      const pdfFilename = `Invoice-${invoice.invoiceNumber || invoice.id}.pdf`;
+      archive.append(Buffer.from(pdfBytes), { name: pdfFilename });
+      
+      console.log(`Added PDF for invoice ${invoiceId} to the archive`);
+    }
+    
+    // Add the JSON data file with all invoices
+    archive.append(JSON.stringify(allInvoicesData, null, 2), { name: 'all-invoices.json' });
+    
+    // Finalize the archive
+    await archive.finalize();
+    
+    // Wait for the zip file to be fully written
+    await new Promise((resolve, reject) => {
+      zipStream.on('finish', resolve);
+      zipStream.on('error', reject);
+    });
+    
+    console.log(`Zip file created at: ${zipPath}`);
+    
+    // Generate a signed URL for the zip file
+    const [signedUrl] = await zipFile.getSignedUrl({
+      action: 'read',
+      expires: Date.now() + 24 * 60 * 60 * 1000 // 24 hours
+    });
+    
+    console.log(`Batch invoice generation completed successfully`);
+    
+    return {
+      success: true,
+      url: signedUrl,
+      filename: zipFilename,
+      invoiceCount: allInvoicesData.length
+    };
+  } catch (error) {
+    console.error('Error generating batch invoices:', error);
+    throw new functions.https.HttpsError('internal', `Error generating batch invoices: ${error.message}`);
   }
 });
