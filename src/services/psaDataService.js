@@ -17,6 +17,7 @@ import {
   getDocs, 
   serverTimestamp 
 } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
 import logger from '../utils/logger';
 
 // Constants
@@ -50,6 +51,13 @@ class PSADataService {
       logger.debug(`PSA card not found in Firestore cache: ${certNumber}`);
       return null;
     } catch (error) {
+      // If we get a permission error, it might be because the collection doesn't exist yet
+      // We'll silently handle this error since it's expected for unauthenticated users
+      if (error.code === 'permission-denied') {
+        logger.debug(`Permission denied reading from PSA cache: ${certNumber}`);
+        return null;
+      }
+      
       logger.error(`Error fetching PSA card from Firestore: ${error.message}`, error);
       return null;
     }
@@ -69,6 +77,16 @@ class PSADataService {
         return false;
       }
       
+      // Check if user is authenticated before attempting to write
+      const auth = getAuth();
+      if (!auth.currentUser) {
+        logger.debug('User not authenticated, skipping PSA cache write');
+        return false;
+      }
+      
+      // Ensure collection is initialized before writing
+      await this.ensureCollectionInitialized();
+      
       logger.debug(`Saving PSA card to Firestore cache: ${certNumber}`);
       const docRef = doc(db, PSA_COLLECTION, certNumber);
       
@@ -83,7 +101,7 @@ class PSADataService {
     } catch (error) {
       // Handle permission errors gracefully
       if (error.code === 'permission-denied') {
-        logger.warn('Permission denied saving to PSA database. Please update your Firestore rules.');
+        logger.debug('Permission denied saving to PSA database. User may not be authenticated.');
         return false;
       }
       
@@ -94,50 +112,54 @@ class PSADataService {
 
   /**
    * Initialize the PSA collection in Firestore if it doesn't exist
-   * This should be called during app initialization
+   * This is now a private method only called when needed
+   * @private
    */
   async initializeCollection() {
-    const MAX_RETRIES = 3;
-    let attempt = 0;
-    
-    while (attempt < MAX_RETRIES) {
-      try {
-        // Check if collection exists by trying to get a document
-        const testDoc = doc(db, PSA_COLLECTION, 'test-doc');
-        await setDoc(testDoc, { 
-          initialized: true,
-          timestamp: serverTimestamp()
-        }, { merge: true }); // Added merge option for idempotency
-        
-        logger.debug('PSA collection initialized successfully');
-        return true;
-      } catch (error) {
-        attempt++;
-        
-        if (error.code === 'failed-precondition' || 
-            error.message?.includes('network') || 
-            error.message?.includes('blocked')) {
-          logger.warn(`Firestore connection blocked (attempt ${attempt}/${MAX_RETRIES}):`, error);
-          // Show user-friendly message on first attempt
-          if (attempt === 1) {
-            // Import toast only if needed to avoid circular dependencies
-            const { toast } = require('react-hot-toast');
-            toast.error('Connection to Firebase blocked. If you use an ad blocker, please whitelist this site.');
-          }
-        } else {
-          logger.error('Failed to initialize PSA collection:', error);
-        }
-        
-        if (attempt >= MAX_RETRIES) {
-          logger.error('Max retries reached for PSA collection initialization');
-          return false;
-        }
-        
-        // Exponential backoff
-        await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, attempt)));
-      }
+    // Check if user is authenticated before attempting to initialize
+    const auth = getAuth();
+    if (!auth.currentUser) {
+      logger.debug('User not authenticated, skipping PSA collection initialization');
+      return false;
     }
-    return false;
+    
+    try {
+      // Check if collection exists by trying to get a document
+      const testDoc = doc(db, PSA_COLLECTION, 'test-doc');
+      await setDoc(testDoc, { 
+        initialized: true,
+        timestamp: serverTimestamp()
+      }, { merge: true });
+      
+      logger.debug('PSA collection initialized successfully');
+      return true;
+    } catch (error) {
+      if (error.code === 'permission-denied') {
+        logger.debug('Permission denied initializing PSA collection. User may not have proper permissions.');
+        return false;
+      } else if (error.message?.includes('network') || error.message?.includes('blocked')) {
+        logger.debug('Firestore connection blocked, likely by an ad blocker');
+        return false;
+      }
+      
+      logger.error('Failed to initialize PSA collection:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Ensure the PSA collection is initialized before use
+   * This is a public method that will be called before operations that require the collection
+   * @returns {Promise<boolean>} - Success status
+   */
+  async ensureCollectionInitialized() {
+    // We only need to initialize if the user is authenticated
+    const auth = getAuth();
+    if (!auth.currentUser) {
+      return false;
+    }
+    
+    return this.initializeCollection();
   }
 }
 

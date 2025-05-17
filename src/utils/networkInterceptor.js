@@ -1,8 +1,11 @@
 /**
  * Network Interceptor
  * 
- * This utility intercepts network requests and responses to prevent console errors
- * from being shown to users while still allowing proper error handling in the app.
+ * This utility provides targeted interception of Firebase-related network requests
+ * to prevent console errors while avoiding interference with browser extensions.
+ * 
+ * IMPORTANT: This implementation specifically avoids global interception patterns
+ * that could interfere with browser extensions like 1Password.
  */
 
 import logger from './logger';
@@ -11,136 +14,124 @@ import logger from './logger';
  * Initialize network request interceptors
  */
 export const initNetworkInterceptors = () => {
-  // Intercept fetch requests
-  interceptFetch();
-  
-  // Intercept XMLHttpRequest
-  interceptXHR();
+  // Only intercept Firebase-specific requests
+  interceptFirebaseRequests();
 };
 
 /**
- * Intercept fetch requests to handle errors silently
+ * Intercept only Firebase-related fetch requests to handle errors silently
+ * This approach avoids interfering with browser extensions like 1Password
  */
-const interceptFetch = () => {
-  const originalFetch = window.fetch;
+const interceptFirebaseRequests = () => {
+  // We'll use a more targeted approach that doesn't override global fetch
+  // Instead, we'll create a Firebase-specific fetch wrapper to use in our app
   
-  window.fetch = async function(...args) {
+  // Export a function that can be used for Firebase requests
+  window.firebaseFetch = async function(url, options = {}) {
     try {
-      const response = await originalFetch.apply(this, args);
+      const response = await fetch(url, options);
       
-      // Handle non-2xx responses
+      // Handle non-2xx responses for Firebase requests
       if (!response.ok) {
         // Log the error but don't show it in console
-        const url = typeof args[0] === 'string' ? args[0] : args[0]?.url || 'unknown';
-        const method = args[1]?.method || 'GET';
+        const method = options.method || 'GET';
         
         // Only log detailed errors in development
         if (process.env.NODE_ENV === 'development') {
-          logger.warn(`[Network] ${method} ${url} failed with status ${response.status}`);
+          logger.warn(`[Firebase] ${method} ${url} failed with status ${response.status}`);
         }
       }
       
       return response;
     } catch (error) {
-      // Handle network errors silently
-      const url = typeof args[0] === 'string' ? args[0] : args[0]?.url || 'unknown';
-      
-      // Check if it's a Firebase/Firestore request
-      const isFirebaseRequest = url.includes('firestore.googleapis.com') || 
-                               url.includes('firebase') || 
-                               url.includes('googleapis.com');
-      
-      if (isFirebaseRequest) {
-        // Completely suppress Firebase connection errors in console
-        if (process.env.NODE_ENV === 'development') {
-          logger.debug(`[Firebase] Connection issue: ${error.message}`);
-        }
-      } else {
-        // For other requests, log minimally in production
-        if (process.env.NODE_ENV === 'development') {
-          logger.warn(`[Network] Request to ${url} failed: ${error.message}`);
-        }
+      // Handle Firebase network errors silently
+      if (process.env.NODE_ENV === 'development') {
+        logger.debug(`[Firebase] Connection issue: ${error.message}`);
       }
       
       // Re-throw the error so the application can handle it
       throw error;
     }
   };
+  
+  // Add a console filter for Firebase-related errors
+  addConsoleFilter();
 };
 
 /**
- * Intercept XMLHttpRequest to handle errors silently
+ * Add a console filter that only affects Firebase-related errors
+ * This is a safer approach than overriding XMLHttpRequest globally
  */
-const interceptXHR = () => {
-  const originalXHROpen = XMLHttpRequest.prototype.open;
-  const originalXHRSend = XMLHttpRequest.prototype.send;
+const addConsoleFilter = () => {
+  // Store original console methods
+  const originalConsoleError = console.error;
+  const originalConsoleWarn = console.warn;
   
-  // Override open to track the URL
-  XMLHttpRequest.prototype.open = function(method, url, ...rest) {
-    this._url = url;
-    this._method = method;
-    return originalXHROpen.apply(this, [method, url, ...rest]);
+  // Create a function to check if a message is Firebase-related
+  const isFirebaseMessage = (args) => {
+    if (!args || args.length === 0) return false;
+    
+    const message = args.join ? args.join(' ') : String(args);
+    return (
+      message.includes('firestore.googleapis.com') ||
+      message.includes('firebase') ||
+      message.includes('googleapis.com') ||
+      message.includes('FirebaseError') ||
+      message.includes('WebChannelConnection')
+    );
   };
   
-  // Override send to handle errors
-  XMLHttpRequest.prototype.send = function(...args) {
-    // Store original event handlers
-    const originalOnError = this.onerror;
-    const originalOnLoad = this.onload;
+  // Override console.error only for Firebase-related messages
+  console.error = function(...args) {
+    if (isFirebaseMessage(args)) {
+      // Log to our custom logger instead of console
+      if (process.env.NODE_ENV === 'development') {
+        logger.debug('[Firebase Error Suppressed]', ...args);
+      }
+      return;
+    }
     
-    // Override error handler
-    this.onerror = function(event) {
-      // Check if it's a Firebase/Firestore request
-      const isFirebaseRequest = this._url?.includes('firestore.googleapis.com') || 
-                               this._url?.includes('firebase') || 
-                               this._url?.includes('googleapis.com');
-      
-      if (isFirebaseRequest) {
-        // Suppress Firebase errors in console
+    // Pass through all other errors
+    originalConsoleError.apply(console, args);
+  };
+  
+  // Override console.warn only for Firebase-related messages
+  console.warn = function(...args) {
+    if (isFirebaseMessage(args)) {
+      // Log to our custom logger instead of console
+      if (process.env.NODE_ENV === 'development') {
+        logger.debug('[Firebase Warning Suppressed]', ...args);
+      }
+      return;
+    }
+    
+    // Pass through all other warnings
+    originalConsoleWarn.apply(console, args);
+  };
+};
+
+// Create a Firebase-specific XMLHttpRequest for use in the app
+window.FirebaseXHR = class FirebaseXHR extends XMLHttpRequest {
+  constructor() {
+    super();
+    this.addEventListener('error', (event) => {
+      // Suppress Firebase errors in console
+      if (this._url?.includes('firestore.googleapis.com') || 
+          this._url?.includes('firebase') || 
+          this._url?.includes('googleapis.com')) {
         if (process.env.NODE_ENV === 'development') {
           logger.debug(`[Firebase XHR] Connection issue for ${this._url}`);
         }
-        
-        // Prevent the error from propagating to console
-        event.stopPropagation();
-        event.preventDefault();
+        // Don't prevent default here to allow normal error handling
       }
-      
-      // Call original handler if exists
-      if (typeof originalOnError === 'function') {
-        originalOnError.apply(this, arguments);
-      }
-    };
-    
-    // Override load handler to check for error status codes
-    this.onload = function(event) {
-      if (this.status >= 400) {
-        // Handle error status codes
-        const isFirebaseRequest = this._url?.includes('firestore.googleapis.com') || 
-                                 this._url?.includes('firebase') || 
-                                 this._url?.includes('googleapis.com');
-        
-        if (isFirebaseRequest) {
-          // Suppress Firebase errors in console
-          if (process.env.NODE_ENV === 'development') {
-            logger.debug(`[Firebase XHR] Request failed with status ${this.status} for ${this._url}`);
-          }
-        } else {
-          // For other requests, log minimally
-          if (process.env.NODE_ENV === 'development') {
-            logger.warn(`[XHR] ${this._method} ${this._url} failed with status ${this.status}`);
-          }
-        }
-      }
-      
-      // Call original handler if exists
-      if (typeof originalOnLoad === 'function') {
-        originalOnLoad.apply(this, arguments);
-      }
-    };
-    
-    return originalXHRSend.apply(this, args);
-  };
+    });
+  }
+  
+  open(method, url, ...rest) {
+    this._url = url;
+    this._method = method;
+    return super.open(method, url, ...rest);
+  }
 };
 
 export default initNetworkInterceptors;

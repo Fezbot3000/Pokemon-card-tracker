@@ -1,7 +1,10 @@
 // Test comment to verify GitHub Actions automatic deployment is working
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
-const fetch = require('node-fetch'); // Use node-fetch v2 syntax;
+const fetch = require('node-fetch'); // Use node-fetch v2 syntax
+const PDFDocument = require('pdfkit');
+const AdmZip = require('adm-zip');
+const { Readable } = require('stream');
 
 // Configure CORS: Allow requests from local dev and production domain
 const allowedOrigins = [
@@ -1594,10 +1597,10 @@ exports.storeCardImage = functions.https.onCall(async (data, context) => {
   }
 });
 
-// Generate batch JSON export of invoices
+// Generate batch PDF invoices on the server
 exports.generateInvoiceBatch = functions.runWith({
-  timeoutSeconds: 300, // 5 minutes
-  memory: '1GB'
+  timeoutSeconds: 540, // 9 minutes (max is 9 minutes for standard functions)
+  memory: '2GB' // Increase memory for PDF generation
 }).https.onCall(async (data, context) => {
   // Ensure the user is authenticated
   if (!context.auth) {
@@ -1605,7 +1608,7 @@ exports.generateInvoiceBatch = functions.runWith({
   }
 
   const userId = context.auth.uid;
-  console.log(`Starting batch invoice data export for user: ${userId}`);
+  console.log(`Starting batch invoice PDF generation for user: ${userId}`);
 
   try {
     // Get the invoice IDs from the request
@@ -1618,9 +1621,22 @@ exports.generateInvoiceBatch = functions.runWith({
       );
     }
 
-    console.log(`Processing ${invoiceIds.length} invoices for batch export`);
+    console.log(`Processing ${invoiceIds.length} invoices for PDF generation`);
     
-    // Collect all invoice data
+    // Get user profile data for the invoice headers
+    const userProfileDoc = await admin.firestore().collection('profiles').doc(userId).get();
+    let profile = null;
+    if (userProfileDoc.exists) {
+      profile = userProfileDoc.data();
+      console.log('Retrieved user profile for invoices');
+    } else {
+      console.log('No user profile found, proceeding without profile data');
+    }
+
+    // Create a ZIP file to store all PDFs
+    const zip = new AdmZip();
+    
+    // Create a JSON file with all invoice data for backup
     const allInvoicesData = [];
     
     // Process each invoice
@@ -1643,6 +1659,9 @@ exports.generateInvoiceBatch = functions.runWith({
       const invoice = invoiceDoc.data();
       invoice.id = invoiceDoc.id; // Add the document ID to the data
       
+      // Add to the all invoices data array for JSON backup
+      allInvoicesData.push(invoice);
+      
       // Get card details for the invoice
       const cards = [];
       if (invoice.cards && Array.isArray(invoice.cards)) {
@@ -1663,25 +1682,164 @@ exports.generateInvoiceBatch = functions.runWith({
         }
       }
       
-      // Add cards to the invoice data
-      invoice.cardDetails = cards;
-      
-      // Add to the all invoices data array
-      allInvoicesData.push(invoice);
+      // Generate PDF for this invoice
+      try {
+        // Create a PDF document
+        const pdfDoc = new PDFDocument({
+          size: 'A4',
+          margin: 50,
+          info: {
+            Title: `Invoice ${invoice.invoiceNumber || invoice.id}`,
+            Author: 'Pokemon Card Tracker',
+            Subject: 'Purchase Invoice',
+            Keywords: 'pokemon, cards, invoice'
+          }
+        });
+        
+        // Collect PDF chunks
+        const pdfChunks = [];
+        pdfDoc.on('data', chunk => pdfChunks.push(chunk));
+        
+        // Add invoice header
+        pdfDoc.fontSize(24).font('Helvetica-Bold').text('PURCHASE INVOICE', { align: 'center' });
+        pdfDoc.moveDown();
+        
+        // Add invoice details
+        pdfDoc.fontSize(12).font('Helvetica-Bold').text('Invoice Details');
+        pdfDoc.fontSize(10).font('Helvetica');
+        pdfDoc.text(`Invoice Number: ${invoice.invoiceNumber || invoice.id}`);
+        pdfDoc.text(`Date: ${invoice.date || new Date().toISOString().split('T')[0]}`);
+        pdfDoc.text(`Seller: ${invoice.seller || 'N/A'}`);
+        pdfDoc.moveDown();
+        
+        // Add buyer details if profile exists
+        if (profile) {
+          pdfDoc.fontSize(12).font('Helvetica-Bold').text('Buyer');
+          pdfDoc.fontSize(10).font('Helvetica');
+          pdfDoc.text(`Name: ${profile.name || 'N/A'}`);
+          if (profile.email) pdfDoc.text(`Email: ${profile.email}`);
+          pdfDoc.moveDown();
+        }
+        
+        // Add card table header
+        pdfDoc.fontSize(12).font('Helvetica-Bold').text('Items');
+        pdfDoc.moveDown(0.5);
+        
+        // Define table columns
+        const tableTop = pdfDoc.y;
+        const tableColumnWidth = {
+          name: 250,
+          set: 100,
+          quantity: 50,
+          price: 80
+        };
+        
+        // Draw table header
+        pdfDoc.fontSize(10).font('Helvetica-Bold');
+        pdfDoc.text('Card Name', 50, tableTop);
+        pdfDoc.text('Set', 50 + tableColumnWidth.name, tableTop);
+        pdfDoc.text('Qty', 50 + tableColumnWidth.name + tableColumnWidth.set, tableTop);
+        pdfDoc.text('Price', 50 + tableColumnWidth.name + tableColumnWidth.set + tableColumnWidth.quantity, tableTop);
+        
+        pdfDoc.moveDown();
+        
+        // Draw table rows
+        let y = pdfDoc.y;
+        let totalAmount = 0;
+        
+        pdfDoc.fontSize(10).font('Helvetica');
+        
+        for (const card of cards) {
+          const cardName = card.card || card.name || card.player || 'Unnamed Card';
+          const setName = card.set || card.setName || 'Unknown Set';
+          const quantity = card.quantity || 1;
+          const price = card.price || 0;
+          totalAmount += price * quantity;
+          
+          // Check if we need a new page
+          if (y > pdfDoc.page.height - 150) {
+            pdfDoc.addPage();
+            y = 50;
+          }
+          
+          pdfDoc.text(cardName.substring(0, 40), 50, y, { width: tableColumnWidth.name });
+          pdfDoc.text(setName.substring(0, 20), 50 + tableColumnWidth.name, y);
+          pdfDoc.text(quantity.toString(), 50 + tableColumnWidth.name + tableColumnWidth.set, y);
+          pdfDoc.text(`$${price.toFixed(2)}`, 50 + tableColumnWidth.name + tableColumnWidth.set + tableColumnWidth.quantity, y);
+          
+          y += 20;
+        }
+        
+        // Add total
+        pdfDoc.moveDown();
+        pdfDoc.fontSize(12).font('Helvetica-Bold');
+        pdfDoc.text(`Total Amount: $${(invoice.totalAmount || totalAmount).toFixed(2)}`, { align: 'right' });
+        
+        // Add notes if available
+        if (invoice.notes) {
+          pdfDoc.moveDown();
+          pdfDoc.fontSize(12).font('Helvetica-Bold').text('Notes');
+          pdfDoc.fontSize(10).font('Helvetica').text(invoice.notes);
+        }
+        
+        // Finalize the PDF
+        pdfDoc.end();
+        
+        // Wait for PDF generation to complete
+        const pdfBuffer = await new Promise((resolve) => {
+          pdfDoc.on('end', () => {
+            resolve(Buffer.concat(pdfChunks));
+          });
+        });
+        
+        // Add the PDF to the ZIP file
+        const pdfFilename = `Invoice-${invoice.invoiceNumber || invoice.id}.pdf`;
+        zip.addFile(pdfFilename, pdfBuffer);
+        
+        console.log(`Added PDF for invoice ${invoiceId} to the ZIP file`);
+      } catch (pdfError) {
+        console.error(`Error generating PDF for invoice ${invoiceId}:`, pdfError);
+      }
     }
     
-    console.log(`Batch invoice export completed successfully with ${allInvoicesData.length} invoices`);
+    // Add the JSON data file with all invoices
+    zip.addFile('all-invoices.json', Buffer.from(JSON.stringify(allInvoicesData, null, 2)));
     
-    // Return the data directly in the response
-    // Note: There's a 10MB limit on the response size for Cloud Functions
+    // Generate the ZIP file
+    const zipBuffer = zip.toBuffer();
+    
+    // Upload the ZIP file to Firebase Storage
+    const bucket = admin.storage().bucket();
+    const zipFilename = `purchase-invoices-${new Date().toISOString().split('T')[0]}.zip`;
+    const zipPath = `exports/${userId}/${Date.now()}/${zipFilename}`;
+    const file = bucket.file(zipPath);
+    
+    // Upload the ZIP file with public read access
+    await file.save(zipBuffer, {
+      metadata: {
+        contentType: 'application/zip',
+        metadata: {
+          createdBy: userId,
+          timestamp: new Date().toISOString(),
+          invoiceCount: allInvoicesData.length
+        }
+      },
+      public: true // Make the file publicly accessible
+    });
+    
+    // Get the public URL (no signing needed)
+    const publicUrl = `https://storage.googleapis.com/${bucket.name}/${zipPath}`;
+    
+    console.log(`Batch invoice generation completed successfully`);
+    
     return {
       success: true,
-      invoiceCount: allInvoicesData.length,
-      data: allInvoicesData,
-      message: 'Invoice data exported successfully. You can generate PDFs from this data in the browser.'
+      url: publicUrl,
+      filename: zipFilename,
+      invoiceCount: allInvoicesData.length
     };
   } catch (error) {
-    console.error('Error exporting invoice data:', error);
-    throw new functions.https.HttpsError('internal', `Error exporting invoice data: ${error.message}`);
+    console.error('Error generating batch invoices:', error);
+    throw new functions.https.HttpsError('internal', `Error generating batch invoices: ${error.message}`);
   }
 });

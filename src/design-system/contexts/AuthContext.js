@@ -1,19 +1,22 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { 
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  signOut as firebaseSignOut,
-  sendPasswordResetEmail,
-  onAuthStateChanged,
-  updateProfile,
-  GoogleAuthProvider,
-  signInWithPopup,
+  getAuth, 
+  createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword, 
+  signOut as firebaseSignOut, 
+  onAuthStateChanged, 
+  GoogleAuthProvider, 
+  signInWithRedirect,
   getRedirectResult,
-  OAuthProvider
+  OAuthProvider,
+  sendPasswordResetEmail
 } from 'firebase/auth';
-import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
-import { auth, db, googleProvider } from '../../firebase'; // Import from the main app's firebase config
-import { toast } from 'react-hot-toast';
+import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { db, auth } from '../../services/firebase';
+import { toast } from '../';
+import { initErrorSuppression } from '../../utils/errorHandler';
+import subscriptionManager from '../../utils/subscriptionManager';
+import logger from '../../utils/logger';
 
 /**
  * Auth Context for the design system
@@ -59,30 +62,85 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  // Get the Firebase auth instance
+  const firebaseAuth = auth;
 
   // Clear any error when component unmounts or when dependencies change
   useEffect(() => {
     return () => setError(null);
   }, []);
 
-  // Set up the auth state listener
+  // Set up the auth state listener and handle redirect results
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        try {
-          // Just set the current user
-          setUser(user);
-        } catch (err) {
-          console.error("Error handling user:", err);
-          setUser(user);
+    const handleRedirectResult = async () => {
+      try {
+        // Check if we have a redirect result
+        const result = await getRedirectResult(firebaseAuth);
+        
+        if (result && result.user) {
+          console.log("Redirect sign-in successful:", result.user?.email);
+          
+          // Check if this is a new user
+          const isFirstSignIn = result?.additionalUserInfo?.isNewUser;
+          
+          // Try to create user document
+          try {
+            await createUserDocument(result.user);
+            console.log("User document created after redirect sign-in");
+          } catch (docError) {
+            console.error("Failed to create user document after redirect sign-in:", docError);
+          }
+          
+          toast.success('Signed in successfully!');
+          
+          // After successful sign-in, clear any previous plan choice
+          localStorage.removeItem('chosenPlan');
+          
+          // Check if this is a truly new user
+          const isNewAccount = 
+            isFirstSignIn || 
+            result.user.metadata.creationTime === result.user.metadata.lastSignInTime;
+          
+          // Only set the isNewUser flag for brand new accounts
+          if (isNewAccount) {
+            console.log("Brand new account detected, setting isNewUser flag");
+            localStorage.setItem('isNewUser', 'true');
+          } else {
+            console.log("Existing account detected, not setting isNewUser flag");
+            // Ensure we clear any existing flag for sign-ins
+            localStorage.removeItem('isNewUser');
+          }
         }
-      } else {
-        setUser(null);
+      } catch (err) {
+        if (err.code !== 'auth/no-auth-event') {
+          console.error("Redirect sign-in error:", err);
+          const errorMessage = handleFirebaseError(err);
+          setError(errorMessage);
+          toast.error(errorMessage);
+        }
       }
-      setLoading(false);
-    });
+    };
 
-    return unsubscribe;
+    // Handle redirect result first, then set up auth state listener
+    handleRedirectResult().then(() => {
+      const unsubscribe = onAuthStateChanged(firebaseAuth, async (user) => {
+        if (user) {
+          try {
+            // Just set the current user
+            setUser(user);
+          } catch (err) {
+            console.error("Error handling user:", err);
+            setUser(user);
+          }
+        } else {
+          setUser(null);
+        }
+        setLoading(false);
+      });
+      
+      return () => unsubscribe();
+    });
   }, []);
 
   // Helper function to create a user document in Firestore
@@ -115,7 +173,7 @@ export const AuthProvider = ({ children }) => {
   const signUp = async ({ email, password, displayName }) => {
     try {
       setError(null);
-      const result = await createUserWithEmailAndPassword(auth, email, password);
+      const result = await createUserWithEmailAndPassword(firebaseAuth, email, password);
       
       // Update profile with display name if provided
       if (displayName) {
@@ -142,7 +200,7 @@ export const AuthProvider = ({ children }) => {
   const signIn = async ({ email, password, remember = false }) => {
     try {
       setError(null);
-      const result = await signInWithEmailAndPassword(auth, email, password);
+      const result = await signInWithEmailAndPassword(firebaseAuth, email, password);
       
       // Clear any new user flag for sign-ins
       localStorage.removeItem('isNewUser');
@@ -157,109 +215,55 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Google Sign In
+  // Google Sign In using redirect to avoid COOP errors
   const signInWithGoogle = async () => {
     try {
       setError(null);
-      console.log("Starting Google sign-in process...");
+      console.log("Starting Google sign-in process with redirect...");
       
-      // Use popup for Google sign-in
-      const result = await signInWithPopup(auth, googleProvider);
-      console.log("Google sign-in successful:", result.user?.email);
+      // Use redirect for Google sign-in to avoid COOP issues
+      const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({
+        prompt: 'select_account'
+      });
       
-      // Check if this is a new user
-      const isFirstSignIn = result?.additionalUserInfo?.isNewUser;
+      await signInWithRedirect(firebaseAuth, provider);
       
-      // Try to create user document
-      try {
-        await createUserDocument(result.user);
-        console.log("User document created after Google sign-in");
-      } catch (docError) {
-        console.error("Failed to create user document after Google sign-in:", docError);
-      }
+      // The actual sign-in result will be handled in the useEffect with getRedirectResult
+      // This function will return before the redirect completes
       
-      toast.success('Signed in with Google successfully!');
-      
-      // After successful Google sign-in, clear any previous plan choice
-      localStorage.removeItem('chosenPlan');
-      
-      // Check if this is a truly new user
-      const isNewAccount = 
-        isFirstSignIn || 
-        result.user.metadata.creationTime === result.user.metadata.lastSignInTime;
-      
-      // Only set the isNewUser flag for brand new accounts
-      if (isNewAccount) {
-        console.log("Brand new Google account detected, setting isNewUser flag");
-        localStorage.setItem('isNewUser', 'true');
-      } else {
-        console.log("Existing Google account detected, not setting isNewUser flag");
-        // Ensure we clear any existing flag for sign-ins
-        localStorage.removeItem('isNewUser');
-      }
-      
-      return result.user;
+      return null; // We won't have a user yet as the redirect hasn't completed
     } catch (err) {
-      console.error("Google sign-in error:", err);
-      if (err.code !== 'auth/popup-closed-by-user') {
-        const errorMessage = handleFirebaseError(err);
-        setError(errorMessage);
-        toast.error(errorMessage);
-      }
+      console.error("Google sign-in redirect error:", err);
+      const errorMessage = handleFirebaseError(err);
+      setError(errorMessage);
+      toast.error(errorMessage);
       throw err;
     }
   };
 
-  // Apple Sign In
+  // Apple Sign In using redirect to avoid COOP errors
   const signInWithApple = async () => {
     try {
       setError(null);
-      console.log("Starting Apple sign-in process...");
+      console.log("Starting Apple sign-in process with redirect...");
+      
+      // Use redirect for Apple sign-in to avoid COOP issues
       const provider = new OAuthProvider('apple.com');
+      provider.addScope('email');
+      provider.addScope('name');
       
-      // Use popup for Apple sign-in
-      const result = await signInWithPopup(auth, provider);
-      console.log("Apple sign-in successful:", result.user?.email);
+      await signInWithRedirect(firebaseAuth, provider);
       
-      // Check if this is a new user
-      const isFirstSignIn = result?.additionalUserInfo?.isNewUser;
+      // The actual sign-in result will be handled in the useEffect with getRedirectResult
+      // This function will return before the redirect completes
       
-      // Try to create user document
-      try {
-        await createUserDocument(result.user);
-        console.log("User document created after Apple sign-in");
-      } catch (docError) {
-        console.error("Failed to create user document after Apple sign-in:", docError);
-      }
-      
-      toast.success('Signed in with Apple successfully!');
-      
-      // After successful Apple sign-in, clear any previous plan choice
-      localStorage.removeItem('chosenPlan');
-      
-      // Check if this is a truly new user
-      const isNewAccount = 
-        isFirstSignIn || 
-        result.user.metadata.creationTime === result.user.metadata.lastSignInTime;
-      
-      // Only set the isNewUser flag for brand new accounts
-      if (isNewAccount) {
-        console.log("Brand new Apple account detected, setting isNewUser flag");
-        localStorage.setItem('isNewUser', 'true');
-      } else {
-        console.log("Existing Apple account detected, not setting isNewUser flag");
-        // Ensure we clear any existing flag for sign-ins
-        localStorage.removeItem('isNewUser');
-      }
-      
-      return result.user;
+      return null; // We won't have a user yet as the redirect hasn't completed
     } catch (err) {
-      console.error("Apple sign-in error:", err);
-      if (err.code !== 'auth/popup-closed-by-user') {
-        const errorMessage = handleFirebaseError(err);
-        setError(errorMessage);
-        toast.error(errorMessage);
-      }
+      console.error("Apple sign-in redirect error:", err);
+      const errorMessage = handleFirebaseError(err);
+      setError(errorMessage);
+      toast.error(errorMessage);
       throw err;
     }
   };
@@ -268,7 +272,22 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     try {
       setError(null);
-      await firebaseSignOut(auth);
+      
+      // Clean up all Firestore subscriptions before signing out
+      // This prevents console errors from unauthorized Firestore access
+      try {
+        logger.debug('Cleaning up all Firestore subscriptions before logout');
+        subscriptionManager.cleanupAll();
+        
+        // Small delay to ensure all subscriptions are cleaned up
+        await new Promise(resolve => setTimeout(resolve, 100));
+      } catch (cleanupError) {
+        logger.error('Error cleaning up subscriptions during logout:', cleanupError);
+        // Continue with logout even if cleanup fails
+      }
+      
+      // Now sign out from Firebase
+      await firebaseSignOut(firebaseAuth);
       toast.success('Signed out successfully!');
     } catch (err) {
       const errorMessage = handleFirebaseError(err);
@@ -282,7 +301,7 @@ export const AuthProvider = ({ children }) => {
   const resetPassword = async (email) => {
     try {
       setError(null);
-      await sendPasswordResetEmail(auth, email);
+      await sendPasswordResetEmail(firebaseAuth, email);
       toast.success('Password reset email sent!');
     } catch (err) {
       const errorMessage = handleFirebaseError(err);

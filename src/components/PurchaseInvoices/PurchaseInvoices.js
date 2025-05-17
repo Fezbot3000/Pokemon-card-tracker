@@ -34,7 +34,7 @@ const PurchaseInvoices = () => {
     setShowCreateModal(true);
   };
   
-  // Handle server-side batch data export
+  // Handle server-side batch PDF generation
   const handleServerBatchGeneration = async () => {
     if (invoices.length === 0) {
       toast.error('No invoices to export');
@@ -43,7 +43,7 @@ const PurchaseInvoices = () => {
     
     try {
       // Show loading toast
-      toast.loading('Preparing invoice data export...', { id: 'server-batch' });
+      toast.loading('Generating PDF invoices on the server...', { id: 'server-batch' });
       setIsGeneratingBatch(true);
       
       // Get all invoice IDs from filtered invoices
@@ -54,36 +54,26 @@ const PurchaseInvoices = () => {
       const result = await generateBatchFn({ invoiceIds });
       
       if (result.data && result.data.success) {
-        // Success - export the data as JSON file
-        toast.success(`Successfully exported ${result.data.invoiceCount} invoices!`, { id: 'server-batch' });
+        // Success - provide download link for ZIP file
+        toast.success(`Successfully generated ${result.data.invoiceCount} invoice PDFs!`, { id: 'server-batch' });
         
-        // Convert the data to a downloadable JSON file
-        const jsonData = JSON.stringify(result.data.data, null, 2);
-        const blob = new Blob([jsonData], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        
-        // Create a temporary link to download the file
+        // Create a temporary link to download the ZIP file
         const downloadLink = document.createElement('a');
-        downloadLink.href = url;
-        downloadLink.download = `purchase-invoices-export-${new Date().toISOString().split('T')[0]}.json`;
+        downloadLink.href = result.data.url;
+        downloadLink.download = result.data.filename;
         document.body.appendChild(downloadLink);
         downloadLink.click();
         document.body.removeChild(downloadLink);
         
-        // Clean up the URL object
-        URL.revokeObjectURL(url);
-        
-        // Show message about generating PDFs in browser
-        if (result.data.message) {
-          setTimeout(() => {
-            toast.success(result.data.message, { duration: 6000 });
-          }, 1000);
-        }
+        // Show success message
+        setTimeout(() => {
+          toast.success('Your invoice PDFs have been downloaded as a ZIP file', { duration: 6000 });
+        }, 1000);
       } else {
-        toast.error('Failed to export invoice data', { id: 'server-batch' });
+        toast.error('Failed to generate invoice PDFs', { id: 'server-batch' });
       }
     } catch (error) {
-      console.error('Error in server batch export:', error);
+      console.error('Error in server batch PDF generation:', error);
       toast.error(`Error: ${error.message || 'Unknown error'}`, { id: 'server-batch' });
     } finally {
       setIsGeneratingBatch(false);
@@ -544,10 +534,10 @@ const PurchaseInvoices = () => {
                     className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center gap-2"
                     onClick={handleServerBatchGeneration}
                     disabled={invoices.length === 0}
-                    title="Export all invoice data as a JSON file from the server"
+                    title="Generate PDF invoices for all items"
                   >
                     <span className="material-icons">cloud_download</span>
-                    <span>Export All Data</span>
+                    <span>Generate All PDFs</span>
                   </button>
                 )}
                 <button

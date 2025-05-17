@@ -12,26 +12,28 @@ import './env';
 // Import app initialization
 import { initializeApp } from './services/appInitialization';
 import logger from './utils/logger';
-// Import error suppression utilities
+// Import error handling utilities - now using targeted approach
 import { initErrorSuppression } from './utils/errorHandler';
-import initNetworkErrorSuppression from './utils/networkErrorSuppressor';
-import initAdvancedErrorSuppression from './utils/consoleErrorSuppressor';
 import initNetworkInterceptors from './utils/networkInterceptor';
+import initExtensionLogBlocker from './utils/extensionLogBlocker';
 import ErrorBoundary from './components/ErrorBoundary';
+// Import subscription manager for proper Firestore subscription handling
+import subscriptionManager from './utils/subscriptionManager';
 
 // Disable Firebase debug logging for production readiness
 window.localStorage.removeItem('debug');
 
+// Initialize extension log blocker first to prevent 1Password logs
+initExtensionLogBlocker();
 
-// Initialize all error suppression mechanisms to clean up console logs
+// Initialize basic error handling
 initErrorSuppression();
-initNetworkErrorSuppression();
 
-// Initialize advanced error suppression for a professional, clean console
-initAdvancedErrorSuppression();
-
-// Initialize network interceptors to prevent network errors from showing in console
+// Initialize targeted network interceptors for Firebase-specific error handling
 initNetworkInterceptors();
+
+// Log the subscription manager initialization
+logger.debug('Subscription manager initialized for Firestore subscription tracking');
 
 // Initialize the application
 initializeApp()
