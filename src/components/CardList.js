@@ -278,12 +278,14 @@ const CardList = ({
 
   // Sort options
   const sortOptions = [
+    { field: 'card', label: 'Card Name' },
     { field: 'currentValueAUD', label: 'Current Value' },
     { field: 'investmentAUD', label: 'Paid' },
     { field: 'potentialProfit', label: 'Profit' },
     { field: 'datePurchased', label: 'Purchase Date' },
     { field: 'player', label: 'Player Name' },
-    { field: 'cardNumber', label: 'Card Number' }
+    { field: 'cardNumber', label: 'Card Number' },
+    { field: 'set', label: 'Set Name' }
   ];
 
   // Function to get the label for a sort field
@@ -392,23 +394,74 @@ const CardList = ({
 
   // Memoized filtered and sorted cards to ensure stable keys and prevent duplicate key warnings
   const filteredCards = useMemo(() => {
+    if (!cards || cards.length === 0) return [];
+    
+    // Apply filter
     let filtered = cards;
     if (filter) {
       const lowerFilter = filter.toLowerCase();
-      filtered = filtered.filter(card =>
+      filtered = filtered.filter(card => 
         (card.card && card.card.toLowerCase().includes(lowerFilter)) ||
+        (card.set && card.set.toLowerCase().includes(lowerFilter)) ||
+        (card.slabSerial && card.slabSerial.toLowerCase().includes(lowerFilter)) ||
         (card.player && card.player.toLowerCase().includes(lowerFilter))
       );
     }
-    // Sort cards
-    filtered = [...filtered].sort((a, b) => {
+    
+    // Create a completely new sorted array to avoid mutation issues
+    filtered = [...filtered];
+    
+    // Apply a multi-level sorting strategy for consistent ordering
+    filtered.sort((a, b) => {
+      // 1. First sort by the user-selected field and direction
       const aValue = a[sortField] ?? 0;
       const bValue = b[sortField] ?? 0;
-      if (sortDirection === 'asc') {
-        return aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
-      } else {
-        return aValue < bValue ? 1 : aValue > bValue ? -1 : 0;
+      
+      // Handle different types of values appropriately
+      let primarySort = 0;
+      
+      // Handle numeric values
+      if (typeof aValue === 'number' && typeof bValue === 'number') {
+        primarySort = sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
+      } 
+      // Handle string values
+      else if (typeof aValue === 'string' && typeof bValue === 'string') {
+        primarySort = sortDirection === 'asc' ? 
+          aValue.localeCompare(bValue) : 
+          bValue.localeCompare(aValue);
       }
+      // Handle mixed types (convert to string for comparison)
+      else {
+        const aStr = String(aValue);
+        const bStr = String(bValue);
+        primarySort = sortDirection === 'asc' ? 
+          aStr.localeCompare(bStr) : 
+          bStr.localeCompare(aStr);
+      }
+      
+      // If primary sort doesn't determine order, use secondary sorting criteria
+      if (primarySort === 0) {
+        // 2. Secondary sort by card name
+        const aName = (a.card || '').toLowerCase();
+        const bName = (b.card || '').toLowerCase();
+        const nameSort = aName.localeCompare(bName);
+        
+        if (nameSort !== 0) return nameSort;
+        
+        // 3. Tertiary sort by set
+        const aSet = (a.set || '').toLowerCase();
+        const bSet = (b.set || '').toLowerCase();
+        const setSort = aSet.localeCompare(bSet);
+        
+        if (setSort !== 0) return setSort;
+        
+        // 4. Final sort by slabSerial for absolute consistency
+        const aSerial = (a.slabSerial || '').toLowerCase();
+        const bSerial = (b.slabSerial || '').toLowerCase();
+        return aSerial.localeCompare(bSerial);
+      }
+      
+      return primarySort;
     });
     // Ensure uniqueness by combining slabSerial and collection as fallback key
     return filtered.map((card, idx) => ({ ...card, _uniqueKey: `${card.slabSerial || 'unknown'}-${card.collection || 'none'}-${idx}` }));
@@ -987,10 +1040,20 @@ const CardList = ({
         selectedCollection={selectedCollection}
         collections={[
           'All Cards', 
-          ...Object.keys(collections).filter(collection => {
-            const lowerCase = collection.toLowerCase();
-            return lowerCase !== 'sold' && !lowerCase.includes('sold');
-          })
+          ...Object.keys(collections)
+            .filter(collection => {
+              const lowerCase = collection.toLowerCase();
+              // Hide 'Default Collection' if it's empty
+              if (lowerCase === 'default collection' && 
+                  Array.isArray(collections[collection]) && 
+                  collections[collection].length === 0) {
+                return false;
+              }
+              // Filter out sold collections
+              return lowerCase !== 'sold' && !lowerCase.includes('sold');
+            })
+            // Sort collections alphabetically
+            .sort((a, b) => a.localeCompare(b))
         ]}
         onCollectionChange={onCollectionChange}
         onAddCollection={(newCollectionName) => {

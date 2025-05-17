@@ -1004,6 +1004,7 @@ class CardRepository {
   }
 
   subscribeToSoldCards(callback) {
+    // Use consistent ordering by card name and slabSerial for predictable left-to-right display
     const q = query(
       this.soldCardsRef,
       orderBy('soldDate', 'desc')

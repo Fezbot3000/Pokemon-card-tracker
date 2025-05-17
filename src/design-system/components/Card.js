@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { formatCurrency, formatCurrencyK } from '../utils/formatters';
 import Icon from '../atoms/Icon';
@@ -122,10 +122,9 @@ const Card = ({
       {/* Card Image */}
       <div className="aspect-[2/3] bg-white dark:bg-[#1B2131] relative overflow-hidden p-2">
         {cardImage ? (
-          <img 
+          <ImageWithAnimation 
             src={cardImage} 
             alt={card.name || 'Pokemon Card'} 
-            className="w-full h-full object-contain rounded"
           />
         ) : (
           <div className="flex items-center justify-center h-full">
@@ -219,6 +218,25 @@ Card.Body.propTypes = {
 Card.Footer.propTypes = {
   children: PropTypes.node,
   className: PropTypes.string
+};
+
+// Image component with slide-in animation
+const ImageWithAnimation = ({ src, alt }) => {
+  const [imageLoaded, setImageLoaded] = useState(false);
+
+  return (
+    <img 
+      src={src} 
+      alt={alt} 
+      className={`w-full h-full object-contain rounded transition-all duration-500 ${imageLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-95 transform translate-y-4'}`}
+      onLoad={() => setImageLoaded(true)}
+    />
+  );
+};
+
+ImageWithAnimation.propTypes = {
+  src: PropTypes.string.isRequired,
+  alt: PropTypes.string.isRequired
 };
 
 export default Card;
