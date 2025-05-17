@@ -373,7 +373,7 @@ const AddCardModal = ({
                          bg-white dark:bg-[#0F0F0F] text-gray-900 dark:text-white
                          focus:outline-none focus:ring-2 focus:ring-primary/20"
               >
-                <option value="">Select Collection...</option>
+                <option value="" disabled>Select Collection...</option>
                 {collections
                   .filter(collection => collection.toLowerCase() !== 'sold')
                   .map(collection => (

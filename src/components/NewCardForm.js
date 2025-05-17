@@ -622,7 +622,7 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
                             required={isRequired}
                             className={commonInputClasses}
                           >
-                            <option value="">Select Set...</option>
+                            <option value="" disabled>Select Set...</option>
                             {/* Add set options here */}
                           </select>
                         ) : field === 'category' ? (
@@ -634,7 +634,7 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
                             required={isRequired}
                             className={commonInputClasses}
                           >
-                            <option value="">Select Category...</option>
+                            <option value="" disabled>Select Category...</option>
                             {/* Add category options here */}
                           </select>
                         ) : (

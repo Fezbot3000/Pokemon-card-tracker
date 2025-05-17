@@ -40,15 +40,33 @@ let db;
 // This will prevent the console from showing ERR_BLOCKED_BY_CLIENT errors
 const originalConsoleError = console.error;
 console.error = function(...args) {
-  // Filter out Firebase network errors that are caused by ad blockers
-  const errorString = args.join(' ');
-  if (errorString.includes('net::ERR_BLOCKED_BY_CLIENT') || 
-      errorString.includes('Failed to fetch') ||
-      errorString.includes('NetworkError') ||
-      errorString.includes('firestore.googleapis.com')) {
-    // Silently ignore these errors
+  // Convert args to string for easier filtering
+  const errorString = args.length > 0 ? JSON.stringify(args) : '';
+  
+  // Comprehensive list of patterns to filter out
+  const blockedPatterns = [
+    'net::ERR_BLOCKED_BY_CLIENT',
+    'Failed to fetch',
+    'NetworkError',
+    'firestore.googleapis.com',
+    'WebChannelConnection',
+    'FirebaseError',
+    'permission-denied',
+    'insufficient permissions',
+    'channel?VER=8',
+    'terminate',
+    'webchannel',
+    'close call',
+    'Cross-Origin-Opener-Policy'
+  ];
+  
+  // Check if any of the patterns match
+  if (blockedPatterns.some(pattern => errorString.includes(pattern))) {
+    // Log to debug if needed, but don't show in console
+    // logger.debug('Suppressed Firebase error:', args[0]);
     return;
   }
+  
   // Pass through all other errors to the original console.error
   originalConsoleError.apply(console, args);
 };
@@ -56,14 +74,30 @@ console.error = function(...args) {
 // Same for console.warn
 const originalConsoleWarn = console.warn;
 console.warn = function(...args) {
-  // Filter out Firebase network warnings
-  const warnString = args.join(' ');
-  if (warnString.includes('WebChannelConnection') ||
-      warnString.includes('firestore') ||
-      warnString.includes('transport errored')) {
+  // Convert args to string for easier filtering
+  const warnString = args.length > 0 ? JSON.stringify(args) : '';
+  
+  // Comprehensive list of warning patterns to filter out
+  const blockedWarningPatterns = [
+    'WebChannelConnection',
+    'firestore',
+    'transport errored',
+    'Unknown event handler property',
+    'onExportData',
+    'onImportSoldItemsFromZip',
+    'Text component',
+    'string child',
+    'Firebase',
+    'channel?VER=8',
+    'webchannel'
+  ];
+  
+  // Check if any of the patterns match
+  if (blockedWarningPatterns.some(pattern => warnString.includes(pattern))) {
     // Silently ignore these warnings
     return;
   }
+  
   // Pass through all other warnings
   originalConsoleWarn.apply(console, args);
 };

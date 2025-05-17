@@ -303,13 +303,39 @@ const CardDetailsForm = ({
     let condition = '';
     if (company === 'RAW') {
       condition = grade; // For raw cards, just use the grade (e.g., "Mint")
+      // Also update the gradingCompany and grade fields to ensure they persist
+      onChange({
+        ...card,
+        condition,
+        gradingCompany: company,
+        grade
+      });
     } else if (company && grade) {
       condition = `${company} ${grade}`; // For graded cards, combine (e.g., "PSA 10")
+      // Also update the gradingCompany and grade fields to ensure they persist
+      onChange({
+        ...card,
+        condition,
+        gradingCompany: company,
+        grade
+      });
     } else if (company) {
       condition = company; // If only company is selected
+      onChange({
+        ...card,
+        condition,
+        gradingCompany: company,
+        grade: ''
+      });
+    } else {
+      // Reset everything if nothing is selected
+      onChange({
+        ...card,
+        condition: '',
+        gradingCompany: '',
+        grade: ''
+      });
     }
-    
-    onChange({ ...card, condition });
   };
 
   // Handle collection change
@@ -374,7 +400,7 @@ const CardDetailsForm = ({
             error={errors.collectionId}
             required
           >
-            <option value="">Select Collection...</option>
+            <option value="" disabled>Select Collection...</option>
             {collections
               .filter(collection => collection !== 'sold') // Filter out the 'sold' collection
               .map(collection => (
@@ -571,7 +597,7 @@ const CardDetailsForm = ({
                   } bg-white dark:bg-[#0F0F0F] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none pr-10`}
                   data-component-name="CardDetailsForm"
                 >
-                  <option value="">Select Set...</option>
+                  <option value="" disabled>Select Set...</option>
                   {availableSets.map(set => (
                     <option key={set} value={set}>{set}</option>
                   ))}

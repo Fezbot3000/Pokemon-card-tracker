@@ -40,8 +40,10 @@ const SettingsModal = ({
   onSignOut,
   onResetData,
   onStartTutorial,
-  onImportAndCloudMigrate, // Add this new prop
-  onUploadImagesFromZip, // Add new prop for image upload
+  onImportAndCloudMigrate,
+  onUploadImagesFromZip,
+  onExportData, // Add missing prop that's being passed from App.js
+  onImportSoldItemsFromZip, // Add missing prop that's being passed from App.js
   className = '',
   ...props 
 }) => {
@@ -759,7 +761,7 @@ const SettingsModal = ({
           </nav>
 
           {/* Content area */}
-          <div className="w-full lg:flex-1 overflow-y-auto scrollbar-hide p-6 sm:p-8 bg-gray-50 dark:bg-[#1A1A1A]" {...stripDebugProps(props)}>
+          <div className="w-full lg:flex-1 overflow-y-auto scrollbar-hide p-6 sm:p-8 bg-gray-50 dark:bg-[#1A1A1A]">
             {activeTab === 'general' && (
               <div className="space-y-6">
                 <SettingsPanel
@@ -853,45 +855,97 @@ const SettingsModal = ({
 
                 <SettingsPanel
                   title="Manage Collections"
-                  description="Delete a collection (must have at least one)."
+                  description="Rename or delete your card collections."
                 >
-                  <div className="space-y-3">
-                    <select 
-                      className={`w-full rounded-lg p-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
-                        isDarkMode 
-                          ? 'bg-[#0F0F0F] text-white border border-[#ffffff1a]' 
-                          : 'bg-white text-gray-800 border border-gray-300'
-                      }`}
-                      value={collectionToDelete}
-                      onChange={(e) => setCollectionToDelete(e.target.value)}
-                    >
-                      <option value="">Select Collection...</option>
-                      {Array.isArray(collections) 
-                        ? collections.filter(name => name !== 'All Cards').map((collection) => (
-                            <option key={collection} value={collection}>
-                              {collection}
-                            </option>
-                          ))
-                        : Object.keys(collections).filter(name => name !== 'All Cards' && name !== 'Sold').map((collection) => (
-                            <option key={collection} value={collection}>
-                              {collection}
-                            </option>
-                          ))
-                      }
-                    </select>
-                    <Button
-                      variant="danger"
-                      onClick={() => {
-                        if (collectionToDelete) {
-                          onDeleteCollection(collectionToDelete);
-                          setCollectionToDelete('');
-                        }
-                      }}
-                      disabled={!collectionToDelete}
-                      fullWidth
-                    >
-                      Delete Selected Collection
-                    </Button>
+                  <div className="space-y-5">
+                    {/* Rename Collection Section */}
+                    <div className="bg-white dark:bg-[#1B2131] rounded-lg p-4 border border-gray-200 dark:border-indigo-900/20">
+                      <h4 className="font-medium text-gray-900 dark:text-white mb-3 flex items-center">
+                        <Icon name="edit" className="text-indigo-400 mr-2" />
+                        Rename Collection
+                      </h4>
+                      <div className="space-y-3">
+                        <select 
+                          className={`w-full rounded-lg p-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
+                            isDarkMode 
+                              ? 'bg-[#0F0F0F] text-white border border-[#ffffff1a]' 
+                              : 'bg-white text-gray-800 border border-gray-300'
+                          }`}
+                          value={collectionToRename}
+                          onChange={(e) => setCollectionToRename(e.target.value)}
+                        >
+                          <option value="" disabled>Select Collection...</option>
+                          {Array.isArray(collections) 
+                            ? collections.filter(name => name !== 'All Cards').map((collection) => (
+                                <option key={collection} value={collection}>
+                                  {collection}
+                                </option>
+                              ))
+                            : Object.keys(collections).filter(name => name !== 'All Cards' && name !== 'Sold').map((collection) => (
+                                <option key={collection} value={collection}>
+                                  {collection}
+                                </option>
+                              ))
+                          }
+                        </select>
+                        <Button
+                          variant="primary"
+                          onClick={handleStartRenaming}
+                          disabled={!collectionToRename}
+                          iconLeft={<Icon name="edit" />}
+                          fullWidth
+                        >
+                          Rename Selected Collection
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    {/* Delete Collection Section */}
+                    <div className="bg-white dark:bg-[#1B2131] rounded-lg p-4 border border-gray-200 dark:border-indigo-900/20">
+                      <h4 className="font-medium text-gray-900 dark:text-white mb-3 flex items-center">
+                        <Icon name="delete" className="text-red-500 mr-2" />
+                        Delete Collection
+                      </h4>
+                      <div className="space-y-3">
+                        <select 
+                          className={`w-full rounded-lg p-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
+                            isDarkMode 
+                              ? 'bg-[#0F0F0F] text-white border border-[#ffffff1a]' 
+                              : 'bg-white text-gray-800 border border-gray-300'
+                          }`}
+                          value={collectionToDelete}
+                          onChange={(e) => setCollectionToDelete(e.target.value)}
+                        >
+                          <option value="" disabled>Select Collection...</option>
+                          {Array.isArray(collections) 
+                            ? collections.filter(name => name !== 'All Cards').map((collection) => (
+                                <option key={collection} value={collection}>
+                                  {collection}
+                                </option>
+                              ))
+                            : Object.keys(collections).filter(name => name !== 'All Cards' && name !== 'Sold').map((collection) => (
+                                <option key={collection} value={collection}>
+                                  {collection}
+                                </option>
+                              ))
+                          }
+                        </select>
+                        <Button
+                          variant="danger"
+                          onClick={() => {
+                            if (collectionToDelete) {
+                              onDeleteCollection(collectionToDelete);
+                              setCollectionToDelete('');
+                            }
+                          }}
+                          disabled={!collectionToDelete}
+                          iconLeft={<Icon name="delete" />}
+                          fullWidth
+                        >
+                          Delete Selected Collection
+                        </Button>
+                      </div>
+                    </div>
                   </div>
                 </SettingsPanel>
               </div>
@@ -1065,6 +1119,43 @@ const SettingsModal = ({
         title="Reset All Data"
         message="Are you sure you want to reset all data? This will permanently delete ALL your data from both local storage AND the cloud. This action cannot be undone."
       />
+      
+      {/* Rename Collection Modal */}
+      <Modal
+        isOpen={isRenaming}
+        onClose={() => setIsRenaming(false)}
+        title="Rename Collection"
+        size="sm"
+      >
+        <div className="p-6 space-y-4">
+          <p className="text-sm text-gray-600 dark:text-gray-300">
+            Enter a new name for the collection <span className="font-semibold">"{collectionToRename}"</span>:
+          </p>
+          <FormField
+            id="newCollectionName"
+            label="New Collection Name"
+            type="text"
+            value={newCollectionName}
+            onChange={(e) => setNewCollectionName(e.target.value)}
+            autoFocus
+          />
+          <div className="flex justify-end space-x-3 pt-4">
+            <Button
+              variant="outline"
+              onClick={() => setIsRenaming(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleRenameConfirm}
+              disabled={!newCollectionName || newCollectionName === collectionToRename}
+            >
+              Rename Collection
+            </Button>
+          </div>
+        </div>
+      </Modal>
 
       {/* Hidden file inputs */}
       <input
@@ -1099,7 +1190,9 @@ SettingsModal.propTypes = {
   onResetData: PropTypes.func,
   onStartTutorial: PropTypes.func,
   onImportAndCloudMigrate: PropTypes.func,
-  onUploadImagesFromZip: PropTypes.func, // Add prop type for image upload
+  onUploadImagesFromZip: PropTypes.func,
+  onExportData: PropTypes.func, // Add missing prop type for export data function
+  onImportSoldItemsFromZip: PropTypes.func, // Add missing prop type for importing sold items
   className: PropTypes.string
 };
 
