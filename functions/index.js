@@ -1704,83 +1704,134 @@ exports.generateInvoiceBatch = functions.runWith({
         pdfDoc.fontSize(24).font('Helvetica-Bold').text('PURCHASE INVOICE', { align: 'center' });
         pdfDoc.moveDown();
         
-        // Add invoice details
-        pdfDoc.fontSize(12).font('Helvetica-Bold').text('Invoice Details');
-        pdfDoc.fontSize(10).font('Helvetica');
-        pdfDoc.text(`Invoice Number: ${invoice.invoiceNumber || invoice.id}`);
-        pdfDoc.text(`Date: ${invoice.date || new Date().toISOString().split('T')[0]}`);
-        pdfDoc.text(`Seller: ${invoice.seller || 'N/A'}`);
-        pdfDoc.moveDown();
-        
-        // Add buyer details if profile exists
-        if (profile) {
-          pdfDoc.fontSize(12).font('Helvetica-Bold').text('Buyer');
-          pdfDoc.fontSize(10).font('Helvetica');
-          pdfDoc.text(`Name: ${profile.name || 'N/A'}`);
-          if (profile.email) pdfDoc.text(`Email: ${profile.email}`);
-          pdfDoc.moveDown();
-        }
-        
-        // Add card table header
-        pdfDoc.fontSize(12).font('Helvetica-Bold').text('Items');
+        // Add PURCHASE INVOICE title with matching style
+        pdfDoc.fontSize(14).font('Helvetica-Bold').text('PURCHASE INVOICE');
         pdfDoc.moveDown(0.5);
         
-        // Define table columns
-        const tableTop = pdfDoc.y;
-        const tableColumnWidth = {
-          name: 250,
-          set: 100,
-          quantity: 50,
-          price: 80
-        };
-        
-        // Draw table header
-        pdfDoc.fontSize(10).font('Helvetica-Bold');
-        pdfDoc.text('Card Name', 50, tableTop);
-        pdfDoc.text('Set', 50 + tableColumnWidth.name, tableTop);
-        pdfDoc.text('Qty', 50 + tableColumnWidth.name + tableColumnWidth.set, tableTop);
-        pdfDoc.text('Price', 50 + tableColumnWidth.name + tableColumnWidth.set + tableColumnWidth.quantity, tableTop);
-        
+        // Add invoice details section
+        pdfDoc.fontSize(11).font('Helvetica');
+        pdfDoc.text(`Invoice #: ${invoice.invoiceNumber || 'INV-' + invoice.id}`);
+        pdfDoc.text(`Date: ${invoice.date}`);
+        if (invoice.notes) {
+          pdfDoc.text(`Notes: ${invoice.notes}`);
+        }
         pdfDoc.moveDown();
+        
+        // Seller Information
+        pdfDoc.fontSize(11).font('Helvetica-Bold').text('Purchased From:');
+        pdfDoc.fontSize(11).font('Helvetica').text(invoice.seller);
+        pdfDoc.moveDown();
+        
+        // Buyer Information (if profile exists)
+        if (profile) {
+          pdfDoc.fontSize(11).font('Helvetica-Bold').text('Purchased By:');
+          if (profile.companyName) {
+            pdfDoc.fontSize(11).font('Helvetica').text(profile.companyName);
+          }
+          pdfDoc.text(`${profile.firstName || ''} ${profile.lastName || ''}`.trim());
+          if (profile.address) {
+            pdfDoc.text(profile.address);
+          }
+          if (profile.mobileNumber) {
+            pdfDoc.text(profile.mobileNumber);
+          }
+          if (profile.email) {
+            pdfDoc.text(profile.email);
+          }
+        }
+        pdfDoc.moveDown(2);
+        
+        // Table header with dark background
+        const tableTop = pdfDoc.y;
+        const tableWidth = pdfDoc.page.width - 80; // 40px margin on each side
+        
+        // Define table column widths to match client-side
+        const col1Width = tableWidth * 0.5;  // 50% for Item Description
+        const col2Width = tableWidth * 0.25; // 25% for Serial Number
+        const col3Width = tableWidth * 0.25; // 25% for Price
+        
+        // Draw table header background
+        pdfDoc.fillColor('#213547').rect(40, tableTop, tableWidth, 20).fill();
+        
+        // Draw table header text
+        pdfDoc.fillColor('#ffffff').fontSize(11).font('Helvetica-Bold');
+        pdfDoc.text('Item Description', 46, tableTop + 6);
+        pdfDoc.text('Serial Number', 46 + col1Width, tableTop + 6);
+        pdfDoc.text('Price', 46 + col1Width + col2Width, tableTop + 6, { align: 'right' });
+        
+        // Reset fill color for the rest of the document
+        pdfDoc.fillColor('#1a1a1a');
         
         // Draw table rows
-        let y = pdfDoc.y;
-        let totalAmount = 0;
-        
-        pdfDoc.fontSize(10).font('Helvetica');
+        let y = tableTop + 25;
         
         for (const card of cards) {
-          const cardName = card.card || card.name || card.player || 'Unnamed Card';
-          const setName = card.set || card.setName || 'Unknown Set';
-          const quantity = card.quantity || 1;
-          const price = card.price || 0;
-          totalAmount += price * quantity;
+          // Create display name for the card
+          const cardName = card.name || card.player || card.card || 
+            (card.set ? `${card.set} Card` : 'Unnamed Card');
           
-          // Check if we need a new page
-          if (y > pdfDoc.page.height - 150) {
-            pdfDoc.addPage();
-            y = 50;
+          // Draw card name in bold
+          pdfDoc.fontSize(11).font('Helvetica-Bold');
+          pdfDoc.text(cardName, 46, y, { width: col1Width - 10 });
+          
+          // Draw set and grade info in smaller gray text
+          if (card.set) {
+            pdfDoc.fontSize(9).font('Helvetica').fillColor('#6b7280');
+            pdfDoc.text(`${card.year || ''} ${card.set} ${card.cardNumber ? '#' + card.cardNumber : ''}`.trim(), 
+              46, pdfDoc.y, { width: col1Width - 10 });
           }
           
-          pdfDoc.text(cardName.substring(0, 40), 50, y, { width: tableColumnWidth.name });
-          pdfDoc.text(setName.substring(0, 20), 50 + tableColumnWidth.name, y);
-          pdfDoc.text(quantity.toString(), 50 + tableColumnWidth.name + tableColumnWidth.set, y);
-          pdfDoc.text(`$${price.toFixed(2)}`, 50 + tableColumnWidth.name + tableColumnWidth.set + tableColumnWidth.quantity, y);
+          if (card.grade) {
+            pdfDoc.fontSize(9).font('Helvetica').fillColor('#6b7280');
+            pdfDoc.text(`${card.gradeVendor || 'PSA'} ${card.grade}`, 46, pdfDoc.y, { width: col1Width - 10 });
+          }
           
-          y += 20;
+          // Reset text color
+          pdfDoc.fillColor('#1a1a1a');
+          
+          // Calculate the height used so far
+          const rowHeight = pdfDoc.y - y + 5;
+          
+          // Draw serial number
+          pdfDoc.fontSize(11).font('Helvetica');
+          pdfDoc.text(card.slabSerial || 'N/A', 46 + col1Width, y);
+          
+          // Draw price
+          const price = card.investmentAUD ? `$${card.investmentAUD.toFixed(2)}` : 'N/A';
+          pdfDoc.text(price, 46 + col1Width + col2Width, y, { align: 'right' });
+          
+          // Draw bottom border
+          pdfDoc.strokeColor('#e5e5e5').lineWidth(1)
+            .moveTo(40, y + rowHeight)
+            .lineTo(40 + tableWidth, y + rowHeight)
+            .stroke();
+          
+          // Move to next row
+          y = pdfDoc.y + 10;
+          
+          // Check if we need a new page
+          if (y > pdfDoc.page.height - 100) {
+            pdfDoc.addPage();
+            y = 40;
+          }
         }
         
-        // Add total
+        // Add total amount
         pdfDoc.moveDown();
-        pdfDoc.fontSize(12).font('Helvetica-Bold');
-        pdfDoc.text(`Total Amount: $${(invoice.totalAmount || totalAmount).toFixed(2)}`, { align: 'right' });
+        pdfDoc.fontSize(11).font('Helvetica-Bold').fillColor('#213547');
         
-        // Add notes if available
-        if (invoice.notes) {
-          pdfDoc.moveDown();
-          pdfDoc.fontSize(12).font('Helvetica-Bold').text('Notes');
-          pdfDoc.fontSize(10).font('Helvetica').text(invoice.notes);
-        }
+        // Position the total amount at the right side
+        const totalLabel = 'Total Amount:';
+        const totalAmount = `$${(invoice.totalAmount || 0).toFixed(2)}`;
+        const totalLabelWidth = 120;
+        const totalValueWidth = 100;
+        
+        pdfDoc.text(totalLabel, pdfDoc.page.width - 40 - totalLabelWidth - totalValueWidth, pdfDoc.y, { width: totalLabelWidth, align: 'right' });
+        pdfDoc.text(totalAmount, pdfDoc.page.width - 40 - totalValueWidth, pdfDoc.y - pdfDoc.currentLineHeight(), { width: totalValueWidth, align: 'right' });
+        
+        // Add footer
+        pdfDoc.fontSize(10).fillColor('#6b7280');
+        pdfDoc.text('Thank you for your purchase!', { align: 'center' }, pdfDoc.page.height - 50);
         
         // Finalize the PDF
         pdfDoc.end();
