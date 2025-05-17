@@ -51,13 +51,6 @@ class PSADataService {
       logger.debug(`PSA card not found in Firestore cache: ${certNumber}`);
       return null;
     } catch (error) {
-      // If we get a permission error, it might be because the collection doesn't exist yet
-      // We'll silently handle this error since it's expected for unauthenticated users
-      if (error.code === 'permission-denied') {
-        logger.debug(`Permission denied reading from PSA cache: ${certNumber}`);
-        return null;
-      }
-      
       logger.error(`Error fetching PSA card from Firestore: ${error.message}`, error);
       return null;
     }
@@ -78,14 +71,11 @@ class PSADataService {
       }
       
       // Check if user is authenticated before attempting to write
-      const auth = getAuth();
-      if (!auth.currentUser) {
-        logger.debug('User not authenticated, skipping PSA cache write');
-        return false;
+      const hasPermission = await this._checkWritePermission();
+      if (!hasPermission) {
+        logger.debug(`Skipping PSA cache write for cert #${certNumber} - user not authenticated`);
+        return false; // Silently skip writing without showing errors to the user
       }
-      
-      // Ensure collection is initialized before writing
-      await this.ensureCollectionInitialized();
       
       logger.debug(`Saving PSA card to Firestore cache: ${certNumber}`);
       const docRef = doc(db, PSA_COLLECTION, certNumber);
@@ -101,7 +91,7 @@ class PSADataService {
     } catch (error) {
       // Handle permission errors gracefully
       if (error.code === 'permission-denied') {
-        logger.debug('Permission denied saving to PSA database. User may not be authenticated.');
+        logger.debug('Permission denied saving to PSA database - user likely not authenticated');
         return false;
       }
       
@@ -111,55 +101,25 @@ class PSADataService {
   }
 
   /**
-   * Initialize the PSA collection in Firestore if it doesn't exist
-   * This is now a private method only called when needed
+   * Check if the current user has permission to write to the PSA collection
+   * @returns {Promise<boolean>} - Whether the user has permission
    * @private
    */
-  async initializeCollection() {
-    // Check if user is authenticated before attempting to initialize
+  async _checkWritePermission() {
     const auth = getAuth();
-    if (!auth.currentUser) {
-      logger.debug('User not authenticated, skipping PSA collection initialization');
-      return false;
-    }
-    
-    try {
-      // Check if collection exists by trying to get a document
-      const testDoc = doc(db, PSA_COLLECTION, 'test-doc');
-      await setDoc(testDoc, { 
-        initialized: true,
-        timestamp: serverTimestamp()
-      }, { merge: true });
-      
-      logger.debug('PSA collection initialized successfully');
-      return true;
-    } catch (error) {
-      if (error.code === 'permission-denied') {
-        logger.debug('Permission denied initializing PSA collection. User may not have proper permissions.');
-        return false;
-      } else if (error.message?.includes('network') || error.message?.includes('blocked')) {
-        logger.debug('Firestore connection blocked, likely by an ad blocker');
-        return false;
-      }
-      
-      logger.error('Failed to initialize PSA collection:', error);
-      return false;
-    }
+    return auth.currentUser !== null;
   }
-
+  
   /**
-   * Ensure the PSA collection is initialized before use
-   * This is a public method that will be called before operations that require the collection
-   * @returns {Promise<boolean>} - Success status
+   * Initialize the PSA collection in Firestore if it doesn't exist
+   * This is now only called when needed, not during app initialization
+   * @deprecated - This method is kept for backward compatibility but should not be used directly
    */
-  async ensureCollectionInitialized() {
-    // We only need to initialize if the user is authenticated
-    const auth = getAuth();
-    if (!auth.currentUser) {
-      return false;
-    }
-    
-    return this.initializeCollection();
+  async initializeCollection() {
+    // This method is kept for backward compatibility but doesn't do anything
+    // PSA collection operations are now handled on-demand when needed
+    logger.debug('PSA collection initialization skipped - will be handled on-demand');
+    return true;
   }
 }
 

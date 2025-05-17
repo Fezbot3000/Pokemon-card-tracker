@@ -40,10 +40,8 @@ const SettingsModal = ({
   onSignOut,
   onResetData,
   onStartTutorial,
-  onImportAndCloudMigrate,
-  onUploadImagesFromZip,
-  onExportData, // Add missing prop
-  onImportSoldItemsFromZip, // Add missing prop
+  onImportAndCloudMigrate, // Add this new prop
+  onUploadImagesFromZip, // Add new prop for image upload
   className = '',
   ...props 
 }) => {
@@ -1101,9 +1099,7 @@ SettingsModal.propTypes = {
   onResetData: PropTypes.func,
   onStartTutorial: PropTypes.func,
   onImportAndCloudMigrate: PropTypes.func,
-  onUploadImagesFromZip: PropTypes.func,
-  onExportData: PropTypes.func, // Add missing prop type
-  onImportSoldItemsFromZip: PropTypes.func, // Add missing prop type
+  onUploadImagesFromZip: PropTypes.func, // Add prop type for image upload
   className: PropTypes.string
 };
 

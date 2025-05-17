@@ -2,7 +2,6 @@ import React, { createContext, useContext, useState, useEffect, useRef } from 'r
 import { useAuth } from '../design-system';
 import { CardRepository } from '../repositories/CardRepository';
 import logger from '../utils/logger';
-import subscriptionManager from '../utils/subscriptionManager';
 
 // Create context for caching data
 const DataCacheContext = createContext();
@@ -55,7 +54,7 @@ export const DataCacheProvider = ({ children }) => {
     // Setup cards listener if not already active
     if (!subscriptionsRef.current.cards) {
       logger.debug('Initializing cards subscription');
-      const unsubscribe = repository.subscribeToAllCards(
+      subscriptionsRef.current.cards = repository.subscribeToAllCards(
         (cardsData) => {
           logger.debug(`Received ${cardsData.length} cards from Firestore`);
           setCards(cardsData);
@@ -67,10 +66,6 @@ export const DataCacheProvider = ({ children }) => {
           setLoading(false);
         }
       );
-      
-      // Register with subscription manager and store the ID
-      const subscriptionId = subscriptionManager.register(unsubscribe, 'datacache-cards');
-      subscriptionsRef.current.cards = subscriptionId;
     }
     
     // Get collections once initially and setup listener
@@ -89,7 +84,7 @@ export const DataCacheProvider = ({ children }) => {
     // Sold items subscription
     if (!subscriptionsRef.current.soldItems) {
       logger.debug('Initializing sold items subscription');
-      const unsubscribe = repository.subscribeToSoldCards(
+      subscriptionsRef.current.soldItems = repository.subscribeToSoldCards(
         (soldItemsData) => {
           logger.debug(`Received ${soldItemsData.length} sold items from Firestore`);
           setSoldItems(soldItemsData);
@@ -98,20 +93,16 @@ export const DataCacheProvider = ({ children }) => {
           logger.error('Error in sold items subscription:', err);
         }
       );
-      
-      // Register with subscription manager and store the ID
-      const subscriptionId = subscriptionManager.register(unsubscribe, 'datacache-solditems');
-      subscriptionsRef.current.soldItems = subscriptionId;
     }
     
     // Cleanup subscriptions on unmount or user change
     return () => {
       if (subscriptionsRef.current.cards) {
-        subscriptionManager.unregister(subscriptionsRef.current.cards);
+        subscriptionsRef.current.cards();
         subscriptionsRef.current.cards = null;
       }
       if (subscriptionsRef.current.soldItems) {
-        subscriptionManager.unregister(subscriptionsRef.current.soldItems);
+        subscriptionsRef.current.soldItems();
         subscriptionsRef.current.soldItems = null;
       }
     };

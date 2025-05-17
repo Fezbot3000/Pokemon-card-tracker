@@ -49,27 +49,7 @@ const SUPPRESSED_ERROR_PATTERNS = [
   'Cross-Origin-Opener-Policy policy would block',
   'USO session',
   'NmLockState',
-  'NmOfflineStatus',
-  
-  // 1Password specific messages
-  'background.js',
-  'Performance diagnostic',
-  'Initialize',
-  'Initializing 1Password',
-  'Initializing WASM',
-  'Looking for desktop app',
-  'Sending <Nm',
-  'Received message <Nm',
-  'Received failure for message',
-  'Received <',
-  'We successfully unlocked',
-  'The item cache has not been initialized',
-  'Hooray!',
-  'Sync',
-  'Lock Monitor',
-  'Managed Apps',
-  'Caught error handling',
-  'injected.js'
+  'NmOfflineStatus'
 ];
 
 // Patterns to log at debug level instead of error
@@ -96,7 +76,11 @@ const INFO_LEVEL_PATTERNS = [
   'Google sign-in successful',
   'User document created',
   'Existing Google account detected',
-  'Using environment variables for Firebase configuration'
+  'Using environment variables for Firebase configuration',
+  'Sending <NmLockState>',
+  'Received message <NmLockState>',
+  'Sending <NmOfflineStatus>',
+  'Received message <NmOfflineStatus>'
 ];
 
 // Keep track of seen messages to avoid duplicates
@@ -179,12 +163,6 @@ export const initAdvancedErrorSuppression = () => {
   
   // Override console.error
   console.error = function(...args) {
-    // Quick check for background.js messages from extensions
-    if (args.length > 0 && args[0] && typeof args[0] === 'string' && 
-        (args[0].includes('background.js') || args[0].includes('injected.js'))) {
-      return; // Immediately suppress extension messages
-    }
-    
     const message = args.join(' ');
     const result = shouldSuppressMessage(message);
     
@@ -220,12 +198,6 @@ export const initAdvancedErrorSuppression = () => {
   
   // Override console.log for certain patterns
   console.log = function(...args) {
-    // Quick check for background.js messages from extensions
-    if (args.length > 0 && args[0] && typeof args[0] === 'string' && 
-        (args[0].includes('background.js') || args[0].includes('injected.js'))) {
-      return; // Immediately suppress extension messages
-    }
-    
     const message = args.join(' ');
     const result = shouldSuppressMessage(message);
     

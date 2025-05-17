@@ -2,8 +2,6 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { useAuth } from './AuthContext';
 import CardRepository from '../repositories/CardRepository';
 import db from '../services/db';
-import subscriptionManager from '../utils/subscriptionManager';
-import logger from '../utils/logger';
 
 const CardContext = createContext();
 
@@ -146,7 +144,7 @@ export function CardProvider({ children }) {
 
   // Subscribe to collection changes
   useEffect(() => {
-    let subscriptionId = null;
+    let unsubscribe = null;
     let isFirstLoad = true; // Track if this is the first load
     
     const setupSubscription = async () => {
@@ -154,145 +152,127 @@ export function CardProvider({ children }) {
       
       try {
         // Always clean up any existing subscription first
-        if (subscriptionId) {
-          subscriptionManager.unregister(subscriptionId);
-          subscriptionId = null;
+        if (unsubscribe) {
+          unsubscribe();
+          unsubscribe = null;
         }
         
         // Wait a small delay to ensure clean unsubscribe
         await new Promise(resolve => setTimeout(resolve, 100));
       
-        if (selectedCollection && selectedCollection.id !== 'all-cards') {
-          // Subscribe to a specific collection
-          const unsubscribe = repository.subscribeToCollection(
-            selectedCollection.id,
-            (updatedCards) => {
-              let filteredCards = verifyCardsAgainstSoldList(updatedCards);
+      if (selectedCollection && selectedCollection.id !== 'all-cards') {
+        // Subscribe to a specific collection
+        unsubscribe = repository.subscribeToCollection(
+          selectedCollection.id,
+          (updatedCards) => {
+            let filteredCards = verifyCardsAgainstSoldList(updatedCards);
+            
+            // Secondary filter from localStorage/sessionStorage for redundancy
+            let pendingSoldCardIds = [];
+            try {
+              // First from localStorage (primary)
+              pendingSoldCardIds = JSON.parse(localStorage.getItem('pendingSoldCardIds') || '[]');
               
-              // Secondary filter from localStorage/sessionStorage for redundancy
-              let pendingSoldCardIds = [];
-              try {
-                // First from localStorage (primary)
-                pendingSoldCardIds = JSON.parse(localStorage.getItem('pendingSoldCardIds') || '[]');
-                
-                // Then add any from sessionStorage (backward compatibility)
-                const sessionStorageIds = JSON.parse(sessionStorage.getItem('pendingSoldCardIds') || '[]');
-                if (sessionStorageIds.length > 0) {
-                  pendingSoldCardIds = [...new Set([...pendingSoldCardIds, ...sessionStorageIds])];
-                }
-              } catch (e) {
-                logger.warn('Failed to get pending sold cards from storage', e);
+              // Then add any from sessionStorage (backward compatibility)
+              const sessionStorageIds = JSON.parse(sessionStorage.getItem('pendingSoldCardIds') || '[]');
+              if (sessionStorageIds.length > 0) {
+                pendingSoldCardIds = [...new Set([...pendingSoldCardIds, ...sessionStorageIds])];
               }
-              
-              // Final filter step if needed
-              if (pendingSoldCardIds.length > 0) {
-                const initialCount = filteredCards.length;
-                filteredCards = filteredCards.filter(card => !pendingSoldCardIds.includes(card.id));
-              }
-              
-              // Always update cards immediately with what we get from Firestore
-              setCards(filteredCards);
-              setSyncStatus('synced');
+            } catch (e) {
+              console.warn('Failed to get pending sold cards from storage', e);
             }
-          );
-          
-          // Register the subscription with the manager
-          subscriptionId = subscriptionManager.register(
-            unsubscribe, 
-            `collection-${selectedCollection.id}`
-          );
-        } else {
+            
+            // Final filter step if needed
+            if (pendingSoldCardIds.length > 0) {
+              const initialCount = filteredCards.length;
+              filteredCards = filteredCards.filter(card => !pendingSoldCardIds.includes(card.id));
+            }
+            
+            // Always update cards immediately with what we get from Firestore
+            setCards(filteredCards);
+            setSyncStatus('synced');
+          }
+        );
+      } else {
           // Subscribe to all cards when "All Cards" is selected
-          const unsubscribe = repository.subscribeToAllCards(
-            (updatedCards) => {
-              let filteredCards = verifyCardsAgainstSoldList(updatedCards);
+        unsubscribe = repository.subscribeToAllCards(
+          (updatedCards) => {
+            let filteredCards = verifyCardsAgainstSoldList(updatedCards);
+            
+            // Secondary filter from localStorage/sessionStorage for redundancy
+            let pendingSoldCardIds = [];
+            try {
+              // First from localStorage (primary)
+              pendingSoldCardIds = JSON.parse(localStorage.getItem('pendingSoldCardIds') || '[]');
               
-              // Secondary filter from localStorage/sessionStorage for redundancy
-              let pendingSoldCardIds = [];
-              try {
-                // First from localStorage (primary)
-                pendingSoldCardIds = JSON.parse(localStorage.getItem('pendingSoldCardIds') || '[]');
-                
-                // Then add any from sessionStorage (backward compatibility)
-                const sessionStorageIds = JSON.parse(sessionStorage.getItem('pendingSoldCardIds') || '[]');
-                if (sessionStorageIds.length > 0) {
-                  pendingSoldCardIds = [...new Set([...pendingSoldCardIds, ...sessionStorageIds])];
-                }
-              } catch (e) {
-                logger.warn('Failed to get pending sold cards from storage', e);
+              // Then add any from sessionStorage (backward compatibility)
+              const sessionStorageIds = JSON.parse(sessionStorage.getItem('pendingSoldCardIds') || '[]');
+              if (sessionStorageIds.length > 0) {
+                pendingSoldCardIds = [...new Set([...pendingSoldCardIds, ...sessionStorageIds])];
               }
-              
-              // Final filter step if needed
-              if (pendingSoldCardIds.length > 0) {
-                const initialCount = filteredCards.length;
-                filteredCards = filteredCards.filter(card => !pendingSoldCardIds.includes(card.id));
-              }
-              
-              // Always update cards immediately
-              setCards(filteredCards);
-              setSyncStatus('synced');
+            } catch (e) {
+              console.warn('Failed to get pending sold cards from storage', e);
             }
-          );
-          
-          // Register the subscription with the manager
-          subscriptionId = subscriptionManager.register(
-            unsubscribe, 
-            'all-cards'
-          );
-        }
+            
+            // Final filter step if needed
+            if (pendingSoldCardIds.length > 0) {
+              const initialCount = filteredCards.length;
+              filteredCards = filteredCards.filter(card => !pendingSoldCardIds.includes(card.id));
+            }
+            
+            // Always update cards immediately
+            setCards(filteredCards);
+            setSyncStatus('synced');
+          }
+        );
+      }
       } catch (error) {
-        logger.error('Error setting up subscription:', error);
+        console.error('Error setting up subscription:', error);
       }
     };
     
     setupSubscription();
       
-    return () => {
-      if (subscriptionId) {
-        subscriptionManager.unregister(subscriptionId);
-      }
-    };
+      return () => {
+        if (unsubscribe) {
+          unsubscribe();
+        }
+      };
   }, [repository, selectedCollection, verifyCardsAgainstSoldList]); // Added verifyCardsAgainstSoldList dependency
 
   // Subscribe to sold cards changes
   useEffect(() => {
-    let subscriptionId = null;
+    let unsubscribe = null;
     
     const setupSoldCardsSubscription = async () => {
       if (!repository) return;
       
       try {
-        if (subscriptionId) {
-          subscriptionManager.unregister(subscriptionId);
-          subscriptionId = null;
+        if (unsubscribe) {
+          unsubscribe();
+          unsubscribe = null;
         }
         
         // Wait a small delay to ensure clean unsubscribe
         await new Promise(resolve => setTimeout(resolve, 100));
         
         // Set up sold cards subscription with minimal logging
-        const unsubscribe = repository.subscribeToSoldCards(
-          (updatedSoldCards) => {
-            setSoldCards(updatedSoldCards);
-            setSyncStatus('synced');
-          }
-        );
-        
-        // Register the subscription with the manager
-        subscriptionId = subscriptionManager.register(
-          unsubscribe, 
-          'sold-cards'
-        );
+        unsubscribe = repository.subscribeToSoldCards(
+        (updatedSoldCards) => {
+          setSoldCards(updatedSoldCards);
+          setSyncStatus('synced');
+        }
+      );
       } catch (error) {
-        logger.error('Error setting up sold cards subscription:', error);
+        console.error('Error setting up sold cards subscription:', error);
       }
     };
     
     setupSoldCardsSubscription();
     
     return () => {
-      if (subscriptionId) {
-        subscriptionManager.unregister(subscriptionId);
+      if (unsubscribe) {
+        unsubscribe();
       }
     };
   }, [repository, soldCards.length]);
