@@ -224,11 +224,11 @@ const SoldItems = () => {
   // Group cards by invoice ID instead of buyer+date
   const groupCardsByInvoice = (cards) => {
     const invoicesMap = {};
-    
+
     cards.forEach(card => {
       // Use invoiceId if available, otherwise fall back to legacy grouping
       const key = card.invoiceId || `${card.buyer}_${card.dateSold}_${card.id || card.slabSerial}`;
-      
+
       if (!invoicesMap[key]) {
         invoicesMap[key] = {
           id: card.invoiceId || key,
@@ -237,16 +237,33 @@ const SoldItems = () => {
           cards: [],
           totalInvestment: 0,
           totalSale: 0,
-          totalProfit: 0
+          totalProfit: 0 // Initialize profit
         };
       }
-      
+
+      const cardId = card.id || card.slabSerial;
+      // Attempt to get the individual card's sale price from soldPrices
+      const individualSalePrice = card.soldPrices && card.soldPrices[cardId]
+        ? parseFloat(card.soldPrices[cardId])
+        : 0;
+
+      // Fallback: if individualSalePrice is 0 (e.g. not found in soldPrices or soldPrices is missing),
+      // try using card.soldPrice directly. This covers cases where soldPrice might be populated correctly.
+      const effectiveSalePrice = individualSalePrice > 0 ? individualSalePrice : (parseFloat(card.soldPrice) || 0);
+
+      const investment = parseFloat(card.investmentAUD) || 0;
+
       invoicesMap[key].cards.push(card);
-      invoicesMap[key].totalInvestment += parseFloat(card.investmentAUD) || 0;
-      invoicesMap[key].totalSale += parseFloat(card.finalValueAUD) || 0;
-      invoicesMap[key].totalProfit += parseFloat(card.finalProfitAUD) || 0;
+      invoicesMap[key].totalInvestment += investment;
+      invoicesMap[key].totalSale += effectiveSalePrice;
+      // Profit will be calculated after all cards for the invoice are processed
     });
-    
+
+    // After processing all cards for an invoice, calculate totalProfit from totalSale and totalInvestment
+    Object.keys(invoicesMap).forEach(invoiceKey => {
+      invoicesMap[invoiceKey].totalProfit = invoicesMap[invoiceKey].totalSale - invoicesMap[invoiceKey].totalInvestment;
+    });
+
     return invoicesMap;
   };
 

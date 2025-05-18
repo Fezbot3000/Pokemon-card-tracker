@@ -1234,7 +1234,7 @@ class DatabaseService {
       const db = await this.ensureDB();
       
       return new Promise((resolve, reject) => {
-        const transaction = db.transaction([COLLECTIONS_STORE], 'readwrite');
+        const transaction = this.db.transaction([COLLECTIONS_STORE], 'readwrite');
         const store = transaction.objectStore(COLLECTIONS_STORE);
         
         const request = store.put({ userId, name: 'sold', data: soldCards });
@@ -1245,7 +1245,9 @@ class DatabaseService {
           // Shadow write to Firestore if feature flag is enabled
           if (featureFlags.enableFirestoreSync) {
             // Shadow write each sold card individually
-            const shadowWritePromises = soldCards.map(soldCard => {
+            const shadowWritePromises = soldCards
+              .filter(soldCard => soldCard && (soldCard.id || soldCard.cardId)) // Add this filter
+              .map(soldCard => {
               // Ensure each card has the necessary fields
               const soldCardData = {
                 ...soldCard,
