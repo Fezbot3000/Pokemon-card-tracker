@@ -25,7 +25,7 @@ class CardRepository {
     this.userId = userId;
     this.collectionsRef = collection(firestoreDb, 'users', userId, 'collections');
     this.cardsRef = collection(firestoreDb, 'users', userId, 'cards');
-    this.soldCardsRef = collection(firestoreDb, 'users', userId, 'soldCards');
+    this.soldCardsRef = collection(firestoreDb, 'users', userId, 'sold-items');
   }
 
   // Collection Operations
@@ -678,8 +678,21 @@ class CardRepository {
 
   async deleteCard(cardId, options = {}) {
     try {
+      // Validate input
+      if (!cardId) {
+        console.error('Invalid card ID provided to deleteCard:', cardId);
+        throw new Error('Invalid input: Card ID is required');
+      }
+      
       // Ensure cardId is a string
       const id = typeof cardId === 'object' ? cardId.slabSerial : String(cardId);
+      
+      if (!id || id === 'undefined' || id === 'null') {
+        console.error('Invalid card ID after conversion:', id);
+        throw new Error('Invalid input: Card ID is invalid');
+      }
+      
+      console.log(`Attempting to delete card with ID: ${id}`);
       
       const cardRef = doc(this.cardsRef, id);
       const storageRef = ref(storage, `users/${this.userId}/cards/${id}.jpg`);
@@ -689,6 +702,7 @@ class CardRepository {
         // Delete image from Firebase storage
         try {
           await deleteObject(storageRef);
+          console.log(`Image for card ${id} deleted from Firebase storage`);
         } catch (error) {
           console.log('Error deleting image from Firebase storage:', error);
           // Continue with deletion even if image deletion fails
@@ -697,6 +711,7 @@ class CardRepository {
         // Delete image from IndexedDB
         try {
           await db.deleteImage(id);
+          console.log(`Image for card ${id} deleted from IndexedDB`);
         } catch (error) {
           console.log('Error deleting image from IndexedDB:', error);
           // Continue with deletion even if image deletion fails
@@ -710,7 +725,12 @@ class CardRepository {
       return true;
     } catch (error) {
       console.error(`Error deleting card ${cardId}:`, error);
-      throw error;
+      // Provide a more user-friendly error message
+      if (error.message.includes('Invalid input')) {
+        throw error; // Already formatted nicely
+      } else {
+        throw new Error(`Failed to delete card: ${error.message}`);
+      }
     }
   }
 
@@ -801,75 +821,187 @@ class CardRepository {
   // Sold Cards Operations
   async markCardAsSold(cardId, soldData) {
     try {
-      const cardRef = doc(this.cardsRef, cardId);
+      if (!cardId) {
+        throw new Error('Card ID is required to mark a card as sold.');
+      }
+      const card = await this.getCard(cardId);
+      if (!card) {
+        throw new Error(`Card with ID ${cardId} not found.`);
+      }
+
+      // Use card.id as the document ID for the sold item in the 'sold-items' collection
+      const soldItemRef = doc(this.soldCardsRef, card.id);
+
+      // Check if this card has already been marked as sold by checking if a doc with its ID exists
+      const existingSoldDoc = await getDoc(soldItemRef);
+      if (existingSoldDoc.exists()) {
+        console.warn(`Card ${card.id} (${card.name || card.card}) is already marked as sold. To update, a different flow might be needed.`);
+        throw new Error(`Card ${card.name || card.card} (ID: ${card.id}) has already been marked as sold.`);
+      }
+      
+      // Prepare the data for the new document in 'sold-items'
+      // Determine soldDate: use provided Timestamp, convert from dateSold string, or use serverTimestamp
+      let finalSoldDate;
+      if (soldData.soldDate instanceof Timestamp) {
+        finalSoldDate = soldData.soldDate;
+      } else if (soldData.dateSold && typeof soldData.dateSold === 'string') {
+        try {
+          finalSoldDate = Timestamp.fromDate(new Date(soldData.dateSold));
+        } catch (e) {
+          console.warn('Invalid dateSold string, using current date for soldDate:', soldData.dateSold, e);
+          finalSoldDate = serverTimestamp(); 
+        }
+      } else {
+        finalSoldDate = serverTimestamp();
+      }
+
+      const soldItemData = {
+        ...card, // Spread original card data (includes fields like name, set, year, and importantly card.id)
+        originalCardId: card.id, // Explicitly store originalCardId
+        
+        soldDate: finalSoldDate,
+        soldPrice: typeof soldData.soldPrice === 'number' ? soldData.soldPrice : 0,
+        buyer: soldData.buyer || '',
+        notes: soldData.notes || '',
+        
+        finalProfitAUD: typeof soldData.finalProfitAUD === 'number' ? soldData.finalProfitAUD : null, 
+        finalValueAUD: typeof soldData.finalValueAUD === 'number' ? soldData.finalValueAUD : null,
+        
+        // Keep dateSold string if provided and distinct from soldDate (Timestamp object's representation)
+        dateSold: soldData.dateSold || (finalSoldDate === serverTimestamp() ? new Date().toISOString().split('T')[0] : finalSoldDate.toDate().toISOString().split('T')[0]),
+
+        status: 'sold',
+        collection: 'sold',
+
+        updatedAt: serverTimestamp(),
+        createdAt: serverTimestamp() 
+      };
+      
+      delete soldItemData.images;
+      delete soldItemData.imagePath;
+
+      await setDoc(soldItemRef, soldItemData);
+      
+      // After successfully marking as sold, delete the original card from the 'cards' collection.
+      try {
+        await this.deleteCard(cardId, { preserveImages: false }); // Set preserveImages based on desired behavior
+        console.log(`Card ${cardId} successfully moved to sold items and deleted from active collection.`);
+      } catch (deleteError) {
+        console.error(`Failed to delete original card ${cardId} after marking as sold:`, deleteError);
+        // Consider how to handle this: The card is sold, but not removed from active. 
+        // This could be a notification to the user or an attempt to retry deletion.
+      }
+
+      return { ...soldItemData, id: soldItemRef.id, createdAt: new Date(), updatedAt: new Date() }; // Simulate client-side timestamps
+    } catch (error) {
+      console.error('Error marking card as sold:', error);
+      throw error;
+    }
+  }
+
+  async getSoldCards(pageSize = 20, lastDoc = null) {
+    try {
+      const q = lastDoc
+        ? query(this.soldCardsRef, orderBy('soldDate', 'desc'), startAfter(lastDoc), limit(pageSize))
+        : query(this.soldCardsRef, orderBy('soldDate', 'desc'), limit(pageSize));
+
+      const querySnapshot = await getDocs(q);
+      return querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        soldDate: doc.data().soldDate?.toDate() || new Date()
+      }));
+    } catch (error) {
+      console.error('Error getting sold cards:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Create a sold card directly from local data without requiring the original card to exist in Firestore
+   * This is used as a fallback when the card exists locally but not in Firestore
+   * 
+   * @param {Object} soldCardData - Complete sold card data including original card properties
+   * @returns {Promise<Object>} - The created sold card document
+   */
+  async createSoldCardDirectly(soldCardData) {
+    try {
+      // Validate required fields
+      if (!soldCardData) {
+        throw new Error('Sold card data is required');
+      }
+
+      // Ensure we have a valid soldPrice
+      let soldPrice = 0;
+      if (soldCardData.soldPrice !== undefined) {
+        if (typeof soldCardData.soldPrice === 'string') {
+          soldPrice = parseFloat(soldCardData.soldPrice);
+        } else if (typeof soldCardData.soldPrice === 'number') {
+          soldPrice = soldCardData.soldPrice;
+        }
+        
+        if (isNaN(soldPrice)) {
+          soldPrice = 0;
+        }
+      }
+
+      // Create a new document in the soldCards collection
       const soldCardRef = doc(this.soldCardsRef);
       
-      // Get the card data
-      const cardSnap = await getDoc(cardRef);
-      if (!cardSnap.exists()) {
-        throw new Error('Card not found');
-      }
-
-      const cardData = cardSnap.data();
-      
-      // Ensure soldPrice exists and is a number
-      if (typeof soldData.soldPrice !== 'number' || isNaN(soldData.soldPrice)) {
-        throw new Error('Invalid soldPrice: must be a number');
-      }
-      
-      // Ensure we have a valid invoiceId
-      if (!soldData.invoiceId) {
-        soldData.invoiceId = `INV-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`;
-      }
-      
-      // Check if this card has already been marked as sold by querying for soldCards with this originalCardId
-      const existingSoldCardsQuery = query(
-        this.soldCardsRef,
-        where('originalCardId', '==', cardId),
-        limit(1)
-      );
-      
-      const existingSoldCardsSnapshot = await getDocs(existingSoldCardsQuery);
-      
-      if (!existingSoldCardsSnapshot.empty) {
-        const existingSoldCard = existingSoldCardsSnapshot.docs[0];
-        return {
-          id: existingSoldCard.id,
-          ...existingSoldCard.data(),
-          alreadyExists: true
-        };
-      }
-      
-      // Get the investment value
-      const investmentValue = parseFloat(cardData.investmentAUD) || 0;
-      const soldPrice = parseFloat(soldData.soldPrice) || 0;
+      // Calculate profit values
+      const investmentValue = parseFloat(soldCardData.investmentAUD) || 0;
       const profit = soldPrice - investmentValue;
       
-      // Create sold card document with all fields from the original card
-      // plus the sold data fields
-      const soldCard = {
-        ...cardData,
-        originalCardId: cardId, // Keep track of the original card ID
+      // Create a clean object with only the fields we need
+      // This prevents any undefined or invalid values from causing issues
+      const cleanData = {
+        // Essential fields for a sold card
+        originalCardId: soldCardData.originalCardId || soldCardData.id || `card-${Date.now()}`,
         soldDate: serverTimestamp(),
         soldPrice: soldPrice,
-        finalValueAUD: soldPrice, // Add this field to match expected naming
+        finalValueAUD: soldPrice,
         profit: profit,
-        finalProfitAUD: profit, // Add this field to match expected naming
-        buyer: soldData.buyer || 'Unknown',
-        dateSold: soldData.dateSold || new Date().toISOString().split('T')[0],
-        invoiceId: soldData.invoiceId // Use the exact invoiceId provided
+        finalProfitAUD: profit,
+        buyer: soldCardData.buyer || 'Unknown',
+        dateSold: soldCardData.dateSold || new Date().toISOString().split('T')[0],
+        invoiceId: soldCardData.invoiceId || `INV-DIRECT-${Date.now()}`,
+        
+        // Card identification fields
+        card: soldCardData.card || '',
+        name: soldCardData.name || '',
+        player: soldCardData.player || '',
+        year: soldCardData.year || '',
+        game: soldCardData.game || '',
+        set: soldCardData.set || '',
+        number: soldCardData.number || '',
+        grade: soldCardData.grade || '',
+        gradeCompany: soldCardData.gradeCompany || '',
+        
+        // Collection information
+        collectionId: soldCardData.collectionId || '',
+        collection: soldCardData.collection || '',
+        collectionName: soldCardData.collectionName || '',
+        
+        // Financial information
+        investmentAUD: investmentValue,
+        currency: soldCardData.currency || 'AUD',
+        
+        // Timestamps
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        
+        // User information
+        userId: this.userId
       };
 
-      // First add the sold card document
-      await setDoc(soldCardRef, soldCard);
-      
-      // Then delete the original card document
-      await deleteDoc(cardRef);
-      
+      // Write to Firestore
+      await setDoc(soldCardRef, cleanData);
+      console.log(`Successfully created sold card directly with ID: ${soldCardRef.id}`);
+
       // If the card belonged to a collection, update the collection's card count
-      if (cardData.collectionId) {
+      if (cleanData.collectionId) {
         try {
-          const collectionRef = doc(this.collectionsRef, cardData.collectionId);
+          const collectionRef = doc(this.collectionsRef, cleanData.collectionId);
           const collectionDoc = await getDoc(collectionRef);
           
           if (collectionDoc.exists()) {
@@ -878,44 +1010,28 @@ class CardRepository {
               cardCount: Math.max((collectionData.cardCount || 0) - 1, 0),
               updatedAt: serverTimestamp()
             });
+            console.log(`Updated collection ${cleanData.collectionId} card count after selling`);
           }
         } catch (collectionError) {
           console.error("Error updating collection card count:", collectionError);
+          // Continue with the sold card creation even if collection update fails
         }
       }
 
-      const result = { 
-        id: soldCardRef.id, 
-        ...soldCard,
-        soldDate: new Date() // Convert serverTimestamp for immediate use
+      // Return the created sold card with a proper date object
+      return {
+        id: soldCardRef.id,
+        ...cleanData,
+        soldDate: new Date(), // Convert serverTimestamp for immediate use
+        createdAt: new Date(),
+        updatedAt: new Date()
       };
-      
-      return result;
     } catch (error) {
-      console.error("Error marking card as sold:", error);
+      console.error('Error creating sold card directly:', error);
       throw error;
     }
   }
 
-  async getSoldCards(pageSize = 20, lastDoc = null) {
-    let q = query(
-      this.soldCardsRef,
-      orderBy('soldDate', 'desc'),
-      limit(pageSize)
-    );
-
-    if (lastDoc) {
-      q = query(q, startAfter(lastDoc));
-    }
-
-    const querySnapshot = await getDocs(q);
-    return {
-      cards: querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })),
-      lastDoc: querySnapshot.docs[querySnapshot.docs.length - 1]
-    };
-  }
-
-  // Specialized method for importing sold cards from backup
   async importSoldCards(soldCards) {
     try {
       if (!Array.isArray(soldCards) || soldCards.length === 0) {

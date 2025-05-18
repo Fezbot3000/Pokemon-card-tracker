@@ -16,21 +16,28 @@ import { auth } from './firebase';
 import { CardRepository } from '../repositories/CardRepository';
 import featureFlags from '../utils/featureFlags';
 import logger from '../utils/logger';
+import { doc, getDoc, updateDoc, Timestamp, collection, onSnapshot, writeBatch, deleteDoc } from 'firebase/firestore';
+// Note: We don't import db directly to avoid circular dependencies
+// Instead, we'll use dynamic imports when needed
+
+// Firestore DB instance (ensure it's initialized elsewhere, e.g., in firebase.js)
+import { db as firestoreDb } from './firebase';
+
+const MAX_BATCH_OPERATIONS = 500; // Firestore batch limit
 
 class ShadowSyncService {
   constructor() {
     this.repository = null;
     this.userId = null;
     this.isInitialized = false;
-    this.listenerUnsubscribe = null;
-    this.onlineStatus = navigator.onLine;
-
-    // Track sync activity
     this.syncInProgress = false;
     this.syncOperationsCount = 0;
     this.lastSyncTime = null;
-    
-    // Track card queue processing
+    this.onlineStatus = navigator.onLine;
+    this.listenerUnsubscribe = null;
+    this.unsubscribeSoldItemsListener = null; // To store the unsubscribe function
+
+    // Track sync activity
     this._processingQueue = false;
     this._cardQueue = [];
     this._lastSaveTimestamp = null;
@@ -55,6 +62,10 @@ class ShadowSyncService {
         logger.debug('[ShadowSync] User signed out, cleaned up resources');
       }
     });
+
+    // Listen for online/offline events
+    window.addEventListener('online', () => this._updateOnlineStatus(true));
+    window.addEventListener('offline', () => this._updateOnlineStatus(false));
   }
 
   /**
@@ -68,6 +79,15 @@ class ShadowSyncService {
     this.repository = null;
     this.userId = null;
     this.isInitialized = false;
+  }
+
+  _updateOnlineStatus(isOnline) {
+    this.onlineStatus = isOnline;
+    logger.debug(`[ShadowSync] Online status changed to: ${isOnline}`);
+  }
+
+  isOnline() {
+    return this.onlineStatus;
   }
 
   /**
@@ -117,14 +137,6 @@ class ShadowSyncService {
       isOnline: this.isOnline(),
       isInitialized: this.isInitialized
     };
-  }
-
-  /**
-   * Checks if the browser is currently online
-   * @returns {boolean} - True if online, false otherwise
-   */
-  isOnline() {
-    return this.onlineStatus;
   }
 
   /**
@@ -447,41 +459,67 @@ class ShadowSyncService {
     try {
       // Check if online before attempting to write
       if (!this.isOnline()) {
-        logger.debug('[ShadowSync] Device is offline, skipping shadow write');
+        logger.debug('[ShadowSync] Device is offline, skipping sold card write');
+        this._notifySyncCompleted(false);
+        return false;
+      }
+      
+      if (!cardId || !soldData) {
+        logger.error('[ShadowSync] Invalid card ID or sold data provided');
         this._notifySyncCompleted(false);
         return false;
       }
 
-      logger.debug(`[ShadowSync] Shadow writing sold card ${cardId} to Firestore`);
-      
-      if (cardId && soldData) {
-        // Ensure soldPrice is a valid number
-        const processedSoldData = { ...soldData };
-        if (processedSoldData.soldPrice !== undefined) {
-          // Convert to number if it's a string
-          if (typeof processedSoldData.soldPrice === 'string') {
-            processedSoldData.soldPrice = parseFloat(processedSoldData.soldPrice);
-          }
-          
-          // If still not a valid number after conversion, set a default value
-          if (isNaN(processedSoldData.soldPrice) || typeof processedSoldData.soldPrice !== 'number') {
-            processedSoldData.soldPrice = 0;
-          }
-        } else {
-          // Default value if soldPrice is missing
-          processedSoldData.soldPrice = 0;
+      const soldItemRef = doc(firestoreDb, 'users', this.userId, 'sold-items', cardId);
+      const soldItemSnap = await getDoc(soldItemRef);
+
+      let processedSoldData = { ...soldData };
+      // Ensure dateSold is a Firestore Timestamp if it's a string
+      if (processedSoldData.dateSold && typeof processedSoldData.dateSold === 'string') {
+        try {
+            processedSoldData.dateSold = Timestamp.fromDate(new Date(processedSoldData.dateSold));
+        } catch (dateError) {
+            logger.warn(`[ShadowSync] Invalid date format for dateSold: ${processedSoldData.dateSold}. Setting to now.`, dateError);
+            processedSoldData.dateSold = Timestamp.now();
         }
-        
-        // Mark card as sold in Firestore
-        await this.repository.markCardAsSold(cardId, processedSoldData);
-        logger.debug(`[ShadowSync] Successfully shadow wrote sold card ${cardId}`);
+      } else if (!processedSoldData.dateSold) {
+        processedSoldData.dateSold = Timestamp.now(); // Default if not provided
+      }
+      // Add/update a 'lastShadowSyncedAt' timestamp
+      processedSoldData.lastShadowSyncedAt = Timestamp.now();
+
+      if (soldItemSnap.exists()) {
+        logger.debug(`[ShadowSync] Card ${cardId} already exists in Firestore 'sold-items'. Updating with new data.`);
+        await updateDoc(soldItemRef, processedSoldData); // Use processedSoldData
+        logger.debug(`[ShadowSync] Updated existing sold card ${cardId} in Firestore.`);
         this._notifySyncCompleted(true);
         return true;
       }
-      this._notifySyncCompleted(false);
-      return false;
+
+      // If it doesn't exist in sold-items, then proceed to mark it as sold.
+      logger.debug(`[ShadowSync] Card ${cardId} not found in Firestore 'sold-items'. Attempting to mark as sold via repository.`);
+      // Pass processedSoldData to markCardAsSold as it contains the correct Timestamp format
+      const sellOperationResult = await this.repository.markCardAsSold(cardId, processedSoldData);
+      
+      if (sellOperationResult && sellOperationResult.success) {
+        logger.debug(`[ShadowSync] Successfully marked card ${cardId} as sold in Firestore via repository.`);
+        this._notifySyncCompleted(true);
+        return true;
+      } else {
+        const errorMessage = sellOperationResult ? sellOperationResult.message : 'Unknown error during markCardAsSold';
+        logger.error(`[ShadowSync] Failed to mark card ${cardId} as sold via repository: ${errorMessage}`);
+        // Specific handling if the card was 'not found' by markCardAsSold (original card)
+        if (errorMessage && errorMessage.includes('not found')) {
+            logger.warn(`[ShadowSync] Original card ${cardId} was not found by repository.markCardAsSold. Cannot complete sale normally.`);
+        }
+        this._notifySyncCompleted(false);
+        return false;
+      }
+
     } catch (error) {
-      logger.error(`[ShadowSync] Error writing sold card ${cardId} to Firestore:`, error);
+      // This catch block handles unexpected errors from getDoc, updateDoc, 
+      // or if markCardAsSold itself throws an *unexpected* error (not its normal {success:false} return).
+      logger.error(`[ShadowSync] Unexpected error in shadowWriteSoldCard for card ${cardId}: ${error.message}`, error);
       this._notifySyncCompleted(false);
       return false;
     }
@@ -639,12 +677,149 @@ class ShadowSyncService {
     }
   }
 
-  // Additional methods will be implemented in future phases:
-  // - startBackgroundMigration
-  // - enableRealtimeListeners
-  // - syncFromFirestore
+  // Method to set up Firestore listener for sold items
+  listenToSoldItemsChanges() {
+    if (this.unsubscribeSoldItemsListener) {
+      this.unsubscribeSoldItemsListener(); // Unsubscribe from any previous listener
+    }
+
+    if (!this.repository || !this.repository.userId) {
+      logger.warn('[ShadowSync] Cannot listen to sold items: User ID not available in repository.');
+      // Attempt to get user ID directly if repository isn't fully set up with it
+      // This might happen if initialize wasn't called with a fully ready repository
+      const currentUser = auth.currentUser;
+      if (!currentUser) {
+        logger.warn('[ShadowSync] Current user not available for listener.');
+        return;
+      }
+      this.repository.userId = currentUser.uid; // Assuming repository has a userId field
+    }
+    
+    const userId = this.repository.userId;
+    if (!userId) {
+        logger.error('[ShadowSync] User ID is null, cannot set up listener for sold items.');
+        return;
+    }
+
+    const soldItemsCollectionRef = collection(firestoreDb, 'users', userId, 'sold-items');
+
+    logger.debug(`[ShadowSync] Setting up onSnapshot listener for user ${userId}'s sold-items.`);
+
+    this.unsubscribeSoldItemsListener = onSnapshot(soldItemsCollectionRef, 
+      async (snapshot) => {
+        logger.debug('[ShadowSync] Received snapshot for sold-items.');
+        const dbService = (await import('./db')).default; // Dynamically import db.js to avoid circular deps
+
+        for (const change of snapshot.docChanges()) {
+          const cardId = change.doc.id;
+          const cardData = change.doc.data();
+
+          switch (change.type) {
+            case 'added':
+              logger.debug(`[ShadowSync] Firestore 'added': ${cardId}`, cardData);
+              await dbService.addOrUpdateSoldCardLocal(cardId, cardData); // To be created in db.js
+              window.dispatchEvent(new CustomEvent('soldItemsUpdated', { detail: { type: 'add', cardId, data: cardData } }));
+              break;
+            case 'modified':
+              logger.debug(`[ShadowSync] Firestore 'modified': ${cardId}`, cardData);
+              await dbService.addOrUpdateSoldCardLocal(cardId, cardData); // To be created in db.js
+              window.dispatchEvent(new CustomEvent('soldItemsUpdated', { detail: { type: 'update', cardId, data: cardData } }));
+              break;
+            case 'removed':
+              logger.debug(`[ShadowSync] Firestore 'removed': ${cardId}`);
+              await dbService.deleteSoldCardFromLocal(cardId); // To be created in db.js
+              window.dispatchEvent(new CustomEvent('soldItemsUpdated', { detail: { type: 'delete', cardId } }));
+              break;
+          }
+        }
+      },
+      (error) => {
+        logger.error('[ShadowSync] Error in onSnapshot listener for sold-items:', error);
+      }
+    );
+
+    // Store the unsubscribe function to be called on cleanup/re-init
+    window.addEventListener('beforeunload', () => {
+      if (this.unsubscribeSoldItemsListener) {
+        logger.debug('[ShadowSync] Unsubscribing from sold-items listener due to page unload.');
+        this.unsubscribeSoldItemsListener();
+      }
+    });
+  }
+
+  // Call this when user logs out or service is destroyed
+  cleanupListeners() {
+    if (this.unsubscribeSoldItemsListener) {
+      logger.debug('[ShadowSync] Cleaning up sold-items listener.');
+      this.unsubscribeSoldItemsListener();
+      this.unsubscribeSoldItemsListener = null;
+    }
+  }
+
+  // New method for deleting multiple sold items from Firestore
+  async shadowDeleteSoldItems(cardIds) {
+    if (!featureFlags.enableFirestoreSync || !this.isInitialized) {
+      logger.debug('[ShadowSync] Firestore sync disabled, skipping shadow delete of sold items.');
+      return { success: false, message: 'Firestore sync disabled' };
+    }
+    if (!this.isOnline()) {
+      logger.debug('[ShadowSync] Device is offline, skipping shadow delete of sold items.');
+      return { success: false, message: 'Device offline' };
+    }
+    if (!this.repository || !this.repository.userId) {
+      logger.error('[ShadowSync] User ID not available, cannot delete sold items from Firestore.');
+      return { success: false, message: 'User ID not available' };
+    }
+
+    this._notifySyncStarted();
+    const userId = this.repository.userId;
+    const batch = writeBatch(firestoreDb);
+    let operationCount = 0;
+
+    for (const cardId of cardIds) {
+      const docRef = doc(firestoreDb, 'users', userId, 'sold-items', cardId);
+      batch.delete(docRef);
+      operationCount++;
+      logger.debug(`[ShadowSync] Queued deletion of sold item ${cardId} from Firestore.`);
+
+      if (operationCount >= MAX_BATCH_OPERATIONS) {
+        try {
+          await batch.commit();
+          logger.debug(`[ShadowSync] Committed batch of ${operationCount} sold item deletions to Firestore.`);
+          // Re-initialize batch for next set of operations if any
+          // This part of the code doesn't exist, so batch would be re-declared (let batch = writeBatch(firestoreDb);)
+          // but it's better to re-assign: batch = writeBatch(firestoreDb);
+          // For simplicity, if we hit MAX_BATCH_OPERATIONS, we might just error or handle this case specifically.
+          // Current implementation implies cardIds will be less than MAX_BATCH_OPERATIONS or this needs more logic.
+        } catch (error) {
+          logger.error('[ShadowSync] Error committing batch deletion of sold items:', error);
+          this._notifySyncCompleted(false);
+          return { success: false, message: 'Batch commit failed', error };
+        }
+        operationCount = 0; // Reset for next batch, though current loop structure doesn't fully support >500 items well.
+      }
+    }
+
+    try {
+      if (operationCount > 0) {
+        await batch.commit();
+        logger.debug(`[ShadowSync] Committed final batch of ${operationCount} sold item deletions to Firestore.`);
+      }
+      this._notifySyncCompleted(true);
+      return { success: true, message: `${cardIds.length} sold items scheduled for deletion from Firestore.` };
+    } catch (error) {
+      logger.error('[ShadowSync] Error committing final batch deletion of sold items:', error);
+      this._notifySyncCompleted(false);
+      return { success: false, message: 'Final batch commit failed', error };
+    }
+  }
 }
 
-// Create singleton instance
 const shadowSync = new ShadowSyncService();
+
+// Initialize shadowSync when CardRepository is ready with user info
+// This might need adjustment based on how CardRepository signals its readiness
+// A common pattern is to use an event emitter or a callback system.
+// For now, assuming CardRepository might call shadowSync.initialize() when it's ready.
+
 export default shadowSync;

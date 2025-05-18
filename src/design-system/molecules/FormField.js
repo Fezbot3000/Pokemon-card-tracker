@@ -19,6 +19,7 @@ const FormField = ({
   suffix,
   additionalContent,
   additionalContentPosition = 'inline', // 'inline' or 'below'
+  error,
   ...inputProps
 }) => {
   const fieldId = id || `field-${inputProps.name}`;
@@ -40,6 +41,7 @@ const FormField = ({
               suffix={suffix}
               required={required}
               className="flex-1"
+              error={error}
               {...inputProps}
             />
           ) : (
@@ -48,6 +50,7 @@ const FormField = ({
               type={type}
               required={required}
               className="flex-1"
+              error={error}
               {...inputProps}
             />
           )}
@@ -62,6 +65,7 @@ const FormField = ({
               prefix={prefix}
               suffix={suffix}
               required={required}
+              error={error}
               {...inputProps}
             />
           ) : (
@@ -69,6 +73,7 @@ const FormField = ({
               id={fieldId}
               type={type}
               required={required}
+              error={error}
               {...inputProps}
             />
           )}
@@ -79,6 +84,10 @@ const FormField = ({
             </div>
           )}
         </>
+      )}
+      {/* Display error message if present */}
+      {error && (
+        <p className="mt-1 text-xs text-red-500 dark:text-red-400">{error}</p>
       )}
     </div>
   );
@@ -93,7 +102,8 @@ FormField.propTypes = {
   prefix: PropTypes.string,
   suffix: PropTypes.string,
   additionalContent: PropTypes.node,
-  additionalContentPosition: PropTypes.oneOf(['inline', 'below'])
+  additionalContentPosition: PropTypes.oneOf(['inline', 'below']),
+  error: PropTypes.string
 };
 
 export default FormField;

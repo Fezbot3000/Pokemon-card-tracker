@@ -99,47 +99,58 @@ const CardDetailsModal = ({
   // Update local state when props change or modal opens
   useEffect(() => {
     if (isOpen) {
+      console.log(
+        '[CardDetailsModal] Main useEffect. isOpen:', isOpen, 
+        'Card ID:', card?.id, 
+        'CollectionID:', card?.collectionId, 
+        'Set:', card?.set, 
+        'Card Name:', card?.card
+        // Consider logging the full card object if issues persist, but be mindful of verbosity
+        // JSON.stringify(card)
+      );
+
       // On mobile, only load content when the modal opens
       if (isMobile) {
         // Set a short delay to allow the modal animation to complete
         const timer = setTimeout(() => {
           if (image) {
             setCardImage(image);
-          } else {
-            setCardImage(null);
           }
-          setLocalImageLoadingState(imageLoadingState);
-          setContentLoaded(true); // Mark content as loaded
-        }, 300);
+          setContentLoaded(true); // Ensure content is marked as loaded
+        }, 150); // 150ms delay
         return () => clearTimeout(timer);
       } else {
-        // On desktop, load immediately
+        // Desktop: Load content immediately
         if (image) {
           setCardImage(image);
-        } else {
-          setCardImage(null);
         }
-        setLocalImageLoadingState(imageLoadingState);
-        setContentLoaded(true); // Mark content as loaded
+        setContentLoaded(true);
       }
-      
-      setActiveTab('details'); // Reset to the details tab on open
-      setErrors({}); // Clear any previous errors
-    } else {
-      // When modal closes, reset content loaded state for next open
-      setContentLoaded(false);
+
+      // --- REVISED ERROR CLEARING LOGIC ---
+      // If the modal is open, and this effect is running (which it will if 'card',
+      // 'card.collectionId', 'card.set', or 'card.card' changes, as they are dependencies),
+      // then clear previous validation states.
+      console.log('[CardDetailsModal] Relevant card data changed or modal opened. Clearing errors and save message.');
+      setErrors({});
       setSaveMessage('');
+      // --- END REVISED ERROR CLEARING LOGIC ---
+
+    } else {
+      // Reset animation class and content loaded state when modal closes
+      setAnimClass('fade-out');
+      setContentLoaded(false); // Reset content loaded state
+      // Optionally reset other states like cardImage if they should not persist
+      // setCardImage(null); 
+      // setLocalImageLoadingState('idle');
+      // It might also be a good idea to clear errors when the modal closes completely
+      // setErrors({});
+      // setSaveMessage('');
     }
-  }, [isOpen, image, imageLoadingState, isMobile]);
-  
-  // Update image state when image prop changes
-  useEffect(() => {
-    if (image) {
-      setCardImage(image);
-    }
-    setLocalImageLoadingState(imageLoadingState);
-  }, [image, imageLoadingState]);
-  
+    // Dependencies that should trigger this effect. 'image' and 'isMobile' are for content loading.
+    // 'card', 'card.collectionId', 'card.set', 'card.card' are critical for resetting form/error state.
+  }, [isOpen, card, image, isMobile, card?.collectionId, card?.set, card?.card]);
+
   // Handle image changes (passed down to form)
   const handleImageChange = (file) => {
     if (onImageChange) {
@@ -175,8 +186,9 @@ const CardDetailsModal = ({
       newErrors.card = 'Card name is required';
     }
     
-    if (!card.set) {
-      newErrors.set = 'Set is required';
+    // Check the 'setName' field from the form data
+    if (!card.setName) { 
+      newErrors.setName = 'Set is required'; // Use 'setName' as the key
     }
     
     if (!card.collectionId) {
@@ -194,7 +206,7 @@ const CardDetailsModal = ({
     
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
-      setSaveMessage('Please fix the errors before saving');
+      setSaveMessage('Please correct the highlighted field errors below.'); // Or setSaveMessage('');
       return;
     }
     

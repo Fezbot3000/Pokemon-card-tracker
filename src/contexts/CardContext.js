@@ -438,41 +438,80 @@ export function CardProvider({ children }) {
   const markCardAsSold = useCallback(async (cardId, soldData) => {
     try {
       setSyncStatus('syncing');
+      console.log(`Attempting to mark card ${cardId} as sold`);
       
       // Ensure we have valid data before proceeding
       if (!cardId) {
+        console.error('No card ID provided to markCardAsSold');
         throw new Error('Card ID is required');
       }
       
-      if (!soldData || typeof soldData.soldPrice !== 'number' || isNaN(soldData.soldPrice)) {
-        throw new Error('Valid sold price is required');
+      // Normalize and validate sold price
+      let soldPrice = 0;
+      if (soldData && soldData.soldPrice !== undefined) {
+        if (typeof soldData.soldPrice === 'string') {
+          soldPrice = parseFloat(soldData.soldPrice);
+        } else if (typeof soldData.soldPrice === 'number') {
+          soldPrice = soldData.soldPrice;
+        }
+        
+        if (isNaN(soldPrice)) {
+          soldPrice = 0;
+        }
       }
+      
+      // Update the sold data with normalized price
+      const normalizedSoldData = {
+        ...soldData,
+        soldPrice: soldPrice
+      };
       
       // Find the card to be marked as sold for local state update
       const cardToMark = cards.find(card => card.id === cardId);
       if (!cardToMark) {
-        throw new Error(`Card with ID ${cardId} not found in local state`);
+        console.warn(`Card with ID ${cardId} not found in local state, will try to proceed anyway`);
       }
       
-      // Store the card ID in state
+      // Store the card ID in state to prevent it from appearing in the UI
       setSoldCardIds(prev => new Set([...prev, cardId]));
       
       // Immediately update local state to remove the card
       // This prevents the user from seeing it while the operation processes
       setCards(prev => prev.filter(card => card.id !== cardId));
       
+      // First try the direct approach - use createSoldCardDirectly
+      // This is more reliable than the standard markCardAsSold method
       try {
-        // Call the repository function
-        const soldCard = await repository.markCardAsSold(cardId, soldData);
+        console.log(`Using direct method to sell card ${cardId}`);
+        
+        // Create a complete sold card object with all necessary data
+        const completeCardData = {
+          // Use data from the card if available, otherwise use minimal data
+          ...(cardToMark || {}),
+          // Ensure these fields are set correctly
+          id: cardId,
+          originalCardId: cardId,
+          soldPrice: soldPrice,
+          finalValueAUD: soldPrice,
+          profit: soldPrice - ((cardToMark?.investmentAUD || 0)),
+          finalProfitAUD: soldPrice - ((cardToMark?.investmentAUD || 0)),
+          buyer: normalizedSoldData.buyer || 'Unknown',
+          dateSold: normalizedSoldData.dateSold || new Date().toISOString().split('T')[0],
+          invoiceId: normalizedSoldData.invoiceId || `INV-DIRECT-${Date.now()}`
+        };
+        
+        // Use the direct method to create the sold card
+        const savedSoldCard = await repository.createSoldCardDirectly(completeCardData);
+        console.log(`Successfully sold card ${cardId} using direct method`);
         
         // Update sold cards state
-        setSoldCards(prev => [soldCard, ...prev]);
+        setSoldCards(prev => [savedSoldCard, ...prev]);
         
-        // Also update collection cardCount if needed
-        if (cardToMark.collectionId) {
+        // Update collection count if we have collection info
+        if (completeCardData.collectionId) {
           setCollections(prev => {
             return prev.map(collection => {
-              if (collection.id === cardToMark.collectionId) {
+              if (collection.id === completeCardData.collectionId) {
                 return {
                   ...collection,
                   cardCount: Math.max((collection.cardCount || 0) - 1, 0)
@@ -489,67 +528,52 @@ export function CardProvider({ children }) {
           newSet.delete(cardId);
           return newSet;
         });
-      
+        
         setSyncStatus('synced');
-        return soldCard;
-      } catch (repoError) {
-        // If card not found in Firestore but exists in local state,
-        // try to create a sold card from the local state data
-        if (repoError.message && repoError.message.includes('Card not found') && cardToMark) {
-          console.log('Card not found in Firestore but exists in local state, using local data');
+        return savedSoldCard;
+      } catch (directError) {
+        console.error('Direct method failed, falling back to standard method:', directError);
+        
+        // If direct method fails, try the standard method as a fallback
+        try {
+          // Call the repository function with the normalized data
+          const soldCard = await repository.markCardAsSold(cardId, normalizedSoldData);
+          console.log(`Successfully sold card ${cardId} using standard method`);
           
-          // Create a sold card from local data
-          const localSoldCard = {
-            ...cardToMark,
-            originalCardId: cardId,
-            soldDate: new Date(),
-            soldPrice: soldData.soldPrice,
-            finalValueAUD: soldData.soldPrice,
-            profit: soldData.soldPrice - (cardToMark.investmentAUD || 0),
-            finalProfitAUD: soldData.soldPrice - (cardToMark.investmentAUD || 0),
-            buyer: soldData.buyer || 'Unknown',
-            dateSold: soldData.dateSold || new Date().toISOString().split('T')[0],
-            invoiceId: soldData.invoiceId || `INV-LOCAL-${Date.now()}`
-          };
+          // Update sold cards state
+          setSoldCards(prev => [soldCard, ...prev]);
           
-          // Try to save the sold card directly
-          try {
-            const savedSoldCard = await repository.createSoldCardDirectly(localSoldCard);
-            
-            // Update sold cards state
-            setSoldCards(prev => [savedSoldCard, ...prev]);
-            
-            // Update collection count
-            if (cardToMark.collectionId) {
-              setCollections(prev => {
-                return prev.map(collection => {
-                  if (collection.id === cardToMark.collectionId) {
-                    return {
-                      ...collection,
-                      cardCount: Math.max((collection.cardCount || 0) - 1, 0)
-                    };
-                  }
-                  return collection;
-                });
+          // Also update collection cardCount if needed
+          if (cardToMark && cardToMark.collectionId) {
+            setCollections(prev => {
+              return prev.map(collection => {
+                if (collection.id === cardToMark.collectionId) {
+                  return {
+                    ...collection,
+                    cardCount: Math.max((collection.cardCount || 0) - 1, 0)
+                  };
+                }
+                return collection;
               });
-            }
-            
-            // Remove from pending list after successful local sale
-            setSoldCardIds(prev => {
-              const newSet = new Set(prev);
-              newSet.delete(cardId);
-              return newSet;
             });
-            
-            setSyncStatus('synced');
-            return savedSoldCard;
-          } catch (saveError) {
-            console.error('Error saving local sold card:', saveError);
-            throw saveError;
           }
-        } else {
-          // If any other error, restore the card to the local state
-          setCards(prev => [...prev, cardToMark]);
+          
+          // Remove from pending list after successful sale
+          setSoldCardIds(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(cardId);
+            return newSet;
+          });
+        
+          setSyncStatus('synced');
+          return soldCard;
+        } catch (standardError) {
+          console.error('Both methods failed to sell card:', standardError);
+          
+          // If both methods fail, restore the card to the local state
+          if (cardToMark) {
+            setCards(prev => [...prev, cardToMark]);
+          }
           
           // Remove from pending list
           setSoldCardIds(prev => {
@@ -558,12 +582,12 @@ export function CardProvider({ children }) {
             return newSet;
           });
           
-          // Rethrow the original error
-          throw repoError;
+          // Throw a more helpful error
+          throw new Error(`Failed to sell card: ${standardError.message}`);
         }
       }
     } catch (err) {
-      console.error('Error marking card as sold:', err);
+      console.error('Error in markCardAsSold:', err);
       setError(err.message);
       setSyncStatus('error');
       throw err;
@@ -575,11 +599,11 @@ export function CardProvider({ children }) {
     }
   }, [repository, cards]);
 
-  // Import/Export operations
-  const importCards = useCallback(async (file, collectionId, importMode = 'priceUpdate') => {
+  const importCards = useCallback(async (file, collectionId, importMode) => {
     try {
       setSyncStatus('syncing');
       const result = await repository.importCards(file, collectionId, importMode);
+      setSyncStatus('synced');
       // Cards will be updated via the subscription
       return { success: true };
     } catch (err) {

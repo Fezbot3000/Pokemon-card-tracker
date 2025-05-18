@@ -781,34 +781,63 @@ const SoldItems = () => {
         return;
       }
 
-      // Filter out the cards from the invoice to be deleted
-      const updatedSoldCards = soldCards.filter(card => {
-        // For cards with invoiceId property
-        if (card.invoiceId) {
-          return card.invoiceId !== invoiceId;
-        }
-        // For legacy cards using the key format
-        const legacyKey = `${card.buyer}_${card.dateSold}_${card.id || card.slabSerial}`;
-        return legacyKey !== invoiceId;
-      });
+      // 1. Identify card IDs to delete associated with the invoiceId
+      const cardIdsToDelete = soldCards
+        .filter(card => {
+          if (card.invoiceId) {
+            return card.invoiceId === invoiceId;
+          }
+          // For legacy cards using the key format
+          const legacyKey = `${card.buyer}_${card.dateSold}_${card.id || card.slabSerial}`;
+          return legacyKey === invoiceId;
+        })
+        .map(card => card.id || card.cardId) // Get the actual card ID
+        .filter(id => id); // Ensure we only have valid IDs
 
-      // Save the updated sold cards list
-      await db.saveSoldCards(updatedSoldCards);
-      
-      // Update local state
-      setSoldCards(updatedSoldCards);
-      
-      // Remove from expanded invoices if it was expanded
-      if (expandedInvoices.has(invoiceId)) {
-        const newExpandedInvoices = new Set(expandedInvoices);
-        newExpandedInvoices.delete(invoiceId);
-        setExpandedInvoices(newExpandedInvoices);
+      if (cardIdsToDelete.length === 0) {
+        logger.info(`[SoldItems] No cards found for invoice ${invoiceId} to delete. It might be an empty invoice or cards already removed.`);
+        // If the invoice is just a grouping and has no separate existence, 
+        // removing its cards effectively removes it. If it needs explicit deletion, 
+        // that would be a separate step (e.g., db.deleteInvoiceRecord(invoiceId)).
+        // For now, assuming removing cards is sufficient.
+        toast.info('No cards associated with this receipt were found to delete.');
+        // Potentially, still remove from expandedInvoices if it was an empty, expanded invoice
+        if (expandedInvoices.has(invoiceId)) {
+          const newExpandedInvoices = new Set(expandedInvoices);
+          newExpandedInvoices.delete(invoiceId);
+          setExpandedInvoices(newExpandedInvoices);
+        }
+        return;
       }
-      
-      toast.success('Receipt deleted successfully');
+
+      logger.debug(`[SoldItems] Attempting to delete ${cardIdsToDelete.length} cards for invoice ${invoiceId}:`, cardIdsToDelete);
+
+      // 2. Call the new DB method to delete from IndexedDB and trigger shadow deletion
+      const deleteResult = await db.deleteSoldItemsByIds(cardIdsToDelete);
+
+      if (deleteResult.success) {
+        // 3. Update local React state for immediate UI feedback
+        setSoldCards(prevSoldCards =>
+          prevSoldCards.filter(card => {
+            const cardIdentifier = card.id || card.cardId;
+            return !cardIdsToDelete.includes(cardIdentifier);
+          })
+        );
+
+        if (expandedInvoices.has(invoiceId)) {
+          const newExpandedInvoices = new Set(expandedInvoices);
+          newExpandedInvoices.delete(invoiceId);
+          setExpandedInvoices(newExpandedInvoices);
+        }
+        toast.success('Receipt and associated cards deleted successfully.');
+        logger.info(`[SoldItems] Successfully deleted receipt ${invoiceId} and ${cardIdsToDelete.length} cards locally.`);
+      } else {
+        logger.error(`[SoldItems] Failed to delete receipt ${invoiceId} from DB: ${deleteResult.message}`, deleteResult.error);
+        toast.error(`Failed to delete receipt: ${deleteResult.message || 'Please try again.'}`);
+      }
     } catch (error) {
-      console.error('Error deleting invoice:', error);
-      toast.error('Failed to delete receipt');
+      logger.error(`[SoldItems] Error in handleDeleteInvoice for invoice ${invoiceId}:`, error);
+      toast.error('An unexpected error occurred while deleting the receipt.');
     }
   };
 

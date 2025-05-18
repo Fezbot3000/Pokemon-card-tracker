@@ -345,8 +345,6 @@ const CardDetailsForm = ({
       onChange({
         ...card,
         collectionId,
-        // For backward compatibility, also update the collection field
-        collection: collectionId
       });
     }
   };
@@ -610,6 +608,10 @@ const CardDetailsForm = ({
                   </svg>
                 </div>
               </div>
+              {/* Display error message for Set if present */}
+              {errors.setName && (
+                <p className="mt-1 text-xs text-red-500 dark:text-red-400">{errors.setName}</p>
+              )}
             </div>
           </div>
 
