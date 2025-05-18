@@ -118,8 +118,20 @@ const styles = StyleSheet.create({
 });
 
 const InvoicePDF = ({ buyer, date, cards, invoiceId, profile }) => {
-  const totalInvestment = cards.reduce((sum, card) => sum + card.investmentAUD, 0);
-  const totalSale = cards.reduce((sum, card) => sum + card.finalValueAUD, 0);
+  // Calculate totals by parsing strings to numbers first
+  const totalInvestment = cards.reduce((sum, card) => {
+    return sum + (parseFloat(card.investmentAUD) || 0);
+  }, 0);
+
+  const totalSale = cards.reduce((sum, card) => {
+    const cardId = card.id || card.slabSerial;
+    const individualSalePrice = card.soldPrices && card.soldPrices[cardId]
+      ? parseFloat(card.soldPrices[cardId])
+      : 0;
+    const effectiveSalePrice = individualSalePrice > 0 ? individualSalePrice : (parseFloat(card.soldPrice) || 0);
+    return sum + effectiveSalePrice;
+  }, 0);
+
   const totalProfit = totalSale - totalInvestment;
 
   return (
@@ -172,25 +184,35 @@ const InvoicePDF = ({ buyer, date, cards, invoiceId, profile }) => {
           </View>
 
           {/* Table Body */}
-          {cards.map((card) => (
-            <View key={card.slabSerial} style={styles.tableRow}>
-              <View style={[styles.col1, styles.tableCell]}>
-                <Text>{card.card} {card.player ? `- ${card.player}` : ''}</Text>
-                <Text style={{ fontSize: 9, color: '#6b7280', marginTop: 2 }}>
-                  Serial: {card.slabSerial}
-                </Text>
+          {cards.map((card) => {
+            const investment = parseFloat(card.investmentAUD) || 0;
+            const cardId = card.id || card.slabSerial;
+            const individualSalePrice = card.soldPrices && card.soldPrices[cardId]
+              ? parseFloat(card.soldPrices[cardId])
+              : 0;
+            const effectiveSalePrice = individualSalePrice > 0 ? individualSalePrice : (parseFloat(card.soldPrice) || 0);
+            const profit = effectiveSalePrice - investment;
+
+            return (
+              <View key={card.slabSerial || card.id} style={styles.tableRow}>
+                <View style={[styles.col1, styles.tableCell]}>
+                  <Text>{card.card} {card.player ? `- ${card.player}` : ''}</Text>
+                  <Text style={{ fontSize: 9, color: '#6b7280', marginTop: 2 }}>
+                    Serial: {card.slabSerial || card.id}
+                  </Text>
+                </View>
+                <View style={[styles.col2, styles.tableCell]}>
+                  <Text>{investment.toFixed(2)}</Text>
+                </View>
+                <View style={[styles.col3, styles.tableCell]}>
+                  <Text>{effectiveSalePrice.toFixed(2)}</Text>
+                </View>
+                <View style={[styles.col4, styles.tableCell]}>
+                  <Text>{profit.toFixed(2)}</Text>
+                </View>
               </View>
-              <View style={[styles.col2, styles.tableCell]}>
-                <Text>{card.investmentAUD.toFixed(2)}</Text>
-              </View>
-              <View style={[styles.col3, styles.tableCell]}>
-                <Text>{card.finalValueAUD.toFixed(2)}</Text>
-              </View>
-              <View style={[styles.col4, styles.tableCell]}>
-                <Text>{card.finalProfitAUD.toFixed(2)}</Text>
-              </View>
-            </View>
-          ))}
+            );
+          })}
         </View>
 
         {/* Summary */}
