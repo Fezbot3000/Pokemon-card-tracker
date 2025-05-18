@@ -55,27 +55,27 @@ function DashboardPricing() {
   }, [subscriptionStatus, isLoadingSubscription, currentUser, isPostPayment]);
 
   // If user has active subscription and manually navigates to pricing, 
-  // redirect them back to dashboard after a short delay
+  // or just completed payment, redirect them back to dashboard.
   useEffect(() => {
     if (subscriptionStatus.status === 'active' && !isLoadingSubscription) {
-      // Show a toast instead of the full screen
-      toast.success('Subscription active - Redirecting to dashboard', {
-        id: 'subscription-check',
-        duration: 2000
-      });
+      if (isPostPayment) { // Only show toast if coming from payment
+        toast.success('Subscription active - Redirecting to dashboard', {
+          id: 'subscription-check', // Use a consistent ID to allow dismissal or update
+          duration: 2000
+        });
+        // Clear the post-payment flag after showing the toast
+        localStorage.removeItem('recentPayment'); 
+        // No need to change isPostPayment state directly, as location.search won't change until navigation
+      }
       
-      // Redirect immediately to dashboard
+      // Redirect to dashboard
       const timer = setTimeout(() => {
-        // Removed: console.log("User has active subscription, redirecting to dashboard");
-        const goToDashboard = () => {
-          navigate('/dashboard', { replace: true });
-        };
-        goToDashboard();
-      }, 500); // Shorter delay, since we're using a toast now
+        navigate('/dashboard', { replace: true });
+      }, 500); // Delay allows toast to be seen if shown
       
       return () => clearTimeout(timer);
     }
-  }, [subscriptionStatus, isLoadingSubscription]);
+  }, [subscriptionStatus, isLoadingSubscription, navigate, isPostPayment]); // Added navigate and isPostPayment
 
   // Handle sign out
   const handleSignOut = async () => {

@@ -29,18 +29,32 @@ const StatisticsSummary = ({
           {statistics.map((stat, index) => {
             let valueToRender = stat.formattedValue || stat.value;
             const isMonetaryStat = ['PAID', 'VALUE', 'PROFIT'].includes(stat.label.toUpperCase());
+            let displayValue = String(valueToRender); // Ensure displayValue is a string initially
 
             if (isMonetaryStat) {
-              const rawValueString = String(valueToRender).replace(/,/g, ''); // Remove existing commas for parsing
+              // Remove currency symbols and commas for reliable parsing
+              const rawValueString = String(valueToRender).replace(/[$,]/g, ''); 
               const num = parseFloat(rawValueString);
+
               if (!isNaN(num)) {
-                // Truncate and then re-format with locale-specific thousands separators and no decimals
-                valueToRender = Math.trunc(num).toLocaleString(undefined, {
+                // Format the absolute, truncated number
+                const absNumFormatted = Math.abs(Math.trunc(num)).toLocaleString(undefined, {
                   minimumFractionDigits: 0,
                   maximumFractionDigits: 0,
                 });
+                
+                if (num < 0) {
+                  displayValue = '-$' + absNumFormatted;
+                } else {
+                  displayValue = '$' + absNumFormatted;
+                }
+              } else {
+                // Fallback for non-numeric values that are still monetary (e.g. "N/A")
+                // Prepend '$' if not already present and not clearly an error/placeholder that shouldn't have it
+                if (!displayValue.includes('$') && displayValue.match(/^[a-zA-Z0-9\s.-]+$/)) { // Avoid adding $ to empty or very odd strings
+                    displayValue = '$' + displayValue;
+                }
               }
-              // If num is NaN, valueToRender remains as its original string form (e.g., an error message or "N/A")
             }
 
             return (
@@ -66,9 +80,8 @@ const StatisticsSummary = ({
                       <Icon name={stat.icon} size="sm" />
                     </span>
                   )}
-                  {/* Only add $ if not already present in valueToRender */}
-                  {isMonetaryStat && !String(valueToRender).includes('$') && '$'}
-                  {isMonetaryStat && String(valueToRender).startsWith('$') ? String(valueToRender).substring(1) : valueToRender}
+                  {/* Render the processed displayValue */}
+                  {displayValue}
                 </div>
               </div>
             );

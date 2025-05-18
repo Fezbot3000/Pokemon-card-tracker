@@ -824,19 +824,31 @@ class CardRepository {
       if (!cardId) {
         throw new Error('Card ID is required to mark a card as sold.');
       }
-      const card = await this.getCard(cardId);
+      let card = await this.getCard(cardId);
+      const soldItemRef = doc(this.soldCardsRef, cardId); // Use cardId directly for soldItemRef
+
       if (!card) {
-        throw new Error(`Card with ID ${cardId} not found.`);
+        // Card not found in 'cards' collection. Check if it's already in 'sold-items'.
+        const existingSoldDoc = await getDoc(soldItemRef);
+        if (existingSoldDoc.exists()) {
+          console.warn(`Card ${cardId} not found in 'cards' collection, but already exists in 'sold-items'. Assuming already processed.`);
+          // Optionally, return the existing sold item data or a success indicator
+          return { ...existingSoldDoc.data(), id: existingSoldDoc.id, alreadySold: true }; 
+        }
+        // If not in 'cards' and not in 'sold-items', then it's truly not found.
+        throw new Error(`Card with ID ${cardId} not found in 'cards' or 'sold-items' collections.`);
       }
 
-      // Use card.id as the document ID for the sold item in the 'sold-items' collection
-      const soldItemRef = doc(this.soldCardsRef, card.id);
+      // Card was found in 'cards' collection. Proceed with marking as sold.
+      // Use card.id (which is cardId if getCard was successful with it) for the sold item doc ID
+      // const soldItemRef = doc(this.soldCardsRef, card.id); // This was potentially problematic if cardId isn't card.id
 
-      // Check if this card has already been marked as sold by checking if a doc with its ID exists
+      // Check if this card has already been marked as sold by checking if a doc with its ID exists in sold-items
       const existingSoldDoc = await getDoc(soldItemRef);
       if (existingSoldDoc.exists()) {
         console.warn(`Card ${card.id} (${card.name || card.card}) is already marked as sold. To update, a different flow might be needed.`);
-        throw new Error(`Card ${card.name || card.card} (ID: ${card.id}) has already been marked as sold.`);
+        // Return existing sold data to indicate it's already processed
+        return { ...existingSoldDoc.data(), id: existingSoldDoc.id, alreadySold: true }; 
       }
       
       // Prepare the data for the new document in 'sold-items'

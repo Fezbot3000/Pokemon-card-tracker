@@ -366,7 +366,7 @@ SoldItemsView.propTypes = {
   items: PropTypes.arrayOf(PropTypes.shape({
     id: PropTypes.string,
     buyer: PropTypes.string,
-    dateSold: PropTypes.string,
+    dateSold: PropTypes.oneOfType([PropTypes.string, PropTypes.object]), 
     cards: PropTypes.array,
     totalInvestment: PropTypes.number,
     totalSale: PropTypes.number,

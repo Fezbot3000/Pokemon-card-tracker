@@ -9,7 +9,9 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   getRedirectResult,
-  OAuthProvider
+  OAuthProvider,
+  setPersistence,
+  browserLocalPersistence
 } from 'firebase/auth';
 import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db, googleProvider } from '../../firebase'; // Import from the main app's firebase config
@@ -142,13 +144,15 @@ export const AuthProvider = ({ children }) => {
   const signIn = async ({ email, password, remember = false }) => {
     try {
       setError(null);
-      const result = await signInWithEmailAndPassword(auth, email, password);
+      // Explicitly set persistence to local
+      await setPersistence(auth, browserLocalPersistence);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
       
       // Clear any new user flag for sign-ins
       localStorage.removeItem('isNewUser');
       
       toast.success('Signed in successfully!');
-      return result.user;
+      return userCredential.user;
     } catch (err) {
       const errorMessage = handleFirebaseError(err);
       setError(errorMessage);
@@ -161,9 +165,8 @@ export const AuthProvider = ({ children }) => {
   const signInWithGoogle = async () => {
     try {
       setError(null);
-      console.log("Starting Google sign-in process...");
-      
-      // Use popup for Google sign-in
+      // Explicitly set persistence to local
+      await setPersistence(auth, browserLocalPersistence);
       const result = await signInWithPopup(auth, googleProvider);
       console.log("Google sign-in successful:", result.user?.email);
       
@@ -214,6 +217,8 @@ export const AuthProvider = ({ children }) => {
   const signInWithApple = async () => {
     try {
       setError(null);
+      // Explicitly set persistence to local
+      await setPersistence(auth, browserLocalPersistence);
       console.log("Starting Apple sign-in process...");
       const provider = new OAuthProvider('apple.com');
       
