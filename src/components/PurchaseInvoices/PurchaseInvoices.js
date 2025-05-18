@@ -201,42 +201,29 @@ const PurchaseInvoices = () => {
     if (!invoices || invoices.length === 0) {
       return [];
     }
-    
+
     // Calculate total spent
     const totalSpent = invoices.reduce((sum, invoice) => {
       return sum + parseFloat(invoice.totalAmount || 0);
     }, 0);
-    
+
     // Calculate total cards
     const totalCards = invoices.reduce((sum, invoice) => {
       return sum + (invoice.cardCount || 0);
     }, 0);
-    
+
     // Calculate average cost per card
     const avgCostPerCard = totalCards > 0 ? totalSpent / totalCards : 0;
-    
+
     // Count unique sellers
     const uniqueSellers = new Set(invoices.map(invoice => invoice.seller)).size;
-    
-    // Format currency without abbreviations
-    const formatFullCurrency = (amount) => {
-      // Convert to number and handle invalid values
-      const num = parseFloat(amount || 0);
-      if (isNaN(num)) return '$0.00';
-      
-      // Format with commas and 2 decimal places, no abbreviations
-      return '$' + num.toLocaleString('en-US', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-      });
-    };
-    
+
     return [
       {
         label: 'Total Spent',
-        value: totalSpent,
-        formattedValue: formatFullCurrency(totalSpent),
-        isProfit: false
+        value: totalSpent, // Pass raw value
+        isMonetary: true,
+        originalCurrencyCode: 'AUD'
       },
       {
         label: 'Cards Purchased',
@@ -246,9 +233,9 @@ const PurchaseInvoices = () => {
       },
       {
         label: 'Avg Cost/Card',
-        value: avgCostPerCard,
-        formattedValue: formatFullCurrency(avgCostPerCard),
-        isProfit: false
+        value: avgCostPerCard, // Pass raw value
+        isMonetary: true,
+        originalCurrencyCode: 'AUD'
       },
       {
         label: 'Sellers',
@@ -477,7 +464,12 @@ const PurchaseInvoices = () => {
     <div className="pt-16 sm:pt-20 w-full px-1 sm:px-2 pb-20">
       {/* Statistics Summary */}
       {!loading && invoices.length > 0 && (
-        <StatisticsSummary statistics={getInvoiceStatistics()} className="mb-4" />
+        <div className="mb-6">
+          <StatisticsSummary 
+            statistics={getInvoiceStatistics()} 
+            className="mb-4"
+          />
+        </div>
       )}
       
       <div className="bg-white dark:bg-[#1B2131] rounded-xl shadow-md p-6">

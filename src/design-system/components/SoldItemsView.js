@@ -18,7 +18,9 @@ const SoldItemsView = ({
   onPrintInvoice,
   onDeleteInvoice,
   formatDate,
-  className = ''
+  className = '',
+  formatUserCurrency, 
+  originalCurrencyCode 
 }) => {
   const { isDarkMode } = useTheme();
   const [expandedYears, setExpandedYears] = useState(new Set());
@@ -320,6 +322,8 @@ const SoldItemsView = ({
                               onPrint={() => handlePrintInvoice(invoice)}
                               onDelete={() => handleDeleteInvoice(invoice)}
                               cardCount={cards.length}
+                              formatUserCurrency={formatUserCurrency}
+                              originalCurrencyCode={originalCurrencyCode}
                             />
                             
                             {/* Invoice Cards */}
@@ -381,7 +385,11 @@ SoldItemsView.propTypes = {
   /** Function to format dates */
   formatDate: PropTypes.func,
   /** Additional class names */
-  className: PropTypes.string
+  className: PropTypes.string,
+  /** Currency formatting function from UserPreferencesContext */
+  formatUserCurrency: PropTypes.func,
+  /** Original currency code for the amounts being formatted */
+  originalCurrencyCode: PropTypes.string
 };
 
 export default SoldItemsView;

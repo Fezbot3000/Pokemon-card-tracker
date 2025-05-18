@@ -22,6 +22,9 @@ const InvoiceHeader = ({
   onDelete,
   cardCount = 0,
   className = '',
+  // New props for currency formatting
+  formatUserCurrency, 
+  originalCurrencyCode,
   ...props
 }) => {
   const headerClasses = `
@@ -32,12 +35,6 @@ const InvoiceHeader = ({
     gap-3 sm:gap-0
     ${className}
   `;
-
-  // Format currency
-  const formatCurrency = (amount) => {
-    const value = parseFloat(amount);
-    return `$${Math.abs(value).toFixed(2)}`;
-  };
 
   // Clean wrapper for Icon component
   const CleanIcon = (iconProps) => {
@@ -71,19 +68,19 @@ const InvoiceHeader = ({
           <div className="flex flex-row justify-between items-baseline w-full sm:flex-col sm:items-start">
             <span className="text-xs text-gray-500 dark:text-gray-400">Paid</span>
             <span className="text-sm font-medium text-gray-900 dark:text-white">
-              {formatCurrency(totalInvestment)}
+              {formatUserCurrency ? formatUserCurrency(totalInvestment, originalCurrencyCode) : `$${parseFloat(totalInvestment || 0).toFixed(2)}`}
             </span>
           </div>
           <div className="flex flex-row justify-between items-baseline w-full sm:flex-col sm:items-start">
             <span className="text-xs text-gray-500 dark:text-gray-400">Sale</span>
             <span className="text-sm font-medium text-gray-900 dark:text-white">
-              {formatCurrency(totalSale)}
+              {formatUserCurrency ? formatUserCurrency(totalSale, originalCurrencyCode) : `$${parseFloat(totalSale || 0).toFixed(2)}`}
             </span>
           </div>
           <div className="flex flex-row justify-between items-baseline w-full sm:flex-col sm:items-start">
             <span className="text-xs text-gray-500 dark:text-gray-400">Profit</span>
             <span className={`text-sm font-medium ${totalProfit >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-              {totalProfit >= 0 ? '' : '-'}{formatCurrency(totalProfit)}
+              {formatUserCurrency ? formatUserCurrency(totalProfit, originalCurrencyCode) : `${totalProfit >= 0 ? '' : '-'}$${Math.abs(parseFloat(totalProfit || 0)).toFixed(2)}`}
             </span>
           </div>
         </div>
@@ -155,6 +152,10 @@ InvoiceHeader.propTypes = {
   cardCount: PropTypes.number,
   /** Additional classes */
   className: PropTypes.string,
+  /** Currency formatting function from UserPreferencesContext */
+  formatUserCurrency: PropTypes.func,
+  /** Original currency code for the amounts being formatted */
+  originalCurrencyCode: PropTypes.string,
 };
 
 export default InvoiceHeader;

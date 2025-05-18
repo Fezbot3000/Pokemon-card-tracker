@@ -7,6 +7,7 @@ import SaleModal from '../../components/SaleModal';
 import { searchByCertNumber, parsePSACardData } from '../../services/psaSearch';
 import { toast } from 'react-hot-toast';
 import '../styles/animations.css';
+import { useUserPreferences } from '../../contexts/UserPreferencesContext';
 
 // Helper function to format date
 const formatDate = (dateString) => {
@@ -52,6 +53,9 @@ const CardDetailsModal = ({
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [isPsaSearching, setIsPsaSearching] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  
+  // Get currency formatting functions
+  const { formatPreferredCurrency, formatAmountForDisplay } = useUserPreferences();
 
   // If the card has pricing data from PriceCharting, extract the product ID
   let priceChartingProductId = null;
@@ -91,9 +95,22 @@ const CardDetailsModal = ({
   // Calculate profit safely
   const getProfit = () => {
     if (!card) return 0;
-    const investment = card.investmentAUD === '' ? 0 : parseFloat(card.investmentAUD) || 0;
-    const currentValue = card.currentValueAUD === '' ? 0 : parseFloat(card.currentValueAUD) || 0;
-    return currentValue - investment;
+    
+    // Use original amounts and currencies for more accurate profit calculation
+    const originalInvestment = card.originalInvestmentAmount !== undefined ? parseFloat(card.originalInvestmentAmount) : 0;
+    const originalInvestmentCurrency = card.originalInvestmentCurrency || 'AUD';
+    
+    const originalCurrentValue = card.originalCurrentValueAmount !== undefined ? parseFloat(card.originalCurrentValueAmount) : 0;
+    const originalCurrentValueCurrency = card.originalCurrentValueCurrency || 'AUD';
+    
+    // Convert both to preferred currency using the UserPreferences context
+    const investmentInPreferredCurrency = originalInvestment !== 0 ? 
+      parseFloat(formatAmountForDisplay(originalInvestment, originalInvestmentCurrency).replace(/[^0-9.-]+/g, '')) : 0;
+    
+    const currentValueInPreferredCurrency = originalCurrentValue !== 0 ? 
+      parseFloat(formatAmountForDisplay(originalCurrentValue, originalCurrentValueCurrency).replace(/[^0-9.-]+/g, '')) : 0;
+    
+    return currentValueInPreferredCurrency - investmentInPreferredCurrency;
   };
   
   // Update local state when props change or modal opens
@@ -392,7 +409,7 @@ const CardDetailsModal = ({
                   className={`font-medium ${getProfit() >= 0 ? 'text-green-600 dark:text-green-500' : 'text-red-600 dark:text-red-500'}`}
                   data-component-name="CardDetailsModal"
                 >
-                  ${Math.abs(getProfit()).toFixed(2)} {getProfit() >= 0 ? 'profit' : 'loss'}
+                  {formatPreferredCurrency(Math.abs(getProfit()))} {getProfit() >= 0 ? 'profit' : 'loss'}
                 </span>
               </div>
             </div>

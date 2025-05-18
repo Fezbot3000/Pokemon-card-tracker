@@ -12,10 +12,12 @@ import { collection, getDocs } from 'firebase/firestore';
 import { db as firestoreDb, storage } from '../../services/firebase';
 import { ref, getDownloadURL } from 'firebase/storage';
 import logger from '../../utils/logger';
+import { useUserPreferences } from '../../contexts/UserPreferencesContext';
 
 const SoldItems = () => {
   const { isDarkMode } = useTheme();
   const { user } = useAuth();
+  const { formatCurrency: formatUserCurrency, preferredCurrency } = useUserPreferences();
   const [soldCards, setSoldCards] = useState([]);
   const [sortField, setSortField] = useState('dateSold');
   const [sortDirection, setSortDirection] = useState('desc');
@@ -920,6 +922,8 @@ const SoldItems = () => {
             onPrintInvoice={handlePrintInvoice}
             onDeleteInvoice={handleDeleteInvoice}
             formatDate={formatDate}
+            formatUserCurrency={formatUserCurrency}
+            originalCurrencyCode="AUD"
             className="mt-4"
           />
         </div>

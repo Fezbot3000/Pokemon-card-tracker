@@ -3,13 +3,13 @@ import { useInView } from 'react-intersection-observer';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../design-system';
 import db from '../services/db';
-import { formatCurrency, formatCondensed } from '../utils/formatters';
 import { toast } from 'react-hot-toast';
 import { StatisticsSummary, SearchToolbar, Card, ConfirmDialog } from '../design-system';
 import CollectionSelector from '../design-system/components/CollectionSelector';
 import SaleModal from './SaleModal';
 import MoveCardsModal from './MoveCardsModal';
 import CreateInvoiceModal from './PurchaseInvoices/CreateInvoiceModal';
+import { useUserPreferences } from '../contexts/UserPreferencesContext';
 
 // Replace FinancialSummary component with individual stat cards
 const StatCard = memo(({ label, value, isProfit = false }) => {
@@ -88,6 +88,7 @@ const CardList = ({
 }) => {
   // Initialize navigate function from React Router
   const navigate = useNavigate();
+  const { formatAmountForDisplay: formatUserCurrency, preferredCurrency } = useUserPreferences();
 
   const [filter, setFilter] = useState('');
   const [sortField, setSortField] = useState(
@@ -804,6 +805,8 @@ const CardList = ({
         duration: 3000,
       });
       
+      // Return true to indicate success
+      return true;
     } catch (error) {
       console.error('Deletion failed with error:', error);
       toast.error('Failed to delete cards');
@@ -992,18 +995,21 @@ const CardList = ({
           {
             label: 'Paid',
             value: totals.investment,
-            formattedValue: formatCondensed(totals.investment)
+            isMonetary: true,
+            originalCurrencyCode: 'AUD'
           },
           {
             label: 'Value',
             value: totals.value,
-            formattedValue: formatCondensed(totals.value)
+            isMonetary: true,
+            originalCurrencyCode: 'AUD'
           },
           {
             label: 'Profit',
             value: totals.profit,
-            formattedValue: formatCondensed(totals.profit),
-            isProfit: true
+            isProfit: true,
+            isMonetary: true,
+            originalCurrencyCode: 'AUD'
           },
           {
             label: 'Cards',
@@ -1088,6 +1094,12 @@ const CardList = ({
               <Card
                 key={card._uniqueKey}
                 card={card}
+                investmentAUD={card.investmentAUD || 0}
+                currentValueAUD={card.currentValueAUD || 0}
+                formatUserCurrency={formatUserCurrency}
+                preferredCurrency={preferredCurrency}
+                originalInvestmentCurrency={card.originalInvestmentCurrency}
+                originalCurrentValueCurrency={card.originalCurrentValueCurrency}
                 cardImage={cardImages[card.slabSerial]}
                 onClick={() => onCardClick(card)} 
                 isSelected={selectedCards.has(card.slabSerial)}
@@ -1168,19 +1180,19 @@ const CardList = ({
                     <div className="flex items-center">
                       <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Paid:</span>
                       <span className="ml-2 font-medium text-xs sm:text-sm text-gray-900 dark:text-white">
-                        {formatCurrency(card.investmentAUD, true)}
+                        {formatUserCurrency(card.investmentAUD, card.originalInvestmentCurrency)}
                       </span>
                     </div>
                     <div className="flex items-center">
                       <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Value:</span>
                       <span className="ml-2 font-medium text-xs sm:text-sm text-gray-900 dark:text-white">
-                        {formatCurrency(card.currentValueAUD, true)}
+                        {formatUserCurrency(card.currentValueAUD, card.originalCurrentValueCurrency)}
                       </span>
                     </div>
                     <div className="flex items-center">
                       <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Profit:</span>
                       <span className={`ml-2 font-medium text-xs sm:text-sm ${(card.currentValueAUD - card.investmentAUD) >= 0 ? 'text-green-500 dark:text-green-400' : 'text-red-500 dark:text-red-400'}`}>
-                        {formatCurrency(card.currentValueAUD - card.investmentAUD, true)}
+                        {formatUserCurrency(card.currentValueAUD - card.investmentAUD, card.originalCurrentValueCurrency)}
                       </span>
                     </div>
                     {card.datePurchased && (

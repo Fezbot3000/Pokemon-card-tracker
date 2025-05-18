@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-import { formatCurrency, formatCurrencyK } from '../utils/formatters';
 import Icon from '../atoms/Icon';
 import { baseColors } from '../styles/colors';
 import { colors, shadows, borders } from '../tokens';
@@ -20,14 +19,28 @@ const Card = ({
   onSelect,
   className = '',
   children,
+  // investmentAUD and currentValueAUD are now primarily for profit calculation,
+  // assuming they are reliably passed as AUD-converted values.
+  investmentAUD = 0, 
+  currentValueAUD = 0, 
+  formatUserCurrency, 
+  // preferredCurrency, // Potentially unused if formatUserCurrency handles all logic
+  // originalCurrencyCode, // Potentially unused if card object's specific currencies are used
   ...props
 }) => {
   // Get theme information
   const { isDarkMode } = useTheme();
+
+  // Use original amounts and currencies from the card object for display
+  const displayInvestmentAmount = card.originalInvestmentAmount !== undefined ? card.originalInvestmentAmount : 0;
+  // Ensure we have a valid currency code - default to 'AUD' if missing
+  const displayInvestmentCurrency = card.originalInvestmentCurrency || 'AUD';
+
+  const displayValueAmount = card.originalCurrentValueAmount !== undefined ? card.originalCurrentValueAmount : 0;
+  // Ensure we have a valid currency code - default to 'AUD' if missing
+  const displayValueCurrency = card.originalCurrentValueCurrency || 'AUD';
   
-  // Calculate profit (safely handle undefined values)
-  const currentValueAUD = card?.currentValueAUD || 0;
-  const investmentAUD = card?.investmentAUD || 0;
+  // Calculate profit using passed props (assumed to be in AUD)
   const profit = currentValueAUD - investmentAUD;
   const isProfitable = profit >= 0;
 
@@ -76,6 +89,19 @@ const Card = ({
         {children}
       </div>
     );
+  }
+
+  // MODIFIED CONSOLE LOG:
+  if (formatUserCurrency && card.card) { // Log if formatUserCurrency is present and it's a proper card item
+    console.log('Card.js PROPS RECEIVED:', {
+      cardName: card.card,
+      investmentAUD,
+      currentValueAUD,
+      preferredCurrencyObj: card.preferredCurrency, // Renamed for clarity
+      originalCurrencyCode: card.originalCurrencyCode,
+      hasFormatUserCurrency: !!formatUserCurrency,
+      // formatUserCurrencyFunctionBody: formatUserCurrency ? formatUserCurrency.toString() : 'undefined'
+    });
   }
 
   return (
@@ -151,21 +177,52 @@ const Card = ({
               <div className="text-center py-1">
                 <div className="financial-detail-label text-xs text-gray-500 dark:text-gray-400">Paid</div>
                 <div className="financial-detail-value text-sm font-medium">
-                  {formatCurrencyK(investmentAUD)}
+                  {formatUserCurrency ? 
+                    (() => {
+                      // Always use formatUserCurrency with a valid currency code
+                      const formatted = formatUserCurrency(displayInvestmentAmount, displayInvestmentCurrency);
+                      console.log('Card.js - Rendering Paid:', {
+                        cardName: card.card || card.name,
+                        displayInvestmentAmount,
+                        displayInvestmentCurrency,
+                        isFormatUserCurrencyTruthy: !!formatUserCurrency,
+                        formattedValue: formatted
+                      });
+                      return formatted;
+                    })() :
+                    `$${(displayInvestmentAmount || 0).toFixed(2)}` // Only use fallback if formatUserCurrency is undefined
+                  }
                 </div>
               </div>
               {/* Value */}
               <div className="text-center py-1">
                 <div className="financial-detail-label text-xs text-gray-500 dark:text-gray-400">Value</div>
                 <div className="financial-detail-value text-sm font-medium">
-                  {formatCurrencyK(currentValueAUD)}
+                  {formatUserCurrency ? 
+                    (() => {
+                      // Always use formatUserCurrency with a valid currency code
+                      const formatted = formatUserCurrency(displayValueAmount, displayValueCurrency);
+                      console.log('Card.js - Rendering Value:', {
+                        cardName: card.card || card.name,
+                        displayValueAmount,
+                        displayValueCurrency,
+                        isFormatUserCurrencyTruthy: !!formatUserCurrency,
+                        formattedValue: formatted
+                      });
+                      return formatted;
+                    })() :
+                    `$${(displayValueAmount || 0).toFixed(2)}` // Only use fallback if formatUserCurrency is undefined
+                  }
                 </div>
               </div>
               {/* Profit */}
               <div className="text-center py-1">
                 <div className="financial-detail-label text-xs text-gray-500 dark:text-gray-400">Profit</div>
                 <div className={`text-sm font-medium ${isProfitable ? 'text-green-500' : 'text-red-500'}`}>
-                  {isProfitable ? '+' : '-'}{formatCurrencyK(Math.abs(profit))}
+                  {formatUserCurrency ? 
+                    formatUserCurrency(profit, 'AUD') : // Profit is assumed to be in AUD, so specify 'AUD' as source currency
+                    `${isProfitable ? '+' : '-'}$${Math.abs(profit).toFixed(2)}`
+                  }
                 </div>
               </div>
             </div>
@@ -202,7 +259,12 @@ Card.propTypes = {
   isSelected: PropTypes.bool,
   onSelect: PropTypes.func,
   className: PropTypes.string,
-  children: PropTypes.node
+  children: PropTypes.node,
+  investmentAUD: PropTypes.number,
+  currentValueAUD: PropTypes.number,
+  formatUserCurrency: PropTypes.func,
+  // preferredCurrency: PropTypes.object,
+  // originalCurrencyCode: PropTypes.string
 };
 
 Card.Header.propTypes = {

@@ -13,7 +13,133 @@ import { gradients } from '../styles/colors';
 import PriceHistoryGraph from '../../components/PriceHistoryGraph';
 import PSALookupButton from '../../components/PSALookupButton'; 
 import { getAllPokemonSets, getPokemonSetsByYear, addCustomSet } from '../../data/pokemonSets';
-import '../styles/formFixes.css'; // Import the new CSS fixes
+import { useUserPreferences } from '../../contexts/UserPreferencesContext'; 
+import '../styles/formFixes.css'; 
+
+const cardCategories = [
+  { value: 'pokemon', label: 'Pokemon' },
+  { value: 'sports', label: 'Sports' },
+  { value: 'other', label: 'Other' },
+  // Add more categories as needed
+];
+
+const gradingCompanies = [
+  { value: '', label: 'Select Company...' },
+  { value: 'PSA', label: 'PSA' },
+  { value: 'BGS', label: 'BGS (Beckett)' },
+  { value: 'CGC', label: 'CGC' },
+  { value: 'SGC', label: 'SGC' },
+  { value: 'RAW', label: 'Raw/Ungraded' },
+];
+
+const rawConditions = [
+  { value: '', label: 'Select Condition...' },
+  { value: 'Mint', label: 'Mint' },
+  { value: 'Near Mint', label: 'Near Mint' },
+  { value: 'Excellent', label: 'Excellent' },
+  { value: 'Good', label: 'Good' },
+  { value: 'Played', label: 'Played' },
+  { value: 'Poor', label: 'Poor' },
+];
+
+// Placeholder for other grading scales - will need to be defined
+const psaGrades = [
+  { value: '', label: 'Select PSA Grade...' },
+  { value: '10', label: 'PSA 10 Gem Mint' },
+  { value: '9', label: 'PSA 9 Mint' },
+  { value: '8', label: 'PSA 8 NM-Mint' },
+  { value: '7', label: 'PSA 7 Near Mint' },
+  { value: '6', label: 'PSA 6 EX-Mint' },
+  { value: '5', label: 'PSA 5 Excellent' },
+  { value: '4', label: 'PSA 4 VG-EX' },
+  { value: '3', label: 'PSA 3 Very Good' },
+  { value: '2', label: 'PSA 2 Good' },
+  { value: '1.5', label: 'PSA 1.5 Fair' },
+  { value: '1', label: 'PSA 1 Poor' },
+  { value: 'A', label: 'PSA Authentic' }, // A for Authentic
+  { value: 'N0', label: 'PSA N0 Evidence of Trimming'},
+  { value: 'N1', label: 'PSA N1 Evidence of Restoration'},
+  { value: 'N2', label: 'PSA N2 Evidence of Recoloring'},
+  { value: 'N3', label: 'PSA N3 Questionable Authenticity'},
+  { value: 'N4', label: 'PSA N4 Evidence of Cleaning'},
+  { value: 'N5', label: 'PSA N5 Altered Stock'},
+  { value: 'N6', label: 'PSA N6 Not Graded - Ungradable'}
+];
+const bgsGrades = [
+  { value: '', label: 'Select BGS Grade...' },
+  { value: '10', label: 'BGS 10 Pristine (Black Label)' },
+  { value: '10P', label: 'BGS 10 Pristine' }, // Different from Black Label
+  { value: '9.5', label: 'BGS 9.5 Gem Mint' },
+  { value: '9', label: 'BGS 9 Mint' },
+  { value: '8.5', label: 'BGS 8.5 NM-Mint+' },
+  { value: '8', label: 'BGS 8 NM-Mint' },
+  { value: '7.5', label: 'BGS 7.5 Near Mint+' },
+  { value: '7', label: 'BGS 7 Near Mint' },
+  { value: '6.5', label: 'BGS 6.5 EX-Mint+' },
+  { value: '6', label: 'BGS 6 EX-Mint' },
+  { value: '5.5', label: 'BGS 5.5 Excellent+' },
+  { value: '5', label: 'BGS 5 Excellent' },
+  { value: '4.5', label: 'BGS 4.5 VG-EX+' },
+  { value: '4', label: 'BGS 4 VG-EX' },
+  { value: '3.5', label: 'BGS 3.5 Very Good+' },
+  { value: '3', label: 'BGS 3 Very Good' },
+  { value: '2.5', label: 'BGS 2.5 Good+' },
+  { value: '2', label: 'BGS 2 Good' },
+  { value: '1.5', label: 'BGS 1.5 Fair+' },
+  { value: '1', label: 'BGS 1 Poor' },
+  { value: 'A', label: 'BGS Authentic' },
+  { value: 'Altered', label: 'BGS Authentic - Altered'}
+];
+const cgcGrades = [
+  { value: '', label: 'Select CGC Grade...' },
+  { value: '10P', label: 'CGC 10 Perfect' },
+  { value: '10', label: 'CGC 10 Pristine' },
+  { value: '9.5', label: 'CGC 9.5 Gem Mint' },
+  { value: '9', label: 'CGC 9 Mint' },
+  { value: '8.5', label: 'CGC 8.5 NM/Mint+' },
+  { value: '8', label: 'CGC 8 NM/Mint' },
+  { value: '7.5', label: 'CGC 7.5 NM+' },
+  { value: '7', label: 'CGC 7 NM' },
+  { value: '6.5', label: 'CGC 6.5 EX/NM+' },
+  { value: '6', label: 'CGC 6 EX/NM' },
+  { value: '5.5', label: 'CGC 5.5 Excellent+' },
+  { value: '5', label: 'CGC 5 Excellent' },
+  { value: '4.5', label: 'CGC 4.5 VG/EX+' },
+  { value: '4', label: 'CGC 4 VG/EX' },
+  { value: '3.5', label: 'CGC 3.5 VG+' },
+  { value: '3', label: 'CGC 3 VG' },
+  { value: '2.5', label: 'CGC 2.5 Good+' },
+  { value: '2', label: 'CGC 2 Good' },
+  { value: '1.5', label: 'CGC 1.5 Fair' },
+  { value: '1', label: 'CGC 1 Poor' },
+  { value: 'Authentic', label: 'CGC Authentic' },
+  { value: 'Altered', label: 'CGC Authentic Altered' },
+  { value: 'Restored', label: 'CGC Restored (Various Tiers)' }
+];
+const sgcGrades = [
+  { value: '', label: 'Select SGC Grade...' },
+  { value: '10P', label: 'SGC 10 Pristine Gold Label' },
+  { value: '10', label: 'SGC 10 Gem Mint' },
+  { value: '9.5', label: 'SGC 9.5 Mint+' },
+  { value: '9', label: 'SGC 9 Mint' },
+  { value: '8.5', label: 'SGC 8.5 NM-Mint+' },
+  { value: '8', label: 'SGC 8 NM-Mint' },
+  { value: '7.5', label: 'SGC 7.5 Near Mint+' },
+  { value: '7', label: 'SGC 7 Near Mint' },
+  { value: '6.5', label: 'SGC 6.5 EX-MT+' },
+  { value: '6', label: 'SGC 6 EX-MT' },
+  { value: '5.5', label: 'SGC 5.5 Excellent+' },
+  { value: '5', label: 'SGC 5 Excellent' },
+  { value: '4.5', label: 'SGC 4.5 VG-EX+' },
+  { value: '4', label: 'SGC 4 VG-EX' },
+  { value: '3.5', label: 'SGC 3.5 Very Good+' },
+  { value: '3', label: 'SGC 3 Very Good' },
+  { value: '2.5', label: 'SGC 2.5 Good+' },
+  { value: '2', label: 'SGC 2 Good' },
+  { value: '1.5', label: 'SGC 1.5 Fair' },
+  { value: '1', label: 'SGC 1 Poor' },
+  { value: 'A', label: 'SGC Authentic' }
+];
 
 /**
  * CardDetailsForm Component
@@ -33,34 +159,40 @@ const CardDetailsForm = ({
   additionalValueContent,
   additionalSerialContent,
   collections = [],
-  initialCollectionName = '', // Use initialCollectionName from modal if available
+  initialCollectionName = '', 
   hideCollectionField = false,
   onPsaSearch,
   isPsaSearching = false,
   hidePsaSearchButton = false
 }) => {
-  
+  const { 
+    preferredCurrency, 
+    convertToUserCurrency,
+    convertFromUserCurrency,
+    formatAmountForDisplay, 
+    formatPreferredCurrency 
+  } = useUserPreferences();
+
   const [selectedCompany, setSelectedCompany] = useState('');
   const [selectedGrade, setSelectedGrade] = useState('');
   const [availableSets, setAvailableSets] = useState([]);
+
+  const [displayInvestment, setDisplayInvestment] = useState('');
+  const [displayCurrentValue, setDisplayCurrentValue] = useState('');
   
-  // Update available sets when year changes
   useEffect(() => {
     if (card?.year) {
       const yearSets = getPokemonSetsByYear(card.year);
-      console.log(`Loading sets for year ${card.year}:`, yearSets);
       setAvailableSets(yearSets);
     } else {
       const allSets = getAllPokemonSets();
-      console.log('Loading all sets:', allSets);
       setAvailableSets(allSets);
     }
   }, [card?.year]);
 
-  // Parse condition string on load/change
   useEffect(() => {
     if (card?.condition) {
-      const parts = card.condition.split(/\s+-\s+|\s+/); // Split by ' - ' or space
+      const parts = card.condition.split(/\s+-\s+|\s+/); 
       const company = parts[0]?.toUpperCase();
       const grade = parts[1] || '';
       
@@ -69,71 +201,68 @@ const CardDetailsForm = ({
     }
   }, [card?.condition]);
 
-  // Ensure set name is properly set
   useEffect(() => {
-    // If card has setName but it's not in availableSets, add it
     if (card?.setName && availableSets.length > 0 && !availableSets.includes(card.setName)) {
-      console.log(`Adding missing set "${card.setName}" to available sets`);
       setAvailableSets(prev => [...prev, card.setName]);
     }
   }, [card?.setName, availableSets]);
 
-  // Handle direct updates to gradingCompany and grade fields
   useEffect(() => {
-    // If both gradingCompany and grade are set directly, update the dropdowns
     if (card?.gradingCompany && card?.grade) {
-      console.log('Direct update to gradingCompany and grade:', card.gradingCompany, card.grade);
       setSelectedCompany(card.gradingCompany);
       setSelectedGrade(card.grade);
     }
   }, [card?.gradingCompany, card?.grade]);
 
-  // Handle input changes for all form fields
+  useEffect(() => {
+    if (card && preferredCurrency) {
+      if (card.originalInvestmentAmount !== undefined && card.originalInvestmentCurrency) {
+        const investmentInPref = convertToUserCurrency(card.originalInvestmentAmount, card.originalInvestmentCurrency);
+        setDisplayInvestment(investmentInPref > 0 ? String(investmentInPref) : '');
+      } else {
+        setDisplayInvestment('');
+      }
+
+      if (card.originalCurrentValueAmount !== undefined && card.originalCurrentValueCurrency) {
+        const currentValueInPref = convertToUserCurrency(card.originalCurrentValueAmount, card.originalCurrentValueCurrency);
+        setDisplayCurrentValue(currentValueInPref > 0 ? String(currentValueInPref) : '');
+      } else {
+        setDisplayCurrentValue('');
+      }
+    }
+  }, [card, preferredCurrency, convertToUserCurrency]);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     
-    // Handle the special case for adding a custom set
     if (name === 'setName' && value === '__add_custom__') {
       const customSet = prompt('Enter the name of the custom set:');
       if (customSet && customSet.trim() !== '') {
-        // Get the current year from the form
-        const currentYear = card.year || "2024"; // Default to 2024 if no year is selected
-        
-        // Add the custom set to the database with the current year
+        const currentYear = card.year || "2024"; 
         const newSet = handleAddCustomSet(customSet.trim(), currentYear);
         
-        // Update the card with the new set
-        if (onChange) {
-          onChange({
-            ...card,
-            [name]: newSet
-          });
-        }
+        onChange({
+          ...card,
+          [name]: newSet
+        });
         
-        // Force refresh the available sets list to include the new set
         setTimeout(() => {
           if (card.year) {
             const updatedSets = getPokemonSetsByYear(card.year);
-            console.log('Updated sets for year', card.year, ':', updatedSets);
             setAvailableSets(updatedSets);
           } else {
             const allSets = getAllPokemonSets();
-            console.log('All updated sets:', allSets);
             setAvailableSets(allSets);
           }
         }, 100);
       } else {
-        // If the user cancels or enters an empty string, revert to previous value
         e.target.value = card.setName || '';
       }
       return;
     }
     
-    // Special handling for year changes to update available sets
     if (name === 'year' && value) {
-      // Update available sets when year changes
       const yearSets = getPokemonSetsByYear(value);
-      console.log(`Sets for year ${value}:`, yearSets);
       setAvailableSets(yearSets);
     }
     
@@ -145,11 +274,9 @@ const CardDetailsForm = ({
     }
   };
 
-  // Handle number field changes
   const handleNumberChange = (e) => {
     const { name, value } = e.target;
     if (onChange) {
-      // Store the raw value in the card object, conversion will happen when needed
       onChange({
         ...card,
         [name]: value === '' ? '' : value
@@ -157,139 +284,65 @@ const CardDetailsForm = ({
     }
   };
 
-  // Calculate profit safely
   const getProfit = () => {
-    const investment = card.investmentAUD === '' ? 0 : parseFloat(card.investmentAUD) || 0;
-    const currentValue = card.currentValueAUD === '' ? 0 : parseFloat(card.currentValueAUD) || 0;
-    return currentValue - investment;
+    const investment = parseFloat(displayInvestment) || 0;
+    const value = parseFloat(displayCurrentValue) || 0;
+    return (value - investment).toFixed(preferredCurrency.code === 'JPY' ? 0 : 2);
   };
 
-  // --- Dropdown Options ---
-  const gradingCompanies = [
-    { value: '', label: 'Select Company...' },
-    { value: 'RAW', label: 'Raw/Ungraded' },
-    { value: 'PSA', label: 'PSA' },
-    { value: 'BGS', label: 'BGS' },
-    { value: 'CGC', label: 'CGC' },
-    { value: 'SGC', label: 'SGC' },
-  ];
+  const handleInvestmentInputChange = (e) => {
+    const inputValue = e.target.value;
+    setDisplayInvestment(inputValue); 
 
-  const rawConditions = [
-    { value: '', label: 'Select Condition...' },
-    { value: 'Mint', label: 'Mint (MT)' },
-    { value: 'Near Mint', label: 'Near Mint (NM)' },
-    { value: 'Excellent', label: 'Excellent (EX)' },
-    { value: 'Very Good', label: 'Very Good (VG)' },
-    { value: 'Good', label: 'Good (G)' },
-    { value: 'Poor', label: 'Poor (P)' },
-  ];
+    const numericValue = parseFloat(inputValue) || 0;
+    let newOriginalAmount = 0;
+    let newOriginalCurrency = card.originalInvestmentCurrency || preferredCurrency.code;
 
-  const psaGrades = [
-    { value: '', label: 'Select Grade...' },
-    { value: '10', label: '10' },
-    { value: '9.5', label: '9.5' },
-    { value: '9', label: '9' },
-    { value: '8.5', label: '8.5' },
-    { value: '8', label: '8' },
-    { value: '7.5', label: '7.5' },
-    { value: '7', label: '7' },
-    { value: '6', label: '6' },
-    { value: '5', label: '5' },
-    { value: '4', label: '4' },
-    { value: '3', label: '3' },
-    { value: '2', label: '2' },
-    { value: '1', label: '1' },
-    { value: 'A', label: 'A (Authentic)' },
-  ];
+    if (card.originalInvestmentCurrency) {
+      newOriginalAmount = convertFromUserCurrency(numericValue, card.originalInvestmentCurrency);
+    } else {
+      newOriginalAmount = numericValue; 
+      newOriginalCurrency = preferredCurrency.code; 
+    }
+    
+    onChange({
+      ...card,
+      originalInvestmentAmount: newOriginalAmount,
+      originalInvestmentCurrency: newOriginalCurrency
+    });
+  };
 
-  const bgsGrades = [
-    { value: '', label: 'Select Grade...' },
-    { value: '10', label: '10' },
-    { value: '9.5', label: '9.5' },
-    { value: '9', label: '9' },
-    { value: '8.5', label: '8.5' },
-    { value: '8', label: '8' },
-    { value: '7.5', label: '7.5' },
-    { value: '7', label: '7' },
-    { value: '6', label: '6' },
-    { value: '5', label: '5' },
-    { value: '4', label: '4' },
-    { value: '3', label: '3' },
-    { value: '2', label: '2' },
-    { value: '1', label: '1' },
-    { value: 'A', label: 'A (Authentic)' },
-  ];
+  const handleCurrentValueInputChange = (e) => {
+    const inputValue = e.target.value;
+    setDisplayCurrentValue(inputValue);
 
-  const cgcGrades = [
-    { value: '', label: 'Select Grade...' },
-    { value: '10', label: '10' },
-    { value: '9.8', label: '9.8' },
-    { value: '9.6', label: '9.6' },
-    { value: '9.4', label: '9.4' },
-    { value: '9.2', label: '9.2' },
-    { value: '9', label: '9' },
-    { value: '8.5', label: '8.5' },
-    { value: '8', label: '8' },
-    { value: '7.5', label: '7.5' },
-    { value: '7', label: '7' },
-    { value: '6', label: '6' },
-    { value: '5', label: '5' },
-    { value: '4', label: '4' },
-    { value: '3', label: '3' },
-    { value: '2', label: '2' },
-    { value: '1', label: '1' },
-    { value: 'A', label: 'A (Authentic)' },
-  ];
+    const numericValue = parseFloat(inputValue) || 0;
+    let newOriginalAmount = 0;
+    let newOriginalCurrency = card.originalCurrentValueCurrency || preferredCurrency.code;
 
-  const sgcGrades = [
-    { value: '', label: 'Select Grade...' },
-    { value: '10', label: '10' },
-    { value: '9.5', label: '9.5' },
-    { value: '9', label: '9' },
-    { value: '8.5', label: '8.5' },
-    { value: '8', label: '8' },
-    { value: '7.5', label: '7.5' },
-    { value: '7', label: '7' },
-    { value: '6', label: '6' },
-    { value: '5', label: '5' },
-    { value: '4', label: '4' },
-    { value: '3', label: '3' },
-    { value: '2', label: '2' },
-    { value: '1', label: '1' },
-    { value: 'A', label: 'A (Authentic)' },
-  ];
+    if (card.originalCurrentValueCurrency) {
+      newOriginalAmount = convertFromUserCurrency(numericValue, card.originalCurrentValueCurrency);
+    } else {
+      newOriginalAmount = numericValue;
+    }
 
-  // Define card categories
-  const cardCategories = [
-    { value: '', label: 'Select Category...' },
-    { value: 'Pokemon', label: 'Pokémon' },
-    { value: 'YuGiOh', label: 'Yu-Gi-Oh!' },
-    { value: 'MagicTheGathering', label: 'Magic: The Gathering' },
-    { value: 'DragonBallZ', label: 'Dragon Ball Z' },
-    { value: 'OnePiece', label: 'One Piece' },
-    { value: 'NHL', label: 'NHL' },
-    { value: 'NBL', label: 'NBL' },
-    { value: 'EPL', label: 'EPL' },
-    { value: 'F1', label: 'F1' },
-    { value: 'WWE', label: 'WWE' },
-    { value: 'Trainer', label: 'Trainer' },
-    { value: 'Energy', label: 'Energy' },
-    { value: 'Other', label: 'Other TCG/CCG' },
-  ];
+    onChange({
+      ...card,
+      originalCurrentValueAmount: newOriginalAmount,
+      originalCurrentValueCurrency: newOriginalCurrency
+    });
+  };
 
-  // --- Dropdown Handlers ---
   const handleCompanyChange = (e) => {
     const company = e.target.value;
     setSelectedCompany(company);
     
-    // Reset grade when company changes
     if (company === 'RAW') {
       setSelectedGrade('');
     } else {
       setSelectedGrade('');
     }
     
-    // Update the condition in the card object
     updateCondition(company, '');
   };
 
@@ -302,8 +355,7 @@ const CardDetailsForm = ({
   const updateCondition = (company, grade) => {
     let condition = '';
     if (company === 'RAW') {
-      condition = grade; // For raw cards, just use the grade (e.g., "Mint")
-      // Also update the gradingCompany and grade fields to ensure they persist
+      condition = grade; 
       onChange({
         ...card,
         condition,
@@ -311,8 +363,7 @@ const CardDetailsForm = ({
         grade
       });
     } else if (company && grade) {
-      condition = `${company} ${grade}`; // For graded cards, combine (e.g., "PSA 10")
-      // Also update the gradingCompany and grade fields to ensure they persist
+      condition = `${company} ${grade}`; 
       onChange({
         ...card,
         condition,
@@ -320,7 +371,7 @@ const CardDetailsForm = ({
         grade
       });
     } else if (company) {
-      condition = company; // If only company is selected
+      condition = company; 
       onChange({
         ...card,
         condition,
@@ -328,7 +379,6 @@ const CardDetailsForm = ({
         grade: ''
       });
     } else {
-      // Reset everything if nothing is selected
       onChange({
         ...card,
         condition: '',
@@ -338,7 +388,6 @@ const CardDetailsForm = ({
     }
   };
 
-  // Handle collection change
   const handleCollectionChange = (e) => {
     const collectionId = e.target.value;
     if (onChange) {
@@ -349,7 +398,6 @@ const CardDetailsForm = ({
     }
   };
 
-  // Custom styles for select options
   const selectStyles = {
     option: {
       display: 'block',
@@ -360,17 +408,14 @@ const CardDetailsForm = ({
     }
   };
 
-  // Handle the addition of a new custom set
   const handleAddCustomSet = (newSet, year) => {
     if (!newSet || newSet.trim() === '') return '';
     
     console.log(`Adding custom set "${newSet}" for year ${year}`);
     
-    // Add the custom set
     const addedSet = addCustomSet(newSet, year);
     console.log(`Custom set added: ${addedSet}`);
     
-    // Update available sets
     if (card.year) {
       const updatedSets = getPokemonSetsByYear(card.year);
       console.log(`Updated sets for year ${card.year} after adding:`, updatedSets);
@@ -381,15 +426,13 @@ const CardDetailsForm = ({
       setAvailableSets(allSets);
     }
     
-    // Return the added set name
     return addedSet;
   };
 
   return (
     <div className={`card-details-form ${className}`}>
-      {/* Collection Dropdown - Always at the top */}
       {!hideCollectionField && (
-        <div className="mb-6 mt-12"> {/* Added significant top margin (mt-12) to create space below the header tabs */}
+        <div className="mb-6 mt-12"> 
           <SelectField
             label="Collection"
             name="collectionId"
@@ -400,7 +443,7 @@ const CardDetailsForm = ({
           >
             <option value="" disabled>Select Collection...</option>
             {collections
-              .filter(collection => collection !== 'sold') // Filter out the 'sold' collection
+              .filter(collection => collection !== 'sold') 
               .map(collection => (
                 <option key={collection} value={collection}>
                   {collection}
@@ -411,9 +454,7 @@ const CardDetailsForm = ({
         </div>
       )}
 
-      {/* Card Image and Information Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        {/* Card Image Column */}
         <div>
           <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Card Image</h3>
           <div className="relative">
@@ -465,11 +506,9 @@ const CardDetailsForm = ({
               <ImageUploadButton onImageChange={onImageChange} />
             </div>
             
-            {/* PSA Lookup Button */}
             {!hidePsaSearchButton && (
               <div className="mt-3 space-y-2">
                 <div className="flex flex-col space-y-2 w-full">
-                  {/* PSA Search Button - Only show if PSA URL doesn't exist */}
                   {!card.psaUrl && (
                     <button
                       onClick={() => onPsaSearch && onPsaSearch(card.slabSerial)}
@@ -495,7 +534,6 @@ const CardDetailsForm = ({
                     </button>
                   )}
                   
-                  {/* PSA Website Link - Show if PSA URL exists */}
                   {card.psaUrl && (
                     <a
                       href={card.psaUrl}
@@ -511,38 +549,36 @@ const CardDetailsForm = ({
               </div>
             )}
             
-            {/* Profit/Loss Display - Moved under the image */}
-            {/* Profit/Loss section removed - now displayed in CardDetailsModal top bar */}
+            {/* Profit display removed - now shown in modal header */}
           </div>
         </div>
         
-        {/* Card Information Column */}
         <div>
           <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Financial Details</h3>
           <div className="financial-details-grid">
             <div>
               <div className="form-label-nowrap">
                 <FormField
-                  label="Paid (AUD)"
-                  name="investmentAUD"
+                  label={`Investment (${preferredCurrency.code})`}
+                  name="displayInvestment" 
                   type="number"
-                  prefix="$"
-                  value={typeof card.investmentAUD === 'number' ? String(card.investmentAUD) : (card.investmentAUD || '')}
-                  onChange={handleNumberChange}
-                  error={errors.investmentAUD}
+                  value={displayInvestment} 
+                  onChange={handleInvestmentInputChange} 
+                  error={errors.originalInvestmentAmount} 
+                  placeholder="0"
                 />
               </div>
             </div>
             <div>
               <div className="form-label-nowrap">
                 <FormField
-                  label="Current Value (AUD)"
-                  name="currentValueAUD"
+                  label={`Current Value (${preferredCurrency.code})`}
+                  name="displayCurrentValue" 
                   type="number"
-                  prefix="$"
-                  value={typeof card.currentValueAUD === 'number' ? String(card.currentValueAUD) : (card.currentValueAUD || '')}
-                  onChange={handleNumberChange}
-                  error={errors.currentValueAUD}
+                  value={displayCurrentValue} 
+                  onChange={handleCurrentValueInputChange} 
+                  error={errors.originalCurrentValueAmount} 
+                  placeholder="0"
                 />
               </div>
               {additionalValueContent && (
@@ -555,7 +591,6 @@ const CardDetailsForm = ({
           
           <h3 className="text-lg font-medium text-gray-900 dark:text-white mt-8 mb-4">Card Details</h3>
           
-          {/* Two-column grid for card details */}
           <div className="grid grid-cols-1 gap-4">
             <div>
               <FormField
@@ -601,14 +636,12 @@ const CardDetailsForm = ({
                   ))}
                   <option value="__add_custom__">+ Add Custom Set...</option>
                 </select>
-                {/* Custom dropdown arrow */}
                 <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 dark:text-gray-300">
                   <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
                     <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
                   </svg>
                 </div>
               </div>
-              {/* Display error message for Set if present */}
               {errors.setName && (
                 <p className="mt-1 text-xs text-red-500 dark:text-red-400">{errors.setName}</p>
               )}
@@ -623,7 +656,6 @@ const CardDetailsForm = ({
                 value={card.year || ''}
                 onChange={handleInputChange}
                 error={errors.year}
-                required
               />
             </div>
           </div>
@@ -663,7 +695,6 @@ const CardDetailsForm = ({
                       <option key={company.value} value={company.value}>{company.label}</option>
                     ))}
                   </select>
-                  {/* Custom dropdown arrow */}
                   <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 dark:text-gray-300">
                     <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
                       <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
@@ -707,7 +738,6 @@ const CardDetailsForm = ({
                       <option value="">Select Grade...</option>
                     )}
                   </select>
-                  {/* Custom dropdown arrow */}
                   <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 dark:text-gray-300">
                     <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
                       <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
@@ -790,17 +820,19 @@ CardDetailsForm.propTypes = {
     year: PropTypes.string,
     category: PropTypes.string,
     condition: PropTypes.string,
-    population: PropTypes.oneOfType([PropTypes.string, PropTypes.number]), // Changed to accept string or number
+    population: PropTypes.oneOfType([PropTypes.string, PropTypes.number]), 
     slabSerial: PropTypes.string,
     datePurchased: PropTypes.string,
-    investmentAUD: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
-    currentValueAUD: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+    originalInvestmentAmount: PropTypes.number,
+    originalInvestmentCurrency: PropTypes.string,
+    originalCurrentValueAmount: PropTypes.number,
+    originalCurrentValueCurrency: PropTypes.string,
     psaUrl: PropTypes.string,
     priceChartingUrl: PropTypes.string,
     priceChartingProductId: PropTypes.string,
     lastPriceUpdate: PropTypes.string,
     quantity: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
-    collectionId: PropTypes.string // Change to collectionId instead of collectionName
+    collectionId: PropTypes.string 
   }).isRequired,
   cardImage: PropTypes.string,
   imageLoadingState: PropTypes.oneOf(['idle', 'loading', 'error']),

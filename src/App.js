@@ -39,6 +39,7 @@ import { processImportedData } from './utils/dataProcessor';
 import db from './services/db';
 import { TutorialProvider, useTutorial } from './contexts/TutorialContext';
 import { SubscriptionProvider, useSubscription } from './contexts/SubscriptionContext';
+import { UserPreferencesProvider } from './contexts/UserPreferencesContext'; // Added import
 import InvoiceProvider from './contexts/InvoiceContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import PremiumFeatures from './components/PremiumFeatures';
@@ -236,6 +237,26 @@ function AppContent() {
     deleteCard,
     addCard
   } = useCardData();
+
+  const handleCloseDetailsModal = () => {
+    clearSelectedCard();
+    setInitialCardCollection(null); // Clear initial collection on close
+  };
+
+  const handleCardUpdate = async (cardId, updatedData, originalCollectionName) => {
+    try {
+      // The updateCard function from useCardData should handle Firestore updates.
+      // If collection changes, updatedData should reflect the new collectionName.
+      // Local state for 'collections' will be updated via useEffect watching 'cards' from useCardData.
+      await updateCard(cardId, updatedData);
+      // Example: toast.success('Card updated successfully!');
+    } catch (error) {
+      // Example: logger.error('Failed to update card:', error);
+      // Example: toast.error('Failed to update card.');
+      console.error('Failed to update card in handleCardUpdate:', error); 
+      // Depending on requirements, you might want to re-throw or handle UI feedback here.
+    }
+  };
 
   // Effect to sync Firestore cards (from useCardData) with local collections state
   useEffect(() => {
@@ -1295,102 +1316,24 @@ To import this backup:
       }
 
       const updatedCollections = { ...currentCollections };
-      let cardFoundAndRemoved = false;
-      const initialLength = updatedCollections[selectedCollection] ? updatedCollections[selectedCollection].length : 0;
-      
-      for (const collectionName in updatedCollections) {
-        // Skip potential non-array properties if any exist
-        if (!Array.isArray(updatedCollections[collectionName])) continue; 
-        
-        updatedCollections[collectionName] = updatedCollections[collectionName].filter(card => card.slabSerial !== slabSerialToDelete);
-        
-        if (updatedCollections[collectionName].length < initialLength) {
-          cardFoundAndRemoved = true;
-        }
-      }
-
-      if (!cardFoundAndRemoved) {
-        // Card wasn't found in any collection - maybe already deleted?
-        // Or maybe it exists in the hook's state but not DB? (unlikely)
-        logger.warn(`[App] Card ${slabSerialToDelete} not found in any collection in the database. Assuming already deleted or state mismatch.`);
-      } else {
-        // Step 3: Save updated collections back to DB
-        // Ensure 'sold' collection, if present, is explicitly preserved during save.
-        await db.saveCollections(updatedCollections, true); // Explicitly preserve sold items
-        
-        // Update state - make sure to preserve the 'All Cards' entry if it exists
-        const newCollections = {...updatedCollections};
-        if ('All Cards' in collections) {
-          newCollections['All Cards'] = [];
-        }
-        setCollections(newCollections);
-      }
-
-      // Step 4: Update the useCardData hook's local state (triggers UI update)
-      deleteCard(slabSerialToDelete); 
-
-      // Step 5: Clear selected card to close modal
-      handleCloseDetailsModal(); // Use the handler that clears both card and initial collection
-
-      // Step 6: Show success toast
-      toast.success('Card deleted successfully!');
-
-    } catch (error) {
-      logger.error('[App] Error during card deletion process:', error);
-      toast.error(`Error deleting card: ${error.message}`);
-    }
-  }, [deleteCard]);
-
-  const handleCloseDetailsModal = () => {
-    clearSelectedCard();
-    setInitialCardCollection(null); // Clear initial collection on close
-  };
-
-  const handleCardUpdate = useCallback(async (updatedCard, initialCardCollection) => {
-    if (!updatedCard || !updatedCard.slabSerial) {
-      logger.error('[App] handleCardUpdate received invalid card data:', updatedCard);
-      toast.error('Failed to update card: Invalid data.');
-      return;
-    }
-
-    const cardId = updatedCard.slabSerial;
-    const originalCollectionName = initialCardCollection; // Get the original collection name from state
-    const newCollectionName = updatedCard.collectionId || updatedCard.collection; // Check both property names for compatibility
-
-    if (!newCollectionName) {
-      toast.error('Please select a collection before saving.');
-      return; // Don't proceed if no collection is selected
-    }
-
-    logger.log(`[App] Updating card ${cardId}. Original Collection: '${originalCollectionName}', New Collection: '${newCollectionName}'`);
-
-    try {
-      // Step 1: Load current collections from DB
-      let currentCollections = await db.getCollections();
-      if (!currentCollections) {
-        logger.warn('[App] No collections found in database, creating new collections object');
-        currentCollections = {};
-      }
-
-      const updatedCollections = { ...currentCollections };
       
       // Step 2: Find and remove the card from its original collection
       let foundCard = null;
       
       // Try to find the card in its original collection if we know it
-      if (originalCollectionName && updatedCollections[originalCollectionName]) {
-        const cardIndex = updatedCollections[originalCollectionName].findIndex(
-          card => card.slabSerial === cardId
+      if (initialCardCollection && updatedCollections[initialCardCollection]) {
+        const cardIndex = updatedCollections[initialCardCollection].findIndex(
+          card => card.slabSerial === slabSerialToDelete
         );
         
         if (cardIndex !== -1) {
           // Save the card before removing it
-          foundCard = updatedCollections[originalCollectionName][cardIndex];
+          foundCard = updatedCollections[initialCardCollection][cardIndex];
           // Remove from original collection
-          updatedCollections[originalCollectionName].splice(cardIndex, 1);
-          logger.log(`[App] Removed card ${cardId} from its original collection '${originalCollectionName}'`);
+          updatedCollections[initialCardCollection].splice(cardIndex, 1);
+          logger.log(`[App] Removed card ${slabSerialToDelete} from its original collection '${initialCardCollection}'`);
         } else {
-          logger.warn(`[App] Card ${cardId} not found in its expected original collection '${originalCollectionName}'`);
+          logger.warn(`[App] Card ${slabSerialToDelete} not found in its expected original collection '${initialCardCollection}'`);
         }
       }
       
@@ -1398,14 +1341,14 @@ To import this backup:
       // search through all collections
       if (!foundCard) {
         for (const [collName, cards] of Object.entries(updatedCollections)) {
-          if (collName !== newCollectionName && Array.isArray(cards)) {
-            const cardIndex = cards.findIndex(card => card.slabSerial === cardId);
+          if (collName !== 'sold' && Array.isArray(cards)) {
+            const cardIndex = cards.findIndex(card => card.slabSerial === slabSerialToDelete);
             if (cardIndex !== -1) {
               // Found the card in this collection
               foundCard = cards[cardIndex];
               // Remove it from this collection
               cards.splice(cardIndex, 1);
-              logger.log(`[App] Found and removed card ${cardId} from collection '${collName}'`);
+              logger.log(`[App] Found and removed card ${slabSerialToDelete} from collection '${collName}'`);
               break;
             }
           }
@@ -1414,40 +1357,37 @@ To import this backup:
       
       // Step 3: Now add the card to its new collection
       // Create the new collection if it doesn't exist
-      if (!updatedCollections[newCollectionName]) {
-        updatedCollections[newCollectionName] = [];
-        logger.log(`[App] Created new collection '${newCollectionName}'`);
+      if (!updatedCollections[selectedCollection]) {
+        updatedCollections[selectedCollection] = [];
+        logger.log(`[App] Created new collection '${selectedCollection}'`);
       }
       
       // Preserve all original card data that wasn't explicitly changed
       const cardToAdd = {
         ...(foundCard || {}),  // Base it on the found card if available
-        ...updatedCard,        // Apply the updates
-        collection: newCollectionName,
-        collectionId: newCollectionName,
         // Explicitly preserve the image URL to prevent it from being lost during moves
-        imageUrl: updatedCard.imageUrl || (foundCard ? foundCard.imageUrl : null)
+        imageUrl: foundCard ? foundCard.imageUrl : null
       };
       
       // Add to the new collection
       // Check if it already exists in the target collection (could happen if moving to same collection)
-      const existingIndex = updatedCollections[newCollectionName].findIndex(
-        card => card.slabSerial === cardId
+      const existingIndex = updatedCollections[selectedCollection].findIndex(
+        card => card.slabSerial === slabSerialToDelete
       );
       
       if (existingIndex !== -1) {
         // Update in place if already exists
-        updatedCollections[newCollectionName][existingIndex] = cardToAdd;
-        logger.log(`[App] Updated existing card ${cardId} in collection '${newCollectionName}'`);
+        updatedCollections[selectedCollection][existingIndex] = cardToAdd;
+        logger.log(`[App] Updated existing card ${slabSerialToDelete} in collection '${selectedCollection}'`);
       } else {
         // Add as new if doesn't exist
-        updatedCollections[newCollectionName].push(cardToAdd);
-        logger.log(`[App] Added card ${cardId} to collection '${newCollectionName}'`);
+        updatedCollections[selectedCollection].push(cardToAdd);
+        logger.log(`[App] Added card ${slabSerialToDelete} to collection '${selectedCollection}'`);
       }
       
       // Step 4: Save the updated collections to DB
       await db.saveCollections(updatedCollections, true);
-      logger.log(`[App] Saved updated collections to DB for card ${cardId}.`);
+      logger.log(`[App] Saved updated collections to DB for card ${slabSerialToDelete}.`);
 
       // Step 5: Update local state
       setCollections(updatedCollections);
@@ -1455,8 +1395,8 @@ To import this backup:
       // Step 6: Update card in Firestore via the useCardData hook and shadowSync
       const cardForFirestore = {
         ...cardToAdd,
-        collection: newCollectionName,
-        collectionId: newCollectionName
+        collection: selectedCollection,
+        collectionId: selectedCollection
       };
       
       // Update in useCardData hook (which triggers UI updates)
@@ -1466,11 +1406,11 @@ To import this backup:
       if (featureFlags.enableFirestoreSync && user) {
         try {
           const shadowSyncService = await import('./services/shadowSync').then(module => module.default);
-          await shadowSyncService.shadowWriteCard(cardId, cardForFirestore, newCollectionName);
-          logger.log(`[App] Successfully shadow synced card ${cardId} to Firestore`);
+          await shadowSyncService.shadowWriteCard(slabSerialToDelete, cardForFirestore, selectedCollection);
+          logger.log(`[App] Successfully shadow synced card ${slabSerialToDelete} to Firestore`);
         } catch (syncError) {
           // Log but don't fail the operation
-          logger.error(`[App] Error syncing card ${cardId} to Firestore:`, syncError);
+          logger.error(`[App] Error syncing card ${slabSerialToDelete} to Firestore:`, syncError);
         }
       }
 
@@ -2230,7 +2170,7 @@ To import this backup:
         <Header
           className="header"
           selectedCollection={selectedCollection}
-          collections={['All Cards', ...Object.keys(collections).filter(name => name.toLowerCase() !== 'sold')]}
+          collections={collections} // Reverted change
           onCollectionChange={setSelectedCollection}
           onImportClick={handleImportClick}
           onSettingsClick={handleSettingsClick}
@@ -2379,7 +2319,6 @@ To import this backup:
           }}
           userData={user}
           onSignOut={logout}
-          onStartTutorial={startTutorial}
           onResetData={handleResetData}
           onImportAndCloudMigrate={importAndCloudMigrate}
           onUploadImagesFromZip={uploadImagesFromZip}
@@ -2398,8 +2337,8 @@ To import this backup:
                   isOpen={showSettings}
                   onClose={handleCloseSettings}
                   selectedCollection={selectedCollection}
-                  collections={collections}
-                  onStartTutorial={startTutorial}
+                  collections={collections} // Reverted change
+                  onStartTutorial={startTutorial} // Ensure this is present once
                   onRenameCollection={(oldName, newName) => {
                     const newCollections = { ...collections };
                     newCollections[newName] = newCollections[oldName];
@@ -2527,7 +2466,6 @@ To import this backup:
                   }}
                   userData={user}
                   onSignOut={logout}
-                  onStartTutorial={startTutorial}
                   onResetData={handleResetData}
                   onImportAndCloudMigrate={importAndCloudMigrate}
                   onUploadImagesFromZip={uploadImagesFromZip}
@@ -2581,7 +2519,8 @@ To import this backup:
             isOpen={showSettings}
             onClose={handleCloseSettings}
             selectedCollection={selectedCollection}
-            collections={Object.keys(collections).filter(name => name.toLowerCase() !== 'sold')}
+            collections={collections} // Reverted change
+            onStartTutorial={startTutorial} // Ensure this is present once
             onRenameCollection={(oldName, newName) => {
               const newCollections = { ...collections };
               newCollections[newName] = newCollections[oldName];
@@ -2711,7 +2650,6 @@ To import this backup:
             }}
             userData={user}
             onSignOut={logout}
-            onStartTutorial={startTutorial}
             onResetData={handleResetData}
           />
         ) : (
@@ -2769,8 +2707,8 @@ To import this backup:
           isOpen={true}
           onClose={handleCloseSettings}
           selectedCollection={selectedCollection}
-          collections={Object.keys(collections).filter(name => name.toLowerCase() !== 'sold')}
-          onStartTutorial={startTutorial}
+          collections={collections} // Reverted change
+          onStartTutorial={startTutorial} // Ensure this is present once
           onRenameCollection={(oldName, newName) => {
             const newCollections = { ...collections };
             newCollections[newName] = newCollections[oldName];
@@ -2898,7 +2836,6 @@ To import this backup:
           }}
           userData={user}
           onSignOut={logout}
-          onStartTutorial={startTutorial}
           onResetData={handleResetData}
           onImportAndCloudMigrate={importAndCloudMigrate}
           onUploadImagesFromZip={uploadImagesFromZip}
@@ -2971,31 +2908,33 @@ const RootProviders = () => (
   <ErrorBoundary>
     <DesignSystemProvider>
       <SubscriptionProvider>
-        <TutorialProvider>
-          <BackupProvider>
-            <BackupProgressBar />
-            <RestoreProvider>
-              <RestoreProgressBar />
-              <InvoiceProvider>
-                <Toast
-                  position="top-center"
-                  toastOptions={{
-                    duration: 3000,
-                    style: {
-                      background: '#1B2131',
-                      color: '#FFFFFF',
-                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                      borderRadius: '12px',
-                      padding: '12px 24px',
-                      fontWeight: '500'
-                    }
-                  }}
-                />
-                <Outlet />
-              </InvoiceProvider>
-            </RestoreProvider>
-          </BackupProvider>
-        </TutorialProvider>
+        <UserPreferencesProvider>
+          <TutorialProvider>
+            <BackupProvider>
+              <BackupProgressBar />
+              <RestoreProvider>
+                <RestoreProgressBar />
+                <InvoiceProvider>
+                  <Toast
+                    position="top-center"
+                    toastOptions={{
+                      duration: 3000,
+                      style: {
+                        background: '#1B2131',
+                        color: '#FFFFFF',
+                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                        borderRadius: '12px',
+                        padding: '12px 24px',
+                        fontWeight: '500'
+                      }
+                    }}
+                  />
+                  <Outlet />
+                </InvoiceProvider>
+              </RestoreProvider>
+            </BackupProvider>
+          </TutorialProvider>
+        </UserPreferencesProvider>
       </SubscriptionProvider>
     </DesignSystemProvider>
   </ErrorBoundary>
