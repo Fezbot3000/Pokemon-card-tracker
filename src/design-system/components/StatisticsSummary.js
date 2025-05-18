@@ -24,7 +24,7 @@ const StatisticsSummary = ({
       className={`w-full bg-white dark:bg-[#1B2131] rounded-md ${isDarkMode ? 'shadow-sm' : ''} overflow-hidden border border-[#ffffff33] dark:border-[#ffffff1a] mb-2 sm:mb-3 ${className}`}
       {...stripDebugProps(props)}
     >
-      <div className="rounded-md p-4 sm:p-6">
+      <div className="rounded-md p-3 sm:p-6">
         <div className="grid grid-cols-2 sm:grid-cols-4">
           {statistics.map((stat, index) => {
             let valueToRender = stat.formattedValue || stat.value;
@@ -60,7 +60,7 @@ const StatisticsSummary = ({
             return (
               <div
                 key={index}
-                className="flex flex-col items-center justify-center p-4 py-6 sm:p-6 sm:py-8 border-none"
+                className="flex flex-col items-center justify-center p-3 py-4 sm:p-4 sm:py-6 border-none"
               >
                 <div className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 sm:mb-2 uppercase">
                   {stat.label}
@@ -70,7 +70,7 @@ const StatisticsSummary = ({
                   ${stat.isProfit && stat.value < 0 ? 'text-red-500' : ''}
                   ${!stat.isProfit ? 'text-gray-900 dark:text-white' : ''}`}
                   style={{
-                    fontSize: 'clamp(1.125rem, calc(0.75rem + 2.5vw), 2.25rem)',
+                    fontSize: 'clamp(1rem, calc(0.8rem + 1.5vw), 1.75rem)',
                     wordBreak: 'break-word',
                     textOverflow: 'clip',
                   }}

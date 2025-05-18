@@ -25,10 +25,11 @@ const InvoiceHeader = ({
   ...props
 }) => {
   const headerClasses = `
-    flex items-center justify-between w-full 
+    flex flex-col sm:flex-row sm:items-center sm:justify-between w-full 
     p-4 sm:p-5 bg-white dark:bg-[#1B2131] 
     ${isExpanded ? 'border-b border-gray-200 dark:border-borde-gray-700' : ''}
     cursor-pointer hover:bg-gray-50 dark:hover:bg-[#252B3B] transition-colors
+    gap-3 sm:gap-0
     ${className}
   `;
 
@@ -64,22 +65,22 @@ const InvoiceHeader = ({
       </div>
       
       {/* Right side with financial summary and actions */}
-      <div className="flex flex-col items-end">
-        {/* Financial summary - Simplified and better aligned */}
-        <div className="grid grid-cols-3 gap-4 mb-3">
-          <div className="flex flex-col items-center">
+      <div className="flex flex-col items-start sm:items-end w-full sm:w-auto">
+        {/* Financial summary - Adjusted for mobile stacking */}
+        <div className="flex flex-col gap-1 mb-3 w-full sm:grid sm:grid-cols-3 sm:gap-x-2 sm:gap-y-1 sm:mb-2">
+          <div className="flex flex-row justify-between items-baseline w-full sm:flex-col sm:items-start">
             <span className="text-xs text-gray-500 dark:text-gray-400">Paid</span>
             <span className="text-sm font-medium text-gray-900 dark:text-white">
               {formatCurrency(totalInvestment)}
             </span>
           </div>
-          <div className="flex flex-col items-center">
+          <div className="flex flex-row justify-between items-baseline w-full sm:flex-col sm:items-start">
             <span className="text-xs text-gray-500 dark:text-gray-400">Sale</span>
             <span className="text-sm font-medium text-gray-900 dark:text-white">
               {formatCurrency(totalSale)}
             </span>
           </div>
-          <div className="flex flex-col items-center">
+          <div className="flex flex-row justify-between items-baseline w-full sm:flex-col sm:items-start">
             <span className="text-xs text-gray-500 dark:text-gray-400">Profit</span>
             <span className={`text-sm font-medium ${totalProfit >= 0 ? 'text-green-500' : 'text-red-500'}`}>
               {totalProfit >= 0 ? '' : '-'}{formatCurrency(totalProfit)}
@@ -87,41 +88,43 @@ const InvoiceHeader = ({
           </div>
         </div>
         
-        {/* Actions */}
-        <div className="flex gap-2">
-          {onPrint && (
-            <Button 
-              variant="text" 
-              size="sm" 
-              iconLeft={<CleanIcon name="print" size="sm" />}
-              onClick={(e) => {
-                e.stopPropagation();
-                onPrint();
-              }}
-              className="!p-1"
-            >
-              PDF
-            </Button>
-          )}
-          
-          {onDelete && (
-            <Button 
-              variant="text" 
-              size="sm" 
-              iconLeft={<CleanIcon name="delete" size="sm" />}
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete();
-              }}
-              className="!p-1 text-red-500 hover:text-red-600"
-              title="Delete receipt"
-            />
-          )}
+        {/* Actions - Adjusted for mobile layout */}
+        <div className="flex justify-between items-center w-full mt-1 sm:mt-0 sm:justify-end sm:gap-2 sm:w-auto">
+          <div className="flex gap-2"> {/* Group PDF and Delete buttons */}
+            {onPrint && (
+              <Button 
+                variant="text" 
+                size="sm" 
+                iconLeft={<CleanIcon name="print" size="sm" />}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onPrint();
+                }}
+                className="!p-1"
+              >
+                PDF
+              </Button>
+            )}
+            
+            {onDelete && (
+              <Button 
+                variant="text" 
+                size="sm" 
+                iconLeft={<CleanIcon name="delete" size="sm" />}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete();
+                }}
+                className="!p-1 text-red-500 hover:text-red-600"
+                title="Delete receipt"
+              />
+            )}
+          </div> {/* End of PDF/Delete button group */}
           
           <CleanIcon 
             name={isExpanded ? "expand_less" : "expand_more"} 
             size="sm"
-            className="text-gray-400"
+            className="text-gray-400 cursor-pointer" // Ensure cursor pointer is here too for clickability
           />
         </div>
       </div>
