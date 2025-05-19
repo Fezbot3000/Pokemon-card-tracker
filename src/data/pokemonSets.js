@@ -473,6 +473,485 @@ const getPokemonSetsByYear = (year) => {
   return [...standardSets, ...customSets];
 };
 
+// Magic: The Gathering Sets
+const MAGIC_SETS = [
+  'Alpha',
+  'Beta',
+  'Unlimited',
+  'Arabian Nights',
+  'Antiquities',
+  'Legends',
+  'The Dark',
+  'Fallen Empires',
+  'Ice Age',
+  'Homelands',
+  'Alliances',
+  'Mirage',
+  'Visions',
+  'Weatherlight',
+  'Tempest',
+  'Stronghold',
+  'Exodus',
+  'Urza\'s Saga',
+  'Urza\'s Legacy',
+  'Urza\'s Destiny',
+  'Mercadian Masques',
+  'Nemesis',
+  'Prophecy',
+  'Invasion',
+  'Planeshift',
+  'Apocalypse',
+  'Odyssey',
+  'Torment',
+  'Judgment',
+  'Onslaught',
+  'Legions',
+  'Scourge',
+  'Mirrodin',
+  'Darksteel',
+  'Fifth Dawn',
+  'Champions of Kamigawa',
+  'Betrayers of Kamigawa',
+  'Saviors of Kamigawa',
+  'Ravnica: City of Guilds',
+  'Guildpact',
+  'Dissension',
+  'Time Spiral',
+  'Planar Chaos',
+  'Future Sight',
+  'Lorwyn',
+  'Morningtide',
+  'Shadowmoor',
+  'Eventide',
+  'Shards of Alara',
+  'Conflux',
+  'Alara Reborn',
+  'Zendikar',
+  'Worldwake',
+  'Rise of the Eldrazi',
+  'Scars of Mirrodin',
+  'Mirrodin Besieged',
+  'New Phyrexia',
+  'Innistrad',
+  'Dark Ascension',
+  'Avacyn Restored',
+  'Return to Ravnica',
+  'Gatecrash',
+  'Dragon\'s Maze',
+  'Theros',
+  'Born of the Gods',
+  'Journey into Nyx',
+  'Khans of Tarkir',
+  'Fate Reforged',
+  'Dragons of Tarkir',
+  'Battle for Zendikar',
+  'Oath of the Gatewatch',
+  'Shadows over Innistrad',
+  'Eldritch Moon',
+  'Kaladesh',
+  'Aether Revolt',
+  'Amonkhet',
+  'Hour of Devastation',
+  'Ixalan',
+  'Rivals of Ixalan',
+  'Dominaria',
+  'Guilds of Ravnica',
+  'Ravnica Allegiance',
+  'War of the Spark',
+  'Throne of Eldraine',
+  'Theros Beyond Death',
+  'Ikoria: Lair of Behemoths',
+  'Core Set 2021',
+  'Zendikar Rising',
+  'Kaldheim',
+  'Strixhaven: School of Mages',
+  'Adventures in the Forgotten Realms',
+  'Innistrad: Midnight Hunt',
+  'Innistrad: Crimson Vow',
+  'Kamigawa: Neon Dynasty',
+  'Streets of New Capenna',
+  'Dominaria United',
+  'The Brothers\' War',
+  'Phyrexia: All Will Be One',
+  'March of the Machine',
+  'March of the Machine: The Aftermath',
+  'Wilds of Eldraine',
+  'The Lost Caverns of Ixalan',
+  'Murders at Karlov Manor',
+  'Outlaws of Thunder Junction',
+  'Modern Horizons',
+  'Modern Horizons 2',
+  'Modern Horizons 3',
+  'Double Masters',
+  'Double Masters 2022',
+  'Commander Legends',
+  'Commander Legends: Battle for Baldur\'s Gate',
+  'Commander Masters',
+];
+
+// Yu-Gi-Oh Sets
+const YUGIOH_SETS = [
+  'Legend of Blue Eyes White Dragon',
+  'Metal Raiders',
+  'Spell Ruler',
+  'Pharaoh\'s Servant',
+  'Labyrinth of Nightmare',
+  'Legacy of Darkness',
+  'Pharaonic Guardian',
+  'Magician\'s Force',
+  'Dark Crisis',
+  'Invasion of Chaos',
+  'Ancient Sanctuary',
+  'Soul of the Duelist',
+  'Rise of Destiny',
+  'Flaming Eternity',
+  'The Lost Millennium',
+  'Cybernetic Revolution',
+  'Elemental Energy',
+  'Shadow of Infinity',
+  'Enemy of Justice',
+  'Power of the Duelist',
+  'Cyberdark Impact',
+  'Strike of Neos',
+  'Force of the Breaker',
+  'Tactical Evolution',
+  'Gladiator\'s Assault',
+  'Phantom Darkness',
+  'Light of Destruction',
+  'The Duelist Genesis',
+  'Crossroads of Chaos',
+  'Crimson Crisis',
+  'Raging Battle',
+  'Ancient Prophecy',
+  'Stardust Overdrive',
+  'Absolute Powerforce',
+  'The Shining Darkness',
+  'Duelist Revolution',
+  'Starstrike Blast',
+  'Storm of Ragnarok',
+  'Extreme Victory',
+  'Generation Force',
+  'Photon Shockwave',
+  'Order of Chaos',
+  'Galactic Overlord',
+  'Return of the Duelist',
+  'Abyss Rising',
+  'Cosmo Blazer',
+  'Lord of the Tachyon Galaxy',
+  'Judgment of the Light',
+  'Shadow Specters',
+  'Legacy of the Valiant',
+  'Primal Origin',
+  'Duelist Alliance',
+  'The New Challengers',
+  'Secrets of Eternity',
+  'Crossed Souls',
+  'Clash of Rebellions',
+  'Dimension of Chaos',
+  'Breakers of Shadow',
+  'Shining Victories',
+  'The Dark Illusion',
+  'Invasion: Vengeance',
+  'Raging Tempest',
+  'Maximum Crisis',
+  'Code of the Duelist',
+  'Circuit Break',
+  'Extreme Force',
+  'Flames of Destruction',
+  'Cybernetic Horizon',
+  'Soul Fusion',
+  'Savage Strike',
+  'Dark Neostorm',
+  'Rising Rampage',
+  'Chaos Impact',
+  'Ignition Assault',
+  'Eternity Code',
+  'Rise of the Duelist',
+  'Phantom Rage',
+  'Blazing Vortex',
+  'Lightning Overdrive',
+  'Dawn of Majesty',
+  'Burst of Destiny',
+  'Battle of Chaos',
+  'Dimension Force',
+  'Power of the Elements',
+  'Darkwing Blast',
+  'Photon Hypernova',
+  'Cyberstorm Access',
+  'Duelist Nexus',
+  'Age of Overlord',
+  'Structure Deck: Yugi',
+  'Structure Deck: Kaiba',
+  'Structure Deck: Joey',
+  'Legendary Collection',
+  'Gold Series',
+  'Duel Devastator',
+  'Battles of Legend',
+];
+
+// One Piece Sets
+const ONE_PIECE_SETS = [
+  'Romance Dawn',
+  'Paramount War',
+  'The Seven Warlords of the Sea',
+  'Animal Kingdom Pirates',
+  'Kingdoms of Intrigue',
+  'Pillars of Strength',
+  'Thriller Bark',
+  'One Piece Film Edition',
+  'Straw Hat Crew',
+  'Marineford War',
+  'Dressrosa',
+  'Whole Cake Island',
+  'Wano Country',
+  'Egghead',
+];
+
+// Digimon Sets
+const DIGIMON_SETS = [
+  'New Evolution',
+  'Release Special Booster',
+  'Clash of Rebellion',
+  'Great Legend',
+  'Battle of Omni',
+  'Double Diamond',
+  'Fusion Fighters',
+  'Next Adventure',
+  'Digital Hazard',
+  'Cross Encounter',
+  'Dimensional Phase',
+  'Xros Encounter',
+  'Raging Raid',
+  'Across Time',
+  'Booster EX-01',
+  'Booster EX-02',
+  'Booster EX-03',
+  'Booster EX-04',
+];
+
+// Dragon Ball Z Sets
+const DRAGON_BALL_SETS = [
+  'Awakening',
+  'Union Force',
+  'Cross Worlds',
+  'Tournament of Power',
+  'Miraculous Revival',
+  'Destroyer Kings',
+  'World Martial Arts Tournament',
+  'Assault of the Saiyans',
+  'Malicious Machinations',
+  'Rise of the Unison Warrior',
+  'Vermilion Bloodline',
+  'Supreme Rivalry',
+  'Cross Spirits',
+  'Saiyan Showdown',
+  'Realm of the Gods',
+  'Zenkai Series',
+  'Pride of the Saiyans',
+  'Vicious Rejuvenation',
+  'Unison Warrior Series',
+  'Mythic Booster',
+  'Ultimate Deck',
+];
+
+// Marvel Sets
+const MARVEL_SETS = [
+  'Marvel Universe',
+  'Marvel Masterpieces',
+  'Marvel Premium',
+  'Marvel Beginnings',
+  'Marvel Now',
+  'Marvel Avengers',
+  'Marvel X-Men',
+  'Marvel Guardians of the Galaxy',
+  'Marvel Spider-Man',
+  'Marvel Deadpool',
+  'Marvel Black Panther',
+  'Marvel Captain Marvel',
+  'Marvel Infinity War',
+  'Marvel Endgame',
+  'Marvel Legends',
+  'Marvel Ultimate Universe',
+  'Marvel Retro',
+  'Marvel Fleer Ultra',
+  'Marvel Flair',
+  'Marvel Metal',
+];
+
+// WWE Sets
+const WWE_SETS = [
+  'WWE Legends',
+  'WWE Raw',
+  'WWE SmackDown',
+  'WWE NXT',
+  'WWE WrestleMania',
+  'WWE SummerSlam',
+  'WWE Royal Rumble',
+  'WWE Survivor Series',
+  'WWE Undisputed',
+  'WWE Heritage',
+  'WWE Chrome',
+  'WWE Finest',
+  'WWE Topps',
+  'WWE Panini',
+  'WWE Revolution',
+  'WWE Hall of Fame',
+];
+
+// NBA Sets
+const NBA_SETS = [
+  'Topps Basketball',
+  'Fleer Basketball',
+  'Upper Deck Basketball',
+  'Panini Prizm',
+  'Panini Select',
+  'Panini Optic',
+  'Panini Revolution',
+  'Panini Mosaic',
+  'Panini Contenders',
+  'Panini National Treasures',
+  'Panini Immaculate',
+  'Panini Flawless',
+  'Panini Court Kings',
+  'Panini Chronicles',
+  'Panini Noir',
+  'Panini Status',
+  'Panini Certified',
+  'Panini Absolute',
+  'Panini Spectra',
+  'Panini Origins',
+  'Panini Crown Royale',
+  'Panini Donruss',
+  'Panini Hoops',
+];
+
+// NFL Sets
+const NFL_SETS = [
+  'Topps Football',
+  'Fleer Football',
+  'Upper Deck Football',
+  'Panini Prizm Football',
+  'Panini Select Football',
+  'Panini Optic Football',
+  'Panini Contenders Football',
+  'Panini National Treasures Football',
+  'Panini Immaculate Football',
+  'Panini Flawless Football',
+  'Panini Chronicles Football',
+  'Panini Mosaic Football',
+  'Panini Absolute Football',
+  'Panini Certified Football',
+  'Panini Spectra Football',
+  'Panini Origins Football',
+  'Panini Crown Royale Football',
+  'Panini Donruss Football',
+  'Panini Score Football',
+  'Panini Prestige Football',
+  'Panini Legacy Football',
+];
+
+// MLB Sets
+const MLB_SETS = [
+  'Topps Baseball',
+  'Topps Chrome',
+  'Topps Heritage',
+  'Topps Allen & Ginter',
+  'Topps Gypsy Queen',
+  'Topps Stadium Club',
+  'Topps Archives',
+  'Topps Update',
+  'Topps Tier One',
+  'Topps Tribute',
+  'Topps Dynasty',
+  'Topps Five Star',
+  'Topps Gold Label',
+  'Topps Museum Collection',
+  'Topps Inception',
+  'Topps Definitive',
+  'Bowman Baseball',
+  'Bowman Chrome',
+  'Bowman Draft',
+  'Bowman Sterling',
+  'Bowman Platinum',
+  'Panini Prizm Baseball',
+  'Panini Select Baseball',
+  'Panini National Treasures Baseball',
+  'Panini Immaculate Baseball',
+  'Panini Flawless Baseball',
+  'Upper Deck Baseball',
+];
+
+// Soccer Sets
+const SOCCER_SETS = [
+  'Topps Match Attax',
+  'Topps Chrome UEFA Champions League',
+  'Topps Merlin Premier League',
+  'Topps Stadium Club',
+  'Topps Finest',
+  'Panini Prizm World Cup',
+  'Panini Select Soccer',
+  'Panini Chronicles Soccer',
+  'Panini Immaculate Soccer',
+  'Panini National Treasures Soccer',
+  'Panini Flawless Soccer',
+  'Panini Donruss Soccer',
+  'Panini Obsidian Soccer',
+  'Panini Mosaic Soccer',
+  'Panini Revolution Soccer',
+  'Panini Spectra Soccer',
+  'Panini Gold Standard Soccer',
+  'Panini Noir Soccer',
+  'Upper Deck Soccer',
+];
+
+// UFC Sets
+const UFC_SETS = [
+  'Topps UFC',
+  'Topps UFC Chrome',
+  'Topps UFC Finest',
+  'Topps UFC Knockout',
+  'Topps UFC High Impact',
+  'Topps UFC Museum Collection',
+  'Topps UFC Dynasty',
+  'Panini Prizm UFC',
+  'Panini Select UFC',
+  'Panini Chronicles UFC',
+  'Panini Immaculate UFC',
+  'Panini National Treasures UFC',
+  'Panini Obsidian UFC',
+  'Panini Donruss UFC',
+];
+
+// F1 Sets
+const F1_SETS = [
+  'Topps Formula 1',
+  'Topps Chrome Formula 1',
+  'Topps Dynasty Formula 1',
+  'Topps Finest Formula 1',
+  'Topps Fire Formula 1',
+  'Topps Museum Collection Formula 1',
+  'Topps Definitive Formula 1',
+  'Topps Gold Label Formula 1',
+  'Topps High Tek Formula 1',
+  'Topps Transcendent Formula 1',
+  'Topps Luminaries Formula 1',
+];
+
+// NRL Sets
+const NRL_SETS = [
+  'NRL Traders',
+  'NRL Elite',
+  'NRL Classic',
+  'NRL Dynasty',
+  'NRL Footy Stars',
+  'NRL Select',
+  'NRL Prizm',
+  'NRL Phoenix',
+  'NRL Immortals',
+  'NRL Origins',
+  'NRL Prestige',
+];
+
 /**
  * Get sets filtered by category
  * @param {string} category - Category to filter by
@@ -481,14 +960,41 @@ const getPokemonSetsByYear = (year) => {
 const getSetsByCategory = (category) => {
   if (!category) return [];
   
-  // For Pokemon category, return all Pokemon sets
-  if (category === 'pokemon') {
-    return getAllPokemonSets();
+  // Return sets based on category
+  switch (category) {
+    case 'pokemon':
+      return getAllPokemonSets();
+    case 'magicTheGathering':
+      return MAGIC_SETS;
+    case 'yugioh':
+      return YUGIOH_SETS;
+    case 'onePiece':
+      return ONE_PIECE_SETS;
+    case 'digimon':
+      return DIGIMON_SETS;
+    case 'dragonBallZ':
+      return DRAGON_BALL_SETS;
+    case 'marvel':
+      return MARVEL_SETS;
+    case 'wwe':
+      return WWE_SETS;
+    case 'nba':
+      return NBA_SETS;
+    case 'nfl':
+      return NFL_SETS;
+    case 'mlb':
+      return MLB_SETS;
+    case 'soccer':
+      return SOCCER_SETS;
+    case 'ufc':
+      return UFC_SETS;
+    case 'f1':
+      return F1_SETS;
+    case 'nrl':
+      return NRL_SETS;
+    default:
+      return [];
   }
-  
-  // For other categories, we'll return an empty array for now
-  // This can be expanded later to include sets for other categories
-  return [];
 };
 
 /**
