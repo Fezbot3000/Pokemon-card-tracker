@@ -1,0 +1,183 @@
+Year,Set Name,Region,Set Type
+1996,Base Set,JP,Main
+1997,Jungle,JP,Main
+1997,Fossil,JP,Main
+1997,Team Rocket,JP,Main
+1998,Gym Heroes,JP,Main
+1998,Gym Challenge,JP,Main
+1999,Neo Genesis,JP,Main
+2000,Neo Discovery,JP,Main
+2000,Neo Revelation,JP,Main
+2001,Neo Destiny,JP,Main
+2001,Expedition Base Set,JP,Main
+2001,Aquapolis,JP,Main
+2001,Skyridge,JP,Main
+1999,Base Set,EN,Main
+1999,Jungle,EN,Main
+1999,Fossil,EN,Main
+2000,Base Set 2,EN,Main
+2000,Team Rocket,EN,Main
+2000,Gym Heroes,EN,Main
+2000,Gym Challenge,EN,Main
+2000,Neo Genesis,EN,Main
+2001,Neo Discovery,EN,Main
+2001,Neo Revelation,EN,Main
+2002,Neo Destiny,EN,Main
+2002,Legendary Collection,EN,Main
+2002,Expedition Base Set,EN,Main
+2003,Aquapolis,EN,Main
+2003,Skyridge,EN,Main
+2003,EX Ruby & Sapphire,EN,Main
+2003,EX Sandstorm,EN,Main
+2003,EX Dragon,EN,Main
+2004,EX Team Magma vs Team Aqua,EN,Main
+2004,EX Hidden Legends,EN,Main
+2004,EX FireRed & LeafGreen,EN,Main
+2004,EX Team Rocket Returns,EN,Main
+2005,EX Deoxys,EN,Main
+2005,EX Emerald,EN,Main
+2005,EX Unseen Forces,EN,Main
+2005,EX Delta Species,EN,Main
+2006,EX Legend Maker,EN,Main
+2006,EX Holon Phantoms,EN,Main
+2006,EX Crystal Guardians,EN,Main
+2006,EX Dragon Frontiers,EN,Main
+2007,EX Power Keepers,EN,Main
+2007,Diamond & Pearl,EN,Main
+2007,Mysterious Treasures,EN,Main
+2007,Secret Wonders,EN,Main
+2008,Great Encounters,EN,Main
+2008,Majestic Dawn,EN,Main
+2008,Legends Awakened,EN,Main
+2008,Stormfront,EN,Main
+2009,Platinum,EN,Main
+2009,Rising Rivals,EN,Main
+2009,Supreme Victors,EN,Main
+2009,Arceus,EN,Main
+2010,HeartGold & SoulSilver,EN,Main
+2010,Unleashed,EN,Main
+2010,Undaunted,EN,Main
+2010,Triumphant,EN,Main
+2011,Call of Legends,EN,Main
+2011,Black & White,EN,Main
+2011,Emerging Powers,EN,Main
+2011,Noble Victories,EN,Main
+2012,Next Destinies,EN,Main
+2012,Dark Explorers,EN,Main
+2012,Dragons Exalted,EN,Main
+2012,Boundaries Crossed,EN,Main
+2013,Plasma Storm,EN,Main
+2013,Plasma Freeze,EN,Main
+2013,Plasma Blast,EN,Main
+2013,Legendary Treasures,EN,Main
+2014,XY,EN,Main
+2014,Flashfire,EN,Main
+2014,Furious Fists,EN,Main
+2014,Phantom Forces,EN,Main
+2015,Primal Clash,EN,Main
+2015,Roaring Skies,EN,Main
+2015,Ancient Origins,EN,Main
+2015,BREAKthrough,EN,Main
+2016,BREAKpoint,EN,Main
+2016,Fates Collide,EN,Main
+2016,Steam Siege,EN,Main
+2016,Evolutions,EN,Main
+2017,Sun & Moon,EN,Main
+2017,Guardians Rising,EN,Main
+2017,Burning Shadows,EN,Main
+2017,Crimson Invasion,EN,Main
+2018,Ultra Prism,EN,Main
+2018,Forbidden Light,EN,Main
+2018,Celestial Storm,EN,Main
+2018,Lost Thunder,EN,Main
+2019,Team Up,EN,Main
+2019,Unbroken Bonds,EN,Main
+2019,Unified Minds,EN,Main
+2019,Cosmic Eclipse,EN,Main
+2020,Sword & Shield,EN,Main
+2020,Rebel Clash,EN,Main
+2020,Darkness Ablaze,EN,Main
+2020,Vivid Voltage,EN,Main
+2021,Battle Styles,EN,Main
+2021,Chilling Reign,EN,Main
+2021,Evolving Skies,EN,Main
+2021,Fusion Strike,EN,Main
+2022,Brilliant Stars,EN,Main
+2022,Astral Radiance,EN,Main
+2022,Lost Origin,EN,Main
+2022,Silver Tempest,EN,Main
+2023,Scarlet & Violet,EN,Main
+2023,Paldea Evolved,EN,Main
+2023,Obsidian Flames,EN,Main
+2023,Paradox Rift,EN,Main
+2024,Temporal Forces,EN,Main
+2024,Twilight Masquerade,EN,Main
+2024,Stellar Crown,EN,Main
+2024,Shrouded Fable,EN,Main
+
+# Additional Japanese Sets
+2002,Web Series,JP,Main
+2002,e-Card Series,JP,Main
+2003,ADV Series,JP,Main
+2004,PCG Series,JP,Main
+2005,Holon Series,JP,Main
+2006,DP Series,JP,Main
+2007,Platinum Series,JP,Main
+2008,LEGEND Series,JP,Main
+2009,HeartGold & SoulSilver Series,JP,Main
+2010,Black & White Series,JP,Main
+2011,BW Expansion,JP,Main
+2012,XY Series,JP,Main
+2013,XY Expansion,JP,Main
+2014,XY BREAK Series,JP,Main
+2015,Sun & Moon Series,JP,Main
+2016,SM Expansion,JP,Main
+2017,Ultra Sun & Ultra Moon,JP,Main
+2018,GX Ultra Shiny,JP,Special
+2019,Tag Team GX All Stars,JP,Special
+2019,Dream League,JP,Main
+2020,Sword & Shield Series,JP,Main
+2020,Shiny Star V,JP,Special
+2021,VMAX Climax,JP,Special
+2021,Eevee Heroes,JP,Main
+2022,VSTAR Universe,JP,Special
+2022,Dark Phantasma,JP,Main
+2023,Scarlet & Violet Series,JP,Main
+2023,Snow Hazard,JP,Main
+2023,Clay Burst,JP,Main
+2024,Cyber Judge,JP,Main
+2024,Wild Force,JP,Main
+2024,Crimson Haze,JP,Main
+
+# Special/Mini Sets (English)
+2016,Generations,EN,Special
+2016,XY Promos,EN,Promo
+2017,Shining Legends,EN,Special
+2018,Dragon Majesty,EN,Special
+2019,Detective Pikachu,EN,Special
+2019,Hidden Fates,EN,Special
+2020,Champion's Path,EN,Special
+2021,Shining Fates,EN,Special
+2021,Celebrations,EN,Special
+2022,Pokémon GO,EN,Special
+2023,Crown Zenith,EN,Special
+2023,Pokémon 151,EN,Special
+2023,Scarlet & Violet Promos,EN,Promo
+2024,Paldean Fates,EN,Special
+2024,Pocket,EN,Special
+2024,Temporal Forces Special Collection,EN,Special
+
+# Promotional/Other Sets
+2000,Wizards Black Star Promos,EN,Promo
+2003,Nintendo Black Star Promos,EN,Promo
+2010,HGSS Promos,EN,Promo
+2011,BW Promos,EN,Promo
+2013,XY Promos,EN,Promo
+2017,SM Promos,EN,Promo
+2020,SWSH Promos,EN,Promo
+2023,SV Promos,EN,Promo
+2018,McDonald's Collection,EN,Promo
+2019,McDonald's Collection,EN,Promo
+2021,McDonald's Collection,EN,Promo
+2022,McDonald's Collection,EN,Promo
+2023,McDonald's Collection,EN,Promo

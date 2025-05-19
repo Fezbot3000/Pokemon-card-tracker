@@ -12,13 +12,27 @@ import Icon from '../atoms/Icon';
 import { gradients } from '../styles/colors';
 import PriceHistoryGraph from '../../components/PriceHistoryGraph';
 import PSALookupButton from '../../components/PSALookupButton'; 
-import { getAllPokemonSets, getPokemonSetsByYear, addCustomSet } from '../../data/pokemonSets';
+import { getAllPokemonSets, getPokemonSetsByYear, getSetsByCategory, addCustomSet } from '../../data/pokemonSets';
 import { useUserPreferences } from '../../contexts/UserPreferencesContext'; 
 import '../styles/formFixes.css'; 
 
 const cardCategories = [
   { value: 'pokemon', label: 'Pokemon' },
-  { value: 'sports', label: 'Sports' },
+  { value: 'magicTheGathering', label: 'Magic: The Gathering' },
+  { value: 'yugioh', label: 'Yu-Gi-Oh' },
+  { value: 'digimon', label: 'Digimon' },
+  { value: 'onePiece', label: 'One Piece' },
+  { value: 'dragonBallZ', label: 'Dragon Ball Z' },
+  { value: 'nba', label: 'NBA' },
+  { value: 'nfl', label: 'NFL' },
+  { value: 'mlb', label: 'MLB/Baseball' },
+  { value: 'nrl', label: 'NRL' },
+  { value: 'soccer', label: 'Soccer' },
+  { value: 'ufc', label: 'UFC' },
+  { value: 'f1', label: 'Formula 1' },
+  { value: 'marvel', label: 'Marvel' },
+  { value: 'wwe', label: 'WWE' },
+  { value: 'sports', label: 'Other Sports' },
   { value: 'other', label: 'Other' },
   // Add more categories as needed
 ];
@@ -181,14 +195,31 @@ const CardDetailsForm = ({
   const [displayCurrentValue, setDisplayCurrentValue] = useState('');
   
   useEffect(() => {
-    if (card?.year) {
-      const yearSets = getPokemonSetsByYear(card.year);
-      setAvailableSets(yearSets);
-    } else {
-      const allSets = getAllPokemonSets();
-      setAvailableSets(allSets);
-    }
-  }, [card?.year]);
+    // Filter sets based on both category and year
+    const updateAvailableSets = () => {
+      let filteredSets = [];
+      
+      // If we have a category, get sets for that category
+      if (card?.category) {
+        filteredSets = getSetsByCategory(card.category);
+        
+        // If the category is Pokemon and we have a year, filter further by year
+        if (card.category === 'pokemon' && card?.year) {
+          filteredSets = getPokemonSetsByYear(card.year);
+        }
+      } else if (card?.year) {
+        // If we only have a year but no category, default to Pokemon sets by year
+        filteredSets = getPokemonSetsByYear(card.year);
+      } else {
+        // If we have neither category nor year, show no sets
+        filteredSets = [];
+      }
+      
+      setAvailableSets(filteredSets);
+    };
+    
+    updateAvailableSets();
+  }, [card?.year, card?.category]);
 
   useEffect(() => {
     if (card?.condition) {
@@ -235,6 +266,7 @@ const CardDetailsForm = ({
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     
+    // Handle custom set creation
     if (name === 'setName' && value === '__add_custom__') {
       const customSet = prompt('Enter the name of the custom set:');
       if (customSet && customSet.trim() !== '') {
@@ -261,11 +293,45 @@ const CardDetailsForm = ({
       return;
     }
     
-    if (name === 'year' && value) {
-      const yearSets = getPokemonSetsByYear(value);
-      setAvailableSets(yearSets);
+    // Handle category changes
+    if (name === 'category') {
+      // When category changes, update available sets
+      let updatedCard = {
+        ...card,
+        [name]: value,
+      };
+      
+      // If changing to a non-Pokemon category, clear the year and set
+      if (value !== 'pokemon') {
+        updatedCard.year = '';
+        updatedCard.setName = '';
+        setAvailableSets([]);
+      } else if (card.year) {
+        // If changing to Pokemon and we have a year, get sets for that year
+        const yearSets = getPokemonSetsByYear(card.year);
+        setAvailableSets(yearSets);
+      } else {
+        // If changing to Pokemon but no year, get all Pokemon sets
+        const allSets = getAllPokemonSets();
+        setAvailableSets(allSets);
+      }
+      
+      if (onChange) {
+        onChange(updatedCard);
+      }
+      return;
     }
     
+    // Handle year changes
+    if (name === 'year' && value) {
+      // Only filter by year if the category is Pokemon
+      if (card.category === 'pokemon') {
+        const yearSets = getPokemonSetsByYear(value);
+        setAvailableSets(yearSets);
+      }
+    }
+    
+    // Handle all other input changes
     if (onChange) {
       onChange({
         ...card,
@@ -650,18 +716,6 @@ const CardDetailsForm = ({
 
           <div className="grid grid-cols-1 gap-4 mt-4">
             <div>
-              <FormField
-                label="Year"
-                name="year"
-                value={card.year || ''}
-                onChange={handleInputChange}
-                error={errors.year}
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 gap-4 mt-4">
-            <div>
               <SelectField
                 label="Category"
                 name="category"
@@ -676,6 +730,20 @@ const CardDetailsForm = ({
                   </option>
                 ))}
               </SelectField>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 mt-4">
+            <div>
+              <FormField
+                label="Year"
+                name="year"
+                value={card.year || ''}
+                onChange={handleInputChange}
+                error={errors.year}
+                placeholder={card.category === 'pokemon' ? 'Enter year (e.g., 2023)' : ''}
+                disabled={card.category !== 'pokemon'}
+              />
             </div>
           </div>
 
