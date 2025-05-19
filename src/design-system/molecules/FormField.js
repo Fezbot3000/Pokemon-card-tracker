@@ -23,12 +23,13 @@ const FormField = ({
   ...inputProps
 }) => {
   const fieldId = id || `field-${inputProps.name}`;
+  const hasError = !!error;
   
   return (
-    <div className={`w-full ${className}`}>
+    <div className={`w-full form-field ${className} ${hasError ? 'error' : ''}`}>
       {label && (
         <FormLabel htmlFor={fieldId} required={required}>
-          {label}
+          {label}{required && <span className="required">*</span>}
         </FormLabel>
       )}
       
@@ -85,10 +86,7 @@ const FormField = ({
           )}
         </>
       )}
-      {/* Display error message if present */}
-      {error && (
-        <p className="mt-1 text-xs text-red-500 dark:text-red-400">{error}</p>
-      )}
+      {error && <div className="mt-1 text-xs text-red-500 dark:text-red-400">{error}</div>}
     </div>
   );
 };

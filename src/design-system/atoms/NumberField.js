@@ -82,9 +82,7 @@ const NumberField = ({
           {suffix}
         </span>
       )}
-      {error && (
-        <p className="mt-1 text-xs text-red-500 dark:text-red-400">{error}</p>
-      )}
+      {/* Error message is handled by FormField */}
     </div>
   );
 };

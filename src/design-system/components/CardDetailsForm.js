@@ -177,7 +177,8 @@ const CardDetailsForm = ({
   hideCollectionField = false,
   onPsaSearch,
   isPsaSearching = false,
-  hidePsaSearchButton = false
+  hidePsaSearchButton = false,
+  requiredFields = {}
 }) => {
   const { 
     preferredCurrency, 
@@ -496,7 +497,8 @@ const CardDetailsForm = ({
         ...card,
         condition,
         gradingCompany: company,
-        grade
+        grade,
+        certificationNumber: card.certificationNumber || ''
       });
     } else if (company && grade) {
       condition = `${company} ${grade}`; 
@@ -504,7 +506,8 @@ const CardDetailsForm = ({
         ...card,
         condition,
         gradingCompany: company,
-        grade
+        grade,
+        certificationNumber: card.slabSerial || card.certificationNumber || ''
       });
     } else if (company) {
       condition = company; 
@@ -512,14 +515,16 @@ const CardDetailsForm = ({
         ...card,
         condition,
         gradingCompany: company,
-        grade: ''
+        grade: '',
+        certificationNumber: card.slabSerial || card.certificationNumber || ''
       });
     } else {
       onChange({
         ...card,
         condition: '',
         gradingCompany: '',
-        grade: ''
+        grade: '',
+        certificationNumber: ''
       });
     }
   };
@@ -759,10 +764,11 @@ const CardDetailsForm = ({
             <div>
               <FormField
                 label="Card Name"
-                name="card"
-                value={card.card || ''}
+                name="cardName"
+                value={card.cardName || ''}
                 onChange={handleInputChange}
-                error={errors.card}
+                error={errors.cardName}
+                className={errors.cardName ? 'error' : ''}
                 required
               />
             </div>
@@ -780,7 +786,7 @@ const CardDetailsForm = ({
                   ...cardCategories
                 ]}
                 error={errors.category}
-                required
+                required={false}
                 testId="category-select"
               />
             </div>
@@ -900,12 +906,12 @@ const CardDetailsForm = ({
             <div>
               <div className="form-label-nowrap">
                 <FormField
-                  label={selectedCompany === 'RAW' ? "Serial Number (Optional)" : "Serial Number"}
+                  label="Serial Number"
                   name="slabSerial"
                   value={card.slabSerial || ''}
                   onChange={handleInputChange}
                   error={errors.slabSerial}
-                  required={selectedCompany !== 'RAW'}
+                  required={false}
                 />
               </div>
               {additionalSerialContent && (

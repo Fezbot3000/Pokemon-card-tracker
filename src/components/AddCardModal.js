@@ -95,6 +95,8 @@ const AddCardModal = ({
 
   // Handle card image change
   const handleImageChange = async (file) => {
+    if (!file) return;
+    
     setImageLoadingState('loading');
     
     try {
@@ -108,12 +110,14 @@ const AddCardModal = ({
       
       setCardImage(imageUrl);
       setImageFile(file);
+      setErrors(prev => ({ ...prev, image: undefined }));
       setImageLoadingState('idle');
       
       return file; 
     } catch (error) {
       console.error('Error changing card image:', error);
       setImageLoadingState('error');
+      setErrors(prev => ({ ...prev, image: 'Failed to load image' }));
       return null;
     }
   };
@@ -136,20 +140,29 @@ const AddCardModal = ({
   const validateForm = () => {
     const newErrors = {};
     
-    // Card name is required
+    // Only validate required fields
     if (!newCard.cardName?.trim()) {
       newErrors.cardName = 'Card name is required';
     }
     
-    // Check if this is a raw card by looking at the condition field
-    const isRawCard = newCard.condition?.startsWith('RAW');
-    
-    // Serial number is required for graded cards only
-    if (!isRawCard && !newCard.certificationNumber?.trim()) {
-      newErrors.certificationNumber = 'Serial number is required for graded cards';
+    // Investment amount is required
+    const investmentAmount = parseFloat(newCard.originalInvestmentAmount);
+    if (isNaN(investmentAmount) || investmentAmount <= 0) {
+      newErrors.originalInvestmentAmount = 'Investment amount is required';
     }
     
-    // Selected collection is required and cannot be "Sold"
+    // Date purchased is required
+    if (!newCard.datePurchased) {
+      newErrors.datePurchased = 'Date purchased is required';
+    }
+    
+    // Quantity is required and must be at least 1
+    const quantity = parseInt(newCard.quantity);
+    if (isNaN(quantity) || quantity < 1) {
+      newErrors.quantity = 'Quantity must be at least 1';
+    }
+    
+    // Collection validation
     if (!selectedCollection) {
       newErrors.collection = 'Please select a collection';
     } else if (selectedCollection.toLowerCase() === 'sold') {
@@ -177,7 +190,7 @@ const AddCardModal = ({
     }
 
     // Check if we have an image file
-    if (!imageFile) {
+    if (!imageFile && !cardImage) {
       setSaveMessage('Please add an image for the card');
       setErrors({ image: 'Card image is required' });
       setIsSaving(false); 
@@ -188,7 +201,9 @@ const AddCardModal = ({
       // Prepare card data
       const cardToSave = {
         ...newCard,
-        collection: selectedCollection
+        collection: selectedCollection,
+        originalInvestmentAmount: parseFloat(newCard.originalInvestmentAmount) || 0,
+        currentValue: parseFloat(newCard.currentValue) || 0
       };
 
       // Try to save the card
@@ -439,11 +454,17 @@ const AddCardModal = ({
             imageLoadingState={imageLoadingState}
             onChange={handleCardChange}
             onImageChange={handleImageChange}
-            onImageRetry={() => setImageLoadingState('idle')}
-            onImageClick={() => cardImage && setShowEnlargedImage(true)}
+            onImageRetry={() => handleImageChange(imageFile)}
+            onImageClick={() => setShowEnlargedImage(true)}
             errors={errors}
             hideCollectionField={true}
             hidePsaSearchButton={true}
+            requiredFields={{
+              cardName: true,
+              originalInvestmentAmount: true,
+              datePurchased: true,
+              quantity: true
+            }}
           />
           
           {/* Status message */}
