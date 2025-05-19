@@ -339,8 +339,8 @@ const CardDetailsModal = ({
           const forms = document.querySelectorAll('form');
           forms.forEach(form => form.reset());
           
-          // Close the modal
-          onClose();
+          // Close the modal with success flag
+          onClose(true);
         } catch (saveError) {
           console.error('Error in onSave:', saveError);
           // Check if it's a connection error

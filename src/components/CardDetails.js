@@ -274,6 +274,51 @@ const CardDetails = memo(({
     }
   };
 
+  // Handle close action with confirmation for unsaved changes
+  const handleClose = (saveSuccess = false, skipConfirmation = false) => {
+    // If save was successful, we can close without confirmation
+    if (!saveSuccess && hasUnsavedChanges && !skipConfirmation) {
+      // TODO: Implement a dialog for confirmation
+      if (!window.confirm('You have unsaved changes. Are you sure you want to close?')) {
+        return;
+      }
+    }
+    
+    // Clean up any blob URLs before closing
+    if (editedCard && editedCard._blobUrl && editedCard._blobUrl.startsWith('blob:')) {
+      try {
+        URL.revokeObjectURL(editedCard._blobUrl);
+        console.log('Cleaned up blob URL on close');
+      } catch (e) {
+        console.warn('Failed to revoke blob URL on close:', e);
+      }
+    }
+    
+    // Also clean up cardImage if it's a blob URL
+    if (cardImage && cardImage.startsWith('blob:')) {
+      try {
+        URL.revokeObjectURL(cardImage);
+        // Set to null before closing to prevent invalid references
+        setCardImage(null);
+      } catch (e) {
+        console.warn('Failed to revoke cardImage blob URL on close:', e);
+      }
+    }
+    
+    // Reset unsaved changes state if save was successful
+    if (saveSuccess) {
+      setHasUnsavedChanges(false);
+    }
+    
+    // Close the modal
+    setIsOpen(false);
+    
+    // Execute onClose callback after a short delay to allow animations
+    setTimeout(() => {
+      onClose();
+    }, 100);
+  };
+
   // Handle save action
   const handleSave = async () => {
     console.log('=========== CARD SAVE FLOW START ===========');
@@ -418,54 +463,17 @@ const CardDetails = memo(({
       // Show success message
       toast.success('Card saved successfully!');
       
-      console.log('[CardDetails] Card saved successfully, keeping modal open');
+      console.log('[CardDetails] Card saved successfully, closing modal');
       console.log('=========== CARD SAVE FLOW END ===========');
+      
+      // Close the modal with success flag
+      handleClose(true);
     } catch (error) {
       console.error('=========== CARD SAVE ERROR ===========');
       console.error('Error saving card:', error);
       toast.error('Error saving card: ' + error.message);
       console.error('=========== CARD SAVE ERROR END ===========');
     }
-  };
-
-  // Handle close action with confirmation for unsaved changes
-  const handleClose = (skipConfirmation = false) => {
-    // Check if there are unsaved changes and we're not skipping confirmation
-    if (hasUnsavedChanges && !skipConfirmation) {
-      // TODO: Implement a dialog for confirmation
-      if (!window.confirm('You have unsaved changes. Are you sure you want to close?')) {
-        return;
-      }
-    }
-    
-    // Clean up any blob URLs before closing
-    if (editedCard && editedCard._blobUrl && editedCard._blobUrl.startsWith('blob:')) {
-      try {
-        URL.revokeObjectURL(editedCard._blobUrl);
-        console.log('Cleaned up blob URL on close');
-      } catch (e) {
-        console.warn('Failed to revoke blob URL on close:', e);
-      }
-    }
-    
-    // Also clean up cardImage if it's a blob URL
-    if (cardImage && cardImage.startsWith('blob:')) {
-      try {
-        URL.revokeObjectURL(cardImage);
-        // Set to null before closing to prevent invalid references
-        setCardImage(null);
-      } catch (e) {
-        console.warn('Failed to revoke cardImage blob URL on close:', e);
-      }
-    }
-    
-    // Close the modal
-    setIsOpen(false);
-    
-    // Execute onClose callback after a short delay to allow animations
-    setTimeout(() => {
-      onClose();
-    }, 100);
   };
 
   // Handle card field changes and track if there are unsaved changes
