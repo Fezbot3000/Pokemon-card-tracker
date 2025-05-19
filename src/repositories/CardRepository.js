@@ -496,8 +496,13 @@ class CardRepository {
         console.log(`[CardRepository] Processing tracked card update for ${cardId} (${dataCopy._lastUpdateTime})`);
       }
       
-      // Determine the collection
-      const targetCollection = dataCopy.collection || dataCopy.collectionId;
+      // Clean up collection fields in the incoming data
+      // Remove any existing collection fields to prevent conflicts
+      delete dataCopy.collection;
+      delete dataCopy.collectionId;
+      
+      // Get the target collection from the input data
+      const targetCollection = data.collection || data.collectionId;
       
       if (!targetCollection && isDebugMode) {
         console.warn("[CardRepository] No collection specified for card update");
@@ -543,17 +548,19 @@ class CardRepository {
         // Add server timestamp
         updateData.updatedAt = serverTimestamp();
         
-        // Only include collection fields if targetCollection is defined
+        // Set collection fields consistently
         if (targetCollection) {
+          // Always use the new collection if provided
           updateData.collection = targetCollection;
           updateData.collectionId = targetCollection;
+        } else if (oldCollection) {
+          // If no new collection specified, preserve the existing one
+          updateData.collection = oldCollection;
+          updateData.collectionId = oldCollection;
         } else {
-          // If no new collection is specified but there's an existing one, preserve it
-          if (oldCollection) {
-            updateData.collection = oldCollection;
-            updateData.collectionId = oldCollection;
-          }
-          // Otherwise, don't include collection fields at all
+          // If no collection at all, this is an error
+          console.error(`[CardRepository] No collection found for card ${cardId}`);
+          return false;
         }
         
         // Check if collection has changed
@@ -721,6 +728,24 @@ class CardRepository {
       // Delete the card document from Firestore
       await deleteDoc(cardRef);
       console.log(`Card ${id} deleted from Firestore`);
+      
+      // Check if card exists in Firestore
+      const docSnap = await getDoc(cardRef);
+      
+      if (!docSnap.exists()) {
+        console.log(`Card ${id} not found in Firestore, cleaning up local data...`);
+        // If card doesn't exist in Firestore but exists locally, clean it up
+        try {
+          await db.deleteImage(id);
+          console.log(`Image for card ${id} deleted from IndexedDB`);
+          // Force a cleanup of any local state for this card
+          await db.cleanupGhostCard(id);
+          return true;
+        } catch (error) {
+          console.log('Error cleaning up local data:', error);
+          return false;
+        }
+      }
       
       return true;
     } catch (error) {
@@ -1663,6 +1688,84 @@ class CardRepository {
       return { success: true };
     } catch (error) {
       console.error("Error deleting all user data:", error);
+      throw error;
+    }
+  }
+
+  async cleanupGhostCard(cardId) {
+    try {
+      // Ensure cardId is a string
+      const cardIdStr = String(cardId?.id || cardId || '').trim();
+      if (!cardIdStr) {
+        console.warn('Invalid card ID provided for cleanup:', cardId);
+        return { success: false, error: 'Invalid card ID' };
+      }
+
+      // Try all possible image paths in storage
+      const possiblePaths = [
+        `users/${this.userId}/cards/${cardIdStr}.jpg`,
+        `users/${this.userId}/${cardIdStr}.jpg`,
+        `users/${this.userId}/cards/${cardIdStr}.jpeg`,
+        `users/${this.userId}/${cardIdStr}.jpeg`,
+        `users/${this.userId}/cards/${cardIdStr}.png`,
+        `users/${this.userId}/${cardIdStr}.png`
+      ];
+
+      let imageDeleted = false;
+      for (const path of possiblePaths) {
+        try {
+          const imageRef = ref(storage, path);
+          await deleteObject(imageRef);
+          console.log(`Successfully deleted ghost card image from path: ${path}`);
+          imageDeleted = true;
+          break; // Exit loop after successful deletion
+        } catch (storageError) {
+          // Continue trying other paths
+          console.debug(`No image at path ${path}:`, storageError);
+        }
+      }
+
+      // Clean up local image cache
+      try {
+        await db.deleteImagesForCards([cardIdStr]);
+        window.dispatchEvent(new CustomEvent('card-images-cleanup', { 
+          detail: { cardIds: [cardIdStr] } 
+        }));
+      } catch (imageError) {
+        console.warn("Error cleaning up local image cache:", imageError);
+      }
+
+      return { success: true, imageDeleted };
+    } catch (error) {
+      console.error("Error cleaning up ghost card:", error);
+      throw error;
+    }
+  }
+
+  async deleteCard(cardId, options = {}) {
+    try {
+      // Ensure cardId is a string
+      const cardIdStr = String(cardId?.id || cardId || '').trim();
+      if (!cardIdStr) {
+        console.warn('Invalid card ID provided for deletion:', cardId);
+        return { success: false, error: 'Invalid card ID' };
+      }
+
+      // First try to delete from Firestore
+      try {
+        await deleteDoc(doc(this.cardsRef, cardIdStr));
+      } catch (firestoreError) {
+        // If the document doesn't exist in Firestore, that's okay
+        // We still want to clean up any ghost images
+        console.warn("Card not found in Firestore, attempting cleanup:", firestoreError);
+      }
+      
+      // Try to delete image from storage and clean up local cache
+      const cleanupResult = await this.cleanupGhostCard(cardIdStr);
+      
+      return { success: true, ...cleanupResult };
+    } catch (error) {
+      console.error("Error deleting card:", error);
       throw error;
     }
   }

@@ -26,7 +26,7 @@ class DatabaseService {
     );
   }
 
-  initDatabase() {
+  async initDatabase() {
     return new Promise((resolve, reject) => {
       try {
         // Close any existing connection first
@@ -277,6 +277,125 @@ class DatabaseService {
         reject(error);
       }
     });
+  }
+
+  async getImage(cardId) {
+    if (!cardId) {
+      logger.warn('No cardId provided to getImage');
+      return null;
+    }
+
+    await this.ensureDB();
+    const userId = this.getCurrentUserId();
+    
+    return new Promise((resolve, reject) => {
+      try {
+        const transaction = this.db.transaction([IMAGES_STORE], 'readonly');
+        const store = transaction.objectStore(IMAGES_STORE);
+        const request = store.get([userId, cardId]);
+        
+        request.onsuccess = () => {
+          if (request.result && request.result.blob) {
+            resolve(request.result.blob);
+          } else {
+            resolve(null);
+          }
+        };
+        
+        request.onerror = (error) => {
+          logger.error(`Error fetching image for card ${cardId}:`, error);
+          reject(error);
+        };
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
+  /**
+   * Clean up a ghost card from all collections and local storage
+   * @param {string} cardId - The ID of the ghost card to clean up
+   * @returns {Promise<void>}
+   */
+  async cleanupGhostCard(cardId) {
+    try {
+      await this.ensureDB();
+      const userId = this.getCurrentUserId();
+      logger.debug(`[DBService] Starting cleanup of ghost card ${cardId}`);
+
+      return new Promise((resolve, reject) => {
+        try {
+          const transaction = this.db.transaction([COLLECTIONS_STORE], 'readwrite');
+          const store = transaction.objectStore(COLLECTIONS_STORE);
+          
+          // Get all collections for this user
+          const request = store.getAll(IDBKeyRange.bound(
+            [userId, ''],
+            [userId, '\uffff']
+          ));
+
+          request.onsuccess = async () => {
+            let found = false;
+            const collections = request.result || [];
+
+            for (const collection of collections) {
+              if (collection && Array.isArray(collection.data)) {
+                const cardIndex = collection.data.findIndex(card => 
+                  card.id === cardId || card.slabSerial === cardId
+                );
+
+                if (cardIndex !== -1) {
+                  // Remove the ghost card
+                  collection.data.splice(cardIndex, 1);
+                  found = true;
+
+                  // Update the collection
+                  const putRequest = store.put(collection);
+                  await new Promise((res, rej) => {
+                    putRequest.onsuccess = () => res();
+                    putRequest.onerror = (e) => rej(e.target.error);
+                  });
+
+                  logger.debug(`[DBService] Removed ghost card ${cardId} from collection ${collection.name}`);
+                }
+              }
+            }
+
+            // Clean up any images
+            try {
+              await this.deleteImage(cardId);
+              logger.debug(`[DBService] Cleaned up image for ghost card ${cardId}`);
+            } catch (error) {
+              logger.warn(`[DBService] Error cleaning up image for ghost card ${cardId}:`, error);
+            }
+
+            if (found) {
+              logger.info(`[DBService] Successfully cleaned up ghost card ${cardId} from all collections`);
+            } else {
+              logger.debug(`[DBService] No ghost card ${cardId} found in any collection`);
+            }
+
+            resolve();
+          };
+
+          request.onerror = (error) => {
+            logger.error(`[DBService] Error during ghost card cleanup:`, error);
+            reject(error);
+          };
+
+          transaction.onerror = (error) => {
+            logger.error(`[DBService] Transaction error during ghost card cleanup:`, error);
+            reject(error);
+          };
+        } catch (error) {
+          logger.error(`[DBService] Error setting up ghost card cleanup:`, error);
+          reject(error);
+        }
+      });
+    } catch (error) {
+      logger.error(`[DBService] Error in cleanupGhostCard for ${cardId}:`, error);
+      throw error;
+    }
   }
 
   async addTestSoldItem() {
@@ -685,7 +804,7 @@ class DatabaseService {
           
           const request = store.put(collection);
           
-          request.onsuccess = async () => { // Add async back here
+          request.onsuccess = async () => { 
             logger.debug(`Collection '${name}' saved successfully for user ${userId}`);
             
             // Improved Firestore sync for collections
@@ -864,7 +983,7 @@ class DatabaseService {
               const store = transaction.objectStore(CARDS_STORE);
               const getRequest = store.get(cardId);
               
-              getRequest.onsuccess = async () => {
+              getRequest.onsuccess = async () => { 
                 if (getRequest.result) {
                   const card = getRequest.result;
                   card.imageUrl = downloadURL;
@@ -957,7 +1076,6 @@ class DatabaseService {
           reject(error);
         };
       } catch (error) {
-        logger.error(`Transaction error in getImage for card ${cardId}:`, error);
         reject(error);
       }
     });
@@ -1246,7 +1364,7 @@ class DatabaseService {
           if (featureFlags.enableFirestoreSync) {
             // Shadow write each sold card individually
             const shadowWritePromises = soldCards
-              .filter(soldCard => soldCard && (soldCard.id || soldCard.cardId)) // Add this filter
+              .filter(soldCard => soldCard && (soldCard.id || soldCard.cardId)) 
               .map(soldCard => {
               // Ensure each card has the necessary fields
               const soldCardData = {
@@ -3491,32 +3609,32 @@ class DatabaseService {
       logger.debug('Firestore sync disabled, not saving purchase invoice');
       return false;
     }
-    
+
     try {
       const userId = this.getCurrentUserId();
       if (!userId) {
         logger.error('No user ID available, cannot save purchase invoice to Firestore');
         return false;
       }
-      
+
       // Import Firebase
       const { db } = await import('./firebase');
       const { doc, setDoc } = await import('firebase/firestore');
-      
+
       // Create a document reference
       const invoiceRef = doc(db, 'users', userId, 'purchaseInvoices', invoice.id);
-      
+
       // Clean the invoice object to remove any undefined values
       // Firebase doesn't accept undefined values
       const cleanInvoice = JSON.parse(JSON.stringify(invoice));
-      
+
       // Add sync metadata
       const invoiceWithMeta = {
         ...cleanInvoice,
         lastSynced: Date.now(),
         userId
       };
-      
+
       try {
         // Save to Firestore
         await setDoc(invoiceRef, invoiceWithMeta);
@@ -3537,7 +3655,7 @@ class DatabaseService {
       return false;
     }
   }
-  
+
   /**
    * Delete a purchase invoice from Firestore
    * @param {string} id - ID of the invoice to delete
@@ -3548,21 +3666,21 @@ class DatabaseService {
       logger.debug('Firestore sync disabled, not deleting purchase invoice');
       return false;
     }
-    
+
     try {
       const userId = this.getCurrentUserId();
       if (!userId) {
         logger.error('No user ID available, cannot delete purchase invoice from Firestore');
         return false;
       }
-      
+
       // Import Firebase
       const { db } = await import('./firebase');
       const { doc, deleteDoc } = await import('firebase/firestore');
-      
+
       // Create a document reference
       const invoiceRef = doc(db, 'users', userId, 'purchaseInvoices', id);
-      
+
       try {
         // Delete from Firestore
         await deleteDoc(invoiceRef);
@@ -3583,7 +3701,7 @@ class DatabaseService {
       return false;
     }
   }
-  
+
   /**
    * Sync purchase invoices from Firestore to local database
    * @returns {Promise<number>} - Promise resolving to the number of synced invoices
@@ -3593,25 +3711,25 @@ class DatabaseService {
       logger.debug('Firestore sync disabled, not syncing purchase invoices from Firestore');
       return 0;
     }
-    
+
     try {
       const userId = this.getCurrentUserId();
       if (!userId) {
         logger.error('No user ID available, cannot sync purchase invoices from Firestore');
         return 0;
       }
-      
+
       // Import Firebase
       const { db } = await import('./firebase');
       const { collection, getDocs } = await import('firebase/firestore');
-      
+
       // Get all purchase invoices from Firestore
       const invoicesRef = collection(db, 'users', userId, 'purchaseInvoices');
       const querySnapshot = await getDocs(invoicesRef);
-      
+
       let syncCount = 0;
       const syncPromises = [];
-      
+
       querySnapshot.forEach((doc) => {
         const invoice = doc.data();
         syncPromises.push(
@@ -3624,10 +3742,10 @@ class DatabaseService {
             })
         );
       });
-      
+
       await Promise.all(syncPromises);
       logger.debug(`Synced ${syncCount} purchase invoices from Firestore`);
-      
+
       return syncCount;
     } catch (error) {
       logger.error('Error syncing purchase invoices from Firestore:', error);
@@ -3643,34 +3761,34 @@ class DatabaseService {
   async getPurchaseInvoices(userId) {
     try {
       const db = await this.ensureDB();
-      
+
       // If no userId is provided, use the current user ID
       if (!userId) {
         userId = this.getCurrentUserId();
       }
-      
+
       // If still no userId, return empty array (not logged in)
       if (!userId) {
         logger.debug('No user ID available, returning empty purchase invoices array');
         return [];
       }
-      
+
       return new Promise((resolve, reject) => {
         const transaction = this.db.transaction([PURCHASE_INVOICES_STORE], 'readonly');
         const store = transaction.objectStore(PURCHASE_INVOICES_STORE);
-        
+
         // Check if the userId index exists
         if (store.indexNames.contains('userId')) {
           // Use the userId index to filter by the current user
           const index = store.index('userId');
           const request = index.getAll(userId);
-          
+
           request.onsuccess = () => {
             const invoices = request.result || [];
             logger.debug(`Retrieved ${invoices.length} purchase invoices for user ${userId}`);
             resolve(invoices);
           };
-          
+
           request.onerror = (event) => {
             logger.error('Error getting purchase invoices by userId:', event.target.error);
             reject(event.target.error);
@@ -3678,14 +3796,14 @@ class DatabaseService {
         } else {
           // If no userId index exists, get all and filter manually (fallback)
           const request = store.getAll();
-          
+
           request.onsuccess = () => {
             const allInvoices = request.result || [];
             const userInvoices = allInvoices.filter(invoice => invoice.userId === userId);
             logger.debug(`Manually filtered ${userInvoices.length} purchase invoices for user ${userId} from ${allInvoices.length} total`);
             resolve(userInvoices);
           };
-          
+
           request.onerror = (event) => {
             logger.error('Error getting purchase invoices:', event.target.error);
             reject(event.target.error);
@@ -3697,7 +3815,7 @@ class DatabaseService {
       return [];
     }
   }
-  
+
   /**
    * Save custom Pokemon set to Firestore
    * @param {string} setName - Name of the set to save
@@ -3723,7 +3841,7 @@ class DatabaseService {
 
       // Get the reference to the user's custom sets doc
       const customSetsRef = doc(db, 'userSettings', userId);
-      
+
       // Get current custom sets or create new structure
       let customSetsDoc;
       try {
@@ -3736,12 +3854,12 @@ class DatabaseService {
       if (customSetsDoc.exists()) {
         // Update existing document
         const customSets = customSetsDoc.data().customSets || {};
-        
+
         // Check if this year exists in the custom sets
         if (!customSets[year]) {
           customSets[year] = [];
         }
-        
+
         // Check if set already exists for this year
         if (!customSets[year].includes(setName)) {
           // Add to the array for this year
@@ -3760,7 +3878,7 @@ class DatabaseService {
           }
         });
       }
-      
+
       logger.debug(`Custom set ${setName} for year ${year} saved to Firestore`);
       return true;
     } catch (error) {
@@ -3792,7 +3910,7 @@ class DatabaseService {
 
       // Get the reference to the user's custom sets doc
       const customSetsRef = doc(db, 'userSettings', userId);
-      
+
       try {
         const customSetsDoc = await getDoc(customSetsRef);
         if (customSetsDoc.exists()) {
@@ -3802,7 +3920,7 @@ class DatabaseService {
       } catch (error) {
         logger.error('Error fetching custom sets:', error);
       }
-      
+
       return {};
     } catch (error) {
       logger.error('Error loading custom sets from Firestore:', error);
@@ -3838,6 +3956,7 @@ class DatabaseService {
           }
 
           const itemIndex = soldItemsArray.findIndex(item => (item.id === cardId || item.cardId === cardId));
+
           const newItemData = { ...cardData, id: cardId }; // Ensure 'id' field matches cardId
 
           if (itemIndex > -1) {
@@ -3897,7 +4016,7 @@ class DatabaseService {
           if (soldCollection && Array.isArray(soldCollection.data)) {
             const initialLength = soldCollection.data.length;
             soldCollection.data = soldCollection.data.filter(item => (item.id !== cardId && item.cardId !== cardId));
-            
+
             if (soldCollection.data.length < initialLength) {
               const putRequest = store.put(soldCollection);
               putRequest.onsuccess = () => {

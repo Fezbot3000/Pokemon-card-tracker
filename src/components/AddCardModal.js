@@ -6,7 +6,7 @@ import CardDetailsForm from '../design-system/components/CardDetailsForm';
 import { toast } from 'react-hot-toast';
 import PSADetailModal from './PSADetailModal';
 import NewCollectionModal from './NewCollectionModal';
-import { searchByCertNumber } from '../services/psaSearch';
+import { searchByCertNumber, parsePSACardData } from '../services/psaSearch';
 // import Spinner from './Spinner'; // Import Spinner for loading state
 
 /**
@@ -226,39 +226,60 @@ const AddCardModal = ({
         setSaveMessage(`Error: ${error.message}`);
       }
     } finally {
-      setIsSaving(false); 
+      setIsSaving(false);
     }
   };
 
   // Handle PSA certificate lookup
   const handlePsaLookup = async () => {
-    if (!psaSerial.trim()) {
-      toast.error('Please enter a PSA certificate number');
+    if (!psaSerial) {
+      toast.error('Please enter a PSA serial number');
       return;
     }
-
+    
     setIsSearching(true);
-    setSaveMessage('Searching for PSA certificate...');
-
+    setSaveMessage('Searching PSA database...');
+    
     try {
-      const data = await searchByCertNumber(psaSerial);
-      // Only log in development environment
-      if (process.env.NODE_ENV === 'development') {
-        console.log('PSA data received:', data);
+      const psaData = await searchByCertNumber(psaSerial);
+      if (!psaData) {
+        toast.error('No PSA data found for this serial number');
+        setSaveMessage('Failed to find PSA data');
+        return;
       }
       
-      // Capture the PSA data
-      setPsaData(data);
+      // Parse and apply PSA data directly
+      const parsedData = parsePSACardData(psaData);
+      if (!parsedData) {
+        toast.error('Could not parse PSA data');
+        setSaveMessage('Failed to parse PSA data');
+        return;
+      }
+
+      // Update card data with PSA information
+      const updatedCard = {
+        ...newCard,
+        ...parsedData,
+        slabSerial: psaSerial,
+        condition: `PSA ${parsedData.grade}`,
+        gradeCompany: 'PSA',
+        psaUrl: `https://www.psacard.com/cert/${psaSerial}`,
+        player: parsedData.player || '',
+        cardName: parsedData.cardName || '',
+        population: parsedData.population || '',
+        category: parsedData.category || newCard.category,
+        set: parsedData.set || newCard.set,
+        year: parsedData.year || newCard.year
+      };
+
+      setNewCard(updatedCard);
+      toast.success('PSA data successfully loaded');
+      setSaveMessage('PSA data applied successfully');
       
-      // Show the modal with the PSA details - always show the modal
-      // This will let the mergeWithExistingCard function handle the data processing
-      setPsaDetailModalOpen(true);
-      
-      toast.success('PSA certificate details loaded');
-      setSaveMessage(null);
     } catch (error) {
-      // Keep error logging for troubleshooting
-      console.error('Error looking up PSA certificate:', error);
+      console.error('Error searching PSA:', error);
+      toast.error('Error searching PSA database');
+      setSaveMessage('Failed to search PSA database');
       toast.error(`Failed to find PSA certificate: ${error.message}`);
       setSaveMessage('Failed to find PSA certificate. Please check the number and try again.');
     } finally {

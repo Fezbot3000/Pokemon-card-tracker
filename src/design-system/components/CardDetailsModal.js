@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import { Modal, Button, Icon } from '../';
+import Modal from '../molecules/Modal';
+import Button from '../atoms/Button';
+import Icon from '../atoms/Icon';
 import CardDetailsForm from './CardDetailsForm';
 import PriceHistoryGraph from '../../components/PriceHistoryGraph';
 import SaleModal from '../../components/SaleModal'; 
@@ -56,6 +58,7 @@ const CardDetailsModal = ({
   
   // Get currency formatting functions
   const { formatPreferredCurrency, formatAmountForDisplay } = useUserPreferences();
+
 
   // If the card has pricing data from PriceCharting, extract the product ID
   let priceChartingProductId = null;
@@ -113,6 +116,65 @@ const CardDetailsModal = ({
     return currentValueInPreferredCurrency - investmentInPreferredCurrency;
   };
   
+  // Handle PSA search
+  const handlePsaSearch = async (serialNumber) => {
+    if (!serialNumber) {
+      toast.error('Please enter a serial number to search');
+      return;
+    }
+
+    setIsPsaSearching(true);
+    setSaveMessage('Searching for PSA certificate...');
+
+    try {
+      const psaData = await searchByCertNumber(serialNumber);
+      
+      // Handle rate limit error
+      if (psaData?.error === 'RATE_LIMITED') {
+        toast.error('PSA lookup temporarily unavailable due to rate limiting');
+        return;
+      }
+      
+      // Handle not found error
+      if (psaData?.error === 'NOT_FOUND' || !psaData) {
+        toast.error('No PSA data found for this serial number');
+        return;
+      }
+
+      const parsedData = parsePSACardData(psaData);
+      if (!parsedData) {
+        toast.error('Could not parse PSA data');
+        return;
+      }
+
+      // Update card data with PSA information
+      const updatedCard = {
+        ...card,
+        ...parsedData,
+        slabSerial: serialNumber,
+        condition: `PSA ${parsedData.grade}`,
+        gradeCompany: 'PSA',
+        psaUrl: `https://www.psacard.com/cert/${serialNumber}`,
+        player: parsedData.player || card.player,
+        cardName: parsedData.cardName || card.cardName,
+        population: parsedData.population || card.population,
+        category: parsedData.category || card.category,
+        set: parsedData.set || card.set,
+        year: parsedData.year || card.year
+      };
+
+      // Call onChange with the updated card data
+      onChange(updatedCard);
+      toast.success('PSA data successfully loaded');
+    } catch (error) {
+      console.error('Error searching PSA:', error);
+      toast.error('Error searching PSA database');
+    } finally {
+      setIsPsaSearching(false);
+      setSaveMessage('');
+    }
+  };
+
   // Update local state when props change or modal opens
   useEffect(() => {
     if (isOpen) {
@@ -195,7 +257,12 @@ const CardDetailsModal = ({
   };
   
   // Handle save action
-  const handleSave = async () => {
+  const handleSave = async (e) => {
+    // If this was triggered by a form submit, prevent default
+    if (e?.preventDefault) {
+      e.preventDefault();
+    }
+
     // Validate required fields
     const newErrors = {};
     
@@ -223,7 +290,7 @@ const CardDetailsModal = ({
     
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
-      setSaveMessage('Please correct the highlighted field errors below.'); // Or setSaveMessage('');
+      setSaveMessage('Please correct the highlighted field errors below.');
       return;
     }
     
@@ -249,8 +316,16 @@ const CardDetailsModal = ({
         // Call onSave and wait for it to complete
         await onSave(formattedCard);
         
-        // Don't show a success toast here - it will be shown by the parent component
-        // toast.success('Card saved successfully!');
+        // Clear any unsaved changes state
+        setErrors({});
+        setSaveMessage('');
+        
+        // Reset all form elements to prevent unsaved changes dialog
+        const forms = document.querySelectorAll('form');
+        forms.forEach(form => form.reset());
+        
+        // Close the modal
+        onClose();
       } catch (error) {
         console.error('Error saving card:', error);
         toast.error(`Failed to save card: ${error.message}`);
@@ -259,73 +334,28 @@ const CardDetailsModal = ({
         setIsSaving(false);
       }
     }
-  };
 
-  // Handle PSA search
-  const handlePsaSearch = async (serialNumber) => {
-    if (!serialNumber) {
-      toast.error('Please enter a PSA certificate number');
-      return;
+const currentValueInPreferredCurrency = originalCurrentValue !== 0 ? 
+parseFloat(formatAmountForDisplay(originalCurrentValue, originalCurrentValueCurrency).replace(/[^0-9.-]+/g, '')) : 0;
+
+return currentValueInPreferredCurrency - investmentInPreferredCurrency;
+};
+
+  // Update local state when props change or modal opens
+  useEffect(() => {
+    if (isOpen) {
+      console.log(
+        '[CardDetailsModal] Main useEffect. isOpen:', isOpen, 
+        'Card ID:', card?.id, 
+        'CollectionID:', card?.collectionId, 
+        'Set:', card?.set, 
+        'Card Name:', card?.card
+        // Consider logging the full card object if issues persist, but be mindful of verbosity
+        // JSON.stringify(card)
+      );
+      setContentLoaded(true);
     }
-
-    setIsPsaSearching(true);
-    setSaveMessage('Searching for PSA certificate...');
-
-    try {
-      const data = await searchByCertNumber(serialNumber);
-      console.log('PSA data received:', data);
-      
-      if (data && !data.error) {
-        try {
-          // Parse the PSA data into our app's format
-          const parsedData = parsePSACardData(data);
-          console.log('Parsed PSA data:', parsedData);
-          
-          // Create a direct mapping of PSA data to card fields
-          const updatedCardData = {
-            ...card,
-            card: parsedData.cardName || card.card || '',
-            player: parsedData.player || card.player || '',
-            set: parsedData.setName || card.set || '',
-            year: parsedData.year || card.year || '',
-            category: parsedData.category || 'Pokemon', // Default to Pokemon for PSA cards
-            condition: parsedData.grade ? `PSA ${parsedData.grade}` : card.condition || '',
-            gradingCompany: 'PSA', // Explicitly set the grading company
-            // Extract just the numeric part of the grade if it's in format "GEM MT 10"
-            grade: parsedData.grade ? parsedData.grade.replace(/^.*?(\d+(?:\.\d+)?)$/, '$1') : card.grade || '',
-            slabSerial: parsedData.slabSerial || serialNumber || card.slabSerial || '',
-            population: parsedData.population || card.population || '',
-            psaUrl: parsedData.psaUrl || card.psaUrl || '',
-            // Preserve financial data
-            datePurchased: card?.datePurchased || new Date().toISOString().split('T')[0],
-            investmentAUD: card?.investmentAUD || '',
-            currentValueAUD: card?.currentValueAUD || '',
-            quantity: card?.quantity || 1
-          };
-          
-          console.log('Updated card data:', updatedCardData);
-          
-          // Update the card data
-          if (onChange) {
-            onChange(updatedCardData);
-            toast.success('PSA data applied successfully!');
-          }
-        } catch (parseError) {
-          console.error('Error parsing PSA data:', parseError);
-          toast.error('Error parsing PSA data: ' + parseError.message);
-        }
-      } else {
-        console.error('PSA lookup failed:', data);
-        toast.error(`PSA search error: ${data?.error || 'Unknown error'}`);
-      }
-    } catch (error) {
-      console.error('Error looking up PSA certificate:', error);
-      toast.error(`Failed to find PSA certificate: ${error.message}`);
-    } finally {
-      setIsPsaSearching(false);
-      setSaveMessage('');
-    }
-  };
+  }, [isOpen, card]);
 
   return (
     <>

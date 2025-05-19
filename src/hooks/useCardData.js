@@ -214,6 +214,51 @@ const useCardData = () => {
     }
   }, [currentUser, cards, setCards, setSelectedCard, setLoading, setError]); // Add dependencies
 
+  // Delete a card - Wrapped in useCallback
+  const deleteCard = useCallback(async (cardId) => { // Make async
+    // Extract ID if cardId is an object
+    const id = cardId?.id || cardId;
+    
+    if (!id || typeof id !== 'string') {
+      logger.error("Delete card failed: Invalid card ID.", { cardId, id });
+      setError("Failed to delete card: Invalid ID.");
+      return;
+    }
+
+    // Store card before deleting for potential revert
+    const cardToDelete = cards.find(card => card.id === id);
+
+    // Optimistic UI update (remove immediately)
+    setCards(prevCards => prevCards.filter(card => card.id !== id));
+    setSelectedCard(prevSelected => 
+       prevSelected && prevSelected.id === id ? null : prevSelected
+    );
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      if (currentUser) {
+        const repository = new CardRepository(currentUser.uid);
+        await repository.deleteCard(id);
+        logger.debug(`Card ${id} deleted from Firestore.`);
+        // Firestore listener should confirm the deletion in the state eventually
+      } else {
+        // Local storage is already updated by the optimistic removal via setCards
+      }
+
+    } catch (err) {
+      logger.error("Error deleting card:", err);
+      setError("Failed to delete card from cloud.");
+      // Revert optimistic update if Firestore delete failed
+      if (cardToDelete) {
+        setCards(prevCards => [...prevCards, cardToDelete]);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [currentUser, cards, setCards, setSelectedCard, setLoading, setError]); // Add dependencies
+
   // Add a new card - Wrapped in useCallback
   const addCard = useCallback(async (newCardData, imageFile = null) => { // Make async, accept imageFile
     if (!newCardData) { 
@@ -265,48 +310,6 @@ const useCardData = () => {
       setLoading(false);
     }
   }, [currentUser, setCards, setLoading, setError]); // Add dependencies
-
-  // Delete a card - Wrapped in useCallback
-  const deleteCard = useCallback(async (cardId) => { // Make async
-    if (!cardId) {
-      logger.error("Delete card failed: Invalid card ID.");
-      setError("Failed to delete card: Invalid ID.");
-      return;
-    }
-
-    // Store card before deleting for potential revert
-    const cardToDelete = cards.find(card => card.id === cardId);
-
-    // Optimistic UI update (remove immediately)
-    setCards(prevCards => prevCards.filter(card => card.id !== cardId));
-    setSelectedCard(prevSelected => 
-       prevSelected && prevSelected.id === cardId ? null : prevSelected
-    );
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      if (currentUser) {
-        const repository = new CardRepository(currentUser.uid);
-        await repository.deleteCard(cardId);
-        logger.debug(`Card ${cardId} deleted from Firestore.`);
-        // Firestore listener should confirm the deletion in the state eventually
-      } else {
-        // Local storage is already updated by the optimistic removal via setCards
-      }
-
-    } catch (err) {
-      logger.error("Error deleting card:", err);
-      setError("Failed to delete card from cloud.");
-      // Revert optimistic update if Firestore delete failed
-      if (cardToDelete) {
-        setCards(prevCards => [...prevCards, cardToDelete]);
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [currentUser, cards, setCards, setSelectedCard, setLoading, setError]); // Add dependencies
 
   // Update the exchange rate - Wrapped in useCallback
   const updateExchangeRate = useCallback((newRate) => {

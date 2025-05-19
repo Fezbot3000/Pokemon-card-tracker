@@ -345,26 +345,22 @@ class ShadowSyncService {
     try {
       logger.debug(`[ShadowSync] Preparing to write card ${cardId} to collection ${collectionName || 'unknown'}`);
       
-      // Ensure collectionId is included in the data to be written
+      // Create a clean card data object without duplicating collection fields
       const cardDataToWrite = {
         ...card
       };
       
-      // Only add collection fields if collectionName is valid
-      if (collectionName) {
-        cardDataToWrite.collectionId = collectionName; // Explicitly add collectionId
-        cardDataToWrite.collection = collectionName;  // Add collection property for backward compatibility
-      }
+      // Remove existing collection fields to prevent duplicates
+      delete cardDataToWrite.collection;
+      delete cardDataToWrite.collectionId;
+      delete cardDataToWrite.id;
       
-      // Remove the id property from the data itself if it exists, as it's the document key
-      delete cardDataToWrite.id; 
-
-      // Combine ID, data, and collection into a single payload object
+      // Create the update payload with the correct collection fields
       const updatePayload = {
         ...cardDataToWrite,
-        id: cardId, // Ensure the ID is included
-        collection: collectionName, // Use the collection name passed
-        collectionId: collectionName // Also set collectionId for consistency
+        id: cardId,
+        collection: collectionName,
+        collectionId: collectionName
       };
 
       // Directly update the card without extensive checks (our getCard optimization will handle this)

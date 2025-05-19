@@ -662,24 +662,27 @@ const CardList = ({
   };
 
   const handleCardDelete = async (cardToDelete) => {
-    if (!cardToDelete || !cardToDelete.slabSerial) {
-      toast.error('Failed to delete card: Invalid card data');
-      return;
-    }
     try {
-      // Correctly call the onDeleteCard prop passed from App.js
-      if (onDeleteCard) {
-        await onDeleteCard(cardToDelete); // Pass the full card object
-      } else {
-        toast.error('Deletion setup error.');
+      const cardId = cardToDelete?.id || cardToDelete;
+      if (!cardId) {
+        console.error('Invalid card ID for deletion:', cardToDelete);
+        toast.error('Failed to delete card: Invalid ID');
+        return;
       }
-    } catch (err) {
-      toast.error(`Failed to delete card: ${err.message || 'Unknown error'}`);
+
+      await onDeleteCard(cardId);
+      toast.success('Card deleted successfully');
+      
+      // Clear selection if the deleted card was selected
+      if (selectedCards.has(cardId)) {
+        const newSelectedCards = new Set(selectedCards);
+        newSelectedCards.delete(cardId);
+        setSelectedCards(newSelectedCards);
+      }
+    } catch (error) {
+      console.error('Error deleting card:', error);
+      toast.error('Failed to delete card');
     }
-    // Always close the modal and clear selection after delete
-    setShowCardDetails(false);
-    setSelectedCard(null);
-    setSelectedCards(new Set());
   };
 
   const handleBulkDelete = async (cardsToDelete) => {

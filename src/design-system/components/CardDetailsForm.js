@@ -544,12 +544,14 @@ const CardDetailsForm = ({
     }
   };
 
-  const handleAddCustomSet = (newSet, year) => {
+  const handleAddCustomSet = async (newSet, year) => {
+    console.log('Adding custom set:', newSet, 'for year:', year);
+    
     if (!newSet || newSet.trim() === '') return '';
     
     console.log(`Adding custom set "${newSet}" for year ${year}`);
     
-    const addedSet = addCustomSet(newSet, year);
+    const addedSet = await addCustomSet(newSet, year);
     console.log(`Custom set added: ${addedSet}`);
     
     if (card.year) {
@@ -565,27 +567,28 @@ const CardDetailsForm = ({
     return addedSet;
   };
 
+  const handleSubmit = (e) => {
+    e.preventDefault();
+  };
+
   return (
-    <div className={`card-details-form ${className}`}>
+    <form onSubmit={handleSubmit} className={`card-details-form ${className}`}>
       {!hideCollectionField && (
         <div className="mb-6 mt-12"> 
           <SelectField
             label="Collection"
             name="collectionId"
-            value={card.collectionId || ''}
+            value={card.collectionId || initialCollectionName}
             onChange={handleCollectionChange}
             error={errors.collectionId}
             required
           >
-            <option value="" disabled>Select Collection...</option>
-            {collections
-              .filter(collection => collection !== 'sold') 
-              .map(collection => (
-                <option key={collection} value={collection}>
-                  {collection}
-                </option>
-              ))
-            }
+            <option value="">Select Collection...</option>
+            {collections.map((collection) => (
+              <option key={collection} value={collection}>
+                {collection}
+              </option>
+            ))}
           </SelectField>
         </div>
       )}
@@ -953,7 +956,7 @@ const CardDetailsForm = ({
           </div>
         </div>
       </div>
-    </div>
+    </form>
   );
 };
 

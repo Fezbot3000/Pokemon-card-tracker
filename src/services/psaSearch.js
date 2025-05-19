@@ -28,8 +28,35 @@ const subscriptionCache = {
 // PSA search result cache
 const psaCache = {
   results: {},  // Store results by cert number
-  expiry: 24 * 60 * 60 * 1000  // Cache PSA results for 24 hours
+  expiry: 24 * 60 * 60 * 1000,  // Cache PSA results for 24 hours
+  
+  // Load cached results from localStorage
+  loadFromStorage: function() {
+    try {
+      const stored = localStorage.getItem('psaSearchCache');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        this.results = parsed.results || {};
+      }
+    } catch (e) {
+      console.warn('Failed to load PSA search cache from localStorage:', e);
+    }
+  },
+  
+  // Save cached results to localStorage
+  saveToStorage: function() {
+    try {
+      localStorage.setItem('psaSearchCache', JSON.stringify({
+        results: this.results
+      }));
+    } catch (e) {
+      console.warn('Failed to save PSA search cache to localStorage:', e);
+    }
+  }
 };
+
+// Initialize cache from localStorage
+psaCache.loadFromStorage();
 
 // Access token storage
 let accessToken = null;
@@ -155,6 +182,8 @@ const cachePSAResult = (certNumber, data) => {
     timestamp: Date.now()
   };
   
+  psaCache.saveToStorage();
+  
   console.log(`Cached PSA result for cert number: ${certNumber}`);
   
   // Save to Firestore
@@ -272,7 +301,32 @@ const searchByCertNumber = async (certNumber, forceRefresh = false) => {
     // Show loading notification
     PSANotifications.showLoadingNotification();
     
-    // Check if we've hit the API rate limit
+    // Check caches first if not forcing refresh
+    if (!forceRefresh) {
+      // Check memory cache first (fastest)
+      const memoryResult = getCachedPSAResult(certNumber);
+      if (memoryResult) {
+        logger.debug(`Using PSA result from memory cache for cert #${certNumber}`);
+        PSANotifications.showLookupNotification('SUCCESS');
+        return memoryResult;
+      }
+      
+      // Then check Firebase cache
+      try {
+        const dbResult = await psaDataService.getCardFromCache(certNumber);
+        if (dbResult) {
+          logger.debug(`Using PSA result from Firebase for cert #${certNumber}`);
+          // Update memory cache
+          psaCache.results[certNumber] = dbResult;
+          PSANotifications.showLookupNotification('SUCCESS');
+          return dbResult;
+        }
+      } catch (dbError) {
+        logger.warn('Failed to get PSA result from Firebase:', dbError);
+      }
+    }
+    
+    // Only check rate limit if we need to make an API call
     const rateLimitStatus = apiRateLimit.checkStatus();
     if (rateLimitStatus.isLimited) {
       const hoursRemaining = Math.round(rateLimitStatus.timeUntilReset / (60 * 60 * 1000));
@@ -295,29 +349,9 @@ const searchByCertNumber = async (certNumber, forceRefresh = false) => {
       };
     }
     
-    // Check local cache first if not forcing refresh
-    if (!forceRefresh) {
-      const cachedResult = getCachedPSAResult(certNumber);
-      if (cachedResult) {
-        return cachedResult;
-      }
-      
-      // Check Firestore
-      try {
-        const dbResult = await psaDataService.getCardFromCache(certNumber);
-        if (dbResult) {
-          // Only log in development environment
-          if (process.env.NODE_ENV === 'development') {
-            console.log(`Using PSA result from Firestore for cert number: ${certNumber}`);
-          }
-          // Update memory cache with the same structure as direct API results
-          psaCache.results[certNumber] = dbResult;
-          return dbResult;
-        }
-      } catch (dbError) {
-        // Keep error logging for troubleshooting
-        console.warn('Failed to get PSA result from Firestore:', dbError);
-      }
+    // Only log in development environment
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`PSA Search: Not found in any cache, calling PSA API for cert #${certNumber}`);
     }
     
     // Only log in development environment
@@ -340,9 +374,11 @@ const searchByCertNumber = async (certNumber, forceRefresh = false) => {
     if (result.data && result.data.success) {
       const psaData = result.data.data;
       
-      // Cache the successful result locally
+      // Cache the successful result in memory and Firebase
       cachePSAResult(certNumber, psaData);
+      await psaDataService.saveCardToCache(certNumber, psaData);
       
+      PSANotifications.showLookupNotification('SUCCESS');
       return psaData;
     } else {
       // Keep error logging for PSA search since these are important for troubleshooting
