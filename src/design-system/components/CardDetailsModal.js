@@ -266,13 +266,13 @@ const CardDetailsModal = ({
     // Validate required fields
     const newErrors = {};
     
-    if (!card.card) {
-      newErrors.card = 'Card name is required';
+    if (!card.cardName) {
+      newErrors.cardName = 'Card name is required';
     }
     
     // Check the 'setName' field from the form data
-    if (!card.setName) { 
-      newErrors.setName = 'Set is required'; // Use 'setName' as the key
+    if (!card.set) { 
+      newErrors.set = 'Set is required';
     }
     
     if (!card.collectionId) {
@@ -288,10 +288,13 @@ const CardDetailsModal = ({
       newErrors.currentValueAUD = 'Must be a valid number';
     }
     
+    // Only show error message if there are actual errors
+    setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
       setSaveMessage('Please correct the highlighted field errors below.');
       return;
+    } else {
+      setSaveMessage('');
     }
     
     // Clear errors and save
@@ -302,6 +305,12 @@ const CardDetailsModal = ({
       setIsSaving(true);
       
       try {
+        // Get original amounts and currencies
+        const originalInvestment = card.originalInvestmentAmount !== undefined ? parseFloat(card.originalInvestmentAmount) : 0;
+        const originalInvestmentCurrency = card.originalInvestmentCurrency || 'AUD';
+        const originalCurrentValue = card.originalCurrentValueAmount !== undefined ? parseFloat(card.originalCurrentValueAmount) : 0;
+        const originalCurrentValueCurrency = card.originalCurrentValueCurrency || 'AUD';
+
         // Format the card data before saving
         const formattedCard = {
           ...card,
@@ -311,21 +320,40 @@ const CardDetailsModal = ({
           investmentAUD: card.investmentAUD ? parseFloat(card.investmentAUD) : '',
           currentValueAUD: card.currentValueAUD ? parseFloat(card.currentValueAUD) : '',
           quantity: card.quantity ? parseInt(card.quantity, 10) : 1,
+          // Add currency information
+          originalInvestmentAmount: originalInvestment,
+          originalInvestmentCurrency: originalInvestmentCurrency,
+          originalCurrentValueAmount: originalCurrentValue,
+          originalCurrentValueCurrency: originalCurrentValueCurrency
         };
         
-        // Call onSave and wait for it to complete
-        await onSave(formattedCard);
-        
-        // Clear any unsaved changes state
-        setErrors({});
-        setSaveMessage('');
-        
-        // Reset all form elements to prevent unsaved changes dialog
-        const forms = document.querySelectorAll('form');
-        forms.forEach(form => form.reset());
-        
-        // Close the modal
-        onClose();
+        try {
+          // Call onSave and wait for it to complete
+          await onSave(formattedCard);
+          
+          // Clear any unsaved changes state
+          setErrors({});
+          setSaveMessage('');
+          
+          // Reset all form elements to prevent unsaved changes dialog
+          const forms = document.querySelectorAll('form');
+          forms.forEach(form => form.reset());
+          
+          // Close the modal
+          onClose();
+        } catch (saveError) {
+          console.error('Error in onSave:', saveError);
+          // Check if it's a connection error
+          if (saveError.code === 'failed-precondition' || 
+              saveError.message?.includes('ERR_BLOCKED_BY_CLIENT') ||
+              saveError.message?.includes('network error')) {
+            setSaveMessage('Connection error. Please check your internet connection and try again.');
+          } else {
+            setSaveMessage('Failed to save changes. Please try again.');
+          }
+          setErrors({});
+          return;
+        }
       } catch (error) {
         console.error('Error saving card:', error);
         toast.error(`Failed to save card: ${error.message}`);
@@ -334,12 +362,7 @@ const CardDetailsModal = ({
         setIsSaving(false);
       }
     }
-
-const currentValueInPreferredCurrency = originalCurrentValue !== 0 ? 
-parseFloat(formatAmountForDisplay(originalCurrentValue, originalCurrentValueCurrency).replace(/[^0-9.-]+/g, '')) : 0;
-
-return currentValueInPreferredCurrency - investmentInPreferredCurrency;
-};
+  };
 
   // Update local state when props change or modal opens
   useEffect(() => {

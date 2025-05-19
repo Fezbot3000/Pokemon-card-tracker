@@ -201,9 +201,7 @@ const AddCardModal = ({
       // Prepare card data
       const cardToSave = {
         ...newCard,
-        collection: selectedCollection,
-        originalInvestmentAmount: parseFloat(newCard.originalInvestmentAmount) || 0,
-        currentValue: parseFloat(newCard.currentValue) || 0
+        collection: selectedCollection
       };
 
       // Try to save the card

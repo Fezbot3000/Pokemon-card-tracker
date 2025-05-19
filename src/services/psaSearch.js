@@ -684,9 +684,22 @@ const findBestMatchingSet = (setName, year) => {
       
     console.log('Cleaned set name for matching:', cleanSetName);
     
+    // Special case for Base Set cards from 1999
+    if (year === '1999' && cleanSetName.includes('game')) {
+      const baseSet = availableSets.find(set => 
+        set.label.toLowerCase() === 'base set (en)' ||
+        set.value.toLowerCase() === 'base set (en)'
+      );
+      if (baseSet) {
+        console.log('Found Base Set match for 1999 card:', baseSet);
+        return { matchedValue: baseSet.value, matchedLabel: baseSet.label };
+      }
+    }
+    
     // Try for exact match on label
     const exactMatch = availableSets.find(set => 
-      set.label.toLowerCase() === cleanSetName
+      set.label.toLowerCase() === cleanSetName ||
+      set.value.toLowerCase() === cleanSetName
     );
     if (exactMatch) {
       console.log('Found exact match:', exactMatch);
@@ -695,11 +708,23 @@ const findBestMatchingSet = (setName, year) => {
     
     // Try for partial match with more aggressive matching on label
     const partialMatches = availableSets
-      .filter(set => 
-        set.label.toLowerCase().includes(cleanSetName) ||
-        cleanSetName.includes(set.label.toLowerCase())
-      )
+      .filter(set => {
+        const setLower = set.label.toLowerCase();
+        const valueLower = set.value.toLowerCase();
+        return setLower.includes(cleanSetName) ||
+               cleanSetName.includes(setLower) ||
+               valueLower.includes(cleanSetName) ||
+               cleanSetName.includes(valueLower);
+      })
       .sort((a, b) => {
+        // Prioritize Base Set for 1999 cards
+        if (year === '1999') {
+          const aIsBase = a.label.toLowerCase().includes('base set');
+          const bIsBase = b.label.toLowerCase().includes('base set');
+          if (aIsBase && !bIsBase) return -1;
+          if (!aIsBase && bIsBase) return 1;
+        }
+        
         const aContainsSearch = a.label.toLowerCase().includes(cleanSetName);
         const bContainsSearch = b.label.toLowerCase().includes(cleanSetName);
         if (aContainsSearch && !bContainsSearch) return -1;
@@ -713,23 +738,6 @@ const findBestMatchingSet = (setName, year) => {
       const bestMatch = partialMatches[0];
       console.log('Found partial matches, best match:', bestMatch);
       return { matchedValue: bestMatch.value, matchedLabel: bestMatch.label };
-    }
-    
-    // Word-by-word matching on label
-    const words = cleanSetName.split(/\s+/);
-    if (words.length > 1) {
-      console.log('Trying word-by-word matching with words:', words);
-      for (const word of words) {
-        if (word.length < 3) continue;
-        const wordMatches = availableSets
-          .filter(set => set.label.toLowerCase().includes(word))
-          .sort((a, b) => a.label.length - b.label.length);
-        if (wordMatches.length > 0) {
-          const bestWordMatch = wordMatches[0];
-          console.log(`Found match using word "${word}":`, bestWordMatch);
-          return { matchedValue: bestWordMatch.value, matchedLabel: bestWordMatch.label };
-        }
-      }
     }
   }
   

@@ -25,18 +25,20 @@ export const availableCurrencies = [
 
 const AUD_CURRENCY_INFO = availableCurrencies.find(c => c.code === 'AUD') || availableCurrencies[0];
 
-// Approximate conversion rates (as of a defined point in time, e.g., May 2025 for simulation)
-// Base Currency: USD (1 USD = X of the specified currency)
-// These rates should be periodically reviewed and updated if managing manually.
-// For a production system, fetching these from a reliable API is recommended.
+// Base conversion rates (USD to X) - Last updated 2025-05-19
 const conversionRates = {
-  USD: 1,       // Base
-  EUR: 0.92,
+  USD: 1,
+  EUR: 0.91,
   GBP: 0.79,
-  AUD: 1.51,
-  CAD: 1.37,
-  JPY: 109.73   // Note: JPY often has higher values, e.g., 1 USD ~ 150 JPY in reality (May 2024)
+  JPY: 134.50,
+  AUD: 1.48,
+  CAD: 1.35,
 };
+
+// Constants for rate management
+const RATE_STORAGE_KEY = 'exchangeRates';
+const RATE_LAST_FETCH_KEY = 'lastRateFetch';
+const FETCH_INTERVAL = 12 * 60 * 60 * 1000; // 12 hours in milliseconds
 
 export function UserPreferencesProvider({ children }) {
   const { user } = useAuth();
@@ -62,28 +64,148 @@ export function UserPreferencesProvider({ children }) {
 
   // Fetch live exchange rates on mount or when user changes
   useEffect(() => {
-    const fetchLiveRates = async () => {
-      try {
-        const response = await fetch(CLOUD_FUNCTION_EXCHANGE_RATE_URL); // New call to Cloud Function
-        if (!response.ok) {
-          throw new Error(`API request failed with status ${response.status}`);
+    const fetchWithRetry = async (url, options, maxRetries = 3, baseDelay = 1000) => {
+      let lastError;
+      for (let i = 0; i < maxRetries; i++) {
+        try {
+          const response = await fetch(url, options);
+          if (response.ok) return response;
+          
+          // For 5xx errors, we'll retry
+          if (response.status >= 500) {
+            lastError = new Error(`Server error: ${response.status}`);
+            // Don't retry on last attempt
+            if (i === maxRetries - 1) throw lastError;
+          } else {
+            // For other errors (4xx), throw immediately
+            throw new Error(`API request failed: ${response.status}`);
+          }
+        } catch (error) {
+          lastError = error;
+          // Don't retry on last attempt
+          if (i === maxRetries - 1) throw error;
         }
-        const data = await response.json();
-        if (!data.error && data.rates) { // New check for Cloud Function response
-          setLiveExchangeRates(data.rates); // Use data.rates from Cloud Function
-          logger.info('Live exchange rates fetched successfully via proxy.', data.rates);
-        } else {
-          logger.error('Failed to fetch live exchange rates via proxy:', data.message || 'Invalid API response format from proxy', data);
-          setLiveExchangeRates(null); // Fallback or ensure it's handled
+        
+        // Exponential backoff
+        const delay = baseDelay * Math.pow(2, i);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+      throw lastError;
+    };
+
+    const loadStoredRates = () => {
+      try {
+        const stored = localStorage.getItem(RATE_STORAGE_KEY);
+        if (stored) {
+          const { rates, timestamp } = JSON.parse(stored);
+          // Verify the stored rates have all required currencies
+          const hasAllCurrencies = Object.keys(conversionRates).every(currency => rates[currency]);
+          if (hasAllCurrencies) {
+            return rates;
+          }
         }
       } catch (error) {
-        logger.error('Failed to fetch live exchange rates via proxy:', error);
-        setLiveExchangeRates(null); // Fallback to null if error
+        logger.warn('Failed to load stored rates:', error);
+      }
+      return null;
+    };
+
+    const saveRatesToStorage = (rates) => {
+      try {
+        localStorage.setItem(RATE_STORAGE_KEY, JSON.stringify({
+          rates,
+          timestamp: Date.now()
+        }));
+        localStorage.setItem(RATE_LAST_FETCH_KEY, Date.now().toString());
+      } catch (error) {
+        logger.warn('Failed to save rates to storage:', error);
+      }
+    };
+
+    const shouldFetchRates = () => {
+      try {
+        const lastFetch = parseInt(localStorage.getItem(RATE_LAST_FETCH_KEY));
+        return !lastFetch || Date.now() - lastFetch > FETCH_INTERVAL;
+      } catch {
+        return true;
+      }
+    };
+
+    const fetchLiveRates = async () => {
+      // Check if service is marked as unavailable
+      const serviceUnavailable = localStorage.getItem('exchangeRateServiceUnavailable');
+      if (serviceUnavailable) {
+        const unavailableUntil = parseInt(serviceUnavailable);
+        if (Date.now() < unavailableUntil) {
+          // Service is still in cooldown, use stored or hardcoded rates
+          const stored = loadStoredRates();
+          setLiveExchangeRates(stored || conversionRates);
+          return;
+        }
+        // Cooldown period is over, clear the flag and try again
+        localStorage.removeItem('exchangeRateServiceUnavailable');
+      }
+
+      // Don't fetch if it's not time yet
+      if (!shouldFetchRates()) {
+        const stored = loadStoredRates();
+        if (stored) {
+          setLiveExchangeRates(stored);
+          return;
+        }
+      }
+
+      try {
+        const response = await fetch(CLOUD_FUNCTION_EXCHANGE_RATE_URL, {
+          method: 'GET',
+          headers: { 'Accept': 'application/json' },
+          mode: 'cors'
+        });
+
+        const data = await response.json();
+
+        // Check for API configuration error
+        if (response.status === 500 && data.message?.includes('API key is not configured')) {
+          // Mark service as unavailable for 24 hours
+          localStorage.setItem('exchangeRateServiceUnavailable', (Date.now() + 24 * 60 * 60 * 1000).toString());
+          throw new Error('Exchange rate service not configured');
+        }
+
+        if (!response.ok) {
+          throw new Error(`API request failed: ${response.status}`);
+        }
+
+        if (!data.error && data.rates) {
+          // Verify the response has all required currencies
+          const hasAllCurrencies = Object.keys(conversionRates).every(currency => data.rates[currency]);
+          if (hasAllCurrencies) {
+            setLiveExchangeRates(data.rates);
+            saveRatesToStorage(data.rates);
+            return;
+          }
+        }
+        throw new Error('Invalid rate data');
+      } catch (error) {
+        // For configuration errors, log once and suppress future warnings
+        if (error.message === 'Exchange rate service not configured') {
+          logger.info('Exchange rate service is not configured, using fallback rates');
+        } else {
+          logger.warn('Using fallback rates:', error);
+        }
+        
+        // Try stored rates first
+        const stored = loadStoredRates();
+        setLiveExchangeRates(stored || conversionRates);
       }
     };
 
     fetchLiveRates(); // Fetch on initial load
-    // Consider re-fetching periodically or based on other triggers if needed
+    
+    // Retry every 30 minutes
+    const intervalId = setInterval(fetchLiveRates, 30 * 60 * 1000);
+    
+    // Cleanup interval on unmount
+    return () => clearInterval(intervalId);
   }, []); // Empty dependency array means this runs once on mount
 
   // Load preferences from Firestore when user context changes and set up real-time listener
@@ -174,37 +296,82 @@ export function UserPreferencesProvider({ children }) {
   // --- Internal Core Conversion and Formatting Logic ---
   
   const _convertAmount = (amount, fromCurrencyCode, toCurrencyCode) => {
-    if (fromCurrencyCode === toCurrencyCode) return amount;
-    if (amount === 0 || isNaN(amount)) return 0;
-
-    const ratesToUse = liveExchangeRates || conversionRates;
-
-    // Check if both currencies are in the rates object
-    if (!ratesToUse[fromCurrencyCode] || !ratesToUse[toCurrencyCode]) {
-      logger.warn(
-        `Missing rate for ${fromCurrencyCode} or ${toCurrencyCode}. Using 1:1 as fallback. Live rates available: ${!!liveExchangeRates}`,
-        { fromCurrencyCode, toCurrencyCode, availableRates: Object.keys(ratesToUse) }
-      );
-      // Fallback: if a rate is missing (e.g., new currency not in hardcoded list and API fails)
-      // try direct conversion if one is USD, otherwise assume 1:1 for safety to avoid NaN
-      // This part of fallback might need more robust handling depending on how critical direct match is.
-      if (fromCurrencyCode === 'USD') return amount * (ratesToUse[toCurrencyCode] || 1);
-      if (toCurrencyCode === 'USD') return amount / (ratesToUse[fromCurrencyCode] || 1);
-      return amount; // Or throw an error, or handle more gracefully
+    // Handle invalid inputs
+    if (amount === null || amount === undefined || isNaN(amount)) {
+      return 0;
     }
 
-    let amountInBase = amount;
-    // If 'fromCurrency' is not the base (USD for both rate sets), convert it to base first
-    if (fromCurrencyCode !== 'USD') {
-      amountInBase = amount / ratesToUse[fromCurrencyCode];
+    // If converting to the same currency, no conversion needed
+    if (fromCurrencyCode === toCurrencyCode) {
+      return amount;
     }
 
-    // Convert from base to the target currency
-    const convertedAmount = amountInBase * ratesToUse[toCurrencyCode];
-    
-    // For JPY, typically no decimals. For others, 2 decimals.
-    const isJPY = toCurrencyCode === 'JPY';
-    return isJPY ? Math.round(convertedAmount) : parseFloat(convertedAmount.toFixed(2));
+    try {
+      // Use hardcoded rates if live rates aren't available
+      const rates = liveExchangeRates || conversionRates;
+
+      // Validate currency codes
+      if (!rates[fromCurrencyCode]) {
+        logger.error(`Missing rate for ${fromCurrencyCode}, using 1:1 conversion`);
+        return amount;
+      }
+      if (!rates[toCurrencyCode]) {
+        logger.error(`Missing rate for ${toCurrencyCode}, using 1:1 conversion`);
+        return amount;
+      }
+
+      // Convert to USD first (our base currency)
+      let amountInUSD;
+      if (fromCurrencyCode === 'USD') {
+        amountInUSD = amount;
+      } else {
+        const fromRate = rates[fromCurrencyCode];
+        if (!fromRate || fromRate <= 0) {
+          logger.error(`Invalid rate for ${fromCurrencyCode}: ${fromRate}`);
+          return amount;
+        }
+        amountInUSD = amount / fromRate;
+      }
+
+      // Then convert from USD to target currency
+      const toRate = rates[toCurrencyCode];
+      if (!toRate || toRate <= 0) {
+        logger.error(`Invalid rate for ${toCurrencyCode}: ${toRate}`);
+        return amount;
+      }
+      const result = amountInUSD * toRate;
+
+      // Validate result
+      if (!isFinite(result)) {
+        logger.error('Invalid conversion result', {
+          amount,
+          fromCurrencyCode,
+          toCurrencyCode,
+          result,
+          rates: {
+            from: rates[fromCurrencyCode],
+            to: rates[toCurrencyCode]
+          }
+        });
+        return amount;
+      }
+
+      // For JPY, round to whole numbers
+      if (toCurrencyCode === 'JPY') {
+        return Math.round(result);
+      }
+
+      // For other currencies, keep 2 decimal places
+      return Math.round(result * 100) / 100;
+    } catch (error) {
+      logger.error('Currency conversion error', {
+        error,
+        amount,
+        fromCurrencyCode,
+        toCurrencyCode
+      });
+      return amount;
+    }
   };
 
   const _formatUsingIntl = (amount, currencyCodeForFormatting) => {
