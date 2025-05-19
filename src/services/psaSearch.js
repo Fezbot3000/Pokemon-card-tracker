@@ -420,24 +420,49 @@ const parsePSACardData = (psaData) => {
     parsedGradeValue = 'A';
   }
 
+  // Attempt to match the set using brand and year
+  const psaSetInfo = cert.Brand || cert.SetName || '';
+  const psaYear = cert.Year || '';
+  const matchedSetResult = findBestMatchingSet(psaSetInfo, psaYear);
+
+  let finalSetName = psaSetInfo; // Default to raw PSA set info
+  let finalSetValue = psaSetInfo; // Default to raw PSA set info for the value too, or empty
+
+  if (matchedSetResult) {
+    finalSetName = matchedSetResult.matchedLabel;
+    finalSetValue = matchedSetResult.matchedValue;
+    console.log(`PSA Search: Matched set to internal set. Label: "${finalSetName}", Value: "${finalSetValue}"`);
+  } else {
+    console.log(`PSA Search: Could not match set "${psaSetInfo}" for year "${psaYear}" to an internal set. Using raw info.`);
+    // Optionally, decide if `finalSetValue` should be empty if no match, 
+    // or if the raw `psaSetInfo` is acceptable as a temporary 'value'.
+    // For now, using psaSetInfo for both if no match, which might not select in dropdown
+    // but preserves the original data.
+  }
+
   const result = {
-    cardName: cleanCardName,
+    cardName: cleanCardName, // Expected: card.cardName in form
     cardNumber: cert.CardNumber || cert.SpecNumber || '',
-    slabSerial: cert.CertNumber || cert.SpecId || '',
-    grade: parsedGradeValue, // Use the extracted numerical/Authentic value
-    setName: cert.Brand || cert.SetName || '',
-    year: cert.Year || '',
-    cardType: cert.Category || '',
+    certificationNumber: cert.CertNumber || cert.SpecId || '', // Changed from slabSerial
+    grade: parsedGradeValue, // Expected: card.grade in form
+    gradingCompany: 'PSA', // Added: Expected card.gradingCompany in form
+    set: finalSetValue,
+    setName: finalSetName,
+    year: psaYear,
+    // Explicitly set category to 'pokemon' for all PSA cards
+    category: 'pokemon',
+    cardType: cert.Category || '', // Expected: card.category in form (implicitly)
     psaImageUrl: cert.ImageUrl || '',
-    population: cert.TotalPopulation || 0,
+    population: cert.TotalPopulation || 0, // Expected: card.population in form
     populationHigher: cert.TotalPopulationHigher || 0,
     varietyType: cert.Variety || '',
     certificationDate: cert.CertDate || '',
     // Show edition info (e.g., '1st Edition', 'Unlimited') in player field if present, otherwise fallback to character/player
-    player: (cert.Variety && /(Edition|Unlimited|1st)/i.test(cert.Variety)) ? cert.Variety : (cert.Subject || ''),
+    player: (cert.Variety && !/(N\/A|NONE)/i.test(cert.Variety) && /(Edition|Unlimited|1st|Promo|Holo|Reverse)/i.test(cert.Variety)) ? cert.Variety : (cert.Subject || ''), // Expected: card.player in form
     brand: cert.Brand || '',
     psaUrl: `https://www.psacard.com/cert/${cert.CertNumber || ''}`,
     isPSAAuthenticated: true,
+    _rawPsaData: cert // Include raw data for debugging or future use
   };
 
   console.log('Parsed PSA data into:', result);
@@ -473,7 +498,13 @@ const mergeWithExistingCard = (existingCardData, psaCardData) => {
   if (psaCardData.setName) {
     const matchedSet = findBestMatchingSet(psaCardData.setName, psaCardData.year);
     console.log('Found matching set:', matchedSet, 'from', psaCardData.setName);
-    mergedData.set = matchedSet;
+    if (matchedSet) {
+      mergedData.set = matchedSet.matchedValue;
+      mergedData.setName = matchedSet.matchedLabel; // Set both set and setName for compatibility
+    } else {
+      mergedData.set = psaCardData.setName;
+      mergedData.setName = psaCardData.setName;
+    }
   }
   
   if (psaCardData.year) mergedData.year = psaCardData.year;
@@ -522,7 +553,7 @@ const mergeWithExistingCard = (existingCardData, psaCardData) => {
   console.log('Category detection combined info:', combinedInfo);
 
   // Default category
-  mergedData.category = 'Pokemon'; // Default to Pokemon for PSA searches
+  mergedData.category = 'pokemon'; // Default to pokemon (lowercase) for PSA searches to match form expectations
 
   if (combinedInfo) {
     // Dragon Ball Z - check this first as it's more specific
@@ -530,38 +561,38 @@ const mergeWithExistingCard = (existingCardData, psaCardData) => {
         combinedInfo.includes('dragonball') || 
         combinedInfo.includes('dbz') ||
         /goku|vegeta|piccolo|gohan|trunks|frieza|cell|buu/i.test(combinedInfo)) {
-      mergedData.category = 'DragonBallZ';
+      mergedData.category = 'dragonBallZ'; // Use camelCase to match form expectations
     }
     // One Piece
     else if (combinedInfo.includes('one piece') || 
              /luffy|zoro|sanji|nami|usopp|chopper|robin|franky|brook|jinbe/i.test(combinedInfo)) {
-      mergedData.category = 'OnePiece';
+      mergedData.category = 'onePiece'; // Use camelCase to match form expectations
     }
     // Pokémon check
     else if (combinedInfo.includes('pokemon') || 
              combinedInfo.includes('pokémon') ||
              /pikachu|charizard|blastoise|venusaur|mewtwo/i.test(combinedInfo)) {
-      mergedData.category = 'Pokemon';
+      mergedData.category = 'pokemon'; // Use lowercase to match form expectations
     }
     // Yu-Gi-Oh
     else if (combinedInfo.includes('yu-gi-oh') || 
              combinedInfo.includes('yugioh') ||
              combinedInfo.includes('yu gi oh') ||
              /kaiba|yugi|exodia|blue-eyes|dark magician/i.test(combinedInfo)) {
-      mergedData.category = 'YuGiOh';
+      mergedData.category = 'yugioh'; // Use lowercase to match form expectations
     }
     // Magic: The Gathering
     else if (combinedInfo.includes('magic') || 
              combinedInfo.includes('mtg') ||
              combinedInfo.includes('gathering') ||
              /planeswalker|mana|wizards of the coast|mythic rare/i.test(combinedInfo)) {
-      mergedData.category = 'MagicTheGathering';
+      mergedData.category = 'magicTheGathering'; // Use camelCase to match form expectations
     }
     // Sports cards - NHL
     else if (combinedInfo.includes('hockey') || 
              combinedInfo.includes('nhl') ||
              /gretzky|ovechkin|crosby|mcdavid/i.test(combinedInfo)) {
-      mergedData.category = 'NHL';
+      mergedData.category = 'nhl'; // Use lowercase to match form expectations;
     }
     // NBL (National Basketball League)
     else if (combinedInfo.includes('nbl') || 
@@ -593,108 +624,83 @@ const findBestMatchingSet = (setName, year) => {
   // First try to get sets for the specific year
   let availableSets = [];
   if (year) {
-    const parsedYear = parseInt(year, 10);
+    const parsedYear = typeof year === 'string' ? parseInt(year.trim(), 10) : parseInt(year, 10);
+    console.log('Parsed year:', parsedYear);
+    
     if (!isNaN(parsedYear)) {
-      availableSets = getPokemonSetsByYear(parsedYear);
-      console.log(`Found ${availableSets.length} sets for year ${parsedYear}`);
+      availableSets = getPokemonSetsByYear(parsedYear); // Now returns [{label, value}, ...]
+      console.log(`Found ${availableSets.length} sets for year ${parsedYear}:`, availableSets);
     }
   }
   
-  // If no sets found for the year, use all sets
   if (availableSets.length === 0) {
-    availableSets = getAllPokemonSets();
-    console.log(`Using all sets (${availableSets.length} total)`);
+    availableSets = getAllPokemonSets(); // Now returns [{label, value}, ...]
+    console.log(`Using all sets (${availableSets.length} total):`, availableSets);
   }
   
-  // If we have a set name, try to find the best match
   if (setName && typeof setName === 'string' && availableSets.length > 0) {
-    // Clean up the set name for better matching
-    const cleanSetName = setName.toLowerCase().trim();
+    let cleanSetName = setName.toLowerCase().trim();
+    cleanSetName = cleanSetName
+      .replace(/pokemon\s+(trading\s+)?card\s+game/i, '')
+      .replace(/pokemon\s+(tcg|ccg)/i, '')
+      .replace(/^(japanese|english|jp|en)\s+/i, '')
+      .trim();
+      
     console.log('Cleaned set name for matching:', cleanSetName);
     
-    // Try for exact match first
+    // Try for exact match on label
     const exactMatch = availableSets.find(set => 
-      typeof set === 'string' && set.toLowerCase() === cleanSetName
+      set.label.toLowerCase() === cleanSetName
     );
-    
     if (exactMatch) {
       console.log('Found exact match:', exactMatch);
-      return exactMatch;
+      return { matchedValue: exactMatch.value, matchedLabel: exactMatch.label };
     }
     
-    // Try for partial match with more aggressive matching
-    // Sort by match quality - longer matches are better
+    // Try for partial match with more aggressive matching on label
     const partialMatches = availableSets
       .filter(set => 
-        typeof set === 'string' && (
-          set.toLowerCase().includes(cleanSetName) ||
-          cleanSetName.includes(set.toLowerCase())
-        )
+        set.label.toLowerCase().includes(cleanSetName) ||
+        cleanSetName.includes(set.label.toLowerCase())
       )
       .sort((a, b) => {
-        // Prefer sets that contain the search term over sets contained in the search term
-        const aContainsSearch = a.toLowerCase().includes(cleanSetName);
-        const bContainsSearch = b.toLowerCase().includes(cleanSetName);
-        
+        const aContainsSearch = a.label.toLowerCase().includes(cleanSetName);
+        const bContainsSearch = b.label.toLowerCase().includes(cleanSetName);
         if (aContainsSearch && !bContainsSearch) return -1;
         if (!aContainsSearch && bContainsSearch) return 1;
-        
-        // If both contain or are contained, prefer the closer length match
-        const aLengthDiff = Math.abs(a.length - cleanSetName.length);
-        const bLengthDiff = Math.abs(b.length - cleanSetName.length);
+        const aLengthDiff = Math.abs(a.label.length - cleanSetName.length);
+        const bLengthDiff = Math.abs(b.label.length - cleanSetName.length);
         return aLengthDiff - bLengthDiff;
       });
     
     if (partialMatches.length > 0) {
-      console.log('Found partial matches, best match:', partialMatches[0]);
-      console.log('All partial matches:', partialMatches);
-      return partialMatches[0];
+      const bestMatch = partialMatches[0];
+      console.log('Found partial matches, best match:', bestMatch);
+      return { matchedValue: bestMatch.value, matchedLabel: bestMatch.label };
     }
     
-    // Try word-by-word matching as a last resort
+    // Word-by-word matching on label
     const words = cleanSetName.split(/\s+/);
     if (words.length > 1) {
       console.log('Trying word-by-word matching with words:', words);
-      
-      // Try to match with individual words from the set name
       for (const word of words) {
-        if (word.length < 3) continue; // Skip very short words
-        
+        if (word.length < 3) continue;
         const wordMatches = availableSets
-          .filter(set => typeof set === 'string' && set.toLowerCase().includes(word))
-          .sort((a, b) => a.length - b.length); // Prefer shorter matches
-        
+          .filter(set => set.label.toLowerCase().includes(word))
+          .sort((a, b) => a.label.length - b.label.length);
         if (wordMatches.length > 0) {
-          console.log(`Found match using word "${word}":`, wordMatches[0]);
-          return wordMatches[0];
+          const bestWordMatch = wordMatches[0];
+          console.log(`Found match using word "${word}":`, bestWordMatch);
+          return { matchedValue: bestWordMatch.value, matchedLabel: bestWordMatch.label };
         }
       }
     }
   }
   
-  // If no match found, add it to custom sets and return the original value
-  console.log('No matching set found, adding to custom sets:', setName);
-  
-  try {
-    // Add the set to custom sets for the specified year or default to current year
-    const targetYear = year || new Date().getFullYear().toString();
-    const { addCustomSet } = require('../data/pokemonSets');
-    
-    // Add the set to custom sets
-    addCustomSet(setName, targetYear);
-    console.log(`Added "${setName}" to custom sets for year ${targetYear}`);
-    
-    // Also save to Firestore if available
-    if (db && typeof db.saveCustomSet === 'function') {
-      db.saveCustomSet(setName, targetYear)
-        .then(() => console.log(`Saved custom set "${setName}" to Firestore`))
-        .catch(err => console.error('Error saving custom set to Firestore:', err));
-    }
-  } catch (error) {
-    console.error('Error adding custom set:', error);
-  }
-  
-  return setName;
+  // If no match found, we will not add to custom sets here anymore.
+  // parsePSACardData will decide what to do if no match is found.
+  console.log('No matching set found by findBestMatchingSet for:', setName);
+  return null; // Return null if no match
 };
 
 /**

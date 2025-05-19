@@ -95,29 +95,107 @@ const PSADetailModal = ({
         console.log('Current card data:', currentCardData);
       }
       
-      // Create a direct mapping of PSA data to card fields
-      // This ensures we don't lose any existing data while adding PSA data
-      const mergedData = {
+      // Extract and trim values from the 'data' object (output of processPSACardData)
+      const psaMappedSetName = data.setName ? String(data.setName).trim() : '';      // e.g., "XY Promos" - from findBestMatchingSet
+      const psaRawBrand = data.Brand ? String(data.Brand).trim() : '';            // e.g., "POKEMON JAPANESE XY PROMO" - raw from PSA
+      const psaCardName = data.cardName ? String(data.cardName).trim() : '';        // e.g., "MARIO PIKACHU-HOLO"
+      const psaCardNumber = data.cardNumber ? String(data.cardNumber).trim() : '';    // e.g., "293"
+      const psaYear = data.year ? String(data.year).trim() : '';                  // e.g., "2016"
+      const psaGrade = data.grade ? String(data.grade).trim() : '';                // e.g., "GEM MT 10"
+      const psaCertNumber = data.certNumber ? String(data.certNumber).trim() : '';
+      const psaPsaUrl = data.psaUrl ? String(data.psaUrl).trim() : '';
+
+      // Start with a clean slate for the fields we want to set in order
+      let mergedData = {
         ...currentCardData,
-        card: data.cardName || currentCardData.card || '',
-        player: data.player || currentCardData.player || '',
-        set: data.setName || currentCardData.set || '',
-        year: data.year || currentCardData.year || '',
-        category: 'Pokemon', // Default to Pokemon for PSA cards
-        condition: `PSA ${data.grade}`,
-        gradingCompany: 'PSA',
-        grade: data.grade || '',
-        slabSerial: data.slabSerial || currentCardData.slabSerial || '',
-        population: data.population || currentCardData.population || '',
-        // Ensure PSA URL is set correctly
-        psaUrl: data.psaUrl || `https://www.psacard.com/cert/${data.slabSerial || certNumber}`,
-        // Preserve financial data
-        datePurchased: currentCardData?.datePurchased || new Date().toISOString().split('T')[0],
-        investmentAUD: currentCardData?.investmentAUD || '',
-        currentValueAUD: currentCardData?.currentValueAUD || '',
-        quantity: currentCardData?.quantity || 1
       };
       
+      // Step 1: Set category first - always 'pokemon' for PSA cards
+      console.log('[PSADetailModal] Step 1: Setting category to "pokemon"');
+      
+      // Force category to 'pokemon' for all PSA cards
+      // This is critical for the cascading dropdown logic to work correctly
+      mergedData.category = 'pokemon';
+      
+      // Check if the parsed data already has a category set (from parsePSACardData)
+      if (data.category === 'pokemon') {
+        console.log('[PSADetailModal] Category already set to "pokemon" in parsed data');
+      } else {
+        console.log('[PSADetailModal] Forcing category to "pokemon" regardless of parsed data');
+      }
+      
+      // Step 2: Set year - Use PSA year if available, else keep current
+      if (psaYear) {
+        console.log(`[PSADetailModal] Step 2: Setting year to "${psaYear}" from PSA data`);
+        mergedData.year = psaYear;
+      } else if (currentCardData.year) {
+        console.log(`[PSADetailModal] Step 2: Keeping current year "${currentCardData.year}"`); 
+        mergedData.year = String(currentCardData.year).trim();
+      } else {
+        console.log('[PSADetailModal] Step 2: No year available from PSA or current data');
+        mergedData.year = '';
+      }
+      
+      // Step 3: Set the set name and raw set value
+      if (psaMappedSetName) {
+        console.log(`[PSADetailModal] Step 3: Setting setName to "${psaMappedSetName}" from PSA data`);
+        mergedData.setName = psaMappedSetName;
+      } else if (currentCardData.setName) {
+        console.log(`[PSADetailModal] Step 3: Keeping current setName "${currentCardData.setName}"`);
+        mergedData.setName = String(currentCardData.setName).trim();
+      } else {
+        console.log('[PSADetailModal] Step 3: No setName available from PSA or current data');
+        mergedData.setName = '';
+      }
+      
+      // Also set the raw set value for reference
+      if (psaRawBrand) {
+        console.log(`[PSADetailModal] Step 3b: Setting raw set to "${psaRawBrand}" from PSA data`);
+        mergedData.set = psaRawBrand;
+      } else if (currentCardData.set) {
+        console.log(`[PSADetailModal] Step 3b: Keeping current raw set "${currentCardData.set}"`);
+        mergedData.set = String(currentCardData.set).trim();
+      } else {
+        console.log('[PSADetailModal] Step 3b: No raw set available from PSA or current data');
+        mergedData.set = '';
+      }
+
+      // Other card details: Use PSA if available, else current, else empty/default
+      mergedData.cardName = psaCardName || (currentCardData.cardName ? String(currentCardData.cardName).trim() : '');
+      mergedData.cardNumber = psaCardNumber || (currentCardData.cardNumber ? String(currentCardData.cardNumber).trim() : '');
+      
+      // Grade related fields
+      mergedData.grade = psaGrade || currentCardData.grade || ''; // General grade field, can be from PSA
+      mergedData.psaGrade = psaGrade || currentCardData.psaGrade || ''; // Explicit PSA grade field
+      // If psaGrade is available, attempt to parse company and grade number for 'condition'
+      if (psaGrade) {
+        const gradeParts = psaGrade.match(/([A-Z\s]+)(\d+|[A-Z]+)/i); // Attempt to split company and grade value
+        if (gradeParts && gradeParts.length > 2) {
+          const company = gradeParts[1].trim().toUpperCase();
+          const gradeVal = gradeParts[2].trim();
+          if (['PSA', 'CGS', 'BGS'].includes(company)) {
+            mergedData.gradingCompany = company;
+            mergedData.grade = gradeVal; // Overwrite general grade with specific parsed grade number/code
+            mergedData.condition = `${company} ${gradeVal}`;
+          } else {
+            mergedData.condition = psaGrade; // Fallback to full PSA grade string if company not recognized
+          }
+        } else {
+          mergedData.condition = psaGrade; // Fallback if regex fails
+        }
+      } else if (currentCardData.condition) {
+        mergedData.condition = currentCardData.condition;
+      } else {
+        mergedData.condition = '';
+      }
+
+      mergedData.certificationNumber = psaCertNumber || currentCardData.certificationNumber || '';
+      mergedData.psaUrl = psaPsaUrl || currentCardData.psaUrl || '';
+
+      // Quantity & Value: Retain current or default, PSA doesn't directly provide these in a general way for merging.
+      mergedData.quantity = currentCardData.quantity || 1;
+      mergedData.value = currentCardData.value || ''; // Placeholder for value, typically user-input or market data
+
       if (process.env.NODE_ENV === 'development') {
         console.log('Merged card data:', mergedData);
       }

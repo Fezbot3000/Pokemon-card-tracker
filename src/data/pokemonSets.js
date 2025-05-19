@@ -452,7 +452,7 @@ const getAllPokemonSets = () => {
   const allSets = [];
   Object.keys(POKEMON_SETS).forEach(year => {
     POKEMON_SETS[year].forEach(set => {
-      allSets.push(set.value);
+      allSets.push(set);
     });
   });
   return allSets;
@@ -466,8 +466,8 @@ const getAllPokemonSets = () => {
 const getPokemonSetsByYear = (year) => {
   if (!year) return getAllPokemonSets();
   
-  const standardSets = POKEMON_SETS[year] ? POKEMON_SETS[year].map(set => set.value) : [];
-  const customSets = userCustomSets[year] ? userCustomSets[year].map(set => set.value) : [];
+  const standardSets = POKEMON_SETS[year] || []; 
+  const customSets = userCustomSets[year] || [];
   
   // Combine standard and custom sets
   return [...standardSets, ...customSets];

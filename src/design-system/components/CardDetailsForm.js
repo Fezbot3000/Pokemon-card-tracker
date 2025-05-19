@@ -12,7 +12,7 @@ import Icon from '../atoms/Icon';
 import { gradients } from '../styles/colors';
 import PriceHistoryGraph from '../../components/PriceHistoryGraph';
 import PSALookupButton from '../../components/PSALookupButton'; 
-import { getAllPokemonSets, getPokemonSetsByYear, getSetsByCategory, addCustomSet } from '../../data/pokemonSets';
+import { getAllPokemonSets, getPokemonSetsByYear, getSetsByCategory, addCustomSet, getAvailableYears } from '../../data/pokemonSets';
 import { useUserPreferences } from '../../contexts/UserPreferencesContext'; 
 import '../styles/formFixes.css'; 
 
@@ -190,36 +190,117 @@ const CardDetailsForm = ({
   const [selectedCompany, setSelectedCompany] = useState('');
   const [selectedGrade, setSelectedGrade] = useState('');
   const [availableSets, setAvailableSets] = useState([]);
-
+  const [availableYears, setAvailableYears] = useState(getAvailableYears());
   const [displayInvestment, setDisplayInvestment] = useState('');
   const [displayCurrentValue, setDisplayCurrentValue] = useState('');
-  
+
   useEffect(() => {
-    // Filter sets based on both category and year
     const updateAvailableSets = () => {
+      console.log('[CardDetailsForm/updateAvailableSets] Updating available sets. Current card state:', {
+        category: card?.category,
+        year: card?.year,
+        set: card?.set, // Log original card.set for context
+        setName: card?.setName // This is the field driving the dropdown
+      });
+
       let filteredSets = [];
       
-      // If we have a category, get sets for that category
+      // Step 1: Always get sets based on category first
       if (card?.category) {
-        filteredSets = getSetsByCategory(card.category);
+        // Get all sets for the selected category
+        const categorySets = getSetsByCategory(card.category);
+        console.log(`[CardDetailsForm/updateAvailableSets] Found ${categorySets.length} sets for category '${card.category}'`);
         
-        // If the category is Pokemon and we have a year, filter further by year
-        if (card.category === 'pokemon' && card?.year) {
-          filteredSets = getPokemonSetsByYear(card.year);
+        // If we have sets for this category, use them
+        if (categorySets && categorySets.length > 0) {
+          filteredSets = categorySets;
+          
+          // Step 2: If category is Pokemon and we have a year, filter by year
+          if (card.category === 'pokemon' && card?.year) {
+            const parsedYear = parseInt(card.year, 10);
+            if (!isNaN(parsedYear)) {
+              console.log(`[CardDetailsForm/updateAvailableSets] Filtering Pokemon sets for year: ${parsedYear}`);
+              const yearSets = getPokemonSetsByYear(parsedYear);
+              
+              // Only use year-filtered sets if we found some
+              if (yearSets && yearSets.length > 0) {
+                filteredSets = yearSets;
+                console.log(`[CardDetailsForm/updateAvailableSets] Found ${yearSets.length} sets for year ${parsedYear}`);
+              } else {
+                console.log(`[CardDetailsForm/updateAvailableSets] No sets found for year ${parsedYear}, keeping all Pokemon sets`);
+              }
+            }
+          }
         }
       } else if (card?.year) {
-        // If we only have a year but no category, default to Pokemon sets by year
-        filteredSets = getPokemonSetsByYear(card.year);
-      } else {
-        // If we have neither category nor year, show no sets
-        filteredSets = [];
+        // If no category but we have a year, default to Pokemon sets for that year
+        const parsedYear = parseInt(card.year, 10);
+        if (!isNaN(parsedYear)) {
+          console.log(`[CardDetailsForm/updateAvailableSets] No category, getting Pokemon sets for year: ${parsedYear}`);
+          const yearSets = getPokemonSetsByYear(parsedYear);
+          if (yearSets && yearSets.length > 0) {
+            filteredSets = yearSets;
+            console.log(`[CardDetailsForm/updateAvailableSets] Found ${yearSets.length} sets for year ${parsedYear}`);
+          }
+        }
       }
       
-      setAvailableSets(filteredSets);
+      // Step 3: Process the sets to ensure consistent format (objects with value/label)
+      let formattedSets = [];
+      
+      // Convert all sets to objects with value and label properties
+      filteredSets.forEach(set => {
+        if (typeof set === 'string') {
+          formattedSets.push({ value: set.trim(), label: set.trim() });
+        } else if (set && set.value) {
+          formattedSets.push({ 
+            value: set.value.trim(), 
+            label: set.label || set.value.trim() 
+          });
+        }
+      });
+      
+      // Step 4: Add current set if it exists and isn't already in the list
+      const currentCardSetName = card?.setName ? String(card.setName).trim() : '';
+      if (currentCardSetName) {
+        // Check if the current set is already in the list
+        const setExists = formattedSets.some(set => set.value === currentCardSetName);
+        
+        if (!setExists) {
+          console.log(`[CardDetailsForm/updateAvailableSets] Adding current set "${currentCardSetName}" to available sets`);
+          formattedSets.push({ value: currentCardSetName, label: currentCardSetName });
+        }
+      }
+      
+      // Step 5: Remove duplicates and empty values
+      const uniqueSets = [];
+      const seenValues = new Set();
+      
+      formattedSets.forEach(set => {
+        if (set.value && !seenValues.has(set.value)) {
+          seenValues.add(set.value);
+          uniqueSets.push(set);
+        }
+      });
+      
+      // Step 6: Sort alphabetically by label
+      uniqueSets.sort((a, b) => a.label.localeCompare(b.label));
+      
+      console.log(`[CardDetailsForm/updateAvailableSets] Final available sets for dropdown: ${uniqueSets.length} sets`);
+      setAvailableSets(uniqueSets);
     };
     
+    console.log('[CardDetailsForm] useEffect for availableSets triggered. Dependencies: Category:', card?.category, 'Year:', card?.year, 'setName:', card?.setName);
     updateAvailableSets();
-  }, [card?.year, card?.category]);
+  }, [card?.category, card?.year, card?.setName]); // Dependency now on card.setName
+
+  useEffect(() => {
+    if (card?.category === 'pokemon') {
+      setAvailableYears(getAvailableYears());
+    } else {
+      setAvailableYears([]);
+    }
+  }, [card?.category]);
 
   useEffect(() => {
     if (card?.condition) {
@@ -231,12 +312,6 @@ const CardDetailsForm = ({
       setSelectedGrade(grade || '');
     }
   }, [card?.condition]);
-
-  useEffect(() => {
-    if (card?.setName && availableSets.length > 0 && !availableSets.includes(card.setName)) {
-      setAvailableSets(prev => [...prev, card.setName]);
-    }
-  }, [card?.setName, availableSets]);
 
   useEffect(() => {
     if (card?.gradingCompany && card?.grade) {
@@ -265,79 +340,74 @@ const CardDetailsForm = ({
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    console.log(`[CardDetailsForm/handleInputChange] Event - Name: ${name}, Value: ${value}`);
     
-    // Handle custom set creation
-    if (name === 'setName' && value === '__add_custom__') {
-      const customSet = prompt('Enter the name of the custom set:');
-      if (customSet && customSet.trim() !== '') {
-        const currentYear = card.year || "2024"; 
-        const newSet = handleAddCustomSet(customSet.trim(), currentYear);
-        
-        onChange({
-          ...card,
-          [name]: newSet
-        });
-        
-        setTimeout(() => {
-          if (card.year) {
-            const updatedSets = getPokemonSetsByYear(card.year);
-            setAvailableSets(updatedSets);
-          } else {
-            const allSets = getAllPokemonSets();
-            setAvailableSets(allSets);
-          }
-        }, 100);
-      } else {
-        e.target.value = card.setName || '';
-      }
-      return;
-    }
-    
-    // Handle category changes
+    let newCardData = { ...card };
+
     if (name === 'category') {
-      // When category changes, update available sets
-      let updatedCard = {
+      newCardData = {
         ...card,
-        [name]: value,
+        category: value,
+        // year: '', // DO NOT RESET YEAR
+        set: '',        // Reset raw set (PSA Brand)
+        setName: '',    // Reset display set name
       };
+      console.log('[CardDetailsForm/handleInputChange] Category changed to:', value);
       
-      // If changing to a non-Pokemon category, clear the year and set
-      if (value !== 'pokemon') {
-        updatedCard.year = '';
-        updatedCard.setName = '';
-        setAvailableSets([]);
-      } else if (card.year) {
-        // If changing to Pokemon and we have a year, get sets for that year
-        const yearSets = getPokemonSetsByYear(card.year);
-        setAvailableSets(yearSets);
+      // When category changes, update available years
+      if (value === 'pokemon') {
+        setAvailableYears(getAvailableYears());
       } else {
-        // If changing to Pokemon but no year, get all Pokemon sets
-        const allSets = getAllPokemonSets();
-        setAvailableSets(allSets);
+        setAvailableYears([]);
       }
-      
-      if (onChange) {
-        onChange(updatedCard);
-      }
-      return;
-    }
-    
-    // Handle year changes
-    if (name === 'year' && value) {
-      // Only filter by year if the category is Pokemon
-      if (card.category === 'pokemon') {
-        const yearSets = getPokemonSetsByYear(value);
-        setAvailableSets(yearSets);
-      }
-    }
-    
-    // Handle all other input changes
-    if (onChange) {
-      onChange({
+    } else if (name === 'year') {
+      newCardData = {
         ...card,
-        [name]: value
-      });
+        year: value,    // Update year from text input
+        set: '',        // Reset raw set
+        setName: '',    // Reset display set name
+      };
+      console.log('[CardDetailsForm/handleInputChange] Year changed to:', value);
+    } else if (name === 'set') { // This 'set' name comes from the Set SelectField's name attribute
+      newCardData = {
+        ...card,
+        setName: value, // Update display name
+        // Also update the raw set value to keep them in sync
+        set: value, 
+      };
+      console.log('[CardDetailsForm/handleInputChange] Set changed to:', value);
+    } else if (name === 'gradingCompany') {
+      setSelectedCompany(value); // Local state for grade options
+      newCardData = { ...card, gradingCompany: value, grade: '' }; // Reset grade in card data
+      setSelectedGrade(''); // Reset local selectedGrade for UI consistency
+    } else if (name === 'grade') { // No need to check selectedCompany here, card.gradingCompany is source of truth
+      setSelectedGrade(value); // Local state for UI consistency
+      newCardData = { ...card, grade: value };
+    } else if (name === 'condition' && card?.gradingCompany === 'RAW') {
+      // If grading company is RAW, condition is also used as the grade
+      newCardData = { ...card, condition: value, grade: value };
+    } else if (name === 'investment') {
+      setDisplayInvestment(value); // Update display value immediately
+      const numericValue = convertFromUserCurrency(value);
+      if (!isNaN(numericValue)) {
+        newCardData.investment = numericValue; // Store as number in card data
+      } else if (value.trim() === '') {
+        newCardData.investment = null; // Allow clearing the field
+      }
+    } else if (name === 'currentValue') {
+      setDisplayCurrentValue(value); // Update display value immediately
+      const numericValue = convertFromUserCurrency(value);
+      if (!isNaN(numericValue)) {
+        newCardData.currentValue = numericValue; // Store as number in card data
+      } else if (value.trim() === '') {
+        newCardData.currentValue = null; // Allow clearing the field
+      }
+    } else {
+      // Default handling for other fields
+      newCardData[name] = value;
     }
+    
+    onChange(newCardData); // Propagate changes up to the parent
   };
 
   const handleNumberChange = (e) => {
@@ -601,15 +671,28 @@ const CardDetailsForm = ({
                   )}
                   
                   {card.psaUrl && (
-                    <a
-                      href={card.psaUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-full inline-flex items-center justify-center font-medium rounded-lg transition-colors focus:outline-none px-4 py-2 text-base bg-gradient-to-r from-blue-500 to-blue-700 text-white hover:opacity-90 shadow-sm"
-                    >
-                      <Icon name="open_in_new" className="mr-2" />
-                      View on PSA Website
-                    </a>
+                    <div className="flex flex-col space-y-2">
+                      <a
+                        href={card.psaUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full inline-flex items-center justify-center font-medium rounded-lg transition-colors focus:outline-none px-4 py-2 text-base bg-gradient-to-r from-blue-500 to-blue-700 text-white hover:opacity-90 shadow-sm"
+                      >
+                        <Icon name="open_in_new" className="mr-2" />
+                        View on PSA Website
+                      </a>
+                      
+                      {card.slabSerial && onPsaSearch && (
+                        <button
+                          onClick={() => onPsaSearch(card.slabSerial)}
+                          className="w-full inline-flex items-center justify-center font-medium rounded-lg transition-colors focus:outline-none px-4 py-2 text-base bg-gradient-to-r from-green-500 to-green-700 text-white hover:opacity-90 shadow-sm"
+                          title="Reload data from PSA"
+                        >
+                          <Icon name="refresh" className="mr-2" />
+                          Reload PSA Data
+                        </button>
+                      )}
+                    </div>
                   )}
                 </div>
               </div>
@@ -684,66 +767,60 @@ const CardDetailsForm = ({
 
           <div className="grid grid-cols-1 gap-4 mt-4">
             <div>
-              <FormLabel htmlFor="setName">Set</FormLabel>
-              <div className="relative">
-                <select
-                  id="setName"
-                  name="setName"
-                  value={card.setName || ''}
-                  onChange={handleInputChange}
-                  className={`w-full px-4 py-2 border rounded-md ${
-                    errors.setName ? 'border-red-500' : 'border-[#ffffff33] dark:border-[#ffffff1a]'
-                  } bg-white dark:bg-[#0F0F0F] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none pr-10`}
-                  data-component-name="CardDetailsForm"
-                >
-                  <option value="" disabled>Select Set...</option>
-                  {availableSets.map(set => (
-                    <option key={set} value={set}>{set}</option>
-                  ))}
-                  <option value="__add_custom__">+ Add Custom Set...</option>
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 dark:text-gray-300">
-                  <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                    <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-                  </svg>
-                </div>
-              </div>
-              {errors.setName && (
-                <p className="mt-1 text-xs text-red-500 dark:text-red-400">{errors.setName}</p>
-              )}
+              <SelectField
+                label="Category"
+                name="category"
+                value={card?.category || ''}
+                onChange={handleInputChange}
+                options={[
+                  { value: '', label: 'Select Category...' },
+                  ...cardCategories
+                ]}
+                error={errors.category}
+                required
+                testId="category-select"
+              />
             </div>
           </div>
 
           <div className="grid grid-cols-1 gap-4 mt-4">
             <div>
               <SelectField
-                label="Category"
-                name="category"
-                value={card.category || ''}
+                label="Year"
+                name="year"
+                value={card?.year || ''}
                 onChange={handleInputChange}
-                error={errors.category}
-                required
+                error={errors.year}
+                disabled={false}
+                testId="year-select"
               >
-                {cardCategories.map(option => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
+                <option value="">Select Year...</option>
+                {availableYears.map(year => (
+                  <option key={year} value={year}>{year}</option>
                 ))}
               </SelectField>
             </div>
           </div>
-
+          
           <div className="grid grid-cols-1 gap-4 mt-4">
             <div>
-              <FormField
-                label="Year"
-                name="year"
-                value={card.year || ''}
+              <SelectField
+                label="Set"
+                name="set"
+                value={card?.setName || ''}
                 onChange={handleInputChange}
-                error={errors.year}
-                placeholder={card.category === 'pokemon' ? 'Enter year (e.g., 2023)' : ''}
-                disabled={card.category !== 'pokemon'}
+                options={[
+                  { value: '', label: 'Select Set...' },
+                  ...availableSets
+                ]}
+                disabled={!card?.category}
+                className={errors.setName ? 'border-red-500' : ''}
+                aria-describedby={errors.setName ? 'set-error' : undefined}
+                testId="set-select"
               />
+              {errors.setName && (
+                <p className="mt-1 text-xs text-red-500 dark:text-red-400">{errors.setName}</p>
+              )}
             </div>
           </div>
 

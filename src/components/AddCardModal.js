@@ -27,16 +27,16 @@ const AddCardModal = ({
   const emptyCard = {
     id: null,
     player: '',
-    card: '',
+    cardName: '', 
     set: '',
     year: '',
-    category: '', // Changed from 'Pokemon' to blank to fix default
+    category: '', 
     condition: '',
-    slabSerial: '',
+    certificationNumber: '', 
     datePurchased: new Date().toISOString().split('T')[0],
     investmentAUD: '',
     currentValueAUD: '',
-    quantity: 1, // Add default quantity of 1
+    quantity: 1, 
   };
   
   // State for card data
@@ -69,7 +69,7 @@ const AddCardModal = ({
   const [errors, setErrors] = useState({});
   const [saveMessage, setSaveMessage] = useState(null);
   const [animClass, setAnimClass] = useState('');
-  const [isSaving, setIsSaving] = useState(false); // Add saving state
+  const [isSaving, setIsSaving] = useState(false); 
   
   // State for new collection modal
   const [showNewCollectionModal, setShowNewCollectionModal] = useState(false);
@@ -110,7 +110,7 @@ const AddCardModal = ({
       setImageFile(file);
       setImageLoadingState('idle');
       
-      return file; // Return the file for saving by parent component
+      return file; 
     } catch (error) {
       console.error('Error changing card image:', error);
       setImageLoadingState('error');
@@ -137,16 +137,16 @@ const AddCardModal = ({
     const newErrors = {};
     
     // Card name is required
-    if (!newCard.card?.trim()) {
-      newErrors.card = 'Card name is required';
+    if (!newCard.cardName?.trim()) {
+      newErrors.cardName = 'Card name is required';
     }
     
     // Check if this is a raw card by looking at the condition field
     const isRawCard = newCard.condition?.startsWith('RAW');
     
     // Serial number is required for graded cards only
-    if (!isRawCard && !newCard.slabSerial?.trim()) {
-      newErrors.slabSerial = 'Serial number is required for graded cards';
+    if (!isRawCard && !newCard.certificationNumber?.trim()) {
+      newErrors.certificationNumber = 'Serial number is required for graded cards';
     }
     
     // Selected collection is required and cannot be "Sold"
@@ -165,14 +165,14 @@ const AddCardModal = ({
     // Clear any previous error messages
     setSaveMessage(null);
     setErrors({});
-    setIsSaving(true); // Set saving state to true
+    setIsSaving(true); 
 
     // Validate form
     const validationErrors = validateForm();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       setSaveMessage('Please fix the errors before saving');
-      setIsSaving(false); // Reset saving state
+      setIsSaving(false); 
       return;
     }
 
@@ -180,7 +180,7 @@ const AddCardModal = ({
     if (!imageFile) {
       setSaveMessage('Please add an image for the card');
       setErrors({ image: 'Card image is required' });
-      setIsSaving(false); // Reset saving state
+      setIsSaving(false); 
       return;
     }
 
@@ -212,12 +212,12 @@ const AddCardModal = ({
       // Handle specific error cases
       if (error.message.includes('serial number already exists')) {
         setErrors({
-          slabSerial: 'This serial number already exists in your active collections'
+          certificationNumber: 'This serial number already exists in your active collections'
         });
         setSaveMessage('Card already exists');
         
         // Scroll the serial number field into view
-        const serialField = document.querySelector('[name="slabSerial"]');
+        const serialField = document.querySelector('[name="certificationNumber"]');
         if (serialField) {
           serialField.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
@@ -226,7 +226,7 @@ const AddCardModal = ({
         setSaveMessage(`Error: ${error.message}`);
       }
     } finally {
-      setIsSaving(false); // Reset saving state regardless of success/failure
+      setIsSaving(false); 
     }
   };
 
@@ -269,17 +269,14 @@ const AddCardModal = ({
   // Handle applying PSA details to the card
   const handleApplyPsaDetails = (updatedCardData) => {
     setNewCard(prev => {
-      // Ensure the original serial number used for the search is preserved
-      const originalSerial = prev.slabSerial;
-
+      // updatedCardData contains all fields from parsePSACardData, including certificationNumber
       const mergedData = {
-        ...prev, // Start with previous state
-        ...updatedCardData, // Merge PSA data
-        slabSerial: originalSerial || updatedCardData.slabSerial || '', // Always prioritize the original user-entered serial
-        // Ensure psaUrl is set correctly
-        psaUrl: updatedCardData.psaUrl || `https://www.psacard.com/cert/${originalSerial || updatedCardData.slabSerial || ''}`,
+        ...prev, 
+        ...updatedCardData, 
+        // Ensure psaUrl uses the certification number from PSA data, fallback to the user-entered psaSerial if needed.
+        psaUrl: updatedCardData.psaUrl || `https://www.psacard.com/cert/${updatedCardData.certificationNumber || psaSerial || ''}`,
       };
-      console.log('Applied PSA details with URL:', mergedData.psaUrl);
+      console.log('Applied PSA details. Merged data:', mergedData);
       return mergedData;
     });
     toast.success('PSA card details applied');
@@ -305,7 +302,7 @@ const AddCardModal = ({
         <Button
           variant="primary"
           onClick={handleSave}
-          disabled={isSaving} // Disable button when saving
+          disabled={isSaving} 
         >
           {isSaving ? (
             'Saving...'
