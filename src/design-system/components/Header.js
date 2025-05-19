@@ -10,6 +10,7 @@ import Dropdown, { DropdownItem, DropdownDivider } from '../molecules/Dropdown';
 // Import needed contexts and services
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useUserPreferences, availableCurrencies } from '../../contexts/UserPreferencesContext';
 import { baseColors } from '../styles/colors';
 
 /**
@@ -29,8 +30,30 @@ const Header = ({
   const [isAnimating, setIsAnimating] = useState(false);
   const { theme, toggleTheme } = useTheme();
   const { user, logout } = useAuth() || { user: null, logout: () => {} };
+  const { preferredCurrency, updatePreferredCurrency } = useUserPreferences();
+  const [currencyDropdownOpen, setCurrencyDropdownOpen] = useState(false);
+  const currencyDropdownRef = useRef(null);
 
 
+
+  // Handle click outside to close currency dropdown
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (currencyDropdownRef.current && !currencyDropdownRef.current.contains(event.target)) {
+        setCurrencyDropdownOpen(false);
+      }
+    }
+
+    // Add event listener when dropdown is open
+    if (currencyDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    
+    // Cleanup event listener
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [currencyDropdownOpen]);
 
   // Handle view mode change with animation
   const handleViewChange = (newView) => {
@@ -160,8 +183,44 @@ const Header = ({
             </div>
           )}
           
-          {/* Right side - action buttons (hidden on mobile) */}
-          <div className="hidden sm:flex items-center space-x-2">
+          {/* Right side - action buttons */}
+          <div className="flex items-center space-x-2">
+            {/* Currency Dropdown - Visible on all screen sizes */}
+            <div className="relative" ref={currencyDropdownRef}>
+              <button
+                onClick={() => setCurrencyDropdownOpen(!currencyDropdownOpen)}
+                className="px-2 py-1 flex items-center justify-center rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200"
+                aria-label="Change currency"
+              >
+                <span className="mr-1">{preferredCurrency.symbol}</span>
+                <span className="hidden xs:inline">{preferredCurrency.code}</span>
+                <Icon name="expand_more" size="sm" className="ml-0.5 hidden xs:inline" />
+              </button>
+              
+              {currencyDropdownOpen && (
+                <div 
+                  className="absolute right-0 mt-1 w-48 bg-white dark:bg-gray-900 rounded-md shadow-lg py-1 z-50 border border-gray-200 dark:border-gray-700"
+                >
+                  {availableCurrencies.map((currency) => (
+                    <button
+                      key={currency.code}
+                      className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 ${currency.code === preferredCurrency.code ? 'bg-gray-100 dark:bg-gray-800 font-medium' : ''}`}
+                      onClick={() => {
+                        updatePreferredCurrency(currency);
+                        setCurrencyDropdownOpen(false);
+                      }}
+                    >
+                      <span className="mr-2">{currency.symbol}</span>
+                      <span>{currency.name}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            
+            {/* Other buttons - Hidden on mobile */}
+            <div className="hidden sm:flex items-center space-x-2">
+            
             <button
               onClick={toggleTheme}
               className="p-1 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
@@ -181,6 +240,7 @@ const Header = ({
             )}
             
             {/* Upload icon removed from main navigation and moved to developer settings */}
+            </div>
           </div>
         </div>
       </div>

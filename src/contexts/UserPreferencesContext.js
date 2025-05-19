@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { useAuth } from '../design-system/contexts/AuthContext';
 import logger from '../utils/logger';
@@ -86,11 +86,12 @@ export function UserPreferencesProvider({ children }) {
     // Consider re-fetching periodically or based on other triggers if needed
   }, []); // Empty dependency array means this runs once on mount
 
-  // Load preferences from Firestore when user context changes
+  // Load preferences from Firestore when user context changes and set up real-time listener
   useEffect(() => {
-    async function loadUserPreferencesFromFirestore() {
-      if (!user) return;
-      
+    if (!user) return;
+    
+    // Initial load from Firestore
+    async function loadUserPreferencesFromFirestore() {      
       try {
         const userPrefsRef = doc(db, 'userPreferences', user.uid);
         const userPrefsDoc = await getDoc(userPrefsRef);
@@ -114,7 +115,33 @@ export function UserPreferencesProvider({ children }) {
       }
     }
     
+    // Set up real-time listener for changes
+    const userPrefsRef = doc(db, 'userPreferences', user.uid);
+    const unsubscribe = onSnapshot(userPrefsRef, (doc) => {
+      try {
+        if (doc.exists()) {
+          const firestoreData = doc.data();
+          if (firestoreData.currency && availableCurrencies.find(c => c.code === firestoreData.currency.code)) {
+            const firestoreCurrency = firestoreData.currency;
+            // Only update if the currency has actually changed
+            if (firestoreCurrency.code !== preferredCurrency.code) {
+              logger.info('Currency preference updated from another device:', firestoreCurrency);
+              setPreferredCurrency(firestoreCurrency);
+              localStorage.setItem(CURRENCY_PREFERENCE_KEY, JSON.stringify(firestoreCurrency));
+            }
+          }
+        }
+      } catch (error) {
+        logger.error('Error in currency preference real-time listener:', error);
+      }
+    }, (error) => {
+      logger.error('Error setting up currency preference listener:', error);
+    });
+    
     loadUserPreferencesFromFirestore();
+    
+    // Clean up listener when component unmounts or user changes
+    return () => unsubscribe();
   }, [user]); // Removed preferredCurrency from dependency array to avoid loop on initial save
 
   // Save preferences to Firestore (takes currencyToSave to handle initial save correctly)
@@ -137,6 +164,8 @@ export function UserPreferencesProvider({ children }) {
       logger.warn('Attempted to set invalid currency:', newCurrencyObject);
       return;
     }
+    // Local state and storage updates will also happen via the Firestore listener
+    // but we set them immediately for a responsive UI
     setPreferredCurrency(newCurrencyObject);
     localStorage.setItem(CURRENCY_PREFERENCE_KEY, JSON.stringify(newCurrencyObject));
     await saveUserPreferencesToFirestore(newCurrencyObject);
