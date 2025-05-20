@@ -58,7 +58,7 @@ import SyncStatusIndicator from './components/SyncStatusIndicator'; // Import th
 import featureFlags from './utils/featureFlags'; // Import feature flags
 import { CardRepository } from './repositories/CardRepository';
 import { doc, getDoc, setDoc, serverTimestamp, collection, getDocs } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { ref, uploadBytes, getDownloadURL, listAll } from 'firebase/storage';
 import { db as firestoreDb, storage } from './services/firebase';
 import JSZip from 'jszip'; // Import JSZip for handling zip files
 import TutorialModal from './components/TutorialModal'; // Add back this import
@@ -629,11 +629,341 @@ function AppContent() {
     initializeDatabaseAndLoadCollections();
   }, []);
 
-  // Function to export all data as a ZIP file
+  // Function to export all data as a ZIP file or JSON file for personal data export
   const handleExportData = async (options = {}) => {
     return new Promise(async (resolve, reject) => {
       try {
-        // Show loading toast
+        // Check if this is a personal data export
+        if (options.personalDataExport) {
+          // Show loading toast
+          toast.loading('Preparing personal data export...', { id: 'export-data' });
+          
+          // Get current user ID
+          const userId = user?.uid;
+          if (!userId) {
+            toast.error('You must be logged in to export your data', { id: 'export-data' });
+            reject(new Error('User not authenticated'));
+            return;
+          }
+          
+          // Create a new ZIP file for personal data export
+          const zip = new JSZip();
+          
+          // Create an images folder in the ZIP
+          const imagesFolder = zip.folder("images");
+          
+          // Fetch user document from Firestore
+          let userDocument = {};
+          try {
+            const userDocRef = doc(firestoreDb, 'users', userId);
+            const userDocSnap = await getDoc(userDocRef);
+            if (userDocSnap.exists()) {
+              userDocument = userDocSnap.data();
+              // Remove any sensitive fields
+              delete userDocument.apiKeys;
+              delete userDocument.stripeCustomerId;
+              delete userDocument.stripeSubscriptionId;
+            }
+          } catch (error) {
+            logger.error('Error fetching user document:', error);
+            // Continue anyway - we'll still export other data
+          }
+          
+          // Get ALL collections data
+          const allCollections = await db.getCollections();
+          
+          // Get profile data
+          const profileData = await db.getProfile();
+          
+          // Get sold cards data
+          const soldCardsData = await db.getSoldCards();
+          
+          // Get purchase invoices data
+          const purchaseInvoicesData = await db.getPurchaseInvoices();
+          
+          // Get user preferences from localStorage
+          const userPreferences = {
+            theme: localStorage.getItem('theme') || 'light',
+            cardListSortField: localStorage.getItem('cardListSortField') || 'name',
+            cardListSortDirection: localStorage.getItem('cardListSortDirection') || 'asc',
+            cardListDisplayMetric: localStorage.getItem('cardListDisplayMetric') || 'value',
+            preferredCurrency: localStorage.getItem('preferredCurrency') || 'USD',
+            featureFlags: JSON.parse(localStorage.getItem('appFeatureFlags') || '{}')
+          };
+          
+          // Process collections and their cards
+          const processedCollections = {};
+          const cardImageMap = new Map(); // Map to track which cards have images
+          
+          // Convert allCollections object to array format for iteration
+          const collectionsArray = Object.entries(allCollections).map(([name, data]) => ({ name, data }));
+          
+          for (const collection of collectionsArray) {
+            const collectionName = collection.name;
+            const cards = collection.data || [];
+            
+            processedCollections[collectionName] = [];
+            
+            for (const card of cards) {
+              // Create a clean copy of the card without internal fields
+              const cleanCard = { ...card };
+              
+              // Remove internal fields
+              delete cleanCard._lastUpdateTime;
+              delete cleanCard._syncStatus;
+              delete cleanCard._localId;
+              
+              // Track card IDs for image mapping
+              if (cleanCard.id) {
+                cardImageMap.set(cleanCard.id, cleanCard);
+              }
+              if (cleanCard.slabSerial) {
+                cardImageMap.set(cleanCard.slabSerial, cleanCard);
+              }
+              
+              processedCollections[collectionName].push(cleanCard);
+            }
+          }
+          
+          // Process sold items
+          const processedSoldItems = [];
+          
+          for (const soldCard of soldCardsData) {
+            // Create a clean copy of the sold card without internal fields
+            const cleanSoldCard = { ...soldCard };
+            
+            // Remove internal fields
+            delete cleanSoldCard._lastUpdateTime;
+            delete cleanSoldCard._syncStatus;
+            delete cleanSoldCard._localId;
+            
+            // Track card IDs for image mapping
+            if (cleanSoldCard.id) {
+              cardImageMap.set(cleanSoldCard.id, cleanSoldCard);
+            }
+            if (cleanSoldCard.slabSerial) {
+              cardImageMap.set(cleanSoldCard.slabSerial, cleanSoldCard);
+            }
+            
+            processedSoldItems.push(cleanSoldCard);
+          }
+          
+          // Create a progress indicator element
+          const progressContainer = document.createElement('div');
+          progressContainer.style.position = 'fixed';
+          progressContainer.style.top = '50%';
+          progressContainer.style.left = '50%';
+          progressContainer.style.transform = 'translate(-50%, -50%)';
+          progressContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+          progressContainer.style.padding = '20px';
+          progressContainer.style.borderRadius = '10px';
+          progressContainer.style.zIndex = '9999';
+          progressContainer.style.color = 'white';
+          progressContainer.style.width = '300px';
+          progressContainer.style.textAlign = 'center';
+          
+          const progressTitle = document.createElement('h3');
+          progressTitle.textContent = 'Downloading Images';
+          progressTitle.style.margin = '0 0 10px 0';
+          
+          const progressText = document.createElement('div');
+          progressText.textContent = 'Fetching image list...';
+          progressText.style.marginBottom = '10px';
+          
+          const progressBarContainer = document.createElement('div');
+          progressBarContainer.style.width = '100%';
+          progressBarContainer.style.backgroundColor = '#444';
+          progressBarContainer.style.borderRadius = '5px';
+          progressBarContainer.style.overflow = 'hidden';
+          
+          const progressBar = document.createElement('div');
+          progressBar.style.width = '0%';
+          progressBar.style.height = '20px';
+          progressBar.style.backgroundColor = '#4CAF50';
+          progressBar.style.transition = 'width 0.3s';
+          
+          const progressStats = document.createElement('div');
+          progressStats.style.marginTop = '10px';
+          progressStats.textContent = '0/0 images';
+          
+          progressBarContainer.appendChild(progressBar);
+          progressContainer.appendChild(progressTitle);
+          progressContainer.appendChild(progressText);
+          progressContainer.appendChild(progressBarContainer);
+          progressContainer.appendChild(progressStats);
+          document.body.appendChild(progressContainer);
+          
+          // Function to update progress
+          const updateProgress = (current, total, message) => {
+            const percent = total > 0 ? Math.round((current / total) * 100) : 0;
+            progressBar.style.width = `${percent}%`;
+            progressText.textContent = message || `Downloading images...`;
+            progressStats.textContent = `${current}/${total} images`;
+            logger.debug(`Export progress: ${percent}% - ${current}/${total} - ${message || ''}`);
+          };
+          
+          // Process images
+          const imagePromises = [];
+          let processedImageCount = 0;
+          
+          try {
+            // Fetch all images from Firebase Storage
+            toast.loading('Fetching images from cloud storage...', { id: 'export-data' });
+            
+            // Get all images from Firebase Storage for this user
+            const storageRef = ref(storage, `images/${userId}`);
+            const cloudImagesList = await listAll(storageRef);
+            const totalImages = cloudImagesList.items.length;
+            
+            logger.debug(`Found ${totalImages} cloud images in Firebase Storage`);
+            updateProgress(0, totalImages, `Found ${totalImages} images to download`);
+            
+            // Process images in batches to avoid overwhelming the browser
+            const batchSize = 10;
+            const totalBatches = Math.ceil(totalImages / batchSize);
+            
+            for (let batchIndex = 0; batchIndex < totalBatches; batchIndex++) {
+              const batchStart = batchIndex * batchSize;
+              const batchEnd = Math.min(batchStart + batchSize, totalImages);
+              const batchItems = cloudImagesList.items.slice(batchStart, batchEnd);
+              
+              // Process each batch with Promise.all for parallel downloads
+              const batchPromises = batchItems.map(async (imageRef) => {
+                try {
+                  const imageId = imageRef.name;
+                  
+                  // Download the image from Firebase Storage
+                  const imageUrl = await getDownloadURL(imageRef);
+                  const response = await fetch(imageUrl);
+                  
+                  if (!response.ok) {
+                    throw new Error(`Failed to fetch image: ${response.status} ${response.statusText}`);
+                  }
+                  
+                  const imageBlob = await response.blob();
+                  
+                  // Add image to ZIP
+                  const extension = imageBlob.type.split('/')[1] || 'jpg';
+                  const filename = `${imageId}.${extension}`;
+                  await imagesFolder.file(filename, imageBlob);
+                  
+                  // Update image reference in card data if this image belongs to a card
+                  const card = cardImageMap.get(imageId);
+                  if (card) {
+                    card.imageUrl = `images/${filename}`;
+                  }
+                  
+                  // Also check if this is a numeric ID (which might be a slab serial)
+                  if (/^\d+$/.test(imageId)) {
+                    const cardBySlabSerial = cardImageMap.get(imageId);
+                    if (cardBySlabSerial && cardBySlabSerial !== card) {
+                      cardBySlabSerial.imageUrl = `images/${filename}`;
+                    }
+                  }
+                  
+                  processedImageCount++;
+                  updateProgress(processedImageCount, totalImages, `Downloaded ${processedImageCount} of ${totalImages} images`);
+                  
+                  return { success: true, imageId };
+                } catch (error) {
+                  logger.error(`Failed to export cloud image ${imageRef.name}:`, error);
+                  return { success: false, imageId: imageRef.name, error };
+                }
+              });
+              
+              await Promise.all(batchPromises);
+            }
+          } catch (error) {
+            logger.error('Error processing cloud images:', error);
+            toast.error('Error downloading images from cloud storage', { id: 'export-data' });
+          } finally {
+            // Clean up the progress indicator when done
+            document.body.removeChild(progressContainer);
+          }
+          
+          
+          // Create metadata with counts
+          const metadata = {
+            totalCards: Object.values(processedCollections).reduce((sum, cards) => sum + cards.length, 0),
+            totalSoldItems: processedSoldItems.length,
+            totalPurchaseInvoices: purchaseInvoicesData.length,
+            totalCollections: Object.keys(processedCollections).length,
+            totalImages: processedImageCount,
+            exportDate: new Date().toISOString(),
+            userId: userId
+          };
+          
+          // Create the comprehensive personal data export
+          const personalDataExport = {
+            exportDate: new Date().toISOString(),
+            version: '3.0',
+            user: {
+              profile: {
+                ...profileData,
+                ...userDocument,
+                userId: userId,
+                email: user?.email || ''
+              },
+              preferences: userPreferences
+            },
+            collections: processedCollections,
+            soldItems: processedSoldItems,
+            purchaseInvoices: purchaseInvoicesData,
+            metadata: metadata
+          };
+          
+          // Add the personal data JSON to the root of the ZIP
+          zip.file("personal_data.json", JSON.stringify(personalDataExport, null, 2));
+          
+          // Add a README file
+          const readme = `Pokemon Card Tracker - Personal Data Export
+Created: ${new Date().toISOString()}
+User ID: ${userId}
+
+This ZIP file contains:
+- personal_data.json: Complete export of your personal data
+- /images/: All card images referenced in the data file
+
+This export includes:
+- ${metadata.totalCards} cards across ${metadata.totalCollections} collections
+- ${metadata.totalSoldItems} sold items
+- ${metadata.totalPurchaseInvoices} purchase invoices
+- ${metadata.totalImages} images`;
+          
+          zip.file("README.txt", readme);
+          
+          // Generate the ZIP file
+          toast.loading('Generating ZIP file...', { id: 'export-data' });
+          const content = await zip.generateAsync({
+            type: "blob",
+            compression: "DEFLATE",
+            compressionOptions: {
+              level: 9
+            }
+          });
+          
+          // Update toast to success
+          toast.success('Personal data export created successfully!', { id: 'export-data' });
+          
+          // Create download link for ZIP file
+          const link = document.createElement('a');
+          link.href = URL.createObjectURL(content);
+          const timestamp = new Date().toISOString().split('T')[0];
+          link.download = `mycardtracker_data_${userId}_${timestamp}.zip`;
+          document.body.appendChild(link);
+          link.click();
+          
+          // Clean up
+          setTimeout(() => {
+            URL.revokeObjectURL(link.href);
+            document.body.removeChild(link);
+          }, 100);
+          
+          resolve();
+          return;
+        }
+        
+        // Regular ZIP backup export (existing functionality)
         toast.loading('Preparing backup...', { id: 'export-data' });
         
         // Create a new ZIP file

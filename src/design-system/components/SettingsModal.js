@@ -1303,6 +1303,29 @@ const SettingsModal = ({
                       </Button>
                     </div>
                     
+                    {/* Download My Data Section */}
+                    <div className="bg-white dark:bg-[#1B2131] rounded-lg p-4 border border-gray-200 dark:border-indigo-900/20">
+                      <h4 className="font-medium text-gray-900 dark:text-white mb-2 flex items-center">
+                        <Icon name="download" className="text-green-500 mr-2" />
+                        Download My Data
+                      </h4>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+                        Export all your personal data for backup or portability purposes.
+                      </p>
+                      <Button 
+                        variant="primary" 
+                        iconLeft={<Icon name="download" />}
+                        onClick={() => {
+                          if (onExportData) {
+                            onExportData({ personalDataExport: true });
+                          }
+                        }}
+                        fullWidth
+                      >
+                        Download My Data
+                      </Button>
+                    </div>
+                    
                     {/* Reset Data Section */}
                     <div className="bg-white dark:bg-[#1B2131] rounded-lg p-4 border border-gray-200 dark:border-indigo-900/20">
                       <h4 className="font-medium text-gray-900 dark:text-white mb-2 flex items-center">
