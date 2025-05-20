@@ -18,9 +18,12 @@ const Button = ({
   type = 'button',
   className = '',
   isLoading,
+  loading, // Support for legacy loading prop
   loadingText = 'Processing...', 
   ...props
 }) => {
+  // Handle both isLoading and loading props for backward compatibility
+  const isLoadingState = isLoading || loading === true;
   // Base styles that apply to all buttons
   const baseClasses = 'inline-flex items-center justify-center font-medium rounded-lg transition-colors focus:outline-none';
   
@@ -73,11 +76,11 @@ const Button = ({
       type={type}
       className={buttonClasses}
       onClick={onClick}
-      disabled={disabled || isLoading}
+      disabled={disabled || isLoadingState}
       style={hasRoundedFull ? { borderRadius: '9999px' } : undefined}
       {...domProps}
     >
-      {isLoading ? (
+      {isLoadingState ? (
         <>
           <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>

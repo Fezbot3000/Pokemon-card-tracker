@@ -1635,28 +1635,133 @@ class CardRepository {
   // Delete all cloud data for the current user
   async deleteAllUserData() {
     try {
-      // 1. Delete all cards in Firestore
-      const cardsSnapshot = await getDocs(this.cardsRef);
-      const deleteCardPromises = [];
+      console.log(`Starting complete data deletion for user: ${this.userId}`);
+      const batchSize = 500; // Firestore batch limit
       
-      cardsSnapshot.forEach(doc => {
-        deleteCardPromises.push(deleteDoc(doc.ref));
-      });
+      // Helper function to delete all documents in a collection
+      const deleteCollection = async (collectionRef, logName) => {
+        try {
+          const snapshot = await getDocs(collectionRef);
+          
+          if (snapshot.empty) {
+            console.log(`No documents found in ${logName} collection`);
+            return 0;
+          }
+          
+          // Use batched writes for efficiency but avoid await in forEach
+          let batches = [];
+          let currentBatch = writeBatch(firestoreDb);
+          let count = 0;
+          let totalDeleted = 0;
+          
+          // Group documents into batches
+          snapshot.forEach(doc => {
+            currentBatch.delete(doc.ref);
+            count++;
+            totalDeleted++;
+            
+            // When batch reaches limit, store it and create a new one
+            if (count >= batchSize) {
+              console.log(`Created batch of ${count} ${logName} deletions`);
+              batches.push(currentBatch);
+              currentBatch = writeBatch(firestoreDb);
+              count = 0;
+            }
+          });
+          
+          // Add the final batch if it has operations
+          if (count > 0) {
+            console.log(`Created final batch of ${count} ${logName} deletions`);
+            batches.push(currentBatch);
+          }
+          
+          // Commit all batches sequentially
+          if (batches.length > 0) {
+            console.log(`Committing ${batches.length} batches for ${logName}`);
+            for (const batch of batches) {
+              await batch.commit();
+            }
+          }
+          
+          console.log(`Successfully deleted ${totalDeleted} ${logName} documents`);
+          return totalDeleted;
+        } catch (error) {
+          console.error(`Error deleting ${logName} collection:`, error);
+          throw error;
+        }
+      };
       
-      await Promise.all(deleteCardPromises);
+      // 1. Delete all cards in Firestore - use direct approach first
+      try {
+        console.log('Attempting direct card deletion for user:', this.userId);
+        // Get all cards first
+        const cardsSnapshot = await getDocs(this.cardsRef);
+        
+        if (!cardsSnapshot.empty) {
+          console.log(`Found ${cardsSnapshot.size} cards to delete directly`);
+          
+          // Delete each card individually to ensure they're removed
+          const deletePromises = [];
+          
+          cardsSnapshot.forEach(cardDoc => {
+            console.log(`Directly deleting card: ${cardDoc.id}`);
+            deletePromises.push(deleteDoc(cardDoc.ref));
+          });
+          
+          // Wait for all direct deletions to complete
+          await Promise.all(deletePromises);
+          console.log('Direct card deletion completed successfully');
+        } else {
+          console.log('No cards found for direct deletion');
+        }
+      } catch (directDeleteError) {
+        console.error('Error during direct card deletion:', directDeleteError);
+        // Fall back to collection-based deletion
+      }
+      
+      // Also try the batched collection approach as a backup
+      await deleteCollection(this.cardsRef, 'cards');
       
       // 2. Delete all collections in Firestore
-      const collectionsSnapshot = await getDocs(this.collectionsRef);
-      const deleteCollectionPromises = [];
+      await deleteCollection(this.collectionsRef, 'collections');
       
-      collectionsSnapshot.forEach(doc => {
-        deleteCollectionPromises.push(deleteDoc(doc.ref));
-      });
+      // 3. Delete all sold items in Firestore
+      const soldItemsRef = collection(firestoreDb, 'users', this.userId, 'sold-items');
+      await deleteCollection(soldItemsRef, 'sold items');
       
-      await Promise.all(deleteCollectionPromises);
+      // 4. Delete all purchase invoices in Firestore
+      const purchaseInvoicesRef = collection(firestoreDb, 'users', this.userId, 'purchase-invoices');
+      await deleteCollection(purchaseInvoicesRef, 'purchase invoices');
       
-      // 3. Delete all images in Firebase Storage
+      // 5. Delete any other custom collections that might exist
+      // This is a safety net to catch any collections we might have missed
       try {
+        // These are known subcollections we want to check
+        const additionalCollections = [
+          'events',          // For any event tracking
+          'settings',        // For app settings
+          'preferences',     // For user preferences
+          'metadata',        // For any metadata
+          'custom-sets'      // For any custom card sets
+        ];
+        
+        for (const collName of additionalCollections) {
+          const collRef = collection(firestoreDb, 'users', this.userId, collName);
+          try {
+            await deleteCollection(collRef, collName);
+          } catch (collError) {
+            // This collection might not exist, which is fine
+            console.log(`Collection ${collName} might not exist or error:`, collError);
+          }
+        }
+      } catch (otherCollError) {
+        console.warn("Error checking for other collections:", otherCollError);
+        // Continue with the reset process
+      }
+      
+      // 6. Delete all images in Firebase Storage
+      try {
+        console.log('Deleting all user images from Firebase Storage');
         const storageRef = ref(storage, `users/${this.userId}`);
         const listResult = await listAll(storageRef);
         
@@ -1664,27 +1769,54 @@ class CardRepository {
         const deleteImagePromises = [];
         
         // Delete all files in the main directory
-        listResult.items.forEach(itemRef => {
-          deleteImagePromises.push(deleteObject(itemRef));
-        });
-        
-        // Delete all files in the cards subdirectory if it exists
-        const cardsRef = ref(storage, `users/${this.userId}/cards`);
-        try {
-          const cardsListResult = await listAll(cardsRef);
-          cardsListResult.items.forEach(itemRef => {
+        if (listResult.items.length > 0) {
+          console.log(`Found ${listResult.items.length} files in main storage directory`);
+          listResult.items.forEach(itemRef => {
             deleteImagePromises.push(deleteObject(itemRef));
           });
-        } catch (error) {
-          // Cards directory might not exist, which is fine
-          console.log("No cards directory found or error listing it:", error);
         }
         
-        await Promise.all(deleteImagePromises);
+        // Process all subdirectories
+        for (const prefix of listResult.prefixes) {
+          try {
+            console.log(`Checking subdirectory: ${prefix.fullPath}`);
+            const subDirResult = await listAll(prefix);
+            
+            if (subDirResult.items.length > 0) {
+              console.log(`Found ${subDirResult.items.length} files in ${prefix.fullPath}`);
+              subDirResult.items.forEach(itemRef => {
+                deleteImagePromises.push(deleteObject(itemRef));
+              });
+            }
+            
+            // Recursively process nested folders if needed
+            for (const nestedPrefix of subDirResult.prefixes) {
+              try {
+                const nestedResult = await listAll(nestedPrefix);
+                nestedResult.items.forEach(itemRef => {
+                  deleteImagePromises.push(deleteObject(itemRef));
+                });
+              } catch (nestedError) {
+                console.warn(`Error listing nested directory ${nestedPrefix.fullPath}:`, nestedError);
+              }
+            }
+          } catch (subDirError) {
+            console.warn(`Error listing subdirectory ${prefix.fullPath}:`, subDirError);
+          }
+        }
+        
+        if (deleteImagePromises.length > 0) {
+          console.log(`Deleting ${deleteImagePromises.length} total files from storage`);
+          await Promise.allSettled(deleteImagePromises); // Use allSettled to continue even if some deletions fail
+          console.log('Storage cleanup completed');
+        } else {
+          console.log('No files found in storage to delete');
+        }
       } catch (storageError) {
-        console.warn("Error deleting storage items, continuing with reset:", storageError);
+        console.warn("Error during storage cleanup, continuing with reset:", storageError);
       }
       
+      console.log('All user data deletion completed successfully');
       return { success: true };
     } catch (error) {
       console.error("Error deleting all user data:", error);

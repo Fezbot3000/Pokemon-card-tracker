@@ -2917,20 +2917,112 @@ class DatabaseService {
   }
 
   /**
+   * Clear all cards for the current user
+   * @returns {Promise<boolean>} - Whether the operation was successful
+   */
+  async clearCards() {
+    try {
+      await this.ensureDB();
+      const userId = this.getCurrentUserId();
+      logger.debug(`Explicitly clearing cards for user: ${userId}`);
+      
+      return new Promise((resolve, reject) => {
+        try {
+          const transaction = this.db.transaction([CARDS_STORE], 'readwrite');
+          const store = transaction.objectStore(CARDS_STORE);
+          
+          // Use IDBKeyRange to find cards for the current user
+          const range = IDBKeyRange.bound([userId, ''], [userId, '\uffff']);
+          const request = store.delete(range);
+          
+          request.onsuccess = () => {
+            logger.debug('Successfully cleared all cards for current user');
+            resolve(true);
+          };
+          
+          request.onerror = (event) => {
+            logger.error('Error clearing cards:', event.target.error);
+            reject(event.target.error);
+          };
+        } catch (error) {
+          logger.error('Transaction error in clearCards:', error);
+          reject(error);
+        }
+      });
+    } catch (error) {
+      logger.error('Error in clearCards:', error);
+      return false;
+    }
+  }
+  
+  /**
+   * Clear a specific object store completely
+   * @param {string} storeName - Name of the store to clear
+   * @returns {Promise<boolean>} - Whether the operation was successful
+   */
+  async clearStore(storeName) {
+    try {
+      await this.ensureDB();
+      if (!this.db.objectStoreNames.contains(storeName)) {
+        logger.debug(`Store ${storeName} does not exist, nothing to clear`);
+        return true;
+      }
+      
+      return new Promise((resolve, reject) => {
+        try {
+          const transaction = this.db.transaction([storeName], 'readwrite');
+          const store = transaction.objectStore(storeName);
+          const request = store.clear();
+          
+          request.onsuccess = () => {
+            logger.debug(`Successfully cleared store: ${storeName}`);
+            resolve(true);
+          };
+          
+          request.onerror = (event) => {
+            logger.error(`Error clearing store ${storeName}:`, event.target.error);
+            reject(event.target.error);
+          };
+        } catch (error) {
+          logger.error(`Transaction error in clearStore(${storeName}):`, error);
+          reject(error);
+        }
+      });
+    } catch (error) {
+      logger.error(`Error in clearStore(${storeName}):`, error);
+      return false;
+    }
+  }
+  
+  /**
    * Reset all data in the database
    * This deletes all collections, cards, and other user data
    * @returns {Promise<boolean>} - Whether the reset was successful
    */
   async resetAllData() {
+    if (this._resetInProgress) {
+      logger.warn('Reset already in progress, avoiding concurrent reset operations');
+      return false;
+    }
+    
+    this._resetInProgress = true;
+    
     try {
+      logger.debug('Starting complete database reset');
       await this.ensureDB();
       const userId = this.getCurrentUserId();
       
       // Get all object stores in the database
       const storeNames = Array.from(this.db.objectStoreNames);
+      logger.debug(`Found ${storeNames.length} stores to clear: ${storeNames.join(', ')}`);
       
       // Create a transaction for all stores
       const transaction = this.db.transaction(storeNames, 'readwrite');
+      
+      // Set up transaction error handling
+      transaction.onerror = (event) => {
+        logger.error('Transaction error during resetAllData:', event.target.error);
+      };
       
       // Clear each store
       const clearPromises = storeNames.map(storeName => {
@@ -2941,30 +3033,51 @@ class DatabaseService {
           
           request.onsuccess = () => {
             logger.debug(`Successfully cleared store: ${storeName}`);
-            resolve();
+            resolve(storeName);
           };
           
           request.onerror = (event) => {
             logger.error(`Error clearing store ${storeName}:`, event.target.error);
-            reject(event.target.error);
+            // Don't reject the promise, just log the error and resolve with null
+            // This ensures we continue with other stores even if one fails
+            resolve(null);
           };
         });
       });
       
       // Wait for all stores to be cleared
-      await Promise.all(clearPromises);
+      const results = await Promise.allSettled(clearPromises);
+      
+      // Log results
+      const succeeded = results.filter(r => r.status === 'fulfilled' && r.value).map(r => r.value);
+      const failed = results.filter(r => r.status === 'rejected' || !r.value).length;
+      
+      logger.debug(`Successfully cleared ${succeeded.length} stores: ${succeeded.join(', ')}`);
+      if (failed > 0) {
+        logger.warn(`Failed to clear ${failed} stores`);
+      }
       
       // Create a default collection only if no other collections exist
-      const collections = await this.getCollections();
-      if (Object.keys(collections).length === 0) {
-        await this.createEmptyCollection('Default Collection');
+      try {
+        const collections = await this.getCollections();
+        if (Object.keys(collections).length === 0) {
+          logger.debug('Creating default collection after reset');
+          await this.createEmptyCollection('Default Collection');
+        }
+      } catch (collectionError) {
+        logger.error('Error creating default collection after reset:', collectionError);
       }
+      
+      // Dispatch event to notify components of reset
+      window.dispatchEvent(new CustomEvent('database-reset', { detail: { userId } }));
       
       logger.debug('All local data has been reset successfully');
       return true;
     } catch (error) {
       logger.error('Error resetting all data:', error);
       return false;
+    } finally {
+      this._resetInProgress = false;
     }
   };
 

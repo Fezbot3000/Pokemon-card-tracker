@@ -101,6 +101,7 @@ const SettingsModal = ({
   });
   const [collectionToRename, setCollectionToRename] = useState('');
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+const [resetConfirmText, setResetConfirmText] = useState('');
   const [isVerifyingBackup, setIsVerifyingBackup] = useState(false); // Add state for cloud backup verification
   const [isReloadingPSA, setIsReloadingPSA] = useState(false);
   const [psaReloadProgress, setPsaReloadProgress] = useState({ current: 0, total: 0 });
@@ -658,7 +659,11 @@ const SettingsModal = ({
   };
 
   const handleConfirmReset = () => {
+    if (resetConfirmText !== 'RESET') {
+      return;
+    }
     setShowResetConfirm(false);
+    setResetConfirmText('');
     if (onResetData) {
       onResetData();
     }
@@ -666,6 +671,7 @@ const SettingsModal = ({
 
   const handleCancelReset = () => {
     setShowResetConfirm(false);
+    setResetConfirmText('');
   };
 
   // Handle subscription management
@@ -1352,13 +1358,48 @@ const SettingsModal = ({
         </div>
       </Modal>
 
-      {/* Custom ConfirmDialog for Reset All Data */}
+      {/* Enhanced ConfirmDialog for Reset All Data with detailed information */}
       <ConfirmDialog
         isOpen={showResetConfirm}
         onClose={handleCancelReset}
         onConfirm={handleConfirmReset}
         title="Reset All Data"
-        message="Are you sure you want to reset all data? This will permanently delete ALL your data from both local storage AND the cloud. This action cannot be undone."
+        message={
+          <div className="space-y-3">
+            <p className="font-medium text-red-600 dark:text-red-400">
+              Warning: This will permanently delete ALL your data. This action cannot be undone.
+            </p>
+            <p className="text-sm text-gray-600 dark:text-gray-300">
+              The following data will be deleted:
+            </p>
+            <ul className="text-sm text-gray-600 dark:text-gray-300 list-disc pl-5 space-y-1">
+              <li>All cards in your collection (Dashboard)</li>
+              <li>All sold items and sales history</li>
+              <li>All purchase invoices and purchase history</li>
+              <li>All uploaded card images</li>
+              <li>All collections and categories</li>
+              <li>All local data (browser storage)</li>
+              <li>All cloud data (if you're signed in)</li>
+            </ul>
+            <p className="text-sm text-gray-600 dark:text-gray-300 mt-2">
+              Your account will remain active, but all data associated with it will be removed.
+            </p>
+            <p className="text-sm font-medium mt-2">
+              Type "RESET" below to confirm this action:
+            </p>
+            <input
+              type="text"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md"
+              placeholder="Type RESET to confirm"
+              value={resetConfirmText}
+              onChange={(e) => setResetConfirmText(e.target.value)}
+            />
+          </div>
+        }
+        confirmButtonProps={{
+          disabled: resetConfirmText !== 'RESET',
+          variant: 'danger'
+        }}
       />
       
       {/* Rename Collection Modal */}
