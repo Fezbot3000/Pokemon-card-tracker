@@ -110,10 +110,10 @@ const Modal = ({
     }
   };
   
-  // Handle escape key to close modal if closeOnClickOutside is true
+  // Handle escape key to close modal
   useEffect(() => {
     const handleEscapeKey = (e) => {
-      if (isOpen && closeOnClickOutside && e.key === 'Escape') {
+      if (isOpen && e.key === 'Escape') {
         handleClose();
       }
     };
@@ -122,7 +122,7 @@ const Modal = ({
     return () => {
       document.removeEventListener('keydown', handleEscapeKey);
     };
-  }, [isOpen, closeOnClickOutside]);
+  }, [isOpen]);
   
   // Return null if modal is not open
   if (!isOpen) return null;
