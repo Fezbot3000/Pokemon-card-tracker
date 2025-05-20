@@ -255,6 +255,15 @@ const AddCardModal = ({
     
     try {
       const psaData = await searchByCertNumber(psaSerial);
+      
+      // Check for error response
+      if (psaData.error) {
+        console.error('PSA search error:', psaData.error);
+        toast.error(psaData.message || 'Failed to find PSA data');
+        setSaveMessage('Failed to find PSA data. Please check the number and try again.');
+        return;
+      }
+      
       if (!psaData) {
         toast.error('No PSA data found for this serial number');
         setSaveMessage('Failed to find PSA data');
@@ -292,9 +301,7 @@ const AddCardModal = ({
     } catch (error) {
       console.error('Error searching PSA:', error);
       toast.error('Error searching PSA database');
-      setSaveMessage('Failed to search PSA database');
-      toast.error(`Failed to find PSA certificate: ${error.message}`);
-      setSaveMessage('Failed to find PSA certificate. Please check the number and try again.');
+      setSaveMessage('Failed to search PSA database. Please check the number and try again.');
     } finally {
       setIsSearching(false);
     }

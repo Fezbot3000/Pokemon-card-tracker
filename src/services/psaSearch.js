@@ -15,7 +15,11 @@ import psaDataService from './psaDataService';
 
 // Initialize Firebase Functions
 const functions = getFunctions();
-const psaLookupFunction = httpsCallable(functions, 'psaLookupWithCache');
+const psaLookupFunction = httpsCallable(functions, 'psaLookup');
+
+// Firebase project region and ID for direct HTTP calls
+const region = 'us-central1';
+const projectId = 'mycardtracker-c8479';
 
 // Subscription cache - no rate limiting
 const subscriptionCache = {
@@ -63,48 +67,21 @@ const psaCache = {
 psaCache.loadFromStorage();
 
 // Access token storage
-let accessToken = null;
 let tokenExpiry = null;
 
 /**
- * Get or refresh the PSA API access token
- * @returns {Promise<string>} - The access token
+ * Get the PSA API access token from environment variable
+ * @returns {string} - The access token
  */
-const getAccessToken = async () => {
-  // Check if we have a valid token
-  if (accessToken && tokenExpiry && new Date() < tokenExpiry) {
-    return accessToken;
-  }
-
-  try {
-    // For simplicity in this implementation, we're using a hardcoded token
-    // In a production environment, you would use a more secure method
-    
-    // This is the token from your PSA account
-    accessToken = "Zj8lSQ1Q-KwQ2SSRwohGicwRbmYEm9AqYxBQnKEMqsTcgEHB374SVjupB_CCPFB-fq4hAJNvoex01EkI-sTD05GTXEuYCr6j-zZ5678uD2MmATvRIkf_fMZe5TZEAB5HpxR5dKa8TamE4A8TWS9lvv2nn7K6Azo0md7zrV-s_-hPdbKF0iywZOMHpbPTs4MPmzRbY2LbRGm1NXiThfJ5Ykq74d2Y7vXC29zXcIKYqjyUg8E9oqJ7A1Fhd5d1PzFciJJ-up63dn-f9B2isBW2_s1X5cBsluk-SytPt2qnzYplvsTe";
-    
-    // Set token expiry to 1 hour from now
+const getAccessToken = () => {
+  const accessToken = process.env.REACT_APP_PSA_API_TOKEN;
+  
+  // Set token expiry to 1 hour from now if not already set
+  if (!tokenExpiry) {
     tokenExpiry = new Date(new Date().getTime() + 60 * 60 * 1000);
-    
-    return accessToken;
-  } catch (error) {
-    // If hardcoded token fails, try using environment variables
-    console.error('Falling back to environment variables for PSA auth:', error);
-    
-    const psaUsername = process.env.REACT_APP_PSA_USERNAME;
-    const psaPassword = process.env.REACT_APP_PSA_PASSWORD;
-    
-    if (!psaUsername || !psaPassword) {
-      throw new Error('PSA API credentials not configured. Please set REACT_APP_PSA_USERNAME and REACT_APP_PSA_PASSWORD');
-    }
-    
-    // Here you would implement the actual token acquisition using the credentials
-    // For now, we'll show a toast that we're falling back
-    PSANotifications.showLookupNotification('AUTH_ERROR');
-    
-    // This is a placeholder for the actual token acquisition
-    throw new Error('Token acquisition from environment variables not implemented');
   }
+  
+  return accessToken;
 };
 
 /**
@@ -115,13 +92,13 @@ const getAccessToken = async () => {
 const testPSAConnection = async (certNumber = '10249374') => {
   try {
     console.log('Testing PSA API connection...');
-    const token = await getAccessToken();
+    const token = getAccessToken();
     
     // Try a different endpoint that might be more reliable
     const url = `https://api.psacard.com/publicapi/cert/${encodeURIComponent(certNumber)}`;
     
     console.log(`Test URL: ${url}`);
-    console.log(`Using token: ${token.substring(0, 20)}...`);
+    console.log(`Using token from environment variable`);
     
     const response = await fetch(url, {
       method: 'GET',
@@ -326,75 +303,26 @@ const searchByCertNumber = async (certNumber, forceRefresh = false) => {
         console.error('Error details:', result.data.error);
       }
       
-      // No rate limit checks - proceed directly to mock data
-      console.log('No rate limiting for 403 errors - proceeding with mock data');
+      // Show error notification instead of returning mock data
+      PSANotifications.showLookupNotification('FETCH_ERROR');
       
-      // Instead of failing, return mock data for testing
-      console.log('API call failed, returning mock data for testing');
-      
-      // Create mock PSA data that matches the expected structure
-      const mockPsaData = {
-        PSACert: {
-          CertNumber: certNumber,
-          Year: "1999",
-          Brand: "Pokemon",
-          SetName: "Base Set (EN)",
-          CardNumber: "4",
-          Subject: "Charizard",
-          Variety: "Holo",
-          GradeDescription: "MINT 9",
-          CardGrade: "9",
-          TotalPopulation: 1423,
-          TotalPopulationHigher: 112,
-          CertDate: "2023-01-15",
-          ImageUrl: "https://www.psacard.com/cert/images/charizard.jpg"
-        }
+      // Return error object
+      return {
+        error: result.data?.error || 'API_ERROR',
+        message: 'Failed to fetch PSA data. Please try again later.'
       };
-      
-      // Cache the mock result
-      cachePSAResult(certNumber, mockPsaData);
-      
-      // Show success notification
-      PSANotifications.showLookupNotification('SUCCESS');
-      
-      // Return the mock data
-      return mockPsaData;
     }
   } catch (error) {
     console.error('Error searching PSA card by cert number:', error);
     
-    // Instead of failing, return mock data for testing
-    console.log('Exception caught, returning mock data for testing');
+    // Show error notification
+    PSANotifications.showLookupNotification('FETCH_ERROR');
     
-    // Create mock PSA data that matches the expected structure
-    const mockPsaData = {
-      PSACert: {
-        CertNumber: certNumber || '12345678',
-        Year: "1999",
-        Brand: "Pokemon",
-        SetName: "Base Set (EN)",
-        CardNumber: "4",
-        Subject: "Charizard",
-        Variety: "Holo",
-        GradeDescription: "MINT 9",
-        CardGrade: "9",
-        TotalPopulation: 1423,
-        TotalPopulationHigher: 112,
-        CertDate: "2023-01-15",
-        ImageUrl: "https://www.psacard.com/cert/images/charizard.jpg"
-      }
+    // Return error object
+    return {
+      error: 'API_ERROR',
+      message: `Failed to fetch PSA data: ${error.message}`
     };
-    
-    // Cache the mock result if we have a cert number
-    if (certNumber) {
-      cachePSAResult(certNumber, mockPsaData);
-    }
-    
-    // Show success notification
-    PSANotifications.showLookupNotification('SUCCESS');
-    
-    // Return the mock data
-    return mockPsaData;
   }
 };
 

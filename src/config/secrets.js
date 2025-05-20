@@ -59,15 +59,7 @@ export const getGoogleClientId = () => {
     "726820232287-qcmvs1a9u5g5vf5rjb5uf8c7m7i7qdnv.apps.googleusercontent.com";
 };
 
-/**
- * Get PriceCharting API key
- */
-export const getPriceChartingApiKey = () => {
-  usageTracker.track('priceChartingApiKey');
-  return process.env.REACT_APP_PRICECHARTING_API_KEY || 
-    localConfig.PRICECHARTING_API_KEY || 
-    null;
-};
+// PriceCharting API key function removed
 
 /**
  * Generate a map of config sources for debugging
@@ -88,8 +80,7 @@ export const getConfigSources = () => {
   
   // Additional API keys
   sources.googleClientId = !!process.env.REACT_APP_FIREBASE_CLIENT_ID ? 'Environment' : 'Fallback';
-  sources.priceChartingApiKey = process.env.REACT_APP_PRICECHARTING_API_KEY ? 'Environment' : 
-                               localConfig.PRICECHARTING_API_KEY ? 'LocalConfig' : 'None';
+  // PriceCharting API key reference removed
                                
   return sources;
 };

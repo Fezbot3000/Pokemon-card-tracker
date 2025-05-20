@@ -54,8 +54,18 @@ exports.psaLookupHttp = functions.https.onRequest((req, res) => {
       // If we don't have the card or it's too old, fetch from PSA API
       console.log(`Fetching fresh PSA data for cert #${certNumber}`);
       
-      // PSA API token - stored securely on the server
-      const psaToken = "Zj8lSQ1Q-KwQ2SSRwohGicwRbmYEm9AqYxBQnKEMqsTcgEHB374SVjupB_CCPFB-fq4hAJNvoex01EkI-sTD05GTXEuYCr6j-zZ5678uD2MmATvRIkf_fMZe5TZEAB5HpxR5dKa8TamE4A8TWS9lvv2nn7K6Azo0md7zrV-s_-hPdbKF0iywZOMHpbPTs4MPmzRbY2LbRGm1NXiThfJ5Ykq74d2Y7vXC29zXcIKYqjyUg8E9oqJ7A1Fhd5d1PzFciJJ-up63dn-f9B2isBW2_s1X5cBsluk-SytPt2qnzYplvsTe";
+      // Get PSA API token from environment variable
+      const psaToken = functions.config().psa?.api_token || '';
+      
+      if (!psaToken) {
+        console.error('PSA API token not configured. Please set using firebase functions:config:set psa.api_token="YOUR_TOKEN"');
+        res.status(500).json({
+          success: false,
+          error: 'CONFIGURATION_ERROR',
+          message: 'PSA API is not properly configured. Please contact support.'
+        });
+        return;
+      }
       
       // Try multiple PSA API endpoints in case some are down or rate-limited
       const endpoints = [

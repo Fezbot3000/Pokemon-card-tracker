@@ -7,7 +7,6 @@ import { toast } from 'react-hot-toast';
 import { formatDate } from '../utils/dateUtils';
 import CardDetailsModal from '../design-system/components/CardDetailsModal';
 import PSALookupButton from './PSALookupButton';
-import PriceHistoryGraph from './PriceHistoryGraph';
 
 const CardDetails = memo(({
   card = null,

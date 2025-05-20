@@ -22,6 +22,47 @@ exports.psaLookup = functions.https.onCall(async (data, context) => {
   return exports.psaLookupWithCache(data, context);
 });
 
+// Add HTTP version of PSA lookup for direct API access
+exports.psaLookupHttp = functions.https.onRequest((request, response) => {
+  // Set CORS headers for preflight requests
+  response.set('Access-Control-Allow-Origin', '*');
+  response.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  response.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  
+  // Handle preflight OPTIONS request
+  if (request.method === 'OPTIONS') {
+    response.status(204).send('');
+    return;
+  }
+  
+  // Process the request using CORS middleware
+  return cors(request, response, async () => {
+    try {
+      // Extract cert number from request
+      const certNumber = request.query.certNumber || (request.body && request.body.certNumber);
+      
+      if (!certNumber) {
+        return response.status(400).json({
+          success: false,
+          error: 'MISSING_CERT_NUMBER',
+          message: 'Certification number is required'
+        });
+      }
+      
+      // Call the same logic as the callable function
+      const result = await exports.psaLookupWithCache({ certNumber }, { auth: { uid: 'http-api-user' } });
+      return response.json(result);
+    } catch (error) {
+      console.error('Error in HTTP PSA lookup:', error);
+      return response.status(500).json({
+        success: false,
+        error: 'SERVER_ERROR',
+        message: error.message
+      });
+    }
+  });
+});
+
 // Cloud Function to store card images in Firebase Storage
 exports.storeCardImage = functions.https.onCall(async (data, context) => {
   // Check if user is authenticated
@@ -173,8 +214,17 @@ exports.psaLookupWithCache = functions.https.onCall(async (data, context) => {
     // If we don't have the card or it's too old, fetch from PSA API
     console.log(`Fetching fresh PSA data for cert #${certNumber}`);
     
-    // PSA API token - stored securely on the server
-    const psaToken = "Zj8lSQ1Q-KwQ2SSRwohGicwRbmYEm9AqYxBQnKEMqsTcgEHB374SVjupB_CCPFB-fq4hAJNvoex01EkI-sTD05GTXEuYCr6j-zZ5678uD2MmATvRIkf_fMZe5TZEAB5HpxR5dKa8TamE4A8TWS9lvv2nn7K6Azo0md7zrV-s_-hPdbKF0iywZOMHpbPTs4MPmzRbY2LbRGm1NXiThfJ5Ykq74d2Y7vXC29zXcIKYqjyUg8E9oqJ7A1Fhd5d1PzFciJJ-up63dn-f9B2isBW2_s1X5cBsluk-SytPt2qnzYplvsTe";
+    // Get PSA API token from environment variable
+    const psaToken = functions.config().psa?.api_token || '';
+    
+    if (!psaToken) {
+      console.error('PSA API token not configured. Please set using firebase functions:config:set psa.api_token="YOUR_TOKEN"');
+      return {
+        success: false,
+        error: 'CONFIGURATION_ERROR',
+        message: 'PSA API is not properly configured. Please contact support.'
+      };
+    }
     
     // Try multiple PSA API endpoints in case some are down or rate-limited
     const endpoints = [
@@ -249,41 +299,11 @@ exports.psaLookupWithCache = functions.https.onCall(async (data, context) => {
     const errorMessage = `All PSA API endpoints failed: ${errors.join('; ')}`;
     console.error(errorMessage);
     
-    // Return mock data instead of failing
-    console.log(`Returning mock PSA data for cert #${certNumber}`);
-    
-    // Mock PSA data structure
-    const mockPsaData = {
-      PSACert: {
-        CertNumber: certNumber,
-        Year: "1999",
-        Brand: "Pokemon",
-        SetName: "Base Set (EN)",
-        CardNumber: "4",
-        Subject: "Charizard",
-        Variety: "Holo",
-        GradeDescription: "MINT 9",
-        CardGrade: "9",
-        TotalPopulation: 1423,
-        TotalPopulationHigher: 112,
-        CertDate: "2023-01-15",
-        ImageUrl: "https://www.psacard.com/cert/images/charizard.jpg"
-      }
-    };
-    
-    // Store in Firestore cache
-    await docRef.set({
-      cardData: mockPsaData,
-      timestamp: Date.now(),
-      accessCount: 1,
-      lastAccessed: Date.now()
-    });
-    
+    // Return error instead of mock data
     return {
-      success: true,
-      fromCache: false,
-      data: mockPsaData,
-      isMock: true
+      success: false,
+      error: 'API_ERROR',
+      message: errorMessage
     };
   } catch (error) {
     console.error('Error in PSA lookup with cache:', error);

@@ -6,6 +6,12 @@ const PDFDocument = require('pdfkit');
 const AdmZip = require('adm-zip');
 const { Readable } = require('stream');
 
+// Import PSA-related functions
+const { testPsaToken } = require('./src/psaTokenTest');
+
+// Export PSA token test function
+exports.testPsaToken = testPsaToken;
+
 // Configure CORS: Allow requests from local dev and production domain
 const allowedOrigins = [
   'http://localhost:3000', 
@@ -1194,21 +1200,23 @@ exports.psaLookup = functions.https.onCall(async (data, context) => {
 
     console.log(`Looking up PSA cert #${certNumber}`);
 
-    // Get PSA API token from Firebase config or use fallback
+    // Get PSA API token from environment variable
     let psaToken;
     try {
-      // Try to get token from Firebase environment config
-      psaToken = functions.config().psa?.token;
+      // Get token from Firebase environment config using the standard key
+      psaToken = functions.config().psa?.api_token;
       if (!psaToken) {
-        // Fallback to hardcoded token
-        psaToken = "A_aNeEjOmhbwHJNcpcEuOdlZOtXv5OJ0PqA535oKF0eoDleejRMRVCEEOTfSe-hACCLK-pidDO3KarjNpx6JT8kvY-SsnbWBhzjLYRE-awKISKdUYqI0SvT7UJ0EeNX8AVNNNZbTFWmse-oUVocMVd-UC8FLbXyMo_gT1nVp3JpBbCLpL43dYSUDIqi3QLtB41IZcTPAHvLOnahZ5bJp8MoeL-xKHWepqhzgxjrZluTMHglicaL5sTurL7sfffANewJjAmCo8kcaLtwbGLjZ6SEenzCZwAwF3fYx5GNQ7_Kkq0um";
-        console.log('Using fallback PSA token');
-      } else {
-        console.log('Using PSA token from Firebase config');
+        console.error('PSA API token not configured. Please set using firebase functions:config:set psa.api_token="YOUR_TOKEN"');
+        throw new functions.https.HttpsError(
+          'failed-precondition',
+          'PSA API is not properly configured. Please contact support.',
+          { error: 'CONFIGURATION_ERROR' }
+        );
       }
+      console.log('Using PSA token from Firebase config');
     } catch (error) {
       console.error('Error getting PSA token from config:', error);
-      throw new Error('Error accessing PSA credentials');
+      throw new functions.https.HttpsError('internal', 'Error accessing PSA credentials');
     }
     
     // Define multiple possible URL formats to try

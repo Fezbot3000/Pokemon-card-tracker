@@ -4,7 +4,6 @@ import Modal from '../molecules/Modal';
 import Button from '../atoms/Button';
 import Icon from '../atoms/Icon';
 import CardDetailsForm from './CardDetailsForm';
-import PriceHistoryGraph from '../../components/PriceHistoryGraph';
 import SaleModal from '../../components/SaleModal'; 
 import { searchByCertNumber, parsePSACardData } from '../../services/psaSearch';
 import { toast } from 'react-hot-toast';
@@ -60,19 +59,7 @@ const CardDetailsModal = ({
   const { formatPreferredCurrency, formatAmountForDisplay } = useUserPreferences();
 
 
-  // If the card has pricing data from PriceCharting, extract the product ID
-  let priceChartingProductId = null;
-  if (card?.priceChartingUrl) {
-    try {
-      const urlParts = card.priceChartingUrl.split('/');
-      priceChartingProductId = urlParts[urlParts.length - 1]?.split('?')[0];
-    } catch (error) {
-      console.error("Error extracting PriceCharting product ID:", error);
-    }
-  } else if (card?.priceChartingProductId) {
-    // If the product ID is already stored in the card data, use it directly
-    priceChartingProductId = card.priceChartingProductId;
-  }
+  // PriceCharting functionality removed
   
   // Handle window resize to detect mobile/desktop
   useEffect(() => {
@@ -84,16 +71,7 @@ const CardDetailsModal = ({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
   
-  // Determine the condition type for the price history graph
-  const getPriceConditionType = () => {
-    if (card?.condition) {
-      const condition = card.condition.toLowerCase();
-      if (condition.includes('psa') || condition.includes('bgs') || condition.includes('cgc') || condition.includes('gem mt')) {
-        return 'graded';
-      }
-    }
-    return 'loose';
-  };
+  // Price condition type function removed
   
   // Calculate profit safely
   const getProfit = () => {
@@ -129,21 +107,25 @@ const CardDetailsModal = ({
     try {
       const psaData = await searchByCertNumber(serialNumber);
       
-      // Handle rate limit error
-      if (psaData?.error === 'RATE_LIMITED') {
-        toast.error('PSA lookup temporarily unavailable due to rate limiting');
+      // Handle error response
+      if (psaData?.error) {
+        console.error('PSA search error:', psaData.error);
+        toast.error(psaData.message || 'Failed to find PSA data');
+        setSaveMessage('Failed to find PSA data. Please check the number and try again.');
         return;
       }
       
       // Handle not found error
-      if (psaData?.error === 'NOT_FOUND' || !psaData) {
+      if (!psaData) {
         toast.error('No PSA data found for this serial number');
+        setSaveMessage('No PSA data found for this serial number');
         return;
       }
 
       const parsedData = parsePSACardData(psaData);
       if (!parsedData) {
         toast.error('Could not parse PSA data');
+        setSaveMessage('Could not parse PSA data');
         return;
       }
 
@@ -166,12 +148,13 @@ const CardDetailsModal = ({
       // Call onChange with the updated card data
       onChange(updatedCard);
       toast.success('PSA data successfully loaded');
+      setSaveMessage('PSA data successfully loaded');
     } catch (error) {
       console.error('Error searching PSA:', error);
       toast.error('Error searching PSA database');
+      setSaveMessage('Error searching PSA database');
     } finally {
       setIsPsaSearching(false);
-      setSaveMessage('');
     }
   };
 
@@ -443,18 +426,7 @@ const CardDetailsModal = ({
               >
                 Card Details
               </button>
-              {priceChartingProductId && (
-                <button
-                  className={`py-2 px-4 font-medium text-sm ${
-                    activeTab === 'price-history'
-                      ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400'
-                      : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
-                  }`}
-                  onClick={() => setActiveTab('price-history')}
-                >
-                  Price History
-                </button>
-              )}
+              {/* Price history tab removed */}
               
               {/* Profit/Loss Display */}
               <div className="ml-auto flex items-center">
@@ -492,16 +464,7 @@ const CardDetailsModal = ({
             </div>
           )}
 
-          {contentLoaded && activeTab === 'price-history' && (
-            <div className="mt-4">
-              <h3 className="text-lg font-semibold">Price History (PriceCharting)</h3>
-              {card.priceCharting?.productId ? (
-                <PriceHistoryGraph productId={card.priceCharting.productId} />
-              ) : (
-                <p className="text-gray-500 dark:text-gray-400 mt-2">No PriceCharting data available for this card.</p>
-              )}
-            </div>
-          )}
+          {/* Price history section removed */}
           
           {/* Loading indicator when content is not yet loaded */}
           {!contentLoaded && (

@@ -10,7 +10,6 @@ import ImageUpload from '../atoms/ImageUpload';
 import ImageUploadButton from '../atoms/ImageUploadButton';
 import Icon from '../atoms/Icon';
 import { gradients } from '../styles/colors';
-import PriceHistoryGraph from '../../components/PriceHistoryGraph';
 import PSALookupButton from '../../components/PSALookupButton'; 
 import { getAllPokemonSets, getPokemonSetsByYear, getSetsByCategory, addCustomSet, getAvailableYears } from '../../data/pokemonSets';
 import { useUserPreferences } from '../../contexts/UserPreferencesContext'; 
@@ -982,8 +981,6 @@ CardDetailsForm.propTypes = {
     originalCurrentValueAmount: PropTypes.number,
     originalCurrentValueCurrency: PropTypes.string,
     psaUrl: PropTypes.string,
-    priceChartingUrl: PropTypes.string,
-    priceChartingProductId: PropTypes.string,
     lastPriceUpdate: PropTypes.string,
     quantity: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
     collectionId: PropTypes.string 
