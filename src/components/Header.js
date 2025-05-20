@@ -271,7 +271,7 @@ const Header = ({
 };
 
 Header.propTypes = {
-  currentView: PropTypes.oneOf(['cards', 'sold']).isRequired,
+  currentView: PropTypes.oneOf(['cards', 'sold-items', 'purchase-invoices', 'grid', 'list', 'settings']).isRequired,
 };
 
 export default Header;

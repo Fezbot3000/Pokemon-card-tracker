@@ -848,7 +848,7 @@ const [resetConfirmText, setResetConfirmText] = useState('');
           </div>
         }
         position="right"
-        className={`max-w-screen-lg mx-auto ${className}`}
+        className={`w-[70%] max-w-screen-xl mx-auto ${className}`}
         ariaLabel="Settings"
         size="full"
         closeOnClickOutside={false}
@@ -896,7 +896,7 @@ const [resetConfirmText, setResetConfirmText] = useState('');
                       onClick={() => toggleTheme('light')}
                     >
                       <div className="flex items-center justify-between mb-2">
-                        <h4 className="font-medium text-gray-900">Light Mode</h4>
+                        <h4 className="font-medium text-gray-900 dark:text-white">Light Mode</h4>
                         {!isDarkMode && <Icon name="check_circle" className="text-blue-500" />}
                       </div>
                       <div className="bg-white border border-gray-200 rounded-md p-2">

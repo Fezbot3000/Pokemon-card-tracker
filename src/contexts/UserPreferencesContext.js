@@ -132,14 +132,22 @@ export function UserPreferencesProvider({ children }) {
     };
 
     const fetchLiveRates = async () => {
+      // Immediately load stored rates as a fallback
+      const stored = loadStoredRates();
+      if (stored) {
+        // Set stored rates immediately so we have something to work with
+        setLiveExchangeRates(stored);
+      } else {
+        // If no stored rates, use hardcoded rates
+        setLiveExchangeRates(conversionRates);
+      }
+      
       // Check if service is marked as unavailable
       const serviceUnavailable = localStorage.getItem('exchangeRateServiceUnavailable');
       if (serviceUnavailable) {
         const unavailableUntil = parseInt(serviceUnavailable);
         if (Date.now() < unavailableUntil) {
-          // Service is still in cooldown, use stored or hardcoded rates
-          const stored = loadStoredRates();
-          setLiveExchangeRates(stored || conversionRates);
+          // Service is still in cooldown, use already set rates
           return;
         }
         // Cooldown period is over, clear the flag and try again
@@ -148,32 +156,32 @@ export function UserPreferencesProvider({ children }) {
 
       // Don't fetch if it's not time yet
       if (!shouldFetchRates()) {
-        const stored = loadStoredRates();
-        if (stored) {
-          setLiveExchangeRates(stored);
-          return;
-        }
+        return; // We already set the stored rates above
       }
 
       try {
+        // Mark the service as temporarily unavailable to prevent multiple concurrent requests
+        // This will be cleared if the request succeeds
+        localStorage.setItem('exchangeRateServiceUnavailable', (Date.now() + 5 * 60 * 1000).toString()); // 5 minute cooldown
+        
         const response = await fetch(CLOUD_FUNCTION_EXCHANGE_RATE_URL, {
           method: 'GET',
           headers: { 'Accept': 'application/json' },
-          mode: 'cors'
+          mode: 'cors',
+          // Add a cache-busting parameter to avoid cached 500 responses
+          cache: 'no-cache',
+          credentials: 'same-origin'
         });
+
+        // If the response is not ok, throw immediately before trying to parse JSON
+        if (!response.ok) {
+          throw new Error(`API request failed with status: ${response.status}`);
+        }
 
         const data = await response.json();
 
-        // Check for API configuration error
-        if (response.status === 500 && data.message?.includes('API key is not configured')) {
-          // Mark service as unavailable for 24 hours
-          localStorage.setItem('exchangeRateServiceUnavailable', (Date.now() + 24 * 60 * 60 * 1000).toString());
-          throw new Error('Exchange rate service not configured');
-        }
-
-        if (!response.ok) {
-          throw new Error(`API request failed: ${response.status}`);
-        }
+        // Successfully got response, clear the temporary unavailable flag
+        localStorage.removeItem('exchangeRateServiceUnavailable');
 
         if (!data.error && data.rates) {
           // Verify the response has all required currencies
@@ -186,16 +194,22 @@ export function UserPreferencesProvider({ children }) {
         }
         throw new Error('Invalid rate data');
       } catch (error) {
-        // For configuration errors, log once and suppress future warnings
-        if (error.message === 'Exchange rate service not configured') {
+        // For server errors, set a longer cooldown
+        if (error.message.includes('500')) {
+          // Mark service as unavailable for 6 hours on server error
+          localStorage.setItem('exchangeRateServiceUnavailable', (Date.now() + 6 * 60 * 60 * 1000).toString());
+          logger.warn('Exchange rate API returned 500 error, using fallback rates for 6 hours');
+        } else if (error.message === 'Exchange rate service not configured') {
+          // Mark service as unavailable for 24 hours on configuration error
+          localStorage.setItem('exchangeRateServiceUnavailable', (Date.now() + 24 * 60 * 60 * 1000).toString());
           logger.info('Exchange rate service is not configured, using fallback rates');
         } else {
-          logger.warn('Using fallback rates:', error);
+          // For other errors, set a shorter cooldown
+          localStorage.setItem('exchangeRateServiceUnavailable', (Date.now() + 30 * 60 * 1000).toString()); // 30 minutes
+          logger.warn('Using fallback rates due to error:', error);
         }
         
-        // Try stored rates first
-        const stored = loadStoredRates();
-        setLiveExchangeRates(stored || conversionRates);
+        // We already set fallback rates at the beginning of this function
       }
     };
 

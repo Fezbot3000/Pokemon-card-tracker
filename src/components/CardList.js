@@ -473,12 +473,57 @@ const CardList = ({
     return filteredCards.slice(0, visibleCardCount);
   }, [filteredCards, visibleCardCount]);
 
-  // Calculate totals
+  // Calculate totals with direct access to the exact fields in the database
   const totals = useMemo(() => {
+    if (!cards || !cards.length) {
+      return { investment: 0, value: 0, profit: 0 };
+    }
+    
+    // For debugging - log the first card's structure
+    if (cards.length > 0 && process.env.NODE_ENV === 'development') {
+      console.log('Card structure sample:', {
+        card: cards[0].card || cards[0].cardName || cards[0].player,
+        hasOriginalInvestmentAmount: 'originalInvestmentAmount' in cards[0],
+        hasOriginalCurrentValueAmount: 'originalCurrentValueAmount' in cards[0],
+        originalInvestmentAmount: cards[0].originalInvestmentAmount,
+        originalCurrentValueAmount: cards[0].originalCurrentValueAmount,
+        investmentAUD: cards[0].investmentAUD,
+        currentValueAUD: cards[0].currentValueAUD
+      });
+    }
+    
     return cards.reduce((acc, card) => {
-      acc.investment += parseFloat(card.investmentAUD) || 0;
-      acc.value += parseFloat(card.currentValueAUD) || 0;
-      acc.profit += (parseFloat(card.currentValueAUD) || 0) - (parseFloat(card.investmentAUD) || 0);
+      // IMPORTANT: Based on the provided data structure, we know exactly which fields to use
+      // The cards have originalInvestmentAmount and originalCurrentValueAmount as the primary fields
+      
+      // Get investment amount - directly use originalInvestmentAmount as the primary source
+      let investment = 0;
+      if (typeof card.originalInvestmentAmount === 'number') {
+        investment = card.originalInvestmentAmount;
+      } else if (typeof card.originalInvestmentAmount === 'string' && card.originalInvestmentAmount) {
+        investment = parseFloat(card.originalInvestmentAmount) || 0;
+      } else if (typeof card.investmentAUD === 'number') {
+        investment = card.investmentAUD;
+      } else if (typeof card.investmentAUD === 'string' && card.investmentAUD) {
+        investment = parseFloat(card.investmentAUD) || 0;
+      }
+      
+      // Get value amount - directly use originalCurrentValueAmount as the primary source
+      let value = 0;
+      if (typeof card.originalCurrentValueAmount === 'number') {
+        value = card.originalCurrentValueAmount;
+      } else if (typeof card.originalCurrentValueAmount === 'string' && card.originalCurrentValueAmount) {
+        value = parseFloat(card.originalCurrentValueAmount) || 0;
+      } else if (typeof card.currentValueAUD === 'number') {
+        value = card.currentValueAUD;
+      } else if (typeof card.currentValueAUD === 'string' && card.currentValueAUD) {
+        value = parseFloat(card.currentValueAUD) || 0;
+      }
+      
+      // Update running totals
+      acc.investment += investment;
+      acc.value += value;
+      acc.profit += value - investment;
       return acc;
     }, { investment: 0, value: 0, profit: 0 });
   }, [cards]);

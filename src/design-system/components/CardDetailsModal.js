@@ -246,35 +246,51 @@ const CardDetailsModal = ({
       e.preventDefault();
     }
 
+    // Trim whitespace from string fields
+    const trimmedCard = { ...card };
+    Object.keys(trimmedCard).forEach(key => {
+      if (typeof trimmedCard[key] === 'string') {
+        trimmedCard[key] = trimmedCard[key].trim();
+      }
+    });
+
     // Validate required fields
     const newErrors = {};
+    const missingFields = [];
     
-    if (!card.cardName) {
+    // Only require cardName, investmentAUD, and datePurchased
+    if (!trimmedCard.cardName) {
       newErrors.cardName = 'Card name is required';
+      missingFields.push('Card Name');
     }
     
-    // Check the 'setName' field from the form data
-    if (!card.set) { 
-      newErrors.set = 'Set is required';
-    }
-    
-    if (!card.collectionId) {
-      newErrors.collectionId = 'Collection is required';
-    }
-    
-    // Add validation for numeric fields
-    if (card.investmentAUD && isNaN(parseFloat(card.investmentAUD))) {
+    if (!trimmedCard.investmentAUD) {
+      newErrors.investmentAUD = 'Investment amount is required';
+      missingFields.push('Investment Amount');
+    } else if (isNaN(parseFloat(trimmedCard.investmentAUD))) {
       newErrors.investmentAUD = 'Must be a valid number';
+      missingFields.push('Investment Amount (invalid format)');
     }
     
-    if (card.currentValueAUD && isNaN(parseFloat(card.currentValueAUD))) {
+    if (!trimmedCard.datePurchased) {
+      newErrors.datePurchased = 'Purchase date is required';
+      missingFields.push('Purchase Date');
+    }
+    
+    // Optional field validations - only validate format if value is provided
+    if (trimmedCard.currentValueAUD && isNaN(parseFloat(trimmedCard.currentValueAUD))) {
       newErrors.currentValueAUD = 'Must be a valid number';
+      missingFields.push('Current Value (invalid format)');
     }
     
     // Only show error message if there are actual errors
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) {
-      setSaveMessage('Please correct the highlighted field errors below.');
+      // Create a more specific error message
+      const errorMessage = missingFields.length > 0 
+        ? `Missing or invalid: ${missingFields.join(', ')}` 
+        : 'Please correct the highlighted field errors below.';
+      setSaveMessage(`Error: ${errorMessage}`);
       return;
     } else {
       setSaveMessage('');
@@ -296,13 +312,18 @@ const CardDetailsModal = ({
 
         // Format the card data before saving
         const formattedCard = {
-          ...card,
+          ...trimmedCard,
           // Format date if it exists
-          datePurchased: card.datePurchased ? formatDate(card.datePurchased) : '',
+          datePurchased: trimmedCard.datePurchased ? formatDate(trimmedCard.datePurchased) : '',
           // Convert numeric fields to numbers
-          investmentAUD: card.investmentAUD ? parseFloat(card.investmentAUD) : '',
-          currentValueAUD: card.currentValueAUD ? parseFloat(card.currentValueAUD) : '',
-          quantity: card.quantity ? parseInt(card.quantity, 10) : 1,
+          investmentAUD: trimmedCard.investmentAUD ? parseFloat(trimmedCard.investmentAUD) : 0,
+          currentValueAUD: trimmedCard.currentValueAUD ? parseFloat(trimmedCard.currentValueAUD) : 0,
+          quantity: trimmedCard.quantity ? parseInt(trimmedCard.quantity, 10) : 1,
+          // Ensure optional fields are never undefined
+          card: trimmedCard.card || trimmedCard.cardName || '',  // Make sure card field has the card name
+          set: trimmedCard.set || '',
+          player: trimmedCard.player || '',
+          category: trimmedCard.category || '',
           // Add currency information
           originalInvestmentAmount: originalInvestment,
           originalInvestmentCurrency: originalInvestmentCurrency,
