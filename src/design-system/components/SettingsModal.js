@@ -23,6 +23,7 @@ import { searchByCertNumber, parsePSACardData } from '../../services/psaSearch';
 import SubscriptionManagement from '../../components/SubscriptionManagement'; // Import the SubscriptionManagement component
 import { useUserPreferences, availableCurrencies } from '../../contexts/UserPreferencesContext'; // Added import
 import SelectField from '../atoms/SelectField'; // Added import
+import { runCardDataMigration } from '../../utils/migrateCardData'; // Import card data migration utility
 
 /**
  * SettingsModal Component
@@ -87,6 +88,8 @@ const SettingsModal = ({
   const [isForceSyncing, setIsForceSyncing] = useState(false); // Add state for force syncing
   const [isCloudMigrating, setIsCloudMigrating] = useState(false); // Add state for cloud migration
   const [isUploadingImages, setIsUploadingImages] = useState(false); // Add state for image upload
+  const [isMigratingCardData, setIsMigratingCardData] = useState(false); // Add state for card data migration
+  const [cardMigrationMode, setCardMigrationMode] = useState('dry-run'); // 'dry-run' or 'live'
   const [activeTab, setActiveTab] = useState('general');
   const [collectionToDelete, setCollectionToDelete] = useState('');
   const [profile, setProfile] = useState({
@@ -775,14 +778,50 @@ const SettingsModal = ({
   };
 
   const handlePreferredCurrencyChange = (event) => {
-    const newCurrencyCode = event.target.value;
-    const newCurrency = availableCurrencies.find(c => c.code === newCurrencyCode);
-    if (newCurrency) {
+    const newCurrency = event.target.value;
+    if (newCurrency && newCurrency !== preferredCurrency) {
       updatePreferredCurrency(newCurrency);
-      toastService.success(`Preferred currency updated to ${newCurrency.name} (${newCurrency.code})`);
-    } else {
-      toastService.error('Failed to update currency: Invalid selection.');
-      logger.error('Invalid currency selected:', newCurrencyCode);
+      toastService.success(`Display currency updated to ${newCurrency}`);
+    }
+  };
+
+  // Handle card data migration
+  const handleCardDataMigration = async () => {
+    if (isMigratingCardData) return;
+    
+    try {
+      setIsMigratingCardData(true);
+      toastService.loading('Starting card data migration...');
+      
+      const isDryRun = cardMigrationMode === 'dry-run';
+      const result = await runCardDataMigration(isDryRun);
+      
+      if (result.success) {
+        const { stats } = result;
+        toastService.dismiss();
+        toastService.success(
+          `${isDryRun ? 'Dry run' : 'Migration'} completed: ${stats.docsUpdated} cards updated, ${stats.fieldsRemoved} fields removed`
+        );
+        
+        // Show more detailed toast for dry run
+        if (isDryRun && stats.docsUpdated > 0) {
+          setTimeout(() => {
+            toastService.success(
+              'Dry run successful. Switch to "Live Run" mode to apply these changes.', 
+              { duration: 5000 }
+            );
+          }, 1500);
+        }
+      } else {
+        toastService.dismiss();
+        toastService.error(`Migration failed: ${result.message}`);
+      }
+    } catch (error) {
+      logger.error('Error during card data migration:', error);
+      toastService.dismiss();
+      toastService.error(`Migration error: ${error.message}`);
+    } finally {
+      setIsMigratingCardData(false);
     }
   };
 
@@ -1183,6 +1222,64 @@ const SettingsModal = ({
                       </Button>
                     </div>
 
+                    {/* Card Data Structure Migration Section */}
+                    <div className="bg-white dark:bg-[#1B2131] rounded-lg p-4 border border-gray-200 dark:border-indigo-900/20">
+                      <h4 className="font-medium text-gray-900 dark:text-white mb-2 flex items-center">
+                        <Icon name="format_align_left" className="text-green-500 mr-2" />
+                        Card Data Structure Migration
+                      </h4>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+                        Standardize card data structure across your collection. This fixes legacy data issues and ensures consistent field naming.
+                      </p>
+                      <div className="mb-3">
+                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">Migration Mode</label>
+                        <div className="flex space-x-2">
+                          <label className={`flex-1 flex items-center p-2 border rounded-md cursor-pointer transition-colors ${cardMigrationMode === 'dry-run' ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-300 dark:border-gray-700'}`}>
+                            <input 
+                              type="radio" 
+                              name="migrationMode" 
+                              value="dry-run" 
+                              checked={cardMigrationMode === 'dry-run'}
+                              onChange={() => setCardMigrationMode('dry-run')}
+                              className="sr-only"
+                            />
+                            <span className="w-4 h-4 mr-2 rounded-full border flex items-center justify-center border-blue-500">
+                              {cardMigrationMode === 'dry-run' && <span className="w-2 h-2 rounded-full bg-blue-500"></span>}
+                            </span>
+                            <span>Dry Run (Safe)</span>
+                          </label>
+                          <label className={`flex-1 flex items-center p-2 border rounded-md cursor-pointer transition-colors ${cardMigrationMode === 'live' ? 'border-red-500 bg-red-50 dark:bg-red-900/20' : 'border-gray-300 dark:border-gray-700'}`}>
+                            <input 
+                              type="radio" 
+                              name="migrationMode" 
+                              value="live" 
+                              checked={cardMigrationMode === 'live'}
+                              onChange={() => setCardMigrationMode('live')}
+                              className="sr-only"
+                            />
+                            <span className="w-4 h-4 mr-2 rounded-full border flex items-center justify-center border-red-500">
+                              {cardMigrationMode === 'live' && <span className="w-2 h-2 rounded-full bg-red-500"></span>}
+                            </span>
+                            <span>Live Run</span>
+                          </label>
+                        </div>
+                      </div>
+                      <Button 
+                        variant={cardMigrationMode === 'live' ? "danger" : "primary"}
+                        iconLeft={<Icon name={cardMigrationMode === 'live' ? "warning" : "check_circle"} />}
+                        onClick={handleCardDataMigration}
+                        fullWidth
+                        loading={isMigratingCardData ? true : undefined}
+                        disabled={isMigratingCardData}
+                      >
+                        {isMigratingCardData 
+                          ? `Migrating Card Data...`
+                          : cardMigrationMode === 'dry-run' 
+                            ? 'Run Migration (Dry Run)' 
+                            : 'Run Migration (Live)'}
+                      </Button>
+                    </div>
+                    
                     {/* PSA Data Management Section */}
                     <div className="bg-white dark:bg-[#1B2131] rounded-lg p-4 border border-gray-200 dark:border-indigo-900/20">
                       <h4 className="font-medium text-gray-900 dark:text-white mb-2 flex items-center">
