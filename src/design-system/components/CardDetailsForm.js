@@ -603,7 +603,7 @@ const CardDetailsForm = ({
           <div className="relative">
             <div 
               className="relative overflow-hidden rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 flex items-center justify-center w-full"
-              style={{ height: '300px', width: '100%', maxWidth: '220px', margin: '0 auto' }}
+              style={{ height: '400px', width: '100%', maxWidth: '100%', margin: '0 auto' }}
             >
               {imageLoadingState === 'loading' ? (
                 <div className="absolute inset-0 flex items-center justify-center bg-black/5 dark:bg-white/5">
@@ -629,7 +629,7 @@ const CardDetailsForm = ({
                   <img 
                     src={cardImage} 
                     alt="Card preview" 
-                    className="max-h-[280px] max-w-full h-auto object-contain cursor-pointer"
+                    className="max-h-[380px] max-w-full h-auto object-contain cursor-pointer"
                     onClick={onImageClick}
                     onError={(e) => {
                       console.log('Image failed to load:', e);

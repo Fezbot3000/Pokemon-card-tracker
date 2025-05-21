@@ -35,6 +35,8 @@ const Modal = ({
   
   // Preserve scroll position and prevent background scrolling
   useEffect(() => {
+    const isMobile = window.innerWidth < 768;
+    
     if (isOpen) {
       setIsMounted(true);
       setIsAnimatingOut(false);
@@ -48,20 +50,42 @@ const Modal = ({
       
       // Only prevent background scroll if modal is open and not static
       if (!showAsStatic) {
-        // Store current scroll position when modal opens
+        // Store current scroll position when modal opens - do this FIRST
         scrollPosRef.current = {
           x: window.scrollX,
           y: window.scrollY
         };
-        document.body.classList.add('modal-open');
+        
+        // Use requestAnimationFrame to delay DOM modifications until after the current frame
+        requestAnimationFrame(() => {
+          if (isMobile) {
+            // Mobile-specific approach: fixed position with negative top
+            document.body.style.position = 'fixed';
+            document.body.style.width = '100%';
+            document.body.style.top = `-${scrollPosRef.current.y}px`;
+            document.body.style.overflow = 'hidden';
+          } else {
+            // Desktop approach: just add the modal-open class
+            document.body.classList.add('modal-open');
+          }
+        });
       }
     }
     
     return () => {
       if (isOpen) {
-        // When modal closes, remove the class but don't force scroll
-        document.body.classList.remove('modal-open');
-        // Don't restore scroll position - let the page stay where it is
+        if (isMobile && !showAsStatic) {
+          // Mobile cleanup: restore position and scroll
+          const scrollY = parseInt(document.body.style.top || '0') * -1;
+          document.body.style.position = '';
+          document.body.style.width = '';
+          document.body.style.top = '';
+          document.body.style.overflow = '';
+          window.scrollTo(0, scrollY || scrollPosRef.current?.y || 0);
+        } else {
+          // Desktop cleanup: just remove the class
+          document.body.classList.remove('modal-open');
+        }
       }
     };
   }, [isOpen, position, showAsStatic]);
