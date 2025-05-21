@@ -3,6 +3,7 @@ import { useAuth } from '../../design-system';
 import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import db from '../../services/db';
+import FormField from '../../design-system/molecules/FormField';
 
 /**
  * Modal component for creating or editing a purchase invoice
@@ -478,88 +479,53 @@ const CreateInvoiceModal = ({ isOpen, onClose, onSave, editingInvoice = null, pr
           ) : (
             <>
               {/* Invoice Details Step */}
-              <form onSubmit={handleSubmit} className="space-y-6 max-w-5xl mx-auto">
+              <form onSubmit={handleSubmit} className="space-y-6 max-w-5xl mx-auto pb-20">
                 <div className="space-y-4">
-                  <div>
-                    <label className="block text-gray-700 dark:text-gray-300 mb-1">
-                      Invoice Number
-                    </label>
-                    <input
-                      type="text"
-                      value={invoiceNumber}
-                      onChange={(e) => setInvoiceNumber(e.target.value)}
-                      className="w-full px-4 py-2 rounded-xl 
-                              border border-gray-200 dark:border-gray-700/50 
-                              bg-white dark:bg-[#252B3B]
-                              text-gray-900 dark:text-white
-                              focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary
-                              placeholder-gray-500 dark:placeholder-gray-400"
-                      required
-                    />
-                  </div>
+                  <FormField
+                    label="Invoice Number"
+                    name="invoiceNumber"
+                    type="text"
+                    value={invoiceNumber}
+                    onChange={(e) => setInvoiceNumber(e.target.value)}
+                    required={true}
+                  />
                   
-                  <div>
-                    <label className="block text-gray-700 dark:text-gray-300 mb-1">
-                      Seller
-                    </label>
-                    <input
-                      type="text"
-                      value={seller}
-                      onChange={(e) => setSeller(e.target.value)}
-                      className="w-full px-4 py-2 rounded-xl 
-                              border border-gray-200 dark:border-gray-700/50 
-                              bg-white dark:bg-[#252B3B]
-                              text-gray-900 dark:text-white
-                              focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary
-                              placeholder-gray-500 dark:placeholder-gray-400"
-                      placeholder="Enter seller name"
-                      required
-                    />
-                  </div>
+                  <FormField
+                    label="Seller"
+                    name="seller"
+                    type="text"
+                    value={seller}
+                    onChange={(e) => setSeller(e.target.value)}
+                    placeholder="Enter seller name"
+                    required={true}
+                  />
                   
-                  <div>
-                    <label className="block text-gray-700 dark:text-gray-300 mb-1">
-                      Date
-                    </label>
-                    <input
-                      type="date"
-                      value={date}
-                      onChange={(e) => setDate(e.target.value)}
-                      className="w-full px-4 py-2 rounded-xl 
-                              border border-gray-200 dark:border-gray-700/50 
-                              bg-white dark:bg-[#252B3B]
-                              text-gray-900 dark:text-white
-                              focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary
-                              placeholder-gray-500 dark:placeholder-gray-400"
-                      required
-                    />
-                  </div>
+                  <FormField
+                    label="Date"
+                    name="date"
+                    type="date"
+                    value={date}
+                    onChange={(e) => setDate(e.target.value)}
+                    required={true}
+                  />
                   
-                  <div>
-                    <label className="block text-gray-700 dark:text-gray-300 mb-1">
-                      Notes
-                    </label>
-                    <textarea
-                      value={notes}
-                      onChange={(e) => setNotes(e.target.value)}
-                      className="w-full px-4 py-2 rounded-xl 
-                              border border-gray-200 dark:border-gray-700/50 
-                              bg-white dark:bg-[#252B3B]
-                              text-gray-900 dark:text-white
-                              focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary
-                              placeholder-gray-500 dark:placeholder-gray-400"
-                      placeholder="Add any notes about this purchase"
-                      rows="3"
-                    />
-                  </div>
+                  <FormField
+                    label="Notes"
+                    name="notes"
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    placeholder="Add any notes about this purchase"
+                    multiline={true}
+                    rows={3}
+                  />
                   
                   <div className="border-t border-gray-200 dark:border-gray-700/50 pt-4">
                     <h3 className="text-lg font-medium text-gray-800 dark:text-gray-200 mb-2">
                       Selected Cards
                     </h3>
-                    <div className="overflow-y-auto max-h-60">
+                    <div>
                       <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                        <thead className="bg-gray-50 dark:bg-gray-800 sticky top-0">
+                        <thead className="bg-gray-50 dark:bg-gray-800">
                           <tr key="header-row">
                             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                               Card
@@ -613,7 +579,7 @@ const CreateInvoiceModal = ({ isOpen, onClose, onSave, editingInvoice = null, pr
                   </div>
                 </div>
                 
-                <div className="flex justify-between mt-6 sticky bottom-0 bg-white dark:bg-[#1B2131] py-4">
+                <div className="fixed bottom-0 left-0 right-0 flex justify-between px-6 py-4 bg-white dark:bg-[#1B2131] border-t border-gray-200 dark:border-gray-700/50 z-10">
                   <button
                     type="button"
                     className="px-4 py-2 rounded-lg

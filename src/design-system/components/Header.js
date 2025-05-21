@@ -185,8 +185,8 @@ const Header = ({
           
           {/* Right side - action buttons */}
           <div className="flex items-center space-x-2">
-            {/* Currency Dropdown - Visible on all screen sizes */}
-            <div className="relative" ref={currencyDropdownRef}>
+            {/* Currency Dropdown - Hidden on mobile, visible on larger screens */}
+            <div className="relative hidden sm:block" ref={currencyDropdownRef}>
               <button
                 onClick={() => setCurrencyDropdownOpen(!currencyDropdownOpen)}
                 className="px-2 py-1 flex items-center justify-center rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200"
