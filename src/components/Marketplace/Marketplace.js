@@ -6,6 +6,7 @@ import Card from '../../design-system/components/Card';
 import logger from '../../utils/logger';
 import { useUserPreferences } from '../../contexts/UserPreferencesContext';
 import db from '../../services/db'; // Import IndexedDB service for image loading
+import MessageModal from './MessageModal'; // Import the MessageModal component
 
 function Marketplace() {
   const [listings, setListings] = useState([]);
@@ -15,6 +16,8 @@ function Marketplace() {
   const { convertCurrency, formatAmountForDisplay: formatUserCurrency } = useUserPreferences();
 
   const [indexBuildingError, setIndexBuildingError] = useState(false);
+  const [selectedListing, setSelectedListing] = useState(null);
+  const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -174,14 +177,25 @@ function Marketplace() {
   };
 
   const handleContactSeller = (listing) => {
-    // This will be implemented in Phase 3
-    console.log('Contact seller for listing:', listing.id);
-    // TODO: Implement contact seller functionality
+    if (!user) {
+      // If user is not logged in, show a message or redirect to login
+      logger.warn('User must be logged in to contact seller');
+      return;
+    }
+    
+    // Don't allow contacting yourself
+    if (listing.userId === user.uid) {
+      logger.warn('Cannot contact yourself');
+      return;
+    }
+    
+    // Set the selected listing and open the message modal
+    setSelectedListing(listing);
+    setIsMessageModalOpen(true);
   };
 
   return (
-    <div className="p-4 sm:p-6">
-      <h1 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Marketplace</h1>
+    <div className="p-4 sm:p-6 pt-6 sm:pt-8">
       
       {loading ? (
         <div className="flex justify-center items-center h-64">
@@ -243,6 +257,13 @@ function Marketplace() {
           ))}
         </div>
       )}
+      
+      {/* Message Modal */}
+      <MessageModal 
+        isOpen={isMessageModalOpen} 
+        onClose={() => setIsMessageModalOpen(false)} 
+        listing={selectedListing} 
+      />
     </div>
   );
 }

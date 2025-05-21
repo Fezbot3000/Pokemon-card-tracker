@@ -114,5 +114,17 @@ service cloud.firestore {
       // Allow updates and deletes only by the listing owner
       allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
     }
+    
+    // --- Marketplace Messages ---
+    // Simple rules for marketplace messages - any authenticated user can read/write
+    match /marketplaceMessages/{threadId} {
+      // Allow any authenticated user to read, create, and update threads
+      allow read, write: if request.auth != null;
+      
+      // Messages subcollection - also allow any authenticated user to read/write
+      match /messages/{messageId} {
+        allow read, write: if request.auth != null;
+      }
+    }
   }
 }

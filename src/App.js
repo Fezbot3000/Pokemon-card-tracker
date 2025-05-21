@@ -49,6 +49,8 @@ import './styles/ios-fixes.css';
 import SoldItems from './components/SoldItems/SoldItems';
 import PurchaseInvoices from './components/PurchaseInvoices/PurchaseInvoices';
 import Marketplace from './components/Marketplace/Marketplace';
+import MarketplaceSelling from './components/Marketplace/MarketplaceSelling';
+import MarketplaceMessages from './components/Marketplace/MarketplaceMessages';
 import BottomNavBar from './components/BottomNavBar';
 import CloudSync from './components/CloudSync';
 import DashboardPricing from './components/DashboardPricing';
@@ -217,7 +219,7 @@ function AppContent() {
     oldProfit: 0,
     newProfit: 0
   });
-  const [currentView, setCurrentView] = useState('cards'); // 'cards', 'sold', 'marketplace', 'settings' // 'cards' or 'sold'
+  const [currentView, setCurrentView] = useState('cards'); // 'cards', 'sold', 'sold-items', 'purchase-invoices', 'marketplace', 'settings'
   const [initialCardCollection, setInitialCardCollection] = useState(null); // State for initial collection
   const { registerSettingsCallback, checkAndStartTutorial, startTutorial } = useTutorial();
   const { user, logout } = useAuth();
@@ -348,6 +350,27 @@ function AppContent() {
       window.removeEventListener('resize', handleResize);
     };
   }, []);
+  
+  // Update currentView based on location changes
+  useEffect(() => {
+    const path = location.pathname;
+    
+    // Extract the view from the path
+    if (path.includes('/purchase-invoices')) {
+      setCurrentView('purchase-invoices');
+    } else if (path.includes('/sold-items')) {
+      setCurrentView('sold-items');
+    } else if (path.includes('/sold')) {
+      setCurrentView('sold');
+    } else if (path.includes('/marketplace')) {
+      setCurrentView('marketplace');
+    } else if (path.includes('/settings')) {
+      setCurrentView('settings');
+    } else {
+      // Default to cards view
+      setCurrentView('cards');
+    }
+  }, [location.pathname]);
 
   // Add keyboard shortcut for settings (press 's' key)
   useEffect(() => {
@@ -2931,47 +2954,62 @@ To import this backup:
                 <>
                   {/* Show card list when no card is selected */}
                   {currentView === 'cards' && (
-                    <CardList
-                      cards={collectionData} 
-                      exchangeRate={exchangeRate}
-                      onCardClick={(card) => {
-                        let actualCollectionName = selectedCollection;
-                        if (selectedCollection === 'All Cards') {
-                          for (const [collName, cardsInCollection] of Object.entries(collections)) {
-                            if (Array.isArray(cardsInCollection) && cardsInCollection.some(c => c.slabSerial === card.slabSerial)) {
-                              actualCollectionName = collName;
-                              break; 
+                    <>
+                      <CardList
+                        cards={collectionData} 
+                        exchangeRate={exchangeRate}
+                        onCardClick={(card) => {
+                          let actualCollectionName = selectedCollection;
+                          if (selectedCollection === 'All Cards') {
+                            for (const [collName, cardsInCollection] of Object.entries(collections)) {
+                              if (Array.isArray(cardsInCollection) && cardsInCollection.some(c => c.slabSerial === card.slabSerial)) {
+                                actualCollectionName = collName;
+                                break; 
+                              }
+                            }
+                            if (actualCollectionName === 'All Cards') {
+                              logger.warn("Could not determine original collection for card: ", card.slabSerial);
+                              actualCollectionName = null; 
                             }
                           }
-                          if (actualCollectionName === 'All Cards') {
-                            logger.warn("Could not determine original collection for card: ", card.slabSerial);
-                            actualCollectionName = null; 
-                          }
-                        }
-                        selectCard(card);
-                        setInitialCardCollection(actualCollectionName); 
-                      }}
-                      onDeleteCards={onDeleteCards}
-                      onDeleteCard={handleCardDelete}
-                      onUpdateCard={handleCardUpdate}
-                      onAddCard={() => setShowNewCardForm(true)}
-                      selectedCollection={selectedCollection}
-                      collections={collections}
-                      setCollections={setCollections}
-                      onCollectionChange={(collection) => {
-                        setSelectedCollection(collection);
-                        localStorage.setItem('selectedCollection', collection);
-                      }}
-                    />
+                          selectCard(card);
+                          setInitialCardCollection(actualCollectionName); 
+                        }}
+                        onDeleteCards={onDeleteCards}
+                        onDeleteCard={handleCardDelete}
+                        onUpdateCard={handleCardUpdate}
+                        onAddCard={() => setShowNewCardForm(true)}
+                        selectedCollection={selectedCollection}
+                        collections={collections}
+                        setCollections={setCollections}
+                        onCollectionChange={(collection) => {
+                          setSelectedCollection(collection);
+                          localStorage.setItem('selectedCollection', collection);
+                        }}
+                      />
+                      
+                      {/* Floating Add Button - Mobile Only */}
+                      <button
+                        onClick={() => setShowNewCardForm(true)}
+                        className="sm:hidden fixed bottom-20 right-5 w-14 h-14 rounded-full bg-gradient-to-r from-[#ef4444] to-[#db2777] text-white shadow-lg flex items-center justify-center z-30 hover:shadow-xl transition-shadow"
+                        aria-label="Add new card"
+                      >
+                        <span className="material-icons text-3xl">add</span>
+                      </button>
+                    </>
                   )}
                 </>
               )}
             </div>
           </div>
-        ) : currentView === 'purchase-invoices' ? (
+        ) : currentView === 'purchase-invoices' || currentView === 'sold' ? (
           <PurchaseInvoices />
         ) : currentView === 'marketplace' ? (
           <Marketplace />
+        ) : currentView === 'marketplace-selling' ? (
+          <MarketplaceSelling />
+        ) : currentView === 'marketplace-messages' ? (
+          <MarketplaceMessages />
         ) : currentView === 'settings' && isMobile ? (
           <MobileSettingsModal
             isOpen={showSettings}
@@ -3110,8 +3148,10 @@ To import this backup:
             onSignOut={logout}
             onResetData={handleResetData}
           />
-        ) : (
+        ) : currentView === 'sold-items' ? (
           <SoldItems />
+        ) : (
+          <PurchaseInvoices />
         )}
       </main>
 
@@ -3317,7 +3357,7 @@ To import this backup:
         className={`lg:hidden fixed bottom-0 left-0 right-0 z-40 transition-transform duration-300 ${selectedCard ? 'bottom-nav-hidden' : ''}`}
       >
         <BottomNavBar
-          currentView={currentView || location.pathname.split('/').pop() || 'cards'}
+          currentView={currentView}
           onViewChange={(view) => {
             setCurrentView(view);
             if (view !== 'settings' && showSettings) {
@@ -3327,7 +3367,6 @@ To import this backup:
               setShowSettings(true);
             }
           }}
-          onAddCard={() => setShowNewCardForm(true)}
           onSettingsClick={handleSettingsClick}
           isModalOpen={selectedCard !== null || showNewCardForm || isAnyModalOpen}
         />

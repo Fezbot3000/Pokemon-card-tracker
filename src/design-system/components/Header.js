@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 // Import design system components
 import Button from '../atoms/Button';
@@ -33,6 +33,17 @@ const Header = ({
   const { preferredCurrency, updatePreferredCurrency } = useUserPreferences();
   const [currencyDropdownOpen, setCurrencyDropdownOpen] = useState(false);
   const currencyDropdownRef = useRef(null);
+  const location = useLocation();
+  
+  // Helper function to check if current view is in the sold section
+  const isSoldSection = () => {
+    return ['sold', 'sold-items', 'purchase-invoices'].includes(currentView);
+  };
+  
+  // Helper function to check if current view is in the marketplace section
+  const isMarketplaceSection = () => {
+    return ['marketplace', 'marketplace-selling', 'marketplace-messages'].includes(currentView);
+  };
 
 
 
@@ -124,46 +135,46 @@ const Header = ({
             </Link>
           </div>
           
-          {/* Navigation tabs - integrated into the top bar */}
+          {/* Center - Navigation tabs */}
           {onViewChange && (
-            <div className="flex-1 flex justify-center overflow-x-auto hide-scrollbar mx-4">
-              <div className="flex space-x-2">
-                {/* Cards Button */}
-                <button
+            <div className="flex-1 flex justify-center">
+              {/* Desktop navigation - always visible on larger screens */}
+              <div className="hidden sm:flex space-x-1">
+                <button 
                   onClick={() => handleViewChange('cards')}
-                  className={`px-3 py-1.5 flex items-center justify-center rounded-full relative transition-colors duration-200 ${
+                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors duration-200 ${
                     currentView === 'cards' 
                       ? 'bg-gradient-to-r from-[#ef4444] to-[#db2777] text-white' 
                       : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200/50 dark:hover:bg-gray-700/50'
                   }`}
                 >
                   <Icon 
-                    name="style" 
+                    name="dashboard" 
                     className="mr-1 hidden xs:inline" 
                     color={currentView === 'cards' ? 'white' : 'default'} 
                     size="sm"
                   />
                   <span>Cards</span>
                 </button>
-                {/* Purchase Invoices Button */}
-                <button
+                
+                <button 
                   onClick={() => handleViewChange('purchase-invoices')}
-                  className={`px-3 py-1.5 flex items-center justify-center rounded-full relative transition-colors duration-200 ${
+                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors duration-200 ${
                     currentView === 'purchase-invoices' 
                       ? 'bg-gradient-to-r from-[#ef4444] to-[#db2777] text-white' 
                       : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200/50 dark:hover:bg-gray-700/50'
                   }`}
                 >
                   <Icon 
-                    name="receipt" 
+                    name="receipt_long" 
                     className="mr-1 hidden xs:inline" 
                     color={currentView === 'purchase-invoices' ? 'white' : 'default'} 
                     size="sm"
                   />
                   <span>Purchase Invoices</span>
                 </button>
-                {/* Sold Items Button */}
-                <button
+                
+                <button 
                   onClick={() => handleViewChange('sold-items')}
                   className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors duration-200 ${
                     currentView === 'sold-items' 
@@ -179,8 +190,8 @@ const Header = ({
                   />
                   <span>Sold Items</span>
                 </button>
-                {/* Marketplace Button */}
-                <button
+                
+                <button 
                   onClick={() => handleViewChange('marketplace')}
                   className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors duration-200 ${
                     currentView === 'marketplace' 
@@ -196,6 +207,109 @@ const Header = ({
                   />
                   <span>Marketplace</span>
                 </button>
+              </div>
+              
+              {/* Mobile navigation - contextual based on current view */}
+              <div className="sm:hidden flex space-x-1 justify-center">
+                {/* Hide header completely on Cards page */}
+                {currentView === 'cards' ? null : (
+                  <>
+                    {/* Show Purchase Invoices and Sold Items buttons on any Sold-related page */}
+                    {isSoldSection() && (
+                      <>
+                        <button 
+                          onClick={() => handleViewChange('purchase-invoices')}
+                          className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors duration-200 ${
+                            currentView === 'purchase-invoices' 
+                              ? 'bg-gradient-to-r from-[#ef4444] to-[#db2777] text-white' 
+                              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200/50 dark:hover:bg-gray-700/50'
+                          }`}
+                        >
+                          <Icon 
+                            name="receipt_long" 
+                            className="mr-1" 
+                            color={currentView === 'purchase-invoices' ? 'white' : 'default'} 
+                            size="sm"
+                          />
+                          <span>Purchase Invoices</span>
+                        </button>
+                        
+                        <button 
+                          onClick={() => handleViewChange('sold-items')}
+                          className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors duration-200 ${
+                            currentView === 'sold-items' 
+                              ? 'bg-gradient-to-r from-[#ef4444] to-[#db2777] text-white' 
+                              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200/50 dark:hover:bg-gray-700/50'
+                          }`}
+                        >
+                          <Icon 
+                            name="sell" 
+                            className="mr-1" 
+                            color={currentView === 'sold-items' ? 'white' : 'default'} 
+                            size="sm"
+                          />
+                          <span>Sold Items</span>
+                        </button>
+                      </>
+                    )}
+                    
+                    {/* Marketplace navigation tabs */}
+                    {isMarketplaceSection() && (
+                      <>
+                        <button 
+                          onClick={() => handleViewChange('marketplace')}
+                          className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors duration-200 ${
+                            currentView === 'marketplace' 
+                              ? 'bg-gradient-to-r from-[#ef4444] to-[#db2777] text-white' 
+                              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200/50 dark:hover:bg-gray-700/50'
+                          }`}
+                        >
+                          <Icon 
+                            name="storefront" 
+                            className="mr-1" 
+                            color={currentView === 'marketplace' ? 'white' : 'default'} 
+                            size="sm"
+                          />
+                          <span>Marketplace</span>
+                        </button>
+                        
+                        <button 
+                          onClick={() => handleViewChange('marketplace-selling')}
+                          className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors duration-200 ${
+                            currentView === 'marketplace-selling' 
+                              ? 'bg-gradient-to-r from-[#ef4444] to-[#db2777] text-white' 
+                              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200/50 dark:hover:bg-gray-700/50'
+                          }`}
+                        >
+                          <Icon 
+                            name="sell" 
+                            className="mr-1" 
+                            color={currentView === 'marketplace-selling' ? 'white' : 'default'} 
+                            size="sm"
+                          />
+                          <span>Selling</span>
+                        </button>
+                        
+                        <button 
+                          onClick={() => handleViewChange('marketplace-messages')}
+                          className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors duration-200 ${
+                            currentView === 'marketplace-messages' 
+                              ? 'bg-gradient-to-r from-[#ef4444] to-[#db2777] text-white' 
+                              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200/50 dark:hover:bg-gray-700/50'
+                          }`}
+                        >
+                          <Icon 
+                            name="chat" 
+                            className="mr-1" 
+                            color={currentView === 'marketplace-messages' ? 'white' : 'default'} 
+                            size="sm"
+                          />
+                          <span>Messages</span>
+                        </button>
+                      </>
+                    )}
+                  </>
+                )}
               </div>
             </div>
           )}
@@ -270,7 +384,7 @@ const Header = ({
 Header.propTypes = {
   onImportClick: PropTypes.func,
   onSettingsClick: PropTypes.func,
-  currentView: PropTypes.oneOf(['cards', 'sold-items', 'purchase-invoices', 'marketplace', 'grid', 'list']),
+  currentView: PropTypes.oneOf(['cards', 'sold', 'sold-items', 'purchase-invoices', 'marketplace', 'marketplace-selling', 'marketplace-messages', 'grid', 'list']),
   onViewChange: PropTypes.func,
   isComponentLibrary: PropTypes.bool
 };
