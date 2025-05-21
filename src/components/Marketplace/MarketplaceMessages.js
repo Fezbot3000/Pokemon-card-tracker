@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../design-system';
+import { useLocation } from 'react-router-dom';
 import { collection, query, where, orderBy, getDocs, onSnapshot, doc, getDoc, addDoc, serverTimestamp, setDoc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { db as firestoreDb } from '../../services/firebase';
 import logger from '../../utils/logger';
@@ -24,6 +25,18 @@ function MarketplaceMessages() {
   const [sendingMessage, setSendingMessage] = useState(false);
   const { user } = useAuth();
   const messagesEndRef = useRef(null);
+  const location = useLocation();
+  const activeChatId = location.state?.activeChatId;
+
+  // Handle navigation with active chat ID
+  useEffect(() => {
+    if (activeChatId && conversations.length > 0) {
+      const chat = conversations.find(c => c.id === activeChatId);
+      if (chat) {
+        setActiveChat(chat);
+      }
+    }
+  }, [activeChatId, conversations]);
 
   useEffect(() => {
     if (!user) return;
@@ -35,6 +48,14 @@ function MarketplaceMessages() {
     try {
       // Query for user's chats
       const chatsRef = collection(firestoreDb, 'chats');
+      
+      // Validate user.uid to prevent invalid queries
+      if (!user.uid || typeof user.uid !== 'string') {
+        logger.error('Invalid user ID for Firestore query:', user.uid);
+        setLoading(false);
+        return;
+      }
+      
       const chatsQuery = query(
         chatsRef,
         where('participants', 'array-contains', user.uid),
@@ -185,25 +206,45 @@ function MarketplaceMessages() {
       return;
     }
     
-    const messagesRef = collection(firestoreDb, 'chats', activeChat.id, 'messages');
-    const messagesQuery = query(messagesRef, orderBy('timestamp', 'asc'));
+    // Validate chat ID to prevent invalid queries
+    if (!activeChat.id || typeof activeChat.id !== 'string') {
+      logger.error('Invalid chat ID for Firestore query:', activeChat.id);
+      return;
+    }
     
-    const unsubscribe = onSnapshot(messagesQuery, (snapshot) => {
-      const messagesData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        timestamp: doc.data().timestamp?.toDate() || new Date()
-      }));
-      
-      setMessages(messagesData);
-      
-      // Scroll to bottom when messages change
-      setTimeout(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-      }, 100);
-    });
+    let unsubscribe;
     
-    return () => unsubscribe();
+    try {
+      const messagesRef = collection(firestoreDb, 'chats', activeChat.id, 'messages');
+      const messagesQuery = query(messagesRef, orderBy('timestamp', 'asc'));
+      
+      unsubscribe = onSnapshot(messagesQuery, (snapshot) => {
+        const messagesData = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          timestamp: doc.data().timestamp?.toDate() || new Date()
+        }));
+        
+        setMessages(messagesData);
+        
+        // Scroll to bottom when messages change
+        setTimeout(() => {
+          messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+      }, (error) => {
+        // Handle specific error types
+        logger.error('Error in messages listener:', error);
+        // Don't set messages to empty array to preserve any existing messages
+      });
+    } catch (error) {
+      logger.error('Error setting up messages listener:', error);
+    }
+    
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
   }, [activeChat]);
   
   // Format timestamp for display
@@ -263,13 +304,77 @@ function MarketplaceMessages() {
     ? 'The seller has left the chat.' 
     : 'The buyer has left the chat.';
 
+  // Hide header, footer and bottom nav when in active chat
+  useEffect(() => {
+    const body = document.body;
+    const bottomNav = document.querySelector('.fixed.sm\\:hidden.bottom-0');
+    
+    if (activeChat) {
+      // Hide header and footer
+      body.classList.add('hide-header-footer');
+      
+      // Directly hide bottom nav
+      if (bottomNav) {
+        bottomNav.style.display = 'none';
+      }
+    } else {
+      // Show header and footer
+      body.classList.remove('hide-header-footer');
+      
+      // Show bottom nav
+      if (bottomNav) {
+        bottomNav.style.display = '';
+      }
+    }
+    
+    // Cleanup function
+    return () => {
+      body.classList.remove('hide-header-footer');
+      if (bottomNav) {
+        bottomNav.style.display = '';
+      }
+    };
+  }, [activeChat]);
+  
+  // Additional effect to ensure bottom nav stays hidden
+  useEffect(() => {
+    if (!activeChat) return;
+    
+    // Function to hide bottom nav
+    const hideBottomNav = () => {
+      const bottomNav = document.querySelector('.fixed.sm\\:hidden.bottom-0');
+      if (bottomNav) {
+        bottomNav.style.display = 'none';
+      }
+    };
+    
+    // Hide immediately
+    hideBottomNav();
+    
+    // Set up an interval to keep checking and hiding
+    const interval = setInterval(hideBottomNav, 100);
+    
+    return () => clearInterval(interval);
+  }, [activeChat]);
+
   return (
     <>
-      <style>{scrollbarHideStyles}</style>
-      <div className="h-[calc(100vh-120px)] w-screen flex flex-col overflow-hidden pt-16 max-w-none mx-0 px-0 absolute left-0 right-0"> {/* Full height minus header/footer with padding for fixed header */}
+      <style>
+        {`${scrollbarHideStyles}
+        .hide-header-footer header, .hide-header-footer footer {
+          display: none !important;
+        }
+        .hide-header-footer .main-content {
+          padding-top: 0 !important;
+          height: 100vh !important;
+        }
+        .hide-header-footer .fixed.sm\:hidden.bottom-0 {
+          display: none !important;
+        }`}
+      </style>
+      <div className={`${activeChat ? 'h-screen' : 'h-[calc(100vh-120px)]'} w-screen flex flex-col overflow-hidden ${activeChat ? 'pt-0' : 'pt-16'} max-w-none mx-0 px-0 absolute left-0 right-0`}> {/* Adjust height and padding based on active chat */}
       {!activeChat ? (
       <div className="w-full px-0 sm:px-2">
-        <h1 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Messages</h1>
         
         {loading ? (
           <div className="flex justify-center items-center h-64">
@@ -312,9 +417,9 @@ function MarketplaceMessages() {
             )}
           </div>
         ) : (
-          <div className="flex flex-col h-[calc(100vh-180px)] w-full max-w-none mx-0 px-0">
+          <div className="flex flex-col h-screen w-full max-w-none mx-0 px-0">
             {/* Chat header */}
-            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+            <div className="flex items-center justify-between p-2 border-b border-gray-200 dark:border-gray-700">
               <div className="flex items-center">
                 <button 
                   className="mr-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
@@ -323,7 +428,7 @@ function MarketplaceMessages() {
                   <span className="material-icons">arrow_back</span>
                 </button>
                 <div className="flex items-center">
-                  {activeChat?.cardImage ? (
+                  {activeChat?.cardImage && typeof activeChat.cardImage === 'string' ? (
                     <img 
                       src={activeChat.cardImage} 
                       alt={activeChat?.cardTitle || 'Card'}

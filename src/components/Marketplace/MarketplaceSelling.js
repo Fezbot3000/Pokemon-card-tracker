@@ -2,15 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../design-system';
 import { collection, query, where, orderBy, getDocs, onSnapshot } from 'firebase/firestore';
 import { db as firestoreDb } from '../../services/firebase';
-import Card from '../../design-system/components/Card';
 import logger from '../../utils/logger';
 import { useUserPreferences } from '../../contexts/UserPreferencesContext';
 import db from '../../services/db'; // Import IndexedDB service for image loading
+import EditListingModal from './EditListingModal';
+import MarketplaceCard from './MarketplaceCard'; // Import the custom MarketplaceCard component
 
 function MarketplaceSelling() {
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [cardImages, setCardImages] = useState({});
+  const [selectedListing, setSelectedListing] = useState(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const { user } = useAuth();
   const { convertCurrency, formatAmountForDisplay: formatUserCurrency } = useUserPreferences();
 
@@ -131,6 +134,36 @@ function MarketplaceSelling() {
             return;
           }
           
+          // If not in IndexedDB, try to get the image URL from the listing
+          if (listing.card?.imageUrl) {
+            images[cardId] = listing.card.imageUrl;
+            return;
+          }
+
+          // If the card has an image property directly
+          if (listing.card?.image) {
+            images[cardId] = listing.card.image;
+            return;
+          }
+
+          // If the listing itself has an imageUrl
+          if (listing.imageUrl) {
+            images[cardId] = listing.imageUrl;
+            return;
+          }
+          
+          // If the card has a frontImageUrl property
+          if (listing.card?.frontImageUrl) {
+            images[cardId] = listing.card.frontImageUrl;
+            return;
+          }
+          
+          // If the listing has a cardImageUrl property
+          if (listing.cardImageUrl) {
+            images[cardId] = listing.cardImageUrl;
+            return;
+          }
+          
           // If not in IndexedDB, the image will be loaded via the Card component's built-in loading
         } catch (error) {
           logger.error('Error loading card image:', error);
@@ -146,9 +179,18 @@ function MarketplaceSelling() {
     setLoading(false);
   };
 
+  const handleEditClick = (listing) => {
+    setSelectedListing(listing);
+    setIsEditModalOpen(true);
+  };
+
+  const handleCloseEditModal = () => {
+    setIsEditModalOpen(false);
+    setSelectedListing(null);
+  };
+
   return (
     <div className="p-4 sm:p-6 pt-16"> {/* Added pt-16 for padding-top to avoid header overlap */}
-      <h1 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Your Listings</h1>
       
       {loading ? (
         <div className="flex justify-center items-center h-64">
@@ -164,39 +206,46 @@ function MarketplaceSelling() {
       ) : (
         <div className="grid grid-cols-2 gap-4">
           {listings.map(listing => (
-            <div key={listing.id} className="relative">
-              <Card 
-                card={listing.card}
-                cardImage={cardImages[listing.card?.slabSerial || listing.card?.id || listing.cardId]}
-                onClick={() => {}} // No detailed view in marketplace yet
-                className="h-full"
-                investmentAUD={listing.card?.investmentAUD || 0}
-                currentValueAUD={listing.card?.currentValueAUD || 0}
-                formatUserCurrency={formatUserCurrency}
-              />
-              <div className="absolute bottom-0 left-0 right-0 bg-white dark:bg-gray-800 p-3 rounded-b-lg">
-                <div className="flex flex-col space-y-2">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <p className="font-semibold text-gray-900 dark:text-white">
-                        {listing.listingPrice} {listing.currency}
-                      </p>
-                      <p className="text-xs text-gray-600 dark:text-gray-400">
-                        Status: {listing.status === 'available' ? 'Active' : 'Sold'}
-                      </p>
-                    </div>
-                    <button
-                      className="px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white text-sm rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-                    >
-                      Edit
-                    </button>
+            <div key={listing.id} className="flex flex-col h-full overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-black">
+              <div className="flex-grow">
+                <MarketplaceCard 
+                  card={listing.card}
+                  cardImage={cardImages[listing.card?.slabSerial || listing.card?.id || listing.cardId]}
+                  onClick={() => {}} // No detailed view in marketplace yet
+                  className="h-full border-0"
+                  investmentAUD={0}
+                  formatUserCurrency={formatUserCurrency}
+                />
+              </div>
+              <div className="bg-white dark:bg-gray-800 p-3 rounded-b-lg">
+                <div className="flex flex-col items-center space-y-2">
+                  <div className="text-center">
+                    <p className="font-semibold text-gray-900 dark:text-white">
+                      {listing.listingPrice} {listing.currency}
+                    </p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">
+                      {listing.location || 'No location'}
+                    </p>
                   </div>
+                  <button
+                    onClick={() => handleEditClick(listing)}
+                    className="w-full px-3 py-1.5 bg-blue-500 text-white text-sm rounded-md hover:bg-blue-600 transition-colors"
+                  >
+                    Edit
+                  </button>
                 </div>
               </div>
             </div>
           ))}
         </div>
       )}
+
+      {/* Edit Listing Modal */}
+      <EditListingModal 
+        isOpen={isEditModalOpen}
+        onClose={handleCloseEditModal}
+        listing={selectedListing}
+      />
     </div>
   );
 }

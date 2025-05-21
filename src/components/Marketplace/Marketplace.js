@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../design-system';
 import { collection, query, where, orderBy, getDocs, onSnapshot } from 'firebase/firestore';
 import { db as firestoreDb } from '../../services/firebase';
-import Card from '../../design-system/components/Card';
 import logger from '../../utils/logger';
 import { useUserPreferences } from '../../contexts/UserPreferencesContext';
 import db from '../../services/db'; // Import IndexedDB service for image loading
 import MessageModal from './MessageModal'; // Import the MessageModal component
+import MarketplaceCard from './MarketplaceCard'; // Import the custom MarketplaceCard component
+import { useNavigate } from 'react-router-dom'; // Import for navigation
 
 function Marketplace() {
   const [listings, setListings] = useState([]);
@@ -14,10 +15,39 @@ function Marketplace() {
   const [cardImages, setCardImages] = useState({});
   const { user } = useAuth();
   const { convertCurrency, formatAmountForDisplay: formatUserCurrency } = useUserPreferences();
+  const navigate = useNavigate();
 
   const [indexBuildingError, setIndexBuildingError] = useState(false);
   const [selectedListing, setSelectedListing] = useState(null);
   const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
+  const [existingChats, setExistingChats] = useState({});
+
+  // Fetch existing chats for the current user
+  useEffect(() => {
+    if (!user) return;
+    
+    const fetchExistingChats = async () => {
+      try {
+        const chatsRef = collection(firestoreDb, 'chats');
+        const userChatsQuery = query(chatsRef, where('participants', 'array-contains', user.uid));
+        const chatsSnapshot = await getDocs(userChatsQuery);
+        
+        const chatsData = {};
+        chatsSnapshot.forEach(doc => {
+          const chatData = doc.data();
+          if (chatData.cardId) {
+            chatsData[chatData.cardId] = doc.id;
+          }
+        });
+        
+        setExistingChats(chatsData);
+      } catch (error) {
+        logger.error('Error fetching existing chats:', error);
+      }
+    };
+    
+    fetchExistingChats();
+  }, [user]);
 
   useEffect(() => {
     if (!user) return;
@@ -124,11 +154,11 @@ function Marketplace() {
     
     // Clean up existing blob URLs before loading new ones
     Object.values(cardImages).forEach(url => {
-      if (url && url.startsWith('blob:')) {
+      if (url && typeof url === 'string' && url.startsWith('blob:')) {
         try {
           URL.revokeObjectURL(url);
         } catch (error) {
-          console.warn('Failed to revoke potential blob URL:', url, error);
+          logger.warn('Failed to revoke potential blob URL:', url, error);
         }
       }
     });
@@ -138,32 +168,55 @@ function Marketplace() {
     
     // Process each listing
     listingsData.forEach(listing => {
-      if (!listing.card) return;
+      const cardId = listing.card?.slabSerial || listing.card?.id || listing.cardId;
       
-      const cardId = listing.card.slabSerial || listing.card.id || listing.cardId;
-      if (!cardId) return;
+      if (!cardId) {
+        logger.warn('Card ID not found for listing:', listing.id);
+        return;
+      }
       
-      // Create a promise for each image load
       const loadPromise = (async () => {
         try {
-          // First check if the card has an imageUrl directly
-          if (listing.card.imageUrl) {
-            images[cardId] = listing.card.imageUrl;
+          // Try to load from IndexedDB first
+          const cachedImage = await db.getImage(cardId);
+          if (cachedImage) {
+            images[cardId] = cachedImage;
             return;
           }
           
-          // Try loading from IndexedDB if no direct URL
-          const imageBlob = await db.getImage(cardId);
-          if (imageBlob) {
-            const blobUrl = URL.createObjectURL(imageBlob);
-            images[cardId] = blobUrl;
-          } else {
-            // Set to null if not found
-            images[cardId] = null;
+          // If not in IndexedDB, try to get the image URL from the listing
+          if (listing.card?.imageUrl) {
+            images[cardId] = listing.card.imageUrl;
+            return;
           }
+
+          // If the card has an image property directly
+          if (listing.card?.image) {
+            images[cardId] = listing.card.image;
+            return;
+          }
+
+          // If the listing itself has an imageUrl
+          if (listing.imageUrl) {
+            images[cardId] = listing.imageUrl;
+            return;
+          }
+          
+          // If the card has a frontImageUrl property
+          if (listing.card?.frontImageUrl) {
+            images[cardId] = listing.card.frontImageUrl;
+            return;
+          }
+          
+          // If the listing has a cardImageUrl property
+          if (listing.cardImageUrl) {
+            images[cardId] = listing.cardImageUrl;
+            return;
+          }
+          
+          // If not in IndexedDB, the image will be loaded via the Card component's built-in loading
         } catch (error) {
-          console.error(`Error loading image for card ${cardId}:`, error);
-          images[cardId] = null;
+          logger.error('Error loading card image:', error);
         }
       })();
       
@@ -176,7 +229,7 @@ function Marketplace() {
     setLoading(false);
   };
 
-  const handleContactSeller = (listing) => {
+  const handleContactSeller = async (listing) => {
     if (!user) {
       // If user is not logged in, show a message or redirect to login
       logger.warn('User must be logged in to contact seller');
@@ -189,7 +242,14 @@ function Marketplace() {
       return;
     }
     
-    // Set the selected listing and open the message modal
+    // Check if there's an existing chat for this listing
+    if (existingChats[listing.id]) {
+      // Navigate to the existing chat
+      navigate('/marketplace/messages', { state: { activeChatId: existingChats[listing.id] } });
+      return;
+    }
+    
+    // If no existing chat, set the selected listing and open the message modal
     setSelectedListing(listing);
     setIsMessageModalOpen(true);
   };
@@ -220,37 +280,33 @@ function Marketplace() {
       ) : (
         <div className="grid grid-cols-2 gap-4">
           {listings.map(listing => (
-            <div key={listing.id} className="relative">
-              <Card 
-                card={listing.card}
-                cardImage={cardImages[listing.card?.slabSerial || listing.card?.id || listing.cardId]}
-                onClick={() => {}} // No detailed view in marketplace yet
-                className="h-full"
-                investmentAUD={listing.card?.investmentAUD || 0}
-                currentValueAUD={listing.card?.currentValueAUD || 0}
-                formatUserCurrency={formatUserCurrency}
-              />
-              <div className="absolute bottom-0 left-0 right-0 bg-white dark:bg-gray-800 p-3 rounded-b-lg">
-                <div className="flex flex-col space-y-2">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <p className="font-semibold text-gray-900 dark:text-white">
-                        {listing.listingPrice} {listing.currency}
-                      </p>
-                      {listing.location && (
-                        <p className="text-xs text-gray-600 dark:text-gray-400 flex items-center">
-                          <span className="material-icons text-xs mr-1">location_on</span>
-                          {listing.location}
-                        </p>
-                      )}
-                    </div>
-                    <button
-                      onClick={() => handleContactSeller(listing)}
-                      className="px-3 py-1 bg-red-500 text-white text-sm rounded-md hover:bg-red-600 transition-colors"
-                    >
-                      Contact Seller
-                    </button>
+            <div key={listing.id} className="flex flex-col h-full overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-black">
+              <div className="flex-grow">
+                <MarketplaceCard 
+                  card={listing.card}
+                  cardImage={cardImages[listing.card?.slabSerial || listing.card?.id || listing.cardId]}
+                  onClick={() => {}} // No detailed view in marketplace yet
+                  className="h-full border-0"
+                  investmentAUD={listing.card?.investmentAUD || 0}
+                  formatUserCurrency={formatUserCurrency}
+                />
+              </div>
+              <div className="bg-white dark:bg-gray-800 p-3 rounded-b-lg">
+                <div className="flex flex-col items-center space-y-2">
+                  <div className="text-center">
+                    <p className="font-semibold text-gray-900 dark:text-white">
+                      {listing.listingPrice} {listing.currency}
+                    </p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">
+                      {listing.location || 'No location'}
+                    </p>
                   </div>
+                  <button
+                    onClick={() => handleContactSeller(listing)}
+                    className="w-full px-3 py-1.5 bg-red-500 text-white text-sm rounded-md hover:bg-red-600 transition-colors"
+                  >
+                    Contact Seller
+                  </button>
                 </div>
               </div>
             </div>
