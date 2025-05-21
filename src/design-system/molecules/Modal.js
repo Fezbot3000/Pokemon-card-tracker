@@ -33,16 +33,7 @@ const Modal = ({
   const [isAnimatingOut, setIsAnimatingOut] = useState(false);
   const [animationClass, setAnimationClass] = useState('');
   
-  // Store scroll position on component mount to use as a reference
-  useEffect(() => {
-    // Store the initial scroll position when component mounts
-    scrollPosRef.current = {
-      x: window.scrollX,
-      y: window.scrollY
-    };
-  }, []);
-
-  // Handle modal open/close effects
+  // Preserve scroll position and prevent background scrolling
   useEffect(() => {
     if (isOpen) {
       setIsMounted(true);
@@ -58,46 +49,19 @@ const Modal = ({
       // Only prevent background scroll if modal is open and not static
       if (!showAsStatic) {
         // Store current scroll position when modal opens
-        // This is critical - must happen BEFORE adding modal-open class
         scrollPosRef.current = {
           x: window.scrollX,
           y: window.scrollY
         };
-        
-        // For mobile devices, we need a different approach to prevent scroll jumping
-        if (window.innerWidth < 768) {
-          // Add a data attribute to store the scroll position for later restoration
-          document.documentElement.setAttribute('data-scroll-position', scrollPosRef.current.y);
-          // Add a class that we can use to restore the scroll position
-          document.documentElement.classList.add('modal-scroll-locked');
-        }
-        
-        // Add modal-open class after storing scroll position
         document.body.classList.add('modal-open');
       }
     }
     
     return () => {
       if (isOpen) {
-        // When modal closes, remove the class
+        // When modal closes, remove the class but don't force scroll
         document.body.classList.remove('modal-open');
-        
-        // For mobile devices, restore scroll position
-        if (window.innerWidth < 768) {
-          // Remove the modal-scroll-locked class
-          document.documentElement.classList.remove('modal-scroll-locked');
-          
-          // Get the stored scroll position
-          const scrollPosition = document.documentElement.getAttribute('data-scroll-position');
-          if (scrollPosition) {
-            // Use a small timeout to ensure the modal is fully closed before scrolling
-            setTimeout(() => {
-              window.scrollTo(0, parseInt(scrollPosition, 10));
-              // Clean up the data attribute
-              document.documentElement.removeAttribute('data-scroll-position');
-            }, 50);
-          }
-        }
+        // Don't restore scroll position - let the page stay where it is
       }
     };
   }, [isOpen, position, showAsStatic]);

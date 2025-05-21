@@ -9,7 +9,7 @@ const BottomSheet = ({ isOpen, onClose, title, children }) => {
   return (
     // Backdrop
     <div 
-      className="fixed inset-0 z-[1000] flex items-end bg-black/50 backdrop-blur-sm transition-opacity duration-300 ease-in-out"
+      className="fixed inset-0 z-[1000] flex items-end bg-black bg-opacity-30 transition-opacity duration-300 ease-in-out"
       onClick={onClose}
     >
       {/* Sheet Content */}
