@@ -1,14 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { doc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, updateDoc, deleteDoc, serverTimestamp, getDoc, writeBatch } from 'firebase/firestore';
 import { db as firestoreDb } from '../../services/firebase';
 import { toast } from 'react-hot-toast';
 import { useUserPreferences } from '../../contexts/UserPreferencesContext';
 import logger from '../../utils/logger';
 import { collection, addDoc } from 'firebase/firestore';
+import { Modal } from '../../design-system';
+import { useAuth } from '../../design-system';
 
-function EditListingModal({ isOpen, onClose, listing }) {
+function EditListingModal({ isOpen, onClose, listing, onListingDeleted }) {
   const { preferredCurrency } = useUserPreferences();
+  const { user } = useAuth(); // Get current authenticated user
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [formData, setFormData] = useState({
     price: '',
     note: '',
@@ -120,10 +125,153 @@ function EditListingModal({ isOpen, onClose, listing }) {
     }
   };
 
+  const handleDeleteListing = async () => {
+    if (!listing || !listing.id) {
+      toast.error('No listing data available');
+      return;
+    }
+
+    // Check if user is authenticated
+    if (!user || !user.uid) {
+      toast.error('You must be logged in to delete a listing');
+      return;
+    }
+
+    // Check if user owns the listing
+    if (listing.userId && listing.userId !== user.uid) {
+      toast.error('You can only delete your own listings');
+      return;
+    }
+
+    setIsDeleting(true);
+    logger.info('Starting deletion process for listing:', listing.id);
+
+    try {
+      // Use a batch to ensure atomic operation
+      const batch = writeBatch(firestoreDb);
+      
+      // Get a direct reference to the document
+      const listingRef = doc(firestoreDb, 'marketplaceItems', listing.id);
+      
+      // First verify the document exists
+      const docSnap = await getDoc(listingRef);
+      
+      if (!docSnap.exists()) {
+        logger.warn(`Document at marketplaceItems/${listing.id} does not exist or has already been deleted`);
+        toast.success('Listing has been removed');
+        setShowDeleteConfirmation(false);
+        onClose();
+        
+        // Still notify parent to update UI
+        if (typeof onListingDeleted === 'function') {
+          onListingDeleted(listing.id);
+        }
+        return;
+      }
+      
+      // Update status to 'archived' first, then delete
+      batch.update(listingRef, { status: 'archived', timestampArchived: serverTimestamp() });
+      batch.delete(listingRef);
+      
+      // Also update the isListed flag in the original card document
+      if (listing.card && listing.card.slabSerial && listing.userId) {
+        const cardRef = doc(firestoreDb, `users/${listing.userId}/cards/${listing.card.slabSerial}`);
+        // Check if the card document exists before updating
+        const cardDoc = await getDoc(cardRef);
+        if (cardDoc.exists()) {
+          logger.info(`Updating isListed flag for card: ${listing.card.slabSerial}`);
+          batch.update(cardRef, { isListed: false });
+        } else {
+          logger.warn(`Card document not found for: ${listing.card.slabSerial}`);
+        }
+      }
+      
+      // Commit the batch
+      await batch.commit();
+      
+      // Verify deletion was successful
+      const verifySnap = await getDoc(listingRef);
+      if (!verifySnap.exists()) {
+        logger.info(`Successfully deleted document at: marketplaceItems/${listing.id}`);
+        toast.success('Listing deleted successfully');
+      } else {
+        throw new Error('Document still exists after deletion');
+      }
+      
+      // Update UI
+      setShowDeleteConfirmation(false);
+      
+      // Notify parent component about the deletion
+      if (typeof onListingDeleted === 'function') {
+        onListingDeleted(listing.id);
+      }
+      
+      // Close the modal
+      onClose();
+    } catch (error) {
+      logger.error('Error deleting listing:', error);
+      logger.error('Listing details:', { id: listing.id, userId: listing.userId, userAuth: user?.uid });
+      toast.error('Failed to delete listing. Please try again.');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   if (!isOpen || !listing) return null;
+  
+  // Delete confirmation modal
+  const DeleteConfirmationModal = () => (
+    <Modal
+      isOpen={showDeleteConfirmation}
+      onClose={() => setShowDeleteConfirmation(false)}
+      title="Delete Listing"
+      closeOnClickOutside={!isDeleting}
+    >
+      <div className="p-6">
+        <div className="mb-4 text-center">
+          <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900/20 mb-4">
+            <svg className="h-6 w-6 text-red-600 dark:text-red-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white">Are you sure you want to delete this listing?</h3>
+          <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+            This action will permanently remove the listing from the marketplace. This action cannot be undone.
+          </p>
+        </div>
+        <div className="mt-5 sm:mt-6 flex flex-col sm:flex-row-reverse gap-3">
+          <button
+            type="button"
+            disabled={isDeleting}
+            onClick={handleDeleteListing}
+            className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:w-auto sm:text-sm"
+          >
+            {isDeleting ? (
+              <>
+                <span className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></span>
+                Deleting...
+              </>
+            ) : (
+              'Delete Listing'
+            )}
+          </button>
+          <button
+            type="button"
+            disabled={isDeleting}
+            onClick={() => setShowDeleteConfirmation(false)}
+            className="w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-[#0F0F0F] text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 sm:w-auto sm:text-sm"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </Modal>
+  );
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
+    <>
+      <DeleteConfirmationModal />
+      <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="flex items-center justify-center min-h-screen text-center">
         <div className="fixed inset-0 transition-opacity" aria-hidden="true">
           <div className="absolute inset-0 bg-gray-500 dark:bg-gray-900 opacity-75"></div>
@@ -236,6 +384,14 @@ function EditListingModal({ isOpen, onClose, listing }) {
             
             <div className="bg-gray-50 dark:bg-[#151515] px-6 py-4 flex flex-col sm:flex-row-reverse gap-3">
               <button
+                type="button"
+                onClick={() => setShowDeleteConfirmation(true)}
+                disabled={isSubmitting || isDeleting}
+                className="w-full inline-flex justify-center rounded-lg border border-red-300 dark:border-red-800 shadow-sm px-4 py-3 bg-white dark:bg-[#0F0F0F] text-base font-medium text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:w-auto"
+              >
+                Delete Listing
+              </button>
+              <button
                 type="submit"
                 disabled={isSubmitting}
                 className="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-3 bg-purple-600 text-base font-medium text-white hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 sm:w-auto"
@@ -263,6 +419,12 @@ function EditListingModal({ isOpen, onClose, listing }) {
         </div>
       </div>
     </div>
+    
+    {/* Render the delete confirmation modal */}
+    {showDeleteConfirmation && (
+      <DeleteConfirmationModal />
+    )}
+    </>
   );
 }
 

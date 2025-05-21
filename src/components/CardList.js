@@ -2,7 +2,9 @@ import React, { useState, useRef, useEffect, useCallback, memo, useMemo } from '
 import { useInView } from 'react-intersection-observer';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../design-system';
+import { collection, query, where, doc, updateDoc, getDocs } from 'firebase/firestore';
 import db from '../services/db';
+import { db as firestoreDb } from '../services/firebase';
 import { toast } from 'react-hot-toast';
 import { StatisticsSummary, SearchToolbar, Card, ConfirmDialog } from '../design-system';
 import CollectionSelector from '../design-system/components/CollectionSelector';
@@ -11,6 +13,7 @@ import MoveCardsModal from './MoveCardsModal';
 import CreateInvoiceModal from './PurchaseInvoices/CreateInvoiceModal';
 import ListCardModal from './Marketplace/ListCardModal';
 import { useUserPreferences } from '../contexts/UserPreferencesContext';
+import { useAuth } from '../design-system';
 
 // Replace FinancialSummary component with individual stat cards
 const StatCard = memo(({ label, value, isProfit = false }) => {
@@ -89,6 +92,7 @@ const CardList = ({
 }) => {
   // Initialize navigate function from React Router
   const navigate = useNavigate();
+  const { user } = useAuth() || { user: null };
   const { formatAmountForDisplay: formatUserCurrency, preferredCurrency } = useUserPreferences();
 
   const [filter, setFilter] = useState('');
@@ -1335,14 +1339,102 @@ const CardList = ({
                     setShowPurchaseInvoiceModal(true);
                     break;
                   case 'list':
-                    // Filter out cards that are already listed
-                    const cardsToList = cards.filter(card => selectedCards.has(card.slabSerial) && !card.isListed);
-                    if (cardsToList.length === 0) {
-                      toast.error('All selected cards are already listed on the marketplace');
-                      break;
-                    }
-                    setSelectedCardsForListing(cardsToList);
-                    setShowListCardModal(true);
+                    // Use an immediately invoked async function to handle async operations
+                    (async () => {
+                      try {
+                        // Start the bulk listing process
+                        console.log("Starting bulk listing flow");
+                        setSelectedAction('');
+                        
+                        // Check if user is authenticated
+                        if (!user || !user.uid) {
+                          toast.error('You must be logged in to list cards');
+                          return;
+                        }
+                        
+                        // Get all selected cards
+                        const selectedCardObjects = cards.filter(card => selectedCards.has(card.slabSerial));
+                        
+                        if (selectedCardObjects.length === 0) {
+                          toast.error('No cards selected for listing');
+                          return;
+                        }
+                        
+                        // Show loading toast while we check Firestore
+                        const loadingToast = toast.loading('Checking marketplace status...');
+                        
+                        try {
+                          // Dynamically check Firestore for each card's listing status
+                          const marketplaceRef = collection(firestoreDb, 'marketplaceItems');
+                          const checkPromises = selectedCardObjects.map(async (card) => {
+                            if (!card.slabSerial) return { ...card, isActuallyListed: false };
+                            
+                            // Query Firestore directly to check if card is listed
+                            const existingQuery = query(
+                              marketplaceRef,
+                              where('cardId', '==', card.slabSerial),
+                              where('status', '==', 'available')
+                            );
+                            
+                            try {
+                              const snapshot = await getDocs(existingQuery);
+                              const isActuallyListed = !snapshot.empty;
+                              return { ...card, isActuallyListed };
+                            } catch (error) {
+                              console.error(`Error checking listing status for ${card.slabSerial}:`, error);
+                              return { ...card, isActuallyListed: false }; // Assume not listed on error
+                            }
+                          });
+                          
+                          const checkedCards = await Promise.all(checkPromises);
+                          toast.dismiss(loadingToast);
+                          
+                          // Filter out cards that are actually listed in Firestore
+                          const cardsToList = checkedCards.filter(card => !card.isActuallyListed);
+                          
+                          // Update local isListed flags if they're out of sync
+                          const cardsNeedingUpdate = checkedCards.filter(card => 
+                            Boolean(card.isListed) !== Boolean(card.isActuallyListed)
+                          );
+                          
+                          if (cardsNeedingUpdate.length > 0) {
+                            console.log(`Found ${cardsNeedingUpdate.length} cards with out-of-sync isListed flags`);
+                            
+                            // Create update promises for all cards needing updates
+                            const updatePromises = cardsNeedingUpdate.map(card => {
+                              if (!card.slabSerial) return Promise.resolve();
+                              
+                              const cardRef = doc(firestoreDb, `users/${user.uid}/cards/${card.slabSerial}`);
+                              return updateDoc(cardRef, { isListed: card.isActuallyListed })
+                                .then(() => {
+                                  console.log(`Updated isListed flag for ${card.card || card.slabSerial} to ${card.isActuallyListed}`);
+                                })
+                                .catch(error => {
+                                  console.error(`Error updating isListed flag for ${card.slabSerial}:`, error);
+                                });
+                            });
+                            
+                            // Wait for all updates to complete
+                            await Promise.all(updatePromises);
+                          }
+                          
+                          if (cardsToList.length === 0) {
+                            toast.error('All selected cards are already listed on the marketplace');
+                            return;
+                          }
+                          
+                          setSelectedCardsForListing(cardsToList);
+                          setShowListCardModal(true);
+                        } catch (error) {
+                          toast.dismiss(loadingToast);
+                          toast.error('Error checking marketplace status');
+                          console.error('Error in bulk listing flow:', error);
+                        }
+                      } catch (error) {
+                        toast.error('Error starting bulk listing process');
+                        console.error('Error in bulk listing flow:', error);
+                      }
+                    })();
                     break;
                   case 'move':
                     handleMoveCards();

@@ -150,19 +150,35 @@ const MarketplaceCard = ({
 // Image component with slide-in animation
 const ImageWithAnimation = ({ src, alt }) => {
   const [imageLoaded, setImageLoaded] = useState(false);
+  
+  // Ensure we have a valid string URL
+  const safeImageSrc = typeof src === 'string' ? src : null;
+  
+  if (!safeImageSrc) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <Icon name="image" className="text-gray-400 dark:text-gray-600 text-4xl" />
+      </div>
+    );
+  }
 
   return (
     <img 
-      src={src} 
+      src={safeImageSrc} 
       alt={alt} 
       className={`w-full h-full object-contain rounded transition-all duration-500 ${imageLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-95 transform translate-y-4'}`}
       onLoad={() => setImageLoaded(true)}
+      onError={(e) => {
+        console.warn('Image failed to load:', alt);
+        e.target.onerror = null; // Prevent infinite error loops
+        e.target.src = ''; // Clear the src
+      }}
     />
   );
 };
 
 ImageWithAnimation.propTypes = {
-  src: PropTypes.string.isRequired,
+  src: PropTypes.string,
   alt: PropTypes.string.isRequired
 };
 

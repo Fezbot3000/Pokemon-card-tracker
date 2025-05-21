@@ -195,68 +195,146 @@ function MarketplaceSelling({ currentView, onViewChange }) {
 
   // Function to load card images from Firebase or IndexedDB
   const loadCardImages = async (listingsData) => {
-    const images = {};
-    const loadPromises = [];
+    if (!listingsData || listingsData.length === 0) return;
     
-    listingsData.forEach(listing => {
-      const cardId = listing.card?.slabSerial || listing.card?.id || listing.cardId;
-      
-      if (!cardId) {
-        logger.warn('Card ID not found for listing:', listing.id);
-        return;
-      }
-      
-      const loadPromise = (async () => {
+    // Clean up existing blob URLs before loading new ones
+    Object.values(cardImages).forEach(url => {
+      if (url && typeof url === 'string' && url.startsWith('blob:')) {
         try {
-          // Try to load from IndexedDB first
-          const cachedImage = await db.getImage(cardId);
-          if (cachedImage) {
-            images[cardId] = cachedImage;
-            return;
-          }
-          
-          // If not in IndexedDB, try to get the image URL from the listing
-          if (listing.card?.imageUrl) {
-            images[cardId] = listing.card.imageUrl;
-            return;
-          }
-
-          // If the card has an image property directly
-          if (listing.card?.image) {
-            images[cardId] = listing.card.image;
-            return;
-          }
-
-          // If the listing itself has an imageUrl
-          if (listing.imageUrl) {
-            images[cardId] = listing.imageUrl;
-            return;
-          }
-          
-          // If the card has a frontImageUrl property
-          if (listing.card?.frontImageUrl) {
-            images[cardId] = listing.card.frontImageUrl;
-            return;
-          }
-          
-          // If the listing has a cardImageUrl property
-          if (listing.cardImageUrl) {
-            images[cardId] = listing.cardImageUrl;
-            return;
-          }
-          
-          // If not in IndexedDB, the image will be loaded via the Card component's built-in loading
+          URL.revokeObjectURL(url);
         } catch (error) {
-          logger.error('Error loading card image:', error);
+          logger.warn('Failed to revoke blob URL:', error);
         }
-      })();
-      
-      loadPromises.push(loadPromise);
+      }
     });
     
-    // Wait for all images to load (or fail)
-    await Promise.all(loadPromises);
-    setCardImages(images);
+    const newCardImages = {};
+    
+    // Helper function to ensure we have a string URL
+    const ensureStringUrl = (imageData) => {
+      if (!imageData) return null;
+      
+      // If it's already a string, return it
+      if (typeof imageData === 'string') {
+        return imageData;
+      }
+      
+      // If it's a File object with a preview URL
+      if (imageData instanceof File && window.URL) {
+        return window.URL.createObjectURL(imageData);
+      }
+      
+      // If it's an object with a URL property, use that
+      if (typeof imageData === 'object') {
+        // Check for common URL properties
+        if (imageData.url) return imageData.url;
+        if (imageData.src) return imageData.src;
+        if (imageData.uri) return imageData.uri;
+        if (imageData.href) return imageData.href;
+        if (imageData.downloadURL) return imageData.downloadURL;
+        if (imageData.path && typeof imageData.path === 'string') return imageData.path;
+        
+        // If it has a toString method, try that
+        if (typeof imageData.toString === 'function') {
+          const stringValue = imageData.toString();
+          if (stringValue !== '[object Object]') {
+            return stringValue;
+          }
+        }
+      }
+      
+      // If it's a Blob with a type
+      if (imageData instanceof Blob && imageData.type && imageData.type.startsWith('image/')) {
+        return window.URL.createObjectURL(imageData);
+      }
+      
+      // If we can't extract a URL, return null
+      return null;
+    };
+    
+    // Process each listing
+    for (const listing of listingsData) {
+      try {
+        const card = listing.card;
+        if (!card) continue;
+        
+        const cardId = card.slabSerial || card.id || listing.cardId;
+        if (!cardId) continue;
+        
+        // Debug logging to help identify image issues
+        console.log(`Processing image for card ${cardId} in Selling view:`, {
+          hasImageUrl: Boolean(card.imageUrl),
+          hasImage: Boolean(card.image),
+          imageUrlType: card.imageUrl ? typeof card.imageUrl : 'none',
+          imageType: card.image ? typeof card.image : 'none'
+        });
+        
+        // First, check if the card has an imageUrl property
+        if (card.imageUrl) {
+          const url = ensureStringUrl(card.imageUrl);
+          if (url) {
+            console.log(`Using imageUrl for card ${cardId} in Selling view:`, url);
+            newCardImages[cardId] = url;
+            continue;
+          }
+        }
+        
+        // Next, check if the card has an image property
+        if (card.image) {
+          const imageUrl = ensureStringUrl(card.image);
+          if (imageUrl) {
+            console.log(`Using image property for card ${cardId} in Selling view:`, imageUrl);
+            newCardImages[cardId] = imageUrl;
+            continue;
+          }
+        }
+        
+        // Check all other possible image properties
+        const possibleImageProps = ['frontImageUrl', 'backImageUrl', 'imageData', 'cardImageUrl'];
+        let foundImage = false;
+        
+        for (const prop of possibleImageProps) {
+          if (card[prop]) {
+            const url = ensureStringUrl(card[prop]);
+            if (url) {
+              console.log(`Using ${prop} for card ${cardId} in Selling view:`, url);
+              newCardImages[cardId] = url;
+              foundImage = true;
+              break;
+            }
+          }
+        }
+        
+        if (foundImage) continue;
+        
+        // If no image in card object, try to load from IndexedDB
+        try {
+          const imageBlob = await db.getImage(cardId);
+          if (imageBlob) {
+            const blobUrl = URL.createObjectURL(imageBlob);
+            console.log(`Using IndexedDB image for card ${cardId} in Selling view:`, blobUrl);
+            newCardImages[cardId] = blobUrl;
+            continue;
+          }
+        } catch (dbError) {
+          // Silently handle IndexedDB errors
+          logger.warn(`Error loading image from IndexedDB for card ${cardId}:`, dbError);
+        }
+        
+        // If we still don't have an image, set to null
+        console.log(`No image found for card ${cardId} in Selling view`);
+        newCardImages[cardId] = null;
+      } catch (error) {
+        logger.warn('Error processing card image:', error);
+      }
+    }
+    
+    setCardImages(prevImages => ({
+      ...prevImages,
+      ...newCardImages
+    }));
+    
+    // Make sure to update loading state
     setLoading(false);
   };
 
@@ -268,6 +346,12 @@ function MarketplaceSelling({ currentView, onViewChange }) {
   const handleCloseEditModal = () => {
     setIsEditModalOpen(false);
     setSelectedListing(null);
+  };
+  
+  const handleListingDeleted = (deletedListingId) => {
+    // Update the UI by removing the deleted listing from state
+    setAllListings(prev => prev.filter(listing => listing.id !== deletedListingId));
+    setFilteredListings(prev => prev.filter(listing => listing.id !== deletedListingId));
   };
   
   const handleCardClick = (listing) => {
@@ -361,6 +445,7 @@ function MarketplaceSelling({ currentView, onViewChange }) {
         isOpen={isEditModalOpen}
         onClose={handleCloseEditModal}
         listing={selectedListing}
+        onListingDeleted={handleListingDeleted}
       />
       
       {/* Listing Detail Modal */}
