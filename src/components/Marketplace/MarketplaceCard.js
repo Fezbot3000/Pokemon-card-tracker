@@ -151,8 +151,45 @@ const MarketplaceCard = ({
 const ImageWithAnimation = ({ src, alt }) => {
   const [imageLoaded, setImageLoaded] = useState(false);
   
-  // Ensure we have a valid string URL
-  const safeImageSrc = typeof src === 'string' ? src : null;
+  // Normalize the src value to ensure it's a valid string URL
+  const getSafeImageSrc = (imageData) => {
+    // If null or undefined, return null
+    if (imageData == null) return null;
+    
+    // If it's already a string, return it
+    if (typeof imageData === 'string') {
+      return imageData;
+    }
+    
+    // If it's a File or Blob object
+    if (imageData instanceof Blob && window.URL) {
+      return window.URL.createObjectURL(imageData);
+    }
+    
+    // If it's an object with a URL property
+    if (typeof imageData === 'object') {
+      // Check for common URL properties
+      if (imageData.url) return imageData.url;
+      if (imageData.src) return imageData.src;
+      if (imageData.uri) return imageData.uri;
+      if (imageData.href) return imageData.href;
+      if (imageData.downloadURL) return imageData.downloadURL;
+      
+      // If it has a toString method, try that
+      if (typeof imageData.toString === 'function') {
+        const stringValue = imageData.toString();
+        if (stringValue !== '[object Object]') {
+          return stringValue;
+        }
+      }
+    }
+    
+    // If we can't extract a URL, return null
+    console.warn('Unable to extract valid image URL from:', imageData);
+    return null;
+  };
+  
+  const safeImageSrc = getSafeImageSrc(src);
   
   if (!safeImageSrc) {
     return (

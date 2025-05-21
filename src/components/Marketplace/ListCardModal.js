@@ -18,9 +18,6 @@ const scrollbarHideStyles = `
 `;
 
 function ListCardModal({ isOpen, onClose, selectedCards }) {
-  // Early return before any hooks to avoid hook order issues
-  if (!isOpen) return null;
-  
   const { user } = useAuth();
   const { preferredCurrency } = useUserPreferences();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -29,7 +26,7 @@ function ListCardModal({ isOpen, onClose, selectedCards }) {
   // Initialize listing data when component mounts or selectedCards changes
   // Consolidated the two previous useEffect hooks into one
   React.useEffect(() => {
-    if (!selectedCards || !Array.isArray(selectedCards) || selectedCards.length === 0) return;
+    if (!isOpen || !selectedCards || !Array.isArray(selectedCards) || selectedCards.length === 0) return;
     
     const initialData = {};
     selectedCards.forEach(card => {
@@ -45,7 +42,7 @@ function ListCardModal({ isOpen, onClose, selectedCards }) {
     });
     
     setListingData(initialData);
-  }, [selectedCards]);
+  }, [selectedCards, isOpen]);
   
   // Add the style to the document for hiding scrollbars and prevent body scrolling
   React.useEffect(() => {
@@ -66,6 +63,9 @@ function ListCardModal({ isOpen, onClose, selectedCards }) {
       document.body.style.overflow = originalStyle;
     };
   }, [isOpen]);
+  
+  // Return null early but AFTER all hooks are defined
+  if (!isOpen) return null;
 
   const handleInputChange = (cardId, field, value) => {
     setListingData(prev => ({
