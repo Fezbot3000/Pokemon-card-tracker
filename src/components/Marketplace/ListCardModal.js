@@ -6,33 +6,28 @@ import { toast } from 'react-hot-toast';
 import { useUserPreferences } from '../../contexts/UserPreferencesContext';
 import logger from '../../utils/logger';
 
+// Add CSS for hiding scrollbars
+const scrollbarHideStyles = `
+  .hide-scrollbar {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;  /* Chrome, Safari and Opera */
+  }
+`;
+
 function ListCardModal({ isOpen, onClose, selectedCards }) {
+  // Early return before any hooks to avoid hook order issues
+  if (!isOpen) return null;
+  
   const { user } = useAuth();
   const { preferredCurrency } = useUserPreferences();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [listingData, setListingData] = useState({});
   
-  // Initialize listing data when component mounts
-  React.useEffect(() => {
-    if (!selectedCards || !Array.isArray(selectedCards) || selectedCards.length === 0) return;
-    
-    const initialData = {};
-    selectedCards.forEach(card => {
-      if (!card) return; // Skip null/undefined cards
-      
-      // Use a unique identifier that's guaranteed to exist
-      const cardId = card.slabSerial || card.id || card._id || JSON.stringify(card);
-      initialData[cardId] = {
-        price: '',
-        note: '',
-        location: ''
-      };
-    });
-    
-    setListingData(initialData);
-  }, []);
-
-  // Reset form when selectedCards changes
+  // Initialize listing data when component mounts or selectedCards changes
+  // Consolidated the two previous useEffect hooks into one
   React.useEffect(() => {
     if (!selectedCards || !Array.isArray(selectedCards) || selectedCards.length === 0) return;
     
@@ -51,6 +46,26 @@ function ListCardModal({ isOpen, onClose, selectedCards }) {
     
     setListingData(initialData);
   }, [selectedCards]);
+  
+  // Add the style to the document for hiding scrollbars and prevent body scrolling
+  React.useEffect(() => {
+    if (!isOpen) return;
+    
+    // Create style element
+    const styleEl = document.createElement('style');
+    styleEl.innerHTML = scrollbarHideStyles;
+    document.head.appendChild(styleEl);
+    
+    // Prevent body scrolling when modal is open
+    const originalStyle = window.getComputedStyle(document.body).overflow;
+    document.body.style.overflow = 'hidden';
+    
+    // Cleanup on unmount
+    return () => {
+      document.head.removeChild(styleEl);
+      document.body.style.overflow = originalStyle;
+    };
+  }, [isOpen]);
 
   const handleInputChange = (cardId, field, value) => {
     setListingData(prev => ({
@@ -205,12 +220,13 @@ function ListCardModal({ isOpen, onClose, selectedCards }) {
     }
   };
 
-  if (!isOpen) return null;
+  // Early return was moved to the top of the component
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white dark:bg-[#1B2131] rounded-xl w-full max-w-3xl mx-4 max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700/50">
+    <div className="fixed inset-0 z-50 bg-black bg-opacity-50">
+      <div className="fixed inset-0 flex flex-col bg-white dark:bg-[#1B2131] overflow-hidden">
+        {/* Fixed Header */}
+        <div className="flex-shrink-0 flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700/50 bg-white dark:bg-[#1B2131] z-10">
           <h2 className="text-xl font-medium text-gray-800 dark:text-gray-200">
             List {selectedCards.length} Card{selectedCards.length > 1 ? 's' : ''} on Marketplace
           </h2>
@@ -223,8 +239,9 @@ function ListCardModal({ isOpen, onClose, selectedCards }) {
           </button>
         </div>
         
-        <form onSubmit={handleSubmit} className="p-6">
-          <div className="space-y-6 max-h-[60vh] overflow-y-auto p-1">
+        <form onSubmit={handleSubmit} className="flex flex-col flex-grow overflow-hidden">
+          {/* Scrollable Content Area */}
+          <div className="flex-grow overflow-y-auto hide-scrollbar px-6 py-4 pb-32">
             {(selectedCards || []).map(card => card && (
               <div key={card.slabSerial} className="border border-gray-200 dark:border-gray-700/50 rounded-lg p-4">
                 <div className="flex flex-col sm:flex-row gap-4">
@@ -312,7 +329,8 @@ function ListCardModal({ isOpen, onClose, selectedCards }) {
             ))}
           </div>
           
-          <div className="flex justify-end gap-3 mt-6">
+          {/* Fixed Footer */}
+          <div className="flex-shrink-0 absolute bottom-0 left-0 right-0 bg-white dark:bg-[#1B2131] border-t border-gray-200 dark:border-gray-700/50 p-4 flex justify-end gap-3">
             <button
               type="button"
               onClick={onClose}

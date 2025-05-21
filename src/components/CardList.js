@@ -1060,7 +1060,7 @@ const CardList = ({
   };
 
   return (
-    <div className="pt-16 sm:pt-20 w-full px-1 sm:px-2 pb-20">
+    <div className="pt-8 sm:pt-20 w-full px-1 sm:px-2 pb-20">
       {/* Stats Section */}
       <StatisticsSummary 
         statistics={[
@@ -1316,7 +1316,7 @@ const CardList = ({
               <option value="">Select action...</option>
               <option value="sell">Sell</option>
               <option value="purchase">Purchase Invoice</option>
-              <option value="list">List for Sale</option>
+              <option value="list">List on Marketplace</option>
               <option value="move">Move</option>
               <option value="delete">Delete</option>
               <option value="selectAll">Select All</option>

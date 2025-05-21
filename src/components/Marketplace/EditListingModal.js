@@ -130,12 +130,12 @@ function EditListingModal({ isOpen, onClose, listing }) {
         </div>
 
         <div 
-          className="fixed inset-0 flex items-center justify-center p-4 sm:p-0"
+          className="fixed inset-0 flex items-center justify-center"
           role="dialog" 
           aria-modal="true" 
           aria-labelledby="modal-headline"
         >
-          <div className="w-full max-w-md md:max-w-lg bg-white dark:bg-[#0F0F0F] rounded-xl text-left overflow-hidden shadow-xl transform transition-all">
+          <div className="w-full h-full bg-white dark:bg-[#0F0F0F] text-left overflow-auto shadow-xl transform transition-all">
           <form onSubmit={handleSubmit} className="h-full">
             <div className="px-6 pt-6 pb-4">
               <div className="flex flex-col">

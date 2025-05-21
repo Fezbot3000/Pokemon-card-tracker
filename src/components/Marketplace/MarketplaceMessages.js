@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../design-system';
 import { useLocation } from 'react-router-dom';
-import { collection, query, where, orderBy, getDocs, onSnapshot, doc, getDoc, addDoc, serverTimestamp, setDoc, updateDoc, arrayUnion } from 'firebase/firestore';
+import { collection, query, where, orderBy, getDocs, onSnapshot, doc, getDoc, addDoc, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore';
 import { db as firestoreDb } from '../../services/firebase';
 import logger from '../../utils/logger';
+import toast from 'react-hot-toast';
+import ListingDetailModal from './ListingDetailModal';
 
 // Add CSS for hiding scrollbars
 const scrollbarHideStyles = `
@@ -23,6 +25,8 @@ function MarketplaceMessages() {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [sendingMessage, setSendingMessage] = useState(false);
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [selectedListing, setSelectedListing] = useState(null);
   const { user } = useAuth();
   const messagesEndRef = useRef(null);
   const location = useLocation();
@@ -170,6 +174,13 @@ function MarketplaceMessages() {
     
     if (!newMessage.trim() || !activeChat || !user) return;
     
+    // Check if either user has left the chat
+    const hasUserLeft = activeChat.leftBy && (activeChat.leftBy.buyer || activeChat.leftBy.seller);
+    if (hasUserLeft) {
+      toast.error('This chat has been closed');
+      return;
+    }
+    
     try {
       setSendingMessage(true);
       
@@ -181,9 +192,6 @@ function MarketplaceMessages() {
         timestamp: serverTimestamp()
       });
       
-      // We can't update the chat document due to security rules preventing updates
-      // The chat list will still show the conversation
-      
       // Clear the input field
       setNewMessage('');
       setSendingMessage(false);
@@ -194,7 +202,7 @@ function MarketplaceMessages() {
       }, 100);
       
     } catch (error) {
-      logger.error('Error sending message:', error);
+      console.error('Error sending message:', error);
       setSendingMessage(false);
     }
   };
@@ -279,24 +287,67 @@ function MarketplaceMessages() {
   // Handle leaving a chat
   const handleLeaveChat = async () => {
     if (!activeChat || !user) return;
-    
+
     try {
-      // Update the chat document to add the current user to leftParticipants array
       const chatRef = doc(firestoreDb, 'chats', activeChat.id);
-      await updateDoc(chatRef, {
-        leftParticipants: arrayUnion(user.uid)
+      const chatSnap = await getDoc(chatRef);
+      const chatData = chatSnap.data();
+
+      // Determine if user is buyer or seller
+      const isBuyer = user.uid === chatData.buyerId;
+      const isSeller = user.uid === chatData.sellerId;
+
+      if (!isBuyer && !isSeller) {
+        toast.error('You cannot leave this chat');
+        return;
+      }
+
+      // Create a new leftBy object that exactly matches what was there before
+      // This is critical for the security rules to work
+      const existingLeftBy = chatData.leftBy || {};
+      const newLeftBy = {};
+      
+      // Copy all existing properties
+      Object.keys(existingLeftBy).forEach(key => {
+        newLeftBy[key] = existingLeftBy[key];
       });
       
-      // Return to chat list
+      // Set only the property we're allowed to change
+      if (isBuyer) {
+        newLeftBy.buyer = true;
+      } else {
+        newLeftBy.seller = true;
+      }
+
+      // Update the document with the new leftBy object
+      await updateDoc(chatRef, { leftBy: newLeftBy });
+      
+      // Add a system message
+      try {
+        const messagesRef = collection(firestoreDb, 'chats', activeChat.id, 'messages');
+        await addDoc(messagesRef, {
+          text: `${isBuyer ? 'Buyer' : 'Seller'} has left the chat.`,
+          senderId: 'system',
+          timestamp: serverTimestamp()
+        });
+      } catch (messageError) {
+        // If adding the message fails, just log it - we still want to leave the chat
+        console.log('Could not add system message, but chat was left');
+      }
+
+      // Close the chat
       setActiveChat(null);
+      toast.success('You have left the chat');
     } catch (error) {
-      logger.error('Error leaving chat:', error);
+      console.error('Error leaving chat:', error);
+      toast.error('Failed to leave chat');
     }
   };
-  
-  // Check if the other participant has left the chat
-  const hasOtherParticipantLeft = activeChat?.leftParticipants?.includes(
-    activeChat.buyerId === user?.uid ? activeChat.sellerId : activeChat.buyerId
+
+  // Check if the other participant has left the chat based on leftBy field
+  const hasOtherParticipantLeft = activeChat && user && activeChat.leftBy && (
+    (activeChat.buyerId === user.uid && activeChat.leftBy.seller) ||
+    (activeChat.sellerId === user.uid && activeChat.leftBy.buyer)
   );
   
   // Determine the message to show when the other participant has left
@@ -359,6 +410,12 @@ function MarketplaceMessages() {
 
   return (
     <>
+      <ListingDetailModal 
+        isOpen={detailModalOpen} 
+        onClose={() => setDetailModalOpen(false)} 
+        listing={selectedListing}
+        cardImage={selectedListing ? (activeChat?.cardImage || '') : ''}
+      />
       <style>
         {`${scrollbarHideStyles}
         .hide-header-footer header, .hide-header-footer footer {
@@ -402,9 +459,9 @@ function MarketplaceMessages() {
                       <div className="flex justify-between items-start">
                         <h3 className="font-medium text-gray-900 dark:text-white">{conversation.otherParticipantName}</h3>
                         <span className="text-xs text-gray-500 dark:text-gray-400">
-                          {conversation.lastMessageTimestamp ? 
+                          {conversation.lastMessageTimestamp && typeof conversation.lastMessageTimestamp.toDate === 'function' ? 
                             formatDate(conversation.lastMessageTimestamp.toDate()) : 
-                            'Unknown date'}
+                            formatDate(conversation.timestamp) || 'Recent'}
                         </span>
                       </div>
                       <p className="text-sm text-gray-600 dark:text-gray-300 truncate">
@@ -432,10 +489,62 @@ function MarketplaceMessages() {
                     <img 
                       src={activeChat.cardImage} 
                       alt={activeChat?.cardTitle || 'Card'}
-                      className="w-10 h-10 object-cover rounded-md mr-3" 
+                      className="w-10 h-10 object-cover rounded-md mr-3 cursor-pointer hover:opacity-80 transition-opacity" 
+                      onClick={() => {
+                        // Log the activeChat to debug
+                        console.log('Active chat data:', activeChat);
+                        
+                        // Create a card object from available data if not present
+                        const cardData = activeChat.card || {
+                          card: activeChat.cardTitle || 'Card Listing',
+                          set: activeChat.cardSet,
+                          year: activeChat.cardYear,
+                          grade: activeChat.cardGrade,
+                          gradeCompany: activeChat.cardGradeCompany,
+                          slabSerial: activeChat.cardId
+                        };
+                        
+                        setSelectedListing({
+                          card: cardData,
+                          userId: activeChat.sellerId || activeChat.buyerId,
+                          listingPrice: activeChat.price || 0,
+                          currency: activeChat.currency || 'USD',
+                          timestampListed: activeChat.timestamp,
+                          note: activeChat.note || '',
+                          location: activeChat.location || ''
+                        });
+                        setDetailModalOpen(true);
+                      }}
                     />
                   ) : (
-                    <div className="w-10 h-10 bg-gray-200 dark:bg-gray-600 rounded-md flex items-center justify-center text-gray-500 dark:text-gray-400 mr-3">
+                    <div 
+                      className="w-10 h-10 bg-gray-200 dark:bg-gray-600 rounded-md flex items-center justify-center text-gray-500 dark:text-gray-400 mr-3 cursor-pointer hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors"
+                      onClick={() => {
+                        // Log the activeChat to debug
+                        console.log('Active chat data:', activeChat);
+                        
+                        // Create a card object from available data if not present
+                        const cardData = activeChat.card || {
+                          card: activeChat.cardTitle || 'Card Listing',
+                          set: activeChat.cardSet,
+                          year: activeChat.cardYear,
+                          grade: activeChat.cardGrade,
+                          gradeCompany: activeChat.cardGradeCompany,
+                          slabSerial: activeChat.cardId
+                        };
+                        
+                        setSelectedListing({
+                          card: cardData,
+                          userId: activeChat.sellerId || activeChat.buyerId,
+                          listingPrice: activeChat.price || 0,
+                          currency: activeChat.currency || 'USD',
+                          timestampListed: activeChat.timestamp,
+                          note: activeChat.note || '',
+                          location: activeChat.location || ''
+                        });
+                        setDetailModalOpen(true);
+                      }}
+                    >
                       <span className="material-icons">style</span>
                     </div>
                   )}
@@ -447,12 +556,24 @@ function MarketplaceMessages() {
                   </div>
                 </div>
               </div>
-              <button
-                onClick={handleLeaveChat}
-                className="px-3 py-1 text-sm text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 border border-red-600 dark:border-red-400 rounded-md transition-colors"
-              >
-                Leave Chat
-              </button>
+              {/* Leave Chat button - disabled if user already left */}
+              {(activeChat?.leftBy && 
+                ((user.uid === activeChat.buyerId && activeChat.leftBy.buyer) || 
+                 (user.uid === activeChat.sellerId && activeChat.leftBy.seller))) ? (
+                <button
+                  disabled
+                  className="px-3 py-1 text-sm text-gray-400 dark:text-gray-500 border border-gray-400 dark:border-gray-500 rounded-md cursor-not-allowed"
+                >
+                  Chat Left
+                </button>
+              ) : (
+                <button
+                  onClick={handleLeaveChat}
+                  className="px-3 py-1 text-sm text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 border border-red-600 dark:border-red-400 rounded-md transition-colors"
+                >
+                  Leave Chat
+                </button>
+              )}
             </div>
             
             {/* Left chat notification banner */}
@@ -496,25 +617,35 @@ function MarketplaceMessages() {
             </div>
             
             {/* Message input */}
-            <form onSubmit={handleSendMessage} className="border-t border-gray-200 dark:border-gray-700 p-4 sticky bottom-0 bg-white dark:bg-gray-800 z-10 w-full max-w-none">
-              <div className="flex items-center space-x-2">
-                <input
-                  type="text"
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  placeholder="Type a message..."
-                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white"
-                  disabled={sendingMessage}
-                />
-                <button
-                  type="submit"
-                  className={`px-4 py-2 rounded-md ${sendingMessage || !newMessage.trim() ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed' : 'bg-blue-500 text-white hover:bg-blue-600'}`}
-                  disabled={sendingMessage || !newMessage.trim()}
-                >
-                  <span className="material-icons">send</span>
-                </button>
+            {activeChat?.leftBy && (activeChat.leftBy.buyer || activeChat.leftBy.seller) ? (
+              <div className="border-t border-gray-200 dark:border-gray-700 p-4 sticky bottom-0 bg-gray-100 dark:bg-gray-800 z-10 w-full max-w-none text-center">
+                <p className="text-gray-600 dark:text-gray-400">
+                  {activeChat.leftBy.buyer && activeChat.leftBy.seller ? 
+                    'Both users have left this chat' : 
+                    (activeChat.leftBy.buyer ? 'Buyer has left this chat' : 'Seller has left this chat')}
+                </p>
               </div>
-            </form>
+            ) : (
+              <form onSubmit={handleSendMessage} className="border-t border-gray-200 dark:border-gray-700 p-4 sticky bottom-0 bg-white dark:bg-gray-800 z-10 w-full max-w-none">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="text"
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    placeholder="Type a message..."
+                    className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white"
+                    disabled={sendingMessage}
+                  />
+                  <button
+                    type="submit"
+                    className={`px-4 py-2 rounded-md ${sendingMessage || !newMessage.trim() ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed' : 'bg-blue-500 text-white hover:bg-blue-600'}`}
+                    disabled={sendingMessage || !newMessage.trim()}
+                  >
+                    <span className="material-icons">send</span>
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         )}
     </div>

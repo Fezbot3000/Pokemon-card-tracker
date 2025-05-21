@@ -146,12 +146,8 @@ service cloud.firestore {
         ) &&
         // Check if user is a participant
         request.auth.uid in resource.data.participants &&
-        // Buyer can only set leftBy.buyer
-        ((request.auth.uid == resource.data.buyerId && 
-          request.resource.data.leftBy.diff(resource.data.leftBy || {}).affectedKeys().hasOnly(['buyer'])) ||
-        // Seller can only set leftBy.seller
-        (request.auth.uid == resource.data.sellerId && 
-          request.resource.data.leftBy.diff(resource.data.leftBy || {}).affectedKeys().hasOnly(['seller'])));
+        // User must be either buyer or seller
+        (request.auth.uid == resource.data.buyerId || request.auth.uid == resource.data.sellerId);
       
       // Prevent deletion
       allow delete: if false;

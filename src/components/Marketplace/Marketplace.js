@@ -6,6 +6,7 @@ import logger from '../../utils/logger';
 import { useUserPreferences } from '../../contexts/UserPreferencesContext';
 import db from '../../services/db'; // Import IndexedDB service for image loading
 import MessageModal from './MessageModal'; // Import the MessageModal component
+import ListingDetailModal from './ListingDetailModal'; // Import the ListingDetailModal component
 import MarketplaceCard from './MarketplaceCard'; // Import the custom MarketplaceCard component
 import { useNavigate } from 'react-router-dom'; // Import for navigation
 
@@ -20,6 +21,7 @@ function Marketplace() {
   const [indexBuildingError, setIndexBuildingError] = useState(false);
   const [selectedListing, setSelectedListing] = useState(null);
   const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [existingChats, setExistingChats] = useState({});
 
   // Fetch existing chats for the current user
@@ -253,6 +255,16 @@ function Marketplace() {
     setSelectedListing(listing);
     setIsMessageModalOpen(true);
   };
+  
+  const handleCardClick = (listing) => {
+    setSelectedListing(listing);
+    setIsDetailModalOpen(true);
+  };
+  
+  const handleCloseDetailModal = () => {
+    setIsDetailModalOpen(false);
+    setSelectedListing(null);
+  };
 
   return (
     <div className="p-4 sm:p-6 pt-16"> {/* Added pt-16 for padding-top to avoid header overlap */}
@@ -285,7 +297,7 @@ function Marketplace() {
                 <MarketplaceCard 
                   card={listing.card}
                   cardImage={cardImages[listing.card?.slabSerial || listing.card?.id || listing.cardId]}
-                  onClick={() => {}} // No detailed view in marketplace yet
+                  onClick={() => handleCardClick(listing)} // Show detail modal when card is clicked
                   className="h-full border-0"
                   investmentAUD={listing.card?.investmentAUD || 0}
                   formatUserCurrency={formatUserCurrency}
@@ -319,6 +331,14 @@ function Marketplace() {
         isOpen={isMessageModalOpen} 
         onClose={() => setIsMessageModalOpen(false)} 
         listing={selectedListing} 
+      />
+      
+      {/* Listing Detail Modal */}
+      <ListingDetailModal
+        isOpen={isDetailModalOpen}
+        onClose={handleCloseDetailModal}
+        listing={selectedListing}
+        cardImage={selectedListing ? cardImages[selectedListing.card?.slabSerial || selectedListing.card?.id || selectedListing.cardId] : null}
       />
     </div>
   );

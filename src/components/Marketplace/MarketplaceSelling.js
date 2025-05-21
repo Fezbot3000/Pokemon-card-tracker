@@ -6,6 +6,7 @@ import logger from '../../utils/logger';
 import { useUserPreferences } from '../../contexts/UserPreferencesContext';
 import db from '../../services/db'; // Import IndexedDB service for image loading
 import EditListingModal from './EditListingModal';
+import ListingDetailModal from './ListingDetailModal';
 import MarketplaceCard from './MarketplaceCard'; // Import the custom MarketplaceCard component
 
 function MarketplaceSelling() {
@@ -14,6 +15,7 @@ function MarketplaceSelling() {
   const [cardImages, setCardImages] = useState({});
   const [selectedListing, setSelectedListing] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const { user } = useAuth();
   const { convertCurrency, formatAmountForDisplay: formatUserCurrency } = useUserPreferences();
 
@@ -188,6 +190,16 @@ function MarketplaceSelling() {
     setIsEditModalOpen(false);
     setSelectedListing(null);
   };
+  
+  const handleCardClick = (listing) => {
+    setSelectedListing(listing);
+    setIsDetailModalOpen(true);
+  };
+  
+  const handleCloseDetailModal = () => {
+    setIsDetailModalOpen(false);
+    setSelectedListing(null);
+  };
 
   return (
     <div className="p-4 sm:p-6 pt-16"> {/* Added pt-16 for padding-top to avoid header overlap */}
@@ -211,7 +223,7 @@ function MarketplaceSelling() {
                 <MarketplaceCard 
                   card={listing.card}
                   cardImage={cardImages[listing.card?.slabSerial || listing.card?.id || listing.cardId]}
-                  onClick={() => {}} // No detailed view in marketplace yet
+                  onClick={() => handleCardClick(listing)} // Show detail modal when card is clicked
                   className="h-full border-0"
                   investmentAUD={0}
                   formatUserCurrency={formatUserCurrency}
@@ -245,6 +257,14 @@ function MarketplaceSelling() {
         isOpen={isEditModalOpen}
         onClose={handleCloseEditModal}
         listing={selectedListing}
+      />
+      
+      {/* Listing Detail Modal */}
+      <ListingDetailModal
+        isOpen={isDetailModalOpen}
+        onClose={handleCloseDetailModal}
+        listing={selectedListing}
+        cardImage={selectedListing ? cardImages[selectedListing.card?.slabSerial || selectedListing.card?.id || selectedListing.cardId] : null}
       />
     </div>
   );
