@@ -798,7 +798,7 @@ const [resetConfirmText, setResetConfirmText] = useState('');
           </div>
         }
         position="right"
-        className={`w-[70%] max-w-screen-xl mx-auto ${className}`}
+        className={`w-full sm:w-[80%] md:w-[70%] max-w-screen-xl mx-auto ${className}`}
         ariaLabel="Settings"
         size="full"
         closeOnClickOutside={false}
@@ -830,7 +830,7 @@ const [resetConfirmText, setResetConfirmText] = useState('');
           </nav>
 
           {/* Content area */}
-          <div className="w-full lg:flex-1 overflow-y-auto scrollbar-hide p-6 sm:p-8 bg-gray-50 dark:bg-[#1A1A1A]">
+          <div className="w-full lg:flex-1 overflow-y-auto scrollbar-hide px-2 sm:px-4 py-4">
             {activeTab === 'general' && (
               <div className="space-y-6">
                 <SettingsPanel

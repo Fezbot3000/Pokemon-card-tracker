@@ -1279,9 +1279,8 @@ const CardList = ({
 
       {/* Selected Cards Actions */}
       {selectedCards.size > 0 && (
-        <div className={`fixed bottom-0 sm:bottom-[56px] left-0 w-full flex items-center justify-between px-4 py-3 rounded-t-md shadow-2xl bg-white dark:bg-[#1B2131] border-t border-gray-200 dark:border-gray-700 z-50 sm:z-40
-          ${window.innerWidth >= 640 ? 'left-1/2 transform -translate-x-1/2 w-auto rounded-md border min-h-[64px] h-auto' : 'mb-[60px]'}
-        `}>
+        <div className="fixed bottom-[90px] left-0 w-full flex items-center justify-between px-4 py-2 bg-white dark:bg-[#1B2131] sm:border sm:border-gray-200 sm:dark:border-gray-700 z-40 shadow-md">
+
           <span className="text-sm sm:text-base text-gray-900 dark:text-white font-medium">{selectedCards.size} selected</span>
           
           <div className="flex items-center gap-3">

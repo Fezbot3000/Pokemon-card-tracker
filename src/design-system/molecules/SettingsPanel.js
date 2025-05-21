@@ -16,7 +16,7 @@ const SettingsPanel = ({
   ...props 
 }) => {
   return (
-    <div className={`p-5 rounded-lg border border-gray-200 dark:border-gray-800 shadow-sm mb-6 ${className}`} {...stripDebugProps(props)}>
+    <div className={`mb-6 ${className}`} {...stripDebugProps(props)}>
       {title && (
         <h3 className="text-base font-medium text-gray-900 dark:text-white mb-1 flex items-center">
           {title}
