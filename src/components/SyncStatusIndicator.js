@@ -72,8 +72,8 @@ const SyncStatusIndicator = () => {
     return () => window.removeEventListener('shadow-sync-activity', handleSyncActivity);
   }, [syncEnabled]);
   
-  // Don't render anything if sync is disabled
-  if (!syncEnabled) return null;
+  // Always return null to hide the indicator
+  return null;
   
   // Determine status and icon
   let statusIcon = 'cloud_off';

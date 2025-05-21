@@ -110,73 +110,107 @@ function ListingDetailModal({ isOpen, onClose, listing, cardImage }) {
                 </div>
                 
                 {/* Card Details */}
-                <div className="flex flex-col space-y-6">
-                  <div>
-                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                      {(card.cardName || card.card || card.name || card.player || 'Unnamed Card').toUpperCase()}
-                    </h1>
-                    <p className="text-lg text-gray-600 dark:text-gray-400">
-                      {card.set || 'Pokemon Game'}{card.number ? ` · ${card.number}` : ''}
-                    </p>
-                  </div>
+                <div className="space-y-4">
+                  {/* Card Title */}
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                    {card.cardName || card.name || 'Pokemon Card'}
+                  </h3>
                   
-                  <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
-                    <div className="text-2xl font-bold text-purple-600 dark:text-purple-400 mb-1">
-                      {listing.listingPrice} {listing.currency || 'AUD'}
+                  {/* Price and Date */}
+                  <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4 mb-4">
+                    <div className="text-3xl font-bold text-purple-600 dark:text-purple-400">
+                      {listing.listingPrice} {listing.currency}
                     </div>
                     <div className="text-sm text-gray-500 dark:text-gray-400">
                       Listed on {formattedDate}
                     </div>
                   </div>
                   
-                  {/* Card Details */}
-                  <div className="grid grid-cols-2 gap-4">
-                    {card.category && (
-                      <div>
-                        <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Category</h3>
-                        <p className="text-base text-gray-900 dark:text-white">{card.category}</p>
-                      </div>
-                    )}
-                    
-                    {card.year && (
-                      <div>
-                        <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Year</h3>
-                        <p className="text-base text-gray-900 dark:text-white">{card.year}</p>
-                      </div>
-                    )}
-                    
-                    {card.grade && (
-                      <div>
-                        <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Grade</h3>
-                        <p className="text-base text-gray-900 dark:text-white">{card.grade}</p>
-                      </div>
-                    )}
-                    
-                    {card.grader && (
-                      <div>
-                        <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Grader</h3>
-                        <p className="text-base text-gray-900 dark:text-white">{card.grader}</p>
-                      </div>
-                    )}
-                    
-                    {card.slabSerial && (
-                      <div>
-                        <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Slab Serial</h3>
-                        <p className="text-base text-gray-900 dark:text-white">{card.slabSerial}</p>
-                      </div>
-                    )}
-                  </div>
-                  
-                  {/* Location */}
-                  {listing.location && (
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Location</h3>
-                      <p className="text-base text-gray-900 dark:text-white flex items-center">
-                        <span className="material-icons text-gray-400 mr-1 text-sm">location_on</span>
-                        {listing.location}
-                      </p>
+                  {/* Basic Details */}
+                  <div className="space-y-2">
+                    {/* Card Set */}
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Set</span>
+                      <span className="font-medium text-gray-900 dark:text-white">{card.set || card.setName || 'Not specified'}</span>
                     </div>
-                  )}
+                    
+                    {/* Card Number */}
+                    {(card.cardNumber || card.number) && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Card Number</span>
+                        <span className="font-medium text-gray-900 dark:text-white">{card.cardNumber || card.number}</span>
+                      </div>
+                    )}
+                    
+                    {/* Card Rarity */}
+                    {card.rarity && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Rarity</span>
+                        <span className="font-medium text-gray-900 dark:text-white">{card.rarity}</span>
+                      </div>
+                    )}
+                    
+                    {/* Card Type */}
+                    {card.type && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Type</span>
+                        <span className="font-medium text-gray-900 dark:text-white">{card.type}</span>
+                      </div>
+                    )}
+                    
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Category</span>
+                      <span className="font-medium text-gray-900 dark:text-white">{listing.category || card.category || 'Not specified'}</span>
+                    </div>
+                    
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Grade</span>
+                      <span className="font-medium text-gray-900 dark:text-white">
+                        {listing.grade || card.grade ? `${listing.grade || card.grade} (${listing.gradingCompany || card.gradingCompany || 'Unknown'})` : 'Ungraded'}
+                      </span>
+                    </div>
+                    
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Slab Serial</span>
+                      <span className="font-medium text-gray-900 dark:text-white">{listing.slabSerial || card.slabSerial || 'N/A'}</span>
+                    </div>
+                    
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Year</span>
+                      <span className="font-medium text-gray-900 dark:text-white">{listing.year || card.year || 'Unknown'}</span>
+                    </div>
+                    
+                    {/* Language */}
+                    {(card.language || listing.language) && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Language</span>
+                        <span className="font-medium text-gray-900 dark:text-white">{card.language || listing.language}</span>
+                      </div>
+                    )}
+                    
+                    {/* First Edition */}
+                    {(card.firstEdition !== undefined || listing.firstEdition !== undefined) && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">First Edition</span>
+                        <span className="font-medium text-gray-900 dark:text-white">
+                          {card.firstEdition || listing.firstEdition ? 'Yes' : 'No'}
+                        </span>
+                      </div>
+                    )}
+                    
+                    {/* Condition (if ungraded) */}
+                    {(!listing.grade && !card.grade && (card.condition || listing.condition)) && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Condition</span>
+                        <span className="font-medium text-gray-900 dark:text-white">{card.condition || listing.condition}</span>
+                      </div>
+                    )}
+                    
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Location</span>
+                      <span className="font-medium text-gray-900 dark:text-white">{listing.location || 'Not specified'}</span>
+                    </div>
+                  </div>
                   
                   {/* Seller Note */}
                   {listing.note && (

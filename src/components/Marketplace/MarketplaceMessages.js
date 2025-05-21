@@ -6,6 +6,7 @@ import { db as firestoreDb } from '../../services/firebase';
 import logger from '../../utils/logger';
 import toast from 'react-hot-toast';
 import ListingDetailModal from './ListingDetailModal';
+import DesktopMarketplaceMessages from './DesktopMarketplaceMessages';
 
 // Add CSS for hiding scrollbars
 const scrollbarHideStyles = `
@@ -18,7 +19,31 @@ const scrollbarHideStyles = `
   }
 `;
 
-function MarketplaceMessages() {
+function MarketplaceMessages({ currentView, onViewChange }) {
+  // State to track window width for responsive layout
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  
+  // Update window width when resized
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+  
+  // Determine if we should show desktop or mobile layout
+  const isDesktop = windowWidth >= 1024; // lg breakpoint in Tailwind
+  
+  // Return desktop version for larger screens
+  if (isDesktop) {
+    return <DesktopMarketplaceMessages currentView={currentView} onViewChange={onViewChange} />;
+  }
+  
+  // Mobile version continues below
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeChat, setActiveChat] = useState(null);

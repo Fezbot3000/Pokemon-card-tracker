@@ -8,9 +8,19 @@ import db from '../../services/db'; // Import IndexedDB service for image loadin
 import EditListingModal from './EditListingModal';
 import ListingDetailModal from './ListingDetailModal';
 import MarketplaceCard from './MarketplaceCard'; // Import the custom MarketplaceCard component
+import MarketplaceNavigation from './MarketplaceNavigation'; // Import the navigation component
+import MarketplaceSearchFilters from './MarketplaceSearchFilters'; // Import the search and filter component
+import { Icon } from '../../design-system'; // Import Icon component
 
-function MarketplaceSelling() {
-  const [listings, setListings] = useState([]);
+function MarketplaceSelling({ currentView, onViewChange }) {
+  const [allListings, setAllListings] = useState([]);
+  const [filteredListings, setFilteredListings] = useState([]);
+  const [filters, setFilters] = useState({
+    search: '',
+    category: '',
+    gradingCompany: '',
+    grade: ''
+  });
   const [loading, setLoading] = useState(true);
   const [cardImages, setCardImages] = useState({});
   const [selectedListing, setSelectedListing] = useState(null);
@@ -40,14 +50,15 @@ function MarketplaceSelling() {
       // Set up real-time listener for marketplace items
       unsubscribe = onSnapshot(marketplaceQuery, (snapshot) => {
         try {
-          const listingData = snapshot.docs.map(doc => ({
+          const listingsData = snapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data()
           }));
-          setListings(listingData);
+          setAllListings(listingsData);
+          setFilteredListings(listingsData);
           
           // Load card images after getting listings
-          loadCardImages(listingData);
+          loadCardImages(listingsData);
         } catch (error) {
           // Ignore AdBlock related errors
           if (error.message && error.message.includes('net::ERR_BLOCKED_BY_CLIENT')) {
@@ -80,7 +91,8 @@ function MarketplaceSelling() {
                 const timeB = b.timestampListed?.seconds || 0;
                 return timeB - timeA; // Descending order
               });
-              setListings(listingData);
+              setAllListings(listingData);
+              setFilteredListings(listingData);
               
               // Load card images after getting listings
               loadCardImages(listingData);
@@ -113,6 +125,73 @@ function MarketplaceSelling() {
       }
     };
   }, [user]);
+
+  // Handle filter changes from the search/filter component
+  const handleFilterChange = (newFilters) => {
+    setFilters(newFilters);
+    
+    // Save filters to localStorage for persistence
+    localStorage.setItem('marketplaceSellingFilters', JSON.stringify(newFilters));
+  };
+  
+  // Load saved filters on component mount
+  useEffect(() => {
+    const savedFilters = localStorage.getItem('marketplaceSellingFilters');
+    if (savedFilters) {
+      try {
+        setFilters(JSON.parse(savedFilters));
+      } catch (error) {
+        console.error('Error parsing saved filters:', error);
+      }
+    }
+  }, []);
+
+  // Apply filters when listings or filters change
+  useEffect(() => {
+    if (!allListings.length) return;
+    
+    let results = [...allListings];
+    
+    // Apply search filter
+    if (filters.search) {
+      const searchTerm = filters.search.toLowerCase();
+      results = results.filter(listing => {
+        // Check card name in the card object
+        const cardName = listing.card?.cardName || listing.card?.name || '';
+        // Check other properties
+        return (
+          cardName.toLowerCase().includes(searchTerm) ||
+          (listing.cardName && listing.cardName.toLowerCase().includes(searchTerm)) ||
+          (listing.brand && listing.brand.toLowerCase().includes(searchTerm)) ||
+          (listing.category && listing.category.toLowerCase().includes(searchTerm)) ||
+          (listing.year && listing.year.toString().includes(searchTerm))
+        );
+      });
+    }
+    
+    // Apply category filter
+    if (filters.category) {
+      results = results.filter(listing => 
+        listing.category === filters.category
+      );
+    }
+    
+    // Apply grading company filter
+    if (filters.gradingCompany) {
+      results = results.filter(listing => 
+        listing.gradingCompany === filters.gradingCompany
+      );
+    }
+    
+    // Apply grade filter
+    if (filters.grade) {
+      results = results.filter(listing => 
+        listing.grade === filters.grade
+      );
+    }
+    
+    setFilteredListings(results);
+  }, [allListings, filters]);
 
   // Function to load card images from Firebase or IndexedDB
   const loadCardImages = async (listingsData) => {
@@ -202,22 +281,47 @@ function MarketplaceSelling() {
   };
 
   return (
-    <div className="p-4 sm:p-6 pt-16"> {/* Added pt-16 for padding-top to avoid header overlap */}
+    <div className="p-4 sm:p-6 pt-16 sm:pt-20"> {/* Enhanced padding-top to ensure header clearance on all devices */}
+      <MarketplaceNavigation currentView={currentView} onViewChange={onViewChange} />
+      
+      {/* Search and Filter Component */}
+      <MarketplaceSearchFilters 
+        onFilterChange={handleFilterChange} 
+        listings={allListings}
+      />
       
       {loading ? (
         <div className="flex justify-center items-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900 dark:border-white"></div>
         </div>
-      ) : listings.length === 0 ? (
+      ) : allListings.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-gray-600 dark:text-gray-400 text-lg">You don't have any cards listed for sale.</p>
           <p className="text-gray-500 dark:text-gray-500 mt-2">
             When you list cards for sale, they will appear here.
           </p>
         </div>
+      ) : filteredListings.length === 0 ? (
+        <div className="text-center py-10">
+          <div className="text-gray-500 dark:text-gray-400">
+            <Icon name="search_off" className="text-4xl mb-2" />
+            <p>No listings match your filters</p>
+            <button 
+              onClick={() => handleFilterChange({
+                search: '',
+                category: '',
+                gradingCompany: '',
+                grade: ''
+              })}
+              className="mt-2 text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+            >
+              Clear filters
+            </button>
+          </div>
+        </div>
       ) : (
-        <div className="grid grid-cols-2 gap-4">
-          {listings.map(listing => (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-2 sm:gap-3">
+          {filteredListings.map(listing => (
             <div key={listing.id} className="flex flex-col h-full overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-black">
               <div className="flex-grow">
                 <MarketplaceCard 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../../design-system';
+import { useAuth, Icon, toast } from '../../design-system';
 import { collection, query, where, orderBy, getDocs, onSnapshot } from 'firebase/firestore';
 import { db as firestoreDb } from '../../services/firebase';
 import logger from '../../utils/logger';
@@ -8,10 +8,19 @@ import db from '../../services/db'; // Import IndexedDB service for image loadin
 import MessageModal from './MessageModal'; // Import the MessageModal component
 import ListingDetailModal from './ListingDetailModal'; // Import the ListingDetailModal component
 import MarketplaceCard from './MarketplaceCard'; // Import the custom MarketplaceCard component
+import MarketplaceNavigation from './MarketplaceNavigation'; // Import the navigation component
+import MarketplaceSearchFilters from './MarketplaceSearchFilters'; // Import the search and filter component
 import { useNavigate } from 'react-router-dom'; // Import for navigation
 
-function Marketplace() {
-  const [listings, setListings] = useState([]);
+function Marketplace({ currentView, onViewChange }) {
+  const [allListings, setAllListings] = useState([]);
+  const [filteredListings, setFilteredListings] = useState([]);
+  const [filters, setFilters] = useState({
+    search: '',
+    category: '',
+    gradingCompany: '',
+    grade: ''
+  });
   const [loading, setLoading] = useState(true);
   const [cardImages, setCardImages] = useState({});
   const { user } = useAuth();
@@ -71,21 +80,25 @@ function Marketplace() {
       // Set up real-time listener for marketplace items
       unsubscribe = onSnapshot(marketplaceQuery, (snapshot) => {
         try {
-          const listingData = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-          }));
-          setListings(listingData);
+          // Fetch listings from Firestore
+          const listingsData = [];
+          snapshot.forEach(doc => {
+            listingsData.push({ id: doc.id, ...doc.data() });
+          });
+          setAllListings(listingsData);
+          setFilteredListings(listingsData);
           
           // Load card images after getting listings
-          loadCardImages(listingData);
+          loadCardImages(listingsData);
         } catch (error) {
           // Ignore AdBlock related errors
           if (error.message && error.message.includes('net::ERR_BLOCKED_BY_CLIENT')) {
             // Silently handle AdBlock errors
           } else {
-            logger.error('Error fetching marketplace listings:', error);
+            logger.error('Error fetching marketplace items:', error);
+            toast.error('Error loading marketplace items');
           }
+        } finally {
           setLoading(false);
         }
       }, (error) => {
@@ -112,7 +125,8 @@ function Marketplace() {
                 const timeB = b.timestampListed?.seconds || 0;
                 return timeB - timeA; // Descending order
               });
-              setListings(listingData);
+              setAllListings(listingData);
+              setFilteredListings(listingData);
               
               // Load card images after getting listings
               loadCardImages(listingData);
@@ -125,12 +139,7 @@ function Marketplace() {
             setLoading(false);
           }
         } else {
-          // Ignore AdBlock related errors
-          if (error.message && error.message.includes('net::ERR_BLOCKED_BY_CLIENT')) {
-            // Silently handle AdBlock errors
-          } else {
-            logger.error('Error in marketplace listener:', error);
-          }
+          logger.error('Error in marketplace listener:', error);
           setLoading(false);
         }
       });
@@ -266,8 +275,85 @@ function Marketplace() {
     setSelectedListing(null);
   };
 
+  // Handle filter changes from the search/filter component
+  const handleFilterChange = (newFilters) => {
+    setFilters(newFilters);
+    
+    // Save filters to localStorage for persistence
+    localStorage.setItem('marketplaceFilters', JSON.stringify(newFilters));
+  };
+  
+  // Load saved filters on component mount
+  useEffect(() => {
+    const savedFilters = localStorage.getItem('marketplaceFilters');
+    if (savedFilters) {
+      try {
+        setFilters(JSON.parse(savedFilters));
+      } catch (error) {
+        console.error('Error parsing saved filters:', error);
+      }
+    }
+  }, []);
+
+  // Apply filters when listings or filters change
+  useEffect(() => {
+    if (!allListings.length) return;
+    
+    let results = [...allListings];
+    
+    // Apply search filter
+    if (filters.search) {
+      const searchTerm = filters.search.toLowerCase();
+      results = results.filter(listing => {
+        // Check card name in the card object
+        const cardName = listing.card?.cardName || listing.card?.name || '';
+        // Check other properties
+        return (
+          cardName.toLowerCase().includes(searchTerm) ||
+          (listing.cardName && listing.cardName.toLowerCase().includes(searchTerm)) ||
+          (listing.brand && listing.brand.toLowerCase().includes(searchTerm)) ||
+          (listing.category && listing.category.toLowerCase().includes(searchTerm)) ||
+          (listing.year && listing.year.toString().includes(searchTerm))
+        );
+      });
+    }
+    
+    // Apply category filter
+    if (filters.category) {
+      results = results.filter(listing => 
+        listing.category === filters.category ||
+        listing.card?.category === filters.category
+      );
+    }
+    
+    // Apply grading company filter
+    if (filters.gradingCompany) {
+      results = results.filter(listing => 
+        listing.gradingCompany === filters.gradingCompany || 
+        listing.card?.gradingCompany === filters.gradingCompany
+      );
+    }
+    
+    // Apply grade filter
+    if (filters.grade) {
+      results = results.filter(listing => 
+        listing.grade === filters.grade ||
+        listing.card?.grade === filters.grade
+      );
+    }
+    
+    setFilteredListings(results);
+  }, [allListings, filters]);
+
   return (
-    <div className="p-4 sm:p-6 pt-16"> {/* Added pt-16 for padding-top to avoid header overlap */}
+    <div className="p-4 sm:p-6 pt-16 sm:pt-20"> {/* Enhanced padding-top to ensure header clearance on all devices */}
+      <MarketplaceNavigation currentView={currentView} onViewChange={onViewChange} />
+      
+      {/* Search and Filter Component */}
+      <MarketplaceSearchFilters 
+        onFilterChange={handleFilterChange} 
+        listings={allListings}
+      />
       
       {loading ? (
         <div className="flex justify-center items-center h-64">
@@ -281,17 +367,35 @@ function Marketplace() {
               <p className="text-yellow-700 dark:text-yellow-400">The marketplace index is still being built. Some features may be limited until it's ready.</p>
             </div>
           </div>
-          {listings.length === 0 ? (
+          {allListings.length === 0 ? (
             <p className="text-gray-600 dark:text-gray-400 text-lg">No cards currently listed in the marketplace.</p>
           ) : null}
         </div>
-      ) : listings.length === 0 ? (
+      ) : allListings.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-gray-600 dark:text-gray-400 text-lg">No cards currently listed in the marketplace.</p>
         </div>
+      ) : filteredListings.length === 0 ? (
+        <div className="text-center py-10">
+          <div className="text-gray-500 dark:text-gray-400">
+            <Icon name="search_off" className="text-4xl mb-2" />
+            <p>No listings match your filters</p>
+            <button 
+              onClick={() => handleFilterChange({
+                search: '',
+                category: '',
+                gradingCompany: '',
+                grade: ''
+              })}
+              className="mt-2 text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+            >
+              Clear filters
+            </button>
+          </div>
+        </div>
       ) : (
-        <div className="grid grid-cols-2 gap-4">
-          {listings.map(listing => (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-2 sm:gap-3">
+          {filteredListings.map(listing => (
             <div key={listing.id} className="flex flex-col h-full overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-black">
               <div className="flex-grow">
                 <MarketplaceCard 

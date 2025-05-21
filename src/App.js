@@ -3005,11 +3005,11 @@ To import this backup:
         ) : currentView === 'purchase-invoices' || currentView === 'sold' ? (
           <PurchaseInvoices />
         ) : currentView === 'marketplace' ? (
-          <Marketplace />
+          <Marketplace currentView={currentView} onViewChange={setCurrentView} />
         ) : currentView === 'marketplace-selling' ? (
-          <MarketplaceSelling />
+          <MarketplaceSelling currentView={currentView} onViewChange={setCurrentView} />
         ) : currentView === 'marketplace-messages' ? (
-          <MarketplaceMessages />
+          <MarketplaceMessages currentView={currentView} onViewChange={setCurrentView} />
         ) : currentView === 'settings' && isMobile ? (
           <MobileSettingsModal
             isOpen={showSettings}
