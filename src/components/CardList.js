@@ -415,8 +415,29 @@ const CardList = ({
     // Apply a multi-level sorting strategy for consistent ordering
     filtered.sort((a, b) => {
       // 1. First sort by the user-selected field and direction
-      const aValue = a[sortField] ?? 0;
-      const bValue = b[sortField] ?? 0;
+      // Handle different field names between accounts
+      let aValue, bValue;
+      
+      // Special handling for monetary fields that might have different naming conventions
+      if (sortField === 'currentValueAUD') {
+        aValue = parseFloat(a.originalCurrentValueAmount || a.currentValueAUD || 0);
+        bValue = parseFloat(b.originalCurrentValueAmount || b.currentValueAUD || 0);
+      } else if (sortField === 'investmentAUD') {
+        aValue = parseFloat(a.originalInvestmentAmount || a.investmentAUD || 0);
+        bValue = parseFloat(b.originalInvestmentAmount || b.investmentAUD || 0);
+      } else if (sortField === 'potentialProfit') {
+        // Calculate profit from the available fields
+        const aInvestment = parseFloat(a.originalInvestmentAmount || a.investmentAUD || 0);
+        const aCurrentValue = parseFloat(a.originalCurrentValueAmount || a.currentValueAUD || 0);
+        const bInvestment = parseFloat(b.originalInvestmentAmount || b.investmentAUD || 0);
+        const bCurrentValue = parseFloat(b.originalCurrentValueAmount || b.currentValueAUD || 0);
+        aValue = aCurrentValue - aInvestment;
+        bValue = bCurrentValue - bInvestment;
+      } else {
+        // Default fallback for other fields
+        aValue = a[sortField] ?? 0;
+        bValue = b[sortField] ?? 0;
+      }
       
       // Handle different types of values appropriately
       let primarySort = 0;
@@ -1142,8 +1163,8 @@ const CardList = ({
               <Card
                 key={card._uniqueKey}
                 card={card}
-                investmentAUD={card.investmentAUD || 0}
-                currentValueAUD={card.currentValueAUD || 0}
+                investmentAUD={parseFloat(card.originalInvestmentAmount || card.investmentAUD || 0)}
+                currentValueAUD={parseFloat(card.originalCurrentValueAmount || card.currentValueAUD || 0)}
                 formatUserCurrency={formatUserCurrency}
                 preferredCurrency={preferredCurrency}
                 originalInvestmentCurrency={card.originalInvestmentCurrency}
@@ -1239,8 +1260,8 @@ const CardList = ({
                     </div>
                     <div className="flex items-center">
                       <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Profit:</span>
-                      <span className={`ml-2 font-medium text-xs sm:text-sm ${(card.currentValueAUD - card.investmentAUD) >= 0 ? 'text-green-500 dark:text-green-400' : 'text-red-500 dark:text-red-400'}`}>
-                        {formatUserCurrency(card.currentValueAUD - card.investmentAUD, card.originalCurrentValueCurrency)}
+                      <span className={`ml-2 font-medium text-xs sm:text-sm ${(parseFloat(card.originalCurrentValueAmount || card.currentValueAUD || 0) - parseFloat(card.originalInvestmentAmount || card.investmentAUD || 0)) >= 0 ? 'text-green-500 dark:text-green-400' : 'text-red-500 dark:text-red-400'}`}>
+                        {formatUserCurrency(parseFloat(card.originalCurrentValueAmount || card.currentValueAUD || 0) - parseFloat(card.originalInvestmentAmount || card.investmentAUD || 0), card.originalCurrentValueCurrency)}
                       </span>
                     </div>
                     {card.datePurchased && (

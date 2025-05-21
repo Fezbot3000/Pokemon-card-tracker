@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import Icon from '../atoms/Icon';
+import BottomSheet from './BottomSheet';
 import { stripDebugProps } from '../../utils/stripDebugProps';
 
 /**
@@ -16,11 +17,25 @@ const Dropdown = ({
   className = '',
   width = 'auto',
   align = 'left',
+  title = '',
+  useMobileSheet = true,
   ...props
 }) => {
   // Internal state for controlled or uncontrolled usage
   const [internalIsOpen, setInternalIsOpen] = useState(false);
+  const [isMobileView, setIsMobileView] = useState(false);
   const dropdownRef = useRef(null);
+  
+  // Detect mobile view
+  useEffect(() => {
+    const checkMobileView = () => {
+      setIsMobileView(window.innerWidth < 640); // Tailwind 'sm' breakpoint
+    };
+    
+    checkMobileView();
+    window.addEventListener('resize', checkMobileView);
+    return () => window.removeEventListener('resize', checkMobileView);
+  }, []);
   
   // Determine if we're using controlled or uncontrolled mode
   const controlled = isOpen !== undefined;
@@ -74,6 +89,7 @@ const Dropdown = ({
     center: 'left-1/2 -translate-x-1/2',
   };
   
+  // Render different UI for mobile and desktop
   return (
     <div className={`relative ${className}`} ref={dropdownRef} {...stripDebugProps(props)}>
       {/* Trigger element */}
@@ -81,8 +97,8 @@ const Dropdown = ({
         {trigger}
       </div>
       
-      {/* Dropdown menu */}
-      {dropdownIsOpen && (
+      {/* Desktop Dropdown Menu */}
+      {dropdownIsOpen && !isMobileView && (
         <div 
           className={`absolute z-50 mt-1 ${widthClasses[width]} ${alignClasses[align]} 
                      bg-white dark:bg-[#1B2131] shadow-lg rounded-md 
@@ -97,6 +113,58 @@ const Dropdown = ({
         >
           {children}
         </div>
+      )}
+      
+      {/* Mobile Bottom Sheet */}
+      {useMobileSheet && isMobileView && (
+        <BottomSheet 
+          isOpen={dropdownIsOpen} 
+          onClose={() => handleOpenChange(false)} 
+          title={title || 'Select Option'}
+        >
+          <div className="py-1 px-2 space-y-2">
+            {React.Children.map(children, child => {
+              // Skip dividers in bottom sheet
+              if (child.type === DropdownDivider) return null;
+              
+              // Clone DropdownItem elements with mobile styling
+              if (child.type === DropdownItem) {
+                // Check if this item is selected (has bg-gray-100 or dark:bg-black in its className)
+                const isSelected = child.props.className && 
+                  (child.props.className.includes('bg-gray-100') || 
+                   child.props.className.includes('dark:bg-black'));
+                
+                // Preserve the original children to keep any icons or additional content
+                const originalChildren = child.props.children;
+                
+                return React.cloneElement(child, {
+                  className: `text-center rounded-lg py-3 ${isSelected 
+                    ? 'bg-gradient-to-r from-[#ef4444] to-[#db2777] text-white font-semibold' 
+                    : 'bg-white dark:bg-[#000] text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700'} 
+                    hover:opacity-90 ${child.props.className || ''}`.replace('bg-gray-100', '').replace('dark:bg-black', ''),
+                  onClick: () => {
+                    if (child.props.onClick) {
+                      child.props.onClick();
+                    }
+                    handleOpenChange(false);
+                  },
+                  // Keep the original children to preserve any icons
+                  children: originalChildren
+                });
+              }
+              
+              return child;
+            })}
+            
+            {/* Cancel Button */}
+            <button
+              onClick={() => handleOpenChange(false)}
+              className="block w-full text-center px-4 py-3 mt-3 text-sm rounded-lg bg-[#000] text-gray-300 border border-gray-700 hover:opacity-90 font-semibold"
+            >
+              Cancel
+            </button>
+          </div>
+        </BottomSheet>
       )}
     </div>
   );
@@ -153,6 +221,8 @@ Dropdown.propTypes = {
   className: PropTypes.string,
   width: PropTypes.oneOf(['auto', 'sm', 'md', 'lg', 'xl', 'full']),
   align: PropTypes.oneOf(['left', 'right', 'center']),
+  title: PropTypes.string,
+  useMobileSheet: PropTypes.bool,
 };
 
 DropdownItem.propTypes = {

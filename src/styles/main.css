@@ -199,6 +199,20 @@ body.modal-open {
   overflow: hidden;
 }
 
+/* Class to handle scroll position locking on mobile */
+html.modal-scroll-locked {
+  /* Prevent scroll but maintain position */
+  overflow: hidden;
+  height: 100%;
+}
+
+/* Apply to body as well for maximum compatibility */
+html.modal-scroll-locked body {
+  overflow: hidden;
+  height: 100%;
+  position: relative;
+}
+
 /* Collection Dropdown */
 .collection-dropdown {
   background-color: white;

@@ -921,7 +921,7 @@ const [resetConfirmText, setResetConfirmText] = useState('');
                     </div>
                     
                     {/* Preferred Currency Setting */}
-                    <div className="bg-white dark:bg-[#1B2131] rounded-lg p-4 border border-gray-200 dark:border-indigo-900/20">
+                    <div className="bg-white dark:bg-[#1B2131] rounded-lg p-4 border border-gray-200 dark:border-indigo-900/20 max-w-md">
                       <h4 className="font-medium text-gray-900 dark:text-white mb-2 flex items-center">
                         <Icon name="language" className="mr-2" /> {/* Using 'language' icon as a placeholder for currency */}
                         Display Currency
@@ -950,7 +950,7 @@ const [resetConfirmText, setResetConfirmText] = useState('');
                   title="Manage Collections"
                   description="Rename or delete your card collections."
                 >
-                  <div className="space-y-5">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     {/* Rename Collection Section */}
                     <div className="bg-white dark:bg-[#1B2131] rounded-lg p-4 border border-gray-200 dark:border-indigo-900/20">
                       <h4 className="font-medium text-gray-900 dark:text-white mb-3 flex items-center">

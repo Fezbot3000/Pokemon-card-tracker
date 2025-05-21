@@ -68,7 +68,10 @@ const CollectionSelector = ({
           }}
           className={`block w-full text-left px-4 py-2 text-sm 
             ${forMobileSheet 
-              ? `text-center rounded-lg text-blue-500 dark:text-blue-400 bg-gray-100 dark:bg-gray-700/60 hover:bg-gray-200 dark:hover:bg-gray-700 py-3 ${collection === selectedCollection ? 'font-semibold ring-1 ring-blue-500' : ''}`
+              ? `text-center rounded-lg ${collection === selectedCollection 
+                  ? 'bg-gradient-to-r from-[#ef4444] to-[#db2777] text-white font-semibold' 
+                  : 'bg-white dark:bg-[#000] text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700'} 
+                hover:opacity-90 py-3`
               : `${collection === selectedCollection ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
           `}
         >
@@ -85,7 +88,7 @@ const CollectionSelector = ({
         }}
         className={`block w-full text-left px-4 py-2 text-sm 
           ${forMobileSheet 
-            ? 'text-center rounded-lg text-blue-500 dark:text-blue-400 bg-gray-100 dark:bg-gray-700/60 hover:bg-gray-200 dark:hover:bg-gray-700 py-3'
+            ? 'text-center rounded-lg bg-white dark:bg-[#000] text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:opacity-90 py-3'
             : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`
         }
       >
@@ -98,7 +101,7 @@ const CollectionSelector = ({
       {forMobileSheet && (
         <button
           onClick={() => setIsBottomSheetOpen(false)}
-          className="block w-full text-center px-4 py-3 mt-3 text-sm rounded-lg text-blue-500 dark:text-blue-400 bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 font-semibold"
+          className="block w-full text-center px-4 py-3 mt-3 text-sm rounded-lg bg-[#000] text-gray-300 border border-gray-700 hover:opacity-90 font-semibold"
         >
           Cancel
         </button>

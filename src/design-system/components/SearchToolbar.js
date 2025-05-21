@@ -167,6 +167,8 @@ const SearchToolbar = ({
           onOpenChange={setIsSortDropdownOpen}
           align="right"
           width="sm"
+          title="Sort By"
+          useMobileSheet={true}
         >
           {sortOptions.map((option) => (
             <DropdownItem
@@ -179,6 +181,13 @@ const SearchToolbar = ({
             >
               <div className="flex items-center justify-between w-full">
                 <span>{option}</span>
+                {sortOption === option && (
+                  <Icon 
+                    name={currentSortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward'} 
+                    size="sm" 
+                    className="ml-2"
+                  />
+                )}
               </div>
             </DropdownItem>
           ))}
