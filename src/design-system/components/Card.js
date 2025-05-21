@@ -55,6 +55,13 @@ const Card = ({
         onClick={onClick}
         {...props}
       >
+        {/* Listed badge */}
+        {card.isListed && (
+          <div className="absolute top-2 left-2 z-10 bg-blue-500 text-white text-xs font-medium px-2 py-0.5 rounded-full flex items-center">
+            <span className="material-icons text-xs mr-0.5">storefront</span>
+            <span>Listed</span>
+          </div>
+        )}
         {/* Selection checkbox (only shown when onSelect is provided) */}
         {onSelect && (
           <div className="absolute top-2 right-2 z-10">

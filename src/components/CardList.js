@@ -9,6 +9,7 @@ import CollectionSelector from '../design-system/components/CollectionSelector';
 import SaleModal from './SaleModal';
 import MoveCardsModal from './MoveCardsModal';
 import CreateInvoiceModal from './PurchaseInvoices/CreateInvoiceModal';
+import ListCardModal from './Marketplace/ListCardModal';
 import { useUserPreferences } from '../contexts/UserPreferencesContext';
 
 // Replace FinancialSummary component with individual stat cards
@@ -121,6 +122,8 @@ const CardList = ({
   const [selectedCard, setSelectedCard] = useState(null);
   const [showPurchaseInvoiceModal, setShowPurchaseInvoiceModal] = useState(false);
   const [selectedCardsForPurchase, setSelectedCardsForPurchase] = useState([]);
+  const [showListCardModal, setShowListCardModal] = useState(false);
+  const [selectedCardsForListing, setSelectedCardsForListing] = useState([]);
   const [selectedAction, setSelectedAction] = useState('');  // For dropdown selection
   const [visibleCardCount, setVisibleCardCount] = useState(24); // Initial number of cards to show (4 rows of 6 cards)
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -1313,6 +1316,7 @@ const CardList = ({
               <option value="">Select action...</option>
               <option value="sell">Sell</option>
               <option value="purchase">Purchase Invoice</option>
+              <option value="list">List for Sale</option>
               <option value="move">Move</option>
               <option value="delete">Delete</option>
               <option value="selectAll">Select All</option>
@@ -1323,12 +1327,22 @@ const CardList = ({
               onClick={() => {
                 switch(selectedAction) {
                   case 'sell':
-                    setSelectedCardsForSale(cards.filter(card => selectedCards.has(card.id)));
+                    setSelectedCardsForSale(cards.filter(card => selectedCards.has(card.slabSerial)));
                     setShowSaleModal(true);
                     break;
                   case 'purchase':
-                    setSelectedCardsForPurchase(cards.filter(card => selectedCards.has(card.id)));
+                    setSelectedCardsForPurchase(cards.filter(card => selectedCards.has(card.slabSerial)));
                     setShowPurchaseInvoiceModal(true);
+                    break;
+                  case 'list':
+                    // Filter out cards that are already listed
+                    const cardsToList = cards.filter(card => selectedCards.has(card.slabSerial) && !card.isListed);
+                    if (cardsToList.length === 0) {
+                      toast.error('All selected cards are already listed on the marketplace');
+                      break;
+                    }
+                    setSelectedCardsForListing(cardsToList);
+                    setShowListCardModal(true);
                     break;
                   case 'move':
                     handleMoveCards();
@@ -1437,6 +1451,17 @@ const CardList = ({
           }, 300); // Short delay to ensure toast is visible
         }}
         preSelectedCards={selectedCardsForPurchase}
+      />
+
+      {/* List Card Modal */}
+      <ListCardModal
+        isOpen={showListCardModal}
+        onClose={() => {
+          setShowListCardModal(false);
+          setSelectedCardsForListing([]);
+          setSelectedCards(new Set());
+        }}
+        selectedCards={selectedCardsForListing}
       />
     </div>
   );

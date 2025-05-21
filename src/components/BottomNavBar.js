@@ -35,6 +35,18 @@ const BottomNavBar = ({
         </button>
         
         <button
+          className={`flex flex-col items-center justify-center px-4 py-1 ${
+            currentView === 'marketplace' 
+              ? 'text-[#ef4444]' 
+              : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+          }`}
+          onClick={() => onViewChange('marketplace')}
+        >
+          <span className={`material-icons text-2xl ${currentView === 'marketplace' ? 'text-[#ef4444]' : ''}`}>storefront</span>
+          <span className={`text-xs mt-1 ${currentView === 'marketplace' ? 'text-[#ef4444]' : ''}`}>Marketplace</span>
+        </button>
+        
+        <button
           className="flex flex-col items-center justify-center px-4 py-1 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
           onClick={onAddCard}
         >

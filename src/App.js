@@ -48,6 +48,7 @@ import './styles/black-background.css';
 import './styles/ios-fixes.css'; 
 import SoldItems from './components/SoldItems/SoldItems';
 import PurchaseInvoices from './components/PurchaseInvoices/PurchaseInvoices';
+import Marketplace from './components/Marketplace/Marketplace';
 import BottomNavBar from './components/BottomNavBar';
 import CloudSync from './components/CloudSync';
 import DashboardPricing from './components/DashboardPricing';
@@ -216,7 +217,7 @@ function AppContent() {
     oldProfit: 0,
     newProfit: 0
   });
-  const [currentView, setCurrentView] = useState('cards'); // 'cards' or 'sold'
+  const [currentView, setCurrentView] = useState('cards'); // 'cards', 'sold', 'marketplace', 'settings' // 'cards' or 'sold'
   const [initialCardCollection, setInitialCardCollection] = useState(null); // State for initial collection
   const { registerSettingsCallback, checkAndStartTutorial, startTutorial } = useTutorial();
   const { user, logout } = useAuth();
@@ -2969,6 +2970,8 @@ To import this backup:
           </div>
         ) : currentView === 'purchase-invoices' ? (
           <PurchaseInvoices />
+        ) : currentView === 'marketplace' ? (
+          <Marketplace />
         ) : currentView === 'settings' && isMobile ? (
           <MobileSettingsModal
             isOpen={showSettings}

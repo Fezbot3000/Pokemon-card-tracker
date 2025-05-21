@@ -165,7 +165,7 @@ const Header = ({
                 {/* Sold Items Button */}
                 <button
                   onClick={() => handleViewChange('sold-items')}
-                  className={`px-3 py-1.5 flex items-center justify-center rounded-full relative transition-colors duration-200 ${
+                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors duration-200 ${
                     currentView === 'sold-items' 
                       ? 'bg-gradient-to-r from-[#ef4444] to-[#db2777] text-white' 
                       : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200/50 dark:hover:bg-gray-700/50'
@@ -178,6 +178,23 @@ const Header = ({
                     size="sm"
                   />
                   <span>Sold Items</span>
+                </button>
+                {/* Marketplace Button */}
+                <button
+                  onClick={() => handleViewChange('marketplace')}
+                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors duration-200 ${
+                    currentView === 'marketplace' 
+                      ? 'bg-gradient-to-r from-[#ef4444] to-[#db2777] text-white' 
+                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200/50 dark:hover:bg-gray-700/50'
+                  }`}
+                >
+                  <Icon 
+                    name="storefront" 
+                    className="mr-1 hidden xs:inline" 
+                    color={currentView === 'marketplace' ? 'white' : 'default'} 
+                    size="sm"
+                  />
+                  <span>Marketplace</span>
                 </button>
               </div>
             </div>
@@ -253,7 +270,7 @@ const Header = ({
 Header.propTypes = {
   onImportClick: PropTypes.func,
   onSettingsClick: PropTypes.func,
-  currentView: PropTypes.oneOf(['cards', 'sold-items', 'purchase-invoices', 'grid', 'list']),
+  currentView: PropTypes.oneOf(['cards', 'sold-items', 'purchase-invoices', 'marketplace', 'grid', 'list']),
   onViewChange: PropTypes.func,
   isComponentLibrary: PropTypes.bool
 };

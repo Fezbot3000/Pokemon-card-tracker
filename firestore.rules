@@ -1,5 +1,4 @@
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
 
@@ -100,6 +99,20 @@ service cloud.firestore {
       allow get, list: if isOwner(userId);
       // Allow owner to write their own preferences
       allow write: if isOwner(userId);
+    }
+    
+    // --- Marketplace Items ---
+    // All authenticated users can read marketplace listings
+    // Only the owner of a listing can modify or delete it
+    match /marketplaceItems/{listingId} {
+      // Allow any authenticated user to read marketplace listings
+      allow read: if request.auth != null;
+      
+      // Allow creation of new listings by authenticated users
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      
+      // Allow updates and deletes only by the listing owner
+      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
     }
   }
 }
