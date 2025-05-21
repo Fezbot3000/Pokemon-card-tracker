@@ -95,8 +95,8 @@ const SaleModal = ({ isOpen, onClose, selectedCards, onConfirm }) => {
   if (!isOpen || !isInitialized) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="flex min-h-screen items-center justify-center px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+    <div className="fixed inset-0 z-50 overflow-hidden">
+      <div className="flex min-h-screen items-stretch sm:items-center justify-center px-0 sm:px-4 pt-0 sm:pt-4 pb-0 sm:pb-20 text-center sm:block sm:p-0 h-full">
         {/* Background overlay with blur effect */}
         <div 
           className="fixed inset-0 transition-opacity backdrop-blur-sm"
@@ -106,7 +106,7 @@ const SaleModal = ({ isOpen, onClose, selectedCards, onConfirm }) => {
         </div>
 
         {/* Modal panel */}
-        <div className="inline-block align-bottom bg-white dark:bg-[#0B0F19] rounded-md text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full border border-gray-300 dark:border-gray-700">
+        <div className="inline-block w-full h-full sm:h-auto align-bottom bg-white dark:bg-[#0B0F19] sm:rounded-md text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full border-0 sm:border sm:border-gray-300 sm:dark:border-gray-700 flex flex-col">
           {/* Header */}
           <div className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
             <h1 className="text-xl font-semibold text-gray-800 dark:text-white">
@@ -122,7 +122,7 @@ const SaleModal = ({ isOpen, onClose, selectedCards, onConfirm }) => {
           </div>
           
           {/* Body - Scrollable */}
-          <div className="max-h-[calc(100vh-200px)] overflow-y-auto p-4">
+          <div className="flex-grow overflow-y-auto p-4">
             {/* Buyer and Date */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4 md:mb-6">
               <div>
