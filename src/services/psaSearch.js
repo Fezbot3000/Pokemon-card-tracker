@@ -243,7 +243,7 @@ const searchByCertNumber = async (certNumber, forceRefresh = false) => {
       const memoryResult = getCachedPSAResult(certNumber);
       if (memoryResult) {
         logger.debug(`Using PSA result from memory cache for cert #${certNumber}`);
-        PSANotifications.showLookupNotification('SUCCESS');
+        PSANotifications.showLookupNotification('success');
         return memoryResult;
       }
       
@@ -254,7 +254,7 @@ const searchByCertNumber = async (certNumber, forceRefresh = false) => {
           logger.debug(`Using PSA result from Firebase for cert #${certNumber}`);
           // Update memory cache
           psaCache.results[certNumber] = dbResult;
-          PSANotifications.showLookupNotification('SUCCESS');
+          PSANotifications.showLookupNotification('success');
           return dbResult;
         }
       } catch (dbError) {
@@ -293,7 +293,7 @@ const searchByCertNumber = async (certNumber, forceRefresh = false) => {
       cachePSAResult(certNumber, psaData);
       await psaDataService.saveCardToCache(certNumber, psaData);
       
-      PSANotifications.showLookupNotification('SUCCESS');
+      PSANotifications.showLookupNotification('success');
       return psaData;
     } else {
       // Keep error logging for PSA search since these are important for troubleshooting

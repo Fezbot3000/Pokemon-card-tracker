@@ -103,8 +103,6 @@ const SettingsModal = ({
   const [showResetConfirm, setShowResetConfirm] = useState(false);
 const [resetConfirmText, setResetConfirmText] = useState('');
   const [isVerifyingBackup, setIsVerifyingBackup] = useState(false); // Add state for cloud backup verification
-  const [isReloadingPSA, setIsReloadingPSA] = useState(false);
-  const [psaReloadProgress, setPsaReloadProgress] = useState({ current: 0, total: 0 });
   const [verificationStatus, setVerificationStatus] = useState('Idle'); // Add state for verification status
   const [isCreatingPortalSession, setIsCreatingPortalSession] = useState(false);
   const importBaseDataRef = useRef(null);
@@ -719,57 +717,9 @@ const [resetConfirmText, setResetConfirmText] = useState('');
     }
   };
 
-  // Handle bulk PSA data reload
-  const handleBulkPSAReload = async () => {
-    if (!user || !cardRepositoryRef.current || isReloadingPSA) {
-      return;
-    }
-
-    try {
-      setIsReloadingPSA(true);
-      const cardRepository = cardRepositoryRef.current;
-
-      // Get all cards
-      const allCards = await cardRepository.getAllCards();
-      
-      // Filter cards with PSA slab numbers
-      const psaCards = allCards.filter(card => card.slabSerial);
-      
-      setPsaReloadProgress({ current: 0, total: psaCards.length });
-      
-      // Process each card
-      for (let i = 0; i < psaCards.length; i++) {
-        const card = psaCards[i];
-        try {
-          const psaData = await searchByCertNumber(card.slabSerial);
-          
-          if (!psaData.error) {
-            const parsedData = parsePSACardData(psaData);
-            if (parsedData.cardName || parsedData.setName || parsedData.grade) {
-              // Update the card with new PSA data
-              await cardRepository.updateCard({
-                id: card.id,
-                ...card,
-                ...parsedData,
-                _lastUpdateTime: Date.now()
-              });
-            }
-          }
-        } catch (cardError) {
-          console.error(`Error updating PSA data for card ${card.id}:`, cardError);
-        }
-        
-        setPsaReloadProgress(prev => ({ ...prev, current: i + 1 }));
-      }
-      
-      toastService.success(`Updated PSA data for ${psaCards.length} cards`);
-    } catch (error) {
-      console.error('Error in bulk PSA reload:', error);
-      toastService.error('Failed to update PSA data');
-    } finally {
-      setIsReloadingPSA(false);
-      setPsaReloadProgress({ current: 0, total: 0 });
-    }
+  // Deprecated bulk PSA data reload function (removed)
+  const handleBulkPSAReload = () => {
+    console.warn('handleBulkPSAReload was deprecated and has been removed');
   };
 
   // Handle subscription upgrade
@@ -1286,28 +1236,7 @@ const [resetConfirmText, setResetConfirmText] = useState('');
                       </Button>
                     </div>
                     
-                    {/* PSA Data Management Section */}
-                    <div className="bg-white dark:bg-[#1B2131] rounded-lg p-4 border border-gray-200 dark:border-indigo-900/20">
-                      <h4 className="font-medium text-gray-900 dark:text-white mb-2 flex items-center">
-                        <Icon name="refresh" className="text-blue-500 mr-2" />
-                        PSA Data Management
-                      </h4>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
-                        Reload PSA data for all graded cards in your collection.
-                      </p>
-                      <Button 
-                        variant="primary" 
-                        iconLeft={<Icon name="refresh" />}
-                        onClick={handleBulkPSAReload}
-                        fullWidth
-                        loading={isReloadingPSA}
-                        disabled={isReloadingPSA}
-                      >
-                        {isReloadingPSA 
-                          ? `Updating PSA Data (${psaReloadProgress.current}/${psaReloadProgress.total})` 
-                          : 'Reload PSA Data'}
-                      </Button>
-                    </div>
+                    {/* PSA Data Management Section - Removed */}
                     
                     {/* Download My Data Section */}
                     <div className="bg-white dark:bg-[#1B2131] rounded-lg p-4 border border-gray-200 dark:border-indigo-900/20">

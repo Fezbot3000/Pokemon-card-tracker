@@ -158,7 +158,7 @@ const CreateInvoiceModal = ({ isOpen, onClose, onSave, editingInvoice = null, pr
   
   // Calculate total investment amount
   const totalInvestment = selectedCards.reduce((sum, card) => {
-    return sum + (parseFloat(card.investmentAUD) || 0);
+    return sum + (parseFloat(card.originalInvestmentAmount || card.investmentAUD) || 0);
   }, 0);
   
   // Handle form submission
@@ -195,6 +195,9 @@ const CreateInvoiceModal = ({ isOpen, onClose, onSave, editingInvoice = null, pr
           grade: card.grade || '',
           gradeVendor: card.gradeVendor || '',
           slabSerial: card.slabSerial || '',
+          // Use originalInvestmentAmount as primary source with investmentAUD as fallback
+          originalInvestmentAmount: parseFloat(card.originalInvestmentAmount || card.investmentAUD) || 0,
+          originalInvestmentCurrency: card.originalInvestmentCurrency || 'AUD',
           investmentAUD: parseFloat(card.investmentAUD) || 0
         };
         
@@ -209,7 +212,7 @@ const CreateInvoiceModal = ({ isOpen, onClose, onSave, editingInvoice = null, pr
       });
       
       // Calculate total investment
-      const totalAmount = cardData.reduce((sum, card) => sum + (card.investmentAUD || 0), 0);
+      const totalAmount = cardData.reduce((sum, card) => sum + (card.originalInvestmentAmount || card.investmentAUD || 0), 0);
       
       let invoice;
       
@@ -310,8 +313,8 @@ const CreateInvoiceModal = ({ isOpen, onClose, onSave, editingInvoice = null, pr
   if (!isOpen) return null;
   
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/50 flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-[#1B2131] rounded-xl w-full max-w-4xl mx-auto shadow-xl">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/50 flex flex-col">
+      <div className="bg-white dark:bg-[#1B2131] w-full h-full flex flex-col overflow-hidden">
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700/50">
           <h2 className="text-xl font-medium text-gray-800 dark:text-gray-200">
             {step === 1 ? 'Select Cards for Purchase Invoice' : 'Invoice Details'}
@@ -324,7 +327,7 @@ const CreateInvoiceModal = ({ isOpen, onClose, onSave, editingInvoice = null, pr
           </button>
         </div>
         
-        <div className="p-6">
+        <div className="p-6 flex-1 overflow-y-auto">
           {step === 1 ? (
             <>
               {/* Card Selection Step */}
@@ -475,7 +478,7 @@ const CreateInvoiceModal = ({ isOpen, onClose, onSave, editingInvoice = null, pr
           ) : (
             <>
               {/* Invoice Details Step */}
-              <form onSubmit={handleSubmit}>
+              <form onSubmit={handleSubmit} className="space-y-6 max-w-5xl mx-auto">
                 <div className="space-y-4">
                   <div>
                     <label className="block text-gray-700 dark:text-gray-300 mb-1">
@@ -589,7 +592,7 @@ const CreateInvoiceModal = ({ isOpen, onClose, onSave, editingInvoice = null, pr
                                 </div>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                                ${parseFloat(card.investmentAUD || 0).toFixed(2)}
+                                ${parseFloat(card.originalInvestmentAmount || card.investmentAUD || 0).toFixed(2)}
                               </td>
                             </tr>
                           ))}
@@ -610,7 +613,7 @@ const CreateInvoiceModal = ({ isOpen, onClose, onSave, editingInvoice = null, pr
                   </div>
                 </div>
                 
-                <div className="flex justify-between mt-6">
+                <div className="flex justify-between mt-6 sticky bottom-0 bg-white dark:bg-[#1B2131] py-4">
                   <button
                     type="button"
                     className="px-4 py-2 rounded-lg
@@ -618,7 +621,7 @@ const CreateInvoiceModal = ({ isOpen, onClose, onSave, editingInvoice = null, pr
                              text-gray-700 dark:text-gray-300
                              hover:bg-gray-200 dark:hover:bg-[#323B4B]
                              transition-colors"
-                    onClick={handleBack}
+                    onClick={handleClose}
                   >
                     Close
                   </button>

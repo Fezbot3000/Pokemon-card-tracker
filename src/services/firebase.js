@@ -40,30 +40,18 @@ let db;
 // This will prevent the console from showing ERR_BLOCKED_BY_CLIENT errors
 const originalConsoleError = console.error;
 console.error = function(...args) {
-  // Convert args to string for easier filtering
-  const errorString = args.length > 0 ? JSON.stringify(args) : '';
+  // Convert args to string in a safer way
+  const stringified = args.map(arg => String(arg)).join(' ');
   
-  // Comprehensive list of patterns to filter out
-  const blockedPatterns = [
+  // More targeted list of patterns to filter out specifically for Firestore channel termination
+  const shouldSuppress = [
     'net::ERR_BLOCKED_BY_CLIENT',
-    'Failed to fetch',
-    'NetworkError',
-    'firestore.googleapis.com',
-    'WebChannelConnection',
-    'FirebaseError',
-    'permission-denied',
-    'insufficient permissions',
-    'channel?VER=8',
-    'terminate',
-    'webchannel',
-    'close call',
-    'Cross-Origin-Opener-Policy'
-  ];
+    'google.firestore.v1.Firestore/Write/channel?TYPE=terminate',
+    'google.firestore.v1.Firestore/Listen/channel?TYPE=terminate'
+  ].some(fragment => stringified.includes(fragment));
   
-  // Check if any of the patterns match
-  if (blockedPatterns.some(pattern => errorString.includes(pattern))) {
-    // Log to debug if needed, but don't show in console
-    // logger.debug('Suppressed Firebase error:', args[0]);
+  if (shouldSuppress) {
+    // Silently suppress only the specific Firestore channel termination errors
     return;
   }
   
@@ -74,27 +62,19 @@ console.error = function(...args) {
 // Same for console.warn
 const originalConsoleWarn = console.warn;
 console.warn = function(...args) {
-  // Convert args to string for easier filtering
-  const warnString = args.length > 0 ? JSON.stringify(args) : '';
+  // Convert args to string in a safer way
+  const stringified = args.map(arg => String(arg)).join(' ');
   
-  // Comprehensive list of warning patterns to filter out
-  const blockedWarningPatterns = [
+  // More targeted list of patterns to filter out specifically for Firestore channel termination
+  const shouldSuppress = [
+    'google.firestore.v1.Firestore/Write/channel?TYPE=terminate',
+    'google.firestore.v1.Firestore/Listen/channel?TYPE=terminate',
     'WebChannelConnection',
-    'firestore',
-    'transport errored',
-    'Unknown event handler property',
-    'onExportData',
-    'onImportSoldItemsFromZip',
-    'Text component',
-    'string child',
-    'Firebase',
-    'channel?VER=8',
-    'webchannel'
-  ];
+    'transport errored'
+  ].some(fragment => stringified.includes(fragment));
   
-  // Check if any of the patterns match
-  if (blockedWarningPatterns.some(pattern => warnString.includes(pattern))) {
-    // Silently ignore these warnings
+  if (shouldSuppress) {
+    // Silently suppress only the specific Firestore channel termination warnings
     return;
   }
   

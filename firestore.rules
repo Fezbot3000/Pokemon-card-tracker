@@ -92,5 +92,14 @@ service cloud.firestore {
       // Allow owner to write their own purchase invoices
       allow write: if isOwner(userId);
     }
+    
+    // --- User Preferences ---
+    // Only the owner can read/write their preferences
+    match /userPreferences/{userId} { 
+      // Allow owner to read their own preferences
+      allow get, list: if isOwner(userId);
+      // Allow owner to write their own preferences
+      allow write: if isOwner(userId);
+    }
   }
 }
