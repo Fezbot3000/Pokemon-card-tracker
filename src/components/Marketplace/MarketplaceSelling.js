@@ -24,6 +24,8 @@ function MarketplaceSelling() {
     try {
       // Query for user's own listings
       const marketplaceRef = collection(firestoreDb, 'marketplaceItems');
+      
+      // First try with the composite index (which might still be building)
       const marketplaceQuery = query(
         marketplaceRef,
         where('userId', '==', user.uid),
@@ -51,13 +53,49 @@ function MarketplaceSelling() {
           setLoading(false);
         }
       }, (error) => {
-        // Ignore AdBlock related errors
-        if (error.message && error.message.includes('net::ERR_BLOCKED_BY_CLIENT')) {
-          // Silently handle AdBlock errors
+        // Check if this is an index building error
+        if (error.message && error.message.includes('requires an index')) {
+          logger.warn('Marketplace selling index is still building:', error);
+          
+          // Fall back to a simpler query without ordering
+          try {
+            const simpleQuery = query(
+              marketplaceRef,
+              where('userId', '==', user.uid)
+            );
+            
+            unsubscribe = onSnapshot(simpleQuery, (snapshot) => {
+              const listingData = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+              }));
+              // Sort manually on the client side
+              listingData.sort((a, b) => {
+                const timeA = a.timestampListed?.seconds || 0;
+                const timeB = b.timestampListed?.seconds || 0;
+                return timeB - timeA; // Descending order
+              });
+              setListings(listingData);
+              
+              // Load card images after getting listings
+              loadCardImages(listingData);
+            }, (fallbackError) => {
+              logger.error('Error in fallback user listings listener:', fallbackError);
+              setLoading(false);
+            });
+          } catch (fallbackSetupError) {
+            logger.error('Error setting up fallback user listings listener:', fallbackSetupError);
+            setLoading(false);
+          }
         } else {
-          logger.error('Error in user listings listener:', error);
+          // Ignore AdBlock related errors
+          if (error.message && error.message.includes('net::ERR_BLOCKED_BY_CLIENT')) {
+            // Silently handle AdBlock errors
+          } else {
+            logger.error('Error in user listings listener:', error);
+          }
+          setLoading(false);
         }
-        setLoading(false);
       });
     } catch (error) {
       logger.error('Error setting up user listings listener:', error);
@@ -87,7 +125,7 @@ function MarketplaceSelling() {
       const loadPromise = (async () => {
         try {
           // Try to load from IndexedDB first
-          const cachedImage = await db.getCardImage(cardId);
+          const cachedImage = await db.getImage(cardId);
           if (cachedImage) {
             images[cardId] = cachedImage;
             return;
@@ -109,7 +147,7 @@ function MarketplaceSelling() {
   };
 
   return (
-    <div className="p-4 sm:p-6">
+    <div className="p-4 sm:p-6 pt-16"> {/* Added pt-16 for padding-top to avoid header overlap */}
       <h1 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Your Listings</h1>
       
       {loading ? (

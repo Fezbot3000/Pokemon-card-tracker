@@ -195,7 +195,7 @@ function Marketplace() {
   };
 
   return (
-    <div className="p-4 sm:p-6 pt-6 sm:pt-8">
+    <div className="p-4 sm:p-6 pt-16"> {/* Added pt-16 for padding-top to avoid header overlap */}
       
       {loading ? (
         <div className="flex justify-center items-center h-64">
