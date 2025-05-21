@@ -353,6 +353,7 @@ function Marketplace({ currentView, onViewChange }) {
       <MarketplaceSearchFilters 
         onFilterChange={handleFilterChange} 
         listings={allListings}
+        initialFilters={filters}
       />
       
       {loading ? (

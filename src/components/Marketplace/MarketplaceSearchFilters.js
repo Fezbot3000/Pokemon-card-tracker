@@ -103,9 +103,9 @@ const rawConditions = [
   { value: 'Poor', label: 'Poor' },
 ];
 
-function MarketplaceSearchFilters({ onFilterChange, listings }) {
+function MarketplaceSearchFilters({ onFilterChange, listings, initialFilters }) {
   // Filter state
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState(initialFilters || {
     search: '',
     category: '',
     gradingCompany: '',
@@ -135,6 +135,13 @@ function MarketplaceSearchFilters({ onFilterChange, listings }) {
   
   // Grades based on selected grading company
   const [gradeOptions, setGradeOptions] = useState([]);
+  
+  // Update filters when initialFilters changes
+  useEffect(() => {
+    if (initialFilters) {
+      setFilters(initialFilters);
+    }
+  }, [initialFilters]);
 
   // No need to extract grading companies from listings anymore
   // We're using the predefined list
