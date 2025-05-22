@@ -734,10 +734,13 @@ const [resetConfirmText, setResetConfirmText] = useState('');
   };
 
   const handlePreferredCurrencyChange = (event) => {
-    const newCurrency = event.target.value;
-    if (newCurrency && newCurrency !== preferredCurrency) {
-      updatePreferredCurrency(newCurrency);
-      toastService.success(`Display currency updated to ${newCurrency}`);
+    const newCurrencyCode = event.target.value;
+    // Find the full currency object from availableCurrencies
+    const currencyObject = availableCurrencies.find(currency => currency.code === newCurrencyCode);
+    
+    if (currencyObject && newCurrencyCode !== preferredCurrency.code) {
+      updatePreferredCurrency(currencyObject);
+      toastService.success(`Display currency updated to ${currencyObject.code}`);
     }
   };
 
