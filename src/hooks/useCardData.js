@@ -216,8 +216,8 @@ const useCardData = () => {
 
   // Delete a card - Wrapped in useCallback
   const deleteCard = useCallback(async (cardId) => { // Make async
-    // Extract ID if cardId is an object
-    const id = cardId?.id || cardId;
+    // Extract ID if cardId is an object - handle both id and slabSerial properties
+    const id = cardId?.id || cardId?.slabSerial || cardId;
     
     if (!id || typeof id !== 'string') {
       logger.error("Delete card failed: Invalid card ID.", { cardId, id });
