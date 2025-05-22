@@ -96,6 +96,7 @@ function MarketplaceSelling({ currentView, onViewChange }) {
               
               // Load card images after getting listings
               loadCardImages(listingData);
+              setLoading(false);
             }, (fallbackError) => {
               logger.error('Error in fallback user listings listener:', fallbackError);
               setLoading(false);

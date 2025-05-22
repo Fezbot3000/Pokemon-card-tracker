@@ -2991,7 +2991,7 @@ To import this backup:
                       {/* Floating Add Button - Mobile Only */}
                       <button
                         onClick={() => setShowNewCardForm(true)}
-                        className="sm:hidden fixed bottom-20 right-5 w-14 h-14 rounded-full bg-gradient-to-r from-[#ef4444] to-[#db2777] text-white shadow-lg flex items-center justify-center z-30 hover:shadow-xl transition-shadow"
+                        className="sm:hidden fixed bottom-24 right-5 w-14 h-14 rounded-full bg-gradient-to-r from-[#ef4444] to-[#db2777] text-white shadow-lg flex items-center justify-center z-30 hover:shadow-xl transition-shadow"
                         aria-label="Add new card"
                       >
                         <span className="material-icons text-3xl">add</span>
