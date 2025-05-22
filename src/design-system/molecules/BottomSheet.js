@@ -1,56 +1,58 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import Icon from '../atoms/Icon';
 import Button from '../atoms/Button';
 
 const BottomSheet = ({ isOpen, onClose, title, children }) => {
-  const [footerHeight, setFooterHeight] = useState(0);
   const sheetRef = useRef(null);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
   
+  // Handle animation and body scroll locking
   useEffect(() => {
-    if (isOpen && window.innerWidth < 768) { // Only apply on mobile
-      // Function to calculate footer height
-      const calculateFooterHeight = () => {
-        const footer = document.querySelector('.fixed.sm\\:hidden.bottom-0');
-        if (footer) {
-          const footerRect = footer.getBoundingClientRect();
-          setFooterHeight(footerRect.height);
-        } else {
-          setFooterHeight(0);
-        }
-      };
+    if (isOpen) {
+      // First make it visible with initial position
+      setIsAnimating(true);
+      // Lock body scroll when sheet is open
+      document.body.style.overflow = 'hidden';
       
-      // Calculate initially and on resize
-      calculateFooterHeight();
-      window.addEventListener('resize', calculateFooterHeight);
-      
-      return () => {
-        window.removeEventListener('resize', calculateFooterHeight);
-      };
+      // Small delay to ensure the initial position is applied before animating
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setIsVisible(true);
+        });
+      });
+    } else {
+      // Hide it with animation
+      setIsVisible(false);
+      // Restore body scroll when sheet is closed
+      document.body.style.overflow = '';
     }
+    
+    return () => {
+      // Cleanup: restore body scroll when component unmounts
+      document.body.style.overflow = '';
+    };
   }, [isOpen]);
   
-  if (!isOpen) return null;
+  if (!isOpen && !isAnimating) return null;
 
   return (
     // Backdrop
     <div 
-      className="fixed inset-0 z-[1000] flex items-end bg-black bg-opacity-30 transition-opacity duration-300 ease-in-out"
+      className="fixed inset-0 z-[1000] bg-black bg-opacity-30"
       onClick={onClose}
-      style={{
-        // Adjust bottom padding to account for footer height on mobile
-        paddingBottom: window.innerWidth < 768 ? `${footerHeight}px` : '0'
-      }}
     >
       {/* Sheet Content */}
       <div 
         ref={sheetRef}
-        className="w-full bg-white dark:bg-[#1e2130] rounded-t-xl shadow-xl transform transition-all duration-300 ease-in-out pt-3 pb-4 px-3"
+        className="fixed bottom-0 left-0 right-0 w-full bg-white dark:bg-[#1e2130] rounded-t-xl shadow-xl transform transition-transform duration-500 ease-out pt-3 px-3 z-[1001]"
         style={{ 
-          maxHeight: '90vh', 
-          transform: isOpen ? 'translateY(0)' : 'translateY(100%)',
-          // On mobile, position the sheet above the footer
-          marginBottom: window.innerWidth < 768 ? `${footerHeight}px` : '0'
+          maxHeight: '90vh',
+          transform: isVisible ? 'translateY(0)' : 'translateY(100%)',
+        }}
+        onTransitionEnd={() => {
+          if (!isVisible) setIsAnimating(false);
         }}
         onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside the sheet
       >
@@ -63,22 +65,11 @@ const BottomSheet = ({ isOpen, onClose, title, children }) => {
             <h3 className="text-base font-semibold text-gray-700 dark:text-white text-center flex-grow">
               {title}
             </h3>
-            {/* <button onClick={onClose} className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 p-1 rounded-full">
-              <Icon name="close" size="md" />
-            </button> */}
-            {/* iOS action sheets usually rely on a cancel button or backdrop tap, so the X can be optional or removed */}
           </div>
         )}
         
-        {/* Scrollable Content Area */}
-        <div className="overflow-y-auto" style={{ 
-          // Adjust height calculation to account for footer on mobile
-          maxHeight: window.innerWidth < 768 
-            ? `calc(90vh - 70px - ${footerHeight}px)` 
-            : 'calc(90vh - 70px)' 
-        }}>
-          {children}
-        </div>
+        {/* Content area */}
+        {children}
       </div>
     </div>
   );

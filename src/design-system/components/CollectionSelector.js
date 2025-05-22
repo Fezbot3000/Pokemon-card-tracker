@@ -59,6 +59,29 @@ const CollectionSelector = ({
 
   const renderCollectionItems = (forMobileSheet) => (
     <div className={`py-1 ${forMobileSheet ? 'px-2 space-y-2' : ''}`}>
+      {/* New Collection button at the top */}
+      <button
+        onClick={() => {
+          setIsNewCollectionModalOpen(true);
+          isMobileView ? setIsBottomSheetOpen(false) : setIsDropdownOpen(false);
+        }}
+        className={`block w-full text-left px-4 py-2 text-sm 
+          ${forMobileSheet 
+            ? 'text-center rounded-lg bg-white dark:bg-[#000] text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:opacity-90 py-3'
+            : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`
+        }
+      >
+        <div className={`flex items-center ${forMobileSheet ? 'justify-center' : ''}`}>
+          <Icon name="add" size="sm" className="mr-1" />
+          <span>+ New Collection</span>
+        </div>
+      </button>
+      
+      <div 
+        className={`my-1 ${forMobileSheet ? 'border-t-0' : 'border-t border-gray-200 dark:border-gray-700'}`}
+      ></div>
+      
+      {/* Collection list */}
       {collections.map((collection) => (
         <button
           key={collection}
@@ -78,34 +101,7 @@ const CollectionSelector = ({
           {collection}
         </button>
       ))}
-      <div 
-        className={`my-1 ${forMobileSheet ? 'border-t-0' : 'border-t border-gray-200 dark:border-gray-700'}`}
-      ></div>
-      <button
-        onClick={() => {
-          setIsNewCollectionModalOpen(true);
-          isMobileView ? setIsBottomSheetOpen(false) : setIsDropdownOpen(false);
-        }}
-        className={`block w-full text-left px-4 py-2 text-sm 
-          ${forMobileSheet 
-            ? 'text-center rounded-lg bg-white dark:bg-[#000] text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:opacity-90 py-3'
-            : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`
-        }
-      >
-        <div className={`flex items-center ${forMobileSheet ? 'justify-center' : ''}`}>
-          <Icon name="add" size="sm" className="mr-1" />
-          <span>New Collection</span>
-        </div>
-      </button>
-
-      {forMobileSheet && (
-        <button
-          onClick={() => setIsBottomSheetOpen(false)}
-          className="block w-full text-center px-4 py-3 mt-3 text-sm rounded-lg bg-[#000] text-gray-300 border border-gray-700 hover:opacity-90 font-semibold"
-        >
-          Cancel
-        </button>
-      )}
+      {/* Cancel button moved outside of this component */}
     </div>
   );
 
@@ -144,7 +140,19 @@ const CollectionSelector = ({
           onClose={() => setIsBottomSheetOpen(false)} 
           title="Select Collection"
         >
-          {renderCollectionItems(true)}
+          <div className="flex flex-col h-full">
+            <div className="flex-grow overflow-y-auto scrollbar-hide" style={{ maxHeight: 'calc(85vh - 130px)' }}>
+              {renderCollectionItems(true)}
+            </div>
+            <div className="sticky bottom-0 left-0 right-0 pt-2 mt-2 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1e2130]">
+              <button
+                onClick={() => setIsBottomSheetOpen(false)}
+                className="block w-full text-center px-4 py-3 text-sm rounded-lg bg-[#000] text-gray-300 border border-gray-700 hover:opacity-90 font-semibold mb-2"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
         </BottomSheet>
       )}
 

@@ -473,3 +473,13 @@ html.dark body {
   max-height: 2000px; /* Large enough to accommodate content */
   opacity: 1;
 }
+
+/* Hide scrollbars while maintaining scrolling functionality */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
+}
