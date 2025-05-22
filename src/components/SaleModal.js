@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { useUserPreferences } from '../contexts/UserPreferencesContext';
 
 const SaleModal = ({ isOpen, onClose, selectedCards, onConfirm }) => {
+  const { formatAmountForDisplay, preferredCurrency } = useUserPreferences();
   const [buyer, setBuyer] = useState('');
   const [dateSold, setDateSold] = useState(new Date().toISOString().split('T')[0]);
   const [soldPrices, setSoldPrices] = useState({});
@@ -32,7 +34,14 @@ const SaleModal = ({ isOpen, onClose, selectedCards, onConfirm }) => {
     };
   }, [isOpen, selectedCards]);
 
-  const totalInvestment = selectedCards.reduce((sum, card) => sum + (parseFloat(card.investmentAUD) || 0), 0);
+  // Calculate total investment with proper currency conversion
+  const { convertToUserCurrency } = useUserPreferences();
+  const totalInvestment = selectedCards.reduce((sum, card) => {
+    const investment = parseFloat(card.originalInvestmentAmount || card.investmentAUD) || 0;
+    const investmentInPreferredCurrency = convertToUserCurrency(investment, card.originalInvestmentCurrency || preferredCurrency.code);
+    return sum + investmentInPreferredCurrency;
+  }, 0);
+  
   const totalSalePrice = Object.values(soldPrices).reduce((sum, price) => sum + (parseFloat(price) || 0), 0);
   const totalProfit = totalSalePrice - totalInvestment;
 
@@ -95,8 +104,8 @@ const SaleModal = ({ isOpen, onClose, selectedCards, onConfirm }) => {
   if (!isOpen || !isInitialized) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden">
-      <div className="flex min-h-screen items-stretch sm:items-center justify-center px-0 sm:px-4 pt-0 sm:pt-4 pb-0 sm:pb-20 text-center sm:block sm:p-0 h-full">
+    <div className="fixed inset-0 z-50 overflow-hidden flex items-center justify-center">
+      <div className="flex items-center justify-center w-full h-full p-4">
         {/* Background overlay with blur effect */}
         <div 
           className="fixed inset-0 transition-opacity backdrop-blur-sm"
@@ -106,7 +115,7 @@ const SaleModal = ({ isOpen, onClose, selectedCards, onConfirm }) => {
         </div>
 
         {/* Modal panel */}
-        <div className="inline-block w-full h-full sm:h-auto align-bottom bg-white dark:bg-[#0B0F19] sm:rounded-md text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full border-0 sm:border sm:border-gray-300 sm:dark:border-gray-700 flex flex-col">
+        <div className="relative w-full max-w-2xl max-h-[90vh] bg-white dark:bg-[#0B0F19] rounded-md text-left overflow-hidden shadow-xl transform transition-all border border-gray-300 dark:border-gray-700 flex flex-col">
           {/* Header */}
           <div className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
             <h1 className="text-xl font-semibold text-gray-800 dark:text-white">
@@ -165,8 +174,11 @@ const SaleModal = ({ isOpen, onClose, selectedCards, onConfirm }) => {
               </h3>
               {selectedCards.map(card => {
                 const soldPrice = parseFloat(soldPrices[card.slabSerial] || '0');
-                const investment = parseFloat(card.investmentAUD) || 0;
-                const profit = soldPrice - investment;
+                const investment = parseFloat(card.originalInvestmentAmount || card.investmentAUD) || 0;
+                // Convert investment to preferred currency for correct profit calculation
+                const { convertToUserCurrency } = useUserPreferences();
+                const investmentInPreferredCurrency = convertToUserCurrency(investment, card.originalInvestmentCurrency || preferredCurrency.code);
+                const profit = soldPrice - investmentInPreferredCurrency;
 
                 return (
                   <div 
@@ -176,15 +188,15 @@ const SaleModal = ({ isOpen, onClose, selectedCards, onConfirm }) => {
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                       <div className="flex-1">
                         <h4 className="font-medium text-sm text-gray-900 dark:text-white">
-                          {card.card}
+                          {card.card || card.name || card.player || 'Unnamed Card'}
                         </h4>
                         <p className="text-xs text-gray-700 dark:text-gray-400">
-                          Investment: {investment.toFixed(2)}
+                          Investment: {formatAmountForDisplay(investment, card.originalInvestmentCurrency || preferredCurrency.code)}
                         </p>
                       </div>
                       <div className="w-full sm:w-40">
                         <label className="block text-xs font-medium text-gray-800 dark:text-gray-300 mb-1">
-                          Sold Price (AUD) <span className="text-red-600 dark:text-red-500">*</span>
+                          Sold Price ({preferredCurrency.code}) <span className="text-red-600 dark:text-red-500">*</span>
                         </label>
                         <input
                           type="number"
@@ -204,7 +216,7 @@ const SaleModal = ({ isOpen, onClose, selectedCards, onConfirm }) => {
                         <div className="text-xs mt-1">
                           Profit: {' '}
                           <span className={profit >= 0 ? 'text-green-600 dark:text-green-500' : 'text-red-600 dark:text-red-500'}>
-                            {profit.toFixed(2)}
+                            {formatAmountForDisplay(profit, preferredCurrency.code)}
                           </span>
                         </div>
                       </div>
@@ -220,7 +232,7 @@ const SaleModal = ({ isOpen, onClose, selectedCards, onConfirm }) => {
                 <div>
                   <span className="text-gray-700 dark:text-gray-400 text-xs md:text-sm">Total Sale Price:</span>
                   <span className="float-right font-medium text-gray-900 dark:text-white text-xs md:text-sm">
-                    {totalSalePrice.toFixed(2)}
+                    {formatAmountForDisplay(totalSalePrice, preferredCurrency.code)}
                   </span>
                 </div>
                 <div>
@@ -228,7 +240,7 @@ const SaleModal = ({ isOpen, onClose, selectedCards, onConfirm }) => {
                   <span className={`float-right font-medium text-xs md:text-sm ${
                     totalProfit >= 0 ? 'text-green-600 dark:text-green-500' : 'text-red-600 dark:text-red-500'
                   }`}>
-                    {totalProfit.toFixed(2)}
+                    {formatAmountForDisplay(totalProfit, preferredCurrency.code)}
                   </span>
                 </div>
               </div>

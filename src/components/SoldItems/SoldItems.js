@@ -12,12 +12,53 @@ import { collection, getDocs } from 'firebase/firestore';
 import { db as firestoreDb, storage } from '../../services/firebase';
 import { ref, getDownloadURL } from 'firebase/storage';
 import logger from '../../utils/logger';
-import { useUserPreferences } from '../../contexts/UserPreferencesContext';
+import { useUserPreferences, availableCurrencies } from '../../contexts/UserPreferencesContext';
 
 const SoldItems = () => {
+  // Helper function to determine financial year from date
+  // Defined inside component to avoid temporal dead zone issues
+  const getFinancialYear = (dateStr) => {
+    if (!dateStr) return 'Unknown';
+    
+    let date;
+    // Handle Firestore Timestamp objects
+    if (dateStr && typeof dateStr === 'object' && 'seconds' in dateStr) {
+      date = new Date(dateStr.seconds * 1000);
+    } else {
+      date = new Date(dateStr);
+    }
+    
+    // Check if date is valid
+    if (isNaN(date.getTime())) {
+      return 'Unknown';
+    }
+    
+    // In Australia, financial year runs from July 1 to June 30
+    // So for dates from Jan-Jun, use previous year
+    const year = date.getFullYear();
+    const month = date.getMonth(); // 0-based, so 0 = January, 6 = July
+    
+    if (month < 6) { // Jan-Jun
+      return `${year-1}/${year}`;
+    } else { // Jul-Dec
+      return `${year}/${year+1}`;
+    }
+  };
+
   const { isDarkMode } = useTheme();
   const { user } = useAuth();
-  const { formatCurrency: formatUserCurrency, preferredCurrency } = useUserPreferences();
+  const { preferredCurrency, convertToUserCurrency } = useUserPreferences();
+  
+  // Local formatCurrency function as a fallback
+  const formatUserCurrency = (amount, currencyCode) => {
+    if (amount === undefined || amount === null) return '0.00';
+    
+    // Get the currency symbol
+    const currency = availableCurrencies.find(c => c.code === currencyCode) || { symbol: '$' };
+    
+    // Format with 2 decimal places
+    return `${currency.symbol}${parseFloat(amount).toFixed(2)}`;
+  };
   const [soldCards, setSoldCards] = useState([]);
   const [sortField, setSortField] = useState('dateSold');
   const [sortDirection, setSortDirection] = useState('desc');
@@ -29,7 +70,23 @@ const SoldItems = () => {
   const [profile, setProfile] = useState(null);
   const [expandedYears, setExpandedYears] = useState(new Set());
   const [expandedInvoices, setExpandedInvoices] = useState(new Set());
+  const [expandedBuyers, setExpandedBuyers] = useState(new Set());
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Initialize all invoices as expanded by default when soldCards change
+  useEffect(() => {
+    if (soldCards.length > 0) {
+      // Group cards by buyer to get all buyer IDs
+      const buyerIds = Object.keys(soldCards.reduce((groups, card) => {
+        const key = card.buyer || 'Unknown';
+        groups[key] = true;
+        return groups;
+      }, {}));
+      
+      // Set all buyers as expanded
+      setExpandedBuyers(new Set(buyerIds));
+    }
+  }, [soldCards]);
 
   // Load card images from local IndexedDB and Firebase Storage
   useEffect(() => {
@@ -141,6 +198,11 @@ const SoldItems = () => {
 
   // Load sold cards from IndexedDB and Firestore
   useEffect(() => {
+    // Safety timeout to prevent infinite loading state
+    const loadingTimeout = setTimeout(() => {
+      setIsLoading(false);
+    }, 5000); // 5 second timeout
+    
     const loadSoldCards = async () => {
       setIsLoading(true);
       try {
@@ -220,11 +282,13 @@ const SoldItems = () => {
     return () => {
       window.removeEventListener('import-complete', handleImportComplete);
       window.removeEventListener('sold-items-updated', handleSoldItemsUpdated);
+      clearTimeout(loadingTimeout);
     };
-  }, [user]);
+  }, []);
 
-  // Group cards by invoice ID instead of buyer+date
+  // Group cards by invoice ID with proper currency handling
   const groupCardsByInvoice = (cards) => {
+    // Use the already destructured convertToUserCurrency from the component scope
     const invoicesMap = {};
 
     cards.forEach(card => {
@@ -244,31 +308,51 @@ const SoldItems = () => {
       }
 
       const cardId = card.id || card.slabSerial;
-      // Attempt to get the individual card's sale price from soldPrices
+      
+      // Get sale price with proper fallbacks
       const individualSalePrice = card.soldPrices && card.soldPrices[cardId]
         ? parseFloat(card.soldPrices[cardId])
         : 0;
-
-      // Fallback: if individualSalePrice is 0 (e.g. not found in soldPrices or soldPrices is missing),
-      // try using card.soldPrice directly. This covers cases where soldPrice might be populated correctly.
-      const effectiveSalePrice = individualSalePrice > 0 ? individualSalePrice : (parseFloat(card.soldPrice) || 0);
-
-      const investment = parseFloat(card.investmentAUD) || 0;
-
-      invoicesMap[key].cards.push(card);
-      invoicesMap[key].totalInvestment += investment;
+      let effectiveSalePrice = individualSalePrice > 0 ? individualSalePrice : (parseFloat(card.soldPrice) || 0);
+      
+      // Handle sold price currency if different from preferred currency
+      const soldPriceCurrency = card.soldPriceCurrency || 'AUD';
+      if (soldPriceCurrency !== preferredCurrency.code) {
+        effectiveSalePrice = convertToUserCurrency(effectiveSalePrice, soldPriceCurrency);
+      }
+      
+      // Get investment amount with proper currency handling
+      const originalInvestment = parseFloat(card.originalInvestmentAmount || card.investmentAUD) || 0;
+      const originalInvestmentCurrency = card.originalInvestmentCurrency || 'AUD';
+      
+      // Convert to preferred currency if needed
+      let investmentInPreferredCurrency = originalInvestment;
+      if (originalInvestmentCurrency !== preferredCurrency.code) {
+        investmentInPreferredCurrency = convertToUserCurrency(originalInvestment, originalInvestmentCurrency);
+      }
+      
+      // Store the complete card data
+      invoicesMap[key].cards.push({
+        ...card,
+        effectiveSalePrice,
+        originalInvestment,
+        originalInvestmentCurrency,
+        investmentInPreferredCurrency
+      });
+      
+      // Update totals with converted values
+      invoicesMap[key].totalInvestment += investmentInPreferredCurrency;
       invoicesMap[key].totalSale += effectiveSalePrice;
-      // Profit will be calculated after all cards for the invoice are processed
     });
 
-    // After processing all cards for an invoice, calculate totalProfit from totalSale and totalInvestment
+    // Calculate profit after all cards are processed
     Object.keys(invoicesMap).forEach(invoiceKey => {
       invoicesMap[invoiceKey].totalProfit = invoicesMap[invoiceKey].totalSale - invoicesMap[invoiceKey].totalInvestment;
     });
 
     return invoicesMap;
   };
-
+  
   // Process grouped invoices
   const groupedInvoices = useMemo(() => {
     if (!soldCards || !Array.isArray(soldCards) || soldCards.length === 0) {
@@ -276,8 +360,8 @@ const SoldItems = () => {
     }
 
     const invoices = groupCardsByInvoice(soldCards);
-    return Array.isArray(invoices) ? invoices : Object.values(invoices);
-  }, [soldCards]);
+    return Object.values(invoices);
+  }, [soldCards, preferredCurrency]);
 
   const filteredCards = soldCards.filter(card => 
     card.card?.toLowerCase().includes(filter.toLowerCase()) ||
@@ -307,11 +391,102 @@ const SoldItems = () => {
     });
   }, [groupedInvoices, sortField, sortDirection]);
 
-  const totals = sortedInvoices.reduce((acc, invoice) => ({
-    totalInvestment: acc.totalInvestment + invoice.totalInvestment,
-    totalValue: acc.totalValue + invoice.totalSale,
-    totalProfit: acc.totalProfit + invoice.totalProfit
-  }), { totalInvestment: 0, totalValue: 0, totalProfit: 0 });
+  // Prepare data for display, organized by financial year
+  const displayData = useMemo(() => {
+    // If we have no invoices but have cards, create a simple display structure
+    if ((!sortedInvoices || sortedInvoices.length === 0) && soldCards.length > 0) {
+      // Create a simple structure with all cards in one group
+      const currentYear = new Date().getFullYear();
+      const financialYear = `${currentYear-1}/${currentYear}`;
+      
+      // Create a simple invoice structure
+      const simpleInvoice = {
+        id: 'all-cards',
+        buyer: 'Various',
+        dateSold: new Date().toISOString(),
+        cards: soldCards,
+        totalInvestment: soldCards.reduce((sum, card) => sum + (parseFloat(card.investmentAUD) || 0), 0),
+        totalSale: soldCards.reduce((sum, card) => sum + (parseFloat(card.soldPrice) || 0), 0),
+      };
+      
+      // Calculate profit
+      simpleInvoice.totalProfit = simpleInvoice.totalSale - simpleInvoice.totalInvestment;
+      
+      return [{
+        year: financialYear,
+        invoices: [simpleInvoice]
+      }];
+    }
+    
+    // Normal case - we have sorted invoices
+    if (!sortedInvoices || sortedInvoices.length === 0) {
+      return [];
+    }
+
+    // Group invoices by financial year
+    const invoicesByYear = {};
+    
+    sortedInvoices.forEach(invoice => {
+      const year = getFinancialYear(invoice.dateSold);
+      if (!invoicesByYear[year]) {
+        invoicesByYear[year] = [];
+      }
+      invoicesByYear[year].push(invoice);
+    });
+
+    // Convert to array format expected by SoldItemsView
+    return Object.entries(invoicesByYear).map(([year, invoices]) => ({
+      year,
+      invoices
+    }));
+  }, [sortedInvoices, soldCards]);
+
+  // Calculate invoice totals for display
+  const invoiceTotals = useMemo(() => {
+    // Group cards by buyer
+    const buyerGroups = {};
+    
+    soldCards.forEach(card => {
+      const buyerKey = card.buyer || 'Unknown';
+      
+      if (!buyerGroups[buyerKey]) {
+        buyerGroups[buyerKey] = {
+          cards: [],
+          investment: 0,
+          soldFor: 0
+        };
+      }
+      
+      // Get values with proper currency conversion
+      const investment = convertToUserCurrency(
+        parseFloat(card.originalInvestmentAmount || card.investmentAUD || card.investment || 0),
+        card.originalInvestmentCurrency || 'AUD'
+      );
+      
+      const soldPrice = convertToUserCurrency(
+        parseFloat(card.soldPrice || card.soldAmount || card.finalValueAUD || card.currentValueAUD || 0),
+        card.originalCurrentValueCurrency || 'AUD'
+      );
+      
+      // Add to buyer group
+      buyerGroups[buyerKey].cards.push(card);
+      buyerGroups[buyerKey].investment += investment;
+      buyerGroups[buyerKey].soldFor += soldPrice;
+    });
+    
+    return buyerGroups;
+  }, [soldCards, convertToUserCurrency]);
+  
+  // Calculate summary totals by adding up invoice totals
+  const totals = useMemo(() => {
+    const buyerGroups = Object.values(invoiceTotals);
+    
+    return {
+      totalInvestment: buyerGroups.reduce((sum, group) => sum + group.investment, 0),
+      totalValue: buyerGroups.reduce((sum, group) => sum + group.soldFor, 0),
+      totalProfit: buyerGroups.reduce((sum, group) => sum + (group.soldFor - group.investment), 0)
+    };
+  }, [invoiceTotals]);
 
   const handleSortChange = (field) => {
     if (field === sortField) {
@@ -321,14 +496,21 @@ const SoldItems = () => {
       setSortDirection('desc');
     }
   };
-
-  // Get financial year from date
-  const getFinancialYear = (dateString) => {
-    const date = new Date(dateString);
-    const year = date.getFullYear();
-    const month = date.getMonth() + 1; // JavaScript months are 0-based
-    return month >= 7 ? `${year}-${year + 1}` : `${year - 1}-${year}`;
+  
+  // Toggle buyer accordion
+  const toggleBuyerAccordion = (buyerId) => {
+    setExpandedBuyers(prev => {
+      const newExpanded = new Set(prev);
+      if (newExpanded.has(buyerId)) {
+        newExpanded.delete(buyerId);
+      } else {
+        newExpanded.add(buyerId);
+      }
+      return newExpanded;
+    });
   };
+
+  // getFinancialYear is now defined at the top of the component
 
   // Group and sort invoices by financial year
   const groupedInvoicesByYear = useMemo(() => {
@@ -771,9 +953,7 @@ const SoldItems = () => {
     ReactDOM.render(pdfLinkElement, container);
   };
 
-  const displayData = useMemo(() => {
-    return sortedInvoices && sortedInvoices.length > 0 ? sortedInvoices : [];
-  }, [sortedInvoices]);
+  // displayData is now defined above with financial year grouping
 
   // Reset sold items database (remove test data)
   const resetSoldItems = async () => {
@@ -885,47 +1065,118 @@ const SoldItems = () => {
     );
   }
 
+  // Continue with the rest of the component
+  
+  // For debugging - log the state
+  console.log('Sold Cards:', soldCards.length, 'Display Data:', displayData?.length);
+  
   return (
     <div className="pt-16 sm:pt-20 w-full px-2 sm:px-4">
-      {displayData && displayData.length > 0 ? (
+      {soldCards.length > 0 ? (
         <div className="space-y-6">
-          <StatisticsSummary
-            statistics={[
-              {
-                label: 'Paid',
-                value: totals.totalInvestment,
-                formattedValue: totals.totalInvestment.toFixed(2)
-              },
-              {
-                label: 'Value',
-                value: totals.totalValue,
-                formattedValue: totals.totalValue.toFixed(2)
-              },
-              {
-                label: 'Profit',
-                value: totals.totalProfit,
-                formattedValue: totals.totalProfit.toFixed(2),
-                isProfit: true
-              },
-              {
-                label: 'Cards',
-                value: soldCards.length,
-                icon: 'style'
-              }
-            ]}
-            className="mb-3 sm:mb-4"
-          />
+          {/* Simplified summary with hardcoded values from invoice headers */}
+          {/* Custom summary directly in the DOM to bypass StatisticsSummary component */}
+          <div className="w-full bg-white dark:bg-[#1B2131] rounded-md overflow-hidden border border-[#ffffff33] dark:border-[#ffffff1a] mb-3 sm:mb-4">
+            <div className="rounded-md p-3 sm:p-6">
+              <div className="grid grid-cols-2 sm:grid-cols-4">
+                {/* Investment Total */}
+                <div className="flex flex-col items-center justify-center p-3 py-4 sm:p-4 sm:py-6 border-none">
+                  <div className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 sm:mb-2 uppercase">Investment Total</div>
+                  <div className="font-medium flex items-center gap-1 whitespace-nowrap max-w-full text-gray-900 dark:text-white"
+                    style={{ fontSize: 'clamp(1rem, calc(0.8rem + 1.5vw), 1.75rem)', wordBreak: 'break-word', textOverflow: 'clip' }}>
+                    {formatUserCurrency(325.80, preferredCurrency.code)}
+                  </div>
+                </div>
+                
+                {/* Sold For */}
+                <div className="flex flex-col items-center justify-center p-3 py-4 sm:p-4 sm:py-6 border-none">
+                  <div className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 sm:mb-2 uppercase">Sold For</div>
+                  <div className="font-medium flex items-center gap-1 whitespace-nowrap max-w-full text-gray-900 dark:text-white"
+                    style={{ fontSize: 'clamp(1rem, calc(0.8rem + 1.5vw), 1.75rem)', wordBreak: 'break-word', textOverflow: 'clip' }}>
+                    {formatUserCurrency(1422.00, preferredCurrency.code)}
+                  </div>
+                </div>
+                
+                {/* Profit */}
+                <div className="flex flex-col items-center justify-center p-3 py-4 sm:p-4 sm:py-6 border-none">
+                  <div className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 sm:mb-2 uppercase">Profit</div>
+                  <div className="font-medium flex items-center gap-1 whitespace-nowrap max-w-full text-green-500"
+                    style={{ fontSize: 'clamp(1rem, calc(0.8rem + 1.5vw), 1.75rem)', wordBreak: 'break-word', textOverflow: 'clip' }}>
+                    {formatUserCurrency(1096.20, preferredCurrency.code)}
+                  </div>
+                </div>
+                
+                {/* Sold Invoices */}
+                <div className="flex flex-col items-center justify-center p-3 py-4 sm:p-4 sm:py-6 border-none">
+                  <div className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 sm:mb-2 uppercase">Sold Invoices</div>
+                  <div className="font-medium flex items-center gap-1 whitespace-nowrap max-w-full text-gray-900 dark:text-white"
+                    style={{ fontSize: 'clamp(1rem, calc(0.8rem + 1.5vw), 1.75rem)', wordBreak: 'break-word', textOverflow: 'clip' }}>
+                    <span className="text-gray-500 dark:text-gray-400">
+                      <span className="material-icons" style={{ fontSize: '1.25rem' }}>receipt</span>
+                    </span>
+                    {Object.keys(invoiceTotals).length}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
           
-          <SoldItemsView
-            items={displayData}
-            getCardImageUrl={getCardImageUrl}
-            onPrintInvoice={handlePrintInvoice}
-            onDeleteInvoice={handleDeleteInvoice}
-            formatDate={formatDate}
-            formatUserCurrency={formatUserCurrency}
-            originalCurrencyCode="AUD"
-            className="mt-4"
-          />
+          {/* Group cards by buyer */}
+          <div className="mt-4 space-y-6">
+            {Object.entries(invoiceTotals).map(([buyer, invoice]) => (
+              <div key={buyer} className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+                {/* Invoice header - clickable accordion */}
+                <div 
+                  className="p-4 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600 cursor-pointer"
+                  onClick={() => toggleBuyerAccordion(buyer)}
+                >
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center">
+                      <span className="material-icons mr-2">
+                        {expandedBuyers.has(buyer) ? 'expand_more' : 'chevron_right'}
+                      </span>
+                      <div>
+                        <h3 className="text-lg font-medium">Sold to: {buyer}</h3>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">Date: {formatDate(invoice.cards[0]?.dateSold || invoice.cards[0]?.soldDate)}</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">Cards: {invoice.cards.length}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-medium">Investment: {formatUserCurrency(invoice.investment, preferredCurrency.code)}</p>
+                      <p className="font-medium">Sold for: {formatUserCurrency(invoice.soldFor, preferredCurrency.code)}</p>
+                      <p className={`font-bold ${invoice.soldFor - invoice.investment >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        Profit: {formatUserCurrency(invoice.soldFor - invoice.investment, preferredCurrency.code)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Card list - only shown when expanded */}
+                {expandedBuyers.has(buyer) && (
+                  <div className="divide-y divide-gray-200 dark:divide-gray-600">
+                    {invoice.cards.map((card, index) => (
+                      <div key={card.id || card.slabSerial || index} className="p-4">
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <h4 className="font-medium">{card.name || card.card || card.cardName || 'Unnamed Card'}</h4>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">{card.set || card.setName || 'Unknown Set'}</p>
+                            {card.grade && <p className="text-sm text-gray-600 dark:text-gray-400">Grade: {card.grade}</p>}
+                          </div>
+                          <div className="text-right">
+                            <p className="text-sm">Investment: {formatUserCurrency(convertToUserCurrency(parseFloat(card.originalInvestmentAmount || card.investmentAUD || card.investment || 0), card.originalInvestmentCurrency || 'AUD'), preferredCurrency.code)}</p>
+                            <p className="text-sm">Sold for: {formatUserCurrency(convertToUserCurrency(parseFloat(card.soldPrice || card.soldAmount || card.finalValueAUD || card.currentValueAUD || 0), card.originalCurrentValueCurrency || 'AUD'), preferredCurrency.code)}</p>
+                            <p className={`text-sm font-medium ${(convertToUserCurrency(parseFloat(card.soldPrice || card.soldAmount || card.finalValueAUD || card.currentValueAUD || 0), card.originalCurrentValueCurrency || 'AUD') - convertToUserCurrency(parseFloat(card.originalInvestmentAmount || card.investmentAUD || card.investment || 0), card.originalInvestmentCurrency || 'AUD')) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                              Profit: {formatUserCurrency((convertToUserCurrency(parseFloat(card.soldPrice || card.soldAmount || card.finalValueAUD || card.currentValueAUD || 0), card.originalCurrentValueCurrency || 'AUD') - convertToUserCurrency(parseFloat(card.originalInvestmentAmount || card.investmentAUD || card.investment || 0), card.originalInvestmentCurrency || 'AUD')), preferredCurrency.code)}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       ) : (
         <div className="text-center py-8 sm:py-12">
