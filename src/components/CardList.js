@@ -14,6 +14,7 @@ import CreateInvoiceModal from './PurchaseInvoices/CreateInvoiceModal';
 import ListCardModal from './Marketplace/ListCardModal';
 import { useUserPreferences } from '../contexts/UserPreferencesContext';
 import { useAuth } from '../design-system';
+import { calculateCardTotals, formatStatisticsForDisplay } from '../utils/cardStatistics';
 
 // Replace FinancialSummary component with individual stat cards
 const StatCard = memo(({ label, value, isProfit = false }) => {
@@ -501,60 +502,8 @@ const CardList = ({
     return filteredCards.slice(0, visibleCardCount);
   }, [filteredCards, visibleCardCount]);
 
-  // Calculate totals with direct access to the exact fields in the database
-  const totals = useMemo(() => {
-    if (!cards || !cards.length) {
-      return { investment: 0, value: 0, profit: 0 };
-    }
-    
-    // For debugging - log the first card's structure
-    if (cards.length > 0 && process.env.NODE_ENV === 'development') {
-      console.log('Card structure sample:', {
-        card: cards[0].card || cards[0].cardName || cards[0].player,
-        hasOriginalInvestmentAmount: 'originalInvestmentAmount' in cards[0],
-        hasOriginalCurrentValueAmount: 'originalCurrentValueAmount' in cards[0],
-        originalInvestmentAmount: cards[0].originalInvestmentAmount,
-        originalCurrentValueAmount: cards[0].originalCurrentValueAmount,
-        investmentAUD: cards[0].investmentAUD,
-        currentValueAUD: cards[0].currentValueAUD
-      });
-    }
-    
-    return cards.reduce((acc, card) => {
-      // IMPORTANT: Based on the provided data structure, we know exactly which fields to use
-      // The cards have originalInvestmentAmount and originalCurrentValueAmount as the primary fields
-      
-      // Get investment amount - directly use originalInvestmentAmount as the primary source
-      let investment = 0;
-      if (typeof card.originalInvestmentAmount === 'number') {
-        investment = card.originalInvestmentAmount;
-      } else if (typeof card.originalInvestmentAmount === 'string' && card.originalInvestmentAmount) {
-        investment = parseFloat(card.originalInvestmentAmount) || 0;
-      } else if (typeof card.investmentAUD === 'number') {
-        investment = card.investmentAUD;
-      } else if (typeof card.investmentAUD === 'string' && card.investmentAUD) {
-        investment = parseFloat(card.investmentAUD) || 0;
-      }
-      
-      // Get value amount - directly use originalCurrentValueAmount as the primary source
-      let value = 0;
-      if (typeof card.originalCurrentValueAmount === 'number') {
-        value = card.originalCurrentValueAmount;
-      } else if (typeof card.originalCurrentValueAmount === 'string' && card.originalCurrentValueAmount) {
-        value = parseFloat(card.originalCurrentValueAmount) || 0;
-      } else if (typeof card.currentValueAUD === 'number') {
-        value = card.currentValueAUD;
-      } else if (typeof card.currentValueAUD === 'string' && card.currentValueAUD) {
-        value = parseFloat(card.currentValueAUD) || 0;
-      }
-      
-      // Update running totals
-      acc.investment += investment;
-      acc.value += value;
-      acc.profit += value - investment;
-      return acc;
-    }, { investment: 0, value: 0, profit: 0 });
-  }, [cards]);
+  // Calculate totals using the utility function
+  const totals = useMemo(() => calculateCardTotals(cards), [cards]);
 
   // Reset state when collection changes
   useEffect(() => {
@@ -1067,33 +1016,7 @@ const CardList = ({
     <div className="pt-8 sm:pt-20 w-full px-1 sm:px-2 pb-20">
       {/* Stats Section */}
       <StatisticsSummary 
-        statistics={[
-          {
-            label: 'Paid',
-            value: totals.investment,
-            isMonetary: true,
-            originalCurrencyCode: 'AUD'
-          },
-          {
-            label: 'Value',
-            value: totals.value,
-            isMonetary: true,
-            originalCurrencyCode: 'AUD'
-          },
-          {
-            label: 'Profit',
-            value: totals.profit,
-            isProfit: true,
-            isMonetary: true,
-            originalCurrencyCode: 'AUD'
-          },
-          {
-            label: 'Cards',
-            value: filteredCards.length,
-            icon: 'style',
-            subtitle: paginatedCards.length < filteredCards.length ? `Showing ${paginatedCards.length} of ${filteredCards.length}` : undefined
-          }
-        ]}
+        statistics={formatStatisticsForDisplay(totals, filteredCards.length, paginatedCards.length)}
         className="mb-3 sm:mb-4"
       />
 

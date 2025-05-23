@@ -4,7 +4,8 @@ import ReactDOM from 'react-dom/client';
 import './styles/design-system.css';  // Base design tokens and variables
 import './styles/main.css';           // Core styles with Tailwind
 import './styles/black-background.css'; // Dark mode styling
-import App, { router } from './App';
+import App from './App';
+import { router } from './router';
 import { RouterProvider } from 'react-router-dom';
 import reportWebVitals from './reportWebVitals';
 // Import environment validation before Firebase initialization

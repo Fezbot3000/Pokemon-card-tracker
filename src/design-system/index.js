@@ -56,6 +56,7 @@ export { default as Header } from './components/Header';
 export { default as StatisticsSummary } from './components/StatisticsSummary';
 export { default as SearchToolbar } from './components/SearchToolbar';
 export { default as Card } from './components/Card';
+export { default as CardOptimized } from './components/CardOptimized';
 export { default as CardDetailsForm } from './components/CardDetailsForm';
 export { default as CardDetailsModal } from './components/CardDetailsModal';
 export { default as LoginModal } from './components/LoginModal';

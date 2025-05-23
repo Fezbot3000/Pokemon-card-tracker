@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import ReactDOM from 'react-dom';
 import { useTheme, SoldItemsView } from '../../design-system'; 
 import { formatCondensed } from '../../utils/formatters';
@@ -13,6 +13,7 @@ import { db as firestoreDb, storage } from '../../services/firebase';
 import { ref, getDownloadURL } from 'firebase/storage';
 import logger from '../../utils/logger';
 import { useUserPreferences, availableCurrencies } from '../../contexts/UserPreferencesContext';
+import { calculateSoldCardStatistics } from '../../utils/cardStatistics';
 
 const SoldItems = () => {
   // Helper function to determine financial year from date
@@ -477,16 +478,10 @@ const SoldItems = () => {
     return buyerGroups;
   }, [soldCards, convertToUserCurrency]);
   
-  // Calculate summary totals by adding up invoice totals
-  const totals = useMemo(() => {
-    const buyerGroups = Object.values(invoiceTotals);
-    
-    return {
-      totalInvestment: buyerGroups.reduce((sum, group) => sum + group.investment, 0),
-      totalValue: buyerGroups.reduce((sum, group) => sum + group.soldFor, 0),
-      totalProfit: buyerGroups.reduce((sum, group) => sum + (group.soldFor - group.investment), 0)
-    };
-  }, [invoiceTotals]);
+  // Calculate statistics from sold cards using utility function
+  const statistics = useMemo(() => {
+    return calculateSoldCardStatistics(soldCards, invoiceTotals, convertToUserCurrency);
+  }, [soldCards, invoiceTotals, convertToUserCurrency]);
 
   const handleSortChange = (field) => {
     if (field === sortField) {
@@ -509,8 +504,6 @@ const SoldItems = () => {
       return newExpanded;
     });
   };
-
-  // getFinancialYear is now defined at the top of the component
 
   // Group and sort invoices by financial year
   const groupedInvoicesByYear = useMemo(() => {
@@ -687,7 +680,7 @@ const SoldItems = () => {
             });
             
             request.onsuccess = () => {
-              alert("Database has been reset with a test sold item. Refresh the page to continue.");
+              alert("Database has been reset with a test sold item. Refreshing page...");
               window.location.reload();
             };
             
@@ -1084,7 +1077,7 @@ const SoldItems = () => {
                   <div className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 sm:mb-2 uppercase">Investment Total</div>
                   <div className="font-medium flex items-center gap-1 whitespace-nowrap max-w-full text-gray-900 dark:text-white"
                     style={{ fontSize: 'clamp(1rem, calc(0.8rem + 1.5vw), 1.75rem)', wordBreak: 'break-word', textOverflow: 'clip' }}>
-                    {formatUserCurrency(325.80, preferredCurrency.code)}
+                    {formatUserCurrency(statistics.totalInvestment, preferredCurrency.code)}
                   </div>
                 </div>
                 
@@ -1093,16 +1086,16 @@ const SoldItems = () => {
                   <div className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 sm:mb-2 uppercase">Sold For</div>
                   <div className="font-medium flex items-center gap-1 whitespace-nowrap max-w-full text-gray-900 dark:text-white"
                     style={{ fontSize: 'clamp(1rem, calc(0.8rem + 1.5vw), 1.75rem)', wordBreak: 'break-word', textOverflow: 'clip' }}>
-                    {formatUserCurrency(1422.00, preferredCurrency.code)}
+                    {formatUserCurrency(statistics.totalSoldFor, preferredCurrency.code)}
                   </div>
                 </div>
                 
                 {/* Profit */}
                 <div className="flex flex-col items-center justify-center p-3 py-4 sm:p-4 sm:py-6 border-none">
                   <div className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 sm:mb-2 uppercase">Profit</div>
-                  <div className="font-medium flex items-center gap-1 whitespace-nowrap max-w-full text-green-500"
+                  <div className={`font-medium flex items-center gap-1 whitespace-nowrap max-w-full ${statistics.totalProfit >= 0 ? 'text-green-500' : 'text-red-500'}`}
                     style={{ fontSize: 'clamp(1rem, calc(0.8rem + 1.5vw), 1.75rem)', wordBreak: 'break-word', textOverflow: 'clip' }}>
-                    {formatUserCurrency(1096.20, preferredCurrency.code)}
+                    {formatUserCurrency(statistics.totalProfit, preferredCurrency.code)}
                   </div>
                 </div>
                 
@@ -1114,7 +1107,7 @@ const SoldItems = () => {
                     <span className="text-gray-500 dark:text-gray-400">
                       <span className="material-icons" style={{ fontSize: '1.25rem' }}>receipt</span>
                     </span>
-                    {Object.keys(invoiceTotals).length}
+                    {statistics.invoiceCount}
                   </div>
                 </div>
               </div>

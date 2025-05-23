@@ -23,7 +23,6 @@ import { searchByCertNumber, parsePSACardData } from '../../services/psaSearch';
 import SubscriptionManagement from '../../components/SubscriptionManagement'; // Import the SubscriptionManagement component
 import { useUserPreferences, availableCurrencies } from '../../contexts/UserPreferencesContext'; // Added import
 import SelectField from '../atoms/SelectField'; // Added import
-import { runCardDataMigration } from '../../utils/migrateCardData'; // Import card data migration utility
 
 /**
  * SettingsModal Component
@@ -88,8 +87,6 @@ const SettingsModal = ({
   const [isForceSyncing, setIsForceSyncing] = useState(false); // Add state for force syncing
   const [isCloudMigrating, setIsCloudMigrating] = useState(false); // Add state for cloud migration
   const [isUploadingImages, setIsUploadingImages] = useState(false); // Add state for image upload
-  const [isMigratingCardData, setIsMigratingCardData] = useState(false); // Add state for card data migration
-  const [cardMigrationMode, setCardMigrationMode] = useState('dry-run'); // 'dry-run' or 'live'
   const [activeTab, setActiveTab] = useState('general');
   const [collectionToDelete, setCollectionToDelete] = useState('');
   const [profile, setProfile] = useState({
@@ -744,46 +741,6 @@ const [resetConfirmText, setResetConfirmText] = useState('');
     }
   };
 
-  // Handle card data migration
-  const handleCardDataMigration = async () => {
-    if (isMigratingCardData) return;
-    
-    try {
-      setIsMigratingCardData(true);
-      toastService.loading('Starting card data migration...');
-      
-      const isDryRun = cardMigrationMode === 'dry-run';
-      const result = await runCardDataMigration(isDryRun);
-      
-      if (result.success) {
-        const { stats } = result;
-        toastService.dismiss();
-        toastService.success(
-          `${isDryRun ? 'Dry run' : 'Migration'} completed: ${stats.docsUpdated} cards updated, ${stats.fieldsRemoved} fields removed`
-        );
-        
-        // Show more detailed toast for dry run
-        if (isDryRun && stats.docsUpdated > 0) {
-          setTimeout(() => {
-            toastService.success(
-              'Dry run successful. Switch to "Live Run" mode to apply these changes.', 
-              { duration: 5000 }
-            );
-          }, 1500);
-        }
-      } else {
-        toastService.dismiss();
-        toastService.error(`Migration failed: ${result.message}`);
-      }
-    } catch (error) {
-      logger.error('Error during card data migration:', error);
-      toastService.dismiss();
-      toastService.error(`Migration error: ${error.message}`);
-    } finally {
-      setIsMigratingCardData(false);
-    }
-  };
-
   return (
     <>
       <Modal
@@ -822,12 +779,6 @@ const [resetConfirmText, setResetConfirmText] = useState('');
                 label="Account" 
                 isActive={activeTab === 'account'}
                 onClick={() => setActiveTab('account')}
-              />
-              <SettingsNavItem 
-                icon="code" 
-                label="Development" 
-                isActive={activeTab === 'development'}
-                onClick={() => setActiveTab('development')}
               />
             </div>
           </nav>
@@ -1146,143 +1097,24 @@ const [resetConfirmText, setResetConfirmText] = useState('');
                     </Button>
                   )}
                 </SettingsPanel>
-              </div>
-            )}
-            
-            {activeTab === 'development' && (
-              <div className="space-y-6">
-                {/* Development Tools Section */}
-                <SettingsPanel
-                  title="Development Tools"
-                  description="Manage your card data and perform maintenance operations."
-                >
-                  <div className="space-y-4">
-                    {/* Update Card Data Section */}
-                    <div className="bg-white dark:bg-[#1B2131] rounded-lg p-4 border border-gray-200 dark:border-indigo-900/20">
-                      <h4 className="font-medium text-gray-900 dark:text-white mb-2 flex items-center">
-                        <Icon name="upload" className="text-indigo-400 mr-2" />
-                        Update Card Data
-                      </h4>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
-                        Update card values and metadata by importing CSV files with updated information.
-                      </p>
-                      <Button
-                        variant="primary"
-                        onClick={() => {
-                          if (onImportCollection) {
-                            onImportCollection(null, { mode: 'priceUpdate' });
-                          }
-                          onClose();
-                        }}
-                        iconLeft={<Icon name="upload" />}
-                        fullWidth
-                      >
-                        Update Card Data
-                      </Button>
-                    </div>
 
-                    {/* Card Data Structure Migration Section */}
-                    <div className="bg-white dark:bg-[#1B2131] rounded-lg p-4 border border-gray-200 dark:border-indigo-900/20">
-                      <h4 className="font-medium text-gray-900 dark:text-white mb-2 flex items-center">
-                        <Icon name="format_align_left" className="text-green-500 mr-2" />
-                        Card Data Structure Migration
-                      </h4>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
-                        Standardize card data structure across your collection. This fixes legacy data issues and ensures consistent field naming.
-                      </p>
-                      <div className="mb-3">
-                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">Migration Mode</label>
-                        <div className="flex space-x-2">
-                          <label className={`flex-1 flex items-center p-2 border rounded-md cursor-pointer transition-colors ${cardMigrationMode === 'dry-run' ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-300 dark:border-gray-700'}`}>
-                            <input 
-                              type="radio" 
-                              name="migrationMode" 
-                              value="dry-run" 
-                              checked={cardMigrationMode === 'dry-run'}
-                              onChange={() => setCardMigrationMode('dry-run')}
-                              className="sr-only"
-                            />
-                            <span className="w-4 h-4 mr-2 rounded-full border flex items-center justify-center border-blue-500">
-                              {cardMigrationMode === 'dry-run' && <span className="w-2 h-2 rounded-full bg-blue-500"></span>}
-                            </span>
-                            <span>Dry Run (Safe)</span>
-                          </label>
-                          <label className={`flex-1 flex items-center p-2 border rounded-md cursor-pointer transition-colors ${cardMigrationMode === 'live' ? 'border-red-500 bg-red-50 dark:bg-red-900/20' : 'border-gray-300 dark:border-gray-700'}`}>
-                            <input 
-                              type="radio" 
-                              name="migrationMode" 
-                              value="live" 
-                              checked={cardMigrationMode === 'live'}
-                              onChange={() => setCardMigrationMode('live')}
-                              className="sr-only"
-                            />
-                            <span className="w-4 h-4 mr-2 rounded-full border flex items-center justify-center border-red-500">
-                              {cardMigrationMode === 'live' && <span className="w-2 h-2 rounded-full bg-red-500"></span>}
-                            </span>
-                            <span>Live Run</span>
-                          </label>
-                        </div>
-                      </div>
-                      <Button 
-                        variant={cardMigrationMode === 'live' ? "danger" : "primary"}
-                        iconLeft={<Icon name={cardMigrationMode === 'live' ? "warning" : "check_circle"} />}
-                        onClick={handleCardDataMigration}
-                        fullWidth
-                        loading={isMigratingCardData ? true : undefined}
-                        disabled={isMigratingCardData}
-                      >
-                        {isMigratingCardData 
-                          ? `Migrating Card Data...`
-                          : cardMigrationMode === 'dry-run' 
-                            ? 'Run Migration (Dry Run)' 
-                            : 'Run Migration (Live)'}
-                      </Button>
-                    </div>
-                    
-                    {/* PSA Data Management Section - Removed */}
-                    
-                    {/* Download My Data Section */}
-                    <div className="bg-white dark:bg-[#1B2131] rounded-lg p-4 border border-gray-200 dark:border-indigo-900/20">
-                      <h4 className="font-medium text-gray-900 dark:text-white mb-2 flex items-center">
-                        <Icon name="download" className="text-green-500 mr-2" />
-                        Download My Data
-                      </h4>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
-                        Export all your personal data for backup or portability purposes.
-                      </p>
-                      <Button 
-                        variant="primary" 
-                        iconLeft={<Icon name="download" />}
-                        onClick={() => {
-                          if (onExportData) {
-                            onExportData({ personalDataExport: true });
-                          }
-                        }}
-                        fullWidth
-                      >
-                        Download My Data
-                      </Button>
-                    </div>
-                    
-                    {/* Reset Data Section */}
-                    <div className="bg-white dark:bg-[#1B2131] rounded-lg p-4 border border-gray-200 dark:border-indigo-900/20">
-                      <h4 className="font-medium text-gray-900 dark:text-white mb-2 flex items-center">
-                        <Icon name="delete_forever" className="text-red-500 mr-2" />
-                        Reset Data
-                      </h4>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
-                        This will permanently delete all your data from both local storage and the cloud.
-                      </p>
-                      <Button 
-                        variant="danger" 
-                        iconLeft={<Icon name="delete" />}
-                        onClick={handleResetData}
-                        fullWidth
-                      >
-                        Reset All Data
-                      </Button>
-                    </div>
+                <SettingsPanel
+                  title="Reset All Data"
+                  description="Permanently delete all your data from both local storage and the cloud."
+                >
+                  <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-4">
+                    <p className="text-sm text-red-800 dark:text-red-200">
+                      <strong>Warning:</strong> This action will permanently delete all your cards, collections, sales history, and images. This cannot be undone.
+                    </p>
                   </div>
+                  <Button 
+                    variant="danger" 
+                    iconLeft={<Icon name="delete_forever" />}
+                    onClick={handleResetData}
+                    fullWidth
+                  >
+                    Reset All Data
+                  </Button>
                 </SettingsPanel>
               </div>
             )}
