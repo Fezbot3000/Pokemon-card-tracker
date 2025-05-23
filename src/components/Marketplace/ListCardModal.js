@@ -313,6 +313,7 @@ function ListCardModal({ isOpen, onClose, selectedCards }) {
             cardId: card.slabSerial || card.id || card._id,
             userId: user.uid,
             card: cardWithImage, // Store the entire card object with image data for display
+            category: card.category || 'pokemon', // Add explicit category field for filtering
             listingPrice: price,
             currency: preferredCurrency.code,
             timestampListed: serverTimestamp(),

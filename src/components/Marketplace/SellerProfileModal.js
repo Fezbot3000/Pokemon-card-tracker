@@ -27,6 +27,8 @@ function SellerProfileModal({ isOpen, onClose, sellerId }) {
       try {
         setLoading(true);
         
+        console.log('Loading seller data for ID:', sellerId);
+        
         // Load seller profile
         const profileRef = doc(firestoreDb, 'marketplaceProfiles', sellerId);
         const profileSnap = await getDoc(profileRef);
@@ -74,22 +76,80 @@ function SellerProfileModal({ isOpen, onClose, sellerId }) {
         setRatingBreakdown(breakdown);
         
         // Load active listings
-        const listingsRef = collection(firestoreDb, 'marketplaceItems');
-        const listingsQuery = query(
-          listingsRef,
-          where('userId', '==', sellerId),
-          where('status', '==', 'available'),
-          orderBy('timestampListed', 'desc')
-        );
-        
-        const listingsSnapshot = await getDocs(listingsQuery);
-        const listings = [];
-        
-        listingsSnapshot.forEach((doc) => {
-          listings.push({ id: doc.id, ...doc.data() });
-        });
-        
-        setActiveListings(listings);
+        try {
+          const listingsRef = collection(firestoreDb, 'marketplaceItems');
+          
+          // Debug: First check ALL marketplace items to understand the data structure
+          const allItemsQuery = query(listingsRef);
+          const allItemsSnapshot = await getDocs(allItemsQuery);
+          
+          console.log('=== DEBUG: Checking ALL marketplace items ===');
+          console.log('Total items in marketplace:', allItemsSnapshot.size);
+          
+          const userIdSet = new Set();
+          allItemsSnapshot.forEach((doc) => {
+            const data = doc.data();
+            userIdSet.add(data.userId);
+            
+            // Log first few items to see structure
+            if (userIdSet.size <= 5) {
+              console.log('Sample item:', {
+                id: doc.id,
+                userId: data.userId,
+                sellerId: data.sellerId, // Check if it's sellerId instead
+                status: data.status,
+                title: data.title || data.card?.name
+              });
+            }
+          });
+          
+          console.log('Unique userIds found:', Array.from(userIdSet));
+          console.log('Looking for sellerId:', sellerId);
+          console.log('=== END DEBUG ===');
+          
+          // Now try the actual query
+          const listingsQuery = query(
+            listingsRef,
+            where('userId', '==', sellerId)
+          );
+          
+          console.log('Querying listings for sellerId:', sellerId);
+          
+          const listingsSnapshot = await getDocs(listingsQuery);
+          const listings = [];
+          
+          console.log('Total listings found for this seller:', listingsSnapshot.size);
+          
+          listingsSnapshot.forEach((doc) => {
+            const data = doc.data();
+            console.log('Listing:', { 
+              id: doc.id, 
+              userId: data.userId, 
+              status: data.status,
+              title: data.title || data.card?.name
+            });
+            
+            // Only include available listings
+            if (data.status === 'available') {
+              listings.push({ id: doc.id, ...data });
+            }
+          });
+          
+          console.log('Available listings after filtering:', listings.length);
+          
+          // Sort listings by timestamp on client side
+          listings.sort((a, b) => {
+            const timeA = a.timestampListed?.toDate?.() || a.timestampListed || 0;
+            const timeB = b.timestampListed?.toDate?.() || b.timestampListed || 0;
+            return timeB - timeA; // Descending order
+          });
+          
+          setActiveListings(listings);
+        } catch (listingsError) {
+          logger.error('Error loading seller listings:', listingsError);
+          console.error('Listings query error:', listingsError);
+          setActiveListings([]);
+        }
       } catch (error) {
         logger.error('Error loading seller data:', error);
         toast.error('Failed to load seller profile');

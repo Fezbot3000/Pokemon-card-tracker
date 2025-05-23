@@ -8,6 +8,7 @@ import toast from 'react-hot-toast';
 import ListingDetailModal from './ListingDetailModal';
 import DesktopMarketplaceMessages from './DesktopMarketplaceMessages';
 import SellerProfile from './SellerProfile';
+import SellerProfileModal from './SellerProfileModal';
 
 // Add CSS for hiding scrollbars
 const scrollbarHideStyles = `
@@ -55,6 +56,8 @@ function MarketplaceMessages({ currentView, onViewChange }) {
   const [selectedListing, setSelectedListing] = useState(null);
   const [showSellerProfile, setShowSellerProfile] = useState(false);
   const [selectedSellerId, setSelectedSellerId] = useState(null);
+  const [sellerProfileOpen, setSellerProfileOpen] = useState(false);
+  const [sellerProfileId, setSellerProfileId] = useState(null);
   const { user } = useAuth();
   const messagesEndRef = useRef(null);
   const location = useLocation();
@@ -113,6 +116,10 @@ function MarketplaceMessages({ currentView, onViewChange }) {
               (chatData.buyerName || 'Buyer');
               
             return chatData;
+          }).filter(chat => {
+            // Filter out chats that have been hidden by this user
+            const hiddenBy = chat.hiddenBy || {};
+            return !hiddenBy[user.uid];
           });
           
           setConversations(chatsData);
@@ -165,7 +172,13 @@ function MarketplaceMessages({ currentView, onViewChange }) {
                   return timeB - timeA; // Descending order
                 });
                 
-                setConversations(chatsData);
+                // Filter out chats that have been hidden by this user
+                const filteredChats = chatsData.filter(chat => {
+                  const hiddenBy = chat.hiddenBy || {};
+                  return !hiddenBy[user.uid];
+                });
+                
+                setConversations(filteredChats);
                 setLoading(false);
               } catch (innerError) {
                 logger.error('Error processing chats in fallback listener:', innerError);
@@ -372,6 +385,54 @@ function MarketplaceMessages({ currentView, onViewChange }) {
     }
   };
 
+  // Handle deleting a chat
+  const handleDeleteChat = async () => {
+    if (!activeChat || !user) return;
+
+    // Show confirmation dialog
+    if (!window.confirm('Are you sure you want to delete this chat? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const chatRef = doc(firestoreDb, 'chats', activeChat.id);
+      const chatSnap = await getDoc(chatRef);
+      const chatData = chatSnap.data();
+
+      // Determine if user is buyer or seller
+      const isBuyer = user.uid === chatData.buyerId;
+      const isSeller = user.uid === chatData.sellerId;
+
+      if (!isBuyer && !isSeller) {
+        toast.error('You cannot delete this chat');
+        return;
+      }
+
+      // Create a new hiddenBy object that exactly matches what was there before
+      // This is critical for the security rules to work
+      const existingHiddenBy = chatData.hiddenBy || {};
+      const newHiddenBy = {};
+      
+      // Copy all existing properties
+      Object.keys(existingHiddenBy).forEach(key => {
+        newHiddenBy[key] = existingHiddenBy[key];
+      });
+      
+      // Set only the property we're allowed to change
+      newHiddenBy[user.uid] = true;
+
+      // Update the document with the new hiddenBy object
+      await updateDoc(chatRef, { hiddenBy: newHiddenBy });
+
+      // Close the chat
+      setActiveChat(null);
+      toast.success('Chat has been deleted');
+    } catch (error) {
+      console.error('Error deleting chat:', error);
+      toast.error('Failed to delete chat');
+    }
+  };
+
   // Check if the other participant has left the chat based on leftBy field
   const hasOtherParticipantLeft = activeChat && user && activeChat.leftBy && (
     (activeChat.buyerId === user.uid && activeChat.leftBy.seller) ||
@@ -436,26 +497,44 @@ function MarketplaceMessages({ currentView, onViewChange }) {
     return () => clearInterval(interval);
   }, [activeChat]);
 
+  // Handle viewing seller profile
+  const handleViewSellerProfile = (sellerId) => {
+    setSellerProfileId(sellerId);
+    setSellerProfileOpen(true);
+  };
+
   return (
     <>
-      <ListingDetailModal 
-        isOpen={detailModalOpen} 
-        onClose={() => setDetailModalOpen(false)} 
-        listing={selectedListing}
-        cardImage={selectedListing ? (activeChat?.cardImage || '') : ''}
-      />
-      {showSellerProfile && selectedSellerId && (
-        <SellerProfile
-          sellerId={selectedSellerId}
+      {/* Listing Detail Modal */}
+      {detailModalOpen && selectedListing && (
+        <ListingDetailModal
+          isOpen={detailModalOpen}
           onClose={() => {
-            setShowSellerProfile(false);
-            setSelectedSellerId(null);
+            setDetailModalOpen(false);
+            setSelectedListing(null);
           }}
-          onViewListing={(listing) => {
-            setShowSellerProfile(false);
-            setSelectedSellerId(null);
-            // Handle viewing listing if needed
+          listing={selectedListing}
+          onContactSeller={() => {
+            // Already in messages, just close modal
+            setDetailModalOpen(false);
+            setSelectedListing(null);
           }}
+          onReportListing={() => {
+            toast.error('Reporting functionality coming soon');
+          }}
+          onViewSellerProfile={handleViewSellerProfile}
+        />
+      )}
+      
+      {/* Seller Profile Modal */}
+      {sellerProfileOpen && sellerProfileId && (
+        <SellerProfileModal
+          isOpen={sellerProfileOpen}
+          onClose={() => {
+            setSellerProfileOpen(false);
+            setSellerProfileId(null);
+          }}
+          sellerId={sellerProfileId}
         />
       )}
       <style>
@@ -504,8 +583,7 @@ function MarketplaceMessages({ currentView, onViewChange }) {
                           onClick={(e) => {
                             e.stopPropagation();
                             const otherUserId = conversation.buyerId === user.uid ? conversation.sellerId : conversation.buyerId;
-                            setSelectedSellerId(otherUserId);
-                            setShowSellerProfile(true);
+                            handleViewSellerProfile(otherUserId);
                           }}
                         >
                           {conversation.otherParticipantName}
@@ -605,8 +683,7 @@ function MarketplaceMessages({ currentView, onViewChange }) {
                       className="font-medium text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer transition-colors"
                       onClick={() => {
                         const otherUserId = activeChat.buyerId === user.uid ? activeChat.sellerId : activeChat.buyerId;
-                        setSelectedSellerId(otherUserId);
-                        setShowSellerProfile(true);
+                        handleViewSellerProfile(otherUserId);
                       }}
                     >
                       {activeChat?.otherParticipantName}
@@ -635,6 +712,13 @@ function MarketplaceMessages({ currentView, onViewChange }) {
                   Leave Chat
                 </button>
               )}
+              {/* Delete Chat button */}
+              <button
+                onClick={handleDeleteChat}
+                className="px-3 py-1 text-sm text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 border border-red-600 dark:border-red-400 rounded-md transition-colors"
+              >
+                Delete Chat
+              </button>
             </div>
             
             {/* Left chat notification banner */}

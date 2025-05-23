@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../design-system';
-import { collection, query, where, orderBy, onSnapshot, doc, getDoc, addDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
+import { collection, query, where, orderBy, onSnapshot, doc, getDoc, addDoc, serverTimestamp, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db as firestoreDb } from '../../services/firebase';
 import logger from '../../utils/logger';
 import toast from 'react-hot-toast';
 import ListingDetailModal from './ListingDetailModal';
 import MarketplaceNavigation from './MarketplaceNavigation';
-import SellerProfile from './SellerProfile';
+import SellerProfileModal from './SellerProfileModal';
 
 // Add CSS for hiding scrollbars
 const scrollbarHideStyles = `
@@ -28,8 +28,8 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
   const [sendingMessage, setSendingMessage] = useState(false);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [selectedListing, setSelectedListing] = useState(null);
-  const [showSellerProfile, setShowSellerProfile] = useState(false);
-  const [selectedSellerId, setSelectedSellerId] = useState(null);
+  const [sellerProfileOpen, setSellerProfileOpen] = useState(false);
+  const [sellerProfileId, setSellerProfileId] = useState(null);
   const { user } = useAuth();
   const messagesEndRef = useRef(null);
 
@@ -87,6 +87,10 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
               (chatData.buyerName || 'Buyer');
               
             return chatData;
+          }).filter(chat => {
+            // Filter out chats that have been hidden by this user
+            const hiddenBy = chat.hiddenBy || {};
+            return !hiddenBy[user.uid];
           });
           
           setConversations(chatsData);
@@ -134,6 +138,10 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
                   (chatData.buyerName || 'Buyer');
                   
                 return chatData;
+              }).filter(chat => {
+                // Filter out chats that have been hidden by this user
+                const hiddenBy = chat.hiddenBy || {};
+                return !hiddenBy[user.uid];
               });
               
               // Sort manually on the client side
@@ -319,6 +327,42 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
     }
   };
 
+  // Handle deleting a chat
+  const handleDeleteChat = async () => {
+    if (!activeChat || !user) return;
+    
+    // Show confirmation dialog
+    if (!window.confirm('Are you sure you want to delete this chat? This action cannot be undone.')) {
+      return;
+    }
+    
+    try {
+      const chatRef = doc(firestoreDb, 'chats', activeChat.id);
+      
+      // Get the current chat document
+      const chatDoc = await getDoc(chatRef);
+      if (!chatDoc.exists()) {
+        toast.error('Chat not found');
+        return;
+      }
+      
+      // Get the current hiddenBy status or initialize it
+      const chatData = chatDoc.data();
+      const hiddenBy = chatData.hiddenBy || {};
+      
+      // Set the hiddenBy status for the current user
+      hiddenBy[user.uid] = true;
+      
+      // Update the chat document with the new hiddenBy status
+      await updateDoc(chatRef, { hiddenBy });
+      
+      toast.success('Chat deleted');
+    } catch (error) {
+      logger.error('Error deleting chat:', error);
+      toast.error('Failed to delete chat');
+    }
+  };
+
   // Handle showing card details
   const handleShowCardDetails = (chat) => {
     if (!chat.cardId || !chat.card) return;
@@ -334,6 +378,12 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
     });
     
     setDetailModalOpen(true);
+  };
+
+  // Handle viewing seller profile
+  const handleViewSellerProfile = (sellerId) => {
+    setSellerProfileId(sellerId);
+    setSellerProfileOpen(true);
   };
 
   return (
@@ -378,8 +428,7 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
                       onClick={(e) => {
                         e.stopPropagation();
                         const otherUserId = chat.buyerId === user.uid ? chat.sellerId : chat.buyerId;
-                        setSelectedSellerId(otherUserId);
-                        setShowSellerProfile(true);
+                        handleViewSellerProfile(otherUserId);
                       }}
                     >
                       {chat.otherParticipantName}
@@ -419,8 +468,7 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
                     className="font-medium text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer transition-colors"
                     onClick={() => {
                       const otherUserId = activeChat.buyerId === user.uid ? activeChat.sellerId : activeChat.buyerId;
-                      setSelectedSellerId(otherUserId);
-                      setShowSellerProfile(true);
+                      handleViewSellerProfile(otherUserId);
                     }}
                   >
                     {activeChat.otherParticipantName}
@@ -459,6 +507,14 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
                     Leave Chat
                   </button>
                 )}
+                
+                {/* Delete Chat button */}
+                <button
+                  onClick={handleDeleteChat}
+                  className="px-3 py-1 text-sm text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 border border-red-600 dark:border-red-400 rounded-md transition-colors"
+                >
+                  Delete Chat
+                </button>
               </div>
             </div>
             
@@ -548,21 +604,25 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
         isOpen={detailModalOpen}
         onClose={() => setDetailModalOpen(false)}
         listing={selectedListing}
+        onContactSeller={() => {
+          // Already in messages, just close modal
+          setDetailModalOpen(false);
+        }}
+        onReportListing={() => {
+          toast.error('Reporting functionality coming soon');
+        }}
+        onViewSellerProfile={handleViewSellerProfile}
       />
       
-      {/* Seller Profile */}
-      {showSellerProfile && selectedSellerId && (
-        <SellerProfile
-          sellerId={selectedSellerId}
+      {/* Seller Profile Modal */}
+      {sellerProfileOpen && sellerProfileId && (
+        <SellerProfileModal
+          isOpen={sellerProfileOpen}
           onClose={() => {
-            setShowSellerProfile(false);
-            setSelectedSellerId(null);
+            setSellerProfileOpen(false);
+            setSellerProfileId(null);
           }}
-          onViewListing={(listing) => {
-            setShowSellerProfile(false);
-            setSelectedSellerId(null);
-            // Handle viewing listing if needed
-          }}
+          sellerId={sellerProfileId}
         />
       )}
     </div>

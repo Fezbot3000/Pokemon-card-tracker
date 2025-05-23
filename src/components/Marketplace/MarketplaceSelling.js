@@ -184,9 +184,13 @@ function MarketplaceSelling({ currentView, onViewChange }) {
     
     // Apply category filter
     if (filters.category) {
-      results = results.filter(listing => 
-        listing.category === filters.category
-      );
+      results = results.filter(listing => {
+        const listingCategory = listing.category?.toLowerCase();
+        const cardCategory = listing.card?.category?.toLowerCase();
+        const filterCategory = filters.category.toLowerCase();
+        
+        return listingCategory === filterCategory || cardCategory === filterCategory;
+      });
     }
     
     // Apply grading company filter

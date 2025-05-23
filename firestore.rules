@@ -144,13 +144,13 @@ service cloud.firestore {
       // Allow creation if the authenticated user is one of the participants
       allow create: if request.auth.uid in request.resource.data.participants;
       
-      // Allow updates only for the leftBy field
+      // Allow updates only for the leftBy and hiddenBy fields
       allow update: if 
-        // Only allow updating the leftBy field
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['leftBy']) &&
+        // Only allow updating the leftBy and/or hiddenBy fields
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['leftBy', 'hiddenBy']) &&
         // Ensure other fields remain unchanged
         request.resource.data.diff(resource.data).unchangedKeys().hasAll(
-          resource.data.keys().removeAll(['leftBy'])
+          resource.data.keys().removeAll(['leftBy', 'hiddenBy'])
         ) &&
         // Check if user is a participant
         request.auth.uid in resource.data.participants &&

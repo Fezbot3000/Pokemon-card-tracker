@@ -12,7 +12,7 @@ import MarketplaceNavigation from './MarketplaceNavigation'; // Import the navig
 import MarketplaceSearchFilters from './MarketplaceSearchFilters'; // Import the search and filter component
 import MarketplacePagination from './MarketplacePagination'; // Import pagination component
 import LazyImage from './LazyImage'; // Import lazy image component
-import SellerProfile from './SellerProfile'; // Import seller profile component
+import SellerProfileModal from './SellerProfileModal'; // Import seller profile modal component
 import ReportListing from './ReportListing'; // Import report listing component
 import { useNavigate } from 'react-router-dom'; // Import for navigation
 
@@ -386,10 +386,13 @@ function Marketplace({ currentView, onViewChange }) {
 
     // Apply category filter
     if (filters.category) {
-      results = results.filter(listing =>
-        listing.category === filters.category ||
-        listing.card?.category === filters.category
-      );
+      results = results.filter(listing => {
+        const listingCategory = listing.category?.toLowerCase();
+        const cardCategory = listing.card?.category?.toLowerCase();
+        const filterCategory = filters.category.toLowerCase();
+        
+        return listingCategory === filterCategory || cardCategory === filterCategory;
+      });
     }
 
     // Apply grading company filter
@@ -430,6 +433,7 @@ function Marketplace({ currentView, onViewChange }) {
   }, [filters]);
 
   const handleViewSellerProfile = (sellerId) => {
+    console.log('Opening seller profile for sellerId:', sellerId);
     setSelectedSellerId(sellerId);
     setShowSellerProfile(true);
   };
@@ -568,16 +572,12 @@ function Marketplace({ currentView, onViewChange }) {
 
       {/* Seller Profile Modal */}
       {showSellerProfile && selectedSellerId && (
-        <SellerProfile
+        <SellerProfileModal
+          isOpen={showSellerProfile}
           sellerId={selectedSellerId}
           onClose={() => {
             setShowSellerProfile(false);
             setSelectedSellerId(null);
-          }}
-          onViewListing={(listing) => {
-            setShowSellerProfile(false);
-            setSelectedSellerId(null);
-            handleCardClick(listing);
           }}
         />
       )}
