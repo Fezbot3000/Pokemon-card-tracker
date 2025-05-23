@@ -13,26 +13,15 @@ import './env';
 // Import app initialization
 import { initializeApp } from './services/appInitialization';
 import logger from './utils/logger';
-// Import error suppression utilities
-import { initErrorSuppression } from './utils/errorHandler';
-import initNetworkErrorSuppression from './utils/networkErrorSuppressor';
-import initAdvancedErrorSuppression from './utils/consoleErrorSuppressor';
-import initNetworkInterceptors from './utils/networkInterceptor';
+// Import unified error handler
+import { initUnifiedErrorHandler } from './utils/unifiedErrorHandler';
 import ErrorBoundary from './components/ErrorBoundary';
 
 // Disable Firebase debug logging for production readiness
 window.localStorage.removeItem('debug');
 
-
-// Initialize all error suppression mechanisms to clean up console logs
-initErrorSuppression();
-initNetworkErrorSuppression();
-
-// Initialize advanced error suppression for a professional, clean console
-initAdvancedErrorSuppression();
-
-// Initialize network interceptors to prevent network errors from showing in console
-initNetworkInterceptors();
+// Initialize unified error handler
+initUnifiedErrorHandler();
 
 // Initialize the application
 initializeApp()

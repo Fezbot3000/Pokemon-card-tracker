@@ -3,6 +3,8 @@
  * This allows us to customize webpack without ejecting
  */
 
+const TerserPlugin = require('terser-webpack-plugin');
+
 module.exports = {
   webpack: {
     configure: (webpackConfig) => {
@@ -11,9 +13,25 @@ module.exports = {
         // Disable source maps in production
         webpackConfig.devtool = false;
         
-        // Optimize bundle splitting
+        // Optimize bundle splitting and remove console logs
         webpackConfig.optimization = {
           ...webpackConfig.optimization,
+          minimizer: [
+            new TerserPlugin({
+              terserOptions: {
+                compress: {
+                  drop_console: true, // Remove all console.* calls
+                  drop_debugger: true, // Remove debugger statements
+                  pure_funcs: ['console.log', 'console.info', 'console.debug', 'console.warn'] // Remove specific console methods
+                },
+                mangle: true,
+                format: {
+                  comments: false // Remove all comments
+                }
+              },
+              extractComments: false // Don't extract comments to separate file
+            })
+          ],
           splitChunks: {
             chunks: 'all',
             cacheGroups: {

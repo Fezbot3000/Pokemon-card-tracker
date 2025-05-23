@@ -15,6 +15,7 @@ import ListCardModal from './Marketplace/ListCardModal';
 import { useUserPreferences } from '../contexts/UserPreferencesContext';
 import { useAuth } from '../design-system';
 import { calculateCardTotals, formatStatisticsForDisplay } from '../utils/cardStatistics';
+import { useCardSelection } from '../hooks';
 
 // Replace FinancialSummary component with individual stat cards
 const StatCard = memo(({ label, value, isProfit = false }) => {
@@ -109,7 +110,114 @@ const CardList = ({
     const saved = localStorage.getItem('cardListDisplayMetric');
     return saved || 'currentValueAUD';
   });
-  const [selectedCards, setSelectedCards] = useState(new Set());
+  
+  // Memoized filtered and sorted cards
+  const filteredCards = useMemo(() => {
+    if (!cards || cards.length === 0) return [];
+    
+    // Apply filter
+    let filtered = cards;
+    if (filter) {
+      const lowerFilter = filter.toLowerCase();
+      filtered = filtered.filter(card => 
+        (card.card && card.card.toLowerCase().includes(lowerFilter)) ||
+        (card.set && card.set.toLowerCase().includes(lowerFilter)) ||
+        (card.slabSerial && card.slabSerial.toLowerCase().includes(lowerFilter)) ||
+        (card.player && card.player.toLowerCase().includes(lowerFilter))
+      );
+    }
+    
+    // Create a completely new sorted array to avoid mutation issues
+    filtered = [...filtered];
+    
+    // Apply a multi-level sorting strategy for consistent ordering
+    filtered.sort((a, b) => {
+      // 1. First sort by the user-selected field and direction
+      // Handle different field names between accounts
+      let aValue, bValue;
+      
+      // Special handling for monetary fields that might have different naming conventions
+      if (sortField === 'currentValueAUD') {
+        aValue = parseFloat(a.originalCurrentValueAmount || a.currentValueAUD || 0);
+        bValue = parseFloat(b.originalCurrentValueAmount || b.currentValueAUD || 0);
+      } else if (sortField === 'investmentAUD') {
+        aValue = parseFloat(a.originalInvestmentAmount || a.investmentAUD || 0);
+        bValue = parseFloat(b.originalInvestmentAmount || b.investmentAUD || 0);
+      } else if (sortField === 'potentialProfit') {
+        // Calculate profit from the available fields
+        const aInvestment = parseFloat(a.originalInvestmentAmount || a.investmentAUD || 0);
+        const aCurrentValue = parseFloat(a.originalCurrentValueAmount || a.currentValueAUD || 0);
+        const bInvestment = parseFloat(b.originalInvestmentAmount || b.investmentAUD || 0);
+        const bCurrentValue = parseFloat(b.originalCurrentValueAmount || b.currentValueAUD || 0);
+        aValue = aCurrentValue - aInvestment;
+        bValue = bCurrentValue - bInvestment;
+      } else {
+        // Default fallback for other fields
+        aValue = a[sortField] ?? 0;
+        bValue = b[sortField] ?? 0;
+      }
+      
+      // Handle different types of values appropriately
+      let primarySort = 0;
+      
+      // Handle numeric values
+      if (typeof aValue === 'number' && typeof bValue === 'number') {
+        primarySort = sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
+      } 
+      // Handle string values
+      else if (typeof aValue === 'string' && typeof bValue === 'string') {
+        primarySort = sortDirection === 'asc' ? 
+          aValue.localeCompare(bValue) : 
+          bValue.localeCompare(aValue);
+      }
+      // Handle mixed types (convert to string for comparison)
+      else {
+        const aStr = String(aValue);
+        const bStr = String(bValue);
+        primarySort = sortDirection === 'asc' ? 
+          aStr.localeCompare(bStr) : 
+          bStr.localeCompare(aStr);
+      }
+      
+      // If primary sort doesn't determine order, use secondary sorting criteria
+      if (primarySort === 0) {
+        // 2. Secondary sort by card name
+        const aName = (a.card || '').toLowerCase();
+        const bName = (b.card || '').toLowerCase();
+        const nameSort = aName.localeCompare(bName);
+        
+        if (nameSort !== 0) return nameSort;
+        
+        // 3. Tertiary sort by set
+        const aSet = (a.set || '').toLowerCase();
+        const bSet = (b.set || '').toLowerCase();
+        const setSort = aSet.localeCompare(bSet);
+        
+        if (setSort !== 0) return setSort;
+        
+        // 4. Final sort by slabSerial for absolute consistency
+        const aSerial = (a.slabSerial || '').toLowerCase();
+        const bSerial = (b.slabSerial || '').toLowerCase();
+        return aSerial.localeCompare(bSerial);
+      }
+      
+      return primarySort;
+    });
+    // Ensure uniqueness by combining slabSerial and collection as fallback key
+    return filtered.map((card, idx) => ({ ...card, _uniqueKey: `${card.slabSerial || 'unknown'}-${card.collection || 'none'}-${idx}` }));
+  }, [cards, filter, sortField, sortDirection]);
+
+  // Use card selection hook with filtered cards
+  const { 
+    selectedCards, 
+    selectedCount,
+    handleSelectCard, 
+    handleSelectAll, 
+    clearSelection,
+    getSelectedCards,
+    isCardSelected 
+  } = useCardSelection(filteredCards);
+
   const [isValueDropdownOpen, setIsValueDropdownOpen] = useState(false);
   const [isMetricDropdownOpen, setIsMetricDropdownOpen] = useState(false);
   const [cardImages, setCardImages] = useState({});
@@ -178,8 +286,8 @@ const CardList = ({
 
   // Reset selected cards when the cards prop changes
   useEffect(() => {
-    setSelectedCards(new Set());
-  }, [cards]);
+    clearSelection();
+  }, [cards, clearSelection]);
 
   // Effect to load card images when the component mounts or cards change
   useEffect(() => {
@@ -325,50 +433,6 @@ const CardList = ({
     }
   };
 
-  const handleSelectCard = (e, cardId) => {
-    // If e is a boolean (direct from Card component), convert it
-    if (typeof e === 'boolean') {
-      const isSelected = e;
-      setSelectedCards(prev => {
-        const newSet = new Set(prev);
-        if (!isSelected) {
-          newSet.delete(cardId);
-        } else {
-          newSet.add(cardId);
-        }
-        return newSet;
-      });
-      return;
-    }
-    
-    // Otherwise, handle as normal event
-    // If e exists, stop propagation to prevent triggering the card click
-    if (e && typeof e.stopPropagation === 'function') {
-      e.stopPropagation();
-    }
-    
-    setSelectedCards(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(cardId)) {
-        newSet.delete(cardId);
-      } else {
-        newSet.add(cardId);
-      }
-      return newSet;
-    });
-  };
-
-  const handleSelectAll = () => {
-    // If all cards are already selected, deselect all
-    if (selectedCards.size === filteredCards.length) {
-      setSelectedCards(new Set());
-    } else {
-      // Otherwise, select all cards
-      const allCardIds = filteredCards.map(card => card.slabSerial);
-      setSelectedCards(new Set(allCardIds));
-    }
-  };
-
   const handleInvestmentEdit = (e, card) => {
     e.stopPropagation(); // Prevent card click
     setEditingInvestment(card.slabSerial);
@@ -401,102 +465,6 @@ const CardList = ({
     }
   };
 
-  // Memoized filtered and sorted cards to ensure stable keys and prevent duplicate key warnings
-  const filteredCards = useMemo(() => {
-    if (!cards || cards.length === 0) return [];
-    
-    // Apply filter
-    let filtered = cards;
-    if (filter) {
-      const lowerFilter = filter.toLowerCase();
-      filtered = filtered.filter(card => 
-        (card.card && card.card.toLowerCase().includes(lowerFilter)) ||
-        (card.set && card.set.toLowerCase().includes(lowerFilter)) ||
-        (card.slabSerial && card.slabSerial.toLowerCase().includes(lowerFilter)) ||
-        (card.player && card.player.toLowerCase().includes(lowerFilter))
-      );
-    }
-    
-    // Create a completely new sorted array to avoid mutation issues
-    filtered = [...filtered];
-    
-    // Apply a multi-level sorting strategy for consistent ordering
-    filtered.sort((a, b) => {
-      // 1. First sort by the user-selected field and direction
-      // Handle different field names between accounts
-      let aValue, bValue;
-      
-      // Special handling for monetary fields that might have different naming conventions
-      if (sortField === 'currentValueAUD') {
-        aValue = parseFloat(a.originalCurrentValueAmount || a.currentValueAUD || 0);
-        bValue = parseFloat(b.originalCurrentValueAmount || b.currentValueAUD || 0);
-      } else if (sortField === 'investmentAUD') {
-        aValue = parseFloat(a.originalInvestmentAmount || a.investmentAUD || 0);
-        bValue = parseFloat(b.originalInvestmentAmount || b.investmentAUD || 0);
-      } else if (sortField === 'potentialProfit') {
-        // Calculate profit from the available fields
-        const aInvestment = parseFloat(a.originalInvestmentAmount || a.investmentAUD || 0);
-        const aCurrentValue = parseFloat(a.originalCurrentValueAmount || a.currentValueAUD || 0);
-        const bInvestment = parseFloat(b.originalInvestmentAmount || b.investmentAUD || 0);
-        const bCurrentValue = parseFloat(b.originalCurrentValueAmount || b.currentValueAUD || 0);
-        aValue = aCurrentValue - aInvestment;
-        bValue = bCurrentValue - bInvestment;
-      } else {
-        // Default fallback for other fields
-        aValue = a[sortField] ?? 0;
-        bValue = b[sortField] ?? 0;
-      }
-      
-      // Handle different types of values appropriately
-      let primarySort = 0;
-      
-      // Handle numeric values
-      if (typeof aValue === 'number' && typeof bValue === 'number') {
-        primarySort = sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
-      } 
-      // Handle string values
-      else if (typeof aValue === 'string' && typeof bValue === 'string') {
-        primarySort = sortDirection === 'asc' ? 
-          aValue.localeCompare(bValue) : 
-          bValue.localeCompare(aValue);
-      }
-      // Handle mixed types (convert to string for comparison)
-      else {
-        const aStr = String(aValue);
-        const bStr = String(bValue);
-        primarySort = sortDirection === 'asc' ? 
-          aStr.localeCompare(bStr) : 
-          bStr.localeCompare(aStr);
-      }
-      
-      // If primary sort doesn't determine order, use secondary sorting criteria
-      if (primarySort === 0) {
-        // 2. Secondary sort by card name
-        const aName = (a.card || '').toLowerCase();
-        const bName = (b.card || '').toLowerCase();
-        const nameSort = aName.localeCompare(bName);
-        
-        if (nameSort !== 0) return nameSort;
-        
-        // 3. Tertiary sort by set
-        const aSet = (a.set || '').toLowerCase();
-        const bSet = (b.set || '').toLowerCase();
-        const setSort = aSet.localeCompare(bSet);
-        
-        if (setSort !== 0) return setSort;
-        
-        // 4. Final sort by slabSerial for absolute consistency
-        const aSerial = (a.slabSerial || '').toLowerCase();
-        const bSerial = (b.slabSerial || '').toLowerCase();
-        return aSerial.localeCompare(bSerial);
-      }
-      
-      return primarySort;
-    });
-    // Ensure uniqueness by combining slabSerial and collection as fallback key
-    return filtered.map((card, idx) => ({ ...card, _uniqueKey: `${card.slabSerial || 'unknown'}-${card.collection || 'none'}-${idx}` }));
-  }, [cards, filter, sortField, sortDirection]);
-  
   // Paginated cards - only show the number of cards specified by visibleCardCount
   const paginatedCards = useMemo(() => {
     return filteredCards.slice(0, visibleCardCount);
@@ -507,14 +475,14 @@ const CardList = ({
 
   // Reset state when collection changes
   useEffect(() => {
-    setSelectedCards(new Set());
+    clearSelection();
     setSelectedCardsForSale([]);
     setShowSaleModal(false);
     setBuyer('');
     setFilter('');
     setVisibleCardCount(24); // Reset pagination when collection changes
   }, [selectedCollection]);
-  
+
   // Load more cards when user scrolls to the bottom
   useEffect(() => {
     if (inView && !isLoadingMore && paginatedCards.length < filteredCards.length) {
@@ -626,7 +594,7 @@ const CardList = ({
 
       // Update local state after parent state is updated
       setCollections(updatedCollections);
-      setSelectedCards(new Set());
+      clearSelection();
       setShowSaleModal(false);
       setSelectedCardsForSale([]);
 
@@ -697,9 +665,7 @@ const CardList = ({
       
       // Clear selection if the deleted card was selected
       if (selectedCards.has(cardId)) {
-        const newSelectedCards = new Set(selectedCards);
-        newSelectedCards.delete(cardId);
-        setSelectedCards(newSelectedCards);
+        handleSelectCard(false, cardId);
       }
     } catch (error) {
       console.error('Error deleting card:', error);
@@ -819,7 +785,7 @@ const CardList = ({
 
       // Update local state after parent state is updated
       setCollections(updatedCollections);
-      setSelectedCards(new Set());
+      clearSelection();
       setShowDeleteModal(false);
       setShowCardDetails(false);
       setSelectedCard(null);
@@ -839,7 +805,7 @@ const CardList = ({
       setShowDeleteModal(false);
       setShowCardDetails(false);
       setSelectedCard(null);
-      setSelectedCards(new Set());
+      clearSelection();
     }
   };
 
@@ -986,7 +952,7 @@ const CardList = ({
       // Update state
       setShowMoveModal(false);
       setSelectedCardsToMove([]);
-      setSelectedCards(new Set());
+      clearSelection();
       
       // Store move verification data in localStorage for later verification
       localStorage.setItem('lastCardMove', JSON.stringify({
@@ -1369,7 +1335,7 @@ const CardList = ({
                     handleSelectAll();
                     break;
                   case 'clear':
-                    setSelectedCards(new Set());
+                    clearSelection();
                     break;
                   default:
                     // No action selected
@@ -1407,7 +1373,7 @@ const CardList = ({
         onClose={() => {
           setShowSaleModal(false);
           setSelectedCardsForSale([]);
-          setSelectedCards(new Set());
+          clearSelection();
         }}
         selectedCards={selectedCardsForSale}
         onConfirm={handleSaleConfirm}
@@ -1451,13 +1417,13 @@ const CardList = ({
         onClose={() => {
           setShowPurchaseInvoiceModal(false);
           setSelectedCardsForPurchase([]);
-          setSelectedCards(new Set());
+          clearSelection();
         }}
         onSave={(newInvoice) => {
           // Toast is already shown in the CreateInvoiceModal component
           setShowPurchaseInvoiceModal(false);
           setSelectedCardsForPurchase([]);
-          setSelectedCards(new Set());
+          clearSelection();
           
           // Navigate to Purchase Invoices page after successful save using React Router
           setTimeout(() => {
@@ -1474,7 +1440,7 @@ const CardList = ({
         onClose={() => {
           setShowListCardModal(false);
           setSelectedCardsForListing([]);
-          setSelectedCards(new Set());
+          clearSelection();
         }}
         selectedCards={selectedCardsForListing}
       />

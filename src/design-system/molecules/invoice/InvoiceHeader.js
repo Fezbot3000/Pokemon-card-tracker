@@ -28,11 +28,9 @@ const InvoiceHeader = ({
   ...props
 }) => {
   const headerClasses = `
-    flex flex-col sm:flex-row sm:items-center sm:justify-between w-full 
-    p-4 sm:p-5 bg-white dark:bg-[#1B2131] 
-    ${isExpanded ? 'border-b border-gray-200 dark:border-borde-gray-700' : ''}
-    cursor-pointer hover:bg-gray-50 dark:hover:bg-[#252B3B] transition-colors
-    gap-3 sm:gap-0
+    flex flex-col sm:flex-row sm:items-center sm:justify-between w-full p-4 sm:p-5 
+    bg-gray-50 dark:bg-gray-900 
+    cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors
     ${className}
   `;
 
@@ -47,83 +45,90 @@ const InvoiceHeader = ({
 
   return (
     <div className={headerClasses} onClick={onToggle} {...stripDebugProps(props)}>
-      {/* Left side with invoice info */}
-      <div className="flex flex-col min-w-0">
-        <div className="flex items-center gap-2">
-          <CleanIcon name="receipt" className="text-gray-500 dark:text-gray-400" />
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white truncate" title={title}>
-            {title}
+      {/* Left side - Invoice info and expand icon */}
+      <div className="flex items-center gap-3 flex-1 min-w-0">
+        <CleanIcon 
+          name={isExpanded ? "expand_less" : "expand_more"} 
+          size="md"
+          className="text-gray-400 dark:text-gray-500 flex-shrink-0" 
+        />
+        <div className="flex flex-col min-w-0">
+          <h3 className="text-base font-semibold text-gray-900 dark:text-white truncate" title={`Sold to: ${title}`}>
+            Sold to: {title}
           </h3>
+          <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
+            <span>Date: {subtitle}</span>
+            <span>Cards: {cardCount}</span>
+          </div>
         </div>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{subtitle}</p>
-        <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
-          {cardCount} {cardCount === 1 ? 'card' : 'cards'}
-        </p>
       </div>
       
-      {/* Right side with financial summary and actions */}
-      <div className="flex flex-col items-start sm:items-end w-full sm:w-auto">
-        {/* Financial summary - Adjusted for mobile stacking */}
-        <div className="flex flex-col gap-1 mb-3 w-full sm:grid sm:grid-cols-3 sm:gap-x-2 sm:gap-y-1 sm:mb-2">
-          <div className="flex flex-row justify-between items-baseline w-full sm:flex-col sm:items-start">
-            <span className="text-xs text-gray-500 dark:text-gray-400">Paid</span>
-            <span className="text-sm font-medium text-gray-900 dark:text-white">
+      {/* Right side - Financial summary and actions */}
+      <div className="flex items-center gap-4">
+        {/* Financial summary - Horizontal layout */}
+        <div className="hidden sm:flex items-center gap-6">
+          <div className="text-right">
+            <div className="text-xs text-gray-500 dark:text-gray-400 uppercase">Investment</div>
+            <div className="text-base font-medium text-gray-900 dark:text-white">
               {formatUserCurrency ? formatUserCurrency(totalInvestment, originalCurrencyCode) : `$${parseFloat(totalInvestment || 0).toFixed(2)}`}
-            </span>
+            </div>
           </div>
-          <div className="flex flex-row justify-between items-baseline w-full sm:flex-col sm:items-start">
-            <span className="text-xs text-gray-500 dark:text-gray-400">Sale</span>
-            <span className="text-sm font-medium text-gray-900 dark:text-white">
+          <div className="text-right">
+            <div className="text-xs text-gray-500 dark:text-gray-400 uppercase">Sold for</div>
+            <div className="text-base font-medium text-gray-900 dark:text-white">
               {formatUserCurrency ? formatUserCurrency(totalSale, originalCurrencyCode) : `$${parseFloat(totalSale || 0).toFixed(2)}`}
-            </span>
+            </div>
           </div>
-          <div className="flex flex-row justify-between items-baseline w-full sm:flex-col sm:items-start">
-            <span className="text-xs text-gray-500 dark:text-gray-400">Profit</span>
-            <span className={`text-sm font-medium ${totalProfit >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+          <div className="text-right">
+            <div className="text-xs text-gray-500 dark:text-gray-400 uppercase">Profit</div>
+            <div className={`text-base font-medium ${totalProfit >= 0 ? 'text-green-500' : 'text-red-500'}`}>
               {formatUserCurrency ? formatUserCurrency(totalProfit, originalCurrencyCode) : `${totalProfit >= 0 ? '' : '-'}$${Math.abs(parseFloat(totalProfit || 0)).toFixed(2)}`}
-            </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile financial summary */}
+        <div className="flex sm:hidden text-right">
+          <div>
+            <div className="text-xs text-gray-500 dark:text-gray-400 uppercase">Profit</div>
+            <div className={`text-base font-medium ${totalProfit >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+              {formatUserCurrency ? formatUserCurrency(totalProfit, originalCurrencyCode) : `${totalProfit >= 0 ? '' : '-'}$${Math.abs(parseFloat(totalProfit || 0)).toFixed(2)}`}
+            </div>
           </div>
         </div>
         
-        {/* Actions - Adjusted for mobile layout */}
-        <div className="flex justify-between items-center w-full mt-1 sm:mt-0 sm:justify-end sm:gap-2 sm:w-auto">
-          <div className="flex gap-2"> {/* Group PDF and Delete buttons */}
+        {/* Action buttons */}
+        {(onPrint || onDelete) && (
+          <div className="flex items-center gap-1 border-l border-gray-200 dark:border-gray-700 pl-4">
             {onPrint && (
               <Button 
                 variant="text" 
                 size="sm" 
-                iconLeft={<CleanIcon name="print" size="sm" />}
+                iconLeft={<CleanIcon name="picture_as_pdf" size="sm" />}
                 onClick={(e) => {
                   e.stopPropagation();
                   onPrint();
                 }}
-                className="!p-1"
-              >
-                PDF
-              </Button>
+                className="!p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                title="Download PDF"
+              />
             )}
             
             {onDelete && (
               <Button 
                 variant="text" 
                 size="sm" 
-                iconLeft={<CleanIcon name="delete" size="sm" />}
+                iconLeft={<CleanIcon name="delete_outline" size="sm" />}
                 onClick={(e) => {
                   e.stopPropagation();
                   onDelete();
                 }}
-                className="!p-1 text-red-500 hover:text-red-600"
+                className="!p-2 text-gray-600 dark:text-gray-400 hover:text-red-500"
                 title="Delete receipt"
               />
             )}
-          </div> {/* End of PDF/Delete button group */}
-          
-          <CleanIcon 
-            name={isExpanded ? "expand_less" : "expand_more"} 
-            size="sm"
-            className="text-gray-400 cursor-pointer" // Ensure cursor pointer is here too for clickability
-          />
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );

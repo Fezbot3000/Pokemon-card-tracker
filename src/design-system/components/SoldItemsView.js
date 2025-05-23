@@ -262,7 +262,7 @@ const SoldItemsView = ({
                   className="w-full flex flex-col"
                   onClick={() => toggleYear(year)}
                 >
-                  <div className="flex items-center justify-between p-4 bg-white dark:bg-[#1B2131] rounded-t-md border border-gray-200 dark:border-[#ffffff1a]">
+                  <div className="flex items-center justify-between p-4 bg-white dark:bg-black rounded-t-md border border-gray-200 dark:border-[#ffffff1a]">
                     <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
                       {year} Financial Year
                     </h2>
@@ -273,7 +273,7 @@ const SoldItemsView = ({
                   </div>
 
                   {/* Year Summary */}
-                  <div className="grid grid-cols-3 w-full bg-white dark:bg-[#1B2131] rounded-b-md border-x border-b border-gray-200 dark:border-[#ffffff1a]">
+                  <div className="grid grid-cols-3 w-full bg-white dark:bg-black rounded-b-md border-x border-b border-gray-200 dark:border-[#ffffff1a]">
                     {/* Investment */}
                     <div className="py-4 px-4 flex flex-col items-center">
                       <span className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 uppercase mb-1">Investment</span>
@@ -308,7 +308,7 @@ const SoldItemsView = ({
                         return (
                           <div 
                             key={invoice.id || Math.random().toString(36).substring(2, 15)} 
-                            className="bg-white dark:bg-[#1B2131] rounded-md border border-gray-200 dark:border-[#ffffff1a] overflow-hidden"
+                            className="bg-white dark:bg-black rounded-md border border-gray-200 dark:border-[#ffffff1a] overflow-hidden"
                           >
                             {/* Invoice Header */}
                             <InvoiceHeader

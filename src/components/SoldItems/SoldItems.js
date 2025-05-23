@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import ReactDOM from 'react-dom';
-import { useTheme, SoldItemsView } from '../../design-system'; 
+import { useTheme, SoldItemsView, Icon, StatisticsSummary } from '../../design-system'; 
 import { formatCondensed } from '../../utils/formatters';
 import db from '../../services/firestore/dbAdapter';
 import { PDFDownloadLink } from '@react-pdf/renderer';
 import InvoicePDF from '../InvoicePDF';
-import { StatisticsSummary } from '../../design-system';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../../design-system';
 import { collection, getDocs } from 'firebase/firestore';
@@ -57,9 +56,20 @@ const SoldItems = () => {
     // Get the currency symbol
     const currency = availableCurrencies.find(c => c.code === currencyCode) || { symbol: '$' };
     
-    // Format with 2 decimal places
-    return `${currency.symbol}${parseFloat(amount).toFixed(2)}`;
+    // Check if the amount is negative
+    const isNegative = amount < 0;
+    const absoluteAmount = Math.abs(amount);
+    
+    // Format with proper thousand separators and 2 decimal places
+    const formattedAmount = absoluteAmount.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+    
+    // Return with proper negative sign placement
+    return isNegative ? `-${currency.symbol}${formattedAmount}` : `${currency.symbol}${formattedAmount}`;
   };
+
   const [soldCards, setSoldCards] = useState([]);
   const [sortField, setSortField] = useState('dateSold');
   const [sortDirection, setSortDirection] = useState('desc');
@@ -434,6 +444,7 @@ const SoldItems = () => {
     
     sortedInvoices.forEach(invoice => {
       const year = getFinancialYear(invoice.dateSold);
+      
       if (!invoicesByYear[year]) {
         invoicesByYear[year] = [];
       }
@@ -458,8 +469,10 @@ const SoldItems = () => {
       if (!buyerGroups[buyerKey]) {
         buyerGroups[buyerKey] = {
           cards: [],
-          investment: 0,
-          soldFor: 0
+          totalInvestment: 0,
+          totalSale: 0,
+          totalProfit: 0,
+          date: card.dateSold || card.soldDate || new Date().toISOString()
         };
       }
       
@@ -476,8 +489,18 @@ const SoldItems = () => {
       
       // Add to buyer group
       buyerGroups[buyerKey].cards.push(card);
-      buyerGroups[buyerKey].investment += investment;
-      buyerGroups[buyerKey].soldFor += soldPrice;
+      buyerGroups[buyerKey].totalInvestment += investment;
+      buyerGroups[buyerKey].totalSale += soldPrice;
+      buyerGroups[buyerKey].totalProfit += (soldPrice - investment);
+      
+      // Update date to the most recent sale date
+      if (card.dateSold || card.soldDate) {
+        const cardDate = new Date(card.dateSold || card.soldDate);
+        const groupDate = new Date(buyerGroups[buyerKey].date);
+        if (cardDate > groupDate) {
+          buyerGroups[buyerKey].date = card.dateSold || card.soldDate;
+        }
+      }
     });
     
     return buyerGroups;
@@ -485,8 +508,43 @@ const SoldItems = () => {
   
   // Calculate statistics from sold cards using utility function
   const statistics = useMemo(() => {
-    return calculateSoldCardStatistics(soldCards, invoiceTotals, convertToUserCurrency);
+    const stats = calculateSoldCardStatistics(soldCards, invoiceTotals, convertToUserCurrency);
+    // Fix invoice count to show actual number of unique buyers
+    return {
+      ...stats,
+      invoiceCount: Object.keys(invoiceTotals).length
+    };
   }, [soldCards, invoiceTotals, convertToUserCurrency]);
+
+  // Format statistics for StatisticsSummary component
+  const formattedStatistics = useMemo(() => {
+    return [
+      {
+        label: 'INVESTMENT TOTAL',
+        value: statistics.totalInvestment,
+        isMonetary: true,
+        originalCurrencyCode: preferredCurrency.code
+      },
+      {
+        label: 'SOLD FOR',
+        value: statistics.totalSoldFor,
+        isMonetary: true,
+        originalCurrencyCode: preferredCurrency.code
+      },
+      {
+        label: 'PROFIT',
+        value: statistics.totalProfit,
+        isMonetary: true,
+        isProfit: true,
+        originalCurrencyCode: preferredCurrency.code
+      },
+      {
+        label: 'SOLD INVOICES',
+        value: statistics.invoiceCount,
+        isMonetary: false
+      }
+    ];
+  }, [statistics, preferredCurrency.code]);
 
   const handleSortChange = (field) => {
     if (field === sortField) {
@@ -497,19 +555,6 @@ const SoldItems = () => {
     }
   };
   
-  // Toggle buyer accordion
-  const toggleBuyerAccordion = (buyerId) => {
-    setExpandedBuyers(prev => {
-      const newExpanded = new Set(prev);
-      if (newExpanded.has(buyerId)) {
-        newExpanded.delete(buyerId);
-      } else {
-        newExpanded.add(buyerId);
-      }
-      return newExpanded;
-    });
-  };
-
   // Group and sort invoices by financial year
   const groupedInvoicesByYear = useMemo(() => {
     const groups = {};
@@ -872,6 +917,15 @@ const SoldItems = () => {
     });
   };
 
+  const formatDateSafely = (dateStr) => {
+    try {
+      return formatDate(dateStr);
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'Invalid date';
+    }
+  };
+
   // Get card image URL function for SoldItemsView
   const getCardImageUrl = (card) => {
     try {
@@ -906,7 +960,7 @@ const SoldItems = () => {
         document={
           <InvoicePDF 
             buyer={invoice.buyer} 
-            date={formatDate(invoice.dateSold)}
+            date={formatDateSafely(invoice.dateSold)}
             cards={invoice.cards} 
             invoiceId={invoice.id}
             profile={profile}
@@ -1072,109 +1126,99 @@ const SoldItems = () => {
     <div className="pt-16 sm:pt-20 w-full px-2 sm:px-4">
       {soldCards.length > 0 ? (
         <div className="space-y-6">
-          {/* Simplified summary with hardcoded values from invoice headers */}
-          {/* Custom summary directly in the DOM to bypass StatisticsSummary component */}
-          <div className="w-full bg-white dark:bg-[#1B2131] rounded-md overflow-hidden border border-[#ffffff33] dark:border-[#ffffff1a] mb-3 sm:mb-4">
-            <div className="rounded-md p-3 sm:p-6">
-              <div className="grid grid-cols-2 sm:grid-cols-4">
-                {/* Investment Total */}
-                <div className="flex flex-col items-center justify-center p-3 py-4 sm:p-4 sm:py-6 border-none">
-                  <div className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 sm:mb-2 uppercase">Investment Total</div>
-                  <div className="font-medium flex items-center gap-1 whitespace-nowrap max-w-full text-gray-900 dark:text-white"
-                    style={{ fontSize: 'clamp(1rem, calc(0.8rem + 1.5vw), 1.75rem)', wordBreak: 'break-word', textOverflow: 'clip' }}>
-                    {formatUserCurrency(statistics.totalInvestment, preferredCurrency.code)}
-                  </div>
-                </div>
-                
-                {/* Sold For */}
-                <div className="flex flex-col items-center justify-center p-3 py-4 sm:p-4 sm:py-6 border-none">
-                  <div className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 sm:mb-2 uppercase">Sold For</div>
-                  <div className="font-medium flex items-center gap-1 whitespace-nowrap max-w-full text-gray-900 dark:text-white"
-                    style={{ fontSize: 'clamp(1rem, calc(0.8rem + 1.5vw), 1.75rem)', wordBreak: 'break-word', textOverflow: 'clip' }}>
-                    {formatUserCurrency(statistics.totalSoldFor, preferredCurrency.code)}
-                  </div>
-                </div>
-                
-                {/* Profit */}
-                <div className="flex flex-col items-center justify-center p-3 py-4 sm:p-4 sm:py-6 border-none">
-                  <div className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 sm:mb-2 uppercase">Profit</div>
-                  <div className={`font-medium flex items-center gap-1 whitespace-nowrap max-w-full ${statistics.totalProfit >= 0 ? 'text-green-500' : 'text-red-500'}`}
-                    style={{ fontSize: 'clamp(1rem, calc(0.8rem + 1.5vw), 1.75rem)', wordBreak: 'break-word', textOverflow: 'clip' }}>
-                    {formatUserCurrency(statistics.totalProfit, preferredCurrency.code)}
-                  </div>
-                </div>
-                
-                {/* Sold Invoices */}
-                <div className="flex flex-col items-center justify-center p-3 py-4 sm:p-4 sm:py-6 border-none">
-                  <div className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 sm:mb-2 uppercase">Sold Invoices</div>
-                  <div className="font-medium flex items-center gap-1 whitespace-nowrap max-w-full text-gray-900 dark:text-white"
-                    style={{ fontSize: 'clamp(1rem, calc(0.8rem + 1.5vw), 1.75rem)', wordBreak: 'break-word', textOverflow: 'clip' }}>
-                    <span className="text-gray-500 dark:text-gray-400">
-                      <span className="material-icons" style={{ fontSize: '1.25rem' }}>receipt</span>
-                    </span>
-                    {statistics.invoiceCount}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          {/* Group cards by buyer */}
-          <div className="mt-4 space-y-6">
-            {Object.entries(invoiceTotals).map(([buyer, invoice]) => (
-              <div key={buyer} className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
-                {/* Invoice header - clickable accordion */}
-                <div 
-                  className="p-4 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600 cursor-pointer"
-                  onClick={() => toggleBuyerAccordion(buyer)}
-                >
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center">
-                      <span className="material-icons mr-2">
-                        {expandedBuyers.has(buyer) ? 'expand_more' : 'chevron_right'}
-                      </span>
-                      <div>
-                        <h3 className="text-lg font-medium">Sold to: {buyer}</h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">Date: {formatDate(invoice.cards[0]?.dateSold || invoice.cards[0]?.soldDate)}</p>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">Cards: {invoice.cards.length}</p>
+          {/* Summary Statistics */}
+          <StatisticsSummary statistics={formattedStatistics} />
+          {/* Invoices */}
+          {Object.entries(invoiceTotals).map(([buyer, invoice]) => (
+            <div key={buyer} className="bg-white dark:bg-black rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+              {/* Invoice header - clickable accordion */}
+              <div 
+                className="p-4 bg-gray-50 dark:bg-gray-900 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                onClick={() => setExpandedBuyers(prev => {
+                  const newSet = new Set(prev);
+                  if (newSet.has(buyer)) {
+                    newSet.delete(buyer);
+                  } else {
+                    newSet.add(buyer);
+                  }
+                  return newSet;
+                })}
+              >
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-3">
+                    <Icon 
+                      name={expandedBuyers.has(buyer) ? "expand_less" : "expand_more"} 
+                      className="text-gray-400 dark:text-gray-500"
+                    />
+                    <div>
+                      <h3 className="text-base font-semibold text-gray-900 dark:text-white">
+                        Sold to: {buyer}
+                      </h3>
+                      <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400 mt-1">
+                        <span>Date: {formatDateSafely(invoice.date)}</span>
+                        <span>Cards: {invoice.cards.length}</span>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="font-medium">Investment: {formatUserCurrency(invoice.investment, preferredCurrency.code)}</p>
-                      <p className="font-medium">Sold for: {formatUserCurrency(invoice.soldFor, preferredCurrency.code)}</p>
-                      <p className={`font-bold ${invoice.soldFor - invoice.investment >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        Profit: {formatUserCurrency(invoice.soldFor - invoice.investment, preferredCurrency.code)}
-                      </p>
-                    </div>
                   </div>
-                </div>
-                
-                {/* Card list - only shown when expanded */}
-                {expandedBuyers.has(buyer) && (
-                  <div className="divide-y divide-gray-200 dark:divide-gray-600">
-                    {invoice.cards.map((card, index) => (
-                      <div key={card.id || card.slabSerial || index} className="p-4">
-                        <div className="flex justify-between items-center">
-                          <div>
-                            <h4 className="font-medium">{card.name || card.card || card.cardName || 'Unnamed Card'}</h4>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">{card.set || card.setName || 'Unknown Set'}</p>
-                            {card.grade && <p className="text-sm text-gray-600 dark:text-gray-400">Grade: {card.grade}</p>}
-                          </div>
-                          <div className="text-right">
-                            <p className="text-sm">Investment: {formatUserCurrency(convertToUserCurrency(parseFloat(card.originalInvestmentAmount || card.investmentAUD || card.investment || 0), card.originalInvestmentCurrency || 'AUD'), preferredCurrency.code)}</p>
-                            <p className="text-sm">Sold for: {formatUserCurrency(convertToUserCurrency(parseFloat(card.soldPrice || card.soldAmount || card.finalValueAUD || card.currentValueAUD || 0), card.originalCurrentValueCurrency || 'AUD'), preferredCurrency.code)}</p>
-                            <p className={`text-sm font-medium ${(convertToUserCurrency(parseFloat(card.soldPrice || card.soldAmount || card.finalValueAUD || card.currentValueAUD || 0), card.originalCurrentValueCurrency || 'AUD') - convertToUserCurrency(parseFloat(card.originalInvestmentAmount || card.investmentAUD || card.investment || 0), card.originalInvestmentCurrency || 'AUD')) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                              Profit: {formatUserCurrency((convertToUserCurrency(parseFloat(card.soldPrice || card.soldAmount || card.finalValueAUD || card.currentValueAUD || 0), card.originalCurrentValueCurrency || 'AUD') - convertToUserCurrency(parseFloat(card.originalInvestmentAmount || card.investmentAUD || card.investment || 0), card.originalInvestmentCurrency || 'AUD')), preferredCurrency.code)}
-                            </p>
-                          </div>
+                  <div className="flex items-center gap-6">
+                    {/* Financial summary - Desktop */}
+                    <div className="hidden sm:flex items-center gap-6">
+                      <div className="text-right">
+                        <div className="text-xs text-gray-500 dark:text-gray-400 uppercase">Investment</div>
+                        <div className="text-base font-medium text-gray-900 dark:text-white">
+                          {formatUserCurrency(invoice.totalInvestment, preferredCurrency.code)}
                         </div>
                       </div>
-                    ))}
+                      <div className="text-right">
+                        <div className="text-xs text-gray-500 dark:text-gray-400 uppercase">Sold for</div>
+                        <div className="text-base font-medium text-gray-900 dark:text-white">
+                          {formatUserCurrency(invoice.totalSale, preferredCurrency.code)}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-xs text-gray-500 dark:text-gray-400 uppercase">Profit</div>
+                        <div className={`text-base font-medium ${invoice.totalProfit >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                          {formatUserCurrency(invoice.totalProfit, preferredCurrency.code)}
+                        </div>
+                      </div>
+                    </div>
+                    {/* Mobile - show only profit */}
+                    <div className="flex sm:hidden text-right">
+                      <div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400 uppercase">Profit</div>
+                        <div className={`text-base font-medium ${invoice.totalProfit >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                          {formatUserCurrency(invoice.totalProfit, preferredCurrency.code)}
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                )}
+                </div>
               </div>
-            ))}
-          </div>
+              {/* Card list - only shown when expanded */}
+              {expandedBuyers.has(buyer) && (
+                <div className="divide-y divide-gray-200 dark:divide-gray-700">
+                  {invoice.cards.map((card, index) => (
+                    <div key={card.id || card.slabSerial || index} className="p-4">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <h4 className="font-medium">{card.name || card.card || card.cardName || 'Unnamed Card'}</h4>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">{card.set || card.setName || 'Unknown Set'}</p>
+                          {card.grade && <p className="text-sm text-gray-600 dark:text-gray-400">Grade: {card.grade}</p>}
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm">Investment: {formatUserCurrency(convertToUserCurrency(parseFloat(card.originalInvestmentAmount || card.investmentAUD || card.investment || 0), card.originalInvestmentCurrency || 'AUD'), preferredCurrency.code)}</p>
+                          <p className="text-sm">Sold for: {formatUserCurrency(convertToUserCurrency(parseFloat(card.soldPrice || card.soldAmount || card.finalValueAUD || card.currentValueAUD || 0), card.originalCurrentValueCurrency || 'AUD'), preferredCurrency.code)}</p>
+                          <p className={`text-sm font-medium ${(convertToUserCurrency(parseFloat(card.soldPrice || card.soldAmount || card.finalValueAUD || card.currentValueAUD || 0), card.originalCurrentValueCurrency || 'AUD') - convertToUserCurrency(parseFloat(card.originalInvestmentAmount || card.investmentAUD || card.investment || 0), card.originalInvestmentCurrency || 'AUD')) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            {formatUserCurrency((convertToUserCurrency(parseFloat(card.soldPrice || card.soldAmount || card.finalValueAUD || card.currentValueAUD || 0), card.originalCurrentValueCurrency || 'AUD') - convertToUserCurrency(parseFloat(card.originalInvestmentAmount || card.investmentAUD || card.investment || 0), card.originalInvestmentCurrency || 'AUD')), preferredCurrency.code)}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
         </div>
       ) : (
         <div className="text-center py-8 sm:py-12">

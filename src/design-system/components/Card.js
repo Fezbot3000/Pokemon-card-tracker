@@ -24,9 +24,11 @@ const Card = ({
   investmentAUD = 0, 
   currentValueAUD = 0, 
   formatUserCurrency, 
-  // preferredCurrency, // Potentially unused if formatUserCurrency handles all logic
-  // originalCurrencyCode, // Potentially unused if card object's specific currencies are used
-  ...props
+  // Destructure these props to prevent them from being spread to the div
+  preferredCurrency,
+  originalInvestmentCurrency,
+  originalCurrentValueCurrency,
+  // Don't spread remaining props to avoid passing invalid DOM attributes
 }) => {
   // Get theme information
   const { isDarkMode } = useTheme();
@@ -53,7 +55,6 @@ const Card = ({
                     ${isSelected ? 'border-2 border-purple-500' : 'border border-[#ffffff33] dark:border-[#ffffff1a]'}
                     ${className}`}
         onClick={onClick}
-        {...props}
       >
         {/* Listed badge */}
         {card.isListed && (
@@ -119,7 +120,6 @@ const Card = ({
           : 'border border-[#ffffff33] dark:border-[#ffffff1a]'
       } rounded-md ${className}`}
       onClick={onClick}
-      {...props}
     >
       {/* Selection checkbox (only shown when onSelect is provided) */}
       {onSelect && (
