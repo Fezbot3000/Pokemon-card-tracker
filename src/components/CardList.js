@@ -115,8 +115,16 @@ const CardList = ({
   const filteredCards = useMemo(() => {
     if (!cards || cards.length === 0) return [];
     
-    // Apply filter
+    // First filter by collection
     let filtered = cards;
+    if (selectedCollection && selectedCollection !== 'All Cards') {
+      filtered = filtered.filter(card => 
+        card.collection === selectedCollection || 
+        card.collectionId === selectedCollection
+      );
+    }
+    
+    // Then apply search filter
     if (filter) {
       const lowerFilter = filter.toLowerCase();
       filtered = filtered.filter(card => 
@@ -205,7 +213,7 @@ const CardList = ({
     });
     // Ensure uniqueness by combining slabSerial and collection as fallback key
     return filtered.map((card, idx) => ({ ...card, _uniqueKey: `${card.slabSerial || 'unknown'}-${card.collection || 'none'}-${idx}` }));
-  }, [cards, filter, sortField, sortDirection]);
+  }, [cards, filter, sortField, sortDirection, selectedCollection]);
 
   // Use card selection hook with filtered cards
   const { 

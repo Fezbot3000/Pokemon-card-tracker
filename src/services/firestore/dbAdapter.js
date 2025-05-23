@@ -119,6 +119,10 @@ class DatabaseAdapter {
       // Add timestamp
       cardData.addedAt = new Date().toISOString();
 
+      // Add the collection field to the card data
+      cardData.collection = targetCollection;
+      cardData.collectionId = targetCollection;
+
       // Handle image upload if provided
       if (imageFile) {
         try {
