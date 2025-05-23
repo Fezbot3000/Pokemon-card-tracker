@@ -7,7 +7,7 @@
 
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { getAuth } from 'firebase/auth';
-import db from './db';
+import db from './firestore/dbAdapter';
 import logger from '../utils/logger';
 import PSANotifications from '../components/PSANotifications';
 import { getPokemonSetsByYear, getAllPokemonSets } from '../data/pokemonSets';

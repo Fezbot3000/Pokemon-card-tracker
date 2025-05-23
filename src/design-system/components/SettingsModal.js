@@ -13,7 +13,7 @@ import { useBackup } from '../contexts/BackupContext';
 import { ref, uploadBytes, getDownloadURL, listAll, deleteObject } from 'firebase/storage';
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import JSZip from 'jszip';
-import db from '../../services/db';
+import db from '../../services/firestore/dbAdapter';
 import cloudSync from '../../services/cloudSync';
 import featureFlags, { updateFeatureFlag, resetFeatureFlags, getAllFeatureFlags } from '../../utils/featureFlags';
 import logger from '../../utils/logger';
@@ -21,6 +21,7 @@ import shadowSync from '../../services/shadowSync'; // Import the shadowSync ser
 import { CardRepository } from '../../repositories/CardRepository'; // Import CardRepository
 import { searchByCertNumber, parsePSACardData } from '../../services/psaSearch';
 import SubscriptionManagement from '../../components/SubscriptionManagement'; // Import the SubscriptionManagement component
+import CollectionManagement from '../../components/settings/CollectionManagement'; // Import CollectionManagement
 import { useUserPreferences, availableCurrencies } from '../../contexts/UserPreferencesContext'; // Added import
 import SelectField from '../atoms/SelectField'; // Added import
 
@@ -89,6 +90,7 @@ const SettingsModal = ({
   const [isUploadingImages, setIsUploadingImages] = useState(false); // Add state for image upload
   const [activeTab, setActiveTab] = useState('general');
   const [collectionToDelete, setCollectionToDelete] = useState('');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [profile, setProfile] = useState({
     firstName: '',
     lastName: '',
@@ -98,7 +100,7 @@ const SettingsModal = ({
   });
   const [collectionToRename, setCollectionToRename] = useState('');
   const [showResetConfirm, setShowResetConfirm] = useState(false);
-const [resetConfirmText, setResetConfirmText] = useState('');
+  const [resetConfirmText, setResetConfirmText] = useState('');
   const [isVerifyingBackup, setIsVerifyingBackup] = useState(false); // Add state for cloud backup verification
   const [verificationStatus, setVerificationStatus] = useState('Idle'); // Add state for verification status
   const [isCreatingPortalSession, setIsCreatingPortalSession] = useState(false);
@@ -981,8 +983,7 @@ const [resetConfirmText, setResetConfirmText] = useState('');
                           variant="danger"
                           onClick={() => {
                             if (collectionToDelete) {
-                              onDeleteCollection(collectionToDelete);
-                              setCollectionToDelete('');
+                              setShowDeleteConfirm(true);
                             }
                           }}
                           disabled={!collectionToDelete}
@@ -1122,6 +1123,26 @@ const [resetConfirmText, setResetConfirmText] = useState('');
         </div>
       </Modal>
 
+      {/* Delete Collection Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={showDeleteConfirm}
+        onClose={() => {
+          setShowDeleteConfirm(false);
+        }}
+        onConfirm={() => {
+          if (collectionToDelete && onDeleteCollection) {
+            onDeleteCollection(collectionToDelete);
+            setCollectionToDelete('');
+            setShowDeleteConfirm(false);
+          }
+        }}
+        title="Delete Collection"
+        message={`Are you sure you want to delete the collection "${collectionToDelete}"? All cards in this collection will be permanently removed.`}
+        confirmButtonProps={{
+          variant: 'danger'
+        }}
+      />
+      
       {/* Enhanced ConfirmDialog for Reset All Data with detailed information */}
       <ConfirmDialog
         isOpen={showResetConfirm}

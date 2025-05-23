@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useAuth } from './AuthContext';
 import CardRepository from '../repositories/CardRepository';
-import db from '../services/db';
+import db from '../services/firestore/dbAdapter';
 
 const CardContext = createContext();
 

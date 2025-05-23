@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../design-system';
 import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
-import db from '../../services/db';
+import db from '../../services/firestore/dbAdapter';
 import FormField from '../../design-system/molecules/FormField';
 
 /**

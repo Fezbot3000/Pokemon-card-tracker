@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Firestore Migration Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #fff;
+        }
+        .test-result {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .success {
+            background: #2d4a2d;
+            border: 1px solid #4a7c4a;
+        }
+        .error {
+            background: #4a2d2d;
+            border: 1px solid #7c4a4a;
+        }
+        .info {
+            background: #2d3a4a;
+            border: 1px solid #4a5a7c;
+        }
+        button {
+            background: #4a7c4a;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #5a8c5a;
+        }
+    </style>
+</head>
+<body>
+    <h1>Firestore Migration Test</h1>
+    <p>This page tests the new Firestore service to ensure the migration is working correctly.</p>
+    
+    <div>
+        <button onclick="testBasicOperations()">Test Basic Operations</button>
+        <button onclick="testCollections()">Test Collections</button>
+        <button onclick="testSoldItems()">Test Sold Items</button>
+        <button onclick="clearResults()">Clear Results</button>
+    </div>
+    
+    <div id="results"></div>
+
+    <script type="module">
+        import firestoreService from '/src/services/firestore/firestoreService.js';
+        import dbAdapter from '/src/services/firestore/dbAdapter.js';
+        
+        window.firestoreService = firestoreService;
+        window.dbAdapter = dbAdapter;
+        
+        function log(message, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.textContent = `${new Date().toLocaleTimeString()} - ${message}`;
+            results.appendChild(div);
+        }
+        
+        window.log = log;
+        
+        window.testBasicOperations = async function() {
+            try {
+                log('Starting basic operations test...');
+                
+                // Test 1: Check user
+                const userId = firestoreService.getCurrentUserId();
+                if (userId) {
+                    log(`✓ User logged in: ${userId}`, 'success');
+                } else {
+                    log('✗ No user logged in', 'error');
+                    return;
+                }
+                
+                // Test 2: Get profile
+                const profile = await dbAdapter.getProfile();
+                log(`✓ Profile retrieved: ${profile ? 'Found' : 'Not found'}`, 'success');
+                
+                // Test 3: Get collections using adapter
+                const collections = await dbAdapter.getCollections();
+                log(`✓ Collections retrieved via adapter: ${Object.keys(collections).length} collections`, 'success');
+                
+                log('Basic operations test completed!', 'success');
+                
+            } catch (error) {
+                log(`Error: ${error.message}`, 'error');
+                console.error(error);
+            }
+        };
+        
+        window.testCollections = async function() {
+            try {
+                log('Starting collections test...');
+                
+                const testCollection = 'test-migration-' + Date.now();
+                const testCards = [
+                    { id: '1', name: 'Pikachu', set: 'Base Set' },
+                    { id: '2', name: 'Charizard', set: 'Base Set' }
+                ];
+                
+                // Save collection
+                await dbAdapter.saveCollection(testCollection, testCards);
+                log(`✓ Saved test collection: ${testCollection}`, 'success');
+                
+                // Get cards
+                const cards = await dbAdapter.getCards(testCollection);
+                log(`✓ Retrieved ${cards.length} cards from collection`, 'success');
+                
+                // Delete collection
+                await dbAdapter.deleteCollection(testCollection);
+                log(`✓ Deleted test collection`, 'success');
+                
+                log('Collections test completed!', 'success');
+                
+            } catch (error) {
+                log(`Error: ${error.message}`, 'error');
+                console.error(error);
+            }
+        };
+        
+        window.testSoldItems = async function() {
+            try {
+                log('Starting sold items test...');
+                
+                // Get sold items
+                const soldItems = await dbAdapter.getSoldCards();
+                log(`✓ Retrieved sold items: ${soldItems.data?.length || 0} items`, 'success');
+                
+                log('Sold items test completed!', 'success');
+                
+            } catch (error) {
+                log(`Error: ${error.message}`, 'error');
+                console.error(error);
+            }
+        };
+        
+        window.clearResults = function() {
+            document.getElementById('results').innerHTML = '';
+        };
+        
+        // Initial message
+        log('Test page loaded. Click a button to start testing.');
+    </script>
+</body>
+</html>

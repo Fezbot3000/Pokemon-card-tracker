@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, memo } from 'react';
 import PropTypes from 'prop-types'; 
-import db from '../services/db';
+import db from '../services/firestore/dbAdapter';
 import cardRepo from '../services/cardRepo';
 import { useTheme } from '../design-system';
 import { toast } from 'react-hot-toast';
@@ -33,6 +33,7 @@ const CardDetails = memo(({
   const [cardImage, setCardImage] = useState(null);
   const [imageLoadingState, setImageLoadingState] = useState('loading');
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [isPsaLoading, setIsPsaLoading] = useState(false);
   const { isDarkMode } = useTheme();
   const messageTimeoutRef = useRef(null);
 
@@ -581,6 +582,7 @@ const CardDetails = memo(({
       onImageChange={handleImageChange}
       onImageRetry={loadCardImage}
       className="fade-in"
+      isPsaLoading={isPsaLoading}
       additionalHeaderContent={
         <PSALookupButton 
           currentCardData={editedCard}
@@ -604,6 +606,7 @@ const CardDetails = memo(({
             setHasUnsavedChanges(true);
             toast.success("Card details updated from PSA data");
           }}
+          onLoadingChange={setIsPsaLoading}
           buttonText="Lookup PSA Data"
         />
       }
@@ -630,6 +633,7 @@ const CardDetails = memo(({
             setHasUnsavedChanges(true);
             toast.success("Card details updated from PSA data");
           }}
+          onLoadingChange={setIsPsaLoading}
           iconOnly={true}
         />
       }

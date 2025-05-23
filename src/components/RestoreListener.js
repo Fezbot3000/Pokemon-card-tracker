@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { useRestore } from '../design-system/contexts/RestoreContext';
 import { useBackup } from '../design-system/contexts/BackupContext';
-import db from '../services/db';
+import db from '../services/firestore/dbAdapter';
 import logger from '../utils/logger';
 
 /**

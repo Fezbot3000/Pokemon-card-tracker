@@ -18,7 +18,7 @@ import {
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, deleteObject, listAll } from 'firebase/storage';
 import { db as firestoreDb, storage } from '../services/firebase';
-import db from '../services/db';
+import db from '../services/firestore/dbAdapter';
 
 class CardRepository {
   constructor(userId) {
@@ -160,50 +160,51 @@ class CardRepository {
 
   async deleteCollection(collectionId) {
     try {
-      // First, get all cards in this collection
-      const cardsQuery = query(this.cardsRef, where('collectionId', '==', collectionId));
-      const querySnapshot = await getDocs(cardsQuery);
+      console.log(`CardRepository: Deleting collection ${collectionId}`);
       
-      // If there are cards, delete them and their images
-      if (!querySnapshot.empty) {
-        const cardIds = querySnapshot.docs.map(doc => doc.id);
-        console.log(`Deleting ${cardIds.length} cards from collection ${collectionId}`);
+      // Get all cards in the collection first
+      const cards = await this.getCardsForCollection(collectionId);
+      console.log(`Found ${cards.length} cards to delete in collection ${collectionId}`);
+      
+      // Extract card IDs for image cleanup
+      const cardIds = cards.map(card => card.id || card.slabSerial).filter(Boolean);
+      
+      // Delete all images for these cards from IndexedDB
+      try {
+        const { deleted, failed } = await db.deleteImagesForCards(cardIds);
+        console.log(`Deleted ${deleted} images, ${failed} failed during collection deletion`);
         
-        // Get card data before deleting to ensure we have all information needed for cleanup
-        const cardData = querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
-        
-        // Emit an event that can be captured by components to clean up blob URLs
-        if (typeof window !== 'undefined') {
-          window.dispatchEvent(new CustomEvent('card-images-cleanup', {
-            detail: { cardIds }
+        // Dispatch event to notify components to clean up blob URLs
+        if (cardIds.length > 0) {
+          console.log(`Dispatching card-images-cleanup event for ${cardIds.length} cards`);
+          window.dispatchEvent(new CustomEvent('card-images-cleanup', { 
+            detail: { cardIds } 
           }));
         }
-        
-        // Delete all cards and their images
-        await this.deleteCards(cardIds);
-        
-        // Also ensure images are deleted from IndexedDB
-        // This is important because deleteCards might not properly clean up IndexedDB images
-        for (const cardId of cardIds) {
-          try {
-            await db.deleteImage(cardId);
-            console.log(`Successfully deleted image for card ${cardId} from IndexedDB`);
-          } catch (imageError) {
-            console.warn(`Error deleting image for card ${cardId} from IndexedDB:`, imageError);
-            // Continue with deletion even if individual image deletion fails
-          }
+      } catch (imageError) {
+        console.error('Error cleaning up images during collection deletion:', imageError);
+        // Continue with deletion even if image cleanup fails
+      }
+      
+      // Delete the collection document from Firestore
+      const collectionRef = doc(firestoreDb, 'users', this.userId, 'collections', collectionId);
+      await deleteDoc(collectionRef);
+      
+      // Delete all cards in the collection from Firestore
+      const batch = writeBatch(firestoreDb);
+      for (const card of cards) {
+        if (card.id) {
+          const cardRef = doc(this.cardsRef, card.id);
+          batch.delete(cardRef);
         }
       }
       
-      // Finally, delete the collection itself
-      const collectionRef = doc(this.collectionsRef, collectionId);
-      await deleteDoc(collectionRef);
+      // Commit the batch delete operation
+      if (cards.length > 0) {
+        await batch.commit();
+      }
       
-      console.log(`Collection ${collectionId} deleted successfully with all associated data`);
-      return true;
+      console.log(`Successfully deleted collection ${collectionId} and all its cards`);
     } catch (error) {
       console.error(`Error deleting collection ${collectionId}:`, error);
       throw error;
@@ -1608,14 +1609,14 @@ class CardRepository {
       }
       
       // Delete the collection document from Firestore
-      const collectionRef = doc(this.db, 'collections', collectionId);
+      const collectionRef = doc(firestoreDb, 'users', this.userId, 'collections', collectionId);
       await deleteDoc(collectionRef);
       
       // Delete all cards in the collection from Firestore
-      const batch = writeBatch(this.db);
+      const batch = writeBatch(firestoreDb);
       for (const card of cards) {
         if (card.id) {
-          const cardRef = doc(this.db, 'cards', card.id);
+          const cardRef = doc(this.cardsRef, card.id);
           batch.delete(cardRef);
         }
       }

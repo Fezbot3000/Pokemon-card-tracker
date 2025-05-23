@@ -33,7 +33,7 @@ import Login from './components/Login';
 import ForgotPassword from './components/ForgotPassword';
 import Pricing from './components/Pricing';
 import useCardData from './hooks/useCardData';
-import db from './services/db';
+import db from './services/firestore/dbAdapter';
 import { TutorialProvider, useTutorial } from './contexts/TutorialContext';
 import { SubscriptionProvider, useSubscription } from './contexts/SubscriptionContext';
 import { UserPreferencesProvider } from './contexts/UserPreferencesContext'; // Added import
@@ -65,6 +65,9 @@ import { dataResetManager } from './utils/dataResetManager'; // Import data rese
 import { useCardModals } from './hooks/useCardModals'; // Import card modals hook
 import { CardRepository } from './repositories/CardRepository';
 import { collectionManager } from './utils/collectionManager'; // Import collection manager
+import MigrationStatus from './components/MigrationStatus'; // Import migration status
+import './utils/migrationDiagnostics'; // Import migration diagnostics
+import './utils/migrationCleanup'; // Import migration cleanup
 
 // Helper function to generate a unique ID for cards without one
 const generateUniqueId = () => {
@@ -951,6 +954,7 @@ function AppContent() {
 
       <TutorialModal />
       <SyncStatusIndicator />
+      <MigrationStatus />
     </div>
   );
 }

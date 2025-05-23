@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import db from '../services/db';
+import db from '../services/firestore/dbAdapter';
 
 // Create a context for invoice data
 const InvoiceContext = createContext();

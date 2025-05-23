@@ -22,6 +22,30 @@ const CollectionManagement = ({
     }
   };
 
+  const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false);
+  const [selectedCollectionToDelete, setSelectedCollectionToDelete] = React.useState('');
+
+  const handleDeleteClick = () => {
+    if (collectionToDelete) {
+      setSelectedCollectionToDelete(collectionToDelete);
+      setShowDeleteConfirm(true);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setShowDeleteConfirm(false);
+    setSelectedCollectionToDelete('');
+  };
+
+  const handleDeleteConfirmAction = () => {
+    if (onDeleteCollection && selectedCollectionToDelete) {
+      onDeleteCollection(selectedCollectionToDelete);
+      setShowDeleteConfirm(false);
+      setSelectedCollectionToDelete('');
+      setCollectionToDelete('');
+    }
+  };
+
   return (
     <>
       <SettingsPanel
@@ -103,7 +127,7 @@ const CollectionManagement = ({
               </select>
               <Button
                 variant="danger"
-                onClick={() => collectionToDelete && setCollectionToDelete(collectionToDelete)}
+                onClick={handleDeleteClick}
                 disabled={!collectionToDelete}
                 iconLeft={<Icon name="delete" />}
                 fullWidth
@@ -117,11 +141,11 @@ const CollectionManagement = ({
 
       {/* Delete Confirmation Dialog */}
       <ConfirmDialog
-        isOpen={!!collectionToDelete}
-        onClose={() => setCollectionToDelete('')}
-        onConfirm={handleDeleteConfirm}
+        isOpen={showDeleteConfirm}
+        onClose={handleDeleteCancel}
+        onConfirm={handleDeleteConfirmAction}
         title="Delete Collection"
-        message={`Are you sure you want to delete the collection "${collectionToDelete}"? All cards in this collection will be permanently removed.`}
+        message={`Are you sure you want to delete the collection "${selectedCollectionToDelete}"? All cards in this collection will be permanently removed.`}
         confirmButtonProps={{
           variant: 'danger'
         }}

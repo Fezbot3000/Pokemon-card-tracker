@@ -1,6 +1,6 @@
 import { getFunctions, httpsCallable, connectFunctionsEmulator } from 'firebase/functions';
 import { getAuth } from 'firebase/auth';
-import db from './db';
+import db from './firestore/dbAdapter';
 import logger from '../utils/logger';
 
 // Subscription cache to avoid too many API calls

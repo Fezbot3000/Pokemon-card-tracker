@@ -23,6 +23,14 @@ service cloud.firestore {
       allow write: if isOwner(userId);
     }
 
+    // General profile subcollection rule to handle any profile document
+    match /users/{userId}/profile/{document=**} {
+      // Allow owner to GET/LIST their own profile data
+      allow get, list: if isOwner(userId);
+      // Allow owner to write
+      allow write: if isOwner(userId);
+    }
+
     // Collections: Only the owner can read/write their collections data.
     match /users/{userId}/collections/{document=**} { 
       // Separate read into get and list

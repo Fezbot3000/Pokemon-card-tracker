@@ -3,7 +3,7 @@ import JSZip from 'jszip';
 import { doc, getDoc } from 'firebase/firestore';
 import { ref, listAll, getDownloadURL } from 'firebase/storage';
 import { db as firestoreDb, storage } from '../services/firebase';
-import db from '../services/db';
+import db from '../services/firestore/dbAdapter';
 import logger from './logger';
 
 /**

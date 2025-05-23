@@ -25,7 +25,7 @@ import CloudSync from './components/CloudSync';
 import TutorialModal from './components/TutorialModal';
 import useCardData from './hooks/useCardData';
 import { processImportedData } from './utils/dataProcessor';
-import db from './services/db';
+import db from './services/firestore/dbAdapter';
 import { useTutorial } from './contexts/TutorialContext';
 import { useSubscription } from './contexts/SubscriptionContext';
 import logger from './utils/logger';

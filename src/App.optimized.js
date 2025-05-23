@@ -25,7 +25,7 @@ import {
 import DesignSystemProvider from './design-system/providers/DesignSystemProvider';
 import useCardData from './hooks/useCardData';
 import { processImportedData } from './utils/dataProcessor';
-import db from './services/db';
+import db from './services/firestore/dbAdapter';
 import { TutorialProvider, useTutorial } from './contexts/TutorialContext';
 import { SubscriptionProvider, useSubscription } from './contexts/SubscriptionContext';
 import { UserPreferencesProvider } from './contexts/UserPreferencesContext';

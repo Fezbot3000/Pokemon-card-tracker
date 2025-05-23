@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import PropTypes from 'prop-types';
 import { toast } from 'react-hot-toast';
-import db from '../../services/db';
+import db from '../../services/firestore/dbAdapter';
 import cardRepo from '../../services/cardRepo';
 import FormField from '../molecules/FormField';
 import FormLabel from '../atoms/FormLabel';
@@ -576,7 +576,7 @@ const CardDetailsForm = ({
   };
 
   return (
-    <form onSubmit={handleSubmit} className={`card-details-form ${className}`}>
+    <form onSubmit={handleSubmit} className={`card-details-form ${className}`} noValidate>
       {!hideCollectionField && (
         <div className="mb-6 mt-12"> 
           <SelectField

@@ -1,7 +1,8 @@
 import { toast } from 'react-hot-toast';
-import db from '../services/db';
-import { CardRepository } from '../repositories/CardRepository';
 import logger from './logger';
+import db from '../services/firestore/dbAdapter';
+import CardRepository from '../repositories/CardRepository';
+import firestoreService from '../services/firestore/firestoreService';
 
 /**
  * Collection management utility
@@ -93,13 +94,14 @@ export const collectionManager = {
       }
       
       // Delete from Firestore if user is logged in
-      if (collectionId && user) {
+      if (user) {
         try {
-          const cardRepo = new CardRepository(user.uid);
-          await cardRepo.deleteCollection(collectionId);
+          // Use firestoreService which properly queries by name
+          await firestoreService.deleteCollection(name);
           logger.log(`Collection "${name}" and all its cards deleted from Firestore`);
         } catch (firestoreError) {
           logger.error("Error deleting collection from Firestore:", firestoreError);
+          // Don't throw here, continue with local deletion
         }
       }
       

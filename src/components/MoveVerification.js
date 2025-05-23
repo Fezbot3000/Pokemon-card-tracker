@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../design-system';
-import db from '../services/db';
+import db from '../services/firestore/dbAdapter';
 import { CardRepository } from '../repositories/CardRepository';
 import featureFlags from '../utils/featureFlags';
 

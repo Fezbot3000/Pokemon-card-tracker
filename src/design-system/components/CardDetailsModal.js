@@ -40,7 +40,8 @@ const CardDetailsModal = ({
   additionalValueContent,
   additionalSerialContent,
   collections = [], // Default to empty array
-  initialCollectionName = null // Default to null
+  initialCollectionName = null, // Default to null
+  isPsaLoading = false
 }) => {
   const [activeTab, setActiveTab] = useState('details');
   const [cardImage, setCardImage] = useState(null); // Start with null to implement lazy loading
@@ -399,7 +400,7 @@ const CardDetailsModal = ({
             <Button 
               variant="secondary" 
               onClick={onClose}
-              disabled={isPsaSearching || isSaving}
+              disabled={isPsaLoading || isSaving}
             >
               Cancel
             </Button>
@@ -409,7 +410,7 @@ const CardDetailsModal = ({
                   variant="secondary" 
                   onClick={handleMarkAsSold}
                   leftIcon={<Icon name="tag" />}
-                  disabled={isPsaSearching || isSaving}
+                  disabled={isPsaLoading || isSaving}
                 >
                   Mark as Sold
                 </Button>
@@ -417,7 +418,7 @@ const CardDetailsModal = ({
               <Button 
                 variant="primary" 
                 onClick={handleSave}
-                disabled={isPsaSearching || isSaving}
+                disabled={isPsaLoading || isSaving}
               >
                 {isSaving ? (
                   <>
@@ -463,11 +464,21 @@ const CardDetailsModal = ({
 
           {/* Main Content */}
           {contentLoaded && activeTab === 'details' && (
-            <div className="flex-1 overflow-y-auto scrollbar-hide">
-              <div className="py-2"> 
+            <div className={`${animClass} relative`}>
+              {/* PSA Search Loading Overlay */}
+              {(isPsaSearching || isPsaLoading) && (
+                <div className="absolute inset-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm z-10 flex items-center justify-center rounded-lg">
+                  <div className="text-center">
+                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-500 border-t-transparent mb-2"></div>
+                    <p className="text-gray-600 dark:text-gray-400">Looking up PSA information...</p>
+                  </div>
+                </div>
+              )}
+              
+              <div className="p-6">
                 <CardDetailsForm
                   card={card}
-                  cardImage={cardImage}
+                  cardImage={localImageLoadingState === 'loading' ? null : (cardImage || image)}
                   imageLoadingState={localImageLoadingState}
                   onChange={onChange}
                   onImageChange={handleImageChange}
@@ -573,7 +584,8 @@ CardDetailsModal.propTypes = {
   additionalValueContent: PropTypes.node,
   additionalSerialContent: PropTypes.node,
   collections: PropTypes.arrayOf(PropTypes.string), // Expect an array of strings now
-  initialCollectionName: PropTypes.string // Add prop type
+  initialCollectionName: PropTypes.string, // Add prop type
+  isPsaLoading: PropTypes.bool
 };
 
 export default CardDetailsModal;

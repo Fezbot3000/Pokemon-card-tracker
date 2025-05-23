@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useTheme } from '../design-system';
-import db from '../services/db';  // Use the correct db service
+import db from '../services/firestore/dbAdapter';  // Use the correct db service
 import { useAuth } from '../design-system'; // Import auth context
 import JSZip from 'jszip';
 import CollectionSelector from './CollectionSelector';

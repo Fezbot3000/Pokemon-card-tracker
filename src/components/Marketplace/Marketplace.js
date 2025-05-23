@@ -4,7 +4,7 @@ import { collection, query, where, orderBy, getDocs, onSnapshot } from 'firebase
 import { db as firestoreDb } from '../../services/firebase';
 import logger from '../../utils/logger';
 import { useUserPreferences } from '../../contexts/UserPreferencesContext';
-import db from '../../services/db'; // Import IndexedDB service for image loading
+import db from '../../services/firestore/dbAdapter'; // Import IndexedDB service for image loading
 import MessageModal from './MessageModal'; // Import the MessageModal component
 import ListingDetailModal from './ListingDetailModal'; // Import the ListingDetailModal component
 import MarketplaceCard from './MarketplaceCard'; // Import the custom MarketplaceCard component

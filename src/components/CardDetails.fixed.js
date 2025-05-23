@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, memo } from 'react';
 import PropTypes from 'prop-types'; 
-import db from '../services/db';
+import db from '../services/firestore/dbAdapter';
 import cardRepo from '../services/cardRepo';
 import { useTheme } from '../design-system';
 import { toast } from 'react-hot-toast';

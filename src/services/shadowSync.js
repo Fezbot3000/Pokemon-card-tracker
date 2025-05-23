@@ -704,7 +704,7 @@ class ShadowSyncService {
     this.unsubscribeSoldItemsListener = onSnapshot(soldItemsCollectionRef, 
       async (snapshot) => {
         logger.debug('[ShadowSync] Received snapshot for sold-items.');
-        const dbService = (await import('./db')).default; // Dynamically import db.js to avoid circular deps
+        const dbService = (await import('./firestore/dbAdapter')).default; // Dynamically import dbAdapter to avoid circular deps
 
         for (const change of snapshot.docChanges()) {
           const cardId = change.doc.id;

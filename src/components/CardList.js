@@ -3,7 +3,7 @@ import { useInView } from 'react-intersection-observer';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../design-system';
 import { collection, query, where, doc, updateDoc, getDocs } from 'firebase/firestore';
-import db from '../services/db';
+import db from '../services/firestore/dbAdapter';
 import { db as firestoreDb } from '../services/firebase';
 import { toast } from 'react-hot-toast';
 import { StatisticsSummary, SearchToolbar, Card, ConfirmDialog } from '../design-system';

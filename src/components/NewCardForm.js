@@ -3,7 +3,7 @@ import { formatValue } from '../utils/formatters';
 import { useTheme } from '../design-system';
 import { toast } from 'react-hot-toast';
 import { parseCSVFile, validateCSVStructure } from '../utils/dataProcessor';
-import db from '../services/db';
+import db from '../services/firestore/dbAdapter';
 import PSALookupButton from './PSALookupButton';
 
 const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, selectedCollection }) => {

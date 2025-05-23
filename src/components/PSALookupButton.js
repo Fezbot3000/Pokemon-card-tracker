@@ -8,7 +8,7 @@ import PSADetailModal from './PSADetailModal';
  * PSA Lookup Button Component
  * Allows users to search for a card by PSA certification number
  */
-const PSALookupButton = ({ currentCardData, onCardUpdate, iconOnly = false }) => {
+const PSALookupButton = ({ currentCardData, onCardUpdate, iconOnly = false, buttonText = "Search PSA", onLoadingChange }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [certNumber, setCertNumber] = useState('');
   const [showLookupForm, setShowLookupForm] = useState(false);
@@ -20,6 +20,13 @@ const PSALookupButton = ({ currentCardData, onCardUpdate, iconOnly = false }) =>
       setCertNumber(currentCardData.slabSerial);
     }
   }, [currentCardData]);
+
+  // Notify parent about loading state changes
+  useEffect(() => {
+    if (onLoadingChange) {
+      onLoadingChange(isLoading);
+    }
+  }, [isLoading, onLoadingChange]);
 
   // Handle PSA lookup button click
   const handleLookupClick = () => {
@@ -67,6 +74,13 @@ const PSALookupButton = ({ currentCardData, onCardUpdate, iconOnly = false }) =>
     setIsLoading(false);
   };
 
+  // Reset loading state when modal closes
+  useEffect(() => {
+    if (!isModalOpen) {
+      setIsLoading(false);
+    }
+  }, [isModalOpen]);
+
   return (
     <>
       {!showLookupForm ? (
@@ -75,13 +89,13 @@ const PSALookupButton = ({ currentCardData, onCardUpdate, iconOnly = false }) =>
             type="button"
             onClick={handleLookupClick}
             className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            aria-label="Search PSA"
+            aria-label={buttonText || "Reload PSA Data"}
             disabled={isLoading}
           >
             {isLoading ? (
               <div className="w-5 h-5 border-2 border-t-transparent border-blue-500 rounded-full animate-spin"></div>
             ) : (
-              <Icon name="search" size="sm" />
+              <Icon name={currentCardData?.slabSerial ? "refresh" : "search"} size="sm" />
             )}
           </button>
         ) : (
@@ -96,7 +110,7 @@ const PSALookupButton = ({ currentCardData, onCardUpdate, iconOnly = false }) =>
             ) : (
               <Icon name="search" size="sm" />
             )}
-            {!iconOnly && "Search PSA"}
+            {buttonText}
           </Button>
         )
       ) : (
@@ -137,7 +151,9 @@ const PSALookupButton = ({ currentCardData, onCardUpdate, iconOnly = false }) =>
 PSALookupButton.propTypes = {
   currentCardData: PropTypes.object,
   onCardUpdate: PropTypes.func.isRequired,
-  iconOnly: PropTypes.bool
+  iconOnly: PropTypes.bool,
+  buttonText: PropTypes.string,
+  onLoadingChange: PropTypes.func
 };
 
 export default PSALookupButton;

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, memo } from 'react';
 import ImagePersistenceManager from '../utils/ImagePersistenceManager';
-import db from '../services/db';
+import db from '../services/firestore/dbAdapter';
 import logger from '../utils/logger';
 import { useInvoiceContext } from '../contexts/InvoiceContext';
 

@@ -16,7 +16,6 @@ import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db as firestoreDb, googleProvider } from '../firebase'; // Rename to firestoreDb
 import { toast } from 'react-hot-toast';
 import { useAutoSync } from './AutoSyncContext';
-import databaseService from '../services/db'; // Import as databaseService instead
 import logger from '../utils/logger';
 import featureFlags from '../utils/featureFlags';
 

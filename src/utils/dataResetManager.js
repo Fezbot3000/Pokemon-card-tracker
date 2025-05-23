@@ -1,7 +1,7 @@
 import { toast } from 'react-hot-toast';
 import { collection, getDocs, deleteDoc, writeBatch, doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db as firestoreDb } from '../services/firebase';
-import db from '../services/db';
+import db from '../services/firestore/dbAdapter';
 import shadowSync from '../services/shadowSync';
 import { CardRepository } from '../repositories/CardRepository';
 import logger from './logger';

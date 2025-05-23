@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import ReactDOM from 'react-dom';
 import { useTheme, SoldItemsView } from '../../design-system'; 
 import { formatCondensed } from '../../utils/formatters';
-import db from '../../services/db';
+import db from '../../services/firestore/dbAdapter';
 import { PDFDownloadLink } from '@react-pdf/renderer';
 import InvoicePDF from '../InvoicePDF';
 import { StatisticsSummary } from '../../design-system';
@@ -210,9 +210,14 @@ const SoldItems = () => {
         // Get local sold cards from IndexedDB
         const localSoldCards = await db.getSoldCards() || [];
         
+        // Handle both array and object formats
+        const soldCardsArray = Array.isArray(localSoldCards) 
+          ? localSoldCards 
+          : (localSoldCards.data || []);
+        
         // Create a map of existing cards by ID to avoid duplicates
         const existingCardsMap = new Map();
-        localSoldCards.forEach(card => {
+        soldCardsArray.forEach(card => {
           const cardId = card.id || card.slabSerial;
           if (cardId) {
             existingCardsMap.set(cardId, card);

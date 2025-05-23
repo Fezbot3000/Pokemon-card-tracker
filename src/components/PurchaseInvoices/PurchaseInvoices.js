@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth, StatisticsSummary } from '../../design-system';
-import db from '../../services/db';
+import db from '../../services/firestore/dbAdapter';
 import { toast } from 'react-hot-toast';
 import CreateInvoiceModal from './CreateInvoiceModal';
 import { PDFDownloadLink, pdf } from '@react-pdf/renderer';
