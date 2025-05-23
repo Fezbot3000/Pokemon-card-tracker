@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../design-system';
-import { collection, query, where, getDocs, addDoc, serverTimestamp, updateDoc, doc } from 'firebase/firestore';
+import { collection, query, where, getDocs, addDoc, serverTimestamp, updateDoc, doc, getDoc } from 'firebase/firestore';
 import { db as firestoreDb } from '../../services/firebase';
 import { toast } from 'react-hot-toast';
 import { useUserPreferences } from '../../contexts/UserPreferencesContext';
@@ -22,11 +22,30 @@ function ListCardModal({ isOpen, onClose, selectedCards }) {
   const { preferredCurrency } = useUserPreferences();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [listingData, setListingData] = useState({});
+  const [userLocation, setUserLocation] = useState('');
   
   // Initialize listing data when component mounts or selectedCards changes
   // Consolidated the two previous useEffect hooks into one
-  React.useEffect(() => {
+  useEffect(() => {
     if (!isOpen || !selectedCards || !Array.isArray(selectedCards) || selectedCards.length === 0) return;
+    
+    const loadUserProfile = async () => {
+      if (!user) return;
+      
+      try {
+        const profileRef = doc(firestoreDb, 'marketplaceProfiles', user.uid);
+        const profileSnap = await getDoc(profileRef);
+        
+        if (profileSnap.exists()) {
+          const profileData = profileSnap.data();
+          setUserLocation(profileData.location || '');
+        }
+      } catch (error) {
+        logger.error('Error loading user profile:', error);
+      }
+    };
+    
+    loadUserProfile();
     
     const initialData = {};
     selectedCards.forEach(card => {
@@ -37,15 +56,29 @@ function ListCardModal({ isOpen, onClose, selectedCards }) {
       initialData[cardId] = {
         price: '',
         note: '',
-        location: ''
+        location: userLocation || ''
       };
     });
     
     setListingData(initialData);
-  }, [selectedCards, isOpen]);
+  }, [selectedCards, isOpen, user]);
+  
+  // Update location when userLocation is loaded
+  useEffect(() => {
+    if (userLocation && listingData) {
+      const updatedData = {};
+      Object.keys(listingData).forEach(cardId => {
+        updatedData[cardId] = {
+          ...listingData[cardId],
+          location: listingData[cardId].location || userLocation
+        };
+      });
+      setListingData(updatedData);
+    }
+  }, [userLocation]);
   
   // Add the style to the document for hiding scrollbars and prevent body scrolling
-  React.useEffect(() => {
+  useEffect(() => {
     if (!isOpen) return;
     
     // Create style element
@@ -330,146 +363,186 @@ function ListCardModal({ isOpen, onClose, selectedCards }) {
     }
   };
 
-  // Early return was moved to the top of the component
-
   return (
-    <div className="fixed inset-0 z-50 bg-black bg-opacity-50">
-      <div className="fixed inset-0 flex flex-col bg-white dark:bg-[#1B2131] overflow-hidden">
-        {/* Fixed Header */}
-        <div className="flex-shrink-0 flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700/50 bg-white dark:bg-[#1B2131] z-10">
-          <h2 className="text-xl font-medium text-gray-800 dark:text-gray-200">
-            List {selectedCards.length} Card{selectedCards.length > 1 ? 's' : ''} on Marketplace
-          </h2>
-          <button 
-            className="text-2xl text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
-            onClick={onClose}
-            disabled={isSubmitting}
-          >
-            ×
-          </button>
-        </div>
-        
-        <form onSubmit={handleSubmit} className="flex flex-col flex-grow overflow-hidden">
-          {/* Scrollable Content Area */}
-          <div className="flex-grow overflow-y-auto hide-scrollbar px-6 py-4 pb-32">
-            {(selectedCards || []).map(card => card && (
-              <div key={card.slabSerial} className="border border-gray-200 dark:border-gray-700/50 rounded-lg p-4">
-                <div className="flex flex-col sm:flex-row gap-4">
-                  {/* Card image and details */}
-                  <div className="flex items-center gap-4 sm:w-1/2">
-                    <div className="w-16 h-24 flex-shrink-0 bg-gray-100 dark:bg-gray-800 rounded-md overflow-hidden">
-                      {card.imageUrl ? (
-                        <img 
-                          src={card.imageUrl} 
-                          alt={card.card || 'Card'} 
-                          className="w-full h-full object-contain"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <span className="material-icons text-gray-400">image</span>
-                        </div>
-                      )}
-                    </div>
-                    <div>
-                      <h3 className="font-medium text-gray-900 dark:text-white">
-                        {card.card || 'Unnamed Card'}
-                      </h3>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        {card.set} • {card.year || 'Unknown Year'}
-                      </p>
-                      {card.grade && (
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                          {card.gradeCompany} {card.grade}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                  
-                  {/* Price and note inputs */}
-                  <div className="sm:w-1/2 space-y-3">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Listing Price ({preferredCurrency.code})
-                      </label>
-                      <div className="relative">
-                        <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500 dark:text-gray-400">
-                          {preferredCurrency.symbol}
-                        </span>
-                        <input
-                          type="number"
-                          value={listingData[card.slabSerial || card.id || card._id || JSON.stringify(card)]?.price || ''}
-                          onChange={(e) => handleInputChange(card.slabSerial || card.id || card._id || JSON.stringify(card), 'price', e.target.value)}
-                          className="w-full pl-8 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-transparent text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          placeholder="0.00"
-                          step="0.01"
-                          min="0.01"
-                          required
-                        />
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Note (Optional)
-                      </label>
-                      <textarea
-                        value={listingData[card.slabSerial || card.id || card._id || JSON.stringify(card)]?.note || ''}
-                        onChange={(e) => handleInputChange(card.slabSerial || card.id || card._id || JSON.stringify(card), 'note', e.target.value)}
-                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-transparent text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Add a note about this card..."
-                        rows="2"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Location (Optional)
-                      </label>
-                      <input
-                        type="text"
-                        value={listingData[card.slabSerial || card.id || card._id || JSON.stringify(card)]?.location || ''}
-                        onChange={(e) => handleInputChange(card.slabSerial || card.id || card._id || JSON.stringify(card), 'location', e.target.value)}
-                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-transparent text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Enter your location (e.g., Sydney)"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
+    <>
+      <style>{scrollbarHideStyles}</style>
+      {/* Full-page modal backdrop */}
+      <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-0">
+        {/* Full-page modal container */}
+        <div className="bg-white dark:bg-[#1B2131] w-full h-full max-w-none flex flex-col">
+          {/* Header */}
+          <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+              List {selectedCards.length} Card{selectedCards.length > 1 ? 's' : ''} on Marketplace
+            </h2>
+            <button
+              onClick={onClose}
+              className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            >
+              <span className="material-icons">close</span>
+            </button>
           </div>
           
-          {/* Fixed Footer */}
-          <div className="flex-shrink-0 absolute bottom-0 left-0 right-0 bg-white dark:bg-[#1B2131] border-t border-gray-200 dark:border-gray-700/50 p-4 flex justify-end gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={isSubmitting}
-              className="px-4 py-2 rounded-md bg-gray-100 dark:bg-[#252B3B] text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-[#323B4B] transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="px-4 py-2 rounded-md bg-blue-500 text-white hover:bg-blue-600 transition-colors flex items-center gap-2"
-            >
-              {isSubmitting ? (
-                <>
-                  <span className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></span>
-                  <span>Listing...</span>
-                </>
-              ) : (
-                <>
-                  <span className="material-icons text-sm">storefront</span>
-                  <span>List on Marketplace</span>
-                </>
-              )}
-            </button>
-          </div>
-        </form>
+          {/* Scrollable Content */}
+          <form onSubmit={handleSubmit} className="flex-1 flex flex-col overflow-hidden">
+            <div className="flex-1 overflow-y-auto p-6 hide-scrollbar">
+              <div className="max-w-4xl mx-auto">
+                {selectedCards.map((card, index) => {
+                  // Log card structure to console for debugging
+                  console.log('Card data:', card);
+                  
+                  return (
+                    <div key={card.slabSerial || card.id || card._id || JSON.stringify(card)} className="mb-8 last:mb-0">
+                      <div className="bg-gray-50 dark:bg-[#252B3B] rounded-lg p-6">
+                        <div className="flex flex-col md:flex-row gap-6">
+                          {/* Card Image */}
+                          <div className="flex-shrink-0">
+                            <img
+                              src={card.imageUrl || card.cloudImageUrl || card.image || card.imageURL || card.img || '/placeholder-card.png'}
+                              alt={card.card || card.name || 'Card'}
+                              className="w-48 h-64 object-contain bg-gray-100 dark:bg-gray-800 rounded-lg shadow-md"
+                              onError={(e) => {
+                                console.log('Image failed to load:', e.target.src);
+                                e.target.src = '/placeholder-card.png';
+                              }}
+                            />
+                          </div>
+                          
+                          {/* Card Details and Form */}
+                          <div className="flex-1 space-y-4">
+                            {/* Card Info */}
+                            <div>
+                              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
+                                {card.card || card.name || 'Unnamed Card'}
+                              </h3>
+                              <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                                <div>
+                                  <span className="text-gray-500 dark:text-gray-400">Set:</span>
+                                  <p className="text-gray-900 dark:text-white font-medium">{card.set || card.setName || 'Unknown Set'}</p>
+                                </div>
+                                <div>
+                                  <span className="text-gray-500 dark:text-gray-400">Year:</span>
+                                  <p className="text-gray-900 dark:text-white font-medium">{card.year || 'Unknown'}</p>
+                                </div>
+                                <div>
+                                  <span className="text-gray-500 dark:text-gray-400">Grade:</span>
+                                  <p className="text-gray-900 dark:text-white font-medium">PSA {card.grade || 'Ungraded'}</p>
+                                </div>
+                                <div>
+                                  <span className="text-gray-500 dark:text-gray-400">Slab Serial:</span>
+                                  <p className="text-gray-900 dark:text-white font-medium">{card.slabSerial || 'N/A'}</p>
+                                </div>
+                                {(card.currentValueAUD || card.value || card.marketValue || card.currentValue) && (
+                                  <div>
+                                    <span className="text-gray-500 dark:text-gray-400">Current Value:</span>
+                                    <p className="text-gray-900 dark:text-white font-medium">
+                                      {preferredCurrency?.symbol || '$'}{card.currentValueAUD || card.value || card.marketValue || card.currentValue || '0'}
+                                    </p>
+                                  </div>
+                                )}
+                                {(card.paidPriceAUD || card.purchasePrice || card.paidPrice || card.paid || card.cost) && (
+                                  <div>
+                                    <span className="text-gray-500 dark:text-gray-400">Purchase Price:</span>
+                                    <p className="text-gray-900 dark:text-white font-medium">
+                                      {preferredCurrency?.symbol || '$'}{card.paidPriceAUD || card.purchasePrice || card.paidPrice || card.paid || card.cost || '0'}
+                                    </p>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            
+                            {/* Form Fields */}
+                            <div className="space-y-4 pt-4 border-t border-gray-200 dark:border-gray-600">
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                  Listing Price ({preferredCurrency?.code || 'USD'})
+                                </label>
+                                <div className="relative">
+                                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400">
+                                    {preferredCurrency?.symbol || '$'}
+                                  </span>
+                                  <input
+                                    type="number"
+                                    value={listingData[card.slabSerial || card.id || card._id || JSON.stringify(card)]?.price || ''}
+                                    onChange={(e) => handleInputChange(card.slabSerial || card.id || card._id || JSON.stringify(card), 'price', e.target.value)}
+                                    className="w-full pl-8 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-[#1B2131] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    placeholder="0.00"
+                                    step="0.01"
+                                    min="0.01"
+                                    required
+                                  />
+                                </div>
+                              </div>
+                              
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    Note (Optional)
+                                  </label>
+                                  <textarea
+                                    value={listingData[card.slabSerial || card.id || card._id || JSON.stringify(card)]?.note || ''}
+                                    onChange={(e) => handleInputChange(card.slabSerial || card.id || card._id || JSON.stringify(card), 'note', e.target.value)}
+                                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-[#1B2131] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    placeholder="Add a note about this card..."
+                                    rows="3"
+                                  />
+                                </div>
+                                
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    Location (Optional)
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={listingData[card.slabSerial || card.id || card._id || JSON.stringify(card)]?.location || ''}
+                                    onChange={(e) => handleInputChange(card.slabSerial || card.id || card._id || JSON.stringify(card), 'location', e.target.value)}
+                                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-[#1B2131] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    placeholder="Enter your location (e.g., Sydney)"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+            
+            {/* Fixed Footer */}
+            <div className="flex-shrink-0 bg-white dark:bg-[#1B2131] border-t border-gray-200 dark:border-gray-700 p-4 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={onClose}
+                disabled={isSubmitting}
+                className="px-4 py-2 rounded-md bg-gray-100 dark:bg-[#252B3B] text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-[#323B4B] transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="px-4 py-2 rounded-md bg-blue-500 text-white hover:bg-blue-600 transition-colors flex items-center gap-2"
+              >
+                {isSubmitting ? (
+                  <>
+                    <span className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></span>
+                    <span>Listing...</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="material-icons text-sm">storefront</span>
+                    <span>List on Marketplace</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 

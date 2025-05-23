@@ -7,6 +7,7 @@ import logger from '../../utils/logger';
 import toast from 'react-hot-toast';
 import ListingDetailModal from './ListingDetailModal';
 import DesktopMarketplaceMessages from './DesktopMarketplaceMessages';
+import SellerProfile from './SellerProfile';
 
 // Add CSS for hiding scrollbars
 const scrollbarHideStyles = `
@@ -52,6 +53,8 @@ function MarketplaceMessages({ currentView, onViewChange }) {
   const [sendingMessage, setSendingMessage] = useState(false);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [selectedListing, setSelectedListing] = useState(null);
+  const [showSellerProfile, setShowSellerProfile] = useState(false);
+  const [selectedSellerId, setSelectedSellerId] = useState(null);
   const { user } = useAuth();
   const messagesEndRef = useRef(null);
   const location = useLocation();
@@ -441,6 +444,20 @@ function MarketplaceMessages({ currentView, onViewChange }) {
         listing={selectedListing}
         cardImage={selectedListing ? (activeChat?.cardImage || '') : ''}
       />
+      {showSellerProfile && selectedSellerId && (
+        <SellerProfile
+          sellerId={selectedSellerId}
+          onClose={() => {
+            setShowSellerProfile(false);
+            setSelectedSellerId(null);
+          }}
+          onViewListing={(listing) => {
+            setShowSellerProfile(false);
+            setSelectedSellerId(null);
+            // Handle viewing listing if needed
+          }}
+        />
+      )}
       <style>
         {`${scrollbarHideStyles}
         .hide-header-footer header, .hide-header-footer footer {
@@ -482,7 +499,17 @@ function MarketplaceMessages({ currentView, onViewChange }) {
                     </div>
                     <div className="ml-4 flex-1">
                       <div className="flex justify-between items-start">
-                        <h3 className="font-medium text-gray-900 dark:text-white">{conversation.otherParticipantName}</h3>
+                        <h3 
+                          className="font-medium text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer transition-colors"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const otherUserId = conversation.buyerId === user.uid ? conversation.sellerId : conversation.buyerId;
+                            setSelectedSellerId(otherUserId);
+                            setShowSellerProfile(true);
+                          }}
+                        >
+                          {conversation.otherParticipantName}
+                        </h3>
                         <span className="text-xs text-gray-500 dark:text-gray-400">
                           {conversation.lastMessageTimestamp && typeof conversation.lastMessageTimestamp.toDate === 'function' ? 
                             formatDate(conversation.lastMessageTimestamp.toDate()) : 
@@ -574,7 +601,16 @@ function MarketplaceMessages({ currentView, onViewChange }) {
                     </div>
                   )}
                   <div>
-                    <h3 className="font-medium text-gray-900 dark:text-white">{activeChat?.otherParticipantName}</h3>
+                    <h3 
+                      className="font-medium text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer transition-colors"
+                      onClick={() => {
+                        const otherUserId = activeChat.buyerId === user.uid ? activeChat.sellerId : activeChat.buyerId;
+                        setSelectedSellerId(otherUserId);
+                        setShowSellerProfile(true);
+                      }}
+                    >
+                      {activeChat?.otherParticipantName}
+                    </h3>
                     {activeChat?.cardTitle && (
                       <p className="text-xs text-gray-600 dark:text-gray-400">{activeChat.cardTitle}</p>
                     )}

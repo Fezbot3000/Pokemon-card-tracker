@@ -24,6 +24,8 @@ import SubscriptionManagement from '../../components/SubscriptionManagement'; //
 import CollectionManagement from '../../components/settings/CollectionManagement'; // Import CollectionManagement
 import { useUserPreferences, availableCurrencies } from '../../contexts/UserPreferencesContext'; // Added import
 import SelectField from '../atoms/SelectField'; // Added import
+import MarketplaceProfile from '../../components/settings/MarketplaceProfile'; // Import MarketplaceProfile
+import MarketplaceReviews from '../../components/settings/MarketplaceReviews'; // Import MarketplaceReviews
 
 /**
  * SettingsModal Component
@@ -782,6 +784,12 @@ const SettingsModal = ({
                 isActive={activeTab === 'account'}
                 onClick={() => setActiveTab('account')}
               />
+              <SettingsNavItem 
+                icon="storefront" 
+                label="Marketplace" 
+                isActive={activeTab === 'marketplace'}
+                onClick={() => setActiveTab('marketplace')}
+              />
             </div>
           </nav>
 
@@ -1002,6 +1010,36 @@ const SettingsModal = ({
             {activeTab === 'account' && (
               <div className="space-y-6">
                 <SettingsPanel
+                  title="Sign Out"
+                  description="Sign out of your account and return to the login screen."
+                >
+                  {userData && (
+                    <div 
+                      className="flex items-center space-x-4 mb-6 bg-gray-100 dark:bg-gray-800 p-4 rounded-lg"
+                      data-component-name="SettingsModal"
+                    >
+                      <div className="w-12 h-12 bg-indigo-600 rounded-full flex items-center justify-center text-white font-medium">
+                        {userData.firstName ? userData.firstName.charAt(0) : '?'}
+                      </div>
+                      <div>
+                        <div className="text-gray-900 dark:text-white font-medium">{userData.firstName} {userData.lastName}</div>
+                        <div className="text-gray-600 dark:text-gray-400 text-sm">{user ? user.email : 'Not signed in'}</div>
+                      </div>
+                    </div>
+                  )}
+                  {onSignOut && (
+                    <Button
+                      variant="outline"
+                      onClick={onSignOut}
+                      iconLeft={<Icon name="logout" />}
+                      fullWidth
+                    >
+                      Sign Out
+                    </Button>
+                  )}
+                </SettingsPanel>
+
+                <SettingsPanel
                   title="Personal Information"
                   description="Update your personal information and profile settings."
                 >
@@ -1070,36 +1108,6 @@ const SettingsModal = ({
                 </SettingsPanel>
 
                 <SettingsPanel
-                  title="Sign Out"
-                  description="Sign out of your account and return to the login screen."
-                >
-                  {userData && (
-                    <div 
-                      className="flex items-center space-x-4 mb-6 bg-gray-100 dark:bg-gray-800 p-4 rounded-lg"
-                      data-component-name="SettingsModal"
-                    >
-                      <div className="w-12 h-12 bg-indigo-600 rounded-full flex items-center justify-center text-white font-medium">
-                        {userData.firstName ? userData.firstName.charAt(0) : '?'}
-                      </div>
-                      <div>
-                        <div className="text-gray-900 dark:text-white font-medium">{userData.firstName} {userData.lastName}</div>
-                        <div className="text-gray-600 dark:text-gray-400 text-sm">{user ? user.email : 'Not signed in'}</div>
-                      </div>
-                    </div>
-                  )}
-                  {onSignOut && (
-                    <Button
-                      variant="outline"
-                      onClick={onSignOut}
-                      iconLeft={<Icon name="logout" />}
-                      fullWidth
-                    >
-                      Sign Out
-                    </Button>
-                  )}
-                </SettingsPanel>
-
-                <SettingsPanel
                   title="Reset All Data"
                   description="Permanently delete all your data from both local storage and the cloud."
                 >
@@ -1116,6 +1124,23 @@ const SettingsModal = ({
                   >
                     Reset All Data
                   </Button>
+                </SettingsPanel>
+              </div>
+            )}
+            
+            {activeTab === 'marketplace' && (
+              <div className="space-y-6">
+                <SettingsPanel
+                  title="Marketplace Profile"
+                  description="Manage your marketplace profile and seller information."
+                >
+                  <MarketplaceProfile />
+                </SettingsPanel>
+                <SettingsPanel
+                  title="My Reviews"
+                  description="View and manage your marketplace reviews and ratings."
+                >
+                  <MarketplaceReviews />
                 </SettingsPanel>
               </div>
             )}

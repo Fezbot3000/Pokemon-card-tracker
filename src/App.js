@@ -738,86 +738,83 @@ function AppContent() {
       )}
       
       <main className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-4 pb-20">
+        {/* Settings Modal - Available for all views */}
+        {showSettings && !isMobile && (
+          <SettingsModal
+            isOpen={showSettings}
+            onClose={handleCloseSettings}
+            selectedCollection={selectedCollection}
+            collections={collections}
+            onStartTutorial={startTutorial}
+            onSignOut={logout}
+            onRenameCollection={(oldName, newName) => {
+              collectionManager.renameCollection(oldName, newName, {
+                collections,
+                setCollections,
+                selectedCollection,
+                setSelectedCollection
+              });
+            }}
+            onDeleteCollection={async (name) => {
+              await collectionManager.deleteCollection(name, {
+                collections,
+                user,
+                selectedCollection,
+                setCollections,
+                setSelectedCollection
+              });
+            }}
+          />
+        )}
+
         {currentView === 'cards' ? (
           <div className="flex-1 overflow-y-auto">
             {/* Main content */}
             <div className={`${selectedCard ? 'hidden lg:block' : ''}`}>
-              {/* Show settings modal when settings is selected */}
-              {showSettings ? (
-                <SettingsModal
-                  isOpen={showSettings}
-                  onClose={handleCloseSettings}
-                  selectedCollection={selectedCollection}
-                  collections={collections} 
-                  onStartTutorial={startTutorial} 
-                  onRenameCollection={(oldName, newName) => {
-                    collectionManager.renameCollection(oldName, newName, {
-                      collections,
-                      setCollections,
-                      selectedCollection,
-                      setSelectedCollection
-                    });
-                  }}
-                  onDeleteCollection={async (name) => {
-                    await collectionManager.deleteCollection(name, {
-                      collections,
-                      user,
-                      selectedCollection,
-                      setCollections,
-                      setSelectedCollection
-                    });
-                  }}
-                  userData={user}
-                  onSignOut={logout}
-                />
-              ) : (
+              {/* Show cards when settings is not selected */}
+              {!showSettings ? (
                 <>
-                  {/* Show card list when no card is selected */}
-                  {currentView === 'cards' && (
-                    <>
-                      <CardList
-                        cards={collectionData} 
-                        exchangeRate={exchangeRate}
-                        onCardClick={(card) => {
-                          let actualCollectionName = selectedCollection;
-                          if (selectedCollection === 'All Cards') {
-                            for (const [collName, cardsInCollection] of Object.entries(collections)) {
-                              if (Array.isArray(cardsInCollection) && cardsInCollection.some(c => c.slabSerial === card.slabSerial)) {
-                                actualCollectionName = collName;
-                                break; 
-                              }
-                            }
-                            if (actualCollectionName === 'All Cards') {
-                              logger.warn("Could not determine original collection for card: ", card.slabSerial);
-                              actualCollectionName = null; 
+                  {/* Card List */}
+                  {cards.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center h-full">
+                      <h2 className="text-lg font-bold mb-4">No cards found</h2>
+                      <p className="text-gray-500">You don't have any cards in this collection.</p>
+                    </div>
+                  ) : (
+                    <CardList
+                      cards={cards} 
+                      exchangeRate={exchangeRate}
+                      onCardClick={(card) => {
+                        let actualCollectionName = selectedCollection;
+                        if (selectedCollection === 'All Cards') {
+                          for (const [collName, cardsInCollection] of Object.entries(collections)) {
+                            if (Array.isArray(cardsInCollection) && cardsInCollection.some(c => c.slabSerial === card.slabSerial)) {
+                              actualCollectionName = collName;
+                              break; 
                             }
                           }
-                          openCardDetails(card, actualCollectionName);
-                        }}
-                        onDeleteCards={onDeleteCards}
-                        onDeleteCard={handleCardDelete}
-                        onUpdateCard={handleCardUpdate}
-                        onAddCard={() => openNewCardForm()}
-                        selectedCollection={selectedCollection}
-                        collections={collections}
-                        setCollections={setCollections}
-                        onCollectionChange={(collection) => {
-                          setSelectedCollection(collection);
-                          localStorage.setItem('selectedCollection', collection);
-                        }}
-                      />
-                      
-                      {/* Floating Add Button - Mobile Only */}
-                      <button
-                        onClick={() => openNewCardForm()}
-                        className="sm:hidden fixed bottom-24 right-5 w-14 h-14 rounded-full bg-gradient-to-r from-[#ef4444] to-[#db2777] text-white shadow-lg flex items-center justify-center z-30 hover:shadow-xl transition-shadow"
-                        aria-label="Add new card"
-                      >
-                        <span className="material-icons text-3xl">add</span>
-                      </button>
-                    </>
+                          if (actualCollectionName === 'All Cards') {
+                            logger.warn("Could not determine original collection for card: ", card.slabSerial);
+                            actualCollectionName = null; 
+                          }
+                        }
+                        openCardDetails(card, actualCollectionName);
+                      }}
+                      onDeleteCard={deleteCard}
+                      onUpdateCard={updateCard}
+                      onAddCard={() => openNewCardForm()}
+                      selectedCollection={selectedCollection}
+                      collections={collections}
+                      setCollections={setCollections}
+                      onCollectionChange={(collection) => {
+                        setSelectedCollection(collection);
+                        localStorage.setItem('selectedCollection', collection);
+                      }}
+                    />
                   )}
                 </>
+              ) : (
+                <></>
               )}
             </div>
           </div>

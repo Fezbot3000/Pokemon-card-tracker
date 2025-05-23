@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../design-system';
-import { collection, query, where, orderBy, getDocs, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, orderBy, getDocs, onSnapshot, doc, updateDoc } from 'firebase/firestore';
 import { db as firestoreDb } from '../../services/firebase';
 import logger from '../../utils/logger';
 import { useUserPreferences } from '../../contexts/UserPreferencesContext';
@@ -11,6 +11,7 @@ import MarketplaceCard from './MarketplaceCard'; // Import the custom Marketplac
 import MarketplaceNavigation from './MarketplaceNavigation'; // Import the navigation component
 import MarketplaceSearchFilters from './MarketplaceSearchFilters'; // Import the search and filter component
 import { Icon } from '../../design-system'; // Import Icon component
+import toast from 'react-hot-toast';
 
 function MarketplaceSelling({ currentView, onViewChange }) {
   const [allListings, setAllListings] = useState([]);
@@ -54,6 +55,17 @@ function MarketplaceSelling({ currentView, onViewChange }) {
             id: doc.id,
             ...doc.data()
           }));
+          
+          console.log('MarketplaceSelling listings loaded:', {
+            count: listingsData.length,
+            listings: listingsData.map(l => ({
+              id: l.id,
+              status: l.status,
+              cardId: l.cardId,
+              name: l.card?.name
+            }))
+          });
+          
           setAllListings(listingsData);
           setFilteredListings(listingsData);
           
@@ -365,6 +377,36 @@ function MarketplaceSelling({ currentView, onViewChange }) {
     setSelectedListing(null);
   };
 
+  const handleMarkAsSold = async (listing) => {
+    try {
+      console.log('Marking listing as sold:', { id: listing.id, currentStatus: listing.status });
+      const listingRef = doc(firestoreDb, 'marketplaceItems', listing.id);
+      await updateDoc(listingRef, {
+        status: 'sold',
+        updatedAt: new Date()
+      });
+      toast.success('Listing marked as sold');
+    } catch (error) {
+      logger.error('Error marking listing as sold:', error);
+      toast.error('Failed to mark listing as sold');
+    }
+  };
+
+  const handleMarkAsPending = async (listing) => {
+    try {
+      console.log('Marking listing as pending:', { id: listing.id, currentStatus: listing.status });
+      const listingRef = doc(firestoreDb, 'marketplaceItems', listing.id);
+      await updateDoc(listingRef, {
+        status: 'pending',
+        updatedAt: new Date()
+      });
+      toast.success('Listing marked as pending');
+    } catch (error) {
+      logger.error('Error marking listing as pending:', error);
+      toast.error('Failed to mark listing as pending');
+    }
+  };
+
   return (
     <div className="p-4 sm:p-6 pt-16 sm:pt-20"> {/* Enhanced padding-top to ensure header clearance on all devices */}
       <MarketplaceNavigation currentView={currentView} onViewChange={onViewChange} />
@@ -427,13 +469,66 @@ function MarketplaceSelling({ currentView, onViewChange }) {
                     <p className="text-xs text-gray-600 dark:text-gray-400">
                       {listing.location || 'No location'}
                     </p>
+                    {listing.status && listing.status !== 'available' && (
+                      <p className={`text-xs font-semibold mt-1 ${
+                        listing.status === 'sold' ? 'text-red-600 dark:text-red-400' : 
+                        listing.status === 'pending' ? 'text-yellow-600 dark:text-yellow-400' : ''
+                      }`}>
+                        {listing.status === 'sold' ? 'SOLD' : listing.status === 'pending' ? 'PENDING' : listing.status.toUpperCase()}
+                      </p>
+                    )}
                   </div>
-                  <button
-                    onClick={() => handleEditClick(listing)}
-                    className="w-full px-3 py-1.5 bg-blue-500 text-white text-sm rounded-md hover:bg-blue-600 transition-colors"
-                  >
-                    Edit
-                  </button>
+                  <div className="w-full space-y-1">
+                    <button
+                      onClick={() => handleEditClick(listing)}
+                      className="w-full px-3 py-1.5 bg-blue-500 text-white text-sm rounded-md hover:bg-blue-600 transition-colors"
+                    >
+                      Edit
+                    </button>
+                    {listing.status !== 'sold' && listing.status !== 'pending' && (
+                      <>
+                        <button
+                          onClick={() => handleMarkAsPending(listing)}
+                          className="w-full px-3 py-1.5 bg-yellow-500 text-white text-sm rounded-md hover:bg-yellow-600 transition-colors"
+                        >
+                          Mark as Pending
+                        </button>
+                        <button
+                          onClick={() => handleMarkAsSold(listing)}
+                          className="w-full px-3 py-1.5 bg-red-500 text-white text-sm rounded-md hover:bg-red-600 transition-colors"
+                        >
+                          Mark as Sold
+                        </button>
+                      </>
+                    )}
+                    {(listing.status === 'sold' || listing.status === 'pending') && (
+                      <button
+                        onClick={async () => {
+                          try {
+                            console.log('Marking listing as available:', { 
+                              id: listing.id, 
+                              currentStatus: listing.status,
+                              cardId: listing.cardId,
+                              cardName: listing.card?.name
+                            });
+                            const listingRef = doc(firestoreDb, 'marketplaceItems', listing.id);
+                            await updateDoc(listingRef, {
+                              status: 'available',
+                              updatedAt: new Date()
+                            });
+                            console.log('Successfully marked as available');
+                            toast.success('Listing marked as available');
+                          } catch (error) {
+                            logger.error('Error marking listing as available:', error);
+                            toast.error('Failed to mark listing as available');
+                          }
+                        }}
+                        className="w-full px-3 py-1.5 bg-green-500 text-white text-sm rounded-md hover:bg-green-600 transition-colors"
+                      >
+                        Mark as Available
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

@@ -6,6 +6,7 @@ import logger from '../../utils/logger';
 import toast from 'react-hot-toast';
 import ListingDetailModal from './ListingDetailModal';
 import MarketplaceNavigation from './MarketplaceNavigation';
+import SellerProfile from './SellerProfile';
 
 // Add CSS for hiding scrollbars
 const scrollbarHideStyles = `
@@ -27,6 +28,8 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
   const [sendingMessage, setSendingMessage] = useState(false);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [selectedListing, setSelectedListing] = useState(null);
+  const [showSellerProfile, setShowSellerProfile] = useState(false);
+  const [selectedSellerId, setSelectedSellerId] = useState(null);
   const { user } = useAuth();
   const messagesEndRef = useRef(null);
 
@@ -370,7 +373,15 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
               >
                 <div className="flex justify-between items-start">
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-gray-900 dark:text-white truncate">
+                    <h3 
+                      className="font-medium text-gray-900 dark:text-white truncate hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const otherUserId = chat.buyerId === user.uid ? chat.sellerId : chat.buyerId;
+                        setSelectedSellerId(otherUserId);
+                        setShowSellerProfile(true);
+                      }}
+                    >
                       {chat.otherParticipantName}
                     </h3>
                     <p className="text-sm text-gray-600 dark:text-gray-400 truncate mt-1">
@@ -393,7 +404,7 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
           <div className="flex-1 flex justify-center items-center">
             <div className="text-center p-4">
               <p className="text-gray-600 dark:text-gray-400">Select a conversation</p>
-              <p className="text-gray-500 dark:text-gray-500 mt-2 text-sm">
+              <p className="text-gray-500 dark:text-gray-500 mt-2">
                 Choose a conversation from the list to view messages.
               </p>
             </div>
@@ -404,7 +415,14 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
             <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
               <div className="flex items-center">
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-medium text-gray-900 dark:text-white">
+                  <h3 
+                    className="font-medium text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer transition-colors"
+                    onClick={() => {
+                      const otherUserId = activeChat.buyerId === user.uid ? activeChat.sellerId : activeChat.buyerId;
+                      setSelectedSellerId(otherUserId);
+                      setShowSellerProfile(true);
+                    }}
+                  >
                     {activeChat.otherParticipantName}
                   </h3>
                   <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
@@ -531,6 +549,22 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
         onClose={() => setDetailModalOpen(false)}
         listing={selectedListing}
       />
+      
+      {/* Seller Profile */}
+      {showSellerProfile && selectedSellerId && (
+        <SellerProfile
+          sellerId={selectedSellerId}
+          onClose={() => {
+            setShowSellerProfile(false);
+            setSelectedSellerId(null);
+          }}
+          onViewListing={(listing) => {
+            setShowSellerProfile(false);
+            setSelectedSellerId(null);
+            // Handle viewing listing if needed
+          }}
+        />
+      )}
     </div>
   );
 }

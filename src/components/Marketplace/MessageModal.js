@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { collection, addDoc, serverTimestamp, doc, setDoc, getDoc, query, where, getDocs } from 'firebase/firestore';
 import { db as firestoreDb } from '../../services/firebase';
@@ -8,7 +8,7 @@ import Button from '../../design-system/atoms/Button';
 import logger from '../../utils/logger';
 import toast from 'react-hot-toast';
 
-const MessageModal = ({ isOpen, onClose, listing }) => {
+const MessageModal = ({ isOpen, onClose, listing, prefilledMessage = '' }) => {
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -16,6 +16,13 @@ const MessageModal = ({ isOpen, onClose, listing }) => {
   
   // Generate a chat ID based on listing ID and buyer ID
   const chatId = listing && user ? `${listing.id}_${user.uid}` : null;
+  
+  // Set the pre-filled message when it changes
+  useEffect(() => {
+    if (prefilledMessage) {
+      setNewMessage(prefilledMessage);
+    }
+  }, [prefilledMessage, isOpen]);
   
   // Handle sending a new message and creating a chat thread
   const handleSendMessage = async (e) => {
@@ -238,6 +245,7 @@ const MessageModal = ({ isOpen, onClose, listing }) => {
       size="md"
       maxWidth="max-w-lg"
       closeOnClickOutside={true}
+      zIndex={70}
     >
       <div className="flex flex-col h-96">
         {/* Message form */}
@@ -300,7 +308,8 @@ const MessageModal = ({ isOpen, onClose, listing }) => {
 MessageModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
-  listing: PropTypes.object
+  listing: PropTypes.object,
+  prefilledMessage: PropTypes.string
 };
 
 export default MessageModal;

@@ -515,29 +515,32 @@ const PurchaseInvoices = () => {
                 </div>
               </div>
               
-              <div className="flex flex-wrap gap-2">
+              <div className="flex gap-2 items-center">
                 {isGeneratingBatch ? (
                   <div className="px-4 py-2 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 flex items-center gap-2">
                     <span className="material-icons animate-spin">autorenew</span>
-                    <span>Generating PDFs on server...</span>
+                    <span className="hidden sm:inline">Generating PDFs on server...</span>
+                    <span className="sm:hidden">Generating...</span>
                   </div>
                 ) : (
                   <button
-                    className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center gap-2"
+                    className="px-3 sm:px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center gap-1 sm:gap-2 text-sm sm:text-base"
                     onClick={handleServerBatchGeneration}
                     disabled={invoices.length === 0}
                     title="Generate PDF invoices for all items"
                   >
-                    <span className="material-icons">cloud_download</span>
-                    <span>Generate All PDFs</span>
+                    <span className="material-icons text-lg sm:text-base">cloud_download</span>
+                    <span className="hidden sm:inline">Generate All PDFs</span>
+                    <span className="sm:hidden">PDFs</span>
                   </button>
                 )}
                 <button
-                  className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary/90 transition-colors flex items-center gap-2"
+                  className="px-3 sm:px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary/90 transition-colors flex items-center gap-1 sm:gap-2 text-sm sm:text-base"
                   onClick={() => setShowCreateModal(true)}
                 >
-                  <span className="material-icons">add</span>
-                  <span>Create New Invoice</span>
+                  <span className="material-icons text-lg sm:text-base">add</span>
+                  <span className="hidden sm:inline">Create New Invoice</span>
+                  <span className="sm:hidden">Create</span>
                 </button>
               </div>
             </div>

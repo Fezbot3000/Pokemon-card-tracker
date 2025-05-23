@@ -176,5 +176,46 @@ service cloud.firestore {
            request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participants);
       }
     }
+    
+    // --- Marketplace Profiles ---
+    // Users can read any marketplace profile, but only write their own
+    match /marketplaceProfiles/{userId} {
+      // Allow any authenticated user to read marketplace profiles
+      allow read: if request.auth != null;
+      
+      // Allow users to create/update their own profile
+      allow create, update: if request.auth != null && request.auth.uid == userId;
+      
+      // Prevent deletion
+      allow delete: if false;
+    }
+    
+    // --- Marketplace Reviews ---
+    // Reviews for sellers in the marketplace
+    match /marketplaceReviews/{reviewId} {
+      // Allow any authenticated user to read reviews
+      allow read: if request.auth != null;
+      
+      // Allow creation if the user is authenticated and is the reviewer
+      allow create: if request.auth != null && 
+        request.resource.data.reviewerId == request.auth.uid;
+      
+      // Prevent updates and deletes
+      allow update, delete: if false;
+    }
+    
+    // --- Marketplace Reports ---
+    // Reports for inappropriate listings
+    match /marketplaceReports/{reportId} {
+      // Only admins can read reports (for now, no one can read)
+      allow read: if false;
+      
+      // Allow authenticated users to create reports
+      allow create: if request.auth != null && 
+        request.resource.data.reporterId == request.auth.uid;
+      
+      // Prevent updates and deletes
+      allow update, delete: if false;
+    }
   }
 }
