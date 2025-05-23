@@ -25,11 +25,24 @@ function ListingDetailModal({ isOpen, onClose, listing, onContactSeller, onRepor
         setLoadingSellerData(true);
         
         // Load seller profile
+        console.log('Loading seller profile for listing.userId:', listing.userId);
         const profileRef = doc(firestoreDb, 'marketplaceProfiles', listing.userId);
         const profileSnap = await getDoc(profileRef);
         
         if (profileSnap.exists()) {
-          setSellerProfile(profileSnap.data());
+          const profileData = profileSnap.data();
+          console.log('Seller profile data:', {
+            docId: profileSnap.id,
+            profileUserId: profileData.userId,
+            displayName: profileData.displayName,
+            listingUserId: listing.userId
+          });
+          setSellerProfile(profileData);
+          
+          // Store the actual marketplace profile userId for viewing seller's other listings
+          if (profileData.userId) {
+            listing._marketplaceProfileUserId = profileData.userId;
+          }
         }
         
         // Load seller reviews
@@ -110,6 +123,8 @@ function ListingDetailModal({ isOpen, onClose, listing, onContactSeller, onRepor
 
   const handleViewSellerProfile = () => {
     if (onViewSellerProfile) {
+      // Always use the listing's userId which is the Firebase Auth user ID
+      console.log('Viewing seller profile for userId:', listing.userId);
       onViewSellerProfile(listing.userId);
     } else {
       toast.error('Seller profile view is not available');

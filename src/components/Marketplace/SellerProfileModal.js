@@ -21,7 +21,15 @@ function SellerProfileModal({ isOpen, onClose, sellerId }) {
   });
 
   useEffect(() => {
-    if (!sellerId || !isOpen) return;
+    if (!isOpen || !sellerId) {
+      console.log('SellerProfileModal: Not opening because:', { isOpen, sellerId });
+      return;
+    }
+
+    console.log('=== SellerProfileModal Opening ===');
+    console.log('sellerId parameter:', sellerId);
+    console.log('sellerId type:', typeof sellerId);
+    console.log('sellerId length:', sellerId?.length);
 
     const loadSellerData = async () => {
       try {
@@ -91,6 +99,20 @@ function SellerProfileModal({ isOpen, onClose, sellerId }) {
             const data = doc.data();
             userIdSet.add(data.userId);
             
+            // Check if this seller's ID matches (case-insensitive)
+            if (data.userId && 
+                (data.userId === sellerId || 
+                 data.userId.toLowerCase() === sellerId.toLowerCase() ||
+                 data.userId.trim() === sellerId.trim())) {
+              console.log('MATCH FOUND! Listing for our seller:', {
+                id: doc.id,
+                userId: data.userId,
+                sellerIdParam: sellerId,
+                status: data.status,
+                title: data.title || data.card?.name
+              });
+            }
+            
             // Log first few items to see structure
             if (userIdSet.size <= 5) {
               console.log('Sample item:', {
@@ -143,6 +165,42 @@ function SellerProfileModal({ isOpen, onClose, sellerId }) {
             const timeB = b.timestampListed?.toDate?.() || b.timestampListed || 0;
             return timeB - timeA; // Descending order
           });
+          
+          // If no listings found with userId, try with sellerId field
+          if (listings.length === 0) {
+            console.log('No listings found with userId, trying sellerId field...');
+            
+            const sellerIdQuery = query(
+              listingsRef,
+              where('sellerId', '==', sellerId)
+            );
+            
+            const sellerIdSnapshot = await getDocs(sellerIdQuery);
+            console.log('Listings found with sellerId field:', sellerIdSnapshot.size);
+            
+            sellerIdSnapshot.forEach((doc) => {
+              const data = doc.data();
+              console.log('Listing with sellerId:', { 
+                id: doc.id, 
+                sellerId: data.sellerId,
+                userId: data.userId, 
+                status: data.status,
+                title: data.title || data.card?.name
+              });
+              
+              // Only include available listings
+              if (data.status === 'available') {
+                listings.push({ id: doc.id, ...data });
+              }
+            });
+            
+            // Re-sort after adding new listings
+            listings.sort((a, b) => {
+              const timeA = a.timestampListed?.toDate?.() || a.timestampListed || 0;
+              const timeB = b.timestampListed?.toDate?.() || b.timestampListed || 0;
+              return timeB - timeA; // Descending order
+            });
+          }
           
           setActiveListings(listings);
         } catch (listingsError) {
