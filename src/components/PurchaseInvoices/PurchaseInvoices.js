@@ -6,7 +6,7 @@ import CreateInvoiceModal from './CreateInvoiceModal';
 import { PDFDownloadLink, pdf } from '@react-pdf/renderer';
 import PurchaseInvoicePDF from '../PurchaseInvoicePDF';
 import { formatDateForDisplay } from '../../utils/dateUtils';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, query, getDocs } from 'firebase/firestore';
 import { db as firestoreDb, functions, httpsCallable } from '../../services/firebase';
 import featureFlags from '../../utils/featureFlags';
 import logger from '../../utils/logger';
@@ -345,38 +345,33 @@ const PurchaseInvoices = () => {
     }
   };
 
-  // Load purchase invoices with improved cloud synchronization
-  useEffect(() => {
-    const loadInvoices = async () => {
-      try {
-        setLoading(true);
-        
-        // First try to fetch directly from Firestore if online
-        let firestoreInvoices = [];
-        let loadedFromFirestore = false;
-        
-        if (currentUser && navigator.onLine && featureFlags.enableFirestoreSync) {
-          try {
-            // Import Firebase modules
-            const { collection, query, getDocs } = await import('firebase/firestore');
+  const loadInvoices = async () => {
+    try {
+      setLoading(true);
+      
+      // Load directly from Firestore if online
+      if (currentUser && navigator.onLine && featureFlags.enableFirestoreSync) {
+        try {
+          // Create a reference to the user's purchase invoices collection
+          const invoicesRef = collection(firestoreDb, 'users', currentUser.uid, 'purchaseInvoices');
+          const q = query(invoicesRef);
+          
+          // Get all purchase invoices for the current user
+          const querySnapshot = await getDocs(q);
+          
+          if (!querySnapshot.empty) {
+            const firestoreInvoices = querySnapshot.docs.map(doc => {
+              const data = doc.data();
+              return { ...data, id: doc.id };
+            });
             
-            // Create a reference to the user's purchase invoices collection
-            const invoicesRef = collection(firestoreDb, 'users', currentUser.uid, 'purchaseInvoices');
-            const q = query(invoicesRef);
+            // Set invoices from Firestore immediately
+            setInvoices(firestoreInvoices);
+            console.log(`Loaded ${firestoreInvoices.length} invoices from Firestore`);
             
-            // Get all purchase invoices for the current user
-            const querySnapshot = await getDocs(q);
-            
-            if (!querySnapshot.empty) {
-              firestoreInvoices = querySnapshot.docs.map(doc => {
-                const data = doc.data();
-                // Ensure the ID is set correctly
-                return { ...data, id: doc.id };
-              });
-              
-              // Update local database with Firestore data
+            // Update local database in the background (don't await)
+            Promise.resolve().then(async () => {
               for (const invoice of firestoreInvoices) {
-                // Clean the invoice object to remove undefined values
                 const cleanedInvoice = {};
                 Object.entries(invoice).forEach(([key, value]) => {
                   if (value !== undefined) {
@@ -385,78 +380,59 @@ const PurchaseInvoices = () => {
                 });
                 await db.savePurchaseInvoice(cleanedInvoice);
               }
-              
-              // Set invoices from Firestore
-              setInvoices(firestoreInvoices);
-              loadedFromFirestore = true;
-              console.log(`Loaded ${firestoreInvoices.length} invoices directly from Firestore`);
-            }
-          } catch (firestoreError) {
-            console.error('Error loading invoices from Firestore:', firestoreError);
-          }
-        }
-        
-        // If we couldn't load from Firestore, fall back to local database
-        if (!loadedFromFirestore) {
-          // Try to sync invoices from Firebase first
-          try {
-            await db.syncPurchaseInvoicesFromFirestore();
-            console.log('Synced purchase invoices from Firebase');
-          } catch (syncError) {
-            console.error('Error syncing invoices from Firebase:', syncError);
-          }
-          
-          // Get purchase invoices from local database for the current user only
-          const purchaseInvoices = await db.getPurchaseInvoices(currentUser?.uid) || [];
-          setInvoices(purchaseInvoices);
-          console.log(`Loaded ${purchaseInvoices.length} invoices from local database for user ${currentUser?.uid}`);
-        }
-      } catch (error) {
-        console.error('Error loading purchase invoices:', error);
-        toast.error('Failed to load purchase invoices');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    const loadProfile = async () => {
-      try {
-        // First try to load from IndexedDB
-        const userProfile = await db.getProfile();
-        console.log('Profile loaded from IndexedDB:', userProfile);
-        
-        if (userProfile) {
-          setProfile(userProfile);
-        } else {
-          // If not found in IndexedDB, try loading from Firestore
-          console.log('Profile not found in IndexedDB, trying Firestore...');
-          if (currentUser && currentUser.uid) {
-            const profileRef = doc(firestoreDb, 'users', currentUser.uid);
-            const profileDoc = await getDoc(profileRef);
+            });
             
-            if (profileDoc.exists()) {
-              const firestoreProfile = profileDoc.data();
-              console.log('Profile loaded from Firestore:', firestoreProfile);
-              
-              // Save to IndexedDB for future use
-              await db.saveProfile(firestoreProfile);
-              
-              setProfile(firestoreProfile);
-            } else {
-              console.log('No profile found in Firestore');
-            }
+            return; // Exit early if we loaded from Firestore
           }
+        } catch (firestoreError) {
+          console.error('Error loading invoices from Firestore:', firestoreError);
         }
-      } catch (error) {
-        console.error('Error loading profile:', error);
       }
-    };
+      
+      // Fall back to local database only if Firestore failed
+      const purchaseInvoices = await db.getPurchaseInvoices(currentUser?.uid) || [];
+      setInvoices(purchaseInvoices);
+      console.log(`Loaded ${purchaseInvoices.length} invoices from local database`);
+    } catch (error) {
+      console.error('Error loading purchase invoices:', error);
+      toast.error('Failed to load purchase invoices');
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  const loadProfile = async () => {
+    try {
+      // Try Firestore first if online
+      if (currentUser && currentUser.uid && navigator.onLine) {
+        const profileRef = doc(firestoreDb, 'users', currentUser.uid);
+        const profileDoc = await getDoc(profileRef);
+        
+        if (profileDoc.exists()) {
+          const firestoreProfile = profileDoc.data();
+          setProfile(firestoreProfile);
+          
+          // Save to IndexedDB in the background
+          db.saveProfile(firestoreProfile).catch(console.error);
+          return;
+        }
+      }
+      
+      // Fall back to IndexedDB
+      const userProfile = await db.getProfile();
+      if (userProfile) {
+        setProfile(userProfile);
+      }
+    } catch (error) {
+      console.error('Error loading profile:', error);
+    }
+  };
 
+  // Load purchase invoices with improved cloud synchronization
+  useEffect(() => {
     if (currentUser) {
       loadInvoices();
       loadProfile();
-    } else {
-      setLoading(false);
     }
   }, [currentUser]);
 
