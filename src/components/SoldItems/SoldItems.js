@@ -94,8 +94,8 @@ const SoldItems = () => {
         return groups;
       }, {}));
       
-      // Set all buyers as expanded
-      setExpandedBuyers(new Set(buyerIds));
+      // Set all buyers as collapsed by default (empty set)
+      setExpandedBuyers(new Set());
     }
   }, [soldCards]);
 
