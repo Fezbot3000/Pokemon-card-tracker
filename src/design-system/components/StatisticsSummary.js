@@ -27,8 +27,8 @@ const StatisticsSummary = ({
       className={`w-full bg-white dark:bg-[#1B2131] rounded-md ${isDarkMode ? 'shadow-sm' : ''} overflow-hidden border border-[#ffffff33] dark:border-[#ffffff1a] mb-2 sm:mb-3 ${className}`}
       {...stripDebugProps(props)}
     >
-      <div className="rounded-md p-3 sm:p-6">
-        <div className="grid grid-cols-2 sm:grid-cols-4">
+      <div className="rounded-md p-2 sm:p-4 md:p-6">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-0">
           {statistics.map((stat, index) => {
             let displayValue;
             const isMonetaryStat = stat.isMonetary !== undefined ? stat.isMonetary : ['PAID', 'VALUE', 'PROFIT'].includes(stat.label.toUpperCase());
@@ -58,28 +58,30 @@ const StatisticsSummary = ({
             return (
               <div
                 key={index}
-                className="flex flex-col items-center justify-center p-3 py-4 sm:p-4 sm:py-6 border-none"
+                className="flex flex-col items-center justify-center p-2 sm:p-3 md:p-4 py-3 sm:py-4 md:py-6 border-none"
               >
                 <div className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 sm:mb-2 uppercase">
                   {stat.label}
                 </div>
-                <div className={`font-medium flex items-center gap-1 whitespace-nowrap max-w-full
+                <div className={`font-medium flex items-center gap-1 whitespace-nowrap overflow-hidden
                   ${stat.isProfit && stat.value > 0 ? 'text-green-500' : ''}
                   ${stat.isProfit && stat.value < 0 ? 'text-red-500' : ''}
                   ${!stat.isProfit ? 'text-gray-900 dark:text-white' : ''}`}
                   style={{
-                    fontSize: 'clamp(1rem, calc(0.8rem + 1.5vw), 1.75rem)',
-                    wordBreak: 'break-word',
-                    textOverflow: 'clip',
+                    fontSize: 'clamp(0.875rem, calc(0.75rem + 1.2vw), 1.5rem)',
+                    maxWidth: '100%',
+                    textOverflow: 'ellipsis',
                   }}
                 >
                   {stat.icon && (
-                    <span className="text-gray-500 dark:text-gray-400">
+                    <span className="text-gray-500 dark:text-gray-400 flex-shrink-0">
                       <Icon name={stat.icon} size="sm" />
                     </span>
                   )}
                   {/* Render the processed displayValue */}
-                  {displayValue}
+                  <span className="overflow-hidden text-ellipsis">
+                    {displayValue}
+                  </span>
                 </div>
               </div>
             );

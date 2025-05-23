@@ -8,6 +8,7 @@ import {
   updateProfile,
   GoogleAuthProvider,
   signInWithPopup,
+  signInWithRedirect,
   getRedirectResult,
   OAuthProvider,
   connectAuthEmulator
@@ -126,9 +127,40 @@ export function AuthProvider({ children }) {
       try {
         const result = await getRedirectResult(auth);
         if (result?.user) {
-          // User successfully authenticated with redirect
-          await createUserDocument(result.user);
+          console.log("Redirect sign-in successful:", result.user?.email);
+          
+          // Try to create user document but don't fail if it errors
+          try {
+            await createUserDocument(result.user);
+            console.log("User document created after redirect sign-in");
+          } catch (docError) {
+            console.error("Failed to create user document after redirect sign-in:", docError);
+          }
+          
           toast.success('Signed in successfully!');
+          
+          // After successful sign-in, clear any previous plan choice
+          localStorage.removeItem('chosenPlan');
+          
+          // Check if this is a truly new user
+          const isNewAccount = result.user.metadata.creationTime === result.user.metadata.lastSignInTime;
+          
+          if (isNewAccount) {
+            console.log("Brand new account detected, setting isNewUser flag");
+            localStorage.setItem('isNewUser', 'true');
+          } else {
+            console.log("Existing account detected, not setting isNewUser flag");
+            localStorage.removeItem('isNewUser');
+            
+            // Trigger auto-sync for existing users after successful login
+            if (performAutoSync) {
+              try {
+                await performAutoSync();
+              } catch (syncError) {
+                console.error('Error during auto-sync:', syncError);
+              }
+            }
+          }
         }
       } catch (error) {
         console.error("Redirect error:", error);
@@ -236,43 +268,58 @@ export function AuthProvider({ children }) {
     try {
       setError(null);
       console.log("Starting Google sign-in process...");
-      const result = await signInWithPopup(auth, googleProvider);
-      console.log("Google sign-in successful:", result.user?.email);
       
-      // Try to create user document but don't fail if it errors
-      try {
-        await createUserDocument(result.user);
-        console.log("User document created after Google sign-in");
-      } catch (docError) {
-        console.error("Failed to create user document after Google sign-in:", docError);
-      }
+      // Detect if running as PWA (installed app)
+      const isPWA = window.matchMedia('(display-mode: standalone)').matches ||
+                    window.navigator.standalone ||
+                    document.referrer.includes('android-app://');
       
-      toast.success('Signed in with Google successfully!');
-      
-      // After successful Google sign-in, clear any previous plan choice
-      localStorage.removeItem('chosenPlan');
-      
-      // Check if this is a truly new user
-      const isNewAccount = result.user.metadata.creationTime === result.user.metadata.lastSignInTime;
-      
-      if (isNewAccount) {
-        console.log("Brand new Google account detected, setting isNewUser flag");
-        localStorage.setItem('isNewUser', 'true');
+      if (isPWA) {
+        // Use redirect for PWA to avoid popup issues
+        console.log("PWA detected, using redirect sign-in");
+        await signInWithRedirect(auth, googleProvider);
+        // The redirect result will be handled by handleRedirectResult on page reload
+        return;
       } else {
-        console.log("Existing Google account detected, not setting isNewUser flag");
-        localStorage.removeItem('isNewUser');
+        // Use popup for regular browser
+        const result = await signInWithPopup(auth, googleProvider);
+        console.log("Google sign-in successful:", result.user?.email);
         
-        // Trigger auto-sync for existing users after successful login
-        if (performAutoSync) {
-          try {
-            await performAutoSync();
-          } catch (syncError) {
-            console.error('Error during auto-sync:', syncError);
+        // Try to create user document but don't fail if it errors
+        try {
+          await createUserDocument(result.user);
+          console.log("User document created after Google sign-in");
+        } catch (docError) {
+          console.error("Failed to create user document after Google sign-in:", docError);
+        }
+        
+        toast.success('Signed in with Google successfully!');
+        
+        // After successful Google sign-in, clear any previous plan choice
+        localStorage.removeItem('chosenPlan');
+        
+        // Check if this is a truly new user
+        const isNewAccount = result.user.metadata.creationTime === result.user.metadata.lastSignInTime;
+        
+        if (isNewAccount) {
+          console.log("Brand new Google account detected, setting isNewUser flag");
+          localStorage.setItem('isNewUser', 'true');
+        } else {
+          console.log("Existing Google account detected, not setting isNewUser flag");
+          localStorage.removeItem('isNewUser');
+          
+          // Trigger auto-sync for existing users after successful login
+          if (performAutoSync) {
+            try {
+              await performAutoSync();
+            } catch (syncError) {
+              console.error('Error during auto-sync:', syncError);
+            }
           }
         }
+        
+        return result.user;
       }
-      
-      return result.user;
     } catch (err) {
       console.error("Google sign-in error:", err);
       if (err.code !== 'auth/popup-closed-by-user') {
