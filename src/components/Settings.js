@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../design-system/contexts/ThemeContext';
@@ -71,48 +71,41 @@ const Settings = () => {
     toastService.info('Tutorial functionality coming soon');
   };
 
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#0F1419]">
-      {/* Header */}
-      <div className="bg-white dark:bg-[#1B2131] border-b border-gray-200 dark:border-gray-700">
-        <div className="flex items-center justify-between p-4">
-          <div className="flex items-center space-x-3">
-            <button
-              onClick={() => navigate('/dashboard')}
-              className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-            <h1 className="text-xl font-semibold text-gray-900 dark:text-white">Settings</h1>
-          </div>
-        </div>
-      </div>
-
       {/* Tab Navigation */}
-      <div className="bg-white dark:bg-[#1B2131] border-b border-gray-200 dark:border-gray-700">
-        <div className="flex">
-          {tabs.map((tab) => (
+      <div className="fixed top-0 left-0 right-0 z-50 bg-white dark:bg-[#1B2131] border-b border-gray-200 dark:border-gray-700 lg:sticky lg:top-0 lg:z-10">
+        <div className="flex justify-center space-x-1 p-4">
+          {tabs.map(tab => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 py-4 px-2 text-center border-b-2 transition-colors ${
+              onClick={() => {
+                setActiveTab(tab.id);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors duration-200 ${
                 activeTab === tab.id
-                  ? 'border-[#ef4444] text-[#ef4444]'
-                  : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                  ? 'bg-gradient-to-r from-[#ef4444] to-[#db2777] text-white'
+                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200/50 dark:hover:bg-gray-700/50'
               }`}
             >
-              <div className="flex flex-col items-center space-y-1">
-                <span className="text-sm font-medium">{tab.label}</span>
-              </div>
+              <span className={`material-icons text-sm mr-1 ${
+                activeTab === tab.id ? 'text-white' : 'text-gray-600 dark:text-gray-300'
+              }`}>
+                {tab.icon}
+              </span>
+              <span>{tab.label}</span>
             </button>
           ))}
         </div>
       </div>
 
       {/* Tab Content */}
-      <div className="p-4 space-y-4">
+      <div className="pt-20 lg:pt-0 p-4 space-y-4 mb-20 sm:mb-4">
         {activeTab === 'general' && (
           <div className="space-y-6">
             {/* Appearance */}

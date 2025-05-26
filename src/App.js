@@ -216,11 +216,12 @@ function Dashboard() {
             if (view === 'settings') {
               navigate('/dashboard/settings');
             } else {
-              // If we're on settings page, navigate back to dashboard first
+              // If we're on settings page, navigate back to dashboard with the desired view
               if (location.pathname.includes('/settings')) {
-                navigate('/dashboard');
+                navigate('/dashboard', { state: { targetView: view } });
+              } else {
+                setCurrentView(view);
               }
-              setCurrentView(view);
             }
           }}
           onSettingsClick={() => {
@@ -235,6 +236,17 @@ function Dashboard() {
 // Wrapper for dashboard index route (AppContent)
 function DashboardIndex() {
   const { currentView, setCurrentView } = useOutletContext();
+  const location = useLocation();
+  
+  // Handle navigation state from settings page
+  useEffect(() => {
+    if (location.state?.targetView) {
+      setCurrentView(location.state.targetView);
+      // Clear the state to prevent repeated navigation
+      window.history.replaceState({}, '', location.pathname);
+    }
+  }, [location.state, setCurrentView]);
+  
   return <>
     <AppContent currentView={currentView} setCurrentView={setCurrentView} />
   </>;

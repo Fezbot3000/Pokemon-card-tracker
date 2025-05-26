@@ -500,7 +500,7 @@ const PurchaseInvoices = () => {
                   </div>
                 ) : (
                   <button
-                    className="px-3 sm:px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center gap-1 sm:gap-2 text-sm sm:text-base"
+                    className="flex-1 px-3 sm:px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center justify-center gap-1 sm:gap-2 text-sm sm:text-base"
                     onClick={handleServerBatchGeneration}
                     disabled={invoices.length === 0}
                     title="Generate PDF invoices for all items"
@@ -511,7 +511,7 @@ const PurchaseInvoices = () => {
                   </button>
                 )}
                 <button
-                  className="px-3 sm:px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary/90 transition-colors flex items-center gap-1 sm:gap-2 text-sm sm:text-base"
+                  className="flex-1 px-3 sm:px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary/90 transition-colors flex items-center justify-center gap-1 sm:gap-2 text-sm sm:text-base"
                   onClick={() => setShowCreateModal(true)}
                 >
                   <span className="material-icons text-lg sm:text-base">add</span>
