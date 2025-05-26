@@ -1,6 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import NavigationBar from './NavigationBar';
+import Footer from './Footer';
+import { Helmet } from 'react-helmet-async';
 import { useAuth } from '../design-system';
 import { useSubscription } from '../contexts/SubscriptionContext';
 import { toast } from 'react-hot-toast';
@@ -118,6 +120,14 @@ function Pricing() {
 
   return (
     <div className="min-h-screen bg-[#1B2131] text-white">
+      <Helmet>
+        <title>Pricing Plans | Pokemon Card Tracker Australia</title>
+        <meta name="description" content="Choose the perfect plan for your Pokemon card collection. Free tier available with 50 cards. Premium plans unlock unlimited tracking, marketplace access, and advanced analytics." />
+        <meta name="keywords" content="pokemon card tracker pricing, pokemon collection plans, card tracking subscription, pokemon marketplace premium, PSA tracking plans" />
+        <meta property="og:title" content="Pricing Plans | Pokemon Card Tracker Australia" />
+        <meta property="og:description" content="Choose the perfect plan for your Pokemon card collection. Free tier available with 50 cards. Premium plans unlock unlimited tracking, marketplace access, and advanced analytics." />
+        <link rel="canonical" href="https://www.mycardtracker.com.au/pricing" />
+      </Helmet>
       <NavigationBar />
       
       {/* Hero Section */}
@@ -347,52 +357,7 @@ function Pricing() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="py-16 px-4 sm:px-6 lg:px-8 border-t border-white/10 bg-black">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
-            <div className="col-span-1 md:col-span-1">
-              <h3 className="text-xl font-bold mb-4">Collectibles Tracker</h3>
-              <p className="text-gray-400 text-sm mb-6">
-                Australia's most trusted platform for collectible management and trading.
-              </p>
-            </div>
-            
-            <div className="col-span-1">
-              <h4 className="font-semibold mb-4">Platform</h4>
-              <ul className="space-y-2 text-sm text-gray-400">
-                <li><Link to="/login" onClick={() => window.scrollTo(0, 0)} className="hover:text-white transition-colors">Sign Up</Link></li>
-                <li><Link to="/features" onClick={() => window.scrollTo(0, 0)} className="hover:text-white transition-colors">Features</Link></li>
-                <li><Link to="/pricing" onClick={() => window.scrollTo(0, 0)} className="hover:text-white transition-colors">Pricing</Link></li>
-              </ul>
-            </div>
-            
-            <div className="col-span-1">
-              <h4 className="font-semibold mb-4">Resources</h4>
-              <ul className="space-y-2 text-sm text-gray-400">
-                <li><Link to="/help-center" onClick={() => window.scrollTo(0, 0)} className="hover:text-white transition-colors">Help Center</Link></li>
-                <li><Link to="/collecting-guide" onClick={() => window.scrollTo(0, 0)} className="hover:text-white transition-colors">Collecting Guide</Link></li>
-                <li><Link to="/grading-integration" onClick={() => window.scrollTo(0, 0)} className="hover:text-white transition-colors">Grading Integration</Link></li>
-              </ul>
-            </div>
-            
-            <div className="col-span-1">
-              <h4 className="font-semibold mb-4">Company</h4>
-              <ul className="space-y-2 text-sm text-gray-400">
-                <li><Link to="/about" onClick={() => window.scrollTo(0, 0)} className="hover:text-white transition-colors">About</Link></li>
-                <li><Link to="/privacy" onClick={() => window.scrollTo(0, 0)} className="hover:text-white transition-colors">Privacy</Link></li>
-                <li><Link to="/terms" onClick={() => window.scrollTo(0, 0)} className="hover:text-white transition-colors">Terms</Link></li>
-              </ul>
-            </div>
-          </div>
-          
-          <div className="pt-8 border-t border-white/10 text-center">
-            <p className="text-gray-400 text-sm">
-              {new Date().getFullYear()} Collectibles Tracker. Made with ❤️ for collectors worldwide.
-            </p>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

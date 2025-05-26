@@ -478,8 +478,8 @@ const CardList = ({
     return filteredCards.slice(0, visibleCardCount);
   }, [filteredCards, visibleCardCount]);
 
-  // Calculate totals using the utility function
-  const totals = useMemo(() => calculateCardTotals(cards), [cards]);
+  // Calculate totals using the utility function - updated to use filtered cards for selected collection
+  const totals = useMemo(() => calculateCardTotals(filteredCards), [filteredCards]);
 
   // Reset state when collection changes
   useEffect(() => {

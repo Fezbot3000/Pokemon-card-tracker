@@ -1,3 +1,13 @@
 # https://www.robotstxt.org/robotstxt.html
 User-agent: *
-Disallow:
+Allow: /
+Disallow: /dashboard/
+Disallow: /admin/
+Disallow: /api/
+Disallow: /private/
+
+# Sitemap location
+Sitemap: https://www.mycardtracker.com.au/sitemap.xml
+
+# Crawl delay for better server performance
+Crawl-delay: 1

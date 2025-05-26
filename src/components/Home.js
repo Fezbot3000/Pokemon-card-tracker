@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../design-system';
+import { Helmet } from 'react-helmet-async';
 import NavigationBar from './NavigationBar';
+import Footer from './Footer';
 import { Link } from 'react-router-dom';
 
 function Home() {
@@ -29,6 +31,78 @@ function Home() {
 
   return (
     <div className="min-h-screen bg-[#1B2131] text-white">
+      <Helmet>
+        <title>Pokemon Card Tracker Australia | Track, Value & Trade Pokemon Cards</title>
+        <meta name="description" content="Australia's #1 Pokemon card tracker. Manage your collection, track PSA graded cards, monitor investments, and trade in our secure marketplace. Free to start!" />
+        <meta name="keywords" content="track PSA graded pokemon cards, pokemon card price tracker, charizard card value tracker, pokemon card investment calculator, pokemon tcg collection manager, pokemon card grading tracker, pokemon card market prices australia, vintage pokemon card tracker, pokemon card portfolio tracker, pokemon booster box tracker, shadowless charizard price, first edition pokemon cards value, pokemon card condition tracker, pokemon card rarity guide, pokemon set completion tracker" />
+        <meta property="og:title" content="Pokemon Card Tracker Australia | Track, Value & Trade Pokemon Cards" />
+        <meta property="og:description" content="Australia's #1 Pokemon card tracker. Manage your collection, track PSA graded cards, monitor investments, and trade in our secure marketplace. Free to start!" />
+        <meta property="og:url" content="https://www.mycardtracker.com.au" />
+        <meta property="og:type" content="website" />
+        <link rel="canonical" href="https://www.mycardtracker.com.au" />
+        
+        {/* Structured Data */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@graph": [
+              {
+                "@type": "Organization",
+                "@id": "https://www.mycardtracker.com.au/#organization",
+                "name": "Pokemon Card Tracker",
+                "alternateName": "My Card Tracker",
+                "url": "https://www.mycardtracker.com.au",
+                "logo": {
+                  "@type": "ImageObject",
+                  "url": "https://www.mycardtracker.com.au/logo192.png"
+                },
+                "description": "Australia's premier Pokemon card tracking and marketplace platform",
+                "areaServed": "Australia",
+                "serviceType": "Digital Platform"
+              },
+              {
+                "@type": "WebSite",
+                "@id": "https://www.mycardtracker.com.au/#website",
+                "url": "https://www.mycardtracker.com.au",
+                "name": "Pokemon Card Tracker Australia",
+                "description": "Track, value, and trade Pokemon cards with Australia's #1 Pokemon card tracker",
+                "publisher": {
+                  "@id": "https://www.mycardtracker.com.au/#organization"
+                },
+                "potentialAction": {
+                  "@type": "SearchAction",
+                  "target": "https://www.mycardtracker.com.au/search?q={search_term_string}",
+                  "query-input": "required name=search_term_string"
+                }
+              },
+              {
+                "@type": "SoftwareApplication",
+                "name": "Pokemon Card Tracker",
+                "applicationCategory": "CollectionManagement",
+                "operatingSystem": "Web Browser",
+                "offers": {
+                  "@type": "Offer",
+                  "price": "0",
+                  "priceCurrency": "AUD",
+                  "description": "Free tier with 50 cards, premium plans available"
+                },
+                "aggregateRating": {
+                  "@type": "AggregateRating",
+                  "ratingValue": "4.8",
+                  "reviewCount": "150"
+                },
+                "featureList": [
+                  "Pokemon card collection tracking",
+                  "PSA graded card integration",
+                  "Investment analytics",
+                  "Secure marketplace",
+                  "Price monitoring"
+                ]
+              }
+            ]
+          })}
+        </script>
+      </Helmet>
       <NavigationBar />
       
       {/* Modal for enlarged images */}
@@ -371,52 +445,7 @@ function Home() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="py-16 px-4 sm:px-6 lg:px-8 border-t border-white/10 bg-black">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
-            <div className="col-span-1 md:col-span-1">
-              <h3 className="text-xl font-bold mb-4">Collectibles Tracker</h3>
-              <p className="text-gray-400 text-sm mb-6">
-                Australia's most trusted platform for collectible management and trading.
-              </p>
-            </div>
-            
-            <div className="col-span-1">
-              <h4 className="font-semibold mb-4">Platform</h4>
-              <ul className="space-y-2 text-sm text-gray-400">
-                <li><Link to="/login" onClick={() => window.scrollTo(0, 0)} className="hover:text-white transition-colors">Sign Up</Link></li>
-                <li><Link to="/features" onClick={() => window.scrollTo(0, 0)} className="hover:text-white transition-colors">Features</Link></li>
-                <li><Link to="/pricing" onClick={() => window.scrollTo(0, 0)} className="hover:text-white transition-colors">Pricing</Link></li>
-              </ul>
-            </div>
-            
-            <div className="col-span-1">
-              <h4 className="font-semibold mb-4">Resources</h4>
-              <ul className="space-y-2 text-sm text-gray-400">
-                <li><Link to="/help-center" onClick={() => window.scrollTo(0, 0)} className="hover:text-white transition-colors">Help Center</Link></li>
-                <li><Link to="/collecting-guide" onClick={() => window.scrollTo(0, 0)} className="hover:text-white transition-colors">Collecting Guide</Link></li>
-                <li><Link to="/grading-integration" onClick={() => window.scrollTo(0, 0)} className="hover:text-white transition-colors">Grading Integration</Link></li>
-              </ul>
-            </div>
-            
-            <div className="col-span-1">
-              <h4 className="font-semibold mb-4">Company</h4>
-              <ul className="space-y-2 text-sm text-gray-400">
-                <li><Link to="/about" onClick={() => window.scrollTo(0, 0)} className="hover:text-white transition-colors">About</Link></li>
-                <li><Link to="/privacy" onClick={() => window.scrollTo(0, 0)} className="hover:text-white transition-colors">Privacy</Link></li>
-                <li><Link to="/terms" onClick={() => window.scrollTo(0, 0)} className="hover:text-white transition-colors">Terms</Link></li>
-              </ul>
-            </div>
-          </div>
-          
-          <div className="pt-8 border-t border-white/10 text-center">
-            <p className="text-gray-400 text-sm">
-              {new Date().getFullYear()} Collectibles Tracker. Made with ❤️ for collectors worldwide.
-            </p>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

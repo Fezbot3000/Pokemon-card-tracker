@@ -8,6 +8,7 @@ import {
   useNavigate,
   Outlet
 } from 'react-router-dom';
+import { HelmetProvider } from 'react-helmet-async';
 import { 
   Header, 
   useTheme, 
@@ -955,6 +956,4 @@ function AppContent() {
 // Export Dashboard and DashboardIndex for router
 export { Dashboard, DashboardIndex };
 
-function App() {
-  return null;
-}
+export default Dashboard;

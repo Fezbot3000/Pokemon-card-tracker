@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import NavigationBar from './NavigationBar';
+import Footer from './Footer';
 
 const CollectingGuide = () => {
   const [activeSection, setActiveSection] = useState('getting-started');
@@ -19,12 +21,12 @@ const CollectingGuide = () => {
       case 'getting-started':
         return (
           <div className="space-y-8">
-            <h2 className="text-3xl font-bold mb-6">Getting Started with Card Collecting</h2>
+            <h2 className="text-3xl font-bold mb-6">Getting Started with Pokémon Card Collecting</h2>
             
             <div className="bg-white/5 rounded-xl p-6">
               <h3 className="text-xl font-bold text-blue-400 mb-4">🎯 Define Your Collection Goals</h3>
               <ul className="space-y-2 text-gray-300">
-                <li>• Choose your focus: specific sets, players, or eras</li>
+                <li>• Choose your focus: specific sets, Pokémon, or eras</li>
                 <li>• Set a realistic budget for your collection</li>
                 <li>• Decide between vintage or modern cards</li>
                 <li>• Consider long-term vs. short-term collecting</li>
@@ -58,7 +60,7 @@ const CollectingGuide = () => {
       case 'card-conditions':
         return (
           <div className="space-y-8">
-            <h2 className="text-3xl font-bold mb-6">Understanding Card Conditions</h2>
+            <h2 className="text-3xl font-bold mb-6">Understanding Pokémon Card Conditions</h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <div className="bg-white/5 rounded-xl p-6">
@@ -109,6 +111,14 @@ const CollectingGuide = () => {
 
   return (
     <div className="min-h-screen bg-[#1B2131] text-white">
+      <Helmet>
+        <title>Pokemon Card Collecting Guide Australia | PSA Grading & Investment Tips</title>
+        <meta name="description" content="Complete guide to collecting Pokemon cards in Australia. Learn PSA grading, card conditions, storage tips, market trends, and how to spot fake Pokemon cards. Expert advice for collectors." />
+        <meta name="keywords" content="pokemon card collecting guide australia, PSA grading pokemon cards, pokemon card conditions guide, how to store pokemon cards, pokemon card market trends, fake pokemon cards identification, vintage pokemon cards collecting, first edition pokemon cards, shadowless pokemon cards, pokemon card investment tips, charizard card collecting, pokemon booster box collecting" />
+        <meta property="og:title" content="Pokemon Card Collecting Guide Australia | PSA Grading & Investment Tips" />
+        <meta property="og:description" content="Complete guide to collecting Pokemon cards in Australia. Learn PSA grading, card conditions, storage tips, market trends, and how to spot fake Pokemon cards." />
+        <link rel="canonical" href="https://www.mycardtracker.com.au/collecting-guide" />
+      </Helmet>
       <NavigationBar />
       
       {/* Hero Section */}
@@ -129,7 +139,7 @@ const CollectingGuide = () => {
           </h1>
           
           <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-300 mb-8 sm:mb-12 max-w-3xl mx-auto leading-relaxed">
-            Everything you need to know about collecting, grading, and protecting your valuable cards.
+            Everything you need to know about collecting, grading, and protecting your valuable Pokémon cards.
           </p>
         </div>
       </section>
@@ -172,51 +182,7 @@ const CollectingGuide = () => {
       </section>
 
       {/* Footer */}
-      <footer className="py-16 px-4 sm:px-6 lg:px-8 border-t border-white/10 bg-black">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
-            <div className="col-span-1 md:col-span-1">
-              <h3 className="text-xl font-bold mb-4">Collectibles Tracker</h3>
-              <p className="text-gray-400 text-sm mb-6">
-                Australia's most trusted platform for collectible management and trading.
-              </p>
-            </div>
-            
-            <div className="col-span-1">
-              <h4 className="font-semibold mb-4">Platform</h4>
-              <ul className="space-y-2 text-sm text-gray-400">
-                <li><Link to="/login" onClick={() => window.scrollTo(0, 0)} className="hover:text-white transition-colors">Sign Up</Link></li>
-                <li><Link to="/features" onClick={() => window.scrollTo(0, 0)} className="hover:text-white transition-colors">Features</Link></li>
-                <li><Link to="/pricing" onClick={() => window.scrollTo(0, 0)} className="hover:text-white transition-colors">Pricing</Link></li>
-              </ul>
-            </div>
-            
-            <div className="col-span-1">
-              <h4 className="font-semibold mb-4">Resources</h4>
-              <ul className="space-y-2 text-sm text-gray-400">
-                <li><Link to="/help-center" onClick={() => window.scrollTo(0, 0)} className="hover:text-white transition-colors">Help Center</Link></li>
-                <li><Link to="/collecting-guide" onClick={() => window.scrollTo(0, 0)} className="hover:text-white transition-colors">Collecting Guide</Link></li>
-                <li><Link to="/grading-integration" onClick={() => window.scrollTo(0, 0)} className="hover:text-white transition-colors">Grading Integration</Link></li>
-              </ul>
-            </div>
-            
-            <div className="col-span-1">
-              <h4 className="font-semibold mb-4">Company</h4>
-              <ul className="space-y-2 text-sm text-gray-400">
-                <li><Link to="/about" onClick={() => window.scrollTo(0, 0)} className="hover:text-white transition-colors">About</Link></li>
-                <li><Link to="/privacy" onClick={() => window.scrollTo(0, 0)} className="hover:text-white transition-colors">Privacy</Link></li>
-                <li><Link to="/terms" onClick={() => window.scrollTo(0, 0)} className="hover:text-white transition-colors">Terms</Link></li>
-              </ul>
-            </div>
-          </div>
-          
-          <div className="pt-8 border-t border-white/10 text-center">
-            <p className="text-gray-400 text-sm">
-              {new Date().getFullYear()} Collectibles Tracker. Made with ❤️ for collectors worldwide.
-            </p>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };

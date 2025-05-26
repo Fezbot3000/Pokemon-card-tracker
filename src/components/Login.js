@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../design-system';
+import { Helmet } from 'react-helmet-async';
 import NavigationBar from './NavigationBar';
 
 function Login() {
@@ -156,6 +157,12 @@ function Login() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-red-500 to-green-500 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 page-no-padding">
+      <Helmet>
+        <title>{isLogin ? 'Login' : 'Sign Up'} | Pokemon Card Tracker Australia</title>
+        <meta name="description" content={isLogin ? 'Login to your Pokemon Card Tracker account to manage your collection, track investments, and access the marketplace.' : 'Sign up for Pokemon Card Tracker to start tracking your Pokemon cards, monitor investments, and trade with other collectors.'} />
+        <meta name="robots" content="index, follow" />
+        <link rel="canonical" href={`https://www.mycardtracker.com.au/login`} />
+      </Helmet>
       <NavigationBar />
       
       <div className="max-w-md w-full bg-white dark:bg-[#1B2131] rounded-2xl shadow-xl overflow-hidden mt-16">

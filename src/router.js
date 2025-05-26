@@ -1,5 +1,6 @@
 import React from 'react';
 import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom';
+import { HelmetProvider } from 'react-helmet-async';
 import { Toast } from './design-system';
 import DesignSystemProvider from './design-system/providers/DesignSystemProvider';
 import { SubscriptionProvider } from './contexts/SubscriptionContext';
@@ -20,6 +21,8 @@ import Terms from './components/Terms';
 import HelpCenter from './components/HelpCenter';
 import CollectingGuide from './components/CollectingGuide';
 import GradingIntegration from './components/GradingIntegration';
+import PokemonSets from './components/PokemonSets';
+import PokemonInvestmentGuide from './components/PokemonInvestmentGuide';
 import { Dashboard, DashboardIndex } from './App';
 import DashboardPricing from './components/DashboardPricing';
 import PremiumFeatures from './components/PremiumFeatures';
@@ -28,37 +31,39 @@ import ComponentLibrary from './pages/ComponentLibrary';
 // Root providers wrapper component
 export const RootProviders = () => (
   <ErrorBoundary>
-    <DesignSystemProvider>
-      <SubscriptionProvider>
-        <UserPreferencesProvider>
-          <TutorialProvider>
-            <BackupProvider>
-              <BackupProgressBar />
-              <RestoreProvider>
-                <RestoreProgressBar />
-                <InvoiceProvider>
-                  <Toast
-                    position="top-center"
-                    toastOptions={{
-                      duration: 3000,
-                      style: {
-                        background: '#1B2131',
-                        color: '#FFFFFF',
-                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                        borderRadius: '12px',
-                        padding: '12px 24px',
-                        fontWeight: '500'
-                      }
-                    }}
-                  />
-                  <Outlet />
-                </InvoiceProvider>
-              </RestoreProvider>
-            </BackupProvider>
-          </TutorialProvider>
-        </UserPreferencesProvider>
-      </SubscriptionProvider>
-    </DesignSystemProvider>
+    <HelmetProvider>
+      <DesignSystemProvider>
+        <SubscriptionProvider>
+          <UserPreferencesProvider>
+            <TutorialProvider>
+              <BackupProvider>
+                <BackupProgressBar />
+                <RestoreProvider>
+                  <RestoreProgressBar />
+                  <InvoiceProvider>
+                    <Toast
+                      position="top-center"
+                      toastOptions={{
+                        duration: 3000,
+                        style: {
+                          background: '#1B2131',
+                          color: '#FFFFFF',
+                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                          borderRadius: '12px',
+                          padding: '12px 24px',
+                          fontWeight: '500'
+                        }
+                      }}
+                    />
+                    <Outlet />
+                  </InvoiceProvider>
+                </RestoreProvider>
+              </BackupProvider>
+            </TutorialProvider>
+          </UserPreferencesProvider>
+        </SubscriptionProvider>
+      </DesignSystemProvider>
+    </HelmetProvider>
   </ErrorBoundary>
 );
 
@@ -111,6 +116,14 @@ export const router = createBrowserRouter([
       {
         path: 'grading-integration',
         element: <GradingIntegration />,
+      },
+      {
+        path: 'pokemon-sets',
+        element: <PokemonSets />,
+      },
+      {
+        path: 'pokemon-investment-guide',
+        element: <PokemonInvestmentGuide />,
       },
       {
         path: 'dashboard',
