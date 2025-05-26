@@ -119,7 +119,7 @@ const Header = ({
   return (
     <header className="bg-white dark:bg-black fixed top-0 left-0 right-0 z-50">
       {/* Combined navigation bar */}
-      <div className="border-b border-gray-200 dark:border-[#ffffff1a] py-2 px-4">
+      <div className="border-b border-gray-200 dark:border-[#ffffff1a] py-4 px-4">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           {/* Left side - Logo (hidden on mobile) */}
           <div className="hidden sm:flex items-center">
