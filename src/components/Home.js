@@ -1,342 +1,422 @@
-import React, { useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../design-system';
 import NavigationBar from './NavigationBar';
+import { Link } from 'react-router-dom';
 
 function Home() {
   const { currentUser } = useAuth();
-  const navigate = useNavigate(); // Call useNavigate at the top level
+  const navigate = useNavigate();
+  const [modalImage, setModalImage] = useState(null);
 
-  // Add page-no-padding class to body when component mounts
   useEffect(() => {
-    document.body.classList.add('page-no-padding');
-    
-    // Clean up function to remove the class when component unmounts
-    return () => {
-      document.body.classList.remove('page-no-padding');
-    };
-  }, []);
-
-  // Auto-navigate to dashboard if user is logged in
-  useEffect(() => {
-    if (currentUser && window.location.pathname === '/') {
-      navigate('/dashboard'); // Use navigate defined outside
+    if (currentUser) {
+      navigate('/dashboard');
     }
-  }, [currentUser, navigate]); // Add navigate to dependency array
-  
+  }, [currentUser, navigate]);
+
+  const openModal = (imageSrc, title, description) => {
+    setModalImage({ src: imageSrc, title, description });
+  };
+
+  const closeModal = () => {
+    setModalImage(null);
+  };
+
+  if (currentUser) {
+    return null; // Will redirect to dashboard
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-red-500 to-green-500 text-gray-900 dark:text-white page-no-padding">
+    <div className="min-h-screen bg-[#1B2131] text-white">
       <NavigationBar />
       
-      {/* Hero Section */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 pt-32 sm:pt-40">
-        <div className="text-center">
-          <h1 className="text-4xl sm:text-6xl font-bold mb-6 text-white">
-            Your Ultimate Trading Card Companion
-          </h1>
-          <p className="text-xl sm:text-2xl mb-6 text-gray-100">
-            Track, value, and manage your collection—be it Magic: The Gathering, Yu-Gi-Oh!, Pokémon, or any other.
-          </p>
-          <p className="text-lg mb-12 text-gray-200">
-            In collaboration with SwapITT, Australia's premier trading card and collectibles destination.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
-            {currentUser ? (
-              <Link 
-                to="/dashboard" 
-                className="bg-white text-purple-900 font-bold py-3 px-6 rounded-lg hover:bg-gray-100 transition-colors flex items-center justify-center gap-2"
-              >
-                <span className="material-icons">dashboard</span>
-                Open Dashboard
-              </Link>
-            ) : (
-              <>
-                <Link 
-                  to="/login" 
-                  className="bg-white text-purple-900 font-bold py-3 px-6 rounded-lg hover:bg-gray-100 transition-colors flex items-center justify-center gap-2"
-                >
-                  <span className="material-icons">login</span>
-                  Login / Sign Up
-                </Link>
-                <Link 
-                  to="/pricing" 
-                  className="bg-transparent border-2 border-white text-white font-bold py-3 px-6 rounded-lg hover:bg-white/10 transition-colors flex items-center justify-center gap-2"
-                >
-                  <span className="material-icons">sell</span>
-                  View Pricing Plans
-                </Link>
-              </>
-            )}
+      {/* Modal for enlarged images */}
+      {modalImage && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={closeModal}>
+          <div className="relative max-w-4xl max-h-[60vh] w-full">
+            <button 
+              onClick={closeModal}
+              className="absolute -top-12 right-0 text-white/70 hover:text-white text-2xl font-bold z-10"
+            >
+              ✕
+            </button>
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 sm:p-6">
+              <img 
+                src={modalImage.src} 
+                alt={modalImage.title}
+                className="w-full h-auto max-h-[40vh] object-contain rounded-xl shadow-2xl"
+                onClick={(e) => e.stopPropagation()}
+              />
+              <div className="mt-4 text-center">
+                <h3 className="text-xl sm:text-2xl font-bold mb-2">{modalImage.title}</h3>
+                <p className="text-gray-300">{modalImage.description}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modern Hero Section */}
+      <section className="relative h-[85vh] flex items-center justify-center px-4 sm:px-6 lg:px-8 overflow-hidden">
+        {/* Background Elements */}
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 via-purple-600/10 to-pink-600/10"></div>
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl"></div>
+        
+        <div className="relative z-10 max-w-4xl mx-auto text-center px-4">
+          {/* Badge */}
+          <div className="inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 bg-white/10 backdrop-blur-sm rounded-full text-xs sm:text-sm font-medium mb-6 sm:mb-8 border border-white/20">
+            <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-400 rounded-full mr-2"></span>
+            Australia's #1 Collectibles Platform
           </div>
           
-          {/* App Screenshots */}
-          <div className="mt-16 relative">
+          {/* Main Headline */}
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-4 sm:mb-6 leading-tight">
+            Track, Value & Trade
+            <span className="block bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+              Your Collectibles
+            </span>
+          </h1>
+          
+          {/* Subheadline */}
+          <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-300 mb-8 sm:mb-12 max-w-3xl mx-auto leading-relaxed px-4">
+            The ultimate platform for serious collectors. Track your collection, 
+            monitor investments, and trade with verified collectors.
+          </p>
+          
+          {/* CTA Buttons */}
+          <div className="flex flex-col gap-3 sm:gap-4 justify-center items-center mb-12 sm:mb-16 px-4">
+            <button 
+              onClick={() => navigate('/login')}
+              className="w-full max-w-xs sm:max-w-sm bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-2xl font-semibold text-base sm:text-lg shadow-2xl hover:shadow-blue-500/25 transform hover:scale-105 transition-all duration-300"
+            >
+              Get Started
+            </button>
+            <button 
+              onClick={() => navigate('/pricing')}
+              className="w-full max-w-xs sm:max-w-sm bg-white/10 backdrop-blur-sm hover:bg-white/20 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-2xl font-semibold text-base sm:text-lg border border-white/20 hover:border-white/30 transition-all duration-300"
+            >
+              View Pricing
+            </button>
+          </div>
+          
+          {/* Social Proof */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8 text-xs sm:text-sm text-gray-400 px-4">
+            <div className="flex items-center gap-2">
+              <span className="text-lg sm:text-2xl font-bold text-blue-400">10K+</span>
+              <span>Items Tracked</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-lg sm:text-2xl font-bold text-purple-400">500+</span>
+              <span>Active Users</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-lg sm:text-2xl font-bold text-pink-400">1K+</span>
+              <span>Marketplace Listings</span>
+            </div>
+          </div>
+        </div>
+        
+        {/* Scroll indicator */}
+        <div className="absolute bottom-4 sm:bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
+          <div className="w-5 h-8 sm:w-6 sm:h-10 border-2 border-white/30 rounded-full flex justify-center">
+            <div className="w-0.5 h-2 sm:w-1 sm:h-3 bg-white/50 rounded-full mt-1.5 sm:mt-2 animate-pulse"></div>
+          </div>
+        </div>
+      </section>
+
+      {/* Features Preview */}
+      <section className="py-12 sm:py-16 md:py-24 px-4 sm:px-6 lg:px-8 bg-black">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-12 sm:mb-16 md:mb-20">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6">
+              Everything you need in
+              <span className="block text-blue-400">one platform</span>
+            </h2>
+            <p className="text-base sm:text-lg md:text-xl text-gray-300 max-w-2xl mx-auto px-4">
+              Professional tools for serious collectors and investors
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+            {[
+              { icon: '📊', title: 'Portfolio Tracking', desc: 'Monitor your collection value in real-time' },
+              { icon: '🏪', title: 'Marketplace', desc: 'Buy and sell with verified collectors' },
+              { icon: '🔍', title: 'Price Discovery', desc: 'Get accurate valuations instantly' },
+              { icon: '📱', title: 'Mobile Ready', desc: 'Access your collection anywhere' },
+              { icon: '🔒', title: 'Secure Trading', desc: 'Safe transactions with escrow protection' },
+              { icon: '📈', title: 'Investment Analytics', desc: 'Track performance and trends' }
+            ].map((feature, index) => (
+              <div key={index} className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm rounded-2xl p-4 sm:p-6 border border-white/10 hover:border-white/20 transition-all duration-300 group">
+                <div className="text-3xl sm:text-4xl mb-3 sm:mb-4 group-hover:scale-110 transition-transform duration-300">
+                  {feature.icon}
+                </div>
+                <h3 className="text-lg sm:text-xl font-bold mb-2 sm:mb-3">{feature.title}</h3>
+                <p className="text-sm sm:text-base text-gray-400 leading-relaxed">{feature.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Screenshots Section */}
+      <section className="py-12 sm:py-16 md:py-24 px-4 sm:px-6 lg:px-8 bg-black">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-12 sm:mb-16 md:mb-20">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6">
+              See it in action
+            </h2>
+            <p className="text-base sm:text-lg md:text-xl text-gray-300 max-w-2xl mx-auto px-4">
+              Real screenshots from the Collectibles Tracker platform
+            </p>
+          </div>
+
+          {/* Main Screenshots */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-16 items-center mb-16">
             {/* Desktop Screenshot */}
-            <div className="relative z-10 rounded-xl shadow-2xl overflow-hidden bg-[#1B2131] p-4">
-              <img 
-                src="/screenshots/Dashboardexample.png" 
-                alt="Card Tracker Dashboard"
-                className="w-full rounded-lg"
-              />
+            <div className="relative group order-2 lg:order-1">
+              <div className="absolute -inset-2 sm:-inset-4 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-2xl sm:rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-300"></div>
+              <div className="relative bg-white/5 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 border border-white/10 hover:border-white/20 transition-all duration-300">
+                <button 
+                  onClick={() => openModal('/screenshots/dashboard.png', 'Desktop Dashboard', 'Complete collection overview with advanced analytics and real-time valuations')}
+                  className="w-full cursor-pointer"
+                >
+                  <img 
+                    src="/screenshots/dashboard.png" 
+                    alt="Desktop Dashboard" 
+                    className="w-full rounded-xl sm:rounded-2xl shadow-2xl hover:scale-105 transition-transform duration-300"
+                  />
+                </button>
+                <div className="mt-4 sm:mt-6 text-center">
+                  <h3 className="text-lg sm:text-xl lg:text-2xl font-bold mb-1 sm:mb-2">Desktop Dashboard</h3>
+                  <p className="text-sm sm:text-base text-gray-400">Complete collection overview with advanced analytics</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Mobile Screenshot */}
+            <div className="relative group order-1 lg:order-2">
+              <div className="absolute -inset-2 sm:-inset-4 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-2xl sm:rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-300"></div>
+              <div className="relative bg-white/5 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 border border-white/10 hover:border-white/20 transition-all duration-300">
+                <button 
+                  onClick={() => openModal('/screenshots/phonemockup.png', 'Mobile Experience', 'Track your collection anywhere with our mobile-optimized interface')}
+                  className="w-full cursor-pointer"
+                >
+                  <img 
+                    src="/screenshots/phonemockup.png" 
+                    alt="Mobile App" 
+                    className="w-full max-w-xs sm:max-w-sm mx-auto rounded-xl sm:rounded-2xl shadow-2xl hover:scale-105 transition-transform duration-300"
+                  />
+                </button>
+                <div className="mt-4 sm:mt-6 text-center">
+                  <h3 className="text-lg sm:text-xl lg:text-2xl font-bold mb-1 sm:mb-2">Mobile Experience</h3>
+                  <p className="text-sm sm:text-base text-gray-400">Track your collection anywhere, anytime</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Feature Screenshots Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+            {[
+              {
+                src: '/screenshots/addcards.png',
+                title: 'Add Items',
+                description: 'Easy collection management with bulk import and grading integration'
+              },
+              {
+                src: '/screenshots/marketplace.png',
+                title: 'Marketplace',
+                description: 'Buy and sell with verified collectors in a secure environment'
+              },
+              {
+                src: '/screenshots/invoicepaeg.png',
+                title: 'Invoices',
+                description: 'Professional invoice management and transaction tracking'
+              },
+              {
+                src: '/screenshots/marketplacemessages.png',
+                title: 'Messages',
+                description: 'Secure communication with buyers and sellers'
+              }
+            ].map((feature, index) => (
+              <div key={index} className="relative group">
+                <div className="absolute -inset-1 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-2xl blur group-hover:blur-lg transition-all duration-300"></div>
+                <div className="relative bg-white/5 backdrop-blur-sm rounded-2xl p-4 border border-white/10 hover:border-white/20 transition-all duration-300">
+                  <button 
+                    onClick={() => openModal(feature.src, feature.title, feature.description)}
+                    className="w-full cursor-pointer"
+                  >
+                    <div className="aspect-square bg-gradient-to-br from-gray-800/50 to-gray-900/50 rounded-xl mb-4 overflow-hidden">
+                      <img 
+                        src={feature.src} 
+                        alt={feature.title}
+                        className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
+                      />
+                    </div>
+                  </button>
+                  <h3 className="font-semibold mb-2 text-center">{feature.title}</h3>
+                  <p className="text-xs text-gray-400 text-center leading-relaxed">{feature.description}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Social Proof */}
+      <section className="py-24 px-4 sm:px-6 lg:px-8 bg-black">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-20">
+            <h2 className="text-4xl sm:text-5xl font-bold mb-6">
+              Trusted by collectors
+            </h2>
+            <p className="text-xl text-gray-300">
+              Join thousands of collecting enthusiasts
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10">
+              <div className="flex text-yellow-400 mb-4">
+                {[...Array(5)].map((_, i) => (
+                  <span key={i} className="material-icons">star</span>
+                ))}
+              </div>
+              <p className="text-gray-300 mb-6 leading-relaxed">
+                "I was able to sell my rare collectible for a great price thanks to the marketplace. The grading integration made it easy to price my item accurately."
+              </p>
+              <div className="font-semibold">Marcus, Sydney</div>
+            </div>
+
+            <div className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10">
+              <div className="flex text-yellow-400 mb-4">
+                {[...Array(5)].map((_, i) => (
+                  <span key={i} className="material-icons">star</span>
+                ))}
+              </div>
+              <p className="text-gray-300 mb-6 leading-relaxed">
+                "I've been using Collectibles Tracker for a few months now and it's been a game changer for my collection. The investment tracking features are incredibly useful."
+              </p>
+              <div className="font-semibold">Sarah, Melbourne</div>
+            </div>
+
+            <div className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10">
+              <div className="flex text-yellow-400 mb-4">
+                {[...Array(5)].map((_, i) => (
+                  <span key={i} className="material-icons">star</span>
+                ))}
+              </div>
+              <p className="text-gray-300 mb-6 leading-relaxed">
+                "I was blown away by the ease of use and features of Collectibles Tracker. It's the perfect platform for any serious collector."
+              </p>
+              <div className="font-semibold">James, Brisbane</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing */}
+      <section className="py-24 px-4 sm:px-6 lg:px-8 bg-black">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-4xl sm:text-5xl font-bold mb-6">
+            Unlock the full potential of Collectibles Tracker
+          </h2>
+          <p className="text-xl text-gray-300 mb-16">
+            Get access to all features and tools for a low monthly fee
+          </p>
+
+          <div className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm rounded-3xl p-12 border border-white/10 max-w-md mx-auto">
+            <div className="text-6xl font-bold mb-4">
+              <span className="text-4xl text-gray-400">$</span>
+              <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">12.99</span>
+            </div>
+            <div className="text-gray-400 mb-8">per month</div>
+            
+            <ul className="space-y-4 text-left mb-12">
+              <li className="flex items-center gap-3">
+                <span className="w-6 h-6 bg-green-500/20 rounded-full flex items-center justify-center">
+                  <span className="material-icons text-green-400 text-sm">check</span>
+                </span>
+                <span>Unlimited item tracking</span>
+              </li>
+              <li className="flex items-center gap-3">
+                <span className="w-6 h-6 bg-green-500/20 rounded-full flex items-center justify-center">
+                  <span className="material-icons text-green-400 text-sm">check</span>
+                </span>
+                <span>Grading integration</span>
+              </li>
+              <li className="flex items-center gap-3">
+                <span className="w-6 h-6 bg-green-500/20 rounded-full flex items-center justify-center">
+                  <span className="material-icons text-green-400 text-sm">check</span>
+                </span>
+                <span>Marketplace access</span>
+              </li>
+              <li className="flex items-center gap-3">
+                <span className="w-6 h-6 bg-green-500/20 rounded-full flex items-center justify-center">
+                  <span className="material-icons text-green-400 text-sm">check</span>
+                </span>
+                <span>Investment analytics</span>
+              </li>
+            </ul>
+
+            <button 
+              onClick={() => navigate('/login')}
+              className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white py-4 rounded-2xl font-semibold text-lg shadow-2xl hover:shadow-blue-500/25 transform hover:scale-105 transition-all duration-300"
+            >
+              Get Started
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="py-16 px-4 sm:px-6 lg:px-8 border-t border-white/10 bg-black">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
+            <div className="col-span-1 md:col-span-1">
+              <h3 className="text-xl font-bold mb-4">Collectibles Tracker</h3>
+              <p className="text-gray-400 text-sm mb-6">
+                Australia's most trusted platform for collectible management and trading.
+              </p>
             </div>
             
-            {/* Mobile Screenshot - Positioned to overlap */}
-            <div className="absolute -bottom-20 right-0 md:right-[10%] w-48 z-20 rounded-xl shadow-2xl overflow-hidden bg-[#1B2131] p-2">
-              <img 
-                src="/mobileexample.png" 
-                alt="Card Tracker Mobile View"
-                className="w-full rounded-lg"
-              />
+            <div className="col-span-1">
+              <h4 className="font-semibold mb-4">Platform</h4>
+              <ul className="space-y-2 text-sm text-gray-400">
+                <li><Link to="/login" onClick={() => window.scrollTo(0, 0)} className="hover:text-white transition-colors">Sign Up</Link></li>
+                <li><Link to="/features" onClick={() => window.scrollTo(0, 0)} className="hover:text-white transition-colors">Features</Link></li>
+                <li><Link to="/pricing" onClick={() => window.scrollTo(0, 0)} className="hover:text-white transition-colors">Pricing</Link></li>
+              </ul>
+            </div>
+            
+            <div className="col-span-1">
+              <h4 className="font-semibold mb-4">Resources</h4>
+              <ul className="space-y-2 text-sm text-gray-400">
+                <li><Link to="/help-center" onClick={() => window.scrollTo(0, 0)} className="hover:text-white transition-colors">Help Center</Link></li>
+                <li><Link to="/collecting-guide" onClick={() => window.scrollTo(0, 0)} className="hover:text-white transition-colors">Collecting Guide</Link></li>
+                <li><Link to="/grading-integration" onClick={() => window.scrollTo(0, 0)} className="hover:text-white transition-colors">Grading Integration</Link></li>
+              </ul>
+            </div>
+            
+            <div className="col-span-1">
+              <h4 className="font-semibold mb-4">Company</h4>
+              <ul className="space-y-2 text-sm text-gray-400">
+                <li><Link to="/about" onClick={() => window.scrollTo(0, 0)} className="hover:text-white transition-colors">About</Link></li>
+                <li><Link to="/privacy" onClick={() => window.scrollTo(0, 0)} className="hover:text-white transition-colors">Privacy</Link></li>
+                <li><Link to="/terms" onClick={() => window.scrollTo(0, 0)} className="hover:text-white transition-colors">Terms</Link></li>
+              </ul>
             </div>
           </div>
           
-          {/* Features Section */}
-          <div className="mt-32 mb-10">
-            <h2 className="text-3xl font-bold mb-10 text-center text-white">Features Overview</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-              <div className="p-6 rounded-xl bg-white/10 backdrop-blur-sm">
-                <span className="material-icons text-4xl text-white mb-4">
-                  local_library
-                </span>
-                <h3 className="text-xl font-semibold mb-2 text-white">Comprehensive Card Database</h3>
-                <p className="text-gray-100">
-                  Access a vast repository covering various trading card games including Pokémon, Magic: The Gathering, and Yu-Gi-Oh!
-                </p>
-              </div>
-              
-              <div className="p-6 rounded-xl bg-white/10 backdrop-blur-sm">
-                <span className="material-icons text-4xl text-white mb-4">
-                  trending_up
-                </span>
-                <h3 className="text-xl font-semibold mb-2 text-white">Real-Time Price Tracking</h3>
-                <p className="text-gray-100">
-                  Stay updated with the latest market values and watch your investment grow with accurate data.
-                </p>
-              </div>
-              
-              <div className="p-6 rounded-xl bg-white/10 backdrop-blur-sm">
-                <span className="material-icons text-4xl text-white mb-4">
-                  folder_special
-                </span>
-                <h3 className="text-xl font-semibold mb-2 text-white">Collection Management</h3>
-                <p className="text-gray-100">
-                  Organize and monitor your collection seamlessly across multiple card games and categories.
-                </p>
-              </div>
-              
-              <div className="p-6 rounded-xl bg-white/10 backdrop-blur-sm">
-                <span className="material-icons text-4xl text-white mb-4">
-                  touch_app
-                </span>
-                <h3 className="text-xl font-semibold mb-2 text-white">User-Friendly Interface</h3>
-                <p className="text-gray-100">
-                  Navigate through intuitive and responsive design that makes tracking your collection effortless.
-                </p>
-              </div>
-            </div>
+          <div className="pt-8 border-t border-white/10 text-center">
+            <p className="text-gray-400 text-sm">
+              {new Date().getFullYear()} Collectibles Tracker. Made with ❤️ for collectors worldwide.
+            </p>
           </div>
-
-          {/* Pricing Section */}
-          <div className="mt-20 mb-16">
-            <h2 className="text-3xl font-bold mb-10 text-center text-white">Premium Plan</h2>
-            <div className="max-w-lg mx-auto">
-              <div className="bg-yellow-400/20 backdrop-blur-sm rounded-xl p-8 transform transition-transform hover:scale-105 border-2 border-yellow-400/50">
-                <div className="text-center mb-6">
-                  <h3 className="text-2xl font-bold text-white">Premium Features</h3>
-                  <div className="mt-4">
-                    <span className="text-4xl font-bold text-white">$12.99</span>
-                    <span className="text-white text-sm">/month</span>
-                  </div>
-                  <p className="text-sm text-gray-300 mt-2">Advanced analytics and priority support</p>
-                </div>
-                <ul className="space-y-4 mb-8">
-                  <li className="flex items-start">
-                    <span className="material-icons text-green-400 mr-3">check_circle</span>
-                    <span className="text-gray-200">Track unlimited cards</span>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="material-icons text-green-400 mr-3">check_circle</span>
-                    <span className="text-gray-200">Advanced analytics</span>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="material-icons text-green-400 mr-3">check_circle</span>
-                    <span className="text-gray-200">Unlimited collections</span>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="material-icons text-green-400 mr-3">check_circle</span>
-                    <span className="text-gray-200">Automatic cloud backup</span>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="material-icons text-green-400 mr-3">check_circle</span>
-                    <span className="text-gray-200">Sync across all devices</span>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="material-icons text-green-400 mr-3">check_circle</span>
-                    <span className="text-gray-200">Priority customer support</span>
-                  </li>
-                </ul>
-                <div className="mt-auto text-center">
-                  <Link to="/pricing" className="inline-block w-full py-3 px-6 bg-yellow-400 hover:bg-yellow-500 text-center text-gray-900 font-bold rounded-lg transition-colors">
-                    Subscribe Now
-                  </Link>
-                  <p className="text-center text-sm text-gray-400 mt-4">
-                    Secure payment processed by Stripe
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Partnership Highlight Section */}
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 mt-24">
-            <div className="flex flex-col md:flex-row items-center gap-8">
-              <div className="w-48 h-48 flex-shrink-0">
-                <img 
-                  src="/swapit-logo.svg" 
-                  alt="SwapITT Logo" 
-                  className="w-full h-full object-contain"
-                  onError={(e) => {
-                    console.error('Failed to load SwapITT logo:', e);
-                    e.target.style.display = 'none';
-                    e.target.onerror = null;
-                  }}
-                />
-              </div>
-              <div className="flex-grow">
-                <h2 className="text-2xl sm:text-3xl font-bold mb-4 text-white">
-                  Partnering with SwapITT: Elevating Your Collecting Experience
-                </h2>
-                <p className="text-lg text-gray-100 mb-6">
-                  We've teamed up with SwapITT, Australia's leading trading card and collectibles store, to bring you exclusive insights, deals, and community events. Explore SwapITT's extensive collection of NBA, Pokémon, Soccer, UFC, Formula 1, NFL, Baseball, NRL, One Piece, MARVEL, and more.
-                </p>
-                <div className="flex flex-wrap gap-2 mb-6">
-                  {['NBA', 'Pokémon', 'Soccer', 'UFC', 'F1', 'NFL', 'Baseball', 'NRL', 'One Piece', 'MARVEL'].map(tag => (
-                    <span key={tag} className="px-3 py-1 bg-white/20 rounded-full text-sm text-white">
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-                <a 
-                  href="https://swapitt.com.au/" 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="inline-flex items-center gap-2 bg-white text-purple-900 font-bold py-2 px-4 rounded-lg hover:bg-gray-100 transition-colors"
-                >
-                  <span>Visit SwapITT</span>
-                  <span className="material-icons text-sm">open_in_new</span>
-                </a>
-              </div>
-            </div>
-          </div>
-
-          {/* Testimonials Section */}
-          <div className="mt-20 mb-16">
-            <h2 className="text-3xl font-bold mb-10 text-center text-white">What Our Users Say</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6">
-                <div className="flex items-center mb-4">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-bold text-xl">
-                    A
-                  </div>
-                  <div className="ml-4">
-                    <h4 className="text-white font-semibold">Alex R.</h4>
-                    <div className="flex text-yellow-400">
-                      <span className="material-icons text-sm">star</span>
-                      <span className="material-icons text-sm">star</span>
-                      <span className="material-icons text-sm">star</span>
-                      <span className="material-icons text-sm">star</span>
-                      <span className="material-icons text-sm">star</span>
-                    </div>
-                  </div>
-                </div>
-                <p className="text-gray-200 italic">
-                  "CardTracker has revolutionized how I manage my Magic: The Gathering collection! The interface is intuitive and the price tracking feature is incredibly accurate."
-                </p>
-              </div>
-              
-              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6">
-                <div className="flex items-center mb-4">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-400 to-teal-500 flex items-center justify-center text-white font-bold text-xl">
-                    J
-                  </div>
-                  <div className="ml-4">
-                    <h4 className="text-white font-semibold">Jamie L.</h4>
-                    <div className="flex text-yellow-400">
-                      <span className="material-icons text-sm">star</span>
-                      <span className="material-icons text-sm">star</span>
-                      <span className="material-icons text-sm">star</span>
-                      <span className="material-icons text-sm">star</span>
-                      <span className="material-icons text-sm">star_half</span>
-                    </div>
-                  </div>
-                </div>
-                <p className="text-gray-200 italic">
-                  "An indispensable tool for any trading card enthusiast. I've been able to track my Yu-Gi-Oh collection's value with precision and the cloud backup gives me peace of mind."
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Footer */}
-          <footer className="bg-black/30 backdrop-blur-sm py-12 mt-20">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-                <div className="col-span-1 md:col-span-1">
-                  <h3 className="text-xl font-bold text-white mb-4">CardTracker</h3>
-                  <p className="text-gray-300 text-sm mb-4">
-                    Your ultimate companion for tracking, valuing, and managing your trading card collection.
-                  </p>
-                </div>
-                
-                <div className="col-span-1">
-                  <h4 className="font-semibold text-white mb-4">Quick Links</h4>
-                  <ul className="space-y-2">
-                    <li><Link to="/" className="text-gray-300 hover:text-white">Home</Link></li>
-                    <li><Link to="/pricing" className="text-gray-300 hover:text-white">Pricing</Link></li>
-                    <li><a href="#" className="text-gray-300 hover:text-white">Features</a></li>
-                    <li><a href="#" className="text-gray-300 hover:text-white">About Us</a></li>
-                    <li><a href="#" className="text-gray-300 hover:text-white">Contact</a></li>
-                  </ul>
-                </div>
-                
-                <div className="col-span-1">
-                  <h4 className="font-semibold text-white mb-4">Legal</h4>
-                  <ul className="space-y-2">
-                    <li><a href="#" className="text-gray-300 hover:text-white">Privacy Policy</a></li>
-                    <li><a href="#" className="text-gray-300 hover:text-white">Terms of Service</a></li>
-                    <li><a href="#" className="text-gray-300 hover:text-white">Cookie Policy</a></li>
-                    <li><a href="#" className="text-gray-300 hover:text-white">Support</a></li>
-                  </ul>
-                </div>
-                
-                <div className="col-span-1">
-                  <h4 className="font-semibold text-white mb-4">Newsletter</h4>
-                  <p className="text-gray-300 text-sm mb-4">Subscribe for updates and tips.</p>
-                  <form className="flex">
-                    <input 
-                      type="email" 
-                      placeholder="Your email" 
-                      className="bg-white/10 text-white placeholder-gray-400 px-4 py-2 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 flex-grow"
-                    />
-                    <button 
-                      type="submit"
-                      className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 px-4 py-2 rounded-r-lg font-medium"
-                    >
-                      <span className="material-icons text-sm">send</span>
-                    </button>
-                  </form>
-                </div>
-              </div>
-              
-              <div className="mt-8 pt-8 border-t border-gray-700 text-center">
-                <p className="text-gray-400 text-sm">
-                  {new Date().getFullYear()} CardTracker. All rights reserved.
-                </p>
-              </div>
-            </div>
-          </footer>
         </div>
-      </div>
+      </footer>
     </div>
   );
 }

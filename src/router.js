@@ -13,6 +13,13 @@ import Home from './components/Home';
 import Login from './components/Login';
 import ForgotPassword from './components/ForgotPassword';
 import Pricing from './components/Pricing';
+import Features from './components/Features';
+import About from './components/About';
+import Privacy from './components/Privacy';
+import Terms from './components/Terms';
+import HelpCenter from './components/HelpCenter';
+import CollectingGuide from './components/CollectingGuide';
+import GradingIntegration from './components/GradingIntegration';
 import { Dashboard, DashboardIndex } from './App';
 import DashboardPricing from './components/DashboardPricing';
 import PremiumFeatures from './components/PremiumFeatures';
@@ -76,6 +83,34 @@ export const router = createBrowserRouter([
       {
         path: 'pricing',
         element: <Pricing />,
+      },
+      {
+        path: 'features',
+        element: <Features />,
+      },
+      {
+        path: 'about',
+        element: <About />,
+      },
+      {
+        path: 'privacy',
+        element: <Privacy />,
+      },
+      {
+        path: 'terms',
+        element: <Terms />,
+      },
+      {
+        path: 'help-center',
+        element: <HelpCenter />,
+      },
+      {
+        path: 'collecting-guide',
+        element: <CollectingGuide />,
+      },
+      {
+        path: 'grading-integration',
+        element: <GradingIntegration />,
       },
       {
         path: 'dashboard',
