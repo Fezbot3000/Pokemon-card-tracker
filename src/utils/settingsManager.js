@@ -9,11 +9,18 @@ export const settingsManager = {
    * @param {boolean} isMobile - Whether the device is mobile
    * @param {Function} setCurrentView - Function to set current view
    * @param {Function} setShowSettings - Function to show/hide settings
+   * @param {Function} navigate - Navigation function for routing (optional, for mobile)
    */
-  openSettings: (isMobile, setCurrentView, setShowSettings) => {
+  openSettings: (isMobile, setCurrentView, setShowSettings, navigate = null) => {
     document.body.classList.add('settings-open');
     
-    // For mobile, treat settings as a view
+    // For mobile, navigate to settings page instead of modal
+    if (isMobile && navigate) {
+      navigate('/dashboard/settings');
+      return;
+    }
+    
+    // For desktop or when navigate is not provided, use modal
     if (isMobile) {
       setCurrentView('settings');
     }

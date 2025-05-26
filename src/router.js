@@ -24,6 +24,7 @@ import GradingIntegration from './components/GradingIntegration';
 import PokemonSets from './components/PokemonSets';
 import PokemonInvestmentGuide from './components/PokemonInvestmentGuide';
 import { Dashboard, DashboardIndex } from './App';
+import Settings from './components/Settings';
 import DashboardPricing from './components/DashboardPricing';
 import PremiumFeatures from './components/PremiumFeatures';
 import ComponentLibrary from './pages/ComponentLibrary';
@@ -136,6 +137,10 @@ export const router = createBrowserRouter([
           {
             path: 'pricing',
             element: <DashboardPricing />,
+          },
+          {
+            path: 'settings',
+            element: <Settings />,
           },
         ],
       },

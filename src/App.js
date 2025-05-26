@@ -6,7 +6,8 @@ import {
   useLocation, 
   Link, 
   useNavigate,
-  Outlet
+  Outlet,
+  useOutletContext
 } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import { 
@@ -130,6 +131,15 @@ function Dashboard() {
   const { subscriptionStatus, isLoading: subscriptionLoading, refreshSubscriptionStatus } = useSubscription();
   const hasRefreshed = useRef(false);
   const navigate = useNavigate();
+  
+  // Add view state management at Dashboard level
+  const [currentView, setCurrentView] = useState(() => {
+    // Determine initial view based on route
+    if (location.pathname.includes('/settings')) {
+      return 'settings';
+    }
+    return 'cards';
+  });
 
   // Check for checkout_success parameter when dashboard loads - but only once
   useEffect(() => {
@@ -195,18 +205,42 @@ function Dashboard() {
   
   // Render the dashboard content if authenticated and subscription is active
   return (
-    <Outlet />
+    <div className="relative">
+      <Outlet context={{ currentView, setCurrentView }} />
+      
+      {/* Mobile Bottom Navigation - Available across all dashboard routes */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40">
+        <BottomNavBar
+          currentView={location.pathname.includes('/settings') ? 'settings' : currentView}
+          onViewChange={(view) => {
+            if (view === 'settings') {
+              navigate('/dashboard/settings');
+            } else {
+              // If we're on settings page, navigate back to dashboard first
+              if (location.pathname.includes('/settings')) {
+                navigate('/dashboard');
+              }
+              setCurrentView(view);
+            }
+          }}
+          onSettingsClick={() => {
+            navigate('/dashboard/settings');
+          }}
+        />
+      </div>
+    </div>
   );
 }
 
 // Wrapper for dashboard index route (AppContent)
 function DashboardIndex() {
+  const { currentView, setCurrentView } = useOutletContext();
   return <>
-    <AppContent />
+    <AppContent currentView={currentView} setCurrentView={setCurrentView} />
   </>;
 }
 
-function AppContent() {
+function AppContent({ currentView, setCurrentView }) {
   // Use card modals hook
   const {
     showNewCardForm,
@@ -230,13 +264,13 @@ function AppContent() {
   const [selectedCollection, setSelectedCollection] = useState('All Cards');
   const [collections, setCollections] = useState({});
   const [isLoading, setIsLoading] = useState(true);
-  const [currentView, setCurrentView] = useState('cards');
   const { registerSettingsCallback, checkAndStartTutorial, startTutorial } = useTutorial();
   const { user, logout } = useAuth();
   const { subscriptionStatus } = useSubscription();
   const { currentUser } = useAuth();
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const location = useLocation();
+  const navigate = useNavigate();
   
   const {
     cards,
@@ -371,6 +405,10 @@ function AppContent() {
       setCurrentView('sold');
     } else if (path.includes('/marketplace')) {
       setCurrentView('marketplace');
+    } else if (path.includes('/marketplace-selling')) {
+      setCurrentView('marketplace-selling');
+    } else if (path.includes('/marketplace-messages')) {
+      setCurrentView('marketplace-messages');
     } else if (path.includes('/settings')) {
       setCurrentView('settings');
     } else {
@@ -663,7 +701,7 @@ function AppContent() {
   }, [addCard, collections]);
 
   const handleSettingsClick = () => {
-    settingsManager.openSettings(isMobile, setCurrentView, setShowSettings);
+    settingsManager.openSettings(isMobile, setCurrentView, setShowSettings, navigate);
   };
 
   const handleCloseSettings = () => {
@@ -824,6 +862,8 @@ function AppContent() {
           <MarketplaceSelling currentView={currentView} onViewChange={setCurrentView} />
         ) : currentView === 'marketplace-messages' ? (
           <MarketplaceMessages currentView={currentView} onViewChange={setCurrentView} />
+        ) : currentView === 'sold-items' ? (
+          <SoldItems />
         ) : currentView === 'settings' && isMobile ? (
           <MobileSettingsModal
             isOpen={showSettings}
@@ -851,8 +891,6 @@ function AppContent() {
             userData={user}
             onSignOut={logout}
           />
-        ) : currentView === 'sold-items' ? (
-          <SoldItems />
         ) : (
           <PurchaseInvoices />
         )}
@@ -903,26 +941,6 @@ function AppContent() {
           }}
         />
       )}
-
-      {/* Mobile Bottom Navigation */}
-      <div
-        className={`lg:hidden fixed bottom-0 left-0 right-0 z-40 transition-transform duration-300 ${selectedCard ? 'bottom-nav-hidden' : ''}`}
-      >
-        <BottomNavBar
-          currentView={currentView}
-          onViewChange={(view) => {
-            setCurrentView(view);
-            if (view !== 'settings' && showSettings) {
-              setShowSettings(false);
-            }
-            if (view === 'settings' && !showSettings) {
-              setShowSettings(true);
-            }
-          }}
-          onSettingsClick={handleSettingsClick}
-          isModalOpen={selectedCard !== null || showNewCardForm}
-        />
-      </div>
 
       {/* Add RestoreListener at the App component level where state setters are in scope */}
       <RestoreListener 
