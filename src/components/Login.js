@@ -158,8 +158,8 @@ function Login() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-red-500 to-green-500 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 page-no-padding">
       <Helmet>
-        <title>{isLogin ? 'Login' : 'Sign Up'} | Pokemon Card Tracker Australia</title>
-        <meta name="description" content={isLogin ? 'Login to your Pokemon Card Tracker account to manage your collection, track investments, and access the marketplace.' : 'Sign up for Pokemon Card Tracker to start tracking your Pokemon cards, monitor investments, and trade with other collectors.'} />
+        <title>{isLogin ? 'Login' : 'Sign Up'} | MyCardTracker</title>
+        <meta name="description" content={isLogin ? 'Login to your MyCardTracker account to manage your collection, track investments, and access the marketplace.' : 'Sign up for MyCardTracker to start tracking your trading cards, monitor investments, and trade with other collectors.'} />
         <meta name="robots" content="index, follow" />
         <link rel="canonical" href={`https://www.mycardtracker.com.au/login`} />
       </Helmet>

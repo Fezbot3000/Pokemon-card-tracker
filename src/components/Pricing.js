@@ -121,11 +121,11 @@ function Pricing() {
   return (
     <div className="min-h-screen bg-[#1B2131] text-white">
       <Helmet>
-        <title>Pricing Plans | Pokemon Card Tracker Australia</title>
-        <meta name="description" content="Choose the perfect plan for your Pokemon card collection. Free tier available with 50 cards. Premium plans unlock unlimited tracking, marketplace access, and advanced analytics." />
-        <meta name="keywords" content="pokemon card tracker pricing, pokemon collection plans, card tracking subscription, pokemon marketplace premium, PSA tracking plans" />
-        <meta property="og:title" content="Pricing Plans | Pokemon Card Tracker Australia" />
-        <meta property="og:description" content="Choose the perfect plan for your Pokemon card collection. Free tier available with 50 cards. Premium plans unlock unlimited tracking, marketplace access, and advanced analytics." />
+        <title>Pricing Plans | MyCardTracker</title>
+        <meta name="description" content="Choose the perfect plan for your trading card collection. Free tier available with 50 cards. Premium plans unlock unlimited tracking, marketplace access, and advanced analytics." />
+        <meta name="keywords" content="card tracker pricing, card collection plans, card tracking subscription, card marketplace premium, grading tracking plans" />
+        <meta property="og:title" content="Pricing Plans | MyCardTracker" />
+        <meta property="og:description" content="Choose the perfect plan for your trading card collection. Free tier available with 50 cards. Premium plans unlock unlimited tracking, marketplace access, and advanced analytics." />
         <link rel="canonical" href="https://www.mycardtracker.com.au/pricing" />
       </Helmet>
       <NavigationBar />
@@ -341,7 +341,7 @@ function Pricing() {
               <>
                 <Link 
                   to="/login" 
-                  className="w-full sm:w-auto bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 px-8 py-4 rounded-2xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl text-center"
+                  className="w-full sm:w-auto bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white text-lg font-semibold py-4 rounded-2xl shadow-lg transition-all duration-300 hover:shadow-xl transform hover:scale-105 text-center"
                 >
                   Sign In
                 </Link>

@@ -95,11 +95,11 @@ const Header = ({
             <div className="flex items-center">
               <img 
                 src="/favicon-192x192.png" 
-                alt="Pokemon Card Tracker" 
+                alt="MyCardTracker" 
                 className="w-8 h-8 rounded-md"
               />
               <span className="ml-2 font-medium text-gray-900 dark:text-white">
-                Pokemon Card Tracker
+                MyCardTracker
               </span>
             </div>
             <button 
@@ -126,11 +126,11 @@ const Header = ({
             <Link to="/dashboard" className="flex items-center">
               <img 
                 src="/favicon-192x192.png" 
-                alt="Pokemon Card Tracker" 
+                alt="MyCardTracker" 
                 className="w-8 h-8 rounded-md"
               />
               <span className="ml-2 font-medium text-gray-900 dark:text-white hidden xs:inline">
-                Pokemon Card Tracker
+                MyCardTracker
               </span>
             </Link>
           </div>

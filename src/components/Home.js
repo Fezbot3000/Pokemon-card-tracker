@@ -32,11 +32,11 @@ function Home() {
   return (
     <div className="min-h-screen bg-[#1B2131] text-white">
       <Helmet>
-        <title>Pokemon Card Tracker Australia | Track, Value & Trade Pokemon Cards</title>
-        <meta name="description" content="Australia's #1 Pokemon card tracker. Manage your collection, track PSA graded cards, monitor investments, and trade in our secure marketplace. Free to start!" />
-        <meta name="keywords" content="track PSA graded pokemon cards, pokemon card price tracker, charizard card value tracker, pokemon card investment calculator, pokemon tcg collection manager, pokemon card grading tracker, pokemon card market prices australia, vintage pokemon card tracker, pokemon card portfolio tracker, pokemon booster box tracker, shadowless charizard price, first edition pokemon cards value, pokemon card condition tracker, pokemon card rarity guide, pokemon set completion tracker" />
-        <meta property="og:title" content="Pokemon Card Tracker Australia | Track, Value & Trade Pokemon Cards" />
-        <meta property="og:description" content="Australia's #1 Pokemon card tracker. Manage your collection, track PSA graded cards, monitor investments, and trade in our secure marketplace. Free to start!" />
+        <title>MyCardTracker | Track, Value & Trade Trading Cards</title>
+        <meta name="description" content="Australia's #1 trading card tracker. Manage your collection, track graded cards, monitor investments, and trade in our secure marketplace. Free to start!" />
+        <meta name="keywords" content="track graded trading cards, card price tracker, card value tracker, card investment calculator, tcg collection manager, card grading tracker, card market prices australia, vintage card tracker, card portfolio tracker, card condition tracker, card rarity guide, card set completion tracker" />
+        <meta property="og:title" content="MyCardTracker | Track, Value & Trade Trading Cards" />
+        <meta property="og:description" content="Australia's #1 trading card tracker. Manage your collection, track graded cards, monitor investments, and trade in our secure marketplace. Free to start!" />
         <meta property="og:url" content="https://www.mycardtracker.com.au" />
         <meta property="og:type" content="website" />
         <link rel="canonical" href="https://www.mycardtracker.com.au" />
@@ -49,14 +49,14 @@ function Home() {
               {
                 "@type": "Organization",
                 "@id": "https://www.mycardtracker.com.au/#organization",
-                "name": "Pokemon Card Tracker",
+                "name": "MyCardTracker",
                 "alternateName": "My Card Tracker",
                 "url": "https://www.mycardtracker.com.au",
                 "logo": {
                   "@type": "ImageObject",
                   "url": "https://www.mycardtracker.com.au/logo192.png"
                 },
-                "description": "Australia's premier Pokemon card tracking and marketplace platform",
+                "description": "Australia's premier trading card tracking and marketplace platform",
                 "areaServed": "Australia",
                 "serviceType": "Digital Platform"
               },
@@ -64,8 +64,8 @@ function Home() {
                 "@type": "WebSite",
                 "@id": "https://www.mycardtracker.com.au/#website",
                 "url": "https://www.mycardtracker.com.au",
-                "name": "Pokemon Card Tracker Australia",
-                "description": "Track, value, and trade Pokemon cards with Australia's #1 Pokemon card tracker",
+                "name": "MyCardTracker",
+                "description": "Track, value, and trade trading cards with Australia's #1 card tracker",
                 "publisher": {
                   "@id": "https://www.mycardtracker.com.au/#organization"
                 },
@@ -77,7 +77,7 @@ function Home() {
               },
               {
                 "@type": "SoftwareApplication",
-                "name": "Pokemon Card Tracker",
+                "name": "MyCardTracker",
                 "applicationCategory": "CollectionManagement",
                 "operatingSystem": "Web Browser",
                 "offers": {
@@ -92,8 +92,8 @@ function Home() {
                   "reviewCount": "150"
                 },
                 "featureList": [
-                  "Pokemon card collection tracking",
-                  "PSA graded card integration",
+                  "Trading card collection tracking",
+                  "Graded card integration",
                   "Investment analytics",
                   "Secure marketplace",
                   "Price monitoring"
@@ -149,7 +149,7 @@ function Home() {
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-4 sm:mb-6 leading-tight">
             Track, Value & Trade
             <span className="block bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-              Your Collectibles
+              Your Trading Cards
             </span>
           </h1>
           
@@ -395,7 +395,7 @@ function Home() {
       <section className="py-24 px-4 sm:px-6 lg:px-8 bg-black">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-4xl sm:text-5xl font-bold mb-6">
-            Unlock the full potential of Collectibles Tracker
+            Unlock the full potential of MyCardTracker
           </h2>
           <p className="text-xl text-gray-300 mb-16">
             Get access to all features and tools for a low monthly fee

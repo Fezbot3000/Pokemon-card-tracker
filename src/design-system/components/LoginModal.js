@@ -54,7 +54,7 @@ const LoginModal = ({
         <div className="flex justify-center mb-6">
           <img 
             src="/favicon-192x192.png" 
-            alt="Pokemon Card Tracker" 
+            alt="MyCardTracker" 
             className="w-16 h-16 rounded-xl"
           />
         </div>
