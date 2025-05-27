@@ -1,5 +1,7 @@
 const functions = require('firebase-functions');
+const admin = require('firebase-admin');
 const emailService = require('./emailService');
+const { generateWelcomeEmailHTML, generateSubscriptionConfirmedHTML, generatePaymentFailedHTML, generateSubscriptionCancelledHTML, generateMarketplaceMessageHTML, generateListingSoldHTML, generateEmailVerificationHTML } = require('./emailTemplates');
 
 // Test all email types by sending them to a specified email
 exports.testAllEmails = functions.https.onCall(async (data, context) => {
@@ -8,8 +10,8 @@ exports.testAllEmails = functions.https.onCall(async (data, context) => {
       throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
     }
 
-    const { testEmail } = data;
-    if (!testEmail) {
+    const { to } = data;
+    if (!to) {
       throw new functions.https.HttpsError('invalid-argument', 'Test email address is required');
     }
 
@@ -18,7 +20,7 @@ exports.testAllEmails = functions.https.onCall(async (data, context) => {
     // 1. Welcome Email
     try {
       await emailService.sendCustomEmail(
-        testEmail,
+        to,
         '🎉 Welcome to MyCardTracker!',
         generateWelcomeEmailHTML('Test User')
       );
@@ -30,7 +32,7 @@ exports.testAllEmails = functions.https.onCall(async (data, context) => {
     // 2. Subscription Confirmed
     try {
       await emailService.sendCustomEmail(
-        testEmail,
+        to,
         '✅ Subscription Confirmed - MyCardTracker Pro',
         generateSubscriptionConfirmedHTML('Test User', 'Pro Plan')
       );
@@ -42,7 +44,7 @@ exports.testAllEmails = functions.https.onCall(async (data, context) => {
     // 3. Payment Failed
     try {
       await emailService.sendCustomEmail(
-        testEmail,
+        to,
         '⚠️ Payment Failed - Action Required',
         generatePaymentFailedHTML('Test User', '$9.99')
       );
@@ -54,7 +56,7 @@ exports.testAllEmails = functions.https.onCall(async (data, context) => {
     // 4. Subscription Cancelled
     try {
       await emailService.sendCustomEmail(
-        testEmail,
+        to,
         '😢 Subscription Cancelled - We\'ll Miss You',
         generateSubscriptionCancelledHTML('Test User', 'March 31, 2024')
       );
@@ -66,7 +68,7 @@ exports.testAllEmails = functions.https.onCall(async (data, context) => {
     // 5. Marketplace Message
     try {
       await emailService.sendCustomEmail(
-        testEmail,
+        to,
         '💬 New Message About Your Listing',
         generateMarketplaceMessageHTML('John Buyer', 'Is this card still available? I\'m very interested!', 'Charizard Base Set Shadowless')
       );
@@ -78,7 +80,7 @@ exports.testAllEmails = functions.https.onCall(async (data, context) => {
     // 6. Listing Sold
     try {
       await emailService.sendCustomEmail(
-        testEmail,
+        to,
         '🎉 Your Listing Sold!',
         generateListingSoldHTML('Test User', 'Pikachu First Edition', '$250.00')
       );
@@ -90,7 +92,7 @@ exports.testAllEmails = functions.https.onCall(async (data, context) => {
     // 7. Email Verification
     try {
       await emailService.sendCustomEmail(
-        testEmail,
+        to,
         '📧 Verify Your Email Address',
         generateEmailVerificationHTML('https://mycardtracker.com.au/verify?token=sample123')
       );
@@ -101,7 +103,7 @@ exports.testAllEmails = functions.https.onCall(async (data, context) => {
 
     return {
       success: true,
-      message: `Sent ${results.filter(r => r.status === 'sent').length} test emails to ${testEmail}`,
+      message: `Sent ${results.filter(r => r.status === 'sent').length} test emails to ${to}`,
       results
     };
 
