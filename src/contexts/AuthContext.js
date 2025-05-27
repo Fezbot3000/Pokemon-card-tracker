@@ -289,6 +289,7 @@ export function AuthProvider({ children }) {
   // Google Sign In
   const signInWithGoogle = async () => {
     try {
+      console.log('=== AuthContext: signInWithGoogle started ===');
       setError(null);
       console.log("Starting Google sign-in process...");
       
@@ -302,6 +303,7 @@ export function AuthProvider({ children }) {
         displayMode: window.matchMedia('(display-mode: standalone)').matches,
         navigatorStandalone: window.navigator.standalone,
         androidApp: document.referrer.includes('android-app://'),
+        urlParam: window.location.href.includes('?utm_source=homescreen'),
         isPWA
       });
       
@@ -311,12 +313,16 @@ export function AuthProvider({ children }) {
         
         // Store that we're starting a redirect flow
         localStorage.setItem('googleSignInRedirect', 'true');
+        console.log("Set googleSignInRedirect flag in localStorage");
         
+        console.log("About to call signInWithRedirect...");
         await signInWithRedirect(auth, googleProvider);
+        console.log("signInWithRedirect called (this line may not execute due to redirect)");
         // Note: This function will not return as the page redirects
         // The result will be handled by handleRedirectResult on return
         return null; // Explicitly return null to indicate redirect flow
       } else {
+        console.log("Regular browser detected, using popup sign-in");
         // Use popup for regular browser
         const result = await signInWithPopup(auth, googleProvider);
         console.log("Google sign-in successful:", result.user?.email);
@@ -357,7 +363,7 @@ export function AuthProvider({ children }) {
         return result.user;
       }
     } catch (err) {
-      console.error("Google sign-in error:", err);
+      console.error("=== AuthContext: Google sign-in error ===", err);
       if (err.code !== 'auth/popup-closed-by-user') {
         const errorMessage = handleFirebaseError(err);
         setError(errorMessage);
@@ -492,7 +498,8 @@ export function AuthProvider({ children }) {
     resetPassword,
     getAuthToken,
     signInWithGoogle,
-    signInWithApple
+    signInWithApple,
+    auth
   };
 
   return (

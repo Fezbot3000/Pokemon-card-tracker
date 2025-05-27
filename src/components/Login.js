@@ -24,7 +24,8 @@ function Login() {
     signUp, 
     error: authError, 
     signInWithGoogle, 
-    signInWithApple 
+    signInWithApple,
+    auth
   } = useAuth();
   
   // Get the redirect path from location state or default to dashboard
@@ -47,7 +48,9 @@ function Login() {
   
   // Reset loading states and handle redirect cleanup on component mount
   useEffect(() => {
-    // Reset social loading states on page load
+    console.log('Login component mounted, resetting loading states');
+    
+    // Force reset social loading states on page load
     setSocialLoading({ google: false, apple: false });
     
     // If we were in a redirect flow but ended up back on login page, something went wrong
@@ -56,6 +59,21 @@ function Login() {
       console.log('Cleaning up incomplete redirect flow');
       localStorage.removeItem('googleSignInRedirect');
     }
+    
+    // Additional cleanup - check if we're stuck in a loading state
+    const checkStuckLoading = () => {
+      console.log('Checking for stuck loading states...');
+      setSocialLoading(prev => {
+        console.log('Current social loading state:', prev);
+        return { google: false, apple: false };
+      });
+    };
+    
+    // Run immediately and after a short delay to ensure state is reset
+    checkStuckLoading();
+    const timeoutId = setTimeout(checkStuckLoading, 1000);
+    
+    return () => clearTimeout(timeoutId);
   }, []);
 
   // Set errors from auth context
@@ -121,15 +139,35 @@ function Login() {
 
   // Handle Google sign in
   const handleGoogleSignIn = async () => {
+    console.log('=== Google Sign-In Started ===');
+    console.log('Current socialLoading state:', socialLoading);
+    
+    // Set up a timeout to prevent infinite loading
+    const timeoutId = setTimeout(() => {
+      console.log('Google sign-in timeout reached, clearing loading state');
+      setSocialLoading(prev => ({ ...prev, google: false }));
+    }, 30000); // 30 second timeout
+    
     try {
-      setSocialLoading({ ...socialLoading, google: true });
+      console.log('Setting Google loading to true');
+      setSocialLoading(prev => {
+        const newState = { ...prev, google: true };
+        console.log('New socialLoading state:', newState);
+        return newState;
+      });
+      
+      console.log('Calling signInWithGoogle...');
       const user = await signInWithGoogle();
+      console.log('signInWithGoogle returned:', user);
+      
+      // Clear the timeout since we got a response
+      clearTimeout(timeoutId);
       
       // Check if this was a redirect flow (user will be null)
       if (user === null) {
         // This is a redirect flow, don't navigate or clear loading yet
         // The loading will be cleared when the page reloads after redirect
-        console.log('Google sign-in redirect initiated');
+        console.log('Google sign-in redirect initiated - keeping loading state');
         return;
       }
       
@@ -138,16 +176,33 @@ function Login() {
       console.log('Google sign-in successful, going through dashboard flow');
       navigate('/dashboard', { replace: true });
     } catch (error) {
+      console.log('=== Google Sign-In Error ===');
+      console.error('Google sign in error:', error);
+      
+      // Clear the timeout on error
+      clearTimeout(timeoutId);
+      
       // Only log errors that aren't popup closed by user
       if (error.code !== 'auth/popup-closed-by-user') {
-        console.error('Google sign in error:', error);
+        console.error('Non-popup-closed error:', error);
       }
       // Error handling is done in AuthContext
     } finally {
+      console.log('=== Google Sign-In Finally Block ===');
+      
       // Only clear loading state if we're not in a redirect flow
       const isRedirecting = localStorage.getItem('googleSignInRedirect');
+      console.log('Is redirecting?', isRedirecting);
+      
       if (!isRedirecting) {
-        setSocialLoading({ ...socialLoading, google: false });
+        console.log('Clearing Google loading state');
+        setSocialLoading(prev => {
+          const newState = { ...prev, google: false };
+          console.log('Final socialLoading state:', newState);
+          return newState;
+        });
+      } else {
+        console.log('Keeping loading state due to redirect flow');
       }
     }
   };
@@ -171,6 +226,30 @@ function Login() {
     } finally {
       setSocialLoading({ ...socialLoading, apple: false });
     }
+  };
+
+  // Debug function to test PWA detection and Firebase
+  const handleDebugTest = () => {
+    console.log('=== DEBUG TEST ===');
+    console.log('Current URL:', window.location.href);
+    console.log('User Agent:', navigator.userAgent);
+    console.log('Display mode standalone:', window.matchMedia('(display-mode: standalone)').matches);
+    console.log('Navigator standalone:', window.navigator.standalone);
+    console.log('Document referrer:', document.referrer);
+    console.log('LocalStorage googleSignInRedirect:', localStorage.getItem('googleSignInRedirect'));
+    console.log('Current socialLoading:', socialLoading);
+    console.log('Auth loading:', authLoading);
+    console.log('Current user:', currentUser);
+    console.log('Auth error:', authError);
+    
+    // Test Firebase auth instance
+    console.log('Firebase auth instance:', auth);
+    console.log('Firebase auth current user:', auth.currentUser);
+    
+    // Clear any stuck states
+    localStorage.removeItem('googleSignInRedirect');
+    setSocialLoading({ google: false, apple: false });
+    console.log('Cleared stuck states');
   };
 
   // Toggle between login and signup modes
@@ -252,6 +331,13 @@ function Login() {
                     <span>Continue with Google</span>
                   </>
                 )}
+              </button>
+              <button
+                type="button"
+                onClick={handleDebugTest}
+                className="w-full flex justify-center items-center gap-3 px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-xl shadow-sm bg-white dark:bg-[#252B3B] text-gray-700 dark:text-white hover:bg-gray-50 dark:hover:bg-[#2A3241] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 font-medium"
+              >
+                <span>Debug Test</span>
               </button>
             </div>
 
