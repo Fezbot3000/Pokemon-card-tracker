@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Message About Your Listing</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #ffffff;
+            background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #6366f1 100%);
+            margin: 0;
+            padding: 0;
+        }
+        
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #6366f1 100%);
+            min-height: 100vh;
+        }
+        
+        .header {
+            text-align: center;
+            padding: 40px 20px 20px;
+            background: rgba(0, 0, 0, 0.2);
+        }
+        
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            color: #ffffff;
+            margin-bottom: 10px;
+        }
+        
+        .tagline {
+            font-size: 14px;
+            color: #a5b4fc;
+            margin-bottom: 20px;
+        }
+        
+        .content {
+            padding: 40px 30px;
+            background: rgba(255, 255, 255, 0.05);
+            margin: 20px;
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .message-badge {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            color: #ffffff;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+        
+        .greeting {
+            font-size: 24px;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .intro-message {
+            font-size: 16px;
+            color: #e2e8f0;
+            margin-bottom: 30px;
+            line-height: 1.6;
+            text-align: center;
+        }
+        
+        .listing-info {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid #8b5cf6;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 30px 0;
+        }
+        
+        .listing-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #8b5cf6;
+            margin-bottom: 10px;
+        }
+        
+        .sender-info {
+            color: #e2e8f0;
+            margin-bottom: 15px;
+        }
+        
+        .message-content {
+            background: rgba(0, 0, 0, 0.3);
+            border-left: 4px solid #8b5cf6;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .message-text {
+            color: #ffffff;
+            font-style: italic;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            color: #ffffff;
+            text-decoration: none;
+            padding: 16px 32px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 18px;
+            text-align: center;
+            margin: 20px auto;
+            display: block;
+            width: fit-content;
+            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+        }
+        
+        .tips-section {
+            margin: 30px 0;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            border-left: 4px solid #10b981;
+        }
+        
+        .tips-title {
+            font-weight: 600;
+            color: #10b981;
+            margin-bottom: 10px;
+        }
+        
+        .tips-text {
+            font-size: 14px;
+            color: #e2e8f0;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 30px 20px;
+            color: #a5b4fc;
+            font-size: 14px;
+        }
+        
+        .footer a {
+            color: #8b5cf6;
+            text-decoration: none;
+        }
+        
+        @media (max-width: 600px) {
+            .content {
+                margin: 10px;
+                padding: 20px;
+            }
+            
+            .listing-info {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <div class="logo">🎯 MyCardTracker</div>
+            <div class="tagline">Australia's #1 Collectibles Platform</div>
+        </div>
+        
+        <div class="content">
+            <div style="text-align: center;">
+                <div class="message-badge">💬 New Message</div>
+            </div>
+            
+            <div class="greeting">You have a new message about your listing!</div>
+            
+            <div class="intro-message">
+                Someone is interested in one of your marketplace listings.
+            </div>
+            
+            <div class="listing-info">
+                <div class="listing-title">Listing: {{listing_title}}</div>
+                <div class="sender-info">From: {{sender_name}}</div>
+                
+                <div class="message-content">
+                    <div class="message-text">"{{message}}"</div>
+                </div>
+            </div>
+            
+            <a href="{{marketplace_url}}" class="cta-button">View Message</a>
+            
+            <div class="tips-section">
+                <div class="tips-title">💡 Selling Tips</div>
+                <div class="tips-text">
+                    <ul style="margin: 10px 0; padding-left: 20px;">
+                        <li>Respond quickly to maintain buyer interest</li>
+                        <li>Be honest about card condition and any flaws</li>
+                        <li>Consider secure payment methods</li>
+                        <li>Package cards safely for shipping</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div style="margin-top: 30px; text-align: center; color: #a5b4fc; font-size: 14px;">
+                Reply to messages quickly to increase your chances of making a sale!
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>
+                Track, Value & Trade Your Trading Cards<br>
+                <a href="https://mycardtracker.com.au">mycardtracker.com.au</a>
+            </p>
+            <p style="margin-top: 20px; font-size: 12px; color: #64748b;">
+                Manage your marketplace notifications in your account settings.<br>
+                <a href="mailto:support@mycardtracker.com.au">Contact Support</a> | 
+                <a href="https://mycardtracker.com.au/settings">Email Preferences</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

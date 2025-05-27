@@ -10,15 +10,15 @@ if (apiKey) {
   console.warn('SendGrid API key not configured. Please set using: firebase functions:config:set sendgrid.api_key="YOUR_KEY"');
 }
 
-// Email templates
+// Email templates - Updated with real SendGrid template IDs
 const EMAIL_TEMPLATES = {
-  WELCOME: 'd-welcome-template-id', // Replace with actual SendGrid template IDs
-  EMAIL_VERIFICATION: 'd-verification-template-id',
-  SUBSCRIPTION_CONFIRMED: 'd-subscription-confirmed-id',
-  PAYMENT_FAILED: 'd-payment-failed-id',
-  SUBSCRIPTION_CANCELLED: 'd-subscription-cancelled-id',
-  MARKETPLACE_MESSAGE: 'd-marketplace-message-id',
-  LISTING_SOLD: 'd-listing-sold-id'
+  WELCOME: 'd-e480237baa62442b9bae651a8333b25d',
+  EMAIL_VERIFICATION: 'd-80d372d269dc479697fbf3cfec743d1c',
+  SUBSCRIPTION_CONFIRMED: 'd-47b16c4532694534ba72b3bfe50e50b9',
+  PAYMENT_FAILED: 'd-5f9a170e486443b0b85413e78927ffe8',
+  SUBSCRIPTION_CANCELLED: 'd-5f9a170e486443b0b85413e78927ffe8',
+  MARKETPLACE_MESSAGE: 'd-a3ec6f68150c4f469bebc920910993f9',
+  LISTING_SOLD: 'd-a3ec6f68150c4f469bebc920910993f9'
 };
 
 class EmailService {
