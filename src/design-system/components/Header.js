@@ -88,9 +88,9 @@ const Header = ({
   // If this is being used in the component library, render a simplified version
   if (isComponentLibrary) {
     return (
-      <header className="bg-white dark:bg-black fixed top-0 left-0 right-0 z-50">
+      <header className="bg-white dark:bg-black fixed top-0 left-0 right-0 z-50 fixed-top">
         {/* Top bar */}
-        <div className="border-b border-gray-200 dark:border-[#ffffff1a] py-2 px-4">
+        <div className="border-b border-gray-200 dark:border-[#ffffff1a] py-2 px-4" style={{ paddingTop: 'max(0.5rem, env(safe-area-inset-top))' }}>
           <div className="max-w-7xl mx-auto flex justify-between items-center">
             <div className="flex items-center">
               <img 
@@ -117,9 +117,9 @@ const Header = ({
 
   // Main header implementation for the actual application
   return (
-    <header className="bg-white dark:bg-black fixed top-0 left-0 right-0 z-50">
+    <header className="bg-white dark:bg-black fixed top-0 left-0 right-0 z-50 fixed-top">
       {/* Combined navigation bar */}
-      <div className="border-b border-gray-200 dark:border-[#ffffff1a] py-4 px-4">
+      <div className="border-b border-gray-200 dark:border-[#ffffff1a] py-4 px-4" style={{ paddingTop: 'max(1rem, env(safe-area-inset-top))' }}>
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           {/* Left side - Logo (hidden on mobile) */}
           <div className="hidden sm:flex items-center">

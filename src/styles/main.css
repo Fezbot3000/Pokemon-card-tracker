@@ -498,3 +498,38 @@ html.dark body {
 .scrollbar-hide::-webkit-scrollbar {
   display: none; /* Chrome, Safari and Opera */
 }
+
+/* Safe Area Utility Classes for iOS Devices */
+.safe-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.safe-left {
+  padding-left: env(safe-area-inset-left, 0px);
+}
+
+.safe-right {
+  padding-right: env(safe-area-inset-right, 0px);
+}
+
+.safe-all {
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+}
+
+/* Header height compensation for content */
+.content-with-header {
+  padding-top: calc(4rem + env(safe-area-inset-top, 0px));
+}
+
+@media (max-width: 640px) {
+  .content-with-header {
+    padding-top: calc(3.5rem + env(safe-area-inset-top, 0px));
+  }
+}

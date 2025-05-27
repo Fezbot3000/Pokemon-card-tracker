@@ -16,6 +16,18 @@
     padding-top: env(safe-area-inset-top);
   }
   
+  /* Fix for iOS main content area to account for header with safe area */
+  .dashboard-page main {
+    padding-top: calc(1rem + env(safe-area-inset-top, 0px) + 4rem); /* 1rem base + safe area + header height */
+  }
+  
+  /* Adjust for mobile devices specifically */
+  @media (max-width: 640px) {
+    .dashboard-page main {
+      padding-top: calc(1rem + env(safe-area-inset-top, 0px) + 3.5rem); /* Smaller header on mobile */
+    }
+  }
+  
   /* Fix for iOS Safari viewport height issues */
   .min-h-screen {
     min-height: -webkit-fill-available;
