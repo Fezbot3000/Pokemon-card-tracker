@@ -328,10 +328,68 @@ pokemon-card-tracker/
 ## Authentication & Security
 
 ### Firebase Authentication
-- **Email/Password**: Primary authentication method
-- **Password Reset**: Email-based password recovery
-- **Session Management**: Automatic token refresh
-- **User Profiles**: Extended profile data in Firestore
+The platform uses Firebase Authentication for user management with multiple sign-in methods:
+
+**Supported Authentication Methods:**
+- Email/Password authentication
+- Google OAuth 2.0 (with iOS PWA optimizations)
+- Apple Sign-In (iOS devices)
+
+### iOS PWA Authentication Implementation
+
+**Challenge**: iOS Progressive Web Apps (PWAs) block popup-based authentication, causing Google Sign-In to fail when the app is saved to the home screen.
+
+**Solution**: Implemented intelligent authentication flow detection:
+
+```javascript
+// AuthContext.js - iOS-optimized Google Sign-In
+const signInWithGoogle = async () => {
+  try {
+    setError(null);
+    
+    // iOS detection - use redirect for all iOS (both PWA and Safari browser)
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    // Also check for Safari on iOS which often blocks popups
+    const isSafari = /Safari/.test(navigator.userAgent) && /Apple Computer/.test(navigator.vendor);
+    
+    if (isIOS || (isIOS && isSafari)) {
+      // Always use redirect on iOS to avoid popup blocking in Safari and PWA
+      await signInWithRedirect(auth, googleProvider);
+      return null; // Redirect flow
+    } else {
+      // Use popup for non-iOS devices
+      const result = await signInWithPopup(auth, googleProvider);
+      // Handle successful popup authentication...
+      return result.user;
+    }
+  } catch (err) {
+    // If popup is blocked, fall back to redirect
+    if (err.code === 'auth/popup-blocked') {
+      try {
+        await signInWithRedirect(auth, googleProvider);
+        return null;
+      } catch (redirectErr) {
+        // Handle redirect error...
+      }
+    }
+    // Handle other errors...
+  }
+};
+```
+
+**Key Features:**
+- **Automatic Detection**: Detects iOS devices and Safari browsers
+- **Fallback Mechanism**: If popup is blocked, automatically retries with redirect
+- **PWA Compatibility**: Works seamlessly in both browser and home screen PWA modes
+- **Cross-Platform**: Maintains popup experience for desktop browsers
+
+**PWA Manifest Configuration:**
+```html
+<!-- Apple PWA Meta Tags for proper iOS integration -->
+<meta name="apple-mobile-web-app-title" content="MyCardTracker">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+```
 
 ### Security Rules
 

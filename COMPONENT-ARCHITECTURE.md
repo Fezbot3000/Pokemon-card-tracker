@@ -80,6 +80,23 @@ PurchaseInvoices/
 └── CreateInvoiceModal.js (New invoice creation)
 ```
 
+#### 4. Authentication Components
+```
+Login.js (Authentication interface)
+├── Email/Password Form
+├── Google Sign-In Button (iOS PWA optimized)
+├── Apple Sign-In Button (iOS only)
+├── Social Loading States
+└── Error Handling
+
+AuthContext.js (Authentication state management)
+├── signInWithGoogle() (iOS-aware implementation)
+├── signInWithApple() 
+├── handleRedirectResult() (PWA redirect handling)
+├── User state management
+└── Authentication persistence
+```
+
 ## Component Patterns
 
 ### 1. Modal Pattern
@@ -154,17 +171,13 @@ const useCardSelection = (filteredCards) => {
 ```
 
 ### 3. Context Provider Pattern
-Global state managed through React Context:
+Context providers manage global application state:
 
 ```javascript
 // Example: SubscriptionContext
-const SubscriptionContext = createContext();
-
-export const SubscriptionProvider = ({ children }) => {
+const SubscriptionProvider = ({ children }) => {
   const [subscriptionStatus, setSubscriptionStatus] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  
-  // Subscription logic here
   
   return (
     <SubscriptionContext.Provider value={{
@@ -177,6 +190,56 @@ export const SubscriptionProvider = ({ children }) => {
   );
 };
 ```
+
+### 4. iOS PWA Authentication Pattern
+Special handling for iOS Progressive Web App authentication:
+
+```javascript
+// AuthContext.js - iOS-aware authentication
+const signInWithGoogle = async () => {
+  try {
+    setError(null);
+    
+    // iOS detection for PWA compatibility
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const isSafari = /Safari/.test(navigator.userAgent) && /Apple Computer/.test(navigator.vendor);
+    
+    if (isIOS || (isIOS && isSafari)) {
+      // Use redirect for iOS to avoid popup blocking
+      await signInWithRedirect(auth, googleProvider);
+      return null; // Redirect flow
+    } else {
+      // Use popup for desktop browsers
+      const result = await signInWithPopup(auth, googleProvider);
+      return result.user;
+    }
+  } catch (err) {
+    // Fallback to redirect if popup is blocked
+    if (err.code === 'auth/popup-blocked') {
+      await signInWithRedirect(auth, googleProvider);
+      return null;
+    }
+    throw err;
+  }
+};
+
+// Login.js - Simplified button handling
+const handleGoogleSignIn = async () => {
+  try {
+    await signInWithGoogle();
+    navigate('/dashboard', { replace: true });
+  } catch (error) {
+    console.error('Google sign in error:', error);
+  }
+};
+```
+
+**Key iOS PWA Considerations:**
+- **Popup Blocking**: iOS PWAs block authentication popups
+- **Redirect Flow**: Always use `signInWithRedirect` for iOS devices
+- **User Agent Detection**: Reliable iOS device detection
+- **Fallback Mechanism**: Automatic fallback from popup to redirect
+- **State Management**: Simplified loading states for redirect flows
 
 ## Data Flow Patterns
 
