@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { useAuth } from './AuthContext';
+import { useAuth } from '../design-system';
 import CardRepository from '../repositories/CardRepository';
 import db from '../services/firestore/dbAdapter';
 

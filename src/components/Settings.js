@@ -1,6 +1,6 @@
 import React, { useState, useEffect, Fragment } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../design-system';
 import { useTheme } from '../design-system/contexts/ThemeContext';
 import { useUserPreferences } from '../contexts/UserPreferencesContext';
 import { useSubscription } from '../contexts/SubscriptionContext';
