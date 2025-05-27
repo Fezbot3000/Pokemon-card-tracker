@@ -1,66 +1,71 @@
-const admin = require('firebase-admin');
 const functions = require('firebase-functions');
-const { defineSecret } = require('firebase-functions/params');
-const emailService = require('./emailService');
-
-// Define the secret
-const sendgridApiKey = defineSecret('SENDGRID_API_KEY');
+const sgMail = require('@sendgrid/mail');
 
 // Test function to send a simple email (for testing purposes)
-exports.testEmail = functions
-  .runWith({ secrets: [sendgridApiKey] })
-  .https.onCall(async (data, context) => {
+exports.testEmail = functions.https.onCall(async (data, context) => {
   try {
+    // Initialize SendGrid with API key from Firebase config
+    const apiKey = functions.config().sendgrid?.api_key;
+    if (!apiKey) {
+      throw new functions.https.HttpsError('failed-precondition', 'SendGrid API key not configured');
+    }
+    
+    sgMail.setApiKey(apiKey);
+    
     const { to, subject = 'Test Email from MyCardTracker' } = data;
     
     if (!to) {
       throw new functions.https.HttpsError('invalid-argument', 'Email address is required');
     }
 
-    // Send a simple HTML email without templates for testing
-    const htmlContent = `
-      <html>
-        <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px;">
-            <h1 style="color: #333; text-align: center;">🎉 Email Service is Working!</h1>
-            <p style="color: #666; font-size: 16px;">
-              Congratulations! Your SendGrid email service has been successfully configured for MyCardTracker.
-            </p>
-            <p style="color: #666; font-size: 16px;">
-              This test email confirms that:
-            </p>
-            <ul style="color: #666; font-size: 16px;">
-              <li>✅ SendGrid API key is properly configured</li>
-              <li>✅ Firebase Functions are deployed and working</li>
-              <li>✅ Email service is ready to send notifications</li>
-            </ul>
-            <div style="background-color: #e3f2fd; padding: 15px; border-radius: 5px; margin: 20px 0;">
-              <p style="margin: 0; color: #1976d2; font-weight: bold;">
-                Next Steps:
+    // Send email directly with sgMail
+    const msg = {
+      to,
+      from: {
+        email: 'noreply@mycardtracker.com.au',
+        name: 'MyCardTracker'
+      },
+      subject,
+      html: `
+        <html>
+          <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px;">
+              <h1 style="color: #333; text-align: center;">🎉 Email Service is Working!</h1>
+              <p style="color: #666; font-size: 16px;">
+                Congratulations! Your SendGrid email service has been successfully configured for MyCardTracker.
               </p>
-              <p style="margin: 5px 0 0 0; color: #1976d2;">
-                1. Set up domain authentication in SendGrid<br>
-                2. Create email templates for better formatting<br>
-                3. Enable email verification for user signups
+              <p style="color: #666; font-size: 16px;">
+                This test email confirms that:
               </p>
+              <ul style="color: #666; font-size: 16px;">
+                <li>✅ SendGrid API integration is working</li>
+                <li>✅ Email delivery is functional</li>
+                <li>✅ Your domain authentication is valid</li>
+              </ul>
+              <p style="color: #666; font-size: 16px;">
+                You can now use the email service for user notifications, welcome emails, and other communications.
+              </p>
+              <div style="text-align: center; margin-top: 30px;">
+                <a href="https://mycardtracker.com.au" style="background-color: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px;">
+                  Visit MyCardTracker
+                </a>
+              </div>
             </div>
-            <p style="color: #666; font-size: 14px; text-align: center; margin-top: 30px;">
-              Sent from MyCardTracker Email Service<br>
-              <a href="https://mycardtracker.com.au" style="color: #1976d2;">mycardtracker.com.au</a>
-            </p>
-          </div>
-        </body>
-      </html>
-    `;
+          </body>
+        </html>
+      `
+    };
 
-    await emailService.sendCustomEmail(to, subject, htmlContent);
+    const result = await sgMail.send(msg);
+    console.log('Test email sent successfully:', { to, subject });
     
-    return { 
-      success: true, 
-      message: `Test email sent successfully to ${to}` 
+    return {
+      success: true,
+      message: 'Test email sent successfully',
+      messageId: result[0].headers['x-message-id']
     };
   } catch (error) {
     console.error('Error sending test email:', error);
-    throw new functions.https.HttpsError('internal', `Failed to send test email: ${error.message}`);
+    throw new functions.https.HttpsError('internal', 'Failed to send test email: ' + error.message);
   }
 });
