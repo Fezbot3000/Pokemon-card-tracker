@@ -24,7 +24,7 @@ const StatisticsSummary = ({
 
   return (
     <div 
-      className={`w-full bg-white dark:bg-[#1B2131] rounded-md ${isDarkMode ? 'shadow-sm' : ''} overflow-hidden border border-[#ffffff33] dark:border-[#ffffff1a] mb-2 sm:mb-3 ${className}`}
+      className={`w-full bg-white dark:bg-[#1B2131] rounded-md ${isDarkMode ? 'shadow-sm' : ''} overflow-hidden border border-[#ffffff33] dark:border-[#ffffff1a] ${className}`}
       {...stripDebugProps(props)}
     >
       <div className="rounded-md p-2 sm:p-4 md:p-6">

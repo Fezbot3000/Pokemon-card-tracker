@@ -157,7 +157,7 @@
   --safe-area-top: env(safe-area-inset-top, 0px);
   --safe-area-bottom: env(safe-area-inset-bottom, 0px);
   --header-total-height-mobile: calc(var(--header-height-mobile) + var(--safe-area-top));
-  --header-total-height-desktop: calc(var(--header-height-desktop) + var(--safe-area-top));
+  --header-total-height-desktop: var(--header-height-desktop);
 }
 
 html.dark {
@@ -630,6 +630,16 @@ html.dark body {
   }
 }
 
+.main-content.content-with-header {
+  padding-top: var(--header-total-height-mobile);
+}
+
+@media (min-width: 640px) {
+  .main-content.content-with-header {
+    padding-top: var(--header-total-height-desktop);
+  }
+}
+
 /* Header responsive height class */
 .header-responsive {
   height: var(--header-total-height-mobile);
@@ -639,5 +649,26 @@ html.dark body {
 @media (min-width: 640px) {
   .header-responsive {
     height: var(--header-total-height-desktop);
+  }
+}
+
+.content-with-header {
+  padding-top: var(--header-total-height-mobile);
+}
+
+@media (min-width: 640px) {
+  .content-with-header {
+    padding-top: var(--header-total-height-desktop);
+  }
+}
+
+/* Content with safe area only (no header spacing) */
+.content-safe-area-only {
+  padding-top: var(--safe-area-top);
+}
+
+@media (min-width: 640px) {
+  .content-safe-area-only {
+    padding-top: var(--header-total-height-desktop);
   }
 }

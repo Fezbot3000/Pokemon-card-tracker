@@ -80,8 +80,8 @@ const Settings = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#0F1419]">
       {/* Tab Navigation */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-white dark:bg-[#1B2131] border-b border-gray-200 dark:border-gray-700 lg:sticky lg:top-0 lg:z-10">
-        <div className="flex justify-center space-x-1 p-4">
+      <div className="header-responsive fixed top-0 left-0 right-0 z-50 bg-white dark:bg-[#1B2131] border-b border-gray-200 dark:border-gray-700 lg:sticky lg:top-0 lg:z-10">
+        <div className="flex justify-center items-center space-x-1 px-4 h-full">
           {tabs.map(tab => (
             <button
               key={tab.id}
@@ -107,7 +107,7 @@ const Settings = () => {
       </div>
 
       {/* Tab Content */}
-      <div className="pt-20 lg:pt-0 p-4 space-y-4 mb-20 sm:mb-4">
+      <div className="content-with-header p-4 space-y-4 mb-20 sm:mb-4">
         {activeTab === 'general' && (
           <div className="space-y-6">
             {/* Appearance */}
@@ -152,14 +152,6 @@ const Settings = () => {
                   </div>
                 </div>
               </div>
-            </div>
-
-            {/* TEST SECTION - SHOULD BE VISIBLE */}
-            <div className="bg-red-100 dark:bg-red-900/20 rounded-lg p-4 border border-red-200 dark:border-red-700">
-              <h3 className="text-lg font-medium text-red-900 dark:text-red-100 mb-2">🔴 TEST SECTION</h3>
-              <p className="text-sm text-red-700 dark:text-red-300">
-                If you can see this red section, then React is updating properly.
-              </p>
             </div>
 
             {/* Application Settings */}

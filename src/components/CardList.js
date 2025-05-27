@@ -987,7 +987,7 @@ const CardList = ({
   };
 
   return (
-    <div className="pt-8 sm:pt-20 w-full px-1 sm:px-2 pb-20">
+    <div className="w-full px-1 sm:px-2 pb-20">
       {/* Stats Section */}
       <StatisticsSummary 
         statistics={formatStatisticsForDisplay(totals, filteredCards.length, paginatedCards.length)}

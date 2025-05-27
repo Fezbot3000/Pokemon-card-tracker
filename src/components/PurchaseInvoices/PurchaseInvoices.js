@@ -437,7 +437,7 @@ const PurchaseInvoices = () => {
   }, [currentUser]);
 
   return (
-    <div className="pt-16 sm:pt-20 w-full px-1 sm:px-2 pb-20">
+    <div className="w-full px-1 sm:px-2 pb-20">
       {/* Statistics Summary */}
       {!loading && invoices.length > 0 && (
         <div className="mb-6">

@@ -737,8 +737,8 @@ function AppContent({ currentView, setCurrentView }) {
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-[#0F0F0F] dashboard-page">
-      {/* Hide Header on mobile when in settings view */}
-      {!(isMobile && currentView === 'settings') && (
+      {/* Hide Header on mobile when in settings or cards view */}
+      {!(isMobile && (currentView === 'settings' || currentView === 'cards')) && (
         <Header
           className="header"
           selectedCollection={selectedCollection}
