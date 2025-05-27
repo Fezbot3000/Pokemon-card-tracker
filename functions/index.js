@@ -14,6 +14,8 @@ const { testPsaToken } = require('./src/psaTokenTest');
 
 // Import email functions
 const { sendWelcomeEmail, sendSubscriptionEmail, sendPaymentFailedEmail, sendMarketplaceMessageEmail, sendListingSoldEmail, sendEmailVerificationEmail, sendCustomEmail } = require('./src/emailService');
+const { testEmail } = require('./src/testEmail');
+const { testAllEmails } = require('./src/emailTester');
 
 // Import auth triggers
 const { onUserCreate, onUserDelete } = require('./src/authTriggers');
@@ -32,6 +34,10 @@ exports.sendMarketplaceMessageEmail = sendMarketplaceMessageEmail;
 exports.sendListingSoldEmail = sendListingSoldEmail;
 exports.sendEmailVerificationEmail = sendEmailVerificationEmail;
 exports.sendCustomEmail = sendCustomEmail;
+
+// Export test functions
+exports.testEmail = testEmail;
+exports.testAllEmails = testAllEmails;
 
 // Export auth triggers
 exports.onUserCreate = onUserCreate;
