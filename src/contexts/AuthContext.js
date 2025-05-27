@@ -281,46 +281,51 @@ export function AuthProvider({ children }) {
       
       // Use redirect for iOS, Safari, mobile devices, or in-app browsers
       if (isIOS || isSafari || isMobile || isInAppBrowser) {
-        console.log('Using redirect flow for mobile/iOS device');
+        console.log('Using redirect flow for mobile/Safari device');
         await signInWithRedirect(auth, googleProvider);
-        return null; // Redirect flow
+        return null; // Redirect doesn't return immediately
+      }
+      
+      // Try popup for desktop browsers
+      console.log('Attempting popup sign-in for desktop');
+      const result = await signInWithPopup(auth, googleProvider);
+      console.log("Google sign-in successful:", result.user?.email);
+      
+      // Check if this is a new user more reliably by checking if this is their first sign-in
+      const isFirstSignIn = result?.additionalUserInfo?.isNewUser;
+      
+      // Try to create user document but don't fail if it errors
+      try {
+        await createUserDocument(result.user);
+      } catch (docError) {
+        console.error("Failed to create user document:", docError);
+        // Continue with auth success even if document creation fails
+      }
+      
+      toast.success('Signed in successfully!');
+      localStorage.removeItem('chosenPlan');
+      
+      if (isFirstSignIn) {
+        localStorage.setItem('isNewUser', 'true');
       } else {
-        // Use popup for desktop browsers
-        console.log('Using popup flow for desktop browser');
-        const result = await signInWithPopup(auth, googleProvider);
+        localStorage.removeItem('isNewUser');
         
-        try {
-          await createUserDocument(result.user);
-        } catch (docError) {
-          console.error("Failed to create user document after Google sign-in:", docError);
-        }
-        
-        toast.success('Signed in with Google successfully!');
-        localStorage.removeItem('chosenPlan');
-        
-        const isNewAccount = result.user.metadata.creationTime === result.user.metadata.lastSignInTime;
-        
-        if (isNewAccount) {
-          localStorage.setItem('isNewUser', 'true');
-        } else {
-          localStorage.removeItem('isNewUser');
-          
-          if (performAutoSync) {
-            try {
-              await performAutoSync();
-            } catch (syncError) {
-              console.error('Error during auto-sync:', syncError);
-            }
+        // Trigger auto-sync for existing users after successful login
+        if (performAutoSync) {
+          try {
+            await performAutoSync();
+          } catch (syncError) {
+            console.error('Error during auto-sync:', syncError);
           }
         }
-        
-        return result.user;
       }
-    } catch (err) {
-      console.error('Google sign-in error:', err);
       
-      // If popup is blocked or any popup-related error, fall back to redirect
-      if (err.code === 'auth/popup-blocked' || err.code === 'auth/popup-closed-by-user' || err.message.includes('popup')) {
+      return result.user;
+    } catch (err) {
+      console.error("Google sign-in error:", err);
+      
+      // If popup is blocked or fails, automatically try redirect
+      if (err.code === 'auth/popup-blocked' || err.code === 'auth/cancelled-popup-request') {
         console.log('Popup blocked, falling back to redirect flow');
         try {
           await signInWithRedirect(auth, googleProvider);
