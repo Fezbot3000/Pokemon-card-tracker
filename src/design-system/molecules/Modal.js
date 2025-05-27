@@ -25,6 +25,7 @@ const Modal = ({
   showAsStatic = false,
   maxWidth = 'max-w-2xl',
   ariaLabel,
+  zIndex = 50,
   ...props
 }) => {
   const modalRef = useRef(null);
@@ -175,7 +176,7 @@ const Modal = ({
   };
   
   // Build the classes based on theme
-  const backdropClasses = `fixed inset-0 z-50 ${positionClasses[position]} bg-black/50 backdrop-blur-sm`;
+  const backdropClasses = `fixed inset-0 ${positionClasses[position]} bg-black/50 backdrop-blur-sm`;
   
   const modalClasses = forceDarkMode 
     ? `bg-[#0F0F0F]/95 backdrop-blur-sm rounded-md shadow-xl text-white` 
@@ -239,6 +240,7 @@ const Modal = ({
   return (
     <div 
       className={`${backdropClasses} ${darkModeClass} ${isAnimatingOut ? 'animate-backdrop-fade-out' : 'animate-backdrop-fade-in'}`}
+      style={{ zIndex }}
       onClick={handleBackdropClick}
     >
       <div 
@@ -254,11 +256,11 @@ const Modal = ({
         aria-modal="true"
         aria-labelledby={title ? 'modal-title' : undefined}
         aria-label={ariaLabel}
-        style={window.innerWidth < 640 ? {
-          height: 'calc(var(--vh, 1vh) * 100)',
-          maxHeight: 'calc(var(--vh, 1vh) * 100)',
-          paddingBottom: 'env(safe-area-inset-bottom)'
-        } : {}}
+        style={{
+          height: window.innerWidth < 640 ? 'calc(var(--vh, 1vh) * 100)' : undefined,
+          maxHeight: window.innerWidth < 640 ? 'calc(var(--vh, 1vh) * 100)' : undefined,
+          paddingBottom: window.innerWidth < 640 ? 'env(safe-area-inset-bottom)' : undefined
+        }}
         {...stripDebugProps(props)}
       >
         {/* Modal Header - Sticky */}
@@ -306,7 +308,8 @@ Modal.propTypes = {
   showOverlay: PropTypes.bool,
   showAsStatic: PropTypes.bool,
   maxWidth: PropTypes.string,
-  ariaLabel: PropTypes.string
+  ariaLabel: PropTypes.string,
+  zIndex: PropTypes.number
 };
 
 export default Modal;

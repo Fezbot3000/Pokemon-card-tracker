@@ -235,7 +235,7 @@ function ListingDetailModal({ isOpen, onClose, listing, onContactSeller, onRepor
 
           {/* Main Content */}
           <div className="flex-1 overflow-y-auto">
-            <div className="max-w-7xl mx-auto p-4 lg:p-6">
+            <div className="p-4 lg:p-6 pb-8 lg:pb-12">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
                 {/* Left Column - Images */}
                 <div className="space-y-4">
@@ -301,165 +301,206 @@ function ListingDetailModal({ isOpen, onClose, listing, onContactSeller, onRepor
                 </div>
 
                 {/* Right Column - Details */}
-                <div className="lg:max-h-[calc(100vh-200px)] lg:overflow-y-auto lg:pr-2">
-                  <div className="space-y-6">
-                    {/* Title and Price */}
-                    <div>
-                      <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                        {card.name || card.cardName || 'Pokemon Card'}
-                      </h1>
-                      <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                        ${listing.listingPrice}
-                      </p>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                        Listed in {listing.location || 'Unknown location'}
-                      </p>
-                    </div>
+                <div className="space-y-6">
+                  {/* Title and Price */}
+                  <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                    {card.name || card.cardName || 'Pokemon Card'}
+                  </h1>
+                  <p className="text-3xl font-bold text-gray-900 dark:text-white">
+                    ${listing.listingPrice}
+                  </p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    Listed in {listing.location || 'Unknown location'}
+                  </p>
 
-                    {/* Action Buttons */}
-                    <div className="flex gap-3">
-                      <Button
-                        variant="primary"
-                        size="lg"
-                        onClick={handleMessageSeller}
-                        className="flex-1"
-                      >
-                        Message Seller
-                      </Button>
-                      <Button
-                        variant="secondary"
-                        size="lg"
-                        onClick={() => onReportListing()}
-                      >
-                        Report Listing
-                      </Button>
-                    </div>
-
-                    {/* Details Section */}
-                    <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-                      <h2 className="text-lg font-semibold mb-4">Details</h2>
-                      <dl className="grid grid-cols-2 gap-4">
-                        <div>
-                          <dt className="text-sm text-gray-600 dark:text-gray-400">Condition</dt>
-                          <dd className="font-medium">
-                            {card.grade ? `${card.gradingCompany || 'PSA'} ${card.grade}` : 'Ungraded'}
-                          </dd>
-                        </div>
-                        {card.set && (
-                          <div>
-                            <dt className="text-sm text-gray-600 dark:text-gray-400">Set</dt>
-                            <dd className="font-medium">{card.set}</dd>
-                          </div>
-                        )}
-                        {card.year && (
-                          <div>
-                            <dt className="text-sm text-gray-600 dark:text-gray-400">Year</dt>
-                            <dd className="font-medium">{card.year}</dd>
-                          </div>
-                        )}
-                        {card.category && (
-                          <div>
-                            <dt className="text-sm text-gray-600 dark:text-gray-400">Category</dt>
-                            <dd className="font-medium">{card.category}</dd>
-                          </div>
-                        )}
-                        {card.slabSerial && (
-                          <div>
-                            <dt className="text-sm text-gray-600 dark:text-gray-400">Slab Serial</dt>
-                            <dd className="font-medium">{card.slabSerial}</dd>
-                          </div>
-                        )}
-                        <div>
-                          <dt className="text-sm text-gray-600 dark:text-gray-400">Location</dt>
-                          <dd className="font-medium">{listing.location || 'Not specified'}</dd>
-                        </div>
-                        {card.purchasePrice && (
-                          <div>
-                            <dt className="text-sm text-gray-600 dark:text-gray-400">Purchase Price</dt>
-                            <dd className="font-medium">${card.purchasePrice}</dd>
-                          </div>
-                        )}
-                        {card.currentValue && (
-                          <div>
-                            <dt className="text-sm text-gray-600 dark:text-gray-400">Current Value</dt>
-                            <dd className="font-medium">${card.currentValue}</dd>
-                          </div>
-                        )}
-                      </dl>
-                      
-                      {listing.note && (
-                        <div className="mt-4">
-                          <dt className="text-sm text-gray-600 dark:text-gray-400 mb-1">Description</dt>
-                          <dd className="text-gray-900 dark:text-white">{listing.note}</dd>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Map Section */}
-                    {listing.location && (
-                      <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-                        <h2 className="text-lg font-semibold mb-4">Location</h2>
-                        <MapView 
-                          location={listing.location} 
-                          cardName={card.name || card.cardName || 'Pokemon Card'}
-                          price={listing.listingPrice}
-                        />
+                  {/* Seller Information */}
+                  <div className="border-t border-gray-200 dark:border-gray-700 pt-6 mt-4">
+                    <h2 className="text-lg font-semibold mb-4">Seller Information</h2>
+                    
+                    {loadingSellerData ? (
+                      <div className="flex items-center justify-center py-8">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
                       </div>
-                    )}
-
-                    {/* Seller Information */}
-                    <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-                      <h2 className="text-lg font-semibold mb-4">Seller Information</h2>
-                      
-                      {loadingSellerData ? (
-                        <div className="flex items-center justify-center py-8">
-                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
-                        </div>
-                      ) : (
-                        <div className="space-y-4">
-                          {/* Seller Profile */}
-                          <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-full bg-purple-100 dark:bg-purple-900/20 flex items-center justify-center">
-                              <span className="text-lg font-semibold text-purple-600 dark:text-purple-400">
-                                {sellerProfile?.displayName?.charAt(0) || 'S'}
-                              </span>
-                            </div>
-                            <div className="flex-1">
-                              <button
-                                onClick={handleViewSellerProfile}
-                                className="font-medium text-gray-900 dark:text-white hover:text-purple-600 dark:hover:text-purple-400"
-                              >
-                                {sellerProfile?.displayName || 'Seller'}
-                              </button>
-                              <p className="text-sm text-gray-500 dark:text-gray-400">
-                                Joined {sellerProfile?.createdAt ? formatDate(sellerProfile.createdAt) : 'Recently'}
-                              </p>
-                            </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {/* Seller Profile */}
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 rounded-full bg-purple-100 dark:bg-purple-900/20 flex items-center justify-center">
+                            <span className="text-lg font-semibold text-purple-600 dark:text-purple-400">
+                              {sellerProfile?.displayName?.charAt(0) || 'S'}
+                            </span>
+                          </div>
+                          <div className="flex-1">
                             <button
                               onClick={handleViewSellerProfile}
-                              className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                              className="font-medium text-gray-900 dark:text-white hover:text-purple-600 dark:hover:text-purple-400"
                             >
-                              Seller details
+                              {sellerProfile?.displayName || 'Seller'}
                             </button>
-                          </div>
-
-                          {/* Quick Message */}
-                          <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
-                            <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                              Send seller a message
+                            <p className="text-sm text-gray-500 dark:text-gray-400">
+                              Joined {sellerProfile?.createdAt ? formatDate(sellerProfile.createdAt) : 'Recently'}
                             </p>
-                            <button
-                              onClick={handleMessageSeller}
-                              className="w-full text-left px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
-                            >
-                              <span className="text-gray-600 dark:text-gray-400">
-                                Hi, is this available?
-                              </span>
-                            </button>
                           </div>
+                          <button
+                            onClick={handleViewSellerProfile}
+                            className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                          >
+                            Seller details
+                          </button>
+                        </div>
+
+                        {/* Quick Message */}
+                        <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                          <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Send seller a message
+                          </p>
+                          <button
+                            onClick={handleMessageSeller}
+                            className="w-full text-left px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
+                          >
+                            <span className="text-gray-600 dark:text-gray-400">
+                              Hi, is this available?
+                            </span>
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Details Section */}
+                  <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+                    <h2 className="text-lg font-semibold mb-4">Details</h2>
+                    <dl className="grid grid-cols-2 gap-4">
+                      <div>
+                        <dt className="text-sm text-gray-600 dark:text-gray-400">Condition</dt>
+                        <dd className="font-medium">
+                          {card.grade ? `${card.gradingCompany || 'PSA'} ${card.grade}` : 'Ungraded'}
+                        </dd>
+                      </div>
+                      {card.set && (
+                        <div>
+                          <dt className="text-sm text-gray-600 dark:text-gray-400">Set</dt>
+                          <dd className="font-medium">{card.set}</dd>
                         </div>
                       )}
+                      {card.year && (
+                        <div>
+                          <dt className="text-sm text-gray-600 dark:text-gray-400">Year</dt>
+                          <dd className="font-medium">{card.year}</dd>
+                        </div>
+                      )}
+                      {card.category && (
+                        <div>
+                          <dt className="text-sm text-gray-600 dark:text-gray-400">Category</dt>
+                          <dd className="font-medium">{card.category}</dd>
+                        </div>
+                      )}
+                      {card.slabSerial && (
+                        <div>
+                          <dt className="text-sm text-gray-600 dark:text-gray-400">Slab Serial</dt>
+                          <dd className="font-medium">{card.slabSerial}</dd>
+                        </div>
+                      )}
+                      <div>
+                        <dt className="text-sm text-gray-600 dark:text-gray-400">Location</dt>
+                        <dd className="font-medium">{listing.location || 'Not specified'}</dd>
+                      </div>
+                      {card.purchasePrice && (
+                        <div>
+                          <dt className="text-sm text-gray-600 dark:text-gray-400">Purchase Price</dt>
+                          <dd className="font-medium">${card.purchasePrice}</dd>
+                        </div>
+                      )}
+                      {card.currentValue && (
+                        <div>
+                          <dt className="text-sm text-gray-600 dark:text-gray-400">Current Value</dt>
+                          <dd className="font-medium">${card.currentValue}</dd>
+                        </div>
+                      )}
+                    </dl>
+                    
+                    {listing.note && (
+                      <div className="mt-4">
+                        <dt className="text-sm text-gray-600 dark:text-gray-400 mb-1">Description</dt>
+                        <dd className="text-gray-900 dark:text-white">{listing.note}</dd>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Map Section */}
+                  {listing.location && (
+                    <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+                      <h2 className="text-lg font-semibold mb-4">Location</h2>
+                      <MapView 
+                        location={listing.location} 
+                        cardName={card.name || card.cardName || 'Pokemon Card'}
+                        price={listing.listingPrice}
+                      />
                     </div>
+                  )}
+
+                  {/* Action Buttons */}
+                  <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+                    {user?.uid === listing.userId ? (
+                      // Seller's own listing - show management options
+                      <div className="space-y-3">
+                        <h2 className="text-lg font-semibold mb-4">Manage Listing</h2>
+                        
+                        <Button
+                          variant="primary"
+                          size="lg"
+                          className="w-full"
+                          onClick={() => {
+                            // TODO: Implement edit functionality
+                            toast.info('Edit functionality coming soon!');
+                          }}
+                        >
+                          <Icon name="edit" size="sm" className="mr-2" />
+                          Edit
+                        </Button>
+                        
+                        <Button
+                          variant="warning"
+                          size="lg"
+                          className="w-full"
+                          onClick={() => {
+                            // TODO: Implement mark as pending
+                            toast.info('Mark as pending functionality coming soon!');
+                          }}
+                        >
+                          <Icon name="schedule" size="sm" className="mr-2" />
+                          Mark as Pending
+                        </Button>
+                        
+                        <Button
+                          variant="success"
+                          size="lg"
+                          className="w-full"
+                          onClick={() => {
+                            // TODO: Implement mark as sold
+                            toast.info('Mark as sold functionality coming soon!');
+                          }}
+                        >
+                          <Icon name="check_circle" size="sm" className="mr-2" />
+                          Mark as Sold
+                        </Button>
+                      </div>
+                    ) : (
+                      // Other user's listing - show contact button
+                      <div className="space-y-3">
+                        <h2 className="text-lg font-semibold mb-4">Contact Seller</h2>
+                        
+                        <Button
+                          variant="primary"
+                          size="lg"
+                          className="w-full"
+                          onClick={handleMessageSeller}
+                        >
+                          <Icon name="message" size="sm" className="mr-2" />
+                          Send Seller a Message
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

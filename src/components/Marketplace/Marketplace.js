@@ -557,6 +557,7 @@ function Marketplace({ currentView, onViewChange }) {
         }}
         listing={selectedListing}
         prefilledMessage={prefilledMessage}
+        onViewChange={onViewChange}
       />
 
       {/* Listing Detail Modal */}
@@ -575,9 +576,17 @@ function Marketplace({ currentView, onViewChange }) {
         <SellerProfileModal
           isOpen={showSellerProfile}
           sellerId={selectedSellerId}
+          cardImages={cardImages}
           onClose={() => {
             setShowSellerProfile(false);
             setSelectedSellerId(null);
+          }}
+          onOpenListing={(listing) => {
+            // Close seller profile and open listing detail
+            setShowSellerProfile(false);
+            setSelectedSellerId(null);
+            setSelectedListing(listing);
+            setIsDetailModalOpen(true);
           }}
         />
       )}

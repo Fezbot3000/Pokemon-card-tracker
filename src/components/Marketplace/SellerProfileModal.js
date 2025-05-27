@@ -4,7 +4,7 @@ import { doc, getDoc, collection, query, where, orderBy, getDocs } from 'firebas
 import { db as firestoreDb } from '../../services/firebase';
 import logger from '../../utils/logger';
 
-function SellerProfileModal({ isOpen, onClose, sellerId }) {
+function SellerProfileModal({ isOpen, onClose, sellerId, onOpenListing, cardImages }) {
   const [sellerProfile, setSellerProfile] = useState(null);
   const [sellerReviews, setSellerReviews] = useState([]);
   const [averageRating, setAverageRating] = useState(0);
@@ -45,15 +45,35 @@ function SellerProfileModal({ isOpen, onClose, sellerId }) {
           setSellerProfile({ id: profileSnap.id, ...profileSnap.data() });
         } else {
           // If no marketplace profile exists, try to get basic user info
-          const userRef = doc(firestoreDb, 'users', sellerId);
-          const userSnap = await getDoc(userRef);
-          
-          if (userSnap.exists()) {
-            const userData = userSnap.data();
+          console.log('No marketplace profile found, trying users collection...');
+          try {
+            const userRef = doc(firestoreDb, 'users', sellerId);
+            const userSnap = await getDoc(userRef);
+            
+            if (userSnap.exists()) {
+              const userData = userSnap.data();
+              console.log('Found user data:', userData);
+              setSellerProfile({
+                id: userSnap.id,
+                displayName: userData.displayName || userData.email?.split('@')[0] || 'Seller',
+                createdAt: userData.createdAt || new Date()
+              });
+            } else {
+              console.log('No user data found, using fallback profile');
+              // Fallback profile
+              setSellerProfile({
+                id: sellerId,
+                displayName: 'Seller',
+                createdAt: new Date()
+              });
+            }
+          } catch (userError) {
+            console.error('Error loading user data:', userError);
+            // Still set a fallback profile
             setSellerProfile({
-              id: userSnap.id,
-              displayName: userData.displayName || userData.email?.split('@')[0] || 'Seller',
-              createdAt: userData.createdAt || new Date()
+              id: sellerId,
+              displayName: 'Seller',
+              createdAt: new Date()
             });
           }
         }
@@ -62,8 +82,7 @@ function SellerProfileModal({ isOpen, onClose, sellerId }) {
         const reviewsRef = collection(firestoreDb, 'marketplaceReviews');
         const reviewsQuery = query(
           reviewsRef,
-          where('sellerId', '==', sellerId),
-          orderBy('createdAt', 'desc')
+          where('sellerId', '==', sellerId)
         );
         
         const reviewsSnapshot = await getDocs(reviewsQuery);
@@ -78,6 +97,13 @@ function SellerProfileModal({ isOpen, onClose, sellerId }) {
           breakdown[review.rating] = (breakdown[review.rating] || 0) + 1;
         });
         
+        // Sort reviews by date (newest first) on client side
+        reviews.sort((a, b) => {
+          const timeA = a.createdAt?.toDate?.() || a.createdAt || 0;
+          const timeB = b.createdAt?.toDate?.() || b.createdAt || 0;
+          return timeB - timeA;
+        });
+        
         setSellerReviews(reviews);
         setTotalReviews(reviews.length);
         setAverageRating(reviews.length > 0 ? totalRating / reviews.length : 0);
@@ -87,122 +113,57 @@ function SellerProfileModal({ isOpen, onClose, sellerId }) {
         try {
           const listingsRef = collection(firestoreDb, 'marketplaceItems');
           
-          // Debug: First check ALL marketplace items to understand the data structure
-          const allItemsQuery = query(listingsRef);
-          const allItemsSnapshot = await getDocs(allItemsQuery);
+          // Debug: First check what fields are available in a sample listing
+          console.log('=== DEBUGGING SELLER LISTINGS ===');
+          console.log('Looking for listings with sellerId:', sellerId);
           
-          console.log('=== DEBUG: Checking ALL marketplace items ===');
-          console.log('Total items in marketplace:', allItemsSnapshot.size);
-          
-          const userIdSet = new Set();
-          allItemsSnapshot.forEach((doc) => {
-            const data = doc.data();
-            userIdSet.add(data.userId);
-            
-            // Check if this seller's ID matches (case-insensitive)
-            if (data.userId && 
-                (data.userId === sellerId || 
-                 data.userId.toLowerCase() === sellerId.toLowerCase() ||
-                 data.userId.trim() === sellerId.trim())) {
-              console.log('MATCH FOUND! Listing for our seller:', {
-                id: doc.id,
-                userId: data.userId,
-                sellerIdParam: sellerId,
-                status: data.status,
-                title: data.title || data.card?.name
-              });
-            }
-            
-            // Log first few items to see structure
-            if (userIdSet.size <= 5) {
-              console.log('Sample item:', {
-                id: doc.id,
-                userId: data.userId,
-                sellerId: data.sellerId, // Check if it's sellerId instead
-                status: data.status,
-                title: data.title || data.card?.name
-              });
-            }
-          });
-          
-          console.log('Unique userIds found:', Array.from(userIdSet));
-          console.log('Looking for sellerId:', sellerId);
-          console.log('=== END DEBUG ===');
-          
-          // Now try the actual query
-          const listingsQuery = query(
+          // Try to get all available listings first to see the data structure
+          const allListingsQuery = query(
             listingsRef,
-            where('userId', '==', sellerId)
+            where('status', '==', 'available')
           );
+          const allListingsSnapshot = await getDocs(allListingsQuery);
           
-          console.log('Querying listings for sellerId:', sellerId);
+          console.log('Total available listings:', allListingsSnapshot.size);
           
-          const listingsSnapshot = await getDocs(listingsQuery);
-          const listings = [];
-          
-          console.log('Total listings found for this seller:', listingsSnapshot.size);
-          
-          listingsSnapshot.forEach((doc) => {
+          // Check first few listings to see field structure
+          let foundSellerListings = [];
+          allListingsSnapshot.forEach((doc) => {
             const data = doc.data();
-            console.log('Listing:', { 
-              id: doc.id, 
-              userId: data.userId, 
-              status: data.status,
-              title: data.title || data.card?.name
-            });
             
-            // Only include available listings
-            if (data.status === 'available') {
-              listings.push({ id: doc.id, ...data });
+            // Check if this listing belongs to our seller
+            if (data.userId === sellerId || data.sellerId === sellerId) {
+              console.log('FOUND SELLER LISTING:', {
+                id: doc.id,
+                userId: data.userId,
+                sellerId: data.sellerId,
+                title: data.card?.name || data.title,
+                status: data.status,
+                priceAUD: data.priceAUD,
+                price: data.price,
+                askingPrice: data.askingPrice,
+                allPriceFields: Object.keys(data).filter(key => key.toLowerCase().includes('price')),
+                images: data.images,
+                imageUrls: data.imageUrls,
+                cardImages: data.cardImages,
+                allImageFields: Object.keys(data).filter(key => key.toLowerCase().includes('image')),
+                fullData: data
+              });
+              foundSellerListings.push({ id: doc.id, ...data });
             }
           });
           
-          console.log('Available listings after filtering:', listings.length);
+          console.log('Found seller listings:', foundSellerListings.length);
+          console.log('=== END DEBUGGING ===');
           
-          // Sort listings by timestamp on client side
-          listings.sort((a, b) => {
+          // Sort listings by timestamp
+          foundSellerListings.sort((a, b) => {
             const timeA = a.timestampListed?.toDate?.() || a.timestampListed || 0;
             const timeB = b.timestampListed?.toDate?.() || b.timestampListed || 0;
-            return timeB - timeA; // Descending order
+            return timeB - timeA;
           });
           
-          // If no listings found with userId, try with sellerId field
-          if (listings.length === 0) {
-            console.log('No listings found with userId, trying sellerId field...');
-            
-            const sellerIdQuery = query(
-              listingsRef,
-              where('sellerId', '==', sellerId)
-            );
-            
-            const sellerIdSnapshot = await getDocs(sellerIdQuery);
-            console.log('Listings found with sellerId field:', sellerIdSnapshot.size);
-            
-            sellerIdSnapshot.forEach((doc) => {
-              const data = doc.data();
-              console.log('Listing with sellerId:', { 
-                id: doc.id, 
-                sellerId: data.sellerId,
-                userId: data.userId, 
-                status: data.status,
-                title: data.title || data.card?.name
-              });
-              
-              // Only include available listings
-              if (data.status === 'available') {
-                listings.push({ id: doc.id, ...data });
-              }
-            });
-            
-            // Re-sort after adding new listings
-            listings.sort((a, b) => {
-              const timeA = a.timestampListed?.toDate?.() || a.timestampListed || 0;
-              const timeB = b.timestampListed?.toDate?.() || b.timestampListed || 0;
-              return timeB - timeA; // Descending order
-            });
-          }
-          
-          setActiveListings(listings);
+          setActiveListings(foundSellerListings);
         } catch (listingsError) {
           logger.error('Error loading seller listings:', listingsError);
           console.error('Listings query error:', listingsError);
@@ -210,7 +171,13 @@ function SellerProfileModal({ isOpen, onClose, sellerId }) {
         }
       } catch (error) {
         logger.error('Error loading seller data:', error);
-        toast.error('Failed to load seller profile');
+        console.error('=== SELLER PROFILE ERROR ===');
+        console.error('Error details:', error);
+        console.error('Error message:', error.message);
+        console.error('Error code:', error.code);
+        console.error('SellerId that failed:', sellerId);
+        console.error('=== END ERROR ===');
+        toast.error(`Failed to load seller profile: ${error.message || 'Unknown error'}`);
       } finally {
         setLoading(false);
       }
@@ -324,22 +291,88 @@ function SellerProfileModal({ isOpen, onClose, sellerId }) {
                   {activeListings.map((listing) => (
                     <div
                       key={listing.id}
-                      className="border border-gray-200 dark:border-gray-700 rounded-lg p-3 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer"
+                      onClick={() => {
+                        // Close seller profile and open listing detail
+                        onClose();
+                        onOpenListing(listing);
+                      }}
+                      className="border border-gray-200 dark:border-gray-700 rounded-lg p-3 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors"
                     >
                       <div className="flex items-start gap-3">
-                        {listing.images?.[0] && (
-                          <img
-                            src={listing.images[0]}
-                            alt={listing.title}
-                            className="w-16 h-16 object-cover rounded"
-                          />
-                        )}
-                        <div className="flex-1">
-                          <h4 className="font-medium line-clamp-1">{listing.title}</h4>
-                          <p className="text-purple-600 dark:text-purple-400 font-bold">
-                            ${listing.price}
-                          </p>
+                        <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded overflow-hidden flex-shrink-0">
+                          {(() => {
+                            const cardImageKey = listing.card?.slabSerial || listing.card?.id || listing.cardId;
+                            const cardImage = cardImages?.[cardImageKey];
+                            const fallbackImage = listing.images?.[0] || listing.imageUrls?.[0] || listing.cardImages?.[0];
+                            const imageUrl = cardImage || fallbackImage;
+                            
+                            console.log('Image lookup for listing', listing.id, ':', {
+                              cardImageKey,
+                              cardImage,
+                              fallbackImage,
+                              finalImageUrl: imageUrl
+                            });
+                            
+                            if (imageUrl) {
+                              return (
+                                <img
+                                  src={imageUrl}
+                                  alt={listing.card?.name || 'Card image'}
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    console.log('Image failed to load:', e.target.src);
+                                    e.target.style.display = 'none';
+                                    e.target.nextSibling.style.display = 'flex';
+                                  }}
+                                />
+                              );
+                            } else {
+                              return (
+                                <div className="w-full h-full flex items-center justify-center text-gray-400">
+                                  <Icon name="image" size="sm" />
+                                </div>
+                              );
+                            }
+                          })()}
                         </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-medium line-clamp-2 text-sm">
+                            {listing.card?.name || listing.title || 'Unknown Card'}
+                          </h4>
+                          <p className="text-purple-600 dark:text-purple-400 font-bold text-lg">
+                            {(() => {
+                              const price = listing.listingPrice || listing.priceAUD || listing.price || listing.askingPrice || listing.amount || listing.cost || 0;
+                              const currency = listing.currency || 'AUD';
+                              console.log('Price for listing', listing.id, ':', price, currency, 'from fields:', {
+                                listingPrice: listing.listingPrice,
+                                currency: listing.currency,
+                                priceAUD: listing.priceAUD,
+                                price: listing.price,
+                                askingPrice: listing.askingPrice,
+                                amount: listing.amount,
+                                cost: listing.cost
+                              });
+                              return `${price} ${currency}`;
+                            })()}
+                          </p>
+                          {listing.card?.set && (
+                            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                              {listing.card.set}
+                            </p>
+                          )}
+                          {listing.condition && (
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                              {listing.condition}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {/* View Details Button */}
+                      <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+                        <button className="w-full bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium py-2 px-3 rounded transition-colors">
+                          View Details
+                        </button>
                       </div>
                     </div>
                   ))}

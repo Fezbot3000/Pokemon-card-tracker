@@ -8,7 +8,7 @@ import Button from '../../design-system/atoms/Button';
 import logger from '../../utils/logger';
 import toast from 'react-hot-toast';
 
-const MessageModal = ({ isOpen, onClose, listing, prefilledMessage = '' }) => {
+const MessageModal = ({ isOpen, onClose, listing, prefilledMessage = '', onViewChange }) => {
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -208,7 +208,13 @@ const MessageModal = ({ isOpen, onClose, listing, prefilledMessage = '' }) => {
       
       // Close the modal and show success message
       onClose();
-      toast.success('Message sent! Check the Messages tab to continue the conversation.');
+      
+      // Store the chatId in localStorage so the Messages component can auto-open this chat
+      localStorage.setItem('openChatId', existingChatId || chatId);
+      
+      // Navigate to messages tab
+      onViewChange('marketplace-messages');
+      toast.success('Message sent! Opening your conversation...');
       
     } catch (error) {
       logger.error('Error sending message:', error);
@@ -245,7 +251,7 @@ const MessageModal = ({ isOpen, onClose, listing, prefilledMessage = '' }) => {
       size="md"
       maxWidth="max-w-lg"
       closeOnClickOutside={true}
-      zIndex={70}
+      zIndex={100}
     >
       <div className="flex flex-col h-96">
         {/* Message form */}
@@ -309,7 +315,8 @@ MessageModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
   listing: PropTypes.object,
-  prefilledMessage: PropTypes.string
+  prefilledMessage: PropTypes.string,
+  onViewChange: PropTypes.func.isRequired
 };
 
 export default MessageModal;
