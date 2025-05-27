@@ -273,20 +273,53 @@ export function AuthProvider({ children }) {
     try {
       setError(null);
       
-      // Enhanced iOS and mobile detection
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-      const isSafari = /Safari/.test(navigator.userAgent) && /Apple Computer/.test(navigator.vendor);
-      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-      const isInAppBrowser = /FBAN|FBAV|Instagram|Twitter|Line|WhatsApp|Snapchat|TikTok/i.test(navigator.userAgent);
+      // Enhanced device detection with more comprehensive checks
+      const userAgent = navigator.userAgent;
+      const vendor = navigator.vendor || '';
       
-      // Use redirect for iOS, Safari, mobile devices, or in-app browsers
-      if (isIOS || isSafari || isMobile || isInAppBrowser) {
-        console.log('Using redirect flow for mobile/Safari device');
+      // More comprehensive iOS detection
+      const isIOS = /iPad|iPhone|iPod/.test(userAgent) || 
+                    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); // iPad on iOS 13+
+      
+      // Enhanced Safari detection
+      const isSafari = /Safari/.test(userAgent) && /Apple Computer/.test(vendor) && !/Chrome|CriOS|FxiOS|EdgiOS/.test(userAgent);
+      
+      // Mobile device detection
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+      
+      // In-app browser detection
+      const isInAppBrowser = /FBAN|FBAV|Instagram|Twitter|Line|WhatsApp|Snapchat|TikTok/i.test(userAgent);
+      
+      // Touch device detection
+      const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+      
+      // PWA detection
+      const isPWA = window.navigator.standalone === true || 
+                    window.matchMedia('(display-mode: standalone)').matches ||
+                    document.referrer.includes('android-app://');
+      
+      // Use redirect for any mobile/touch device, Safari, PWA, or in-app browser
+      const shouldUseRedirect = isIOS || isSafari || isMobile || isInAppBrowser || isTouchDevice || isPWA;
+      
+      console.log('Device detection:', {
+        userAgent,
+        vendor,
+        isIOS,
+        isSafari,
+        isMobile,
+        isInAppBrowser,
+        isTouchDevice,
+        isPWA,
+        shouldUseRedirect
+      });
+      
+      if (shouldUseRedirect) {
+        console.log('Using redirect flow for mobile/touch device');
         await signInWithRedirect(auth, googleProvider);
         return null; // Redirect doesn't return immediately
       }
       
-      // Try popup for desktop browsers
+      // Only try popup for confirmed desktop browsers
       console.log('Attempting popup sign-in for desktop');
       const result = await signInWithPopup(auth, googleProvider);
       console.log("Google sign-in successful:", result.user?.email);
@@ -324,7 +357,7 @@ export function AuthProvider({ children }) {
     } catch (err) {
       console.error("Google sign-in error:", err);
       
-      // If popup is blocked or fails, automatically try redirect
+      // If popup is blocked or fails, automatically try redirect as final fallback
       if (err.code === 'auth/popup-blocked' || err.code === 'auth/cancelled-popup-request') {
         console.log('Popup blocked, falling back to redirect flow');
         try {
