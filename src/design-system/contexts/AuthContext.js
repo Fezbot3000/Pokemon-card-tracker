@@ -102,36 +102,51 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Set up the auth state listener
   useEffect(() => {
-    // First, check for redirect result immediately
-    getRedirectResult(auth)
-      .then(async (result) => {
+    // Check for redirect result first, before setting up auth listener
+    const processRedirectAndSetupListener = async () => {
+      try {
+        console.log("Checking for redirect result...");
+        const result = await getRedirectResult(auth);
+        
         if (result?.user) {
           console.log("Redirect success - user found:", result.user.email);
           // Handle post-signin logic for redirect flow
           await handlePostSignIn(result);
+          // Set user immediately to prevent redirect back to login
+          setUser(result.user);
         } else {
           console.log("No redirect result found");
         }
-      })
-      .catch((error) => {
+      } catch (error) {
         console.error("Redirect result error:", error);
         if (error.code !== 'auth/popup-closed-by-user') {
           const errorMessage = handleFirebaseError(error);
           setError(errorMessage);
           toast.error(errorMessage);
         }
+      }
+
+      // Set up auth state listener after processing redirect
+      const unsubscribe = onAuthStateChanged(auth, (user) => {
+        console.log("Auth state changed:", user?.email || "No user");
+        setUser(user);
+        setLoading(false);
       });
 
-    // Set up auth state listener
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      console.log("Auth state changed:", user?.email || "No user");
-      setUser(user);
-      setLoading(false);
-    });
+      return unsubscribe;
+    };
 
-    return unsubscribe;
+    const unsubscribe = processRedirectAndSetupListener();
+    
+    // Return cleanup function
+    return () => {
+      if (unsubscribe && typeof unsubscribe.then === 'function') {
+        unsubscribe.then(unsub => unsub && unsub());
+      } else if (typeof unsubscribe === 'function') {
+        unsubscribe();
+      }
+    };
   }, []);
 
   // Helper function to create a user document in Firestore
