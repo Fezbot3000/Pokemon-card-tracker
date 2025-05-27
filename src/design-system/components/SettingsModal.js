@@ -771,6 +771,30 @@ const SettingsModal = ({
     }
   };
 
+  // Test all email types function
+  const handleTestAllEmails = async () => {
+    if (!user?.email) {
+      toastService.error('No email address found');
+      return;
+    }
+
+    setIsTestingEmail(true);
+    try {
+      const testAllEmailsFunction = httpsCallable(functions, 'testAllEmails');
+      const result = await testAllEmailsFunction({
+        to: user.email
+      });
+      
+      toastService.success(`All email types sent successfully to ${user.email}`);
+      console.log('Test all emails result:', result.data);
+    } catch (error) {
+      console.error('Error sending test emails:', error);
+      toastService.error(`Failed to send test emails: ${error.message}`);
+    } finally {
+      setIsTestingEmail(false);
+    }
+  };
+
   return (
     <>
       <Modal
@@ -893,6 +917,15 @@ const SettingsModal = ({
                       iconLeft={isTestingEmail ? <span>⏳</span> : <span>📧</span>}
                     >
                       {isTestingEmail ? 'Sending Test Email...' : 'Send Test Email'}
+                    </Button>
+                    <Button
+                      onClick={handleTestAllEmails}
+                      disabled={isTestingEmail}
+                      variant="primary"
+                      fullWidth
+                      iconLeft={isTestingEmail ? <span>⏳</span> : <span>📧</span>}
+                    >
+                      {isTestingEmail ? 'Sending Test Emails...' : 'Send All Test Emails'}
                     </Button>
                   </div>
                 </SettingsPanel>

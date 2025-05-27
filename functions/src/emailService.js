@@ -82,29 +82,27 @@ class EmailService {
   }
 
   // Subscription confirmed
-  async sendSubscriptionConfirmed(userEmail, userName, planName, amount) {
+  async sendSubscriptionConfirmed(userEmail, userName, planName) {
     return this.sendEmail(
       userEmail,
       EMAIL_TEMPLATES.SUBSCRIPTION_CONFIRMED,
       {
         user_name: userName,
         plan_name: planName,
-        amount: amount,
-        billing_portal_url: 'https://mycardtracker.com.au/dashboard/settings'
+        dashboard_url: 'https://mycardtracker.com.au/dashboard'
       }
     );
   }
 
   // Payment failed
-  async sendPaymentFailed(userEmail, userName, amount, retryUrl) {
+  async sendPaymentFailed(userEmail, userName, amount) {
     return this.sendEmail(
       userEmail,
       EMAIL_TEMPLATES.PAYMENT_FAILED,
       {
         user_name: userName,
         amount: amount,
-        retry_url: retryUrl,
-        support_email: 'support@mycardtracker.com.au'
+        billing_url: 'https://mycardtracker.com.au/billing'
       }
     );
   }
@@ -122,37 +120,36 @@ class EmailService {
     );
   }
 
-  // Marketplace message notification
-  async sendMarketplaceMessage(userEmail, userName, senderName, cardName, messagePreview) {
+  // Marketplace message
+  async sendMarketplaceMessage(userEmail, senderName, message, listingTitle) {
     return this.sendEmail(
       userEmail,
       EMAIL_TEMPLATES.MARKETPLACE_MESSAGE,
       {
-        user_name: userName,
         sender_name: senderName,
-        card_name: cardName,
-        message_preview: messagePreview,
-        messages_url: 'https://mycardtracker.com.au/dashboard?view=marketplace-messages'
+        message: message,
+        listing_title: listingTitle,
+        marketplace_url: 'https://mycardtracker.com.au/marketplace'
       }
     );
   }
 
   // Listing sold notification
-  async sendListingSold(userEmail, userName, cardName, salePrice) {
+  async sendListingSold(userEmail, userName, listingTitle, salePrice) {
     return this.sendEmail(
       userEmail,
       EMAIL_TEMPLATES.LISTING_SOLD,
       {
         user_name: userName,
-        card_name: cardName,
+        listing_title: listingTitle,
         sale_price: salePrice,
-        marketplace_url: 'https://mycardtracker.com.au/dashboard?view=marketplace-selling'
+        dashboard_url: 'https://mycardtracker.com.au/dashboard'
       }
     );
   }
 
-  // Generic email for custom messages
-  async sendCustomEmail(to, subject, htmlContent, textContent = null) {
+  // Custom email method (for sending HTML emails without templates)
+  async sendCustomEmail(to, subject, htmlContent) {
     try {
       const msg = {
         to,
@@ -161,8 +158,7 @@ class EmailService {
           name: this.fromName
         },
         subject,
-        html: htmlContent,
-        text: textContent || htmlContent.replace(/<[^>]*>/g, '') // Strip HTML for text version
+        html: htmlContent
       };
 
       const result = await sgMail.send(msg);
@@ -175,4 +171,5 @@ class EmailService {
   }
 }
 
+// Export singleton instance
 module.exports = new EmailService();

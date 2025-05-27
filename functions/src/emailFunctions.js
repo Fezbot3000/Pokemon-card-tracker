@@ -19,6 +19,115 @@ exports.sendWelcomeEmail = functions.auth.user().onCreate(async (user) => {
   }
 });
 
+// Send subscription confirmation email
+exports.sendSubscriptionEmail = functions.https.onCall(async (data, context) => {
+  try {
+    // Verify user is authenticated
+    if (!context.auth) {
+      throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
+    }
+
+    const { userEmail, userName, planName, type } = data;
+
+    if (type === 'confirmed') {
+      await emailService.sendSubscriptionConfirmed(userEmail, userName, planName);
+    } else if (type === 'cancelled') {
+      const { endDate } = data;
+      await emailService.sendSubscriptionCancelled(userEmail, userName, endDate);
+    }
+
+    return { success: true, message: `Subscription ${type} email sent successfully` };
+  } catch (error) {
+    console.error('Error sending subscription email:', error);
+    throw new functions.https.HttpsError('internal', error.message);
+  }
+});
+
+// Send payment failed email
+exports.sendPaymentFailedEmail = functions.https.onCall(async (data, context) => {
+  try {
+    if (!context.auth) {
+      throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
+    }
+
+    const { userEmail, userName, amount } = data;
+    await emailService.sendPaymentFailed(userEmail, userName, amount);
+
+    return { success: true, message: 'Payment failed email sent successfully' };
+  } catch (error) {
+    console.error('Error sending payment failed email:', error);
+    throw new functions.https.HttpsError('internal', error.message);
+  }
+});
+
+// Send marketplace message notification
+exports.sendMarketplaceMessageEmail = functions.https.onCall(async (data, context) => {
+  try {
+    if (!context.auth) {
+      throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
+    }
+
+    const { recipientEmail, senderName, message, listingTitle } = data;
+    await emailService.sendMarketplaceMessage(recipientEmail, senderName, message, listingTitle);
+
+    return { success: true, message: 'Marketplace message email sent successfully' };
+  } catch (error) {
+    console.error('Error sending marketplace message email:', error);
+    throw new functions.https.HttpsError('internal', error.message);
+  }
+});
+
+// Send listing sold notification
+exports.sendListingSoldEmail = functions.https.onCall(async (data, context) => {
+  try {
+    if (!context.auth) {
+      throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
+    }
+
+    const { userEmail, userName, listingTitle, salePrice } = data;
+    await emailService.sendListingSold(userEmail, userName, listingTitle, salePrice);
+
+    return { success: true, message: 'Listing sold email sent successfully' };
+  } catch (error) {
+    console.error('Error sending listing sold email:', error);
+    throw new functions.https.HttpsError('internal', error.message);
+  }
+});
+
+// Send email verification
+exports.sendEmailVerificationEmail = functions.https.onCall(async (data, context) => {
+  try {
+    if (!context.auth) {
+      throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
+    }
+
+    const { userEmail, verificationLink } = data;
+    await emailService.sendEmailVerification(userEmail, verificationLink);
+
+    return { success: true, message: 'Email verification sent successfully' };
+  } catch (error) {
+    console.error('Error sending email verification:', error);
+    throw new functions.https.HttpsError('internal', error.message);
+  }
+});
+
+// Generic custom email function
+exports.sendCustomEmail = functions.https.onCall(async (data, context) => {
+  try {
+    if (!context.auth) {
+      throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
+    }
+
+    const { to, subject, htmlContent } = data;
+    await emailService.sendCustomEmail(to, subject, htmlContent);
+
+    return { success: true, message: 'Custom email sent successfully' };
+  } catch (error) {
+    console.error('Error sending custom email:', error);
+    throw new functions.https.HttpsError('internal', error.message);
+  }
+});
+
 // Handle Stripe webhook events for subscription emails
 exports.handleStripeWebhook = functions.https.onRequest(async (req, res) => {
   const event = req.body;

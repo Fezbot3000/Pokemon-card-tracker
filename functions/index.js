@@ -11,12 +11,30 @@ const { testPsaToken } = require('./src/psaTokenTest');
 
 // Import email-related functions
 const { testEmail } = require('./src/testEmail');
+const { testAllEmails } = require('./src/emailTester');
+const { 
+  sendWelcomeEmail,
+  sendSubscriptionEmail,
+  sendPaymentFailedEmail,
+  sendMarketplaceMessageEmail,
+  sendListingSoldEmail,
+  sendEmailVerificationEmail,
+  sendCustomEmail
+} = require('./src/emailFunctions');
 
 // Export PSA token test function
 exports.testPsaToken = testPsaToken;
 
-// Export email test function
+// Export email functions
 exports.testEmail = testEmail;
+exports.testAllEmails = testAllEmails;
+exports.sendWelcomeEmail = sendWelcomeEmail;
+exports.sendSubscriptionEmail = sendSubscriptionEmail;
+exports.sendPaymentFailedEmail = sendPaymentFailedEmail;
+exports.sendMarketplaceMessageEmail = sendMarketplaceMessageEmail;
+exports.sendListingSoldEmail = sendListingSoldEmail;
+exports.sendEmailVerificationEmail = sendEmailVerificationEmail;
+exports.sendCustomEmail = sendCustomEmail;
 
 // Configure CORS: Allow requests from local dev and production domain
 const allowedOrigins = [
