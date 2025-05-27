@@ -103,49 +103,71 @@ export const AuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    // Check for redirect result first, before setting up auth listener
-    const processRedirectAndSetupListener = async () => {
+    let mounted = true;
+    
+    const initializeAuth = async () => {
       try {
-        console.log("Checking for redirect result...");
-        const result = await getRedirectResult(auth);
+        // Set explicit persistence for iOS Safari
+        await setPersistence(auth, browserLocalPersistence);
         
-        if (result?.user) {
+        // Check for redirect result with timeout
+        const redirectPromise = getRedirectResult(auth);
+        const timeoutPromise = new Promise((resolve) => 
+          setTimeout(() => resolve(null), 3000)
+        );
+        
+        const result = await Promise.race([redirectPromise, timeoutPromise]);
+        
+        if (result?.user && mounted) {
           console.log("Redirect success - user found:", result.user.email);
-          // Handle post-signin logic for redirect flow
           await handlePostSignIn(result);
-          // Set user immediately to prevent redirect back to login
           setUser(result.user);
-        } else {
-          console.log("No redirect result found");
+          setLoading(false);
+          return;
         }
+        
+        // If no redirect result, check current auth state
+        const currentUser = auth.currentUser;
+        if (currentUser && mounted) {
+          console.log("Current user found:", currentUser.email);
+          setUser(currentUser);
+        }
+        
+        if (mounted) {
+          setLoading(false);
+        }
+        
       } catch (error) {
-        console.error("Redirect result error:", error);
-        if (error.code !== 'auth/popup-closed-by-user') {
-          const errorMessage = handleFirebaseError(error);
-          setError(errorMessage);
-          toast.error(errorMessage);
+        console.error("Auth initialization error:", error);
+        if (mounted) {
+          setLoading(false);
+          if (error.code !== 'auth/popup-closed-by-user') {
+            const errorMessage = handleFirebaseError(error);
+            setError(errorMessage);
+            toast.error(errorMessage);
+          }
         }
       }
-
-      // Set up auth state listener after processing redirect
-      const unsubscribe = onAuthStateChanged(auth, (user) => {
-        console.log("Auth state changed:", user?.email || "No user");
-        setUser(user);
-        setLoading(false);
-      });
-
-      return unsubscribe;
     };
 
-    const unsubscribe = processRedirectAndSetupListener();
-    
-    // Return cleanup function
-    return () => {
-      if (unsubscribe && typeof unsubscribe.then === 'function') {
-        unsubscribe.then(unsub => unsub && unsub());
-      } else if (typeof unsubscribe === 'function') {
-        unsubscribe();
+    // Set up auth state listener
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (mounted) {
+        console.log("Auth state changed:", user?.email || "No user");
+        setUser(user);
+        if (!loading) {
+          // Only set loading false if we're not in initial load
+          setLoading(false);
+        }
       }
+    });
+
+    // Initialize auth
+    initializeAuth();
+
+    return () => {
+      mounted = false;
+      unsubscribe();
     };
   }, []);
 
