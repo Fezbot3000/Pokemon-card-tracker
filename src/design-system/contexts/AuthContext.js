@@ -104,38 +104,25 @@ export const AuthProvider = ({ children }) => {
 
   // Set up the auth state listener
   useEffect(() => {
-    // Handle redirect result first (for iOS devices using redirect flow)
-    const handleRedirectResult = async () => {
-      try {
-        const result = await getRedirectResult(auth);
+    // First, check for redirect result immediately
+    getRedirectResult(auth)
+      .then(async (result) => {
         if (result?.user) {
-          console.log("Redirect result found:", result.user.email);
           // Handle post-signin logic for redirect flow
           await handlePostSignIn(result);
         }
-      } catch (error) {
-        console.error("Error handling redirect result:", error);
-        const errorMessage = handleFirebaseError(error);
-        setError(errorMessage);
-        toast.error(errorMessage);
-      }
-    };
-
-    // Check for redirect result immediately
-    handleRedirectResult();
-
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        try {
-          // Just set the current user
-          setUser(user);
-        } catch (err) {
-          console.error("Error handling user:", err);
-          setUser(user);
+      })
+      .catch((error) => {
+        if (error.code !== 'auth/popup-closed-by-user') {
+          const errorMessage = handleFirebaseError(error);
+          setError(errorMessage);
+          toast.error(errorMessage);
         }
-      } else {
-        setUser(null);
-      }
+      });
+
+    // Set up auth state listener
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setUser(user);
       setLoading(false);
     });
 
@@ -223,35 +210,10 @@ export const AuthProvider = ({ children }) => {
       // Explicitly set persistence to local
       await setPersistence(auth, browserLocalPersistence);
       
-      // Device detection for iOS/mobile
-      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-      const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+      // Always use redirect flow - works reliably on ALL devices
+      await signInWithRedirect(auth, googleProvider);
+      return null; // Redirect doesn't return immediately
       
-      // Use redirect for mobile devices (especially iOS) to avoid popup blocking
-      const shouldUseRedirect = isMobile || isIOS || (isSafari && isMobile);
-      
-      console.log('Google sign-in method selection:', {
-        isMobile,
-        isIOS,
-        isSafari,
-        shouldUseRedirect,
-        userAgent: navigator.userAgent
-      });
-      
-      if (shouldUseRedirect) {
-        console.log('Using redirect flow for Google sign-in (mobile/iOS detected)');
-        await signInWithRedirect(auth, googleProvider);
-        return null; // Redirect doesn't return immediately
-      } else {
-        console.log('Using popup flow for Google sign-in (desktop detected)');
-        const result = await signInWithPopup(auth, googleProvider);
-        console.log("Google sign-in successful:", result.user?.email);
-        
-        // Handle post-signin logic for popup flow
-        await handlePostSignIn(result);
-        return result.user;
-      }
     } catch (err) {
       console.error("Google sign-in error:", err);
       if (err.code !== 'auth/popup-closed-by-user') {
