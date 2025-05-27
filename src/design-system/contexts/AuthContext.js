@@ -70,87 +70,56 @@ export const AuthProvider = ({ children }) => {
 
   // Set up the auth state listener
   useEffect(() => {
-    let unsubscribe = null;
+    console.log("=== AuthContext useEffect starting ===");
     
-    // Handle redirect result IMMEDIATELY - this can only be called once successfully
-    const handleRedirectResult = async () => {
-      try {
-        console.log("=== CHECKING FOR REDIRECT RESULT ===");
-        const result = await getRedirectResult(auth);
-        
+    // First, check for redirect result immediately
+    getRedirectResult(auth)
+      .then(async (result) => {
         if (result?.user) {
-          console.log("=== REDIRECT SIGN-IN SUCCESSFUL ===");
-          console.log("User email:", result.user?.email);
-          console.log("User UID:", result.user?.uid);
+          console.log("=== REDIRECT SUCCESS ===", result.user.email);
           
-          // Check if this is a new user
-          const isFirstSignIn = result?.additionalUserInfo?.isNewUser;
-          
-          // Try to create user document
+          // Create user document
           try {
             await createUserDocument(result.user);
-            console.log("User document created after redirect sign-in");
-          } catch (docError) {
-            console.error("Failed to create user document after redirect sign-in:", docError);
+            console.log("User document created");
+          } catch (error) {
+            console.error("Error creating user document:", error);
           }
           
-          toast.success('Signed in with Google successfully!');
-          
-          // After successful Google sign-in, clear any previous plan choice
-          localStorage.removeItem('chosenPlan');
-          
-          // Check if this is a truly new user
-          const isNewAccount = 
-            isFirstSignIn || 
+          // Handle new user flags
+          const isFirstSignIn = result?.additionalUserInfo?.isNewUser;
+          const isNewAccount = isFirstSignIn || 
             result.user.metadata.creationTime === result.user.metadata.lastSignInTime;
           
-          // Only set the isNewUser flag for brand new accounts
           if (isNewAccount) {
-            console.log("Brand new Google account detected, setting isNewUser flag");
             localStorage.setItem('isNewUser', 'true');
           } else {
-            console.log("Existing Google account detected, not setting isNewUser flag");
-            // Ensure we clear any existing flag for sign-ins
             localStorage.removeItem('isNewUser');
           }
           
-          // Set the user immediately after successful redirect
-          console.log("=== SETTING USER STATE ===");
-          setUser(result.user);
-          setLoading(false);
-          console.log("=== USER STATE SET, LOADING FALSE ===");
+          localStorage.removeItem('chosenPlan');
+          toast.success('Signed in with Google successfully!');
         } else {
-          console.log("=== NO REDIRECT RESULT FOUND ===");
+          console.log("=== NO REDIRECT RESULT ===");
         }
-      } catch (error) {
-        console.error("=== ERROR HANDLING REDIRECT RESULT ===", error);
+      })
+      .catch((error) => {
+        console.error("=== REDIRECT ERROR ===", error);
         if (error.code !== 'auth/popup-closed-by-user') {
           const errorMessage = handleFirebaseError(error);
           setError(errorMessage);
           toast.error(errorMessage);
         }
-      }
-      
-      // Always set up auth state listener after checking redirect
-      console.log("=== SETTING UP AUTH STATE LISTENER ===");
-      unsubscribe = onAuthStateChanged(auth, async (user) => {
-        console.log("=== AUTH STATE CHANGED ===");
-        console.log("User:", user?.email || "No user");
-        setUser(user);
-        setLoading(false);
-        console.log("=== AUTH STATE UPDATED ===");
       });
-    };
 
-    // Call the async function
-    handleRedirectResult();
-    
-    // Return cleanup function
-    return () => {
-      if (unsubscribe) {
-        unsubscribe();
-      }
-    };
+    // Set up auth state listener
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      console.log("=== AUTH STATE CHANGE ===", user?.email || "No user");
+      setUser(user);
+      setLoading(false);
+    });
+
+    return unsubscribe;
   }, []);
 
   // Helper function to create a user document in Firestore
