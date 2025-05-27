@@ -129,6 +129,9 @@ export function AuthProvider({ children }) {
         if (result?.user) {
           console.log("Redirect sign-in successful:", result.user?.email);
           
+          // Clear the redirect flag
+          localStorage.removeItem('googleSignInRedirect');
+          
           // Try to create user document but don't fail if it errors
           try {
             await createUserDocument(result.user);
@@ -161,9 +164,29 @@ export function AuthProvider({ children }) {
               }
             }
           }
+          
+          // Navigate to dashboard after successful redirect sign-in
+          // Use a small delay to ensure state is updated
+          setTimeout(() => {
+            if (window.location.pathname === '/login' || window.location.pathname === '/') {
+              console.log("Navigating to dashboard after redirect sign-in");
+              window.location.href = '/dashboard';
+            }
+          }, 100);
+        } else {
+          // Check if we were expecting a redirect result but didn't get one
+          const wasRedirecting = localStorage.getItem('googleSignInRedirect');
+          if (wasRedirecting) {
+            console.log("Expected redirect result but didn't receive one");
+            localStorage.removeItem('googleSignInRedirect');
+          }
         }
       } catch (error) {
         console.error("Redirect error:", error);
+        
+        // Clear the redirect flag on error
+        localStorage.removeItem('googleSignInRedirect');
+        
         const errorMessage = handleFirebaseError(error);
         setError(errorMessage);
         toast.error(errorMessage);
@@ -269,17 +292,30 @@ export function AuthProvider({ children }) {
       setError(null);
       console.log("Starting Google sign-in process...");
       
-      // Detect if running as PWA (installed app)
+      // Improved PWA detection for iOS
       const isPWA = window.matchMedia('(display-mode: standalone)').matches ||
-                    window.navigator.standalone ||
-                    document.referrer.includes('android-app://');
+                    (window.navigator.standalone === true) ||
+                    document.referrer.includes('android-app://') ||
+                    (window.location.href.includes('?utm_source=homescreen'));
+      
+      console.log("PWA detection:", {
+        displayMode: window.matchMedia('(display-mode: standalone)').matches,
+        navigatorStandalone: window.navigator.standalone,
+        androidApp: document.referrer.includes('android-app://'),
+        isPWA
+      });
       
       if (isPWA) {
         // Use redirect for PWA to avoid popup issues
         console.log("PWA detected, using redirect sign-in");
+        
+        // Store that we're starting a redirect flow
+        localStorage.setItem('googleSignInRedirect', 'true');
+        
         await signInWithRedirect(auth, googleProvider);
-        // The redirect result will be handled by handleRedirectResult on page reload
-        return;
+        // Note: This function will not return as the page redirects
+        // The result will be handled by handleRedirectResult on return
+        return null; // Explicitly return null to indicate redirect flow
       } else {
         // Use popup for regular browser
         const result = await signInWithPopup(auth, googleProvider);

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../design-system';
 import { Helmet } from 'react-helmet-async';
@@ -45,6 +45,19 @@ function Login() {
     };
   }, [currentUser, authLoading, navigate]);
   
+  // Reset loading states and handle redirect cleanup on component mount
+  useEffect(() => {
+    // Reset social loading states on page load
+    setSocialLoading({ google: false, apple: false });
+    
+    // If we were in a redirect flow but ended up back on login page, something went wrong
+    const wasRedirecting = localStorage.getItem('googleSignInRedirect');
+    if (wasRedirecting) {
+      console.log('Cleaning up incomplete redirect flow');
+      localStorage.removeItem('googleSignInRedirect');
+    }
+  }, []);
+
   // Set errors from auth context
   useEffect(() => {
     if (authError) {
@@ -112,6 +125,14 @@ function Login() {
       setSocialLoading({ ...socialLoading, google: true });
       const user = await signInWithGoogle();
       
+      // Check if this was a redirect flow (user will be null)
+      if (user === null) {
+        // This is a redirect flow, don't navigate or clear loading yet
+        // The loading will be cleared when the page reloads after redirect
+        console.log('Google sign-in redirect initiated');
+        return;
+      }
+      
       // IMPORTANT: Always navigate to dashboard and let NewUserRoute handle the redirects
       // This ensures all flows go through the same redirect logic
       console.log('Google sign-in successful, going through dashboard flow');
@@ -123,7 +144,11 @@ function Login() {
       }
       // Error handling is done in AuthContext
     } finally {
-      setSocialLoading({ ...socialLoading, google: false });
+      // Only clear loading state if we're not in a redirect flow
+      const isRedirecting = localStorage.getItem('googleSignInRedirect');
+      if (!isRedirecting) {
+        setSocialLoading({ ...socialLoading, google: false });
+      }
     }
   };
 
