@@ -6,6 +6,9 @@ const PDFDocument = require('pdfkit');
 const AdmZip = require('adm-zip');
 const { Readable } = require('stream');
 
+// Initialize Firebase Admin
+admin.initializeApp();
+
 // Import PSA-related functions
 const { testPsaToken } = require('./src/psaTokenTest');
 
@@ -59,9 +62,6 @@ const cors = require('cors')({
     return callback(null, true);
   }
 });
-
-// Initialize Firebase Admin
-admin.initializeApp();
 
 // Add better logging for Stripe initialization
 let stripe;

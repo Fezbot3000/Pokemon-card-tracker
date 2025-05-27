@@ -2,6 +2,11 @@ const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 const emailService = require('./emailService');
 
+// Initialize Firebase Admin if not already initialized
+if (!admin.apps.length) {
+  admin.initializeApp();
+}
+
 // Initialize Firestore
 const db = admin.firestore();
 

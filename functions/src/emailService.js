@@ -1,4 +1,5 @@
 const functions = require('firebase-functions');
+const admin = require('firebase-admin'); // Add this line
 const sgMail = require('@sendgrid/mail');
 
 // Initialize SendGrid with API key from Firebase config (proper v1 approach)
