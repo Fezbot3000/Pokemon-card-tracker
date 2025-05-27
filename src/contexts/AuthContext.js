@@ -273,67 +273,13 @@ export function AuthProvider({ children }) {
     try {
       setError(null);
       
-      // Simple approach: Always try redirect first for mobile reliability
-      // Only use popup for confirmed desktop environments
-      const isMobile = /iPhone|iPad|iPod|Android|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-      const isSafari = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
-      const isTouchDevice = 'ontouchstart' in window;
+      // Always use redirect flow (opens new tab) - works reliably on ALL devices
+      console.log('Using redirect flow for Google sign-in');
+      await signInWithRedirect(auth, googleProvider);
+      return null; // Redirect doesn't return immediately
       
-      // Use redirect for mobile, Safari, or touch devices
-      if (isMobile || isSafari || isTouchDevice) {
-        console.log('Using redirect flow for mobile/Safari/touch device');
-        await signInWithRedirect(auth, googleProvider);
-        return null;
-      }
-      
-      // Try popup for desktop only
-      console.log('Attempting popup sign-in for desktop');
-      const result = await signInWithPopup(auth, googleProvider);
-      console.log("Google sign-in successful:", result.user?.email);
-      
-      const isFirstSignIn = result?.additionalUserInfo?.isNewUser;
-      
-      try {
-        await createUserDocument(result.user);
-      } catch (docError) {
-        console.error("Failed to create user document:", docError);
-      }
-      
-      toast.success('Signed in successfully!');
-      localStorage.removeItem('chosenPlan');
-      
-      if (isFirstSignIn) {
-        localStorage.setItem('isNewUser', 'true');
-      } else {
-        localStorage.removeItem('isNewUser');
-        
-        if (performAutoSync) {
-          try {
-            await performAutoSync();
-          } catch (syncError) {
-            console.error('Error during auto-sync:', syncError);
-          }
-        }
-      }
-      
-      return result.user;
     } catch (err) {
       console.error("Google sign-in error:", err);
-      
-      // If popup fails, try redirect as fallback
-      if (err.code === 'auth/popup-blocked' || err.code === 'auth/cancelled-popup-request') {
-        console.log('Popup failed, using redirect fallback');
-        try {
-          await signInWithRedirect(auth, googleProvider);
-          return null;
-        } catch (redirectErr) {
-          console.error('Redirect fallback failed:', redirectErr);
-          const errorMessage = handleFirebaseError(redirectErr);
-          setError(errorMessage);
-          toast.error(errorMessage);
-          throw redirectErr;
-        }
-      }
       
       if (err.code !== 'auth/popup-closed-by-user') {
         const errorMessage = handleFirebaseError(err);
