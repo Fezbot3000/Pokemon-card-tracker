@@ -38,6 +38,7 @@ const handleFirebaseError = (error) => {
     'auth/invalid-email': 'Invalid email address',
     'auth/requires-recent-login': 'Please log in again to complete this action',
     'auth/popup-closed-by-user': 'Authentication popup was closed',
+    'auth/cancelled-popup-request': 'Authentication popup was cancelled',
     'auth/unauthorized-domain': 'This domain is not authorized for authentication',
     'auth/operation-not-allowed': 'This operation is not allowed',
     'auth/account-exists-with-different-credential': 'An account already exists with the same email address',
@@ -61,6 +62,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [signingIn, setSigningIn] = useState(false);
 
   // Clear any error when component unmounts or when dependencies change
   useEffect(() => {
@@ -163,6 +165,8 @@ export const AuthProvider = ({ children }) => {
 
   // Google sign in function
   const signInWithGoogle = async () => {
+    if (signingIn) return;
+    setSigningIn(true);
     try {
       setError(null);
       // Explicitly set persistence to local
@@ -201,20 +205,24 @@ export const AuthProvider = ({ children }) => {
         localStorage.removeItem('isNewUser');
       }
       
+      setSigningIn(false);
       return result.user;
     } catch (err) {
       console.error("Google sign-in error:", err);
-      if (err.code !== 'auth/popup-closed-by-user') {
+      if (err.code !== 'auth/popup-closed-by-user' && err.code !== 'auth/cancelled-popup-request') {
         const errorMessage = handleFirebaseError(err);
         setError(errorMessage);
         toast.error(errorMessage);
       }
+      setSigningIn(false);
       throw err;
     }
   };
 
   // Apple Sign In
   const signInWithApple = async () => {
+    if (signingIn) return;
+    setSigningIn(true);
     try {
       setError(null);
       // Explicitly set persistence to local
@@ -257,14 +265,16 @@ export const AuthProvider = ({ children }) => {
         localStorage.removeItem('isNewUser');
       }
       
+      setSigningIn(false);
       return result.user;
     } catch (err) {
       console.error("Apple sign-in error:", err);
-      if (err.code !== 'auth/popup-closed-by-user') {
+      if (err.code !== 'auth/popup-closed-by-user' && err.code !== 'auth/cancelled-popup-request') {
         const errorMessage = handleFirebaseError(err);
         setError(errorMessage);
         toast.error(errorMessage);
       }
+      setSigningIn(false);
       throw err;
     }
   };
@@ -316,6 +326,7 @@ export const AuthProvider = ({ children }) => {
       currentUser: user, // For backward compatibility
       loading, 
       error,
+      signingIn,
       signIn, 
       signUp,
       signInWithGoogle,
