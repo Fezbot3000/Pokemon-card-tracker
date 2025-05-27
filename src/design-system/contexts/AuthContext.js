@@ -106,36 +106,45 @@ export const AuthProvider = ({ children }) => {
     console.log(" AuthContext initializing...");
     console.log("Current URL:", window.location.href);
     
-    // Check for redirect result first
-    getRedirectResult(auth)
-      .then(async (result) => {
+    const initializeAuth = async () => {
+      let redirectHandled = false;
+      
+      // Step 1: Handle redirect result FIRST and wait for completion
+      try {
+        const result = await getRedirectResult(auth);
         console.log(" Redirect result:", result);
         console.log(" Redirect user:", result?.user?.email || "None");
         
         if (result?.user) {
           console.log(" Processing successful redirect...");
+          redirectHandled = true;
           await handlePostSignIn(result);
-        } else {
-          console.log(" No redirect result found");
+          setUser(result.user);
+          setLoading(false);
+          return; // Exit early, don't set up listener
         }
-      })
-      .catch((error) => {
+      } catch (error) {
         console.error(" Redirect result error:", error);
         if (error.code !== 'auth/popup-closed-by-user') {
           const errorMessage = handleFirebaseError(error);
           setError(errorMessage);
           toast.error(errorMessage);
         }
-      });
-
-    // Set up auth state listener
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      console.log(" Auth state changed:", user?.email || "No user");
-      setUser(user);
-      setLoading(false);
-    });
-
-    return unsubscribe;
+      }
+      
+      // Step 2: Only if no redirect was handled, set up auth state listener
+      if (!redirectHandled) {
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+          console.log(" Auth state changed:", user?.email || "No user");
+          setUser(user);
+          setLoading(false);
+        });
+        
+        return unsubscribe;
+      }
+    };
+    
+    return initializeAuth();
   }, []);
 
   // Helper function to create a user document in Firestore
@@ -215,7 +224,7 @@ export const AuthProvider = ({ children }) => {
   // Google sign in function
   const signInWithGoogle = async () => {
     try {
-      console.log("🚀 Starting Google sign in...");
+      console.log(" Starting Google sign in...");
       console.log("Current URL before redirect:", window.location.href);
       
       setError(null);
@@ -223,11 +232,11 @@ export const AuthProvider = ({ children }) => {
       provider.addScope('email');
       provider.addScope('profile');
       
-      console.log("🔄 Redirecting to Google...");
+      console.log(" Redirecting to Google...");
       await signInWithRedirect(auth, provider);
       
     } catch (error) {
-      console.error("❌ Google sign-in error:", error);
+      console.error(" Google sign-in error:", error);
       const errorMessage = handleFirebaseError(error);
       setError(errorMessage);
       toast.error(errorMessage);
