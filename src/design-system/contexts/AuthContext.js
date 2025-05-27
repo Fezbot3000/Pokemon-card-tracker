@@ -103,72 +103,39 @@ export const AuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    let mounted = true;
+    console.log(" AuthContext initializing...");
+    console.log("Current URL:", window.location.href);
     
-    const initializeAuth = async () => {
-      try {
-        // Set explicit persistence for iOS Safari
-        await setPersistence(auth, browserLocalPersistence);
+    // Check for redirect result first
+    getRedirectResult(auth)
+      .then(async (result) => {
+        console.log(" Redirect result:", result);
+        console.log(" Redirect user:", result?.user?.email || "None");
         
-        // Check for redirect result with timeout
-        const redirectPromise = getRedirectResult(auth);
-        const timeoutPromise = new Promise((resolve) => 
-          setTimeout(() => resolve(null), 3000)
-        );
-        
-        const result = await Promise.race([redirectPromise, timeoutPromise]);
-        
-        if (result?.user && mounted) {
-          console.log("Redirect success - user found:", result.user.email);
+        if (result?.user) {
+          console.log(" Processing successful redirect...");
           await handlePostSignIn(result);
-          setUser(result.user);
-          setLoading(false);
-          return;
+        } else {
+          console.log(" No redirect result found");
         }
-        
-        // If no redirect result, check current auth state
-        const currentUser = auth.currentUser;
-        if (currentUser && mounted) {
-          console.log("Current user found:", currentUser.email);
-          setUser(currentUser);
+      })
+      .catch((error) => {
+        console.error(" Redirect result error:", error);
+        if (error.code !== 'auth/popup-closed-by-user') {
+          const errorMessage = handleFirebaseError(error);
+          setError(errorMessage);
+          toast.error(errorMessage);
         }
-        
-        if (mounted) {
-          setLoading(false);
-        }
-        
-      } catch (error) {
-        console.error("Auth initialization error:", error);
-        if (mounted) {
-          setLoading(false);
-          if (error.code !== 'auth/popup-closed-by-user') {
-            const errorMessage = handleFirebaseError(error);
-            setError(errorMessage);
-            toast.error(errorMessage);
-          }
-        }
-      }
-    };
+      });
 
     // Set up auth state listener
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (mounted) {
-        console.log("Auth state changed:", user?.email || "No user");
-        setUser(user);
-        if (!loading) {
-          // Only set loading false if we're not in initial load
-          setLoading(false);
-        }
-      }
+      console.log(" Auth state changed:", user?.email || "No user");
+      setUser(user);
+      setLoading(false);
     });
 
-    // Initialize auth
-    initializeAuth();
-
-    return () => {
-      mounted = false;
-      unsubscribe();
-    };
+    return unsubscribe;
   }, []);
 
   // Helper function to create a user document in Firestore
@@ -245,25 +212,26 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Google Sign In
+  // Google sign in function
   const signInWithGoogle = async () => {
     try {
+      console.log("🚀 Starting Google sign in...");
+      console.log("Current URL before redirect:", window.location.href);
+      
       setError(null);
-      // Explicitly set persistence to local
-      await setPersistence(auth, browserLocalPersistence);
+      const provider = new GoogleAuthProvider();
+      provider.addScope('email');
+      provider.addScope('profile');
       
-      // Always use redirect flow - works reliably on ALL devices
-      await signInWithRedirect(auth, googleProvider);
-      return null; // Redirect doesn't return immediately
+      console.log("🔄 Redirecting to Google...");
+      await signInWithRedirect(auth, provider);
       
-    } catch (err) {
-      console.error("Google sign-in error:", err);
-      if (err.code !== 'auth/popup-closed-by-user') {
-        const errorMessage = handleFirebaseError(err);
-        setError(errorMessage);
-        toast.error(errorMessage);
-      }
-      throw err;
+    } catch (error) {
+      console.error("❌ Google sign-in error:", error);
+      const errorMessage = handleFirebaseError(error);
+      setError(errorMessage);
+      toast.error(errorMessage);
+      throw error;
     }
   };
 
