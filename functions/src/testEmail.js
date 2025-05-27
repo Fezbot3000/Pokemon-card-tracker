@@ -1,9 +1,15 @@
 const admin = require('firebase-admin');
 const functions = require('firebase-functions');
+const { defineSecret } = require('firebase-functions/params');
 const emailService = require('./emailService');
 
+// Define the secret
+const sendgridApiKey = defineSecret('SENDGRID_API_KEY');
+
 // Test function to send a simple email (for testing purposes)
-exports.testEmail = functions.https.onCall(async (data, context) => {
+exports.testEmail = functions
+  .runWith({ secrets: [sendgridApiKey] })
+  .https.onCall(async (data, context) => {
   try {
     const { to, subject = 'Test Email from MyCardTracker' } = data;
     

@@ -1,8 +1,9 @@
 const functions = require('firebase-functions');
 const sgMail = require('@sendgrid/mail');
 
-// Initialize SendGrid with API key from environment variables
-sgMail.setApiKey(functions.config().sendgrid.api_key);
+// Initialize SendGrid with API key from environment variables (Firebase v2 compatible)
+// The API key will be available as process.env.SENDGRID_API_KEY when the secret is properly configured
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 // Email templates
 const EMAIL_TEMPLATES = {
