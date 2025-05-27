@@ -75,11 +75,13 @@ export const AuthProvider = ({ children }) => {
     // Handle redirect result IMMEDIATELY - this can only be called once successfully
     const handleRedirectResult = async () => {
       try {
-        console.log("Checking for redirect result...");
+        console.log("=== CHECKING FOR REDIRECT RESULT ===");
         const result = await getRedirectResult(auth);
         
         if (result?.user) {
-          console.log("Redirect sign-in successful:", result.user?.email);
+          console.log("=== REDIRECT SIGN-IN SUCCESSFUL ===");
+          console.log("User email:", result.user?.email);
+          console.log("User UID:", result.user?.uid);
           
           // Check if this is a new user
           const isFirstSignIn = result?.additionalUserInfo?.isNewUser;
@@ -113,13 +115,15 @@ export const AuthProvider = ({ children }) => {
           }
           
           // Set the user immediately after successful redirect
+          console.log("=== SETTING USER STATE ===");
           setUser(result.user);
           setLoading(false);
+          console.log("=== USER STATE SET, LOADING FALSE ===");
         } else {
-          console.log("No redirect result found");
+          console.log("=== NO REDIRECT RESULT FOUND ===");
         }
       } catch (error) {
-        console.error("Error handling redirect result:", error);
+        console.error("=== ERROR HANDLING REDIRECT RESULT ===", error);
         if (error.code !== 'auth/popup-closed-by-user') {
           const errorMessage = handleFirebaseError(error);
           setError(errorMessage);
@@ -128,10 +132,13 @@ export const AuthProvider = ({ children }) => {
       }
       
       // Always set up auth state listener after checking redirect
+      console.log("=== SETTING UP AUTH STATE LISTENER ===");
       unsubscribe = onAuthStateChanged(auth, async (user) => {
-        console.log("Auth state changed:", user?.email || "No user");
+        console.log("=== AUTH STATE CHANGED ===");
+        console.log("User:", user?.email || "No user");
         setUser(user);
         setLoading(false);
+        console.log("=== AUTH STATE UPDATED ===");
       });
     };
 
