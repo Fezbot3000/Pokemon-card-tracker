@@ -127,10 +127,6 @@ export function AuthProvider({ children }) {
       try {
         const result = await getRedirectResult(auth);
         if (result?.user) {
-          // Clear the redirect flag
-          localStorage.removeItem('googleSignInRedirect');
-          
-          // Try to create user document but don't fail if it errors
           try {
             await createUserDocument(result.user);
           } catch (docError) {
@@ -138,11 +134,8 @@ export function AuthProvider({ children }) {
           }
           
           toast.success('Signed in successfully!');
-          
-          // After successful sign-in, clear any previous plan choice
           localStorage.removeItem('chosenPlan');
           
-          // Check if this is a truly new user
           const isNewAccount = result.user.metadata.creationTime === result.user.metadata.lastSignInTime;
           
           if (isNewAccount) {
@@ -150,7 +143,6 @@ export function AuthProvider({ children }) {
           } else {
             localStorage.removeItem('isNewUser');
             
-            // Trigger auto-sync for existing users after successful login
             if (performAutoSync) {
               try {
                 await performAutoSync();
@@ -160,25 +152,13 @@ export function AuthProvider({ children }) {
             }
           }
           
-          // Navigate to dashboard after successful redirect sign-in
+          // Navigate to dashboard
           setTimeout(() => {
-            if (window.location.pathname === '/login' || window.location.pathname === '/') {
-              window.location.href = '/dashboard';
-            }
+            window.location.href = '/dashboard';
           }, 100);
-        } else {
-          // Check if we were expecting a redirect result but didn't get one
-          const wasRedirecting = localStorage.getItem('googleSignInRedirect');
-          if (wasRedirecting) {
-            localStorage.removeItem('googleSignInRedirect');
-          }
         }
       } catch (error) {
         console.error("Redirect error:", error);
-        
-        // Clear the redirect flag on error
-        localStorage.removeItem('googleSignInRedirect');
-        
         const errorMessage = handleFirebaseError(error);
         setError(errorMessage);
         toast.error(errorMessage);
@@ -283,24 +263,17 @@ export function AuthProvider({ children }) {
     try {
       setError(null);
       
-      // Detect mobile devices and PWA - force redirect for better compatibility
-      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-      const isPWA = window.matchMedia('(display-mode: standalone)').matches ||
-                    (window.navigator.standalone === true) ||
-                    document.referrer.includes('android-app://') ||
-                    (window.location.href.includes('?utm_source=homescreen'));
+      // Simple iOS detection - always use redirect on iOS
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
       
-      // Use redirect for mobile devices or PWA to avoid popup blocking
-      if (isMobile || isPWA) {
-        // Store that we're starting a redirect flow
-        localStorage.setItem('googleSignInRedirect', 'true');
+      if (isIOS) {
+        // Always use redirect on iOS to avoid popup issues
         await signInWithRedirect(auth, googleProvider);
         return null; // Redirect flow
       } else {
-        // Use popup for desktop browsers only
+        // Use popup for non-iOS devices
         const result = await signInWithPopup(auth, googleProvider);
         
-        // Try to create user document but don't fail if it errors
         try {
           await createUserDocument(result.user);
         } catch (docError) {
@@ -308,11 +281,8 @@ export function AuthProvider({ children }) {
         }
         
         toast.success('Signed in with Google successfully!');
-        
-        // After successful Google sign-in, clear any previous plan choice
         localStorage.removeItem('chosenPlan');
         
-        // Check if this is a truly new user
         const isNewAccount = result.user.metadata.creationTime === result.user.metadata.lastSignInTime;
         
         if (isNewAccount) {
@@ -320,7 +290,6 @@ export function AuthProvider({ children }) {
         } else {
           localStorage.removeItem('isNewUser');
           
-          // Trigger auto-sync for existing users after successful login
           if (performAutoSync) {
             try {
               await performAutoSync();
