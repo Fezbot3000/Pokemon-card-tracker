@@ -263,11 +263,13 @@ export function AuthProvider({ children }) {
     try {
       setError(null);
       
-      // Simple iOS detection - always use redirect on iOS
+      // iOS detection - use redirect for all iOS (both PWA and Safari browser)
       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      // Also check for Safari on iOS which often blocks popups
+      const isSafari = /Safari/.test(navigator.userAgent) && /Apple Computer/.test(navigator.vendor);
       
-      if (isIOS) {
-        // Always use redirect on iOS to avoid popup issues
+      if (isIOS || (isIOS && isSafari)) {
+        // Always use redirect on iOS to avoid popup blocking in Safari and PWA
         await signInWithRedirect(auth, googleProvider);
         return null; // Redirect flow
       } else {
@@ -302,6 +304,19 @@ export function AuthProvider({ children }) {
         return result.user;
       }
     } catch (err) {
+      // If popup is blocked, fall back to redirect
+      if (err.code === 'auth/popup-blocked') {
+        try {
+          await signInWithRedirect(auth, googleProvider);
+          return null;
+        } catch (redirectErr) {
+          const errorMessage = handleFirebaseError(redirectErr);
+          setError(errorMessage);
+          toast.error(errorMessage);
+          throw redirectErr;
+        }
+      }
+      
       if (err.code !== 'auth/popup-closed-by-user') {
         const errorMessage = handleFirebaseError(err);
         setError(errorMessage);
