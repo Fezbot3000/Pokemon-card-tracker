@@ -9,8 +9,14 @@ const { Readable } = require('stream');
 // Import PSA-related functions
 const { testPsaToken } = require('./src/psaTokenTest');
 
+// Import email-related functions
+const { testEmail } = require('./src/testEmail');
+
 // Export PSA token test function
 exports.testPsaToken = testPsaToken;
+
+// Export email test function
+exports.testEmail = testEmail;
 
 // Configure CORS: Allow requests from local dev and production domain
 const allowedOrigins = [
