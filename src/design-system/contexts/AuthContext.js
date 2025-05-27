@@ -11,8 +11,7 @@ import {
   getRedirectResult,
   OAuthProvider,
   setPersistence,
-  browserLocalPersistence,
-  signInWithRedirect
+  browserLocalPersistence
 } from 'firebase/auth';
 import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db, googleProvider } from '../../firebase'; // Import from the main app's firebase config
@@ -68,83 +67,24 @@ export const AuthProvider = ({ children }) => {
     return () => setError(null);
   }, []);
 
-  // Helper function to handle post sign-in logic
-  const handlePostSignIn = async (result) => {
-    // Check if this is a new user
-    const isFirstSignIn = result?.additionalUserInfo?.isNewUser;
-    
-    // Try to create user document
-    try {
-      await createUserDocument(result.user);
-      console.log("User document created after Google sign-in");
-    } catch (docError) {
-      console.error("Failed to create user document after Google sign-in:", docError);
-    }
-    
-    toast.success('Signed in with Google successfully!');
-    
-    // After successful Google sign-in, clear any previous plan choice
-    localStorage.removeItem('chosenPlan');
-    
-    // Check if this is a truly new user
-    const isNewAccount = 
-      isFirstSignIn || 
-      result.user.metadata.creationTime === result.user.metadata.lastSignInTime;
-    
-    // Only set the isNewUser flag for brand new accounts
-    if (isNewAccount) {
-      console.log("Brand new Google account detected, setting isNewUser flag");
-      localStorage.setItem('isNewUser', 'true');
-    } else {
-      console.log("Existing Google account detected, not setting isNewUser flag");
-      // Ensure we clear any existing flag for sign-ins
-      localStorage.removeItem('isNewUser');
-    }
-  };
-
+  // Set up the auth state listener
   useEffect(() => {
-    console.log(" AuthContext initializing...");
-    console.log("Current URL:", window.location.href);
-    
-    const initializeAuth = async () => {
-      let redirectHandled = false;
-      
-      // Step 1: Handle redirect result FIRST and wait for completion
-      try {
-        const result = await getRedirectResult(auth);
-        console.log(" Redirect result:", result);
-        console.log(" Redirect user:", result?.user?.email || "None");
-        
-        if (result?.user) {
-          console.log(" Processing successful redirect...");
-          redirectHandled = true;
-          await handlePostSignIn(result);
-          setUser(result.user);
-          setLoading(false);
-          return; // Exit early, don't set up listener
-        }
-      } catch (error) {
-        console.error(" Redirect result error:", error);
-        if (error.code !== 'auth/popup-closed-by-user') {
-          const errorMessage = handleFirebaseError(error);
-          setError(errorMessage);
-          toast.error(errorMessage);
-        }
-      }
-      
-      // Step 2: Only if no redirect was handled, set up auth state listener
-      if (!redirectHandled) {
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
-          console.log(" Auth state changed:", user?.email || "No user");
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        try {
+          // Just set the current user
           setUser(user);
-          setLoading(false);
-        });
-        
-        return unsubscribe;
+        } catch (err) {
+          console.error("Error handling user:", err);
+          setUser(user);
+        }
+      } else {
+        setUser(null);
       }
-    };
-    
-    return initializeAuth();
+      setLoading(false);
+    });
+
+    return unsubscribe;
   }, []);
 
   // Helper function to create a user document in Firestore
@@ -224,23 +164,52 @@ export const AuthProvider = ({ children }) => {
   // Google sign in function
   const signInWithGoogle = async () => {
     try {
-      console.log(" Starting Google sign in...");
-      console.log("Current URL before redirect:", window.location.href);
-      
       setError(null);
-      const provider = new GoogleAuthProvider();
-      provider.addScope('email');
-      provider.addScope('profile');
+      // Explicitly set persistence to local
+      await setPersistence(auth, browserLocalPersistence);
+      const result = await signInWithPopup(auth, googleProvider);
+      console.log("Google sign-in successful:", result.user?.email);
       
-      console.log(" Redirecting to Google...");
-      await signInWithRedirect(auth, provider);
+      // Check if this is a new user
+      const isFirstSignIn = result?.additionalUserInfo?.isNewUser;
       
-    } catch (error) {
-      console.error(" Google sign-in error:", error);
-      const errorMessage = handleFirebaseError(error);
-      setError(errorMessage);
-      toast.error(errorMessage);
-      throw error;
+      // Try to create user document
+      try {
+        await createUserDocument(result.user);
+        console.log("User document created after Google sign-in");
+      } catch (docError) {
+        console.error("Failed to create user document after Google sign-in:", docError);
+      }
+      
+      toast.success('Signed in with Google successfully!');
+      
+      // After successful Google sign-in, clear any previous plan choice
+      localStorage.removeItem('chosenPlan');
+      
+      // Check if this is a truly new user
+      const isNewAccount = 
+        isFirstSignIn || 
+        result.user.metadata.creationTime === result.user.metadata.lastSignInTime;
+      
+      // Only set the isNewUser flag for brand new accounts
+      if (isNewAccount) {
+        console.log("Brand new Google account detected, setting isNewUser flag");
+        localStorage.setItem('isNewUser', 'true');
+      } else {
+        console.log("Existing Google account detected, not setting isNewUser flag");
+        // Ensure we clear any existing flag for sign-ins
+        localStorage.removeItem('isNewUser');
+      }
+      
+      return result.user;
+    } catch (err) {
+      console.error("Google sign-in error:", err);
+      if (err.code !== 'auth/popup-closed-by-user') {
+        const errorMessage = handleFirebaseError(err);
+        setError(errorMessage);
+        toast.error(errorMessage);
+      }
+      throw err;
     }
   };
 
