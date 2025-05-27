@@ -509,9 +509,21 @@ function ListingDetailModal({
                   <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
                     {card.name || card.cardName || 'Pokemon Card'}
                   </h1>
-                  <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                    ${listing.listingPrice}
-                  </p>
+                  <div className="flex items-center gap-3 mb-2">
+                    <p className="text-3xl font-bold text-gray-900 dark:text-white">
+                      ${listing.listingPrice}
+                    </p>
+                    {/* Status Tag */}
+                    <div className={`px-3 py-1 rounded-full text-sm font-medium ${
+                      listing.status === 'sold' 
+                        ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
+                        : listing.status === 'pending'
+                        ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
+                        : 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
+                    }`}>
+                      {listing.status === 'sold' ? 'SOLD' : listing.status === 'pending' ? 'PENDING' : 'FOR SALE'}
+                    </div>
+                  </div>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                     Listed in {listing.location}
                   </p>

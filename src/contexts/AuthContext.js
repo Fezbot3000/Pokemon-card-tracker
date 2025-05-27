@@ -38,6 +38,7 @@ const handleFirebaseError = (error) => {
     'auth/invalid-email': 'Invalid email address',
     'auth/requires-recent-login': 'Please log in again to complete this action',
     'auth/popup-closed-by-user': 'Authentication popup was closed',
+    'auth/popup-blocked': 'Authentication popup was blocked by your browser. Please allow popups or try again.',
     'auth/unauthorized-domain': 'This domain is not authorized for authentication',
     'auth/operation-not-allowed': 'This operation is not allowed',
     'auth/account-exists-with-different-credential': 'An account already exists with the same email address',
@@ -79,6 +80,9 @@ export function AuthProvider({ children }) {
 
   // Setup auth state listener to handle when user signs in/out
   useEffect(() => {
+    // Handle redirect result first (for iOS devices)
+    handleRedirectResult();
+    
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
       setError(null);
@@ -263,17 +267,20 @@ export function AuthProvider({ children }) {
     try {
       setError(null);
       
-      // iOS detection - use redirect for all iOS (both PWA and Safari browser)
+      // Enhanced iOS and mobile detection
       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-      // Also check for Safari on iOS which often blocks popups
       const isSafari = /Safari/.test(navigator.userAgent) && /Apple Computer/.test(navigator.vendor);
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      const isInAppBrowser = /FBAN|FBAV|Instagram|Twitter|Line|WhatsApp|Snapchat|TikTok/i.test(navigator.userAgent);
       
-      if (isIOS || (isIOS && isSafari)) {
-        // Always use redirect on iOS to avoid popup blocking in Safari and PWA
+      // Use redirect for iOS, Safari, mobile devices, or in-app browsers
+      if (isIOS || isSafari || isMobile || isInAppBrowser) {
+        console.log('Using redirect flow for mobile/iOS device');
         await signInWithRedirect(auth, googleProvider);
         return null; // Redirect flow
       } else {
-        // Use popup for non-iOS devices
+        // Use popup for desktop browsers
+        console.log('Using popup flow for desktop browser');
         const result = await signInWithPopup(auth, googleProvider);
         
         try {
@@ -304,12 +311,16 @@ export function AuthProvider({ children }) {
         return result.user;
       }
     } catch (err) {
-      // If popup is blocked, fall back to redirect
-      if (err.code === 'auth/popup-blocked') {
+      console.error('Google sign-in error:', err);
+      
+      // If popup is blocked or any popup-related error, fall back to redirect
+      if (err.code === 'auth/popup-blocked' || err.code === 'auth/popup-closed-by-user' || err.message.includes('popup')) {
+        console.log('Popup blocked, falling back to redirect flow');
         try {
           await signInWithRedirect(auth, googleProvider);
           return null;
         } catch (redirectErr) {
+          console.error('Redirect fallback failed:', redirectErr);
           const errorMessage = handleFirebaseError(redirectErr);
           setError(errorMessage);
           toast.error(errorMessage);

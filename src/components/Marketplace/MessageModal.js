@@ -156,6 +156,10 @@ const MessageModal = ({ isOpen, onClose, listing, prefilledMessage = '', onViewC
           lastUpdated: serverTimestamp(),
           cardTitle: listing.isGeneralChat ? 'General Discussion' : (listing.cardName || listing.card?.name || listing.card?.cardName || listing.card?.card || 'Card Listing'),
           cardImage: listing.isGeneralChat ? null : (listing.card?.imageUrl || listing.card?.cloudImageUrl || null),
+          listingPrice: listing.isGeneralChat ? null : (listing.priceAUD || listing.price),
+          currency: listing.isGeneralChat ? null : (listing.currency || 'AUD'),
+          location: listing.isGeneralChat ? null : listing.location,
+          status: listing.isGeneralChat ? null : (listing.status || 'for sale'),
           sellerName,
           buyerName,
           buyerId: user.uid,
@@ -372,64 +376,92 @@ const MessageModal = ({ isOpen, onClose, listing, prefilledMessage = '', onViewC
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={`Message about ${listing?.card?.name || 'Card Listing'}`}
+      title={`Message about ${listing?.card?.name || listing?.isGeneralChat ? 'General Discussion' : 'Card Listing'}`}
       size="md"
       maxWidth="max-w-lg"
       closeOnClickOutside={true}
       zIndex={100}
+      className="rounded-2xl overflow-hidden"
     >
-      <div className="flex flex-col h-96">
-        {/* Message form */}
-        <div className="flex-1 p-4">
-          <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg mb-4">
-            <h3 className="font-medium text-gray-900 dark:text-white mb-2">Contact about:</h3>
-            <div className="flex items-center">
+      <div className="space-y-6 pb-6 px-2">
+        {/* Header Section with Gradient */}
+        <div className="bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl p-6 text-white -mx-8 mt-6">
+          <div className="px-6">
+            <h3 className="text-xl font-bold mb-4 text-center">Contact about:</h3>
+            <div className="flex items-center gap-4 bg-white/10 backdrop-blur-sm rounded-xl p-4">
               {listing?.card?.imageUrl ? (
                 <img 
                   src={listing.card.imageUrl} 
                   alt={listing?.card?.name || listing?.card?.card || 'Card'}
-                  className="w-12 h-12 object-cover rounded-md mr-3" 
+                  className="w-16 h-16 object-cover rounded-xl shadow-md flex-shrink-0" 
                 />
               ) : (
-                <div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-md flex items-center justify-center text-gray-500 dark:text-gray-400 mr-3">
-                  <span className="material-icons">style</span>
+                <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center text-white flex-shrink-0">
+                  <span className="material-icons text-2xl">
+                    {listing?.isGeneralChat ? 'chat' : 'style'}
+                  </span>
                 </div>
               )}
-              <div>
-                <p className="font-medium text-gray-900 dark:text-white">
-                  {listing?.card?.name || listing?.card?.card || 'Card Listing'}
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-white text-lg mb-1 truncate">
+                  {listing?.isGeneralChat ? 'General Discussion' : 
+                   (listing?.card?.name || listing?.card?.card || 'Card Listing')}
                 </p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {listing?.listingPrice} {listing?.currency}
-                </p>
+                {!listing?.isGeneralChat && listing?.listingPrice && (
+                  <p className="text-white/90 font-medium">
+                    {listing.listingPrice} {listing.currency || 'AUD'}
+                  </p>
+                )}
               </div>
             </div>
           </div>
-          
-          {error && (
-            <div className="text-center text-red-500 py-2 mb-4">{error}</div>
-          )}
         </div>
         
-        {/* Message input */}
-        <form onSubmit={handleSendMessage}>
-          <div className="flex flex-col space-y-2">
+        {/* Error Message */}
+        {error && (
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4">
+            <div className="flex items-center gap-2">
+              <span className="material-icons text-red-500 text-sm">error</span>
+              <p className="text-red-700 dark:text-red-400 text-sm font-medium">{error}</p>
+            </div>
+          </div>
+        )}
+        
+        {/* Message Form */}
+        <form onSubmit={handleSendMessage} className="space-y-4">
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+              Your Message
+            </label>
             <textarea
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
-              placeholder="Type your message here..."
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white min-h-[100px]"
+              placeholder={listing?.isGeneralChat ? 
+                "Hi! I'd like to discuss your Pokemon cards." : 
+                "Hi! I'm interested in this card. Is it still available?"}
+              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-800 dark:text-white min-h-[120px] resize-none transition-all duration-200"
               disabled={loading}
             />
-            <Button
-              type="submit"
-              variant="primary"
-              disabled={!newMessage.trim() || loading}
-              className="w-full"
-            >
-              {loading ? 'Sending...' : 'Send Message'}
-            </Button>
           </div>
+          
+          <Button
+            type="submit"
+            variant="primary"
+            disabled={!newMessage.trim() || loading}
+            className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 border-0 shadow-md py-3 text-base font-semibold"
+          >
+            {loading ? (
+              <div className="flex items-center justify-center gap-2">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                Sending...
+              </div>
+            ) : (
+              <div className="flex items-center justify-center gap-2">
+                <span className="material-icons text-sm">send</span>
+                Send Message
+              </div>
+            )}
+          </Button>
         </form>
       </div>
     </Modal>

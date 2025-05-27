@@ -7,6 +7,7 @@ import toast from 'react-hot-toast';
 import ListingDetailModal from './ListingDetailModal';
 import MarketplaceNavigation from './MarketplaceNavigation';
 import SellerProfileModal from './SellerProfileModal';
+import db from '../../services/firestore/dbAdapter'; // Import IndexedDB service for image loading
 
 // Add CSS for hiding scrollbars
 const scrollbarHideStyles = `
@@ -30,6 +31,7 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
   const [selectedListing, setSelectedListing] = useState(null);
   const [sellerProfileOpen, setSellerProfileOpen] = useState(false);
   const [sellerProfileId, setSellerProfileId] = useState(null);
+  const [cardImages, setCardImages] = useState({});
   const { user } = useAuth();
   const messagesEndRef = useRef(null);
 
@@ -184,6 +186,142 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
       setLoading(false);
     }
   }, [user]);
+
+  // Load card images for listings referenced in conversations
+  const loadCardImages = async (conversationsData) => {
+    if (!conversationsData || conversationsData.length === 0) return;
+
+    // Clean up existing blob URLs before loading new ones
+    Object.values(cardImages).forEach(url => {
+      if (url && typeof url === 'string' && url.startsWith('blob:')) {
+        try {
+          URL.revokeObjectURL(url);
+        } catch (error) {
+          logger.warn('Failed to revoke blob URL:', error);
+        }
+      }
+    });
+
+    const newCardImages = {};
+
+    // Helper function to ensure we have a string URL
+    const ensureStringUrl = (imageData) => {
+      if (!imageData) return null;
+
+      // If it's already a string, return it
+      if (typeof imageData === 'string') {
+        return imageData;
+      }
+
+      // If it's a File object with a preview URL
+      if (imageData instanceof File && window.URL) {
+        return window.URL.createObjectURL(imageData);
+      }
+
+      // If it's an object with a URL property, use that
+      if (typeof imageData === 'object') {
+        // Check for common URL properties
+        if (imageData.url) return imageData.url;
+        if (imageData.src) return imageData.src;
+        if (imageData.uri) return imageData.uri;
+        if (imageData.href) return imageData.href;
+        if (imageData.downloadURL) return imageData.downloadURL;
+        if (imageData.path && typeof imageData.path === 'string') return imageData.path;
+
+        // If it has a toString method, try that
+        if (typeof imageData.toString === 'function') {
+          const stringValue = imageData.toString();
+          if (stringValue !== '[object Object]') {
+            return stringValue;
+          }
+        }
+      }
+
+      // If it's a Blob with a type
+      if (imageData instanceof Blob && imageData.type && imageData.type.startsWith('image/')) {
+        return window.URL.createObjectURL(imageData);
+      }
+
+      // If we can't extract a URL, return null
+      return null;
+    };
+
+    // Process each conversation to extract card data
+    for (const conversation of conversationsData) {
+      try {
+        const card = conversation.card;
+        if (!card) continue;
+
+        const cardId = card.slabSerial || card.id || conversation.cardId;
+        if (!cardId) continue;
+
+        // First, check if the card has an imageUrl property
+        if (card.imageUrl) {
+          const url = ensureStringUrl(card.imageUrl);
+          if (url) {
+            newCardImages[cardId] = url;
+            continue;
+          }
+        }
+
+        // Next, check if the card has an image property
+        if (card.image) {
+          const imageUrl = ensureStringUrl(card.image);
+          if (imageUrl) {
+            newCardImages[cardId] = imageUrl;
+            continue;
+          }
+        }
+
+        // Check all other possible image properties
+        const possibleImageProps = ['frontImageUrl', 'backImageUrl', 'imageData', 'cardImageUrl'];
+        let foundImage = false;
+
+        for (const prop of possibleImageProps) {
+          if (card[prop]) {
+            const url = ensureStringUrl(card[prop]);
+            if (url) {
+              newCardImages[cardId] = url;
+              foundImage = true;
+              break;
+            }
+          }
+        }
+
+        if (foundImage) continue;
+
+        // If no image in card object, try to load from IndexedDB
+        try {
+          const imageBlob = await db.getImage(cardId);
+          if (imageBlob) {
+            const blobUrl = URL.createObjectURL(imageBlob);
+            newCardImages[cardId] = blobUrl;
+            continue;
+          }
+        } catch (dbError) {
+          // Silently handle IndexedDB errors
+          logger.warn(`Error loading image from IndexedDB for card ${cardId}:`, dbError);
+        }
+
+        // If we still don't have an image, set to null
+        newCardImages[cardId] = null;
+      } catch (error) {
+        logger.warn('Error processing card image:', error);
+      }
+    }
+
+    setCardImages(prevImages => ({
+      ...prevImages,
+      ...newCardImages
+    }));
+  };
+
+  // Load card images when conversations change
+  useEffect(() => {
+    if (conversations.length > 0) {
+      loadCardImages(conversations);
+    }
+  }, [conversations]);
 
   // Listen for custom events to open specific chats (cross-device compatible)
   useEffect(() => {
@@ -428,10 +566,42 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
     setSellerProfileOpen(true);
   };
 
+  // Handle contacting seller from profile modal
+  const handleContactSeller = (sellerId) => {
+    // Close the seller profile modal
+    setSellerProfileOpen(false);
+    setSellerProfileId(null);
+    
+    // Find existing chat with this seller
+    const existingChat = conversations.find(chat => 
+      chat.sellerId === sellerId || chat.buyerId === sellerId
+    );
+    
+    if (existingChat) {
+      // Open existing chat
+      setActiveChat(existingChat);
+      toast.success('Opening existing conversation');
+    } else {
+      // No existing chat found - would need to create one, but that requires a specific listing
+      toast('To start a conversation, please contact the seller from a specific listing');
+    }
+  };
+
+  // Handle opening listing from seller profile
+  const handleOpenListing = (listing) => {
+    // Close seller profile modal
+    setSellerProfileOpen(false);
+    setSellerProfileId(null);
+    
+    // Open listing detail modal
+    setSelectedListing(listing);
+    setDetailModalOpen(true);
+  };
+
   return (
-    <div className="flex flex-col h-[calc(100vh-5rem)] pt-20 px-4">
+    <div className="flex flex-col h-[calc(100vh-5rem)] pt-16 sm:pt-20 p-4 sm:p-6">
       <MarketplaceNavigation currentView={currentView} onViewChange={onViewChange} />
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden -mx-4 sm:-mx-6">
       {/* Chat list - 1/3 width on desktop */}
       <div className="w-1/3 border-r border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col">
         <div className="p-4 border-b border-gray-200 dark:border-gray-700">
@@ -446,7 +616,7 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
           <div className="flex-1 flex justify-center items-center">
             <div className="text-center p-4">
               <p className="text-gray-600 dark:text-gray-400">No conversations yet</p>
-              <p className="text-gray-500 dark:text-gray-500 mt-2 text-sm">
+              <p className="text-gray-500 dark:text-gray-500 mt-2">
                 When you contact a seller, your conversations will appear here.
               </p>
             </div>
@@ -466,11 +636,23 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
                 <div className="flex justify-between items-start">
                   <div className="flex-1 min-w-0">
                     <h3 
-                      className="font-medium text-gray-900 dark:text-white truncate hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                      className="font-medium text-gray-900 dark:text-white truncate hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer"
                       onClick={(e) => {
                         e.stopPropagation();
-                        const otherUserId = chat.buyerId === user.uid ? chat.sellerId : chat.buyerId;
-                        handleViewSellerProfile(otherUserId);
+                        try {
+                          const otherUserId = chat.buyerId === user.uid ? chat.sellerId : chat.buyerId;
+                          console.log('Viewing seller profile:', { otherUserId, chat, user: user.uid });
+                          
+                          if (!otherUserId) {
+                            toast.error('Unable to determine seller ID');
+                            return;
+                          }
+                          
+                          handleViewSellerProfile(otherUserId);
+                        } catch (error) {
+                          console.error('Error opening seller profile:', error);
+                          toast.error('Failed to open seller profile');
+                        }
                       }}
                     >
                       {chat.otherParticipantName}
@@ -503,60 +685,53 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
         ) : (
           <>
             {/* Chat header */}
-            <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-              <div className="flex items-center">
-                <div className="flex-1 min-w-0">
-                  <h3 
-                    className="font-medium text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer transition-colors"
-                    onClick={() => {
-                      const otherUserId = activeChat.buyerId === user.uid ? activeChat.sellerId : activeChat.buyerId;
-                      handleViewSellerProfile(otherUserId);
-                    }}
-                  >
-                    {activeChat.otherParticipantName}
-                  </h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
-                    {activeChat.card?.card || 'Card discussion'}
-                  </p>
+            <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="flex-1 min-w-0">
+                    <h3 
+                      className="font-medium text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer transition-colors"
+                      onClick={() => {
+                        const otherUserId = activeChat.buyerId === user.uid ? activeChat.sellerId : activeChat.buyerId;
+                        handleViewSellerProfile(otherUserId);
+                      }}
+                    >
+                      {activeChat.otherParticipantName}
+                    </h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
+                      {activeChat.card?.card || 'Card discussion'}
+                    </p>
+                  </div>
                 </div>
-              </div>
-              
-              <div className="flex items-center space-x-4">
-                {activeChat.card && (
-                  <button
-                    onClick={() => handleShowCardDetails(activeChat)}
-                    className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm"
-                  >
-                    View Card
-                  </button>
-                )}
                 
-                {/* Leave Chat button - disabled if user already left */}
-                {(activeChat?.leftBy && 
-                  ((user.uid === activeChat.buyerId && activeChat.leftBy.buyer) || 
-                   (user.uid === activeChat.sellerId && activeChat.leftBy.seller))) ? (
+                <div className="flex items-center space-x-4">
+                  {/* Leave Chat button - disabled if user already left */}
+                  {(activeChat?.leftBy && 
+                    ((user.uid === activeChat.buyerId && activeChat.leftBy.buyer) || 
+                     (user.uid === activeChat.sellerId && activeChat.leftBy.seller))) ? (
+                    <button
+                      disabled
+                      className="px-3 py-1 text-sm text-gray-400 dark:text-gray-500 border border-gray-400 dark:border-gray-500 rounded-md cursor-not-allowed"
+                    >
+                      Chat Left
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleLeaveChat}
+                      className="px-3 py-1 text-sm text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 border border-red-600 dark:border-red-400 rounded-md transition-colors"
+                    >
+                      Leave Chat
+                    </button>
+                  )}
+                  
+                  {/* Delete Chat button */}
                   <button
-                    disabled
-                    className="px-3 py-1 text-sm text-gray-400 dark:text-gray-500 border border-gray-400 dark:border-gray-500 rounded-md cursor-not-allowed"
-                  >
-                    Chat Left
-                  </button>
-                ) : (
-                  <button
-                    onClick={handleLeaveChat}
+                    onClick={handleDeleteChat}
                     className="px-3 py-1 text-sm text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 border border-red-600 dark:border-red-400 rounded-md transition-colors"
                   >
-                    Leave Chat
+                    Delete Chat
                   </button>
-                )}
-                
-                {/* Delete Chat button */}
-                <button
-                  onClick={handleDeleteChat}
-                  className="px-3 py-1 text-sm text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 border border-red-600 dark:border-red-400 rounded-md transition-colors"
-                >
-                  Delete Chat
-                </button>
+                </div>
               </div>
             </div>
             
@@ -570,6 +745,70 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
                       ? 'The buyer has left this chat.' 
                       : 'The seller has left this chat.'}
                 </p>
+              </div>
+            )}
+            
+            {/* Card Info Section - Show what item they're discussing */}
+            {activeChat && activeChat.cardId && (
+              <div 
+                className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                onClick={() => handleShowCardDetails(activeChat)}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    {/* Card Image */}
+                    {(cardImages[activeChat.cardId] || activeChat.cardImage) && (
+                      <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-200 dark:bg-gray-700 flex-shrink-0">
+                        <img 
+                          src={cardImages[activeChat.cardId] || activeChat.cardImage} 
+                          alt="Card" 
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                          }}
+                        />
+                      </div>
+                    )}
+                    
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center space-x-2">
+                        <h4 className="font-medium text-gray-900 dark:text-white text-sm truncate">
+                          {activeChat.cardTitle || activeChat.cardName || activeChat.card?.name || activeChat.card?.cardName || activeChat.card?.card || 'Card discussion'}
+                        </h4>
+                        {/* Status Tag */}
+                        <div className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                          activeChat.status === 'sold' 
+                            ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
+                            : activeChat.status === 'pending'
+                            ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
+                            : 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
+                        }`}>
+                          {activeChat.status === 'sold' ? 'SOLD' : activeChat.status === 'pending' ? 'PENDING' : 'FOR SALE'}
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2 text-xs text-gray-600 dark:text-gray-400">
+                        {(activeChat.listingPrice || activeChat.priceAUD) && (
+                          <span className="font-semibold">
+                            ${activeChat.listingPrice || activeChat.priceAUD} {activeChat.currency || 'AUD'}
+                          </span>
+                        )}
+                        {activeChat.location && (
+                          <>
+                            <span>•</span>
+                            <span>{activeChat.location}</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Click indicator */}
+                  <div className="text-gray-400 dark:text-gray-500">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                </div>
               </div>
             )}
             
@@ -675,7 +914,9 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
             setSellerProfileId(null);
           }}
           sellerId={sellerProfileId}
+          cardImages={cardImages}
           onContactSeller={handleContactSeller}
+          onOpenListing={handleOpenListing}
           onViewChange={onViewChange}
         />
       )}

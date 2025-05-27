@@ -682,9 +682,9 @@ function MarketplaceMessages({ currentView, onViewChange }) {
             )}
           </div>
         ) : (
-          <div className="flex flex-col h-screen w-full max-w-none mx-0 px-0">
-            {/* Chat header */}
-            <div className="flex items-center justify-between p-2 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex flex-col h-screen w-full max-w-none mx-0 px-0 fixed inset-0">
+            {/* Chat header - Fixed at top */}
+            <div className="flex items-center justify-between p-2 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 fixed top-0 left-0 right-0 z-20">
               <div className="flex items-center">
                 <button 
                   className="mr-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
@@ -730,50 +730,39 @@ function MarketplaceMessages({ currentView, onViewChange }) {
                         handleViewSellerProfile(otherUserId);
                       }}
                     >
-                      {activeChat?.otherParticipantName}
+                      {activeChat.otherParticipantName}
                     </h3>
-                    {activeChat?.cardTitle && (
-                      <p className="text-xs text-gray-600 dark:text-gray-400">{activeChat.cardTitle}</p>
-                    )}
+                    <p className="text-xs text-gray-600 dark:text-gray-400">
+                      {activeChat?.cardTitle || 'General Discussion'}
+                    </p>
                   </div>
                 </div>
               </div>
-              {/* Leave Chat button - disabled if user already left */}
-              {(activeChat?.leftBy && 
-                ((user.uid === activeChat.buyerId && activeChat.leftBy.buyer) || 
-                 (user.uid === activeChat.sellerId && activeChat.leftBy.seller))) ? (
-                <button
-                  disabled
-                  className="px-3 py-1 text-sm text-gray-400 dark:text-gray-500 border border-gray-400 dark:border-gray-500 rounded-md cursor-not-allowed"
-                >
-                  Chat Left
-                </button>
-              ) : (
-                <button
+              <div className="flex items-center space-x-2">
+                <button 
+                  className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 text-sm px-3 py-1 border border-red-600 dark:border-red-400 rounded-md hover:bg-red-50 dark:hover:bg-red-900"
                   onClick={handleLeaveChat}
-                  className="px-3 py-1 text-sm text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 border border-red-600 dark:border-red-400 rounded-md transition-colors"
                 >
                   Leave Chat
                 </button>
-              )}
-              {/* Delete Chat button */}
-              <button
-                onClick={handleDeleteChat}
-                className="px-3 py-1 text-sm text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 border border-red-600 dark:border-red-400 rounded-md transition-colors"
-              >
-                Delete Chat
-              </button>
+                <button 
+                  className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 text-sm px-3 py-1 border border-red-600 dark:border-red-400 rounded-md hover:bg-red-50 dark:hover:bg-red-900"
+                  onClick={handleDeleteChat}
+                >
+                  Delete Chat
+                </button>
+              </div>
             </div>
             
             {/* Left chat notification banner */}
             {hasOtherParticipantLeft && (
-              <div className="bg-yellow-100 dark:bg-yellow-900 border-l-4 border-yellow-500 text-yellow-700 dark:text-yellow-300 p-4 mb-4">
+              <div className="bg-yellow-100 dark:bg-yellow-900 border-l-4 border-yellow-500 text-yellow-700 dark:text-yellow-300 p-4 mt-16 mx-2">
                 <p>{leaveMessage}</p>
               </div>
             )}
             
-            {/* Messages container */}
-            <div className="flex-1 overflow-y-auto px-2 py-4 pt-2 space-y-4 scroll-mt-16 w-full max-w-none hide-scrollbar">
+            {/* Messages container - Scrollable area between fixed header and footer */}
+            <div className="flex-1 overflow-y-auto px-2 py-4 space-y-4 hide-scrollbar mt-20 mb-20">
               {messages.length === 0 ? (
                 <div className="text-center py-12">
                   <p className="text-gray-600 dark:text-gray-400">No messages yet</p>
@@ -805,9 +794,9 @@ function MarketplaceMessages({ currentView, onViewChange }) {
               <div ref={messagesEndRef} />
             </div>
             
-            {/* Message input */}
+            {/* Message input - Fixed at bottom */}
             {activeChat?.leftBy && (activeChat.leftBy.buyer || activeChat.leftBy.seller) ? (
-              <div className="border-t border-gray-200 dark:border-gray-700 p-4 sticky bottom-0 bg-gray-100 dark:bg-gray-800 z-10 w-full max-w-none text-center">
+              <div className="border-t border-gray-200 dark:border-gray-700 p-4 bg-gray-100 dark:bg-gray-800 text-center fixed bottom-0 left-0 right-0 z-20">
                 <p className="text-gray-600 dark:text-gray-400">
                   {activeChat.leftBy.buyer && activeChat.leftBy.seller ? 
                     'Both users have left this chat' : 
@@ -815,7 +804,7 @@ function MarketplaceMessages({ currentView, onViewChange }) {
                 </p>
               </div>
             ) : (
-              <form onSubmit={handleSendMessage} className="border-t border-gray-200 dark:border-gray-700 p-4 sticky bottom-0 bg-white dark:bg-gray-800 z-10 w-full max-w-none">
+              <form onSubmit={handleSendMessage} className="border-t border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-gray-800 fixed bottom-0 left-0 right-0 z-20">
                 <div className="flex items-center space-x-2">
                   <input
                     type="text"
