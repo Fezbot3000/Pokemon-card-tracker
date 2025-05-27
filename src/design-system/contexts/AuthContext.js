@@ -70,10 +70,17 @@ export const AuthProvider = ({ children }) => {
 
   // Set up the auth state listener
   useEffect(() => {
+    let redirectHandled = false;
+    
     // Handle redirect result on page load
     const handleRedirectResult = async () => {
+      if (redirectHandled) return;
+      redirectHandled = true;
+      
       try {
+        console.log("Checking for redirect result...");
         const result = await getRedirectResult(auth);
+        
         if (result?.user) {
           console.log("Redirect sign-in successful:", result.user?.email);
           
@@ -107,6 +114,8 @@ export const AuthProvider = ({ children }) => {
             // Ensure we clear any existing flag for sign-ins
             localStorage.removeItem('isNewUser');
           }
+        } else {
+          console.log("No redirect result found");
         }
       } catch (error) {
         console.error("Error handling redirect result:", error);
@@ -118,13 +127,12 @@ export const AuthProvider = ({ children }) => {
       }
     };
 
-    // Handle redirect result first
-    handleRedirectResult();
-
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      console.log("Auth state changed:", user?.email || "No user");
+      
       if (user) {
         try {
-          // Just set the current user
+          // Set the current user
           setUser(user);
         } catch (err) {
           console.error("Error handling user:", err);
@@ -135,6 +143,9 @@ export const AuthProvider = ({ children }) => {
       }
       setLoading(false);
     });
+
+    // Handle redirect result after setting up auth listener
+    handleRedirectResult();
 
     return unsubscribe;
   }, []);
