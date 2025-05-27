@@ -273,66 +273,30 @@ export function AuthProvider({ children }) {
     try {
       setError(null);
       
-      // Enhanced device detection with more comprehensive checks
-      const userAgent = navigator.userAgent;
-      const vendor = navigator.vendor || '';
+      // Simple approach: Always try redirect first for mobile reliability
+      // Only use popup for confirmed desktop environments
+      const isMobile = /iPhone|iPad|iPod|Android|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      const isSafari = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
+      const isTouchDevice = 'ontouchstart' in window;
       
-      // More comprehensive iOS detection
-      const isIOS = /iPad|iPhone|iPod/.test(userAgent) || 
-                    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); // iPad on iOS 13+
-      
-      // Enhanced Safari detection
-      const isSafari = /Safari/.test(userAgent) && /Apple Computer/.test(vendor) && !/Chrome|CriOS|FxiOS|EdgiOS/.test(userAgent);
-      
-      // Mobile device detection
-      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
-      
-      // In-app browser detection
-      const isInAppBrowser = /FBAN|FBAV|Instagram|Twitter|Line|WhatsApp|Snapchat|TikTok/i.test(userAgent);
-      
-      // Touch device detection
-      const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-      
-      // PWA detection
-      const isPWA = window.navigator.standalone === true || 
-                    window.matchMedia('(display-mode: standalone)').matches ||
-                    document.referrer.includes('android-app://');
-      
-      // Use redirect for any mobile/touch device, Safari, PWA, or in-app browser
-      const shouldUseRedirect = isIOS || isSafari || isMobile || isInAppBrowser || isTouchDevice || isPWA;
-      
-      console.log('Device detection:', {
-        userAgent,
-        vendor,
-        isIOS,
-        isSafari,
-        isMobile,
-        isInAppBrowser,
-        isTouchDevice,
-        isPWA,
-        shouldUseRedirect
-      });
-      
-      if (shouldUseRedirect) {
-        console.log('Using redirect flow for mobile/touch device');
+      // Use redirect for mobile, Safari, or touch devices
+      if (isMobile || isSafari || isTouchDevice) {
+        console.log('Using redirect flow for mobile/Safari/touch device');
         await signInWithRedirect(auth, googleProvider);
-        return null; // Redirect doesn't return immediately
+        return null;
       }
       
-      // Only try popup for confirmed desktop browsers
+      // Try popup for desktop only
       console.log('Attempting popup sign-in for desktop');
       const result = await signInWithPopup(auth, googleProvider);
       console.log("Google sign-in successful:", result.user?.email);
       
-      // Check if this is a new user more reliably by checking if this is their first sign-in
       const isFirstSignIn = result?.additionalUserInfo?.isNewUser;
       
-      // Try to create user document but don't fail if it errors
       try {
         await createUserDocument(result.user);
       } catch (docError) {
         console.error("Failed to create user document:", docError);
-        // Continue with auth success even if document creation fails
       }
       
       toast.success('Signed in successfully!');
@@ -343,7 +307,6 @@ export function AuthProvider({ children }) {
       } else {
         localStorage.removeItem('isNewUser');
         
-        // Trigger auto-sync for existing users after successful login
         if (performAutoSync) {
           try {
             await performAutoSync();
@@ -357,9 +320,9 @@ export function AuthProvider({ children }) {
     } catch (err) {
       console.error("Google sign-in error:", err);
       
-      // If popup is blocked or fails, automatically try redirect as final fallback
+      // If popup fails, try redirect as fallback
       if (err.code === 'auth/popup-blocked' || err.code === 'auth/cancelled-popup-request') {
-        console.log('Popup blocked, falling back to redirect flow');
+        console.log('Popup failed, using redirect fallback');
         try {
           await signInWithRedirect(auth, googleProvider);
           return null;
@@ -445,6 +408,22 @@ export function AuthProvider({ children }) {
       return result.user;
     } catch (err) {
       console.error("Apple sign-in error:", err);
+      
+      // If popup is blocked or fails, automatically try redirect as final fallback
+      if (err.code === 'auth/popup-blocked' || err.code === 'auth/cancelled-popup-request') {
+        console.log('Popup blocked, falling back to redirect flow');
+        try {
+          await signInWithRedirect(auth, provider);
+          return null;
+        } catch (redirectErr) {
+          console.error('Redirect fallback failed:', redirectErr);
+          const errorMessage = handleFirebaseError(redirectErr);
+          setError(errorMessage);
+          toast.error(errorMessage);
+          throw redirectErr;
+        }
+      }
+      
       if (err.code !== 'auth/popup-closed-by-user') {
         const errorMessage = handleFirebaseError(err);
         setError(errorMessage);
