@@ -87,18 +87,20 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
               (chatData.buyerName || 'Buyer');
               
             return chatData;
-          }).filter(chat => {
+          });
+          
+          const filteredChats = chatsData.filter(chat => {
             // Filter out chats that have been hidden by this user
             const hiddenBy = chat.hiddenBy || {};
             return !hiddenBy[user.uid];
           });
           
-          setConversations(chatsData);
+          setConversations(filteredChats);
           setLoading(false);
           
           // If there's no active chat and we have conversations, select the first one
-          if (!activeChat && chatsData.length > 0) {
-            setActiveChat(chatsData[0]);
+          if (!activeChat && filteredChats.length > 0) {
+            setActiveChat(filteredChats[0]);
           }
         } catch (error) {
           logger.error('Error processing chats:', error);
@@ -121,7 +123,7 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
               where('participants', 'array-contains', user.uid)
             );
             
-            unsubscribe = onSnapshot(simpleQuery, (snapshot) => {
+            unsubscribe = onSnapshot(simpleQuery, async (snapshot) => {
               const chatsData = snapshot.docs.map(doc => {
                 const chatData = {
                   id: doc.id,
@@ -138,25 +140,25 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
                   (chatData.buyerName || 'Buyer');
                   
                 return chatData;
-              }).filter(chat => {
-                // Filter out chats that have been hidden by this user
-                const hiddenBy = chat.hiddenBy || {};
-                return !hiddenBy[user.uid];
               });
               
               // Sort manually on the client side
-              chatsData.sort((a, b) => {
+              const filteredChats = chatsData.filter(chat => {
+                // Filter out chats that have been hidden by this user
+                const hiddenBy = chat.hiddenBy || {};
+                return !hiddenBy[user.uid];
+              }).sort((a, b) => {
                 const timeA = a.timestamp?.getTime() || 0;
                 const timeB = b.timestamp?.getTime() || 0;
                 return timeB - timeA; // Descending order
               });
               
-              setConversations(chatsData);
+              setConversations(filteredChats);
               setLoading(false);
               
               // If there's no active chat and we have conversations, select the first one
-              if (!activeChat && chatsData.length > 0) {
-                setActiveChat(chatsData[0]);
+              if (!activeChat && filteredChats.length > 0) {
+                setActiveChat(filteredChats[0]);
               }
             }, (fallbackError) => {
               logger.error('Error in fallback chat listener:', fallbackError);
@@ -182,6 +184,28 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
       setLoading(false);
     }
   }, [user]);
+
+  // Listen for custom events to open specific chats (cross-device compatible)
+  useEffect(() => {
+    const handleOpenSpecificChat = (event) => {
+      const { chatId } = event.detail;
+      if (chatId && conversations.length > 0) {
+        // Find the chat in the current conversations
+        const targetChat = conversations.find(chat => chat.id === chatId);
+        if (targetChat) {
+          setActiveChat(targetChat);
+        }
+      }
+    };
+
+    // Add event listener
+    window.addEventListener('openSpecificChat', handleOpenSpecificChat);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('openSpecificChat', handleOpenSpecificChat);
+    };
+  }, [conversations]); // Re-run when conversations change
 
   // Listen for messages when an active chat is selected
   useEffect(() => {
@@ -364,20 +388,38 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
   };
 
   // Handle showing card details
-  const handleShowCardDetails = (chat) => {
-    if (!chat.cardId || !chat.card) return;
+  const handleShowCardDetails = async (chat) => {
+    if (!chat.cardId) return;
     
-    setSelectedListing({
-      id: chat.cardId,
-      card: chat.card,
-      listingPrice: chat.listingPrice,
-      currency: chat.currency,
-      location: chat.location,
-      userId: chat.sellerId,
-      sellerName: chat.sellerName
-    });
-    
-    setDetailModalOpen(true);
+    try {
+      // Fetch the complete listing from Firestore
+      const listingRef = doc(firestoreDb, 'marketplaceItems', chat.cardId);
+      const listingSnap = await getDoc(listingRef);
+      
+      if (listingSnap.exists()) {
+        const listingData = {
+          id: listingSnap.id,
+          ...listingSnap.data()
+        };
+        setSelectedListing(listingData);
+        setDetailModalOpen(true);
+      } else {
+        // Fallback to chat data if listing no longer exists
+        setSelectedListing({
+          id: chat.cardId,
+          card: chat.card,
+          listingPrice: chat.listingPrice,
+          currency: chat.currency,
+          location: chat.location,
+          userId: chat.sellerId,
+          sellerName: chat.sellerName
+        });
+        setDetailModalOpen(true);
+      }
+    } catch (error) {
+      logger.error('Error fetching listing details:', error);
+      toast.error('Failed to load listing details');
+    }
   };
 
   // Handle viewing seller profile
@@ -612,6 +654,16 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
           toast.error('Reporting functionality coming soon');
         }}
         onViewSellerProfile={handleViewSellerProfile}
+        onEditListing={() => {
+          toast.error('Edit functionality not available in messages view');
+        }}
+        onMarkAsPending={() => {
+          toast.error('Mark as pending not available in messages view');
+        }}
+        onMarkAsSold={() => {
+          toast.error('Mark as sold not available in messages view');
+        }}
+        onViewChange={onViewChange}
       />
       
       {/* Seller Profile Modal */}
@@ -623,6 +675,8 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
             setSellerProfileId(null);
           }}
           sellerId={sellerProfileId}
+          onContactSeller={handleContactSeller}
+          onViewChange={onViewChange}
         />
       )}
     </div>

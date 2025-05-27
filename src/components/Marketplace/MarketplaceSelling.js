@@ -554,6 +554,10 @@ function MarketplaceSelling({ currentView, onViewChange }) {
         onClose={handleCloseDetailModal}
         listing={selectedListing}
         cardImage={selectedListing ? cardImages[selectedListing.card?.slabSerial || selectedListing.card?.id || selectedListing.cardId] : null}
+        onEditListing={handleEditClick}
+        onMarkAsPending={handleMarkAsPending}
+        onMarkAsSold={handleMarkAsSold}
+        onViewChange={onViewChange}
       />
     </div>
   );

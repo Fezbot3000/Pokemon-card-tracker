@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth, Icon, toast } from '../../design-system';
-import { collection, query, where, orderBy, getDocs, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, orderBy, getDocs, onSnapshot, doc, updateDoc } from 'firebase/firestore';
 import { db as firestoreDb } from '../../services/firebase';
 import logger from '../../utils/logger';
 import { useUserPreferences } from '../../contexts/UserPreferencesContext';
 import db from '../../services/firestore/dbAdapter'; // Import IndexedDB service for image loading
 import MessageModal from './MessageModal'; // Import the MessageModal component
 import ListingDetailModal from './ListingDetailModal'; // Import the ListingDetailModal component
+import EditListingModal from './EditListingModal'; // Import the EditListingModal component
 import MarketplaceCard from './MarketplaceCard'; // Import the custom MarketplaceCard component
 import MarketplaceNavigation from './MarketplaceNavigation'; // Import the navigation component
 import MarketplaceSearchFilters from './MarketplaceSearchFilters'; // Import the search and filter component
@@ -37,6 +38,7 @@ function Marketplace({ currentView, onViewChange }) {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [existingChats, setExistingChats] = useState({});
   const [prefilledMessage, setPrefilledMessage] = useState('');
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -443,6 +445,37 @@ function Marketplace({ currentView, onViewChange }) {
     setShowReportModal(true);
   };
 
+  const handleEditListing = async (listing) => {
+    setSelectedListing(listing);
+    setIsEditModalOpen(true);
+  };
+
+  const handleMarkAsPending = async (listing) => {
+    try {
+      const listingRef = doc(firestoreDb, 'marketplaceItems', listing.id);
+      await updateDoc(listingRef, {
+        status: 'pending'
+      });
+      toast.success('Listing marked as pending');
+    } catch (error) {
+      logger.error('Error marking listing as pending:', error);
+      toast.error('Error marking listing as pending');
+    }
+  };
+
+  const handleMarkAsSold = async (listing) => {
+    try {
+      const listingRef = doc(firestoreDb, 'marketplaceItems', listing.id);
+      await updateDoc(listingRef, {
+        status: 'sold'
+      });
+      toast.success('Listing marked as sold');
+    } catch (error) {
+      logger.error('Error marking listing as sold:', error);
+      toast.error('Error marking listing as sold');
+    }
+  };
+
   return (
     <div className="p-4 sm:p-6 pt-16 sm:pt-20"> {/* Enhanced padding-top to ensure header clearance on all devices */}
       <MarketplaceNavigation currentView={currentView} onViewChange={onViewChange} />
@@ -514,7 +547,7 @@ function Marketplace({ currentView, onViewChange }) {
                   <div className="flex flex-col items-center space-y-2">
                     <div className="text-center w-full">
                       <p className="font-semibold text-gray-900 dark:text-white truncate">
-                        {listing.card?.name || 'Unknown Card'}
+                        {listing.cardName || listing.card?.name || listing.card?.cardName || 'Unknown Card'}
                       </p>
                       <p className="font-semibold text-gray-900 dark:text-white">
                         {listing.listingPrice} {listing.currency}
@@ -569,6 +602,10 @@ function Marketplace({ currentView, onViewChange }) {
         onContactSeller={handleContactSeller}
         onViewSellerProfile={handleViewSellerProfile}
         onReportListing={() => handleReportListing(selectedListing)}
+        onEditListing={handleEditListing}
+        onMarkAsPending={handleMarkAsPending}
+        onMarkAsSold={handleMarkAsSold}
+        onViewChange={onViewChange}
       />
 
       {/* Seller Profile Modal */}
@@ -588,6 +625,8 @@ function Marketplace({ currentView, onViewChange }) {
             setSelectedListing(listing);
             setIsDetailModalOpen(true);
           }}
+          onContactSeller={handleContactSeller}
+          onViewChange={onViewChange}
         />
       )}
 
@@ -600,6 +639,19 @@ function Marketplace({ currentView, onViewChange }) {
             setShowReportModal(false);
             setReportingListing(null);
           }}
+        />
+      )}
+
+      {/* Edit Listing Modal */}
+      {isEditModalOpen && selectedListing && (
+        <EditListingModal
+          isOpen={isEditModalOpen}
+          listing={selectedListing}
+          onClose={() => {
+            setIsEditModalOpen(false);
+            setSelectedListing(null);
+          }}
+          onEditListing={handleEditListing}
         />
       )}
     </div>

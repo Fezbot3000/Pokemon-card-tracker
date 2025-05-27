@@ -1,12 +1,31 @@
-import React, { useState, useEffect } from 'react';
-import { Modal, Button, Icon, toast } from '../../design-system';
+import React, { useState, useEffect, Fragment } from 'react';
+import { Modal, Button, Icon, toastService } from '../../design-system';
 import { useAuth } from '../../design-system';
-import { doc, getDoc, collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, orderBy, limit, getDocs, updateDoc, onSnapshot } from 'firebase/firestore';
 import { db as firestoreDb } from '../../services/firebase';
 import logger from '../../utils/logger';
 import MapView from './MapView';
 
-function ListingDetailModal({ isOpen, onClose, listing, onContactSeller, onReportListing, onViewSellerProfile }) {
+function ListingDetailModal({ 
+  isOpen, 
+  onClose, 
+  listing, 
+  onContactSeller, 
+  onReportListing, 
+  onViewSellerProfile,
+  onEditListing,
+  onMarkAsPending,
+  onMarkAsSold,
+  onViewChange
+}) {
+  console.log('🚀 ListingDetailModal component loaded - DEBUG VERSION');
+  
+  // Temporary test to verify our changes are loading
+  if (typeof window !== 'undefined' && !window.debugTestRan) {
+    window.debugTestRan = true;
+    console.log('✅ UPDATED COMPONENT IS LOADING!');
+  }
+  
   const { user } = useAuth();
   const [imageIndex, setImageIndex] = useState(0);
   const [sellerProfile, setSellerProfile] = useState(null);
@@ -16,6 +35,8 @@ function ListingDetailModal({ isOpen, onClose, listing, onContactSeller, onRepor
   const [loadingSellerData, setLoadingSellerData] = useState(true);
   const [showAllReviews, setShowAllReviews] = useState(false);
   const [showReportMenu, setShowReportMenu] = useState(false);
+  const [hasExistingChat, setHasExistingChat] = useState(false);
+  const [existingChatId, setExistingChatId] = useState(null);
 
   useEffect(() => {
     if (!listing || !isOpen) return;
@@ -25,23 +46,26 @@ function ListingDetailModal({ isOpen, onClose, listing, onContactSeller, onRepor
         setLoadingSellerData(true);
         
         // Load seller profile
-        console.log('Loading seller profile for listing.userId:', listing.userId);
         const profileRef = doc(firestoreDb, 'marketplaceProfiles', listing.userId);
-        const profileSnap = await getDoc(profileRef);
-        
-        if (profileSnap.exists()) {
-          const profileData = profileSnap.data();
-          console.log('Seller profile data:', {
-            docId: profileSnap.id,
-            profileUserId: profileData.userId,
-            displayName: profileData.displayName,
-            listingUserId: listing.userId
-          });
-          setSellerProfile(profileData);
-          
-          // Store the actual marketplace profile userId for viewing seller's other listings
-          if (profileData.userId) {
-            listing._marketplaceProfileUserId = profileData.userId;
+        try {
+          const profileSnap = await getDoc(profileRef);
+          if (profileSnap.exists()) {
+            const profileData = profileSnap.data();
+            setSellerProfile(profileData);
+            
+            // Store the actual marketplace profile userId for viewing seller's other listings
+            if (profileData.userId) {
+              listing._marketplaceProfileUserId = profileData.userId;
+            }
+          } else {
+            logger.error('Seller profile not found');
+          }
+        } catch (error) {
+          if (error.code === 'permission-denied') {
+            logger.error('Permission denied: cannot access seller profile');
+            toastService.error('Permission denied: cannot access seller profile');
+          } else {
+            logger.error('Error loading seller profile:', error);
           }
         }
         
@@ -54,19 +78,33 @@ function ListingDetailModal({ isOpen, onClose, listing, onContactSeller, onRepor
           limit(10)
         );
         
-        const querySnapshot = await getDocs(q);
-        const reviews = [];
-        let totalRating = 0;
+        try {
+          const querySnapshot = await getDocs(q);
+          const reviews = [];
+          let totalRating = 0;
+          
+          querySnapshot.forEach((doc) => {
+            const review = { id: doc.id, ...doc.data() };
+            reviews.push(review);
+            totalRating += review.rating;
+          });
+          
+          setSellerReviews(reviews);
+          setTotalReviews(reviews.length);
+          setAverageRating(reviews.length > 0 ? totalRating / reviews.length : 0);
+        } catch (error) {
+          if (error.code === 'permission-denied') {
+            logger.error('Permission denied: cannot access seller reviews');
+          } else {
+            logger.error('Error loading seller reviews:', error);
+          }
+          setSellerReviews([]);
+          setTotalReviews(0);
+          setAverageRating(0);
+        }
         
-        querySnapshot.forEach((doc) => {
-          const review = { id: doc.id, ...doc.data() };
-          reviews.push(review);
-          totalRating += review.rating;
-        });
-        
-        setSellerReviews(reviews);
-        setTotalReviews(reviews.length);
-        setAverageRating(reviews.length > 0 ? totalRating / reviews.length : 0);
+        // Check for existing chat with this seller about this listing
+        await checkForExistingChat();
       } catch (error) {
         logger.error('Error loading seller data:', error);
       } finally {
@@ -77,7 +115,121 @@ function ListingDetailModal({ isOpen, onClose, listing, onContactSeller, onRepor
     loadSellerData();
   }, [listing, isOpen]);
 
-  if (!listing) return null;
+  // Function to check for existing chats
+  const checkForExistingChat = async () => {
+    if (!user || !listing || user.uid === listing.userId) return;
+    
+    try {
+      const chatsRef = collection(firestoreDb, 'chats');
+      const chatQuery = query(
+        chatsRef,
+        where('participants', 'array-contains', user.uid),
+        where('cardId', '==', listing.id)
+      );
+      
+      const chatSnapshot = await getDocs(chatQuery);
+      if (!chatSnapshot.empty) {
+        // Find chat with this specific seller that is NOT hidden by current user
+        const existingChat = chatSnapshot.docs.find(doc => {
+          const chatData = doc.data();
+          const isMatchingSeller = chatData.sellerId === listing.userId || chatData.buyerId === listing.userId;
+          const isHiddenByUser = chatData.hiddenBy && chatData.hiddenBy[user.uid] === true;
+          
+          return isMatchingSeller && !isHiddenByUser;
+        });
+        
+        if (existingChat) {
+          setHasExistingChat(true);
+          setExistingChatId(existingChat.id);
+        } else {
+          setHasExistingChat(false);
+          setExistingChatId(null);
+        }
+      } else {
+        setHasExistingChat(false);
+        setExistingChatId(null);
+      }
+    } catch (error) {
+      logger.error('Error checking for existing chat:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen && listing) {
+      checkForExistingChat();
+      
+      // Set up real-time listener for chat changes
+      if (user && listing.userId !== user.uid) {
+        const chatsRef = collection(firestoreDb, 'chats');
+        const chatQuery = query(
+          chatsRef,
+          where('participants', 'array-contains', user.uid),
+          where('cardId', '==', listing.id)
+        );
+        
+        console.log('🔄 Setting up real-time chat listener for listing:', listing.id);
+        
+        const unsubscribe = onSnapshot(chatQuery, (snapshot) => {
+          console.log('📡 Real-time chat update received:', {
+            isEmpty: snapshot.empty,
+            docCount: snapshot.docs.length,
+            listingId: listing.id,
+            userId: user.uid
+          });
+          
+          if (snapshot.empty) {
+            console.log('❌ No chats found - setting hasExistingChat to false');
+            setHasExistingChat(false);
+            setExistingChatId(null);
+          } else {
+            // Find chat with this specific seller that is NOT hidden by current user
+            const existingChat = snapshot.docs.find(doc => {
+              const chatData = doc.data();
+              const isMatchingSeller = chatData.sellerId === listing.userId || chatData.buyerId === listing.userId;
+              const isHiddenByUser = chatData.hiddenBy && chatData.hiddenBy[user.uid] === true;
+              
+              console.log('🔍 Checking chat:', {
+                chatId: doc.id,
+                sellerId: chatData.sellerId,
+                buyerId: chatData.buyerId,
+                targetSellerId: listing.userId,
+                isMatch: isMatchingSeller,
+                isHiddenByUser,
+                hiddenBy: chatData.hiddenBy
+              });
+              
+              return isMatchingSeller && !isHiddenByUser;
+            });
+            
+            if (existingChat) {
+              console.log('✅ Found existing chat:', existingChat.id);
+              setHasExistingChat(true);
+              setExistingChatId(existingChat.id);
+            } else {
+              console.log('❌ No matching chat found - setting hasExistingChat to false');
+              setHasExistingChat(false);
+              setExistingChatId(null);
+            }
+          }
+        });
+        
+        return () => {
+          console.log('🧹 Cleaning up chat listener');
+          unsubscribe();
+        };
+      }
+    }
+  }, [isOpen, listing, user]);
+
+  if (!isOpen || !listing) return null;
+
+  console.log('🔄 ListingDetailModal render state:', {
+    hasExistingChat,
+    existingChatId,
+    userId: user?.uid,
+    sellerId: listing?.userId,
+    listingId: listing?.id
+  });
 
   // Get card data from listing
   const card = listing.card || {};
@@ -121,13 +273,65 @@ function ListingDetailModal({ isOpen, onClose, listing, onContactSeller, onRepor
     onContactSeller(listing, prefilledMessage);
   };
 
+  const handleNavigateToChat = () => {
+    if (onViewChange && existingChatId) {
+      // Navigate to Messages tab - the Messages component will auto-select this chat
+      // We'll use a URL parameter to pass the chat ID
+      onViewChange('marketplace-messages');
+      onClose(); // Close the listing modal
+      
+      // Set a brief timeout to ensure the Messages component has loaded, then trigger chat selection
+      setTimeout(() => {
+        // Dispatch a custom event that the Messages component can listen for
+        window.dispatchEvent(new CustomEvent('openSpecificChat', { 
+          detail: { chatId: existingChatId } 
+        }));
+      }, 100);
+    } else {
+      // Fallback: just navigate to messages tab
+      onViewChange('marketplace-messages');
+      onClose();
+    }
+  };
+
   const handleViewSellerProfile = () => {
     if (onViewSellerProfile) {
       // Always use the listing's userId which is the Firebase Auth user ID
-      console.log('Viewing seller profile for userId:', listing.userId);
       onViewSellerProfile(listing.userId);
     } else {
-      toast.error('Seller profile view is not available');
+      toastService.info('Seller profile view is not available');
+    }
+  };
+
+  const handleEditListing = async () => {
+    onEditListing(listing);
+  };
+
+  const handleMarkAsPending = async () => {
+    try {
+      const listingRef = doc(firestoreDb, 'marketplaceItems', listing.id);
+      await updateDoc(listingRef, { 
+        status: 'pending',
+        updatedAt: new Date()
+      });
+      toastService.success('Listing marked as pending');
+    } catch (error) {
+      logger.error('Error marking listing as pending:', error);
+      toastService.error('Failed to mark listing as pending');
+    }
+  };
+
+  const handleMarkAsSold = async () => {
+    try {
+      const listingRef = doc(firestoreDb, 'marketplaceItems', listing.id);
+      await updateDoc(listingRef, { 
+        status: 'sold',
+        updatedAt: new Date()
+      });
+      toastService.success('Listing marked as sold');
+    } catch (error) {
+      logger.error('Error marking listing as sold:', error);
+      toastService.error('Failed to mark listing as sold');
     }
   };
 
@@ -178,7 +382,7 @@ function ListingDetailModal({ isOpen, onClose, listing, onContactSeller, onRepor
                 </div>
                 {review.comment && (
                   <p className="text-gray-700 dark:text-gray-300 mt-2">
-                    {review.comment}
+                    "{review.comment}"
                   </p>
                 )}
               </div>
@@ -248,7 +452,6 @@ function ListingDetailModal({ isOpen, onClose, listing, onContactSeller, onRepor
                           alt={card.name || 'Card image'}
                           className="w-full h-full object-contain"
                           onError={(e) => {
-                            console.error('Image failed to load:', e.target.src);
                             e.target.onerror = null;
                             e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400"%3E%3Crect width="400" height="400" fill="%23e5e7eb"/%3E%3Ctext x="200" y="200" font-family="Arial" font-size="20" fill="%236b7280" text-anchor="middle" dominant-baseline="middle"%3ENo Image Available%3C/text%3E%3C/svg%3E';
                           }}
@@ -310,60 +513,146 @@ function ListingDetailModal({ isOpen, onClose, listing, onContactSeller, onRepor
                     ${listing.listingPrice}
                   </p>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                    Listed in {listing.location || 'Unknown location'}
+                    Listed in {listing.location}
                   </p>
 
-                  {/* Seller Information */}
+                  {/* Seller Information OR Management Actions */}
                   <div className="border-t border-gray-200 dark:border-gray-700 pt-6 mt-4">
-                    <h2 className="text-lg font-semibold mb-4">Seller Information</h2>
-                    
-                    {loadingSellerData ? (
-                      <div className="flex items-center justify-center py-8">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+                    {user?.uid === listing.userId ? (
+                      // Seller's own listing - show management options
+                      <div className="space-y-3">
+                        <h2 className="text-lg font-semibold mb-4">Manage Listing</h2>
+                        
+                        <Button
+                          variant="primary"
+                          size="lg"
+                          className="w-full"
+                          onClick={handleEditListing}
+                        >
+                          <Icon name="edit" size="sm" className="mr-2" />
+                          Edit
+                        </Button>
+                        
+                        <Button
+                          variant="secondary"
+                          size="lg"
+                          className="w-full bg-yellow-500 hover:bg-yellow-600 text-white"
+                          onClick={handleMarkAsPending}
+                        >
+                          <Icon name="schedule" size="sm" className="mr-2" />
+                          Mark as Pending
+                        </Button>
+                        
+                        <Button
+                          variant="success"
+                          size="lg"
+                          className="w-full"
+                          onClick={handleMarkAsSold}
+                        >
+                          <Icon name="check_circle" size="sm" className="mr-2" />
+                          Mark as Sold
+                        </Button>
                       </div>
                     ) : (
-                      <div className="space-y-4">
-                        {/* Seller Profile */}
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-full bg-purple-100 dark:bg-purple-900/20 flex items-center justify-center">
-                            <span className="text-lg font-semibold text-purple-600 dark:text-purple-400">
-                              {sellerProfile?.displayName?.charAt(0) || 'S'}
-                            </span>
+                      // Other user's listing - show seller information and contact
+                      <>
+                        <h2 className="text-lg font-semibold mb-4">Seller Information</h2>
+                        
+                        {loadingSellerData ? (
+                          <div className="flex items-center justify-center py-8">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
                           </div>
-                          <div className="flex-1">
-                            <button
-                              onClick={handleViewSellerProfile}
-                              className="font-medium text-gray-900 dark:text-white hover:text-purple-600 dark:hover:text-purple-400"
-                            >
-                              {sellerProfile?.displayName || 'Seller'}
-                            </button>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">
-                              Joined {sellerProfile?.createdAt ? formatDate(sellerProfile.createdAt) : 'Recently'}
-                            </p>
-                          </div>
-                          <button
-                            onClick={handleViewSellerProfile}
-                            className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
-                          >
-                            Seller details
-                          </button>
-                        </div>
+                        ) : (
+                          <div className="space-y-4">
+                            {/* Seller Profile */}
+                            <div className="flex items-center gap-4">
+                              <div className="w-12 h-12 rounded-full bg-purple-100 dark:bg-purple-900/20 flex items-center justify-center">
+                                <span className="text-lg font-semibold text-purple-600 dark:text-purple-400">
+                                  {sellerProfile?.displayName?.charAt(0) || 'S'}
+                                </span>
+                              </div>
+                              <div className="flex-1">
+                                <button
+                                  onClick={handleViewSellerProfile}
+                                  className="font-medium text-gray-900 dark:text-white hover:text-purple-600 dark:hover:text-purple-400"
+                                >
+                                  {sellerProfile?.displayName || 'Seller'}
+                                </button>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">
+                                  Joined {sellerProfile?.createdAt ? formatDate(sellerProfile.createdAt) : 'Recently'}
+                                </p>
+                              </div>
+                              <button
+                                onClick={handleViewSellerProfile}
+                                className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                              >
+                                Seller details
+                              </button>
+                            </div>
 
-                        {/* Quick Message */}
-                        <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
-                          <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Send seller a message
-                          </p>
-                          <button
-                            onClick={handleMessageSeller}
-                            className="w-full text-left px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
-                          >
-                            <span className="text-gray-600 dark:text-gray-400">
-                              Hi, is this available?
-                            </span>
-                          </button>
-                        </div>
-                      </div>
+                            {/* Reviews Summary */}
+                            {sellerReviews.length > 0 && (
+                              <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    {renderStars(Math.round(averageRating))}
+                                    <span className="font-medium">{averageRating.toFixed(1)}</span>
+                                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                                      ({totalReviews} {totalReviews === 1 ? 'review' : 'reviews'})
+                                    </span>
+                                  </div>
+                                  <button
+                                    onClick={() => setShowAllReviews(true)}
+                                    className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                                  >
+                                    View all
+                                  </button>
+                                </div>
+                                
+                                {/* Latest Review */}
+                                {sellerReviews[0] && (
+                                  <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                                    <div className="flex items-center gap-2 mb-1">
+                                      {renderStars(sellerReviews[0].rating)}
+                                      <span className="text-sm text-gray-500">
+                                        {formatDate(sellerReviews[0].createdAt)}
+                                      </span>
+                                    </div>
+                                    {sellerReviews[0].comment && (
+                                      <p className="text-sm text-gray-700 dark:text-gray-300">
+                                        "{sellerReviews[0].comment}"
+                                      </p>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+
+                            {/* Contact Button */}
+                            <Button
+                              variant="primary"
+                              size="lg"
+                              className="w-full"
+                              onClick={() => {
+                                console.log('🔘 Contact button clicked:', {
+                                  hasExistingChat,
+                                  existingChatId,
+                                  userId: user?.uid,
+                                  sellerId: listing?.userId
+                                });
+                                hasExistingChat ? handleNavigateToChat() : handleMessageSeller();
+                              }}
+                            >
+                              {hasExistingChat ? (
+                                <Icon name="message" size="sm" className="mr-2" />
+                              ) : (
+                                <Icon name="message" size="sm" className="mr-2" />
+                              )}
+                              {hasExistingChat ? 'Continue Conversation' : 'Send Seller a Message'}
+                            </Button>
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
 
@@ -438,70 +727,6 @@ function ListingDetailModal({ isOpen, onClose, listing, onContactSeller, onRepor
                       />
                     </div>
                   )}
-
-                  {/* Action Buttons */}
-                  <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-                    {user?.uid === listing.userId ? (
-                      // Seller's own listing - show management options
-                      <div className="space-y-3">
-                        <h2 className="text-lg font-semibold mb-4">Manage Listing</h2>
-                        
-                        <Button
-                          variant="primary"
-                          size="lg"
-                          className="w-full"
-                          onClick={() => {
-                            // TODO: Implement edit functionality
-                            toast.info('Edit functionality coming soon!');
-                          }}
-                        >
-                          <Icon name="edit" size="sm" className="mr-2" />
-                          Edit
-                        </Button>
-                        
-                        <Button
-                          variant="warning"
-                          size="lg"
-                          className="w-full"
-                          onClick={() => {
-                            // TODO: Implement mark as pending
-                            toast.info('Mark as pending functionality coming soon!');
-                          }}
-                        >
-                          <Icon name="schedule" size="sm" className="mr-2" />
-                          Mark as Pending
-                        </Button>
-                        
-                        <Button
-                          variant="success"
-                          size="lg"
-                          className="w-full"
-                          onClick={() => {
-                            // TODO: Implement mark as sold
-                            toast.info('Mark as sold functionality coming soon!');
-                          }}
-                        >
-                          <Icon name="check_circle" size="sm" className="mr-2" />
-                          Mark as Sold
-                        </Button>
-                      </div>
-                    ) : (
-                      // Other user's listing - show contact button
-                      <div className="space-y-3">
-                        <h2 className="text-lg font-semibold mb-4">Contact Seller</h2>
-                        
-                        <Button
-                          variant="primary"
-                          size="lg"
-                          className="w-full"
-                          onClick={handleMessageSeller}
-                        >
-                          <Icon name="message" size="sm" className="mr-2" />
-                          Send Seller a Message
-                        </Button>
-                      </div>
-                    )}
-                  </div>
                 </div>
               </div>
             </div>

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import { collection, addDoc, serverTimestamp, doc, setDoc, getDoc, query, where, getDocs } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, doc, setDoc, getDoc, query, where, getDocs, updateDoc } from 'firebase/firestore';
 import { db as firestoreDb } from '../../services/firebase';
 import { useAuth } from '../../design-system';
 import Modal from '../../design-system/molecules/Modal';
@@ -14,8 +14,12 @@ const MessageModal = ({ isOpen, onClose, listing, prefilledMessage = '', onViewC
   const [error, setError] = useState(null);
   const { user } = useAuth();
   
-  // Generate a chat ID based on listing ID and buyer ID
-  const chatId = listing && user ? `${listing.id}_${user.uid}` : null;
+  // Generate a chat ID based on listing type (specific item or general chat)
+  const chatId = listing && user ? 
+    (listing.isGeneralChat ? 
+      `general_${[user.uid, listing.userId].sort().join('_')}` : 
+      `${listing.id}_${user.uid}`) : 
+    null;
   
   // Set the pre-filled message when it changes
   useEffect(() => {
@@ -59,28 +63,85 @@ const MessageModal = ({ isOpen, onClose, listing, prefilledMessage = '', onViewC
         throw new Error('Seller ID is missing from the listing');
       }
       
-      // Check if a chat already exists for this listing and user
+      // Check if a chat already exists for this listing/conversation and user
       const chatsRef = collection(firestoreDb, 'chats');
-      const existingChatQuery = query(chatsRef, where('cardId', '==', listing.id), 
-                                    where('participants', 'array-contains', user.uid));
+      let existingChatQuery;
+      
+      if (listing.isGeneralChat) {
+        // For general chats, look for existing general conversation between these users
+        existingChatQuery = query(
+          chatsRef, 
+          where('participants', 'array-contains', user.uid),
+          where('isGeneralChat', '==', true)
+        );
+      } else {
+        // For specific listing chats, use the original logic
+        existingChatQuery = query(
+          chatsRef, 
+          where('cardId', '==', listing.id), 
+          where('participants', 'array-contains', user.uid)
+        );
+      }
+      
       const existingChatSnapshot = await getDocs(existingChatQuery);
       
       let existingChatId = null;
       if (!existingChatSnapshot.empty) {
-        existingChatId = existingChatSnapshot.docs[0].id;
+        if (listing.isGeneralChat) {
+          // For general chats, find the one with the specific seller
+          const existingChat = existingChatSnapshot.docs.find(doc => {
+            const chatData = doc.data();
+            return chatData.participants.includes(listing.userId);
+          });
+          if (existingChat) {
+            existingChatId = existingChat.id;
+          }
+        } else {
+          // For listing-specific chats, use the first match
+          existingChatId = existingChatSnapshot.docs[0].id;
+        }
       }
       
       // If chat doesn't exist, create it
       if (!existingChatId) {
-        // Get seller's display name
+        // Get seller's display name from marketplace profile
         let sellerName = 'Seller';
         try {
-          const sellerDoc = await getDoc(doc(firestoreDb, 'users', listing.userId));
-          if (sellerDoc.exists()) {
-            sellerName = sellerDoc.data().displayName || 'Seller';
+          // Try to get seller name from marketplace profile first
+          const sellerProfileDoc = await getDoc(doc(firestoreDb, 'marketplaceProfiles', listing.userId));
+          if (sellerProfileDoc.exists()) {
+            const sellerProfileData = sellerProfileDoc.data();
+            sellerName = sellerProfileData.displayName || sellerProfileData.username || 'Seller';
+          } else {
+            // Fallback to users collection if marketplace profile doesn't exist
+            const sellerDoc = await getDoc(doc(firestoreDb, 'users', listing.userId));
+            if (sellerDoc.exists()) {
+              const sellerData = sellerDoc.data();
+              sellerName = sellerData.displayName || sellerData.username || 'Seller';
+            }
           }
         } catch (error) {
           logger.error('Error fetching seller data:', error);
+          // Use a fallback name if we can't fetch seller data
+          sellerName = 'Seller';
+        }
+
+        // Get buyer's display name from marketplace profile
+        let buyerName = 'Buyer';
+        try {
+          // Try to get buyer name from marketplace profile first
+          const buyerProfileDoc = await getDoc(doc(firestoreDb, 'marketplaceProfiles', user.uid));
+          if (buyerProfileDoc.exists()) {
+            const buyerProfileData = buyerProfileDoc.data();
+            buyerName = buyerProfileData.displayName || buyerProfileData.username || user.displayName || user.username || 'Buyer';
+          } else {
+            // Fallback to user auth data
+            buyerName = user.displayName || user.username || 'Buyer';
+          }
+        } catch (error) {
+          logger.error('Error fetching buyer data:', error);
+          // Use fallback name
+          buyerName = user.displayName || user.username || 'Buyer';
         }
         
         // First create the chat document with all required fields - using exact structure required by security rules
@@ -90,18 +151,17 @@ const MessageModal = ({ isOpen, onClose, listing, prefilledMessage = '', onViewC
           participants: [user.uid, listing.userId],
           
           // Additional metadata fields
-          cardId: listing.id,
+          cardId: listing.isGeneralChat ? null : listing.id,
           lastMessage: newMessage.trim(),
           lastUpdated: serverTimestamp(),
-          cardTitle: listing.card?.name || listing.card?.card || 'Card Listing',
-          cardImage: listing.card?.imageUrl || 
-                    listing.card?.cloudImageUrl || 
-                    null,
+          cardTitle: listing.isGeneralChat ? 'General Discussion' : (listing.cardName || listing.card?.name || listing.card?.cardName || listing.card?.card || 'Card Listing'),
+          cardImage: listing.isGeneralChat ? null : (listing.card?.imageUrl || listing.card?.cloudImageUrl || null),
           sellerName,
-          buyerName: user.displayName || 'Buyer',
+          buyerName,
           buyerId: user.uid,
           sellerId: listing.userId,
-          createdAt: serverTimestamp()
+          createdAt: serverTimestamp(),
+          isGeneralChat: listing.isGeneralChat || false
         };
         
         // Log the chat data for debugging
@@ -185,6 +245,67 @@ const MessageModal = ({ isOpen, onClose, listing, prefilledMessage = '', onViewC
       } else {
         // If chat exists, just add a new message to it
         const messagesRef = collection(firestoreDb, 'chats', existingChatId, 'messages');
+        
+        // First, try to update the existing chat with proper names if they're missing
+        try {
+          const existingChatRef = doc(firestoreDb, 'chats', existingChatId);
+          const existingChatDoc = await getDoc(existingChatRef);
+          
+          if (existingChatDoc.exists()) {
+            const chatData = existingChatDoc.data();
+            let needsUpdate = false;
+            const updates = {};
+            
+            // Check if we need to update seller name
+            if (!chatData.sellerName || chatData.sellerName === 'Seller') {
+              try {
+                const sellerProfileDoc = await getDoc(doc(firestoreDb, 'marketplaceProfiles', listing.userId));
+                if (sellerProfileDoc.exists()) {
+                  const sellerProfileData = sellerProfileDoc.data();
+                  const newSellerName = sellerProfileData.displayName || sellerProfileData.username || 'Seller';
+                  if (newSellerName !== 'Seller') {
+                    updates.sellerName = newSellerName;
+                    needsUpdate = true;
+                  }
+                }
+              } catch (error) {
+                logger.error('Error fetching seller profile for update:', error);
+              }
+            }
+            
+            // Check if we need to update buyer name
+            if (!chatData.buyerName || chatData.buyerName === 'Buyer') {
+              try {
+                const buyerProfileDoc = await getDoc(doc(firestoreDb, 'marketplaceProfiles', user.uid));
+                if (buyerProfileDoc.exists()) {
+                  const buyerProfileData = buyerProfileDoc.data();
+                  const newBuyerName = buyerProfileData.displayName || buyerProfileData.username || user.displayName || user.username || 'Buyer';
+                  if (newBuyerName !== 'Buyer') {
+                    updates.buyerName = newBuyerName;
+                    needsUpdate = true;
+                  }
+                }
+              } catch (error) {
+                logger.error('Error fetching buyer profile for update:', error);
+              }
+            }
+            
+            // Update the chat document if needed
+            if (needsUpdate) {
+              try {
+                await updateDoc(existingChatRef, updates);
+                logger.debug('Updated existing chat with proper names:', updates);
+              } catch (updateError) {
+                logger.error('Error updating chat with proper names:', updateError);
+                // Continue anyway, this is not critical
+              }
+            }
+          }
+        } catch (error) {
+          logger.error('Error checking/updating existing chat:', error);
+          // Continue anyway, this is not critical
+        }
+        
         await addDoc(messagesRef, {
           // Required fields that match security rules
           sender: user.uid,  // This must match request.auth.uid in rules
@@ -206,14 +327,18 @@ const MessageModal = ({ isOpen, onClose, listing, prefilledMessage = '', onViewC
       // Success message
       toast.success('Message sent');
       
-      // Close the modal and show success message
       onClose();
-      
-      // Store the chatId in localStorage so the Messages component can auto-open this chat
-      localStorage.setItem('openChatId', existingChatId || chatId);
       
       // Navigate to messages tab
       onViewChange('marketplace-messages');
+      
+      // Dispatch custom event to open the specific chat (cross-device compatible)
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('openSpecificChat', { 
+          detail: { chatId: existingChatId || chatId } 
+        }));
+      }, 100);
+      
       toast.success('Message sent! Opening your conversation...');
       
     } catch (error) {

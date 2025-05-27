@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Button, Icon, toast } from '../../design-system';
+import { useAuth } from '../../design-system';
 import { doc, getDoc, collection, query, where, orderBy, getDocs } from 'firebase/firestore';
 import { db as firestoreDb } from '../../services/firebase';
 import logger from '../../utils/logger';
 
-function SellerProfileModal({ isOpen, onClose, sellerId, onOpenListing, cardImages }) {
+function SellerProfileModal({ isOpen, onClose, sellerId, onOpenListing, cardImages, onContactSeller, onViewChange }) {
+  const { user } = useAuth();
   const [sellerProfile, setSellerProfile] = useState(null);
   const [sellerReviews, setSellerReviews] = useState([]);
   const [averageRating, setAverageRating] = useState(0);
@@ -207,6 +209,24 @@ function SellerProfileModal({ isOpen, onClose, sellerId, onOpenListing, cardImag
     return date.toLocaleDateString();
   };
 
+  const handleMessageSeller = () => {
+    if (!onContactSeller || !user || user.uid === sellerId) return;
+    
+    // Create a general listing object for messaging (not tied to a specific item)
+    const generalListing = {
+      id: `general_${sellerId}_${Date.now()}`, // Unique ID for general conversations
+      userId: sellerId,
+      cardName: 'General Discussion',
+      card: {
+        name: 'General Discussion'
+      },
+      isGeneralChat: true // Flag to indicate this is a general conversation
+    };
+    
+    const prefilledMessage = `Hi! I'd like to discuss your Pokemon cards.`;
+    onContactSeller(generalListing, prefilledMessage);
+  };
+
   return (
     <Modal
       isOpen={isOpen}
@@ -228,19 +248,35 @@ function SellerProfileModal({ isOpen, onClose, sellerId, onOpenListing, cardImag
                 <Icon name="person" size="xl" className="text-purple-600 dark:text-purple-400" />
               </div>
               <div className="flex-1">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {sellerProfile?.displayName || 'Seller'}
-                </h2>
-                <div className="mt-2 space-y-1">
-                  <div className="text-sm text-gray-600 dark:text-gray-400">
-                    <Icon name="calendar_today" size="sm" className="inline mr-1" />
-                    Member since {formatDate(sellerProfile?.createdAt)}
-                  </div>
-                  {sellerProfile?.location && (
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                      <Icon name="location_on" size="sm" className="inline mr-1" />
-                      {sellerProfile.location}
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                      {sellerProfile?.displayName || 'Seller'}
+                    </h2>
+                    <div className="mt-2 space-y-1">
+                      <div className="text-sm text-gray-600 dark:text-gray-400">
+                        <Icon name="calendar_today" size="sm" className="inline mr-1" />
+                        Member since {formatDate(sellerProfile?.createdAt)}
+                      </div>
+                      {sellerProfile?.location && (
+                        <div className="text-sm text-gray-600 dark:text-gray-400">
+                          <Icon name="location_on" size="sm" className="inline mr-1" />
+                          {sellerProfile.location}
+                        </div>
+                      )}
                     </div>
+                  </div>
+                  {/* Message Seller Button - only show if user is not the seller and onContactSeller is available */}
+                  {user && user.uid !== sellerId && onContactSeller && (
+                    <Button
+                      onClick={handleMessageSeller}
+                      variant="primary"
+                      size="sm"
+                      className="flex items-center gap-2"
+                    >
+                      <Icon name="message" size="sm" />
+                      Message Seller
+                    </Button>
                   )}
                 </div>
               </div>
@@ -337,7 +373,7 @@ function SellerProfileModal({ isOpen, onClose, sellerId, onOpenListing, cardImag
                         </div>
                         <div className="flex-1 min-w-0">
                           <h4 className="font-medium line-clamp-2 text-sm">
-                            {listing.card?.name || listing.title || 'Unknown Card'}
+                            {listing.cardName || listing.card?.name || listing.card?.cardName || listing.title || 'Unknown Card'}
                           </h4>
                           <p className="text-purple-600 dark:text-purple-400 font-bold text-lg">
                             {(() => {

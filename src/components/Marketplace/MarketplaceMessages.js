@@ -63,6 +63,48 @@ function MarketplaceMessages({ currentView, onViewChange }) {
   const location = useLocation();
   const activeChatId = location.state?.activeChatId;
 
+  // Helper function to fetch complete listing data
+  const fetchCompleteListingData = async (chat) => {
+    if (!chat.cardId) return null;
+    
+    try {
+      // Fetch the complete listing from Firestore
+      const listingRef = doc(firestoreDb, 'marketplaceItems', chat.cardId);
+      const listingSnap = await getDoc(listingRef);
+      
+      if (listingSnap.exists()) {
+        return {
+          id: listingSnap.id,
+          ...listingSnap.data()
+        };
+      } else {
+        // Fallback to chat data if listing no longer exists
+        const cardData = chat.card || {
+          name: chat.cardTitle || 'Card Listing',
+          set: chat.cardSet,
+          year: chat.cardYear,
+          grade: chat.cardGrade,
+          gradeCompany: chat.cardGradeCompany,
+          slabSerial: chat.cardId
+        };
+        
+        return {
+          id: chat.cardId,
+          card: cardData,
+          userId: chat.sellerId || chat.buyerId,
+          listingPrice: chat.price || 0,
+          currency: chat.currency || 'USD',
+          timestampListed: chat.timestamp,
+          note: chat.note || '',
+          location: chat.location || ''
+        };
+      }
+    } catch (error) {
+      logger.error('Error fetching listing details:', error);
+      return null;
+    }
+  };
+
   // Handle navigation with active chat ID
   useEffect(() => {
     if (activeChatId && conversations.length > 0) {
@@ -116,13 +158,15 @@ function MarketplaceMessages({ currentView, onViewChange }) {
               (chatData.buyerName || 'Buyer');
               
             return chatData;
-          }).filter(chat => {
+          });
+          
+          const filteredChats = chatsData.filter(chat => {
             // Filter out chats that have been hidden by this user
             const hiddenBy = chat.hiddenBy || {};
             return !hiddenBy[user.uid];
           });
           
-          setConversations(chatsData);
+          setConversations(filteredChats);
           setLoading(false);
         } catch (error) {
           logger.error('Error processing chats:', error);
@@ -145,7 +189,7 @@ function MarketplaceMessages({ currentView, onViewChange }) {
               where('participants', 'array-contains', user.uid)
             );
             
-            unsubscribe = onSnapshot(simpleQuery, (snapshot) => {
+            unsubscribe = onSnapshot(simpleQuery, async (snapshot) => {
               try {
                 const chatsData = snapshot.docs.map(doc => {
                   const chatData = {
@@ -208,6 +252,28 @@ function MarketplaceMessages({ currentView, onViewChange }) {
       }
     };
   }, [user]);
+
+  // Listen for custom events to open specific chats (cross-device compatible)
+  useEffect(() => {
+    const handleOpenSpecificChat = (event) => {
+      const { chatId } = event.detail;
+      if (chatId && conversations.length > 0) {
+        // Find the chat in the current conversations
+        const targetChat = conversations.find(chat => chat.id === chatId);
+        if (targetChat) {
+          setActiveChat(targetChat);
+        }
+      }
+    };
+
+    // Add event listener
+    window.addEventListener('openSpecificChat', handleOpenSpecificChat);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('openSpecificChat', handleOpenSpecificChat);
+    };
+  }, [conversations]); // Re-run when conversations change
 
   // Handle sending a new message
   const handleSendMessage = async (e) => {
@@ -523,6 +589,16 @@ function MarketplaceMessages({ currentView, onViewChange }) {
             toast.error('Reporting functionality coming soon');
           }}
           onViewSellerProfile={handleViewSellerProfile}
+          onEditListing={() => {
+            toast.error('Edit functionality not available in messages view');
+          }}
+          onMarkAsPending={() => {
+            toast.error('Mark as pending not available in messages view');
+          }}
+          onMarkAsSold={() => {
+            toast.error('Mark as sold not available in messages view');
+          }}
+          onViewChange={onViewChange}
         />
       )}
       
@@ -535,6 +611,8 @@ function MarketplaceMessages({ currentView, onViewChange }) {
             setSellerProfileId(null);
           }}
           sellerId={sellerProfileId}
+          onContactSeller={handleContactSeller}
+          onViewChange={onViewChange}
         />
       )}
       <style>
@@ -620,58 +698,24 @@ function MarketplaceMessages({ currentView, onViewChange }) {
                       src={activeChat.cardImage} 
                       alt={activeChat?.cardTitle || 'Card'}
                       className="w-10 h-10 object-cover rounded-md mr-3 cursor-pointer hover:opacity-80 transition-opacity" 
-                      onClick={() => {
+                      onClick={async () => {
                         // Log the activeChat to debug
                         console.log('Active chat data:', activeChat);
                         
-                        // Create a card object from available data if not present
-                        const cardData = activeChat.card || {
-                          card: activeChat.cardTitle || 'Card Listing',
-                          set: activeChat.cardSet,
-                          year: activeChat.cardYear,
-                          grade: activeChat.cardGrade,
-                          gradeCompany: activeChat.cardGradeCompany,
-                          slabSerial: activeChat.cardId
-                        };
-                        
-                        setSelectedListing({
-                          card: cardData,
-                          userId: activeChat.sellerId || activeChat.buyerId,
-                          listingPrice: activeChat.price || 0,
-                          currency: activeChat.currency || 'USD',
-                          timestampListed: activeChat.timestamp,
-                          note: activeChat.note || '',
-                          location: activeChat.location || ''
-                        });
+                        const listingData = await fetchCompleteListingData(activeChat);
+                        setSelectedListing(listingData);
                         setDetailModalOpen(true);
                       }}
                     />
                   ) : (
                     <div 
                       className="w-10 h-10 bg-gray-200 dark:bg-gray-600 rounded-md flex items-center justify-center text-gray-500 dark:text-gray-400 mr-3 cursor-pointer hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors"
-                      onClick={() => {
+                      onClick={async () => {
                         // Log the activeChat to debug
                         console.log('Active chat data:', activeChat);
                         
-                        // Create a card object from available data if not present
-                        const cardData = activeChat.card || {
-                          card: activeChat.cardTitle || 'Card Listing',
-                          set: activeChat.cardSet,
-                          year: activeChat.cardYear,
-                          grade: activeChat.cardGrade,
-                          gradeCompany: activeChat.cardGradeCompany,
-                          slabSerial: activeChat.cardId
-                        };
-                        
-                        setSelectedListing({
-                          card: cardData,
-                          userId: activeChat.sellerId || activeChat.buyerId,
-                          listingPrice: activeChat.price || 0,
-                          currency: activeChat.currency || 'USD',
-                          timestampListed: activeChat.timestamp,
-                          note: activeChat.note || '',
-                          location: activeChat.location || ''
-                        });
+                        const listingData = await fetchCompleteListingData(activeChat);
+                        setSelectedListing(listingData);
                         setDetailModalOpen(true);
                       }}
                     >
