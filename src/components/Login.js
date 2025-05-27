@@ -115,11 +115,21 @@ function Login() {
   // Handle Google sign in
   const handleGoogleSignIn = async () => {
     try {
-      await signInWithGoogle();
-      // Router will handle redirect automatically when auth state changes
+      setSocialLoading({ ...socialLoading, google: true });
+      const user = await signInWithGoogle();
+      
+      // IMPORTANT: Always navigate to dashboard and let NewUserRoute handle the redirects
+      // This ensures all flows go through the same redirect logic
+      console.log('Google sign-in successful, going through dashboard flow');
+      navigate('/dashboard', { replace: true });
     } catch (error) {
-      console.error('Google sign in error:', error);
+      // Only log errors that aren't popup closed by user
+      if (error.code !== 'auth/popup-closed-by-user') {
+        console.error('Google sign in error:', error);
+      }
       // Error handling is done in AuthContext
+    } finally {
+      setSocialLoading({ ...socialLoading, google: false });
     }
   };
 

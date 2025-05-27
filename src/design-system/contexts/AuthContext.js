@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, Fragment } from 'react';
 import { 
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -62,7 +62,6 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [signingIn, setSigningIn] = useState(false);
 
   // Clear any error when component unmounts or when dependencies change
   useEffect(() => {
@@ -165,12 +164,11 @@ export const AuthProvider = ({ children }) => {
 
   // Google sign in function
   const signInWithGoogle = async () => {
-    if (signingIn) return;
-    setSigningIn(true);
     try {
       setError(null);
-      // Explicitly set persistence to local
-      await setPersistence(auth, browserLocalPersistence);
+      console.log("Starting Google sign-in process...");
+      
+      // Use popup for Google sign-in
       const result = await signInWithPopup(auth, googleProvider);
       console.log("Google sign-in successful:", result.user?.email);
       
@@ -205,24 +203,20 @@ export const AuthProvider = ({ children }) => {
         localStorage.removeItem('isNewUser');
       }
       
-      setSigningIn(false);
       return result.user;
     } catch (err) {
       console.error("Google sign-in error:", err);
-      if (err.code !== 'auth/popup-closed-by-user' && err.code !== 'auth/cancelled-popup-request') {
+      if (err.code !== 'auth/popup-closed-by-user') {
         const errorMessage = handleFirebaseError(err);
         setError(errorMessage);
         toast.error(errorMessage);
       }
-      setSigningIn(false);
       throw err;
     }
   };
 
   // Apple Sign In
   const signInWithApple = async () => {
-    if (signingIn) return;
-    setSigningIn(true);
     try {
       setError(null);
       // Explicitly set persistence to local
@@ -265,7 +259,6 @@ export const AuthProvider = ({ children }) => {
         localStorage.removeItem('isNewUser');
       }
       
-      setSigningIn(false);
       return result.user;
     } catch (err) {
       console.error("Apple sign-in error:", err);
@@ -274,7 +267,6 @@ export const AuthProvider = ({ children }) => {
         setError(errorMessage);
         toast.error(errorMessage);
       }
-      setSigningIn(false);
       throw err;
     }
   };
@@ -326,7 +318,6 @@ export const AuthProvider = ({ children }) => {
       currentUser: user, // For backward compatibility
       loading, 
       error,
-      signingIn,
       signIn, 
       signUp,
       signInWithGoogle,
