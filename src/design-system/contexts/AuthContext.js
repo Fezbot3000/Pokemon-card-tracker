@@ -104,6 +104,26 @@ export const AuthProvider = ({ children }) => {
 
   // Set up the auth state listener
   useEffect(() => {
+    // Handle redirect result first (for iOS devices using redirect flow)
+    const handleRedirectResult = async () => {
+      try {
+        const result = await getRedirectResult(auth);
+        if (result?.user) {
+          console.log("Redirect result found:", result.user.email);
+          // Handle post-signin logic for redirect flow
+          await handlePostSignIn(result);
+        }
+      } catch (error) {
+        console.error("Error handling redirect result:", error);
+        const errorMessage = handleFirebaseError(error);
+        setError(errorMessage);
+        toast.error(errorMessage);
+      }
+    };
+
+    // Check for redirect result immediately
+    handleRedirectResult();
+
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         try {
@@ -202,41 +222,36 @@ export const AuthProvider = ({ children }) => {
       setError(null);
       // Explicitly set persistence to local
       await setPersistence(auth, browserLocalPersistence);
-      const result = await signInWithPopup(auth, googleProvider);
-      console.log("Google sign-in successful:", result.user?.email);
       
-      // Check if this is a new user
-      const isFirstSignIn = result?.additionalUserInfo?.isNewUser;
+      // Device detection for iOS/mobile
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
       
-      // Try to create user document
-      try {
-        await createUserDocument(result.user);
-        console.log("User document created after Google sign-in");
-      } catch (docError) {
-        console.error("Failed to create user document after Google sign-in:", docError);
-      }
+      // Use redirect for mobile devices (especially iOS) to avoid popup blocking
+      const shouldUseRedirect = isMobile || isIOS || (isSafari && isMobile);
       
-      toast.success('Signed in with Google successfully!');
+      console.log('Google sign-in method selection:', {
+        isMobile,
+        isIOS,
+        isSafari,
+        shouldUseRedirect,
+        userAgent: navigator.userAgent
+      });
       
-      // After successful Google sign-in, clear any previous plan choice
-      localStorage.removeItem('chosenPlan');
-      
-      // Check if this is a truly new user
-      const isNewAccount = 
-        isFirstSignIn || 
-        result.user.metadata.creationTime === result.user.metadata.lastSignInTime;
-      
-      // Only set the isNewUser flag for brand new accounts
-      if (isNewAccount) {
-        console.log("Brand new Google account detected, setting isNewUser flag");
-        localStorage.setItem('isNewUser', 'true');
+      if (shouldUseRedirect) {
+        console.log('Using redirect flow for Google sign-in (mobile/iOS detected)');
+        await signInWithRedirect(auth, googleProvider);
+        return null; // Redirect doesn't return immediately
       } else {
-        console.log("Existing Google account detected, not setting isNewUser flag");
-        // Ensure we clear any existing flag for sign-ins
-        localStorage.removeItem('isNewUser');
+        console.log('Using popup flow for Google sign-in (desktop detected)');
+        const result = await signInWithPopup(auth, googleProvider);
+        console.log("Google sign-in successful:", result.user?.email);
+        
+        // Handle post-signin logic for popup flow
+        await handlePostSignIn(result);
+        return result.user;
       }
-      
-      return result.user;
     } catch (err) {
       console.error("Google sign-in error:", err);
       if (err.code !== 'auth/popup-closed-by-user') {
