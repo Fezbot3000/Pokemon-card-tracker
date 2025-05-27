@@ -59,7 +59,15 @@ export const getGoogleClientId = () => {
     "726820232287-qcmvs1a9u5g5vf5rjb5uf8c7m7i7qdnv.apps.googleusercontent.com";
 };
 
-// PriceCharting API key function removed
+/**
+ * Get SendGrid API key
+ */
+export const getSendGridApiKey = () => {
+  usageTracker.track('sendgridApiKey');
+  return process.env.REACT_APP_SENDGRID_API_KEY || 
+    localConfig.SENDGRID_API_KEY || 
+    null; // No fallback for security
+};
 
 /**
  * Generate a map of config sources for debugging
@@ -80,7 +88,8 @@ export const getConfigSources = () => {
   
   // Additional API keys
   sources.googleClientId = !!process.env.REACT_APP_FIREBASE_CLIENT_ID ? 'Environment' : 'Fallback';
-  // PriceCharting API key reference removed
+  sources.sendgridApiKey = !!process.env.REACT_APP_SENDGRID_API_KEY ? 'Environment' : 
+    !!localConfig.SENDGRID_API_KEY ? 'Local Config' : 'Fallback';
                                
   return sources;
 };

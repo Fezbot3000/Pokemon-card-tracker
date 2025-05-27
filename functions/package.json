@@ -13,6 +13,7 @@
   },
   "main": "index.js",
   "dependencies": {
+    "@sendgrid/mail": "^8.1.5",
     "adm-zip": "^0.5.16",
     "cors": "^2.8.5",
     "firebase-admin": "^11.8.0",

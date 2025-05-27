@@ -23,7 +23,7 @@ exports.getExchangeRates = functions.https.onRequest((request, response) => {
       console.log('Fetching live exchange rates from ExchangeRate-API');
       
       // Your API key and endpoint
-      const API_KEY = '43d6478dcf6ef5175ef60b73';
+      const API_KEY = functions.config().exchangerate?.api_key || '43d6478dcf6ef5175ef60b73';
       const API_URL = `https://v6.exchangerate-api.com/v6/${API_KEY}/latest/USD`;
       
       // Fetch live rates from the API

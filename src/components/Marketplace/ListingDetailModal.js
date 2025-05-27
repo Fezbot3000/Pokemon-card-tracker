@@ -40,6 +40,69 @@ function ListingDetailModal({
   const [existingChatId, setExistingChatId] = useState(null);
   const [showBuyerSelectionModal, setShowBuyerSelectionModal] = useState(false);
 
+  const handleShareListing = () => {
+    if (!listing?.id) {
+      toastService.error('Unable to share listing');
+      return;
+    }
+
+    const shareUrl = `${window.location.origin}/marketplace/listing/${listing.id}`;
+    const cardName = listing.card?.name || listing.title || 'Trading Card';
+    const price = listing.price ? `$${listing.price}` : 'Price on request';
+    
+    console.log('Sharing listing:', { 
+      listingId: listing.id, 
+      shareUrl, 
+      cardName, 
+      price 
+    });
+    
+    if (navigator.share) {
+      // Use native sharing if available (mobile)
+      navigator.share({
+        title: `${cardName} - ${price}`,
+        text: `Check out this ${cardName} for sale on MyCardTracker!`,
+        url: shareUrl
+      }).catch(err => {
+        console.log('Error sharing:', err);
+        // Fallback to clipboard if native sharing fails
+        fallbackToClipboard(shareUrl);
+      });
+    } else {
+      fallbackToClipboard(shareUrl);
+    }
+    setShowReportMenu(false);
+  };
+
+  const fallbackToClipboard = (url) => {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url).then(() => {
+        toastService.success('Link copied to clipboard!');
+      }).catch(() => {
+        legacyClipboardCopy(url);
+      });
+    } else {
+      legacyClipboardCopy(url);
+    }
+  };
+
+  const legacyClipboardCopy = (url) => {
+    try {
+      const textArea = document.createElement('textarea');
+      textArea.value = url;
+      textArea.style.position = 'fixed';
+      textArea.style.opacity = '0';
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      toastService.success('Link copied to clipboard!');
+    } catch (err) {
+      console.error('Failed to copy to clipboard:', err);
+      toastService.error('Failed to copy link');
+    }
+  };
+
   useEffect(() => {
     if (!listing || !isOpen) return;
 
@@ -422,6 +485,15 @@ function ListingDetailModal({
                       className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                     >
                       Report Listing
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowReportMenu(false);
+                        handleShareListing();
+                      }}
+                      className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    >
+                      Share Listing
                     </button>
                   </div>
                 )}

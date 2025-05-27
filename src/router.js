@@ -28,6 +28,7 @@ import Settings from './components/Settings';
 import DashboardPricing from './components/DashboardPricing';
 import PremiumFeatures from './components/PremiumFeatures';
 import ComponentLibrary from './pages/ComponentLibrary';
+import MarketplaceListing from './components/Marketplace/MarketplaceListing';
 
 // Root providers wrapper component
 export const RootProviders = () => (
@@ -125,6 +126,10 @@ export const router = createBrowserRouter([
       {
         path: 'pokemon-investment-guide',
         element: <PokemonInvestmentGuide />,
+      },
+      {
+        path: 'marketplace/listing/:listingId',
+        element: <MarketplaceListing />,
       },
       {
         path: 'dashboard',

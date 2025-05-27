@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Fragment } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../design-system/contexts/ThemeContext';
 import { useUserPreferences } from '../contexts/UserPreferencesContext';
 import { useSubscription } from '../contexts/SubscriptionContext';
 import { toast as toastService } from '../design-system';
+import { httpsCallable } from 'firebase/functions';
+import { functions } from '../firebase';
 import CollectionManagement from './settings/CollectionManagement';
 import SubscriptionManagement from './SubscriptionManagement';
 import MarketplaceProfile from './settings/MarketplaceProfile';
@@ -25,8 +27,34 @@ const Settings = () => {
     mobile: userData?.mobile || '',
     address: userData?.address || ''
   });
+  const [isTestingEmail, setIsTestingEmail] = useState(false);
 
   const isDarkMode = theme === 'dark';
+
+  // Test email function
+  const handleTestEmail = async () => {
+    if (!user?.email) {
+      toastService.error('No email address found');
+      return;
+    }
+
+    setIsTestingEmail(true);
+    try {
+      const testEmailFunction = httpsCallable(functions, 'testEmail');
+      const result = await testEmailFunction({
+        to: user.email,
+        subject: 'MyCardTracker Email Service Test'
+      });
+      
+      toastService.success(`Test email sent successfully to ${user.email}`);
+      console.log('Test email result:', result.data);
+    } catch (error) {
+      console.error('Error sending test email:', error);
+      toastService.error(`Failed to send test email: ${error.message}`);
+    } finally {
+      setIsTestingEmail(false);
+    }
+  };
 
   const tabs = [
     { id: 'general', label: 'General', icon: 'settings' },
@@ -152,6 +180,14 @@ const Settings = () => {
               </div>
             </div>
 
+            {/* TEST SECTION - SHOULD BE VISIBLE */}
+            <div className="bg-red-100 dark:bg-red-900/20 rounded-lg p-4 border border-red-200 dark:border-red-700">
+              <h3 className="text-lg font-medium text-red-900 dark:text-red-100 mb-2">🔴 TEST SECTION</h3>
+              <p className="text-sm text-red-700 dark:text-red-300">
+                If you can see this red section, then React is updating properly.
+              </p>
+            </div>
+
             {/* Application Settings */}
             <div className="bg-white dark:bg-[#1B2131] rounded-lg p-4 border border-gray-200 dark:border-gray-700">
               <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Application Settings</h3>
@@ -188,6 +224,46 @@ const Settings = () => {
                   </p>
                 </div>
               </div>
+            </div>
+
+            {/* Email Service Test */}
+            <div className="bg-white dark:bg-[#1B2131] rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">📧 Email Service Test</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                Test the email service to ensure notifications are working correctly.
+              </p>
+              
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-4">
+                <div className="flex items-center">
+                  <span className="text-2xl mr-3">📧</span>
+                  <div>
+                    <p className="text-sm text-blue-800 dark:text-blue-200 font-medium">
+                      Test email will be sent to: {user?.email}
+                    </p>
+                    <p className="text-xs text-blue-600 dark:text-blue-300 mt-1">
+                      Check your inbox and spam folder after sending
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              <button
+                onClick={handleTestEmail}
+                disabled={isTestingEmail}
+                className="w-full py-3 px-4 bg-[#ef4444] text-white rounded-lg hover:bg-[#dc2626] transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isTestingEmail ? (
+                  <>
+                    <span className="mr-2">⏳</span>
+                    Sending Test Email...
+                  </>
+                ) : (
+                  <>
+                    <span className="mr-2">📧</span>
+                    Send Test Email
+                  </>
+                )}
+              </button>
             </div>
 
             {/* Manage Collections */}

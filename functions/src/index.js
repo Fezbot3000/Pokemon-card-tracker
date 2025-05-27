@@ -4,9 +4,21 @@ const psaDatabase = require('./psaDatabase');
 const fetch = require('node-fetch');
 const cors = require('cors')({ origin: true });
 const { psaLookupHttp } = require('./psaLookupHttp');
+const emailFunctions = require('./emailFunctions');
+const testEmail = require('./testEmail');
 
 // Initialize Firebase Admin SDK
 admin.initializeApp();
+
+// Export email functions
+exports.sendWelcomeEmail = emailFunctions.sendWelcomeEmail;
+exports.handleStripeWebhook = emailFunctions.handleStripeWebhook;
+exports.sendMarketplaceMessageNotification = emailFunctions.sendMarketplaceMessageNotification;
+exports.sendListingSoldNotification = emailFunctions.sendListingSoldNotification;
+exports.sendCustomEmail = emailFunctions.sendCustomEmail;
+
+// Export test email function
+exports.testEmail = testEmail.testEmail;
 
 // Export PSA database functions
 exports.cleanupPSADatabase = psaDatabase.cleanupPSADatabase;
