@@ -194,7 +194,7 @@ const Header = ({
                 <button 
                   onClick={() => handleViewChange('marketplace')}
                   className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors duration-200 ${
-                    currentView === 'marketplace' 
+                    isMarketplaceSection() 
                       ? 'bg-gradient-to-r from-[#ef4444] to-[#db2777] text-white' 
                       : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200/50 dark:hover:bg-gray-700/50'
                   }`}
@@ -202,7 +202,7 @@ const Header = ({
                   <Icon 
                     name="storefront" 
                     className="mr-1 hidden xs:inline" 
-                    color={currentView === 'marketplace' ? 'white' : 'default'} 
+                    color={isMarketplaceSection() ? 'white' : 'default'} 
                     size="sm"
                   />
                   <span>Marketplace</span>
@@ -259,7 +259,7 @@ const Header = ({
                         <button 
                           onClick={() => handleViewChange('marketplace')}
                           className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors duration-200 ${
-                            currentView === 'marketplace' 
+                            isMarketplaceSection() 
                               ? 'bg-gradient-to-r from-[#ef4444] to-[#db2777] text-white' 
                               : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200/50 dark:hover:bg-gray-700/50'
                           }`}
@@ -267,7 +267,7 @@ const Header = ({
                           <Icon 
                             name="storefront" 
                             className="mr-1" 
-                            color={currentView === 'marketplace' ? 'white' : 'default'} 
+                            color={isMarketplaceSection() ? 'white' : 'default'} 
                             size="sm"
                           />
                           <span>Marketplace</span>

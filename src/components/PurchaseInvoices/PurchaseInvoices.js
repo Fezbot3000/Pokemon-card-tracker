@@ -500,23 +500,21 @@ const PurchaseInvoices = () => {
                   </div>
                 ) : (
                   <button
-                    className="flex-1 px-3 sm:px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center justify-center gap-1 sm:gap-2 text-sm sm:text-base"
+                    className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 text-sm whitespace-nowrap"
                     onClick={handleServerBatchGeneration}
                     disabled={invoices.length === 0}
                     title="Generate PDF invoices for all items"
                   >
-                    <span className="material-icons text-lg sm:text-base">cloud_download</span>
-                    <span className="hidden sm:inline">Generate All PDFs</span>
-                    <span className="sm:hidden">PDFs</span>
+                    <span className="material-icons text-base">cloud_download</span>
+                    <span>Generate All PDFs</span>
                   </button>
                 )}
                 <button
-                  className="flex-1 px-3 sm:px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary/90 transition-colors flex items-center justify-center gap-1 sm:gap-2 text-sm sm:text-base"
+                  className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 text-sm whitespace-nowrap"
                   onClick={() => setShowCreateModal(true)}
                 >
-                  <span className="material-icons text-lg sm:text-base">add</span>
-                  <span className="hidden sm:inline">Create New Invoice</span>
-                  <span className="sm:hidden">Create</span>
+                  <span className="material-icons text-base">add</span>
+                  <span>Create New Invoice</span>
                 </button>
               </div>
             </div>

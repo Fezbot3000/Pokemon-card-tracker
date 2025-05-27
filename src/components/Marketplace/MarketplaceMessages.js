@@ -9,6 +9,7 @@ import ListingDetailModal from './ListingDetailModal';
 import DesktopMarketplaceMessages from './DesktopMarketplaceMessages';
 import SellerProfile from './SellerProfile';
 import SellerProfileModal from './SellerProfileModal';
+import SellerReviewModal from './SellerReviewModal';
 
 // Add CSS for hiding scrollbars
 const scrollbarHideStyles = `
@@ -58,6 +59,8 @@ function MarketplaceMessages({ currentView, onViewChange }) {
   const [selectedSellerId, setSelectedSellerId] = useState(null);
   const [sellerProfileOpen, setSellerProfileOpen] = useState(false);
   const [sellerProfileId, setSellerProfileId] = useState(null);
+  const [sellerReviewOpen, setSellerReviewOpen] = useState(false);
+  const [sellerReviewId, setSellerReviewId] = useState(null);
   const { user } = useAuth();
   const messagesEndRef = useRef(null);
   const location = useLocation();
@@ -569,6 +572,12 @@ function MarketplaceMessages({ currentView, onViewChange }) {
     setSellerProfileOpen(true);
   };
 
+  // Handle viewing seller review
+  const handleViewSellerReview = (sellerId) => {
+    setSellerReviewId(sellerId);
+    setSellerReviewOpen(true);
+  };
+
   return (
     <>
       {/* Listing Detail Modal */}
@@ -613,6 +622,20 @@ function MarketplaceMessages({ currentView, onViewChange }) {
           sellerId={sellerProfileId}
           onContactSeller={handleContactSeller}
           onViewChange={onViewChange}
+        />
+      )}
+      
+      {/* Seller Review Modal */}
+      {sellerReviewOpen && sellerReviewId && (
+        <SellerReviewModal
+          isOpen={sellerReviewOpen}
+          onClose={() => {
+            setSellerReviewOpen(false);
+            setSellerReviewId(null);
+          }}
+          sellerId={sellerReviewId}
+          listingId={activeChat?.cardId}
+          chatId={activeChat?.id}
         />
       )}
       <style>
@@ -774,20 +797,44 @@ function MarketplaceMessages({ currentView, onViewChange }) {
                 messages.map(message => (
                   <div 
                     key={message.id} 
-                    className={`flex ${message.senderId === user?.uid ? 'justify-end' : 'justify-start'}`}
+                    className={`flex ${message.senderId === user?.uid ? 'justify-end' : message.senderId === 'system' ? 'justify-center' : 'justify-start'}`}
                   >
-                    <div 
-                      className={`max-w-[80%] rounded-lg px-4 py-2 ${
-                        message.senderId === user?.uid 
-                          ? 'bg-blue-500 text-white' 
-                          : 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white'
-                      }`}
-                    >
-                      <div className="text-sm">{message.text}</div>
-                      <div className="text-xs mt-1 opacity-70 text-right">
-                        {formatTimestamp(message.timestamp)}
+                    {message.senderId === 'system' ? (
+                      <div className="max-w-[90%] bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg px-4 py-3">
+                        <div className="text-sm text-blue-800 dark:text-blue-200 text-center">
+                          {message.text}
+                        </div>
+                        {message.type === 'review_request' && message.sellerId && user?.uid !== message.sellerId && (
+                          <div className="mt-3 text-center">
+                            <button
+                              onClick={() => {
+                                setSellerReviewId(message.sellerId);
+                                setSellerReviewOpen(true);
+                              }}
+                              className="bg-blue-500 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-600 transition-colors"
+                            >
+                              Write Review
+                            </button>
+                          </div>
+                        )}
+                        <div className="text-xs mt-2 opacity-70 text-center text-blue-600 dark:text-blue-300">
+                          {formatTimestamp(message.timestamp)}
+                        </div>
                       </div>
-                    </div>
+                    ) : (
+                      <div 
+                        className={`max-w-[80%] rounded-lg px-4 py-2 ${
+                          message.senderId === user?.uid 
+                            ? 'bg-blue-500 text-white' 
+                            : 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white'
+                        }`}
+                      >
+                        <div className="text-sm">{message.text}</div>
+                        <div className="text-xs mt-1 opacity-70 text-right">
+                          {formatTimestamp(message.timestamp)}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))
               )}

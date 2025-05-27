@@ -163,7 +163,7 @@ const Modal = ({
     '4xl': 'max-w-4xl', // ~896px
     '5xl': 'max-w-5xl', // ~1024px
     'modal-width': 'w-[55%]', // exactly 55% width
-    full: 'max-w-full',
+    full: 'w-full max-w-full',
   };
   
   // Mobile full width override

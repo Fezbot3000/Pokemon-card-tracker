@@ -8,6 +8,7 @@ import db from '../../services/firestore/dbAdapter'; // Import IndexedDB service
 import MessageModal from './MessageModal'; // Import the MessageModal component
 import ListingDetailModal from './ListingDetailModal'; // Import the ListingDetailModal component
 import EditListingModal from './EditListingModal'; // Import the EditListingModal component
+import BuyerSelectionModal from './BuyerSelectionModal'; // Import the BuyerSelectionModal component
 import MarketplaceCard from './MarketplaceCard'; // Import the custom MarketplaceCard component
 import MarketplaceNavigation from './MarketplaceNavigation'; // Import the navigation component
 import MarketplaceSearchFilters from './MarketplaceSearchFilters'; // Import the search and filter component
@@ -39,6 +40,7 @@ function Marketplace({ currentView, onViewChange }) {
   const [existingChats, setExistingChats] = useState({});
   const [prefilledMessage, setPrefilledMessage] = useState('');
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isBuyerSelectionModalOpen, setIsBuyerSelectionModalOpen] = useState(false);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -328,9 +330,26 @@ function Marketplace({ currentView, onViewChange }) {
   };
 
   const handleContactSeller = (listing, message = '') => {
-    setSelectedListing(listing);
-    setPrefilledMessage(message);
-    setIsMessageModalOpen(true);
+    // Check if there's an existing chat for this listing
+    const existingChatId = existingChats[listing.id];
+    
+    if (existingChatId) {
+      // Navigate to Messages tab and open the existing chat
+      onViewChange('marketplace-messages');
+      
+      // Set a brief timeout to ensure the Messages component has loaded, then trigger chat selection
+      setTimeout(() => {
+        // Dispatch a custom event that the Messages component can listen for
+        window.dispatchEvent(new CustomEvent('openSpecificChat', { 
+          detail: { chatId: existingChatId } 
+        }));
+      }, 100);
+    } else {
+      // No existing chat, open the message modal to start a new conversation
+      setSelectedListing(listing);
+      setPrefilledMessage(message);
+      setIsMessageModalOpen(true);
+    }
   };
 
   const handleCardClick = (listing) => {
@@ -464,16 +483,8 @@ function Marketplace({ currentView, onViewChange }) {
   };
 
   const handleMarkAsSold = async (listing) => {
-    try {
-      const listingRef = doc(firestoreDb, 'marketplaceItems', listing.id);
-      await updateDoc(listingRef, {
-        status: 'sold'
-      });
-      toast.success('Listing marked as sold');
-    } catch (error) {
-      logger.error('Error marking listing as sold:', error);
-      toast.error('Error marking listing as sold');
-    }
+    setSelectedListing(listing);
+    setIsBuyerSelectionModalOpen(true);
   };
 
   return (
@@ -558,9 +569,13 @@ function Marketplace({ currentView, onViewChange }) {
                     </div>
                     <button
                       onClick={() => handleContactSeller(listing)}
-                      className="w-full px-3 py-1.5 bg-red-500 text-white text-sm rounded-md hover:bg-red-600 transition-colors"
+                      className={`w-full px-3 py-1.5 text-white text-sm rounded-md transition-colors ${
+                        existingChats[listing.id] 
+                          ? 'bg-green-500 hover:bg-green-600' 
+                          : 'bg-red-500 hover:bg-red-600'
+                      }`}
                     >
-                      Contact Seller
+                      {existingChats[listing.id] ? 'See Chat' : 'Contact Seller'}
                     </button>
                   </div>
                 </div>
@@ -652,6 +667,18 @@ function Marketplace({ currentView, onViewChange }) {
             setSelectedListing(null);
           }}
           onEditListing={handleEditListing}
+        />
+      )}
+
+      {/* Buyer Selection Modal */}
+      {isBuyerSelectionModalOpen && selectedListing && (
+        <BuyerSelectionModal
+          isOpen={isBuyerSelectionModalOpen}
+          listing={selectedListing}
+          onClose={() => {
+            setIsBuyerSelectionModalOpen(false);
+            setSelectedListing(null);
+          }}
         />
       )}
     </div>

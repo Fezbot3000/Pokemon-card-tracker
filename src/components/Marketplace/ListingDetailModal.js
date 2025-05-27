@@ -1,10 +1,11 @@
 import React, { useState, useEffect, Fragment } from 'react';
 import { Modal, Button, Icon, toastService } from '../../design-system';
 import { useAuth } from '../../design-system';
-import { doc, getDoc, collection, query, where, orderBy, limit, getDocs, updateDoc, onSnapshot } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, orderBy, limit, getDocs, updateDoc, onSnapshot, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db as firestoreDb } from '../../services/firebase';
 import logger from '../../utils/logger';
 import MapView from './MapView';
+import BuyerSelectionModal from './BuyerSelectionModal';
 
 function ListingDetailModal({ 
   isOpen, 
@@ -37,6 +38,7 @@ function ListingDetailModal({
   const [showReportMenu, setShowReportMenu] = useState(false);
   const [hasExistingChat, setHasExistingChat] = useState(false);
   const [existingChatId, setExistingChatId] = useState(null);
+  const [showBuyerSelectionModal, setShowBuyerSelectionModal] = useState(false);
 
   useEffect(() => {
     if (!listing || !isOpen) return;
@@ -322,17 +324,7 @@ function ListingDetailModal({
   };
 
   const handleMarkAsSold = async () => {
-    try {
-      const listingRef = doc(firestoreDb, 'marketplaceItems', listing.id);
-      await updateDoc(listingRef, { 
-        status: 'sold',
-        updatedAt: new Date()
-      });
-      toastService.success('Listing marked as sold');
-    } catch (error) {
-      logger.error('Error marking listing as sold:', error);
-      toastService.error('Failed to mark listing as sold');
-    }
+    setShowBuyerSelectionModal(true);
   };
 
   const ReviewsModal = () => (
@@ -748,6 +740,13 @@ function ListingDetailModal({
 
       {/* Reviews Modal */}
       <ReviewsModal />
+
+      {/* Buyer Selection Modal */}
+      <BuyerSelectionModal 
+        isOpen={showBuyerSelectionModal} 
+        onClose={() => setShowBuyerSelectionModal(false)} 
+        listing={listing}
+      />
     </>
   );
 }

@@ -12,6 +12,7 @@ import MarketplaceNavigation from './MarketplaceNavigation'; // Import the navig
 import MarketplaceSearchFilters from './MarketplaceSearchFilters'; // Import the search and filter component
 import { Icon } from '../../design-system'; // Import Icon component
 import toast from 'react-hot-toast';
+import BuyerSelectionModal from './BuyerSelectionModal'; // Import BuyerSelectionModal
 
 function MarketplaceSelling({ currentView, onViewChange }) {
   const [allListings, setAllListings] = useState([]);
@@ -27,6 +28,7 @@ function MarketplaceSelling({ currentView, onViewChange }) {
   const [selectedListing, setSelectedListing] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isBuyerSelectionModalOpen, setIsBuyerSelectionModalOpen] = useState(false); // New state for buyer selection modal
   const { user } = useAuth();
   const { convertCurrency, formatAmountForDisplay: formatUserCurrency } = useUserPreferences();
 
@@ -381,19 +383,9 @@ function MarketplaceSelling({ currentView, onViewChange }) {
     setSelectedListing(null);
   };
 
-  const handleMarkAsSold = async (listing) => {
-    try {
-      console.log('Marking listing as sold:', { id: listing.id, currentStatus: listing.status });
-      const listingRef = doc(firestoreDb, 'marketplaceItems', listing.id);
-      await updateDoc(listingRef, {
-        status: 'sold',
-        updatedAt: new Date()
-      });
-      toast.success('Listing marked as sold');
-    } catch (error) {
-      logger.error('Error marking listing as sold:', error);
-      toast.error('Failed to mark listing as sold');
-    }
+  const handleMarkAsSold = (listing) => {
+    setSelectedListing(listing);
+    setIsBuyerSelectionModalOpen(true);
   };
 
   const handleMarkAsPending = async (listing) => {
@@ -409,6 +401,11 @@ function MarketplaceSelling({ currentView, onViewChange }) {
       logger.error('Error marking listing as pending:', error);
       toast.error('Failed to mark listing as pending');
     }
+  };
+
+  const handleCloseBuyerSelectionModal = () => {
+    setIsBuyerSelectionModalOpen(false);
+    setSelectedListing(null);
   };
 
   return (
@@ -558,6 +555,13 @@ function MarketplaceSelling({ currentView, onViewChange }) {
         onMarkAsPending={handleMarkAsPending}
         onMarkAsSold={handleMarkAsSold}
         onViewChange={onViewChange}
+      />
+      
+      {/* Buyer Selection Modal */}
+      <BuyerSelectionModal
+        isOpen={isBuyerSelectionModalOpen}
+        onClose={handleCloseBuyerSelectionModal}
+        listing={selectedListing}
       />
     </div>
   );

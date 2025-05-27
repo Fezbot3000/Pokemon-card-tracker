@@ -1,0 +1,303 @@
+import React, { useState, useEffect, Fragment } from 'react';
+import { Modal, Button } from '../../design-system';
+import { useAuth } from '../../design-system';
+import { 
+  collection, 
+  query, 
+  where, 
+  getDocs, 
+  doc, 
+  updateDoc, 
+  addDoc, 
+  serverTimestamp 
+} from 'firebase/firestore';
+import { db as firestoreDb } from '../../services/firebase';
+import logger from '../../utils/logger';
+import toast from 'react-hot-toast';
+import db from '../../services/firestore/dbAdapter';
+
+const BuyerSelectionModal = ({ isOpen, onClose, listing }) => {
+  const [potentialBuyers, setPotentialBuyers] = useState([]);
+  const [selectedBuyerId, setSelectedBuyerId] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [createSoldInvoice, setCreateSoldInvoice] = useState(false);
+  const [soldPrice, setSoldPrice] = useState('');
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (isOpen && listing) {
+      fetchPotentialBuyers();
+      // Initialize sold price with listing price
+      setSoldPrice(listing.listingPrice || listing.priceAUD || '');
+    }
+  }, [isOpen, listing]);
+
+  const fetchPotentialBuyers = async () => {
+    setLoading(true);
+    try {
+      // Get all chats for this listing
+      const chatsRef = collection(firestoreDb, 'chats');
+      const chatsQuery = query(
+        chatsRef,
+        where('listingId', '==', listing.id),
+        where('sellerId', '==', user.uid)
+      );
+      
+      const chatSnapshot = await getDocs(chatsQuery);
+      const buyerIds = new Set();
+      
+      chatSnapshot.forEach(doc => {
+        const chatData = doc.data();
+        if (chatData.buyerId && chatData.buyerId !== user.uid) {
+          buyerIds.add(chatData.buyerId);
+        }
+      });
+
+      // Fetch buyer details
+      const buyers = [];
+      for (const buyerId of buyerIds) {
+        try {
+          const userDoc = await getDocs(query(collection(firestoreDb, 'users'), where('uid', '==', buyerId)));
+          if (!userDoc.empty) {
+            const userData = userDoc.docs[0].data();
+            buyers.push({
+              id: buyerId,
+              name: userData.displayName || userData.email || 'Unknown User'
+            });
+          }
+        } catch (error) {
+          console.error('Error fetching buyer details:', error);
+        }
+      }
+
+      setPotentialBuyers(buyers);
+    } catch (error) {
+      console.error('Error fetching potential buyers:', error);
+      toast.error('Failed to load potential buyers');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!selectedBuyerId) {
+      toast.error('Please select a buyer');
+      return;
+    }
+
+    if (createSoldInvoice && !soldPrice) {
+      toast.error('Please enter the sold price');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      // Update the listing with buyer info and sold status
+      const listingRef = doc(firestoreDb, 'marketplaceItems', listing.id);
+      await updateDoc(listingRef, {
+        status: 'sold',
+        soldToBuyerId: selectedBuyerId,
+        soldAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+
+      // Create sold invoice if requested
+      if (createSoldInvoice) {
+        const selectedBuyer = potentialBuyers.find(b => b.id === selectedBuyerId);
+        
+        // Create invoice data
+        const invoiceData = {
+          seller: selectedBuyer?.name || 'Unknown Buyer',
+          date: new Date().toISOString().split('T')[0],
+          invoiceNumber: `SOLD-${Date.now()}`,
+          notes: `Sold via marketplace - ${listing.cardTitle || listing.card?.name}`,
+          cards: [{
+            id: listing.id,
+            name: listing.cardTitle || listing.card?.name || 'Unknown Card',
+            player: listing.card?.player || '',
+            set: listing.card?.set || '',
+            grade: listing.card?.grade || '',
+            grader: listing.card?.grader || '',
+            slabSerial: listing.card?.slabSerial || '',
+            investmentAUD: parseFloat(listing.card?.investmentAUD || 0),
+            purchasePrice: parseFloat(listing.card?.investmentAUD || 0),
+            salePrice: parseFloat(soldPrice),
+            collectionName: 'Marketplace Sale'
+          }],
+          totalInvestment: parseFloat(listing.card?.investmentAUD || 0),
+          totalSale: parseFloat(soldPrice),
+          totalProfit: parseFloat(soldPrice) - parseFloat(listing.card?.investmentAUD || 0),
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+
+        try {
+          await db.savePurchaseInvoice(invoiceData);
+          toast.success('Sold invoice created successfully!');
+        } catch (invoiceError) {
+          console.error('Error creating sold invoice:', invoiceError);
+          toast.error('Item marked as sold but failed to create invoice');
+        }
+      }
+
+      // Create a review request in the chat
+      const selectedBuyer = potentialBuyers.find(b => b.id === selectedBuyerId);
+      if (selectedBuyer) {
+        const chatId = [user.uid, selectedBuyerId].sort().join('_') + '_' + listing.id;
+        const chatRef = doc(firestoreDb, 'chats', chatId);
+        
+        // Add system message for review request
+        const messagesRef = collection(chatRef, 'messages');
+        await addDoc(messagesRef, {
+          type: 'system',
+          subtype: 'review_request',
+          content: `${user.displayName || 'Seller'} has marked this item as sold. Please leave a review for this transaction.`,
+          timestamp: serverTimestamp(),
+          senderId: 'system'
+        });
+
+        // Update chat with pending review
+        await updateDoc(chatRef, {
+          pendingReview: {
+            buyerId: selectedBuyerId,
+            sellerId: user.uid,
+            listingId: listing.id,
+            requestedAt: serverTimestamp()
+          },
+          lastMessage: 'Review request sent',
+          lastUpdated: serverTimestamp()
+        });
+      }
+
+      toast.success(createSoldInvoice ? 
+        'Item marked as sold, invoice created, and review request sent!' : 
+        'Item marked as sold and review request sent!'
+      );
+      onClose();
+    } catch (error) {
+      console.error('Error marking as sold:', error);
+      toast.error('Failed to mark item as sold');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
+        <div className="p-6">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+              Mark as Sold
+            </h2>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+            >
+              <span className="material-icons">close</span>
+            </button>
+          </div>
+
+          <div className="mb-4">
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
+              Who purchased <strong>{listing?.cardTitle || listing?.card?.name || 'this item'}</strong>?
+            </p>
+            
+            {loading ? (
+              <div className="flex justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+              </div>
+            ) : potentialBuyers.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-gray-500 dark:text-gray-400">
+                  No potential buyers found. Only users who have messaged you about this item will appear here.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {potentialBuyers.map((buyer) => (
+                  <label
+                    key={buyer.id}
+                    className="flex items-center p-3 border border-gray-200 dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700"
+                  >
+                    <input
+                      type="radio"
+                      name="buyer"
+                      value={buyer.id}
+                      checked={selectedBuyerId === buyer.id}
+                      onChange={(e) => setSelectedBuyerId(e.target.value)}
+                      className="mr-3"
+                    />
+                    <div>
+                      <p className="font-medium text-gray-900 dark:text-white">
+                        {buyer.name}
+                      </p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        Messaged about this item
+                      </p>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Sold Invoice Option */}
+          <div className="mb-4 p-4 border border-gray-200 dark:border-gray-600 rounded-lg">
+            <label className="flex items-center mb-3">
+              <input
+                type="checkbox"
+                checked={createSoldInvoice}
+                onChange={(e) => setCreateSoldInvoice(e.target.checked)}
+                className="mr-3"
+              />
+              <span className="text-sm font-medium text-gray-900 dark:text-white">
+                Create sold invoice
+              </span>
+            </label>
+            
+            {createSoldInvoice && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Final Sale Price (AUD)
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={soldPrice}
+                  onChange={(e) => setSoldPrice(e.target.value)}
+                  placeholder="Enter final sale price"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                />
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  This will create an invoice record for your sold item
+                </p>
+              </div>
+            )}
+          </div>
+
+          <div className="flex space-x-3">
+            <button
+              onClick={onClose}
+              className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSubmit}
+              disabled={!selectedBuyerId || submitting || potentialBuyers.length === 0}
+              className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
+            >
+              {submitting ? 'Processing...' : 'Mark as Sold'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default BuyerSelectionModal;
