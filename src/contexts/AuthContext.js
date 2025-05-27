@@ -127,15 +127,12 @@ export function AuthProvider({ children }) {
       try {
         const result = await getRedirectResult(auth);
         if (result?.user) {
-          console.log("Redirect sign-in successful:", result.user?.email);
-          
           // Clear the redirect flag
           localStorage.removeItem('googleSignInRedirect');
           
           // Try to create user document but don't fail if it errors
           try {
             await createUserDocument(result.user);
-            console.log("User document created after redirect sign-in");
           } catch (docError) {
             console.error("Failed to create user document after redirect sign-in:", docError);
           }
@@ -149,10 +146,8 @@ export function AuthProvider({ children }) {
           const isNewAccount = result.user.metadata.creationTime === result.user.metadata.lastSignInTime;
           
           if (isNewAccount) {
-            console.log("Brand new account detected, setting isNewUser flag");
             localStorage.setItem('isNewUser', 'true');
           } else {
-            console.log("Existing account detected, not setting isNewUser flag");
             localStorage.removeItem('isNewUser');
             
             // Trigger auto-sync for existing users after successful login
@@ -166,10 +161,8 @@ export function AuthProvider({ children }) {
           }
           
           // Navigate to dashboard after successful redirect sign-in
-          // Use a small delay to ensure state is updated
           setTimeout(() => {
             if (window.location.pathname === '/login' || window.location.pathname === '/') {
-              console.log("Navigating to dashboard after redirect sign-in");
               window.location.href = '/dashboard';
             }
           }, 100);
@@ -177,7 +170,6 @@ export function AuthProvider({ children }) {
           // Check if we were expecting a redirect result but didn't get one
           const wasRedirecting = localStorage.getItem('googleSignInRedirect');
           if (wasRedirecting) {
-            console.log("Expected redirect result but didn't receive one");
             localStorage.removeItem('googleSignInRedirect');
           }
         }
@@ -289,48 +281,28 @@ export function AuthProvider({ children }) {
   // Google Sign In
   const signInWithGoogle = async () => {
     try {
-      console.log('=== AuthContext: signInWithGoogle started ===');
       setError(null);
-      console.log("Starting Google sign-in process...");
       
-      // Improved PWA detection for iOS
+      // Detect mobile devices and PWA - force redirect for better compatibility
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
       const isPWA = window.matchMedia('(display-mode: standalone)').matches ||
                     (window.navigator.standalone === true) ||
                     document.referrer.includes('android-app://') ||
                     (window.location.href.includes('?utm_source=homescreen'));
       
-      console.log("PWA detection:", {
-        displayMode: window.matchMedia('(display-mode: standalone)').matches,
-        navigatorStandalone: window.navigator.standalone,
-        androidApp: document.referrer.includes('android-app://'),
-        urlParam: window.location.href.includes('?utm_source=homescreen'),
-        isPWA
-      });
-      
-      if (isPWA) {
-        // Use redirect for PWA to avoid popup issues
-        console.log("PWA detected, using redirect sign-in");
-        
+      // Use redirect for mobile devices or PWA to avoid popup blocking
+      if (isMobile || isPWA) {
         // Store that we're starting a redirect flow
         localStorage.setItem('googleSignInRedirect', 'true');
-        console.log("Set googleSignInRedirect flag in localStorage");
-        
-        console.log("About to call signInWithRedirect...");
         await signInWithRedirect(auth, googleProvider);
-        console.log("signInWithRedirect called (this line may not execute due to redirect)");
-        // Note: This function will not return as the page redirects
-        // The result will be handled by handleRedirectResult on return
-        return null; // Explicitly return null to indicate redirect flow
+        return null; // Redirect flow
       } else {
-        console.log("Regular browser detected, using popup sign-in");
-        // Use popup for regular browser
+        // Use popup for desktop browsers only
         const result = await signInWithPopup(auth, googleProvider);
-        console.log("Google sign-in successful:", result.user?.email);
         
         // Try to create user document but don't fail if it errors
         try {
           await createUserDocument(result.user);
-          console.log("User document created after Google sign-in");
         } catch (docError) {
           console.error("Failed to create user document after Google sign-in:", docError);
         }
@@ -344,10 +316,8 @@ export function AuthProvider({ children }) {
         const isNewAccount = result.user.metadata.creationTime === result.user.metadata.lastSignInTime;
         
         if (isNewAccount) {
-          console.log("Brand new Google account detected, setting isNewUser flag");
           localStorage.setItem('isNewUser', 'true');
         } else {
-          console.log("Existing Google account detected, not setting isNewUser flag");
           localStorage.removeItem('isNewUser');
           
           // Trigger auto-sync for existing users after successful login
@@ -363,7 +333,6 @@ export function AuthProvider({ children }) {
         return result.user;
       }
     } catch (err) {
-      console.error("=== AuthContext: Google sign-in error ===", err);
       if (err.code !== 'auth/popup-closed-by-user') {
         const errorMessage = handleFirebaseError(err);
         setError(errorMessage);
@@ -498,8 +467,7 @@ export function AuthProvider({ children }) {
     resetPassword,
     getAuthToken,
     signInWithGoogle,
-    signInWithApple,
-    auth
+    signInWithApple
   };
 
   return (
