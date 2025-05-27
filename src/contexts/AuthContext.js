@@ -19,8 +19,10 @@ import { toast } from 'react-hot-toast';
 import { useAutoSync } from './AutoSyncContext';
 import logger from '../utils/logger';
 import featureFlags from '../utils/featureFlags';
+import { httpsCallable, getFunctions } from 'firebase/functions';
 
 const AuthContext = createContext();
+const functions = getFunctions();
 
 export function useAuth() {
   return useContext(AuthContext);
@@ -221,6 +223,10 @@ export function AuthProvider({ children }) {
         console.error("Failed to create user document, but auth succeeded:", docError);
         // Continue with auth success even if document creation fails
       }
+
+      // Send welcome email
+      const sendWelcomeEmail = httpsCallable(functions, 'sendWelcomeEmail');
+      await sendWelcomeEmail({ email: user.email, displayName: user.displayName });
 
       toast.success('Account created successfully!');
       return user;

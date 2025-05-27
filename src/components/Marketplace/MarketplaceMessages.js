@@ -3,6 +3,7 @@ import { useAuth } from '../../design-system';
 import { useLocation } from 'react-router-dom';
 import { collection, query, where, orderBy, getDocs, onSnapshot, doc, getDoc, addDoc, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore';
 import { db as firestoreDb } from '../../services/firebase';
+import { httpsCallable, getFunctions } from 'firebase/functions';
 import logger from '../../utils/logger';
 import toast from 'react-hot-toast';
 import ListingDetailModal from './ListingDetailModal';
@@ -21,6 +22,8 @@ const scrollbarHideStyles = `
     display: none;  /* Chrome, Safari and Opera */
   }
 `;
+
+const functions = getFunctions();
 
 function MarketplaceMessages({ currentView, onViewChange }) {
   // State to track window width for responsive layout
@@ -310,6 +313,14 @@ function MarketplaceMessages({ currentView, onViewChange }) {
       setTimeout(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
       }, 100);
+      
+      // Send email notification
+      const sendEmailNotification = httpsCallable(functions, 'sendEmailNotification');
+      await sendEmailNotification({
+        chatId: activeChat.id,
+        senderId: user.uid,
+        message: newMessage.trim(),
+      });
       
     } catch (error) {
       console.error('Error sending message:', error);

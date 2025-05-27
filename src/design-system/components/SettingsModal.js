@@ -90,7 +90,6 @@ const SettingsModal = ({
   const [isForceSyncing, setIsForceSyncing] = useState(false); // Add state for force syncing
   const [isCloudMigrating, setIsCloudMigrating] = useState(false); // Add state for cloud migration
   const [isUploadingImages, setIsUploadingImages] = useState(false); // Add state for image upload
-  const [isTestingEmail, setIsTestingEmail] = useState(false); // Add state for email testing
   const [activeTab, setActiveTab] = useState('general');
   const [collectionToDelete, setCollectionToDelete] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -746,55 +745,6 @@ const SettingsModal = ({
     }
   };
 
-  // Test email function
-  const handleTestEmail = async () => {
-    if (!user?.email) {
-      toastService.error('No email address found');
-      return;
-    }
-
-    setIsTestingEmail(true);
-    try {
-      const testEmailFunction = httpsCallable(functions, 'testEmail');
-      const result = await testEmailFunction({
-        to: user.email,
-        subject: 'MyCardTracker Email Service Test'
-      });
-      
-      toastService.success(`Test email sent successfully to ${user.email}`);
-      console.log('Test email result:', result.data);
-    } catch (error) {
-      console.error('Error sending test email:', error);
-      toastService.error(`Failed to send test email: ${error.message}`);
-    } finally {
-      setIsTestingEmail(false);
-    }
-  };
-
-  // Test all email types function
-  const handleTestAllEmails = async () => {
-    if (!user?.email) {
-      toastService.error('No email address found');
-      return;
-    }
-
-    setIsTestingEmail(true);
-    try {
-      const testAllEmailsFunction = httpsCallable(functions, 'testAllEmails');
-      const result = await testAllEmailsFunction({
-        to: user.email
-      });
-      
-      toastService.success(`All email types sent successfully to ${user.email}`);
-      console.log('Test all emails result:', result.data);
-    } catch (error) {
-      console.error('Error sending test emails:', error);
-      toastService.error(`Failed to send test emails: ${error.message}`);
-    } finally {
-      setIsTestingEmail(false);
-    }
-  };
-
   return (
     <>
       <Modal
@@ -887,46 +837,6 @@ const SettingsModal = ({
                         <div className="h-2 w-10 bg-gray-700 rounded"></div>
                       </div>
                     </div>
-                  </div>
-                </SettingsPanel>
-
-                <SettingsPanel
-                  title="Email Service Test"
-                  description="Test the email service to ensure notifications are working correctly."
-                >
-                  <div className="space-y-4">
-                    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-                      <div className="flex items-center">
-                        <span className="text-2xl mr-3">📧</span>
-                        <div>
-                          <p className="text-sm text-blue-800 dark:text-blue-200 font-medium">
-                            Test email will be sent to: {user?.email}
-                          </p>
-                          <p className="text-xs text-blue-600 dark:text-blue-300 mt-1">
-                            Check your inbox and spam folder after sending
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <Button
-                      onClick={handleTestEmail}
-                      disabled={isTestingEmail}
-                      variant="primary"
-                      fullWidth
-                      iconLeft={isTestingEmail ? <span>⏳</span> : <span>📧</span>}
-                    >
-                      {isTestingEmail ? 'Sending Test Email...' : 'Send Test Email'}
-                    </Button>
-                    <Button
-                      onClick={handleTestAllEmails}
-                      disabled={isTestingEmail}
-                      variant="primary"
-                      fullWidth
-                      iconLeft={isTestingEmail ? <span>⏳</span> : <span>📧</span>}
-                    >
-                      {isTestingEmail ? 'Sending Test Emails...' : 'Send All Test Emails'}
-                    </Button>
                   </div>
                 </SettingsPanel>
 

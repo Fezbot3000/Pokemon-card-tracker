@@ -12,25 +12,19 @@ admin.initializeApp();
 // Import PSA-related functions
 const { testPsaToken } = require('./src/psaTokenTest');
 
-// Import email-related functions
-const { testEmail } = require('./src/testEmail');
-const { testAllEmails } = require('./src/emailTester');
-const { 
-  sendWelcomeEmail,
-  sendSubscriptionEmail,
-  sendPaymentFailedEmail,
-  sendMarketplaceMessageEmail,
-  sendListingSoldEmail,
-  sendEmailVerificationEmail,
-  sendCustomEmail
-} = require('./src/emailFunctions');
+// Import email functions
+const { sendWelcomeEmail, sendSubscriptionEmail, sendPaymentFailedEmail, sendMarketplaceMessageEmail, sendListingSoldEmail, sendEmailVerificationEmail, sendCustomEmail } = require('./src/emailService');
+
+// Import auth triggers
+const { onUserCreate, onUserDelete } = require('./src/authTriggers');
+
+// Import marketplace notifications
+const { sendEmailNotification, sendListingSoldNotification } = require('./src/marketplaceNotifications');
 
 // Export PSA token test function
 exports.testPsaToken = testPsaToken;
 
 // Export email functions
-exports.testEmail = testEmail;
-exports.testAllEmails = testAllEmails;
 exports.sendWelcomeEmail = sendWelcomeEmail;
 exports.sendSubscriptionEmail = sendSubscriptionEmail;
 exports.sendPaymentFailedEmail = sendPaymentFailedEmail;
@@ -38,6 +32,14 @@ exports.sendMarketplaceMessageEmail = sendMarketplaceMessageEmail;
 exports.sendListingSoldEmail = sendListingSoldEmail;
 exports.sendEmailVerificationEmail = sendEmailVerificationEmail;
 exports.sendCustomEmail = sendCustomEmail;
+
+// Export auth triggers
+exports.onUserCreate = onUserCreate;
+exports.onUserDelete = onUserDelete;
+
+// Export marketplace notifications
+exports.sendEmailNotification = sendEmailNotification;
+exports.sendListingSoldNotification = sendListingSoldNotification;
 
 // Configure CORS: Allow requests from local dev and production domain
 const allowedOrigins = [
@@ -250,7 +252,11 @@ exports.fixSubscriptionStatus = functions.https.onCall(async (data, context) => 
   try {
     // First, check if there's already a subscription in Firestore to debug
     const existingSubDoc = await admin.firestore().collection('subscriptions').doc(userId).get();
+    let customerId = null;
+
     if (existingSubDoc.exists) {
+      const firestoreSubscription = existingSubDoc.data();
+      customerId = firestoreSubscription.customerId;
       console.log('Current subscription in Firestore:', existingSubDoc.data());
     } else {
       console.log('No existing subscription found in Firestore');
@@ -293,16 +299,16 @@ exports.fixSubscriptionStatus = functions.https.onCall(async (data, context) => 
     }
     
     let activeSubscription = null;
-    let customerId = null;
+    let customer = null;
     
     // Check each customer for active subscriptions
-    for (const customer of emailCustomers.data) {
-      console.log(`Checking customer ${customer.id}`);
+    for (const c of emailCustomers.data) {
+      console.log(`Checking customer ${c.id}`);
       
-      if (customer.subscriptions && customer.subscriptions.data.length > 0) {
-        console.log(`Customer has ${customer.subscriptions.data.length} subscriptions`);
+      if (c.subscriptions && c.subscriptions.data.length > 0) {
+        console.log(`Customer has ${c.subscriptions.data.length} subscriptions`);
         
-        const activeSubscriptions = customer.subscriptions.data.filter(
+        const activeSubscriptions = c.subscriptions.data.filter(
           sub => sub.status === 'active' || sub.status === 'trialing'
         );
         
@@ -315,7 +321,7 @@ exports.fixSubscriptionStatus = functions.https.onCall(async (data, context) => 
           );
           
           activeSubscription = activeSubscriptions[0];
-          customerId = customer.id;
+          customer = c;
           console.log(`Selected active subscription ${activeSubscription.id} (newest)`);
           break;
         }
@@ -350,7 +356,7 @@ exports.fixSubscriptionStatus = functions.https.onCall(async (data, context) => 
         );
         
         activeSubscription = matchingSubscriptions[0];
-        customerId = activeSubscription.customer.id;
+        customer = activeSubscription.customer;
         console.log(`Selected active subscription ${activeSubscription.id} from direct lookup`);
       }
     }
@@ -384,10 +390,10 @@ exports.fixSubscriptionStatus = functions.https.onCall(async (data, context) => 
     console.log(`Found active subscription ${activeSubscription.id}, updating Firestore`);
     
     // Ensure the customer has firebaseUID metadata
-    await stripe.customers.update(customerId, {
+    await stripe.customers.update(customer.id, {
       metadata: { 
         firebaseUID: userId,
-        client_reference_id: userId
+        client_reference_id: userId 
       }
     });
     
@@ -403,7 +409,7 @@ exports.fixSubscriptionStatus = functions.https.onCall(async (data, context) => 
     
     const subscription = {
       status: activeSubscription.status,
-      customerId: customerId,
+      customerId: customer.id,
       subscriptionId: activeSubscription.id,
       plan: planName,
       priceId: activeSubscription.items.data[0].price.id,

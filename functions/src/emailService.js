@@ -28,6 +28,9 @@ class EmailService {
   }
 
   async sendEmail(to, templateId, dynamicTemplateData = {}, subject = null) {
+    console.log(' SENDING EMAIL WITH TEMPLATE ID:', templateId);
+    console.log(' TEMPLATE DATA:', dynamicTemplateData);
+    
     try {
       const msg = {
         to,
