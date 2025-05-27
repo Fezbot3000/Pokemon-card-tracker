@@ -108,11 +108,15 @@ export const AuthProvider = ({ children }) => {
     getRedirectResult(auth)
       .then(async (result) => {
         if (result?.user) {
+          console.log("Redirect success - user found:", result.user.email);
           // Handle post-signin logic for redirect flow
           await handlePostSignIn(result);
+        } else {
+          console.log("No redirect result found");
         }
       })
       .catch((error) => {
+        console.error("Redirect result error:", error);
         if (error.code !== 'auth/popup-closed-by-user') {
           const errorMessage = handleFirebaseError(error);
           setError(errorMessage);
@@ -122,6 +126,7 @@ export const AuthProvider = ({ children }) => {
 
     // Set up auth state listener
     const unsubscribe = onAuthStateChanged(auth, (user) => {
+      console.log("Auth state changed:", user?.email || "No user");
       setUser(user);
       setLoading(false);
     });

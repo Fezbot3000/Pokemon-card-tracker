@@ -1,7 +1,7 @@
 import React from 'react';
 import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
-import { Toast } from './design-system';
+import { Toast, useAuth } from './design-system';
 import DesignSystemProvider from './design-system/providers/DesignSystemProvider';
 import { SubscriptionProvider } from './contexts/SubscriptionContext';
 import { UserPreferencesProvider } from './contexts/UserPreferencesContext';
@@ -69,6 +69,36 @@ export const RootProviders = () => (
   </ErrorBoundary>
 );
 
+// Protected route wrapper for dashboard
+function ProtectedDashboard() {
+  const { currentUser, loading } = useAuth();
+  
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+  
+  if (!currentUser) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  return <Dashboard />;
+}
+
+// Login route wrapper that redirects authenticated users
+function LoginRoute() {
+  const { currentUser, loading } = useAuth();
+  
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+  
+  if (currentUser) {
+    return <Navigate to="/dashboard" replace />;
+  }
+  
+  return <Login />;
+}
+
 // Create and export the router
 export const router = createBrowserRouter([
   {
@@ -81,7 +111,7 @@ export const router = createBrowserRouter([
       },
       {
         path: 'login',
-        element: <Login />,
+        element: <LoginRoute />,
       },
       {
         path: 'forgot-password',
@@ -133,7 +163,7 @@ export const router = createBrowserRouter([
       },
       {
         path: 'dashboard',
-        element: <Dashboard />,
+        element: <ProtectedDashboard />,
         children: [
           {
             index: true,
