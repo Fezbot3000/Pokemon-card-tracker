@@ -11,7 +11,8 @@ import {
   getRedirectResult,
   OAuthProvider,
   setPersistence,
-  browserLocalPersistence
+  browserLocalPersistence,
+  signInWithRedirect
 } from 'firebase/auth';
 import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db, googleProvider } from '../../firebase'; // Import from the main app's firebase config
@@ -69,6 +70,57 @@ export const AuthProvider = ({ children }) => {
 
   // Set up the auth state listener
   useEffect(() => {
+    // Handle redirect result on page load
+    const handleRedirectResult = async () => {
+      try {
+        const result = await getRedirectResult(auth);
+        if (result?.user) {
+          console.log("Redirect sign-in successful:", result.user?.email);
+          
+          // Check if this is a new user
+          const isFirstSignIn = result?.additionalUserInfo?.isNewUser;
+          
+          // Try to create user document
+          try {
+            await createUserDocument(result.user);
+            console.log("User document created after redirect sign-in");
+          } catch (docError) {
+            console.error("Failed to create user document after redirect sign-in:", docError);
+          }
+          
+          toast.success('Signed in with Google successfully!');
+          
+          // After successful Google sign-in, clear any previous plan choice
+          localStorage.removeItem('chosenPlan');
+          
+          // Check if this is a truly new user
+          const isNewAccount = 
+            isFirstSignIn || 
+            result.user.metadata.creationTime === result.user.metadata.lastSignInTime;
+          
+          // Only set the isNewUser flag for brand new accounts
+          if (isNewAccount) {
+            console.log("Brand new Google account detected, setting isNewUser flag");
+            localStorage.setItem('isNewUser', 'true');
+          } else {
+            console.log("Existing Google account detected, not setting isNewUser flag");
+            // Ensure we clear any existing flag for sign-ins
+            localStorage.removeItem('isNewUser');
+          }
+        }
+      } catch (error) {
+        console.error("Error handling redirect result:", error);
+        if (error.code !== 'auth/popup-closed-by-user') {
+          const errorMessage = handleFirebaseError(error);
+          setError(errorMessage);
+          toast.error(errorMessage);
+        }
+      }
+    };
+
+    // Handle redirect result first
+    handleRedirectResult();
+
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         try {
@@ -167,41 +219,12 @@ export const AuthProvider = ({ children }) => {
       setError(null);
       // Explicitly set persistence to local
       await setPersistence(auth, browserLocalPersistence);
-      const result = await signInWithPopup(auth, googleProvider);
-      console.log("Google sign-in successful:", result.user?.email);
       
-      // Check if this is a new user
-      const isFirstSignIn = result?.additionalUserInfo?.isNewUser;
+      // Always use redirect flow (opens new tab) - works reliably on ALL devices
+      console.log('Using redirect flow for Google sign-in');
+      await signInWithRedirect(auth, googleProvider);
+      return null; // Redirect doesn't return immediately
       
-      // Try to create user document
-      try {
-        await createUserDocument(result.user);
-        console.log("User document created after Google sign-in");
-      } catch (docError) {
-        console.error("Failed to create user document after Google sign-in:", docError);
-      }
-      
-      toast.success('Signed in with Google successfully!');
-      
-      // After successful Google sign-in, clear any previous plan choice
-      localStorage.removeItem('chosenPlan');
-      
-      // Check if this is a truly new user
-      const isNewAccount = 
-        isFirstSignIn || 
-        result.user.metadata.creationTime === result.user.metadata.lastSignInTime;
-      
-      // Only set the isNewUser flag for brand new accounts
-      if (isNewAccount) {
-        console.log("Brand new Google account detected, setting isNewUser flag");
-        localStorage.setItem('isNewUser', 'true');
-      } else {
-        console.log("Existing Google account detected, not setting isNewUser flag");
-        // Ensure we clear any existing flag for sign-ins
-        localStorage.removeItem('isNewUser');
-      }
-      
-      return result.user;
     } catch (err) {
       console.error("Google sign-in error:", err);
       if (err.code !== 'auth/popup-closed-by-user') {
