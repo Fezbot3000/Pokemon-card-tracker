@@ -785,7 +785,7 @@ function AppContent({ currentView, setCurrentView }) {
         />
       )}
       
-      <main className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-4 pb-20">
+      <main className="main-content max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
         {/* Settings Modal - Available for all views */}
         {showSettings && !isMobile && (
           <SettingsModal
