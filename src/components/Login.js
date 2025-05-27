@@ -116,7 +116,7 @@ function Login() {
   const handleGoogleSignIn = async () => {
     try {
       await signInWithGoogle();
-      navigate('/dashboard', { replace: true });
+      // Router will handle redirect automatically when auth state changes
     } catch (error) {
       console.error('Google sign in error:', error);
       // Error handling is done in AuthContext
