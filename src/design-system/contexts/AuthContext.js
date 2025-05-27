@@ -70,13 +70,10 @@ export const AuthProvider = ({ children }) => {
 
   // Set up the auth state listener
   useEffect(() => {
-    let redirectHandled = false;
+    let unsubscribe = null;
     
-    // Handle redirect result on page load
+    // Handle redirect result IMMEDIATELY - this can only be called once successfully
     const handleRedirectResult = async () => {
-      if (redirectHandled) return;
-      redirectHandled = true;
-      
       try {
         console.log("Checking for redirect result...");
         const result = await getRedirectResult(auth);
@@ -114,6 +111,10 @@ export const AuthProvider = ({ children }) => {
             // Ensure we clear any existing flag for sign-ins
             localStorage.removeItem('isNewUser');
           }
+          
+          // Set the user immediately after successful redirect
+          setUser(result.user);
+          setLoading(false);
         } else {
           console.log("No redirect result found");
         }
@@ -125,29 +126,24 @@ export const AuthProvider = ({ children }) => {
           toast.error(errorMessage);
         }
       }
+      
+      // Always set up auth state listener after checking redirect
+      unsubscribe = onAuthStateChanged(auth, async (user) => {
+        console.log("Auth state changed:", user?.email || "No user");
+        setUser(user);
+        setLoading(false);
+      });
     };
 
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      console.log("Auth state changed:", user?.email || "No user");
-      
-      if (user) {
-        try {
-          // Set the current user
-          setUser(user);
-        } catch (err) {
-          console.error("Error handling user:", err);
-          setUser(user);
-        }
-      } else {
-        setUser(null);
-      }
-      setLoading(false);
-    });
-
-    // Handle redirect result after setting up auth listener
+    // Call the async function
     handleRedirectResult();
-
-    return unsubscribe;
+    
+    // Return cleanup function
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
   }, []);
 
   // Helper function to create a user document in Firestore
