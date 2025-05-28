@@ -89,7 +89,11 @@ const PurchaseInvoices = () => {
       // New field, set default direction based on field type
       setSortField(field);
       // Default to descending for dates and numbers, ascending for text
-      if (field === 'date' || field === 'timestamp' || field === 'totalAmount' || field === 'cardCount') {
+      if (field === 'totalAmount') {
+        setSortDirection('desc');
+      } else if (field === 'date') {
+        setSortDirection('desc');
+      } else if (field === 'timestamp') {
         setSortDirection('desc');
       } else {
         setSortDirection('asc');
@@ -518,120 +522,198 @@ const PurchaseInvoices = () => {
                 </button>
               </div>
             </div>
-            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-              <thead className="bg-gray-50 dark:bg-black">
-                <tr>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
-                    onClick={() => handleSort('invoiceNumber')}
-                  >
-                    Invoice # {sortField === 'invoiceNumber' && (
-                      <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
-                    )}
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
-                    onClick={() => handleSort('date')}
-                  >
-                    Date {sortField === 'date' && (
-                      <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
-                    )}
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
-                    onClick={() => handleSort('seller')}
-                  >
-                    Seller {sortField === 'seller' && (
-                      <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
-                    )}
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
-                    onClick={() => handleSort('totalAmount')}
-                  >
-                    Total Amount {sortField === 'totalAmount' && (
-                      <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
-                    )}
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
-                    onClick={() => handleSort('cardCount')}
-                  >
-                    # of Cards {sortField === 'cardCount' && (
-                      <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
-                    )}
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-                  >
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white dark:bg-black divide-y divide-gray-200 dark:divide-gray-700">
-                {getSortedInvoices().map((invoice) => (
-                  <tr key={invoice.id}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                      {invoice.invoiceNumber}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                      {formatDate(invoice.date)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                      <div className="max-w-[150px] truncate" title={invoice.seller}>
-                        {invoice.seller}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white text-right">
-                      {formatCurrency(invoice.totalAmount)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                      {invoice.cardCount}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 flex">
-                      <button 
-                        className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors mr-3 p-2"
-                        onClick={() => handleDownloadInvoice(invoice)}
-                        title="Download PDF"
-                      >
-                        <span className="material-icons text-xl">download</span>
-                      </button>
-                      <button 
-                        className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors mr-3 p-2"
-                        onClick={() => handleEditInvoice(invoice)}
-                        title="Edit Invoice"
-                      >
-                        <span className="material-icons text-xl">edit</span>
-                      </button>
-                      <button 
-                        className="text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 transition-colors p-2"
-                        onClick={async () => {
-                          if (window.confirm('Are you sure you want to delete this invoice?')) {
-                            try {
-                              await db.deletePurchaseInvoice(invoice.id);
-                              setInvoices(prev => prev.filter(i => i.id !== invoice.id));
-                              toast.success('Invoice deleted successfully');
-                            } catch (error) {
-                              console.error('Error deleting invoice:', error);
-                              toast.error('Failed to delete invoice');
-                            }
-                          }
-                        }}
-                        title="Delete Invoice"
-                      >
-                        <span className="material-icons text-xl">delete</span>
-                      </button>
-                    </td>
+            
+            {/* Desktop Table View */}
+            <div className="hidden md:block">
+              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead className="bg-gray-50 dark:bg-black">
+                  <tr>
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                      onClick={() => handleSort('invoiceNumber')}
+                    >
+                      Invoice # {sortField === 'invoiceNumber' && (
+                        <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                      )}
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                      onClick={() => handleSort('date')}
+                    >
+                      Date {sortField === 'date' && (
+                        <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                      )}
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                      onClick={() => handleSort('seller')}
+                    >
+                      Seller {sortField === 'seller' && (
+                        <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                      )}
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                      onClick={() => handleSort('totalAmount')}
+                    >
+                      Total Amount {sortField === 'totalAmount' && (
+                        <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                      )}
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                      onClick={() => handleSort('cardCount')}
+                    >
+                      # of Cards {sortField === 'cardCount' && (
+                        <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                      )}
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                    >
+                      Actions
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="bg-white dark:bg-black divide-y divide-gray-200 dark:divide-gray-700">
+                  {getSortedInvoices().map((invoice) => (
+                    <tr key={invoice.id}>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                        {invoice.invoiceNumber}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                        {formatDate(invoice.date)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                        <div className="max-w-[150px] truncate" title={invoice.seller}>
+                          {invoice.seller}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white text-right">
+                        {formatCurrency(invoice.totalAmount)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                        {invoice.cardCount}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 flex">
+                        <button 
+                          className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors mr-3 p-2"
+                          onClick={() => handleDownloadInvoice(invoice)}
+                          title="Download PDF"
+                        >
+                          <span className="material-icons text-xl">download</span>
+                        </button>
+                        <button 
+                          className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors mr-3 p-2"
+                          onClick={() => handleEditInvoice(invoice)}
+                          title="Edit Invoice"
+                        >
+                          <span className="material-icons text-xl">edit</span>
+                        </button>
+                        <button 
+                          className="text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 transition-colors p-2"
+                          onClick={async () => {
+                            if (window.confirm('Are you sure you want to delete this invoice?')) {
+                              try {
+                                await db.deletePurchaseInvoice(invoice.id);
+                                setInvoices(prev => prev.filter(i => i.id !== invoice.id));
+                                toast.success('Invoice deleted successfully');
+                              } catch (error) {
+                                console.error('Error deleting invoice:', error);
+                                toast.error('Failed to delete invoice');
+                              }
+                            }
+                          }}
+                          title="Delete Invoice"
+                        >
+                          <span className="material-icons text-xl">delete</span>
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="md:hidden space-y-4">
+              {getSortedInvoices().map((invoice) => (
+                <div key={invoice.id} className="bg-white/5 dark:bg-white/5 rounded-xl p-4 border border-gray-200/20 dark:border-gray-700/30">
+                  {/* Header with Invoice Number and Date */}
+                  <div className="flex justify-between items-start mb-3">
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-900 dark:text-white">
+                        Invoice #{invoice.invoiceNumber}
+                      </h3>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        {formatDate(invoice.date)}
+                      </p>
+                    </div>
+                    <span className="text-xs bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-full text-gray-600 dark:text-gray-300">
+                      {invoice.cardCount} cards
+                    </span>
+                  </div>
+
+                  {/* Main Content: Seller and Amount */}
+                  <div className="flex justify-between items-center mb-4">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Seller</p>
+                      <p className="text-sm font-medium text-gray-900 dark:text-white truncate" title={invoice.seller}>
+                        {invoice.seller}
+                      </p>
+                    </div>
+                    <div className="text-right ml-4">
+                      <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Amount</p>
+                      <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                        {formatCurrency(invoice.totalAmount)}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex justify-end space-x-2 pt-3 border-t border-gray-200/20 dark:border-gray-700/30">
+                    <button 
+                      className="flex items-center justify-center w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
+                      onClick={() => handleDownloadInvoice(invoice)}
+                      title="Download PDF"
+                    >
+                      <span className="material-icons text-lg">download</span>
+                    </button>
+                    <button 
+                      className="flex items-center justify-center w-10 h-10 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                      onClick={() => handleEditInvoice(invoice)}
+                      title="Edit Invoice"
+                    >
+                      <span className="material-icons text-lg">edit</span>
+                    </button>
+                    <button 
+                      className="flex items-center justify-center w-10 h-10 rounded-lg bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors"
+                      onClick={async () => {
+                        if (window.confirm('Are you sure you want to delete this invoice?')) {
+                          try {
+                            await db.deletePurchaseInvoice(invoice.id);
+                            setInvoices(prev => prev.filter(i => i.id !== invoice.id));
+                            toast.success('Invoice deleted successfully');
+                          } catch (error) {
+                            console.error('Error deleting invoice:', error);
+                            toast.error('Failed to delete invoice');
+                          }
+                        }
+                      }}
+                      title="Delete Invoice"
+                    >
+                      <span className="material-icons text-lg">delete</span>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>

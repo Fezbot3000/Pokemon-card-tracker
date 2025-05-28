@@ -9,7 +9,7 @@ import Icon from './Icon';
  * A wrapper around react-hot-toast to provide consistent styling and API.
  */
 const Toast = ({ 
-  position = 'top-center',
+  position = 'bottom-right',
   reverseOrder = false,
   gutter = 8,
   containerStyle = {},
