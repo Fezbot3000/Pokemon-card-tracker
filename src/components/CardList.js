@@ -1204,8 +1204,7 @@ const CardList = ({
 
       {/* Selected Cards Actions */}
       {selectedCards.size > 0 && (
-        <div className="fixed bottom-[90px] left-0 w-full flex items-center justify-between px-4 py-2 bg-white dark:bg-[#1B2131] sm:border sm:border-gray-200 sm:dark:border-gray-700 z-40 shadow-md">
-
+        <div className="fixed bottom-[90px] left-0 w-full flex items-center justify-between px-4 py-2 bg-white/90 dark:bg-[#1B2131]/90 backdrop-blur-md sm:border sm:border-gray-200 sm:dark:border-gray-700 z-40 shadow-md border-t border-gray-200/50 dark:border-gray-700/50">
           <span className="text-sm sm:text-base text-gray-900 dark:text-white font-medium">{selectedCards.size} selected</span>
           
           <div className="flex items-center gap-3">

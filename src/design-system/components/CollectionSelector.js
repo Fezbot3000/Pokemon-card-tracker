@@ -144,10 +144,10 @@ const CollectionSelector = ({
             <div className="flex-grow overflow-y-auto scrollbar-hide" style={{ maxHeight: 'calc(85vh - 130px)' }}>
               {renderCollectionItems(true)}
             </div>
-            <div className="sticky bottom-0 left-0 right-0 pt-2 mt-2 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1e2130]">
+            <div className="sticky bottom-0 left-0 right-0 pt-2 mt-2 border-t border-gray-700 bg-black">
               <button
                 onClick={() => setIsBottomSheetOpen(false)}
-                className="block w-full text-center px-4 py-3 text-sm rounded-lg bg-[#000] text-gray-300 border border-gray-700 hover:opacity-90 font-semibold mb-2"
+                className="block w-full text-center px-4 py-3 text-sm rounded-lg bg-gray-800 text-gray-300 border border-gray-700 hover:opacity-90 font-semibold mb-2"
               >
                 Cancel
               </button>

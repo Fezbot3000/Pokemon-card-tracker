@@ -1123,7 +1123,7 @@ const SoldItems = () => {
   console.log('Sold Cards:', soldCards.length, 'Display Data:', displayData?.length);
   
   return (
-    <div className="w-full px-2 sm:px-4">
+    <div className="w-full px-2 sm:px-4 pt-[var(--header-total-height-mobile)] sm:pt-[var(--header-total-height-desktop)] pb-20">
       {soldCards.length > 0 ? (
         <div className="space-y-6">
           {/* Summary Statistics */}

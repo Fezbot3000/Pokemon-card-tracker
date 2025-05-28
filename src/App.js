@@ -732,7 +732,14 @@ function AppContent({ currentView, setCurrentView }) {
   // Removed import functionality
 
   if (isLoading) {
-    return null;
+    return (
+      <div className="min-h-screen bg-gray-100 dark:bg-[#0F0F0F] flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#ef4444] mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400">Loading your collections...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -785,7 +792,7 @@ function AppContent({ currentView, setCurrentView }) {
         />
       )}
       
-      <main className="main-content max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
+      <main className="main-content mobile-dashboard max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
         {/* Settings Modal - Available for all views */}
         {showSettings && !isMobile && (
           <SettingsModal
@@ -860,6 +867,15 @@ function AppContent({ currentView, setCurrentView }) {
                       }}
                     />
                   )}
+                  
+                  {/* Floating Add Button - Mobile Only */}
+                  <button
+                    onClick={() => openNewCardForm()}
+                    className="sm:hidden fixed bottom-20 right-4 z-50 w-16 h-16 bg-[#ef4444] hover:bg-[#dc2626] text-white rounded-full shadow-xl border-4 border-white dark:border-gray-800 flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95"
+                    aria-label="Add new card"
+                  >
+                    <span className="material-icons text-3xl font-bold">add</span>
+                  </button>
                 </>
               ) : (
                 <></>

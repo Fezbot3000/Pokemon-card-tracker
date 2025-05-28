@@ -437,7 +437,7 @@ const PurchaseInvoices = () => {
   }, [currentUser]);
 
   return (
-    <div className="w-full px-1 sm:px-2 pb-20">
+    <div className="w-full px-1 sm:px-2 pb-20 pt-[var(--header-total-height-mobile)] sm:pt-[var(--header-total-height-desktop)]">
       {/* Statistics Summary */}
       {!loading && invoices.length > 0 && (
         <div className="mb-6">
@@ -448,7 +448,7 @@ const PurchaseInvoices = () => {
         </div>
       )}
       
-      <div className="bg-white dark:bg-[#1B2131] rounded-xl shadow-md p-6">
+      <div className="bg-white dark:bg-black rounded-xl shadow-md p-6">
         
         {loading ? (
           <div className="flex justify-center items-center py-12">
@@ -468,8 +468,8 @@ const PurchaseInvoices = () => {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <div className="flex flex-col sm:flex-row justify-between items-center mb-4 gap-4">
-              <div className="w-full sm:w-1/2">
+            <div className="flex flex-col gap-4 mb-4">
+              <div className="w-full">
                 <div className="relative">
                   <input
                     type="text"
@@ -478,7 +478,7 @@ const PurchaseInvoices = () => {
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full px-4 py-2 pl-10 rounded-lg 
                             border border-gray-200 dark:border-gray-700/50 
-                            bg-white dark:bg-[#000000] text-gray-900 dark:text-white
+                            bg-white dark:bg-black text-gray-900 dark:text-white
                             focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary
                             placeholder-gray-500 dark:placeholder-gray-400"
                   />
@@ -491,7 +491,7 @@ const PurchaseInvoices = () => {
                 </div>
               </div>
               
-              <div className="flex gap-2 items-center">
+              <div className="flex flex-col sm:flex-row gap-2 w-full">
                 {isGeneratingBatch ? (
                   <div className="px-4 py-2 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 flex items-center gap-2">
                     <span className="material-icons animate-spin">autorenew</span>
@@ -500,7 +500,7 @@ const PurchaseInvoices = () => {
                   </div>
                 ) : (
                   <button
-                    className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 text-sm whitespace-nowrap"
+                    className="w-full sm:w-auto px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 text-sm"
                     onClick={handleServerBatchGeneration}
                     disabled={invoices.length === 0}
                     title="Generate PDF invoices for all items"
@@ -510,7 +510,7 @@ const PurchaseInvoices = () => {
                   </button>
                 )}
                 <button
-                  className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 text-sm whitespace-nowrap"
+                  className="w-full sm:w-auto px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 text-sm"
                   onClick={() => setShowCreateModal(true)}
                 >
                   <span className="material-icons text-base">add</span>
@@ -519,7 +519,7 @@ const PurchaseInvoices = () => {
               </div>
             </div>
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-              <thead className="bg-gray-50 dark:bg-[#000000]">
+              <thead className="bg-gray-50 dark:bg-black">
                 <tr>
                   <th
                     scope="col"
@@ -532,7 +532,7 @@ const PurchaseInvoices = () => {
                   </th>
                   <th
                     scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 dark:bg-[#000000]"
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
                     onClick={() => handleSort('date')}
                   >
                     Date {sortField === 'date' && (
@@ -574,7 +574,7 @@ const PurchaseInvoices = () => {
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white dark:bg-[#1B2131] divide-y divide-gray-200 dark:divide-gray-700">
+              <tbody className="bg-white dark:bg-black divide-y divide-gray-200 dark:divide-gray-700">
                 {getSortedInvoices().map((invoice) => (
                   <tr key={invoice.id}>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">

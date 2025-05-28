@@ -11,6 +11,7 @@ import CollectionManagement from './settings/CollectionManagement';
 import SubscriptionManagement from './SubscriptionManagement';
 import MarketplaceProfile from './settings/MarketplaceProfile';
 import MarketplaceReviews from './settings/MarketplaceReviews';
+import db from '../services/firestore/dbAdapter';
 
 const Settings = () => {
   const navigate = useNavigate();
@@ -20,6 +21,9 @@ const Settings = () => {
   const { subscriptionStatus } = useSubscription() || {};
   
   const [activeTab, setActiveTab] = useState('general');
+  const [collections, setCollections] = useState({});
+  const [collectionToRename, setCollectionToRename] = useState('');
+  const [collectionToDelete, setCollectionToDelete] = useState('');
   const [profile, setProfile] = useState({
     firstName: userData?.firstName || '',
     lastName: userData?.lastName || '',
@@ -29,6 +33,22 @@ const Settings = () => {
   });
 
   const isDarkMode = theme === 'dark';
+
+  // Load collections on component mount
+  useEffect(() => {
+    const loadCollections = async () => {
+      try {
+        const savedCollections = await db.getCollections();
+        if (savedCollections && typeof savedCollections === 'object') {
+          setCollections(savedCollections);
+        }
+      } catch (error) {
+        console.error('Error loading collections:', error);
+      }
+    };
+    
+    loadCollections();
+  }, []);
 
   const tabs = [
     { id: 'general', label: 'General', icon: 'settings' },
@@ -73,14 +93,57 @@ const Settings = () => {
     toastService.info('Tutorial functionality coming soon');
   };
 
+  const handleStartRenaming = () => {
+    if (collectionToRename) {
+      const newName = prompt(`Enter new name for "${collectionToRename}":`);
+      if (newName && newName.trim() && newName !== collectionToRename) {
+        handleRenameCollection(collectionToRename, newName.trim());
+      }
+    }
+  };
+
+  const handleRenameCollection = async (oldName, newName) => {
+    try {
+      // Update collections object
+      const updatedCollections = { ...collections };
+      updatedCollections[newName] = updatedCollections[oldName];
+      delete updatedCollections[oldName];
+      
+      // Save to database
+      await db.saveCollections(updatedCollections);
+      setCollections(updatedCollections);
+      setCollectionToRename('');
+      toastService.success(`Collection renamed from "${oldName}" to "${newName}"`);
+    } catch (error) {
+      console.error('Error renaming collection:', error);
+      toastService.error('Failed to rename collection');
+    }
+  };
+
+  const handleDeleteCollection = async (collectionName) => {
+    try {
+      const updatedCollections = { ...collections };
+      delete updatedCollections[collectionName];
+      
+      // Save to database
+      await db.saveCollections(updatedCollections);
+      setCollections(updatedCollections);
+      setCollectionToDelete('');
+      toastService.success(`Collection "${collectionName}" deleted successfully`);
+    } catch (error) {
+      console.error('Error deleting collection:', error);
+      toastService.error('Failed to delete collection');
+    }
+  };
+
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#0F1419]">
+    <div className="min-h-screen bg-white dark:bg-black">
       {/* Tab Navigation */}
-      <div className="header-responsive fixed top-0 left-0 right-0 z-50 bg-white dark:bg-[#1B2131] border-b border-gray-200 dark:border-gray-700 lg:sticky lg:top-0 lg:z-10">
+      <div className="header-responsive fixed top-0 left-0 right-0 z-50 bg-white dark:bg-black border-b border-gray-200 dark:border-gray-700 lg:sticky lg:top-0 lg:z-10">
         <div className="flex justify-center items-center space-x-1 px-4 h-full">
           {tabs.map(tab => (
             <button
@@ -107,11 +170,11 @@ const Settings = () => {
       </div>
 
       {/* Tab Content */}
-      <div className="content-with-header p-4 space-y-4 mb-20 sm:mb-4">
+      <div className="pt-[var(--header-total-height-mobile)] pb-[calc(4rem+env(safe-area-inset-bottom,0px))] px-4 lg:pt-[var(--header-total-height-desktop)] lg:pb-4 mt-4">
         {activeTab === 'general' && (
           <div className="space-y-6">
             {/* Appearance */}
-            <div className="bg-white dark:bg-[#1B2131] rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+            <div className="bg-white dark:bg-black border border-gray-200 dark:border-gray-700 rounded-lg p-6">
               <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Appearance</h3>
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Choose your preferred light or dark theme.</p>
               
@@ -155,7 +218,7 @@ const Settings = () => {
             </div>
 
             {/* Application Settings */}
-            <div className="bg-white dark:bg-[#1B2131] rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+            <div className="bg-white dark:bg-black border border-gray-200 dark:border-gray-700 rounded-lg p-6">
               <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Application Settings</h3>
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Configure general application settings.</p>
               
@@ -164,7 +227,7 @@ const Settings = () => {
                   onClick={startTutorial}
                   className="w-full py-3 px-4 bg-gray-100 dark:bg-[#2A3441] text-gray-900 dark:text-white rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-[#3A4551] transition-colors flex items-center justify-center"
                 >
-                  <span className="mr-2">❓</span>
+                  <span className="material-icons mr-2">school</span>
                   Start Tutorial
                 </button>
 
@@ -193,10 +256,19 @@ const Settings = () => {
             </div>
 
             {/* Manage Collections */}
-            <div className="bg-white dark:bg-[#1B2131] rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+            <div className="bg-white dark:bg-black border border-gray-200 dark:border-gray-700 rounded-lg p-6">
               <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Manage Collections</h3>
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Rename or delete your card collections.</p>
-              <CollectionManagement />
+              <CollectionManagement 
+                collections={collections}
+                collectionToRename={collectionToRename}
+                setCollectionToRename={setCollectionToRename}
+                collectionToDelete={collectionToDelete}
+                setCollectionToDelete={setCollectionToDelete}
+                onStartRenaming={handleStartRenaming}
+                onDeleteCollection={handleDeleteCollection}
+                isDarkMode={isDarkMode}
+              />
             </div>
           </div>
         )}
@@ -204,7 +276,7 @@ const Settings = () => {
         {activeTab === 'account' && (
           <div className="space-y-6">
             {/* Sign Out */}
-            <div className="bg-white dark:bg-[#1B2131] rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+            <div className="bg-white dark:bg-black border border-gray-200 dark:border-gray-700 rounded-lg p-6">
               <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Sign Out</h3>
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Sign out of your account and return to the login screen.</p>
               
@@ -230,7 +302,7 @@ const Settings = () => {
             </div>
 
             {/* Personal Information */}
-            <div className="bg-white dark:bg-[#1B2131] rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+            <div className="bg-white dark:bg-black border border-gray-200 dark:border-gray-700 rounded-lg p-6">
               <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Personal Information</h3>
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Update your personal information and profile settings.</p>
               
@@ -299,14 +371,14 @@ const Settings = () => {
             </div>
 
             {/* Subscription Management */}
-            <div className="bg-white dark:bg-[#1B2131] rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+            <div className="bg-white dark:bg-black border border-gray-200 dark:border-gray-700 rounded-lg p-6">
               <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Subscription Management</h3>
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Manage your Stripe subscription and billing information.</p>
               <SubscriptionManagement />
             </div>
 
             {/* Reset All Data */}
-            <div className="bg-white dark:bg-[#1B2131] rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+            <div className="bg-white dark:bg-black border border-red-200 dark:border-red-800 rounded-lg p-6">
               <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Reset All Data</h3>
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Permanently delete all your data from both local storage and the cloud.</p>
               
@@ -330,14 +402,14 @@ const Settings = () => {
         {activeTab === 'marketplace' && (
           <div className="space-y-6">
             {/* Marketplace Profile */}
-            <div className="bg-white dark:bg-[#1B2131] rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+            <div className="bg-white dark:bg-black border border-gray-200 dark:border-gray-700 rounded-lg p-6">
               <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Marketplace Profile</h3>
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Manage your marketplace profile and seller information.</p>
               <MarketplaceProfile />
             </div>
             
             {/* My Reviews */}
-            <div className="bg-white dark:bg-[#1B2131] rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+            <div className="bg-white dark:bg-black border border-gray-200 dark:border-gray-700 rounded-lg p-6">
               <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">My Reviews</h3>
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">View and manage your marketplace reviews and ratings.</p>
               <MarketplaceReviews />

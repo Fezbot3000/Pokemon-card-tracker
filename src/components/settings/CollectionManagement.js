@@ -6,7 +6,7 @@ import { Button, Icon, SettingsPanel, ConfirmDialog } from '../../design-system'
  * Handles renaming and deleting collections
  */
 const CollectionManagement = ({
-  collections = [],
+  collections = {},
   collectionToRename,
   setCollectionToRename,
   collectionToDelete,
@@ -15,6 +15,8 @@ const CollectionManagement = ({
   onDeleteCollection,
   isDarkMode
 }) => {
+  const collectionNames = Object.keys(collections);
+
   const handleDeleteConfirm = () => {
     if (onDeleteCollection && collectionToDelete) {
       onDeleteCollection(collectionToDelete);
@@ -70,18 +72,9 @@ const CollectionManagement = ({
                 onChange={(e) => setCollectionToRename(e.target.value)}
               >
                 <option value="" disabled>Select Collection...</option>
-                {Array.isArray(collections) 
-                  ? collections.filter(name => name !== 'All Cards').map((collection) => (
-                      <option key={collection} value={collection}>
-                        {collection}
-                      </option>
-                    ))
-                  : Object.keys(collections).filter(name => name !== 'All Cards' && name !== 'Sold').map((collection) => (
-                      <option key={collection} value={collection}>
-                        {collection}
-                      </option>
-                    ))
-                }
+                {collectionNames.map(name => (
+                  <option key={name} value={name}>{name}</option>
+                ))}
               </select>
               <Button
                 variant="primary"
@@ -112,18 +105,9 @@ const CollectionManagement = ({
                 onChange={(e) => setCollectionToDelete(e.target.value)}
               >
                 <option value="" disabled>Select Collection...</option>
-                {Array.isArray(collections) 
-                  ? collections.filter(name => name !== 'All Cards').map((collection) => (
-                      <option key={collection} value={collection}>
-                        {collection}
-                      </option>
-                    ))
-                  : Object.keys(collections).filter(name => name !== 'All Cards' && name !== 'Sold').map((collection) => (
-                      <option key={collection} value={collection}>
-                        {collection}
-                      </option>
-                    ))
-                }
+                {collectionNames.map(name => (
+                  <option key={name} value={name}>{name}</option>
+                ))}
               </select>
               <Button
                 variant="danger"

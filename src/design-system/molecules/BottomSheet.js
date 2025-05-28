@@ -40,13 +40,13 @@ const BottomSheet = ({ isOpen, onClose, title, children }) => {
   return (
     // Backdrop
     <div 
-      className="fixed inset-0 z-[1000] bg-black bg-opacity-30"
+      className="fixed inset-0 z-[1000] bg-black/50 backdrop-blur-sm"
       onClick={onClose}
     >
       {/* Sheet Content */}
       <div 
         ref={sheetRef}
-        className="fixed bottom-0 left-0 right-0 w-full bg-white dark:bg-[#1e2130] rounded-t-xl shadow-xl transform transition-transform duration-500 ease-out pt-3 px-3 z-[1001]"
+        className="fixed bottom-0 left-0 right-0 w-full bg-black dark:bg-black rounded-t-xl shadow-xl transform transition-transform duration-500 ease-out pt-3 px-3 z-[1001]"
         style={{ 
           maxHeight: '90vh',
           transform: isVisible ? 'translateY(0)' : 'translateY(100%)',

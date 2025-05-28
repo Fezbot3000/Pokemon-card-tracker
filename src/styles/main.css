@@ -672,3 +672,16 @@ html.dark body {
     padding-top: var(--header-total-height-desktop);
   }
 }
+
+/* Mobile dashboard without header - reduced top margin */
+.main-content.mobile-dashboard {
+  padding-top: calc(var(--safe-area-top) + 1rem);
+  padding-bottom: calc(5rem + var(--safe-area-bottom)); /* Bottom nav + safe area */
+}
+
+@media (min-width: 640px) {
+  .main-content.mobile-dashboard {
+    padding-top: var(--header-total-height-desktop);
+    padding-bottom: 1rem; /* No bottom nav on desktop */
+  }
+}
