@@ -409,7 +409,7 @@ function MarketplaceSelling({ currentView, onViewChange }) {
   };
 
   return (
-    <div className="p-4 sm:p-6 pb-20"> 
+    <div className="p-4 sm:p-6 pb-20 pt-16 sm:pt-4"> 
       <MarketplaceNavigation currentView={currentView} onViewChange={onViewChange} />
       
       {/* Search and Filter Component */}

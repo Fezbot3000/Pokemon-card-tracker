@@ -1123,7 +1123,7 @@ const SoldItems = () => {
   console.log('Sold Cards:', soldCards.length, 'Display Data:', displayData?.length);
   
   return (
-    <div className="p-4 sm:p-6 pb-20">
+    <div className="p-4 sm:p-6 pb-20 pt-16 sm:pt-4">
       {soldCards.length > 0 ? (
         <div className="space-y-6">
           {/* Summary Statistics */}
