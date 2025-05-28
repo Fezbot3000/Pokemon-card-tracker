@@ -110,13 +110,14 @@ service cloud.firestore {
     }
     
     // --- Marketplace Items ---
-    // All authenticated users can read marketplace listings
-    // Only the owner of a listing can modify or delete it
+    // All users (including unauthenticated) can read marketplace listings for public SEO page
+    // Only authenticated users can create/modify listings
     match /marketplaceItems/{listingId} {
-      // Allow any authenticated user to read marketplace listings
-      allow read: if request.auth != null;
+      // Allow anyone (including unauthenticated users) to read marketplace listings
+      // This enables the public marketplace page for SEO purposes
+      allow read: if true;
       
-      // Allow creation of new listings by authenticated users
+      // Allow creation of new listings by authenticated users only
       allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
       
       // Allow updates and deletes only by the listing owner

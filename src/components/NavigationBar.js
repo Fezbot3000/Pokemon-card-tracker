@@ -25,6 +25,15 @@ function NavigationBar() {
             Login
           </NavLink>
           <NavLink 
+            to="/marketplace" 
+            className={({ isActive }) => 
+              `px-5 py-3 text-sm font-medium text-white hover:bg-white/10 transition-colors 
+               ${isActive ? 'bg-white/20' : ''}`
+            }
+          >
+            Marketplace
+          </NavLink>
+          <NavLink 
             to="/pricing" 
             className={({ isActive }) => 
               `px-5 py-3 text-sm font-medium text-white hover:bg-white/10 transition-colors rounded-r-xl 

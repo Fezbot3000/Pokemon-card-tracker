@@ -25,6 +25,7 @@ const LoginModal = ({
   initialEmail = '',
   isLoading = false,
   showModal = true, // Controls if we show a modal or full page
+  backdropClassName, // Custom backdrop styling
 }) => {
   const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState('');
@@ -202,18 +203,33 @@ const LoginModal = ({
   // If we're showing a modal, we'll wrap this in the modal component
   // If not, we'll just return the content directly
   return showModal ? (
-    <div className={`fixed inset-0 z-50 flex items-center justify-center ${isOpen ? '' : 'hidden'}`}>
-      {/* Backdrop */}
+    isOpen && (
       <div 
-        className="fixed inset-0 bg-gradient-to-r from-[#9C2792] to-[#E84545] opacity-100" 
-        onClick={onClose}
-      ></div>
-      
-      {/* Modal */}
-      <div className="relative z-10 w-full max-w-md mx-auto">
-        {content}
+        className="fixed inset-0 z-50 flex items-center justify-center"
+        style={{
+          animation: 'fadeIn 0.3s ease-out forwards'
+        }}
+      >
+        {/* Backdrop */}
+        <div 
+          className={`${backdropClassName || "fixed inset-0 bg-gradient-to-r from-[#9C2792] to-[#E84545]"}`}
+          onClick={onClose}
+          style={{
+            animation: 'fadeIn 0.3s ease-out forwards'
+          }}
+        ></div>
+        
+        {/* Modal */}
+        <div 
+          className="relative z-10 w-full max-w-md mx-auto"
+          style={{
+            animation: 'modalSlideIn 0.3s ease-out forwards'
+          }}
+        >
+          {content}
+        </div>
       </div>
-    </div>
+    )
   ) : content;
 };
 
@@ -238,6 +254,8 @@ LoginModal.propTypes = {
   isLoading: PropTypes.bool,
   /** Controls whether to render as a modal or just the content */
   showModal: PropTypes.bool,
+  /** Custom backdrop styling */
+  backdropClassName: PropTypes.string,
 };
 
 export default LoginModal;

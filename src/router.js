@@ -29,6 +29,7 @@ import DashboardPricing from './components/DashboardPricing';
 import PremiumFeatures from './components/PremiumFeatures';
 import ComponentLibrary from './pages/ComponentLibrary';
 import MarketplaceListing from './components/Marketplace/MarketplaceListing';
+import PublicMarketplace from './components/PublicMarketplace';
 
 // Root providers wrapper component
 export const RootProviders = () => (
@@ -44,7 +45,7 @@ export const RootProviders = () => (
                   <RestoreProgressBar />
                   <InvoiceProvider>
                     <Toast
-                      position="top-center"
+                      position="bottom-right"
                       toastOptions={{
                         duration: 3000,
                         style: {
@@ -156,6 +157,10 @@ export const router = createBrowserRouter([
       {
         path: 'pokemon-investment-guide',
         element: <PokemonInvestmentGuide />,
+      },
+      {
+        path: 'marketplace',
+        element: <PublicMarketplace />,
       },
       {
         path: 'marketplace/listing/:listingId',

@@ -13,6 +13,10 @@
   animation: modalScaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
+.animate-modal-enter {
+  animation: modalScaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
 .animate-modal-exit {
   animation: modalExit 0.2s ease-in forwards;
 }
@@ -86,5 +90,27 @@
   to {
     opacity: 0;
     transform: translateX(30px);
+  }
+}
+
+/* Simple fade in animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Modal slide in from bottom with scale */
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
