@@ -599,7 +599,7 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-5rem)] pt-16 sm:pt-20 p-4 sm:p-6">
+    <div className="flex flex-col h-[calc(100vh-5rem)] p-4 sm:p-6 pb-20">
       <MarketplaceNavigation currentView={currentView} onViewChange={onViewChange} />
       <div className="flex flex-1 overflow-hidden -mx-4 sm:-mx-6">
       {/* Chat list - 1/3 width on desktop */}

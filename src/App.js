@@ -792,7 +792,7 @@ function AppContent({ currentView, setCurrentView }) {
         />
       )}
       
-      <main className="main-content mobile-dashboard max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
+      <main className="main-content mobile-dashboard max-w-[1920px] mx-auto">
         {/* Settings Modal - Available for all views */}
         {showSettings && !isMobile && (
           <SettingsModal
@@ -828,7 +828,7 @@ function AppContent({ currentView, setCurrentView }) {
             <div className={`${selectedCard ? 'hidden lg:block' : ''}`}>
               {/* Show cards when settings is not selected */}
               {!showSettings ? (
-                <>
+                <div className="p-4 sm:p-6 pb-20">
                   {/* Card List */}
                   {cards.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-full">
@@ -876,7 +876,7 @@ function AppContent({ currentView, setCurrentView }) {
                   >
                     <span className="material-icons text-3xl font-bold">add</span>
                   </button>
-                </>
+                </div>
               ) : (
                 <></>
               )}

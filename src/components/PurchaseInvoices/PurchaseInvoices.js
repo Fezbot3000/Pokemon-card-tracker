@@ -437,7 +437,7 @@ const PurchaseInvoices = () => {
   }, [currentUser]);
 
   return (
-    <div className="w-full px-1 sm:px-2 pb-20 pt-[var(--header-total-height-mobile)] sm:pt-[var(--header-total-height-desktop)]">
+    <div className="p-4 sm:p-6 pb-20">
       {/* Statistics Summary */}
       {!loading && invoices.length > 0 && (
         <div className="mb-6">
@@ -448,7 +448,7 @@ const PurchaseInvoices = () => {
         </div>
       )}
       
-      <div className="bg-white dark:bg-black rounded-xl shadow-md p-6">
+      <div className="bg-white dark:bg-black rounded-xl shadow-md">
         
         {loading ? (
           <div className="flex justify-center items-center py-12">
