@@ -3,11 +3,11 @@ import ReactDOM from 'react-dom';
 import { useTheme, SoldItemsView, Icon, StatisticsSummary } from '../../design-system'; 
 import { formatCondensed } from '../../utils/formatters';
 import db from '../../services/firestore/dbAdapter';
-import { PDFDownloadLink } from '@react-pdf/renderer';
+import { PDFDownloadLink, pdf } from '@react-pdf/renderer';
 import InvoicePDF from '../InvoicePDF';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../../design-system';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db as firestoreDb, storage } from '../../services/firebase';
 import { ref, getDownloadURL } from 'firebase/storage';
 import logger from '../../utils/logger';
@@ -83,6 +83,7 @@ const SoldItems = () => {
   const [expandedInvoices, setExpandedInvoices] = useState(new Set());
   const [expandedBuyers, setExpandedBuyers] = useState(new Set());
   const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
   
   // Initialize all invoices as expanded by default when soldCards change
   useEffect(() => {
@@ -194,18 +195,104 @@ const SoldItems = () => {
   }, [soldCards, user]);
 
   // Load profile data
-  useEffect(() => {
-    const loadProfile = async () => {
-      try {
-        const profileData = await db.getProfile();
-        setProfile(profileData);
-      } catch (error) {
-        console.error('Error loading profile:', error);
+  const loadProfile = async () => {
+    try {
+      // Try Firestore first if online
+      if (user && user.uid && navigator.onLine) {
+        const profileRef = doc(firestoreDb, 'users', user.uid);
+        const profileDoc = await getDoc(profileRef);
+        
+        if (profileDoc.exists()) {
+          const firestoreProfile = profileDoc.data();
+          setProfile(firestoreProfile);
+          
+          // Save to IndexedDB in the background
+          db.saveProfile(firestoreProfile).catch(console.error);
+          return;
+        }
       }
-    };
+      
+      // Fall back to IndexedDB
+      const userProfile = await db.getProfile();
+      if (userProfile) {
+        setProfile(userProfile);
+      }
+    } catch (error) {
+      console.error('Error loading profile:', error);
+    }
+  };
 
-    loadProfile();
-  }, []);
+  // Load profile when user changes
+  useEffect(() => {
+    if (user) {
+      loadProfile();
+    }
+  }, [user]);
+
+  // Handle downloading a sold invoice as PDF
+  const handleDownloadInvoice = async (buyer, invoice) => {
+    try {
+      toast.loading('Generating PDF...', { id: 'pdf-download' });
+      
+      // Safely format the date for filename and display
+      let dateString = 'unknown-date';
+      let displayDate = 'Unknown Date';
+      
+      if (invoice.date) {
+        if (typeof invoice.date === 'string') {
+          dateString = invoice.date.replace(/\//g, '-');
+          displayDate = invoice.date;
+        } else if (invoice.date instanceof Date) {
+          dateString = invoice.date.toISOString().split('T')[0];
+          displayDate = invoice.date.toLocaleDateString();
+        } else if (invoice.date && typeof invoice.date === 'object' && invoice.date.seconds) {
+          // Handle Firestore Timestamp
+          const firestoreDate = new Date(invoice.date.seconds * 1000);
+          dateString = firestoreDate.toISOString().split('T')[0];
+          displayDate = firestoreDate.toLocaleDateString();
+        } else {
+          dateString = String(invoice.date).replace(/\//g, '-');
+          displayDate = String(invoice.date);
+        }
+      }
+      
+      // Create a unique filename for the invoice
+      const fileName = `sold-invoice-${buyer.replace(/\s+/g, '-')}-${dateString}.pdf`;
+      
+      // Create the PDF document
+      const pdfDocument = (
+        <InvoicePDF 
+          buyer={buyer}
+          date={displayDate}
+          cards={invoice.cards || []}
+          invoiceId={`SOLD-${Date.now()}`}
+          profile={profile}
+        />
+      );
+      
+      // Generate the PDF blob
+      const pdfBlob = await pdf(pdfDocument).toBlob();
+      
+      // Create a download link and trigger it
+      const fileURL = URL.createObjectURL(pdfBlob);
+      const link = document.createElement('a');
+      link.href = fileURL;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      
+      // Clean up
+      setTimeout(() => {
+        URL.revokeObjectURL(fileURL);
+        document.body.removeChild(link);
+      }, 100);
+      
+      toast.success('Invoice downloaded successfully', { id: 'pdf-download' });
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast.error('Error generating PDF', { id: 'pdf-download' });
+    }
+  };
 
   // Load sold cards from IndexedDB and Firestore
   useEffect(() => {
@@ -1107,6 +1194,17 @@ const SoldItems = () => {
     }
   };
 
+  const filteredInvoices = useMemo(() => {
+    if (!searchQuery.trim()) return Object.entries(invoiceTotals);
+    
+    const query = searchQuery.toLowerCase();
+    return Object.entries(invoiceTotals).filter(([buyer, invoice]) => {
+      return buyer.toLowerCase().includes(query) ||
+             formatDateSafely(invoice.date).toLowerCase().includes(query) ||
+             formatUserCurrency(invoice.totalProfit, preferredCurrency.code).toLowerCase().includes(query);
+    });
+  }, [invoiceTotals, searchQuery, preferredCurrency.code]);
+
   if (isLoading) {
     return (
       <div className="text-center py-8 sm:py-12">
@@ -1117,118 +1215,322 @@ const SoldItems = () => {
     );
   }
 
-  // Continue with the rest of the component
-  
-  // For debugging - log the state
-  console.log('Sold Cards:', soldCards.length, 'Display Data:', displayData?.length);
-  
   return (
     <div className="p-4 sm:p-6 pb-20 pt-16 sm:pt-4">
-      {soldCards.length > 0 ? (
-        <div className="space-y-6">
-          {/* Summary Statistics */}
+      {/* Statistics Summary */}
+      {soldCards.length > 0 && (
+        <div className="mb-6">
           <StatisticsSummary statistics={formattedStatistics} />
-          {/* Invoices */}
-          {Object.entries(invoiceTotals).map(([buyer, invoice]) => (
-            <div key={buyer} className="bg-white dark:bg-black rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-              {/* Invoice header - clickable accordion */}
-              <div 
-                className="p-4 bg-gray-50 dark:bg-gray-900 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                onClick={() => setExpandedBuyers(prev => {
-                  const newSet = new Set(prev);
-                  if (newSet.has(buyer)) {
-                    newSet.delete(buyer);
-                  } else {
-                    newSet.add(buyer);
-                  }
-                  return newSet;
-                })}
-              >
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-3">
-                    <Icon 
-                      name={expandedBuyers.has(buyer) ? "expand_less" : "expand_more"} 
-                      className="text-gray-400 dark:text-gray-500"
-                    />
-                    <div>
-                      <h3 className="text-base font-semibold text-gray-900 dark:text-white">
-                        Sold to: {buyer}
-                      </h3>
-                      <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400 mt-1">
-                        <span>Date: {formatDateSafely(invoice.date)}</span>
-                        <span>Cards: {invoice.cards.length}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-6">
-                    {/* Financial summary - Desktop */}
-                    <div className="hidden sm:flex items-center gap-6">
-                      <div className="text-right">
-                        <div className="text-xs text-gray-500 dark:text-gray-400 uppercase">Investment</div>
-                        <div className="text-base font-medium text-gray-900 dark:text-white">
-                          {formatUserCurrency(invoice.totalInvestment, preferredCurrency.code)}
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-xs text-gray-500 dark:text-gray-400 uppercase">Sold for</div>
-                        <div className="text-base font-medium text-gray-900 dark:text-white">
-                          {formatUserCurrency(invoice.totalSale, preferredCurrency.code)}
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-xs text-gray-500 dark:text-gray-400 uppercase">Profit</div>
-                        <div className={`text-base font-medium ${invoice.totalProfit >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                          {formatUserCurrency(invoice.totalProfit, preferredCurrency.code)}
-                        </div>
-                      </div>
-                    </div>
-                    {/* Mobile - show only profit */}
-                    <div className="flex sm:hidden text-right">
-                      <div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400 uppercase">Profit</div>
-                        <div className={`text-base font-medium ${invoice.totalProfit >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                          {formatUserCurrency(invoice.totalProfit, preferredCurrency.code)}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              {/* Card list - only shown when expanded */}
-              {expandedBuyers.has(buyer) && (
-                <div className="divide-y divide-gray-200 dark:divide-gray-700">
-                  {invoice.cards.map((card, index) => (
-                    <div key={card.id || card.slabSerial || index} className="p-4">
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <h4 className="font-medium">{card.name || card.card || card.cardName || 'Unnamed Card'}</h4>
-                          <p className="text-sm text-gray-600 dark:text-gray-400">{card.set || card.setName || 'Unknown Set'}</p>
-                          {card.grade && <p className="text-sm text-gray-600 dark:text-gray-400">Grade: {card.grade}</p>}
-                        </div>
-                        <div className="text-right">
-                          <p className="text-sm">Investment: {formatUserCurrency(convertToUserCurrency(parseFloat(card.originalInvestmentAmount || card.investmentAUD || card.investment || 0), card.originalInvestmentCurrency || 'AUD'), preferredCurrency.code)}</p>
-                          <p className="text-sm">Sold for: {formatUserCurrency(convertToUserCurrency(parseFloat(card.soldPrice || card.soldAmount || card.finalValueAUD || card.currentValueAUD || 0), card.originalCurrentValueCurrency || 'AUD'), preferredCurrency.code)}</p>
-                          <p className={`text-sm font-medium ${(convertToUserCurrency(parseFloat(card.soldPrice || card.soldAmount || card.finalValueAUD || card.currentValueAUD || 0), card.originalCurrentValueCurrency || 'AUD') - convertToUserCurrency(parseFloat(card.originalInvestmentAmount || card.investmentAUD || card.investment || 0), card.originalInvestmentCurrency || 'AUD')) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                            {formatUserCurrency((convertToUserCurrency(parseFloat(card.soldPrice || card.soldAmount || card.finalValueAUD || card.currentValueAUD || 0), card.originalCurrentValueCurrency || 'AUD') - convertToUserCurrency(parseFloat(card.originalInvestmentAmount || card.investmentAUD || card.investment || 0), card.originalInvestmentCurrency || 'AUD')), preferredCurrency.code)}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="text-center py-8 sm:py-12">
-          <span className="material-icons text-4xl sm:text-5xl mb-3 sm:mb-4 text-gray-400 dark:text-gray-600">inventory_2</span>
-          <h3 className="text-sm sm:text-base font-medium text-gray-900 dark:text-white mb-1 sm:mb-2">No sold cards found</h3>
-          <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-6">When you sell cards from your collection, they will appear here.</p>
         </div>
       )}
+      
+      <div className="bg-white dark:bg-black rounded-xl shadow-md">
+        {soldCards.length > 0 ? (
+          <div className="overflow-x-auto">
+            <div className="flex flex-col gap-4 mb-4 p-4 sm:p-6">
+              <div className="w-full">
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Search sold items..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full px-4 py-2 pl-10 rounded-lg 
+                            border border-gray-200 dark:border-gray-700/50 
+                            bg-white dark:bg-black text-gray-900 dark:text-white
+                            focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary
+                            placeholder-gray-500 dark:placeholder-gray-400"
+                  />
+                  <span className="material-icons absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                    search
+                  </span>
+                </div>
+                <div className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                  {filteredInvoices.length} of {Object.keys(invoiceTotals).length} {Object.keys(invoiceTotals).length === 1 ? 'sale' : 'sales'} found
+                </div>
+              </div>
+            </div>
+            
+            {/* Desktop Table View */}
+            <div className="hidden md:block">
+              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead className="bg-gray-50 dark:bg-black">
+                  <tr>
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                    >
+                      Buyer
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                    >
+                      Date
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                    >
+                      Investment
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                    >
+                      Sold For
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                    >
+                      Profit
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                    >
+                      # of Cards
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                    >
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white dark:bg-black divide-y divide-gray-200 dark:divide-gray-700">
+                  {filteredInvoices.map(([buyer, invoice]) => (
+                    <React.Fragment key={buyer}>
+                      <tr>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                          <div className="max-w-[150px] truncate" title={buyer}>
+                            {buyer}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                          {formatDateSafely(invoice.date)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white text-right">
+                          {formatUserCurrency(invoice.totalInvestment, preferredCurrency.code)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white text-right">
+                          {formatUserCurrency(invoice.totalSale, preferredCurrency.code)}
+                        </td>
+                        <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium text-right ${invoice.totalProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {formatUserCurrency(invoice.totalProfit, preferredCurrency.code)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                          {invoice.cards.length}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 flex">
+                          <button 
+                            className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors mr-3 p-2"
+                            onClick={() => handleDownloadInvoice(buyer, invoice)}
+                            title="Download PDF"
+                          >
+                            <span className="material-icons text-xl">download</span>
+                          </button>
+                          <button 
+                            className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors mr-3 p-2"
+                            onClick={() => setExpandedBuyers(prev => {
+                              const newSet = new Set(prev);
+                              if (newSet.has(buyer)) {
+                                newSet.delete(buyer);
+                              } else {
+                                newSet.add(buyer);
+                              }
+                              return newSet;
+                            })}
+                            title="View Details"
+                          >
+                            <span className="material-icons text-xl">{expandedBuyers.has(buyer) ? 'visibility_off' : 'visibility'}</span>
+                          </button>
+                          <button 
+                            className="text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 transition-colors p-2"
+                            onClick={() => handleDeleteInvoice(buyer)}
+                            title="Delete Sale"
+                          >
+                            <span className="material-icons text-xl">delete</span>
+                          </button>
+                        </td>
+                      </tr>
+                      {/* Expandable Card Details Row */}
+                      {expandedBuyers.has(buyer) && (
+                        <tr>
+                          <td colSpan="7" className="px-0 py-0">
+                            <div className="bg-black border-t border-gray-200 dark:border-gray-700">
+                              <div className="p-6">
+                                <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-4">Card Details</h4>
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                  {invoice.cards.map((card, index) => (
+                                    <div key={card.id || card.slabSerial || index} className="bg-white dark:bg-black rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                                      <div className="flex justify-between items-start">
+                                        <div className="flex-1 min-w-0">
+                                          <h5 className="font-medium text-gray-900 dark:text-white truncate">
+                                            {card.name || card.card || card.cardName || 'Unnamed Card'}
+                                          </h5>
+                                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                                            {card.set || card.setName || 'Unknown Set'}
+                                          </p>
+                                          {card.grade && (
+                                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                                              Grade: {card.grade}
+                                            </p>
+                                          )}
+                                        </div>
+                                        <div className="text-right ml-4">
+                                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                                            Investment: {formatUserCurrency(convertToUserCurrency(parseFloat(card.originalInvestmentAmount || card.investmentAUD || card.investment || 0), card.originalInvestmentCurrency || 'AUD'), preferredCurrency.code)}
+                                          </p>
+                                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                                            Sold for: {formatUserCurrency(convertToUserCurrency(parseFloat(card.soldPrice || card.soldAmount || card.finalValueAUD || card.currentValueAUD || 0), card.originalCurrentValueCurrency || 'AUD'), preferredCurrency.code)}
+                                          </p>
+                                          <p className={`text-sm font-medium ${(convertToUserCurrency(parseFloat(card.soldPrice || card.soldAmount || card.finalValueAUD || card.currentValueAUD || 0), card.originalCurrentValueCurrency || 'AUD') - convertToUserCurrency(parseFloat(card.originalInvestmentAmount || card.investmentAUD || card.investment || 0), card.originalInvestmentCurrency || 'AUD')) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                            {formatUserCurrency((convertToUserCurrency(parseFloat(card.soldPrice || card.soldAmount || card.finalValueAUD || card.currentValueAUD || 0), card.originalCurrentValueCurrency || 'AUD') - convertToUserCurrency(parseFloat(card.originalInvestmentAmount || card.investmentAUD || card.investment || 0), card.originalInvestmentCurrency || 'AUD')), preferredCurrency.code)}
+                                          </p>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="md:hidden space-y-4 p-4">
+              {filteredInvoices.map(([buyer, invoice]) => (
+                <div key={buyer} className="bg-white/5 dark:bg-white/5 rounded-xl border border-gray-200/20 dark:border-gray-700/30 overflow-hidden">
+                  {/* Header with Buyer and Date */}
+                  <div className="p-4">
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <h3 className="text-sm font-medium text-gray-900 dark:text-white">
+                          Sold to: {buyer}
+                        </h3>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          {formatDateSafely(invoice.date)}
+                        </p>
+                      </div>
+                      <span className="text-xs bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-full text-gray-600 dark:text-gray-300">
+                        {invoice.cards.length} cards
+                      </span>
+                    </div>
+
+                    {/* Main Content: Investment and Profit */}
+                    <div className="flex justify-between items-center mb-4">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Investment</p>
+                        <p className="text-sm font-medium text-gray-900 dark:text-white">
+                          {formatUserCurrency(invoice.totalInvestment, preferredCurrency.code)}
+                        </p>
+                      </div>
+                      <div className="text-right ml-4">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Profit</p>
+                        <p className={`text-lg font-semibold ${invoice.totalProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {formatUserCurrency(invoice.totalProfit, preferredCurrency.code)}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex justify-end space-x-2 pt-3 border-t border-gray-200/20 dark:border-gray-700/30">
+                      <button 
+                        className="flex items-center justify-center w-10 h-10 rounded-lg bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/50 transition-colors"
+                        onClick={() => handleDownloadInvoice(buyer, invoice)}
+                        title="Download PDF"
+                      >
+                        <span className="material-icons text-lg">download</span>
+                      </button>
+                      <button 
+                        className="flex items-center justify-center w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
+                        onClick={() => setExpandedBuyers(prev => {
+                          const newSet = new Set(prev);
+                          if (newSet.has(buyer)) {
+                            newSet.delete(buyer);
+                          } else {
+                            newSet.add(buyer);
+                          }
+                          return newSet;
+                        })}
+                        title="View Details"
+                      >
+                        <span className="material-icons text-lg">{expandedBuyers.has(buyer) ? 'visibility_off' : 'visibility'}</span>
+                      </button>
+                      <button 
+                        className="flex items-center justify-center w-10 h-10 rounded-lg bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors"
+                        onClick={() => handleDeleteInvoice(buyer)}
+                        title="Delete Sale"
+                      >
+                        <span className="material-icons text-lg">delete</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Expandable Card Details (inline with each invoice) */}
+                  {expandedBuyers.has(buyer) && (
+                    <div className="border-t border-gray-200/20 dark:border-gray-700/30 bg-black p-4">
+                      <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-3">Card Details</h4>
+                      <div className="space-y-3">
+                        {invoice.cards.map((card, index) => (
+                          <div key={card.id || card.slabSerial || index} className="bg-white dark:bg-black rounded-lg p-3 border border-gray-200 dark:border-gray-700">
+                            <div className="flex justify-between items-start">
+                              <div className="flex-1 min-w-0">
+                                <h5 className="font-medium text-gray-900 dark:text-white truncate">
+                                  {card.name || card.card || card.cardName || 'Unnamed Card'}
+                                </h5>
+                                <p className="text-sm text-gray-600 dark:text-gray-400">
+                                  {card.set || card.setName || 'Unknown Set'}
+                                </p>
+                                {card.grade && (
+                                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                                    Grade: {card.grade}
+                                  </p>
+                                )}
+                              </div>
+                              <div className="text-right ml-4">
+                                <p className="text-sm text-gray-600 dark:text-gray-400">
+                                  Investment: {formatUserCurrency(convertToUserCurrency(parseFloat(card.originalInvestmentAmount || card.investmentAUD || card.investment || 0), card.originalInvestmentCurrency || 'AUD'), preferredCurrency.code)}
+                                </p>
+                                <p className="text-sm text-gray-600 dark:text-gray-400">
+                                  Sold for: {formatUserCurrency(convertToUserCurrency(parseFloat(card.soldPrice || card.soldAmount || card.finalValueAUD || card.currentValueAUD || 0), card.originalCurrentValueCurrency || 'AUD'), preferredCurrency.code)}
+                                </p>
+                                <p className={`text-sm font-medium ${(convertToUserCurrency(parseFloat(card.soldPrice || card.soldAmount || card.finalValueAUD || card.currentValueAUD || 0), card.originalCurrentValueCurrency || 'AUD') - convertToUserCurrency(parseFloat(card.originalInvestmentAmount || card.investmentAUD || card.investment || 0), card.originalInvestmentCurrency || 'AUD')) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                  {formatUserCurrency((convertToUserCurrency(parseFloat(card.soldPrice || card.soldAmount || card.finalValueAUD || card.currentValueAUD || 0), card.originalCurrentValueCurrency || 'AUD') - convertToUserCurrency(parseFloat(card.originalInvestmentAmount || card.investmentAUD || card.investment || 0), card.originalInvestmentCurrency || 'AUD')), preferredCurrency.code)}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Expandable Card Details (shown when expanded) */}
+            {/* Removed */}
+          </div>
+        ) : (
+          <div className="text-center py-8 sm:py-12">
+            <span className="material-icons text-4xl sm:text-5xl mb-3 sm:mb-4 text-gray-400 dark:text-gray-600">inventory_2</span>
+            <h3 className="text-sm sm:text-base font-medium text-gray-900 dark:text-white mb-1 sm:mb-2">No sold cards found</h3>
+            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-6">When you sell cards from your collection, they will appear here.</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
 
-export default SoldItems; 
+export default SoldItems;
