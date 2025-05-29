@@ -871,10 +871,13 @@ function AppContent({ currentView, setCurrentView }) {
                   {/* Floating Add Button - Mobile Only */}
                   <button
                     onClick={() => openNewCardForm()}
-                    className="sm:hidden fixed bottom-20 right-4 z-50 w-16 h-16 bg-[#ef4444] hover:bg-[#dc2626] text-white rounded-full shadow-xl border-4 border-white dark:border-gray-800 flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95"
+                    className="sm:hidden fixed right-4 z-50 w-14 h-14 bg-[#ef4444] hover:bg-[#dc2626] text-white rounded-full shadow-lg border-2 border-white dark:border-gray-800 flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95"
+                    style={{
+                      bottom: 'calc(4rem + env(safe-area-inset-bottom, 0px) + 8px)'
+                    }}
                     aria-label="Add new card"
                   >
-                    <span className="material-icons text-3xl font-bold">add</span>
+                    <span className="material-icons text-2xl font-bold">add</span>
                   </button>
                 </div>
               ) : (

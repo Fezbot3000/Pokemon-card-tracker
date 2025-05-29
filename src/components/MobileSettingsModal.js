@@ -156,7 +156,7 @@ const MobileSettingsModal = ({ isOpen, onClose, onResetData }) => {
           <div>
             <button
               onClick={handleSignOut}
-              className="block w-full text-center px-4 py-2 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              className="block w-full text-center px-4 py-2 bg-[#ef4444] hover:bg-[#dc2626] text-white rounded-md transition-colors"
             >
               Sign Out
             </button>

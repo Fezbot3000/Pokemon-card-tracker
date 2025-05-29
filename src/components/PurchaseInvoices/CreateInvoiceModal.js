@@ -382,7 +382,7 @@ const CreateInvoiceModal = ({ isOpen, onClose, onSave, editingInvoice = null, pr
                 ) : (
                   <div className="overflow-y-auto max-h-96">
                     <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                      <thead className="bg-gray-50 dark:bg-gray-800 sticky top-0">
+                      <thead className="bg-gray-50 dark:bg-[#252B3B]">
                         <tr key="card-selection-header-row">
                           <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                             Select
@@ -525,15 +525,15 @@ const CreateInvoiceModal = ({ isOpen, onClose, onSave, editingInvoice = null, pr
                     </h3>
                     <div>
                       <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                        <thead className="bg-gray-50 dark:bg-gray-800">
-                          <tr key="header-row">
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        <thead className="bg-gray-50 dark:bg-[#252B3B]">
+                          <tr>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/2">
                               Card
                             </th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/4">
                               Set / Year
                             </th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-1/4">
                               Price
                             </th>
                           </tr>
@@ -541,23 +541,23 @@ const CreateInvoiceModal = ({ isOpen, onClose, onSave, editingInvoice = null, pr
                         <tbody className="bg-white dark:bg-[#1B2131] divide-y divide-gray-200 dark:divide-gray-700">
                           {selectedCards.map((card) => (
                             <tr key={card.id}>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm font-medium text-gray-900 dark:text-white">
+                              <td className="px-6 py-4 w-1/2">
+                                <div className="text-sm font-medium text-gray-900 dark:text-white truncate max-w-xs" title={card.name || card.player || 'Unnamed Card'}>
                                   {card.name || card.player || 'Unnamed Card'}
                                 </div>
-                                <div className="text-sm text-gray-500 dark:text-gray-400">
+                                <div className="text-sm text-gray-500 dark:text-gray-400 truncate" title={`#${card.cardNumber}`}>
                                   #{card.cardNumber}
                                 </div>
                               </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm text-gray-900 dark:text-white">
+                              <td className="px-6 py-4 w-1/4">
+                                <div className="text-sm text-gray-900 dark:text-white truncate" title={card.set || card.setName}>
                                   {card.set || card.setName}
                                 </div>
                                 <div className="text-sm text-gray-500 dark:text-gray-400">
                                   {card.year}
                                 </div>
                               </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                              <td className="px-6 py-4 w-1/4 text-sm text-gray-900 dark:text-white">
                                 ${parseFloat(card.originalInvestmentAmount || card.investmentAUD || 0).toFixed(2)}
                               </td>
                             </tr>

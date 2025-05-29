@@ -245,7 +245,6 @@ const CardList = ({
   const [selectedCardsForPurchase, setSelectedCardsForPurchase] = useState([]);
   const [showListCardModal, setShowListCardModal] = useState(false);
   const [selectedCardsForListing, setSelectedCardsForListing] = useState([]);
-  const [selectedAction, setSelectedAction] = useState('');  // For dropdown selection
   const [visibleCardCount, setVisibleCardCount] = useState(24); // Initial number of cards to show (4 rows of 6 cards)
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const { ref: loadMoreRef, inView } = useInView({
@@ -1202,160 +1201,187 @@ const CardList = ({
         </div>
       )}
 
-      {/* Selected Cards Actions */}
+      {/* Selected Cards Actions - Modern FAB Style */}
       {selectedCards.size > 0 && (
-        <div className="fixed bottom-[90px] left-0 w-full flex items-center justify-between px-4 py-2 bg-white/90 dark:bg-[#1B2131]/90 backdrop-blur-md sm:border sm:border-gray-200 sm:dark:border-gray-700 z-40 shadow-md border-t border-gray-200/50 dark:border-gray-700/50">
-          <span className="text-sm sm:text-base text-gray-900 dark:text-white font-medium">{selectedCards.size} selected</span>
+        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
+          {/* Selection Count Badge */}
+          <div className="mb-3 flex justify-center">
+            <div className="bg-white dark:bg-[#1B2131] border border-gray-200 dark:border-gray-700 rounded-full px-4 py-2 shadow-lg backdrop-blur-sm">
+              <span className="text-sm font-medium text-gray-900 dark:text-white">
+                {selectedCards.size} card{selectedCards.size > 1 ? 's' : ''} selected
+              </span>
+            </div>
+          </div>
           
-          <div className="flex items-center gap-3">
-            <select 
-              value={selectedAction}
-              onChange={(e) => setSelectedAction(e.target.value)}
-              className="px-3 py-2 rounded-md bg-white dark:bg-[#252B3B] border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">Select action...</option>
-              <option value="sell">Sell</option>
-              <option value="purchase">Purchase Invoice</option>
-              <option value="list">List on Marketplace</option>
-              <option value="move">Move</option>
-              <option value="delete">Delete</option>
-              <option value="selectAll">Select All</option>
-              <option value="clear">Clear Selection</option>
-            </select>
-            
+          {/* Action Buttons */}
+          <div className="flex items-center gap-3 bg-white dark:bg-[#1B2131] rounded-2xl p-3 shadow-xl border border-gray-200 dark:border-gray-700 backdrop-blur-sm">
+            {/* Sell Button */}
             <button
               onClick={() => {
-                switch(selectedAction) {
-                  case 'sell':
-                    setSelectedCardsForSale(cards.filter(card => selectedCards.has(card.slabSerial)));
-                    setShowSaleModal(true);
-                    break;
-                  case 'purchase':
-                    setSelectedCardsForPurchase(cards.filter(card => selectedCards.has(card.slabSerial)));
-                    setShowPurchaseInvoiceModal(true);
-                    break;
-                  case 'list':
-                    // Use an immediately invoked async function to handle async operations
-                    (async () => {
-                      try {
-                        // Start the bulk listing process
-                        console.log("Starting bulk listing flow");
-                        setSelectedAction('');
+                setSelectedCardsForSale(cards.filter(card => selectedCards.has(card.slabSerial)));
+                setShowSaleModal(true);
+              }}
+              className="group flex flex-col items-center justify-center w-16 h-16 rounded-xl bg-green-500 hover:bg-green-600 text-white transition-all duration-200 shadow-md hover:shadow-lg hover:scale-105 active:scale-95"
+              title="Sell selected cards"
+            >
+              <span className="material-icons text-lg mb-0.5 group-hover:scale-110 transition-transform duration-200">sell</span>
+              <span className="text-xs font-medium">Sell</span>
+            </button>
+            
+            {/* Purchase Invoice Button */}
+            <button
+              onClick={() => {
+                setSelectedCardsForPurchase(cards.filter(card => selectedCards.has(card.slabSerial)));
+                setShowPurchaseInvoiceModal(true);
+              }}
+              className="group flex flex-col items-center justify-center w-16 h-16 rounded-xl bg-blue-500 hover:bg-blue-600 text-white transition-all duration-200 shadow-md hover:shadow-lg hover:scale-105 active:scale-95"
+              title="Create purchase invoice"
+            >
+              <span className="material-icons text-lg mb-0.5 group-hover:scale-110 transition-transform duration-200">receipt</span>
+              <span className="text-xs font-medium">Invoice</span>
+            </button>
+            
+            {/* List on Marketplace Button */}
+            <button
+              onClick={() => {
+                // Use the existing bulk listing logic
+                (async () => {
+                  try {
+                    console.log("Starting bulk listing flow");
+                    
+                    if (!user || !user.uid) {
+                      toast.error('You must be logged in to list cards');
+                      return;
+                    }
+                    
+                    const selectedCardObjects = cards.filter(card => selectedCards.has(card.slabSerial));
+                    
+                    if (selectedCardObjects.length === 0) {
+                      toast.error('No cards selected for listing');
+                      return;
+                    }
+                    
+                    const loadingToast = toast.loading('Checking marketplace status...');
+                    
+                    try {
+                      const marketplaceRef = collection(firestoreDb, 'marketplaceItems');
+                      const checkPromises = selectedCardObjects.map(async (card) => {
+                        if (!card.slabSerial) return { ...card, isActuallyListed: false };
                         
-                        // Check if user is authenticated
-                        if (!user || !user.uid) {
-                          toast.error('You must be logged in to list cards');
-                          return;
-                        }
-                        
-                        // Get all selected cards
-                        const selectedCardObjects = cards.filter(card => selectedCards.has(card.slabSerial));
-                        
-                        if (selectedCardObjects.length === 0) {
-                          toast.error('No cards selected for listing');
-                          return;
-                        }
-                        
-                        // Show loading toast while we check Firestore
-                        const loadingToast = toast.loading('Checking marketplace status...');
+                        const existingQuery = query(
+                          marketplaceRef,
+                          where('cardId', '==', card.slabSerial),
+                          where('status', '==', 'available')
+                        );
                         
                         try {
-                          // Dynamically check Firestore for each card's listing status
-                          const marketplaceRef = collection(firestoreDb, 'marketplaceItems');
-                          const checkPromises = selectedCardObjects.map(async (card) => {
-                            if (!card.slabSerial) return { ...card, isActuallyListed: false };
-                            
-                            // Query Firestore directly to check if card is listed
-                            const existingQuery = query(
-                              marketplaceRef,
-                              where('cardId', '==', card.slabSerial),
-                              where('status', '==', 'available')
-                            );
-                            
-                            try {
-                              const snapshot = await getDocs(existingQuery);
-                              const isActuallyListed = !snapshot.empty;
-                              return { ...card, isActuallyListed };
-                            } catch (error) {
-                              console.error(`Error checking listing status for ${card.slabSerial}:`, error);
-                              return { ...card, isActuallyListed: false }; // Assume not listed on error
-                            }
-                          });
-                          
-                          const checkedCards = await Promise.all(checkPromises);
-                          toast.dismiss(loadingToast);
-                          
-                          // Filter out cards that are actually listed in Firestore
-                          const cardsToList = checkedCards.filter(card => !card.isActuallyListed);
-                          
-                          // Update local isListed flags if they're out of sync
-                          const cardsNeedingUpdate = checkedCards.filter(card => 
-                            Boolean(card.isListed) !== Boolean(card.isActuallyListed)
-                          );
-                          
-                          if (cardsNeedingUpdate.length > 0) {
-                            console.log(`Found ${cardsNeedingUpdate.length} cards with out-of-sync isListed flags`);
-                            
-                            // Create update promises for all cards needing updates
-                            const updatePromises = cardsNeedingUpdate.map(card => {
-                              if (!card.slabSerial) return Promise.resolve();
-                              
-                              const cardRef = doc(firestoreDb, `users/${user.uid}/cards/${card.slabSerial}`);
-                              return updateDoc(cardRef, { isListed: card.isActuallyListed })
-                                .then(() => {
-                                  console.log(`Updated isListed flag for ${card.card || card.slabSerial} to ${card.isActuallyListed}`);
-                                })
-                                .catch(error => {
-                                  console.error(`Error updating isListed flag for ${card.slabSerial}:`, error);
-                                });
-                            });
-                            
-                            // Wait for all updates to complete
-                            await Promise.all(updatePromises);
-                          }
-                          
-                          if (cardsToList.length === 0) {
-                            toast.error('All selected cards are already listed on the marketplace');
-                            return;
-                          }
-                          
-                          setSelectedCardsForListing(cardsToList);
-                          setShowListCardModal(true);
+                          const snapshot = await getDocs(existingQuery);
+                          const isActuallyListed = !snapshot.empty;
+                          return { ...card, isActuallyListed };
                         } catch (error) {
-                          toast.dismiss(loadingToast);
-                          toast.error('Error checking marketplace status');
-                          console.error('Error in bulk listing flow:', error);
+                          console.error(`Error checking listing status for ${card.slabSerial}:`, error);
+                          return { ...card, isActuallyListed: false };
                         }
-                      } catch (error) {
-                        toast.error('Error starting bulk listing process');
-                        console.error('Error in bulk listing flow:', error);
+                      });
+                      
+                      const checkedCards = await Promise.all(checkPromises);
+                      toast.dismiss(loadingToast);
+                      
+                      const cardsToList = checkedCards.filter(card => !card.isActuallyListed);
+                      
+                      const cardsNeedingUpdate = checkedCards.filter(card => 
+                        Boolean(card.isListed) !== Boolean(card.isActuallyListed)
+                      );
+                      
+                      if (cardsNeedingUpdate.length > 0) {
+                        console.log(`Found ${cardsNeedingUpdate.length} cards with out-of-sync isListed flags`);
+                        
+                        const updatePromises = cardsNeedingUpdate.map(card => {
+                          if (!card.slabSerial) return Promise.resolve();
+                          
+                          const cardRef = doc(firestoreDb, `users/${user.uid}/cards/${card.slabSerial}`);
+                          return updateDoc(cardRef, { isListed: card.isActuallyListed })
+                            .then(() => {
+                              console.log(`Updated isListed flag for ${card.card || card.slabSerial} to ${card.isActuallyListed}`);
+                            })
+                            .catch(error => {
+                              console.error(`Error updating isListed flag for ${card.slabSerial}:`, error);
+                            });
+                        });
+                        
+                        await Promise.all(updatePromises);
                       }
-                    })();
-                    break;
-                  case 'move':
-                    handleMoveCards();
-                    break;
-                  case 'delete':
-                    handleDeleteClick();
-                    break;
-                  case 'selectAll':
-                    handleSelectAll();
-                    break;
-                  case 'clear':
-                    clearSelection();
-                    break;
-                  default:
-                    // No action selected
-                    break;
-                }
-                // Reset the dropdown after action
-                setSelectedAction('');
+                      
+                      if (cardsToList.length === 0) {
+                        toast.error('All selected cards are already listed on the marketplace');
+                        return;
+                      }
+                      
+                      setSelectedCardsForListing(cardsToList);
+                      setShowListCardModal(true);
+                    } catch (error) {
+                      toast.dismiss(loadingToast);
+                      toast.error('Error checking marketplace status');
+                      console.error('Error in bulk listing flow:', error);
+                    }
+                  } catch (error) {
+                    toast.error('Error starting bulk listing process');
+                    console.error('Error in bulk listing flow:', error);
+                  }
+                })();
               }}
-              disabled={!selectedAction}
-              className={`px-4 py-2 rounded-md ${selectedAction ? 'bg-blue-500 hover:bg-blue-600' : 'bg-blue-300 cursor-not-allowed'} text-white font-medium transition-colors flex items-center gap-2`}
+              className="group flex flex-col items-center justify-center w-16 h-16 rounded-xl bg-purple-500 hover:bg-purple-600 text-white transition-all duration-200 shadow-md hover:shadow-lg hover:scale-105 active:scale-95"
+              title="List on marketplace"
             >
-              <span className="material-icons text-base">navigate_next</span>
-              <span>Next</span>
+              <span className="material-icons text-lg mb-0.5 group-hover:scale-110 transition-transform duration-200">storefront</span>
+              <span className="text-xs font-medium">List</span>
+            </button>
+            
+            {/* Move Button */}
+            <button
+              onClick={handleMoveCards}
+              className="group flex flex-col items-center justify-center w-16 h-16 rounded-xl bg-orange-500 hover:bg-orange-600 text-white transition-all duration-200 shadow-md hover:shadow-lg hover:scale-105 active:scale-95"
+              title="Move to collection"
+            >
+              <span className="material-icons text-lg mb-0.5 group-hover:scale-110 transition-transform duration-200">drive_file_move</span>
+              <span className="text-xs font-medium">Move</span>
+            </button>
+            
+            {/* Delete Button */}
+            <button
+              onClick={handleDeleteClick}
+              className="group flex flex-col items-center justify-center w-16 h-16 rounded-xl bg-red-500 hover:bg-red-600 text-white transition-all duration-200 shadow-md hover:shadow-lg hover:scale-105 active:scale-95"
+              title="Delete selected cards"
+            >
+              <span className="material-icons text-lg mb-0.5 group-hover:scale-110 transition-transform duration-200">delete</span>
+              <span className="text-xs font-medium">Delete</span>
+            </button>
+            
+            {/* Divider */}
+            <div className="w-px h-12 bg-gray-200 dark:bg-gray-700 mx-1"></div>
+            
+            {/* Select All Button */}
+            <button
+              onClick={handleSelectAll}
+              className="group flex flex-col items-center justify-center w-16 h-16 rounded-xl bg-gray-500 hover:bg-gray-600 text-white transition-all duration-200 shadow-md hover:shadow-lg hover:scale-105 active:scale-95"
+              title={selectedCards.size === cards.length ? "Deselect all" : "Select all"}
+            >
+              <span className="material-icons text-lg mb-0.5 group-hover:scale-110 transition-transform duration-200">
+                {selectedCards.size === cards.length ? 'deselect' : 'select_all'}
+              </span>
+              <span className="text-xs font-medium">
+                {selectedCards.size === cards.length ? 'Deselect' : 'All'}
+              </span>
+            </button>
+            
+            {/* Clear Selection Button */}
+            <button
+              onClick={clearSelection}
+              className="group flex flex-col items-center justify-center w-16 h-16 rounded-xl bg-gray-400 hover:bg-gray-500 text-white transition-all duration-200 shadow-md hover:shadow-lg hover:scale-105 active:scale-95"
+              title="Clear selection"
+            >
+              <span className="material-icons text-lg mb-0.5 group-hover:scale-110 transition-transform duration-200">clear</span>
+              <span className="text-xs font-medium">Clear</span>
             </button>
           </div>
         </div>

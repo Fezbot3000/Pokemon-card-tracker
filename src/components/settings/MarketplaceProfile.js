@@ -117,7 +117,7 @@ function MarketplaceProfile() {
           type="text"
           value={profile.displayName}
           onChange={(e) => setProfile(prev => ({ ...prev, displayName: e.target.value }))}
-          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 dark:bg-gray-800 dark:text-white"
+          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 dark:bg-black dark:text-white"
           placeholder="Your marketplace name"
         />
       </div>
@@ -130,7 +130,7 @@ function MarketplaceProfile() {
         <textarea
           value={profile.bio}
           onChange={(e) => setProfile(prev => ({ ...prev, bio: e.target.value }))}
-          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 dark:bg-gray-800 dark:text-white"
+          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 dark:bg-black dark:text-white"
           rows={3}
           placeholder="Tell buyers a bit about yourself..."
         />
@@ -145,7 +145,7 @@ function MarketplaceProfile() {
           type="text"
           value={profile.location}
           onChange={(e) => setProfile(prev => ({ ...prev, location: e.target.value }))}
-          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 dark:bg-gray-800 dark:text-white"
+          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 dark:bg-black dark:text-white"
           placeholder="City, State/Country"
         />
       </div>
@@ -181,7 +181,7 @@ function MarketplaceProfile() {
         <select
           value={profile.responseTime}
           onChange={(e) => setProfile(prev => ({ ...prev, responseTime: e.target.value }))}
-          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 dark:bg-gray-800 dark:text-white"
+          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 dark:bg-black dark:text-white"
         >
           {responseTimeOptions.map(option => (
             <option key={option.value} value={option.value}>
@@ -199,7 +199,7 @@ function MarketplaceProfile() {
         <textarea
           value={profile.autoReplyMessage}
           onChange={(e) => setProfile(prev => ({ ...prev, autoReplyMessage: e.target.value }))}
-          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 dark:bg-gray-800 dark:text-white"
+          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 dark:bg-black dark:text-white"
           rows={2}
           placeholder="Thanks for your interest! I'll get back to you soon."
         />
