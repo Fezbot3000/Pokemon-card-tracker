@@ -431,6 +431,18 @@ exports.fixSubscriptionStatus = functions.https.onCall(async (data, context) => 
     // Update the subscription record
     await admin.firestore().collection('subscriptions').doc(userId).set(subscription, { merge: true });
     
+    // ALSO update the user document's subscription field to match working accounts
+    await admin.firestore().collection('users').doc(userId).set({
+      subscription: {
+        status: activeSubscription.status,
+        customer: customer.id,
+        subscriptionId: activeSubscription.id,
+        plan: planName,
+        lastVerified: Date.now(),
+        userId: userId
+      }
+    }, { merge: true });
+    
     console.log(`Updated subscription for user ${userId} with data:`, subscription);
     
     return {
@@ -445,6 +457,103 @@ exports.fixSubscriptionStatus = functions.https.onCall(async (data, context) => 
     if (error.type) console.error('Stripe error type:', error.type);
     if (error.stack) console.error('Error stack:', error.stack);
     throw new functions.https.HttpsError('internal', error.message);
+  }
+});
+
+// Manual function to sync subscription status from Stripe to Firestore
+exports.syncSubscriptionStatus = functions.https.onCall(async (data, context) => {
+  // Ensure the user is authenticated
+  if (!context.auth) {
+    throw new functions.https.HttpsError('unauthenticated', 'User must be logged in');
+  }
+
+  try {
+    const userEmail = context.auth.token.email;
+    const firebaseUID = context.auth.uid;
+    
+    console.log(`Syncing subscription for user: ${firebaseUID}, email: ${userEmail}`);
+    
+    // Find customer in Stripe by email
+    const customers = await stripe.customers.list({
+      email: userEmail,
+      limit: 1
+    });
+    
+    if (customers.data.length === 0) {
+      console.log('No customer found in Stripe');
+      return { success: false, message: 'No customer found in Stripe' };
+    }
+    
+    const customer = customers.data[0];
+    console.log(`Found customer: ${customer.id}`);
+    
+    // Get active subscriptions for this customer
+    const subscriptions = await stripe.subscriptions.list({
+      customer: customer.id,
+      status: 'active',
+      limit: 1
+    });
+    
+    if (subscriptions.data.length === 0) {
+      console.log('No active subscriptions found');
+      // Update Firestore to inactive
+      await admin.firestore().collection('subscriptions').doc(firebaseUID).set({
+        status: 'inactive',
+        customerId: customer.id,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+      
+      // ALSO update the user document's subscription field
+      await admin.firestore().collection('users').doc(firebaseUID).set({
+        subscription: {
+          status: 'inactive',
+          customer: customer.id,
+          lastVerified: Date.now(),
+          userId: firebaseUID
+        }
+      }, { merge: true });
+      
+      return { success: true, status: 'inactive', message: 'No active subscription found' };
+    }
+    
+    const subscription = subscriptions.data[0];
+    console.log(`Found active subscription: ${subscription.id}, status: ${subscription.status}`);
+    
+    // Update Firestore with the current subscription status
+    await admin.firestore().collection('subscriptions').doc(firebaseUID).set({
+      status: subscription.status,
+      customerId: customer.id,
+      subscriptionId: subscription.id,
+      plan: 'Premium',
+      priceId: subscription.items.data[0].price.id,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      lastVerified: admin.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+    
+    // ALSO update the user document's subscription field
+    await admin.firestore().collection('users').doc(firebaseUID).set({
+      subscription: {
+        status: subscription.status,
+        customer: customer.id,
+        subscriptionId: subscription.id,
+        plan: 'Premium',
+        lastVerified: Date.now(),
+        userId: firebaseUID
+      }
+    }, { merge: true });
+    
+    console.log(`Successfully synced subscription status: ${subscription.status}`);
+    
+    return { 
+      success: true, 
+      status: subscription.status,
+      subscriptionId: subscription.id,
+      message: 'Subscription status synced successfully'
+    };
+    
+  } catch (error) {
+    console.error('Error syncing subscription status:', error);
+    throw new functions.https.HttpsError('internal', `Failed to sync subscription: ${error.message}`);
   }
 });
 
@@ -502,6 +611,18 @@ exports.stripeWebhook = functions.https.onRequest(async (request, response) => {
             createdAt: admin.firestore.FieldValue.serverTimestamp()
           }, { merge: true });
           
+          // ALSO update the user document's subscription field to match working accounts
+          await admin.firestore().collection('users').doc(firebaseUid).set({
+            subscription: {
+              status: subscription.status,
+              customer: session.customer,
+              subscriptionId: subscription.id,
+              plan: 'Premium',
+              lastVerified: Date.now(),
+              userId: firebaseUid
+            }
+          }, { merge: true });
+          
           console.log(`Updated subscription status for user ${firebaseUid} to ${subscription.status}`);
         }
         break;
@@ -529,6 +650,18 @@ exports.stripeWebhook = functions.https.onRequest(async (request, response) => {
               updatedAt: admin.firestore.FieldValue.serverTimestamp()
             }, { merge: true });
             
+            // ALSO update the user document's subscription field
+            await admin.firestore().collection('users').doc(firebaseUserId).set({
+              subscription: {
+                status: subscriptionEvent.status,
+                customer: subscriptionEvent.customer,
+                subscriptionId: subscriptionEvent.id,
+                plan: 'Premium',
+                lastVerified: Date.now(),
+                userId: firebaseUserId
+              }
+            }, { merge: true });
+            
             console.log(`Updated subscription status for user ${firebaseUserId} to ${subscriptionEvent.status}`);
           } else {
             console.error(`No Firebase user ID found for customer: ${subscriptionEvent.customer}`);
@@ -554,6 +687,16 @@ exports.stripeWebhook = functions.https.onRequest(async (request, response) => {
               status: 'inactive',
               updatedAt: admin.firestore.FieldValue.serverTimestamp(),
               cancellationReason: deletedSubscription.cancellation_details?.reason || 'unknown'
+            }, { merge: true });
+            
+            // ALSO update the user document's subscription field
+            await admin.firestore().collection('users').doc(firebaseUserId).set({
+              subscription: {
+                status: 'inactive',
+                customer: deletedSubscription.customer,
+                lastVerified: Date.now(),
+                userId: firebaseUserId
+              }
             }, { merge: true });
             
             console.log(`Updated subscription status for user ${firebaseUserId} to inactive (deleted)`);
@@ -1025,6 +1168,18 @@ exports.directSubscriptionCheck = functions.https.onCall(async (data, context) =
             updatedAt: admin.firestore.FieldValue.serverTimestamp()
           }, { merge: true });
           
+          // ALSO update the user document's subscription field
+          await admin.firestore().collection('users').doc(userId).set({
+            subscription: {
+              status: subscription.status,
+              customer: customer.id,
+              subscriptionId: subscription.id,
+              plan: plan,
+              lastVerified: Date.now(),
+              userId: userId
+            }
+          }, { merge: true });
+          
           return {
             success: true,
             message: 'Active subscription found and saved',
@@ -1085,6 +1240,18 @@ exports.directSubscriptionCheck = functions.https.onCall(async (data, context) =
             subscriptionId: subscription.id,
             plan: plan,
             updatedAt: admin.firestore.FieldValue.serverTimestamp()
+          }, { merge: true });
+          
+          // ALSO update the user document's subscription field
+          await admin.firestore().collection('users').doc(userId).set({
+            subscription: {
+              status: subscription.status,
+              customer: customer.id,
+              subscriptionId: subscription.id,
+              plan: plan,
+              lastVerified: Date.now(),
+              userId: userId
+            }
           }, { merge: true });
           
           return {

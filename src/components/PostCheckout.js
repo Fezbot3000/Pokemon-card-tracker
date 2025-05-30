@@ -1,13 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSubscription } from '../contexts/SubscriptionContext';
+import { httpsCallable } from 'firebase/functions';
+import { functions } from '../firebase';
 
 const PostCheckout = () => {
   const navigate = useNavigate();
   const { refreshSubscriptionStatus, subscriptionStatus } = useSubscription();
   const [attempts, setAttempts] = useState(0);
   const [showFallback, setShowFallback] = useState(false);
-  const maxAttempts = 10; // Check for up to 30 seconds
+  const [syncMessage, setSyncMessage] = useState('Finalizing your subscription...');
+  const maxAttempts = 8; // Check for up to 24 seconds
 
   useEffect(() => {
     const checkSubscription = async () => {
@@ -16,24 +19,46 @@ const PostCheckout = () => {
         return;
       }
 
-      // Wait 3 seconds before first check to give webhook time
-      if (attempts === 0) {
-        await new Promise(resolve => setTimeout(resolve, 3000));
-      }
+      try {
+        // On first attempt, wait 3 seconds then try manual sync
+        if (attempts === 0) {
+          setSyncMessage('Processing payment...');
+          await new Promise(resolve => setTimeout(resolve, 3000));
+          
+          // Try manual sync first
+          setSyncMessage('Syncing subscription status...');
+          const syncSubscription = httpsCallable(functions, 'syncSubscriptionStatus');
+          const syncResult = await syncSubscription();
+          
+          if (syncResult.data.success && syncResult.data.status === 'active') {
+            setSyncMessage('Subscription activated! Redirecting...');
+            setTimeout(() => navigate('/dashboard'), 1000);
+            return;
+          }
+        }
 
-      // Refresh subscription status from backend
-      await refreshSubscriptionStatus();
-      
-      // Check if subscription is now active
-      if (subscriptionStatus?.status === 'active') {
-        // Success! Redirect to dashboard
-        navigate('/dashboard');
-        return;
-      }
+        // Refresh subscription status from context
+        setSyncMessage('Checking subscription status...');
+        await refreshSubscriptionStatus();
+        
+        // Check if subscription is now active
+        if (subscriptionStatus?.status === 'active') {
+          setSyncMessage('Success! Redirecting to dashboard...');
+          setTimeout(() => navigate('/dashboard'), 1000);
+          return;
+        }
 
-      // Not active yet, try again in 3 seconds
-      setAttempts(prev => prev + 1);
-      setTimeout(checkSubscription, 3000);
+        // Not active yet, try again in 3 seconds
+        setAttempts(prev => prev + 1);
+        setSyncMessage(`Attempt ${attempts + 2} of ${maxAttempts}...`);
+        setTimeout(checkSubscription, 3000);
+        
+      } catch (error) {
+        console.error('Error checking subscription:', error);
+        setAttempts(prev => prev + 1);
+        setSyncMessage('Retrying...');
+        setTimeout(checkSubscription, 3000);
+      }
     };
 
     checkSubscription();
@@ -84,7 +109,7 @@ const PostCheckout = () => {
         </div>
         <h2 className="text-2xl font-bold text-gray-900 mb-2">Payment Successful!</h2>
         <p className="text-gray-600 mb-6">
-          Finalizing your subscription...
+          {syncMessage}
         </p>
         
         <div className="flex items-center justify-center mb-4">
