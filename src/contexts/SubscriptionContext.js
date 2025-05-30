@@ -71,119 +71,147 @@ export function SubscriptionProvider({ children }) {
   // Check subscription status after purchase completion
   useEffect(() => {
     // Detect if we're coming back from a successful checkout
-    const isFromPayment = window.location.search.includes('checkout_success=true');
+    const urlParams = new URLSearchParams(window.location.search);
+    const isFromPayment = urlParams.has('checkout_success');
+    const sessionPaid = sessionStorage.getItem('justPaid') === 'true';
     
-    if (isFromPayment) {
-      clearSubscriptionCache();
+    if (isFromPayment || sessionPaid) {
+      // Clear the session flag immediately to prevent loops
+      sessionStorage.removeItem('justPaid');
       
       // Add a flag to local storage to indicate this was a successful payment
       localStorage.setItem('recentPayment', 'true');
+      localStorage.setItem('paymentTimestamp', Date.now().toString());
       
-      // Immediately trigger the fixSubscription method which has better success finding subscriptions
-      postPaymentCheck();
+      // Clean up URL parameters immediately to prevent refresh issues
+      if (isFromPayment) {
+        const url = new URL(window.location);
+        url.searchParams.delete('checkout_success');
+        window.history.replaceState({}, '', url.toString());
+      }
+      
+      // Delay the subscription check to allow webhook processing
+      setTimeout(() => {
+        postPaymentCheck();
+      }, 3000); // 3 second delay for webhook processing
     } else if (localStorage.getItem('recentPayment') === 'true') {
-      postPaymentCheck();
+      // Check if payment was recent (within last 10 minutes)
+      const paymentTimestamp = localStorage.getItem('paymentTimestamp');
+      const isRecentPayment = paymentTimestamp && 
+        (Date.now() - parseInt(paymentTimestamp)) < 10 * 60 * 1000;
+      
+      if (isRecentPayment) {
+        postPaymentCheck();
+      } else {
+        // Clean up old payment flags
+        localStorage.removeItem('recentPayment');
+        localStorage.removeItem('paymentTimestamp');
+      }
     }
   }, []);
   
   // New function to handle post-payment subscription verification
   const postPaymentCheck = async () => {
+    if (isLoading) {
+      console.log('Subscription check already in progress, skipping duplicate');
+      return;
+    }
+    
     setIsLoading(true);
     
     try {
-      // First try the fix method which does a direct email lookup in Stripe
+      console.log('Starting post-payment subscription verification...');
+      
+      // First, wait a bit more to ensure webhook has processed
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Try the fix method which does a direct email lookup in Stripe
+      console.log('Attempting subscription fix...');
       const fixResult = await fixSubscription();
       
       // If fix was successful, we're done
-      if (fixResult.success) {
-        // Clear the recent payment flag
+      if (fixResult.success && fixResult.status === 'active') {
+        console.log('Subscription fix successful, clearing payment flags');
         localStorage.removeItem('recentPayment');
+        localStorage.removeItem('paymentTimestamp');
+        
+        // Show success message
+        console.log('Subscription activated successfully');
         
         // If we're on the pricing page, redirect to dashboard
-        if (window.location.pathname.includes('/dashboard/pricing')) {
-          window.location.href = '/dashboard';
+        if (window.location.pathname.includes('/pricing')) {
+          setTimeout(() => {
+            window.location.href = '/dashboard';
+          }, 1000);
         }
         return;
       }
       
-      // If fix wasn't successful, fall back to regular verification
-      await verifySubscription();
+      // If fix wasn't successful, try direct verification with longer delays
+      console.log('Fix unsuccessful, attempting direct verification...');
+      await verifySubscriptionWithRetry();
+      
     } catch (error) {
-      // Fall back to regular verification
-      await verifySubscription();
+      console.error('Error in post-payment check:', error);
+      
+      // Don't clear payment flags on error - allow retry
+      console.log('Post-payment check failed, will retry on next load');
+      
     } finally {
       setIsLoading(false);
-      
-      // Clear URL parameters
-      if (window.location.search.includes('checkout_success=true')) {
-        const url = new URL(window.location);
-        url.searchParams.delete('checkout_success');
-        window.history.replaceState({}, '', url);
-      }
     }
   };
   
-  // Separate the verification logic into its own function to reuse it
-  const verifySubscription = async () => {
-    // Define a function to attempt verification with retry logic
-    const attemptVerification = async (attempts = 1, maxAttempts = 5, delay = 2000) => {
-      
+  // Enhanced verification with better retry logic
+  const verifySubscriptionWithRetry = async () => {
+    const maxAttempts = 3;
+    const baseDelay = 5000; // Start with 5 seconds
+    
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
+        console.log(`Verification attempt ${attempt}/${maxAttempts}`);
+        
+        // Clear cache before each attempt
+        clearSubscriptionCache();
+        
         const status = await checkSubscriptionStatus();
         
-        // Check if we got an active subscription
         if (status.status === 'active') {
+          console.log('Subscription verified as active');
           setSubscriptionStatus(status);
-          // Clear the recent payment flag
+          
+          // Clear payment flags on success
           localStorage.removeItem('recentPayment');
+          localStorage.removeItem('paymentTimestamp');
+          
+          // Redirect if on pricing page
+          if (window.location.pathname.includes('/pricing')) {
+            setTimeout(() => {
+              window.location.href = '/dashboard';
+            }, 1000);
+          }
           return true;
         }
         
-        // If not active but we have more attempts, retry after delay
-        if (attempts < maxAttempts) {
+        // If not active and we have more attempts, wait before retry
+        if (attempt < maxAttempts) {
+          const delay = baseDelay * Math.pow(2, attempt - 1); // Exponential backoff
+          console.log(`Waiting ${delay}ms before retry...`);
           await new Promise(resolve => setTimeout(resolve, delay));
-          return attemptVerification(attempts + 1, maxAttempts, delay * 1.5);
         }
         
-        // If we've exhausted all attempts, return the last status
-        setSubscriptionStatus(status);
-        return false;
       } catch (error) {
+        console.error(`Verification attempt ${attempt} failed:`, error);
         
-        // Retry on error if we have attempts left
-        if (attempts < maxAttempts) {
+        if (attempt < maxAttempts) {
+          const delay = baseDelay * Math.pow(2, attempt - 1);
           await new Promise(resolve => setTimeout(resolve, delay));
-          return attemptVerification(attempts + 1, maxAttempts, delay * 1.5);
         }
-        
-        // If we've exhausted all attempts, throw the error
-        throw error;
       }
-    };
-    
-    // Start verification attempts
-    try {
-      const success = await attemptVerification();
-      
-      // If verification was successful, redirect to dashboard
-      if (success) {
-        
-        // If we're not already on the dashboard, redirect there
-        if (!window.location.pathname.includes('/dashboard')) {
-          window.location.href = '/dashboard';
-        } else if (window.location.pathname.includes('/dashboard/pricing')) {
-          // Special case for when we're on the pricing page after successful payment
-          window.location.href = '/dashboard';
-        }
-      } else {
-        
-        // Even without successful verification, we'll still let users continue
-        // The DashboardPricing component will show a special screen
-      }
-    } catch (error) {
-      
-      // Even with error, we'll let the DashboardPricing component handle it
     }
+    
+    console.log('All verification attempts exhausted');
+    return false;
   };
 
   // Method to force refresh of subscription status

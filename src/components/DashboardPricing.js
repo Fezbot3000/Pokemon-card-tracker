@@ -15,9 +15,12 @@ function DashboardPricing() {
   const { subscriptionStatus, isLoading: isLoadingSubscription, refreshSubscriptionStatus, fixSubscription } = useSubscription();
   const [tableError, setTableError] = useState(false);
   const [isPostPayment, setIsPostPayment] = useState(false);
+  const [showSuccessScreen, setShowSuccessScreen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const [isCreatingPortalSession, setIsCreatingPortalSession] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   // Show loading state when checking subscription
   useEffect(() => {
@@ -37,23 +40,38 @@ function DashboardPricing() {
 
   // Detect if user is coming from a successful payment
   useEffect(() => {
-    // Only run on client side to avoid hydration issues
-    if (typeof window !== 'undefined') {
-      const isFromPayment = location.search.includes('checkout_success=true') || 
-        localStorage.getItem('recentPayment') === 'true' ||
-        sessionStorage.getItem('justPaid') === 'true';
-        
-      if (isFromPayment) {
-        setIsPostPayment(true);
-        // Clean up URL parameter to avoid issues
-        if (location.search.includes('checkout_success=true')) {
-          window.history.replaceState({}, '', location.pathname);
-        }
-        // Remove the session storage flag
-        sessionStorage.removeItem('justPaid');
-      }
+    const urlParams = new URLSearchParams(location.search);
+    
+    // Handle successful checkout
+    if (urlParams.has('checkout_success')) {
+      setShowSuccessScreen(true);
+      
+      // Clean up URL immediately to prevent refresh issues
+      const url = new URL(window.location);
+      url.searchParams.delete('checkout_success');
+      window.history.replaceState({}, '', url.toString());
+      
+      // Don't trigger immediate subscription check - let SubscriptionContext handle it
+      return;
     }
-  }, [location]);
+    
+    // Check for recent payment flag
+    const recentPayment = localStorage.getItem('recentPayment');
+    if (recentPayment === 'true') {
+      setShowSuccessScreen(true);
+    }
+  }, [location.search]);
+
+  // Listen for subscription status changes
+  useEffect(() => {
+    if (subscriptionStatus?.status === 'active' && showSuccessScreen) {
+      // Subscription is now active, redirect to dashboard
+      setTimeout(() => {
+        // Use window.location.href for more reliable navigation
+        window.location.href = '/dashboard';
+      }, 2000);
+    }
+  }, [subscriptionStatus, showSuccessScreen]);
 
   // Log when this component is mounted
   useEffect(() => {
@@ -101,71 +119,54 @@ function DashboardPricing() {
 
   // Add handleSubscribeClick function
   const handleSubscribeClick = async () => {
-    console.log('Subscribe button clicked');
-    
     if (!currentUser) {
-      console.error('No user logged in');
-      toast.error('Please log in to subscribe');
+      navigate('/login');
       return;
     }
 
-    if (!currentUser.uid || !currentUser.email) {
-      console.error('User missing required properties:', {
-        uid: currentUser.uid,
-        email: currentUser.email
-      });
-      toast.error('User information incomplete. Please try logging out and back in.');
-      return;
-    }
+    setIsLoading(true);
+    setError(null);
 
-    console.log('User authenticated, proceeding to checkout');
-    
-    // Get the price ID from environment variable
-    const priceId = process.env.REACT_APP_STRIPE_PRICE_ID;
-    
-    if (!priceId) {
-      console.error('Stripe price ID not configured');
-      toast.error('Payment system not configured. Please contact support.');
-      return;
-    }
-    
     try {
+      // Set the flag before creating checkout session
+      sessionStorage.setItem('justPaid', 'true');
+      
       const createCheckoutSession = httpsCallable(functions, 'createCheckoutSession');
       
-      console.log('Creating checkout session...');
-      
-      // Call the Firebase function to create a checkout session
       const result = await createCheckoutSession({
-        priceId: priceId,
+        priceId: process.env.REACT_APP_STRIPE_PRICE_ID,
         baseUrl: window.location.origin,
         successUrl: `${window.location.origin}/dashboard?checkout_success=true`,
         cancelUrl: `${window.location.origin}/dashboard/pricing`
       });
-      
-      console.log('Checkout session created successfully');
-      
-      if (result.data && result.data.success && result.data.url) {
-        console.log('Redirecting to checkout...');
-        // Set flag to track payment attempt
-        sessionStorage.setItem('justPaid', 'true');
+
+      if (result.data && result.data.url) {
+        // Use window.location.href for more reliable redirect
         window.location.href = result.data.url;
       } else {
-        console.error('Failed to create checkout session:', result.data);
-        toast.error('Failed to create checkout session. Please try again.');
+        throw new Error('No checkout URL received');
       }
     } catch (error) {
       console.error('Error creating checkout session:', error);
       
-      // Check for specific Firebase errors
-      if (error.code === 'functions/not-found') {
-        toast.error('Payment function not found. Please contact support.');
-      } else if (error.code === 'functions/unauthenticated') {
-        toast.error('Authentication required. Please log out and log back in.');
-      } else if (error.code === 'functions/permission-denied') {
-        toast.error('Permission denied. Please contact support.');
-      } else {
-        toast.error('Failed to start checkout process. Please try again.');
+      // Clear the session flag on error
+      sessionStorage.removeItem('justPaid');
+      
+      let errorMessage = 'Failed to create checkout session. Please try again.';
+      
+      if (error.code === 'unauthenticated') {
+        errorMessage = 'Please log in to subscribe.';
+        navigate('/login');
+        return;
+      } else if (error.message?.includes('price')) {
+        errorMessage = 'Invalid pricing configuration. Please contact support.';
+      } else if (error.message?.includes('network') || error.message?.includes('fetch')) {
+        errorMessage = 'Network error. Please check your connection and try again.';
       }
+      
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -230,50 +231,56 @@ function DashboardPricing() {
     return null;
   }
 
-  // If we detected checkout_success but verification failed, show a special message
-  if (isPostPayment && subscriptionStatus.status !== 'active') {
-    // Auto-redirect to dashboard after 1.5 seconds
-    useEffect(() => {
-      const timer = setTimeout(() => {
-        console.log('Auto-redirecting to dashboard after successful payment...');
-        localStorage.removeItem('recentPayment');
-        navigate('/dashboard', { replace: true });
-      }, 1500);
-
-      return () => clearTimeout(timer);
-    }, [navigate]);
-
+  // Enhanced success screen with better error handling
+  if (showSuccessScreen) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-white dark:bg-[#1B2131] rounded-xl shadow-lg p-8 text-center">
-          <div className="inline-flex items-center justify-center bg-green-100 dark:bg-green-900/20 p-3 rounded-full mb-4">
-            <span className="material-icons text-green-600 dark:text-green-400 text-3xl">check_circle</span>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
+          <div className="mb-6">
+            {subscriptionStatus?.status === 'active' ? (
+              <>
+                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">Welcome to Premium!</h2>
+                <p className="text-gray-600 mb-4">Your subscription is now active. Redirecting to dashboard...</p>
+              </>
+            ) : (
+              <>
+                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-8 h-8 text-blue-600 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                </div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">Payment Received</h2>
+                <p className="text-gray-600 mb-4">Processing your subscription. This may take a few moments...</p>
+              </>
+            )}
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-            Payment Successful!
-          </h2>
-          <p className="text-lg text-gray-700 dark:text-gray-300 mb-6">
-            Thank you for your payment! You're being redirected to your dashboard...
-          </p>
-          <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 mb-6">
-            <div className="flex items-center justify-center mb-2">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mr-3"></div>
-              <span className="text-gray-700 dark:text-gray-300">Redirecting to dashboard...</span>
-            </div>
-          </div>
+          
+          {/* Manual redirect button as fallback */}
           <button
-            onClick={() => {
-              console.log('Manual navigation to dashboard...');
-              localStorage.removeItem('recentPayment');
-              navigate('/dashboard', { replace: true });
-            }}
-            className="inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-lg transition-colors"
+            onClick={() => window.location.href = '/dashboard'}
+            className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-700 transition-colors"
           >
-            <span className="material-icons text-sm mr-1">dashboard</span>
-            Go to Dashboard Now
+            Continue to Dashboard
           </button>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-4">
-            Redirecting automatically in a few seconds...
+          
+          {/* Troubleshooting link */}
+          <p className="text-sm text-gray-500 mt-4">
+            Having issues? <button 
+              onClick={() => {
+                localStorage.removeItem('recentPayment');
+                localStorage.removeItem('paymentTimestamp');
+                window.location.reload();
+              }}
+              className="text-blue-600 hover:underline"
+            >
+              Refresh page
+            </button>
           </p>
         </div>
       </div>
