@@ -92,19 +92,6 @@ function DashboardPricing() {
   // Add handleSubscribeClick function
   const handleSubscribeClick = async () => {
     console.log('Subscribe button clicked');
-    console.log('Current user:', currentUser);
-    
-    // DEBUGGING: Log all environment variables
-    console.log('=== ENVIRONMENT VARIABLE DEBUG ===');
-    console.log('process.env.NODE_ENV:', process.env.NODE_ENV);
-    console.log('process.env.REACT_APP_STRIPE_PRICE_ID:', process.env.REACT_APP_STRIPE_PRICE_ID);
-    console.log('typeof process.env.REACT_APP_STRIPE_PRICE_ID:', typeof process.env.REACT_APP_STRIPE_PRICE_ID);
-    console.log('Length:', process.env.REACT_APP_STRIPE_PRICE_ID?.length);
-    console.log('All REACT_APP env vars:');
-    Object.keys(process.env).filter(key => key.startsWith('REACT_APP')).forEach(key => {
-      console.log(`  ${key}: "${process.env[key]}"`);
-    });
-    console.log('=== END DEBUG ===');
     
     if (!currentUser) {
       console.error('No user logged in');
@@ -126,45 +113,29 @@ function DashboardPricing() {
     // Get the price ID from environment variable
     const priceId = process.env.REACT_APP_STRIPE_PRICE_ID;
     
-    console.log('Environment variables check:');
-    console.log('REACT_APP_STRIPE_PRICE_ID:', priceId);
-    console.log('All env vars:', Object.keys(process.env).filter(key => key.startsWith('REACT_APP')));
-    
     if (!priceId) {
       console.error('Stripe price ID not configured');
       toast.error('Payment system not configured. Please contact support.');
       return;
     }
     
-    // TEMPORARY: Let's try hardcoding the price ID to test if the Firebase function works
-    const testPriceId = 'price_1R8A57GIULGXhjjBjkQpB84b';
-    console.log('Using test price ID:', testPriceId);
-    
     try {
-      console.log('Testing Firebase function connection...');
-      console.log('Functions object:', functions);
-      
       const createCheckoutSession = httpsCallable(functions, 'createCheckoutSession');
-      console.log('createCheckoutSession function:', createCheckoutSession);
       
-      console.log('Creating checkout session with price ID:', testPriceId);
-      console.log('Function details:', { functions, createCheckoutSession });
+      console.log('Creating checkout session...');
       
       // Call the Firebase function to create a checkout session
-      console.log('About to call Firebase function...');
       const result = await createCheckoutSession({
-        priceId: testPriceId,
+        priceId: priceId,
         baseUrl: window.location.origin,
-        successUrl: `${window.location.origin}/?checkout_success=true`,
+        successUrl: `${window.location.origin}/dashboard?checkout_success=true`,
         cancelUrl: `${window.location.origin}/dashboard/pricing`
       });
       
-      console.log('Firebase function call completed');
-      console.log('Checkout session result:', result);
-      console.log('Result data:', result.data);
+      console.log('Checkout session created successfully');
       
       if (result.data && result.data.success && result.data.url) {
-        console.log('Redirecting to checkout:', result.data.url);
+        console.log('Redirecting to checkout...');
         window.location.href = result.data.url;
       } else {
         console.error('Failed to create checkout session:', result.data);
@@ -172,13 +143,6 @@ function DashboardPricing() {
       }
     } catch (error) {
       console.error('Error creating checkout session:', error);
-      console.error('Error details:', {
-        name: error.name,
-        message: error.message,
-        code: error.code,
-        details: error.details,
-        stack: error.stack
-      });
       
       // Check for specific Firebase errors
       if (error.code === 'functions/not-found') {
@@ -256,41 +220,49 @@ function DashboardPricing() {
 
   // If we detected checkout_success but verification failed, show a special message
   if (isPostPayment && subscriptionStatus.status !== 'active') {
+    // Auto-redirect to dashboard after 1.5 seconds
+    useEffect(() => {
+      const timer = setTimeout(() => {
+        console.log('Auto-redirecting to dashboard after successful payment...');
+        localStorage.removeItem('recentPayment');
+        navigate('/dashboard', { replace: true });
+      }, 1500);
+
+      return () => clearTimeout(timer);
+    }, [navigate]);
+
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="bg-white dark:bg-[#1B2131] rounded-xl shadow-lg p-8 text-center">
-          <div className="inline-flex items-center justify-center bg-yellow-100 dark:bg-yellow-900/20 p-3 rounded-full mb-4">
-            <span className="material-icons text-yellow-600 dark:text-yellow-400 text-3xl">info</span>
+          <div className="inline-flex items-center justify-center bg-green-100 dark:bg-green-900/20 p-3 rounded-full mb-4">
+            <span className="material-icons text-green-600 dark:text-green-400 text-3xl">check_circle</span>
           </div>
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-            Payment Received
+            Payment Successful!
           </h2>
           <p className="text-lg text-gray-700 dark:text-gray-300 mb-6">
-            Your payment was successful, but we're still verifying your subscription status. 
-            This can take a few moments to process.
+            Thank you for your payment! You're being redirected to your dashboard...
           </p>
           <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 mb-6">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-gray-700 dark:text-gray-300">Current Status:</span>
-              <span className="font-semibold text-yellow-600 dark:text-yellow-400">Processing</span>
+            <div className="flex items-center justify-center mb-2">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mr-3"></div>
+              <span className="text-gray-700 dark:text-gray-300">Redirecting to dashboard...</span>
             </div>
           </div>
-          <div className="mt-6 flex flex-col sm:flex-row justify-center gap-4">
-            <button
-              onClick={() => window.location.reload()}
-              className="inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-lg transition-colors mb-3 sm:mb-0"
-            >
-              <span className="material-icons text-sm mr-1">refresh</span>
-              Refresh Page
-            </button>
-            <button
-              onClick={goToDashboard}
-              className="inline-flex items-center justify-center bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-white font-medium py-2 px-6 rounded-lg transition-colors"
-            >
-              <span className="material-icons text-sm mr-1">dashboard</span>
-              Continue to Dashboard
-            </button>
-          </div>
+          <button
+            onClick={() => {
+              console.log('Manual navigation to dashboard...');
+              localStorage.removeItem('recentPayment');
+              navigate('/dashboard', { replace: true });
+            }}
+            className="inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-lg transition-colors"
+          >
+            <span className="material-icons text-sm mr-1">dashboard</span>
+            Go to Dashboard Now
+          </button>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-4">
+            Redirecting automatically in a few seconds...
+          </p>
         </div>
       </div>
     );
