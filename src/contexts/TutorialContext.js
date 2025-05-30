@@ -34,6 +34,19 @@ export function TutorialProvider({ children }) {
     setCurrentStep(tutorialSteps.DASHBOARD);
   }, []);
 
+  const endTutorial = useCallback(() => {
+    setIsTutorialActive(false);
+    setCurrentStep(null);
+    
+    // Mark onboarding as complete
+    try {
+      localStorage.setItem(ONBOARDING_KEY, 'true');
+      setOnboardingComplete(true);
+    } catch (error) {
+      console.error("Failed to save onboarding state", error);
+    }
+  }, []);
+
   const nextStep = useCallback(() => {
     switch (currentStep) {
       case tutorialSteps.DASHBOARD:
@@ -63,19 +76,6 @@ export function TutorialProvider({ children }) {
         break;
     }
   }, [currentStep, onAddCardOpen, endTutorial]);
-
-  const endTutorial = useCallback(() => {
-    setIsTutorialActive(false);
-    setCurrentStep(null);
-    
-    // Mark onboarding as complete
-    try {
-      localStorage.setItem(ONBOARDING_KEY, 'true');
-      setOnboardingComplete(true);
-    } catch (error) {
-      console.error("Failed to save onboarding state", error);
-    }
-  }, []);
 
   const registerAddCardCallback = useCallback((callback) => {
     setOnAddCardOpen(() => callback);
