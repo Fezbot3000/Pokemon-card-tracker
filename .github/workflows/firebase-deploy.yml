@@ -79,6 +79,7 @@ jobs:
           echo "REACT_APP_FIREBASE_MEASUREMENT_ID=${{ secrets.REACT_APP_FIREBASE_MEASUREMENT_ID }}" >> .env
           echo "REACT_APP_PSA_USERNAME=${{ secrets.REACT_APP_PSA_USERNAME }}" >> .env
           echo "REACT_APP_PSA_PASSWORD=${{ secrets.REACT_APP_PSA_PASSWORD }}" >> .env
+          echo "REACT_APP_STRIPE_PRICE_ID=${{ secrets.REACT_APP_STRIPE_PRICE_ID }}" >> .env
           # Add API keys with empty defaults
           echo "REACT_APP_PRICECHARTING_API_KEY=''" >> .env
           echo "REACT_APP_EBAY_APP_ID=''" >> .env
