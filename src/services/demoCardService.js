@@ -87,7 +87,7 @@ class DemoCardService {
 
   /**
    * Fetch PSA card data for the demo card
-   * @returns {Promise<Object|null>} - PSA card data or null
+   * @returns {Promise<Object>} - PSA card data with fallbacks
    */
   async fetchDemoCardData() {
     try {
@@ -102,15 +102,41 @@ class DemoCardService {
       }
       
       if (cardData) {
-        logger.debug('Successfully fetched demo card data');
+        logger.debug('Successfully fetched demo card data from API/cache');
         return cardData;
       } else {
-        logger.warn('Demo card data not found in database');
-        return null;
+        logger.warn('Demo card data not found in database, using fallback data');
+        // Return comprehensive fallback data based on the actual PSA card
+        return {
+          PSANumber: DEMO_PSA_NUMBER,
+          Subject: 'MARIO PIKACHU-HOLO',
+          Year: '2016',
+          Set: 'POKEMON JAPANESE XY PROMO',
+          Grade: 'PSA 10 Gem Mint',
+          Population: '1920',
+          CardNumber: '294',
+          Rarity: 'PROMO',
+          currentValueAUD: 4500,
+          currentValueUSD: 3000,
+          lastUpdated: new Date().toISOString()
+        };
       }
     } catch (error) {
-      logger.error('Error fetching demo card data:', error);
-      return null;
+      logger.error('Error fetching demo card data, using fallback:', error);
+      // Always return fallback data to ensure demo card creation succeeds
+      return {
+        PSANumber: DEMO_PSA_NUMBER,
+        Subject: 'MARIO PIKACHU-HOLO',
+        Year: '2016',
+        Set: 'POKEMON JAPANESE XY PROMO',
+        Grade: 'PSA 10 Gem Mint',
+        Population: '1920',
+        CardNumber: '294',
+        Rarity: 'PROMO',
+        currentValueAUD: 4500,
+        currentValueUSD: 3000,
+        lastUpdated: new Date().toISOString()
+      };
     }
   }
 
@@ -159,46 +185,74 @@ class DemoCardService {
    * @returns {Promise<Object|null>} - Created card data or null
    */
   async createDemoCardDocument(psaData, imageUrl, collectionId) {
-    if (!this.userId || !psaData) return null;
+    if (!this.userId) {
+      logger.error('No user ID set for demo card creation');
+      return null;
+    }
 
     try {
-      const cardId = `demo-${DEMO_PSA_NUMBER}`;
+      // Use the PSA serial number as the card ID for consistency
+      const cardId = `psa-${DEMO_PSA_NUMBER}`;
       const cardRef = doc(firestoreDb, 'users', this.userId, 'cards', cardId);
       
-      // Create card data based on PSA information
+      // Create comprehensive card data with all required fields
       const cardData = {
+        // Core identifiers - CRITICAL: slabSerial must match the PSA number exactly
         id: cardId,
-        serialNumber: DEMO_PSA_NUMBER,
-        player: psaData?.Subject || 'MARIO PIKACHU-HOLO',
-        cardName: psaData?.Subject || 'MARIO PIKACHU-HOLO',
+        slabSerial: DEMO_PSA_NUMBER.toString(), // Critical for card operations - must be string
+        serialNumber: DEMO_PSA_NUMBER.toString(),
+        
+        // Card details from PSA data
+        player: psaData.Subject || 'MARIO PIKACHU-HOLO',
+        cardName: psaData.Subject || 'MARIO PIKACHU-HOLO', 
+        card: psaData.Subject || 'MARIO PIKACHU-HOLO', // Required field
         category: 'Pokemon',
-        year: psaData?.Year || '2016',
-        set: psaData?.Set || 'POKEMON JAPANESE XY PROMO',
+        year: psaData.Year || '2016',
+        set: psaData.Set || 'POKEMON JAPANESE XY PROMO',
+        
+        // Grading information
         gradingCompany: 'PSA',
-        grade: psaData?.Grade || 'PSA 10 Gem Mint',
-        population: psaData?.Population || '1920',
-        datePurchased: new Date().toISOString().split('T')[0], // Today's date
+        grade: psaData.Grade || 'PSA 10 Gem Mint',
+        population: parseInt(psaData.Population) || 1920,
+        
+        // Financial details - all required fields
+        datePurchased: new Date().toISOString().split('T')[0],
         quantity: 1,
-        investmentAUD: psaData?.currentValueAUD || 4440, // Use PSA data if available
-        currentValueAUD: psaData?.currentValueAUD || 4500, // Use PSA data if available
+        investmentAUD: 4440, // Purchase price
+        currentValueAUD: psaData.currentValueAUD || 4500, // Use PSA current value if available
+        paidPriceAUD: 4440, // What was actually paid (same as investment for demo)
         investmentUSD: 0,
-        currentValueUSD: 0,
+        currentValueUSD: psaData.currentValueUSD || 0,
+        paidPriceUSD: 0,
+        
+        // Collection assignment
         collectionId: collectionId,
-        collection: 'Default Collection', // Will be updated with actual collection name
+        collection: 'Default Collection',
+        
+        // Media
         imageUrl: imageUrl,
+        
+        // Metadata
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
-        isDemoCard: true // Mark as demo card
+        isDemoCard: true, // Mark as demo card for identification
+        
+        // Additional fields that might be expected
+        cardNumber: psaData.CardNumber || '294',
+        rarity: psaData.Rarity || 'PROMO',
+        condition: 'PSA 10',
+        notes: 'Demo card to help you get started with the Pokemon Card Tracker!'
       };
       
       // Save the card
       await setDoc(cardRef, cardData);
       
-      logger.debug('Successfully created demo card document');
+      logger.debug('Successfully created demo card document with ID:', cardId);
       return {
         ...cardData,
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
+        _uniqueKey: `${cardId}-${collectionId}` // Add unique key for UI
       };
     } catch (error) {
       logger.error('Error creating demo card document:', error);
@@ -250,16 +304,17 @@ class DemoCardService {
       console.log('🃏 Card document created:', card);
 
       if (card) {
-        // Update collection name in card data
-        card.collection = collectionName;
-
-        // Mark demo card as added
-        console.log('🔍 Marking demo card as added in user profile...');
+        // Mark demo card as added to prevent future creation
+        console.log('🔍 Marking demo card as added...');
         await this.markDemoCardAsAdded();
-        console.log('✅ Demo card process completed successfully');
+        console.log('✅ Demo card marked as added');
+        
+        console.log('✅ Successfully created demo card for new user');
+        return card;
+      } else {
+        console.error('❌ Failed to create demo card document');
+        return null;
       }
-
-      return card;
     } catch (error) {
       console.error('❌ Error in createDemoCardIfNeeded:', error);
       return null;
