@@ -237,72 +237,138 @@ function DashboardPricing() {
 
   // Show the pricing section for non-subscribers
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="flex justify-end items-center mb-4">
-        <button
-          onClick={handleSignOut}
-          className="inline-flex items-center justify-center bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded-lg transition-colors"
-        >
-          <span className="material-icons text-sm mr-1">logout</span>
-          Sign Out
-        </button>
+    <div className="min-h-screen bg-gray-50 dark:bg-[#0F0F0F] px-4 py-6 sm:px-6 lg:px-8">
+      {/* Header with Sign Out */}
+      <div className="max-w-4xl mx-auto mb-6">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center space-x-2">
+            <span className="material-icons text-2xl text-gray-600 dark:text-gray-400">credit_card</span>
+            <h1 className="text-xl font-semibold text-gray-900 dark:text-white">Subscription</h1>
+          </div>
+          <button
+            onClick={handleSignOut}
+            className="inline-flex items-center justify-center bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded-lg transition-colors text-sm"
+          >
+            <span className="material-icons text-sm mr-1">logout</span>
+            Sign Out
+          </button>
+        </div>
       </div>
 
-      <div className="bg-white dark:bg-[#1B2131] rounded-xl shadow-lg p-8">
+      {/* Main Content */}
+      <div className="max-w-4xl mx-auto">
+        {/* Hero Section */}
         <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+          <div className="inline-flex items-center justify-center bg-blue-100 dark:bg-blue-900/20 p-3 rounded-full mb-4">
+            <span className="material-icons text-blue-600 dark:text-blue-400 text-2xl">star</span>
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-3">
             Complete Your Setup
           </h2>
-          <p className="text-lg text-gray-700 dark:text-gray-300">
+          <p className="text-base sm:text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto leading-relaxed">
             Subscribe to unlock all features including cloud backup, multi-device sync, and unlimited card tracking!
           </p>
         </div>
 
-        <div className="max-w-2xl mx-auto">
-          <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800/50 dark:to-gray-700/30 rounded-lg p-8 mb-6 shadow-sm border border-gray-200 dark:border-gray-700">
-            <div className="flex items-center justify-between mb-6">
-              <span className="text-2xl font-semibold text-gray-900 dark:text-white">Premium Plan</span>
-              <div className="text-right">
-                <span className="text-3xl font-bold text-gray-900 dark:text-white">$12.99</span>
-                <span className="text-sm font-normal text-gray-600 dark:text-gray-400">/month</span>
+        {/* Pricing Card */}
+        <div className="bg-white dark:bg-[#1B2131] rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+          {/* Popular Badge */}
+          <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white text-center py-2 px-4">
+            <span className="text-sm font-semibold">Most Popular Plan</span>
+          </div>
+
+          <div className="p-6 sm:p-8">
+            {/* Plan Header */}
+            <div className="text-center mb-6">
+              <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                Premium Plan
+              </h3>
+              <div className="flex items-baseline justify-center space-x-1">
+                <span className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white">$12.99</span>
+                <span className="text-lg text-gray-500 dark:text-gray-400">/month</span>
+              </div>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                Cancel anytime • 30-day money-back guarantee
+              </p>
+            </div>
+
+            {/* Features List */}
+            <div className="space-y-4 mb-8">
+              <div className="flex items-start space-x-3">
+                <div className="flex-shrink-0 bg-green-100 dark:bg-green-900/20 rounded-full p-1">
+                  <span className="material-icons text-green-600 dark:text-green-400 text-lg">check</span>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-gray-900 dark:text-white">Unlimited Card Tracking</h4>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Track as many cards as you want across multiple collections</p>
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-3">
+                <div className="flex-shrink-0 bg-green-100 dark:bg-green-900/20 rounded-full p-1">
+                  <span className="material-icons text-green-600 dark:text-green-400 text-lg">check</span>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-gray-900 dark:text-white">Cloud Backup & Sync</h4>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Automatic backups and sync across all your devices</p>
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-3">
+                <div className="flex-shrink-0 bg-green-100 dark:bg-green-900/20 rounded-full p-1">
+                  <span className="material-icons text-green-600 dark:text-green-400 text-lg">check</span>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-gray-900 dark:text-white">Advanced Analytics</h4>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Detailed insights into your collection's performance</p>
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-3">
+                <div className="flex-shrink-0 bg-green-100 dark:bg-green-900/20 rounded-full p-1">
+                  <span className="material-icons text-green-600 dark:text-green-400 text-lg">check</span>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-gray-900 dark:text-white">Priority Support</h4>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Get help faster with priority customer support</p>
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-3">
+                <div className="flex-shrink-0 bg-green-100 dark:bg-green-900/20 rounded-full p-1">
+                  <span className="material-icons text-green-600 dark:text-green-400 text-lg">check</span>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-gray-900 dark:text-white">Unlimited Collections</h4>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Organize your cards into as many collections as you need</p>
+                </div>
               </div>
             </div>
-            <ul className="space-y-4 mb-8">
-              <li className="flex items-center">
-                <span className="material-icons text-green-500 mr-3">check_circle</span>
-                <span className="text-gray-700 dark:text-gray-300">Track unlimited cards</span>
-              </li>
-              <li className="flex items-center">
-                <span className="material-icons text-green-500 mr-3">check_circle</span>
-                <span className="text-gray-700 dark:text-gray-300">Advanced analytics</span>
-              </li>
-              <li className="flex items-center">
-                <span className="material-icons text-green-500 mr-3">check_circle</span>
-                <span className="text-gray-700 dark:text-gray-300">Unlimited collections</span>
-              </li>
-              <li className="flex items-center">
-                <span className="material-icons text-green-500 mr-3">check_circle</span>
-                <span className="text-gray-700 dark:text-gray-300">Automatic cloud backup</span>
-              </li>
-              <li className="flex items-center">
-                <span className="material-icons text-green-500 mr-3">check_circle</span>
-                <span className="text-gray-700 dark:text-gray-300">Sync across all devices</span>
-              </li>
-              <li className="flex items-center">
-                <span className="material-icons text-green-500 mr-3">check_circle</span>
-                <span className="text-gray-700 dark:text-gray-300">Priority customer support</span>
-              </li>
-            </ul>
+
+            {/* CTA Button */}
             <button
               onClick={handleSubscribeClick}
-              className="w-full bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-gray-900 font-bold py-4 px-6 rounded-lg transition-all shadow-md hover:shadow-lg transform hover:-translate-y-1"
+              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-4 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 text-lg"
             >
               Subscribe Now
             </button>
-            <p className="text-center text-sm text-gray-600 dark:text-gray-400 mt-4">
-              Secure payment processed by Stripe
-            </p>
+
+            {/* Security Notice */}
+            <div className="flex items-center justify-center space-x-2 mt-4 text-sm text-gray-500 dark:text-gray-400">
+              <span className="material-icons text-sm">lock</span>
+              <span>Secure payment processed by Stripe</span>
+            </div>
           </div>
+        </div>
+
+        {/* Additional Info */}
+        <div className="mt-8 text-center">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Questions? Contact us at{' '}
+            <a href="mailto:support@mycardtracker.com.au" className="text-blue-600 dark:text-blue-400 hover:underline">
+              support@mycardtracker.com.au
+            </a>
+          </p>
         </div>
       </div>
     </div>
