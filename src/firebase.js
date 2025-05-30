@@ -52,7 +52,7 @@ const db = getFirestore(app);
 const storage = getStorage(app);
 const auth = getAuth(app);
 const googleProvider = new GoogleAuthProvider();
-const functions = getFunctions(app);
+const functions = getFunctions(app, 'us-central1'); // Specify the region where functions are deployed
 
 // Configure Google provider
 googleProvider.addScope('https://www.googleapis.com/auth/userinfo.email');

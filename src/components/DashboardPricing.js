@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../design-system';
 import { useSubscription } from '../contexts/SubscriptionContext';
 import { getFunctions, httpsCallable } from 'firebase/functions';
+import { functions } from '../firebase';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 
@@ -93,6 +94,18 @@ function DashboardPricing() {
     console.log('Subscribe button clicked');
     console.log('Current user:', currentUser);
     
+    // DEBUGGING: Log all environment variables
+    console.log('=== ENVIRONMENT VARIABLE DEBUG ===');
+    console.log('process.env.NODE_ENV:', process.env.NODE_ENV);
+    console.log('process.env.REACT_APP_STRIPE_PRICE_ID:', process.env.REACT_APP_STRIPE_PRICE_ID);
+    console.log('typeof process.env.REACT_APP_STRIPE_PRICE_ID:', typeof process.env.REACT_APP_STRIPE_PRICE_ID);
+    console.log('Length:', process.env.REACT_APP_STRIPE_PRICE_ID?.length);
+    console.log('All REACT_APP env vars:');
+    Object.keys(process.env).filter(key => key.startsWith('REACT_APP')).forEach(key => {
+      console.log(`  ${key}: "${process.env[key]}"`);
+    });
+    console.log('=== END DEBUG ===');
+    
     if (!currentUser) {
       console.error('No user logged in');
       toast.error('Please log in to subscribe');
@@ -110,34 +123,47 @@ function DashboardPricing() {
 
     console.log('User authenticated, proceeding to checkout');
     
+    // Get the price ID from environment variable
+    const priceId = process.env.REACT_APP_STRIPE_PRICE_ID;
+    
+    console.log('Environment variables check:');
+    console.log('REACT_APP_STRIPE_PRICE_ID:', priceId);
+    console.log('All env vars:', Object.keys(process.env).filter(key => key.startsWith('REACT_APP')));
+    
+    if (!priceId) {
+      console.error('Stripe price ID not configured');
+      toast.error('Payment system not configured. Please contact support.');
+      return;
+    }
+    
+    // TEMPORARY: Let's try hardcoding the price ID to test if the Firebase function works
+    const testPriceId = 'price_1R8A57GIULGXhjjBjkQpB84b';
+    console.log('Using test price ID:', testPriceId);
+    
     try {
-      // Import Firebase functions
-      const { getFunctions, httpsCallable } = await import('firebase/functions');
-      const functions = getFunctions();
+      console.log('Testing Firebase function connection...');
+      console.log('Functions object:', functions);
+      
       const createCheckoutSession = httpsCallable(functions, 'createCheckoutSession');
+      console.log('createCheckoutSession function:', createCheckoutSession);
       
-      // Get the price ID from environment variable
-      const priceId = process.env.REACT_APP_STRIPE_PRICE_ID;
-      
-      if (!priceId) {
-        console.error('Stripe price ID not configured');
-        toast.error('Payment system not configured. Please contact support.');
-        return;
-      }
-      
-      console.log('Creating checkout session with price ID:', priceId);
+      console.log('Creating checkout session with price ID:', testPriceId);
+      console.log('Function details:', { functions, createCheckoutSession });
       
       // Call the Firebase function to create a checkout session
+      console.log('About to call Firebase function...');
       const result = await createCheckoutSession({
-        priceId: priceId,
+        priceId: testPriceId,
         baseUrl: window.location.origin,
         successUrl: `${window.location.origin}/?checkout_success=true`,
         cancelUrl: `${window.location.origin}/dashboard/pricing`
       });
       
-      console.log('Checkout session created:', result.data);
+      console.log('Firebase function call completed');
+      console.log('Checkout session result:', result);
+      console.log('Result data:', result.data);
       
-      if (result.data.success && result.data.url) {
+      if (result.data && result.data.success && result.data.url) {
         console.log('Redirecting to checkout:', result.data.url);
         window.location.href = result.data.url;
       } else {
@@ -146,7 +172,24 @@ function DashboardPricing() {
       }
     } catch (error) {
       console.error('Error creating checkout session:', error);
-      toast.error('Failed to start checkout process. Please try again.');
+      console.error('Error details:', {
+        name: error.name,
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        stack: error.stack
+      });
+      
+      // Check for specific Firebase errors
+      if (error.code === 'functions/not-found') {
+        toast.error('Payment function not found. Please contact support.');
+      } else if (error.code === 'functions/unauthenticated') {
+        toast.error('Authentication required. Please log out and log back in.');
+      } else if (error.code === 'functions/permission-denied') {
+        toast.error('Permission denied. Please contact support.');
+      } else {
+        toast.error('Failed to start checkout process. Please try again.');
+      }
     }
   };
 
@@ -162,7 +205,6 @@ function DashboardPricing() {
   const handleManageSubscription = async () => {
     setIsCreatingPortalSession(true);
     try {
-      const functions = getFunctions(undefined, 'us-central1');
       const createPortalSession = httpsCallable(functions, 'createCustomerPortalSession');
       
       // Call the Cloud Function to get a fresh session URL
