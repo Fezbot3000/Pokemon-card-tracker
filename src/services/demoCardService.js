@@ -125,7 +125,9 @@ class DemoCardService {
       // Fetch the default image from public folder
       const response = await fetch(DEFAULT_IMAGE_PATH);
       if (!response.ok) {
-        throw new Error(`Failed to fetch default image: ${response.statusText}`);
+        logger.warn(`Failed to fetch default image from ${DEFAULT_IMAGE_PATH}: ${response.statusText}`);
+        // Return a fallback image URL instead of failing completely
+        return 'https://via.placeholder.com/300x400/1a1a1a/ffffff?text=Demo+Card';
       }
       
       const imageBlob = await response.blob();
@@ -140,11 +142,12 @@ class DemoCardService {
       // Get the download URL
       const imageUrl = await getDownloadURL(imageRef);
       
-      logger.debug('Successfully uploaded demo card image');
+      logger.debug('Successfully uploaded demo card image:', imageUrl);
       return imageUrl;
     } catch (error) {
-      logger.error('Error uploading demo card image:', error);
-      return null;
+      logger.error('Error uploading default image:', error);
+      // Return fallback image instead of null
+      return 'https://via.placeholder.com/300x400/1a1a1a/ffffff?text=Demo+Card';
     }
   }
 
@@ -166,18 +169,18 @@ class DemoCardService {
       const cardData = {
         id: cardId,
         serialNumber: DEMO_PSA_NUMBER,
-        player: psaData.Subject || 'MARIO PIKACHU-HOLO',
-        cardName: psaData.Subject || 'MARIO PIKACHU-HOLO',
+        player: psaData?.Subject || 'MARIO PIKACHU-HOLO',
+        cardName: psaData?.Subject || 'MARIO PIKACHU-HOLO',
         category: 'Pokemon',
-        year: psaData.Year || '2016',
-        set: psaData.Set || 'POKEMON JAPANESE XY PROMO',
+        year: psaData?.Year || '2016',
+        set: psaData?.Set || 'POKEMON JAPANESE XY PROMO',
         gradingCompany: 'PSA',
-        grade: psaData.Grade || 'PSA 10 Gem Mint',
-        population: psaData.Population || '1920',
+        grade: psaData?.Grade || 'PSA 10 Gem Mint',
+        population: psaData?.Population || '1920',
         datePurchased: new Date().toISOString().split('T')[0], // Today's date
         quantity: 1,
-        investmentAUD: 4440, // Sample investment
-        currentValueAUD: 4500, // Sample current value
+        investmentAUD: psaData?.currentValueAUD || 4440, // Use PSA data if available
+        currentValueAUD: psaData?.currentValueAUD || 4500, // Use PSA data if available
         investmentUSD: 0,
         currentValueUSD: 0,
         collectionId: collectionId,
@@ -238,10 +241,8 @@ class DemoCardService {
       const imageUrl = await this.uploadDefaultImage();
       console.log('🖼️ Image uploaded:', imageUrl);
 
-      if (!imageUrl) {
-        console.error('❌ Failed to upload default image');
-        return null;
-      }
+      // Image upload now always returns a URL (either real or fallback)
+      // so we can continue with card creation
 
       // Create the card document
       console.log('🔍 Creating card document...');
