@@ -71,18 +71,18 @@ const cors = require('cors')({
   }
 });
 
-// Initialize Stripe using environment variables
+// Lazy Stripe initialization - only initialize when needed
 let stripe;
-try {
-  const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
-  if (!stripeSecretKey) {
-    throw new Error('STRIPE_SECRET_KEY environment variable is required');
+function getStripe() {
+  if (!stripe) {
+    const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+    if (!stripeSecretKey) {
+      throw new Error('STRIPE_SECRET_KEY environment variable is required');
+    }
+    stripe = require("stripe")(stripeSecretKey);
+    console.log("Stripe initialized successfully");
   }
-  stripe = require("stripe")(stripeSecretKey);
-  console.log("Stripe initialized successfully");
-} catch (error) {
-  console.error("Error initializing Stripe:", error);
-  throw error; // Fail fast - don't hide configuration issues
+  return stripe;
 }
 
 // Additional Firebase Admin SDK initialization error handling
@@ -160,7 +160,7 @@ exports.checkSubscriptionStatus = functions.https.onCall(async (data, context) =
     // Query Stripe customers to find the customer associated with this userId
     // First check just by looking for all customers and then filter manually
     // This avoids the 'metadata' parameter error
-    const customers = await stripe.customers.list({
+    const customers = await getStripe().customers.list({
       limit: 100,
       expand: ['data.subscriptions']
     });
@@ -185,7 +185,7 @@ exports.checkSubscriptionStatus = functions.https.onCall(async (data, context) =
     // If no customers found, check by email
     if (userCustomers.length === 0 && context.auth.token.email) {
       console.log(`No customers found by client_reference_id, checking by email: ${context.auth.token.email}`);
-      const emailCustomers = await stripe.customers.list({
+      const emailCustomers = await getStripe().customers.list({
         email: context.auth.token.email,
         expand: ['data.subscriptions']
       });
@@ -300,7 +300,7 @@ exports.fixSubscriptionStatus = functions.https.onCall(async (data, context) => 
     }
 
     console.log(`Looking up customer by email: ${context.auth.token.email}`);
-    const emailCustomers = await stripe.customers.list({
+    const emailCustomers = await getStripe().customers.list({
       email: context.auth.token.email,
       expand: ['data.subscriptions']
     });
@@ -365,7 +365,7 @@ exports.fixSubscriptionStatus = functions.https.onCall(async (data, context) => 
       console.log('No active subscription found via customers. Trying direct subscription lookup...');
       
       // Get all subscriptions (up to 100) and filter for this user's email
-      const allSubscriptions = await stripe.subscriptions.list({
+      const allSubscriptions = await getStripe().subscriptions.list({
         limit: 100,
         status: 'active',
         expand: ['data.customer']
@@ -422,7 +422,7 @@ exports.fixSubscriptionStatus = functions.https.onCall(async (data, context) => 
     console.log(`Found active subscription ${activeSubscription.id}, updating Firestore`);
     
     // Ensure the customer has firebaseUID metadata
-    await stripe.customers.update(customer.id, {
+    await getStripe().customers.update(customer.id, {
       metadata: { 
         firebaseUID: userId,
         client_reference_id: userId 
@@ -500,7 +500,7 @@ exports.syncSubscriptionStatus = functions.https.onCall(async (data, context) =>
     console.log(`Syncing subscription for user: ${firebaseUID}, email: ${userEmail}`);
     
     // Find customer in Stripe by email
-    const customers = await stripe.customers.list({
+    const customers = await getStripe().customers.list({
       email: userEmail,
       limit: 1
     });
@@ -514,7 +514,7 @@ exports.syncSubscriptionStatus = functions.https.onCall(async (data, context) =>
     console.log(`Found customer: ${customer.id}`);
     
     // Get active subscriptions for this customer
-    const subscriptions = await stripe.subscriptions.list({
+    const subscriptions = await getStripe().subscriptions.list({
       customer: customer.id,
       status: 'active',
       limit: 1
@@ -586,12 +586,23 @@ exports.syncSubscriptionStatus = functions.https.onCall(async (data, context) =>
 // Webhook handler for Stripe events
 exports.stripeWebhook = functions.https.onRequest(async (request, response) => {
   const signature = request.headers['stripe-signature'];
-  const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  
+  // Try environment variable first, then fallback to functions.config()
+  let endpointSecret;
+  try {
+    endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  } catch (envError) {
+    try {
+      endpointSecret = functions.config().stripe?.webhook_secret;
+    } catch (configError) {
+      console.error('Webhook secret not found in environment or config');
+    }
+  }
   
   let event;
   
   try {
-    event = stripe.webhooks.constructEvent(
+    event = getStripe().webhooks.constructEvent(
       request.rawBody,
       signature,
       endpointSecret
@@ -624,7 +635,7 @@ exports.stripeWebhook = functions.https.onRequest(async (request, response) => {
           console.log(`Associated subscription: ${session.subscription}`);
           
           // Get the subscription details
-          const subscription = await stripe.subscriptions.retrieve(session.subscription);
+          const subscription = await getStripe().subscriptions.retrieve(session.subscription);
           
           // Update the user's subscription status in Firestore
           await admin.firestore().collection('subscriptions').doc(firebaseUid).set({
@@ -660,7 +671,7 @@ exports.stripeWebhook = functions.https.onRequest(async (request, response) => {
         
         // Find the Firebase user ID from the customer
         try {
-          const customer = await stripe.customers.retrieve(subscriptionEvent.customer);
+          const customer = await getStripe().customers.retrieve(subscriptionEvent.customer);
           const firebaseUserId = customer.metadata?.firebaseUID;
           
           if (firebaseUserId) {
@@ -702,7 +713,7 @@ exports.stripeWebhook = functions.https.onRequest(async (request, response) => {
         console.log(`Subscription ${deletedSubscription.id} was deleted/canceled`);
         
         try {
-          const customer = await stripe.customers.retrieve(deletedSubscription.customer);
+          const customer = await getStripe().customers.retrieve(deletedSubscription.customer);
           const firebaseUserId = customer.metadata?.firebaseUID;
           
           if (firebaseUserId) {
@@ -755,14 +766,14 @@ exports.testStripeCustomers = functions.https.onCall(async (data, context) => {
     console.log('Running test Stripe customers function');
     
     // List all customers from Stripe
-    const allCustomers = await stripe.customers.list({
+    const allCustomers = await getStripe().customers.list({
       limit: 10
     });
     
     console.log(`Found ${allCustomers.data.length} customers in Stripe`);
     
     // Test creating a customer
-    const testCustomer = await stripe.customers.create({
+    const testCustomer = await getStripe().customers.create({
       email: context.auth.token.email,
       metadata: {
         client_reference_id: context.auth.uid,
@@ -792,7 +803,7 @@ exports.createCheckoutSession = functions.https.onCall(async (data, context) => 
   }
 
   // Check if Stripe is properly configured
-  if (!stripe || typeof stripe.checkout === 'undefined') {
+  if (!getStripe() || typeof getStripe().checkout === 'undefined') {
     console.error('Stripe is not properly configured');
     throw new functions.https.HttpsError('failed-precondition', 'Payment system is not configured. Please contact support.');
   }
@@ -816,7 +827,7 @@ exports.createCheckoutSession = functions.https.onCall(async (data, context) => 
       
       // Attempt to retrieve the price to validate it exists
       try {
-        await stripe.prices.retrieve(priceId);
+        await getStripe().prices.retrieve(priceId);
         console.log(`Verified price exists: ${priceId}`);
         
         // Use the price in line_items if it exists
@@ -872,7 +883,7 @@ exports.createCheckoutSession = functions.https.onCall(async (data, context) => 
     
     // Try to find an existing customer
     console.log('Looking for existing customer with email:', context.auth.token.email);
-    const customers = await stripe.customers.list({
+    const customers = await getStripe().customers.list({
       email: context.auth.token.email,
       limit: 1
     });
@@ -883,7 +894,7 @@ exports.createCheckoutSession = functions.https.onCall(async (data, context) => 
     } else {
       // Create a new customer
       console.log('Creating new customer with email:', context.auth.token.email);
-      const newCustomer = await stripe.customers.create({
+      const newCustomer = await getStripe().customers.create({
         email: context.auth.token.email,
         metadata: {
           client_reference_id: context.auth.uid,
@@ -902,7 +913,7 @@ exports.createCheckoutSession = functions.https.onCall(async (data, context) => 
       cancel_url: cancelUrl
     });
     
-    const session = await stripe.checkout.sessions.create({
+    const session = await getStripe().checkout.sessions.create({
       payment_method_types: ['card'],
       mode: 'subscription',
       customer: customerId,
@@ -1017,7 +1028,7 @@ exports.testStripePrice = functions.https.onCall(async (data, context) => {
     // Try to get product info
     try {
       console.log(`Testing product ID: ${productId}`);
-      product = await stripe.products.retrieve(productId);
+      product = await getStripe().products.retrieve(productId);
       console.log(`Product exists: ${product.id}, name: ${product.name}`);
     } catch (error) {
       console.log(`Product ${productId} doesn't exist:`, error.message);
@@ -1026,7 +1037,7 @@ exports.testStripePrice = functions.https.onCall(async (data, context) => {
     // Try with original ID
     try {
       console.log(`Testing price ID directly: ${priceId}`);
-      const price = await stripe.prices.retrieve(priceId);
+      const price = await getStripe().prices.retrieve(priceId);
       testResults.push({
         id: priceId,
         exists: true,
@@ -1051,7 +1062,7 @@ exports.testStripePrice = functions.https.onCall(async (data, context) => {
       const prefixedId = `price_${priceId}`;
       try {
         console.log(`Testing price ID with prefix: ${prefixedId}`);
-        const price = await stripe.prices.retrieve(prefixedId);
+        const price = await getStripe().prices.retrieve(prefixedId);
         testResults.push({
           id: prefixedId,
           exists: true,
@@ -1073,7 +1084,7 @@ exports.testStripePrice = functions.https.onCall(async (data, context) => {
     }
     
     // List active prices
-    const activePrices = await stripe.prices.list({
+    const activePrices = await getStripe().prices.list({
       active: true,
       limit: 10
     });
@@ -1087,7 +1098,7 @@ exports.testStripePrice = functions.https.onCall(async (data, context) => {
         console.log(`Testing price creation with product: ${productId}`);
         // Create a test price with a unique lookup_key to avoid duplicates
         const timestamp = new Date().getTime();
-        testPrice = await stripe.prices.create({
+        testPrice = await getStripe().prices.create({
           product: productId,
           unit_amount: 1299,
           currency: 'aud',
@@ -1154,7 +1165,7 @@ exports.directSubscriptionCheck = functions.https.onCall(async (data, context) =
   try {
     // Try direct customer lookup by email first
     console.log(`Looking up customers by email: ${userEmail}`);
-    const customers = await stripe.customers.list({
+    const customers = await getStripe().customers.list({
       email: userEmail,
       limit: 100,
       expand: ['data.subscriptions']
@@ -1232,7 +1243,7 @@ exports.directSubscriptionCheck = functions.https.onCall(async (data, context) =
     // Get recent subscriptions (last 30 days)
     const thirtyDaysAgo = Math.floor(Date.now() / 1000) - (30 * 24 * 60 * 60);
     
-    const subscriptions = await stripe.subscriptions.list({
+    const subscriptions = await getStripe().subscriptions.list({
       limit: 100,
       created: { gte: thirtyDaysAgo },
       expand: ['data.customer']
@@ -1258,7 +1269,7 @@ exports.directSubscriptionCheck = functions.https.onCall(async (data, context) =
           console.log(`Found active subscription: ${subscription.id}, plan: ${plan}`);
           
           // Update customer metadata to include our user ID for future lookups
-          await stripe.customers.update(customer.id, {
+          await getStripe().customers.update(customer.id, {
             metadata: { 
               firebaseUID: userId,
               client_reference_id: userId 
@@ -1332,7 +1343,7 @@ exports.createCustomerPortalSession = functions.https.onCall(async (data, contex
     // If not found in Firestore, look up in Stripe by email
     if (!customerId && context.auth.token.email) {
       console.log(`Looking up customer by email: ${context.auth.token.email}`);
-      const customers = await stripe.customers.list({
+      const customers = await getStripe().customers.list({
         email: context.auth.token.email,
         limit: 1
       });
@@ -1346,7 +1357,7 @@ exports.createCustomerPortalSession = functions.https.onCall(async (data, contex
     // If still not found, look up by metadata
     if (!customerId) {
       console.log(`Looking up customer by Firebase UID metadata`);
-      const customers = await stripe.customers.list({
+      const customers = await getStripe().customers.list({
         limit: 100
       });
 
@@ -1376,7 +1387,7 @@ exports.createCustomerPortalSession = functions.https.onCall(async (data, contex
     const returnUrl = data.returnUrl || `${baseUrl}/dashboard`;
 
     console.log(`Creating portal session for customer ${customerId} with return URL ${returnUrl}`);
-    const session = await stripe.billingPortal.sessions.create({
+    const session = await getStripe().billingPortal.sessions.create({
       customer: customerId,
       return_url: returnUrl,
     });
@@ -2032,9 +2043,6 @@ exports.generateInvoiceBatch = functions.runWith({
           // Reset text color
           pdfDoc.fillColor('#1a1a1a');
           
-          // Calculate the height used so far
-          const rowHeight = pdfDoc.y - y + 5;
-          
           // Draw serial number
           pdfDoc.fontSize(11).font('Helvetica');
           pdfDoc.text(card.slabSerial || 'N/A', 46 + col1Width, y);
@@ -2045,8 +2053,8 @@ exports.generateInvoiceBatch = functions.runWith({
           
           // Draw bottom border
           pdfDoc.strokeColor('#e5e5e5').lineWidth(1)
-            .moveTo(40, y + rowHeight)
-            .lineTo(40 + tableWidth, y + rowHeight)
+            .moveTo(40, y + 20)
+            .lineTo(40 + tableWidth, y + 20)
             .stroke();
           
           // Move to next row
