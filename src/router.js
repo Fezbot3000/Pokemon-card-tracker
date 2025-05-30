@@ -31,6 +31,7 @@ import PremiumFeatures from './components/PremiumFeatures';
 import ComponentLibrary from './pages/ComponentLibrary';
 import MarketplaceListing from './components/Marketplace/MarketplaceListing';
 import PublicMarketplace from './components/PublicMarketplace';
+import PostCheckout from './components/PostCheckout';
 
 // Root providers wrapper component
 export const RootProviders = () => (
@@ -168,6 +169,10 @@ export const router = createBrowserRouter([
       {
         path: 'marketplace/listing/:listingId',
         element: <MarketplaceListing />,
+      },
+      {
+        path: 'post-checkout',
+        element: <PostCheckout />,
       },
       {
         path: 'dashboard',

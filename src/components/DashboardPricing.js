@@ -15,12 +15,11 @@ function DashboardPricing() {
   const { subscriptionStatus, isLoading: isLoadingSubscription, refreshSubscriptionStatus, fixSubscription } = useSubscription();
   const [tableError, setTableError] = useState(false);
   const [isPostPayment, setIsPostPayment] = useState(false);
-  const [showSuccessScreen, setShowSuccessScreen] = useState(false);
-  const navigate = useNavigate();
-  const location = useLocation();
   const [isCreatingPortalSession, setIsCreatingPortalSession] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   // Show loading state when checking subscription
   useEffect(() => {
@@ -38,73 +37,18 @@ function DashboardPricing() {
     };
   }, [isLoadingSubscription]);
 
-  // Detect if user is coming from a successful payment
-  useEffect(() => {
-    const urlParams = new URLSearchParams(location.search);
-    
-    // Handle successful checkout
-    if (urlParams.has('checkout_success')) {
-      setShowSuccessScreen(true);
-      
-      // Clean up URL immediately to prevent refresh issues
-      const url = new URL(window.location);
-      url.searchParams.delete('checkout_success');
-      window.history.replaceState({}, '', url.toString());
-      
-      // Don't trigger immediate subscription check - let SubscriptionContext handle it
-      return;
-    }
-    
-    // Check for recent payment flag
-    const recentPayment = localStorage.getItem('recentPayment');
-    if (recentPayment === 'true') {
-      setShowSuccessScreen(true);
-    }
-  }, [location.search]);
-
-  // Listen for subscription status changes
-  useEffect(() => {
-    if (subscriptionStatus?.status === 'active' && showSuccessScreen) {
-      // Subscription is now active, redirect to dashboard
-      setTimeout(() => {
-        // Use window.location.href for more reliable navigation
-        window.location.href = '/dashboard';
-      }, 2000);
-    }
-  }, [subscriptionStatus, showSuccessScreen]);
-
   // Log when this component is mounted
   useEffect(() => {
-    // Removed: console.log("DashboardPricing component mounted", { 
-    //   subscriptionStatus, 
-    //   isLoading: isLoadingSubscription,
-    //   isPostPayment,
-    //   uid: currentUser?.uid
-    // });
-  }, [subscriptionStatus, isLoadingSubscription, currentUser, isPostPayment]);
+    console.log('DashboardPricing component mounted');
+  }, []);
 
   // If user has active subscription and manually navigates to pricing, 
   // or just completed payment, redirect them back to dashboard.
   useEffect(() => {
     if (subscriptionStatus.status === 'active' && !isLoadingSubscription) {
-      if (isPostPayment) { // Only show toast if coming from payment
-        toast.success('Subscription active - Redirecting to dashboard', {
-          id: 'subscription-check', // Use a consistent ID to allow dismissal or update
-          duration: 2000
-        });
-        // Clear the post-payment flag after showing the toast
-        localStorage.removeItem('recentPayment'); 
-        // No need to change isPostPayment state directly, as location.search won't change until navigation
-      }
-      
-      // Redirect to dashboard
-      const timer = setTimeout(() => {
-        navigate('/dashboard', { replace: true });
-      }, 500); // Delay allows toast to be seen if shown
-      
-      return () => clearTimeout(timer);
+      navigate('/dashboard', { replace: true });
     }
-  }, [subscriptionStatus, isLoadingSubscription, navigate, isPostPayment]); // Added navigate and isPostPayment
+  }, [subscriptionStatus, isLoadingSubscription, navigate]);
 
   // Handle sign out
   const handleSignOut = async () => {
@@ -128,29 +72,22 @@ function DashboardPricing() {
     setError(null);
 
     try {
-      // Set the flag before creating checkout session
-      sessionStorage.setItem('justPaid', 'true');
-      
       const createCheckoutSession = httpsCallable(functions, 'createCheckoutSession');
       
       const result = await createCheckoutSession({
         priceId: process.env.REACT_APP_STRIPE_PRICE_ID,
         baseUrl: window.location.origin,
-        successUrl: `${window.location.origin}/dashboard?checkout_success=true`,
+        successUrl: `${window.location.origin}/post-checkout`,
         cancelUrl: `${window.location.origin}/dashboard/pricing`
       });
 
       if (result.data && result.data.url) {
-        // Use window.location.href for more reliable redirect
         window.location.href = result.data.url;
       } else {
         throw new Error('No checkout URL received');
       }
     } catch (error) {
       console.error('Error creating checkout session:', error);
-      
-      // Clear the session flag on error
-      sessionStorage.removeItem('justPaid');
       
       let errorMessage = 'Failed to create checkout session. Please try again.';
       
@@ -160,8 +97,6 @@ function DashboardPricing() {
         return;
       } else if (error.message?.includes('price')) {
         errorMessage = 'Invalid pricing configuration. Please contact support.';
-      } else if (error.message?.includes('network') || error.message?.includes('fetch')) {
-        errorMessage = 'Network error. Please check your connection and try again.';
       }
       
       setError(errorMessage);
@@ -188,11 +123,9 @@ function DashboardPricing() {
       const { data } = await createPortalSession();
       
       if (data && data.url) {
-        // Removed: console.log('Portal session created successfully, redirecting to:', data.url);
         // Redirect to the Stripe Customer Portal
         window.open(data.url, '_blank');
       } else {
-        // Removed: console.error('No portal URL returned from function:', data);
         // Use a custom toast style that's more visible
         toast.error('Could not access subscription management portal', {
           style: {
@@ -204,8 +137,6 @@ function DashboardPricing() {
         });
       }
     } catch (error) {
-      // Removed: console.error('Error creating portal session:', error);
-      
       // Get more detailed error information
       let errorMessage = 'Failed to access subscription management portal';
       if (error.message) {
@@ -229,62 +160,6 @@ function DashboardPricing() {
   // Early return after all hooks
   if (isLoadingSubscription) {
     return null;
-  }
-
-  // Enhanced success screen with better error handling
-  if (showSuccessScreen) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
-          <div className="mb-6">
-            {subscriptionStatus?.status === 'active' ? (
-              <>
-                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">Welcome to Premium!</h2>
-                <p className="text-gray-600 mb-4">Your subscription is now active. Redirecting to dashboard...</p>
-              </>
-            ) : (
-              <>
-                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-8 h-8 text-blue-600 animate-spin" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                </div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">Payment Received</h2>
-                <p className="text-gray-600 mb-4">Processing your subscription. This may take a few moments...</p>
-              </>
-            )}
-          </div>
-          
-          {/* Manual redirect button as fallback */}
-          <button
-            onClick={() => window.location.href = '/dashboard'}
-            className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-700 transition-colors"
-          >
-            Continue to Dashboard
-          </button>
-          
-          {/* Troubleshooting link */}
-          <p className="text-sm text-gray-500 mt-4">
-            Having issues? <button 
-              onClick={() => {
-                localStorage.removeItem('recentPayment');
-                localStorage.removeItem('paymentTimestamp');
-                window.location.reload();
-              }}
-              className="text-blue-600 hover:underline"
-            >
-              Refresh page
-            </button>
-          </p>
-        </div>
-      </div>
-    );
   }
 
   // If user already has a subscription, don't show the full screen - just return null
