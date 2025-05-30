@@ -1,7 +1,8 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useAuth } from '../design-system';
-import CardRepository from '../repositories/CardRepository';
+import { CardRepository } from '../repositories/CardRepository';
 import db from '../services/firestore/dbAdapter';
+import demoCardService from '../services/demoCardService';
 
 const CardContext = createContext();
 
@@ -36,17 +37,22 @@ export function CardProvider({ children }) {
 
   // Initialize repository when user changes
   useEffect(() => {
+    console.log(' CardContext useEffect triggered - currentUser:', currentUser ? 'exists' : 'null');
     let mounted = true;
     
     const initializeRepository = async () => {
       try {
+        console.log(' initializeRepository called - currentUser:', currentUser ? currentUser.uid : 'null');
         if (currentUser) {
           const repo = new CardRepository(currentUser.uid);
           setRepository(repo);
+          console.log(' Repository created, calling loadInitialData...');
           
           if (mounted) {
             await loadInitialData(repo);
           }
+        } else {
+          console.log(' No currentUser available, skipping repository initialization');
         }
       } catch (error) {
         console.error('Error initializing repository:', error);
@@ -78,6 +84,8 @@ export function CardProvider({ children }) {
 
   // Load initial data (collections, cards, etc)
   const loadInitialData = useCallback(async (repo) => {
+    console.log('📊 loadInitialData called with repo:', repo ? 'exists' : 'null');
+    
     if (!repo) {
       console.error('No repository provided to loadInitialData');
       return { success: false, message: 'No repository available' };
@@ -87,11 +95,12 @@ export function CardProvider({ children }) {
       setLoading(true);
       setError(null);
       setSyncStatus('syncing');
-
+      console.log('🔄 Starting data load process...');
+      
       // Load collections
       let collectionsFromRepo = [];
       try {
-        collectionsFromRepo = await repo.getCollections();
+        collectionsFromRepo = await repo.getAllCollections();
       } catch (collectionsError) {
         console.error('Failed to load collections:', collectionsError);
         collectionsFromRepo = [];
@@ -100,7 +109,7 @@ export function CardProvider({ children }) {
       // Load cards
       let cardsFromRepo = [];
       try {
-        cardsFromRepo = await repo.getCards();
+        cardsFromRepo = await repo.getAllCards();
       } catch (cardsError) {
         console.error('Failed to load cards:', cardsError);
         cardsFromRepo = [];
@@ -118,6 +127,49 @@ export function CardProvider({ children }) {
         console.warn('Failed to filter sold cards during initial load:', e);
       }
 
+      // Check if we need to create a demo card for new users
+      if (currentUser && cardsFromRepo.length === 0 && collectionsFromRepo.length === 0) {
+        console.log(' New user detected - attempting to create demo card');
+        try {
+          // Set up demo card service with current user
+          demoCardService.setUserId(currentUser.uid);
+          console.log(' Demo card service initialized with user:', currentUser.uid);
+          
+          // Create default collection first
+          const defaultCollection = await repo.createCollection('Default Collection');
+          console.log(' Default collection created:', defaultCollection);
+          
+          if (defaultCollection) {
+            collectionsFromRepo = [defaultCollection];
+            
+            // Create demo card in the default collection
+            const demoCard = await demoCardService.createDemoCardIfNeeded(
+              defaultCollection.id, 
+              defaultCollection.name
+            );
+            console.log(' Demo card creation result:', demoCard);
+            
+            if (demoCard) {
+              cardsFromRepo = [demoCard];
+              console.log(' Successfully created demo card for new user onboarding');
+            } else {
+              console.warn(' Demo card creation returned null');
+            }
+          } else {
+            console.error(' Failed to create default collection');
+          }
+        } catch (demoError) {
+          console.error(' Failed to create demo card:', demoError);
+          // Don't fail the entire initialization if demo card creation fails
+        }
+      } else {
+        console.log(' Demo card not needed:', {
+          hasUser: !!currentUser,
+          cardCount: cardsFromRepo.length,
+          collectionCount: collectionsFromRepo.length
+        });
+      }
+
       // Load sold cards
       let soldCardsFromRepo = [];
       try {
@@ -127,7 +179,15 @@ export function CardProvider({ children }) {
         soldCardsFromRepo = [];
       }
       
+      // Set the state with loaded/created data
+      setCollections(collectionsFromRepo);
+      setCards(cardsFromRepo);
       setSoldCards(soldCardsFromRepo);
+      
+      // Set initial selected collection if we have collections
+      if (collectionsFromRepo.length > 0 && !selectedCollection) {
+        setSelectedCollection(collectionsFromRepo[0]);
+      }
       
       setLoading(false);
       setSyncStatus('synced');
@@ -140,7 +200,7 @@ export function CardProvider({ children }) {
       setSyncStatus('error');
       return { success: false, message: error.message };
     }
-  }, []);
+  }, [currentUser]);
 
   // Subscribe to collection changes
   useEffect(() => {
