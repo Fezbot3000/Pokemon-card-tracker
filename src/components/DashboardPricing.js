@@ -40,7 +40,8 @@ function DashboardPricing() {
     // Only run on client side to avoid hydration issues
     if (typeof window !== 'undefined') {
       const isFromPayment = location.search.includes('checkout_success=true') || 
-        localStorage.getItem('recentPayment') === 'true';
+        localStorage.getItem('recentPayment') === 'true' ||
+        sessionStorage.getItem('justPaid') === 'true';
         
       if (isFromPayment) {
         setIsPostPayment(true);
@@ -48,6 +49,8 @@ function DashboardPricing() {
         if (location.search.includes('checkout_success=true')) {
           window.history.replaceState({}, '', location.pathname);
         }
+        // Remove the session storage flag
+        sessionStorage.removeItem('justPaid');
       }
     }
   }, [location]);
@@ -143,6 +146,8 @@ function DashboardPricing() {
       
       if (result.data && result.data.success && result.data.url) {
         console.log('Redirecting to checkout...');
+        // Set flag to track payment attempt
+        sessionStorage.setItem('justPaid', 'true');
         window.location.href = result.data.url;
       } else {
         console.error('Failed to create checkout session:', result.data);

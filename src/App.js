@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { 
   createBrowserRouter, 
   RouterProvider, 
@@ -239,7 +239,34 @@ function Dashboard() {
 function DashboardIndex() {
   const { currentView, setCurrentView } = useOutletContext();
   const location = useLocation();
+  const navigate = useNavigate();
+  const { subscriptionStatus, isLoading: isLoadingSubscription } = useSubscription();
   
+  // Handle post-payment success
+  useEffect(() => {
+    // Only run on client side to avoid hydration issues
+    if (typeof window !== 'undefined') {
+      const isFromPayment = location.search.includes('checkout_success=true') || 
+        localStorage.getItem('recentPayment') === 'true';
+        
+      if (isFromPayment) {
+        // Clean up URL parameter immediately
+        if (location.search.includes('checkout_success=true')) {
+          window.history.replaceState({}, '', location.pathname);
+        }
+        
+        // Show success message
+        toast.success('Payment successful! Checking subscription status...', {
+          id: 'payment-success',
+          duration: 3000
+        });
+        
+        // Clear localStorage flag
+        localStorage.removeItem('recentPayment');
+      }
+    }
+  }, [location]);
+
   // Handle navigation state from settings page
   useEffect(() => {
     if (location.state?.targetView) {
@@ -248,6 +275,23 @@ function DashboardIndex() {
       window.history.replaceState({}, '', location.pathname);
     }
   }, [location.state, setCurrentView]);
+  
+  // Check if subscription is now active after payment
+  useEffect(() => {
+    const wasFromPayment = localStorage.getItem('recentPayment') === 'true' || 
+      sessionStorage.getItem('justPaid') === 'true';
+      
+    if (subscriptionStatus.status === 'active' && !isLoadingSubscription && wasFromPayment) {
+      toast.success('Premium subscription activated! Welcome to Premium!', {
+        id: 'subscription-activated',
+        duration: 4000
+      });
+      
+      // Clear flags
+      localStorage.removeItem('recentPayment');
+      sessionStorage.removeItem('justPaid');
+    }
+  }, [subscriptionStatus, isLoadingSubscription]);
   
   return <>
     <AppContent currentView={currentView} setCurrentView={setCurrentView} />
