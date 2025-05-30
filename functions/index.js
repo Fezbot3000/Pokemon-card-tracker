@@ -829,7 +829,7 @@ exports.createCheckoutSession = functions.https.onCall(async (data, context) => 
     const baseUrl = data.baseUrl || 'http://localhost:3000';
     
     // Use provided success/cancel URLs if available, otherwise construct defaults
-    const successUrl = data.successUrl || `${baseUrl}/?checkout_success=true`;
+    const successUrl = data.successUrl || `${baseUrl}/post-checkout`;
     const cancelUrl = data.cancelUrl || `${baseUrl}/dashboard/pricing`;
     
     console.log('Success URL:', successUrl);
