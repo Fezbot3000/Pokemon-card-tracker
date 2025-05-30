@@ -1,14 +1,12 @@
-import React, { useState, useEffect, Fragment } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../design-system';
 import { useTheme } from '../design-system/contexts/ThemeContext';
 import { useUserPreferences } from '../contexts/UserPreferencesContext';
-import { useSubscription } from '../contexts/SubscriptionContext';
 import { toast as toastService } from '../design-system';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '../firebase';
 import CollectionManagement from './settings/CollectionManagement';
-import SubscriptionManagement from './SubscriptionManagement';
 import MarketplaceProfile from './settings/MarketplaceProfile';
 import MarketplaceReviews from './settings/MarketplaceReviews';
 import db from '../services/firestore/dbAdapter';
@@ -18,7 +16,6 @@ const Settings = () => {
   const { user, logout, userData } = useAuth() || {};
   const { theme, toggleTheme } = useTheme() || { theme: 'light', toggleTheme: () => {} };
   const { preferredCurrency, updatePreferredCurrency } = useUserPreferences() || {};
-  const { subscriptionStatus } = useSubscription() || {};
   
   const [activeTab, setActiveTab] = useState('general');
   const [collections, setCollections] = useState({});
@@ -368,13 +365,6 @@ const Settings = () => {
                   </button>
                 </div>
               </div>
-            </div>
-
-            {/* Subscription Management */}
-            <div className="bg-white dark:bg-black border border-gray-200 dark:border-gray-700 rounded-lg p-6">
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Subscription Management</h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Manage your Stripe subscription and billing information.</p>
-              <SubscriptionManagement />
             </div>
 
             {/* Reset All Data */}

@@ -27,7 +27,6 @@ import useCardData from './hooks/useCardData';
 import { processImportedData } from './utils/dataProcessor';
 import db from './services/firestore/dbAdapter';
 import { useTutorial } from './contexts/TutorialContext';
-import { useSubscription } from './contexts/SubscriptionContext';
 import logger from './utils/logger';
 import RestoreListener from './components/RestoreListener';
 import SyncStatusIndicator from './components/SyncStatusIndicator';
@@ -63,7 +62,6 @@ function AppContent() {
   const [initialCardCollection, setInitialCardCollection] = useState(null);
   const { checkAndStartTutorial, startTutorial } = useTutorial();
   const { user, logout } = useAuth();
-  const { subscriptionStatus } = useSubscription();
   const { currentUser } = useAuth();
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const location = useLocation();

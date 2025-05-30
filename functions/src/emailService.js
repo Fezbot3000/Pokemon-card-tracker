@@ -14,9 +14,6 @@ if (apiKey) {
 const EMAIL_TEMPLATES = {
   WELCOME: 'd-e480237baa62442b9bae651a8333b25d',
   EMAIL_VERIFICATION: 'd-80d372d269dc479697fbf3cfec743d1c',
-  SUBSCRIPTION_CONFIRMED: 'd-47b16c4532694534ba72b3bfe50e50b9',
-  PAYMENT_FAILED: 'd-5f9a170e486443b0b85413e78927ffe8',
-  SUBSCRIPTION_CANCELLED: 'd-5f9a170e486443b0b85413e78927ffe8',
   MARKETPLACE_MESSAGE: 'd-a3ec6f68150c4f469bebc920910993f9',
   LISTING_SOLD: 'd-a3ec6f68150c4f469bebc920910993f9'
 };
@@ -81,45 +78,6 @@ class EmailService {
       {
         verification_link: verificationLink,
         app_name: 'MyCardTracker'
-      }
-    );
-  }
-
-  // Subscription confirmed
-  async sendSubscriptionConfirmed(userEmail, userName, planName) {
-    return this.sendEmail(
-      userEmail,
-      EMAIL_TEMPLATES.SUBSCRIPTION_CONFIRMED,
-      {
-        user_name: userName,
-        plan_name: planName,
-        dashboard_url: 'https://mycardtracker.com.au/dashboard'
-      }
-    );
-  }
-
-  // Payment failed
-  async sendPaymentFailed(userEmail, userName, amount) {
-    return this.sendEmail(
-      userEmail,
-      EMAIL_TEMPLATES.PAYMENT_FAILED,
-      {
-        user_name: userName,
-        amount: amount,
-        billing_url: 'https://mycardtracker.com.au/billing'
-      }
-    );
-  }
-
-  // Subscription cancelled
-  async sendSubscriptionCancelled(userEmail, userName, endDate) {
-    return this.sendEmail(
-      userEmail,
-      EMAIL_TEMPLATES.SUBSCRIPTION_CANCELLED,
-      {
-        user_name: userName,
-        end_date: endDate,
-        resubscribe_url: 'https://mycardtracker.com.au/pricing'
       }
     );
   }

@@ -14,8 +14,6 @@ import {
   Header, 
   useTheme, 
   useAuth,
-  toast,
-  Toast, 
   SettingsModal, 
   Icon,
   RestoreProvider, useRestore,
@@ -33,15 +31,12 @@ import ProfitChangeModal from './components/ProfitChangeModal';
 import Home from './components/Home';
 import Login from './components/Login';
 import ForgotPassword from './components/ForgotPassword';
-import Pricing from './components/Pricing';
 import useCardData from './hooks/useCardData';
 import db from './services/firestore/dbAdapter';
 import { TutorialProvider, useTutorial } from './contexts/TutorialContext';
-import { SubscriptionProvider, useSubscription } from './contexts/SubscriptionContext';
 import { UserPreferencesProvider } from './contexts/UserPreferencesContext'; // Added import
 import InvoiceProvider from './contexts/InvoiceContext';
 import ErrorBoundary from './components/ErrorBoundary';
-import PremiumFeatures from './components/PremiumFeatures';
 import './styles/main.css';
 import './styles/black-background.css'; 
 import './styles/ios-fixes.css'; 
@@ -52,7 +47,6 @@ import MarketplaceSelling from './components/Marketplace/MarketplaceSelling';
 import MarketplaceMessages from './components/Marketplace/MarketplaceMessages';
 import BottomNavBar from './components/BottomNavBar';
 import CloudSync from './components/CloudSync';
-import DashboardPricing from './components/DashboardPricing';
 import ComponentLibrary from './pages/ComponentLibrary';
 import logger from './utils/logger'; // Import the logger utility
 import RestoreListener from './components/RestoreListener';
@@ -75,103 +69,42 @@ const generateUniqueId = () => {
   return `card_${timestamp}_${randomPart}`;
 };
 
-// NewUserRoute to check subscription status and redirect to pricing for new sign-ups
+// NewUserRoute to redirect new users to dashboard
 function NewUserRoute() {
   const { user } = useAuth();
-  const { subscriptionStatus, isLoading } = useSubscription();
   const navigate = useNavigate();
-  const location = useLocation();
   const hasRedirected = useRef(false);
   
   useEffect(() => {
     // Avoid multiple redirects
     if (hasRedirected.current) return;
     
-    // Wait until subscription status is loaded
-    if (isLoading) return;
-    
     // Only proceed if we have a user
     if (!user) return;
     
-    // Check if we're coming from a payment flow
-    const isFromPayment = location.search.includes('checkout_success=true');
-    
-    // Check if we need to redirect the user
-    if (isFromPayment) {
-      logger.debug('User is coming from payment flow, clearing isNewUser flag');
-      localStorage.removeItem('isNewUser');
-      localStorage.removeItem('chosenPlan');
-      hasRedirected.current = true;
-      return;
-    }
-    
-    // If user has an active subscription, they can access the dashboard
-    if (subscriptionStatus?.status === 'active') {
-      hasRedirected.current = true;
-      return;
-    }
-    
-    // For inactive/no subscription users who haven't chosen the free plan,
-    // redirect to pricing page
-    if (subscriptionStatus?.status !== 'active') {
-      logger.debug('User needs subscription, redirecting to pricing');
-      hasRedirected.current = true;
-      navigate('/dashboard/pricing');
-      return;
-    }
-  }, [user, subscriptionStatus, isLoading, navigate, location.pathname]);
-  
-  return null;
+    // Clear any new user flags and redirect to dashboard
+    localStorage.removeItem('isNewUser');
+    hasRedirected.current = true;
+    navigate('/dashboard', { replace: true });
+  }, [user, navigate]);
+
+  // Show loading while redirecting
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+        <p className="text-gray-600">Setting up your account...</p>
+      </div>
+    </div>
+  );
 }
 
 // Main Dashboard Component
 function Dashboard() {
-  const { currentUser, loading: authLoading } = useAuth();
-  const location = useLocation();
-  const { subscriptionStatus, isLoading: subscriptionLoading, refreshSubscriptionStatus } = useSubscription();
-  const hasRefreshed = useRef(false);
+  const { currentUser, authLoading } = useAuth();
   const navigate = useNavigate();
-  
-  // Add view state management at Dashboard level
-  const [currentView, setCurrentView] = useState(() => {
-    // Determine initial view based on route
-    if (location.pathname.includes('/settings')) {
-      return 'settings';
-    }
-    return 'cards';
-  });
-
-  // Check for checkout_success parameter when dashboard loads - but only once
-  useEffect(() => {
-    // Only run this once per component mount
-    if (hasRefreshed.current) return;
-    
-    // Detect if user is coming from a payment flow
-    const isFromPayment = location.search.includes('checkout_success=true');
-    
-    if (isFromPayment) {
-      logger.debug('Detected checkout_success parameter, refreshing subscription status');
-      hasRefreshed.current = true;
-      
-      // Force refresh subscription status
-      refreshSubscriptionStatus();
-      
-      // Remove the parameter from URL
-      const url = new URL(window.location);
-      url.searchParams.delete('checkout_success');
-      window.history.replaceState({}, '', url);
-      
-      // If we're on the pricing page but came from payment success, force redirect to dashboard
-      if (location.pathname.includes('/dashboard/pricing')) {
-        logger.debug('User completed payment but is on pricing page, forcing redirect to dashboard');
-        // Add a small delay to allow the subscription status to refresh
-        setTimeout(() => {
-          // Force navigate to dashboard instead of pricing
-          navigate('/dashboard', { replace: true });
-        }, 1500);
-      }
-    }
-  }, [location.search, location.pathname, refreshSubscriptionStatus, navigate]);
+  const location = useLocation();
+  const [currentView, setCurrentView] = useState('cards');
 
   // Show loading indicator while auth state is being determined
   if (authLoading) {
@@ -187,23 +120,7 @@ function Dashboard() {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
   
-  // Show loading indicator while subscription status is being determined
-  if (subscriptionLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-  
-  // Redirect to pricing if subscription is not active (and not loading)
-  // Add check to avoid redirect loop if already on pricing page
-  if (subscriptionStatus?.status !== 'active' && location.pathname !== '/dashboard/pricing') {
-    logger.debug('Dashboard Gate: User needs subscription, redirecting to pricing');
-    return <Navigate to="/dashboard/pricing" replace />;
-  }
-  
-  // Render the dashboard content if authenticated and subscription is active
+  // Render the dashboard content if authenticated
   return (
     <div className="relative">
       <Outlet context={{ currentView, setCurrentView }} />
@@ -239,34 +156,7 @@ function Dashboard() {
 function DashboardIndex() {
   const { currentView, setCurrentView } = useOutletContext();
   const location = useLocation();
-  const navigate = useNavigate();
-  const { subscriptionStatus, isLoading: isLoadingSubscription } = useSubscription();
   
-  // Handle post-payment success
-  useEffect(() => {
-    // Only run on client side to avoid hydration issues
-    if (typeof window !== 'undefined') {
-      const isFromPayment = location.search.includes('checkout_success=true') || 
-        localStorage.getItem('recentPayment') === 'true';
-        
-      if (isFromPayment) {
-        // Clean up URL parameter immediately
-        if (location.search.includes('checkout_success=true')) {
-          window.history.replaceState({}, '', location.pathname);
-        }
-        
-        // Show success message
-        toast.success('Payment successful! Checking subscription status...', {
-          id: 'payment-success',
-          duration: 3000
-        });
-        
-        // Clear localStorage flag
-        localStorage.removeItem('recentPayment');
-      }
-    }
-  }, [location]);
-
   // Handle navigation state from settings page
   useEffect(() => {
     if (location.state?.targetView) {
@@ -275,23 +165,6 @@ function DashboardIndex() {
       window.history.replaceState({}, '', location.pathname);
     }
   }, [location.state, setCurrentView]);
-  
-  // Check if subscription is now active after payment
-  useEffect(() => {
-    const wasFromPayment = localStorage.getItem('recentPayment') === 'true' || 
-      sessionStorage.getItem('justPaid') === 'true';
-      
-    if (subscriptionStatus.status === 'active' && !isLoadingSubscription && wasFromPayment) {
-      toast.success('Premium subscription activated! Welcome to Premium!', {
-        id: 'subscription-activated',
-        duration: 4000
-      });
-      
-      // Clear flags
-      localStorage.removeItem('recentPayment');
-      sessionStorage.removeItem('justPaid');
-    }
-  }, [subscriptionStatus, isLoadingSubscription]);
   
   return <>
     <AppContent currentView={currentView} setCurrentView={setCurrentView} />
@@ -323,11 +196,9 @@ function AppContent({ currentView, setCurrentView }) {
   const [selectedCollection, setSelectedCollection] = useState('All Cards');
   const [collections, setCollections] = useState({});
   const [isLoading, setIsLoading] = useState(true);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const { registerAddCardCallback, checkAndStartTutorial, startTutorial } = useTutorial();
   const { user, logout } = useAuth();
-  const { subscriptionStatus } = useSubscription();
-  const { currentUser } = useAuth();
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const location = useLocation();
   const navigate = useNavigate();
   
@@ -428,16 +299,16 @@ function AppContent({ currentView, setCurrentView }) {
     }
   }, [registerAddCardCallback]);
 
-  // Check if this is a new user and start the tutorial, but only if they have an active subscription
+  // Check if this is a new user and start the tutorial
   useEffect(() => {
-    if (user && subscriptionStatus?.status === 'active') {
+    if (user) {
       // Start the tutorial for new users after a short delay
       // to ensure the UI is fully loaded
       setTimeout(() => {
         checkAndStartTutorial();
       }, 1000);
     }
-  }, [user, checkAndStartTutorial, subscriptionStatus?.status]);
+  }, [user, checkAndStartTutorial]);
 
   // Check if device is mobile on resize
   useEffect(() => {

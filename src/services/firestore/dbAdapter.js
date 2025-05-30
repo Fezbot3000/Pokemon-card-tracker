@@ -342,30 +342,6 @@ class DatabaseAdapter {
     }
   }
 
-  // ===== SUBSCRIPTION METHODS =====
-
-  async getSubscription(userId) {
-    try {
-      const profile = await firestoreService.getProfile();
-      return profile?.subscription || null;
-    } catch (error) {
-      logger.error('Error in getSubscription adapter:', error);
-      return null;
-    }
-  }
-
-  async saveSubscription(subscriptionData) {
-    try {
-      const profile = await firestoreService.getProfile() || {};
-      profile.subscription = subscriptionData;
-      await firestoreService.saveProfile(profile);
-      return { success: true };
-    } catch (error) {
-      logger.error('Error in saveSubscription adapter:', error);
-      return { success: false, error };
-    }
-  }
-
   // ===== UTILITY METHODS =====
 
   async resetAllData() {

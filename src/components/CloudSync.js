@@ -2,15 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '../services/firebase';
 import { useAuth } from '../design-system';
-import { useSubscription } from '../contexts/SubscriptionContext';
-import SubscriptionBanner from './SubscriptionBanner';
 import { toast } from 'react-hot-toast';
 import { Link } from 'react-router-dom';
 import logger from '../utils/logger';
 
 const CloudSync = ({ onExportData, onImportCollection }) => {
   const { currentUser } = useAuth();
-  const { subscriptionStatus, isLoading: isLoadingSubscription } = useSubscription();
   const [isSyncing, setIsSyncing] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -34,12 +31,6 @@ const CloudSync = ({ onExportData, onImportCollection }) => {
   const handleSyncToCloud = async () => {
     if (!currentUser) {
       toast.error('You must be logged in to use cloud sync');
-      return;
-    }
-
-    // Check if user has premium subscription
-    if (subscriptionStatus.status !== 'active') {
-      toast.error('Cloud sync requires a premium subscription');
       return;
     }
 
@@ -92,12 +83,6 @@ const CloudSync = ({ onExportData, onImportCollection }) => {
   const handleImportFromCloud = async () => {
     if (!currentUser) {
       toast.error('You must be logged in to import from cloud');
-      return;
-    }
-
-    // Check if user has premium subscription
-    if (subscriptionStatus.status !== 'active') {
-      toast.error('Cloud sync requires a premium subscription');
       return;
     }
 
@@ -210,37 +195,6 @@ const CloudSync = ({ onExportData, onImportCollection }) => {
     }
   };
 
-  if (!currentUser || subscriptionStatus.status !== 'active') {
-    return (
-      <div className="bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg p-4 text-white relative overflow-hidden">
-        <div className="absolute -right-4 -top-4 text-yellow-300 opacity-10">
-          <span className="material-icons" style={{ fontSize: '6rem' }}>star</span>
-        </div>
-        
-        <div className="flex items-start">
-          <div className="mr-3 p-2 bg-white/20 rounded-full">
-            <span className="material-icons text-yellow-300">workspace_premium</span>
-          </div>
-          
-          <div className="flex-grow">
-            <h4 className="text-lg font-semibold mb-1">Premium Feature</h4>
-            <p className="text-sm opacity-90 mb-3">
-              Cloud backup requires a premium subscription. Upgrade to access cloud backup and more!
-            </p>
-            
-            <Link
-              to="/dashboard/pricing"
-              className="inline-flex items-center bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-medium px-4 py-2 rounded-lg transition-colors"
-            >
-              <span className="material-icons text-sm mr-1">upgrade</span>
-              Upgrade Now
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="py-4 space-y-4">
       <div className="flex flex-col gap-2 mb-4">
@@ -260,14 +214,12 @@ const CloudSync = ({ onExportData, onImportCollection }) => {
       <div className={`${isMobile ? 'flex flex-col gap-3' : 'flex gap-2'}`}>
         <button
           onClick={handleSyncToCloud}
-          disabled={isSyncing || !currentUser || isLoadingSubscription || subscriptionStatus.status !== 'active'}
+          disabled={isSyncing || !currentUser}
           className={`btn btn-primary ${isMobile ? 'w-full' : 'flex-1'}`}
           style={{ minWidth: '110px' }}
         >
           {isSyncing ? (
             <>Creating backup...</>
-          ) : isLoadingSubscription ? (
-            <>Checking subscription...</>
           ) : (
             <>
               <span className="material-icons" style={{ fontSize: '20px' }}>cloud_upload</span>
@@ -278,14 +230,12 @@ const CloudSync = ({ onExportData, onImportCollection }) => {
         
         <button
           onClick={handleImportFromCloud}
-          disabled={isImporting || !currentUser || isLoadingSubscription || subscriptionStatus.status !== 'active'}
+          disabled={isImporting || !currentUser}
           className={`btn btn-primary ${isMobile ? 'w-full' : 'flex-1'}`}
           style={{ minWidth: '110px' }}
         >
           {isImporting ? (
             <>Restoring data...</>
-          ) : isLoadingSubscription ? (
-            <>Checking subscription...</>
           ) : (
             <>
               <span className="material-icons" style={{ fontSize: '20px' }}>cloud_download</span>

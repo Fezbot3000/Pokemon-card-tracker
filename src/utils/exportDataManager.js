@@ -51,8 +51,6 @@ export const exportDataManager = {
               userDocument = userDocSnap.data();
               // Remove any sensitive fields
               delete userDocument.apiKeys;
-              delete userDocument.stripeCustomerId;
-              delete userDocument.stripeSubscriptionId;
             }
           } catch (error) {
             logger.error('Error fetching user document:', error);

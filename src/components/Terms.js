@@ -13,7 +13,6 @@ const Terms = () => {
     { id: 'usage', title: 'Acceptable Use', icon: '✔️' },
     { id: 'content', title: 'User Content', icon: '📝' },
     { id: 'marketplace', title: 'Marketplace', icon: '🏪' },
-    { id: 'payment', title: 'Payment Terms', icon: '💳' },
     { id: 'termination', title: 'Termination', icon: '🚪' },
     { id: 'liability', title: 'Liability', icon: '⚖️' },
     { id: 'contact', title: 'Contact', icon: '📞' }
@@ -148,16 +147,6 @@ const Terms = () => {
                     </h2>
                     <div className="text-gray-300 space-y-4">
                       <p>Our marketplace facilitates transactions between users. We are not a party to these transactions but provide tools and security measures to help ensure safe trading.</p>
-                    </div>
-                  </section>
-
-                  {/* Payment Terms */}
-                  <section id="payment">
-                    <h2 className="text-2xl font-bold mb-4 flex items-center">
-                      <span className="mr-3">💳</span>Payment Terms
-                    </h2>
-                    <div className="text-gray-300 space-y-4">
-                      <p>Subscription fees are billed in advance. Refunds are provided according to our refund policy. Prices may change with 30 days notice.</p>
                     </div>
                   </section>
 

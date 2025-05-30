@@ -1,54 +1,18 @@
 import { getFunctions, httpsCallable } from 'firebase/functions';
+import { getApp } from 'firebase/app';
 
-const functions = getFunctions();
+const functions = getFunctions(getApp(), 'us-central1');
 
 // Email service helper for frontend
 class EmailServiceHelper {
   constructor() {
     // Initialize all email functions
-    this.testEmail = httpsCallable(functions, 'testEmail');
-    this.sendSubscriptionEmail = httpsCallable(functions, 'sendSubscriptionEmail');
-    this.sendPaymentFailedEmail = httpsCallable(functions, 'sendPaymentFailedEmail');
+    this.sendWelcomeEmail = httpsCallable(functions, 'sendWelcomeEmail');
     this.sendMarketplaceMessageEmail = httpsCallable(functions, 'sendMarketplaceMessageEmail');
     this.sendListingSoldEmail = httpsCallable(functions, 'sendListingSoldEmail');
     this.sendEmailVerificationEmail = httpsCallable(functions, 'sendEmailVerificationEmail');
     this.sendCustomEmail = httpsCallable(functions, 'sendCustomEmail');
-  }
-
-  // Send test email
-  async sendTestEmail(to, subject = 'Test Email from MyCardTracker') {
-    try {
-      const result = await this.testEmail({ to, subject });
-      return result.data;
-    } catch (error) {
-      console.error('Error sending test email:', error);
-      throw error;
-    }
-  }
-
-  // Send subscription confirmation/cancellation email
-  async sendSubscriptionNotification(userEmail, userName, planName, type, endDate = null) {
-    try {
-      const data = { userEmail, userName, planName, type };
-      if (endDate) data.endDate = endDate;
-      
-      const result = await this.sendSubscriptionEmail(data);
-      return result.data;
-    } catch (error) {
-      console.error('Error sending subscription email:', error);
-      throw error;
-    }
-  }
-
-  // Send payment failed notification
-  async sendPaymentFailedNotification(userEmail, userName, amount) {
-    try {
-      const result = await this.sendPaymentFailedEmail({ userEmail, userName, amount });
-      return result.data;
-    } catch (error) {
-      console.error('Error sending payment failed email:', error);
-      throw error;
-    }
+    this.sendFeedbackEmail = httpsCallable(functions, 'sendFeedbackEmail');
   }
 
   // Send marketplace message notification
@@ -101,6 +65,17 @@ class EmailServiceHelper {
       return result.data;
     } catch (error) {
       console.error('Error sending custom email:', error);
+      throw error;
+    }
+  }
+
+  // Send feedback email
+  async sendFeedbackEmailMessage(to, subject, htmlContent) {
+    try {
+      const result = await this.sendFeedbackEmail({ to, subject, htmlContent });
+      return result.data;
+    } catch (error) {
+      console.error('Error sending feedback email:', error);
       throw error;
     }
   }

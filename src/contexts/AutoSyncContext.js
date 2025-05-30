@@ -4,7 +4,6 @@ import { ref, getDownloadURL } from 'firebase/storage';
 import { storage } from '../services/firebase';
 import { toast } from 'react-hot-toast';
 import logger from '../utils/logger';
-import { useSubscription } from './SubscriptionContext';
 
 const AutoSyncContext = createContext({
   isAutoSyncEnabled: false,
@@ -18,7 +17,6 @@ export const useAutoSync = () => useContext(AutoSyncContext);
 
 export const AutoSyncProvider = ({ children }) => {
   const { currentUser } = useAuth();
-  const { subscriptionStatus } = useSubscription();
   const [isAutoSyncEnabled, setIsAutoSyncEnabled] = useState(
     localStorage.getItem('autoRestoreEnabled') === 'true'
   );
@@ -36,8 +34,8 @@ export const AutoSyncProvider = ({ children }) => {
   useEffect(() => {
     const checkForAutoRestore = async () => {
       try {
-        // Only run if user is logged in, auto-restore is enabled, and user has premium subscription
-        if (!currentUser || !isAutoSyncEnabled || subscriptionStatus.status !== 'active') {
+        // Only run if user is logged in and auto-restore is enabled
+        if (!currentUser || !isAutoSyncEnabled) {
           return;
         }
         
@@ -86,7 +84,7 @@ export const AutoSyncProvider = ({ children }) => {
     
     checkForAutoRestore();
     
-  }, [currentUser, isAutoSyncEnabled, subscriptionStatus]);
+  }, [currentUser, isAutoSyncEnabled]);
   
   // Function to manually trigger cloud restore (can be called from other components)
   const triggerCloudRestore = () => {

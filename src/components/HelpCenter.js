@@ -69,7 +69,7 @@ const HelpCenter = () => {
         4. Review and confirm imports
         5. Cards are added automatically
 
-        **Barcode Scanning (Premium)**
+        **Barcode Scanning**
         1. Use the mobile app
         2. Scan card barcodes
         3. Auto-populate card details
@@ -196,17 +196,16 @@ const HelpCenter = () => {
     {
       id: 5,
       title: 'Cloud Backup and Sync',
-      category: 'premium-features',
+      category: 'general-features',
       content: 'Learn how to backup and sync your collection across devices.',
       fullContent: `
-        Premium users can backup and sync their collections across all devices.
+        Users can backup and sync their collections across all devices.
 
         **Setting Up Cloud Backup**
-        1. Upgrade to Premium subscription
-        2. Go to Settings > Cloud Backup
-        3. Enable automatic backup
-        4. Choose backup frequency
-        5. Verify backup completion
+        1. Go to Settings > Cloud Backup
+        2. Enable automatic backup
+        3. Choose backup frequency
+        4. Verify backup completion
 
         **Manual Backup**
         1. Click "Backup Now" button
@@ -238,20 +237,19 @@ const HelpCenter = () => {
 
         **Troubleshooting Sync Issues**
         - Check internet connection
-        - Verify subscription status
         - Force sync manually
         - Clear app cache if needed
         - Contact support for persistent issues
       `,
-      tags: ['backup', 'sync', 'cloud', 'premium', 'restore']
+      tags: ['backup', 'sync', 'cloud', 'restore']
     },
     {
       id: 6,
       title: 'Advanced Analytics and Reports',
-      category: 'premium-features',
+      category: 'general-features',
       content: 'Understand your collection analytics and generate reports.',
       fullContent: `
-        Premium analytics help you understand your collection's performance and value trends.
+        Advanced analytics help you understand your collection's performance and value trends.
 
         **Collection Overview**
         - Total collection value
@@ -302,7 +300,7 @@ const HelpCenter = () => {
         - Collection goal reminders
         - Backup completion notices
       `,
-      tags: ['analytics', 'reports', 'value', 'tracking', 'premium']
+      tags: ['analytics', 'reports', 'value', 'tracking']
     },
     {
       id: 7,
@@ -340,10 +338,9 @@ const HelpCenter = () => {
         - Slow loading: Clear cache, check internet speed
         - Images not displaying: Refresh page, check ad blockers
         - Features not working: Try different browser, disable extensions
-        - Data not syncing: Force refresh, check subscription status
+        - Data not syncing: Force refresh, check internet connection
 
         **Account Issues**
-        - Subscription problems: Check payment method, contact billing
         - Profile updates not saving: Check required fields
         - Privacy settings: Review and update in account settings
         - Data export: Use backup feature or contact support
@@ -423,9 +420,9 @@ const HelpCenter = () => {
     { id: 'getting-started', name: 'Getting Started', icon: '🚀' },
     { id: 'collection-management', name: 'Collection Management', icon: '📦' },
     { id: 'marketplace', name: 'Marketplace', icon: '🏪' },
-    { id: 'premium-features', name: 'Premium Features', icon: '⭐' },
     { id: 'mobile', name: 'Mobile App', icon: '📱' },
-    { id: 'troubleshooting', name: 'Troubleshooting', icon: '🔧' }
+    { id: 'troubleshooting', name: 'Troubleshooting', icon: '🔧' },
+    { id: 'general-features', name: 'General Features', icon: '📈' }
   ];
 
   const filteredArticles = useMemo(() => {

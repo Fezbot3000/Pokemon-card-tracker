@@ -20,7 +20,6 @@ import logger from '../../utils/logger';
 import shadowSync from '../../services/shadowSync'; // Import the shadowSync service directly
 import { CardRepository } from '../../repositories/CardRepository'; // Import CardRepository
 import { searchByCertNumber, parsePSACardData } from '../../services/psaSearch';
-import SubscriptionManagement from '../../components/SubscriptionManagement'; // Import the SubscriptionManagement component
 import CollectionManagement from '../../components/settings/CollectionManagement'; // Import CollectionManagement
 import { useUserPreferences, availableCurrencies } from '../../contexts/UserPreferencesContext'; // Added import
 import SelectField from '../atoms/SelectField'; // Added import
@@ -105,7 +104,6 @@ const SettingsModal = ({
   const [resetConfirmText, setResetConfirmText] = useState('');
   const [isVerifyingBackup, setIsVerifyingBackup] = useState(false); // Add state for cloud backup verification
   const [verificationStatus, setVerificationStatus] = useState('Idle'); // Add state for verification status
-  const [isCreatingPortalSession, setIsCreatingPortalSession] = useState(false);
   const importBaseDataRef = useRef(null);
   const imageUploadRef = useRef(null); // Add ref for image upload
   const soldItemsRef = useRef(null);
@@ -673,67 +671,6 @@ const SettingsModal = ({
     setResetConfirmText('');
   };
 
-  // Handle subscription management
-  const handleManageSubscription = async () => {
-    setIsCreatingPortalSession(true);
-    try {
-      const functions = getFunctions(undefined, 'us-central1');
-      const createPortalSession = httpsCallable(functions, 'createCustomerPortalSession');
-      
-      // Get the current URL origin for the return URL
-      const baseUrl = window.location.origin;
-      
-      // Call the Cloud Function to get a fresh session URL with the baseUrl
-      const { data } = await createPortalSession({ 
-        baseUrl,
-        returnUrl: `${baseUrl}/dashboard`
-      });
-      
-      if (data && data.url) {
-        // Redirect to the Stripe Customer Portal
-        window.open(data.url, '_blank');
-      } else {
-        toastService.error('Could not access subscription management portal');
-      }
-    } catch (error) {
-      console.error('Error creating portal session:', error);
-      toastService.error(`Failed to access subscription portal: ${error.message}`);
-    } finally {
-      setIsCreatingPortalSession(false);
-    }
-  };
-
-  // Handle subscription cancellation
-  const handleCancelSubscription = async () => {
-    // Show confirmation dialog before cancellation
-    if (window.confirm('Are you sure you want to cancel your subscription? You will lose access to premium features at the end of your billing period.')) {
-      try {
-        // Redirect to the Stripe Customer Portal with cancel_subscription=true parameter
-        await handleManageSubscription();
-        toastService.success('Please complete cancellation in the Stripe portal.');
-      } catch (error) {
-        console.error('Error initiating cancellation:', error);
-        toastService.error(`Failed to initiate cancellation: ${error.message}`);
-      }
-    }
-  };
-
-  // Deprecated bulk PSA data reload function (removed)
-  const handleBulkPSAReload = () => {
-    console.warn('handleBulkPSAReload was deprecated and has been removed');
-  };
-
-  // Handle subscription upgrade
-  const handleUpgradeSubscription = async () => {
-    if (!user) {
-      toastService.error('You must be logged in to subscribe');
-      return;
-    }
-    
-    // Redirect to Stripe checkout
-    window.location.href = `https://buy.stripe.com/${process.env.REACT_APP_STRIPE_PRICE_ID}?client_reference_id=${user.uid}&prefilled_email=${user.email}`;
-  };
-
   const handlePreferredCurrencyChange = (event) => {
     const newCurrencyCode = event.target.value;
     // Find the full currency object from availableCurrencies
@@ -1095,15 +1032,6 @@ const SettingsModal = ({
                     >
                       Save Profile
                     </Button>
-                  </div>
-                </SettingsPanel>
-
-                <SettingsPanel
-                  title="Subscription Management"
-                  description="Manage your Stripe subscription and billing information."
-                >
-                  <div className="space-y-4">
-                    <SubscriptionManagement isMobile={false} onClose={onClose} />
                   </div>
                 </SettingsPanel>
 

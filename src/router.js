@@ -3,7 +3,6 @@ import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import { Toast, useAuth } from './design-system';
 import DesignSystemProvider from './design-system/providers/DesignSystemProvider';
-import { SubscriptionProvider } from './contexts/SubscriptionContext';
 import { UserPreferencesProvider } from './contexts/UserPreferencesContext';
 import { TutorialProvider } from './contexts/TutorialContext';
 import { CardProvider } from './contexts/CardContext';
@@ -14,7 +13,6 @@ import ErrorBoundary from './components/ErrorBoundary';
 import Home from './components/Home';
 import Login from './components/Login';
 import ForgotPassword from './components/ForgotPassword';
-import Pricing from './components/Pricing';
 import Features from './components/Features';
 import About from './components/About';
 import Privacy from './components/Privacy';
@@ -26,14 +24,9 @@ import PokemonSets from './components/PokemonSets';
 import PokemonInvestmentGuide from './components/PokemonInvestmentGuide';
 import { Dashboard, DashboardIndex } from './App';
 import Settings from './components/Settings';
-import DashboardPricing from './components/DashboardPricing';
-import PremiumFeatures from './components/PremiumFeatures';
 import ComponentLibrary from './pages/ComponentLibrary';
 import MarketplaceListing from './components/Marketplace/MarketplaceListing';
 import PublicMarketplace from './components/PublicMarketplace';
-import PostCheckout from './components/PostCheckout';
-import Subscribe from './pages/Subscribe';
-import SubscriptionStatus from './pages/SubscriptionStatus';
 import ProtectedRoute from './components/ProtectedRoute';
 
 // Root providers wrapper component
@@ -41,37 +34,35 @@ export const RootProviders = () => (
   <ErrorBoundary>
     <HelmetProvider>
       <DesignSystemProvider>
-        <SubscriptionProvider>
-          <UserPreferencesProvider>
-            <TutorialProvider>
-              <CardProvider>
-                <BackupProvider>
-                  <BackupProgressBar />
-                  <RestoreProvider>
-                    <RestoreProgressBar />
-                    <InvoiceProvider>
-                      <Toast
-                        position="bottom-right"
-                        toastOptions={{
-                          duration: 3000,
-                          style: {
-                            background: '#1B2131',
-                            color: '#FFFFFF',
-                            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                            borderRadius: '12px',
-                            padding: '12px 24px',
-                            fontWeight: '500'
-                          }
-                        }}
-                      />
-                      <Outlet />
-                    </InvoiceProvider>
-                  </RestoreProvider>
-                </BackupProvider>
-              </CardProvider>
-            </TutorialProvider>
-          </UserPreferencesProvider>
-        </SubscriptionProvider>
+        <UserPreferencesProvider>
+          <TutorialProvider>
+            <CardProvider>
+              <BackupProvider>
+                <BackupProgressBar />
+                <RestoreProvider>
+                  <RestoreProgressBar />
+                  <InvoiceProvider>
+                    <Toast
+                      position="bottom-right"
+                      toastOptions={{
+                        duration: 3000,
+                        style: {
+                          background: '#1B2131',
+                          color: '#FFFFFF',
+                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                          borderRadius: '12px',
+                          padding: '12px 24px',
+                          fontWeight: '500'
+                        }
+                      }}
+                    />
+                    <Outlet />
+                  </InvoiceProvider>
+                </RestoreProvider>
+              </BackupProvider>
+            </CardProvider>
+          </TutorialProvider>
+        </UserPreferencesProvider>
       </DesignSystemProvider>
     </HelmetProvider>
   </ErrorBoundary>
@@ -94,10 +85,6 @@ export const router = createBrowserRouter([
       {
         path: 'forgot-password',
         element: <ForgotPassword />,
-      },
-      {
-        path: 'pricing',
-        element: <Pricing />,
       },
       {
         path: 'features',
@@ -144,38 +131,18 @@ export const router = createBrowserRouter([
         element: <MarketplaceListing />,
       },
       {
-        path: 'post-checkout',
-        element: <PostCheckout />,
-      },
-      {
-        path: 'subscribe',
-        element: <Subscribe />,
-      },
-      {
-        path: 'subscription-status',
-        element: <SubscriptionStatus />,
-      },
-      {
         path: 'dashboard',
-        element: <ProtectedRoute requireSubscription={true}><Dashboard /></ProtectedRoute>,
+        element: <Dashboard />,
         children: [
           {
             index: true,
             element: <DashboardIndex />,
           },
           {
-            path: 'pricing',
-            element: <DashboardPricing />,
-          },
-          {
             path: 'settings',
             element: <Settings />,
           },
         ],
-      },
-      {
-        path: 'premium/*',
-        element: <PremiumFeatures />,
       },
       {
         path: 'component-library',

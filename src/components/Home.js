@@ -56,7 +56,7 @@ function Home() {
                   "@type": "ImageObject",
                   "url": "https://www.mycardtracker.com.au/logo192.png"
                 },
-                "description": "Australia's premier trading card tracking and marketplace platform",
+                "description": "Free Pokemon card tracking application",
                 "areaServed": "Australia",
                 "serviceType": "Digital Platform"
               },
@@ -80,12 +80,6 @@ function Home() {
                 "name": "MyCardTracker",
                 "applicationCategory": "CollectionManagement",
                 "operatingSystem": "Web Browser",
-                "offers": {
-                  "@type": "Offer",
-                  "price": "0",
-                  "priceCurrency": "AUD",
-                  "description": "Free tier with 50 cards, premium plans available"
-                },
                 "aggregateRating": {
                   "@type": "AggregateRating",
                   "ratingValue": "4.8",

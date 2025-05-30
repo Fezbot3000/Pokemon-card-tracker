@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth, useTheme } from '../design-system';
-import { useSubscription } from '../contexts/SubscriptionContext';
 import { useTutorial } from '../contexts/TutorialContext';
 import { Link } from 'react-router-dom';
 
 const MobileSettingsModal = ({ isOpen, onClose, onResetData }) => {
   const { user, signOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
-  const { subscriptionStatus } = useSubscription();
   const { startTutorial } = useTutorial();
   const [currency, setCurrency] = useState(localStorage.getItem('currency') || 'USD');
 
@@ -75,11 +73,6 @@ const MobileSettingsModal = ({ isOpen, onClose, onResetData }) => {
           <div className="pb-4 border-b border-gray-200 dark:border-gray-700">
             <p className="text-sm text-gray-600 dark:text-gray-400">Signed in as</p>
             <p className="font-medium text-gray-900 dark:text-white">{user?.email}</p>
-            {subscriptionStatus === 'active' && (
-              <span className="inline-block mt-2 px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
-                Premium Subscriber
-              </span>
-            )}
           </div>
 
           {/* Theme Toggle */}
@@ -118,19 +111,6 @@ const MobileSettingsModal = ({ isOpen, onClose, onResetData }) => {
               <option value="CAD">CAD ($)</option>
             </select>
           </div>
-
-          {/* Subscription Management */}
-          {subscriptionStatus !== 'active' && (
-            <div>
-              <Link
-                to="/dashboard/pricing"
-                onClick={onClose}
-                className="block w-full text-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-              >
-                Upgrade to Premium
-              </Link>
-            </div>
-          )}
 
           {/* Tutorial */}
           <div>

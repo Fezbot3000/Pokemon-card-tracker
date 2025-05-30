@@ -12,7 +12,6 @@ admin.initializeApp();
 
 // Export email functions
 exports.sendWelcomeEmail = emailFunctions.sendWelcomeEmail;
-exports.handleStripeWebhook = emailFunctions.handleStripeWebhook;
 exports.sendMarketplaceMessageNotification = emailFunctions.sendMarketplaceMessageNotification;
 exports.sendListingSoldNotification = emailFunctions.sendListingSoldNotification;
 exports.sendCustomEmail = emailFunctions.sendCustomEmail;

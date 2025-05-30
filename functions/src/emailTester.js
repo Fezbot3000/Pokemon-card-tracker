@@ -32,23 +32,7 @@ exports.testAllEmails = functions.https.onCall(async (data, context) => {
       results.push({ type: 'Email Verification', status: 'failed', error: error.message });
     }
 
-    // 3. Subscription Confirmed - Use SendGrid template
-    try {
-      await emailService.sendSubscriptionConfirmed(to, 'Test User', 'Pro Plan');
-      results.push({ type: 'Subscription Confirmed', status: 'sent' });
-    } catch (error) {
-      results.push({ type: 'Subscription Confirmed', status: 'failed', error: error.message });
-    }
-
-    // 4. Payment Failed - Use SendGrid template
-    try {
-      await emailService.sendPaymentFailed(to, 'Test User', '$9.99');
-      results.push({ type: 'Payment Failed', status: 'sent' });
-    } catch (error) {
-      results.push({ type: 'Payment Failed', status: 'failed', error: error.message });
-    }
-
-    // 5. Marketplace Message - Use SendGrid template
+    // 3. Marketplace Message - Use SendGrid template
     try {
       await emailService.sendMarketplaceMessage(to, 'John Buyer', 'Is this card still available? I\'m very interested!', 'Charizard Base Set Shadowless');
       results.push({ type: 'Marketplace Message', status: 'sent' });
@@ -56,20 +40,12 @@ exports.testAllEmails = functions.https.onCall(async (data, context) => {
       results.push({ type: 'Marketplace Message', status: 'failed', error: error.message });
     }
 
-    // 6. Listing Sold - Use SendGrid template
+    // 4. Listing Sold - Use SendGrid template
     try {
       await emailService.sendListingSold(to, 'Test User', 'Pikachu First Edition', '$250.00');
       results.push({ type: 'Listing Sold', status: 'sent' });
     } catch (error) {
       results.push({ type: 'Listing Sold', status: 'failed', error: error.message });
-    }
-
-    // 7. Subscription Cancelled - Use SendGrid template
-    try {
-      await emailService.sendSubscriptionCancelled(to, 'Test User', 'March 31, 2024');
-      results.push({ type: 'Subscription Cancelled', status: 'sent' });
-    } catch (error) {
-      results.push({ type: 'Subscription Cancelled', status: 'failed', error: error.message });
     }
 
     return {
