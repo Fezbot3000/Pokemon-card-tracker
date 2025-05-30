@@ -1,5 +1,5 @@
 // Test comment to verify GitHub Actions automatic deployment is working
-const functions = require("firebase-functions").region('australia-southeast1');
+const functions = require("firebase-functions").region('us-central1');
 const admin = require("firebase-admin");
 const fetch = require('node-fetch'); // Use node-fetch v2 syntax
 const PDFDocument = require('pdfkit');
@@ -74,7 +74,12 @@ const cors = require('cors')({
 // Add better logging for Stripe initialization
 let stripe;
 try {
-  stripe = require("stripe")(functions.config().stripe.secret_key);
+  // Use environment variables instead of functions.config()
+  const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+  if (!stripeSecretKey) {
+    throw new Error('STRIPE_SECRET_KEY environment variable is not set');
+  }
+  stripe = require("stripe")(stripeSecretKey);
   console.log("Stripe initialized successfully");
 } catch (error) {
   console.error("Error initializing Stripe:", error);
@@ -583,7 +588,7 @@ exports.syncSubscriptionStatus = functions.https.onCall(async (data, context) =>
 // Webhook handler for Stripe events
 exports.stripeWebhook = functions.https.onRequest(async (request, response) => {
   const signature = request.headers['stripe-signature'];
-  const endpointSecret = functions.config().stripe.webhook_secret;
+  const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
   
   let event;
   
