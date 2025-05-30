@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../design-system';
 import { useSubscription } from '../contexts/SubscriptionContext';
 import { getFunctions, httpsCallable } from 'firebase/functions';
@@ -37,11 +37,18 @@ function DashboardPricing() {
 
   // Detect if user is coming from a successful payment
   useEffect(() => {
-    const isFromPayment = location.search.includes('checkout_success=true') || 
-      localStorage.getItem('recentPayment') === 'true';
-      
-    if (isFromPayment) {
-      setIsPostPayment(true);
+    // Only run on client side to avoid hydration issues
+    if (typeof window !== 'undefined') {
+      const isFromPayment = location.search.includes('checkout_success=true') || 
+        localStorage.getItem('recentPayment') === 'true';
+        
+      if (isFromPayment) {
+        setIsPostPayment(true);
+        // Clean up URL parameter to avoid issues
+        if (location.search.includes('checkout_success=true')) {
+          window.history.replaceState({}, '', location.pathname);
+        }
+      }
     }
   }, [location]);
 
