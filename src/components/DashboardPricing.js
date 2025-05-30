@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../design-system';
 import { useSubscription } from '../contexts/SubscriptionContext';
 import { getFunctions, httpsCallable } from 'firebase/functions';
@@ -89,13 +89,13 @@ function DashboardPricing() {
   };
 
   // Add handleSubscribeClick function
-  const handleSubscribeClick = () => {
+  const handleSubscribeClick = async () => {
     console.log('Subscribe button clicked');
     console.log('Current user:', currentUser);
     
     if (!currentUser) {
       console.error('No user logged in');
-      alert('Please log in to subscribe');
+      toast.error('Please log in to subscribe');
       return;
     }
 
@@ -104,25 +104,50 @@ function DashboardPricing() {
         uid: currentUser.uid,
         email: currentUser.email
       });
-      alert('User information incomplete. Please try logging out and back in.');
+      toast.error('User information incomplete. Please try logging out and back in.');
       return;
     }
 
     console.log('User authenticated, proceeding to checkout');
     
-    // Use environment variable for price ID
-    const priceId = process.env.REACT_APP_STRIPE_PRICE_ID;
-    
-    if (!priceId) {
-      console.error('Stripe price ID not configured');
-      alert('Payment system not configured. Please contact support.');
-      return;
+    try {
+      // Import Firebase functions
+      const { getFunctions, httpsCallable } = await import('firebase/functions');
+      const functions = getFunctions();
+      const createCheckoutSession = httpsCallable(functions, 'createCheckoutSession');
+      
+      // Get the price ID from environment variable
+      const priceId = process.env.REACT_APP_STRIPE_PRICE_ID;
+      
+      if (!priceId) {
+        console.error('Stripe price ID not configured');
+        toast.error('Payment system not configured. Please contact support.');
+        return;
+      }
+      
+      console.log('Creating checkout session with price ID:', priceId);
+      
+      // Call the Firebase function to create a checkout session
+      const result = await createCheckoutSession({
+        priceId: priceId,
+        baseUrl: window.location.origin,
+        successUrl: `${window.location.origin}/?checkout_success=true`,
+        cancelUrl: `${window.location.origin}/dashboard/pricing`
+      });
+      
+      console.log('Checkout session created:', result.data);
+      
+      if (result.data.success && result.data.url) {
+        console.log('Redirecting to checkout:', result.data.url);
+        window.location.href = result.data.url;
+      } else {
+        console.error('Failed to create checkout session:', result.data);
+        toast.error('Failed to create checkout session. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error creating checkout session:', error);
+      toast.error('Failed to start checkout process. Please try again.');
     }
-    
-    const checkoutUrl = `https://buy.stripe.com/${priceId}?client_reference_id=${encodeURIComponent(currentUser.uid)}&prefilled_email=${encodeURIComponent(currentUser.email)}`;
-    
-    console.log('Redirecting to:', checkoutUrl);
-    window.open(checkoutUrl, '_blank');
   };
 
   // Function to safely navigate back to dashboard

@@ -627,7 +627,7 @@ exports.createCheckoutSession = functions.https.onCall(async (data, context) => 
     console.log('Data received:', JSON.stringify(data));
     
     // Get the price ID from the request data or use a default
-    let priceId = data.priceId || 'bIY2aL2oC2kBaXe9AA';
+    let priceId = data.priceId || 'price_1R8A57GIULGXhjjBjkQpB84b';
     let lineItems = [];
     
     try {
@@ -665,9 +665,9 @@ exports.createCheckoutSession = functions.https.onCall(async (data, context) => 
         lineItems = [
           {
             price_data: {
-              currency: 'usd',
+              currency: 'aud',
               product: productId,
-              unit_amount: 1299, // $12.99
+              unit_amount: 1299, // A$12.99
               recurring: {
                 interval: 'month'
               }
@@ -832,7 +832,7 @@ exports.testStripePrice = functions.https.onCall(async (data, context) => {
   }
 
   try {
-    const priceId = data.priceId || 'bIY2aL2oC2kBaXe9AA';
+    const priceId = data.priceId || 'price_1R8A57GIULGXhjjBjkQpB84b';
     const productId = data.productId || 'prod_S2EYR7XWZewDLv';
     
     // Test with and without price_ prefix
@@ -915,7 +915,7 @@ exports.testStripePrice = functions.https.onCall(async (data, context) => {
         testPrice = await stripe.prices.create({
           product: productId,
           unit_amount: 1299,
-          currency: 'usd',
+          currency: 'aud',
           recurring: {
             interval: 'month'
           },
