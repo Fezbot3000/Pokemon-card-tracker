@@ -1,13 +1,13 @@
 import React, { useEffect } from 'react';
 import { useTutorial, tutorialSteps } from '../contexts/TutorialContext';
 
-// Import all tutorial images directly
-import dashboardImg from '../assets/tutorial/dashboard.png';
-import addCardImg from '../assets/tutorial/addcards.png';
-import marketplaceImg from '../assets/tutorial/marketplace.png';
-import invoiceImg from '../assets/tutorial/invoicepage.png';
-import messagingImg from '../assets/tutorial/marketplacemessages.png';
-import mobileImg from '../assets/tutorial/phonemockup.png';
+// Use public asset paths instead of imports
+const dashboardImg = '/screenshots/dashboard.png';
+const addCardImg = '/screenshots/addcards.png';
+const marketplaceImg = '/screenshots/marketplace.png';
+const invoiceImg = '/screenshots/invoicepaeg.png'; 
+const messagingImg = '/screenshots/marketplacemessages.png';
+const mobileImg = '/screenshots/phonemockup.png';
 
 const TutorialModal = () => {
   const { isTutorialActive, currentStep, nextStep, endTutorial } = useTutorial();
