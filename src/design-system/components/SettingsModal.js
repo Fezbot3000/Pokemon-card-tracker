@@ -731,7 +731,7 @@ const SettingsModal = ({
     }
     
     // Redirect to Stripe checkout
-    window.location.href = `https://buy.stripe.com/bIY2aL2oC2kBaXe9AA?client_reference_id=${user.uid}&prefilled_email=${user.email}`;
+    window.location.href = `https://buy.stripe.com/${process.env.REACT_APP_STRIPE_PRICE_ID}?client_reference_id=${user.uid}&prefilled_email=${user.email}`;
   };
 
   const handlePreferredCurrencyChange = (event) => {

@@ -90,13 +90,39 @@ function DashboardPricing() {
 
   // Add handleSubscribeClick function
   const handleSubscribeClick = () => {
+    console.log('Subscribe button clicked');
+    console.log('Current user:', currentUser);
+    
     if (!currentUser) {
-      toast.error('You must be logged in to subscribe');
+      console.error('No user logged in');
+      alert('Please log in to subscribe');
+      return;
+    }
+
+    if (!currentUser.uid || !currentUser.email) {
+      console.error('User missing required properties:', {
+        uid: currentUser.uid,
+        email: currentUser.email
+      });
+      alert('User information incomplete. Please try logging out and back in.');
+      return;
+    }
+
+    console.log('User authenticated, proceeding to checkout');
+    
+    // Use environment variable for price ID
+    const priceId = process.env.REACT_APP_STRIPE_PRICE_ID;
+    
+    if (!priceId) {
+      console.error('Stripe price ID not configured');
+      alert('Payment system not configured. Please contact support.');
       return;
     }
     
-    // Redirect to Stripe checkout
-    window.location.href = `https://buy.stripe.com/bIY2aL2oC2kBaXe9AA?client_reference_id=${currentUser.uid}&prefilled_email=${currentUser.email}`;
+    const checkoutUrl = `https://buy.stripe.com/${priceId}?client_reference_id=${encodeURIComponent(currentUser.uid)}&prefilled_email=${encodeURIComponent(currentUser.email)}`;
+    
+    console.log('Redirecting to:', checkoutUrl);
+    window.open(checkoutUrl, '_blank');
   };
 
   // Function to safely navigate back to dashboard
@@ -225,10 +251,10 @@ function DashboardPricing() {
       <div className="bg-white dark:bg-[#1B2131] rounded-xl shadow-lg p-8">
         <div className="text-center mb-8">
           <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
-            Upgrade to Premium
+            Complete Your Setup
           </h2>
           <p className="text-lg text-gray-700 dark:text-gray-300">
-            Get access to all premium features including cloud backup, multi-device sync, and more!
+            Subscribe to unlock all features including cloud backup, multi-device sync, and unlimited card tracking!
           </p>
         </div>
 

@@ -209,26 +209,28 @@ function Dashboard() {
       <Outlet context={{ currentView, setCurrentView }} />
       
       {/* Mobile Bottom Navigation - Available across all dashboard routes */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40">
-        <BottomNavBar
-          currentView={location.pathname.includes('/settings') ? 'settings' : currentView}
-          onViewChange={(view) => {
-            if (view === 'settings') {
-              navigate('/dashboard/settings');
-            } else {
-              // If we're on settings page, navigate back to dashboard with the desired view
-              if (location.pathname.includes('/settings')) {
-                navigate('/dashboard', { state: { targetView: view } });
+      {!location.pathname.includes('/pricing') && (
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40">
+          <BottomNavBar
+            currentView={location.pathname.includes('/settings') ? 'settings' : currentView}
+            onViewChange={(view) => {
+              if (view === 'settings') {
+                navigate('/dashboard/settings');
               } else {
-                setCurrentView(view);
+                // If we're on settings page, navigate back to dashboard with the desired view
+                if (location.pathname.includes('/settings')) {
+                  navigate('/dashboard', { state: { targetView: view } });
+                } else {
+                  setCurrentView(view);
+                }
               }
-            }
-          }}
-          onSettingsClick={() => {
-            navigate('/dashboard/settings');
-          }}
-        />
-      </div>
+            }}
+            onSettingsClick={() => {
+              navigate('/dashboard/settings');
+            }}
+          />
+        </div>
+      )}
     </div>
   );
 }

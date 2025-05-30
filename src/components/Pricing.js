@@ -169,7 +169,7 @@ function Pricing() {
           {currentUser && (
             <div className="text-center mb-12">
               <a
-                href={`https://buy.stripe.com/bIY2aL2oC2kBaXe9AA?client_reference_id=${currentUser?.uid || ''}&prefilled_email=${currentUser?.email || ''}`}
+                href={`https://buy.stripe.com/${process.env.REACT_APP_STRIPE_PRICE_ID}?client_reference_id=${currentUser?.uid || ''}&prefilled_email=${currentUser?.email || ''}`}
                 className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white text-lg font-semibold py-4 px-8 rounded-2xl shadow-lg transition-all duration-300 hover:shadow-xl transform hover:scale-105 inline-block"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -219,7 +219,7 @@ function Pricing() {
               
               {currentUser ? (
                 <a
-                  href={`https://buy.stripe.com/bIY2aL2oC2kBaXe9AA?client_reference_id=${currentUser?.uid || ''}&prefilled_email=${currentUser?.email || ''}`}
+                  href={`https://buy.stripe.com/${process.env.REACT_APP_STRIPE_PRICE_ID}?client_reference_id=${currentUser?.uid || ''}&prefilled_email=${currentUser?.email || ''}`}
                   className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white text-lg font-semibold py-4 rounded-2xl shadow-lg transition-all duration-300 hover:shadow-xl transform hover:scale-105 text-center block"
                   target="_blank"
                   rel="noopener noreferrer"
