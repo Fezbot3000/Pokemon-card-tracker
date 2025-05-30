@@ -74,15 +74,38 @@ const cors = require('cors')({
 // Add better logging for Stripe initialization
 let stripe;
 try {
-  // Use environment variables instead of functions.config()
-  const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
-  if (!stripeSecretKey) {
-    throw new Error('STRIPE_SECRET_KEY environment variable is not set');
+  // Try environment variables first, then fallback to functions.config() for backward compatibility
+  let stripeSecretKey;
+  
+  try {
+    stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+  } catch (envError) {
+    console.log('Environment variable not available, trying functions.config()');
   }
+  
+  // Fallback to functions.config() if environment variable is not available
+  if (!stripeSecretKey) {
+    try {
+      stripeSecretKey = functions.config().stripe?.secret_key;
+    } catch (configError) {
+      console.log('functions.config() also not available');
+    }
+  }
+  
+  if (!stripeSecretKey) {
+    throw new Error('STRIPE_SECRET_KEY not found in environment variables or functions.config()');
+  }
+  
   stripe = require("stripe")(stripeSecretKey);
   console.log("Stripe initialized successfully");
 } catch (error) {
   console.error("Error initializing Stripe:", error);
+  // Initialize a dummy stripe object to prevent crashes
+  stripe = {
+    customers: { list: () => Promise.reject(new Error('Stripe not configured')) },
+    subscriptions: { list: () => Promise.reject(new Error('Stripe not configured')) },
+    checkout: { sessions: { create: () => Promise.reject(new Error('Stripe not configured')) } }
+  };
 }
 
 // Additional Firebase Admin SDK initialization error handling
@@ -97,8 +120,6 @@ try {
 } catch (error) {
   console.error('Error initializing Firebase Admin SDK:', error);
 }
-
-
 
 // Check subscription status function
 exports.checkSubscriptionStatus = functions.https.onCall(async (data, context) => {
@@ -588,7 +609,18 @@ exports.syncSubscriptionStatus = functions.https.onCall(async (data, context) =>
 // Webhook handler for Stripe events
 exports.stripeWebhook = functions.https.onRequest(async (request, response) => {
   const signature = request.headers['stripe-signature'];
-  const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  
+  // Try environment variable first, then fallback to functions.config()
+  let endpointSecret;
+  try {
+    endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  } catch (envError) {
+    try {
+      endpointSecret = functions.config().stripe?.webhook_secret;
+    } catch (configError) {
+      console.error('Webhook secret not found in environment or config');
+    }
+  }
   
   let event;
   
@@ -791,6 +823,12 @@ exports.createCheckoutSession = functions.https.onCall(async (data, context) => 
   // Ensure the user is authenticated
   if (!context.auth) {
     throw new functions.https.HttpsError('unauthenticated', 'User must be logged in');
+  }
+
+  // Check if Stripe is properly configured
+  if (!stripe || typeof stripe.checkout === 'undefined') {
+    console.error('Stripe is not properly configured');
+    throw new functions.https.HttpsError('failed-precondition', 'Payment system is not configured. Please contact support.');
   }
 
   try {
