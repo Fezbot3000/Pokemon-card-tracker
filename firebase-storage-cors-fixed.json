@@ -1,0 +1,30 @@
+[
+  {
+    "origin": [
+      "https://mycardtracker.com.au", 
+      "https://www.mycardtracker.com.au", 
+      "http://localhost:3000", 
+      "http://localhost:5000", 
+      "http://127.0.0.1:3000", 
+      "http://127.0.0.1:5000"
+    ],
+    "method": ["GET", "PUT", "POST", "DELETE", "HEAD", "OPTIONS"],
+    "maxAgeSeconds": 3600,
+    "responseHeader": [
+      "Content-Type", 
+      "Content-Length", 
+      "Content-Encoding", 
+      "Content-Disposition", 
+      "Cache-Control", 
+      "x-goog-meta-filename", 
+      "Authorization",
+      "Access-Control-Allow-Origin",
+      "Access-Control-Allow-Methods",
+      "Access-Control-Allow-Headers",
+      "Access-Control-Max-Age",
+      "Origin",
+      "Accept",
+      "X-Requested-With"
+    ]
+  }
+]

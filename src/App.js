@@ -323,7 +323,7 @@ function AppContent({ currentView, setCurrentView }) {
   const [selectedCollection, setSelectedCollection] = useState('All Cards');
   const [collections, setCollections] = useState({});
   const [isLoading, setIsLoading] = useState(true);
-  const { registerSettingsCallback, checkAndStartTutorial, startTutorial } = useTutorial();
+  const { registerAddCardCallback, checkAndStartTutorial, startTutorial } = useTutorial();
   const { user, logout } = useAuth();
   const { subscriptionStatus } = useSubscription();
   const { currentUser } = useAuth();
@@ -417,16 +417,16 @@ function AppContent({ currentView, setCurrentView }) {
     return collections[selectedCollection] || [];
   }, [collections, selectedCollection]);
 
-  // Register the settings callback when component mounts
+  // Register the add card callback when component mounts
   // Using a ref to ensure we only register the callback once
   const callbackRegistered = useRef(false);
   
   useEffect(() => {
     if (!callbackRegistered.current) {
-      registerSettingsCallback(() => setShowSettings(true));
+      registerAddCardCallback(() => setShowNewCardForm(true));
       callbackRegistered.current = true;
     }
-  }, [registerSettingsCallback]);
+  }, [registerAddCardCallback]);
 
   // Check if this is a new user and start the tutorial, but only if they have an active subscription
   useEffect(() => {

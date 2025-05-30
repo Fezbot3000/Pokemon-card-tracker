@@ -6,19 +6,20 @@ const TutorialContext = createContext();
 const ONBOARDING_KEY = 'pokemon_tracker_onboarding_complete';
 
 export const tutorialSteps = {
-  COLLECTIONS: 'collections',
-  CARD_LISTS: 'card_lists',
-  CARD_DETAILS: 'card_details',
-  MARK_AS_SOLD: 'mark_as_sold',
-  SOLD_ITEMS: 'sold_items',
+  WELCOME: 'welcome',
   DASHBOARD: 'dashboard',
-  DATA_MANAGEMENT: 'data_management'
+  ADD_CARD: 'add_card',
+  MARKETPLACE: 'marketplace',
+  INVOICES: 'invoices',
+  MESSAGING: 'messaging',
+  MOBILE: 'mobile',
+  GET_STARTED: 'get_started'
 };
 
 export function TutorialProvider({ children }) {
   const [isTutorialActive, setIsTutorialActive] = useState(false);
   const [currentStep, setCurrentStep] = useState(null);
-  const [onSettingsOpen, setOnSettingsOpen] = useState(null);
+  const [onAddCardOpen, setOnAddCardOpen] = useState(null);
   const [onboardingComplete, setOnboardingComplete] = useState(() => {
     try {
       // Try to get from localStorage
@@ -31,38 +32,41 @@ export function TutorialProvider({ children }) {
 
   const startTutorial = useCallback(() => {
     setIsTutorialActive(true);
-    setCurrentStep(tutorialSteps.COLLECTIONS);
+    setCurrentStep(tutorialSteps.WELCOME);
   }, []);
 
   const nextStep = useCallback(() => {
     switch (currentStep) {
-      case tutorialSteps.COLLECTIONS:
-        setCurrentStep(tutorialSteps.CARD_LISTS);
-        break;
-      case tutorialSteps.CARD_LISTS:
-        setCurrentStep(tutorialSteps.CARD_DETAILS);
-        break;
-      case tutorialSteps.CARD_DETAILS:
-        setCurrentStep(tutorialSteps.MARK_AS_SOLD);
-        break;
-      case tutorialSteps.MARK_AS_SOLD:
-        setCurrentStep(tutorialSteps.SOLD_ITEMS);
-        break;
-      case tutorialSteps.SOLD_ITEMS:
+      case tutorialSteps.WELCOME:
         setCurrentStep(tutorialSteps.DASHBOARD);
         break;
       case tutorialSteps.DASHBOARD:
-        setCurrentStep(tutorialSteps.DATA_MANAGEMENT);
-        // When moving to data management step, open settings
-        if (onSettingsOpen) onSettingsOpen();
+        setCurrentStep(tutorialSteps.ADD_CARD);
         break;
-      case tutorialSteps.DATA_MANAGEMENT:
+      case tutorialSteps.ADD_CARD:
+        setCurrentStep(tutorialSteps.MARKETPLACE);
+        break;
+      case tutorialSteps.MARKETPLACE:
+        setCurrentStep(tutorialSteps.INVOICES);
+        break;
+      case tutorialSteps.INVOICES:
+        setCurrentStep(tutorialSteps.MESSAGING);
+        break;
+      case tutorialSteps.MESSAGING:
+        setCurrentStep(tutorialSteps.MOBILE);
+        break;
+      case tutorialSteps.MOBILE:
+        setCurrentStep(tutorialSteps.GET_STARTED);
+        break;
+      case tutorialSteps.GET_STARTED:
+        // When finishing tutorial, open add card modal
+        if (onAddCardOpen) onAddCardOpen();
         endTutorial();
         break;
       default:
         break;
     }
-  }, [currentStep, onSettingsOpen]);
+  }, [currentStep, onAddCardOpen]);
 
   const endTutorial = useCallback(() => {
     setIsTutorialActive(false);
@@ -77,8 +81,8 @@ export function TutorialProvider({ children }) {
     }
   }, []);
 
-  const registerSettingsCallback = useCallback((callback) => {
-    setOnSettingsOpen(() => callback);
+  const registerAddCardCallback = useCallback((callback) => {
+    setOnAddCardOpen(() => callback);
   }, []);
 
   // Function to check if user is new and start tutorial if needed
@@ -94,7 +98,7 @@ export function TutorialProvider({ children }) {
     startTutorial,
     nextStep,
     endTutorial,
-    registerSettingsCallback,
+    registerAddCardCallback,
     onboardingComplete,
     checkAndStartTutorial,
   };

@@ -2,13 +2,12 @@ import React, { useEffect } from 'react';
 import { useTutorial, tutorialSteps } from '../contexts/TutorialContext';
 
 // Import all tutorial images directly
-import collectionsImg from '../assets/tutorial/collections.png';
-import cardListsImg from '../assets/tutorial/Card_lists.png';
-import cardDetailsImg from '../assets/tutorial/card_details.png';
-// Use working images as fallbacks for the problematic ones
-import markAsSoldImg from '../assets/tutorial/mark_as_sold.png';
-import soldItemsImg from '../assets/tutorial/Sold_items.png';
-import dashboardExampleImg from '../assets/tutorial/Dashboardexample.png';
+import dashboardImg from '../assets/tutorial/dashboard.png';
+import addCardImg from '../assets/tutorial/addcards.png';
+import marketplaceImg from '../assets/tutorial/marketplace.png';
+import invoiceImg from '../assets/tutorial/invoicepage.png';
+import messagingImg from '../assets/tutorial/marketplacemessages.png';
+import mobileImg from '../assets/tutorial/phonemockup.png';
 
 const TutorialModal = () => {
   const { isTutorialActive, currentStep, nextStep, endTutorial } = useTutorial();
@@ -24,54 +23,60 @@ const TutorialModal = () => {
 
   function getTutorialContent() {
     switch (currentStep) {
-      case tutorialSteps.COLLECTIONS:
+      case tutorialSteps.WELCOME:
         return {
-          title: 'Collections',
-          content: 'Organise your cards into custom collections. Group by set, year, or create your own categories to keep your collection perfectly organised.',
-          imageAlt: 'Collections dropdown interface showing different collection options',
-          imageSrc: collectionsImg
-        };
-      case tutorialSteps.CARD_LISTS:
-        return {
-          title: 'Card Lists',
-          content: 'View all your cards in an organised list. Sort by name, value, or any other attribute to quickly find the cards you\'re looking for.',
-          imageAlt: 'Card list interface showing multiple cards in a collection',
-          imageSrc: cardListsImg
-        };
-      case tutorialSteps.CARD_DETAILS:
-        return {
-          title: 'Card Details',
-          content: 'Tap on any card to view its complete details. See high-resolution images, grading information, purchase history, and current market value.',
-          imageAlt: 'Card details modal showing comprehensive information about a card',
-          imageSrc: cardDetailsImg
-        };
-      case tutorialSteps.MARK_AS_SOLD:
-        return {
-          title: 'Mark as Sold',
-          content: 'When you sell a card, easily mark it as sold and record the sale details. Track your profit and keep a complete history of your transactions.',
-          imageAlt: 'Mark as sold interface showing sale details form',
-          imageSrc: markAsSoldImg
-        };
-      case tutorialSteps.SOLD_ITEMS:
-        return {
-          title: 'Sold Items',
-          content: 'View all your sold cards in one place. Analyse your sales history, track profits, and gain insights into your collecting and selling performance.',
-          imageAlt: 'Sold items list showing past sales and profit information',
-          imageSrc: soldItemsImg
+          title: 'Welcome to Pokemon Card Tracker!',
+          content: 'The ultimate tool for managing your Pokemon card collection. Track values, organize cards, manage sales, and connect with other collectors. Let\'s take a quick tour of the main features.',
+          imageAlt: 'Welcome to Pokemon Card Tracker',
+          imageSrc: null
         };
       case tutorialSteps.DASHBOARD:
         return {
-          title: 'Dashboard',
-          content: 'Get a complete overview of your collection with our intuitive dashboard. See total value, recent additions, profit trends, and more at a glance.',
-          imageAlt: 'Dashboard showing collection statistics and overview',
-          imageSrc: dashboardExampleImg
+          title: 'Dashboard Overview',
+          content: 'Your dashboard provides a complete overview of your collection. See your total portfolio value, recent additions, top performers, and collection statistics at a glance. Monitor your investment performance and track market trends.',
+          imageAlt: 'Dashboard showing collection overview with statistics and charts',
+          imageSrc: dashboardImg
         };
-      case tutorialSteps.DATA_MANAGEMENT:
+      case tutorialSteps.ADD_CARD:
         return {
-          title: 'Data Management',
-          content: 'Your data will automatically save to the cloud. Access your collection from any device, anytime, with our seamless cloud syncing.\n\nPremium members enjoy additional backup options and advanced data management features.',
-          imageAlt: 'Data management options in settings panel',
-          // Remove the image for this step
+          title: 'Adding Cards',
+          content: 'Easily add cards to your collection by entering the PSA certification number or manually inputting card details. The system automatically fetches card information, images, and current market values to keep your collection up-to-date.',
+          imageAlt: 'Add card interface showing form fields and card details',
+          imageSrc: addCardImg
+        };
+      case tutorialSteps.MARKETPLACE:
+        return {
+          title: 'Marketplace',
+          content: 'Browse and discover cards from other collectors. Search by set, player, or specific cards you\'re looking for. Connect with sellers, view detailed card information, and expand your collection through our integrated marketplace.',
+          imageAlt: 'Marketplace showing available cards from other collectors',
+          imageSrc: marketplaceImg
+        };
+      case tutorialSteps.INVOICES:
+        return {
+          title: 'Purchase & Sales Invoices',
+          content: 'Keep track of all your transactions with detailed invoices. Record purchases, manage sales, and maintain a complete financial history of your collecting activities. Generate professional invoices for your sales.',
+          imageAlt: 'Invoice management interface showing purchase and sales records',
+          imageSrc: invoiceImg
+        };
+      case tutorialSteps.MESSAGING:
+        return {
+          title: 'Marketplace Messaging',
+          content: 'Communicate directly with other collectors through our secure messaging system. Negotiate prices, ask questions about cards, and build relationships within the collecting community.',
+          imageAlt: 'Messaging interface for communicating with other collectors',
+          imageSrc: messagingImg
+        };
+      case tutorialSteps.MOBILE:
+        return {
+          title: 'Mobile Experience',
+          content: 'Access your collection anywhere with our responsive mobile interface. Add cards on the go, check values at card shows, and manage your collection from your phone or tablet.',
+          imageAlt: 'Mobile app interface showing collection management on phone',
+          imageSrc: mobileImg
+        };
+      case tutorialSteps.GET_STARTED:
+        return {
+          title: 'Ready to Get Started!',
+          content: 'You\'re all set! Click "Start Collecting" below to add your first card and begin building your digital collection. You can always access this tutorial again from the help menu.',
+          imageAlt: 'Ready to start collecting cards',
           imageSrc: null
         };
       default:
@@ -144,7 +149,7 @@ const TutorialModal = () => {
           onClick={nextStep}
           className="btn btn-lg btn-primary"
         >
-          {currentStep === tutorialSteps.DATA_MANAGEMENT ? 'Finish' : 'Next'}
+          {currentStep === tutorialSteps.GET_STARTED ? 'Start Collecting' : 'Next'}
         </button>
       </div>
     </div>
