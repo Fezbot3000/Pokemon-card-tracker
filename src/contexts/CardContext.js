@@ -2,7 +2,6 @@ import React, { createContext, useContext, useState, useEffect, useCallback, use
 import { useAuth } from '../design-system';
 import { CardRepository } from '../repositories/CardRepository';
 import db from '../services/firestore/dbAdapter';
-import demoCardService from '../services/demoCardService';
 
 const CardContext = createContext();
 
@@ -125,64 +124,6 @@ export function CardProvider({ children }) {
         }
       } catch (e) {
         console.warn('Failed to filter sold cards during initial load:', e);
-      }
-
-      // Check if we need to create a demo card for new users
-      if (currentUser) {
-        console.log('🔍 Checking if demo card needed for user:', currentUser.uid);
-        try {
-          // Set up demo card service with current user
-          demoCardService.setUserId(currentUser.uid);
-          console.log('✅ Demo card service initialized with user:', currentUser.uid);
-          
-          // Check if demo card already exists
-          const hasDemo = await demoCardService.hasDemoCardBeenAdded();
-          console.log('📋 Demo card check result:', hasDemo);
-          
-          if (!hasDemo && cardsFromRepo.length === 0) {
-            console.log('🎯 New user detected - attempting to create demo card');
-            
-            // Create default collection if none exists
-            let defaultCollection = collectionsFromRepo.find(c => c.name === 'Default Collection');
-            if (!defaultCollection) {
-              defaultCollection = await repo.createCollection('Default Collection');
-              console.log('✅ Default collection created:', defaultCollection);
-              
-              if (defaultCollection) {
-                collectionsFromRepo = [...collectionsFromRepo, defaultCollection];
-              }
-            }
-            
-            if (defaultCollection) {
-              // Create demo card in the default collection
-              const demoCard = await demoCardService.createDemoCardIfNeeded(
-                defaultCollection.id, 
-                defaultCollection.name
-              );
-              console.log('🃏 Demo card creation result:', demoCard);
-              
-              if (demoCard) {
-                cardsFromRepo = [demoCard];
-                console.log('✅ Successfully created demo card for new user onboarding');
-              } else {
-                console.warn('⚠️ Demo card creation returned null');
-              }
-            } else {
-              console.error('❌ Failed to create default collection');
-            }
-          } else {
-            console.log('ℹ️ Demo card not needed - hasDemo:', hasDemo, 'cardsCount:', cardsFromRepo.length);
-          }
-        } catch (demoError) {
-          console.error(' Failed to create demo card:', demoError);
-          // Don't fail the entire initialization if demo card creation fails
-        }
-      } else {
-        console.log(' Demo card not needed:', {
-          hasUser: !!currentUser,
-          cardCount: cardsFromRepo.length,
-          collectionCount: collectionsFromRepo.length
-        });
       }
 
       // Load sold cards
