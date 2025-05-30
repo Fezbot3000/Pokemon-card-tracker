@@ -71,41 +71,18 @@ const cors = require('cors')({
   }
 });
 
-// Add better logging for Stripe initialization
+// Initialize Stripe using environment variables
 let stripe;
 try {
-  // Try environment variables first, then fallback to functions.config() for backward compatibility
-  let stripeSecretKey;
-  
-  try {
-    stripeSecretKey = process.env.STRIPE_SECRET_KEY;
-  } catch (envError) {
-    console.log('Environment variable not available, trying functions.config()');
-  }
-  
-  // Fallback to functions.config() if environment variable is not available
+  const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
   if (!stripeSecretKey) {
-    try {
-      stripeSecretKey = functions.config().stripe?.secret_key;
-    } catch (configError) {
-      console.log('functions.config() also not available');
-    }
+    throw new Error('STRIPE_SECRET_KEY environment variable is required');
   }
-  
-  if (!stripeSecretKey) {
-    throw new Error('STRIPE_SECRET_KEY not found in environment variables or functions.config()');
-  }
-  
   stripe = require("stripe")(stripeSecretKey);
   console.log("Stripe initialized successfully");
 } catch (error) {
   console.error("Error initializing Stripe:", error);
-  // Initialize a dummy stripe object to prevent crashes
-  stripe = {
-    customers: { list: () => Promise.reject(new Error('Stripe not configured')) },
-    subscriptions: { list: () => Promise.reject(new Error('Stripe not configured')) },
-    checkout: { sessions: { create: () => Promise.reject(new Error('Stripe not configured')) } }
-  };
+  throw error; // Fail fast - don't hide configuration issues
 }
 
 // Additional Firebase Admin SDK initialization error handling
@@ -609,18 +586,7 @@ exports.syncSubscriptionStatus = functions.https.onCall(async (data, context) =>
 // Webhook handler for Stripe events
 exports.stripeWebhook = functions.https.onRequest(async (request, response) => {
   const signature = request.headers['stripe-signature'];
-  
-  // Try environment variable first, then fallback to functions.config()
-  let endpointSecret;
-  try {
-    endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
-  } catch (envError) {
-    try {
-      endpointSecret = functions.config().stripe?.webhook_secret;
-    } catch (configError) {
-      console.error('Webhook secret not found in environment or config');
-    }
-  }
+  const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
   
   let event;
   
@@ -1473,9 +1439,9 @@ exports.psaLookup = functions.https.onCall(async (data, context) => {
     let psaToken;
     try {
       // Get token from Firebase environment config using the standard key
-      psaToken = functions.config().psa?.api_token;
+      psaToken = process.env.PSA_API_TOKEN;
       if (!psaToken) {
-        console.error('PSA API token not configured. Please set using firebase functions:config:set psa.api_token="YOUR_TOKEN"');
+        console.error('PSA_API_TOKEN environment variable is required');
         throw new functions.https.HttpsError(
           'failed-precondition',
           'PSA API is not properly configured. Please contact support.',
