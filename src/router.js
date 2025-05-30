@@ -32,6 +32,9 @@ import ComponentLibrary from './pages/ComponentLibrary';
 import MarketplaceListing from './components/Marketplace/MarketplaceListing';
 import PublicMarketplace from './components/PublicMarketplace';
 import PostCheckout from './components/PostCheckout';
+import Subscribe from './pages/Subscribe';
+import SubscriptionStatus from './pages/SubscriptionStatus';
+import ProtectedRoute from './components/ProtectedRoute';
 
 // Root providers wrapper component
 export const RootProviders = () => (
@@ -74,36 +77,6 @@ export const RootProviders = () => (
   </ErrorBoundary>
 );
 
-// Protected route wrapper for dashboard
-function ProtectedDashboard() {
-  const { currentUser, loading } = useAuth();
-  
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-  
-  if (!currentUser) {
-    return <Navigate to="/login" replace />;
-  }
-  
-  return <Dashboard />;
-}
-
-// Login route wrapper that redirects authenticated users
-function LoginRoute() {
-  const { currentUser, loading } = useAuth();
-  
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-  
-  if (currentUser) {
-    return <Navigate to="/dashboard" replace />;
-  }
-  
-  return <Login />;
-}
-
 // Create and export the router
 export const router = createBrowserRouter([
   {
@@ -116,7 +89,7 @@ export const router = createBrowserRouter([
       },
       {
         path: 'login',
-        element: <LoginRoute />,
+        element: <Login />,
       },
       {
         path: 'forgot-password',
@@ -175,8 +148,16 @@ export const router = createBrowserRouter([
         element: <PostCheckout />,
       },
       {
+        path: 'subscribe',
+        element: <Subscribe />,
+      },
+      {
+        path: 'subscription-status',
+        element: <SubscriptionStatus />,
+      },
+      {
         path: 'dashboard',
-        element: <ProtectedDashboard />,
+        element: <ProtectedRoute requireSubscription={true}><Dashboard /></ProtectedRoute>,
         children: [
           {
             index: true,

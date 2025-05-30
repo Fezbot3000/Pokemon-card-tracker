@@ -1,5 +1,5 @@
 // Test comment to verify GitHub Actions automatic deployment is working
-const functions = require("firebase-functions");
+const functions = require("firebase-functions").region('australia-southeast1');
 const admin = require("firebase-admin");
 const fetch = require('node-fetch'); // Use node-fetch v2 syntax
 const PDFDocument = require('pdfkit');
@@ -106,16 +106,39 @@ exports.checkSubscriptionStatus = functions.https.onCall(async (data, context) =
   console.log(`Checking subscription for user: ${userId}`);
 
   try {
-    // First, check the Firestore database for subscription information
+    // First, check the user document for subscription information
+    const userDoc = await admin.firestore().collection('users').doc(userId).get();
+    
+    if (userDoc.exists) {
+      const userData = userDoc.data();
+      if (userData.subscription && userData.subscription.status) {
+        console.log(`Found subscription in user document: ${JSON.stringify(userData.subscription)}`);
+        
+        // If we have a subscription with active status, return it immediately
+        if (userData.subscription.status === 'active' || userData.subscription.status === 'trialing') {
+          console.log(`Returning active subscription from user document for user: ${userId}`);
+          return {
+            status: userData.subscription.status,
+            customer: userData.subscription.customer || userData.subscription.customerId,
+            subscriptionId: userData.subscription.subscriptionId,
+            plan: userData.subscription.plan || 'Premium'
+          };
+        } else {
+          console.log(`User document subscription status is not active: ${userData.subscription.status}`);
+        }
+      }
+    }
+
+    // Fallback: check the separate subscriptions collection
     const subscriptionDoc = await admin.firestore().collection('subscriptions').doc(userId).get();
     
     if (subscriptionDoc.exists) {
       const firestoreSubscription = subscriptionDoc.data();
-      console.log(`Found subscription in Firestore: ${JSON.stringify(firestoreSubscription)}`);
+      console.log(`Found subscription in subscriptions collection: ${JSON.stringify(firestoreSubscription)}`);
       
       // If we have a subscription with active status, return it immediately
       if (firestoreSubscription.status === 'active' || firestoreSubscription.status === 'trialing') {
-        console.log(`Returning active subscription from Firestore for user: ${userId}`);
+        console.log(`Returning active subscription from subscriptions collection for user: ${userId}`);
         return {
           status: firestoreSubscription.status,
           customer: firestoreSubscription.customerId,
@@ -123,10 +146,10 @@ exports.checkSubscriptionStatus = functions.https.onCall(async (data, context) =
           plan: firestoreSubscription.plan || 'Premium'
         };
       } else {
-        console.log(`Firestore subscription status is not active: ${firestoreSubscription.status}`);
+        console.log(`Subscriptions collection subscription status is not active: ${firestoreSubscription.status}`);
       }
     } else {
-      console.log(`No subscription found in Firestore for user: ${userId}, checking Stripe...`);
+      console.log(`No subscription found in either location for user: ${userId}, checking Stripe...`);
     }
     
     // If no active subscription found in Firestore or we want to verify with Stripe directly,
@@ -829,8 +852,8 @@ exports.createCheckoutSession = functions.https.onCall(async (data, context) => 
     const baseUrl = data.baseUrl || 'http://localhost:3000';
     
     // Use provided success/cancel URLs if available, otherwise construct defaults
-    const successUrl = data.successUrl || `${baseUrl}/post-checkout`;
-    const cancelUrl = data.cancelUrl || `${baseUrl}/dashboard/pricing`;
+    const successUrl = data.successUrl || `${baseUrl}/subscription-status`;
+    const cancelUrl = data.cancelUrl || `${baseUrl}/subscribe`;
     
     console.log('Success URL:', successUrl);
     console.log('Cancel URL:', cancelUrl);
