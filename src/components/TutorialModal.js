@@ -12,24 +12,23 @@ const mobileImg = '/screenshots/phonemockup.png';
 const TutorialModal = () => {
   const { isTutorialActive, currentStep, nextStep, endTutorial } = useTutorial();
 
-  // Log the current step for debugging
+  // Prevent body scroll when modal is open
   useEffect(() => {
-    if (currentStep) {
-      console.log('Current tutorial step:', currentStep);
+    if (isTutorialActive) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
     }
-  }, [currentStep]);
+    
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isTutorialActive]);
 
   if (!isTutorialActive) return null;
 
   function getTutorialContent() {
     switch (currentStep) {
-      case tutorialSteps.WELCOME:
-        return {
-          title: 'Welcome to Pokemon Card Tracker!',
-          content: 'The ultimate tool for managing your Pokemon card collection. Track values, organize cards, manage sales, and connect with other collectors. Let\'s take a quick tour of the main features.',
-          imageAlt: 'Welcome to Pokemon Card Tracker',
-          imageSrc: null
-        };
       case tutorialSteps.DASHBOARD:
         return {
           title: 'Dashboard Overview',
@@ -92,65 +91,84 @@ const TutorialModal = () => {
   const content = getTutorialContent();
 
   return (
-    <div className="fixed inset-0 z-[100] bg-white dark:bg-[#111827] flex flex-col">
-      {/* Modal Header */}
-      <div className="border-b border-gray-200 dark:border-gray-700/50 px-6 py-4">
-        <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-          {content.title}
-        </h3>
-      </div>
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+      {/* Blurred Background Overlay */}
+      <div 
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        onClick={endTutorial}
+      />
       
-      {/* Modal Content - Scrollable area */}
-      <div className="flex-1 p-6 overflow-y-auto">
-        {/* Image Section - Larger for full screen */}
-        <div className="mb-6 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/30 max-w-md mx-auto">
-          {content.imageSrc ? (
-            <div className="relative">
-              <img 
-                src={content.imageSrc} 
-                alt={content.imageAlt} 
-                className="w-full h-auto object-contain"
-                onError={(e) => {
-                  console.error(`Failed to load image: ${content.imageSrc}`);
-                  e.target.style.display = 'none';
-                  e.target.parentNode.classList.add('h-48', 'flex', 'items-center', 'justify-center');
-                  const placeholder = document.createElement('div');
-                  placeholder.className = 'text-gray-400 dark:text-gray-600 text-center';
-                  placeholder.innerHTML = `<span class="material-icons text-3xl mb-2">image</span><p class="text-sm">${content.imageAlt}</p>`;
-                  e.target.parentNode.appendChild(placeholder);
-                }}
-              />
-            </div>
-          ) : (
-            <div className="h-48 flex items-center justify-center">
-              <div className="text-gray-400 dark:text-gray-600 text-center">
-                <span className="material-icons text-3xl mb-2">image</span>
-                <p className="text-sm">{content.imageAlt}</p>
-              </div>
-            </div>
-          )}
+      {/* Modal Container */}
+      <div className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden border border-gray-200 dark:border-gray-700">
+        {/* Modal Header */}
+        <div className="border-b border-gray-200 dark:border-gray-700/50 px-6 py-4 flex justify-between items-center">
+          <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+            {content.title}
+          </h3>
+          <button
+            onClick={endTutorial}
+            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-2xl font-bold transition-colors"
+          >
+            ✕
+          </button>
         </div>
         
-        {/* Description Text */}
-        <p className="text-lg text-center text-gray-700 dark:text-gray-300 whitespace-pre-line max-w-md mx-auto">
-          {content.content}
-        </p>
-      </div>
-      
-      {/* Modal Footer with Fixed Buttons */}
-      <div className="border-t border-gray-200 dark:border-gray-700/50 px-6 py-4 flex justify-between sticky bottom-0 bg-white dark:bg-[#111827]">
-        <button
-          onClick={endTutorial}
-          className="btn btn-lg btn-tertiary"
-        >
-          Skip
-        </button>
-        <button
-          onClick={nextStep}
-          className="btn btn-lg btn-primary"
-        >
-          {currentStep === tutorialSteps.GET_STARTED ? 'Start Collecting' : 'Next'}
-        </button>
+        {/* Modal Content */}
+        <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
+          <div className="grid md:grid-cols-2 gap-8 items-center">
+            {/* Image Section - Much larger */}
+            <div className="order-2 md:order-1">
+              {content.imageSrc ? (
+                <div className="rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/30 shadow-lg">
+                  <img 
+                    src={content.imageSrc} 
+                    alt={content.imageAlt} 
+                    className="w-full h-auto object-contain max-h-[400px]"
+                    onError={(e) => {
+                      console.error(`Failed to load image: ${content.imageSrc}`);
+                      e.target.style.display = 'none';
+                      e.target.parentNode.classList.add('h-64', 'flex', 'items-center', 'justify-center');
+                      const placeholder = document.createElement('div');
+                      placeholder.className = 'text-gray-400 dark:text-gray-600 text-center';
+                      placeholder.innerHTML = `<div class="text-4xl mb-4">📱</div><p class="text-lg">${content.imageAlt}</p>`;
+                      e.target.parentNode.appendChild(placeholder);
+                    }}
+                  />
+                </div>
+              ) : (
+                <div className="h-64 flex items-center justify-center rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/30">
+                  <div className="text-gray-400 dark:text-gray-600 text-center">
+                    <div className="text-4xl mb-4">🚀</div>
+                    <p className="text-lg">{content.imageAlt}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            {/* Description Text */}
+            <div className="order-1 md:order-2">
+              <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed">
+                {content.content}
+              </p>
+            </div>
+          </div>
+        </div>
+        
+        {/* Modal Footer with Fixed Buttons */}
+        <div className="border-t border-gray-200 dark:border-gray-700/50 px-6 py-4 flex justify-between bg-gray-50 dark:bg-gray-800/50">
+          <button
+            onClick={endTutorial}
+            className="px-6 py-3 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 font-medium transition-colors"
+          >
+            Skip Tutorial
+          </button>
+          <button
+            onClick={nextStep}
+            className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors shadow-lg"
+          >
+            {currentStep === tutorialSteps.GET_STARTED ? 'Start Collecting' : 'Next'}
+          </button>
+        </div>
       </div>
     </div>
   );

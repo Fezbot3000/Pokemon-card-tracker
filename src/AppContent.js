@@ -61,7 +61,7 @@ function AppContent() {
   });
   const [currentView, setCurrentView] = useState('cards');
   const [initialCardCollection, setInitialCardCollection] = useState(null);
-  const { registerSettingsCallback, checkAndStartTutorial, startTutorial } = useTutorial();
+  const { checkAndStartTutorial, startTutorial } = useTutorial();
   const { user, logout } = useAuth();
   const { subscriptionStatus } = useSubscription();
   const { currentUser } = useAuth();
@@ -172,11 +172,6 @@ function AppContent() {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
-
-  // Register settings callback for tutorial
-  useEffect(() => {
-    registerSettingsCallback(() => setShowSettings(true));
-  }, [registerSettingsCallback]);
 
   // Check if tutorial should start
   useEffect(() => {

@@ -6,7 +6,6 @@ const TutorialContext = createContext();
 const ONBOARDING_KEY = 'pokemon_tracker_onboarding_complete';
 
 export const tutorialSteps = {
-  WELCOME: 'welcome',
   DASHBOARD: 'dashboard',
   ADD_CARD: 'add_card',
   MARKETPLACE: 'marketplace',
@@ -32,14 +31,11 @@ export function TutorialProvider({ children }) {
 
   const startTutorial = useCallback(() => {
     setIsTutorialActive(true);
-    setCurrentStep(tutorialSteps.WELCOME);
+    setCurrentStep(tutorialSteps.DASHBOARD);
   }, []);
 
   const nextStep = useCallback(() => {
     switch (currentStep) {
-      case tutorialSteps.WELCOME:
-        setCurrentStep(tutorialSteps.DASHBOARD);
-        break;
       case tutorialSteps.DASHBOARD:
         setCurrentStep(tutorialSteps.ADD_CARD);
         break;
@@ -66,7 +62,7 @@ export function TutorialProvider({ children }) {
       default:
         break;
     }
-  }, [currentStep, onAddCardOpen]);
+  }, [currentStep, onAddCardOpen, endTutorial]);
 
   const endTutorial = useCallback(() => {
     setIsTutorialActive(false);
