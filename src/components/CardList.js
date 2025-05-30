@@ -994,13 +994,15 @@ const CardList = ({
 
   return (
     <div className="w-full px-1 sm:px-2 pb-20">
-      {/* Stats Section */}
-      <StatisticsSummary 
-        statistics={formatStatisticsForDisplay(totals, filteredCards.length, paginatedCards.length)}
-        className="mb-3 sm:mb-4"
-      />
+      {/* Stats Section - Only show if there are cards */}
+      {filteredCards.length > 0 && (
+        <StatisticsSummary 
+          statistics={formatStatisticsForDisplay(totals, filteredCards.length, paginatedCards.length)}
+          className="mb-3 sm:mb-4"
+        />
+      )}
 
-      {/* Controls Section */}
+      {/* Controls Section - Always show so users can add cards */}
       <div className="mb-4">
         <SearchToolbar 
           searchValue={filter}
@@ -1062,9 +1064,23 @@ const CardList = ({
       {/* Cards Display */}
       {filteredCards.length === 0 ? (
         <div className="text-center py-8 sm:py-12">
-          <span className="material-icons text-4xl sm:text-5xl mb-3 sm:mb-4 text-gray-400 dark:text-gray-600">search_off</span>
+          <span className="material-icons text-4xl sm:text-5xl mb-3 sm:mb-4 text-gray-400 dark:text-gray-600">inventory_2</span>
           <h3 className="text-sm sm:text-base font-medium text-gray-900 dark:text-white mb-1 sm:mb-2">No cards found</h3>
-          <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Try adjusting your search or filters</p>
+          <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-4">
+            {cards.length === 0 
+              ? "Start building your collection by adding your first card!" 
+              : "Try adjusting your search or filters"
+            }
+          </p>
+          {cards.length === 0 && (
+            <button
+              onClick={onAddCard}
+              className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+            >
+              <span className="material-icons text-sm mr-2">add</span>
+              Add Your First Card
+            </button>
+          )}
         </div>
       ) : viewMode === 'grid' ? (
         <div className="flex flex-col">

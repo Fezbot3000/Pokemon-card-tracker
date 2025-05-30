@@ -878,9 +878,19 @@ function AppContent({ currentView, setCurrentView }) {
                 <div className="p-4 sm:p-6 pb-20">
                   {/* Card List */}
                   {cards.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-full">
-                      <h2 className="text-lg font-bold mb-4">No cards found</h2>
-                      <p className="text-gray-500">You don't have any cards in this collection.</p>
+                    <div className="flex flex-col items-center justify-center h-full min-h-[400px]">
+                      <span className="material-icons text-6xl mb-4 text-gray-400 dark:text-gray-600">inventory_2</span>
+                      <h2 className="text-lg font-bold mb-2 text-gray-900 dark:text-white">No cards in your collection</h2>
+                      <p className="text-gray-500 dark:text-gray-400 mb-6 text-center max-w-md">
+                        Start building your Pokemon card collection by adding your first card!
+                      </p>
+                      <button
+                        onClick={() => openNewCardForm()}
+                        className="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
+                      >
+                        <span className="material-icons text-lg mr-2">add</span>
+                        Add Your First Card
+                      </button>
                     </div>
                   ) : (
                     <CardList
