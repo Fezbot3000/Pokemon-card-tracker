@@ -132,13 +132,13 @@ function Home() {
       )}
 
       {/* Modern Hero Section */}
-      <section className="relative h-[85vh] flex items-center justify-center px-4 sm:px-6 lg:px-8 overflow-hidden">
+      <section className="relative h-[85vh] flex items-center justify-center px-4 sm:px-6 lg:px-8 overflow-hidden pt-16 sm:pt-20 md:pt-24 lg:pt-28">
         {/* Background Elements */}
         <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 via-purple-600/10 to-pink-600/10"></div>
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl"></div>
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl"></div>
         
-        <div className="relative z-10 max-w-4xl mx-auto text-center px-4">
+        <div className="relative z-10 max-w-4xl mx-auto text-center px-4 mt-8 sm:mt-12 md:mt-16 lg:mt-20">
           {/* Badge */}
           <div className="inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 bg-white/10 backdrop-blur-sm rounded-full text-xs sm:text-sm font-medium mb-6 sm:mb-8 border border-white/20">
             <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-400 rounded-full mr-2"></span>
