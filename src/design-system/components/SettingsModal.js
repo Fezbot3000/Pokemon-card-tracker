@@ -870,12 +870,12 @@ const SettingsModal = ({
                         >
                           <option value="" disabled>Select Collection...</option>
                           {Array.isArray(collections) 
-                            ? collections.filter(name => name !== 'All Cards').map((collection) => (
+                            ? collections.filter(name => name !== 'All Cards' && name.toLowerCase() !== 'sold').map((collection) => (
                                 <option key={collection} value={collection}>
                                   {collection}
                                 </option>
                               ))
-                            : Object.keys(collections).filter(name => name !== 'All Cards' && name !== 'Sold').map((collection) => (
+                            : Object.keys(collections).filter(name => name !== 'All Cards' && name.toLowerCase() !== 'sold').map((collection) => (
                                 <option key={collection} value={collection}>
                                   {collection}
                                 </option>
@@ -894,49 +894,34 @@ const SettingsModal = ({
                       </div>
                     </div>
                     
-                    {/* Delete Collection Section */}
-                    <div className="bg-white dark:bg-[#1B2131] rounded-lg p-4 border border-gray-200 dark:border-indigo-900/20">
-                      <h4 className="font-medium text-gray-900 dark:text-white mb-3 flex items-center">
-                        <Icon name="delete" className="text-red-500 mr-2" />
+                    {/* Delete Collection Section - Disabled */}
+                    <div className="bg-gray-50 dark:bg-[#0F0F0F] rounded-lg p-4 border border-gray-200 dark:border-gray-700 opacity-60">
+                      <h4 className="font-medium text-gray-500 dark:text-gray-400 mb-3 flex items-center">
+                        <Icon name="delete" className="text-gray-400 mr-2" />
                         Delete Collection
                       </h4>
                       <div className="space-y-3">
                         <select 
-                          className={`w-full rounded-lg p-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
+                          className={`w-full rounded-lg p-3 cursor-not-allowed ${
                             isDarkMode 
-                              ? 'bg-[#0F0F0F] text-white border border-[#ffffff1a]' 
-                              : 'bg-white text-gray-800 border border-gray-300'
+                              ? 'bg-[#0F0F0F] text-gray-500 border border-gray-600' 
+                              : 'bg-gray-100 text-gray-500 border border-gray-300'
                           }`}
-                          value={collectionToDelete}
-                          onChange={(e) => setCollectionToDelete(e.target.value)}
+                          disabled
                         >
-                          <option value="" disabled>Select Collection...</option>
-                          {Array.isArray(collections) 
-                            ? collections.filter(name => name !== 'All Cards').map((collection) => (
-                                <option key={collection} value={collection}>
-                                  {collection}
-                                </option>
-                              ))
-                            : Object.keys(collections).filter(name => name !== 'All Cards' && name !== 'Sold').map((collection) => (
-                                <option key={collection} value={collection}>
-                                  {collection}
-                                </option>
-                              ))
-                          }
+                          <option value="" disabled>Collection deletion is disabled</option>
                         </select>
                         <Button
                           variant="danger"
-                          onClick={() => {
-                            if (collectionToDelete) {
-                              setShowDeleteConfirm(true);
-                            }
-                          }}
-                          disabled={!collectionToDelete}
+                          disabled={true}
                           iconLeft={<Icon name="delete" />}
                           fullWidth
                         >
-                          Delete Selected Collection
+                          Delete Collections Disabled
                         </Button>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
+                          Collection deletion is disabled to protect your data
+                        </p>
                       </div>
                     </div>
                   </div>

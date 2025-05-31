@@ -16,114 +16,9 @@ export const collectionManager = {
     try {
       logger.log("collectionManager: Attempting to delete collection:", name);
       
-      const currentCollections = { ...collections };
-      
-      if (!currentCollections[name]) {
-        logger.error(`Collection "${name}" does not exist in:`, Object.keys(currentCollections));
-        throw new Error(`Collection "${name}" does not exist`);
-      }
-      
-      if (Object.keys(currentCollections).length <= 1) {
-        throw new Error("Cannot delete the last collection");
-      }
-      
-      const collectionId = currentCollections[name].id;
-      
-      toast.loading(`Deleting collection "${name}" and all its cards...`, { id: 'delete-collection' });
-      
-      let cardsInCollection = [];
-      
-      // Find cards in the collection from app state
-      try {
-        Object.values(collections).forEach(collectionCards => {
-          if (Array.isArray(collectionCards)) {
-            const matchingCards = collectionCards.filter(card => 
-              card.collectionName === name || card.collection === name
-            );
-            cardsInCollection = [...cardsInCollection, ...matchingCards];
-          }
-        });
-        
-        logger.log(`Found ${cardsInCollection.length} cards in collection "${name}" from app state`);
-      } catch (stateError) {
-        logger.error("Error finding cards in collection from state:", stateError);
-      }
-      
-      // If no cards found in state, check database
-      if (cardsInCollection.length === 0) {
-        try {
-          const allCollections = await db.getCollections();
-          if (allCollections && allCollections[name] && Array.isArray(allCollections[name])) {
-            cardsInCollection = allCollections[name];
-            logger.log(`Found ${cardsInCollection.length} cards in collection "${name}" from database`);
-          }
-        } catch (dbError) {
-          logger.error("Error finding cards in collection from database:", dbError);
-        }
-      }
-      
-      // Revoke blob URLs and delete images
-      try {
-        logger.log(`Revoking blob URLs for ${cardsInCollection.length} cards in collection "${name}"`);
-        
-        cardsInCollection.forEach(card => {
-          if (card.imageUrl && card.imageUrl.startsWith('blob:')) {
-            try {
-              URL.revokeObjectURL(card.imageUrl);
-              logger.debug(`Revoked blob URL for card ${card.id || card.slabSerial}`);
-            } catch (revokeError) {
-              logger.error(`Error revoking blob URL for card ${card.id || card.slabSerial}:`, revokeError);
-            }
-          }
-        });
-        
-        // Delete images from IndexedDB
-        for (const card of cardsInCollection) {
-          const cardId = card.id || card.slabSerial;
-          if (cardId) {
-            try {
-              await db.deleteImage(cardId);
-              logger.debug(`Deleted image for card ${cardId} from IndexedDB`);
-            } catch (deleteError) {
-              logger.error(`Error deleting image for card ${cardId} from IndexedDB:`, deleteError);
-            }
-          }
-        }
-      } catch (blobError) {
-        logger.error("Error revoking blob URLs:", blobError);
-      }
-      
-      // Delete from Firestore if user is logged in
-      if (user) {
-        try {
-          // Use firestoreService which properly queries by name
-          await firestoreService.deleteCollection(name);
-          logger.log(`Collection "${name}" and all its cards deleted from Firestore`);
-        } catch (firestoreError) {
-          logger.error("Error deleting collection from Firestore:", firestoreError);
-          // Don't throw here, continue with local deletion
-        }
-      }
-      
-      // Remove from local state and database
-      delete currentCollections[name];
-      logger.log("Collection removed from object, saving to DB...");
-      
-      await db.saveCollections(currentCollections);
-      
-      setCollections(currentCollections);
-      
-      // Update selected collection if needed
-      if (selectedCollection === name) {
-        const newSelection = Object.keys(currentCollections)[0];
-        setSelectedCollection(newSelection);
-        localStorage.setItem('selectedCollection', newSelection);
-        logger.log("Selected new collection:", newSelection);
-      }
-      
-      toast.success(`Collection "${name}" and all its cards deleted successfully`, { id: 'delete-collection' });
-      
-      return true;
+      // Prevent deletion of any collection for data protection
+      toast.error(`Cannot delete collections - this feature is disabled to protect your data`);
+      return false;
     } catch (error) {
       logger.error("Error deleting collection:", error);
       toast.error(`Failed to delete collection: ${error.message}`, { id: 'delete-collection' });
@@ -163,6 +58,12 @@ export const collectionManager = {
    */
   async renameCollection(oldName, newName, { collections, setCollections, selectedCollection, setSelectedCollection }) {
     if (!oldName || !newName || oldName === newName) {
+      return false;
+    }
+
+    // Protect special collections from being renamed
+    if (oldName === 'All Cards' || oldName.toLowerCase() === 'sold') {
+      toast.error(`Cannot rename the "${oldName}" collection - it is protected`);
       return false;
     }
 

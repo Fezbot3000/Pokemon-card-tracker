@@ -9,6 +9,7 @@ import {
   Outlet,
   useOutletContext
 } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import { HelmetProvider } from 'react-helmet-async';
 import { 
   Header, 
@@ -195,7 +196,6 @@ function AppContent({ currentView, setCurrentView }) {
   });
   const [selectedCollection, setSelectedCollection] = useState('All Cards');
   const [collections, setCollections] = useState({});
-  const [isLoading, setIsLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const { registerAddCardCallback, checkAndStartTutorial, startTutorial } = useTutorial();
   const { user, logout } = useAuth();
@@ -395,7 +395,7 @@ function AppContent({ currentView, setCurrentView }) {
   useEffect(() => {
     const initializeDatabaseAndLoadCollections = async () => {
       try {
-        setIsLoading(true);
+        // Loading state is now managed by useCardData hook
         
         // Use a silent initialization approach for first login
         try {
@@ -443,7 +443,7 @@ function AppContent({ currentView, setCurrentView }) {
         setCollections(defaultCollections);
         setSelectedCollection('Default Collection');
       } finally {
-        setIsLoading(false);
+        // Loading state is now managed by useCardData hook
       }
     };
 
@@ -649,7 +649,7 @@ function AppContent({ currentView, setCurrentView }) {
   // Removed export functionality
   // Removed import functionality
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-gray-100 dark:bg-[#0F0F0F] flex items-center justify-center">
         <div className="text-center">
@@ -662,6 +662,7 @@ function AppContent({ currentView, setCurrentView }) {
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-[#0F0F0F] dashboard-page">
+      <Toaster />
       {/* Hide Header on mobile when in settings or cards view */}
       {!(isMobile && (currentView === 'settings' || currentView === 'cards')) && (
         <Header
@@ -748,7 +749,12 @@ function AppContent({ currentView, setCurrentView }) {
               {!showSettings ? (
                 <div className="p-4 sm:p-6 pb-20">
                   {/* Card List */}
-                  {cards.length === 0 ? (
+                  {loading ? (
+                    <div className="flex flex-col items-center justify-center h-full min-h-[400px]">
+                      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"></div>
+                      <p className="text-gray-600 dark:text-gray-400">Loading your collections...</p>
+                    </div>
+                  ) : cards.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-full min-h-[400px]">
                       <span className="material-icons text-6xl mb-4 text-gray-400 dark:text-gray-600">inventory_2</span>
                       <h2 className="text-lg font-bold mb-2 text-gray-900 dark:text-white">No cards in your collection</h2>
@@ -862,7 +868,7 @@ function AppContent({ currentView, setCurrentView }) {
         <AddCardModal
           isOpen={showNewCardForm}
           onClose={() => closeNewCardForm()}
-          onSave={(cardData, imageFile, targetCollection) => handleAddCard(cardData, imageFile, targetCollection)}
+          onSave={(cardData, imageFile, targetCollection) => addCard(cardData, imageFile)}
           collections={Object.keys(collections)}
           onNewCollectionCreated={handleNewCollectionCreation}
           defaultCollection={selectedCollection !== 'All Cards' && selectedCollection !== 'Sold' ? selectedCollection : ''}

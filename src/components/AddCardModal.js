@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import PropTypes from 'prop-types';
 import Modal from '../design-system/molecules/Modal';
 import Button from '../design-system/atoms/Button';
@@ -214,10 +214,8 @@ const AddCardModal = ({
       setErrors({});
       setSaveMessage('Card saved successfully');
       
-      // Close modal after a brief delay to show success message
-      setTimeout(() => {
-        onClose();
-      }, 1000);
+      // Close modal immediately after successful save
+      onClose();
 
     } catch (error) {
       console.error('Error adding card:', error);
