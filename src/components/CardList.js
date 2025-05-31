@@ -993,15 +993,12 @@ const CardList = ({
   };
 
   return (
-    <div className="w-full px-1 sm:px-2 pb-20">
-      {/* Stats Section - Only show if there are cards */}
-      {filteredCards.length > 0 && (
-        <StatisticsSummary 
-          statistics={formatStatisticsForDisplay(totals, filteredCards.length, paginatedCards.length)}
-          className="mb-3 sm:mb-4"
-        />
-      )}
-
+    <div className="w-full px-1 sm:px-2 pb-20 min-h-screen">
+      {/* Stats Section - Always show even with empty collections */}
+      <StatisticsSummary 
+        statistics={formatStatisticsForDisplay(totals, filteredCards.length, paginatedCards.length)}
+        className="mb-3 sm:mb-4"
+      />
       {/* Controls Section - Always show so users can add cards */}
       <div className="mb-4">
         <SearchToolbar 
@@ -1063,7 +1060,7 @@ const CardList = ({
 
       {/* Cards Display */}
       {filteredCards.length === 0 ? (
-        <div className="text-center py-8 sm:py-12">
+        <div className="text-center py-16 sm:py-24 min-h-96">
           <span className="material-icons text-4xl sm:text-5xl mb-3 sm:mb-4 text-gray-400 dark:text-gray-600">inventory_2</span>
           <h3 className="text-sm sm:text-base font-medium text-gray-900 dark:text-white mb-1 sm:mb-2">No cards found</h3>
           <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-4">
