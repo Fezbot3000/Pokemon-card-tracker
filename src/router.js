@@ -43,7 +43,7 @@ export const RootProviders = () => (
                   <RestoreProgressBar />
                   <InvoiceProvider>
                     <Toast
-                      position="bottom-right"
+                      position="bottom-left"
                       toastOptions={{
                         duration: 3000,
                         style: {
