@@ -319,6 +319,10 @@ class DatabaseAdapter {
     }
   }
 
+  async getCardImage(cardId) {
+    return this.getImage(cardId);
+  }
+
   async deleteImage(cardId) {
     try {
       const userId = this.getCurrentUserId();
