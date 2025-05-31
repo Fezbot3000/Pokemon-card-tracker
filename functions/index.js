@@ -1,5 +1,6 @@
 // Test comment to verify GitHub Actions automatic deployment is working
-const functions = require("firebase-functions").region('us-central1');
+const functionsBase = require("firebase-functions");
+const functions = functionsBase.region('us-central1');
 const { HttpsError } = require("firebase-functions/v1/https");
 const admin = require("firebase-admin");
 const fetch = require('node-fetch'); // Use node-fetch v2 syntax
@@ -131,7 +132,7 @@ exports.psaLookup = functions.https.onCall(async (data, context) => {
     
     // Try to get token from Firebase functions config first (for deployed environment)
     try {
-      const config = functions.config();
+      const config = functionsBase.config();
       psaToken = config.psa?.api_token;
     } catch (configError) {
       console.log('Firebase config not available (likely running locally):', configError.message);
