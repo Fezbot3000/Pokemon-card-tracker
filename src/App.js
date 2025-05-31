@@ -9,7 +9,6 @@ import {
   Outlet,
   useOutletContext
 } from 'react-router-dom';
-import { Toaster } from 'react-hot-toast';
 import { HelmetProvider } from 'react-helmet-async';
 import { 
   Header, 
@@ -662,7 +661,6 @@ function AppContent({ currentView, setCurrentView }) {
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-[#0F0F0F] dashboard-page">
-      <Toaster />
       {/* Hide Header on mobile when in settings or cards view */}
       {!(isMobile && (currentView === 'settings' || currentView === 'cards')) && (
         <Header
@@ -868,7 +866,14 @@ function AppContent({ currentView, setCurrentView }) {
         <AddCardModal
           isOpen={showNewCardForm}
           onClose={() => closeNewCardForm()}
-          onSave={(cardData, imageFile, targetCollection) => addCard(cardData, imageFile)}
+          onSave={async (cardData, imageFile, targetCollection) => {
+            const result = await addCard(cardData, imageFile);
+            // If card was successfully added and we have a target collection, switch to it
+            if (result && targetCollection && targetCollection !== 'All Cards') {
+              setSelectedCollection(targetCollection);
+              localStorage.setItem('selectedCollection', targetCollection);
+            }
+          }}
           collections={Object.keys(collections)}
           onNewCollectionCreated={handleNewCollectionCreation}
           defaultCollection={selectedCollection !== 'All Cards' && selectedCollection !== 'Sold' ? selectedCollection : ''}

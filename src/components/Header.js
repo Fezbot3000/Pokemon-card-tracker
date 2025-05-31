@@ -98,7 +98,12 @@ const Header = ({
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 w-full z-40 bg-white dark:bg-[#1B2131] shadow-md border-b border-gray-200 dark:border-gray-700/50 hidden sm:flex" style={{position: 'fixed'}}>
+      <header className={`
+        fixed top-0 left-0 right-0 z-[100] 
+        pt-[env(safe-area-inset-top,0px)]
+        bg-white/95 dark:bg-[#0B0F19]/95 backdrop-blur-sm border-b border-gray-200 dark:border-gray-800 
+        hidden sm:block ${className}
+      `}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo and Collection Dropdown */}

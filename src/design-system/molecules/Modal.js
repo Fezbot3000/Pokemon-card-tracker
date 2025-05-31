@@ -239,33 +239,28 @@ const Modal = ({
   // Regular modal with backdrop and positioning
   return (
     <div 
-      className={`${backdropClasses} ${darkModeClass} ${isAnimatingOut ? 'animate-backdrop-fade-out' : 'animate-backdrop-fade-in'}`}
+      className={`${backdropClasses} modal-overlay ${darkModeClass} ${isAnimatingOut ? 'animate-backdrop-fade-out' : 'animate-backdrop-fade-in'}`}
       style={{ zIndex }}
       onClick={handleBackdropClick}
     >
       <div 
         ref={modalRef}
-        className={`${modalClasses} flex flex-col ${animationClass} ${
+        className={`${modalClasses} modal-fullscreen-safe flex flex-col ${animationClass} ${
           position === 'right' 
             ? (window.innerWidth < 640 
                 ? 'w-screen max-w-none h-screen min-h-screen rounded-none m-0 fixed top-0 left-0 right-0 bottom-0 z-[9999] overflow-auto' 
                 : 'w-[55%] h-screen min-h-screen rounded-l-md rounded-r-none mr-0 fixed top-0 right-0 z-[9999]')
-            : (mobileFullWidth || (size === 'custom' ? maxWidth : sizeClasses[size] || 'w-[55%]'))
+            : `modal-content-safe ${mobileFullWidth || (size === 'custom' ? maxWidth : sizeClasses[size] || 'w-[55%]')}`
         } ${className}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby={title ? 'modal-title' : undefined}
         aria-label={ariaLabel}
-        style={{
-          height: window.innerWidth < 640 ? 'calc(var(--vh, 1vh) * 100)' : undefined,
-          maxHeight: window.innerWidth < 640 ? 'calc(var(--vh, 1vh) * 100)' : undefined,
-          paddingBottom: window.innerWidth < 640 ? 'env(safe-area-inset-bottom)' : undefined
-        }}
         {...stripDebugProps(props)}
       >
-        {/* Modal Header - Sticky */}
+        {/* Modal Header - Sticky with safe area */}
         {title && (
-          <div className={headerClasses}>
+          <div className={`${headerClasses} pt-[calc(1rem+env(safe-area-inset-top,0px))] sm:pt-6`}>
             <h2 id="modal-title" className={titleClasses}>{title}</h2>
             <button 
               onClick={handleClose}
@@ -278,8 +273,8 @@ const Modal = ({
           </div>
         )}
 
-        {/* Modal Content - Scrollable */}
-        <div className={`flex-1 overflow-y-auto scrollbar-hide px-6 modal-content ${title ? 'pb-0' : 'pt-6 pb-0'}`}>
+        {/* Modal Content - Scrollable with safe area */}
+        <div className="flex-1 overflow-y-auto p-6" style={{ paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom, 0px))' }}>
           {children}
         </div>
 
