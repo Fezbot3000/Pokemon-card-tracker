@@ -23,6 +23,7 @@ const SelectField = ({
   children, // Support direct option elements as children
   allowCustomOptions = false, // Allow user to add custom options
   onAddOption = null, // Callback for adding a new option
+  testId, // Extract testId to handle it properly
   ...props
 }) => {
   const fieldId = id || `field-${name}`;
@@ -76,6 +77,7 @@ const SelectField = ({
           required={required}
           disabled={disabled}
           className={selectClasses}
+          data-testid={testId} // Convert testId to data-testid
           {...props}
         >
           {placeholder && <option value="" disabled>{placeholder}</option>}
@@ -122,6 +124,7 @@ SelectField.propTypes = {
   children: PropTypes.node,
   allowCustomOptions: PropTypes.bool,
   onAddOption: PropTypes.func,
+  testId: PropTypes.string,
 };
 
 export default SelectField;

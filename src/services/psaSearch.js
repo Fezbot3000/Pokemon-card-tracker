@@ -303,13 +303,19 @@ const searchByCertNumber = async (certNumber, forceRefresh = false) => {
         console.error('Error details:', result.data.error);
       }
       
-      // Show error notification instead of returning mock data
-      PSANotifications.showLookupNotification('FETCH_ERROR');
+      // Show appropriate error notification based on error type
+      if (result.data?.error === 'PSA_API_NOT_CONFIGURED') {
+        PSANotifications.showLookupNotification('CONFIG_ERROR');
+      } else if (result.data?.error === 'PSA_CONFIG_ERROR') {
+        PSANotifications.showLookupNotification('CONFIG_ERROR');
+      } else {
+        PSANotifications.showLookupNotification('FETCH_ERROR');
+      }
       
-      // Return error object
+      // Return error object with more specific messaging
       return {
         error: result.data?.error || 'API_ERROR',
-        message: 'Failed to fetch PSA data. Please try again later.'
+        message: result.data?.message || 'Failed to fetch PSA data. Please try again later.'
       };
     }
   } catch (error) {

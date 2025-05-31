@@ -54,6 +54,9 @@ const PSANotifications = {
       case 'success':
         return 'PSA information found';
         
+      case 'CONFIG_ERROR':
+        return 'PSA service temporarily unavailable';
+        
       case 'RATE_LIMITED':
         return 'PSA lookup temporarily unavailable';
         
@@ -93,7 +96,7 @@ const PSANotifications = {
           border: '1px solid #ddd',
         },
         icon: null, // No icon
-      id: 'psa-notification' // Use a consistent ID to prevent multiple toasts
+        id: 'psa-notification' // Use a consistent ID to prevent multiple toasts
       });
     } else {
       console.error('Error applying PSA data:', error);
@@ -109,7 +112,7 @@ const PSANotifications = {
           border: '1px solid #ddd',
         },
         icon: null, // No icon
-      id: 'psa-notification' // Use a consistent ID to prevent multiple toasts
+        id: 'psa-notification' // Use a consistent ID to prevent multiple toasts
       });
     }
   },
@@ -140,4 +143,3 @@ const PSANotifications = {
 };
 
 export default PSANotifications;
-

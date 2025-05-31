@@ -82,6 +82,13 @@ jobs:
           echo "REACT_APP_PRICECHARTING_API_KEY=''" >> .env
           echo "REACT_APP_EBAY_APP_ID=''" >> .env
           echo "REACT_APP_FIREBASE_CLIENT_ID=${{ secrets.REACT_APP_FIREBASE_CLIENT_ID }}" >> .env
+          echo "REACT_APP_PSA_API_TOKEN=${{ secrets.PSA_API_TOKEN }}" >> .env
+      
+      - name: Set Firebase Functions Environment Variables
+        run: |
+          echo "PSA_API_TOKEN=${{ secrets.PSA_API_TOKEN }}" >> functions/.env
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
       
       - name: Delete existing functions (if needed)
         run: |

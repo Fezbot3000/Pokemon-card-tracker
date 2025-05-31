@@ -7,7 +7,7 @@ import Footer from './Footer';
 import { Link } from 'react-router-dom';
 
 function Home() {
-  const { currentUser } = useAuth();
+  const { currentUser, loading } = useAuth();
   const navigate = useNavigate();
   const [modalImage, setModalImage] = useState(null);
 
@@ -24,6 +24,15 @@ function Home() {
   const closeModal = () => {
     setModalImage(null);
   };
+
+  // Show loading screen while checking authentication
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#1B2131] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
 
   if (currentUser) {
     return null; // Will redirect to dashboard

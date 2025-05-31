@@ -101,13 +101,13 @@ function NewUserRoute() {
 
 // Main Dashboard Component
 function Dashboard() {
-  const { currentUser, authLoading } = useAuth();
+  const { currentUser, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [currentView, setCurrentView] = useState('cards');
 
   // Show loading indicator while auth state is being determined
-  if (authLoading) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>

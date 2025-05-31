@@ -1,5 +1,5 @@
-const functions = require('firebase-functions');
 const admin = require('firebase-admin');
+const functions = require('firebase-functions');
 const fetch = require('node-fetch');
 const cors = require('cors')({ origin: true });
 

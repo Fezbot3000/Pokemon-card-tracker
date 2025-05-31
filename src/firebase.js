@@ -1,9 +1,9 @@
 // Basic Firebase initialization without any extra complexity
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider } from 'firebase/auth';
-import { getFirestore, enableIndexedDbPersistence, doc, getDoc } from 'firebase/firestore';
-import { getStorage } from 'firebase/storage';
-import { getFunctions } from 'firebase/functions';
+import { getAuth, GoogleAuthProvider, setPersistence, browserLocalPersistence, connectAuthEmulator } from 'firebase/auth';
+import { getFirestore, enableIndexedDbPersistence, doc, getDoc, connectFirestoreEmulator } from 'firebase/firestore';
+import { getStorage, connectStorageEmulator } from 'firebase/storage';
+import { getFunctions, connectFunctionsEmulator } from 'firebase/functions';
 
 // Import the env validation
 import './env';
@@ -66,6 +66,22 @@ if (process.env.REACT_APP_FIREBASE_CLIENT_ID) {
   });
 } else {
   // Removed: console.error('Missing CLIENT_ID for Google provider');
+}
+
+// Set authentication persistence
+setPersistence(auth, browserLocalPersistence);
+
+// Connect to emulators in development
+if (process.env.NODE_ENV === 'development') {
+  // Connect to Functions emulator
+  try {
+    if (!functions._delegate._url) {
+      connectFunctionsEmulator(functions, 'localhost', 5001);
+      console.log('Connected to Functions emulator');
+    }
+  } catch (error) {
+    console.log('Functions emulator connection failed or already connected:', error.message);
+  }
 }
 
 // Add this section to handle ad blockers that might block Firestore

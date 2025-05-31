@@ -225,7 +225,7 @@ const CardList = ({
     clearSelection,
     getSelectedCards,
     isCardSelected 
-  } = useCardSelection(filteredCards);
+      } = useCardSelection(filteredCards);
 
   useEffect(() => {
     if (onSelectionChange) {

@@ -70,7 +70,11 @@ export const AuthProvider = ({ children }) => {
 
   // Set up the auth state listener
   useEffect(() => {
+    let isMounted = true;
+    
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (!isMounted) return;
+      
       if (user) {
         try {
           // Just set the current user
@@ -82,10 +86,19 @@ export const AuthProvider = ({ children }) => {
       } else {
         setUser(null);
       }
-      setLoading(false);
+      
+      // Add a small delay to prevent flashing
+      setTimeout(() => {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }, 100);
     });
 
-    return unsubscribe;
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
   }, []);
 
   // Helper function to create a user document in Firestore

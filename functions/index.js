@@ -1,5 +1,6 @@
 // Test comment to verify GitHub Actions automatic deployment is working
 const functions = require("firebase-functions").region('us-central1');
+const { HttpsError } = require("firebase-functions/v1/https");
 const admin = require("firebase-admin");
 const fetch = require('node-fetch'); // Use node-fetch v2 syntax
 const PDFDocument = require('pdfkit');
@@ -86,13 +87,13 @@ try {
 exports.sendFeedbackEmail = functions.https.onCall(async (data, context) => {
   // Ensure the user is authenticated
   if (!context.auth) {
-    throw new functions.https.HttpsError('unauthenticated', 'User must be logged in');
+    throw new HttpsError('unauthenticated', 'User must be logged in');
   }
 
   try {
     const { email, message } = data;
     if (!email || !message) {
-      throw new functions.https.HttpsError('invalid-argument', 'Email and message are required');
+      throw new HttpsError('invalid-argument', 'Email and message are required');
     }
 
     // Send the email using a mail service (e.g., Sendgrid, Mailgun)
@@ -102,7 +103,7 @@ exports.sendFeedbackEmail = functions.https.onCall(async (data, context) => {
     return { success: true, message: 'Feedback email sent successfully' };
   } catch (error) {
     console.error('Error sending feedback email:', error);
-    throw new functions.https.HttpsError('internal', error.message);
+    throw new HttpsError('internal', error.message);
   }
 });
 
@@ -125,23 +126,42 @@ exports.psaLookup = functions.https.onCall(async (data, context) => {
 
     console.log(`Looking up PSA cert #${certNumber}`);
 
-    // Get PSA API token from environment variable
+    // Get PSA API token from Firebase config or environment variables
     let psaToken;
     try {
-      // Get token from Firebase environment config using the standard key
-      psaToken = process.env.PSA_API_TOKEN;
-      if (!psaToken) {
-        console.error('PSA_API_TOKEN environment variable is required');
-        throw new functions.https.HttpsError(
-          'failed-precondition',
-          'PSA API is not properly configured. Please contact support.',
-          { error: 'CONFIGURATION_ERROR' }
-        );
+      // Try to get token from Firebase functions config first (for deployed environment)
+      let config;
+      try {
+        config = functions.config();
+        psaToken = config.psa?.api_token;
+      } catch (configError) {
+        console.log('Firebase config not available (likely running locally):', configError.message);
       }
-      console.log('Using PSA token from Firebase config');
+      
+      // Fallback to environment variable (for local development)
+      if (!psaToken) {
+        psaToken = process.env.PSA_API_TOKEN;
+      }
+      
+      if (!psaToken) {
+        console.warn('PSA_API_TOKEN not configured in Firebase config or environment variables');
+        // Return a more user-friendly error response instead of throwing
+        return {
+          success: false,
+          error: 'PSA_API_NOT_CONFIGURED',
+          message: 'PSA API is not currently configured. Please contact support for assistance.',
+          data: null
+        };
+      }
+      console.log('PSA token found and configured');
     } catch (error) {
-      console.error('Error getting PSA token from config:', error);
-      throw new functions.https.HttpsError('internal', 'Error accessing PSA credentials');
+      console.error('Error getting PSA token:', error);
+      return {
+        success: false,
+        error: 'PSA_CONFIG_ERROR',
+        message: 'Error accessing PSA configuration. Please try again later.',
+        data: null
+      };
     }
     
     // Define multiple possible URL formats to try
@@ -236,7 +256,7 @@ exports.psaLookup = functions.https.onCall(async (data, context) => {
 exports.getBackupDownloadUrl = functions.https.onCall(async (data, context) => {
   // Ensure user is authenticated
   if (!context.auth) {
-    throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated to access backups');
+    throw new HttpsError('unauthenticated', 'User must be authenticated to access backups');
   }
 
   try {
@@ -257,11 +277,11 @@ exports.getBackupDownloadUrl = functions.https.onCall(async (data, context) => {
       
       if (metadataExists) {
         // If metadata exists, this is the new unzipped format
-        throw new functions.https.HttpsError('failed-precondition', 
+        throw new HttpsError('failed-precondition', 
           'This backup is in the new unzipped format and should be restored directly from the client.');
       } else {
         // No backup found at all
-        throw new functions.https.HttpsError('not-found', 'No backup file found for this user');
+        throw new HttpsError('not-found', 'No backup file found for this user');
       }
     }
 
@@ -279,7 +299,7 @@ exports.getBackupDownloadUrl = functions.https.onCall(async (data, context) => {
     };
   } catch (error) {
     functions.logger.error('Error generating download URL:', error);
-    throw new functions.https.HttpsError('internal', 'Failed to generate download URL: ' + error.message);
+    throw new HttpsError('internal', 'Failed to generate download URL: ' + error.message);
   }
 });
 
@@ -287,7 +307,7 @@ exports.getBackupDownloadUrl = functions.https.onCall(async (data, context) => {
 exports.uploadBackup = functions.https.onCall(async (data, context) => {
   // Ensure user is authenticated
   if (!context.auth) {
-    throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated to upload backups');
+    throw new HttpsError('unauthenticated', 'User must be authenticated to upload backups');
   }
 
   try {
@@ -322,7 +342,7 @@ exports.uploadBackup = functions.https.onCall(async (data, context) => {
     };
   } catch (error) {
     functions.logger.error('Error uploading backup:', error);
-    throw new functions.https.HttpsError('internal', 'Failed to upload backup: ' + error.message);
+    throw new HttpsError('internal', 'Failed to upload backup: ' + error.message);
   }
 });
 
@@ -330,7 +350,7 @@ exports.uploadBackup = functions.https.onCall(async (data, context) => {
 exports.listBackupFiles = functions.https.onCall(async (data, context) => {
   // Ensure user is authenticated
   if (!context.auth) {
-    throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated to list backups');
+    throw new HttpsError('unauthenticated', 'User must be authenticated to list backups');
   }
 
   try {
@@ -357,7 +377,7 @@ exports.listBackupFiles = functions.https.onCall(async (data, context) => {
     return { files: fileList };
   } catch (error) {
     functions.logger.error('Error listing backup files:', error);
-    throw new functions.https.HttpsError('internal', 'Failed to list backup files: ' + error.message);
+    throw new HttpsError('internal', 'Failed to list backup files: ' + error.message);
   }
 });
 
@@ -365,7 +385,7 @@ exports.listBackupFiles = functions.https.onCall(async (data, context) => {
 exports.getBackupFileContent = functions.https.onCall(async (data, context) => {
   // Ensure user is authenticated
   if (!context.auth) {
-    throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated to access backup content');
+    throw new HttpsError('unauthenticated', 'User must be authenticated to access backup content');
   }
 
   try {
@@ -380,7 +400,7 @@ exports.getBackupFileContent = functions.https.onCall(async (data, context) => {
     // Check if file exists
     const [exists] = await file.exists();
     if (!exists) {
-      throw new functions.https.HttpsError('not-found', `Backup file ${fileName} not found`);
+      throw new HttpsError('not-found', `Backup file ${fileName} not found`);
     }
     
     // Get file content
@@ -393,7 +413,7 @@ exports.getBackupFileContent = functions.https.onCall(async (data, context) => {
     };
   } catch (error) {
     functions.logger.error('Error getting backup file content:', error);
-    throw new functions.https.HttpsError('internal', 'Failed to get backup file content: ' + error.message);
+    throw new HttpsError('internal', 'Failed to get backup file content: ' + error.message);
   }
 });
 
@@ -401,7 +421,7 @@ exports.getBackupFileContent = functions.https.onCall(async (data, context) => {
 exports.getCarPrice = functions.https.onCall(async (data, context) => {
   // Ensure the user is authenticated
   if (!context.auth) {
-    throw new functions.https.HttpsError('unauthenticated', 'User must be logged in');
+    throw new HttpsError('unauthenticated', 'User must be logged in');
   }
 
   try {
@@ -422,14 +442,14 @@ exports.getCarPrice = functions.https.onCall(async (data, context) => {
     };
   } catch (error) {
     console.error('Error in getCarPrice function:', error);
-    throw new functions.https.HttpsError('internal', error.message);
+    throw new HttpsError('internal', error.message);
   }
 });
 
 exports.getCarValueFromAdmin = functions.https.onCall(async (data, context) => {
   // Ensure the user is authenticated
   if (!context.auth) {
-    throw new functions.https.HttpsError('unauthenticated', 'User must be logged in');
+    throw new HttpsError('unauthenticated', 'User must be logged in');
   }
 
   try {
@@ -448,7 +468,7 @@ exports.getCarValueFromAdmin = functions.https.onCall(async (data, context) => {
     };
   } catch (error) {
     console.error('Error in getCarValueFromAdmin function:', error);
-    throw new functions.https.HttpsError('internal', error.message);
+    throw new HttpsError('internal', error.message);
   }
 });
 
@@ -456,7 +476,7 @@ exports.getCarValueFromAdmin = functions.https.onCall(async (data, context) => {
 exports.storeCardImage = functions.https.onCall(async (data, context) => {
   // Require authentication
   if (!context.auth) {
-    throw new functions.https.HttpsError(
+    throw new HttpsError(
       'unauthenticated',
       'User must be authenticated to store images'
     );
@@ -468,7 +488,7 @@ exports.storeCardImage = functions.https.onCall(async (data, context) => {
     
     // Validate inputs
     if (!imageBase64 || !cardId) {
-      throw new functions.https.HttpsError(
+      throw new HttpsError(
         'invalid-argument',
         'Missing required fields: imageBase64, cardId'
       );
@@ -526,7 +546,7 @@ exports.storeCardImage = functions.https.onCall(async (data, context) => {
     };
   } catch (error) {
     console.error('Error storing image:', error);
-    throw new functions.https.HttpsError('internal', error.message);
+    throw new HttpsError('internal', error.message);
   }
 });
 
@@ -537,7 +557,7 @@ exports.generateInvoiceBatch = functions.runWith({
 }).https.onCall(async (data, context) => {
   // Ensure the user is authenticated
   if (!context.auth) {
-    throw new functions.https.HttpsError('unauthenticated', 'User must be logged in');
+    throw new HttpsError('unauthenticated', 'User must be logged in');
   }
 
   const userId = context.auth.uid;
@@ -548,7 +568,7 @@ exports.generateInvoiceBatch = functions.runWith({
     const { invoiceIds } = data;
     
     if (!invoiceIds || !Array.isArray(invoiceIds) || invoiceIds.length === 0) {
-      throw new functions.https.HttpsError(
+      throw new HttpsError(
         'invalid-argument',
         'Missing or invalid invoiceIds parameter'
       );
@@ -821,7 +841,7 @@ exports.generateInvoiceBatch = functions.runWith({
     };
   } catch (error) {
     console.error('Error generating batch invoices:', error);
-    throw new functions.https.HttpsError('internal', `Error generating batch invoices: ${error.message}`);
+    throw new HttpsError('internal', `Error generating batch invoices: ${error.message}`);
   }
 });
 
@@ -829,7 +849,7 @@ exports.generateInvoiceBatch = functions.runWith({
 exports.getUserCards = functions.https.onCall(async (data, context) => {
   // Ensure the user is authenticated
   if (!context.auth) {
-    throw new functions.https.HttpsError('unauthenticated', 'User must be logged in');
+    throw new HttpsError('unauthenticated', 'User must be logged in');
   }
 
   try {
@@ -849,6 +869,6 @@ exports.getUserCards = functions.https.onCall(async (data, context) => {
     };
   } catch (error) {
     console.error('Error getting user cards:', error);
-    throw new functions.https.HttpsError('internal', error.message);
+    throw new HttpsError('internal', error.message);
   }
 });
