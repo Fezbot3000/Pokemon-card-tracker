@@ -108,13 +108,16 @@ class DatabaseAdapter {
     try {
       // Generate a unique ID for the card if it doesn't have one
       if (!cardData.id) {
-        cardData.id = `card_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        // Use PSA certification number as ID if available, otherwise generate random ID
+        if (cardData.certificationNumber) {
+          cardData.id = cardData.certificationNumber;
+        } else {
+          cardData.id = `card_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        }
       }
 
-      // Set slabSerial if not already set (use certificationNumber or generate one)
-      if (!cardData.slabSerial) {
-        cardData.slabSerial = cardData.certificationNumber || cardData.id;
-      }
+      // Set slabSerial to match the ID for consistency
+      cardData.slabSerial = cardData.id;
 
       // Add timestamp
       cardData.addedAt = new Date().toISOString();
