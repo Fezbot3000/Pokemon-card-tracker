@@ -128,41 +128,31 @@ exports.psaLookup = functions.https.onCall(async (data, context) => {
 
     // Get PSA API token from Firebase config or environment variables
     let psaToken;
+    
+    // Try to get token from Firebase functions config first (for deployed environment)
     try {
-      // Try to get token from Firebase functions config first (for deployed environment)
-      let config;
-      try {
-        config = functions.config();
-        psaToken = config.psa?.api_token;
-      } catch (configError) {
-        console.log('Firebase config not available (likely running locally):', configError.message);
-      }
-      
-      // Fallback to environment variable (for local development)
-      if (!psaToken) {
-        psaToken = process.env.PSA_API_TOKEN;
-      }
-      
-      if (!psaToken) {
-        console.warn('PSA_API_TOKEN not configured in Firebase config or environment variables');
-        // Return a more user-friendly error response instead of throwing
-        return {
-          success: false,
-          error: 'PSA_API_NOT_CONFIGURED',
-          message: 'PSA API is not currently configured. Please contact support for assistance.',
-          data: null
-        };
-      }
-      console.log('PSA token found and configured');
-    } catch (error) {
-      console.error('Error getting PSA token:', error);
+      const config = functions.config();
+      psaToken = config.psa?.api_token;
+    } catch (configError) {
+      console.log('Firebase config not available (likely running locally):', configError.message);
+    }
+    
+    // Fallback to environment variable (for local development)
+    if (!psaToken) {
+      psaToken = process.env.PSA_API_TOKEN;
+    }
+    
+    if (!psaToken) {
+      console.warn('PSA_API_TOKEN not configured in Firebase config or environment variables');
       return {
         success: false,
-        error: 'PSA_CONFIG_ERROR',
-        message: 'Error accessing PSA configuration. Please try again later.',
+        error: 'PSA_API_NOT_CONFIGURED',
+        message: 'PSA API is not currently configured. Please contact support for assistance.',
         data: null
       };
     }
+    
+    console.log('PSA token found and configured');
     
     // Define multiple possible URL formats to try
     const urlFormats = [

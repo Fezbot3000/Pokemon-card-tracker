@@ -5,7 +5,7 @@
  * Uses Firebase Cloud Functions to make the API calls to avoid CORS issues.
  */
 
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { getFunctions, httpsCallable, connectFunctionsEmulator } from 'firebase/functions';
 import { getAuth } from 'firebase/auth';
 import db from './firestore/dbAdapter';
 import logger from '../utils/logger';
@@ -15,6 +15,17 @@ import psaDataService from './psaDataService';
 
 // Initialize Firebase Functions
 const functions = getFunctions();
+
+// Connect to emulator in development
+if (process.env.NODE_ENV === 'development') {
+  try {
+    connectFunctionsEmulator(functions, 'localhost', 5001);
+    console.log('Connected to Functions emulator for PSA lookup');
+  } catch (error) {
+    console.log('Functions emulator connection failed or already connected:', error.message);
+  }
+}
+
 const psaLookupFunction = httpsCallable(functions, 'psaLookup');
 
 // Firebase project region and ID for direct HTTP calls
