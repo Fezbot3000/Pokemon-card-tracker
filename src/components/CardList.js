@@ -16,6 +16,7 @@ import { useUserPreferences } from '../contexts/UserPreferencesContext';
 import { useAuth } from '../design-system';
 import { calculateCardTotals, formatStatisticsForDisplay } from '../utils/cardStatistics';
 import { useCardSelection } from '../hooks';
+import { moveCards, validateCollectionsStructure } from '../utils/moveCardsHandler';
 
 // Replace FinancialSummary component with individual stat cards
 const StatCard = memo(({ label, value, isProfit = false }) => {
@@ -73,7 +74,7 @@ const formatDate = (dateValue) => {
       year: 'numeric'
     });
   } catch (error) {
-    console.error('Error formatting date:', error, dateValue);
+    console.error('Error formatting date:', error);
     // Return a fallback string if parsing fails
     return 'Date error';
   }
@@ -232,6 +233,19 @@ const CardList = ({
       onSelectionChange(selectedCards);
     }
   }, [selectedCards, onSelectionChange]);
+
+  // Clear selection when cards array changes (e.g., after move operations)
+  // This prevents stale selection state when cards are moved between collections
+  useEffect(() => {
+    const currentCardIds = new Set(filteredCards.map(card => card.slabSerial));
+    const selectedCardIds = Array.from(selectedCards);
+    const hasStaleSelections = selectedCardIds.some(id => !currentCardIds.has(id));
+    
+    if (hasStaleSelections && selectedCards.size > 0) {
+      console.log('[CardList] Clearing stale selection state after cards changed');
+      clearSelection();
+    }
+  }, [filteredCards, selectedCards, clearSelection]);
 
   const [isValueDropdownOpen, setIsValueDropdownOpen] = useState(false);
   const [isMetricDropdownOpen, setIsMetricDropdownOpen] = useState(false);
@@ -859,128 +873,44 @@ const CardList = ({
       // Get the cards to move
       const cardsToMove = cards.filter(card => selectedCards.has(card.slabSerial));
       
-      // When in "All Cards" view, we need to find the actual collection each card belongs to
-      const isAllCardsView = selectedCollection === 'All Cards';
-      
-      // Create a copy of collections to update
-      const updatedCollections = { ...collections };
-      
-      // Ensure target collection exists
-      if (!updatedCollections[targetCollection]) {
-        updatedCollections[targetCollection] = [];
+      if (cardsToMove.length === 0) {
+        toast.error('No cards selected to move');
+        return;
       }
-      
-      // Track moved cards for verification
-      const movedCards = [];
-      
-      // Update each card's collection
-      for (const card of cardsToMove) {
-        // Prepare card data for the *explicit Firestore write* for the move operation
-        const cardDataForFirestoreWrite = {
-          ...card,
-          collection: targetCollection,
-          collectionId: targetCollection,
-          lastMoved: new Date().toISOString(), // Add timestamp for verification
-          // IMPORTANT: Do NOT set _saveDebug or _lastUpdateTime here, so shadowWriteCard attempts the write
-        };
-        // Ensure any pre-existing skip flags from the original card object are removed for this specific write
-        delete cardDataForFirestoreWrite._saveDebug;
-        delete cardDataForFirestoreWrite._lastUpdateTime;
 
-        // Sync to Firestore if feature flag is enabled
-        try {
-          const shadowSync = await import('../services/shadowSync').then(module => module.default);
-          // This call should now make shadowWriteCard proceed to the actual repository.updateCard
-          await shadowSync.shadowWriteCard(card.slabSerial, cardDataForFirestoreWrite, targetCollection);
-          console.log(`[CardList] Successfully synced card ${card.slabSerial} (move op) to Firestore in collection ${targetCollection}`);
-        } catch (syncError) {
-          // Log but don't fail the operation
-          console.error(`[CardList] Error syncing card ${card.slabSerial} (move op) to Firestore:`, syncError);
-        }
+      console.log('[CardList] Starting move operation:', {
+        cardsCount: cardsToMove.length,
+        targetCollection,
+        sourceCollection: selectedCollection,
+        isAllCardsView: selectedCollection === 'All Cards'
+      });
 
-        // Now prepare the card object for updatedCollections (local state and for IndexedDB via saveCollections)
-        // This version is flagged to indicate it has just been processed.
-        const updatedCardForLocalStateAndIndexedDB = {
-          ...cardDataForFirestoreWrite, // Base it on what was sent to Firestore
-          _saveDebug: true, // Flag for db.saveCollections to know it was just handled
-          _lastUpdateTime: new Date().toISOString() // Standard update tracking timestamp
-        };
+      // Use the robust move handler
+      const success = await moveCards({
+        cardsToMove,
+        targetCollection,
+        sourceCollection: selectedCollection,
+        collections,
+        setCollections,
+        clearSelection,
+        isAllCardsView: selectedCollection === 'All Cards'
+      });
+
+      if (success) {
+        // Clear UI state only on success
+        setShowMoveModal(false);
+        setSelectedCardsToMove([]);
         
-        // Add card to target collection in local state
-        updatedCollections[targetCollection].push(updatedCardForLocalStateAndIndexedDB);
-        
-        // Remove card from source collection
-        if (isAllCardsView) {
-          // In "All Cards" view, find which collection the card is actually in
-          Object.keys(updatedCollections).forEach(collectionName => {
-            if (collectionName !== targetCollection) {
-              updatedCollections[collectionName] = updatedCollections[collectionName].filter(
-                c => c.slabSerial !== card.slabSerial
-              );
-            }
-          });
-        } else {
-          // Normal case: remove from selected collection
-          updatedCollections[selectedCollection] = updatedCollections[selectedCollection].filter(
-            c => c.slabSerial !== card.slabSerial
-          );
-        }
-
-        // Track this card for verification
-        movedCards.push({
-          id: card.slabSerial,
-          name: card.card || 'Unnamed Card',
-          from: isAllCardsView ? 'Unknown Collection' : selectedCollection,
-          to: targetCollection
-        });
-
-        // Sync to Firestore if feature flag is enabled
-        try {
-          const shadowSync = await import('../services/shadowSync').then(module => module.default);
-          // Make sure to pass the updated card with _saveDebug flag
-          await shadowSync.shadowWriteCard(card.slabSerial, updatedCardForLocalStateAndIndexedDB, targetCollection);
-          console.log(`[CardList] Successfully synced card ${card.slabSerial} to Firestore in collection ${targetCollection}`);
-        } catch (syncError) {
-          // Log but don't fail the operation
-          console.error(`[CardList] Error syncing card ${card.slabSerial} to Firestore:`, syncError);
-        }
+        console.log('[CardList] Move operation completed successfully');
+      } else {
+        console.warn('[CardList] Move operation failed or partially failed');
+        // Don't clear the modal on failure so user can retry
       }
       
-      // Save updated collections to database with explicit flags
-      // Mark that we're doing a collection move operation
-      const saveOptions = {
-        preserveSold: true,
-        operationType: 'moveCards'
-      };
-      
-      await db.saveCollections(updatedCollections, saveOptions.preserveSold, saveOptions);
-
-      // Update state
-      setShowMoveModal(false);
-      setSelectedCardsToMove([]);
-      clearSelection();
-      
-      // Store move verification data in localStorage for later verification
-      localStorage.setItem('lastCardMove', JSON.stringify({
-        timestamp: new Date().toISOString(),
-        cards: movedCards,
-        targetCollection
-      }));
-      
-      // Show success message
-      toast.success(`Successfully moved ${cardsToMove.length} card${cardsToMove.length > 1 ? 's' : ''} to ${targetCollection}`);
-      
-      // Update collections in parent component
-      if (setCollections) {
-        setCollections(updatedCollections);
-      }
-      
-      // Return true to indicate success
-      return true;
     } catch (error) {
-      console.error('Error moving cards:', error);
-      toast.error('Error moving cards. Please try again.');
-      return false;
+      console.error('[CardList] Error in handleMoveConfirm:', error);
+      toast.error('Failed to move cards. Please try again.');
+      // Don't clear the modal on error so user can retry
     }
   };
 
