@@ -103,15 +103,18 @@ const Modal = ({
         const style = document.createElement('style');
         style.className = 'safe-area-css-vars';
         style.innerHTML = `
-          .pt-safe {
-            padding-top: env(safe-area-inset-top, 0px) !important;
+          .modal-ios-safe-top {
+            padding-top: max(16px, env(safe-area-inset-top, 0px)) !important;
           }
-          .pb-safe {
-            padding-bottom: env(safe-area-inset-bottom, 0px) !important;
+          .modal-ios-safe-bottom {
+            padding-bottom: max(16px, env(safe-area-inset-bottom, 0px)) !important;
           }
           .modal-ios-fix {
-            padding-top: env(safe-area-inset-top, 0px);
-            padding-bottom: env(safe-area-inset-bottom, 0px);
+            max-height: calc(var(--vh, 1vh) * 100) !important;
+            overflow: hidden !important;
+          }
+          .modal-content-ios {
+            max-height: calc(var(--vh, 1vh) * 100 - 110px) !important;
           }
         `;
         document.head.appendChild(style);
@@ -277,15 +280,14 @@ const Modal = ({
         aria-label={ariaLabel}
         style={{
           height: window.innerWidth < 640 ? 'calc(var(--vh, 1vh) * 100)' : undefined,
-          maxHeight: window.innerWidth < 640 ? 'calc(var(--vh, 1vh) * 100)' : undefined,
-          paddingBottom: window.innerWidth < 640 ? 'env(safe-area-inset-bottom, 0px)' : undefined,
-          paddingTop: window.innerWidth < 640 ? 'env(safe-area-inset-top, 0px)' : undefined
+          maxHeight: window.innerWidth < 640 ? 'calc(var(--vh, 1vh) * 100)' : undefined
+          // Removed redundant padding - safe areas are handled by CSS classes
         }}
         {...stripDebugProps(props)}
       >
         {/* Modal Header - Sticky */}
         {title && (
-          <div className={`${headerClasses} ${window.innerWidth < 640 ? 'pt-safe' : ''}`}>
+          <div className={`${headerClasses} ${window.innerWidth < 640 ? 'modal-ios-safe-top' : ''}`}>
             <h2 id="modal-title" className={titleClasses}>{title}</h2>
             <button 
               onClick={handleClose}
@@ -299,13 +301,13 @@ const Modal = ({
         )}
 
         {/* Modal Content - Scrollable */}
-        <div className={`flex-1 overflow-y-auto scrollbar-hide px-6 modal-content ${title ? 'pb-0' : `${window.innerWidth < 640 ? 'pt-safe' : 'pt-6'} pb-0`}`}>
+        <div className={`flex-1 overflow-y-auto scrollbar-hide px-6 modal-content ${window.innerWidth < 640 ? 'modal-content-ios' : ''} ${title ? 'pb-0' : 'pt-6 pb-0'}`}>
           {children}
         </div>
 
         {/* Modal Footer - Sticky, only shown if footer content is provided */}
         {footer && (
-          <div className={`${footerClasses} ${window.innerWidth < 640 ? 'pb-safe' : ''}`}>
+          <div className={`${footerClasses} ${window.innerWidth < 640 ? 'modal-ios-safe-bottom' : ''}`}>
             {footer}
           </div>
         )}
