@@ -1037,7 +1037,22 @@ const addCustomSet = (setName, year = "2024") => {
  * @returns {Array} Array of year strings
  */
 const getAvailableYears = () => {
-  return Object.keys(POKEMON_SETS).sort();
+  // Get years from existing sets
+  const existingYears = Object.keys(POKEMON_SETS);
+  
+  // Add additional years from 1990 to 2030 to cover early cards and future releases
+  const allYears = new Set();
+  
+  // Add years from 1990 to 2030
+  for (let year = 1990; year <= 2030; year++) {
+    allYears.add(year.toString());
+  }
+  
+  // Add any existing years from the sets
+  existingYears.forEach(year => allYears.add(year));
+  
+  // Convert to array and sort
+  return Array.from(allYears).sort((a, b) => parseInt(b) - parseInt(a)); // Newest first
 };
 
 export {

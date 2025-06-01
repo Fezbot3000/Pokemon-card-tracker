@@ -9,7 +9,6 @@ import {
   Outlet,
   useOutletContext
 } from 'react-router-dom';
-import { Toaster } from 'react-hot-toast';
 import { HelmetProvider } from 'react-helmet-async';
 import { 
   Header, 
@@ -18,7 +17,6 @@ import {
   SettingsModal, 
   Icon,
   RestoreProvider, useRestore,
-  RestoreProgressBar,
   BackupProvider, useBackup,
   BackupProgressBar,
   toastService // Import toastService
@@ -111,7 +109,6 @@ function Dashboard() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-100 dark:bg-black dashboard-page">
-        <Toaster />
         {/* Keep actual Header during loading */}
         <Header
           className="header"
@@ -723,7 +720,6 @@ function AppContent({ currentView, setCurrentView }) {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-100 dark:bg-black dashboard-page">
-        <Toaster />
         {/* Keep actual Header during loading */}
         <Header
           className="header"
@@ -801,7 +797,6 @@ function AppContent({ currentView, setCurrentView }) {
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-black dashboard-page">
-      <Toaster />
       {/* Hide Header on mobile when in settings or cards view */}
       {!(isMobile && (currentView === 'settings' || currentView === 'cards')) && (
         <Header
