@@ -103,10 +103,35 @@ function MarketplaceListing() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-400">Loading listing...</p>
+      <div className="min-h-screen bg-gray-50 dark:bg-black flex items-center justify-center">
+        <div className="w-full max-w-4xl mx-auto p-4">
+          {/* Header skeleton */}
+          <div className="bg-white dark:bg-[#111] rounded-lg border border-gray-200 dark:border-gray-800 p-6 mb-6">
+            <div className="flex items-center space-x-4">
+              <div className="w-16 h-16 bg-gray-200 dark:bg-gray-800 rounded-lg animate-pulse"></div>
+              <div className="flex-1">
+                <div className="h-6 bg-gray-200 dark:bg-gray-800 rounded w-3/4 mb-2 animate-pulse"></div>
+                <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-1/2 animate-pulse"></div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Content skeleton */}
+          <div className="bg-white dark:bg-[#111] rounded-lg border border-gray-200 dark:border-gray-800 p-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Image skeleton */}
+              <div className="aspect-[2.5/3.5] bg-gray-200 dark:bg-gray-800 rounded-lg animate-pulse"></div>
+              
+              {/* Details skeleton */}
+              <div className="space-y-4">
+                <div className="h-8 bg-gray-200 dark:bg-gray-800 rounded w-3/4 animate-pulse"></div>
+                <div className="h-6 bg-gray-200 dark:bg-gray-800 rounded w-1/2 animate-pulse"></div>
+                <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-full animate-pulse"></div>
+                <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-5/6 animate-pulse"></div>
+                <div className="h-10 bg-gray-200 dark:bg-gray-800 rounded w-1/3 animate-pulse"></div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );

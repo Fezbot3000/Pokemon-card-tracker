@@ -91,10 +91,10 @@ function NewUserRoute() {
 
   // Show loading while redirecting
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+    <div className="min-h-screen bg-gray-50 dark:bg-black flex items-center justify-center">
       <div className="text-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-        <p className="text-gray-600">Setting up your account...</p>
+        <p className="text-gray-600 dark:text-gray-400">Setting up your account...</p>
       </div>
     </div>
   );
@@ -110,8 +110,79 @@ function Dashboard() {
   // Show loading indicator while auth state is being determined
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      <div className="min-h-screen bg-gray-100 dark:bg-black dashboard-page">
+        <Toaster />
+        {/* Keep actual Header during loading */}
+        <Header
+          className="header"
+          selectedCollection="All Cards"
+          collections={{}}
+          onCollectionChange={() => {}}
+          onSettingsClick={() => {}}
+          currentView="cards"
+          onViewChange={() => {}}
+          onAddCollection={() => {}}
+        />
+        
+        <main className="main-content mobile-dashboard max-w-[1920px] mx-auto">
+          <div className="p-4 sm:p-6 pb-20">
+            <div className="w-full px-1 sm:px-2 pb-20">
+              {/* Statistics Summary Skeleton */}
+              <div className="w-full bg-white dark:bg-[#111] rounded-md border border-[#ffffff33] dark:border-[#ffffff1a] mb-3 sm:mb-4">
+                <div className="rounded-md p-2 sm:p-4 md:p-6">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-0">
+                    {[
+                      { label: 'CARDS', width: 'w-8' },
+                      { label: 'PAID', width: 'w-16' },
+                      { label: 'VALUE', width: 'w-16' },
+                      { label: 'PROFIT', width: 'w-12' }
+                    ].map((stat, index) => (
+                      <div
+                        key={index}
+                        className="flex flex-col items-center justify-center p-2 sm:p-3 md:p-4 py-3 sm:py-4 md:py-6 border-none"
+                      >
+                        <div className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 sm:mb-2 uppercase">
+                          {stat.label}
+                        </div>
+                        <div className={`h-6 ${stat.width} bg-gray-200 dark:bg-[#333] rounded animate-pulse`}></div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              
+              {/* Search toolbar skeleton */}
+              <div className="mb-4">
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center justify-between bg-white dark:bg-[#111] p-3 sm:p-4 rounded-lg border border-gray-200 dark:border-[#333]">
+                  <div className="flex-1 min-w-0">
+                    <div className="w-full h-10 bg-gray-200 dark:bg-[#333] rounded-lg animate-pulse"></div>
+                  </div>
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="w-20 h-10 bg-gray-200 dark:bg-[#333] rounded-lg animate-pulse"></div>
+                    <div className="w-24 h-10 bg-gray-200 dark:bg-[#333] rounded-lg animate-pulse"></div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Card grid skeleton */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-1 sm:gap-2">
+                {Array.from({ length: 14 }, (_, index) => (
+                  <div
+                    key={index}
+                    className="bg-white dark:bg-[#111] rounded-lg border border-gray-200 dark:border-[#333] overflow-hidden animate-pulse"
+                  >
+                    <div className="aspect-[2.5/3.5] bg-gradient-to-br from-gray-200 to-gray-300 dark:from-[#333] dark:to-[#444]"></div>
+                    <div className="p-2 space-y-2">
+                      <div className="h-3 bg-gray-200 dark:bg-[#333] rounded w-3/4"></div>
+                      <div className="h-2 bg-gray-200 dark:bg-[#333] rounded w-1/2"></div>
+                      <div className="h-4 bg-gray-200 dark:bg-[#333] rounded w-2/3"></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </main>
       </div>
     );
   }
@@ -651,17 +722,85 @@ function AppContent({ currentView, setCurrentView }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-100 dark:bg-[#0F0F0F] flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#ef4444] mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-400">Loading your collections...</p>
-        </div>
+      <div className="min-h-screen bg-gray-100 dark:bg-black dashboard-page">
+        <Toaster />
+        {/* Keep actual Header during loading */}
+        <Header
+          className="header"
+          selectedCollection="All Cards"
+          collections={{}}
+          onCollectionChange={() => {}}
+          onSettingsClick={() => {}}
+          currentView="cards"
+          onViewChange={() => {}}
+          onAddCollection={() => {}}
+        />
+        
+        <main className="main-content mobile-dashboard max-w-[1920px] mx-auto">
+          <div className="p-4 sm:p-6 pb-20">
+            <div className="w-full px-1 sm:px-2 pb-20">
+              {/* Statistics Summary Skeleton */}
+              <div className="w-full bg-white dark:bg-[#111] rounded-md border border-[#ffffff33] dark:border-[#ffffff1a] mb-3 sm:mb-4">
+                <div className="rounded-md p-2 sm:p-4 md:p-6">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-0">
+                    {[
+                      { label: 'CARDS', width: 'w-8' },
+                      { label: 'PAID', width: 'w-16' },
+                      { label: 'VALUE', width: 'w-16' },
+                      { label: 'PROFIT', width: 'w-12' }
+                    ].map((stat, index) => (
+                      <div
+                        key={index}
+                        className="flex flex-col items-center justify-center p-2 sm:p-3 md:p-4 py-3 sm:py-4 md:py-6 border-none"
+                      >
+                        <div className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 sm:mb-2 uppercase">
+                          {stat.label}
+                        </div>
+                        <div className={`h-6 ${stat.width} bg-gray-200 dark:bg-[#333] rounded animate-pulse`}></div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              
+              {/* Search toolbar skeleton */}
+              <div className="mb-4">
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center justify-between bg-white dark:bg-[#111] p-3 sm:p-4 rounded-lg border border-gray-200 dark:border-[#333]">
+                  <div className="flex-1 min-w-0">
+                    <div className="w-full h-10 bg-gray-200 dark:bg-[#333] rounded-lg animate-pulse"></div>
+                  </div>
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="w-20 h-10 bg-gray-200 dark:bg-[#333] rounded-lg animate-pulse"></div>
+                    <div className="w-24 h-10 bg-gray-200 dark:bg-[#333] rounded-lg animate-pulse"></div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Card grid skeleton */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-1 sm:gap-2">
+                {Array.from({ length: 14 }, (_, index) => (
+                  <div
+                    key={index}
+                    className="bg-white dark:bg-[#111] rounded-lg border border-gray-200 dark:border-[#333] overflow-hidden animate-pulse"
+                  >
+                    <div className="aspect-[2.5/3.5] bg-gradient-to-br from-gray-200 to-gray-300 dark:from-[#333] dark:to-[#444]"></div>
+                    <div className="p-2 space-y-2">
+                      <div className="h-3 bg-gray-200 dark:bg-[#333] rounded w-3/4"></div>
+                      <div className="h-2 bg-gray-200 dark:bg-[#333] rounded w-1/2"></div>
+                      <div className="h-4 bg-gray-200 dark:bg-[#333] rounded w-2/3"></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </main>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-[#0F0F0F] dashboard-page">
+    <div className="min-h-screen bg-gray-100 dark:bg-black dashboard-page">
       <Toaster />
       {/* Hide Header on mobile when in settings or cards view */}
       {!(isMobile && (currentView === 'settings' || currentView === 'cards')) && (
@@ -750,9 +889,116 @@ function AppContent({ currentView, setCurrentView }) {
                 <div className="p-4 sm:p-6 pb-20">
                   {/* Card List */}
                   {loading ? (
-                    <div className="flex flex-col items-center justify-center h-full min-h-[400px]">
-                      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"></div>
-                      <p className="text-gray-600 dark:text-gray-400">Loading your collections...</p>
+                    <div className="w-full px-1 sm:px-2 pb-20">
+                      {/* Skeleton Statistics Summary */}
+                      <div className="w-full bg-white dark:bg-[#111] rounded-md border border-[#ffffff33] dark:border-[#ffffff1a] mb-3 sm:mb-4">
+                        <div className="rounded-md p-2 sm:p-4 md:p-6">
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-0">
+                            {[
+                              { label: 'CARDS', width: 'w-8' },
+                              { label: 'PAID', width: 'w-16' },
+                              { label: 'VALUE', width: 'w-16' },
+                              { label: 'PROFIT', width: 'w-12' }
+                            ].map((stat, index) => (
+                              <div
+                                key={index}
+                                className="flex flex-col items-center justify-center p-2 sm:p-3 md:p-4 py-3 sm:py-4 md:py-6 border-none"
+                              >
+                                <div className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 sm:mb-2 uppercase">
+                                  {stat.label}
+                                </div>
+                                <div className={`h-6 ${stat.width} bg-gray-200 dark:bg-[#333] rounded animate-pulse`}></div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Search Toolbar - Keep functional */}
+                      <div className="mb-4">
+                        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center justify-between bg-white dark:bg-[#111] p-3 sm:p-4 rounded-lg border border-gray-200 dark:border-[#333]">
+                          {/* Search Input */}
+                          <div className="flex-1 min-w-0">
+                            <div className="relative">
+                              <span className="material-icons absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg">search</span>
+                              <input
+                                type="text"
+                                placeholder="Search cards..."
+                                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                disabled
+                              />
+                            </div>
+                          </div>
+                          
+                          {/* View Mode and Sort Controls */}
+                          <div className="flex items-center gap-2 sm:gap-3">
+                            {/* View Mode Toggle */}
+                            <div className="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
+                              <button className="p-2 rounded-md bg-blue-600 text-white" disabled>
+                                <span className="material-icons text-lg">grid_view</span>
+                              </button>
+                              <button className="p-2 rounded-md text-gray-600 dark:text-gray-400" disabled>
+                                <span className="material-icons text-lg">view_list</span>
+                              </button>
+                            </div>
+                            
+                            {/* Add Card Button */}
+                            <button
+                              onClick={() => openNewCardForm()}
+                              className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
+                            >
+                              <span className="material-icons text-lg mr-2">add</span>
+                              <span className="hidden sm:inline">Add Card</span>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Collection Selector Skeleton */}
+                      <div className="mb-2">
+                        <div className="bg-white dark:bg-[#111] border border-gray-200 dark:border-[#333] rounded-lg p-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-3">
+                              <div className="w-6 h-6 bg-gray-200 dark:bg-[#333] rounded animate-pulse"></div>
+                              <div className="w-32 h-4 bg-gray-200 dark:bg-[#333] rounded animate-pulse"></div>
+                            </div>
+                            <div className="w-4 h-4 bg-gray-200 dark:bg-[#333] rounded animate-pulse"></div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Skeleton Card Grid */}
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-1 sm:gap-2">
+                        {Array.from({ length: 14 }, (_, index) => (
+                          <div
+                            key={index}
+                            className="bg-white dark:bg-[#111] rounded-lg border border-gray-200 dark:border-[#333] overflow-hidden animate-pulse"
+                          >
+                            {/* Card Image Skeleton */}
+                            <div className="aspect-[2.5/3.5] bg-gradient-to-br from-gray-200 to-gray-300 dark:from-[#333] dark:to-[#444] relative">
+                              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 animate-pulse"></div>
+                            </div>
+                            
+                            {/* Card Content Skeleton */}
+                            <div className="p-2 space-y-2">
+                              {/* Title */}
+                              <div className="h-3 bg-gray-200 dark:bg-[#333] rounded w-3/4"></div>
+                              
+                              {/* Subtitle */}
+                              <div className="h-2 bg-gray-200 dark:bg-[#333] rounded w-1/2"></div>
+                              
+                              {/* Price */}
+                              <div className="h-4 bg-gray-200 dark:bg-[#333] rounded w-2/3"></div>
+                              
+                              {/* Grade */}
+                              <div className="flex justify-between items-center">
+                                <div className="h-3 bg-gray-200 dark:bg-[#333] rounded w-1/3"></div>
+                                <div className="w-6 h-6 bg-gray-200 dark:bg-[#333] rounded"></div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   ) : cards.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-full min-h-[400px]">

@@ -16,6 +16,17 @@ const CollectionManagement = ({
   isDarkMode
 }) => {
   const collectionNames = Object.keys(collections);
+  
+  // Filter out protected collections (case-insensitive)
+  const protectedCollections = ['sold', 'all cards'];
+  const filterProtectedCollections = (names) => {
+    return names.filter(name => 
+      !protectedCollections.includes(name.toLowerCase())
+    );
+  };
+  
+  const renameableCollections = filterProtectedCollections(collectionNames);
+  const deletableCollections = filterProtectedCollections(collectionNames);
 
   const handleDeleteConfirm = () => {
     if (onDeleteCollection && collectionToDelete) {
@@ -72,7 +83,7 @@ const CollectionManagement = ({
                 onChange={(e) => setCollectionToRename(e.target.value)}
               >
                 <option value="" disabled>Select Collection...</option>
-                {collectionNames.map(name => (
+                {renameableCollections.map(name => (
                   <option key={name} value={name}>{name}</option>
                 ))}
               </select>
@@ -105,7 +116,7 @@ const CollectionManagement = ({
                 onChange={(e) => setCollectionToDelete(e.target.value)}
               >
                 <option value="" disabled>Select Collection...</option>
-                {collectionNames.map(name => (
+                {deletableCollections.map(name => (
                   <option key={name} value={name}>{name}</option>
                 ))}
               </select>
