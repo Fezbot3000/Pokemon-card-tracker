@@ -685,3 +685,33 @@ html.dark body {
     padding-bottom: 1rem; /* No bottom nav on desktop */
   }
 }
+
+/* Modal iOS Safe Area Fixes */
+.modal-overlay {
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.modal-fullscreen-safe {
+  padding-top: 0;
+  padding-bottom: 0;
+  height: calc(var(--vh, 1vh) * 100);
+  max-height: calc(var(--vh, 1vh) * 100);
+}
+
+@media (max-width: 639px) {
+  .modal-content-safe {
+    height: calc(var(--vh, 1vh) * 100);
+    max-height: calc(var(--vh, 1vh) * 100);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .modal-header-safe {
+    padding-top: calc(1rem + env(safe-area-inset-top, 0px));
+  }
+  
+  .modal-footer-safe {
+    padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
+  }
+}

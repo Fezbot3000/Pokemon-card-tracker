@@ -93,39 +93,17 @@ const Modal = ({
 
   // Add iOS viewport height fix - always call this hook regardless of conditions
   useEffect(() => {
-    // Fix for iOS viewport height issues
-    const setIOSHeight = () => {
+    // Fix for iOS viewport height calculation
+    function setVh() {
       const vh = window.innerHeight * 0.01;
       document.documentElement.style.setProperty('--vh', `${vh}px`);
-      
-      // Add CSS variables for iOS safe areas if they don't exist in the stylesheet
-      if (!document.querySelector('.safe-area-css-vars')) {
-        const style = document.createElement('style');
-        style.className = 'safe-area-css-vars';
-        style.innerHTML = `
-          .modal-ios-safe-top {
-            padding-top: max(16px, env(safe-area-inset-top, 0px)) !important;
-          }
-          .modal-ios-safe-bottom {
-            padding-bottom: max(16px, env(safe-area-inset-bottom, 0px)) !important;
-          }
-          .modal-ios-fix {
-            max-height: calc(var(--vh, 1vh) * 100) !important;
-            overflow: hidden !important;
-          }
-          .modal-content-ios {
-            max-height: calc(var(--vh, 1vh) * 100 - 110px) !important;
-          }
-        `;
-        document.head.appendChild(style);
-      }
-    };
+    }
     
-    setIOSHeight();
-    window.addEventListener('resize', setIOSHeight);
+    setVh();
+    window.addEventListener('resize', setVh);
     
     return () => {
-      window.removeEventListener('resize', setIOSHeight);
+      window.removeEventListener('resize', setVh);
     };
   }, []);
 
@@ -228,20 +206,26 @@ const Modal = ({
     return (
       <div className={`${maxWidth} w-full bg-white dark:bg-[#0F0F0F] rounded-lg shadow-xl overflow-hidden`}>
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-800">
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-            {title}
-          </h3>
-          {onClose && (
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 focus:outline-none"
-              aria-label="Close"
-            >
-              <Icon name="close" size="md" />
-            </button>
-          )}
-        </div>
+        {title && (
+          <div className="sticky top-0 z-10 flex justify-between items-center px-4 py-4 sm:px-6 sm:py-6 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-[#0F0F0F] modal-header-safe pt-[calc(1rem+env(safe-area-inset-top,0px))] sm:pt-6">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white truncate pr-8">
+              {title}
+            </h3>
+            {onClose && (
+              <button
+                type="button"
+                className="rounded-full text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary/20 p-1"
+                onClick={onClose}
+                aria-label="Close modal"
+              >
+                <span className="sr-only">Close</span>
+                <svg className="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
+          </div>
+        )}
         
         {/* Body */}
         <div className="p-6">
@@ -261,7 +245,7 @@ const Modal = ({
   // Regular modal with backdrop and positioning
   return (
     <div 
-      className={`${backdropClasses} ${darkModeClass} ${isAnimatingOut ? 'animate-backdrop-fade-out' : 'animate-backdrop-fade-in'}`}
+      className={`${backdropClasses} ${darkModeClass} ${isAnimatingOut ? 'animate-backdrop-fade-out' : 'animate-backdrop-fade-in'} modal-overlay`}
       style={{ zIndex }}
       onClick={handleBackdropClick}
     >
@@ -270,24 +254,19 @@ const Modal = ({
         className={`${modalClasses} flex flex-col ${animationClass} ${
           position === 'right' 
             ? (window.innerWidth < 640 
-                ? 'w-screen max-w-none h-screen min-h-screen rounded-none m-0 fixed top-0 left-0 right-0 bottom-0 z-[9999] overflow-auto' 
-                : 'w-[55%] h-screen min-h-screen rounded-l-md rounded-r-none mr-0 fixed top-0 right-0 z-[9999]')
+                ? 'w-screen max-w-none rounded-none m-0 fixed top-0 left-0 right-0 bottom-0 z-[9999] overflow-auto modal-fullscreen-safe' 
+                : 'w-[55%] rounded-l-md rounded-r-none mr-0 fixed top-0 right-0 z-[9999] modal-fullscreen-safe')
             : (mobileFullWidth || (size === 'custom' ? maxWidth : sizeClasses[size] || 'w-[55%]'))
         } ${className}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby={title ? 'modal-title' : undefined}
         aria-label={ariaLabel}
-        style={{
-          height: window.innerWidth < 640 ? 'calc(var(--vh, 1vh) * 100)' : undefined,
-          maxHeight: window.innerWidth < 640 ? 'calc(var(--vh, 1vh) * 100)' : undefined
-          // Removed redundant padding - safe areas are handled by CSS classes
-        }}
         {...stripDebugProps(props)}
       >
         {/* Modal Header - Sticky */}
         {title && (
-          <div className={`${headerClasses} ${window.innerWidth < 640 ? 'modal-ios-safe-top' : ''}`}>
+          <div className={`${headerClasses} modal-header-safe`}>
             <h2 id="modal-title" className={titleClasses}>{title}</h2>
             <button 
               onClick={handleClose}
@@ -301,13 +280,13 @@ const Modal = ({
         )}
 
         {/* Modal Content - Scrollable */}
-        <div className={`flex-1 overflow-y-auto scrollbar-hide px-6 modal-content ${window.innerWidth < 640 ? 'modal-content-ios' : ''} ${title ? 'pb-0' : 'pt-6 pb-0'}`}>
+        <div className={`flex-1 overflow-y-auto scrollbar-hide px-6 modal-content-safe ${title ? 'pb-0' : 'pt-6 pb-0'}`}>
           {children}
         </div>
 
         {/* Modal Footer - Sticky, only shown if footer content is provided */}
         {footer && (
-          <div className={`${footerClasses} ${window.innerWidth < 640 ? 'modal-ios-safe-bottom' : ''}`}>
+          <div className={`${footerClasses} modal-footer-safe`}>
             {footer}
           </div>
         )}
