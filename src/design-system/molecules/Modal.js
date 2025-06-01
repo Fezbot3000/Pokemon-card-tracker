@@ -183,8 +183,8 @@ const Modal = ({
     : `bg-white/95 dark:bg-[#0F0F0F]/95 backdrop-blur-sm rounded-md shadow-xl`;
     
   const headerClasses = forceDarkMode
-    ? 'sticky top-0 z-10 flex items-center justify-between p-6 border-b border-gray-700/50 bg-[#0F0F0F]/95 backdrop-blur-sm'
-    : 'sticky top-0 z-10 flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700/50 bg-white/95 dark:bg-[#0F0F0F]/95 backdrop-blur-sm';
+    ? 'sticky top-0 z-10 flex items-center justify-between p-6 pt-safe border-b border-gray-700/50 bg-[#0F0F0F]/95 backdrop-blur-sm'
+    : 'sticky top-0 z-10 flex items-center justify-between p-6 pt-safe border-b border-gray-200 dark:border-gray-700/50 bg-white/95 dark:bg-[#0F0F0F]/95 backdrop-blur-sm';
     
   const titleClasses = forceDarkMode
     ? 'text-xl font-medium text-gray-200'

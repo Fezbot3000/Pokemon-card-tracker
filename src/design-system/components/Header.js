@@ -88,7 +88,7 @@ const Header = ({
   // If this is being used in the component library, render a simplified version
   if (isComponentLibrary) {
     return (
-      <header className="bg-red-500 dark:bg-red-600 fixed top-0 left-0 right-0 z-50 header-responsive">
+      <header className="bg-white dark:bg-black fixed top-0 left-0 right-0 z-50 header-responsive">
         {/* Top bar */}
         <div className="border-b border-gray-200 dark:border-[#ffffff1a] h-full flex items-center px-4">
           <div className="max-w-7xl mx-auto flex justify-between items-center w-full">
@@ -115,7 +115,7 @@ const Header = ({
 
   // Main header implementation for the actual application
   return (
-    <header className="bg-red-500 dark:bg-red-600 fixed top-0 left-0 right-0 z-50 header-responsive">
+    <header className="bg-white dark:bg-black fixed top-0 left-0 right-0 z-50 header-responsive">
       {/* Combined navigation bar */}
       <div className="border-b border-gray-200 dark:border-[#ffffff1a] h-full flex items-center px-4">
         <div className="max-w-7xl mx-auto flex justify-between items-center w-full">
