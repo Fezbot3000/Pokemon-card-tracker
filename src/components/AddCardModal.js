@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import PropTypes from 'prop-types';
 import Modal from '../design-system/molecules/Modal';
 import Button from '../design-system/atoms/Button';
@@ -90,50 +90,30 @@ const AddCardModal = ({
       setPsaSerial('');
     } else {
       setAnimClass('slide-out-right');
-      // Cleanup image preview URL on close
-      if (cardImage && cardImage.startsWith('blob:')) {
-        URL.revokeObjectURL(cardImage);
-      }
-      setCardImage(null);
-      setImageFile(null);
-      setErrors({});
-      setSaveMessage(null);
-    }
-    // Cleanup timeout on close
-    if (!isOpen && messageTimeoutRef.current) {
-      clearTimeout(messageTimeoutRef.current);
-      messageTimeoutRef.current = null;
     }
   }, [isOpen]);
-
-  // Cleanup image blob URL on unmount
-  useEffect(() => {
-    return () => {
-      if (cardImage && cardImage.startsWith('blob:')) {
-        URL.revokeObjectURL(cardImage);
-      }
-      if (messageTimeoutRef.current) {
-        clearTimeout(messageTimeoutRef.current);
-      }
-    };
-  }, [cardImage]);
 
   // Handle card image change
   const handleImageChange = async (file) => {
     if (!file) return;
+    
     setImageLoadingState('loading');
+    
     try {
+      // Create a preview URL
+      const imageUrl = URL.createObjectURL(file);
+      
       // Cleanup previous URL if it exists
       if (cardImage && cardImage.startsWith('blob:')) {
         URL.revokeObjectURL(cardImage);
       }
-      // Create a preview URL
-      const imageUrl = URL.createObjectURL(file);
+      
       setCardImage(imageUrl);
       setImageFile(file);
       setErrors(prev => ({ ...prev, image: undefined }));
       setImageLoadingState('idle');
-      return file;
+      
+      return file; 
     } catch (error) {
       console.error('Error changing card image:', error);
       setImageLoadingState('error');
@@ -141,7 +121,6 @@ const AddCardModal = ({
       return null;
     }
   };
-
   
   // Handle form changes
   const handleCardChange = (updatedCard) => {
@@ -196,72 +175,71 @@ const AddCardModal = ({
   
   // Handle save action
   const handleSave = async () => {
+    // Clear any previous error messages
     setSaveMessage(null);
     setErrors({});
-    setIsSaving(true);
+    setIsSaving(true); 
 
     // Validate form
     const validationErrors = validateForm();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       setSaveMessage('Please fix the errors before saving');
-      setIsSaving(false);
+      setIsSaving(false); 
       return;
     }
 
-    // Check if we have an image file (must be provided)
+    // Check if we have an image file
     if (!imageFile && !cardImage) {
       setSaveMessage('Please add an image for the card');
       setErrors({ image: 'Card image is required' });
-      setIsSaving(false);
+      setIsSaving(false); 
       return;
     }
 
     try {
-      // Prepare card data, fix prop names for consistency
+      // Prepare card data
       const cardToSave = {
         ...newCard,
-        investmentAUD: newCard.investmentAUD || newCard.originalInvestmentAmount || '',
         collection: selectedCollection
       };
 
-      // Save the card (parent handles DB and image upload)
+      // Try to save the card
       await onSave(cardToSave, imageFile, selectedCollection);
-
-      // Clear form and feedback
-      setNewCard({ ...emptyCard });
+      
+      // Clear form on success
+      setNewCard({...emptyCard});
       setCardImage(null);
       setImageFile(null);
       setErrors({});
       setSaveMessage('Card saved successfully');
-
-      // Close modal after delay, clean up timeout if modal closes early
-      if (messageTimeoutRef.current) {
-        clearTimeout(messageTimeoutRef.current);
-      }
-      messageTimeoutRef.current = setTimeout(() => {
-        onClose();
-        setSaveMessage(null);
-      }, 1000);
+      
+      // Close modal immediately after successful save
+      onClose();
 
     } catch (error) {
       console.error('Error adding card:', error);
-      if (error.message && error.message.includes('serial number already exists')) {
-        setErrors({ certificationNumber: 'This serial number already exists in your active collections' });
+      
+      // Handle specific error cases
+      if (error.message.includes('serial number already exists')) {
+        setErrors({
+          certificationNumber: 'This serial number already exists in your active collections'
+        });
         setSaveMessage('Card already exists');
-        // Scroll serial number field into view
+        
+        // Scroll the serial number field into view
         const serialField = document.querySelector('[name="certificationNumber"]');
         if (serialField) {
           serialField.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
       } else {
-        setSaveMessage(`Error: ${error.message || error}`);
+        // Generic error handling
+        setSaveMessage(`Error: ${error.message}`);
       }
     } finally {
       setIsSaving(false);
     }
   };
-
 
   // Handle PSA certificate lookup
   const handlePsaLookup = async () => {
