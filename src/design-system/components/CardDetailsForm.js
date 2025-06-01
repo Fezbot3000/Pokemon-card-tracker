@@ -649,7 +649,7 @@ const CardDetailsForm = ({
               <ImageUploadButton onImageChange={onImageChange} />
             </div>
             
-            {!hidePsaSearchButton && (
+            {!hidePsaSearchButton && selectedCompany !== 'RAW' && (
               <div className="mt-3 space-y-2">
                 <div className="flex flex-col space-y-2 w-full">
                   {!card.psaUrl && (
@@ -902,24 +902,26 @@ const CardDetailsForm = ({
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-            <div>
-              <div className="form-label-nowrap">
-                <FormField
-                  label="Serial Number"
-                  name="slabSerial"
-                  value={card.slabSerial || ''}
-                  onChange={handleInputChange}
-                  error={errors.slabSerial}
-                  required={false}
-                />
-              </div>
-              {additionalSerialContent && (
-                <div className="absolute right-2 top-8">
-                  {additionalSerialContent}
+            {selectedCompany !== 'RAW' && (
+              <div>
+                <div className="form-label-nowrap">
+                  <FormField
+                    label="Serial Number"
+                    name="slabSerial"
+                    value={card.slabSerial || ''}
+                    onChange={handleInputChange}
+                    error={errors.slabSerial}
+                    required={false}
+                  />
                 </div>
-              )}
-            </div>
-            <div>
+                {additionalSerialContent && (
+                  <div className="absolute right-2 top-8">
+                    {additionalSerialContent}
+                  </div>
+                )}
+              </div>
+            )}
+            <div className={selectedCompany === 'RAW' ? 'md:col-span-2' : ''}>
               <div className="form-label-nowrap">
                 <FormField
                   label="Population"
