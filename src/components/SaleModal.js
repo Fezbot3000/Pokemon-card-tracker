@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useUserPreferences } from '../contexts/UserPreferencesContext';
 
 const SaleModal = ({ isOpen, onClose, selectedCards, onConfirm }) => {
-  const { formatAmountForDisplay, preferredCurrency } = useUserPreferences();
+  const { formatAmountForDisplay, preferredCurrency, convertToUserCurrency } = useUserPreferences();
   const [buyer, setBuyer] = useState('');
   const [dateSold, setDateSold] = useState(new Date().toISOString().split('T')[0]);
   const [soldPrices, setSoldPrices] = useState({});
@@ -35,7 +35,6 @@ const SaleModal = ({ isOpen, onClose, selectedCards, onConfirm }) => {
   }, [isOpen, selectedCards]);
 
   // Calculate total investment with proper currency conversion
-  const { convertToUserCurrency } = useUserPreferences();
   const totalInvestment = selectedCards.reduce((sum, card) => {
     const investment = parseFloat(card.originalInvestmentAmount || card.investmentAUD) || 0;
     const investmentInPreferredCurrency = convertToUserCurrency(investment, card.originalInvestmentCurrency || preferredCurrency.code);
@@ -175,8 +174,6 @@ const SaleModal = ({ isOpen, onClose, selectedCards, onConfirm }) => {
               {selectedCards.map(card => {
                 const soldPrice = parseFloat(soldPrices[card.slabSerial] || '0');
                 const investment = parseFloat(card.originalInvestmentAmount || card.investmentAUD) || 0;
-                // Convert investment to preferred currency for correct profit calculation
-                const { convertToUserCurrency } = useUserPreferences();
                 const investmentInPreferredCurrency = convertToUserCurrency(investment, card.originalInvestmentCurrency || preferredCurrency.code);
                 const profit = soldPrice - investmentInPreferredCurrency;
 

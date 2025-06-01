@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useCallback, memo, useMemo } from '
 import { useInView } from 'react-intersection-observer';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../design-system';
-import { collection, query, where, doc, updateDoc, getDocs } from 'firebase/firestore';
+import { collection, query, where, doc, updateDoc } from 'firebase/firestore';
 import db from '../services/firestore/dbAdapter';
 import { db as firestoreDb } from '../services/firebase';
 import { toast } from 'react-hot-toast';
@@ -537,14 +537,15 @@ const CardList = ({
   // Function to generate a unique invoice ID
   const generateInvoiceId = async () => {
     try {
-      // Get existing sold cards from IndexedDB
-      const existingSoldCards = await db.getSoldCards();
+      // Get existing sold cards directly from Firestore
+      const firestoreService = (await import('../services/firestore/firestoreService.js')).default;
+      const existingSoldItems = await firestoreService.getSoldItems();
       
       // Get the highest invoice number
       let highestNumber = 0;
-      existingSoldCards.forEach(card => {
-        if (card.invoiceId) {
-          const match = card.invoiceId.match(/INV-(\d+)/);
+      existingSoldItems.forEach(item => {
+        if (item.invoiceId) {
+          const match = item.invoiceId.match(/INV-(\d+)/);
           if (match) {
             const num = parseInt(match[1], 10);
             if (num > highestNumber) {
@@ -560,6 +561,7 @@ const CardList = ({
       // Format with leading zeros (e.g., INV-0001)
       return `INV-${String(nextNumber).padStart(4, '0')}`;
     } catch (error) {
+      console.error('Error generating invoice ID:', error);
       // Fallback to timestamp-based ID if there's an error
       return `INV-${Date.now()}`;
     }
@@ -572,6 +574,7 @@ const CardList = ({
       
       const selectedCardsData = selectedCardsForSale.map(card => ({
         ...card,
+        id: card.slabSerial || card.id, // Ensure each sold item has an id field
         finalValueAUD: parseFloat(soldPrices[card.slabSerial]),
         finalProfitAUD: parseFloat(soldPrices[card.slabSerial]) - card.investmentAUD,
         dateSold,
@@ -579,54 +582,43 @@ const CardList = ({
         invoiceId // Add the invoice ID to each card
       }));
 
-      // Get existing sold cards from IndexedDB
-      const existingSoldCards = await db.getSoldCards();
-
-      // Add the new cards to sold cards in IndexedDB
-      await db.saveSoldCards([...existingSoldCards, ...selectedCardsData]);
-
-      // Remove cards from all collections
-      const updatedCollections = { ...collections };
-      const cardIds = selectedCardsData.map(card => card.slabSerial);
-      
-      // Remove from each collection
-      Object.keys(updatedCollections).forEach(collectionName => {
-        if (Array.isArray(updatedCollections[collectionName])) {
-          updatedCollections[collectionName] = updatedCollections[collectionName].filter(
-            card => !cardIds.includes(card.slabSerial)
-          );
-        }
-      });
-
-      // Save to database
-      await db.saveCollections(updatedCollections);
-      
-      // Update state in parent first
-      if (onDeleteCard) {
-        await onDeleteCard(cardIds);
+      // Save each sold card directly to Firestore
+      const firestoreService = (await import('../services/firestore/firestoreService.js')).default;
+      for (const soldCard of selectedCardsData) {
+        await firestoreService.saveSoldItem(soldCard);
       }
 
-      // Update local state after parent state is updated
-      setCollections(updatedCollections);
+      // Remove cards from collections using the proper delete handler
+      const cardIds = selectedCardsData.map(card => card.slabSerial);
+      
+      // Use the parent's delete handler which properly manages collections
+      if (onDeleteCards) {
+        await onDeleteCards(cardIds);
+      } else if (onDeleteCard) {
+        // Fallback to individual deletion if bulk delete not available
+        for (const cardId of cardIds) {
+          await onDeleteCard(cardId);
+        }
+      }
+
+      // Clear local state
       clearSelection();
       setShowSaleModal(false);
       setSelectedCardsForSale([]);
 
-      // Always show success message and refresh page, even if there were non-critical errors
-      // This ensures the user sees success and gets a fresh state
+      // Show success message
       toast.success(`${selectedCardsData.length} card${selectedCardsData.length > 1 ? 's' : ''} marked as sold`, {
-        id: 'delete-success', // Add an ID to prevent duplicate toasts
-        duration: 2000, // 2 seconds
+        id: 'sale-success',
+        duration: 2000,
       });
       
-      // Use a separate timeout for page refresh to ensure it happens
-      // This decouples it from the toast system which might have issues
+      // Refresh page to show updated state
       setTimeout(() => {
         window.location.reload();
-      }, 500); // Changed from 2500ms to 500ms for faster refresh after deletion
+      }, 500);
     } catch (error) {
-      // Fallback to timestamp-based ID if there's an error
-      toast.error('Failed to mark cards as sold. Please try again.');
+      console.error('Error marking cards as sold:', error);
+      toast.error(`Failed to mark cards as sold: ${error.message || 'Please try again.'}`);
     }
   };
 

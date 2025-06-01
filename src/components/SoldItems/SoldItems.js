@@ -1195,14 +1195,33 @@ const SoldItems = () => {
   };
 
   const filteredInvoices = useMemo(() => {
-    if (!searchQuery.trim()) return Object.entries(invoiceTotals);
+    let invoices = Object.entries(invoiceTotals);
     
-    const query = searchQuery.toLowerCase();
-    return Object.entries(invoiceTotals).filter(([buyer, invoice]) => {
-      return buyer.toLowerCase().includes(query) ||
-             formatDateSafely(invoice.date).toLowerCase().includes(query) ||
-             formatUserCurrency(invoice.totalProfit, preferredCurrency.code).toLowerCase().includes(query);
+    // Filter by search query if provided
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      invoices = invoices.filter(([buyer, invoice]) => {
+        return buyer.toLowerCase().includes(query) ||
+               formatDateSafely(invoice.date).toLowerCase().includes(query) ||
+               formatUserCurrency(invoice.totalProfit, preferredCurrency.code).toLowerCase().includes(query);
+      });
+    }
+    
+    // Sort by date sold (newest first)
+    invoices.sort(([, invoiceA], [, invoiceB]) => {
+      const dateA = new Date(invoiceA.date);
+      const dateB = new Date(invoiceB.date);
+      
+      // Handle invalid dates by putting them at the end
+      if (isNaN(dateA.getTime()) && isNaN(dateB.getTime())) return 0;
+      if (isNaN(dateA.getTime())) return 1;
+      if (isNaN(dateB.getTime())) return -1;
+      
+      // Sort in descending order (newest first)
+      return dateB.getTime() - dateA.getTime();
     });
+    
+    return invoices;
   }, [invoiceTotals, searchQuery, preferredCurrency.code]);
 
   if (isLoading) {
