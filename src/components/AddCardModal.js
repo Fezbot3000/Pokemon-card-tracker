@@ -90,30 +90,50 @@ const AddCardModal = ({
       setPsaSerial('');
     } else {
       setAnimClass('slide-out-right');
+      // Cleanup image preview URL on close
+      if (cardImage && cardImage.startsWith('blob:')) {
+        URL.revokeObjectURL(cardImage);
+      }
+      setCardImage(null);
+      setImageFile(null);
+      setErrors({});
+      setSaveMessage(null);
+    }
+    // Cleanup timeout on close
+    if (!isOpen && messageTimeoutRef.current) {
+      clearTimeout(messageTimeoutRef.current);
+      messageTimeoutRef.current = null;
     }
   }, [isOpen]);
+
+  // Cleanup image blob URL on unmount
+  useEffect(() => {
+    return () => {
+      if (cardImage && cardImage.startsWith('blob:')) {
+        URL.revokeObjectURL(cardImage);
+      }
+      if (messageTimeoutRef.current) {
+        clearTimeout(messageTimeoutRef.current);
+      }
+    };
+  }, [cardImage]);
 
   // Handle card image change
   const handleImageChange = async (file) => {
     if (!file) return;
-    
     setImageLoadingState('loading');
-    
     try {
-      // Create a preview URL
-      const imageUrl = URL.createObjectURL(file);
-      
       // Cleanup previous URL if it exists
       if (cardImage && cardImage.startsWith('blob:')) {
         URL.revokeObjectURL(cardImage);
       }
-      
+      // Create a preview URL
+      const imageUrl = URL.createObjectURL(file);
       setCardImage(imageUrl);
       setImageFile(file);
       setErrors(prev => ({ ...prev, image: undefined }));
       setImageLoadingState('idle');
-      
-      return file; 
+      return file;
     } catch (error) {
       console.error('Error changing card image:', error);
       setImageLoadingState('error');
@@ -121,6 +141,7 @@ const AddCardModal = ({
       return null;
     }
   };
+
   
   // Handle form changes
   const handleCardChange = (updatedCard) => {
@@ -175,73 +196,72 @@ const AddCardModal = ({
   
   // Handle save action
   const handleSave = async () => {
-    // Clear any previous error messages
     setSaveMessage(null);
     setErrors({});
-    setIsSaving(true); 
+    setIsSaving(true);
 
     // Validate form
     const validationErrors = validateForm();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       setSaveMessage('Please fix the errors before saving');
-      setIsSaving(false); 
+      setIsSaving(false);
       return;
     }
 
-    // Check if we have an image file
+    // Check if we have an image file (must be provided)
     if (!imageFile && !cardImage) {
       setSaveMessage('Please add an image for the card');
       setErrors({ image: 'Card image is required' });
-      setIsSaving(false); 
+      setIsSaving(false);
       return;
     }
 
     try {
-      // Prepare card data
+      // Prepare card data, fix prop names for consistency
       const cardToSave = {
         ...newCard,
+        investmentAUD: newCard.investmentAUD || newCard.originalInvestmentAmount || '',
         collection: selectedCollection
       };
 
-      // Try to save the card
+      // Save the card (parent handles DB and image upload)
       await onSave(cardToSave, imageFile, selectedCollection);
-      
-      // Clear form on success
-      setNewCard({...emptyCard});
+
+      // Clear form and feedback
+      setNewCard({ ...emptyCard });
       setCardImage(null);
       setImageFile(null);
       setErrors({});
       setSaveMessage('Card saved successfully');
-      
-      // Close modal after a brief delay to show success message
-      setTimeout(() => {
+
+      // Close modal after delay, clean up timeout if modal closes early
+      if (messageTimeoutRef.current) {
+        clearTimeout(messageTimeoutRef.current);
+      }
+      messageTimeoutRef.current = setTimeout(() => {
         onClose();
+        setSaveMessage(null);
       }, 1000);
 
     } catch (error) {
       console.error('Error adding card:', error);
-      
-      // Handle specific error cases
-      if (error.message.includes('serial number already exists')) {
-        setErrors({
-          certificationNumber: 'This serial number already exists in your active collections'
-        });
+      if (error.message && error.message.includes('serial number already exists')) {
+        setErrors({ certificationNumber: 'This serial number already exists in your active collections' });
         setSaveMessage('Card already exists');
-        
-        // Scroll the serial number field into view
+        // Scroll serial number field into view
         const serialField = document.querySelector('[name="certificationNumber"]');
         if (serialField) {
           serialField.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
       } else {
-        // Generic error handling
-        setSaveMessage(`Error: ${error.message}`);
+        setSaveMessage(`Error: ${error.message || error}`);
       }
     } finally {
       setIsSaving(false);
     }
   };
+
 
   // Handle PSA certificate lookup
   const handlePsaLookup = async () => {

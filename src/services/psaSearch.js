@@ -16,15 +16,6 @@ import psaDataService from './psaDataService';
 // Initialize Firebase Functions
 const functions = getFunctions();
 
-// Connect to emulator in development
-if (process.env.NODE_ENV === 'development') {
-  try {
-    connectFunctionsEmulator(functions, 'localhost', 5001);
-    console.log('Connected to Functions emulator for PSA lookup');
-  } catch (error) {
-    console.log('Functions emulator connection failed or already connected:', error.message);
-  }
-}
 
 const psaLookupFunction = httpsCallable(functions, 'psaLookup');
 

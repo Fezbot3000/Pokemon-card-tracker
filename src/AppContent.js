@@ -250,15 +250,15 @@ function AppContent() {
     localStorage.setItem('lastKnownProfit', totalProfit.toString());
   }, [totalProfit]);
 
-  const handleAddCard = async (cardData) => {
+  const handleAddCard = async (cardData, imageFile = null) => {
     try {
       // Ensure the card has an ID
       if (!cardData.id) {
         cardData.id = generateUniqueId();
       }
 
-      // Add the card to the database
-      await addCard(cardData);
+      // Add the card to the database (now with image support)
+      await addCard(cardData, imageFile);
 
       // If a specific collection is selected (not "All Cards"), add the card to it
       if (selectedCollection && selectedCollection !== 'All Cards') {
@@ -283,6 +283,7 @@ function AppContent() {
     } catch (error) {
       logger.error('Error adding card:', error);
       toast.error('Failed to add card');
+      throw error; // Re-throw to allow AddCardModal to handle the error
     }
   };
 
