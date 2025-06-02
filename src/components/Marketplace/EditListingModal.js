@@ -271,159 +271,130 @@ function EditListingModal({ isOpen, onClose, listing, onListingDeleted }) {
   return (
     <>
       <DeleteConfirmationModal />
-      <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="flex items-center justify-center min-h-screen text-center">
-        <div className="fixed inset-0 transition-opacity" aria-hidden="true">
-          <div className="absolute inset-0 bg-gray-500 dark:bg-gray-900 opacity-75"></div>
-        </div>
-
-        <div 
-          className="fixed inset-0 flex items-center justify-center"
-          role="dialog" 
-          aria-modal="true" 
-          aria-labelledby="modal-headline"
-        >
-          <div className="w-full h-full bg-white dark:bg-[#0F0F0F] text-left overflow-auto shadow-xl transform transition-all">
-          <form onSubmit={handleSubmit} className="h-full">
-            <div className="px-6 pt-6 pb-4">
-              <div className="flex flex-col">
-                <div className="w-full">
-                  <h3 className="text-xl leading-6 font-semibold text-gray-900 dark:text-white mb-4" id="modal-headline">
-                    Edit Listing
-                  </h3>
-                  
-                  <div className="mt-4 space-y-4">
-                    <div className="flex items-center mb-4">
+      <Modal
+        isOpen={isOpen}
+        onClose={onClose}
+        title="Edit Listing"
+        size="full"
+      >
+        <form onSubmit={handleSubmit} className="h-full flex flex-col">
+          <div className="flex-1 overflow-y-auto px-6 py-4">
+            <div className="space-y-6">
+              <div className="flex items-center">
+                <label className="inline-flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={formData.markAsSold}
+                    onChange={(e) => handleInputChange('markAsSold', e.target.checked)}
+                    className="form-checkbox h-5 w-5 text-purple-600 rounded focus:ring-purple-500 dark:focus:ring-purple-400"
+                  />
+                  <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">Mark as sold</span>
+                </label>
+              </div>
+              {!formData.markAsSold && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Price ({preferredCurrency.code})
+                    </label>
+                    <div className="relative">
+                      <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500 dark:text-gray-400">
+                        {preferredCurrency.symbol}
+                      </span>
                       <input
-                        id="markAsSold"
-                        type="checkbox"
-                        checked={formData.markAsSold}
-                        onChange={(e) => handleInputChange('markAsSold', e.target.checked)}
-                        className="h-5 w-5 text-purple-600 focus:ring-purple-500 border-gray-300 dark:border-gray-600 rounded"
+                        type="number"
+                        value={formData.price}
+                        onChange={(e) => handleInputChange('price', e.target.value)}
+                        className="w-full pl-8 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-transparent text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        placeholder="0.00"
+                        step="0.01"
+                        min="0.01"
+                        required={!formData.markAsSold}
                       />
-                      <label htmlFor="markAsSold" className="ml-2 block text-base text-gray-900 dark:text-white">
-                        Mark as sold
-                      </label>
                     </div>
-                    
-                    {!formData.markAsSold && (
-                      <>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            Price ({preferredCurrency.code})
-                          </label>
-                          <div className="relative">
-                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500 dark:text-gray-400">
-                              {preferredCurrency.symbol}
-                            </span>
-                            <input
-                              type="number"
-                              value={formData.price}
-                              onChange={(e) => handleInputChange('price', e.target.value)}
-                              className="w-full pl-8 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-transparent text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
-                              placeholder="0.00"
-                              step="0.01"
-                              min="0.01"
-                              required={!formData.markAsSold}
-                            />
-                          </div>
-                        </div>
-                        
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            Note (Optional)
-                          </label>
-                          <textarea
-                            value={formData.note}
-                            onChange={(e) => handleInputChange('note', e.target.value)}
-                            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-transparent text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
-                            placeholder="Add a note about this card..."
-                            rows="3"
-                          />
-                        </div>
-                        
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            Location (Optional)
-                          </label>
-                          <input
-                            type="text"
-                            value={formData.location}
-                            onChange={(e) => handleInputChange('location', e.target.value)}
-                            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-transparent text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
-                            placeholder="Enter your location (e.g., Sydney)"
-                          />
-                        </div>
-                      </>
-                    )}
-                    
-                    {formData.markAsSold && (
-                      <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-900/30 rounded-md p-4">
-                        <div className="flex">
-                          <div className="flex-shrink-0">
-                            <svg className="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                              <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                            </svg>
-                          </div>
-                          <div className="ml-3">
-                            <h3 className="text-sm font-medium text-yellow-800 dark:text-yellow-200">Attention</h3>
-                            <div className="mt-2 text-sm text-yellow-700 dark:text-yellow-300">
-                              <p>
-                                Marking this card as sold will remove it from the marketplace and add it to your sold items.
-                                This action cannot be undone.
-                              </p>
-                            </div>
-                          </div>
-                        </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Note (Optional)
+                    </label>
+                    <textarea
+                      value={formData.note}
+                      onChange={(e) => handleInputChange('note', e.target.value)}
+                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-transparent text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      placeholder="Add a note about this card..."
+                      rows="3"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Location (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.location}
+                      onChange={(e) => handleInputChange('location', e.target.value)}
+                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-transparent text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      placeholder="Enter your location (e.g., Sydney)"
+                    />
+                  </div>
+                </>
+              )}
+              {formData.markAsSold && (
+                <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-900/30 rounded-md p-4">
+                  <div className="flex">
+                    <div className="flex-shrink-0">
+                      <svg className="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div className="ml-3">
+                      <h3 className="text-sm font-medium text-yellow-800 dark:text-yellow-200">Attention</h3>
+                      <div className="mt-2 text-sm text-yellow-700 dark:text-yellow-300">
+                        <p>
+                          Marking this card as sold will remove it from the marketplace and add it to your sold items.
+                          This action cannot be undone.
+                        </p>
                       </div>
-                    )}
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
-            
-            <div className="bg-gray-50 dark:bg-[#151515] px-6 py-4 flex flex-col sm:flex-row-reverse gap-3">
-              <button
-                type="button"
-                onClick={() => setShowDeleteConfirmation(true)}
-                disabled={isSubmitting || isDeleting}
-                className="w-full inline-flex justify-center rounded-lg border border-red-300 dark:border-red-800 shadow-sm px-4 py-3 bg-white dark:bg-[#0F0F0F] text-base font-medium text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:w-auto"
-              >
-                Delete Listing
-              </button>
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-3 bg-purple-600 text-base font-medium text-white hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 sm:w-auto"
-              >
-                {isSubmitting ? (
-                  <>
-                    <span className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></span>
-                    {formData.markAsSold ? 'Processing...' : 'Updating...'}
-                  </>
-                ) : (
-                  formData.markAsSold ? 'Mark as Sold' : 'Update Listing'
-                )}
-              </button>
-              <button
-                type="button"
-                onClick={onClose}
-                disabled={isSubmitting}
-                className="w-full inline-flex justify-center rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-3 bg-white dark:bg-[#0F0F0F] text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 sm:w-auto"
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
           </div>
-        </div>
-      </div>
-    </div>
-    
-    {/* Render the delete confirmation modal */}
-    {showDeleteConfirmation && (
-      <DeleteConfirmationModal />
-    )}
+          <div className="bg-gray-50 dark:bg-[#151515] px-6 py-4 flex flex-col sm:flex-row-reverse gap-3">
+            <button
+              type="button"
+              onClick={() => setShowDeleteConfirmation(true)}
+              disabled={isSubmitting || isDeleting}
+              className="w-full inline-flex justify-center rounded-lg border border-red-300 dark:border-red-800 shadow-sm px-4 py-3 bg-white dark:bg-[#0F0F0F] text-base font-medium text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:w-auto"
+            >
+              Delete Listing
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-3 bg-purple-600 text-base font-medium text-white hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 sm:w-auto"
+            >
+              {isSubmitting ? (
+                <>
+                  <span className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></span>
+                  {formData.markAsSold ? 'Processing...' : 'Updating...'}
+                </>
+              ) : (
+                formData.markAsSold ? 'Mark as Sold' : 'Update Listing'
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={isSubmitting}
+              className="w-full inline-flex justify-center rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-3 bg-white dark:bg-[#0F0F0F] text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 sm:w-auto"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </Modal>
     </>
   );
 }

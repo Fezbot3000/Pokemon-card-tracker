@@ -136,12 +136,7 @@ function Home() {
 
       {/* Modern Hero Section */}
       <section 
-        className="relative flex items-center justify-center px-4 sm:px-6 lg:px-8 overflow-hidden"
-        style={{ 
-          minHeight: 'calc(100vh - 60px)', // Account for nav bar
-          paddingTop: 'max(80px, 15vh)', // Responsive top padding
-          paddingBottom: '40px'
-        }}
+        className="logged-out-page relative flex items-center justify-center px-4 sm:px-6 lg:px-8 overflow-hidden"
       >
         {/* Background Elements */}
         <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 via-purple-600/10 to-pink-600/10"></div>

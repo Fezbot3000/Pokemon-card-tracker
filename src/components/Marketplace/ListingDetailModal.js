@@ -455,7 +455,6 @@ function ListingDetailModal({
         onClose={onClose}
         title=""
         size="full"
-        className="!h-screen !max-h-screen"
       >
         <div className="flex flex-col h-full">
           {/* Header */}
