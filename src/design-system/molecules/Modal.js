@@ -93,17 +93,36 @@ const Modal = ({
 
   // Add iOS viewport height fix - always call this hook regardless of conditions
   useEffect(() => {
-    // Fix for iOS viewport height calculation
-    function setVh() {
+    // Fix for iOS viewport height issues
+    const setIOSHeight = () => {
       const vh = window.innerHeight * 0.01;
       document.documentElement.style.setProperty('--vh', `${vh}px`);
-    }
+      
+      // Add CSS variables for iOS safe areas if they don't exist in the stylesheet
+      if (!document.querySelector('.safe-area-css-vars')) {
+        const style = document.createElement('style');
+        style.className = 'safe-area-css-vars';
+        style.innerHTML = `
+          .pt-safe {
+            padding-top: env(safe-area-inset-top, 0px) !important;
+          }
+          .pb-safe {
+            padding-bottom: env(safe-area-inset-bottom, 0px) !important;
+          }
+          .modal-ios-fix {
+            padding-top: env(safe-area-inset-top, 0px);
+            padding-bottom: env(safe-area-inset-bottom, 0px);
+          }
+        `;
+        document.head.appendChild(style);
+      }
+    };
     
-    setVh();
-    window.addEventListener('resize', setVh);
+    setIOSHeight();
+    window.addEventListener('resize', setIOSHeight);
     
     return () => {
-      window.removeEventListener('resize', setVh);
+      window.removeEventListener('resize', setIOSHeight);
     };
   }, []);
 
@@ -183,8 +202,8 @@ const Modal = ({
     : `bg-white/95 dark:bg-[#0F0F0F]/95 backdrop-blur-sm rounded-md shadow-xl`;
     
   const headerClasses = forceDarkMode
-    ? 'sticky top-0 z-10 flex items-center justify-between p-6 pt-safe border-b border-gray-700/50 bg-[#0F0F0F]/95 backdrop-blur-sm'
-    : 'sticky top-0 z-10 flex items-center justify-between p-6 pt-safe border-b border-gray-200 dark:border-gray-700/50 bg-white/95 dark:bg-[#0F0F0F]/95 backdrop-blur-sm';
+    ? 'sticky top-0 z-10 flex items-center justify-between p-6 border-b border-gray-700/50 bg-[#0F0F0F]/95 backdrop-blur-sm'
+    : 'sticky top-0 z-10 flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700/50 bg-white/95 dark:bg-[#0F0F0F]/95 backdrop-blur-sm';
     
   const titleClasses = forceDarkMode
     ? 'text-xl font-medium text-gray-200'
@@ -195,8 +214,8 @@ const Modal = ({
     : 'text-2xl text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors';
     
   const footerClasses = forceDarkMode
-    ? 'sticky bottom-0 z-10 flex items-center justify-end gap-2 p-6 border-t border-gray-700/50 bg-[#0F0F0F]/95 backdrop-blur-sm pb-safe'
-    : 'sticky bottom-0 z-10 flex items-center justify-end gap-2 p-6 border-t border-gray-200 dark:border-gray-700/50 bg-white/95 dark:bg-[#0F0F0F]/95 backdrop-blur-sm pb-safe';
+    ? 'sticky bottom-0 z-10 flex items-center justify-end gap-2 p-6 border-t border-gray-700/50 bg-[#0F0F0F]/95 backdrop-blur-sm'
+    : 'sticky bottom-0 z-10 flex items-center justify-end gap-2 p-6 border-t border-gray-200 dark:border-gray-700/50 bg-white/95 dark:bg-[#0F0F0F]/95 backdrop-blur-sm';
   
   // Force the dark class if needed
   const darkModeClass = forceDarkMode ? 'dark' : '';
@@ -206,26 +225,20 @@ const Modal = ({
     return (
       <div className={`${maxWidth} w-full bg-white dark:bg-[#0F0F0F] rounded-lg shadow-xl overflow-hidden`}>
         {/* Header */}
-        {title && (
-          <div className="sticky top-0 z-10 flex justify-between items-center px-4 py-4 sm:px-6 sm:py-6 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-[#0F0F0F] modal-header-safe pt-[calc(1rem+env(safe-area-inset-top,0px))] sm:pt-6">
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white truncate pr-8">
-              {title}
-            </h3>
-            {onClose && (
-              <button
-                type="button"
-                className="rounded-full text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary/20 p-1"
-                onClick={onClose}
-                aria-label="Close modal"
-              >
-                <span className="sr-only">Close</span>
-                <svg className="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            )}
-          </div>
-        )}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-800">
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+            {title}
+          </h3>
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 focus:outline-none"
+              aria-label="Close"
+            >
+              <Icon name="close" size="md" />
+            </button>
+          )}
+        </div>
         
         {/* Body */}
         <div className="p-6">
@@ -245,7 +258,7 @@ const Modal = ({
   // Regular modal with backdrop and positioning
   return (
     <div 
-      className={`${backdropClasses} ${darkModeClass} ${isAnimatingOut ? 'animate-backdrop-fade-out' : 'animate-backdrop-fade-in'} modal-overlay`}
+      className={`${backdropClasses} ${darkModeClass} ${isAnimatingOut ? 'animate-backdrop-fade-out' : 'animate-backdrop-fade-in'}`}
       style={{ zIndex }}
       onClick={handleBackdropClick}
     >
@@ -254,19 +267,28 @@ const Modal = ({
         className={`${modalClasses} flex flex-col ${animationClass} ${
           position === 'right' 
             ? (window.innerWidth < 640 
-                ? 'w-screen max-w-none rounded-none m-0 fixed top-0 left-0 right-0 bottom-0 z-[9999] overflow-auto modal-fullscreen-safe' 
-                : 'w-[55%] rounded-l-md rounded-r-none mr-0 fixed top-0 right-0 z-[9999] modal-fullscreen-safe')
+                ? 'w-screen max-w-none h-screen min-h-screen rounded-none m-0 fixed top-0 left-0 right-0 bottom-0 z-[9999] overflow-auto' 
+                : 'w-[55%] h-screen min-h-screen rounded-l-md rounded-r-none mr-0 fixed top-0 right-0 z-[9999]')
             : (mobileFullWidth || (size === 'custom' ? maxWidth : sizeClasses[size] || 'w-[55%]'))
         } ${className}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby={title ? 'modal-title' : undefined}
         aria-label={ariaLabel}
+        style={{
+          height: window.innerWidth < 640 ? 'calc(var(--vh, 1vh) * 100)' : undefined,
+          maxHeight: window.innerWidth < 640 ? 'calc(var(--vh, 1vh) * 100)' : undefined
+        }}
         {...stripDebugProps(props)}
       >
         {/* Modal Header - Sticky */}
         {title && (
-          <div className={`${headerClasses} modal-header-safe`}>
+          <div 
+            className={headerClasses}
+            style={{
+              paddingTop: window.innerWidth < 640 ? 'calc(1.5rem + env(safe-area-inset-top, 0px))' : undefined
+            }}
+          >
             <h2 id="modal-title" className={titleClasses}>{title}</h2>
             <button 
               onClick={handleClose}
@@ -280,13 +302,18 @@ const Modal = ({
         )}
 
         {/* Modal Content - Scrollable */}
-        <div className={`flex-1 overflow-y-auto scrollbar-hide px-6 modal-content-safe ${title ? 'pb-0' : 'pt-6 pb-0'}`}>
+        <div className={`flex-1 overflow-y-auto scrollbar-hide px-6 modal-content ${title ? 'pb-0' : 'pt-6 pb-0'}`}>
           {children}
         </div>
 
         {/* Modal Footer - Sticky, only shown if footer content is provided */}
         {footer && (
-          <div className={`${footerClasses} modal-footer-safe`}>
+          <div 
+            className={footerClasses}
+            style={{
+              paddingBottom: window.innerWidth < 640 ? 'calc(1.5rem + env(safe-area-inset-bottom, 0px))' : undefined
+            }}
+          >
             {footer}
           </div>
         )}
