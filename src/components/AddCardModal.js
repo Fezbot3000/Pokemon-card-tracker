@@ -515,16 +515,29 @@ const AddCardModal = ({
             setShowEnlargedImage(false);
           }}
           onMouseDown={(e) => e.stopPropagation()} 
-          style={{ backdropFilter: 'blur(8px)' }}
+          style={{ 
+            backdropFilter: 'blur(8px)',
+            height: '100vh',
+            minHeight: '100vh',
+            paddingTop: 'calc(1rem + env(safe-area-inset-top, 0px))',
+            paddingBottom: 'calc(1rem + env(safe-area-inset-bottom, 0px))'
+          }}
         >
           <div 
-            className="relative max-w-[90vw] max-h-[90vh] flex items-center justify-center"
+            className="relative max-w-[90vw] flex items-center justify-center"
             onClick={e => e.stopPropagation()}
+            style={{
+              maxHeight: 'calc(90vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))'
+            }}
           >
             <img 
               src={cardImage} 
               alt="Card preview (enlarged)" 
-              className="max-h-[90vh] max-w-[90vw] w-auto h-auto object-contain rounded-lg" 
+              className="w-auto h-auto object-contain rounded-lg" 
+              style={{
+                maxHeight: 'calc(90vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))',
+                maxWidth: '90vw'
+              }}
             />
             <button 
               className="absolute top-4 right-4 p-2 bg-black/70 rounded-full text-white"

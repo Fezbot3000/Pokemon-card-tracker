@@ -195,7 +195,7 @@ const Modal = ({
   };
   
   // Build the classes based on theme
-  const backdropClasses = `fixed inset-0 ${positionClasses[position]} bg-black/50 backdrop-blur-sm`;
+  const backdropClasses = `fixed inset-0 ${positionClasses[position]} bg-black/50 backdrop-blur-sm h-screen min-h-screen`;
   
   const modalClasses = forceDarkMode 
     ? `bg-[#0F0F0F]/95 backdrop-blur-sm rounded-md shadow-xl text-white` 
@@ -259,7 +259,14 @@ const Modal = ({
   return (
     <div 
       className={`${backdropClasses} ${darkModeClass} ${isAnimatingOut ? 'animate-backdrop-fade-out' : 'animate-backdrop-fade-in'}`}
-      style={{ zIndex }}
+      style={{ 
+        zIndex, 
+        height: '100vh', 
+        minHeight: '100vh', 
+        maxHeight: '100vh', 
+        paddingTop: 'env(safe-area-inset-top)', 
+        paddingBottom: 'env(safe-area-inset-bottom)' 
+      }}
       onClick={handleBackdropClick}
     >
       <div 

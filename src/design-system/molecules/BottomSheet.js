@@ -46,10 +46,11 @@ const BottomSheet = ({ isOpen, onClose, title, children }) => {
       {/* Sheet Content */}
       <div 
         ref={sheetRef}
-        className="fixed bottom-0 left-0 right-0 w-full bg-black dark:bg-black rounded-t-xl shadow-xl transform transition-transform duration-500 ease-out pt-3 px-3 z-[1001]"
+        className="fixed bottom-0 left-0 right-0 w-full bg-white dark:bg-[#0F0F0F] rounded-t-xl shadow-xl transform transition-transform duration-500 ease-out pt-3 px-3 z-[1001]"
         style={{ 
           maxHeight: '90vh',
           transform: isVisible ? 'translateY(0)' : 'translateY(100%)',
+          paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom, 0px))'
         }}
         onTransitionEnd={() => {
           if (!isVisible) setIsAnimating(false);

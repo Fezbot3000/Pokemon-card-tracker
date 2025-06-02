@@ -91,7 +91,15 @@ const TutorialModal = () => {
   const content = getTutorialContent();
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+    <div 
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+      style={{
+        height: '100vh',
+        minHeight: '100vh',
+        paddingTop: 'calc(1rem + env(safe-area-inset-top, 0px))',
+        paddingBottom: 'calc(1rem + env(safe-area-inset-bottom, 0px))'
+      }}
+    >
       {/* Blurred Background Overlay */}
       <div 
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
@@ -99,7 +107,12 @@ const TutorialModal = () => {
       />
       
       {/* Modal Container */}
-      <div className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden border border-gray-200 dark:border-gray-700">
+      <div 
+        className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-4xl w-full overflow-hidden border border-gray-200 dark:border-gray-700"
+        style={{
+          maxHeight: 'calc(90vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))'
+        }}
+      >
         {/* Modal Header */}
         <div className="border-b border-gray-200 dark:border-gray-700/50 px-6 py-4 flex justify-between items-center">
           <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -114,7 +127,7 @@ const TutorialModal = () => {
         </div>
         
         {/* Modal Content */}
-        <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
+        <div className="p-6 overflow-y-auto">
           <div className="grid md:grid-cols-2 gap-8 items-center">
             {/* Image Section - Much larger */}
             <div className="order-2 md:order-1">
