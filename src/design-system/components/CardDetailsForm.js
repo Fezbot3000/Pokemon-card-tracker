@@ -179,20 +179,10 @@ const CardDetailsForm = ({
   hidePsaSearchButton = false,
   requiredFields = {}
 }) => {
-  const { 
-    preferredCurrency, 
-    convertToUserCurrency,
-    convertFromUserCurrency,
-    formatAmountForDisplay, 
-    formatPreferredCurrency 
-  } = useUserPreferences();
-
-  const [selectedCompany, setSelectedCompany] = useState('');
-  const [selectedGrade, setSelectedGrade] = useState('');
   const [availableSets, setAvailableSets] = useState([]);
   const [availableYears, setAvailableYears] = useState(getAvailableYears());
-  const [displayInvestment, setDisplayInvestment] = useState('');
-  const [displayCurrentValue, setDisplayCurrentValue] = useState('');
+  const [selectedCompany, setSelectedCompany] = useState(card?.gradingCompany || '');
+  const [selectedGrade, setSelectedGrade] = useState(card?.grade || '');
 
   useEffect(() => {
     const updateAvailableSets = () => {
@@ -320,24 +310,6 @@ const CardDetailsForm = ({
     }
   }, [card?.gradingCompany, card?.grade]);
 
-  useEffect(() => {
-    if (card && preferredCurrency) {
-      if (card.originalInvestmentAmount !== undefined && card.originalInvestmentCurrency) {
-        const investmentInPref = convertToUserCurrency(card.originalInvestmentAmount, card.originalInvestmentCurrency);
-        setDisplayInvestment(investmentInPref > 0 ? String(investmentInPref) : '');
-      } else {
-        setDisplayInvestment('');
-      }
-
-      if (card.originalCurrentValueAmount !== undefined && card.originalCurrentValueCurrency) {
-        const currentValueInPref = convertToUserCurrency(card.originalCurrentValueAmount, card.originalCurrentValueCurrency);
-        setDisplayCurrentValue(currentValueInPref > 0 ? String(currentValueInPref) : '');
-      } else {
-        setDisplayCurrentValue('');
-      }
-    }
-  }, [card, preferredCurrency, convertToUserCurrency]);
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     console.log(`[CardDetailsForm/handleInputChange] Event - Name: ${name}, Value: ${value}`);
@@ -386,22 +358,6 @@ const CardDetailsForm = ({
     } else if (name === 'condition' && card?.gradingCompany === 'RAW') {
       // If grading company is RAW, condition is also used as the grade
       newCardData = { ...card, condition: value, grade: value };
-    } else if (name === 'investment') {
-      setDisplayInvestment(value); // Update display value immediately
-      const numericValue = convertFromUserCurrency(value);
-      if (!isNaN(numericValue)) {
-        newCardData.investment = numericValue; // Store as number in card data
-      } else if (value.trim() === '') {
-        newCardData.investment = null; // Allow clearing the field
-      }
-    } else if (name === 'currentValue') {
-      setDisplayCurrentValue(value); // Update display value immediately
-      const numericValue = convertFromUserCurrency(value);
-      if (!isNaN(numericValue)) {
-        newCardData.currentValue = numericValue; // Store as number in card data
-      } else if (value.trim() === '') {
-        newCardData.currentValue = null; // Allow clearing the field
-      }
     } else {
       // Default handling for other fields
       newCardData[name] = value;
@@ -418,55 +374,6 @@ const CardDetailsForm = ({
         [name]: value === '' ? '' : value
       });
     }
-  };
-
-  const getProfit = () => {
-    const investment = parseFloat(displayInvestment) || 0;
-    const value = parseFloat(displayCurrentValue) || 0;
-    return (value - investment).toFixed(preferredCurrency.code === 'JPY' ? 0 : 2);
-  };
-
-  const handleInvestmentInputChange = (e) => {
-    const inputValue = e.target.value;
-    setDisplayInvestment(inputValue); 
-
-    const numericValue = parseFloat(inputValue) || 0;
-    let newOriginalAmount = 0;
-    let newOriginalCurrency = card.originalInvestmentCurrency || preferredCurrency.code;
-
-    if (card.originalInvestmentCurrency) {
-      newOriginalAmount = convertFromUserCurrency(numericValue, card.originalInvestmentCurrency);
-    } else {
-      newOriginalAmount = numericValue; 
-      newOriginalCurrency = preferredCurrency.code; 
-    }
-    
-    onChange({
-      ...card,
-      originalInvestmentAmount: newOriginalAmount,
-      originalInvestmentCurrency: newOriginalCurrency
-    });
-  };
-
-  const handleCurrentValueInputChange = (e) => {
-    const inputValue = e.target.value;
-    setDisplayCurrentValue(inputValue);
-
-    const numericValue = parseFloat(inputValue) || 0;
-    let newOriginalAmount = 0;
-    let newOriginalCurrency = card.originalCurrentValueCurrency || preferredCurrency.code;
-
-    if (card.originalCurrentValueCurrency) {
-      newOriginalAmount = convertFromUserCurrency(numericValue, card.originalCurrentValueCurrency);
-    } else {
-      newOriginalAmount = numericValue;
-    }
-
-    onChange({
-      ...card,
-      originalCurrentValueAmount: newOriginalAmount,
-      originalCurrentValueCurrency: newOriginalCurrency
-    });
   };
 
   const handleCompanyChange = (e) => {
@@ -704,49 +611,11 @@ const CardDetailsForm = ({
                 </div>
               </div>
             )}
-            
-            {/* Profit display removed - now shown in modal header */}
           </div>
         </div>
         
         <div>
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Financial Details</h3>
-          <div className="financial-details-grid">
-            <div>
-              <div className="form-label-nowrap">
-                <FormField
-                  label={`Investment (${preferredCurrency.code})`}
-                  name="displayInvestment" 
-                  type="number"
-                  value={displayInvestment} 
-                  onChange={handleInvestmentInputChange} 
-                  error={errors.originalInvestmentAmount} 
-                  placeholder="0"
-                />
-              </div>
-            </div>
-            <div>
-              <div className="form-label-nowrap">
-                <FormField
-                  label={`Current Value (${preferredCurrency.code})`}
-                  name="displayCurrentValue" 
-                  type="number"
-                  value={displayCurrentValue} 
-                  onChange={handleCurrentValueInputChange} 
-                  error={errors.originalCurrentValueAmount} 
-                  placeholder="0"
-                />
-              </div>
-              {additionalValueContent && (
-                <div className="mt-2">
-                  {additionalValueContent}
-                </div>
-              )}
-            </div>
-          </div>
-          
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white mt-8 mb-4">Card Details</h3>
-          
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Card Details</h3>
           <div className="grid grid-cols-1 gap-4">
             <div>
               <FormField
@@ -978,10 +847,6 @@ CardDetailsForm.propTypes = {
     population: PropTypes.oneOfType([PropTypes.string, PropTypes.number]), 
     slabSerial: PropTypes.string,
     datePurchased: PropTypes.string,
-    originalInvestmentAmount: PropTypes.number,
-    originalInvestmentCurrency: PropTypes.string,
-    originalCurrentValueAmount: PropTypes.number,
-    originalCurrentValueCurrency: PropTypes.string,
     psaUrl: PropTypes.string,
     lastPriceUpdate: PropTypes.string,
     quantity: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
