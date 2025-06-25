@@ -6,6 +6,7 @@ import Icon from '../atoms/Icon';
 import CardDetailsForm from './CardDetailsForm';
 import SaleModal from '../../components/SaleModal'; 
 import { searchByCertNumber, parsePSACardData } from '../../services/psaSearch';
+import { fetchCardPricing, formatPricingForDisplay } from '../../services/pokemonTcgService';
 import { toast } from 'react-hot-toast';
 import '../styles/animations.css';
 import { useUserPreferences } from '../../contexts/UserPreferencesContext';
@@ -55,6 +56,11 @@ const CardDetailsModal = ({
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [isPsaSearching, setIsPsaSearching] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  
+  // Pokemon TCG pricing state
+  const [pricingData, setPricingData] = useState(null);
+  const [isPricingLoading, setIsPricingLoading] = useState(false);
+  const [pricingError, setPricingError] = useState(null);
   
   // Get currency formatting functions
   const { formatPreferredCurrency, formatAmountForDisplay } = useUserPreferences();
@@ -156,6 +162,42 @@ const CardDetailsModal = ({
       setSaveMessage('Error searching PSA database');
     } finally {
       setIsPsaSearching(false);
+    }
+  };
+
+  // Handle Pokemon TCG pricing fetch
+  const handlePricingFetch = async () => {
+    if (!card || !card.cardName) {
+      toast.error('Card name is required to fetch pricing');
+      return;
+    }
+
+    setIsPricingLoading(true);
+    setPricingError(null);
+    
+    try {
+      const result = await fetchCardPricing(
+        card.cardName,
+        card.set || null,
+        card.number || null
+      );
+      
+      const formattedResult = formatPricingForDisplay(result);
+      
+      if (formattedResult.success) {
+        setPricingData(formattedResult);
+        toast.success('Pricing data fetched successfully!');
+      } else {
+        setPricingError(formattedResult.message);
+        toast.error(`Pricing fetch failed: ${formattedResult.message}`);
+      }
+    } catch (error) {
+      console.error('Pricing fetch error:', error);
+      const errorMessage = `Failed to fetch pricing: ${error.message}`;
+      setPricingError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setIsPricingLoading(false);
     }
   };
 
@@ -492,6 +534,89 @@ const CardDetailsModal = ({
                   onPsaSearch={handlePsaSearch}
                   isPsaSearching={isPsaSearching}
                 />
+
+                {/* Pokemon TCG Pricing Section */}
+                <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                      Card Pricing
+                    </h3>
+                    <Button
+                      variant="secondary"
+                      onClick={handlePricingFetch}
+                      disabled={isPricingLoading || !card?.cardName}
+                      leftIcon={isPricingLoading ? (
+                        <div className="animate-spin h-4 w-4 border-2 border-blue-500 border-t-transparent rounded-full"></div>
+                      ) : (
+                        <Icon name="refresh" />
+                      )}
+                    >
+                      {isPricingLoading ? 'Fetching...' : 'Fetch Pricing'}
+                    </Button>
+                  </div>
+
+                  {/* Pricing Display */}
+                  {pricingData && (
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600 dark:text-gray-400">Card:</span>
+                        <span className="font-medium text-gray-900 dark:text-white">
+                          {pricingData.cardName} ({pricingData.set})
+                        </span>
+                      </div>
+                      
+                      {pricingData.pricing?.tcgplayer && (
+                        <div className="bg-white dark:bg-gray-700 p-3 rounded border">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                              TCGPlayer Price:
+                            </span>
+                            <span className="text-lg font-bold text-green-600 dark:text-green-400">
+                              ${pricingData.pricing.tcgplayer.price}
+                            </span>
+                          </div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400">
+                            Type: {pricingData.pricing.tcgplayer.type} • 
+                            Updated: {new Date(pricingData.pricing.tcgplayer.updatedAt).toLocaleDateString()}
+                          </div>
+                          {pricingData.pricing.tcgplayer.url && (
+                            <a
+                              href={pricingData.pricing.tcgplayer.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center mt-2 text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                            >
+                              View on TCGPlayer
+                              <Icon name="external-link" className="ml-1 h-3 w-3" />
+                            </a>
+                          )}
+                        </div>
+                      )}
+                      
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        Last updated: {new Date(pricingData.updatedAt).toLocaleString()}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Pricing Error */}
+                  {pricingError && (
+                    <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded p-3">
+                      <p className="text-sm text-red-700 dark:text-red-400">
+                        {pricingError}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* No pricing data message */}
+                  {!pricingData && !pricingError && !isPricingLoading && (
+                    <div className="text-center py-4">
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        Click "Fetch Pricing" to get current market value for this card
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           )}
