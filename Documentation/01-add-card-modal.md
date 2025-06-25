@@ -380,7 +380,8 @@ useEffect(() => {
 
 **PSA Certificate Verification API:**
 - **Service:** PSA Card Verification API
-- **Authentication:** API key stored in Firebase Functions configuration
+- **Authentication:** PSA API key is managed via Firebase Functions config: `firebase functions:config:set psa.api_token="YOUR_TOKEN"`
+- **The PSA search uses Firebase Cloud Functions, not direct frontend API calls**
 - **Rate Limiting:** Handled by Firebase Functions
 - **Error Handling:** 
   - Network errors displayed to user
@@ -569,9 +570,6 @@ const cardToSave = {
 - REACT_APP_FIREBASE_STORAGE_BUCKET
 - REACT_APP_FIREBASE_MESSAGING_SENDER_ID
 - REACT_APP_FIREBASE_APP_ID
-
-**PSA API Configuration:**
-- REACT_APP_PSA_API_TOKEN (or Firebase Functions config)
 
 ### 6.4. Build & Deployment
 

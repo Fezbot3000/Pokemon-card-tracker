@@ -68,73 +68,6 @@ const psaCache = {
 // Initialize cache from localStorage
 psaCache.loadFromStorage();
 
-// Access token storage
-let tokenExpiry = null;
-
-/**
- * Get the PSA API access token from environment variable
- * @returns {string} - The access token
- */
-const getAccessToken = () => {
-  const accessToken = process.env.REACT_APP_PSA_API_TOKEN;
-  
-  // Set token expiry to 1 hour from now if not already set
-  if (!tokenExpiry) {
-    tokenExpiry = new Date(new Date().getTime() + 60 * 60 * 1000);
-  }
-  
-  return accessToken;
-};
-
-/**
- * Test the PSA API connection with the current token
- * @param {string} certNumber - PSA certification number to test
- * @returns {Promise<Object>} - Raw API response data
- */
-const testPSAConnection = async (certNumber = '10249374') => {
-  try {
-    console.log('Testing PSA API connection...');
-    const token = getAccessToken();
-    
-    // Try a different endpoint that might be more reliable
-    const url = `https://api.psacard.com/publicapi/cert/${encodeURIComponent(certNumber)}`;
-    
-    console.log(`Test URL: ${url}`);
-    console.log(`Using token from environment variable`);
-    
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-        'Authorization': `Bearer ${token}` // Note: some APIs require "Bearer" with capital B
-      },
-      mode: 'cors',
-    });
-    
-    console.log(`PSA test response status: ${response.status} ${response.statusText}`);
-    
-    // Log the raw text response first for debugging
-    const responseText = await response.text();
-    console.log('Raw response text:', responseText);
-    
-    // Try to parse as JSON
-    let data;
-    try {
-      data = JSON.parse(responseText);
-      console.log('Parsed response data:', data);
-    } catch (e) {
-      console.error('Failed to parse response as JSON:', e);
-      data = { error: 'Invalid JSON response', rawText: responseText };
-    }
-    
-    return data;
-  } catch (error) {
-    console.error('PSA connection test failed:', error);
-    PSANotifications.showLookupNotification('FETCH_ERROR', { details: error });
-    return { error: error.message };
-  }
-};
-
 /**
  * Get cached PSA result if available
  * @param {string} certNumber - PSA certification number
@@ -681,7 +614,5 @@ export {
   searchByCertNumber,
   parsePSACardData,
   mergeWithExistingCard,
-  getAccessToken,
-  testPSAConnection,
   clearPSACache
 };
