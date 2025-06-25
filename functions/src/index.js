@@ -351,3 +351,106 @@ exports.psaLookupHttp = functions.https.onRequest((request, response) => {
     }
   });
 });
+
+// Pokemon TCG Lookup Function - fetches card pricing data
+exports.pokemonTcgLookup = functions.https.onCall(async (data, context) => {
+  // Check if user is authenticated
+  if (!context.auth) {
+    throw new HttpsError(
+      'unauthenticated',
+      'You must be logged in to use this function'
+    );
+  }
+  
+  const { cardName, setName, cardNumber } = data;
+  
+  if (!cardName) {
+    throw new HttpsError(
+      'invalid-argument',
+      'Card name is required'
+    );
+  }
+  
+  try {
+    // Get Pokemon TCG API key from Firebase Functions config
+    const apiKey = functions.config().pokemon_tcg?.api_key || '';
+    
+    if (!apiKey) {
+      console.error('Pokemon TCG API key not configured. Please set using firebase functions:config:set pokemon_tcg.api_key="YOUR_KEY"');
+      return {
+        success: false,
+        error: 'CONFIGURATION_ERROR',
+        message: 'Pokemon TCG API is not properly configured. Please contact support.'
+      };
+    }
+    
+    // Build search query
+    let searchQuery = `name:"${cardName}"`;
+    if (setName) {
+      searchQuery += ` set.name:"${setName}"`;
+    }
+    if (cardNumber) {
+      searchQuery += ` number:${cardNumber}`;
+    }
+    
+    console.log(`Searching Pokemon TCG API with query: ${searchQuery}`);
+    
+    // Call Pokemon TCG API
+    const response = await fetch(`https://api.pokemontcg.io/v2/cards?q=${encodeURIComponent(searchQuery)}`, {
+      method: 'GET',
+      headers: {
+        'X-Api-Key': apiKey,
+        'Accept': 'application/json',
+        'User-Agent': 'Pokemon-Card-Tracker/1.0'
+      }
+    });
+    
+    if (!response.ok) {
+      const errorMsg = `Pokemon TCG API returned error: ${response.status} ${response.statusText}`;
+      console.error(errorMsg);
+      return {
+        success: false,
+        error: 'API_ERROR',
+        message: errorMsg
+      };
+    }
+    
+    const responseData = await response.json();
+    console.log(`Pokemon TCG API response:`, JSON.stringify(responseData, null, 2));
+    
+    if (!responseData.data || responseData.data.length === 0) {
+      return {
+        success: false,
+        error: 'NOT_FOUND',
+        message: 'No cards found matching the search criteria'
+      };
+    }
+    
+    // Return the first matching card with pricing data
+    const card = responseData.data[0];
+    const pricingData = {
+      cardId: card.id,
+      name: card.name,
+      set: card.set?.name || 'Unknown',
+      number: card.number,
+      rarity: card.rarity,
+      tcgplayer: card.tcgplayer || null,
+      cardmarket: card.cardmarket || null,
+      images: card.images || null,
+      updatedAt: new Date().toISOString()
+    };
+    
+    return {
+      success: true,
+      data: pricingData
+    };
+    
+  } catch (error) {
+    console.error('Error fetching Pokemon TCG data:', error);
+    return {
+      success: false,
+      error: 'API_ERROR',
+      message: `Failed to fetch Pokemon TCG data: ${error.message}`
+    };
+  }
+});
