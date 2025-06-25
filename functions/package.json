@@ -20,6 +20,7 @@
     "firebase-functions": "^4.5.0",
     "node-fetch": "^2.7.0",
     "pdfkit": "^0.13.0",
+    "pokemon-card-tracker": "file:..",
     "xml2js": "^0.6.2"
   },
   "devDependencies": {
