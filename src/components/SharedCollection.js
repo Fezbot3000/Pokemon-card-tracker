@@ -116,11 +116,11 @@ const SharedCollection = () => {
         cardsQuery = query(
           cardsRef,
           where('collectionId', '==', shareData.collectionId),
-          orderBy('name')
+          orderBy('updatedAt', 'desc')
         );
       } else {
         // Load all collections
-        cardsQuery = query(cardsRef, orderBy('name'));
+        cardsQuery = query(cardsRef, orderBy('updatedAt', 'desc'));
       }
 
       const cardsSnapshot = await getDocs(cardsQuery);
