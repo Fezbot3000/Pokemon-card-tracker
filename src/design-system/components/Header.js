@@ -198,7 +198,7 @@ const Header = ({
                 <button 
                   onClick={() => handleViewChange('marketplace')}
                   className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors duration-200 ${
-                    isMarketplaceSection() 
+                    currentView === 'marketplace' 
                       ? 'bg-gradient-to-r from-[#ef4444] to-[#db2777] text-white' 
                       : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200/50 dark:hover:bg-gray-700/50'
                   }`}
@@ -206,7 +206,7 @@ const Header = ({
                   <Icon 
                     name="storefront" 
                     className="mr-1 hidden xs:inline" 
-                    color={isMarketplaceSection() ? 'white' : 'default'} 
+                    color={currentView === 'marketplace' ? 'white' : 'default'} 
                     size="sm"
                   />
                   <span>Marketplace</span>
@@ -263,7 +263,7 @@ const Header = ({
                         <button 
                           onClick={() => handleViewChange('marketplace')}
                           className={`px-2 py-1 rounded-md text-xs font-medium transition-colors duration-200 ${
-                            isMarketplaceSection() 
+                            currentView === 'marketplace' 
                               ? 'bg-gradient-to-r from-[#ef4444] to-[#db2777] text-white' 
                               : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200/50 dark:hover:bg-gray-700/50'
                           }`}
@@ -271,7 +271,7 @@ const Header = ({
                           <Icon 
                             name="storefront" 
                             className="mr-1 hidden xs:inline" 
-                            color={isMarketplaceSection() ? 'white' : 'default'} 
+                            color={currentView === 'marketplace' ? 'white' : 'default'} 
                             size="sm"
                           />
                           <span>Marketplace</span>
