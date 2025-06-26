@@ -45,7 +45,13 @@ const Header = ({
     return ['marketplace', 'marketplace-selling', 'marketplace-messages'].includes(currentView);
   };
 
-
+  // Immediate mobile detection to prevent flash
+  const isImmediateMobile = typeof window !== 'undefined' && window.innerWidth < 640; // sm breakpoint
+  
+  // Hide header immediately on mobile for cards view to prevent flash
+  if (isImmediateMobile && currentView === 'cards') {
+    return null;
+  }
 
   // Handle click outside to close currency dropdown
   useEffect(() => {
@@ -217,7 +223,7 @@ const Header = ({
                       <>
                         <button 
                           onClick={() => handleViewChange('purchase-invoices')}
-                          className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors duration-200 ${
+                          className={`px-2 py-1 rounded-md text-xs font-medium transition-colors duration-200 ${
                             currentView === 'purchase-invoices' 
                               ? 'bg-gradient-to-r from-[#ef4444] to-[#db2777] text-white' 
                               : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200/50 dark:hover:bg-gray-700/50'
@@ -225,7 +231,7 @@ const Header = ({
                         >
                           <Icon 
                             name="receipt_long" 
-                            className="mr-1" 
+                            className="mr-1 hidden xs:inline" 
                             color={currentView === 'purchase-invoices' ? 'white' : 'default'} 
                             size="sm"
                           />
@@ -234,7 +240,7 @@ const Header = ({
                         
                         <button 
                           onClick={() => handleViewChange('sold-items')}
-                          className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors duration-200 ${
+                          className={`px-2 py-1 rounded-md text-xs font-medium transition-colors duration-200 ${
                             currentView === 'sold-items' 
                               ? 'bg-gradient-to-r from-[#ef4444] to-[#db2777] text-white' 
                               : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200/50 dark:hover:bg-gray-700/50'
@@ -242,7 +248,7 @@ const Header = ({
                         >
                           <Icon 
                             name="sell" 
-                            className="mr-1" 
+                            className="mr-1 hidden xs:inline" 
                             color={currentView === 'sold-items' ? 'white' : 'default'} 
                             size="sm"
                           />
