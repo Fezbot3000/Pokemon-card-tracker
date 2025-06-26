@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   collection, 
   doc, 
@@ -90,7 +91,7 @@ const Switch = ({ checked, onChange, label, ...props }) => (
   </div>
 );
 
-const CollectionSharing = () => {
+const CollectionSharing = ({ isInModal = false }) => {
   const { currentUser } = useAuth();
   const { collections, cards } = useCards();
   const [sharedCollections, setSharedCollections] = useState([]);
@@ -223,7 +224,7 @@ const CollectionSharing = () => {
   };
 
   const deleteSharedCollection = async (shareId) => {
-    if (!window.confirm('Are you sure you want to delete this shared collection?')) {
+    if (!window.confirm('Are you sure you want to delete this shared collection? This action cannot be undone.')) {
       return;
     }
 
@@ -246,25 +247,107 @@ const CollectionSharing = () => {
     });
   };
 
-  // Get available collections - handle both array and object formats
   const getAvailableCollections = () => {
     if (!collections) return [];
     
-    // If collections is an array (from CardContext)
+    console.log('=== DEBUGGING COLLECTIONS ===');
+    console.log('Collections data:', collections);
+    console.log('Collections type:', typeof collections);
+    console.log('Collections is array:', Array.isArray(collections));
+    console.log('Cards data:', cards);
+    console.log('Cards type:', typeof cards);
+    console.log('Cards is array:', Array.isArray(cards));
+    
+    // If collections is an array (new format)
     if (Array.isArray(collections)) {
-      return collections.map(col => ({
-        id: col.id || col.name,
-        name: col.name || col.id,
-        cardCount: col.cards ? col.cards.length : 0
-      }));
+      return collections.map(collection => {
+        console.log('Processing collection:', collection);
+        
+        // Try multiple ways to get card count
+        let cardCount = 0;
+        
+        // Method 1: Direct cardCount property
+        if (collection.cardCount && collection.cardCount > 0) {
+          cardCount = collection.cardCount;
+          console.log(`Method 1 - Direct cardCount: ${cardCount}`);
+        }
+        // Method 2: cards array in collection
+        else if (collection.cards && Array.isArray(collection.cards)) {
+          cardCount = collection.cards.length;
+          console.log(`Method 2 - Collection.cards array: ${cardCount}`);
+        }
+        // Method 3: Count from global cards array
+        else if (Array.isArray(cards) && cards.length > 0) {
+          // Try different field names for collection matching
+          const matchingCards = cards.filter(card => {
+            const matches = (
+              card.collectionId === collection.id ||
+              card.collectionId === collection.name ||
+              card.collection === collection.id ||
+              card.collection === collection.name ||
+              card.collectionName === collection.name ||
+              card.collectionName === collection.id
+            );
+            if (matches) {
+              console.log(`Card matches collection ${collection.name}:`, card);
+            }
+            return matches;
+          });
+          cardCount = matchingCards.length;
+          console.log(`Method 3 - Filtered from global cards: ${cardCount}`);
+        }
+        // Method 4: If cards is object, try to find collection
+        else if (cards && typeof cards === 'object' && !Array.isArray(cards)) {
+          if (cards[collection.name]) {
+            cardCount = Array.isArray(cards[collection.name]) ? cards[collection.name].length : 0;
+            console.log(`Method 4 - Cards object lookup: ${cardCount}`);
+          }
+        }
+        
+        const result = {
+          id: collection.id || collection.name,
+          name: collection.name || collection.id,
+          cardCount: cardCount
+        };
+        
+        console.log(`Final result for ${collection.name}:`, result);
+        return result;
+      });
     }
     
     // If collections is an object (legacy format)
-    return Object.entries(collections).map(([name, cards]) => ({
-      id: name,
-      name: name,
-      cardCount: Array.isArray(cards) ? cards.length : 0
-    }));
+    if (collections && typeof collections === 'object') {
+      console.log('Processing collections as object...');
+      return Object.entries(collections).map(([name, collectionData]) => {
+        console.log(`Processing collection ${name}:`, collectionData);
+        
+        let cardCount = 0;
+        
+        // If collectionData is an array of cards
+        if (Array.isArray(collectionData)) {
+          cardCount = collectionData.length;
+          console.log(`Object format - direct array: ${cardCount}`);
+        }
+        // If we need to count from global cards array
+        else if (Array.isArray(cards)) {
+          cardCount = cards.filter(card => 
+            card.collectionId === name || 
+            card.collection === name ||
+            card.collectionName === name
+          ).length;
+          console.log(`Object format - filtered from global: ${cardCount}`);
+        }
+        
+        return {
+          id: name,
+          name: name,
+          cardCount: cardCount
+        };
+      });
+    }
+    
+    console.log('No collections found or unrecognized format');
+    return [];
   };
 
   const availableCollections = getAvailableCollections();
@@ -279,217 +362,229 @@ const CollectionSharing = () => {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Collection Sharing</h2>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
-            Share your collections with others through public links
-          </p>
-        </div>
-        <div className="flex items-center space-x-3">
-          <Button
-            onClick={() => setShowQuickStart(true)}
-            variant="outline"
-            className="flex items-center space-x-2"
-          >
-            <span>📖</span>
-            <span>How It Works</span>
-          </Button>
-          <Button
-            onClick={() => setShowCreateModal(true)}
-            className="flex items-center space-x-2"
-          >
-            <span>🔗</span>
-            <span>Share Collection</span>
-          </Button>
-        </div>
-      </div>
-
-      {/* Shared Collections List */}
-      {sharedCollections.length === 0 ? (
-        <Card className="text-center py-12">
-          <div className="text-6xl mb-4">🔗</div>
-          <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-            No Shared Collections
-          </h3>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">
-            Create shareable links to showcase your collections to others
-          </p>
-          <div className="flex items-center justify-center space-x-4">
+    <>
+      <div className={`space-y-6 ${isInModal ? '' : 'p-4 sm:p-6'}`}>
+        {/* Header - FIXED FOR MOBILE */}
+        <div className="space-y-4 sm:space-y-0 sm:flex sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Collection Sharing</h2>
+            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">
+              Share your collections with others through public links
+            </p>
+          </div>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
             <Button
               onClick={() => setShowQuickStart(true)}
               variant="outline"
-              className="flex items-center space-x-2"
+              className="flex items-center justify-center space-x-2 text-sm"
+              size="sm"
             >
               <span>📖</span>
-              <span>How It Works</span>
+              <span className="hidden xs:inline">How It Works</span>
+              <span className="xs:hidden">Help</span>
             </Button>
             <Button
               onClick={() => setShowCreateModal(true)}
-              className="flex items-center space-x-2"
+              className="flex items-center justify-center space-x-2 text-sm"
+              size="sm"
             >
               <span>🔗</span>
-              <span>Share Your First Collection</span>
+              <span className="hidden xs:inline">Share Collection</span>
+              <span className="xs:hidden">Share</span>
             </Button>
           </div>
-        </Card>
-      ) : (
-        <div className="grid gap-4">
-          {sharedCollections.map((shared) => (
-            <Card key={shared.id} className="p-6">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center space-x-3 mb-2">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                      {shared.title}
-                    </h3>
-                    <Badge variant={shared.isActive ? 'success' : 'secondary'}>
-                      {shared.isActive ? 'Active' : 'Inactive'}
-                    </Badge>
+        </div>
+
+        {/* Shared Collections List */}
+        {sharedCollections.length === 0 ? (
+          <Card className={`text-center py-8 sm:py-12 ${isInModal ? 'bg-white bg-opacity-50 dark:bg-gray-800 dark:bg-opacity-50 border-gray-200 border-opacity-30 dark:border-gray-700 dark:border-opacity-30' : ''}`}>
+            <div className="text-4xl sm:text-6xl mb-4">🔗</div>
+            <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-2">
+              No Shared Collections
+            </h3>
+            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-6 px-4">
+              Create shareable links to showcase your collections to others
+            </p>
+          </Card>
+        ) : (
+          <div className="grid gap-4">
+            {sharedCollections.map((shared) => (
+              <Card key={shared.id} className={`p-4 sm:p-6 ${isInModal ? 'bg-white bg-opacity-50 dark:bg-gray-800 dark:bg-opacity-50 border-gray-200 border-opacity-30 dark:border-gray-700 dark:border-opacity-30' : ''}`}>
+                <div className="space-y-4 sm:space-y-0 sm:flex sm:items-start sm:justify-between">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-3 mb-2">
+                      <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white truncate">
+                        {shared.title}
+                      </h3>
+                      <Badge variant={shared.isActive ? 'success' : 'secondary'} className="self-start sm:self-auto">
+                        {shared.isActive ? 'Active' : 'Inactive'}
+                      </Badge>
+                    </div>
+                    
+                    {shared.description && (
+                      <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">
+                        {shared.description}
+                      </p>
+                    )}
+                    
+                    <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-4 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                      <span className="truncate">Collection: {shared.collectionId === 'all' ? 'All Collections' : shared.collectionId}</span>
+                      <span>Views: {shared.viewCount || 0}</span>
+                      <span className="hidden sm:inline">Created: {shared.createdAt?.toDate?.()?.toLocaleDateString() || 'Unknown'}</span>
+                    </div>
                   </div>
                   
-                  {shared.description && (
-                    <p className="text-gray-600 dark:text-gray-400 mb-3">
-                      {shared.description}
-                    </p>
-                  )}
-                  
-                  <div className="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
-                    <span>Collection: {shared.collectionId === 'all' ? 'All Collections' : shared.collectionId}</span>
-                    <span>Views: {shared.viewCount || 0}</span>
-                    <span>Created: {shared.createdAt?.toDate?.()?.toLocaleDateString() || 'Unknown'}</span>
+                  {/* FIXED MOBILE BUTTON LAYOUT */}
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-2 sm:ml-4 w-full sm:w-auto">
+                    <Button
+                      onClick={() => copyShareLink(shared.id)}
+                      variant="outline"
+                      size="sm"
+                      className="text-xs sm:text-sm"
+                    >
+                      Copy Link
+                    </Button>
+                    <Button
+                      onClick={() => toggleActive(shared.id, shared.isActive)}
+                      variant="outline"
+                      size="sm"
+                      className="text-xs sm:text-sm"
+                    >
+                      {shared.isActive ? 'Deactivate' : 'Activate'}
+                    </Button>
+                    <Button
+                      onClick={() => deleteSharedCollection(shared.id)}
+                      variant="outline"
+                      size="sm"
+                      className="text-xs sm:text-sm text-red-600 hover:text-red-700"
+                    >
+                      Delete
+                    </Button>
                   </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        )}
+
+        {/* Quick Start Modal */}
+        {showQuickStart && (
+          <SharingQuickStart onClose={() => setShowQuickStart(false)} />
+        )}
+      </div>
+
+      {/* Create Modal - RENDERED AS PORTAL TO AVOID NESTING */}
+      {showCreateModal && createPortal(
+        <div 
+          className="fixed inset-0 flex items-center justify-center p-4"
+          style={{ 
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            backdropFilter: 'blur(4px)',
+            WebkitBackdropFilter: 'blur(4px)',
+            zIndex: 99999
+          }}
+        >
+          <div 
+            className="rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto"
+            style={{
+              backgroundColor: 'rgb(0, 0, 0)',
+              border: '1px solid rgba(55, 65, 81, 0.5)',
+              zIndex: 100000
+            }}
+          >
+            <div className="p-4 sm:p-6">
+              <h3 className="text-lg font-semibold text-white mb-4">
+                Share Collection
+              </h3>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">
+                    Title *
+                  </label>
+                  <Input
+                    value={createForm.title}
+                    onChange={(e) => setCreateForm({...createForm, title: e.target.value})}
+                    placeholder="My Amazing Card Collection"
+                  />
                 </div>
                 
-                <div className="flex items-center space-x-2 ml-4">
-                  <Button
-                    onClick={() => copyShareLink(shared.id)}
-                    variant="outline"
-                    size="sm"
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">
+                    Description
+                  </label>
+                  <Textarea
+                    value={createForm.description}
+                    onChange={(e) => setCreateForm({...createForm, description: e.target.value})}
+                    placeholder="Tell others about your collection..."
+                    rows={3}
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">
+                    Collection to Share
+                  </label>
+                  <Select
+                    value={createForm.collectionId}
+                    onChange={(e) => setCreateForm({...createForm, collectionId: e.target.value})}
                   >
-                    Copy Link
-                  </Button>
-                  <Button
-                    onClick={() => toggleActive(shared.id, shared.isActive)}
-                    variant="outline"
-                    size="sm"
+                    <option value="all">All Collections</option>
+                    {availableCollections.map((collection) => (
+                      <option key={collection.id} value={collection.id}>
+                        {collection.name} ({collection.cardCount} cards)
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">
+                    Expires After
+                  </label>
+                  <Select
+                    value={createForm.expiresIn}
+                    onChange={(e) => setCreateForm({...createForm, expiresIn: e.target.value})}
                   >
-                    {shared.isActive ? 'Deactivate' : 'Activate'}
-                  </Button>
-                  <Button
-                    onClick={() => deleteSharedCollection(shared.id)}
-                    variant="outline"
-                    size="sm"
-                    className="text-red-600 hover:text-red-700"
-                  >
-                    Delete
-                  </Button>
+                    <option value="never">Never</option>
+                    <option value="7d">7 days</option>
+                    <option value="30d">30 days</option>
+                    <option value="90d">90 days</option>
+                    <option value="1y">1 year</option>
+                  </Select>
+                </div>
+                
+                <div>
+                  <Switch
+                    checked={createForm.isActive}
+                    onChange={(checked) => setCreateForm({...createForm, isActive: checked})}
+                    label="Make active immediately"
+                  />
                 </div>
               </div>
-            </Card>
-          ))}
-        </div>
-      )}
-
-      {/* Create Modal */}
-      {showCreateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-900 rounded-lg max-w-md w-full p-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              Share Collection
-            </h3>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Title *
-                </label>
-                <Input
-                  value={createForm.title}
-                  onChange={(e) => setCreateForm({...createForm, title: e.target.value})}
-                  placeholder="My Amazing Card Collection"
-                />
-              </div>
               
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Description
-                </label>
-                <Textarea
-                  value={createForm.description}
-                  onChange={(e) => setCreateForm({...createForm, description: e.target.value})}
-                  placeholder="Tell others about your collection..."
-                  rows={3}
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Collection to Share
-                </label>
-                <Select
-                  value={createForm.collectionId}
-                  onChange={(e) => setCreateForm({...createForm, collectionId: e.target.value})}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end space-y-2 sm:space-y-0 sm:space-x-3 mt-6">
+                <Button
+                  onClick={() => setShowCreateModal(false)}
+                  variant="outline"
+                  className="w-full sm:w-auto"
                 >
-                  <option value="all">All Collections</option>
-                  {availableCollections.map((collection) => (
-                    <option key={collection.id} value={collection.id}>
-                      {collection.name} ({collection.cardCount} cards)
-                    </option>
-                  ))}
-                </Select>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Expires After
-                </label>
-                <Select
-                  value={createForm.expiresIn}
-                  onChange={(e) => setCreateForm({...createForm, expiresIn: e.target.value})}
+                  Cancel
+                </Button>
+                <Button
+                  onClick={createSharedCollection}
+                  disabled={!createForm.title.trim()}
+                  className="w-full sm:w-auto"
                 >
-                  <option value="never">Never</option>
-                  <option value="7d">7 days</option>
-                  <option value="30d">30 days</option>
-                  <option value="90d">90 days</option>
-                  <option value="1y">1 year</option>
-                </Select>
+                  Create Share Link
+                </Button>
               </div>
-              
-              <div>
-                <Switch
-                  checked={createForm.isActive}
-                  onChange={(checked) => setCreateForm({...createForm, isActive: checked})}
-                  label="Make active immediately"
-                />
-              </div>
-            </div>
-            
-            <div className="flex items-center justify-end space-x-3 mt-6">
-              <Button
-                onClick={() => setShowCreateModal(false)}
-                variant="outline"
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={createSharedCollection}
-                disabled={!createForm.title.trim()}
-              >
-                Create Share Link
-              </Button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
-
-      {/* Quick Start Modal */}
-      {showQuickStart && (
-        <SharingQuickStart onClose={() => setShowQuickStart(false)} />
-      )}
-    </div>
+    </>
   );
 };
 

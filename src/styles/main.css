@@ -182,6 +182,29 @@ html:not(.dark) {
 
 /* Additional styling to ensure proper specificity */
 /* Using standard CSS instead of @apply to avoid lint errors */
+
+/* Line clamp utilities for text truncation */
+.line-clamp-1 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+}
+
+.line-clamp-2 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.line-clamp-3 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
 .financial-detail-box {
   background-color: #F3F4F6; /* gray-100 */
   border-radius: 0.5rem; /* rounded-lg */

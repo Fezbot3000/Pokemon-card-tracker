@@ -4,6 +4,9 @@ module.exports = {
   darkMode: 'class',
   theme: {
     extend: {
+      screens: {
+        'xs': '475px',
+      },
       colors: {
         primary: '#4318FF',
         success: '#05CD99',
@@ -39,4 +42,7 @@ module.exports = {
     },
   },
   plugins: [],
+  corePlugins: {
+    backdropFilter: true,
+  },
 } 

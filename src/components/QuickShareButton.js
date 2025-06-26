@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../design-system';
 import { Button } from '../design-system';
@@ -8,6 +8,25 @@ const QuickShareButton = ({ className = '' }) => {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
   const [showSharingModal, setShowSharingModal] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  // Detect dark mode
+  useEffect(() => {
+    const checkDarkMode = () => {
+      setIsDarkMode(document.documentElement.classList.contains('dark'));
+    };
+    
+    checkDarkMode();
+    
+    // Watch for dark mode changes
+    const observer = new MutationObserver(checkDarkMode);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class']
+    });
+    
+    return () => observer.disconnect();
+  }, []);
 
   if (!currentUser) {
     return null;
@@ -38,10 +57,25 @@ const QuickShareButton = ({ className = '' }) => {
         <span className="sm:hidden">Share</span>
       </Button>
 
-      {/* Sharing Modal */}
+      {/* Sharing Modal - MADE MORE TRANSPARENT */}
       {showSharingModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-900 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div 
+          className="fixed inset-0 flex items-center justify-center z-50 p-4"
+          style={{ 
+            backgroundColor: 'rgba(0, 0, 0, 0.3)',
+            backdropFilter: 'blur(4px)',
+            WebkitBackdropFilter: 'blur(4px)'
+          }}
+        >
+          <div 
+            className="rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto border shadow-2xl"
+            style={{
+              backgroundColor: isDarkMode ? 'rgb(0, 0, 0)' : 'rgb(255, 255, 255)',
+              borderColor: isDarkMode ? 'rgba(55, 65, 81, 0.5)' : 'rgba(229, 231, 235, 0.5)',
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)'
+            }}
+          >
             <div className="p-6">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -49,7 +83,7 @@ const QuickShareButton = ({ className = '' }) => {
                 </h2>
                 <button
                   onClick={() => setShowSharingModal(false)}
-                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-1 rounded-full hover:bg-gray-100 hover:bg-opacity-50 dark:hover:bg-gray-800 dark:hover:bg-opacity-50 transition-colors"
                 >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -57,9 +91,14 @@ const QuickShareButton = ({ className = '' }) => {
                 </button>
               </div>
               
-              <CollectionSharing />
+              <CollectionSharing isInModal={true} />
               
-              <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+              <div 
+                className="mt-6 pt-4 border-t"
+                style={{
+                  borderColor: isDarkMode ? 'rgba(55, 65, 81, 0.5)' : 'rgba(229, 231, 235, 0.5)'
+                }}
+              >
                 <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
                   You can also access sharing settings from{' '}
                   <button
