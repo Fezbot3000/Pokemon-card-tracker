@@ -93,11 +93,12 @@ const Switch = ({ checked, onChange, label, ...props }) => (
 
 const CollectionSharing = ({ isInModal = false }) => {
   const { currentUser } = useAuth();
-  const { collections, cards } = useCards();
+  const { collections, cards, repository } = useCards();
   const [sharedCollections, setSharedCollections] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showQuickStart, setShowQuickStart] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [createForm, setCreateForm] = useState({
     title: '',
     description: '',
@@ -111,6 +112,82 @@ const CollectionSharing = ({ isInModal = false }) => {
     console.log('CollectionSharing - collections:', collections);
     console.log('CollectionSharing - cards:', cards);
     console.log('CollectionSharing - currentUser:', currentUser);
+    
+    // Run the detailed debugging when data is available
+    if (collections && cards) {
+      console.log('=== DEBUGGING COLLECTIONS ===');
+      console.log('Collections data:', collections);
+      console.log('Collections type:', typeof collections);
+      console.log('Collections is array:', Array.isArray(collections));
+      console.log('Cards data:', cards);
+      console.log('Cards type:', typeof cards);
+      console.log('Cards is array:', Array.isArray(cards));
+      console.log('Cards length:', Array.isArray(cards) ? cards.length : 'N/A');
+      
+      // Log a sample of cards to see their structure
+      if (Array.isArray(cards) && cards.length > 0) {
+        console.log('Sample cards (first 3):');
+        cards.slice(0, 3).forEach((card, index) => {
+          console.log(`Card ${index}:`, {
+            id: card.id,
+            collectionId: card.collectionId,
+            collection: card.collection,
+            collectionName: card.collectionName,
+            card: card.card,
+            set: card.set
+          });
+        });
+      }
+      
+      // If collections is an array, analyze each one
+      if (Array.isArray(collections)) {
+        collections.forEach((collection, index) => {
+          console.log(`Collection ${index}:`, {
+            id: collection.id,
+            name: collection.name,
+            cardCount: collection.cardCount
+          });
+          
+          // Try to count cards for this collection
+          if (Array.isArray(cards) && cards.length > 0) {
+            const matchingCards = cards.filter(card => {
+              const matches = (
+                card.collectionId === collection.id ||
+                card.collectionId === collection.name ||
+                card.collection === collection.id ||
+                card.collection === collection.name ||
+                card.collectionName === collection.name ||
+                card.collectionName === collection.id
+              );
+              if (matches) {
+                console.log(`Card matches collection ${collection.name}:`, {
+                  cardId: card.id,
+                  cardName: card.card,
+                  cardCollectionId: card.collectionId,
+                  cardCollection: card.collection,
+                  cardCollectionName: card.collectionName,
+                  collectionId: collection.id,
+                  collectionName: collection.name
+                });
+              }
+              return matches;
+            });
+            console.log(`Collection ${collection.name} has ${matchingCards.length} matching cards`);
+            
+            // If no matches found, let's see all the collectionId values in cards
+            if (matchingCards.length === 0) {
+              const uniqueCollectionIds = [...new Set(cards.map(card => card.collectionId).filter(Boolean))];
+              const uniqueCollections = [...new Set(cards.map(card => card.collection).filter(Boolean))];
+              const uniqueCollectionNames = [...new Set(cards.map(card => card.collectionName).filter(Boolean))];
+              console.log(`No matches found for collection ${collection.name} (${collection.id})`);
+              console.log('Unique collectionId values in cards:', uniqueCollectionIds);
+              console.log('Unique collection values in cards:', uniqueCollections);
+              console.log('Unique collectionName values in cards:', uniqueCollectionNames);
+            }
+          }
+        });
+      }
+    }
   }, [collections, cards, currentUser]);
 
   useEffect(() => {
@@ -247,6 +324,33 @@ const CollectionSharing = ({ isInModal = false }) => {
     });
   };
 
+  const refreshCardCounts = async () => {
+    if (!repository || !collections || !Array.isArray(collections)) {
+      toast.error('Repository or collections not available');
+      return;
+    }
+
+    try {
+      setIsRefreshing(true);
+      console.log('Refreshing card counts for all collections...');
+      
+      for (const collection of collections) {
+        if (collection.id) {
+          console.log(`Updating card count for collection: ${collection.name} (${collection.id})`);
+          await repository.updateCollectionCardCount(collection.id);
+        }
+      }
+      
+      toast.success('Card counts refreshed successfully!');
+      console.log('Card count refresh completed');
+    } catch (error) {
+      console.error('Error refreshing card counts:', error);
+      toast.error('Failed to refresh card counts');
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
   const getAvailableCollections = () => {
     if (!collections) return [];
     
@@ -257,23 +361,46 @@ const CollectionSharing = ({ isInModal = false }) => {
     console.log('Cards data:', cards);
     console.log('Cards type:', typeof cards);
     console.log('Cards is array:', Array.isArray(cards));
+    console.log('Cards length:', Array.isArray(cards) ? cards.length : 'N/A');
+    
+    // Log a sample of cards to see their structure
+    if (Array.isArray(cards) && cards.length > 0) {
+      console.log('Sample cards (first 3):');
+      cards.slice(0, 3).forEach((card, index) => {
+        console.log(`Card ${index}:`, {
+          id: card.id,
+          collectionId: card.collectionId,
+          collection: card.collection,
+          collectionName: card.collectionName,
+          card: card.card,
+          set: card.set
+        });
+      });
+    }
     
     // If collections is an array (new format)
     if (Array.isArray(collections)) {
       return collections.map(collection => {
-        console.log('Processing collection:', collection);
+        console.log('Processing collection:', {
+          id: collection.id,
+          name: collection.name,
+          cardCount: collection.cardCount
+        });
         
         // Try multiple ways to get card count
         let cardCount = 0;
+        let method = 'none';
         
         // Method 1: Direct cardCount property
         if (collection.cardCount && collection.cardCount > 0) {
           cardCount = collection.cardCount;
+          method = 'Direct cardCount';
           console.log(`Method 1 - Direct cardCount: ${cardCount}`);
         }
         // Method 2: cards array in collection
         else if (collection.cards && Array.isArray(collection.cards)) {
           cardCount = collection.cards.length;
+          method = 'Collection.cards array';
           console.log(`Method 2 - Collection.cards array: ${cardCount}`);
         }
         // Method 3: Count from global cards array
@@ -289,17 +416,38 @@ const CollectionSharing = ({ isInModal = false }) => {
               card.collectionName === collection.id
             );
             if (matches) {
-              console.log(`Card matches collection ${collection.name}:`, card);
+              console.log(`Card matches collection ${collection.name}:`, {
+                cardId: card.id,
+                cardName: card.card,
+                cardCollectionId: card.collectionId,
+                cardCollection: card.collection,
+                cardCollectionName: card.collectionName,
+                collectionId: collection.id,
+                collectionName: collection.name
+              });
             }
             return matches;
           });
           cardCount = matchingCards.length;
+          method = 'Filtered from global cards';
           console.log(`Method 3 - Filtered from global cards: ${cardCount}`);
+          
+          // If no matches found, let's see all the collectionId values in cards
+          if (matchingCards.length === 0) {
+            const uniqueCollectionIds = [...new Set(cards.map(card => card.collectionId).filter(Boolean))];
+            const uniqueCollections = [...new Set(cards.map(card => card.collection).filter(Boolean))];
+            const uniqueCollectionNames = [...new Set(cards.map(card => card.collectionName).filter(Boolean))];
+            console.log(`No matches found for collection ${collection.name} (${collection.id})`);
+            console.log('Unique collectionId values in cards:', uniqueCollectionIds);
+            console.log('Unique collection values in cards:', uniqueCollections);
+            console.log('Unique collectionName values in cards:', uniqueCollectionNames);
+          }
         }
         // Method 4: If cards is object, try to find collection
         else if (cards && typeof cards === 'object' && !Array.isArray(cards)) {
           if (cards[collection.name]) {
             cardCount = Array.isArray(cards[collection.name]) ? cards[collection.name].length : 0;
+            method = 'Cards object lookup';
             console.log(`Method 4 - Cards object lookup: ${cardCount}`);
           }
         }
@@ -310,7 +458,7 @@ const CollectionSharing = ({ isInModal = false }) => {
           cardCount: cardCount
         };
         
-        console.log(`Final result for ${collection.name}:`, result);
+        console.log(`Final result for ${collection.name}: ${cardCount} cards (method: ${method})`);
         return result;
       });
     }
@@ -522,9 +670,20 @@ const CollectionSharing = ({ isInModal = false }) => {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">
-                    Collection to Share
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-sm font-medium text-gray-300">
+                      Collection to Share
+                    </label>
+                    <Button
+                      onClick={refreshCardCounts}
+                      disabled={isRefreshing}
+                      variant="outline"
+                      size="sm"
+                      className="text-xs px-2 py-1"
+                    >
+                      {isRefreshing ? '🔄' : '🔄'} {isRefreshing ? 'Refreshing...' : 'Refresh'}
+                    </Button>
+                  </div>
                   <Select
                     value={createForm.collectionId}
                     onChange={(e) => setCreateForm({...createForm, collectionId: e.target.value})}
