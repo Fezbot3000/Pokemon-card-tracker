@@ -662,9 +662,9 @@ function MarketplaceMessages({ currentView, onViewChange }) {
           display: none !important;
         }`}
       </style>
-      <div className={`${activeChat ? 'h-screen' : 'h-[calc(100vh-120px)]'} w-screen flex flex-col overflow-hidden ${activeChat ? 'pt-0' : 'pt-16'} max-w-none mx-0 px-0 absolute left-0 right-0 bg-gray-100 dark:bg-black`}> {/* Adjust height and padding based on active chat */}
+      <div className={`${activeChat ? 'min-h-screen' : 'min-h-[calc(100vh-200px)]'} w-full flex flex-col ${activeChat ? 'pt-0' : 'pt-4'} bg-gray-100 dark:bg-black`}>
       {!activeChat ? (
-      <div className="w-full px-4 sm:px-2">
+      <div className="w-full px-4 sm:px-2 pt-20">
         
         {loading ? (
           <div className="flex justify-center items-center h-64">
@@ -716,9 +716,9 @@ function MarketplaceMessages({ currentView, onViewChange }) {
             )}
           </div>
         ) : (
-          <div className="flex flex-col h-screen w-full max-w-none mx-0 px-0 fixed inset-0">
-            {/* Chat header - Fixed at top */}
-            <div className="flex items-center justify-between p-2 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0F0F0F] fixed top-0 left-0 right-0 z-20">
+          <div className="flex flex-col h-screen w-full max-w-none mx-0 px-0">
+            {/* Chat header */}
+            <div className="flex items-center justify-between p-2 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0F0F0F]">
               <div className="flex items-center">
                 <button 
                   className="mr-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
@@ -790,13 +790,13 @@ function MarketplaceMessages({ currentView, onViewChange }) {
             
             {/* Left chat notification banner */}
             {hasOtherParticipantLeft && (
-              <div className="bg-yellow-100 dark:bg-yellow-900 border-l-4 border-yellow-500 text-yellow-700 dark:text-yellow-300 p-4 mt-16 mx-2">
+              <div className="bg-yellow-100 dark:bg-yellow-900 border-l-4 border-yellow-500 text-yellow-700 dark:text-yellow-300 p-4 mx-2">
                 <p>{leaveMessage}</p>
               </div>
             )}
             
-            {/* Messages container - Scrollable area between fixed header and footer */}
-            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 hide-scrollbar mt-20 mb-20">
+            {/* Messages container - Scrollable area */}
+            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 hide-scrollbar">
               {messages.length === 0 ? (
                 <div className="text-center py-12">
                   <p className="text-gray-600 dark:text-gray-400">No messages yet</p>
@@ -852,9 +852,9 @@ function MarketplaceMessages({ currentView, onViewChange }) {
               <div ref={messagesEndRef} />
             </div>
             
-            {/* Message input - Fixed at bottom */}
+            {/* Message input */}
             {activeChat?.leftBy && (activeChat.leftBy.buyer || activeChat.leftBy.seller) ? (
-              <div className="border-t border-gray-200 dark:border-gray-700 p-4 bg-gray-100 dark:bg-[#0F0F0F] text-center fixed bottom-0 left-0 right-0 z-20">
+              <div className="border-t border-gray-200 dark:border-gray-700 p-4 bg-gray-100 dark:bg-[#0F0F0F] text-center">
                 <p className="text-gray-600 dark:text-gray-400">
                   {activeChat.leftBy.buyer && activeChat.leftBy.seller ? 
                     'Both users have left this chat' : 
@@ -862,7 +862,7 @@ function MarketplaceMessages({ currentView, onViewChange }) {
                 </p>
               </div>
             ) : (
-              <form onSubmit={handleSendMessage} className="border-t border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-[#0F0F0F] fixed bottom-0 left-0 right-0 z-20">
+              <form onSubmit={handleSendMessage} className="border-t border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-[#0F0F0F]">
                 <div className="flex items-center space-x-2">
                   <input
                     type="text"

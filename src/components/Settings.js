@@ -149,13 +149,13 @@ const Settings = () => {
                 setActiveTab(tab.id);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
-              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors duration-200 ${
+              className={`px-2 py-1 rounded-md text-xs font-medium transition-colors duration-200 ${
                 activeTab === tab.id
                   ? 'bg-gradient-to-r from-[#ef4444] to-[#db2777] text-white'
                   : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200/50 dark:hover:bg-gray-700/50'
               }`}
             >
-              <span className={`material-icons text-sm mr-1 ${
+              <span className={`material-icons text-sm mr-1 hidden xs:inline ${
                 activeTab === tab.id ? 'text-white' : 'text-gray-600 dark:text-gray-300'
               }`}>
                 {tab.icon}
