@@ -48,12 +48,7 @@ const Header = ({
   // Immediate mobile detection to prevent flash
   const isImmediateMobile = typeof window !== 'undefined' && window.innerWidth < 640; // sm breakpoint
   
-  // Hide header immediately on mobile for cards view to prevent flash
-  if (isImmediateMobile && currentView === 'cards') {
-    return null;
-  }
-
-  // Handle click outside to close currency dropdown
+  // Handle click outside to close currency dropdown - MOVED BEFORE EARLY RETURN
   useEffect(() => {
     function handleClickOutside(event) {
       if (currencyDropdownRef.current && !currencyDropdownRef.current.contains(event.target)) {
@@ -71,23 +66,42 @@ const Header = ({
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [currencyDropdownOpen]);
+  
+  // Hide header immediately on mobile for cards view to prevent flash
+  if (isImmediateMobile && currentView === 'cards') {
+    return null;
+  }
 
   // Handle view mode change with animation
   const handleViewChange = (newView) => {
-    if (newView !== currentView) {
-      setPreviousView(currentView);
-      setIsAnimating(true);
-      
-      // Scroll to top of the page when switching tabs
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      
-      // Call the provided handler
-      onViewChange?.(newView);
-      
-      // Reset animation flag after transition completes
-      setTimeout(() => {
-        setIsAnimating(false);
-      }, 300); // Match this with the CSS transition duration
+    try {
+      if (newView !== currentView) {
+        setPreviousView(currentView);
+        setIsAnimating(true);
+        
+        // Scroll to top of the page when switching tabs
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        
+        // Call the provided handler with error handling
+        if (onViewChange && typeof onViewChange === 'function') {
+          // Add a small delay to ensure state updates happen in the correct order
+          setTimeout(() => {
+            onViewChange(newView);
+          }, 0);
+        }
+        
+        // Reset animation flag after transition completes
+        setTimeout(() => {
+          setIsAnimating(false);
+        }, 300); // Match this with the CSS transition duration
+      }
+    } catch (error) {
+      console.error('Error changing view in Header:', error);
+      // Fallback: try direct view change
+      if (onViewChange && typeof onViewChange === 'function') {
+        onViewChange(newView);
+      }
+      setIsAnimating(false);
     }
   };
 

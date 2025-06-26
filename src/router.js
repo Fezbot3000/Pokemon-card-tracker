@@ -28,6 +28,7 @@ import ComponentLibrary from './pages/ComponentLibrary';
 import MarketplaceListing from './components/Marketplace/MarketplaceListing';
 import PublicMarketplace from './components/PublicMarketplace';
 import ProtectedRoute from './components/ProtectedRoute';
+import SharedCollection from './components/SharedCollection';
 
 // Root providers wrapper component
 export const RootProviders = () => (
@@ -129,6 +130,10 @@ export const router = createBrowserRouter([
       {
         path: 'marketplace/listing/:listingId',
         element: <MarketplaceListing />,
+      },
+      {
+        path: 'shared/:shareId',
+        element: <SharedCollection />,
       },
       {
         path: 'dashboard',

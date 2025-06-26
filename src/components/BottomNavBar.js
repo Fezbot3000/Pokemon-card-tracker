@@ -15,6 +15,7 @@ const BottomNavBar = ({
   const isMarketplaceSection = () => {
     return ['marketplace', 'marketplace-selling', 'marketplace-messages'].includes(currentView);
   };
+  
   // Check if we're in an active chat in the marketplace messages section
   const isInActiveChat = () => {
     // Check if we're in marketplace messages and if there's an active chat
@@ -23,6 +24,35 @@ const BottomNavBar = ({
       return document.body.classList.contains('hide-header-footer');
     }
     return false;
+  };
+
+  // Safe navigation handler
+  const handleNavigation = (targetView) => {
+    try {
+      // Add a small delay to ensure any ongoing state updates complete
+      setTimeout(() => {
+        if (onViewChange && typeof onViewChange === 'function') {
+          onViewChange(targetView);
+        }
+      }, 0);
+    } catch (error) {
+      console.error('Error navigating to view:', targetView, error);
+      // Fallback: try direct navigation
+      if (onViewChange && typeof onViewChange === 'function') {
+        onViewChange(targetView);
+      }
+    }
+  };
+
+  // Safe settings handler
+  const handleSettingsClick = () => {
+    try {
+      if (onSettingsClick && typeof onSettingsClick === 'function') {
+        onSettingsClick();
+      }
+    } catch (error) {
+      console.error('Error opening settings:', error);
+    }
   };
 
   // Don't render the bottom nav bar if we're in an active chat
@@ -39,7 +69,7 @@ const BottomNavBar = ({
               ? 'text-[#ef4444]' 
               : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
           }`}
-          onClick={() => onViewChange('cards')}
+          onClick={() => handleNavigation('cards')}
         >
           <span className={`material-icons text-2xl ${currentView === 'cards' ? 'text-[#ef4444]' : ''}`}>dashboard</span>
           <span className={`text-xs mt-1 ${currentView === 'cards' ? 'text-[#ef4444]' : ''}`}>Cards</span>
@@ -51,7 +81,7 @@ const BottomNavBar = ({
               ? 'text-[#ef4444]' 
               : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
           }`}
-          onClick={() => onViewChange('purchase-invoices')}
+          onClick={() => handleNavigation('purchase-invoices')}
         >
           <span className={`material-icons text-2xl ${isSoldSection() ? 'text-[#ef4444]' : ''}`}>sell</span>
           <span className={`text-xs mt-1 ${isSoldSection() ? 'text-[#ef4444]' : ''}`}>Invoices</span>
@@ -63,7 +93,7 @@ const BottomNavBar = ({
               ? 'text-[#ef4444]' 
               : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
           }`}
-          onClick={() => onViewChange('marketplace')}
+          onClick={() => handleNavigation('marketplace')}
         >
           <span className={`material-icons text-2xl ${isMarketplaceSection() ? 'text-[#ef4444]' : ''}`}>storefront</span>
           <span className={`text-xs mt-1 ${isMarketplaceSection() ? 'text-[#ef4444]' : ''}`}>Marketplace</span>
@@ -77,7 +107,7 @@ const BottomNavBar = ({
               ? 'text-[#ef4444]' 
               : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
           }`}
-          onClick={onSettingsClick}
+          onClick={handleSettingsClick}
         >
           <span className={`material-icons text-2xl ${currentView === 'settings' ? 'text-[#ef4444]' : ''}`}>settings</span>
           <span className={`text-xs mt-1 ${currentView === 'settings' ? 'text-[#ef4444]' : ''}`}>Settings</span>

@@ -2,7 +2,7 @@ import React, { useState, useEffect, Fragment } from 'react';
 import { useAuth } from '../../design-system';
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { db as firestoreDb } from '../../services/firebase';
-import toast from 'react-hot-toast';
+import { toast as toastService } from '../../design-system';
 import logger from '../../utils/logger';
 
 function MarketplaceProfile() {
@@ -50,7 +50,7 @@ function MarketplaceProfile() {
         }
       } catch (error) {
         logger.error('Error loading marketplace profile:', error);
-        toast.error('Failed to load marketplace profile');
+        toastService.error('Failed to load marketplace profile');
       } finally {
         setLoading(false);
       }
@@ -71,10 +71,10 @@ function MarketplaceProfile() {
         updatedAt: new Date()
       }, { merge: true });
 
-      toast.success('Marketplace profile updated successfully');
+      toastService.success('Marketplace profile updated successfully');
     } catch (error) {
       logger.error('Error saving marketplace profile:', error);
-      toast.error('Failed to save marketplace profile');
+      toastService.error('Failed to save marketplace profile');
     } finally {
       setSaving(false);
     }

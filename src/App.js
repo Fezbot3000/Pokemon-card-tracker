@@ -47,6 +47,7 @@ import MarketplaceMessages from './components/Marketplace/MarketplaceMessages';
 import BottomNavBar from './components/BottomNavBar';
 import CloudSync from './components/CloudSync';
 import ComponentLibrary from './pages/ComponentLibrary';
+import QuickShareButton from './components/QuickShareButton';
 import logger from './utils/logger'; // Import the logger utility
 import RestoreListener from './components/RestoreListener';
 import SyncStatusIndicator from './components/SyncStatusIndicator'; // Import the SyncStatusIndicator
@@ -200,15 +201,24 @@ function Dashboard() {
           <BottomNavBar
             currentView={location.pathname.includes('/settings') ? 'settings' : currentView}
             onViewChange={(view) => {
-              if (view === 'settings') {
-                navigate('/dashboard/settings');
-              } else {
-                // If we're on settings page, navigate back to dashboard with the desired view
-                if (location.pathname.includes('/settings')) {
-                  navigate('/dashboard', { state: { targetView: view } });
+              try {
+                if (view === 'settings') {
+                  navigate('/dashboard/settings');
                 } else {
-                  setCurrentView(view);
+                  // If we're on settings page, navigate back to dashboard with the desired view
+                  if (location.pathname.includes('/settings')) {
+                    navigate('/dashboard', { state: { targetView: view } });
+                  } else {
+                    // Add a small delay to ensure state updates happen correctly
+                    setTimeout(() => {
+                      setCurrentView(view);
+                    }, 0);
+                  }
                 }
+              } catch (error) {
+                console.error('Error changing view from BottomNavBar:', error);
+                // Fallback: try direct view change
+                setCurrentView(view);
               }
             }}
             onSettingsClick={() => {
@@ -228,10 +238,21 @@ function DashboardIndex() {
   
   // Handle navigation state from settings page
   useEffect(() => {
-    if (location.state?.targetView) {
-      setCurrentView(location.state.targetView);
-      // Clear the state to prevent repeated navigation
-      window.history.replaceState({}, '', location.pathname);
+    try {
+      if (location.state?.targetView) {
+        // Add a small delay to ensure state updates happen correctly
+        setTimeout(() => {
+          setCurrentView(location.state.targetView);
+        }, 0);
+        // Clear the state to prevent repeated navigation
+        window.history.replaceState({}, '', location.pathname);
+      }
+    } catch (error) {
+      console.error('Error handling navigation state from settings:', error);
+      // Fallback: just clear the state
+      if (location.state?.targetView) {
+        window.history.replaceState({}, '', location.pathname);
+      }
     }
   }, [location.state, setCurrentView]);
   
@@ -392,28 +413,34 @@ function AppContent({ currentView, setCurrentView }) {
   
   // Update currentView based on location changes
   useEffect(() => {
-    const path = location.pathname;
-    
-    // Extract the view from the path
-    if (path.includes('/purchase-invoices')) {
-      setCurrentView('purchase-invoices');
-    } else if (path.includes('/sold-items')) {
-      setCurrentView('sold-items');
-    } else if (path.includes('/sold')) {
-      setCurrentView('sold');
-    } else if (path.includes('/marketplace')) {
-      setCurrentView('marketplace');
-    } else if (path.includes('/marketplace-selling')) {
-      setCurrentView('marketplace-selling');
-    } else if (path.includes('/marketplace-messages')) {
-      setCurrentView('marketplace-messages');
-    } else if (path.includes('/settings')) {
-      setCurrentView('settings');
-    } else {
-      // Default to cards view
+    try {
+      const path = location.pathname;
+      
+      // Extract the view from the path
+      if (path.includes('/purchase-invoices')) {
+        setCurrentView('purchase-invoices');
+      } else if (path.includes('/sold-items')) {
+        setCurrentView('sold-items');
+      } else if (path.includes('/sold')) {
+        setCurrentView('sold');
+      } else if (path.includes('/marketplace')) {
+        setCurrentView('marketplace');
+      } else if (path.includes('/marketplace-selling')) {
+        setCurrentView('marketplace-selling');
+      } else if (path.includes('/marketplace-messages')) {
+        setCurrentView('marketplace-messages');
+      } else if (path.includes('/settings')) {
+        setCurrentView('settings');
+      } else {
+        // Default to cards view
+        setCurrentView('cards');
+      }
+    } catch (error) {
+      console.error('Error updating current view based on location:', error);
+      // Fallback: default to cards view
       setCurrentView('cards');
     }
-  }, [location.pathname]);
+  }, [location.pathname, setCurrentView]);
 
   // Add keyboard shortcut for settings (press 's' key)
   useEffect(() => {
@@ -879,6 +906,11 @@ function AppContent({ currentView, setCurrentView }) {
           <div className="flex-1 overflow-y-auto">
             {/* Main content */}
             <div className="p-4 sm:p-6 pb-20">
+              {/* Quick Share Button - Prominent placement */}
+              <div className="mb-4 flex justify-end">
+                <QuickShareButton />
+              </div>
+              
               {/* Card List */}
               {loading ? (
                 <div className="w-full px-1 sm:px-2 pb-20">
