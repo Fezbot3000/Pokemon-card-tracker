@@ -662,9 +662,9 @@ function MarketplaceMessages({ currentView, onViewChange }) {
           display: none !important;
         }`}
       </style>
-      <div className={`${activeChat ? 'h-screen' : 'h-[calc(100vh-120px)]'} w-screen flex flex-col overflow-hidden ${activeChat ? 'pt-0' : 'pt-16'} max-w-none mx-0 px-0 absolute left-0 right-0`}> {/* Adjust height and padding based on active chat */}
+      <div className={`${activeChat ? 'h-screen' : 'h-[calc(100vh-120px)]'} w-screen flex flex-col overflow-hidden ${activeChat ? 'pt-0' : 'pt-16'} max-w-none mx-0 px-0 absolute left-0 right-0 bg-gray-100 dark:bg-black`}> {/* Adjust height and padding based on active chat */}
       {!activeChat ? (
-      <div className="w-full px-0 sm:px-2">
+      <div className="w-full px-4 sm:px-2">
         
         {loading ? (
           <div className="flex justify-center items-center h-64">
@@ -682,7 +682,7 @@ function MarketplaceMessages({ currentView, onViewChange }) {
                 {conversations.map(conversation => (
                   <div 
                     key={conversation.id} 
-                    className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 flex items-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                    className="bg-white dark:bg-[#0F0F0F] rounded-lg shadow p-4 flex items-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                     onClick={() => setActiveChat(conversation)}
                   >
                     <div className="w-12 h-12 bg-gray-200 dark:bg-gray-600 rounded-full flex items-center justify-center text-gray-500 dark:text-gray-400">
@@ -718,7 +718,7 @@ function MarketplaceMessages({ currentView, onViewChange }) {
         ) : (
           <div className="flex flex-col h-screen w-full max-w-none mx-0 px-0 fixed inset-0">
             {/* Chat header - Fixed at top */}
-            <div className="flex items-center justify-between p-2 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 fixed top-0 left-0 right-0 z-20">
+            <div className="flex items-center justify-between p-2 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0F0F0F] fixed top-0 left-0 right-0 z-20">
               <div className="flex items-center">
                 <button 
                   className="mr-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
@@ -796,7 +796,7 @@ function MarketplaceMessages({ currentView, onViewChange }) {
             )}
             
             {/* Messages container - Scrollable area between fixed header and footer */}
-            <div className="flex-1 overflow-y-auto px-2 py-4 space-y-4 hide-scrollbar mt-20 mb-20">
+            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 hide-scrollbar mt-20 mb-20">
               {messages.length === 0 ? (
                 <div className="text-center py-12">
                   <p className="text-gray-600 dark:text-gray-400">No messages yet</p>
@@ -837,7 +837,7 @@ function MarketplaceMessages({ currentView, onViewChange }) {
                         className={`max-w-[80%] rounded-lg px-4 py-2 ${
                           message.senderId === user?.uid 
                             ? 'bg-blue-500 text-white' 
-                            : 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white'
+                            : 'bg-gray-200 dark:bg-[#0F0F0F] text-gray-900 dark:text-white'
                         }`}
                       >
                         <div className="text-sm">{message.text}</div>
@@ -854,7 +854,7 @@ function MarketplaceMessages({ currentView, onViewChange }) {
             
             {/* Message input - Fixed at bottom */}
             {activeChat?.leftBy && (activeChat.leftBy.buyer || activeChat.leftBy.seller) ? (
-              <div className="border-t border-gray-200 dark:border-gray-700 p-4 bg-gray-100 dark:bg-gray-800 text-center fixed bottom-0 left-0 right-0 z-20">
+              <div className="border-t border-gray-200 dark:border-gray-700 p-4 bg-gray-100 dark:bg-[#0F0F0F] text-center fixed bottom-0 left-0 right-0 z-20">
                 <p className="text-gray-600 dark:text-gray-400">
                   {activeChat.leftBy.buyer && activeChat.leftBy.seller ? 
                     'Both users have left this chat' : 
@@ -862,14 +862,14 @@ function MarketplaceMessages({ currentView, onViewChange }) {
                 </p>
               </div>
             ) : (
-              <form onSubmit={handleSendMessage} className="border-t border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-gray-800 fixed bottom-0 left-0 right-0 z-20">
+              <form onSubmit={handleSendMessage} className="border-t border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-[#0F0F0F] fixed bottom-0 left-0 right-0 z-20">
                 <div className="flex items-center space-x-2">
                   <input
                     type="text"
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     placeholder="Type a message..."
-                    className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white"
+                    className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-[#0F0F0F] dark:text-white"
                     disabled={sendingMessage}
                   />
                   <button

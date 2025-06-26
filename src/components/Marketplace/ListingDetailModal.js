@@ -400,7 +400,7 @@ function ListingDetailModal({
     >
       <div className="space-y-4">
         {/* Rating Summary */}
-        <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+        <div className="bg-gray-50 dark:bg-[#0F0F0F] rounded-lg p-4">
           <div className="flex items-center gap-4">
             <div className="text-center">
               <div className="text-3xl font-bold">{averageRating.toFixed(1)}</div>
@@ -454,7 +454,8 @@ function ListingDetailModal({
         isOpen={isOpen}
         onClose={onClose}
         title=""
-        size="full"
+        position="right"
+        size="2xl"
       >
         <div className="flex flex-col h-full">
           {/* Header */}
@@ -463,25 +464,25 @@ function ListingDetailModal({
             <div className="flex items-center gap-2">
               <button 
                 onClick={onClose}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+                className="p-2 hover:bg-gray-100 dark:hover:bg-[#0F0F0F] rounded-full transition-colors"
               >
                 <Icon name="close" size="md" />
               </button>
               <div className="relative">
                 <button 
                   onClick={() => setShowReportMenu(!showReportMenu)}
-                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+                  className="p-2 hover:bg-gray-100 dark:hover:bg-[#0F0F0F] rounded-full transition-colors"
                 >
                   <Icon name="more_horiz" size="md" />
                 </button>
                 {showReportMenu && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-10">
+                  <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-[#0F0F0F] rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-10">
                     <button
                       onClick={() => {
                         setShowReportMenu(false);
                         onReportListing();
                       }}
-                      className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                      className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-[#0F0F0F] transition-colors"
                     >
                       Report Listing
                     </button>
@@ -490,7 +491,7 @@ function ListingDetailModal({
                         setShowReportMenu(false);
                         handleShareListing();
                       }}
-                      className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                      className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-[#0F0F0F] transition-colors"
                     >
                       Share Listing
                     </button>
@@ -507,7 +508,7 @@ function ListingDetailModal({
                 {/* Left Column - Images */}
                 <div className="space-y-4">
                   {/* Main Image */}
-                  <div className="relative bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden aspect-square">
+                  <div className="relative bg-gray-100 dark:bg-[#0F0F0F] rounded-lg overflow-hidden aspect-square">
                     {images.length > 0 ? (
                       <>
                         <img
@@ -525,13 +526,13 @@ function ListingDetailModal({
                           <>
                             <button
                               onClick={handlePrevImage}
-                              className="absolute left-2 top-1/2 -translate-y-1/2 p-2 bg-white/80 dark:bg-gray-900/80 rounded-full hover:bg-white dark:hover:bg-gray-900 transition-colors"
+                              className="absolute left-2 top-1/2 -translate-y-1/2 p-2 bg-white/80 dark:bg-[#0F0F0F]/80 rounded-full hover:bg-white dark:hover:bg-[#0F0F0F] transition-colors"
                             >
                               <Icon name="chevron_left" size="md" />
                             </button>
                             <button
                               onClick={handleNextImage}
-                              className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-white/80 dark:bg-gray-900/80 rounded-full hover:bg-white dark:hover:bg-gray-900 transition-colors"
+                              className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-white/80 dark:bg-[#0F0F0F]/80 rounded-full hover:bg-white dark:hover:bg-[#0F0F0F] transition-colors"
                             >
                               <Icon name="chevron_right" size="md" />
                             </button>
@@ -667,7 +668,7 @@ function ListingDetailModal({
 
                             {/* Reviews Summary */}
                             {sellerReviews.length > 0 && (
-                              <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                              <div className="bg-gray-50 dark:bg-[#0F0F0F] rounded-lg p-4">
                                 <div className="flex items-center justify-between">
                                   <div className="flex items-center gap-2">
                                     {renderStars(Math.round(averageRating))}

@@ -751,7 +751,7 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
             {/* Card Info Section - Show what item they're discussing */}
             {activeChat && activeChat.cardId && (
               <div 
-                className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                className="bg-gray-50 dark:bg-[#0F0F0F] border-b border-gray-200 dark:border-gray-700 p-4 cursor-pointer hover:bg-gray-100 dark:hover:bg-[#0F0F0F] transition-colors"
                 onClick={() => handleShowCardDetails(activeChat)}
               >
                 <div className="flex items-center justify-between">
@@ -831,7 +831,7 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
                       className={`max-w-[60%] rounded-lg px-4 py-2 ${
                         message.senderId === user?.uid 
                           ? 'bg-blue-500 text-white' 
-                          : 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white'
+                          : 'bg-gray-200 dark:bg-[#0F0F0F] text-gray-900 dark:text-white'
                       }`}
                     >
                       <div className="text-sm">{message.text}</div>
@@ -847,7 +847,7 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
             
             {/* Message input */}
             {activeChat?.leftBy && (activeChat.leftBy.buyer || activeChat.leftBy.seller) ? (
-              <div className="border-t border-gray-200 dark:border-gray-700 p-4 bg-gray-100 dark:bg-gray-800 text-center">
+              <div className="border-t border-gray-200 dark:border-gray-700 p-4 bg-gray-100 dark:bg-[#0F0F0F] text-center">
                 <p className="text-gray-600 dark:text-gray-400">
                   {activeChat.leftBy.buyer && activeChat.leftBy.seller ? 
                     'Both users have left this chat' : 
@@ -855,14 +855,14 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
                 </p>
               </div>
             ) : (
-              <form onSubmit={handleSendMessage} className="border-t border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-gray-800">
+              <form onSubmit={handleSendMessage} className="border-t border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-[#0F0F0F]">
                 <div className="flex items-center space-x-2">
                   <input
                     type="text"
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     placeholder="Type a message..."
-                    className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white"
+                    className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-[#0F0F0F] dark:text-white"
                     disabled={sendingMessage}
                   />
                   <button

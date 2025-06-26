@@ -540,7 +540,7 @@ function Marketplace({ currentView, onViewChange }) {
         <>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-2 sm:gap-3">
             {paginatedListings.map(listing => (
-              <div key={listing.id} className="flex flex-col h-full overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-black">
+              <div key={listing.id} className="flex flex-col h-full overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0F0F0F]">
                 <div className="flex-grow relative aspect-square">
                   <LazyImage
                     src={cardImages[listing.card?.slabSerial || listing.card?.id || listing.cardId] || '/placeholder-card.png'}
@@ -554,7 +554,7 @@ function Marketplace({ currentView, onViewChange }) {
                     </span>
                   )}
                 </div>
-                <div className="bg-white dark:bg-gray-800 p-3 rounded-b-lg">
+                <div className="bg-white dark:bg-[#0F0F0F] p-3 rounded-b-lg">
                   <div className="flex flex-col items-center space-y-2">
                     <div className="text-center w-full">
                       <p className="font-semibold text-gray-900 dark:text-white truncate">

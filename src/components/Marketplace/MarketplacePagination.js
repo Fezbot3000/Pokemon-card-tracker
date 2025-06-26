@@ -58,8 +58,8 @@ function MarketplacePagination({
           disabled={currentPage === 1}
           className={`px-3 py-2 rounded-md ${
             currentPage === 1
-              ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 cursor-not-allowed'
-              : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600'
+              ? 'bg-gray-100 dark:bg-[#0F0F0F] text-gray-400 cursor-not-allowed'
+              : 'bg-white dark:bg-[#0F0F0F] text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600'
           }`}
         >
           <span className="material-icons text-sm">chevron_left</span>
@@ -75,7 +75,7 @@ function MarketplacePagination({
                 ? 'bg-purple-600 text-white'
                 : page === '...'
                 ? 'cursor-default text-gray-500 dark:text-gray-400'
-                : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600'
+                : 'bg-white dark:bg-[#0F0F0F] text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600'
             }`}
           >
             {page}
@@ -87,8 +87,8 @@ function MarketplacePagination({
           disabled={currentPage === totalPages}
           className={`px-3 py-2 rounded-md ${
             currentPage === totalPages
-              ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 cursor-not-allowed'
-              : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600'
+              ? 'bg-gray-100 dark:bg-[#0F0F0F] text-gray-400 cursor-not-allowed'
+              : 'bg-white dark:bg-[#0F0F0F] text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600'
           }`}
         >
           <span className="material-icons text-sm">chevron_right</span>

@@ -216,7 +216,7 @@ function MarketplaceSearchFilters({ onFilterChange, listings, initialFilters }) 
           onChange={handleChange}
           placeholder="Search by card name, brand, category..."
           className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md 
-                     bg-white dark:bg-gray-800 text-gray-900 dark:text-white 
+                     bg-white dark:bg-[#0F0F0F] text-gray-900 dark:text-white 
                      focus:outline-none focus:ring-1 focus:ring-blue-500"
         />
       </div>
@@ -230,7 +230,7 @@ function MarketplaceSearchFilters({ onFilterChange, listings, initialFilters }) 
             value={filters.category}
             onChange={handleChange}
             className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md 
-                       bg-white dark:bg-gray-800 text-gray-900 dark:text-white 
+                       bg-white dark:bg-[#0F0F0F] text-gray-900 dark:text-white 
                        focus:outline-none focus:ring-1 focus:ring-blue-500"
           >
             <option value="">All Categories</option>
@@ -247,7 +247,7 @@ function MarketplaceSearchFilters({ onFilterChange, listings, initialFilters }) 
             value={filters.gradingCompany}
             onChange={handleChange}
             className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md 
-                       bg-white dark:bg-gray-800 text-gray-900 dark:text-white 
+                       bg-white dark:bg-[#0F0F0F] text-gray-900 dark:text-white 
                        focus:outline-none focus:ring-1 focus:ring-blue-500"
           >
             {gradingCompaniesOptions.map(company => (
@@ -264,7 +264,7 @@ function MarketplaceSearchFilters({ onFilterChange, listings, initialFilters }) 
             onChange={handleChange}
             disabled={!filters.gradingCompany}
             className={`block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md 
-                      bg-white dark:bg-gray-800 text-gray-900 dark:text-white 
+                      bg-white dark:bg-[#0F0F0F] text-gray-900 dark:text-white 
                       focus:outline-none focus:ring-1 focus:ring-blue-500
                       ${!filters.gradingCompany ? 'opacity-50 cursor-not-allowed' : ''}`}
           >

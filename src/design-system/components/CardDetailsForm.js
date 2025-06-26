@@ -509,7 +509,7 @@ const CardDetailsForm = ({
           <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Card Image</h3>
           <div className="relative">
             <div 
-              className="relative overflow-hidden rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 flex items-center justify-center w-full"
+              className="relative overflow-hidden rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-[#0F0F0F] flex items-center justify-center w-full"
               style={{ height: '400px', width: '100%', maxWidth: '100%', margin: '0 auto' }}
             >
               {imageLoadingState === 'loading' ? (
