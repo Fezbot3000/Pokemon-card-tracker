@@ -1,7 +1,7 @@
 import { toast } from 'react-hot-toast';
 import logger from './logger';
 import db from '../services/firestore/dbAdapter';
-import CardRepository from '../repositories/CardRepository';
+import { CardRepository } from '../repositories/CardRepository';
 import firestoreService from '../services/firestore/firestoreService';
 
 /**
@@ -15,6 +15,15 @@ export const collectionManager = {
   async deleteCollection(name, { collections, user, selectedCollection, setCollections, setSelectedCollection }) {
     try {
       logger.log("collectionManager: Attempting to delete collection:", name);
+      
+      // Check if this is a protected collection
+      const protectedCollections = ['sold', 'all cards', 'default collection'];
+      if (protectedCollections.includes(name.toLowerCase())) {
+        const errorMessage = `Cannot delete protected collection "${name}"`;
+        logger.error(errorMessage);
+        toast.error(errorMessage);
+        return false;
+      }
       
       const currentCollections = { ...collections };
       
@@ -159,10 +168,19 @@ export const collectionManager = {
   },
 
   /**
-   * Rename a collection
+   * Rename a collection - SIMPLE APPROACH: Just update the card properties
    */
-  async renameCollection(oldName, newName, { collections, setCollections, selectedCollection, setSelectedCollection }) {
+  async renameCollection(oldName, newName, { collections, setCollections, selectedCollection, setSelectedCollection, user }) {
     if (!oldName || !newName || oldName === newName) {
+      return false;
+    }
+
+    // Check if this is a protected collection
+    const protectedCollections = ['sold', 'all cards', 'default collection'];
+    if (protectedCollections.includes(oldName.toLowerCase())) {
+      const errorMessage = `Cannot rename protected collection "${oldName}"`;
+      logger.error(errorMessage);
+      toast.error(errorMessage);
       return false;
     }
 
@@ -172,25 +190,78 @@ export const collectionManager = {
     }
 
     try {
-      const newCollections = { ...collections };
-      newCollections[newName] = newCollections[oldName];
-      delete newCollections[oldName];
+      toast.loading(`Renaming collection "${oldName}" to "${newName}"...`, { id: 'rename-collection' });
       
-      await db.saveCollections(newCollections);
-      setCollections(newCollections);
+      // SIMPLE APPROACH: Use the cards from the existing collections data instead of querying Firestore
+      const cardsToUpdate = collections[oldName];
       
+      // Validate that we have a valid array of cards
+      if (!cardsToUpdate || !Array.isArray(cardsToUpdate)) {
+        logger.error(`Collection "${oldName}" not found or is not an array:`, cardsToUpdate);
+        toast.error(`Collection "${oldName}" not found or is invalid`, { id: 'rename-collection' });
+        return false;
+      }
+      
+      logger.log(`Found ${cardsToUpdate.length} cards to rename from "${oldName}" to "${newName}"`);
+      
+      if (cardsToUpdate.length === 0) {
+        toast.error(`No cards found in collection "${oldName}"`, { id: 'rename-collection' });
+        return false;
+      }
+      
+      // Update each card in Firestore if user is logged in
+      if (user) {
+        const cardRepository = new CardRepository(user.uid);
+        
+        // Update each card to have the new collection name
+        for (const card of cardsToUpdate) {
+          if (card && card.id) {
+            await cardRepository.updateCard({
+              ...card,
+              collection: newName,
+              collectionId: newName,
+              collectionName: newName
+            });
+          } else {
+            logger.warn('Skipping invalid card:', card);
+          }
+        }
+        
+        logger.log(`Successfully updated ${cardsToUpdate.length} cards in Firestore`);
+      }
+      
+      // Update selected collection if it was the renamed one
       if (selectedCollection === oldName) {
         setSelectedCollection(newName);
         localStorage.setItem('selectedCollection', newName);
       }
       
-      toast.success(`Collection renamed from "${oldName}" to "${newName}"`);
-      logger.log(`Renamed collection from "${oldName}" to "${newName}"`);
+      // Immediately update local collections state to remove old collection and add new one
+      const updatedCollections = { ...collections };
+      updatedCollections[newName] = cardsToUpdate.map(card => ({
+        ...card,
+        collection: newName,
+        collectionId: newName,
+        collectionName: newName
+      }));
+      delete updatedCollections[oldName];
+      setCollections(updatedCollections);
+      
+      // Also update local database
+      try {
+        await db.saveCollections(updatedCollections);
+        logger.log(`Updated local collections state and database`);
+      } catch (dbError) {
+        logger.warn('Failed to update local database:', dbError);
+      }
+      
+      toast.success(`Collection renamed from "${oldName}" to "${newName}"`, { id: 'rename-collection' });
+      logger.log(`Successfully renamed collection from "${oldName}" to "${newName}"`);
       
       return true;
     } catch (error) {
       logger.error('Error renaming collection:', error);
-      toast.error(`Failed to rename collection: ${error.message}`);
+      toast.error(`Failed to rename collection: ${error.message}`, { id: 'rename-collection' });
       return false;
     }
   }

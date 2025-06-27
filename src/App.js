@@ -855,7 +855,8 @@ function AppContent({ currentView, setCurrentView }) {
               collections,
               setCollections,
               selectedCollection,
-              setSelectedCollection
+              setSelectedCollection,
+              user
             });
           }}
           onDeleteCollection={async (name) => {
@@ -887,7 +888,8 @@ function AppContent({ currentView, setCurrentView }) {
                 collections,
                 setCollections,
                 selectedCollection,
-                setSelectedCollection
+                setSelectedCollection,
+                user
               });
             }}
             onDeleteCollection={async (name) => {
@@ -1110,7 +1112,8 @@ function AppContent({ currentView, setCurrentView }) {
                 collections,
                 setCollections,
                 selectedCollection,
-                setSelectedCollection
+                setSelectedCollection,
+                user
               });
             }}
             onDeleteCollection={async (name) => {

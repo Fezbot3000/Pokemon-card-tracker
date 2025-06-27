@@ -18,7 +18,7 @@ const CollectionManagement = ({
   const collectionNames = Object.keys(collections);
   
   // Filter out protected collections (case-insensitive)
-  const protectedCollections = ['sold', 'all cards'];
+  const protectedCollections = ['sold', 'all cards', 'default collection'];
   const filterProtectedCollections = (names) => {
     return names.filter(name => 
       !protectedCollections.includes(name.toLowerCase())

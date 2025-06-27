@@ -326,27 +326,44 @@ const CollectionSharing = ({ isInModal = false }) => {
   };
 
   const refreshCardCounts = async () => {
-    if (!repository || !collections || !Array.isArray(collections)) {
-      toast.error('Repository or collections not available');
-      return;
-    }
-
     try {
       setIsRefreshing(true);
-      console.log('Refreshing card counts for all collections...');
+      console.log('Refreshing card counts and collections...');
       
-      for (const collection of collections) {
-        if (collection.id) {
-          console.log(`Updating card count for collection: ${collection.name} (${collection.id})`);
-          await repository.updateCollectionCardCount(collection.id);
+      // Force refresh of collections and cards from the CardContext
+      if (repository && repository.loadCollections) {
+        console.log('Reloading collections from repository...');
+        await repository.loadCollections();
+      }
+      
+      if (repository && repository.loadCards) {
+        console.log('Reloading cards from repository...');
+        await repository.loadCards();
+      }
+      
+      // If collections is an array and has updateCollectionCardCount method
+      if (repository && collections && Array.isArray(collections)) {
+        console.log('Updating card counts for individual collections...');
+        for (const collection of collections) {
+          if (collection.id && repository.updateCollectionCardCount) {
+            console.log(`Updating card count for collection: ${collection.name} (${collection.id})`);
+            try {
+              await repository.updateCollectionCardCount(collection.id);
+            } catch (error) {
+              console.warn(`Failed to update card count for collection ${collection.name}:`, error);
+            }
+          }
         }
       }
       
-      toast.success('Card counts refreshed successfully!');
-      console.log('Card count refresh completed');
+      // Force a re-render by updating a state variable
+      setCreateForm(prev => ({ ...prev }));
+      
+      toast.success('Collections refreshed successfully!');
+      console.log('Collection refresh completed');
     } catch (error) {
-      console.error('Error refreshing card counts:', error);
-      toast.error('Failed to refresh card counts');
+      console.error('Error refreshing collections:', error);
+      toast.error('Failed to refresh collections');
     } finally {
       setIsRefreshing(false);
     }
@@ -355,79 +372,122 @@ const CollectionSharing = ({ isInModal = false }) => {
   const getAvailableCollections = () => {
     if (!collections) return [];
     
+    console.log('=== GETTING AVAILABLE COLLECTIONS ===');
+    console.log('Collections:', collections);
+    console.log('Cards:', cards);
+    
     // If collections is an array (new format)
     if (Array.isArray(collections)) {
-      return collections.map(collection => {
-        // Try multiple ways to get card count
-        let cardCount = 0;
-        
-        // Method 1: Direct cardCount property (most reliable)
-        if (collection.cardCount && collection.cardCount > 0) {
-          cardCount = collection.cardCount;
-        }
-        // Method 2: cards array in collection
-        else if (collection.cards && Array.isArray(collection.cards)) {
-          cardCount = collection.cards.length;
-        }
-        // Method 3: Count from global cards array
-        else if (Array.isArray(cards) && cards.length > 0) {
-          // Try different field names for collection matching
-          const matchingCards = cards.filter(card => {
-            return (
-              card.collectionId === collection.id ||
-              card.collectionId === collection.name ||
-              card.collection === collection.id ||
-              card.collection === collection.name ||
-              card.collectionName === collection.name ||
-              card.collectionName === collection.id
-            );
-          });
-          cardCount = matchingCards.length;
-        }
-        // Method 4: If cards is object, try to find collection
-        else if (cards && typeof cards === 'object' && !Array.isArray(cards)) {
-          if (cards[collection.name]) {
-            cardCount = Array.isArray(cards[collection.name]) ? cards[collection.name].length : 0;
+      const filteredCollections = collections
+        .filter(collection => {
+          const collectionName = (collection.name || collection.id || '').toLowerCase();
+          // Filter out 'sold' collection
+          return collectionName !== 'sold';
+        })
+        .map(collection => {
+          // Try multiple ways to get card count
+          let cardCount = 0;
+          
+          console.log(`Processing collection: ${collection.name || collection.id}`);
+          
+          // Method 1: Direct cardCount property (most reliable)
+          if (collection.cardCount && collection.cardCount > 0) {
+            cardCount = collection.cardCount;
+            console.log(`Method 1 - Direct cardCount: ${cardCount}`);
           }
-        }
-        
-        return {
-          id: collection.id || collection.name,
-          name: collection.name || collection.id,
-          cardCount: cardCount
-        };
-      });
+          // Method 2: cards array in collection
+          else if (collection.cards && Array.isArray(collection.cards)) {
+            cardCount = collection.cards.length;
+            console.log(`Method 2 - Collection cards array: ${cardCount}`);
+          }
+          // Method 3: Count from global cards array (most accurate for current data)
+          else if (Array.isArray(cards) && cards.length > 0) {
+            // Try different field names for collection matching
+            const collectionName = collection.name || collection.id;
+            const collectionId = collection.id || collection.name;
+            
+            const matchingCards = cards.filter(card => {
+              // Check all possible field combinations
+              const matches = (
+                card.collectionId === collectionId ||
+                card.collectionId === collectionName ||
+                card.collection === collectionId ||
+                card.collection === collectionName ||
+                card.collectionName === collectionName ||
+                card.collectionName === collectionId
+              );
+              
+              if (matches) {
+                console.log(`Card matches collection ${collectionName}:`, {
+                  cardName: card.cardName || card.card || card.name,
+                  cardCollectionId: card.collectionId,
+                  cardCollection: card.collection,
+                  cardCollectionName: card.collectionName
+                });
+              }
+              
+              return matches;
+            });
+            cardCount = matchingCards.length;
+            console.log(`Method 3 - Filtered from global cards: ${cardCount}`);
+          }
+          // Method 4: If cards is object, try to find collection
+          else if (cards && typeof cards === 'object' && !Array.isArray(cards)) {
+            const collectionName = collection.name || collection.id;
+            if (cards[collectionName]) {
+              cardCount = Array.isArray(cards[collectionName]) ? cards[collectionName].length : 0;
+              console.log(`Method 4 - Object lookup: ${cardCount}`);
+            }
+          }
+          
+          const result = {
+            id: collection.id || collection.name,
+            name: collection.name || collection.id,
+            cardCount: cardCount
+          };
+          
+          console.log(`Final collection result:`, result);
+          return result;
+        });
+      
+      console.log('Filtered collections result:', filteredCollections);
+      return filteredCollections;
     }
     
     // If collections is an object (legacy format)
     if (collections && typeof collections === 'object') {
       console.log('Processing collections as object...');
-      return Object.entries(collections).map(([name, collectionData]) => {
-        console.log(`Processing collection ${name}:`, collectionData);
-        
-        let cardCount = 0;
-        
-        // If collectionData is an array of cards
-        if (Array.isArray(collectionData)) {
-          cardCount = collectionData.length;
-          console.log(`Object format - direct array: ${cardCount}`);
-        }
-        // If we need to count from global cards array
-        else if (Array.isArray(cards)) {
-          cardCount = cards.filter(card => 
-            card.collectionId === name || 
-            card.collection === name ||
-            card.collectionName === name
-          ).length;
-          console.log(`Object format - filtered from global: ${cardCount}`);
-        }
-        
-        return {
-          id: name,
-          name: name,
-          cardCount: cardCount
-        };
-      });
+      const filteredEntries = Object.entries(collections)
+        .filter(([name]) => name.toLowerCase() !== 'sold') // Filter out 'sold' collection
+        .map(([name, collectionData]) => {
+          console.log(`Processing collection ${name}:`, collectionData);
+          
+          let cardCount = 0;
+          
+          // If collectionData is an array of cards
+          if (Array.isArray(collectionData)) {
+            cardCount = collectionData.length;
+            console.log(`Object format - direct array: ${cardCount}`);
+          }
+          // If we need to count from global cards array
+          else if (Array.isArray(cards)) {
+            cardCount = cards.filter(card => 
+              card.collectionId === name || 
+              card.collection === name ||
+              card.collectionName === name
+            ).length;
+            console.log(`Object format - filtered from global: ${cardCount}`);
+          }
+          
+          return {
+            id: name,
+            name: name,
+            cardCount: cardCount
+          };
+        });
+      
+      console.log('Object format filtered result:', filteredEntries);
+      return filteredEntries;
     }
     
     console.log('No collections found or unrecognized format');

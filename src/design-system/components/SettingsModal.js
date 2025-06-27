@@ -870,12 +870,18 @@ const SettingsModal = ({
                         >
                           <option value="" disabled>Select Collection...</option>
                           {Array.isArray(collections) 
-                            ? collections.filter(name => name !== 'All Cards').map((collection) => (
+                            ? collections.filter(name => {
+                                const lowerName = name.toLowerCase();
+                                return lowerName !== 'all cards' && lowerName !== 'sold' && lowerName !== 'default collection';
+                              }).map((collection) => (
                                 <option key={collection} value={collection}>
                                   {collection}
                                 </option>
                               ))
-                            : Object.keys(collections).filter(name => name !== 'All Cards' && name !== 'Sold').map((collection) => (
+                            : Object.keys(collections).filter(name => {
+                                const lowerName = name.toLowerCase();
+                                return lowerName !== 'all cards' && lowerName !== 'sold' && lowerName !== 'default collection';
+                              }).map((collection) => (
                                 <option key={collection} value={collection}>
                                   {collection}
                                 </option>
@@ -912,12 +918,18 @@ const SettingsModal = ({
                         >
                           <option value="" disabled>Select Collection...</option>
                           {Array.isArray(collections) 
-                            ? collections.filter(name => name !== 'All Cards').map((collection) => (
+                            ? collections.filter(name => {
+                                const lowerName = name.toLowerCase();
+                                return lowerName !== 'all cards' && lowerName !== 'sold' && lowerName !== 'default collection';
+                              }).map((collection) => (
                                 <option key={collection} value={collection}>
                                   {collection}
                                 </option>
                               ))
-                            : Object.keys(collections).filter(name => name !== 'All Cards' && name !== 'Sold').map((collection) => (
+                            : Object.keys(collections).filter(name => {
+                                const lowerName = name.toLowerCase();
+                                return lowerName !== 'all cards' && lowerName !== 'sold' && lowerName !== 'default collection';
+                              }).map((collection) => (
                                 <option key={collection} value={collection}>
                                   {collection}
                                 </option>
@@ -1155,6 +1167,7 @@ const SettingsModal = ({
             id="newCollectionName"
             label="New Collection Name"
             type="text"
+            name="newCollectionName"
             value={newCollectionName}
             onChange={(e) => setNewCollectionName(e.target.value)}
             autoFocus
