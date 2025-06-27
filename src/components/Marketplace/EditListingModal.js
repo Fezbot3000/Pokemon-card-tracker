@@ -275,11 +275,45 @@ function EditListingModal({ isOpen, onClose, listing, onListingDeleted }) {
         isOpen={isOpen}
         onClose={onClose}
         title="Edit Listing"
-        size="full"
-        className="bg-white dark:bg-[#0F0F0F]"
+        size="lg"
+        footer={
+          <div className="flex flex-col sm:flex-row-reverse gap-3">
+            <button
+              type="button"
+              onClick={() => setShowDeleteConfirmation(true)}
+              disabled={isSubmitting || isDeleting}
+              className="w-full inline-flex justify-center rounded-lg border border-red-300 dark:border-red-800 shadow-sm px-4 py-3 bg-white dark:bg-[#0F0F0F] text-base font-medium text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:w-auto"
+            >
+              Delete Listing
+            </button>
+            <button
+              type="submit"
+              form="edit-listing-form"
+              disabled={isSubmitting}
+              className="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-3 bg-purple-600 text-base font-medium text-white hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 sm:w-auto"
+            >
+              {isSubmitting ? (
+                <>
+                  <span className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></span>
+                  {formData.markAsSold ? 'Processing...' : 'Updating...'}
+                </>
+              ) : (
+                formData.markAsSold ? 'Mark as Sold' : 'Update Listing'
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={isSubmitting}
+              className="w-full inline-flex justify-center rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-3 bg-white dark:bg-[#0F0F0F] text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 sm:w-auto"
+            >
+              Cancel
+            </button>
+          </div>
+        }
       >
-        <form onSubmit={handleSubmit} className="h-full flex flex-col bg-white dark:bg-[#0F0F0F]">
-          <div className="flex-1 overflow-y-auto px-6 py-4 bg-white dark:bg-[#0F0F0F]">
+        <form id="edit-listing-form" onSubmit={handleSubmit} className="space-y-6">
+          <div>
             <div className="space-y-6">
               <div className="flex items-center">
                 <label className="inline-flex items-center">
@@ -361,38 +395,6 @@ function EditListingModal({ isOpen, onClose, listing, onListingDeleted }) {
                 </div>
               )}
             </div>
-          </div>
-          <div className="bg-gray-50 dark:bg-[#151515] px-6 py-4 flex flex-col sm:flex-row-reverse gap-3">
-            <button
-              type="button"
-              onClick={() => setShowDeleteConfirmation(true)}
-              disabled={isSubmitting || isDeleting}
-              className="w-full inline-flex justify-center rounded-lg border border-red-300 dark:border-red-800 shadow-sm px-4 py-3 bg-white dark:bg-[#0F0F0F] text-base font-medium text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:w-auto"
-            >
-              Delete Listing
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-3 bg-purple-600 text-base font-medium text-white hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 sm:w-auto"
-            >
-              {isSubmitting ? (
-                <>
-                  <span className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></span>
-                  {formData.markAsSold ? 'Processing...' : 'Updating...'}
-                </>
-              ) : (
-                formData.markAsSold ? 'Mark as Sold' : 'Update Listing'
-              )}
-            </button>
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={isSubmitting}
-              className="w-full inline-flex justify-center rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-3 bg-white dark:bg-[#0F0F0F] text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 sm:w-auto"
-            >
-              Cancel
-            </button>
           </div>
         </form>
       </Modal>
