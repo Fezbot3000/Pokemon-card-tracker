@@ -80,6 +80,7 @@ const SharedCollection = () => {
     grading: 'all'
   });
   const [stats, setStats] = useState(null);
+  const [metaTags, setMetaTags] = useState({});
 
   useEffect(() => {
     loadSharedCollection();
@@ -104,6 +105,15 @@ const SharedCollection = () => {
       console.log('No cards to process');
     }
   }, [cards, filters]);
+
+  // Update meta tags whenever shareData or cards change
+  useEffect(() => {
+    if (shareData) {
+      const newMetaTags = sharingService.generateMetaTags(shareData, cards);
+      setMetaTags(newMetaTags);
+      console.log('Meta tags updated with cards:', newMetaTags);
+    }
+  }, [shareData, cards]);
 
   const loadSharedCollection = async () => {
     try {
@@ -225,9 +235,6 @@ const SharedCollection = () => {
       }
     }
   };
-
-  // Generate meta tags for social sharing
-  const metaTags = shareData ? sharingService.generateMetaTags(shareData) : {};
 
   if (loading) {
     return (

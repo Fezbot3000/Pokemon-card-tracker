@@ -24,6 +24,7 @@ import {
 } from '../design-system';
 import { toast } from 'react-hot-toast';
 import SharingQuickStart from './SharingQuickStart';
+import sharingService from '../services/sharingService';
 
 // Simple components to replace missing design system components
 const Spinner = ({ size = 'medium' }) => (
@@ -250,6 +251,27 @@ const CollectionSharing = ({ isInModal = false }) => {
       const expirationDate = createForm.expiresIn === 'never' ? null : 
         new Date(Date.now() + getExpirationMs(createForm.expiresIn));
 
+      // Find the best preview image from the selected collection
+      let previewImage = null;
+      if (Array.isArray(cards) && cards.length > 0) {
+        let collectionCards = cards;
+        
+        // Filter cards by collection if not "all"
+        if (createForm.collectionId !== 'all') {
+          collectionCards = cards.filter(card => {
+            return (
+              card.collectionId === createForm.collectionId ||
+              card.collection === createForm.collectionId ||
+              card.collectionName === createForm.collectionId
+            );
+          });
+        }
+        
+        // Use the sharingService to find the best image
+        previewImage = sharingService.findBestCardImage(collectionCards);
+        console.log('Preview image found for shared collection:', previewImage);
+      }
+
       const shareData = {
         id: shareId,
         userId: currentUser.uid,
@@ -259,12 +281,13 @@ const CollectionSharing = ({ isInModal = false }) => {
         collectionId: createForm.collectionId,
         isActive: createForm.isActive,
         expiresAt: expirationDate,
+        previewImage: previewImage,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
         viewCount: 0
       };
 
-      console.log('Creating shared collection:', shareData);
+      console.log('Creating shared collection with preview image:', shareData);
 
       await setDoc(doc(firestoreDb, 'shared-collections', shareId), shareData);
       
@@ -752,6 +775,52 @@ const CollectionSharing = ({ isInModal = false }) => {
                     label="Make active immediately"
                   />
                 </div>
+
+                {/* Preview Image Section */}
+                {(() => {
+                  if (!Array.isArray(cards) || cards.length === 0) return null;
+                  
+                  let collectionCards = cards;
+                  if (createForm.collectionId !== 'all') {
+                    collectionCards = cards.filter(card => {
+                      return (
+                        card.collectionId === createForm.collectionId ||
+                        card.collection === createForm.collectionId ||
+                        card.collectionName === createForm.collectionId
+                      );
+                    });
+                  }
+                  
+                  const previewImage = sharingService.findBestCardImage(collectionCards);
+                  
+                  if (!previewImage) return null;
+                  
+                  return (
+                    <div className="border-t border-gray-700 pt-4">
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                        Share Preview Image
+                      </label>
+                      <div className="flex items-center space-x-3 p-3 bg-gray-800 rounded-lg">
+                        <img 
+                          src={previewImage} 
+                          alt="Share preview" 
+                          className="w-16 h-20 object-cover rounded border border-gray-600"
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                          }}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-gray-300">
+                            This image will be shown when your collection is shared on social media
+                          </p>
+                          <p className="text-xs text-gray-500 mt-1 truncate">
+                            From your highest value card with an image
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
               
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end space-y-2 sm:space-y-0 sm:space-x-3 mt-6">

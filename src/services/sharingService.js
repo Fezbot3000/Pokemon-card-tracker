@@ -78,19 +78,75 @@ class SharingService {
   }
 
   /**
+   * Find the best card image for sharing from a collection
+   * @param {Array} cards - Array of cards
+   * @returns {string|null} The best image URL or null if none found
+   */
+  findBestCardImage(cards) {
+    if (!cards || cards.length === 0) {
+      console.log('findBestCardImage: No cards provided');
+      return null;
+    }
+
+    console.log(`findBestCardImage: Processing ${cards.length} cards`);
+
+    // First, try to find the highest value card with an image
+    const cardsWithImages = cards.filter(card => 
+      card.imageUrl && 
+      card.imageUrl.trim() !== '' && 
+      !card.imageUrl.startsWith('data:') // Exclude data URLs as they're too long for meta tags
+    );
+
+    console.log(`findBestCardImage: Found ${cardsWithImages.length} cards with valid images`);
+
+    if (cardsWithImages.length === 0) {
+      console.log('findBestCardImage: No cards with valid images found');
+      return null;
+    }
+
+    // Sort by value (highest first) and return the first one with an image
+    const sortedByValue = cardsWithImages.sort((a, b) => {
+      const valueA = a.originalCurrentValueAmount || a.currentValueAUD || a.currentValue || 0;
+      const valueB = b.originalCurrentValueAmount || b.currentValueAUD || b.currentValue || 0;
+      return valueB - valueA;
+    });
+
+    const bestCard = sortedByValue[0];
+    const bestValue = bestCard.originalCurrentValueAmount || bestCard.currentValueAUD || bestCard.currentValue || 0;
+    
+    console.log(`findBestCardImage: Selected card "${bestCard.cardName || bestCard.name || 'Unknown'}" with value ${bestValue} and image: ${bestCard.imageUrl}`);
+
+    return bestCard.imageUrl;
+  }
+
+  /**
    * Generate meta tags for social sharing
    * @param {Object} shareData - The share data
+   * @param {Array} cards - Optional array of cards for dynamic image selection
    * @returns {Object} Meta tags object
    */
-  generateMetaTags(shareData) {
+  generateMetaTags(shareData, cards = null) {
     const baseUrl = window.location.origin;
     const shareUrl = this.generateShareUrl(shareData.id);
     
+    // Try to get a dynamic image from the cards
+    let shareImage = shareData.previewImage || `${baseUrl}/logo192.png`;
+    
+    if (cards && cards.length > 0) {
+      const cardImage = this.findBestCardImage(cards);
+      if (cardImage) {
+        shareImage = cardImage;
+        console.log('Using dynamic card image for sharing:', cardImage);
+      } else {
+        console.log('No suitable card image found, using default logo');
+      }
+    }
+    
     return {
       title: `${shareData.title} - Shared Collection | Collectr`,
-      description: shareData.description || `View ${shareData.ownerName}'s trading card collection`,
+      description: shareData.description || `View ${shareData.ownerName}'s trading card collection with ${cards ? cards.length : 'amazing'} cards`,
       url: shareUrl,
-      image: shareData.previewImage || `${baseUrl}/logo192.png`,
+      image: shareImage,
       type: 'website',
       siteName: 'Collectr'
     };
