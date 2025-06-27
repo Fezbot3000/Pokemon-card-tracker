@@ -515,26 +515,77 @@ function Marketplace({ currentView, onViewChange }) {
           ) : null}
         </div>
       ) : allListings.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-gray-600 dark:text-gray-400 text-lg">No cards currently listed in the marketplace.</p>
-        </div>
-      ) : filteredListings.length === 0 ? (
-        <div className="text-center py-10">
-          <div className="text-gray-500 dark:text-gray-400">
-            <Icon name="search_off" className="text-4xl mb-2" />
-            <p>No listings match your filters</p>
+        <div className="flex flex-col items-center justify-center py-16 px-4">
+          {/* Marketplace Icon */}
+          <div className="w-24 h-24 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-6">
+            <span className="material-icons text-4xl text-gray-400 dark:text-gray-600">storefront</span>
+          </div>
+          
+          {/* Main Message */}
+          <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2 text-center">
+            No Cards in Marketplace
+          </h3>
+          
+          {/* Description */}
+          <p className="text-gray-600 dark:text-gray-400 text-center max-w-md mb-8 leading-relaxed">
+            The marketplace is currently empty. Be the first to list a card for sale, or check back later to see what other collectors are offering.
+          </p>
+          
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-3 w-full max-w-sm">
             <button
-              onClick={() => handleFilterChange({
-                search: '',
-                category: '',
-                gradingCompany: '',
-                grade: ''
-              })}
-              className="mt-2 text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+              onClick={() => onViewChange('cards')}
+              className="flex-1 bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
             >
-              Clear filters
+              <span className="material-icons text-lg">add_circle</span>
+              List Your Cards
+            </button>
+            <button
+              onClick={() => window.location.reload()}
+              className="flex-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 px-6 py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+            >
+              <span className="material-icons text-lg">refresh</span>
+              Refresh
             </button>
           </div>
+          
+          {/* Additional Info */}
+          <div className="mt-8 text-center">
+            <p className="text-sm text-gray-500 dark:text-gray-500">
+              💡 Tip: List your valuable cards to connect with other collectors
+            </p>
+          </div>
+        </div>
+      ) : filteredListings.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-16 px-4">
+          {/* Search Icon */}
+          <div className="w-20 h-20 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-6">
+            <span className="material-icons text-3xl text-gray-400 dark:text-gray-600">search_off</span>
+          </div>
+          
+          {/* Main Message */}
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 text-center">
+            No Matching Cards Found
+          </h3>
+          
+          {/* Description */}
+          <p className="text-gray-600 dark:text-gray-400 text-center max-w-md mb-6 leading-relaxed">
+            We couldn't find any cards matching your current filters. Try adjusting your search criteria or clearing the filters.
+          </p>
+          
+          {/* Action Button */}
+          <button 
+            onClick={() => handleFilterChange({
+              search: '',
+              category: '',
+              gradingCompany: '',
+              grade: ''
+            })}
+            className="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2"
+          >
+            <span className="material-icons text-lg">clear_all</span>
+            Clear All Filters
+          </button>
         </div>
       ) : (
         <>

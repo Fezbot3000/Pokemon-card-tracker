@@ -459,16 +459,43 @@ const PurchaseInvoices = () => {
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
           </div>
         ) : invoices.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="text-gray-500 dark:text-gray-400 mb-4">
-              No purchase invoices found
+          <div className="flex flex-col items-center justify-center py-16 px-4">
+            {/* Invoice Icon */}
+            <div className="w-24 h-24 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-6">
+              <span className="material-icons text-4xl text-gray-400 dark:text-gray-600">receipt_long</span>
             </div>
+            
+            {/* Main Message */}
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2 text-center">
+              No Purchase Invoices Yet
+            </h3>
+            
+            {/* Description */}
+            <p className="text-gray-600 dark:text-gray-400 text-center max-w-md mb-8 leading-relaxed">
+              Keep track of your card purchases by creating invoices. This helps you monitor your investments and calculate profits when you sell.
+            </p>
+            
+            {/* Action Button */}
             <button 
-              className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+              className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-lg font-medium transition-colors flex items-center gap-2 shadow-lg"
               onClick={() => setShowCreateModal(true)}
             >
-              Create New Invoice
+              <span className="material-icons text-lg">add_circle</span>
+              Create Your First Invoice
             </button>
+            
+            {/* Additional Info */}
+            <div className="mt-8 text-center">
+              <p className="text-sm text-gray-500 dark:text-gray-500 mb-2">
+                💡 Benefits of tracking purchases:
+              </p>
+              <ul className="text-sm text-gray-500 dark:text-gray-500 space-y-1">
+                <li>• Track your investment amounts</li>
+                <li>• Calculate profit/loss on sales</li>
+                <li>• Organize purchases by seller</li>
+                <li>• Generate PDF records</li>
+              </ul>
+            </div>
           </div>
         ) : (
           <div className="overflow-x-auto">

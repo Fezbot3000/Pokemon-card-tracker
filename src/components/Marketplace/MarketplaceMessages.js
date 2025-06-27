@@ -671,50 +671,76 @@ function MarketplaceMessages({ currentView, onViewChange }) {
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900 dark:border-white"></div>
           </div>
         ) : conversations.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-gray-600 dark:text-gray-400 text-lg">No messages yet</p>
-            <p className="text-gray-500 dark:text-gray-500 mt-2">
-              When you contact sellers or receive messages, they will appear here.
+          <div className="flex flex-col items-center justify-center py-16 px-4">
+            {/* Messages Icon */}
+            <div className="w-24 h-24 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-6">
+              <span className="material-icons text-4xl text-gray-400 dark:text-gray-600">chat_bubble_outline</span>
+            </div>
+            
+            {/* Main Message */}
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2 text-center">
+              No Messages Yet
+            </h3>
+            
+            {/* Description */}
+            <p className="text-gray-600 dark:text-gray-400 text-center max-w-md mb-8 leading-relaxed">
+              Start conversations by contacting sellers about cards you're interested in. Your messages will appear here.
             </p>
+            
+            {/* Action Button */}
+            <button
+              onClick={() => onViewChange('marketplace')}
+              className="bg-red-500 hover:bg-red-600 text-white px-8 py-3 rounded-lg font-medium transition-colors flex items-center gap-2 shadow-lg"
+            >
+              <span className="material-icons text-lg">storefront</span>
+              Browse Marketplace
+            </button>
+            
+            {/* Additional Info */}
+            <div className="mt-8 text-center">
+              <p className="text-sm text-gray-500 dark:text-gray-500">
+                💬 Connect with other collectors and start trading
+              </p>
+            </div>
           </div>
-            ) : (
-              <div className="space-y-4">
-                {conversations.map(conversation => (
-                  <div 
-                    key={conversation.id} 
-                    className="bg-white dark:bg-[#0F0F0F] rounded-lg shadow p-4 flex items-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                    onClick={() => setActiveChat(conversation)}
-                  >
-                    <div className="w-12 h-12 bg-gray-200 dark:bg-gray-600 rounded-full flex items-center justify-center text-gray-500 dark:text-gray-400">
-                      <span className="material-icons">person</span>
-                    </div>
-                    <div className="ml-4 flex-1">
-                      <div className="flex justify-between items-start">
-                        <h3 
-                          className="font-medium text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer transition-colors"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            const otherUserId = conversation.buyerId === user.uid ? conversation.sellerId : conversation.buyerId;
-                            handleViewSellerProfile(otherUserId);
-                          }}
-                        >
-                          {conversation.otherParticipantName}
-                        </h3>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">
-                          {conversation.lastMessageTimestamp && typeof conversation.lastMessageTimestamp.toDate === 'function' ? 
-                            formatDate(conversation.lastMessageTimestamp.toDate()) : 
-                            formatDate(conversation.timestamp) || 'Recent'}
-                        </span>
-                      </div>
-                      <p className="text-sm text-gray-600 dark:text-gray-300 truncate">
-                        {conversation.lastMessage || 'No messages yet'}
-                      </p>
-                    </div>
+        ) : (
+          <div className="space-y-4">
+            {conversations.map(conversation => (
+              <div 
+                key={conversation.id} 
+                className="bg-white dark:bg-[#0F0F0F] rounded-lg shadow p-4 flex items-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                onClick={() => setActiveChat(conversation)}
+              >
+                <div className="w-12 h-12 bg-gray-200 dark:bg-gray-600 rounded-full flex items-center justify-center text-gray-500 dark:text-gray-400">
+                  <span className="material-icons">person</span>
+                </div>
+                <div className="ml-4 flex-1">
+                  <div className="flex justify-between items-start">
+                    <h3 
+                      className="font-medium text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer transition-colors"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const otherUserId = conversation.buyerId === user.uid ? conversation.sellerId : conversation.buyerId;
+                        handleViewSellerProfile(otherUserId);
+                      }}
+                    >
+                      {conversation.otherParticipantName}
+                    </h3>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                      {conversation.lastMessageTimestamp && typeof conversation.lastMessageTimestamp.toDate === 'function' ? 
+                        formatDate(conversation.lastMessageTimestamp.toDate()) : 
+                        formatDate(conversation.timestamp) || 'Recent'}
+                    </span>
                   </div>
-                ))}
+                  <p className="text-sm text-gray-600 dark:text-gray-300 truncate">
+                    {conversation.lastMessage || 'No messages yet'}
+                  </p>
+                </div>
               </div>
-            )}
+            ))}
           </div>
+        )}
+      </div>
         ) : (
           <div className="flex flex-col h-screen w-full max-w-none mx-0 px-0">
             {/* Chat header */}

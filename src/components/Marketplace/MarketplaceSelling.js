@@ -423,29 +423,68 @@ function MarketplaceSelling({ currentView, onViewChange }) {
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900 dark:border-white"></div>
         </div>
       ) : allListings.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-gray-600 dark:text-gray-400 text-lg">You don't have any cards listed for sale.</p>
-          <p className="text-gray-500 dark:text-gray-500 mt-2">
-            When you list cards for sale, they will appear here.
+        <div className="flex flex-col items-center justify-center py-16 px-4">
+          {/* Selling Icon */}
+          <div className="w-24 h-24 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-6">
+            <span className="material-icons text-4xl text-gray-400 dark:text-gray-600">sell</span>
+          </div>
+          
+          {/* Main Message */}
+          <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2 text-center">
+            No Cards Listed for Sale
+          </h3>
+          
+          {/* Description */}
+          <p className="text-gray-600 dark:text-gray-400 text-center max-w-md mb-8 leading-relaxed">
+            You haven't listed any cards for sale yet. Start selling by listing your valuable cards from your collection.
           </p>
+          
+          {/* Action Button */}
+          <button
+            onClick={() => onViewChange('cards')}
+            className="bg-red-500 hover:bg-red-600 text-white px-8 py-3 rounded-lg font-medium transition-colors flex items-center gap-2 shadow-lg"
+          >
+            <span className="material-icons text-lg">add_business</span>
+            List Cards for Sale
+          </button>
+          
+          {/* Additional Info */}
+          <div className="mt-8 text-center">
+            <p className="text-sm text-gray-500 dark:text-gray-500">
+              💰 Start earning from your collection today
+            </p>
+          </div>
         </div>
       ) : filteredListings.length === 0 ? (
-        <div className="text-center py-10">
-          <div className="text-gray-500 dark:text-gray-400">
-            <Icon name="search_off" className="text-4xl mb-2" />
-            <p>No listings match your filters</p>
-            <button 
-              onClick={() => handleFilterChange({
-                search: '',
-                category: '',
-                gradingCompany: '',
-                grade: ''
-              })}
-              className="mt-2 text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
-            >
-              Clear filters
-            </button>
+        <div className="flex flex-col items-center justify-center py-16 px-4">
+          {/* Search Icon */}
+          <div className="w-20 h-20 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-6">
+            <span className="material-icons text-3xl text-gray-400 dark:text-gray-600">search_off</span>
           </div>
+          
+          {/* Main Message */}
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 text-center">
+            No Matching Listings
+          </h3>
+          
+          {/* Description */}
+          <p className="text-gray-600 dark:text-gray-400 text-center max-w-md mb-6 leading-relaxed">
+            No listings match your current filters. Try adjusting your search criteria.
+          </p>
+          
+          {/* Action Button */}
+          <button 
+            onClick={() => handleFilterChange({
+              search: '',
+              category: '',
+              gradingCompany: '',
+              grade: ''
+            })}
+            className="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2"
+          >
+            <span className="material-icons text-lg">clear_all</span>
+            Clear All Filters
+          </button>
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-2 sm:gap-3">

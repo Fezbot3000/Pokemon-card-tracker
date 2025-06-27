@@ -431,16 +431,24 @@ function AppContent({ currentView, setCurrentView }) {
         setCurrentView('marketplace-messages');
       } else if (path.includes('/settings')) {
         setCurrentView('settings');
-      } else {
-        // Default to cards view
-        setCurrentView('cards');
+      } else if (path === '/dashboard') {
+        // Check if there's a target view from navigation state first
+        if (location.state?.targetView) {
+          setCurrentView(location.state.targetView);
+        } else if (!currentView || currentView === 'settings') {
+          // Only default to cards if we don't have a current view or coming from settings
+          setCurrentView('cards');
+        }
+        // If currentView is already set to a valid dashboard view, preserve it
       }
     } catch (error) {
       console.error('Error updating current view based on location:', error);
-      // Fallback: default to cards view
-      setCurrentView('cards');
+      // Fallback: only set to cards if we don't have a current view
+      if (!currentView) {
+        setCurrentView('cards');
+      }
     }
-  }, [location.pathname, setCurrentView]);
+  }, [location.pathname, location.state?.targetView, setCurrentView]);
 
   // Add keyboard shortcut for settings (press 's' key)
   useEffect(() => {
@@ -1125,9 +1133,7 @@ function AppContent({ currentView, setCurrentView }) {
             userData={user}
             onSignOut={logout}
           />
-        ) : (
-          <PurchaseInvoices />
-        )}
+        ) : null}
       </main>
 
       {showNewCardForm && (
