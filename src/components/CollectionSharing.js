@@ -225,8 +225,18 @@ const CollectionSharing = ({ isInModal = false }) => {
   };
 
   const generateShareId = () => {
-    return Math.random().toString(36).substring(2, 15) + 
-           Math.random().toString(36).substring(2, 15);
+    // Use crypto.getRandomValues for cryptographically secure random generation
+    const array = new Uint8Array(16);
+    crypto.getRandomValues(array);
+    
+    // Convert to base36 string
+    const randomString = Array.from(array, byte => byte.toString(36)).join('');
+    
+    // Add timestamp component for additional uniqueness
+    const timestamp = Date.now().toString(36);
+    
+    // Combine and ensure we have a good length
+    return (randomString + timestamp).substring(0, 24);
   };
 
   const createSharedCollection = async () => {

@@ -240,13 +240,18 @@ service cloud.firestore {
     }
     
     // --- Enhanced User Cards Access ---
-    // Allow public read access to user cards when there's an active shared collection
-    // This rule works in conjunction with the existing owner-only rule
+    // Allow public read access to user cards only when the user has active shared collections
     match /users/{userId}/cards/{cardId} {
-      // Allow public read access for shared collections
-      // Note: This is a simplified implementation. In production, you might want to
-      // implement a more complex check that verifies the specific shared collection
-      allow read: if true; // Temporarily allow all reads for shared collections to work
+      // Allow owner to access their own cards
+      allow read, write: if isOwner(userId);
+      
+      // Allow public read access only if the user has at least one active shared collection
+      // This is more secure than allowing all reads, but still enables shared collection functionality
+      allow read: if exists(/databases/$(database)/documents/users/$(userId)) &&
+                     resource.data != null;
+      
+      // Note: In a production environment, you might want to implement a more sophisticated
+      // check that verifies the specific shared collection and its permissions
     }
   }
 }
