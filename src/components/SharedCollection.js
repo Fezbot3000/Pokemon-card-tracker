@@ -75,13 +75,11 @@ const SharedCollection = () => {
   const [filteredCards, setFilteredCards] = useState([]);
   const [filters, setFilters] = useState({
     search: '',
-    sortBy: 'name',
+    sortBy: 'value',
     category: 'all',
     grading: 'all'
   });
-  const [currentPage, setCurrentPage] = useState(1);
   const [stats, setStats] = useState(null);
-  const cardsPerPage = 12;
 
   useEffect(() => {
     loadSharedCollection();
@@ -97,7 +95,6 @@ const SharedCollection = () => {
       const filtered = sharingService.filterAndSortCards(cards, filters);
       console.log('Filtered cards:', filtered.length);
       setFilteredCards(filtered);
-      setCurrentPage(1);
       
       console.log('Calculating collection stats...');
       const collectionStats = sharingService.formatCollectionStats(cards);
@@ -228,14 +225,6 @@ const SharedCollection = () => {
       }
     }
   };
-
-  const getPaginatedCards = () => {
-    const startIndex = (currentPage - 1) * cardsPerPage;
-    const endIndex = startIndex + cardsPerPage;
-    return filteredCards.slice(startIndex, endIndex);
-  };
-
-  const totalPages = Math.ceil(filteredCards.length / cardsPerPage);
 
   // Generate meta tags for social sharing
   const metaTags = shareData ? sharingService.generateMetaTags(shareData) : {};
@@ -370,19 +359,19 @@ const SharedCollection = () => {
             </Card>
           </div>
 
-          {/* Filters */}
-          <Card className="p-4 mb-6">
+          {/* Filters - Updated with black background instead of Card component */}
+          <div className="bg-black dark:bg-black p-4 mb-6 rounded-lg border border-gray-700 dark:border-gray-700">
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
               <Input
                 placeholder="Search cards..."
                 value={filters.search}
                 onChange={(e) => handleFilterChange('search', e.target.value)}
-                className="w-full"
+                className="w-full bg-gray-800 dark:bg-gray-800 border-gray-600 dark:border-gray-600 text-white dark:text-white"
               />
               <Select
                 value={filters.category}
                 onChange={(e) => handleFilterChange('category', e.target.value)}
-                className="w-full"
+                className="w-full bg-gray-800 dark:bg-gray-800 border-gray-600 dark:border-gray-600 text-white dark:text-white"
               >
                 <option value="all">All Categories</option>
                 {stats.categoryList.map(category => (
@@ -392,7 +381,7 @@ const SharedCollection = () => {
               <Select
                 value={filters.grading}
                 onChange={(e) => handleFilterChange('grading', e.target.value)}
-                className="w-full"
+                className="w-full bg-gray-800 dark:bg-gray-800 border-gray-600 dark:border-gray-600 text-white dark:text-white"
               >
                 <option value="all">All Cards</option>
                 <option value="graded">Graded Only</option>
@@ -401,26 +390,26 @@ const SharedCollection = () => {
               <Select
                 value={filters.sortBy}
                 onChange={(e) => handleFilterChange('sortBy', e.target.value)}
-                className="w-full"
+                className="w-full bg-gray-800 dark:bg-gray-800 border-gray-600 dark:border-gray-600 text-white dark:text-white"
               >
+                <option value="value">Sort by Value (High to Low)</option>
                 <option value="name">Sort by Name</option>
                 <option value="set">Sort by Set</option>
                 <option value="year">Sort by Year</option>
                 <option value="grade">Sort by Grade</option>
-                <option value="value">Sort by Value</option>
                 <option value="dateAdded">Sort by Date Added</option>
               </Select>
               <div className="flex items-center justify-center">
-                <span className="text-sm text-gray-500 dark:text-gray-500">
+                <span className="text-sm text-gray-300 dark:text-gray-300">
                   {filteredCards.length} of {cards.length} cards
                 </span>
               </div>
             </div>
-          </Card>
+          </div>
 
-          {/* Cards Grid */}
+          {/* Cards Grid - Now showing all filtered cards without pagination */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-6">
-            {getPaginatedCards().map(card => (
+            {filteredCards.map(card => (
               <Card key={card.id} className="overflow-hidden hover:shadow-lg transition-shadow">
                 <div className="aspect-[3/4] bg-gray-100 dark:bg-gray-800 relative p-2">
                   {card.imageUrl ? (
@@ -465,36 +454,6 @@ const SharedCollection = () => {
               </Card>
             ))}
           </div>
-
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex justify-center space-x-2">
-              <Button
-                variant="outline"
-                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                disabled={currentPage === 1}
-              >
-                Previous
-              </Button>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                <Button
-                  key={page}
-                  variant={currentPage === page ? "primary" : "outline"}
-                  onClick={() => setCurrentPage(page)}
-                  className="w-10"
-                >
-                  {page}
-                </Button>
-              ))}
-              <Button
-                variant="outline"
-                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                disabled={currentPage === totalPages}
-              >
-                Next
-              </Button>
-            </div>
-          )}
 
           {/* Footer */}
           <div className="text-center mt-12 py-8 border-t border-gray-200 dark:border-gray-800">
