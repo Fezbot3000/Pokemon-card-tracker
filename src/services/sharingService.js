@@ -146,17 +146,43 @@ class SharingService {
    * @returns {Object} Formatted statistics
    */
   formatCollectionStats(cards) {
+    console.log('=== FORMATTING COLLECTION STATS ===');
+    console.log('Cards received:', cards);
+    console.log('Cards length:', cards.length);
+    
+    if (cards.length > 0) {
+      console.log('Sample card structure:', cards[0]);
+      console.log('Sample card fields:', Object.keys(cards[0]));
+    }
+    
     const totalCards = cards.length;
-    const gradedCards = cards.filter(card => card.gradingCompany).length;
+    const gradedCards = cards.filter(card => card.gradingCompany || card.gradeCompany).length;
     const categories = [...new Set(cards.map(card => card.category).filter(Boolean))];
-    const totalValue = cards.reduce((total, card) => total + (card.currentValue || 0), 0);
+    
+    console.log('Calculating total value...');
+    const totalValue = cards.reduce((total, card, index) => {
+      const value = card.originalCurrentValueAmount || card.currentValueAUD || card.currentValue || 0;
+      if (index < 3) { // Log first 3 cards
+        console.log(`Card ${index} value calculation:`, {
+          originalCurrentValueAmount: card.originalCurrentValueAmount,
+          currentValueAUD: card.currentValueAUD,
+          currentValue: card.currentValue,
+          finalValue: value,
+          cardName: card.cardName || card.card || card.name
+        });
+      }
+      return total + value;
+    }, 0);
+    
+    console.log('Total value calculated:', totalValue);
     const averageValue = totalCards > 0 ? totalValue / totalCards : 0;
 
     // Grade distribution
     const gradeDistribution = {};
     cards.forEach(card => {
-      if (card.gradingCompany && card.grade) {
-        const key = `${card.gradingCompany} ${card.grade}`;
+      const gradingCompany = card.gradingCompany || card.gradeCompany;
+      if (gradingCompany && card.grade) {
+        const key = `${gradingCompany} ${card.grade}`;
         gradeDistribution[key] = (gradeDistribution[key] || 0) + 1;
       }
     });
@@ -177,7 +203,7 @@ class SharingService {
       }
     });
 
-    return {
+    const result = {
       totalCards,
       gradedCards,
       categories: categories.length,
@@ -188,6 +214,9 @@ class SharingService {
       yearDistribution,
       categoryList: categories
     };
+    
+    console.log('Final stats result:', result);
+    return result;
   }
 
   /**
@@ -203,8 +232,8 @@ class SharingService {
     if (filters.search) {
       const searchTerm = filters.search.toLowerCase();
       filtered = filtered.filter(card =>
-        card.name?.toLowerCase().includes(searchTerm) ||
-        card.set?.toLowerCase().includes(searchTerm) ||
+        (card.cardName || card.name || card.card)?.toLowerCase().includes(searchTerm) ||
+        (card.set || card.cardSet)?.toLowerCase().includes(searchTerm) ||
         card.player?.toLowerCase().includes(searchTerm) ||
         card.category?.toLowerCase().includes(searchTerm)
       );
@@ -218,9 +247,9 @@ class SharingService {
     // Apply grading filter
     if (filters.grading && filters.grading !== 'all') {
       if (filters.grading === 'graded') {
-        filtered = filtered.filter(card => card.gradingCompany);
+        filtered = filtered.filter(card => card.gradingCompany || card.gradeCompany);
       } else if (filters.grading === 'ungraded') {
-        filtered = filtered.filter(card => !card.gradingCompany);
+        filtered = filtered.filter(card => !(card.gradingCompany || card.gradeCompany));
       }
     }
 
@@ -229,15 +258,15 @@ class SharingService {
       filtered.sort((a, b) => {
         switch (filters.sortBy) {
           case 'name':
-            return (a.name || '').localeCompare(b.name || '');
+            return ((a.cardName || a.name || a.card) || '').localeCompare((b.cardName || b.name || b.card) || '');
           case 'set':
-            return (a.set || '').localeCompare(b.set || '');
+            return (a.set || a.cardSet || '').localeCompare(b.set || b.cardSet || '');
           case 'year':
             return (b.year || 0) - (a.year || 0);
           case 'grade':
             return (b.grade || 0) - (a.grade || 0);
           case 'value':
-            return (b.currentValue || 0) - (a.currentValue || 0);
+            return ((b.originalCurrentValueAmount || b.currentValueAUD || b.currentValue) || 0) - ((a.originalCurrentValueAmount || a.currentValueAUD || a.currentValue) || 0);
           case 'dateAdded':
             return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
           default:

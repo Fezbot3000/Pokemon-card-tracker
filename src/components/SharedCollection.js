@@ -88,13 +88,23 @@ const SharedCollection = () => {
   }, [shareId]);
 
   useEffect(() => {
+    console.log('=== CARDS EFFECT TRIGGERED ===');
+    console.log('Cards length:', cards.length);
+    console.log('Filters:', filters);
+    
     if (cards.length > 0) {
+      console.log('Processing cards for display...');
       const filtered = sharingService.filterAndSortCards(cards, filters);
+      console.log('Filtered cards:', filtered.length);
       setFilteredCards(filtered);
       setCurrentPage(1);
       
+      console.log('Calculating collection stats...');
       const collectionStats = sharingService.formatCollectionStats(cards);
+      console.log('Stats calculated:', collectionStats);
       setStats(collectionStats);
+    } else {
+      console.log('No cards to process');
     }
   }, [cards, filters]);
 
@@ -103,16 +113,24 @@ const SharedCollection = () => {
       setLoading(true);
       setError(null);
 
+      console.log('=== LOADING SHARED COLLECTION ===');
+      console.log('Share ID:', shareId);
+
       // Get the share data using the service
       const shareData = await sharingService.getSharedCollection(shareId);
+      console.log('Share data loaded:', shareData);
       setShareData(shareData);
 
       // Load the cards from the user's collection
       const cardsRef = collection(firestoreDb, 'users', shareData.userId, 'cards');
       let cardsQuery;
 
+      console.log('Loading cards for user:', shareData.userId);
+      console.log('Collection ID:', shareData.collectionId);
+
       if (shareData.collectionId && shareData.collectionId !== 'all') {
         // Load specific collection
+        console.log('Loading specific collection:', shareData.collectionId);
         cardsQuery = query(
           cardsRef,
           where('collectionId', '==', shareData.collectionId),
@@ -120,18 +138,69 @@ const SharedCollection = () => {
         );
       } else {
         // Load all collections
+        console.log('Loading all collections');
         cardsQuery = query(cardsRef, orderBy('updatedAt', 'desc'));
       }
 
+      console.log('Executing Firestore query...');
       const cardsSnapshot = await getDocs(cardsQuery);
-      const cardsData = cardsSnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
+      console.log('Query results - documents found:', cardsSnapshot.docs.length);
+      
+      // VISIBLE DEBUG - Show card count in alert
+      alert(`DEBUG: Found ${cardsSnapshot.docs.length} cards in Firestore query`);
+      
+      const cardsData = cardsSnapshot.docs.map(doc => {
+        const data = { id: doc.id, ...doc.data() };
+        console.log('Card loaded:', {
+          id: doc.id,
+          cardName: data.cardName,
+          collectionId: data.collectionId,
+          hasUpdatedAt: !!data.updatedAt,
+          updatedAt: data.updatedAt
+        });
+        return data;
+      });
 
+      console.log('Processed cards data:', cardsData);
+      console.log('Sample card (first one):', cardsData[0]);
+      
+      // Check if we're missing any cards by trying a different query
+      if (shareData.collectionId && shareData.collectionId !== 'all') {
+        console.log('=== DEBUGGING MISSING CARDS ===');
+        console.log('Expected collection ID:', shareData.collectionId);
+        
+        // Try query without orderBy to see if that's the issue
+        const debugQuery = query(
+          cardsRef,
+          where('collectionId', '==', shareData.collectionId)
+        );
+        const debugSnapshot = await getDocs(debugQuery);
+        console.log('Debug query (no orderBy) found:', debugSnapshot.docs.length, 'cards');
+        
+        if (debugSnapshot.docs.length !== cardsSnapshot.docs.length) {
+          console.log('FOUND DISCREPANCY! Some cards missing updatedAt field');
+          alert(`DISCREPANCY: Query without orderBy found ${debugSnapshot.docs.length} cards, but with orderBy found ${cardsSnapshot.docs.length} cards`);
+          
+          debugSnapshot.docs.forEach(doc => {
+            const data = doc.data();
+            if (!data.updatedAt) {
+              console.log('Card missing updatedAt:', {
+                id: doc.id,
+                cardName: data.cardName,
+                collectionId: data.collectionId
+              });
+              alert(`Missing updatedAt: ${data.cardName || 'Unnamed Card'}`);
+            }
+          });
+        }
+      }
+      
       setCards(cardsData);
     } catch (err) {
-      console.error('Error loading shared collection:', err);
+      console.error('=== ERROR LOADING SHARED COLLECTION ===');
+      console.error('Error details:', err);
+      console.error('Error message:', err.message);
+      console.error('Error stack:', err.stack);
       setError(err.message || 'Failed to load collection. Please try again.');
     } finally {
       setLoading(false);
@@ -223,7 +292,7 @@ const SharedCollection = () => {
               />
               <div>
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {shareData.title}
+                  🔥 UPDATED: {shareData.title}
                 </h1>
                 <p className="text-gray-600 dark:text-gray-400">
                   by {shareData.ownerName}
@@ -351,7 +420,7 @@ const SharedCollection = () => {
                   {card.imageUrl ? (
                     <img
                       src={card.imageUrl}
-                      alt={card.name}
+                      alt={card.name || card.card}
                       className="w-full h-full object-cover"
                       loading="lazy"
                     />
@@ -360,30 +429,30 @@ const SharedCollection = () => {
                       <span className="text-4xl">🎴</span>
                     </div>
                   )}
-                  {card.gradingCompany && (
+                  {(card.gradingCompany || card.gradeCompany || card.certificationNumber) && (
                     <Badge
                       variant="primary"
                       className="absolute top-2 right-2"
                     >
-                      {card.gradingCompany} {card.grade}
+                      {card.gradingCompany || card.gradeCompany || 'PSA'} {card.grade}
                     </Badge>
                   )}
                 </div>
                 <div className="p-4">
                   <h3 className="font-semibold text-gray-900 dark:text-white truncate">
-                    {card.name || 'Unnamed Card'}
+                    {card.cardName || card.name || card.card || 'Unnamed Card'}
                   </h3>
                   <p className="text-sm text-gray-500 dark:text-gray-500 truncate">
-                    {card.set} {card.year && `(${card.year})`}
+                    {card.set || card.cardSet} {card.year && `(${card.year})`}
                   </p>
                   {card.player && (
                     <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
                       {card.player}
                     </p>
                   )}
-                  {card.currentValue > 0 && (
+                  {(card.originalCurrentValueAmount > 0 || card.currentValueAUD > 0 || card.currentValue > 0) && (
                     <p className="text-lg font-bold text-gray-900 dark:text-white mt-2">
-                      {formatCurrency(card.currentValue, 'AUD')}
+                      {formatCurrency(card.originalCurrentValueAmount || card.currentValueAUD || card.currentValue, 'AUD')}
                     </p>
                   )}
                 </div>
@@ -424,7 +493,7 @@ const SharedCollection = () => {
           {/* Footer */}
           <div className="text-center mt-12 py-8 border-t border-gray-200 dark:border-gray-800">
             <p className="text-gray-500 dark:text-gray-500 mb-4">
-              Powered by <strong>Collectr</strong> - The ultimate trading card tracker
+              Powered by <strong>MyCardTracker</strong> - The ultimate trading card tracker
             </p>
             <Button
               variant="primary"
