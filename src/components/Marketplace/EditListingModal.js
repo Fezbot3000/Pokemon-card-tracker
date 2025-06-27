@@ -275,7 +275,7 @@ function EditListingModal({ isOpen, onClose, listing, onListingDeleted }) {
         isOpen={isOpen}
         onClose={onClose}
         title="Edit Listing"
-        size="lg"
+        size="2xl"
         footer={
           <div className="flex flex-col sm:flex-row-reverse gap-3">
             <button
@@ -313,89 +313,91 @@ function EditListingModal({ isOpen, onClose, listing, onListingDeleted }) {
         }
       >
         <form id="edit-listing-form" onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <div className="space-y-6">
-              <div className="flex items-center">
-                <label className="inline-flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={formData.markAsSold}
-                    onChange={(e) => handleInputChange('markAsSold', e.target.checked)}
-                    className="h-5 w-5 text-purple-600 bg-white dark:bg-[#1B2131] border-gray-300 dark:border-gray-600 rounded focus:ring-purple-500 dark:focus:ring-purple-400 focus:ring-2"
-                  />
-                  <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">Mark as sold</span>
+          <div className="flex items-center">
+            <label className="inline-flex items-center">
+              <input
+                type="checkbox"
+                checked={formData.markAsSold}
+                onChange={(e) => handleInputChange('markAsSold', e.target.checked)}
+                className="h-5 w-5 text-purple-600 bg-white dark:bg-[#1B2131] border-gray-300 dark:border-gray-600 rounded focus:ring-purple-500 dark:focus:ring-purple-400 focus:ring-2"
+              />
+              <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">Mark as sold</span>
+            </label>
+          </div>
+
+          {!formData.markAsSold && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Price ({preferredCurrency.code}) *
                 </label>
+                <div className="relative">
+                  <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500 dark:text-gray-400">
+                    {preferredCurrency.symbol}
+                  </span>
+                  <input
+                    type="number"
+                    value={formData.price}
+                    onChange={(e) => handleInputChange('price', e.target.value)}
+                    className="w-full pl-8 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-[#1B2131] text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    placeholder="0.00"
+                    step="0.01"
+                    min="0.01"
+                    required={!formData.markAsSold}
+                  />
+                </div>
               </div>
-              {!formData.markAsSold && (
-                <>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Price ({preferredCurrency.code})
-                    </label>
-                    <div className="relative">
-                      <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500 dark:text-gray-400">
-                        {preferredCurrency.symbol}
-                      </span>
-                      <input
-                        type="number"
-                        value={formData.price}
-                        onChange={(e) => handleInputChange('price', e.target.value)}
-                        className="w-full pl-8 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-[#1B2131] text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                        placeholder="0.00"
-                        step="0.01"
-                        min="0.01"
-                        required={!formData.markAsSold}
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Note (Optional)
-                    </label>
-                    <textarea
-                      value={formData.note}
-                      onChange={(e) => handleInputChange('note', e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-[#1B2131] text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                      placeholder="Add a note about this card..."
-                      rows="3"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Location (Optional)
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.location}
-                      onChange={(e) => handleInputChange('location', e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-[#1B2131] text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                      placeholder="Enter your location (e.g., Sydney)"
-                    />
-                  </div>
-                </>
-              )}
-              {formData.markAsSold && (
-                <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-900/30 rounded-md p-4">
-                  <div className="flex">
-                    <div className="flex-shrink-0">
-                      <svg className="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                    <div className="ml-3">
-                      <h3 className="text-sm font-medium text-yellow-800 dark:text-yellow-200">Attention</h3>
-                      <div className="mt-2 text-sm text-yellow-700 dark:text-yellow-300">
-                        <p>
-                          Marking this card as sold will remove it from the marketplace and add it to your sold items.
-                          This action cannot be undone.
-                        </p>
-                      </div>
-                    </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Location (Optional)
+                </label>
+                <input
+                  type="text"
+                  value={formData.location}
+                  onChange={(e) => handleInputChange('location', e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-[#1B2131] text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                  placeholder="Enter your location (e.g., Sydney)"
+                />
+              </div>
+            </div>
+          )}
+
+          {!formData.markAsSold && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Note (Optional)
+              </label>
+              <textarea
+                value={formData.note}
+                onChange={(e) => handleInputChange('note', e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-[#1B2131] text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                placeholder="Add a note about this card..."
+                rows="4"
+              />
+            </div>
+          )}
+
+          {formData.markAsSold && (
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-900/30 rounded-md p-4">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-yellow-800 dark:text-yellow-200">Attention</h3>
+                  <div className="mt-2 text-sm text-yellow-700 dark:text-yellow-300">
+                    <p>
+                      Marking this card as sold will remove it from the marketplace and add it to your sold items.
+                      This action cannot be undone.
+                    </p>
                   </div>
                 </div>
-              )}
+              </div>
             </div>
-          </div>
+          )}
         </form>
       </Modal>
     </>

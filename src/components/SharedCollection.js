@@ -422,12 +422,12 @@ const SharedCollection = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-6">
             {getPaginatedCards().map(card => (
               <Card key={card.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                <div className="aspect-[3/4] bg-gray-100 dark:bg-gray-800 relative">
+                <div className="aspect-[3/4] bg-gray-100 dark:bg-gray-800 relative p-2">
                   {card.imageUrl ? (
                     <img
                       src={card.imageUrl}
                       alt={card.name || card.card}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-contain rounded-lg"
                       loading="lazy"
                     />
                   ) : (
