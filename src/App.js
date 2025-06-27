@@ -47,7 +47,7 @@ import MarketplaceMessages from './components/Marketplace/MarketplaceMessages';
 import BottomNavBar from './components/BottomNavBar';
 import CloudSync from './components/CloudSync';
 import ComponentLibrary from './pages/ComponentLibrary';
-import QuickShareButton from './components/QuickShareButton';
+
 import logger from './utils/logger'; // Import the logger utility
 import RestoreListener from './components/RestoreListener';
 import SyncStatusIndicator from './components/SyncStatusIndicator'; // Import the SyncStatusIndicator
@@ -908,10 +908,7 @@ function AppContent({ currentView, setCurrentView }) {
           <div className="flex-1 overflow-y-auto">
             {/* Main content */}
             <div className="p-4 sm:p-6 pb-20">
-              {/* Quick Share Button - Prominent placement */}
-              <div className="mb-4 flex justify-end">
-                <QuickShareButton />
-              </div>
+
               
               {/* Card List */}
               {loading ? (

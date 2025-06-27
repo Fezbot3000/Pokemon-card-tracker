@@ -356,6 +356,32 @@ const CollectionSharing = ({ isInModal = false }) => {
         }
       }
       
+      // Additional step: Force re-calculation of card counts using current card data
+      if (Array.isArray(cards) && Array.isArray(collections)) {
+        console.log('Recalculating card counts from current card data...');
+        collections.forEach(collection => {
+          const collectionName = collection.name || collection.id;
+          const collectionId = collection.id || collection.name;
+          
+          // Count cards using all possible field combinations
+          const matchingCards = cards.filter(card => {
+            return (
+              card.collectionId === collectionId ||
+              card.collectionId === collectionName ||
+              card.collection === collectionId ||
+              card.collection === collectionName ||
+              card.collectionName === collectionName ||
+              card.collectionName === collectionId
+            );
+          });
+          
+          console.log(`Collection "${collectionName}" calculated count: ${matchingCards.length} (was: ${collection.cardCount})`);
+          
+          // Update the collection object with the new count
+          collection.cardCount = matchingCards.length;
+        });
+      }
+      
       // Force a re-render by updating a state variable
       setCreateForm(prev => ({ ...prev }));
       
@@ -687,7 +713,7 @@ const CollectionSharing = ({ isInModal = false }) => {
                     <option value="all">All Collections</option>
                     {availableCollections.map((collection) => (
                       <option key={collection.id} value={collection.id}>
-                        {collection.name} ({collection.cardCount} cards)
+                        {collection.name}
                       </option>
                     ))}
                   </Select>

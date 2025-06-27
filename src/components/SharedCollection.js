@@ -123,79 +123,85 @@ const SharedCollection = () => {
 
       // Load the cards from the user's collection
       const cardsRef = collection(firestoreDb, 'users', shareData.userId, 'cards');
-      let cardsQuery;
-
+      
       console.log('Loading cards for user:', shareData.userId);
       console.log('Collection ID:', shareData.collectionId);
 
+      let allCards = [];
+
       if (shareData.collectionId && shareData.collectionId !== 'all') {
-        // Load specific collection
         console.log('Loading specific collection:', shareData.collectionId);
-        cardsQuery = query(
-          cardsRef,
-          where('collectionId', '==', shareData.collectionId),
-          orderBy('updatedAt', 'desc')
-        );
-      } else {
-        // Load all collections
-        console.log('Loading all collections');
-        cardsQuery = query(cardsRef, orderBy('updatedAt', 'desc'));
-      }
+        
+        // Query for cards using multiple possible field names
+        // We need to run separate queries since Firestore doesn't support OR queries across different fields
+        const queries = [
+          // Query by collectionId field
+          query(cardsRef, where('collectionId', '==', shareData.collectionId)),
+          // Query by collection field  
+          query(cardsRef, where('collection', '==', shareData.collectionId)),
+          // Query by collectionName field
+          query(cardsRef, where('collectionName', '==', shareData.collectionId))
+        ];
 
-      console.log('Executing Firestore query...');
-      const cardsSnapshot = await getDocs(cardsQuery);
-      console.log('Query results - documents found:', cardsSnapshot.docs.length);
-      
-      // VISIBLE DEBUG - Show card count in alert
-      alert(`DEBUG: Found ${cardsSnapshot.docs.length} cards in Firestore query`);
-      
-      const cardsData = cardsSnapshot.docs.map(doc => {
-        const data = { id: doc.id, ...doc.data() };
-        console.log('Card loaded:', {
-          id: doc.id,
-          cardName: data.cardName,
-          collectionId: data.collectionId,
-          hasUpdatedAt: !!data.updatedAt,
-          updatedAt: data.updatedAt
+        // Execute all queries and combine results
+        const queryPromises = queries.map(async (q, index) => {
+          try {
+            const snapshot = await getDocs(q);
+            console.log(`Query ${index + 1} (${['collectionId', 'collection', 'collectionName'][index]}) found:`, snapshot.docs.length, 'cards');
+            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          } catch (error) {
+            console.warn(`Query ${index + 1} failed:`, error);
+            return [];
+          }
         });
-        return data;
-      });
 
-      console.log('Processed cards data:', cardsData);
-      console.log('Sample card (first one):', cardsData[0]);
-      
-      // Check if we're missing any cards by trying a different query
-      if (shareData.collectionId && shareData.collectionId !== 'all') {
-        console.log('=== DEBUGGING MISSING CARDS ===');
-        console.log('Expected collection ID:', shareData.collectionId);
+        const queryResults = await Promise.all(queryPromises);
         
-        // Try query without orderBy to see if that's the issue
-        const debugQuery = query(
-          cardsRef,
-          where('collectionId', '==', shareData.collectionId)
-        );
-        const debugSnapshot = await getDocs(debugQuery);
-        console.log('Debug query (no orderBy) found:', debugSnapshot.docs.length, 'cards');
-        
-        if (debugSnapshot.docs.length !== cardsSnapshot.docs.length) {
-          console.log('FOUND DISCREPANCY! Some cards missing updatedAt field');
-          alert(`DISCREPANCY: Query without orderBy found ${debugSnapshot.docs.length} cards, but with orderBy found ${cardsSnapshot.docs.length} cards`);
-          
-          debugSnapshot.docs.forEach(doc => {
-            const data = doc.data();
-            if (!data.updatedAt) {
-              console.log('Card missing updatedAt:', {
-                id: doc.id,
-                cardName: data.cardName,
-                collectionId: data.collectionId
-              });
-              alert(`Missing updatedAt: ${data.cardName || 'Unnamed Card'}`);
+        // Combine and deduplicate results (same card might be found by multiple queries)
+        const cardMap = new Map();
+        queryResults.forEach(cards => {
+          cards.forEach(card => {
+            if (!cardMap.has(card.id)) {
+              cardMap.set(card.id, card);
             }
           });
-        }
+        });
+        
+        allCards = Array.from(cardMap.values());
+        console.log(`Total unique cards found across all queries: ${allCards.length}`);
+        
+      } else {
+        // Load all collections - use simple query without orderBy to avoid updatedAt issues
+        console.log('Loading all collections');
+        const cardsQuery = query(cardsRef);
+        const cardsSnapshot = await getDocs(cardsQuery);
+        allCards = cardsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        console.log('Query results - all cards found:', allCards.length);
+      }
+
+      // Sort cards by updatedAt if available, otherwise by creation order
+      allCards.sort((a, b) => {
+        const aDate = a.updatedAt?.toDate?.() || a.createdAt?.toDate?.() || new Date(0);
+        const bDate = b.updatedAt?.toDate?.() || b.createdAt?.toDate?.() || new Date(0);
+        return bDate - aDate; // Descending order (newest first)
+      });
+
+      console.log('Final processed cards:', allCards.length);
+      console.log('Sample card (first one):', allCards[0]);
+      
+      // Debug: Show which field names were found in the cards
+      if (allCards.length > 0) {
+        const fieldAnalysis = {
+          collectionId: allCards.filter(card => card.collectionId === shareData.collectionId).length,
+          collection: allCards.filter(card => card.collection === shareData.collectionId).length,
+          collectionName: allCards.filter(card => card.collectionName === shareData.collectionId).length,
+          hasUpdatedAt: allCards.filter(card => !!card.updatedAt).length,
+          hasCreatedAt: allCards.filter(card => !!card.createdAt).length
+        };
+        console.log('Field analysis for found cards:', fieldAnalysis);
       }
       
-      setCards(cardsData);
+      setCards(allCards);
     } catch (err) {
       console.error('=== ERROR LOADING SHARED COLLECTION ===');
       console.error('Error details:', err);

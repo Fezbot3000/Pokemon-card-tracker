@@ -3,12 +3,31 @@ import logger from './logger';
 import db from '../services/firestore/dbAdapter';
 import { CardRepository } from '../repositories/CardRepository';
 import firestoreService from '../services/firestore/firestoreService';
+import featureFlags from './featureFlags';
 
 /**
  * Collection management utility
  * Handles creating, renaming, and deleting collections
  */
 export const collectionManager = {
+  /**
+   * Debug utility to log collection states
+   * @param {string} operation - The operation being performed
+   * @param {Object} collections - Current collections state
+   * @param {Object} user - Current user
+   */
+  debugCollectionState(operation, collections, user) {
+    logger.debug(`[CollectionManager] ${operation} - Collection state:`, {
+      collectionNames: Object.keys(collections || {}),
+      collectionCounts: Object.entries(collections || {}).reduce((acc, [name, cards]) => {
+        acc[name] = Array.isArray(cards) ? cards.length : 'not-array';
+        return acc;
+      }, {}),
+      userLoggedIn: !!user,
+      userId: user?.uid || 'none'
+    });
+  },
+
   /**
    * Delete a collection and all its cards
    */
@@ -168,12 +187,15 @@ export const collectionManager = {
   },
 
   /**
-   * Rename a collection - SIMPLE APPROACH: Just update the card properties
+   * Rename a collection - COMPLETE APPROACH: Update cards AND clean up old collection
    */
   async renameCollection(oldName, newName, { collections, setCollections, selectedCollection, setSelectedCollection, user }) {
     if (!oldName || !newName || oldName === newName) {
       return false;
     }
+
+    // Debug: Log initial state
+    this.debugCollectionState(`RENAME START (${oldName} -> ${newName})`, collections, user);
 
     // Check if this is a protected collection
     const protectedCollections = ['sold', 'all cards', 'default collection'];
@@ -192,7 +214,7 @@ export const collectionManager = {
     try {
       toast.loading(`Renaming collection "${oldName}" to "${newName}"...`, { id: 'rename-collection' });
       
-      // SIMPLE APPROACH: Use the cards from the existing collections data instead of querying Firestore
+      // Get the cards from the existing collections data
       const cardsToUpdate = collections[oldName];
       
       // Validate that we have a valid array of cards
@@ -204,9 +226,9 @@ export const collectionManager = {
       
       logger.log(`Found ${cardsToUpdate.length} cards to rename from "${oldName}" to "${newName}"`);
       
+      // Allow renaming empty collections
       if (cardsToUpdate.length === 0) {
-        toast.error(`No cards found in collection "${oldName}"`, { id: 'rename-collection' });
-        return false;
+        logger.log(`Renaming empty collection "${oldName}" to "${newName}"`);
       }
       
       // Update each card in Firestore if user is logged in
@@ -228,6 +250,24 @@ export const collectionManager = {
         }
         
         logger.log(`Successfully updated ${cardsToUpdate.length} cards in Firestore`);
+        
+        // CRITICAL FIX: Delete the old collection from Firestore
+        try {
+          await firestoreService.deleteCollection(oldName);
+          logger.log(`Successfully deleted old collection "${oldName}" from Firestore`);
+        } catch (deleteError) {
+          logger.error(`Error deleting old collection "${oldName}" from Firestore:`, deleteError);
+          // Don't fail the entire operation, but log the error
+        }
+        
+        // ADDITIONAL FIX: Create the new collection in Firestore to ensure it exists
+        try {
+          await firestoreService.saveCollection(newName, cardsToUpdate);
+          logger.log(`Successfully created new collection "${newName}" in Firestore`);
+        } catch (saveError) {
+          logger.error(`Error creating new collection "${newName}" in Firestore:`, saveError);
+          // Don't fail the entire operation, but log the error
+        }
       }
       
       // Update selected collection if it was the renamed one
@@ -245,6 +285,10 @@ export const collectionManager = {
         collectionName: newName
       }));
       delete updatedCollections[oldName];
+      
+      // Debug: Log state before setting
+      this.debugCollectionState(`RENAME BEFORE SET STATE (${oldName} -> ${newName})`, updatedCollections, user);
+      
       setCollections(updatedCollections);
       
       // Also update local database
@@ -254,6 +298,26 @@ export const collectionManager = {
       } catch (dbError) {
         logger.warn('Failed to update local database:', dbError);
       }
+      
+      // ADDITIONAL FIX: Force a sync to ensure cloud state is consistent
+      if (user && featureFlags.enableFirestoreSync) {
+        try {
+          const shadowSyncService = await import('../services/shadowSync').then(module => module.default);
+          await shadowSyncService.shadowWriteCollection(newName, {
+            name: newName,
+            cardCount: cardsToUpdate.length,
+            description: '',
+            updatedAt: new Date()
+          });
+          logger.log(`Successfully synced new collection "${newName}" via shadow sync`);
+        } catch (syncError) {
+          logger.error(`Error syncing new collection "${newName}":`, syncError);
+          // Don't fail the operation
+        }
+      }
+      
+      // Debug: Log final state
+      this.debugCollectionState(`RENAME COMPLETE (${oldName} -> ${newName})`, updatedCollections, user);
       
       toast.success(`Collection renamed from "${oldName}" to "${newName}"`, { id: 'rename-collection' });
       logger.log(`Successfully renamed collection from "${oldName}" to "${newName}"`);

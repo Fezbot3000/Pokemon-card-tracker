@@ -25,6 +25,7 @@ import { useUserPreferences, availableCurrencies } from '../../contexts/UserPref
 import SelectField from '../atoms/SelectField'; // Added import
 import MarketplaceProfile from '../../components/settings/MarketplaceProfile'; // Import MarketplaceProfile
 import MarketplaceReviews from '../../components/settings/MarketplaceReviews'; // Import MarketplaceReviews
+import CollectionSharing from '../../components/CollectionSharing'; // Import CollectionSharing
 
 /**
  * SettingsModal Component
@@ -171,11 +172,27 @@ const SettingsModal = ({
     }
   };
 
-  const handleRenameConfirm = () => {
+  const handleRenameConfirm = async () => {
     if (newCollectionName && newCollectionName !== collectionToRename) {
-      onRenameCollection(collectionToRename, newCollectionName);
-      setIsRenaming(false);
-      toastService.success('Collection renamed successfully!');
+      try {
+        // Show loading state
+        toastService.loading('Renaming collection...', { id: 'rename-confirm' });
+        
+        // Wait for the rename operation to complete
+        const success = await onRenameCollection(collectionToRename, newCollectionName);
+        
+        if (success !== false) {
+          setIsRenaming(false);
+          setNewCollectionName('');
+          setCollectionToRename('');
+          toastService.success('Collection renamed successfully!', { id: 'rename-confirm' });
+        } else {
+          toastService.error('Failed to rename collection', { id: 'rename-confirm' });
+        }
+      } catch (error) {
+        console.error('Error renaming collection:', error);
+        toastService.error(`Failed to rename collection: ${error.message}`, { id: 'rename-confirm' });
+      }
     }
   };
 
@@ -727,6 +744,12 @@ const SettingsModal = ({
                 isActive={activeTab === 'marketplace'}
                 onClick={() => setActiveTab('marketplace')}
               />
+              <SettingsNavItem 
+                icon="share" 
+                label="Collection Sharing" 
+                isActive={activeTab === 'sharing'}
+                onClick={() => setActiveTab('sharing')}
+              />
             </div>
           </nav>
 
@@ -1081,6 +1104,17 @@ const SettingsModal = ({
                   description="View and manage your marketplace reviews and ratings."
                 >
                   <MarketplaceReviews />
+                </SettingsPanel>
+              </div>
+            )}
+
+            {activeTab === 'sharing' && (
+              <div className="space-y-6">
+                <SettingsPanel
+                  title="Collection Sharing"
+                  description="Create shareable links to showcase your collections to others."
+                >
+                  <CollectionSharing isInModal={true} />
                 </SettingsPanel>
               </div>
             )}

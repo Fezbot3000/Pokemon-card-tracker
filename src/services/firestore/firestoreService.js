@@ -133,18 +133,46 @@ class FirestoreService {
       });
       await Promise.all(deletePromises);
       
-      // Find the collection document by name field and delete it
+      // Try to delete the collection document - handle both possible storage formats
       const collectionsRef = this.getUserCollection('collections');
-      const collectionQuery = query(collectionsRef, where('name', '==', collectionName));
-      const collectionSnapshot = await getDocs(collectionQuery);
+      let collectionDeleted = false;
       
-      if (!collectionSnapshot.empty) {
-        // Delete the collection document
-        const collectionDoc = collectionSnapshot.docs[0];
-        await deleteDoc(collectionDoc.ref);
-        logger.debug(`Collection ${collectionName} document deleted`);
-      } else {
-        logger.warn(`Collection document not found for: ${collectionName}`);
+      // Method 1: Try deleting by document ID (collection name as document ID)
+      try {
+        const collectionDocRef = doc(collectionsRef, collectionName);
+        const collectionDoc = await getDoc(collectionDocRef);
+        if (collectionDoc.exists()) {
+          await deleteDoc(collectionDocRef);
+          logger.debug(`Collection ${collectionName} document deleted by ID`);
+          collectionDeleted = true;
+        }
+      } catch (docIdError) {
+        logger.debug(`Could not delete collection by document ID: ${docIdError.message}`);
+      }
+      
+      // Method 2: If not found by ID, try finding by name field
+      if (!collectionDeleted) {
+        try {
+          const collectionQuery = query(collectionsRef, where('name', '==', collectionName));
+          const collectionSnapshot = await getDocs(collectionQuery);
+          
+          if (!collectionSnapshot.empty) {
+            // Delete all documents that match (should typically be just one)
+            const deleteCollectionPromises = [];
+            collectionSnapshot.forEach((doc) => {
+              deleteCollectionPromises.push(deleteDoc(doc.ref));
+            });
+            await Promise.all(deleteCollectionPromises);
+            logger.debug(`Collection ${collectionName} document(s) deleted by name field`);
+            collectionDeleted = true;
+          }
+        } catch (nameFieldError) {
+          logger.debug(`Could not delete collection by name field: ${nameFieldError.message}`);
+        }
+      }
+      
+      if (!collectionDeleted) {
+        logger.warn(`Collection document not found for: ${collectionName} (this may be normal if collection was already deleted)`);
       }
 
       logger.debug(`Collection ${collectionName} and ${deletePromises.length} cards deleted successfully`);

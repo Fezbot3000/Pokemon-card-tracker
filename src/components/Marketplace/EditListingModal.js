@@ -276,9 +276,10 @@ function EditListingModal({ isOpen, onClose, listing, onListingDeleted }) {
         onClose={onClose}
         title="Edit Listing"
         size="full"
+        className="bg-white dark:bg-[#0F0F0F]"
       >
-        <form onSubmit={handleSubmit} className="h-full flex flex-col">
-          <div className="flex-1 overflow-y-auto px-6 py-4">
+        <form onSubmit={handleSubmit} className="h-full flex flex-col bg-white dark:bg-[#0F0F0F]">
+          <div className="flex-1 overflow-y-auto px-6 py-4 bg-white dark:bg-[#0F0F0F]">
             <div className="space-y-6">
               <div className="flex items-center">
                 <label className="inline-flex items-center">
@@ -286,7 +287,7 @@ function EditListingModal({ isOpen, onClose, listing, onListingDeleted }) {
                     type="checkbox"
                     checked={formData.markAsSold}
                     onChange={(e) => handleInputChange('markAsSold', e.target.checked)}
-                    className="form-checkbox h-5 w-5 text-purple-600 rounded focus:ring-purple-500 dark:focus:ring-purple-400"
+                    className="h-5 w-5 text-purple-600 bg-white dark:bg-[#1B2131] border-gray-300 dark:border-gray-600 rounded focus:ring-purple-500 dark:focus:ring-purple-400 focus:ring-2"
                   />
                   <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">Mark as sold</span>
                 </label>
@@ -305,7 +306,7 @@ function EditListingModal({ isOpen, onClose, listing, onListingDeleted }) {
                         type="number"
                         value={formData.price}
                         onChange={(e) => handleInputChange('price', e.target.value)}
-                        className="w-full pl-8 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-transparent text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        className="w-full pl-8 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-[#1B2131] text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                         placeholder="0.00"
                         step="0.01"
                         min="0.01"
@@ -320,7 +321,7 @@ function EditListingModal({ isOpen, onClose, listing, onListingDeleted }) {
                     <textarea
                       value={formData.note}
                       onChange={(e) => handleInputChange('note', e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-transparent text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-[#1B2131] text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                       placeholder="Add a note about this card..."
                       rows="3"
                     />
@@ -333,7 +334,7 @@ function EditListingModal({ isOpen, onClose, listing, onListingDeleted }) {
                       type="text"
                       value={formData.location}
                       onChange={(e) => handleInputChange('location', e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-transparent text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-[#1B2131] text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                       placeholder="Enter your location (e.g., Sydney)"
                     />
                   </div>

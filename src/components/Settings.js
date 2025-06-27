@@ -122,16 +122,22 @@ const Settings = () => {
 
   const handleRenameCollection = async (oldName, newName) => {
     try {
-      // Update collections object
-      const updatedCollections = { ...collections };
-      updatedCollections[newName] = updatedCollections[oldName];
-      delete updatedCollections[oldName];
+      // Use the collectionManager for consistent behavior
+      const { collectionManager } = await import('../utils/collectionManager');
+      const success = await collectionManager.renameCollection(oldName, newName, {
+        collections,
+        setCollections,
+        selectedCollection: null, // Settings doesn't track selected collection
+        setSelectedCollection: () => {}, // No-op for settings
+        user: null // Settings doesn't have user context
+      });
       
-      // Save to database
-      await db.saveCollections(updatedCollections);
-      setCollections(updatedCollections);
-      setCollectionToRename('');
-      toastService.success(`Collection renamed from "${oldName}" to "${newName}"`);
+      if (success) {
+        setCollectionToRename('');
+        toastService.success(`Collection renamed from "${oldName}" to "${newName}"`);
+      } else {
+        toastService.error('Failed to rename collection');
+      }
     } catch (error) {
       console.error('Error renaming collection:', error);
       toastService.error('Failed to rename collection');
