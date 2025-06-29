@@ -126,6 +126,8 @@ const styles = StyleSheet.create({
 const PurchaseInvoicePDF = ({ seller, date, cards, invoiceNumber, notes, totalAmount, profile }) => {
   // Debug log the cards data
   console.log('Cards data received in PDF component:', cards);
+  console.log('Total amount received:', totalAmount);
+  console.log('Number of cards:', cards.length);
   return (
     <Document>
       <Page size="A4" style={styles.page}>
@@ -188,14 +190,32 @@ const PurchaseInvoicePDF = ({ seller, date, cards, invoiceNumber, notes, totalAm
               parsed: parseFloat(card.originalInvestmentAmount || card.investmentAUD || 0)
             });
             
+            // Check for any undefined/null values that might cause issues
+            console.log('Card field validation:', {
+              year: card.year,
+              set: card.set,
+              cardNumber: card.cardNumber,
+              grade: card.grade,
+              gradeVendor: card.gradeVendor,
+              slabSerial: card.slabSerial
+            });
+            
             return (
               <View key={card.id} style={styles.tableRow}>
                 <View style={[styles.col1, styles.tableCell]}>
                   <Text style={styles.boldText}>
-                    {cardDisplayName}
+                    {cardDisplayName || 'Unnamed Card'}
                   </Text>
-                  {card.set && <Text style={{ fontSize: 9, color: '#6b7280', marginTop: 2 }}>{card.year} {card.set} #{card.cardNumber}</Text>}
-                  {card.grade && <Text style={{ fontSize: 9, color: '#6b7280', marginTop: 2 }}>{card.gradeVendor || 'PSA'} {card.grade}</Text>}
+                  {card.set && (
+                    <Text style={{ fontSize: 9, color: '#6b7280', marginTop: 2 }}>
+                      {[card.year, card.set, card.cardNumber ? `#${card.cardNumber}` : ''].filter(Boolean).join(' ')}
+                    </Text>
+                  )}
+                  {card.grade && (
+                    <Text style={{ fontSize: 9, color: '#6b7280', marginTop: 2 }}>
+                      {`${card.gradeVendor || 'PSA'} ${card.grade}`}
+                    </Text>
+                  )}
                 </View>
                 <View style={[styles.col2, styles.tableCell]}>
                   <Text>{card.slabSerial || 'N/A'}</Text>
@@ -203,7 +223,19 @@ const PurchaseInvoicePDF = ({ seller, date, cards, invoiceNumber, notes, totalAm
                 <View style={[styles.col3, styles.tableCell]}>
                   <Text>{(() => {
                     // Try to get the price from various possible field names
-                    const price = parseFloat(card.originalInvestmentAmount || card.investmentAUD || 0);
+                    let price = parseFloat(card.originalInvestmentAmount || card.investmentAUD || 0);
+                    
+                    // If no individual price found, but we have a total amount and only one card,
+                    // use the total amount as the individual price
+                    if (price <= 0 && totalAmount && cards.length === 1) {
+                      price = parseFloat(totalAmount);
+                    }
+                    
+                    // If still no price and we have multiple cards, divide total equally
+                    if (price <= 0 && totalAmount && cards.length > 1) {
+                      price = parseFloat(totalAmount) / cards.length;
+                    }
+                    
                     return price > 0 ? `$${price.toFixed(2)}` : 'N/A';
                   })()}</Text>
                 </View>

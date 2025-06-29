@@ -267,6 +267,11 @@ const PurchaseInvoices = () => {
       // Get detailed card information for the invoice
       const cardDetails = await getCardDetails(invoice);
       
+      // Debug: Log the card details to see what data we have
+      console.log('Invoice data for PDF generation:', invoice);
+      console.log('Card details for PDF:', cardDetails);
+      console.log('First card details:', cardDetails[0]);
+      
       // Create the PDF document
       const pdfDocument = (
         <PurchaseInvoicePDF 
