@@ -10,32 +10,35 @@ const PokemonSets = () => {
   // Function to extract valid price range from complex price strings
   const extractPriceRange = (priceString) => {
     try {
-      // Extract all numeric values from the string (removing $, commas, and +)
-      const priceMatches = priceString.match(/\$([0-9,]+)/g);
+      // More comprehensive regex to handle prices with commas and + symbols
+      // This will match patterns like $1,000, $100,000+, etc.
+      const priceMatches = priceString.match(/\$([0-9,]+)\+?/g);
       if (!priceMatches || priceMatches.length === 0) {
-        return { lowPrice: '0', highPrice: '0' };
+        return { lowPrice: '0.00', highPrice: '0.00' };
       }
 
-      // Convert to numbers and clean up
+      // Convert to numbers and clean up (remove $, commas, and + symbols)
       const prices = priceMatches.map(price => {
-        return parseFloat(price.replace(/[$,]/g, ''));
+        const cleanPrice = price.replace(/[$,+]/g, '');
+        return parseFloat(cleanPrice);
       }).filter(price => !isNaN(price) && price > 0);
 
       if (prices.length === 0) {
-        return { lowPrice: '0', highPrice: '0' };
+        return { lowPrice: '0.00', highPrice: '0.00' };
       }
 
       // Get min and max prices
       const minPrice = Math.min(...prices);
       const maxPrice = Math.max(...prices);
 
+      // Format prices with proper decimal places for structured data
       return {
-        lowPrice: minPrice.toString(),
-        highPrice: maxPrice.toString()
+        lowPrice: minPrice.toFixed(2),
+        highPrice: maxPrice.toFixed(2)
       };
     } catch (error) {
       console.warn('Error parsing price string:', priceString, error);
-      return { lowPrice: '0', highPrice: '0' };
+      return { lowPrice: '0.00', highPrice: '0.00' };
     }
   };
 
