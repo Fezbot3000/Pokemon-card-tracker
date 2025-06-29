@@ -62,7 +62,7 @@ const ConfirmDialog = ({
       isOpen={isOpen}
       onClose={handleClose}
       title={title}
-      size="sm"
+      size="lg"
       closeOnClickOutside={true}
     >
       <div className="p-6">

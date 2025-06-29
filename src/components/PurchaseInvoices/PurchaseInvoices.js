@@ -475,14 +475,18 @@ const PurchaseInvoices = () => {
               Keep track of your card purchases by creating invoices. This helps you monitor your investments and calculate profits when you sell.
             </p>
             
-            {/* Action Button */}
-            <button 
-              className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-lg font-medium transition-colors flex items-center gap-2 shadow-lg"
-              onClick={() => setShowCreateModal(true)}
-            >
-              <span className="material-icons text-lg">add_circle</span>
-              Create Your First Invoice
-            </button>
+            {/* Instructions */}
+            <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-6 max-w-md mx-auto mb-8">
+              <h4 className="text-lg font-medium text-blue-900 dark:text-blue-100 mb-3 flex items-center gap-2">
+                <span className="material-icons text-xl">info</span>
+                How to Create an Invoice
+              </h4>
+              <ol className="text-sm text-blue-800 dark:text-blue-200 space-y-2 list-decimal list-inside">
+                <li>Go to your Cards page</li>
+                <li>Use multi-select to choose cards</li>
+                <li>Click "Create Invoice" from the actions menu</li>
+              </ol>
+            </div>
             
             {/* Additional Info */}
             <div className="mt-8 text-center">
@@ -540,13 +544,6 @@ const PurchaseInvoices = () => {
                     <span>Generate All PDFs</span>
                   </button>
                 )}
-                <button
-                  className="w-full sm:w-auto px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 text-sm"
-                  onClick={() => setShowCreateModal(true)}
-                >
-                  <span className="material-icons text-base">add</span>
-                  <span>Create New Invoice</span>
-                </button>
               </div>
             </div>
             

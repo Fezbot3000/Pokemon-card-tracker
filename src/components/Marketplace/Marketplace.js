@@ -715,7 +715,7 @@ function Marketplace({ currentView, onViewChange }) {
           listing={selectedListing}
           onClose={() => {
             setIsEditModalOpen(false);
-            setSelectedListing(null);
+            // Don't clear selectedListing here - keep the detail modal open
           }}
           onEditListing={handleEditListing}
         />

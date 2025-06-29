@@ -127,7 +127,7 @@ const CollectionSelector = ({
         
         {/* Desktop Dropdown */}
         {!isMobileView && isDropdownOpen && (
-          <div className="absolute left-0 right-0 sm:left-auto sm:right-0 mt-2 w-full sm:w-56 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 z-50 max-h-[60vh] overflow-y-auto">
+          <div className="absolute left-0 right-0 sm:left-auto sm:right-0 mt-2 w-full sm:w-56 rounded-md shadow-lg bg-white dark:bg-[#000] ring-1 ring-black ring-opacity-5 z-50 max-h-[60vh] overflow-y-auto">
             {renderCollectionItems(false)}
           </div>
         )}

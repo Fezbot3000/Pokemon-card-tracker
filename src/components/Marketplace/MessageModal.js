@@ -5,6 +5,7 @@ import { db as firestoreDb } from '../../services/firebase';
 import { useAuth } from '../../design-system';
 import Modal from '../../design-system/molecules/Modal';
 import Button from '../../design-system/atoms/Button';
+import Icon from '../../design-system/atoms/Icon';
 import logger from '../../utils/logger';
 import toast from 'react-hot-toast';
 
@@ -199,68 +200,35 @@ const MessageModal = ({ isOpen, onClose, listing, prefilledMessage = '', onViewC
           throw new Error('Failed to create chat document');
         }
         
-        // Add the first message with the exact field structure required by security rules
+        // Add the first message to the messages subcollection
         const messagesRef = collection(firestoreDb, 'chats', chatId, 'messages');
-        const messageData = {
-          // IMPORTANT: senderId must match the authenticated user's UID
-          senderId: user.uid,
-          text: newMessage.trim(),
+        await addDoc(messagesRef, {
+          // Required fields that match security rules
+          sender: user.uid,  // This must match request.auth.uid in rules
+          senderId: user.uid, // Additional field for compatibility
+          content: newMessage.trim(),
+          text: newMessage.trim(), // Additional field for compatibility
           timestamp: serverTimestamp()
-        };
-        
-        // Log the message payload before sending
-        console.log('Message payload:', messageData);
-        console.log('Message path:', `chats/${chatId}/messages/{messageId}`);
-        
-        logger.debug('Adding message with data:', {
-          chatId,
-          senderId: messageData.senderId,
-          text: messageData.text
         });
         
-        try {
-          // Verify the chat document exists before adding the message
-          const chatDoc = await getDoc(chatRef);
-          if (!chatDoc.exists()) {
-            console.error('Chat document does not exist before message creation');
-            throw new Error('Chat document does not exist');
-          }
-          
-          // Log the chat document data to verify participants
-          console.log('Chat document before message:', {
-            exists: chatDoc.exists(),
-            data: chatDoc.data(),
-            hasParticipants: chatDoc.data()?.participants ? 'yes' : 'no',
-            participantsIncludeUser: chatDoc.data()?.participants?.includes(user.uid) ? 'yes' : 'no'
-          });
-          
-          // Add the message
-          await addDoc(messagesRef, messageData);
-          logger.debug('Message added successfully');
-        } catch (messageError) {
-          logger.error('Error adding message:', messageError);
-          console.error('Message error details:', {
-            code: messageError.code,
-            message: messageError.message,
-            path: `chats/${chatId}/messages`
-          });
-          throw new Error(`Message creation failed: ${messageError.message}`);
-        }
+        logger.debug('New chat and message created successfully');
+        existingChatId = chatId;
+        
       } else {
-        // If chat exists, just add a new message to it
+        // Chat exists, just add the message
         const messagesRef = collection(firestoreDb, 'chats', existingChatId, 'messages');
         
-        // First, try to update the existing chat with proper names if they're missing
+        // Try to update chat document with proper display names if they're missing
         try {
           const existingChatRef = doc(firestoreDb, 'chats', existingChatId);
           const existingChatDoc = await getDoc(existingChatRef);
           
           if (existingChatDoc.exists()) {
             const chatData = existingChatDoc.data();
+            let updates = {};
             let needsUpdate = false;
-            const updates = {};
             
-            // Check if we need to update seller name
+            // Update seller name if missing or generic
             if (!chatData.sellerName || chatData.sellerName === 'Seller') {
               try {
                 const sellerProfileDoc = await getDoc(doc(firestoreDb, 'marketplaceProfiles', listing.userId));
@@ -277,7 +245,7 @@ const MessageModal = ({ isOpen, onClose, listing, prefilledMessage = '', onViewC
               }
             }
             
-            // Check if we need to update buyer name
+            // Update buyer name if missing or generic
             if (!chatData.buyerName || chatData.buyerName === 'Buyer') {
               try {
                 const buyerProfileDoc = await getDoc(doc(firestoreDb, 'marketplaceProfiles', user.uid));
@@ -369,100 +337,106 @@ const MessageModal = ({ isOpen, onClose, listing, prefilledMessage = '', onViewC
       setLoading(false);
     }
   };
-  
 
-  
+  const cardName = listing?.card?.name || listing?.card?.cardName || listing?.cardName || 'Card Listing';
+  const cardImage = listing?.card?.imageUrl || listing?.card?.cloudImageUrl || listing?.card?.img || null;
+  const price = listing?.listingPrice || listing?.price;
+  const currency = listing?.currency || 'AUD';
+
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={`Message about ${listing?.card?.name || listing?.isGeneralChat ? 'General Discussion' : 'Card Listing'}`}
-      size="md"
-      maxWidth="max-w-lg"
-      closeOnClickOutside={true}
-      zIndex={100}
-      className="rounded-2xl overflow-hidden"
-    >
-      <div className="space-y-6 pb-6 px-2">
-        {/* Header Section with Gradient */}
-        <div className="bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl p-6 text-white -mx-8 mt-6">
-          <div className="px-6">
-            <h3 className="text-xl font-bold mb-4 text-center">Contact about:</h3>
-            <div className="flex items-center gap-4 bg-white/10 backdrop-blur-sm rounded-xl p-4">
-              {listing?.card?.imageUrl ? (
-                <img 
-                  src={listing.card.imageUrl} 
-                  alt={listing?.card?.name || listing?.card?.card || 'Card'}
-                  className="w-16 h-16 object-cover rounded-xl shadow-md flex-shrink-0" 
-                />
-              ) : (
-                <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center text-white flex-shrink-0">
-                  <span className="material-icons text-2xl">
-                    {listing?.isGeneralChat ? 'chat' : 'style'}
-                  </span>
-                </div>
-              )}
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold text-white text-lg mb-1 truncate">
-                  {listing?.isGeneralChat ? 'General Discussion' : 
-                   (listing?.card?.name || listing?.card?.card || 'Card Listing')}
-                </p>
-                {!listing?.isGeneralChat && listing?.listingPrice && (
-                  <p className="text-white/90 font-medium">
-                    {listing.listingPrice} {listing.currency || 'AUD'}
-                  </p>
-                )}
+      title="Send Message"
+      position="right"
+      size="lg"
+      closeOnClickOutside={false}
+      zIndex={60}
+      footer={
+        <div className="flex justify-between w-full">
+          <Button 
+            variant="secondary" 
+            onClick={onClose}
+          >
+            Cancel
+          </Button>
+          <Button 
+            variant="primary"
+            onClick={handleSendMessage}
+            disabled={!newMessage.trim() || loading}
+            leftIcon={loading ? null : <Icon name="send" />}
+          >
+            {loading ? (
+              <div className="flex items-center gap-2">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                Sending...
               </div>
+            ) : (
+              'Send Message'
+            )}
+          </Button>
+        </div>
+      }
+    >
+      <div className="space-y-6">
+        {/* Card Information */}
+        <div className="bg-white dark:bg-[#0F0F0F] rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Contact about:</h3>
+          <div className="flex items-center gap-4">
+            {cardImage ? (
+              <img 
+                src={cardImage} 
+                alt={cardName}
+                className="w-16 h-16 object-cover rounded-lg border border-gray-200 dark:border-gray-700 flex-shrink-0" 
+              />
+            ) : (
+              <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center text-gray-400 flex-shrink-0">
+                <Icon name="image" size="lg" />
+              </div>
+            )}
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-gray-900 dark:text-white text-lg mb-1 truncate">
+                {listing?.isGeneralChat ? 'General Discussion' : cardName}
+              </p>
+              {!listing?.isGeneralChat && price && (
+                <p className="text-gray-600 dark:text-gray-400 font-medium">
+                  ${price} {currency}
+                </p>
+              )}
+              {listing?.location && (
+                <p className="text-sm text-gray-500 dark:text-gray-500">
+                  {listing.location}
+                </p>
+              )}
             </div>
           </div>
         </div>
         
         {/* Error Message */}
         {error && (
-          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4">
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
             <div className="flex items-center gap-2">
-              <span className="material-icons text-red-500 text-sm">error</span>
+              <Icon name="error" className="text-red-500" />
               <p className="text-red-700 dark:text-red-400 text-sm font-medium">{error}</p>
             </div>
           </div>
         )}
         
         {/* Message Form */}
-        <form onSubmit={handleSendMessage} className="space-y-4">
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-              Your Message
-            </label>
-            <textarea
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              placeholder={listing?.isGeneralChat ? 
-                "Hi! I'd like to discuss your Pokemon cards." : 
-                "Hi! I'm interested in this card. Is it still available?"}
-              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-800 dark:text-white min-h-[120px] resize-none transition-all duration-200"
-              disabled={loading}
-            />
-          </div>
-          
-          <Button
-            type="submit"
-            variant="primary"
-            disabled={!newMessage.trim() || loading}
-            className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 border-0 shadow-md py-3 text-base font-semibold"
-          >
-            {loading ? (
-              <div className="flex items-center justify-center gap-2">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                Sending...
-              </div>
-            ) : (
-              <div className="flex items-center justify-center gap-2">
-                <span className="material-icons text-sm">send</span>
-                Send Message
-              </div>
-            )}
-          </Button>
-        </form>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Your Message <span className="text-red-500">*</span>
+          </label>
+          <textarea
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            placeholder={listing?.isGeneralChat ? 
+              "Hi! I'd like to discuss your Pokemon cards." : 
+              "Hi! I'm interested in this card. Is it still available?"}
+            className="w-full px-3 py-2 border border-[#ffffff33] dark:border-[#ffffff1a] rounded-lg bg-white dark:bg-[#0F0F0F] text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[120px] resize-none"
+            disabled={loading}
+          />
+        </div>
       </div>
     </Modal>
   );

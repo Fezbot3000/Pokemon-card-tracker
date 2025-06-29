@@ -6,6 +6,8 @@ import { toast } from 'react-hot-toast';
 import { useUserPreferences } from '../../contexts/UserPreferencesContext';
 import logger from '../../utils/logger';
 import Modal from '../../design-system/molecules/Modal';
+import Button from '../../design-system/atoms/Button';
+import Icon from '../../design-system/atoms/Icon';
 
 // Add CSS for hiding scrollbars
 const scrollbarHideStyles = `
@@ -335,33 +337,29 @@ function ListCardModal({ isOpen, onClose, selectedCards }) {
       size="2xl"
       closeOnClickOutside={false}
       footer={
-        <div className="flex justify-end gap-3 w-full">
-          <button
-            type="button"
+        <div className="flex justify-between w-full">
+          <Button 
+            variant="secondary" 
             onClick={onClose}
             disabled={isSubmitting}
-            className="px-4 py-2 rounded-md bg-gray-100 dark:bg-[#252B3B] text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-[#323B4B] transition-colors"
           >
             Cancel
-          </button>
-          <button
-            type="submit"
-            form="listing-form"
+          </Button>
+          <Button 
+            variant="primary" 
+            onClick={handleSubmit}
             disabled={isSubmitting}
-            className="px-4 py-2 rounded-md bg-blue-500 text-white hover:bg-blue-600 transition-colors flex items-center gap-2"
+            leftIcon={isSubmitting ? null : <Icon name="storefront" />}
           >
             {isSubmitting ? (
               <>
-                <span className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></span>
-                <span>Listing...</span>
+                <span className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></span>
+                Listing...
               </>
             ) : (
-              <>
-                <span className="material-icons text-sm">storefront</span>
-                <span>List on Marketplace</span>
-              </>
+              'List on Marketplace'
             )}
-          </button>
+          </Button>
         </div>
       }
     >
@@ -371,14 +369,14 @@ function ListCardModal({ isOpen, onClose, selectedCards }) {
           console.log('Card data:', card);
           
           return (
-            <div key={card.slabSerial || card.id || card._id || JSON.stringify(card)} className="bg-gray-50 dark:bg-[#252B3B] rounded-lg p-6">
+            <div key={card.slabSerial || card.id || card._id || JSON.stringify(card)} className="bg-white dark:bg-[#0F0F0F] rounded-lg p-6 border border-gray-200 dark:border-gray-700">
               <div className="flex flex-col md:flex-row gap-6">
                 {/* Card Image */}
                 <div className="flex-shrink-0">
                   <img
                     src={card.imageUrl || card.cloudImageUrl || card.image || card.imageURL || card.img || '/placeholder-card.png'}
                     alt={card.card || card.name || 'Card'}
-                    className="w-32 h-44 object-contain bg-gray-100 dark:bg-gray-800 rounded-lg shadow-md"
+                    className="w-32 h-44 object-contain bg-gray-100 dark:bg-black rounded-lg shadow-md"
                     onError={(e) => {
                       console.log('Image failed to load:', e.target.src);
                       e.target.src = '/placeholder-card.png';
@@ -430,10 +428,10 @@ function ListCardModal({ isOpen, onClose, selectedCards }) {
                   </div>
                   
                   {/* Form Fields */}
-                  <div className="space-y-4 pt-4 border-t border-gray-200 dark:border-gray-600">
+                  <div className="space-y-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Listing Price ({preferredCurrency?.code || 'USD'})
+                        Listing Price ({preferredCurrency?.code || 'USD'}) <span className="text-red-500">*</span>
                       </label>
                       <div className="relative">
                         <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400">
@@ -443,7 +441,7 @@ function ListCardModal({ isOpen, onClose, selectedCards }) {
                           type="number"
                           value={listingData[card.slabSerial || card.id || card._id || JSON.stringify(card)]?.price || ''}
                           onChange={(e) => handleInputChange(card.slabSerial || card.id || card._id || JSON.stringify(card), 'price', e.target.value)}
-                          className="w-full pl-8 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-[#1B2131] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full pl-8 pr-4 py-2 border border-[#ffffff33] dark:border-[#ffffff1a] rounded-lg bg-white dark:bg-[#0F0F0F] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[var(--primary-default)]/20 focus:border-[var(--primary-default)] placeholder-gray-500 dark:placeholder-gray-400"
                           placeholder="0.00"
                           step="0.01"
                           min="0.01"
@@ -460,7 +458,7 @@ function ListCardModal({ isOpen, onClose, selectedCards }) {
                         <textarea
                           value={listingData[card.slabSerial || card.id || card._id || JSON.stringify(card)]?.note || ''}
                           onChange={(e) => handleInputChange(card.slabSerial || card.id || card._id || JSON.stringify(card), 'note', e.target.value)}
-                          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-[#1B2131] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-4 py-2 border border-[#ffffff33] dark:border-[#ffffff1a] rounded-lg bg-white dark:bg-[#0F0F0F] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[var(--primary-default)]/20 focus:border-[var(--primary-default)] placeholder-gray-500 dark:placeholder-gray-400"
                           placeholder="Add a note about this card..."
                           rows="3"
                         />
@@ -474,7 +472,7 @@ function ListCardModal({ isOpen, onClose, selectedCards }) {
                           type="text"
                           value={listingData[card.slabSerial || card.id || card._id || JSON.stringify(card)]?.location || ''}
                           onChange={(e) => handleInputChange(card.slabSerial || card.id || card._id || JSON.stringify(card), 'location', e.target.value)}
-                          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-[#1B2131] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-4 py-2 border border-[#ffffff33] dark:border-[#ffffff1a] rounded-lg bg-white dark:bg-[#0F0F0F] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[var(--primary-default)]/20 focus:border-[var(--primary-default)] placeholder-gray-500 dark:placeholder-gray-400"
                           placeholder="Enter your location (e.g., Sydney)"
                         />
                       </div>

@@ -364,7 +364,7 @@ function MarketplaceSelling({ currentView, onViewChange }) {
 
   const handleCloseEditModal = () => {
     setIsEditModalOpen(false);
-    setSelectedListing(null);
+    // Don't clear selectedListing here - keep the detail modal open
   };
   
   const handleListingDeleted = (deletedListingId) => {
