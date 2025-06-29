@@ -7,6 +7,38 @@ import Footer from './Footer';
 const PokemonSets = () => {
   const [selectedSet, setSelectedSet] = useState('base-set');
 
+  // Function to extract valid price range from complex price strings
+  const extractPriceRange = (priceString) => {
+    try {
+      // Extract all numeric values from the string (removing $, commas, and +)
+      const priceMatches = priceString.match(/\$([0-9,]+)/g);
+      if (!priceMatches || priceMatches.length === 0) {
+        return { lowPrice: '0', highPrice: '0' };
+      }
+
+      // Convert to numbers and clean up
+      const prices = priceMatches.map(price => {
+        return parseFloat(price.replace(/[$,]/g, ''));
+      }).filter(price => !isNaN(price) && price > 0);
+
+      if (prices.length === 0) {
+        return { lowPrice: '0', highPrice: '0' };
+      }
+
+      // Get min and max prices
+      const minPrice = Math.min(...prices);
+      const maxPrice = Math.max(...prices);
+
+      return {
+        lowPrice: minPrice.toString(),
+        highPrice: maxPrice.toString()
+      };
+    } catch (error) {
+      console.warn('Error parsing price string:', priceString, error);
+      return { lowPrice: '0', highPrice: '0' };
+    }
+  };
+
   const pokemonSets = [
     {
       id: 'base-set',
@@ -149,8 +181,8 @@ const PokemonSets = () => {
                 "offers": {
                   "@type": "AggregateOffer",
                   "priceCurrency": "AUD",
-                  "lowPrice": set.averagePrice.split('-')[0].replace('$', '').replace(',', ''),
-                  "highPrice": set.averagePrice.split('-')[1].replace('$', '').replace(',', '')
+                  "lowPrice": extractPriceRange(set.averagePrice).lowPrice,
+                  "highPrice": extractPriceRange(set.averagePrice).highPrice
                 }
               }))
             }
