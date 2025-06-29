@@ -118,17 +118,46 @@ const styles = StyleSheet.create({
 });
 
 const InvoicePDF = ({ buyer, date, cards, invoiceId, profile }) => {
+  // Debug: Log the cards data to see what fields are available
+  console.log('Cards data received in InvoicePDF:', cards);
+  console.log('First card data:', cards[0]);
+  
   // Calculate totals by parsing strings to numbers first
   const totalInvestment = cards.reduce((sum, card) => {
-    return sum + (parseFloat(card.investmentAUD) || 0);
+    // Try multiple possible field names for investment amount
+    const investment = parseFloat(
+      card.originalInvestmentAmount || 
+      card.investmentAUD || 
+      card.investment || 
+      card.investmentInPreferredCurrency ||
+      0
+    );
+    console.log(`Card ${card.card || card.name}: investment = ${investment} (from fields: originalInvestmentAmount=${card.originalInvestmentAmount}, investmentAUD=${card.investmentAUD}, investment=${card.investment})`);
+    return sum + investment;
   }, 0);
 
   const totalSale = cards.reduce((sum, card) => {
     const cardId = card.id || card.slabSerial;
-    const individualSalePrice = card.soldPrices && card.soldPrices[cardId]
-      ? parseFloat(card.soldPrices[cardId])
-      : 0;
-    const effectiveSalePrice = individualSalePrice > 0 ? individualSalePrice : (parseFloat(card.soldPrice) || 0);
+    
+    // Try multiple possible field names for sale price
+    let effectiveSalePrice = 0;
+    
+    // Check for individual sale prices first
+    if (card.soldPrices && card.soldPrices[cardId]) {
+      effectiveSalePrice = parseFloat(card.soldPrices[cardId]);
+    } else {
+      // Try various field names for sale price
+      effectiveSalePrice = parseFloat(
+        card.effectiveSalePrice ||
+        card.soldPrice || 
+        card.salePrice ||
+        card.finalValueAUD ||
+        card.soldFor ||
+        0
+      );
+    }
+    
+    console.log(`Card ${card.card || card.name}: sale price = ${effectiveSalePrice} (from fields: effectiveSalePrice=${card.effectiveSalePrice}, soldPrice=${card.soldPrice}, finalValueAUD=${card.finalValueAUD})`);
     return sum + effectiveSalePrice;
   }, 0);
 
@@ -185,12 +214,33 @@ const InvoicePDF = ({ buyer, date, cards, invoiceId, profile }) => {
 
           {/* Table Body */}
           {cards.map((card) => {
-            const investment = parseFloat(card.investmentAUD) || 0;
+            // Use the same logic as in totals calculation
+            const investment = parseFloat(
+              card.originalInvestmentAmount || 
+              card.investmentAUD || 
+              card.investment || 
+              card.investmentInPreferredCurrency ||
+              0
+            );
+            
             const cardId = card.id || card.slabSerial;
-            const individualSalePrice = card.soldPrices && card.soldPrices[cardId]
-              ? parseFloat(card.soldPrices[cardId])
-              : 0;
-            const effectiveSalePrice = individualSalePrice > 0 ? individualSalePrice : (parseFloat(card.soldPrice) || 0);
+            let effectiveSalePrice = 0;
+            
+            // Check for individual sale prices first
+            if (card.soldPrices && card.soldPrices[cardId]) {
+              effectiveSalePrice = parseFloat(card.soldPrices[cardId]);
+            } else {
+              // Try various field names for sale price
+              effectiveSalePrice = parseFloat(
+                card.effectiveSalePrice ||
+                card.soldPrice || 
+                card.salePrice ||
+                card.finalValueAUD ||
+                card.soldFor ||
+                0
+              );
+            }
+            
             const profit = effectiveSalePrice - investment;
 
             return (
