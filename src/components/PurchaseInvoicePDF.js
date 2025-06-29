@@ -182,6 +182,11 @@ const PurchaseInvoicePDF = ({ seller, date, cards, invoiceNumber, notes, totalAm
             
             console.log('Processing card for PDF:', card);
             console.log('Using display name:', cardDisplayName);
+            console.log('Price fields available:', {
+              originalInvestmentAmount: card.originalInvestmentAmount,
+              investmentAUD: card.investmentAUD,
+              parsed: parseFloat(card.originalInvestmentAmount || card.investmentAUD || 0)
+            });
             
             return (
               <View key={card.id} style={styles.tableRow}>
@@ -196,7 +201,11 @@ const PurchaseInvoicePDF = ({ seller, date, cards, invoiceNumber, notes, totalAm
                   <Text>{card.slabSerial || 'N/A'}</Text>
                 </View>
                 <View style={[styles.col3, styles.tableCell]}>
-                  <Text>{card.investmentAUD ? card.investmentAUD.toFixed(2) : 'N/A'}</Text>
+                  <Text>{(() => {
+                    // Try to get the price from various possible field names
+                    const price = parseFloat(card.originalInvestmentAmount || card.investmentAUD || 0);
+                    return price > 0 ? `$${price.toFixed(2)}` : 'N/A';
+                  })()}</Text>
                 </View>
               </View>
             );
@@ -207,7 +216,7 @@ const PurchaseInvoicePDF = ({ seller, date, cards, invoiceNumber, notes, totalAm
         <View style={styles.summary}>
           <View style={styles.summaryRow}>
             <Text style={[styles.summaryLabel, styles.totalAmount]}>Total Amount:</Text>
-            <Text style={[styles.summaryValue, styles.totalAmount]}>{totalAmount.toFixed(2)}</Text>
+            <Text style={[styles.summaryValue, styles.totalAmount]}>${totalAmount.toFixed(2)}</Text>
           </View>
         </View>
 
