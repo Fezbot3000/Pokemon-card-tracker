@@ -5,6 +5,7 @@ import { db as firestoreDb } from '../../services/firebase';
 import { toast } from 'react-hot-toast';
 import { useUserPreferences } from '../../contexts/UserPreferencesContext';
 import logger from '../../utils/logger';
+import Modal from '../../design-system/molecules/Modal';
 
 // Add CSS for hiding scrollbars
 const scrollbarHideStyles = `
@@ -184,55 +185,16 @@ function ListCardModal({ isOpen, onClose, selectedCards }) {
           queryPath: `marketplaceItems where cardId=${card.slabSerial} and status=available`
         });
         
-        try {
-          const snapshot = await getDocs(existingQuery);
-          console.log("🔍 LISTING MODAL: Query result", {
-            cardId: card.slabSerial,
-            isEmpty: snapshot.empty,
-            docCount: snapshot.size,
-            fromCache: snapshot.metadata.fromCache
-          });
-          
-          // Additional verification to ensure documents actually exist and aren't stale references
-          let exists = false;
-          if (!snapshot.empty) {
-            // Verify each document actually exists and has valid data
-            for (const doc of snapshot.docs) {
-              const data = doc.data();
-              console.log("🔍 LISTING MODAL: Document data", {
-                docId: doc.id,
-                cardId: data?.cardId,
-                status: data?.status,
-                matchesCardId: data?.cardId === card.slabSerial,
-                matchesStatus: data?.status === 'available'
-              });
-              
-              if (data && data.cardId === card.slabSerial && data.status === 'available') {
-                exists = true;
-                console.log("🔍 LISTING MODAL: Found existing listing", {
-                  docId: doc.id,
-                  cardId: data.cardId,
-                  status: data.status
-                });
-                break;
-              }
-            }
-          }
-          
-          console.log("🔍 LISTING MODAL: Final check result", {
-            cardId: card.slabSerial,
-            exists: exists
-          });
-          
-          return { cardId: card.slabSerial, exists: exists };
-        } catch (error) {
-          console.error("🔍 LISTING MODAL: Error checking existing listing", {
-            cardId: card.slabSerial,
-            error: error.message
-          });
-          logger.error(`Error checking existing listing for card ${card.slabSerial}:`, error);
-          return { cardId: card.slabSerial, exists: false }; // Assume no listing on error
-        }
+        const existingDocs = await getDocs(existingQuery);
+        const exists = !existingDocs.empty;
+        
+        console.log("🔍 LISTING MODAL: Duplicate check result", {
+          cardId: card.slabSerial,
+          exists,
+          foundCount: existingDocs.size
+        });
+        
+        return { cardId: card.slabSerial, exists };
       });
 
       console.log("🔍 LISTING MODAL: All duplicate check promises completed");
@@ -365,185 +327,166 @@ function ListCardModal({ isOpen, onClose, selectedCards }) {
   };
 
   return (
-    <>
-      <style>{scrollbarHideStyles}</style>
-      {/* Full-page modal backdrop */}
-      <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-0">
-        {/* Full-page modal container */}
-        <div className="bg-white dark:bg-[#1B2131] w-full h-full max-w-none flex flex-col">
-          {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-              List {selectedCards.length} Card{selectedCards.length > 1 ? 's' : ''} on Marketplace
-            </h2>
-            <button
-              onClick={onClose}
-              className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-            >
-              <span className="material-icons">close</span>
-            </button>
-          </div>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={`List ${selectedCards.length} Card${selectedCards.length > 1 ? 's' : ''} on Marketplace`}
+      position="right"
+      size="2xl"
+      closeOnClickOutside={false}
+      footer={
+        <div className="flex justify-end gap-3 w-full">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={isSubmitting}
+            className="px-4 py-2 rounded-md bg-gray-100 dark:bg-[#252B3B] text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-[#323B4B] transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            form="listing-form"
+            disabled={isSubmitting}
+            className="px-4 py-2 rounded-md bg-blue-500 text-white hover:bg-blue-600 transition-colors flex items-center gap-2"
+          >
+            {isSubmitting ? (
+              <>
+                <span className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></span>
+                <span>Listing...</span>
+              </>
+            ) : (
+              <>
+                <span className="material-icons text-sm">storefront</span>
+                <span>List on Marketplace</span>
+              </>
+            )}
+          </button>
+        </div>
+      }
+    >
+      <form id="listing-form" onSubmit={handleSubmit} className="space-y-6">
+        {selectedCards.map((card, index) => {
+          // Log card structure to console for debugging
+          console.log('Card data:', card);
           
-          {/* Scrollable Content */}
-          <form onSubmit={handleSubmit} className="flex-1 flex flex-col overflow-hidden">
-            <div className="flex-1 overflow-y-auto p-6 hide-scrollbar">
-              <div className="max-w-4xl mx-auto">
-                {selectedCards.map((card, index) => {
-                  // Log card structure to console for debugging
-                  console.log('Card data:', card);
-                  
-                  return (
-                    <div key={card.slabSerial || card.id || card._id || JSON.stringify(card)} className="mb-8 last:mb-0">
-                      <div className="bg-gray-50 dark:bg-[#252B3B] rounded-lg p-6">
-                        <div className="flex flex-col md:flex-row gap-6">
-                          {/* Card Image */}
-                          <div className="flex-shrink-0">
-                            <img
-                              src={card.imageUrl || card.cloudImageUrl || card.image || card.imageURL || card.img || '/placeholder-card.png'}
-                              alt={card.card || card.name || 'Card'}
-                              className="w-48 h-64 object-contain bg-gray-100 dark:bg-gray-800 rounded-lg shadow-md"
-                              onError={(e) => {
-                                console.log('Image failed to load:', e.target.src);
-                                e.target.src = '/placeholder-card.png';
-                              }}
-                            />
-                          </div>
-                          
-                          {/* Card Details and Form */}
-                          <div className="flex-1 space-y-4">
-                            {/* Card Info */}
-                            <div>
-                              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
-                                {card.card || card.name || 'Unnamed Card'}
-                              </h3>
-                              <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-                                <div>
-                                  <span className="text-gray-500 dark:text-gray-400">Set:</span>
-                                  <p className="text-gray-900 dark:text-white font-medium">{card.set || card.setName || 'Unknown Set'}</p>
-                                </div>
-                                <div>
-                                  <span className="text-gray-500 dark:text-gray-400">Year:</span>
-                                  <p className="text-gray-900 dark:text-white font-medium">{card.year || 'Unknown'}</p>
-                                </div>
-                                <div>
-                                  <span className="text-gray-500 dark:text-gray-400">Grade:</span>
-                                  <p className="text-gray-900 dark:text-white font-medium">PSA {card.grade || 'Ungraded'}</p>
-                                </div>
-                                <div>
-                                  <span className="text-gray-500 dark:text-gray-400">Slab Serial:</span>
-                                  <p className="text-gray-900 dark:text-white font-medium">{card.slabSerial || 'N/A'}</p>
-                                </div>
-                                {(card.currentValueAUD || card.value || card.marketValue || card.currentValue) && (
-                                  <div>
-                                    <span className="text-gray-500 dark:text-gray-400">Current Value:</span>
-                                    <p className="text-gray-900 dark:text-white font-medium">
-                                      {preferredCurrency?.symbol || '$'}{card.currentValueAUD || card.value || card.marketValue || card.currentValue || '0'}
-                                    </p>
-                                  </div>
-                                )}
-                                {(card.paidPriceAUD || card.purchasePrice || card.paidPrice || card.paid || card.cost) && (
-                                  <div>
-                                    <span className="text-gray-500 dark:text-gray-400">Purchase Price:</span>
-                                    <p className="text-gray-900 dark:text-white font-medium">
-                                      {preferredCurrency?.symbol || '$'}{card.paidPriceAUD || card.purchasePrice || card.paidPrice || card.paid || card.cost || '0'}
-                                    </p>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                            
-                            {/* Form Fields */}
-                            <div className="space-y-4 pt-4 border-t border-gray-200 dark:border-gray-600">
-                              <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                  Listing Price ({preferredCurrency?.code || 'USD'})
-                                </label>
-                                <div className="relative">
-                                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400">
-                                    {preferredCurrency?.symbol || '$'}
-                                  </span>
-                                  <input
-                                    type="number"
-                                    value={listingData[card.slabSerial || card.id || card._id || JSON.stringify(card)]?.price || ''}
-                                    onChange={(e) => handleInputChange(card.slabSerial || card.id || card._id || JSON.stringify(card), 'price', e.target.value)}
-                                    className="w-full pl-8 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-[#1B2131] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    placeholder="0.00"
-                                    step="0.01"
-                                    min="0.01"
-                                    required
-                                  />
-                                </div>
-                              </div>
-                              
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                    Note (Optional)
-                                  </label>
-                                  <textarea
-                                    value={listingData[card.slabSerial || card.id || card._id || JSON.stringify(card)]?.note || ''}
-                                    onChange={(e) => handleInputChange(card.slabSerial || card.id || card._id || JSON.stringify(card), 'note', e.target.value)}
-                                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-[#1B2131] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    placeholder="Add a note about this card..."
-                                    rows="3"
-                                  />
-                                </div>
-                                
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                    Location (Optional)
-                                  </label>
-                                  <input
-                                    type="text"
-                                    value={listingData[card.slabSerial || card.id || card._id || JSON.stringify(card)]?.location || ''}
-                                    onChange={(e) => handleInputChange(card.slabSerial || card.id || card._id || JSON.stringify(card), 'location', e.target.value)}
-                                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-[#1B2131] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    placeholder="Enter your location (e.g., Sydney)"
-                                  />
-                                </div>
-                              </div>
-                            </div>
-                          </div>
+          return (
+            <div key={card.slabSerial || card.id || card._id || JSON.stringify(card)} className="bg-gray-50 dark:bg-[#252B3B] rounded-lg p-6">
+              <div className="flex flex-col md:flex-row gap-6">
+                {/* Card Image */}
+                <div className="flex-shrink-0">
+                  <img
+                    src={card.imageUrl || card.cloudImageUrl || card.image || card.imageURL || card.img || '/placeholder-card.png'}
+                    alt={card.card || card.name || 'Card'}
+                    className="w-32 h-44 object-contain bg-gray-100 dark:bg-gray-800 rounded-lg shadow-md"
+                    onError={(e) => {
+                      console.log('Image failed to load:', e.target.src);
+                      e.target.src = '/placeholder-card.png';
+                    }}
+                  />
+                </div>
+                
+                {/* Card Details and Form */}
+                <div className="flex-1 space-y-4">
+                  {/* Card Info */}
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                      {card.card || card.name || 'Unnamed Card'}
+                    </h3>
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+                      <div>
+                        <span className="text-gray-500 dark:text-gray-400">Set:</span>
+                        <p className="text-gray-900 dark:text-white font-medium">{card.set || card.setName || 'Unknown Set'}</p>
+                      </div>
+                      <div>
+                        <span className="text-gray-500 dark:text-gray-400">Year:</span>
+                        <p className="text-gray-900 dark:text-white font-medium">{card.year || 'Unknown'}</p>
+                      </div>
+                      <div>
+                        <span className="text-gray-500 dark:text-gray-400">Grade:</span>
+                        <p className="text-gray-900 dark:text-white font-medium">PSA {card.grade || 'Ungraded'}</p>
+                      </div>
+                      <div>
+                        <span className="text-gray-500 dark:text-gray-400">Slab Serial:</span>
+                        <p className="text-gray-900 dark:text-white font-medium">{card.slabSerial || 'N/A'}</p>
+                      </div>
+                      {(card.currentValueAUD || card.value || card.marketValue || card.currentValue) && (
+                        <div>
+                          <span className="text-gray-500 dark:text-gray-400">Current Value:</span>
+                          <p className="text-gray-900 dark:text-white font-medium">
+                            {preferredCurrency?.symbol || '$'}{card.currentValueAUD || card.value || card.marketValue || card.currentValue || '0'}
+                          </p>
                         </div>
+                      )}
+                      {(card.paidPriceAUD || card.purchasePrice || card.paidPrice || card.paid || card.cost) && (
+                        <div>
+                          <span className="text-gray-500 dark:text-gray-400">Purchase Price:</span>
+                          <p className="text-gray-900 dark:text-white font-medium">
+                            {preferredCurrency?.symbol || '$'}{card.paidPriceAUD || card.purchasePrice || card.paidPrice || card.paid || card.cost || '0'}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Form Fields */}
+                  <div className="space-y-4 pt-4 border-t border-gray-200 dark:border-gray-600">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Listing Price ({preferredCurrency?.code || 'USD'})
+                      </label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400">
+                          {preferredCurrency?.symbol || '$'}
+                        </span>
+                        <input
+                          type="number"
+                          value={listingData[card.slabSerial || card.id || card._id || JSON.stringify(card)]?.price || ''}
+                          onChange={(e) => handleInputChange(card.slabSerial || card.id || card._id || JSON.stringify(card), 'price', e.target.value)}
+                          className="w-full pl-8 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-[#1B2131] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="0.00"
+                          step="0.01"
+                          min="0.01"
+                          required
+                        />
                       </div>
                     </div>
-                  );
-                })}
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                          Note (Optional)
+                        </label>
+                        <textarea
+                          value={listingData[card.slabSerial || card.id || card._id || JSON.stringify(card)]?.note || ''}
+                          onChange={(e) => handleInputChange(card.slabSerial || card.id || card._id || JSON.stringify(card), 'note', e.target.value)}
+                          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-[#1B2131] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="Add a note about this card..."
+                          rows="3"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                          Location (Optional)
+                        </label>
+                        <input
+                          type="text"
+                          value={listingData[card.slabSerial || card.id || card._id || JSON.stringify(card)]?.location || ''}
+                          onChange={(e) => handleInputChange(card.slabSerial || card.id || card._id || JSON.stringify(card), 'location', e.target.value)}
+                          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-[#1B2131] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="Enter your location (e.g., Sydney)"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-            
-            {/* Fixed Footer */}
-            <div className="flex-shrink-0 bg-white dark:bg-[#1B2131] border-t border-gray-200 dark:border-gray-700 p-4 flex justify-end gap-3">
-              <button
-                type="button"
-                onClick={onClose}
-                disabled={isSubmitting}
-                className="px-4 py-2 rounded-md bg-gray-100 dark:bg-[#252B3B] text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-[#323B4B] transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="px-4 py-2 rounded-md bg-blue-500 text-white hover:bg-blue-600 transition-colors flex items-center gap-2"
-              >
-                {isSubmitting ? (
-                  <>
-                    <span className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></span>
-                    <span>Listing...</span>
-                  </>
-                ) : (
-                  <>
-                    <span className="material-icons text-sm">storefront</span>
-                    <span>List on Marketplace</span>
-                  </>
-                )}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </>
+          );
+        })}
+      </form>
+    </Modal>
   );
 }
 
