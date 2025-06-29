@@ -1045,85 +1045,77 @@ const CardList = ({
         </div>
       ) : (
         <div className="flex flex-col">
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {paginatedCards.map(card => (
               <div
                 key={card._uniqueKey}
-                className={`bg-white dark:bg-[#0F0F0F] rounded-2xl overflow-hidden transition-all duration-200 hover:shadow-md ${selectedCards.has(card.slabSerial) ? 'ring-2 ring-[#E6185C]' : 'border border-[#ffffff33] dark:border-[#ffffff1a]'}`}
+                className={`bg-white dark:bg-[#0F0F0F] rounded-lg overflow-hidden transition-all duration-200 hover:shadow-md ${selectedCards.has(card.slabSerial) ? 'ring-2 ring-[#E6185C]' : 'border border-[#ffffff33] dark:border-[#ffffff1a]'}`}
               >
-              <div className="flex p-4 items-center">
-                {/* Card selection checkbox */}
-                <div className="mr-4">
-                  <input
-                    type="checkbox"
-                    checked={selectedCards.has(card.slabSerial)}
-                    onChange={(e) => handleSelectCard(e, card.slabSerial)}
-                    className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
-                    aria-label={`Select ${card.card}`}
-                    onClick={(e) => e.stopPropagation()}
-                  />
-                </div>
-                
-                {/* Card image (small) */}
-                <div 
-                  className="relative w-16 h-24 sm:w-20 sm:h-28 flex-shrink-0 rounded-lg overflow-hidden cursor-pointer mr-4"
-                  onClick={() => onCardClick(card)}
-                >
-                  {cardImages[card.slabSerial] ? (
-                    <img
-                      src={cardImages[card.slabSerial]} 
-                      alt={`${card.player} - ${card.card}`} 
-                      className="w-full h-full object-contain"
-                      loading="lazy"
+                <div className="flex p-3 items-start">
+                  {/* Card selection checkbox */}
+                  <div className="mr-3 mt-1">
+                    <input
+                      type="checkbox"
+                      checked={selectedCards.has(card.slabSerial)}
+                      onChange={(e) => handleSelectCard(e, card.slabSerial)}
+                      className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-blue-600 bg-white dark:bg-gray-800 focus:ring-blue-500 dark:focus:ring-blue-600 focus:ring-2 cursor-pointer"
+                      aria-label={`Select ${card.card}`}
+                      onClick={(e) => e.stopPropagation()}
                     />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gray-100 dark:bg-[#1B2131]">
-                      <span className="material-icons text-xl text-gray-400 dark:text-gray-600">image</span>
-                    </div>
-                  )}
-                </div>
-                
-                {/* Card details */}
-                <div className="flex-grow min-w-0 cursor-pointer" onClick={() => onCardClick(card)}>
-                  <h3 className="font-medium text-gray-900 dark:text-white mb-1 text-base sm:text-lg truncate">
-                    {card.card}
-                  </h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
-                    {card.player || 'Unknown Player'}
-                  </p>
+                  </div>
                   
-                  {/* Card metadata */}
-                  <div className="flex flex-wrap gap-x-4 gap-y-1">
-                    <div className="flex items-center">
-                      <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Paid:</span>
-                      <span className="ml-2 font-medium text-xs sm:text-sm text-gray-900 dark:text-white">
-                        {formatUserCurrency(card.investmentAUD, card.originalInvestmentCurrency)}
-                      </span>
-                    </div>
-                    <div className="flex items-center">
-                      <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Value:</span>
-                      <span className="ml-2 font-medium text-xs sm:text-sm text-gray-900 dark:text-white">
-                        {formatUserCurrency(card.currentValueAUD, card.originalCurrentValueCurrency)}
-                      </span>
-                    </div>
-                    <div className="flex items-center">
-                      <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Profit:</span>
-                      <span className={`ml-2 font-medium text-xs sm:text-sm ${(parseFloat(card.originalCurrentValueAmount || card.currentValueAUD || 0) - parseFloat(card.originalInvestmentAmount || card.investmentAUD || 0)) >= 0 ? 'text-green-500 dark:text-green-400' : 'text-red-500 dark:text-red-400'}`}>
-                        {formatUserCurrency(parseFloat(card.originalCurrentValueAmount || card.currentValueAUD || 0) - parseFloat(card.originalInvestmentAmount || card.investmentAUD || 0), card.originalCurrentValueCurrency)}
-                      </span>
-                    </div>
-                    {card.datePurchased && (
-                      <div className="flex items-center">
-                        <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Purchased:</span>
-                        <span className="ml-2 font-medium text-xs sm:text-sm text-gray-900 dark:text-white">
-                          {formatDate(card.datePurchased)}
-                        </span>
+                  {/* Card image (better size) */}
+                  <div 
+                    className="relative w-16 h-20 flex-shrink-0 rounded overflow-hidden cursor-pointer mr-3"
+                    onClick={() => onCardClick(card)}
+                  >
+                    {cardImages[card.slabSerial] ? (
+                      <img
+                        src={cardImages[card.slabSerial]} 
+                        alt={`${card.player} - ${card.card}`} 
+                        className="w-full h-full object-contain"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gray-100 dark:bg-[#1B2131]">
+                        <span className="material-icons text-lg text-gray-400 dark:text-gray-600">image</span>
                       </div>
                     )}
                   </div>
+                  
+                  {/* Card details */}
+                  <div className="flex-grow min-w-0 cursor-pointer" onClick={() => onCardClick(card)}>
+                    <h3 className="font-semibold text-gray-900 dark:text-white mb-1 text-base truncate">
+                      {card.card}
+                    </h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-2 truncate">
+                      {card.player || 'Unknown Player'}
+                    </p>
+                    
+                    {/* Card metadata - Compact */}
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-xs">
+                        <span className="text-gray-600 dark:text-gray-400">Paid:</span>
+                        <span className="font-medium text-gray-900 dark:text-white">
+                          {formatUserCurrency(parseFloat(card.originalInvestmentAmount || card.investmentAUD || 0), card.originalInvestmentCurrency)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-xs">
+                        <span className="text-gray-600 dark:text-gray-400">Value:</span>
+                        <span className="font-medium text-gray-900 dark:text-white">
+                          {formatUserCurrency(parseFloat(card.originalCurrentValueAmount || card.currentValueAUD || 0), card.originalCurrentValueCurrency)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-xs">
+                        <span className="text-gray-600 dark:text-gray-400">Profit:</span>
+                        <span className={`font-medium ${(parseFloat(card.originalCurrentValueAmount || card.currentValueAUD || 0) - parseFloat(card.originalInvestmentAmount || card.investmentAUD || 0)) >= 0 ? 'text-green-500 dark:text-green-400' : 'text-red-500 dark:text-red-400'}`}>
+                          {formatUserCurrency(parseFloat(card.originalCurrentValueAmount || card.currentValueAUD || 0) - parseFloat(card.originalInvestmentAmount || card.investmentAUD || 0), card.originalCurrentValueCurrency)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
             ))}
           </div>
           

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useAuth, StatisticsSummary } from '../../design-system';
 import db from '../../services/firestore/dbAdapter';
 import { toast } from 'react-hot-toast';
@@ -432,13 +432,17 @@ const PurchaseInvoices = () => {
     }
   };
 
+  // Memoize load functions to prevent unnecessary re-renders
+  const memoizedLoadInvoices = useCallback(loadInvoices, [currentUser]);
+  const memoizedLoadProfile = useCallback(loadProfile, [currentUser]);
+  
   // Load purchase invoices with improved cloud synchronization
   useEffect(() => {
     if (currentUser) {
-      loadInvoices();
-      loadProfile();
+      memoizedLoadInvoices();
+      memoizedLoadProfile();
     }
-  }, [currentUser]);
+  }, [currentUser, memoizedLoadInvoices, memoizedLoadProfile]);
 
   return (
     <div className="p-4 sm:p-6 pb-20 pt-16 sm:pt-4">
@@ -745,11 +749,11 @@ const PurchaseInvoices = () => {
       {/* Create/Edit Invoice Modal */}
       <CreateInvoiceModal
         isOpen={showCreateModal}
-        onClose={() => {
+        onClose={useCallback(() => {
           setShowCreateModal(false);
           setEditingInvoice(null); // Reset editing state when closing
-        }}
-        onSave={async (newInvoice) => {
+        }, [])}
+        onSave={useCallback(async (newInvoice) => {
           if (!newInvoice) return;
           
           try {
@@ -775,10 +779,7 @@ const PurchaseInvoices = () => {
             setShowCreateModal(false);
             setEditingInvoice(null);
           }
-          
-          // Prevent event propagation
-          return false;
-        }}
+        }, [editingInvoice])}
         editingInvoice={editingInvoice}
       />
     </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useAuth } from '../../design-system';
 import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
@@ -21,6 +21,12 @@ const CreateInvoiceModal = ({ isOpen, onClose, onSave, editingInvoice = null, pr
   const { currentUser } = useAuth();
   const navigate = useNavigate();
   
+  // Memoize preSelectedCards to prevent unnecessary re-renders
+  const memoizedPreSelectedCards = useMemo(() => preSelectedCards, [preSelectedCards?.length, preSelectedCards?.[0]?.id]);
+  
+  // Memoize editingInvoice to prevent unnecessary re-renders
+  const memoizedEditingInvoice = useMemo(() => editingInvoice, [editingInvoice?.id, editingInvoice?.invoiceNumber]);
+  
   // Initialize form with editing invoice data or pre-selected cards
   useEffect(() => {
     if (!isOpen) {
@@ -34,22 +40,22 @@ const CreateInvoiceModal = ({ isOpen, onClose, onSave, editingInvoice = null, pr
       return;
     }
     
-    if (editingInvoice) {
+    if (memoizedEditingInvoice) {
       // We're in edit mode - populate form with invoice data
-      console.log('Initializing form with editing invoice data:', editingInvoice);
-      setSelectedCards(editingInvoice.cards || []);
-      setSeller(editingInvoice.seller || '');
-      setDate(editingInvoice.date || new Date().toISOString().split('T')[0]);
-      setInvoiceNumber(editingInvoice.invoiceNumber || '');
-      setNotes(editingInvoice.notes || '');
-    } else if (preSelectedCards && preSelectedCards.length > 0) {
+      console.log('Initializing form with editing invoice data:', memoizedEditingInvoice);
+      setSelectedCards(memoizedEditingInvoice.cards || []);
+      setSeller(memoizedEditingInvoice.seller || '');
+      setDate(memoizedEditingInvoice.date || new Date().toISOString().split('T')[0]);
+      setInvoiceNumber(memoizedEditingInvoice.invoiceNumber || '');
+      setNotes(memoizedEditingInvoice.notes || '');
+    } else if (memoizedPreSelectedCards && memoizedPreSelectedCards.length > 0) {
       // Using pre-selected cards for a new invoice
       console.log('Initializing form with pre-selected cards');
-      setSelectedCards(preSelectedCards);
+      setSelectedCards(memoizedPreSelectedCards);
       
       // Pre-populate the purchase date from the first card's datePurchased field
-      if (preSelectedCards[0].datePurchased) {
-        setDate(preSelectedCards[0].datePurchased);
+      if (memoizedPreSelectedCards[0].datePurchased) {
+        setDate(memoizedPreSelectedCards[0].datePurchased);
       }
       
       // Generate a default invoice number based on date
@@ -60,7 +66,7 @@ const CreateInvoiceModal = ({ isOpen, onClose, onSave, editingInvoice = null, pr
       setSeller('');
       setNotes('');
     }
-  }, [isOpen, editingInvoice, preSelectedCards]);
+  }, [isOpen, memoizedEditingInvoice, memoizedPreSelectedCards]);
   
   // Calculate total investment amount
   const totalInvestment = selectedCards.reduce((sum, card) => {
@@ -68,7 +74,7 @@ const CreateInvoiceModal = ({ isOpen, onClose, onSave, editingInvoice = null, pr
   }, 0);
   
   // Handle form submission
-  const handleSubmit = async (e) => {
+  const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
     
     if (selectedCards.length === 0) {
@@ -86,7 +92,7 @@ const CreateInvoiceModal = ({ isOpen, onClose, onSave, editingInvoice = null, pr
       e.stopPropagation();
       
       // Show loading toast
-      const loadingToast = toast.loading(editingInvoice ? 'Updating invoice...' : 'Creating invoice...');
+      const loadingToast = toast.loading(memoizedEditingInvoice ? 'Updating invoice...' : 'Creating invoice...');
       
       // Prepare the card data - ensure all values are defined
       const cardData = selectedCards.map(card => {
@@ -113,7 +119,7 @@ const CreateInvoiceModal = ({ isOpen, onClose, onSave, editingInvoice = null, pr
       });
       
       const invoiceData = {
-        id: editingInvoice?.id || `invoice_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        id: memoizedEditingInvoice?.id || `invoice_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         invoiceNumber: invoiceNumber.trim(),
         seller: seller.trim(),
         date,
@@ -121,7 +127,7 @@ const CreateInvoiceModal = ({ isOpen, onClose, onSave, editingInvoice = null, pr
         cards: cardData,
         totalAmount: totalInvestment,
         cardCount: cardData.length,
-        createdAt: editingInvoice?.createdAt || new Date().toISOString(),
+        createdAt: memoizedEditingInvoice?.createdAt || new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
       
@@ -130,7 +136,7 @@ const CreateInvoiceModal = ({ isOpen, onClose, onSave, editingInvoice = null, pr
       
       // Success feedback
       toast.dismiss(loadingToast);
-      toast.success(editingInvoice ? 'Invoice updated successfully!' : 'Invoice created successfully!');
+      toast.success(memoizedEditingInvoice ? 'Invoice updated successfully!' : 'Invoice created successfully!');
       
       // Close modal
       handleClose();
@@ -139,23 +145,23 @@ const CreateInvoiceModal = ({ isOpen, onClose, onSave, editingInvoice = null, pr
       console.error('Error saving invoice:', error);
       toast.error('Failed to save invoice. Please try again.');
     }
-  };
+  }, [selectedCards, seller, invoiceNumber, date, notes, totalInvestment, memoizedEditingInvoice, onSave]);
 
   // Handle modal close
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setEnlargedImage(null);
     onClose();
-  };
+  }, [onClose]);
   
   // Handle image click to enlarge
-  const handleImageClick = (imageUrl, cardName) => {
+  const handleImageClick = useCallback((imageUrl, cardName) => {
     setEnlargedImage({ url: imageUrl, name: cardName });
-  };
+  }, []);
   
   // Handle enlarged image close
-  const handleEnlargedImageClose = () => {
+  const handleEnlargedImageClose = useCallback(() => {
     setEnlargedImage(null);
-  };
+  }, []);
   
   if (!isOpen) return null;
   
