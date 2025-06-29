@@ -12,12 +12,8 @@ App.js (Root Router)
 │   ├── ErrorBoundary
 │   ├── HelmetProvider (SEO)
 │   ├── DesignSystemProvider
-│   ├── SubscriptionProvider
 │   ├── UserPreferencesProvider
-│   ├── TutorialProvider
-│   ├── BackupProvider
-│   ├── RestoreProvider
-│   └── InvoiceProvider
+│   └── TutorialProvider
 ├── Dashboard (Main App Shell)
 │   ├── Header
 │   ├── AppContent (Main Content Area)
@@ -174,19 +170,17 @@ const useCardSelection = (filteredCards) => {
 Context providers manage global application state:
 
 ```javascript
-// Example: SubscriptionContext
-const SubscriptionProvider = ({ children }) => {
-  const [subscriptionStatus, setSubscriptionStatus] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+// Example: ThemeContext
+const ThemeProvider = ({ children }) => {
+  const [theme, setTheme] = useState('light');
   
   return (
-    <SubscriptionContext.Provider value={{
-      subscriptionStatus,
-      isLoading,
-      // ... other subscription methods
+    <ThemeContext.Provider value={{
+      theme,
+      setTheme
     }}>
       {children}
-    </SubscriptionContext.Provider>
+    </ThemeContext.Provider>
   );
 };
 ```

@@ -70,14 +70,6 @@ service cloud.firestore {
       allow write: if isOwner(userId);
     }
 
-    // Subscriptions: owners can read but not modify 
-    match /subscriptions/{userId} {
-      // 'get' allows reading a single document
-      allow get: if isOwner(userId);
-      // Deny list/write operations from client
-      allow list, create, update, delete: if false;
-    }
-
     // --- PSA Cards Collection ---
     // This collection serves as a shared cache of PSA card data
     // Any authenticated user can read PSA card data

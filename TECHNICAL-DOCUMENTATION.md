@@ -40,20 +40,20 @@ The Pokemon Card Tracker is a comprehensive React-based web application designed
 The application follows a modern React-based Single Page Application (SPA) architecture with Firebase as the backend-as-a-service provider.
 
 ```
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│   React SPA     │    │   Firebase       │    │  External APIs  │
-│                 │    │                  │    │                 │
-│ • Components    │◄──►│ • Firestore DB   │    │ • PSA Database  │
-│ • Hooks         │    │ • Authentication │    │ • ExchangeRate  │
-│ • Context API   │    │ • Storage        │    │ • eBay Links    │
-│ • Router        │    │ • Cloud Functions│    │ • Stripe        │
-└─────────────────┘    └──────────────────┘    └─────────────────┘
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│ Frontend (React)│    │ Backend (Firebase)│    │ External APIs   │
+├─────────────────┤    ├─────────────────┤    ├─────────────────┤
+│ • Components    │    │ • Authentication│    │ • PSA Database  │
+│ • Hooks         │    │ • Firestore     │    │ • SendGrid      │
+│ • Context       │    │ • Storage       │    │ • Exchange Rate │
+│ • Router        │    │ • Cloud Functions│    │                 │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
 ```
 
 ### Frontend Architecture
 - **React 18**: Modern functional components with hooks
 - **React Router v7**: Client-side routing with nested routes
-- **Context API**: Global state management for auth, preferences, subscriptions
+- **Context API**: Global state management for auth, preferences, themes
 - **Custom Design System**: Reusable UI components with Tailwind CSS
 - **Real-time Updates**: Firestore listeners for live data synchronization
 
@@ -89,9 +89,8 @@ The application follows a modern React-based Single Page Application (SPA) archi
   "database": "Firebase Firestore",
   "auth": "Firebase Authentication",
   "storage": "Firebase Storage",
-  "functions": "Firebase Cloud Functions (Node.js)",
-  "hosting": "Firebase Hosting",
-  "payments": "Stripe Integration"
+  "functions": "Firebase Cloud Functions",
+  "hosting": "Firebase Hosting"
 }
 ```
 
@@ -129,8 +128,8 @@ pokemon-card-tracker/
 │   │   └── hooks/            # Design system hooks
 │   ├── contexts/              # React Context providers (9 files)
 │   │   ├── AuthContext.js     # Authentication state
-│   │   ├── SubscriptionContext.js # Subscription management
-│   │   └── UserPreferencesContext.js # User preferences
+│   │   ├── UserPreferencesContext.js # User settings
+│   │   └── TutorialContext.js    # Tutorial state
 │   ├── hooks/                 # Custom React hooks (9 files)
 │   │   ├── useCardData.js     # Card data management
 │   │   ├── useCardModals.js   # Modal state management
@@ -453,21 +452,20 @@ match /users/{userId}/{allPaths=**} {
 - **URL Format**: Dynamically generated based on card details
 - **Use Case**: Price validation and market analysis
 
-**4. Stripe Integration**
-- **Purpose**: Subscription payment processing
-- **Implementation**: Stripe Checkout integration
-- **Plans**: Free tier (50 cards) and Premium tier (unlimited)
-- **Webhooks**: Subscription status updates via Cloud Functions
-
 ### Cloud Functions
 
 **Key Functions** (`functions/index.js`):
 
 1. **`updateExchangeRates`**: Fetches live currency rates
 2. **`generateInvoiceBatch`**: Creates PDF invoices in bulk
-3. **`handleStripeWebhook`**: Processes subscription events
-4. **`psaLookup`**: PSA card data retrieval
-5. **`marketplaceNotifications`**: Real-time messaging notifications
+3. **`psaLookup`**: PSA card data retrieval
+4. **`marketplaceNotifications`**: Real-time messaging notifications
+
+**3. Cloud Functions**
+- **Purpose**: Server-side processing and API integrations
+- **Functions**: 
+  1. **`psaLookup`**: PSA API integration for card data
+  2. **`emailService`**: SendGrid email notifications
 
 ---
 
@@ -503,8 +501,9 @@ REACT_APP_FIREBASE_PROJECT_ID=xxx
 REACT_APP_FIREBASE_STORAGE_BUCKET=xxx
 REACT_APP_FIREBASE_MESSAGING_SENDER_ID=xxx
 REACT_APP_FIREBASE_APP_ID=xxx
-REACT_APP_STRIPE_PUBLISHABLE_KEY=xxx
 REACT_APP_EXCHANGE_RATE_API_KEY=xxx
+REACT_APP_FIREBASE_CLIENT_ID=xxx
+REACT_APP_PSA_API_TOKEN=xxx
 ```
 
 ### Performance Optimizations
@@ -547,3 +546,5 @@ REACT_APP_EXCHANGE_RATE_API_KEY=xxx
 ---
 
 This documentation provides a comprehensive overview of the Pokemon Card Tracker platform. For specific implementation details, refer to the individual component files and service modules within the codebase.
+
+## Performance Optimization

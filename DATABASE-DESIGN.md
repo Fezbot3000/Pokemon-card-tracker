@@ -346,38 +346,15 @@ The Pokemon Card Tracker uses Firebase Firestore as its primary database, provid
 ### 8. User Profile (`/users/{userId}/profile`)
 ```javascript
 {
-  // User Identity
-  userId: "string",
+  // Authentication & Profile
   email: "string",
   displayName: "string",
-  
-  // User Preferences
-  preferredCurrency: "string",          // Default currency
-  theme: "string",                      // "light", "dark", "auto"
-  language: "string",                   // User language
-  timezone: "string",                   // User timezone
-  
-  // App Settings
-  tutorialCompleted: "boolean",         // Tutorial status
-  emailNotifications: "boolean",        // Email notification preference
-  marketplaceNotifications: "boolean",  // Marketplace notifications
-  
-  // Subscription Information
-  subscriptionStatus: "string",         // "free", "premium", "trial"
-  subscriptionId: "string",             // Stripe subscription ID
-  subscriptionExpiry: "timestamp",      // When subscription expires
-  cardLimit: "number",                  // Current card limit
-  
-  // Usage Statistics
-  totalCards: "number",                 // Total cards owned
-  totalCollections: "number",           // Total collections
-  totalValue: "number",                 // Total portfolio value
-  joinDate: "timestamp",                // When user joined
-  lastLogin: "timestamp",               // Last login time
+  photoURL: "string",
   
   // Metadata
-  createdAt: "timestamp",
-  updatedAt: "timestamp"
+  lastLogin: "timestamp",              // Last login time
+  createdAt: "timestamp",             // Account creation
+  updatedAt: "timestamp"              // Last profile update
 }
 ```
 

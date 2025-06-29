@@ -785,8 +785,6 @@ const SoldItems = () => {
             db.createObjectStore("images", { keyPath: ["userId", "id"] });
             
             db.createObjectStore("profile", { keyPath: ["userId", "id"] });
-            
-            db.createObjectStore("subscription", { keyPath: "userId" });
           };
           
           request.onsuccess = () => {

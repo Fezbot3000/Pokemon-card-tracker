@@ -6,20 +6,6 @@
         "npm --prefix \"$RESOURCE_DIR\" install"
       ],
       "codebase": "default"
-    },
-    {
-      "source": "exchange-rate-proxy",
-      "codebase": "exchange-rate-proxy",
-      "ignore": [
-        "node_modules",
-        ".git",
-        "firebase-debug.log",
-        "firebase-debug.*.log",
-        "*.local"
-      ],
-      "predeploy": [
-        "npm --prefix \"$RESOURCE_DIR\" run lint"
-      ]
     }
   ],
   "hosting": {

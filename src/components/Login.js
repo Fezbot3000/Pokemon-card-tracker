@@ -99,9 +99,7 @@ function Login() {
         // Sign up
         await signUp({ email, password, displayName: email.split('@')[0] });
         setSignupSuccess(true);
-        // Instead of navigating directly to pricing, set isNewUser flag and go to dashboard
-        localStorage.setItem('isNewUser', 'true');
-        // NewUserRoute component will handle subscription check and redirect if needed
+        // Navigate to dashboard on successful login
         navigate('/dashboard', { replace: true });
         setIsLoading(false);
       }
