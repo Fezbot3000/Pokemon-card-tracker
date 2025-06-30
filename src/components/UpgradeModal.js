@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Modal from '../design-system/molecules/Modal';
 import Button from '../design-system/atoms/Button';
 import Icon from '../design-system/atoms/Icon';
+import { toast } from 'react-hot-toast';
+import { useAuth } from '../design-system/contexts/AuthContext';
 
 const features = [
   { label: 'Unlimited collections', free: false, premium: true },
@@ -14,6 +16,31 @@ const features = [
 ];
 
 const UpgradeModal = ({ isOpen, onClose, daysRemaining }) => {
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(false);
+
+  const handleUpgrade = async () => {
+    if (!user) {
+      toast.error('Please log in to upgrade');
+      return;
+    }
+
+    setLoading(true);
+    
+    try {
+      // TODO: Implement Stripe checkout
+      toast.success('Stripe checkout will be implemented next!');
+      // For now, just show a success message
+      setTimeout(() => {
+        onClose();
+      }, 2000);
+    } catch (error) {
+      console.error('Upgrade error:', error);
+      toast.error('Failed to start upgrade process');
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <Modal
       isOpen={isOpen}
@@ -71,7 +98,14 @@ const UpgradeModal = ({ isOpen, onClose, daysRemaining }) => {
                 </li>
               ))}
             </ul>
-            <Button variant="primary" className="w-full bg-white/20 border border-white/30 hover:bg-white/30 text-white font-medium px-4 py-2 rounded text-sm mt-auto">Upgrade Now</Button>
+            <Button 
+              variant="primary" 
+              onClick={handleUpgrade}
+              loading={loading}
+              className="w-full bg-white/20 border border-white/30 hover:bg-white/30 text-white font-medium px-4 py-2 rounded text-sm mt-auto"
+            >
+              {loading ? 'Processing...' : 'Upgrade Now'}
+            </Button>
           </div>
         </div>
         <div className="text-center text-xs text-gray-500 dark:text-gray-400 mt-4">

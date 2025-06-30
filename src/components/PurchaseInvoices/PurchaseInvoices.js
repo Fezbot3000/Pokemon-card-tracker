@@ -19,8 +19,22 @@ import FeatureGate from '../FeatureGate';
  * Displays and manages purchase invoices for Pokemon cards
  */
 const PurchaseInvoices = () => {
-  // All hooks must be called before any conditional returns
+  // Check subscription access FIRST, before any hooks
   const { hasFeature } = useSubscription();
+  
+  // If user doesn't have invoicing access, show feature gate
+  if (!hasFeature('INVOICING')) {
+    return (
+      <div className="p-4 sm:p-6 pb-20 pt-16 sm:pt-4">
+        <FeatureGate 
+          feature="INVOICING"
+          customMessage="Create and manage purchase invoices for your card transactions. Track your investments and generate professional invoices. This feature is available with Premium."
+        />
+      </div>
+    );
+  }
+
+  // All other hooks AFTER the conditional return
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -447,18 +461,6 @@ const PurchaseInvoices = () => {
       return [];
     }
   };
-
-  // If user doesn't have invoicing access, show feature gate
-  if (!hasFeature('INVOICING')) {
-    return (
-      <div className="p-4 sm:p-6 pb-20 pt-16 sm:pt-4">
-        <FeatureGate 
-          feature="INVOICING"
-          customMessage="Create and manage purchase invoices for your card transactions. Track your investments and generate professional invoices. This feature is available with Premium."
-        />
-      </div>
-    );
-  }
 
   return (
     <div className="p-4 sm:p-6 pb-20 pt-16 sm:pt-4">

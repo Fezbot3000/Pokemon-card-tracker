@@ -1,8 +1,8 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
 import { useSubscription } from '../hooks/useSubscription';
 import Button from '../design-system/atoms/Button';
 import Icon from '../design-system/atoms/Icon';
+import UpgradeModal from './UpgradeModal';
 
 /**
  * FeatureGate Component
@@ -18,7 +18,7 @@ const FeatureGate = ({
   inline = false
 }) => {
   const { hasFeature, isOnTrial, getTrialDaysRemaining, isFree } = useSubscription();
-  const navigate = useNavigate();
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   
   // If user has access to the feature, render children
   if (hasFeature(feature)) {
@@ -63,65 +63,69 @@ const FeatureGate = ({
   // Inline version for smaller UI elements
   if (inline) {
     return (
-      <div className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-        <Icon name="lock" size="sm" className="text-gray-400" />
-        <span className="text-sm text-gray-600 dark:text-gray-400">
-          Premium feature
-        </span>
-        <Button 
-          variant="primary" 
-          size="sm"
-          onClick={() => navigate('/upgrade')}
-          className="ml-auto"
-        >
-          Upgrade
-        </Button>
-      </div>
+      <>
+        <div className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+          <Icon name="lock" size="sm" className="text-gray-400" />
+          <span className="text-sm text-gray-600 dark:text-gray-400">
+            Premium feature
+          </span>
+          <Button 
+            variant="primary" 
+            size="sm"
+            onClick={() => setShowUpgradeModal(true)}
+            className="ml-auto"
+          >
+            Upgrade
+          </Button>
+        </div>
+        <UpgradeModal 
+          isOpen={showUpgradeModal} 
+          onClose={() => setShowUpgradeModal(false)} 
+          daysRemaining={daysRemaining} 
+        />
+      </>
     );
   }
   
   // Full upgrade prompt
   return (
-    <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-6 text-center border border-gray-200 dark:border-gray-700">
-      <div className="w-12 h-12 mx-auto mb-4 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center">
-        <Icon name="lock" className="text-purple-600 dark:text-purple-400" />
-      </div>
-      
-      <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">
-        {getFeatureName()}
-      </h3>
-      
-      <p className="text-gray-600 dark:text-gray-400 mb-4 max-w-md mx-auto">
-        {getUpgradeMessage()}
-      </p>
-      
-      <div className="flex flex-col sm:flex-row gap-3 justify-center">
-        <Button 
-          variant="primary" 
-          onClick={() => navigate('/upgrade')}
-          className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
-        >
-          <Icon name="star" size="sm" className="mr-2" />
-          Upgrade to Premium - $9.99/month
-        </Button>
+    <>
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-6 text-center border border-gray-200 dark:border-gray-700">
+        <div className="w-12 h-12 mx-auto mb-4 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center">
+          <Icon name="lock" className="text-purple-600 dark:text-purple-400" />
+        </div>
         
-        {isOnTrial && daysRemaining > 0 && (
+        <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">
+          {getFeatureName()}
+        </h3>
+        
+        <p className="text-gray-600 dark:text-gray-400 mb-4 max-w-md mx-auto">
+          {getUpgradeMessage()}
+        </p>
+        
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Button 
-            variant="outline" 
-            onClick={() => navigate('/features')}
-            className="border-purple-300 text-purple-600 hover:bg-purple-50 dark:border-purple-600 dark:text-purple-400 dark:hover:bg-purple-900/20"
+            variant="primary" 
+            onClick={() => setShowUpgradeModal(true)}
+            className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
           >
-            See all Premium features
+            <Icon name="star" size="sm" className="mr-2" />
+            Upgrade to Premium - $9.99/month
           </Button>
+        </div>
+        
+        {fallback && (
+          <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+            {fallback}
+          </div>
         )}
       </div>
-      
-      {fallback && (
-        <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-          {fallback}
-        </div>
-      )}
-    </div>
+      <UpgradeModal 
+        isOpen={showUpgradeModal} 
+        onClose={() => setShowUpgradeModal(false)} 
+        daysRemaining={daysRemaining} 
+      />
+    </>
   );
 };
 
