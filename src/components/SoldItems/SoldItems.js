@@ -17,8 +17,22 @@ import { useSubscription } from '../../hooks/useSubscription';
 import FeatureGate from '../FeatureGate';
 
 const SoldItems = () => {
-  // All hooks must be called before any conditional returns
+  // Check subscription access FIRST, before any hooks
   const { hasFeature } = useSubscription();
+  
+  // If user doesn't have sold items access, show feature gate
+  if (!hasFeature('SOLD_ITEMS')) {
+    return (
+      <div className="p-4 sm:p-6 pb-20 pt-16 sm:pt-4">
+        <FeatureGate 
+          feature="SOLD_ITEMS"
+          customMessage="Track your sold items, generate invoices, and analyze your profit trends. This feature is available with Premium."
+        />
+      </div>
+    );
+  }
+
+  // All other hooks AFTER the conditional return
   const { isDarkMode } = useTheme();
   const { user } = useAuth();
   const { preferredCurrency, convertToUserCurrency } = useUserPreferences();
@@ -37,18 +51,6 @@ const SoldItems = () => {
   const [expandedBuyers, setExpandedBuyers] = useState(new Set());
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-
-  // If user doesn't have sold items access, show feature gate
-  if (!hasFeature('SOLD_ITEMS')) {
-    return (
-      <div className="p-4 sm:p-6 pb-20 pt-16 sm:pt-4">
-        <FeatureGate 
-          feature="SOLD_ITEMS"
-          customMessage="Track your sold items, generate invoices, and analyze your profit trends. This feature is available with Premium."
-        />
-      </div>
-    );
-  }
 
   // Initialize all invoices as expanded by default when soldCards change
   useEffect(() => {
