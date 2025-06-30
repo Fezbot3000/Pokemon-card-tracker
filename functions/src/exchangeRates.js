@@ -20,7 +20,7 @@ exports.getExchangeRates = functions.https.onRequest((request, response) => {
   
   return cors(request, response, async () => {
     try {
-      console.log('Fetching live exchange rates from ExchangeRate-API');
+  
       
       // Your API key and endpoint
       const API_KEY = process.env.EXCHANGERATE_API_KEY || '43d6478dcf6ef5175ef60b73';
@@ -39,7 +39,7 @@ exports.getExchangeRates = functions.https.onRequest((request, response) => {
         throw new Error('API returned unsuccessful result');
       }
       
-      console.log('Successfully fetched live exchange rates');
+
       
       // Return the data in the expected format
       return response.status(200).json({
@@ -59,7 +59,7 @@ exports.getExchangeRates = functions.https.onRequest((request, response) => {
       console.error('Error fetching exchange rates:', error);
       
       // Return fallback static rates on error
-      console.log('Returning fallback static rates due to error');
+
       const fallbackRates = {
         "result": "success",
         "error": false,

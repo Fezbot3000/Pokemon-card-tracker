@@ -65,7 +65,7 @@ const ChatThread = ({ chatId, onBack, cardInfo }) => {
         const messagesData = snapshot.docs.map(doc => {
           // Log each message for debugging
           const messageData = doc.data();
-          console.log("Message data:", JSON.stringify(messageData));
+          // console.log("Message data:", JSON.stringify(messageData));
           
           return {
             id: doc.id,
@@ -117,7 +117,7 @@ const ChatThread = ({ chatId, onBack, cardInfo }) => {
         timestamp: serverTimestamp()
       };
       
-      console.log('Sending message with data:', messageData);
+      // console.log('Sending message with data:', messageData);
       await addDoc(messagesRef, messageData);
       
       // We can't update the chat document due to security rules preventing updates

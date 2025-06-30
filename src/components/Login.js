@@ -118,7 +118,7 @@ function Login() {
       
       // IMPORTANT: Always navigate to dashboard and let NewUserRoute handle the redirects
       // This ensures all flows go through the same redirect logic
-      console.log('Google sign-in successful, going through dashboard flow');
+      // // console.log('Google sign-in successful, going through dashboard flow');
       navigate('/dashboard', { replace: true });
     } catch (error) {
       // Only log errors that aren't popup closed by user
@@ -139,7 +139,7 @@ function Login() {
       
       // IMPORTANT: Always navigate to dashboard and let NewUserRoute handle the redirects
       // This ensures all flows go through the same redirect logic
-      console.log('Apple sign-in successful, going through dashboard flow');
+      // // console.log('Apple sign-in successful, going through dashboard flow');
       navigate('/dashboard', { replace: true });
     } catch (error) {
       // Only log errors that aren't popup closed by user

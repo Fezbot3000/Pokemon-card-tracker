@@ -34,12 +34,12 @@ const PSADetailModal = ({
       try {
         // Log the cert number being searched only in development
         if (process.env.NODE_ENV === 'development') {
-          console.log(`Fetching PSA data for cert number: ${certNumber}`);
+          // console.log(`Fetching PSA data for cert number: ${certNumber}`);
         }
         
         const data = await searchByCertNumber(certNumber);
         if (process.env.NODE_ENV === 'development') {
-          console.log('Raw PSA API response:', data);
+          // console.log('Raw PSA API response:', data);
         }
         
         setPsaData(data);
@@ -52,7 +52,7 @@ const PSADetailModal = ({
             // Parse the PSA data into our app's format
             const parsed = parsePSACardData(data);
             if (process.env.NODE_ENV === 'development') {
-              console.log('Parsed PSA data:', parsed);
+              // console.log('Parsed PSA data:', parsed);
             }
             setParsedData(parsed);
             
@@ -91,8 +91,8 @@ const PSADetailModal = ({
     
     try {
       if (process.env.NODE_ENV === 'development') {
-        console.log('Applying PSA data to card:', data);
-        console.log('Current card data:', currentCardData);
+        // console.log('Applying PSA data to card:', data);
+        // console.log('Current card data:', currentCardData);
       }
       
       // Extract and trim values from the 'data' object (output of processPSACardData)
@@ -111,7 +111,7 @@ const PSADetailModal = ({
       };
       
       // Step 1: Set category first - always 'pokemon' for PSA cards
-      console.log('[PSADetailModal] Step 1: Setting category to "pokemon"');
+      // console.log('[PSADetailModal] Step 1: Setting category to "pokemon"');
       
       // Force category to 'pokemon' for all PSA cards
       // This is critical for the cascading dropdown logic to work correctly
@@ -119,44 +119,44 @@ const PSADetailModal = ({
       
       // Check if the parsed data already has a category set (from parsePSACardData)
       if (data.category === 'pokemon') {
-        console.log('[PSADetailModal] Category already set to "pokemon" in parsed data');
+        // console.log('[PSADetailModal] Category already set to "pokemon" in parsed data');
       } else {
-        console.log('[PSADetailModal] Forcing category to "pokemon" regardless of parsed data');
+        // console.log('[PSADetailModal] Forcing category to "pokemon" regardless of parsed data');
       }
       
       // Step 2: Set year - Use PSA year if available, else keep current
       if (psaYear) {
-        console.log(`[PSADetailModal] Step 2: Setting year to "${psaYear}" from PSA data`);
+        // console.log(`[PSADetailModal] Step 2: Setting year to "${psaYear}" from PSA data`);
         mergedData.year = psaYear;
       } else if (currentCardData.year) {
-        console.log(`[PSADetailModal] Step 2: Keeping current year "${currentCardData.year}"`); 
+        // console.log(`[PSADetailModal] Step 2: Keeping current year "${currentCardData.year}"`); 
         mergedData.year = String(currentCardData.year).trim();
       } else {
-        console.log('[PSADetailModal] Step 2: No year available from PSA or current data');
+        // console.log('[PSADetailModal] Step 2: No year available from PSA or current data');
         mergedData.year = '';
       }
       
       // Step 3: Set the set name and raw set value
       if (psaMappedSetName) {
-        console.log(`[PSADetailModal] Step 3: Setting setName to "${psaMappedSetName}" from PSA data`);
+        // console.log(`[PSADetailModal] Step 3: Setting setName to "${psaMappedSetName}" from PSA data`);
         mergedData.setName = psaMappedSetName;
       } else if (currentCardData.setName) {
-        console.log(`[PSADetailModal] Step 3: Keeping current setName "${currentCardData.setName}"`);
+        // console.log(`[PSADetailModal] Step 3: Keeping current setName "${currentCardData.setName}"`);
         mergedData.setName = String(currentCardData.setName).trim();
       } else {
-        console.log('[PSADetailModal] Step 3: No setName available from PSA or current data');
+        // console.log('[PSADetailModal] Step 3: No setName available from PSA or current data');
         mergedData.setName = '';
       }
       
       // Also set the raw set value for reference
       if (psaRawBrand) {
-        console.log(`[PSADetailModal] Step 3b: Setting raw set to "${psaRawBrand}" from PSA data`);
+        // console.log(`[PSADetailModal] Step 3b: Setting raw set to "${psaRawBrand}" from PSA data`);
         mergedData.set = psaRawBrand;
       } else if (currentCardData.set) {
-        console.log(`[PSADetailModal] Step 3b: Keeping current raw set "${currentCardData.set}"`);
+        // console.log(`[PSADetailModal] Step 3b: Keeping current raw set "${currentCardData.set}"`);
         mergedData.set = String(currentCardData.set).trim();
       } else {
-        console.log('[PSADetailModal] Step 3b: No raw set available from PSA or current data');
+        // console.log('[PSADetailModal] Step 3b: No raw set available from PSA or current data');
         mergedData.set = '';
       }
 
@@ -197,7 +197,7 @@ const PSADetailModal = ({
       mergedData.value = currentCardData.value || ''; // Placeholder for value, typically user-input or market data
 
       if (process.env.NODE_ENV === 'development') {
-        console.log('Merged card data:', mergedData);
+        // console.log('Merged card data:', mergedData);
       }
       
       onApplyDetails(mergedData);

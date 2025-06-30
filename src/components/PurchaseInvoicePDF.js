@@ -125,9 +125,9 @@ const styles = StyleSheet.create({
 
 const PurchaseInvoicePDF = ({ seller, date, cards, invoiceNumber, notes, totalAmount, profile }) => {
   // Debug log the cards data
-  console.log('Cards data received in PDF component:', cards);
-  console.log('Total amount received:', totalAmount);
-  console.log('Number of cards:', cards.length);
+  // // console.log('Cards data received in PDF component:', cards);
+  // // console.log('Total amount received:', totalAmount);
+  // // console.log('Number of cards:', cards.length);
   return (
     <Document>
       <Page size="A4" style={styles.page}>
@@ -181,24 +181,6 @@ const PurchaseInvoicePDF = ({ seller, date, cards, invoiceNumber, notes, totalAm
             // Create a display name for the card dynamically from its properties
             const cardDisplayName = card.name || card.player || card.card || 
               (card.set ? `${card.set} Card` : 'Unnamed Card');
-            
-            console.log('Processing card for PDF:', card);
-            console.log('Using display name:', cardDisplayName);
-            console.log('Price fields available:', {
-              originalInvestmentAmount: card.originalInvestmentAmount,
-              investmentAUD: card.investmentAUD,
-              parsed: parseFloat(card.originalInvestmentAmount || card.investmentAUD || 0)
-            });
-            
-            // Check for any undefined/null values that might cause issues
-            console.log('Card field validation:', {
-              year: card.year,
-              set: card.set,
-              cardNumber: card.cardNumber,
-              grade: card.grade,
-              gradeVendor: card.gradeVendor,
-              slabSerial: card.slabSerial
-            });
             
             return (
               <View key={card.id} style={styles.tableRow}>

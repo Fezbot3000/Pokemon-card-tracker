@@ -25,8 +25,7 @@ class EmailService {
   }
 
   async sendEmail(to, templateId, dynamicTemplateData = {}, subject = null) {
-    console.log(' SENDING EMAIL WITH TEMPLATE ID:', templateId);
-    console.log(' TEMPLATE DATA:', dynamicTemplateData);
+
     
     try {
       const msg = {
@@ -50,7 +49,7 @@ class EmailService {
       }
 
       const result = await sgMail.send(msg);
-      console.log('Email sent successfully:', { to, templateId });
+
       return result;
     } catch (error) {
       console.error('Error sending email:', error);
@@ -124,7 +123,7 @@ class EmailService {
       };
 
       const result = await sgMail.send(msg);
-      console.log('Custom email sent successfully:', { to, subject });
+
       return result;
     } catch (error) {
       console.error('Error sending custom email:', error);

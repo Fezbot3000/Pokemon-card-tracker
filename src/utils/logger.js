@@ -9,7 +9,7 @@ const isProduction = process.env.NODE_ENV === 'production';
 
 // Force silence certain logs even in development mode
 // This is set to true for production readiness
-const forceSilence = true;
+const forceSilence = false; // Temporarily disabled for subscription debugging
 
 // Configure logging levels
 // Set to true to show that type of log, false to hide
@@ -60,7 +60,7 @@ const logger = {
   // Only logs in development mode
   debug: (...args) => {
     if (config.showDebugLogs) {
-      console.log(...args);
+      // console.log(...args);
     }
   },
   
@@ -88,14 +88,14 @@ const logger = {
   // Critical information that should be shown even in production
   critical: (...args) => {
     if (config.showCriticalLogs) {
-      console.log('[CRITICAL]', ...args);
+      // console.log('[CRITICAL]', ...args);
     }
   },
   
   // Alias for log to make migration easier
   log: (...args) => {
     if (config.showDebugLogs) {
-      console.log(...args);
+      // console.log(...args);
     }
   }
 };

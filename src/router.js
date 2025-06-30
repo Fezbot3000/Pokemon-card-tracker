@@ -29,6 +29,7 @@ import MarketplaceListing from './components/Marketplace/MarketplaceListing';
 import PublicMarketplace from './components/PublicMarketplace';
 import ProtectedRoute from './components/ProtectedRoute';
 import SharedCollection from './components/SharedCollection';
+import UpgradePage from './components/UpgradePage';
 
 // Root providers wrapper component
 export const RootProviders = () => (
@@ -152,6 +153,10 @@ export const router = createBrowserRouter([
       {
         path: 'component-library',
         element: <ComponentLibrary />,
+      },
+      {
+        path: 'upgrade',
+        element: <UpgradePage />,
       },
       {
         path: '*',

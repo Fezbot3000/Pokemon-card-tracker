@@ -61,7 +61,7 @@ exports.psaLookup = functions.https.onCall(async (data, context) => {
         // Check if data is fresh (less than 30 days old)
         const thirtyDaysInMs = 30 * 24 * 60 * 60 * 1000;
         if (cachedData.timestamp && (Date.now() - cachedData.timestamp) < thirtyDaysInMs) {
-          console.log(`Serving PSA data from Firebase cache for cert #${certNumber}`);
+    
           
           // Update access tracking
           await docRef.update({

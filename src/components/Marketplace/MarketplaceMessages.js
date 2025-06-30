@@ -453,7 +453,7 @@ function MarketplaceMessages({ currentView, onViewChange }) {
         });
       } catch (messageError) {
         // If adding the message fails, just log it - we still want to leave the chat
-        console.log('Could not add system message, but chat was left');
+        // console.log('Could not add system message, but chat was left');
       }
 
       // Close the chat
@@ -760,7 +760,7 @@ function MarketplaceMessages({ currentView, onViewChange }) {
                       className="w-10 h-10 object-cover rounded-md mr-3 cursor-pointer hover:opacity-80 transition-opacity" 
                       onClick={async () => {
                         // Log the activeChat to debug
-                        console.log('Active chat data:', activeChat);
+                        // console.log('Active chat data:', activeChat);
                         
                         const listingData = await fetchCompleteListingData(activeChat);
                         setSelectedListing(listingData);
@@ -772,7 +772,7 @@ function MarketplaceMessages({ currentView, onViewChange }) {
                       className="w-10 h-10 bg-gray-200 dark:bg-gray-600 rounded-md flex items-center justify-center text-gray-500 dark:text-gray-400 mr-3 cursor-pointer hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors"
                       onClick={async () => {
                         // Log the activeChat to debug
-                        console.log('Active chat data:', activeChat);
+                        // console.log('Active chat data:', activeChat);
                         
                         const listingData = await fetchCompleteListingData(activeChat);
                         setSelectedListing(listingData);

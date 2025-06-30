@@ -177,18 +177,6 @@ const PublicMarketplace = () => {
           });
         }
         
-        console.log('Public marketplace listings loaded:', {
-          count: listingsData.length,
-          sample: listingsData.slice(0, 3).map(l => ({
-            id: l.id,
-            status: l.status,
-            cardId: l.cardId,
-            cardName: l.card?.cardName || l.card?.name || l.card?.card,
-            hasCard: Boolean(l.card),
-            hasImage: Boolean(l.card?.imageUrl || l.card?.image || l.cloudImageUrl)
-          }))
-        });
-        
         setListings(listingsData);
         
         // Load card images after getting listings

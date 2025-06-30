@@ -22,8 +22,8 @@ const noOpLogger = {
 
 // Development logger with full functionality
 const devLogger = {
-  debug: (...args) => console.log('[DEBUG]', ...args),
-  log: (...args) => console.log(...args),
+  debug: (...args) => {}, // console.log('[DEBUG]', ...args),
+  log: (...args) => {}, // console.log(...args),
   info: (...args) => console.info('[INFO]', ...args),
   warn: (...args) => console.warn('[WARN]', ...args),
   error: (...args) => console.error('[ERROR]', ...args),

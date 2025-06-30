@@ -87,22 +87,22 @@ const SharedCollection = () => {
   }, [shareId]);
 
   useEffect(() => {
-    console.log('=== CARDS EFFECT TRIGGERED ===');
-    console.log('Cards length:', cards.length);
-    console.log('Filters:', filters);
+    // // // console.log('=== CARDS EFFECT TRIGGERED ===');
+    // // // console.log('Cards length:', cards.length);
+    // // // console.log('Filters:', filters);
     
     if (cards.length > 0) {
-      console.log('Processing cards for display...');
+      // // // console.log('Processing cards for display...');
       const filtered = sharingService.filterAndSortCards(cards, filters);
-      console.log('Filtered cards:', filtered.length);
+      // // // console.log('Filtered cards:', filtered.length);
       setFilteredCards(filtered);
       
-      console.log('Calculating collection stats...');
+      // // // console.log('Calculating collection stats...');
       const collectionStats = sharingService.formatCollectionStats(cards);
-      console.log('Stats calculated:', collectionStats);
+      // // // console.log('Stats calculated:', collectionStats);
       setStats(collectionStats);
     } else {
-      console.log('No cards to process');
+      // // // console.log('No cards to process');
     }
   }, [cards, filters]);
 
@@ -111,7 +111,7 @@ const SharedCollection = () => {
     if (shareData) {
       const newMetaTags = sharingService.generateMetaTags(shareData, cards);
       setMetaTags(newMetaTags);
-      console.log('Meta tags updated with cards:', newMetaTags);
+      // // // console.log('Meta tags updated with cards:', newMetaTags);
     }
   }, [shareData, cards]);
 
@@ -120,24 +120,24 @@ const SharedCollection = () => {
       setLoading(true);
       setError(null);
 
-      console.log('=== LOADING SHARED COLLECTION ===');
-      console.log('Share ID:', shareId);
+          // // // console.log('=== LOADING SHARED COLLECTION ===');
+    // // // console.log('Share ID:', shareId);
 
       // Get the share data using the service
       const shareData = await sharingService.getSharedCollection(shareId);
-      console.log('Share data loaded:', shareData);
+      // // // console.log('Share data loaded:', shareData);
       setShareData(shareData);
 
       // Load the cards from the user's collection
       const cardsRef = collection(firestoreDb, 'users', shareData.userId, 'cards');
       
-      console.log('Loading cards for user:', shareData.userId);
-      console.log('Collection ID:', shareData.collectionId);
+              // // // console.log('Loading cards for user:', shareData.userId);
+        // // // console.log('Collection ID:', shareData.collectionId);
 
       let allCards = [];
 
       if (shareData.collectionId && shareData.collectionId !== 'all') {
-        console.log('Loading specific collection:', shareData.collectionId);
+                  // // // console.log('Loading specific collection:', shareData.collectionId);
         
         // Query for cards using multiple possible field names
         // We need to run separate queries since Firestore doesn't support OR queries across different fields
@@ -154,7 +154,7 @@ const SharedCollection = () => {
         const queryPromises = queries.map(async (q, index) => {
           try {
             const snapshot = await getDocs(q);
-            console.log(`Query ${index + 1} (${['collectionId', 'collection', 'collectionName'][index]}) found:`, snapshot.docs.length, 'cards');
+            // // // console.log(`Query ${index + 1} (${['collectionId', 'collection', 'collectionName'][index]}) found:`, snapshot.docs.length, 'cards');
             return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
           } catch (error) {
             console.warn(`Query ${index + 1} failed:`, error);
@@ -175,15 +175,15 @@ const SharedCollection = () => {
         });
         
         allCards = Array.from(cardMap.values());
-        console.log(`Total unique cards found across all queries: ${allCards.length}`);
+                  // // // console.log(`Total unique cards found across all queries: ${allCards.length}`);
         
       } else {
         // Load all collections - use simple query without orderBy to avoid updatedAt issues
-        console.log('Loading all collections');
+                  // // // console.log('Loading all collections');
         const cardsQuery = query(cardsRef);
         const cardsSnapshot = await getDocs(cardsQuery);
         allCards = cardsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        console.log('Query results - all cards found:', allCards.length);
+                  // // // console.log('Query results - all cards found:', allCards.length);
       }
 
       // Sort cards by updatedAt if available, otherwise by creation order
@@ -193,8 +193,8 @@ const SharedCollection = () => {
         return bDate - aDate; // Descending order (newest first)
       });
 
-      console.log('Final processed cards:', allCards.length);
-      console.log('Sample card (first one):', allCards[0]);
+              // // // console.log('Final processed cards:', allCards.length);
+        // // // console.log('Sample card (first one):', allCards[0]);
       
       // Debug: Show which field names were found in the cards
       if (allCards.length > 0) {
@@ -205,7 +205,7 @@ const SharedCollection = () => {
           hasUpdatedAt: allCards.filter(card => !!card.updatedAt).length,
           hasCreatedAt: allCards.filter(card => !!card.createdAt).length
         };
-        console.log('Field analysis for found cards:', fieldAnalysis);
+        // // // console.log('Field analysis for found cards:', fieldAnalysis);
       }
       
       setCards(allCards);

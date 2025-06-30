@@ -78,7 +78,6 @@ const getCachedPSAResult = (certNumber) => {
   
   const cachedResult = psaCache.results[certNumber];
   if (cachedResult && (Date.now() - cachedResult.timestamp < psaCache.expiry)) {
-    console.log(`Using cached PSA result for cert number: ${certNumber}`);
     return cachedResult.data;
   }
   
@@ -100,8 +99,6 @@ const cachePSAResult = (certNumber, data) => {
   
   psaCache.saveToStorage();
   
-  console.log(`Cached PSA result for cert number: ${certNumber}`);
-  
   // Save to Firestore
   try {
     psaDataService.saveCardToCache(certNumber, data);
@@ -117,10 +114,8 @@ const cachePSAResult = (certNumber, data) => {
 const clearPSACache = (certNumber = null) => {
   if (certNumber) {
     delete psaCache.results[certNumber];
-    console.log(`Cleared PSA cache for cert number: ${certNumber}`);
   } else {
     psaCache.results = {};
-    console.log('Cleared all PSA cache');
   }
 };
 
@@ -198,27 +193,11 @@ const searchByCertNumber = async (certNumber, forceRefresh = false) => {
     }
     
     // No rate limit checks - proceed directly to API call
-    console.log('No rate limiting applied - proceeding with PSA API call');
-    
-    // Only log in development environment
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`PSA Search: Not found in any cache, calling PSA API for cert #${certNumber}`);
-    }
-    
-    // Only log in development environment
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`PSA Search: Not found in any cache, calling PSA API for cert #${certNumber}`);
-    }
     
     // No rate limiting - proceed with API call without decrementing
     
     // Call the Firebase Cloud Function
     const result = await psaLookupFunction({ certNumber });
-    
-    // Only log in development environment
-    if (process.env.NODE_ENV === 'development') {
-      console.log('PSA API response via Cloud Function:', result);
-    }
     
     // Extract the data from the Cloud Function response
     if (result.data && result.data.success) {
@@ -277,8 +256,6 @@ const parsePSACardData = (psaData) => {
     throw new Error(psaData?.error || 'Invalid PSA data');
   }
   
-  console.log('Parsing PSA data:', psaData);
-  
   // Handle different PSA API response structures
   const cert = psaData.PSACert || psaData.data?.PSACert || psaData;
 
@@ -318,13 +295,6 @@ const parsePSACardData = (psaData) => {
   if (matchedSetResult) {
     finalSetName = matchedSetResult.matchedLabel;
     finalSetValue = matchedSetResult.matchedValue;
-    console.log(`PSA Search: Matched set to internal set. Label: "${finalSetName}", Value: "${finalSetValue}"`);
-  } else {
-    console.log(`PSA Search: Could not match set "${psaSetInfo}" for year "${psaYear}" to an internal set. Using raw info.`);
-    // Optionally, decide if `finalSetValue` should be empty if no match, 
-    // or if the raw `psaSetInfo` is acceptable as a temporary 'value'.
-    // For now, using psaSetInfo for both if no match, which might not select in dropdown
-    // but preserves the original data.
   }
 
   const result = {
@@ -352,7 +322,6 @@ const parsePSACardData = (psaData) => {
     _rawPsaData: cert // Include raw data for debugging or future use
   };
 
-  console.log('Parsed PSA data into:', result);
   return result;
 };
 
@@ -363,8 +332,6 @@ const parsePSACardData = (psaData) => {
  * @returns {Object} - Merged card data
  */
 const mergeWithExistingCard = (existingCardData, psaCardData) => {
-  console.log('Merging PSA data:', psaCardData);
-  console.log('With existing data:', existingCardData);
   
   // Create a new object with existing card data as the base
   // Preserve existing values that should not be overwritten
@@ -384,7 +351,7 @@ const mergeWithExistingCard = (existingCardData, psaCardData) => {
   // Find best matching set from dropdown options
   if (psaCardData.setName) {
     const matchedSet = findBestMatchingSet(psaCardData.setName, psaCardData.year);
-    console.log('Found matching set:', matchedSet, 'from', psaCardData.setName);
+
     if (matchedSet) {
       mergedData.set = matchedSet.matchedValue;
       mergedData.setName = matchedSet.matchedLabel; // Set both set and setName for compatibility
@@ -436,8 +403,6 @@ const mergeWithExistingCard = (existingCardData, psaCardData) => {
     psaCardData.setName, // Set name might also indicate category
     psaCardData.player    // Player/character name is often useful for category detection
   ].filter(Boolean).join(' ').toLowerCase();
-
-  console.log('Category detection combined info:', combinedInfo);
 
   // Default category
   mergedData.category = 'pokemon'; // Default to pokemon (lowercase) for PSA searches to match form expectations
@@ -500,29 +465,23 @@ const mergeWithExistingCard = (existingCardData, psaCardData) => {
     }
   }
   
-  console.log('Final merged data:', mergedData);
   return mergedData;
 };
 
 // Function to find the best matching set from our dropdown options
 const findBestMatchingSet = (setName, year) => {
-  console.log('Finding best matching set for:', setName, 'year:', year);
-  
   // First try to get sets for the specific year
   let availableSets = [];
   if (year) {
     const parsedYear = typeof year === 'string' ? parseInt(year.trim(), 10) : parseInt(year, 10);
-    console.log('Parsed year:', parsedYear);
     
     if (!isNaN(parsedYear)) {
       availableSets = getPokemonSetsByYear(parsedYear); // Now returns [{label, value}, ...]
-      console.log(`Found ${availableSets.length} sets for year ${parsedYear}:`, availableSets);
     }
   }
   
   if (availableSets.length === 0) {
     availableSets = getAllPokemonSets(); // Now returns [{label, value}, ...]
-    console.log(`Using all sets (${availableSets.length} total):`, availableSets);
   }
   
   if (setName && typeof setName === 'string' && availableSets.length > 0) {
@@ -532,8 +491,6 @@ const findBestMatchingSet = (setName, year) => {
       .replace(/pokemon\s+(tcg|ccg)/i, '')
       .replace(/^(japanese|english|jp|en)\s+/i, '')
       .trim();
-      
-    console.log('Cleaned set name for matching:', cleanSetName);
     
     // Special case for Base Set cards from 1999
     if (year === '1999' && cleanSetName.includes('game')) {
@@ -542,7 +499,6 @@ const findBestMatchingSet = (setName, year) => {
         set.value.toLowerCase() === 'base set (en)'
       );
       if (baseSet) {
-        console.log('Found Base Set match for 1999 card:', baseSet);
         return { matchedValue: baseSet.value, matchedLabel: baseSet.label };
       }
     }
@@ -553,7 +509,6 @@ const findBestMatchingSet = (setName, year) => {
       set.value.toLowerCase() === cleanSetName
     );
     if (exactMatch) {
-      console.log('Found exact match:', exactMatch);
       return { matchedValue: exactMatch.value, matchedLabel: exactMatch.label };
     }
     
@@ -587,14 +542,12 @@ const findBestMatchingSet = (setName, year) => {
     
     if (partialMatches.length > 0) {
       const bestMatch = partialMatches[0];
-      console.log('Found partial matches, best match:', bestMatch);
       return { matchedValue: bestMatch.value, matchedLabel: bestMatch.label };
     }
   }
   
   // If no match found, we will not add to custom sets here anymore.
   // parsePSACardData will decide what to do if no match is found.
-  console.log('No matching set found by findBestMatchingSet for:', setName);
   return null; // Return null if no match
 };
 

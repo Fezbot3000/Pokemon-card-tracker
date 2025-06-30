@@ -2,15 +2,19 @@ import React, { useState } from 'react';
 import Modal from '../design-system/molecules/Modal';
 import Button from '../design-system/atoms/Button';
 import Icon from '../design-system/atoms/Icon';
+import FeatureGate from './FeatureGate';
+import { useSubscription } from '../hooks/useSubscription';
 
 /**
  * NewCollectionModal Component
  * 
  * A modal for creating a new collection. Accepts a name and calls onCreate when submitted.
+ * Includes subscription gating for multiple collections feature.
  */
 const NewCollectionModal = ({ isOpen, onClose, onCreate, existingCollections = [] }) => {
   const [collectionName, setCollectionName] = useState('');
   const [error, setError] = useState('');
+  const { hasFeature } = useSubscription();
 
   const handleCreate = () => {
     const trimmed = collectionName.trim();
@@ -32,6 +36,25 @@ const NewCollectionModal = ({ isOpen, onClose, onCreate, existingCollections = [
     setError('');
     onClose();
   };
+
+  // Check if user has access to multiple collections feature
+  if (!hasFeature('MULTIPLE_COLLECTIONS')) {
+    return (
+      <Modal 
+        isOpen={isOpen} 
+        onClose={handleClose}
+        title="Create New Collection"
+        position="center"
+        size="lg"
+        closeOnClickOutside={false}
+      >
+        <FeatureGate 
+          feature="MULTIPLE_COLLECTIONS"
+          customMessage="Create unlimited collections to organize your cards by set, type, or any way you prefer. This feature is available with Premium."
+        />
+      </Modal>
+    );
+  }
 
   return (
     <Modal 

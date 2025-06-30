@@ -23,7 +23,7 @@ export const toast = (message, type = 'info', duration = 3000) => {
   // Log to console as a fallback
   switch (type) {
     case 'success':
-      console.log(`%c✓ ${message}`, 'color: green');
+      // console.log(`%c✓ ${message}`, 'color: green');
       break;
     case 'error':
       console.error(`✗ ${message}`);

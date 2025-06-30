@@ -42,7 +42,7 @@ const CreateInvoiceModal = ({ isOpen, onClose, onSave, editingInvoice = null, pr
     
     if (memoizedEditingInvoice) {
       // We're in edit mode - populate form with invoice data
-      console.log('Initializing form with editing invoice data:', memoizedEditingInvoice);
+      // console.log('Initializing form with editing invoice data:', memoizedEditingInvoice);
       setSelectedCards(memoizedEditingInvoice.cards || []);
       setSeller(memoizedEditingInvoice.seller || '');
       setDate(memoizedEditingInvoice.date || new Date().toISOString().split('T')[0]);
@@ -50,7 +50,7 @@ const CreateInvoiceModal = ({ isOpen, onClose, onSave, editingInvoice = null, pr
       setNotes(memoizedEditingInvoice.notes || '');
     } else if (memoizedPreSelectedCards && memoizedPreSelectedCards.length > 0) {
       // Using pre-selected cards for a new invoice
-      console.log('Initializing form with pre-selected cards');
+      // console.log('Initializing form with pre-selected cards');
       setSelectedCards(memoizedPreSelectedCards);
       
       // Pre-populate the purchase date from the first card's datePurchased field

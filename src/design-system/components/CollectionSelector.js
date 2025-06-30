@@ -5,11 +5,13 @@ import Button from '../atoms/Button';
 import Modal from '../molecules/Modal';
 import BottomSheet from '../molecules/BottomSheet'; // Corrected Import BottomSheet
 import { toast } from '../utils/notifications';
+import { useSubscription } from '../../hooks/useSubscription';
 
 /**
  * CollectionSelector component
  * 
  * A dropdown component for selecting collections in the Pokemon Card Tracker app.
+ * Includes subscription gating for multiple collections feature.
  */
 const CollectionSelector = ({
   selectedCollection = 'Default Collection',
@@ -24,6 +26,7 @@ const CollectionSelector = ({
   const [newCollectionName, setNewCollectionName] = useState('');
   const dropdownRef = useRef(null);
   const [isMobileView, setIsMobileView] = useState(false);
+  const { hasFeature } = useSubscription();
 
   useEffect(() => {
     const checkMobileView = () => {
@@ -57,23 +60,35 @@ const CollectionSelector = ({
     }
   };
 
+  const handleNewCollectionClick = () => {
+    if (!hasFeature('MULTIPLE_COLLECTIONS')) {
+      toast.error('Multiple collections are available with Premium. Upgrade to create unlimited collections!');
+      return;
+    }
+    
+    setIsNewCollectionModalOpen(true);
+    isMobileView ? setIsBottomSheetOpen(false) : setIsDropdownOpen(false);
+  };
+
   const renderCollectionItems = (forMobileSheet) => (
     <div className={`py-1 ${forMobileSheet ? 'px-2 space-y-2' : ''}`}>
       {/* New Collection button at the top */}
       <button
-        onClick={() => {
-          setIsNewCollectionModalOpen(true);
-          isMobileView ? setIsBottomSheetOpen(false) : setIsDropdownOpen(false);
-        }}
+        onClick={handleNewCollectionClick}
         className={`block w-full text-left px-4 py-2 text-sm 
+          ${!hasFeature('MULTIPLE_COLLECTIONS') 
+            ? 'opacity-50 cursor-not-allowed' 
+            : 'hover:opacity-90'
+          }
           ${forMobileSheet 
-            ? 'text-center rounded-lg bg-white dark:bg-[#000] text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:opacity-90 py-3'
+            ? 'text-center rounded-lg bg-white dark:bg-[#000] text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 py-3'
             : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`
         }
+        disabled={!hasFeature('MULTIPLE_COLLECTIONS')}
       >
         <div className={`flex items-center ${forMobileSheet ? 'justify-center' : ''}`}>
-          <Icon name="add" size="sm" className="mr-1" />
-          <span>+ New Collection</span>
+          <Icon name={hasFeature('MULTIPLE_COLLECTIONS') ? "add" : "lock"} size="sm" className="mr-1" />
+          <span>{hasFeature('MULTIPLE_COLLECTIONS') ? '+ New Collection' : '+ New Collection (Premium)'}</span>
         </div>
       </button>
       

@@ -160,76 +160,34 @@ function ListCardModal({ isOpen, onClose, selectedCards }) {
 
     try {
       // Check for existing listings for these cards
-      console.log("🔍 LISTING MODAL: Starting duplicate check for", selectedCards.length, "cards");
       const marketplaceRef = collection(firestoreDb, 'marketplaceItems');
       const existingListingsPromises = selectedCards.map(async (card) => {
         if (!card || !card.slabSerial) {
-          console.log("🔍 LISTING MODAL: Skipping card without slabSerial", card);
           return { cardId: null, exists: false };
         }
         
-        console.log("🔍 LISTING MODAL: Checking card", {
-          cardName: card.card || card.name || 'Unknown',
-          cardId: card.slabSerial,
-          isListed: card.isListed
-        });
-        
-        // More specific query to ensure we only check active listings
         const existingQuery = query(
           marketplaceRef,
           where('cardId', '==', card.slabSerial),
           where('status', '==', 'available')
         );
         
-        console.log("🔍 LISTING MODAL: Query parameters", {
-          cardId: card.slabSerial,
-          status: 'available',
-          queryPath: `marketplaceItems where cardId=${card.slabSerial} and status=available`
-        });
-        
         const existingDocs = await getDocs(existingQuery);
         const exists = !existingDocs.empty;
-        
-        console.log("🔍 LISTING MODAL: Duplicate check result", {
-          cardId: card.slabSerial,
-          exists,
-          foundCount: existingDocs.size
-        });
         
         return { cardId: card.slabSerial, exists };
       });
 
-      console.log("🔍 LISTING MODAL: All duplicate check promises completed");
       const existingListingsResults = await Promise.all(existingListingsPromises);
       
-      console.log("🔍 LISTING MODAL: Duplicate check results summary", {
-        totalChecked: existingListingsResults.length,
-        results: existingListingsResults
-      });
-      
       const alreadyListedCards = existingListingsResults.filter(result => result.cardId && result.exists);
-      
-      console.log("🔍 LISTING MODAL: Already listed cards", {
-        count: alreadyListedCards.length,
-        cardIds: alreadyListedCards.map(result => result.cardId)
-      });
 
       if (alreadyListedCards.length > 0) {
         const alreadyListedCardNames = alreadyListedCards.map(result => {
           const card = selectedCards.find(c => c && c.slabSerial === result.cardId);
           const cardName = card ? (card.card || card.slabSerial) : 'Unknown card';
           
-          console.log("🔍 LISTING MODAL: Already listed card details", {
-            cardId: result.cardId,
-            cardName,
-            cardObject: card
-          });
-          
           return cardName;
-        });
-        
-        console.log("🔍 LISTING MODAL: Showing error for already listed cards", {
-          cardNames: alreadyListedCardNames
         });
         
         toast.error(`${alreadyListedCardNames.join(', ')} already listed in marketplace`);
@@ -237,8 +195,6 @@ function ListCardModal({ isOpen, onClose, selectedCards }) {
         return;
       }
       
-      console.log("🔍 LISTING MODAL: No duplicate cards found, proceeding with listing");
-
       // Create listings for each card
       const listingPromises = selectedCards.map(async (card) => {
         if (!card) return null; // Skip invalid cards
@@ -258,19 +214,13 @@ function ListCardModal({ isOpen, onClose, selectedCards }) {
           
           // If card has imageUrl property, make sure it's included
           if (card.imageUrl) {
-            console.log('Card already has imageUrl:', card.imageUrl);
+            // Card already has imageUrl
           }
           // If card has image data as an object, convert it to a string URL
           else if (card.image && typeof card.image === 'object') {
-            console.log('Card has image object, converting to URL');
             // Ensure the image object is properly formatted for storage
             cardWithImage.imageUrl = card.image.url || card.image.src || null;
           }
-          
-          console.log('Listing card with image data:', {
-            hasImageUrl: Boolean(cardWithImage.imageUrl),
-            imageType: cardWithImage.imageUrl ? typeof cardWithImage.imageUrl : 'none'
-          });
           
           // Create marketplace listing
           const listingRef = await addDoc(collection(firestoreDb, 'marketplaceItems'), {
@@ -365,9 +315,6 @@ function ListCardModal({ isOpen, onClose, selectedCards }) {
     >
       <form id="listing-form" onSubmit={handleSubmit} className="space-y-6">
         {selectedCards.map((card, index) => {
-          // Log card structure to console for debugging
-          console.log('Card data:', card);
-          
           return (
             <div key={card.slabSerial || card.id || card._id || JSON.stringify(card)} className="bg-white dark:bg-[#0F0F0F] rounded-lg p-6 border border-gray-200 dark:border-gray-700">
               <div className="flex flex-col md:flex-row gap-6">
@@ -378,7 +325,6 @@ function ListCardModal({ isOpen, onClose, selectedCards }) {
                     alt={card.card || card.name || 'Card'}
                     className="w-32 h-44 object-contain bg-gray-100 dark:bg-black rounded-lg shadow-md"
                     onError={(e) => {
-                      console.log('Image failed to load:', e.target.src);
                       e.target.src = '/placeholder-card.png';
                     }}
                   />

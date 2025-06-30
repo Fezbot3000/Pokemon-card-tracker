@@ -37,7 +37,6 @@ const fetchCardPricingDirect = async (cardName, setName = null, cardNumber = nul
     );
 
     if (isLikelyJapaneseCard) {
-      console.log(`Detected Japanese/promotional card: "${cardName}" from "${setName}"`);
       return {
         error: 'JAPANESE_CARD',
         message: `This appears to be a Japanese or promotional card ("${setName}"). The Pokemon TCG API only contains English cards, so pricing data is not available. Try checking Japanese card marketplaces like Yahoo Auctions Japan or Mercari.`
@@ -58,9 +57,6 @@ const fetchCardPricingDirect = async (cardName, setName = null, cardNumber = nul
       }
     }
 
-    console.log(`Trying to find pricing for: "${cardName}" (cleaned: "${cleanCardName}")`);
-    console.log(`Set: "${setName}", Number: "${cardNumber}"`);
-
     // Try each search query until we find results
     for (let i = 0; i < searchQueries.length; i++) {
       let searchQuery = searchQueries[i];
@@ -75,7 +71,7 @@ const fetchCardPricingDirect = async (cardName, setName = null, cardNumber = nul
         searchQuery += ` number:${cardNumber}`;
       }
 
-      console.log(`Search attempt ${i + 1}: ${searchQuery}`);
+
       
       try {
         // Direct API call (temporary for testing)
@@ -94,7 +90,6 @@ const fetchCardPricingDirect = async (cardName, setName = null, cardNumber = nul
         }
         
         const responseData = await response.json();
-        console.log(`Search attempt ${i + 1} results:`, responseData.data?.length || 0, 'cards found');
         
         if (responseData.data && responseData.data.length > 0) {
           // Found results! But let's be more careful about matching
@@ -124,12 +119,6 @@ const fetchCardPricingDirect = async (cardName, setName = null, cardNumber = nul
           }
           
           if (bestMatch) {
-            console.log(`Found ${exactMatch ? 'exact' : 'partial'} match: ${bestMatch.name} from ${bestMatch.set?.name}`);
-            
-            // If it's not an exact match, warn the user
-            if (!exactMatch) {
-              console.warn(`Warning: Could not find exact match for "${cardName}". Showing closest match: "${bestMatch.name}"`);
-            }
             
             return {
               cardId: bestMatch.id,

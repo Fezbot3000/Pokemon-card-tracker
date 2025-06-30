@@ -39,7 +39,7 @@ const BaseDataImporter = ({ onImport, loading }) => {
   const handleFiles = (file) => {
     setImportError(null);
     
-    console.log("File received:", {
+    // console.log("File received:", {
       name: file.name,
       type: file.type,
       size: file.size

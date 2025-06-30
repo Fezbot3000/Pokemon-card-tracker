@@ -99,18 +99,7 @@ const Card = ({
     );
   }
 
-  // MODIFIED CONSOLE LOG:
-  if (formatUserCurrency && card.card) { // Log if formatUserCurrency is present and it's a proper card item
-    console.log('Card.js PROPS RECEIVED:', {
-      cardName: card.card,
-      investmentAUD,
-      currentValueAUD,
-      preferredCurrencyObj: card.preferredCurrency, // Renamed for clarity
-      originalCurrencyCode: card.originalCurrencyCode,
-      hasFormatUserCurrency: !!formatUserCurrency,
-      // formatUserCurrencyFunctionBody: formatUserCurrency ? formatUserCurrency.toString() : 'undefined'
-    });
-  }
+  // MODIFIED CONSOLE LOG: (removed for cleanup)
 
   return (
     <div 
@@ -188,13 +177,7 @@ const Card = ({
                     (() => {
                       // Always use formatUserCurrency with a valid currency code
                       const formatted = formatUserCurrency(displayInvestmentAmount, displayInvestmentCurrency);
-                      console.log('Card.js - Rendering Paid:', {
-                        cardName: card.card || card.name,
-                        displayInvestmentAmount,
-                        displayInvestmentCurrency,
-                        isFormatUserCurrencyTruthy: !!formatUserCurrency,
-                        formattedValue: formatted
-                      });
+
                       return formatted;
                     })() :
                     `$${(displayInvestmentAmount || 0).toFixed(2)}` // Only use fallback if formatUserCurrency is undefined
@@ -209,13 +192,7 @@ const Card = ({
                     (() => {
                       // Always use formatUserCurrency with a valid currency code
                       const formatted = formatUserCurrency(displayValueAmount, displayValueCurrency);
-                      console.log('Card.js - Rendering Value:', {
-                        cardName: card.card || card.name,
-                        displayValueAmount,
-                        displayValueCurrency,
-                        isFormatUserCurrencyTruthy: !!formatUserCurrency,
-                        formattedValue: formatted
-                      });
+
                       return formatted;
                     })() :
                     `$${(displayValueAmount || 0).toFixed(2)}` // Only use fallback if formatUserCurrency is undefined

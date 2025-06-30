@@ -58,16 +58,6 @@ function MarketplaceSelling({ currentView, onViewChange }) {
             ...doc.data()
           }));
           
-          console.log('MarketplaceSelling listings loaded:', {
-            count: listingsData.length,
-            listings: listingsData.map(l => ({
-              id: l.id,
-              status: l.status,
-              cardId: l.cardId,
-              name: l.card?.name
-            }))
-          });
-          
           setAllListings(listingsData);
           setFilteredListings(listingsData);
           
@@ -280,19 +270,10 @@ function MarketplaceSelling({ currentView, onViewChange }) {
         const cardId = card.slabSerial || card.id || listing.cardId;
         if (!cardId) continue;
         
-        // Debug logging to help identify image issues
-        console.log(`Processing image for card ${cardId} in Selling view:`, {
-          hasImageUrl: Boolean(card.imageUrl),
-          hasImage: Boolean(card.image),
-          imageUrlType: card.imageUrl ? typeof card.imageUrl : 'none',
-          imageType: card.image ? typeof card.image : 'none'
-        });
-        
         // First, check if the card has an imageUrl property
         if (card.imageUrl) {
           const url = ensureStringUrl(card.imageUrl);
           if (url) {
-            console.log(`Using imageUrl for card ${cardId} in Selling view:`, url);
             newCardImages[cardId] = url;
             continue;
           }
@@ -302,7 +283,6 @@ function MarketplaceSelling({ currentView, onViewChange }) {
         if (card.image) {
           const imageUrl = ensureStringUrl(card.image);
           if (imageUrl) {
-            console.log(`Using image property for card ${cardId} in Selling view:`, imageUrl);
             newCardImages[cardId] = imageUrl;
             continue;
           }
@@ -316,7 +296,6 @@ function MarketplaceSelling({ currentView, onViewChange }) {
           if (card[prop]) {
             const url = ensureStringUrl(card[prop]);
             if (url) {
-              console.log(`Using ${prop} for card ${cardId} in Selling view:`, url);
               newCardImages[cardId] = url;
               foundImage = true;
               break;
@@ -331,7 +310,6 @@ function MarketplaceSelling({ currentView, onViewChange }) {
           const imageBlob = await db.getImage(cardId);
           if (imageBlob) {
             const blobUrl = URL.createObjectURL(imageBlob);
-            console.log(`Using IndexedDB image for card ${cardId} in Selling view:`, blobUrl);
             newCardImages[cardId] = blobUrl;
             continue;
           }
@@ -341,7 +319,6 @@ function MarketplaceSelling({ currentView, onViewChange }) {
         }
         
         // If we still don't have an image, set to null
-        console.log(`No image found for card ${cardId} in Selling view`);
         newCardImages[cardId] = null;
       } catch (error) {
         logger.warn('Error processing card image:', error);
@@ -390,7 +367,7 @@ function MarketplaceSelling({ currentView, onViewChange }) {
 
   const handleMarkAsPending = async (listing) => {
     try {
-      console.log('Marking listing as pending:', { id: listing.id, currentStatus: listing.status });
+      // console.log('Marking listing as pending:', { id: listing.id, currentStatus: listing.status });
       const listingRef = doc(firestoreDb, 'marketplaceItems', listing.id);
       await updateDoc(listingRef, {
         status: 'pending',
@@ -545,18 +522,11 @@ function MarketplaceSelling({ currentView, onViewChange }) {
                       <button
                         onClick={async () => {
                           try {
-                            console.log('Marking listing as available:', { 
-                              id: listing.id, 
-                              currentStatus: listing.status,
-                              cardId: listing.cardId,
-                              cardName: listing.card?.name
-                            });
                             const listingRef = doc(firestoreDb, 'marketplaceItems', listing.id);
                             await updateDoc(listingRef, {
                               status: 'available',
                               updatedAt: new Date()
                             });
-                            console.log('Successfully marked as available');
                             toast.success('Listing marked as available');
                           } catch (error) {
                             logger.error('Error marking listing as available:', error);

@@ -26,20 +26,20 @@ function SellerProfileModal({ isOpen, onClose, sellerId, onOpenListing, cardImag
 
   useEffect(() => {
     if (!isOpen || !sellerId) {
-      console.log('SellerProfileModal: Not opening because:', { isOpen, sellerId });
+      // console.log('SellerProfileModal: Not opening because:', { isOpen, sellerId });
       return;
     }
 
-    console.log('=== SellerProfileModal Opening ===');
-    console.log('sellerId parameter:', sellerId);
-    console.log('sellerId type:', typeof sellerId);
-    console.log('sellerId length:', sellerId?.length);
+    // console.log('=== SellerProfileModal Opening ===');
+    // console.log('sellerId parameter:', sellerId);
+    // console.log('sellerId type:', typeof sellerId);
+    // console.log('sellerId length:', sellerId?.length);
 
     const loadSellerData = async () => {
       try {
         setLoading(true);
         
-        console.log('Loading seller data for ID:', sellerId);
+        // console.log('Loading seller data for ID:', sellerId);
         
         // Load seller profile
         const profileRef = doc(firestoreDb, 'marketplaceProfiles', sellerId);
@@ -49,21 +49,21 @@ function SellerProfileModal({ isOpen, onClose, sellerId, onOpenListing, cardImag
           setSellerProfile({ id: profileSnap.id, ...profileSnap.data() });
         } else {
           // If no marketplace profile exists, try to get basic user info
-          console.log('No marketplace profile found, trying users collection...');
+          // console.log('No marketplace profile found, trying users collection...');
           try {
             const userRef = doc(firestoreDb, 'users', sellerId);
             const userSnap = await getDoc(userRef);
             
             if (userSnap.exists()) {
               const userData = userSnap.data();
-              console.log('Found user data:', userData);
+              // console.log('Found user data:', userData);
               setSellerProfile({
                 id: userSnap.id,
                 displayName: userData.displayName || userData.email?.split('@')[0] || 'Seller',
                 createdAt: userData.createdAt || new Date()
               });
             } else {
-              console.log('No user data found, using fallback profile');
+              // console.log('No user data found, using fallback profile');
               // Fallback profile
               setSellerProfile({
                 id: sellerId,
@@ -118,8 +118,8 @@ function SellerProfileModal({ isOpen, onClose, sellerId, onOpenListing, cardImag
           const listingsRef = collection(firestoreDb, 'marketplaceItems');
           
           // Debug: First check what fields are available in a sample listing
-          console.log('=== DEBUGGING SELLER LISTINGS ===');
-          console.log('Looking for listings with sellerId:', sellerId);
+          // console.log('=== DEBUGGING SELLER LISTINGS ===');
+          // console.log('Looking for listings with sellerId:', sellerId);
           
           // Try to get all available listings first to see the data structure
           const allListingsQuery = query(
@@ -128,7 +128,7 @@ function SellerProfileModal({ isOpen, onClose, sellerId, onOpenListing, cardImag
           );
           const allListingsSnapshot = await getDocs(allListingsQuery);
           
-          console.log('Total available listings:', allListingsSnapshot.size);
+          // console.log('Total available listings:', allListingsSnapshot.size);
           
           // Check first few listings to see field structure
           let foundSellerListings = [];
@@ -137,28 +137,12 @@ function SellerProfileModal({ isOpen, onClose, sellerId, onOpenListing, cardImag
             
             // Check if this listing belongs to our seller
             if (data.userId === sellerId || data.sellerId === sellerId) {
-              console.log('FOUND SELLER LISTING:', {
-                id: doc.id,
-                userId: data.userId,
-                sellerId: data.sellerId,
-                title: data.card?.name || data.title,
-                status: data.status,
-                priceAUD: data.priceAUD,
-                price: data.price,
-                askingPrice: data.askingPrice,
-                allPriceFields: Object.keys(data).filter(key => key.toLowerCase().includes('price')),
-                images: data.images,
-                imageUrls: data.imageUrls,
-                cardImages: data.cardImages,
-                allImageFields: Object.keys(data).filter(key => key.toLowerCase().includes('image')),
-                fullData: data
-              });
               foundSellerListings.push({ id: doc.id, ...data });
             }
           });
           
-          console.log('Found seller listings:', foundSellerListings.length);
-          console.log('=== END DEBUGGING ===');
+          // console.log('Found seller listings:', foundSellerListings.length);
+          // console.log('=== END DEBUGGING ===');
           
           // Sort listings by timestamp
           foundSellerListings.sort((a, b) => {
@@ -248,18 +232,11 @@ function SellerProfileModal({ isOpen, onClose, sellerId, onOpenListing, cardImag
         const cardId = card.slabSerial || card.id || listing.cardId;
         if (!cardId) continue;
 
-        console.log(`Loading image for seller listing ${cardId}:`, {
-          hasImageUrl: Boolean(card.imageUrl),
-          hasImage: Boolean(card.image),
-          imageUrlType: card.imageUrl ? typeof card.imageUrl : 'none',
-          imageType: card.image ? typeof card.image : 'none'
-        });
-
         // First, check if the card has an imageUrl property
         if (card.imageUrl) {
           const url = ensureStringUrl(card.imageUrl);
           if (url) {
-            console.log(`Using imageUrl for seller card ${cardId}:`, url);
+            // console.log(`Using imageUrl for seller card ${cardId}:`, url);
             newCardImages[cardId] = url;
             continue;
           }
@@ -269,7 +246,7 @@ function SellerProfileModal({ isOpen, onClose, sellerId, onOpenListing, cardImag
         if (card.image) {
           const imageUrl = ensureStringUrl(card.image);
           if (imageUrl) {
-            console.log(`Using image property for seller card ${cardId}:`, imageUrl);
+            // console.log(`Using image property for seller card ${cardId}:`, imageUrl);
             newCardImages[cardId] = imageUrl;
             continue;
           }
@@ -283,7 +260,7 @@ function SellerProfileModal({ isOpen, onClose, sellerId, onOpenListing, cardImag
           if (card[prop]) {
             const url = ensureStringUrl(card[prop]);
             if (url) {
-              console.log(`Using ${prop} for seller card ${cardId}:`, url);
+              // console.log(`Using ${prop} for seller card ${cardId}:`, url);
               newCardImages[cardId] = url;
               foundImage = true;
               break;
@@ -298,7 +275,7 @@ function SellerProfileModal({ isOpen, onClose, sellerId, onOpenListing, cardImag
           const imageBlob = await db.getImage(cardId);
           if (imageBlob) {
             const blobUrl = URL.createObjectURL(imageBlob);
-            console.log(`Using IndexedDB image for seller card ${cardId}:`, blobUrl);
+            // console.log(`Using IndexedDB image for seller card ${cardId}:`, blobUrl);
             newCardImages[cardId] = blobUrl;
             continue;
           }
@@ -308,7 +285,7 @@ function SellerProfileModal({ isOpen, onClose, sellerId, onOpenListing, cardImag
         }
 
         // If we still don't have an image, set to null
-        console.log(`No image found for seller card ${cardId}`);
+        // console.log(`No image found for seller card ${cardId}`);
         newCardImages[cardId] = null;
       } catch (error) {
         logger.warn('Error processing seller card image:', error);
@@ -499,14 +476,6 @@ function SellerProfileModal({ isOpen, onClose, sellerId, onOpenListing, cardImag
                             const fallbackImage = listing.images?.[0] || listing.imageUrls?.[0] || listing.cardImages?.[0];
                             const imageUrl = cardImage || fallbackImage;
                             
-                            console.log('Image lookup for listing', listing.id, ':', {
-                              cardImageKey,
-                              cardImage,
-                              fallbackImage,
-                              finalImageUrl: imageUrl,
-                              sellerCardImagesKeys: Object.keys(sellerCardImages)
-                            });
-                            
                             if (imageUrl) {
                               return (
                                 <img
@@ -514,7 +483,6 @@ function SellerProfileModal({ isOpen, onClose, sellerId, onOpenListing, cardImag
                                   alt={listing.card?.name || 'Card image'}
                                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                                   onError={(e) => {
-                                    console.log('Image failed to load:', e.target.src);
                                     e.target.style.display = 'none';
                                     e.target.nextSibling.style.display = 'flex';
                                   }}
@@ -541,15 +509,6 @@ function SellerProfileModal({ isOpen, onClose, sellerId, onOpenListing, cardImag
                               {(() => {
                                 const price = listing.listingPrice || listing.priceAUD || listing.price || listing.askingPrice || listing.amount || listing.cost || 0;
                                 const currency = listing.currency || 'AUD';
-                                console.log('Price for listing', listing.id, ':', price, currency, 'from fields:', {
-                                  listingPrice: listing.listingPrice,
-                                  currency: listing.currency,
-                                  priceAUD: listing.priceAUD,
-                                  price: listing.price,
-                                  askingPrice: listing.askingPrice,
-                                  amount: listing.amount,
-                                  cost: listing.cost
-                                });
                                 return `${price} ${currency}`;
                               })()}
                             </p>

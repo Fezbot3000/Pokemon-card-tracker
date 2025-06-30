@@ -162,15 +162,15 @@ const CardDetailsModal = ({
   // Update local state when props change or modal opens
   useEffect(() => {
     if (isOpen) {
-      console.log(
-        '[CardDetailsModal] Main useEffect. isOpen:', isOpen, 
-        'Card ID:', card?.id, 
-        'CollectionID:', card?.collectionId, 
-        'Set:', card?.set, 
-        'Card Name:', card?.card
-        // Consider logging the full card object if issues persist, but be mindful of verbosity
-        // JSON.stringify(card)
-      );
+      // console.log(
+      //   '[CardDetailsModal] Main useEffect. isOpen:', isOpen, 
+      //   'Card ID:', card?.id, 
+      //   'CollectionID:', card?.collectionId, 
+      //   'Set:', card?.set, 
+      //   'Card Name:', card?.card
+      //   // Consider logging the full card object if issues persist, but be mindful of verbosity
+      //   // JSON.stringify(card)
+      // );
 
       // On mobile, only load content when the modal opens
       if (isMobile) {
@@ -194,7 +194,7 @@ const CardDetailsModal = ({
       // If the modal is open, and this effect is running (which it will if 'card',
       // 'card.collectionId', 'card.set', or 'card.card' changes, as they are dependencies),
       // then clear previous validation states.
-      console.log('[CardDetailsModal] Relevant card data changed or modal opened. Clearing errors and save message.');
+      // console.log('[CardDetailsModal] Relevant card data changed or modal opened. Clearing errors and save message.');
       setErrors({});
       setSaveMessage('');
       // --- END REVISED ERROR CLEARING LOGIC ---
@@ -372,15 +372,15 @@ const CardDetailsModal = ({
   // Update local state when props change or modal opens
   useEffect(() => {
     if (isOpen) {
-      console.log(
-        '[CardDetailsModal] Main useEffect. isOpen:', isOpen, 
-        'Card ID:', card?.id, 
-        'CollectionID:', card?.collectionId, 
-        'Set:', card?.set, 
-        'Card Name:', card?.card
-        // Consider logging the full card object if issues persist, but be mindful of verbosity
-        // JSON.stringify(card)
-      );
+      // console.log(
+      //   '[CardDetailsModal] Main useEffect. isOpen:', isOpen, 
+      //   'Card ID:', card?.id, 
+      //   'CollectionID:', card?.collectionId, 
+      //   'Set:', card?.set, 
+      //   'Card Name:', card?.card
+      //   // Consider logging the full card object if issues persist, but be mindful of verbosity
+      //   // JSON.stringify(card)
+      // );
       setContentLoaded(true);
     }
   }, [isOpen, card]);

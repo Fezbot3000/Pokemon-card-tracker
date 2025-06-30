@@ -242,7 +242,7 @@ const CardList = ({
     const hasStaleSelections = selectedCardIds.some(id => !currentCardIds.has(id));
     
     if (hasStaleSelections && selectedCards.size > 0) {
-      console.log('[CardList] Clearing stale selection state after cards changed');
+      // console.log('[CardList] Clearing stale selection state after cards changed');
       clearSelection();
     }
   }, [filteredCards, selectedCards, clearSelection]);
@@ -699,8 +699,8 @@ const CardList = ({
       const isDevMode = process.env.NODE_ENV === 'development';
       
       if (isDevMode) {
-        console.log('%c DELETION DEBUG - STARTING DELETION PROCESS', 'background: #ff0000; color: white; font-size: 14px;');
-        console.log('Cards to delete:', cardsToDelete);
+        // console.log('%c DELETION DEBUG - STARTING DELETION PROCESS', 'background: #ff0000; color: white; font-size: 14px;');
+        // console.log('Cards to delete:', cardsToDelete);
       }
       
       // Create a copy of the collections
@@ -708,8 +708,8 @@ const CardList = ({
       const cardIds = Array.isArray(cardsToDelete) ? cardsToDelete : [cardsToDelete];
       
       if (isDevMode) {
-        console.log('Card IDs for deletion:', cardIds);
-        console.log('Current collections before deletion:', JSON.parse(JSON.stringify(collections)));
+        // console.log('Card IDs for deletion:', cardIds);
+        // console.log('Current collections before deletion:', JSON.parse(JSON.stringify(collections)));
         
         // Log each card's properties to check ID consistency
         cardIds.forEach(cardId => {
@@ -718,13 +718,13 @@ const CardList = ({
             .find(card => card.slabSerial === cardId || card.id === cardId);
           
           if (cardInCollection) {
-            console.log('Found card to delete:', {
-              cardId,
-              slabSerial: cardInCollection.slabSerial,
-              id: cardInCollection.id,
-              card: cardInCollection.card,
-              collection: cardInCollection.collection
-            });
+            // console.log('Found card to delete:', {
+            //   cardId,
+            //   slabSerial: cardInCollection.slabSerial,
+            //   id: cardInCollection.id,
+            //   card: cardInCollection.card,
+            //   collection: cardInCollection.collection
+            // });
           } else {
             console.warn('Card not found in any collection:', cardId);
           }
@@ -744,21 +744,21 @@ const CardList = ({
           const afterCount = updatedCollections[collectionName].length;
           
           if (isDevMode) {
-            console.log(`Collection "${collectionName}": removed ${beforeCount - afterCount} cards`);
+            // console.log(`Collection "${collectionName}": removed ${beforeCount - afterCount} cards`);
           }
         }
       });
 
       // Save to database
       if (isDevMode) {
-        console.log('Saving updated collections to database...');
+        // console.log('Saving updated collections to database...');
       }
       
       try {
         await db.saveCollections(updatedCollections);
         
         if (isDevMode) {
-          console.log('Database save successful');
+          // console.log('Database save successful');
         }
       } catch (dbError) {
         // Always log errors, even in production
@@ -770,29 +770,29 @@ const CardList = ({
       try {
         if (onDeleteCards) {
           if (isDevMode) {
-            console.log('Calling onDeleteCards with:', cardIds);
+            // console.log('Calling onDeleteCards with:', cardIds);
           }
           
           await onDeleteCards(cardIds);
           
           if (isDevMode) {
-            console.log('onDeleteCards completed successfully');
+            // console.log('onDeleteCards completed successfully');
           }
         } else if (onDeleteCard) {
           if (isDevMode) {
-            console.log('Using onDeleteCard for each card');
+            // console.log('Using onDeleteCard for each card');
           }
           
           for (const cardId of cardIds) {
             if (isDevMode) {
-              console.log('Deleting individual card:', cardId);
+              // console.log('Deleting individual card:', cardId);
             }
             
             await onDeleteCard(cardId);
           }
           
           if (isDevMode) {
-            console.log('All individual deletions completed');
+            // console.log('All individual deletions completed');
           }
         } else {
           console.warn('No deletion handler provided (onDeleteCards or onDeleteCard)');
@@ -878,13 +878,6 @@ const CardList = ({
         return;
       }
 
-      console.log('[CardList] Starting move operation:', {
-        cardsCount: cardsToMove.length,
-        targetCollection,
-        sourceCollection: selectedCollection,
-        isAllCardsView: selectedCollection === 'All Cards'
-      });
-
       // Use the robust move handler
       const success = await moveCards({
         cardsToMove,
@@ -901,7 +894,7 @@ const CardList = ({
         setShowMoveModal(false);
         setSelectedCardsToMove([]);
         
-        console.log('[CardList] Move operation completed successfully');
+        // console.log('[CardList] Move operation completed successfully');
       } else {
         console.warn('[CardList] Move operation failed or partially failed');
         // Don't clear the modal on failure so user can retry
@@ -1186,7 +1179,7 @@ const CardList = ({
                   // Use the existing bulk listing logic
                   (async () => {
                     try {
-                      console.log("Starting bulk listing flow");
+                      // console.log("Starting bulk listing flow");
                       
                       if (!user || !user.uid) {
                         toast.error('You must be logged in to list cards');
@@ -1233,7 +1226,7 @@ const CardList = ({
                         );
                         
                         if (cardsNeedingUpdate.length > 0) {
-                          console.log(`Found ${cardsNeedingUpdate.length} cards with out-of-sync isListed flags`);
+                          // console.log(`Found ${cardsNeedingUpdate.length} cards with out-of-sync isListed flags`);
                           
                           const updatePromises = cardsNeedingUpdate.map(card => {
                             if (!card.slabSerial) return Promise.resolve();
@@ -1241,7 +1234,7 @@ const CardList = ({
                             const cardRef = doc(firestoreDb, `users/${user.uid}/cards/${card.slabSerial}`);
                             return updateDoc(cardRef, { isListed: card.isActuallyListed })
                               .then(() => {
-                                console.log(`Updated isListed flag for ${card.card || card.slabSerial} to ${card.isActuallyListed}`);
+                                // console.log(`Updated isListed flag for ${card.card || card.slabSerial} to ${card.isActuallyListed}`);
                               })
                               .catch(error => {
                                 console.error(`Error updating isListed flag for ${card.slabSerial}:`, error);

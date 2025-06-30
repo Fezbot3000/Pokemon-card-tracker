@@ -47,6 +47,8 @@ import MarketplaceMessages from './components/Marketplace/MarketplaceMessages';
 import BottomNavBar from './components/BottomNavBar';
 import CloudSync from './components/CloudSync';
 import ComponentLibrary from './pages/ComponentLibrary';
+import TrialStatusBanner from './components/TrialStatusBanner';
+import SubscriptionDebug from './components/SubscriptionDebug';
 
 import logger from './utils/logger'; // Import the logger utility
 import RestoreListener from './components/RestoreListener';
@@ -262,6 +264,13 @@ function DashboardIndex() {
 }
 
 function AppContent({ currentView, setCurrentView }) {
+  // Simple test to see if this code runs at all
+  if (typeof window !== 'undefined') {
+    window.testLog = 'AppContent is running!';
+  }
+  
+  
+  
   // Use card modals hook
   const {
     showNewCardForm,
@@ -881,6 +890,10 @@ function AppContent({ currentView, setCurrentView }) {
         />
       )}
       
+      {/* Trial Status Banner */}
+      
+      <TrialStatusBanner />
+      
       <main className="main-content mobile-dashboard max-w-[1920px] mx-auto">
         {/* Settings Modal - Available for all views */}
         {showSettings && !isMobile && (
@@ -1207,6 +1220,7 @@ function AppContent({ currentView, setCurrentView }) {
 
       <TutorialModal />
       <SyncStatusIndicator />
+      <SubscriptionDebug />
     </div>
   );
 }

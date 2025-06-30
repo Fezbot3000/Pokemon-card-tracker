@@ -109,7 +109,7 @@ class PerformanceMonitor {
     const report = this.getReport();
     
     for (const [name, stats] of Object.entries(report)) {
-      console.log(`${name}:`, stats);
+      // // console.log(`${name}:`, stats);
     }
     
     console.groupEnd();

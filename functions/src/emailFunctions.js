@@ -17,7 +17,7 @@ exports.sendWelcomeEmail = functions.auth.user().onCreate(async (user) => {
     
     if (email) {
       await emailService.sendWelcomeEmail(email, displayName);
-      console.log(`Welcome email sent to ${email}`);
+  
     }
   } catch (error) {
     console.error('Error sending welcome email:', error);
@@ -127,7 +127,7 @@ exports.sendMarketplaceMessageNotification = functions.firestore
         messagePreview
       );
 
-      console.log(`Marketplace message notification sent to ${recipient.email}`);
+  
     } catch (error) {
       console.error('Error sending marketplace message notification:', error);
     }
@@ -169,7 +169,7 @@ exports.sendListingSoldNotification = functions.firestore
           `$${salePrice} AUD`
         );
 
-        console.log(`Listing sold notification sent to ${seller.email}`);
+    
       }
     } catch (error) {
       console.error('Error sending listing sold notification:', error);

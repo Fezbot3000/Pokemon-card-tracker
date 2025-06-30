@@ -110,44 +110,44 @@ const CollectionSharing = ({ isInModal = false }) => {
 
   // Debug logging
   useEffect(() => {
-    console.log('CollectionSharing - collections:', collections);
-    console.log('CollectionSharing - cards:', cards);
-    console.log('CollectionSharing - currentUser:', currentUser);
+      // // // // console.log('CollectionSharing - collections:', collections);
+  // // // // console.log('CollectionSharing - cards:', cards);
+  // // // // console.log('CollectionSharing - currentUser:', currentUser);
     
     // Run the detailed debugging when data is available
     if (collections && cards) {
-      console.log('=== DEBUGGING COLLECTIONS ===');
-      console.log('Collections data:', collections);
-      console.log('Collections type:', typeof collections);
-      console.log('Collections is array:', Array.isArray(collections));
-      console.log('Cards data:', cards);
-      console.log('Cards type:', typeof cards);
-      console.log('Cards is array:', Array.isArray(cards));
-      console.log('Cards length:', Array.isArray(cards) ? cards.length : 'N/A');
+          // // // // console.log('=== DEBUGGING COLLECTIONS ===');
+    // // // // console.log('Collections data:', collections);
+    // // // // console.log('Collections type:', typeof collections);
+    // // // // console.log('Collections is array:', Array.isArray(collections));
+    // // // // console.log('Cards data:', cards);
+    // // // // console.log('Cards type:', typeof cards);
+    // // // // console.log('Cards is array:', Array.isArray(cards));
+    // // // // console.log('Cards length:', Array.isArray(cards) ? cards.length : 'N/A');
       
       // Log a sample of cards to see their structure
       if (Array.isArray(cards) && cards.length > 0) {
-        console.log('Sample cards (first 3):');
-        cards.slice(0, 3).forEach((card, index) => {
-          console.log(`Card ${index}:`, {
-            id: card.id,
-            collectionId: card.collectionId,
-            collection: card.collection,
-            collectionName: card.collectionName,
-            card: card.card,
-            set: card.set
-          });
-        });
+        // // // // console.log('Sample cards (first 3):');
+        // cards.slice(0, 3).forEach((card, index) => {
+        //   // // // console.log(`Card ${index}:`, {
+        //     id: card.id,
+        //     collectionId: card.collectionId,
+        //     collection: card.collection,
+        //     collectionName: card.collectionName,
+        //     card: card.card,
+        //     set: card.set
+        //   });
+        // });
       }
       
       // If collections is an array, analyze each one
       if (Array.isArray(collections)) {
         collections.forEach((collection, index) => {
-          console.log(`Collection ${index}:`, {
-            id: collection.id,
-            name: collection.name,
-            cardCount: collection.cardCount
-          });
+          // // // console.log(`Collection ${index}:`, {
+          //   id: collection.id,
+          //   name: collection.name,
+          //   cardCount: collection.cardCount
+          // });
           
           // Try to count cards for this collection
           if (Array.isArray(cards) && cards.length > 0) {
@@ -161,29 +161,29 @@ const CollectionSharing = ({ isInModal = false }) => {
                 card.collectionName === collection.id
               );
               if (matches) {
-                console.log(`Card matches collection ${collection.name}:`, {
-                  cardId: card.id,
-                  cardName: card.card,
-                  cardCollectionId: card.collectionId,
-                  cardCollection: card.collection,
-                  cardCollectionName: card.collectionName,
-                  collectionId: collection.id,
-                  collectionName: collection.name
-                });
+                // // // console.log(`Card matches collection ${collection.name}:`, {
+                //   cardId: card.id,
+                //   cardName: card.card,
+                //   cardCollectionId: card.collectionId,
+                //   cardCollection: card.collection,
+                //   cardCollectionName: card.collectionName,
+                //   collectionId: collection.id,
+                //   collectionName: collection.name
+                // });
               }
               return matches;
             });
-            console.log(`Collection ${collection.name} has ${matchingCards.length} matching cards`);
+            // // // console.log(`Collection ${collection.name} has ${matchingCards.length} matching cards`);
             
             // If no matches found, let's see all the collectionId values in cards
             if (matchingCards.length === 0) {
               const uniqueCollectionIds = [...new Set(cards.map(card => card.collectionId).filter(Boolean))];
               const uniqueCollections = [...new Set(cards.map(card => card.collection).filter(Boolean))];
               const uniqueCollectionNames = [...new Set(cards.map(card => card.collectionName).filter(Boolean))];
-              console.log(`No matches found for collection ${collection.name} (${collection.id})`);
-              console.log('Unique collectionId values in cards:', uniqueCollectionIds);
-              console.log('Unique collection values in cards:', uniqueCollections);
-              console.log('Unique collectionName values in cards:', uniqueCollectionNames);
+              // // // console.log(`No matches found for collection ${collection.name} (${collection.id})`);
+              // // // console.log('Unique collectionId values in cards:', uniqueCollectionIds);
+              // // // console.log('Unique collection values in cards:', uniqueCollections);
+              // // // console.log('Unique collectionName values in cards:', uniqueCollectionNames);
             }
           }
         });
@@ -200,7 +200,7 @@ const CollectionSharing = ({ isInModal = false }) => {
   const loadSharedCollections = async () => {
     try {
       setLoading(true);
-      console.log('Loading shared collections for user:', currentUser.uid);
+      // // // console.log('Loading shared collections for user:', currentUser.uid);
       
       const sharedRef = collection(firestoreDb, 'shared-collections');
       const q = query(
@@ -215,7 +215,7 @@ const CollectionSharing = ({ isInModal = false }) => {
         ...doc.data()
       }));
       
-      console.log('Loaded shared collections:', shared);
+      // // // console.log('Loaded shared collections:', shared);
       setSharedCollections(shared);
     } catch (error) {
       console.error('Error loading shared collections:', error);
@@ -269,7 +269,7 @@ const CollectionSharing = ({ isInModal = false }) => {
         
         // Use the sharingService to find the best image
         previewImage = sharingService.findBestCardImage(collectionCards);
-        console.log('Preview image found for shared collection:', previewImage);
+        // // // console.log('Preview image found for shared collection:', previewImage);
       }
 
       const shareData = {
@@ -287,7 +287,7 @@ const CollectionSharing = ({ isInModal = false }) => {
         viewCount: 0
       };
 
-      console.log('Creating shared collection with preview image:', shareData);
+      // // // console.log('Creating shared collection with preview image:', shareData);
 
       await setDoc(doc(firestoreDb, 'shared-collections', shareId), shareData);
       
@@ -361,25 +361,25 @@ const CollectionSharing = ({ isInModal = false }) => {
   const refreshCardCounts = async () => {
     try {
       setIsRefreshing(true);
-      console.log('Refreshing card counts and collections...');
+      // // // console.log('Refreshing card counts and collections...');
       
       // Force refresh of collections and cards from the CardContext
       if (repository && repository.loadCollections) {
-        console.log('Reloading collections from repository...');
+        // // // console.log('Reloading collections from repository...');
         await repository.loadCollections();
       }
       
       if (repository && repository.loadCards) {
-        console.log('Reloading cards from repository...');
+        // // // console.log('Reloading cards from repository...');
         await repository.loadCards();
       }
       
       // If collections is an array and has updateCollectionCardCount method
       if (repository && collections && Array.isArray(collections)) {
-        console.log('Updating card counts for individual collections...');
+        // // // console.log('Updating card counts for individual collections...');
         for (const collection of collections) {
           if (collection.id && repository.updateCollectionCardCount) {
-            console.log(`Updating card count for collection: ${collection.name} (${collection.id})`);
+            // // // console.log(`Updating card count for collection: ${collection.name} (${collection.id})`);
             try {
               await repository.updateCollectionCardCount(collection.id);
             } catch (error) {
@@ -391,7 +391,7 @@ const CollectionSharing = ({ isInModal = false }) => {
       
       // Additional step: Force re-calculation of card counts using current card data
       if (Array.isArray(cards) && Array.isArray(collections)) {
-        console.log('Recalculating card counts from current card data...');
+        // // // console.log('Recalculating card counts from current card data...');
         collections.forEach(collection => {
           const collectionName = collection.name || collection.id;
           const collectionId = collection.id || collection.name;
@@ -408,7 +408,7 @@ const CollectionSharing = ({ isInModal = false }) => {
             );
           });
           
-          console.log(`Collection "${collectionName}" calculated count: ${matchingCards.length} (was: ${collection.cardCount})`);
+          // // // console.log(`Collection "${collectionName}" calculated count: ${matchingCards.length} (was: ${collection.cardCount})`);
           
           // Update the collection object with the new count
           collection.cardCount = matchingCards.length;
@@ -419,7 +419,7 @@ const CollectionSharing = ({ isInModal = false }) => {
       setCreateForm(prev => ({ ...prev }));
       
       toast.success('Collections refreshed successfully!');
-      console.log('Collection refresh completed');
+      // // // console.log('Collection refresh completed');
     } catch (error) {
       console.error('Error refreshing collections:', error);
       toast.error('Failed to refresh collections');
@@ -431,9 +431,9 @@ const CollectionSharing = ({ isInModal = false }) => {
   const getAvailableCollections = () => {
     if (!collections) return [];
     
-    console.log('=== GETTING AVAILABLE COLLECTIONS ===');
-    console.log('Collections:', collections);
-    console.log('Cards:', cards);
+    // // // console.log('=== GETTING AVAILABLE COLLECTIONS ===');
+    // // // console.log('Collections:', collections);
+    // // // console.log('Cards:', cards);
     
     // If collections is an array (new format)
     if (Array.isArray(collections)) {
@@ -447,17 +447,17 @@ const CollectionSharing = ({ isInModal = false }) => {
           // Try multiple ways to get card count
           let cardCount = 0;
           
-          console.log(`Processing collection: ${collection.name || collection.id}`);
+          // // // console.log(`Processing collection: ${collection.name || collection.id}`);
           
           // Method 1: Direct cardCount property (most reliable)
           if (collection.cardCount && collection.cardCount > 0) {
             cardCount = collection.cardCount;
-            console.log(`Method 1 - Direct cardCount: ${cardCount}`);
+            // // // console.log(`Method 1 - Direct cardCount: ${cardCount}`);
           }
           // Method 2: cards array in collection
           else if (collection.cards && Array.isArray(collection.cards)) {
             cardCount = collection.cards.length;
-            console.log(`Method 2 - Collection cards array: ${cardCount}`);
+            // // // console.log(`Method 2 - Collection cards array: ${cardCount}`);
           }
           // Method 3: Count from global cards array (most accurate for current data)
           else if (Array.isArray(cards) && cards.length > 0) {
@@ -477,25 +477,25 @@ const CollectionSharing = ({ isInModal = false }) => {
               );
               
               if (matches) {
-                console.log(`Card matches collection ${collectionName}:`, {
-                  cardName: card.cardName || card.card || card.name,
-                  cardCollectionId: card.collectionId,
-                  cardCollection: card.collection,
-                  cardCollectionName: card.collectionName
-                });
+                // // // console.log(`Card matches collection ${collectionName}:`, {
+                //   cardName: card.cardName || card.card || card.name,
+                //   cardCollectionId: card.collectionId,
+                //   cardCollection: card.collection,
+                //   cardCollectionName: card.collectionName
+                // });
               }
               
               return matches;
             });
             cardCount = matchingCards.length;
-            console.log(`Method 3 - Filtered from global cards: ${cardCount}`);
+            // // // console.log(`Method 3 - Filtered from global cards: ${cardCount}`);
           }
           // Method 4: If cards is object, try to find collection
           else if (cards && typeof cards === 'object' && !Array.isArray(cards)) {
             const collectionName = collection.name || collection.id;
             if (cards[collectionName]) {
               cardCount = Array.isArray(cards[collectionName]) ? cards[collectionName].length : 0;
-              console.log(`Method 4 - Object lookup: ${cardCount}`);
+              // // // console.log(`Method 4 - Object lookup: ${cardCount}`);
             }
           }
           
@@ -505,28 +505,28 @@ const CollectionSharing = ({ isInModal = false }) => {
             cardCount: cardCount
           };
           
-          console.log(`Final collection result:`, result);
+          // // // console.log(`Final collection result:`, result);
           return result;
         });
       
-      console.log('Filtered collections result:', filteredCollections);
+      // // // console.log('Filtered collections result:', filteredCollections);
       return filteredCollections;
     }
     
     // If collections is an object (legacy format)
     if (collections && typeof collections === 'object') {
-      console.log('Processing collections as object...');
+      // // // console.log('Processing collections as object...');
       const filteredEntries = Object.entries(collections)
         .filter(([name]) => name.toLowerCase() !== 'sold') // Filter out 'sold' collection
         .map(([name, collectionData]) => {
-          console.log(`Processing collection ${name}:`, collectionData);
+          // // // console.log(`Processing collection ${name}:`, collectionData);
           
           let cardCount = 0;
           
           // If collectionData is an array of cards
           if (Array.isArray(collectionData)) {
             cardCount = collectionData.length;
-            console.log(`Object format - direct array: ${cardCount}`);
+            // // // console.log(`Object format - direct array: ${cardCount}`);
           }
           // If we need to count from global cards array
           else if (Array.isArray(cards)) {
@@ -535,7 +535,7 @@ const CollectionSharing = ({ isInModal = false }) => {
               card.collection === name ||
               card.collectionName === name
             ).length;
-            console.log(`Object format - filtered from global: ${cardCount}`);
+            // // // console.log(`Object format - filtered from global: ${cardCount}`);
           }
           
           return {
@@ -545,11 +545,11 @@ const CollectionSharing = ({ isInModal = false }) => {
           };
         });
       
-      console.log('Object format filtered result:', filteredEntries);
+      // // // console.log('Object format filtered result:', filteredEntries);
       return filteredEntries;
     }
     
-    console.log('No collections found or unrecognized format');
+    // // // console.log('No collections found or unrecognized format');
     return [];
   };
 

@@ -102,7 +102,7 @@ const handleFirestoreBlocking = () => {
       // Enable offline persistence to work around blocking
       enableIndexedDbPersistence(db)
         .then(() => {
-          console.log('Offline persistence enabled as a fallback');
+          // console.log('Offline persistence enabled as a fallback');
         })
         .catch(err => {
           console.error('Error enabling offline persistence:', err);

@@ -107,16 +107,6 @@ function Marketplace({ currentView, onViewChange }) {
             listingsData.push({ id: doc.id, ...doc.data() });
           });
           
-          console.log('Marketplace listings loaded:', {
-            count: listingsData.length,
-            listings: listingsData.map(l => ({
-              id: l.id,
-              status: l.status,
-              cardId: l.cardId,
-              name: l.card?.name
-            }))
-          });
-          
           setAllListings(listingsData);
           setFilteredListings(listingsData);
 
@@ -255,19 +245,10 @@ function Marketplace({ currentView, onViewChange }) {
         const cardId = card.slabSerial || card.id || listing.cardId;
         if (!cardId) continue;
 
-        // Debug logging to help identify image issues
-        console.log(`Processing image for card ${cardId}:`, {
-          hasImageUrl: Boolean(card.imageUrl),
-          hasImage: Boolean(card.image),
-          imageUrlType: card.imageUrl ? typeof card.imageUrl : 'none',
-          imageType: card.image ? typeof card.image : 'none'
-        });
-
         // First, check if the card has an imageUrl property
         if (card.imageUrl) {
           const url = ensureStringUrl(card.imageUrl);
           if (url) {
-            console.log(`Using imageUrl for card ${cardId}:`, url);
             newCardImages[cardId] = url;
             continue;
           }
@@ -277,7 +258,6 @@ function Marketplace({ currentView, onViewChange }) {
         if (card.image) {
           const imageUrl = ensureStringUrl(card.image);
           if (imageUrl) {
-            console.log(`Using image property for card ${cardId}:`, imageUrl);
             newCardImages[cardId] = imageUrl;
             continue;
           }
@@ -291,7 +271,6 @@ function Marketplace({ currentView, onViewChange }) {
           if (card[prop]) {
             const url = ensureStringUrl(card[prop]);
             if (url) {
-              console.log(`Using ${prop} for card ${cardId}:`, url);
               newCardImages[cardId] = url;
               foundImage = true;
               break;
@@ -306,7 +285,6 @@ function Marketplace({ currentView, onViewChange }) {
           const imageBlob = await db.getImage(cardId);
           if (imageBlob) {
             const blobUrl = URL.createObjectURL(imageBlob);
-            console.log(`Using IndexedDB image for card ${cardId}:`, blobUrl);
             newCardImages[cardId] = blobUrl;
             continue;
           }
@@ -316,7 +294,6 @@ function Marketplace({ currentView, onViewChange }) {
         }
 
         // If we still don't have an image, set to null
-        console.log(`No image found for card ${cardId}`);
         newCardImages[cardId] = null;
       } catch (error) {
         logger.warn('Error processing card image:', error);
@@ -454,7 +431,7 @@ function Marketplace({ currentView, onViewChange }) {
   }, [filters]);
 
   const handleViewSellerProfile = (sellerId) => {
-    console.log('Opening seller profile for sellerId:', sellerId);
+    // console.log('Opening seller profile for sellerId:', sellerId);
     setSelectedSellerId(sellerId);
     setShowSellerProfile(true);
   };

@@ -268,9 +268,9 @@ const PurchaseInvoices = () => {
       const cardDetails = await getCardDetails(invoice);
       
       // Debug: Log the card details to see what data we have
-      console.log('Invoice data for PDF generation:', invoice);
-      console.log('Card details for PDF:', cardDetails);
-      console.log('First card details:', cardDetails[0]);
+      // console.log('Invoice data for PDF generation:', invoice);
+      // console.log('Card details for PDF:', cardDetails);
+      // console.log('First card details:', cardDetails[0]);
       
       // Create the PDF document
       const pdfDocument = (
@@ -326,7 +326,7 @@ const PurchaseInvoices = () => {
       // If we have card IDs, fetch the full card details
       if (invoice.cards && invoice.cards.length > 0) {
         // Log the card data for debugging
-        console.log('Card data from invoice:', invoice.cards);
+        // console.log('Card data from invoice:', invoice.cards);
         
         // Process cards to ensure they have proper display names
         const processedCards = invoice.cards.map(card => {
@@ -344,7 +344,7 @@ const PurchaseInvoices = () => {
           return processedCard;
         });
         
-        console.log('Processed cards for PDF:', processedCards);
+        // console.log('Processed cards for PDF:', processedCards);
         return processedCards;
       }
       return [];
@@ -376,7 +376,7 @@ const PurchaseInvoices = () => {
             
             // Set invoices from Firestore immediately
             setInvoices(firestoreInvoices);
-            console.log(`Loaded ${firestoreInvoices.length} invoices from Firestore`);
+            // console.log(`Loaded ${firestoreInvoices.length} invoices from Firestore`);
             
             // Update local database in the background (don't await)
             Promise.resolve().then(async () => {
@@ -401,7 +401,7 @@ const PurchaseInvoices = () => {
       // Fall back to local database only if Firestore failed
       const purchaseInvoices = await db.getPurchaseInvoices(currentUser?.uid) || [];
       setInvoices(purchaseInvoices);
-      console.log(`Loaded ${purchaseInvoices.length} invoices from local database`);
+      // console.log(`Loaded ${purchaseInvoices.length} invoices from local database`);
     } catch (error) {
       console.error('Error loading purchase invoices:', error);
       toast.error('Failed to load purchase invoices');
@@ -763,7 +763,7 @@ const PurchaseInvoices = () => {
           
           try {
             if (editingInvoice) {
-              console.log('Updating invoice in local state:', newInvoice);
+              // console.log('Updating invoice in local state:', newInvoice);
               
               // Update existing invoice in local state immediately
               // This ensures the UI reflects the changes without needing to refresh from Firestore
@@ -771,7 +771,7 @@ const PurchaseInvoices = () => {
                 inv.id === newInvoice.id ? newInvoice : inv
               ));
             } else {
-              console.log('Adding new invoice to local state:', newInvoice);
+              // console.log('Adding new invoice to local state:', newInvoice);
               
               // For new invoices, add to local state immediately
               setInvoices(prev => [newInvoice, ...prev]);

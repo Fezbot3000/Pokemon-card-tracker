@@ -77,24 +77,24 @@ function analyzeLoggerUsage() {
 
 // Run analysis
 if (require.main === module) {
-  console.log('Analyzing logger usage in the codebase...\n');
+  // // console.log('Analyzing logger usage in the codebase...\n');
   
   const results = analyzeLoggerUsage();
   
-  console.log(`Files using logger: ${results.filesWithLogger.length}`);
-  console.log(`Total logger calls: ${results.totalLoggerCalls}\n`);
+  // // console.log(`Files using logger: ${results.filesWithLogger.length}`);
+  // // console.log(`Total logger calls: ${results.totalLoggerCalls}\n`);
   
-  console.log('Logger calls by type:');
-  Object.entries(results.loggerCallsByType).forEach(([type, count]) => {
-    console.log(`  ${type}: ${count}`);
-  });
+  // // console.log('Logger calls by type:');
+  // Object.entries(results.loggerCallsByType).forEach(([type, count]) => {
+  //   // console.log(`  ${type}: ${count}`);
+  // });
   
-  console.log('\nFiles with logger (sorted by usage):');
-  results.filesWithLogger
-    .sort((a, b) => b.calls - a.calls)
-    .forEach(({ file, calls }) => {
-      console.log(`  ${file}: ${calls} calls`);
-    });
+  // // console.log('\nFiles with logger (sorted by usage):');
+  // results.filesWithLogger
+  //   .sort((a, b) => b.calls - a.calls)
+  //   .forEach(({ file, calls }) => {
+  //     // console.log(`  ${file}: ${calls} calls`);
+  //   });
 }
 
 module.exports = { analyzeLoggerUsage };

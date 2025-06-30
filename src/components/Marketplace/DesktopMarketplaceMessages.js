@@ -658,7 +658,7 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
                         e.stopPropagation();
                         try {
                           const otherUserId = chat.buyerId === user.uid ? chat.sellerId : chat.buyerId;
-                          console.log('Viewing seller profile:', { otherUserId, chat, user: user.uid });
+                          // console.log('Viewing seller profile:', { otherUserId, chat, user: user.uid });
                           
                           if (!otherUserId) {
                             toast.error('Unable to determine seller ID');

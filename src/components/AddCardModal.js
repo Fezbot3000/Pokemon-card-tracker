@@ -315,7 +315,7 @@ const AddCardModal = ({
         // Ensure psaUrl uses the certification number from PSA data, fallback to the user-entered psaSerial if needed.
         psaUrl: updatedCardData.psaUrl || `https://www.psacard.com/cert/${updatedCardData.certificationNumber || psaSerial || ''}`,
       };
-      console.log('Applied PSA details. Merged data:', mergedData);
+      // console.log('Applied PSA details. Merged data:', mergedData);
       return mergedData;
     });
     toast.success('PSA card details applied');

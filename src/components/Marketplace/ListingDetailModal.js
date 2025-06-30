@@ -19,12 +19,12 @@ function ListingDetailModal({
   onMarkAsSold,
   onViewChange
 }) {
-  console.log('🚀 ListingDetailModal component loaded - DEBUG VERSION');
+  // console.log('🚀 ListingDetailModal component loaded - DEBUG VERSION');
   
   // Temporary test to verify our changes are loading
   if (typeof window !== 'undefined' && !window.debugTestRan) {
     window.debugTestRan = true;
-    console.log('✅ UPDATED COMPONENT IS LOADING!');
+    // console.log('✅ UPDATED COMPONENT IS LOADING!');
   }
   
   const { user } = useAuth();
@@ -50,12 +50,11 @@ function ListingDetailModal({
     const cardName = listing.card?.name || listing.title || 'Trading Card';
     const price = listing.price ? `$${listing.price}` : 'Price on request';
     
-    console.log('Sharing listing:', { 
-      listingId: listing.id, 
-      shareUrl, 
-      cardName, 
-      price 
-    });
+    // console.log('Sharing listing:', {
+    //   shareUrl, 
+    //   cardName, 
+    //   price 
+    // });
     
     if (navigator.share) {
       // Use native sharing if available (mobile)
@@ -64,7 +63,7 @@ function ListingDetailModal({
         text: `Check out this ${cardName} for sale on MyCardTracker!`,
         url: shareUrl
       }).catch(err => {
-        console.log('Error sharing:', err);
+        // console.log('Error sharing:', err);
         // Fallback to clipboard if native sharing fails
         fallbackToClipboard(shareUrl);
       });
@@ -205,7 +204,7 @@ function ListingDetailModal({
         if (existingChat) {
           setHasExistingChat(true);
           setExistingChatId(existingChat.id);
-          console.log('Found existing chat:', existingChat.id);
+          // console.log('Found existing chat:', existingChat.id);
         }
       }
     } catch (error) {
@@ -222,15 +221,6 @@ function ListingDetailModal({
   }
 
   const card = listing.card;
-  console.log('🔄 ListingDetailModal render state:', {
-    listingId: listing.id,
-    userId: user?.uid,
-    sellerId: listing.userId,
-    isOwnListing: user?.uid === listing.userId,
-    hasExistingChat,
-    existingChatId,
-    loadingSellerData
-  });
   
   // Try multiple image sources
   const cardImage = card.cloudImageUrl || card.imageURL || card.imageUrl || card.img || listing.images?.[0] || null;
@@ -376,12 +366,6 @@ function ListingDetailModal({
           <Button 
             variant="primary"
             onClick={() => {
-              console.log('🔘 Contact button clicked:', {
-                hasExistingChat,
-                existingChatId,
-                userId: user?.uid,
-                sellerId: listing?.userId
-              });
               hasExistingChat ? handleNavigateToChat() : handleMessageSeller();
             }}
             leftIcon={<Icon name="message" />}

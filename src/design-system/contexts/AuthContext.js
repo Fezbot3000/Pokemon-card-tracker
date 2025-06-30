@@ -13,15 +13,15 @@ import {
   setPersistence,
   browserLocalPersistence
 } from 'firebase/auth';
-import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, getDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { auth, db, googleProvider } from '../../firebase'; // Import from the main app's firebase config
 import { toast } from 'react-hot-toast';
 
 /**
- * Auth Context for the design system
+ * Auth Context for the design system with subscription management
  * 
- * This context provides authentication-related functionality
- * to components that need user information.
+ * This context provides authentication-related functionality and subscription management
+ * to components that need user information and subscription status.
  */
 const AuthContext = createContext();
 
@@ -53,20 +53,139 @@ const handleFirebaseError = (error) => {
   return errorMessages[error.code] || `Authentication error: ${error.message}`;
 };
 
+// Helper function to calculate days remaining in trial
+const calculateDaysRemaining = (trialEndsAt, status) => {
+  if (status !== 'free_trial' || !trialEndsAt) return 0;
+  
+  const endDate = new Date(trialEndsAt);
+  const now = new Date();
+  const diffTime = endDate - now;
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  return Math.max(0, diffDays);
+};
+
 /**
  * Auth Provider Component
  * 
- * Wraps the application to provide authentication functionality
+ * Wraps the application to provide authentication functionality and subscription management
  */
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [subscriptionData, setSubscriptionData] = useState({
+    status: 'loading', // 'loading', 'free_trial', 'free', 'premium', 'expired'
+    planType: null,
+    trialEndsAt: null,
+    subscriptionId: null,
+    customerId: null,
+    daysRemaining: null
+  });
 
   // Clear any error when component unmounts or when dependencies change
   useEffect(() => {
     return () => setError(null);
   }, []);
+
+  // Check subscription status for a user
+  const checkUserSubscription = async (userId) => {
+    try {
+      const userRef = doc(db, 'users', userId);
+      const userSnap = await getDoc(userRef);
+      const userData = userSnap.exists() ? userSnap.data() : {};
+      
+      // Check if user has subscription data
+      if (!userData.subscriptionStatus) {
+        // User without subscription data - start free trial
+        // This includes both new users and existing users who haven't been migrated yet
+        const trialEndsAt = new Date();
+        trialEndsAt.setDate(trialEndsAt.getDate() + 7);
+        
+        const newSubscriptionData = {
+          status: 'free_trial',
+          planType: 'free_trial',
+          trialEndsAt: trialEndsAt.toISOString(),
+          subscriptionId: null,
+          customerId: null,
+          daysRemaining: 7
+        };
+        
+        // Save to Firestore (merge with existing user data if any)
+        await setDoc(userRef, {
+          subscriptionStatus: 'free_trial',
+          planType: 'free_trial',
+          trialEndsAt: trialEndsAt.toISOString(),
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+        
+        setSubscriptionData(newSubscriptionData);
+        console.log('Started 7-day free trial for user (new or existing without subscription data)');
+        
+        // Show a welcome message for the trial
+        setTimeout(() => {
+          toast.success('🎉 Welcome to your 7-day Premium trial! Enjoy all features!', {
+            duration: 5000
+          });
+        }, 1000);
+        
+      } else {
+        // Existing user with subscription data - check current status
+        const daysRemaining = calculateDaysRemaining(userData.trialEndsAt, userData.subscriptionStatus);
+        
+        // Check if trial has expired
+        if (userData.subscriptionStatus === 'free_trial' && daysRemaining <= 0) {
+          // Trial expired - move to free plan
+          await updateDoc(userRef, {
+            subscriptionStatus: 'free',
+            planType: 'free',
+            updatedAt: serverTimestamp()
+          });
+          
+          setSubscriptionData({
+            status: 'free',
+            planType: 'free',
+            trialEndsAt: userData.trialEndsAt,
+            subscriptionId: userData.subscriptionId || null,
+            customerId: userData.customerId || null,
+            daysRemaining: 0
+          });
+          
+          console.log('Trial expired - moved user to free plan');
+          
+          // Show trial expired message
+          setTimeout(() => {
+            toast.error('Your free trial has expired. Upgrade to Premium to continue using all features!', {
+              duration: 6000
+            });
+          }, 1000);
+          
+        } else {
+          // Use existing subscription data
+          setSubscriptionData({
+            status: userData.subscriptionStatus,
+            planType: userData.planType || userData.subscriptionStatus,
+            trialEndsAt: userData.trialEndsAt,
+            subscriptionId: userData.subscriptionId || null,
+            customerId: userData.customerId || null,
+            daysRemaining: daysRemaining
+          });
+          
+          console.log('Loaded existing subscription data:', userData.subscriptionStatus);
+        }
+      }
+    } catch (error) {
+      console.error('Error checking subscription:', error);
+      setSubscriptionData({
+        status: 'free',
+        planType: 'free',
+        trialEndsAt: null,
+        subscriptionId: null,
+        customerId: null,
+        daysRemaining: 0
+      });
+    }
+  };
 
   // Set up the auth state listener
   useEffect(() => {
@@ -77,14 +196,24 @@ export const AuthProvider = ({ children }) => {
       
       if (user) {
         try {
-          // Just set the current user
+          // Set the current user
           setUser(user);
+          // Check subscription status
+          await checkUserSubscription(user.uid);
         } catch (err) {
           console.error("Error handling user:", err);
           setUser(user);
         }
       } else {
         setUser(null);
+        setSubscriptionData({
+          status: 'loading',
+          planType: null,
+          trialEndsAt: null,
+          subscriptionId: null,
+          customerId: null,
+          daysRemaining: null
+        });
       }
       
       // Add a small delay to prevent flashing
@@ -120,7 +249,7 @@ export const AuthProvider = ({ children }) => {
           createdAt
         });
         
-        console.log("User document created successfully");
+        // console.log("User document created successfully");
       }
     } catch (error) {
       console.error("Error creating user document:", error);
@@ -144,7 +273,7 @@ export const AuthProvider = ({ children }) => {
       // Set new user flag for onboarding
       localStorage.setItem('isNewUser', 'true');
       
-      toast.success('Account created successfully!');
+      toast.success('Account created successfully! Your 7-day free trial has started.');
       return result.user;
     } catch (err) {
       const errorMessage = handleFirebaseError(err);
@@ -179,11 +308,11 @@ export const AuthProvider = ({ children }) => {
   const signInWithGoogle = async () => {
     try {
       setError(null);
-      console.log("Starting Google sign-in process...");
+      // console.log("Starting Google sign-in process...");
       
       // Use popup for Google sign-in
       const result = await signInWithPopup(auth, googleProvider);
-      console.log("Google sign-in successful:", result.user?.email);
+      // console.log("Google sign-in successful:", result.user?.email);
       
       // Check if this is a new user
       const isFirstSignIn = result?.additionalUserInfo?.isNewUser;
@@ -191,7 +320,7 @@ export const AuthProvider = ({ children }) => {
       // Try to create user document
       try {
         await createUserDocument(result.user);
-        console.log("User document created after Google sign-in");
+        // console.log("User document created after Google sign-in");
       } catch (docError) {
         console.error("Failed to create user document after Google sign-in:", docError);
       }
@@ -208,10 +337,11 @@ export const AuthProvider = ({ children }) => {
       
       // Only set the isNewUser flag for brand new accounts
       if (isNewAccount) {
-        console.log("Brand new Google account detected, setting isNewUser flag");
+        // console.log("Brand new Google account detected, setting isNewUser flag");
         localStorage.setItem('isNewUser', 'true');
+        toast.success('Welcome! Your 7-day free trial has started.');
       } else {
-        console.log("Existing Google account detected, not setting isNewUser flag");
+        // console.log("Existing Google account detected, not setting isNewUser flag");
         // Ensure we clear any existing flag for sign-ins
         localStorage.removeItem('isNewUser');
       }
@@ -234,12 +364,12 @@ export const AuthProvider = ({ children }) => {
       setError(null);
       // Explicitly set persistence to local
       await setPersistence(auth, browserLocalPersistence);
-      console.log("Starting Apple sign-in process...");
+      // console.log("Starting Apple sign-in process...");
       const provider = new OAuthProvider('apple.com');
       
       // Use popup for Apple sign-in
       const result = await signInWithPopup(auth, provider);
-      console.log("Apple sign-in successful:", result.user?.email);
+      // console.log("Apple sign-in successful:", result.user?.email);
       
       // Check if this is a new user
       const isFirstSignIn = result?.additionalUserInfo?.isNewUser;
@@ -247,7 +377,7 @@ export const AuthProvider = ({ children }) => {
       // Try to create user document
       try {
         await createUserDocument(result.user);
-        console.log("User document created after Apple sign-in");
+        // console.log("User document created after Apple sign-in");
       } catch (docError) {
         console.error("Failed to create user document after Apple sign-in:", docError);
       }
@@ -264,10 +394,11 @@ export const AuthProvider = ({ children }) => {
       
       // Only set the isNewUser flag for brand new accounts
       if (isNewAccount) {
-        console.log("Brand new Apple account detected, setting isNewUser flag");
+        // console.log("Brand new Apple account detected, setting isNewUser flag");
         localStorage.setItem('isNewUser', 'true');
+        toast.success('Welcome! Your 7-day free trial has started.');
       } else {
-        console.log("Existing Apple account detected, not setting isNewUser flag");
+        // console.log("Existing Apple account detected, not setting isNewUser flag");
         // Ensure we clear any existing flag for sign-ins
         localStorage.removeItem('isNewUser');
       }
@@ -324,6 +455,36 @@ export const AuthProvider = ({ children }) => {
       return null;
     }
   };
+
+  // Update subscription status (for when user upgrades/downgrades)
+  const updateSubscriptionStatus = async (newStatus, additionalData = {}) => {
+    if (!user) return;
+    
+    try {
+      const userRef = doc(db, 'users', user.uid);
+      const updateData = {
+        subscriptionStatus: newStatus,
+        planType: newStatus,
+        updatedAt: serverTimestamp(),
+        ...additionalData
+      };
+      
+      await updateDoc(userRef, updateData);
+      
+      // Update local state
+      setSubscriptionData(prev => ({
+        ...prev,
+        status: newStatus,
+        planType: newStatus,
+        ...additionalData,
+        daysRemaining: calculateDaysRemaining(additionalData.trialEndsAt || prev.trialEndsAt, newStatus)
+      }));
+      
+      console.log('Subscription status updated:', newStatus);
+    } catch (error) {
+      console.error('Error updating subscription status:', error);
+    }
+  };
   
   return (
     <AuthContext.Provider value={{ 
@@ -331,6 +492,7 @@ export const AuthProvider = ({ children }) => {
       currentUser: user, // For backward compatibility
       loading, 
       error,
+      subscriptionData,
       signIn, 
       signUp,
       signInWithGoogle,
@@ -338,7 +500,9 @@ export const AuthProvider = ({ children }) => {
       logout,
       signOut: logout, // Alias for backward compatibility
       resetPassword,
-      getAuthToken
+      getAuthToken,
+      updateSubscriptionStatus,
+      checkUserSubscription
     }}>
       {children}
     </AuthContext.Provider>

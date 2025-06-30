@@ -1022,8 +1022,8 @@ const addCustomSet = (setName, year = "2024") => {
     // Save to localStorage
     try {
       localStorage.setItem('pokemonCustomSets', JSON.stringify(userCustomSets));
-      console.log(`Added custom set "${setName}" to year ${targetYear}`);
-      console.log('Updated userCustomSets:', userCustomSets);
+      // console.log(`Added custom set "${setName}" to year ${targetYear}`);
+      // console.log('Updated userCustomSets:', userCustomSets);
     } catch (error) {
       logger.error('Failed to save custom sets to localStorage:', error);
     }

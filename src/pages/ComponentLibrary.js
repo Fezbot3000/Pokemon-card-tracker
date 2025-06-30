@@ -201,11 +201,11 @@ const ComponentLibrary = () => {
 
   // Mock handlers for demos
   const handleCardSave = (card) => {
-    console.log('Card saved:', card);
+    // // console.log('Card saved:', card);
   };
 
   const handleCardDelete = (card) => {
-    console.log('Card deleted:', card);
+    // // console.log('Card deleted:', card);
   };
 
   // State for LoginModal example
@@ -214,13 +214,11 @@ const ComponentLibrary = () => {
 
   // Mock login handler for demo
   const handleMockLogin = ({ email, password, rememberMe }) => {
-    console.log('Attempting login with:', { email, password, rememberMe });
     setIsLoginLoading(true);
 
     // Simulate API call
     setTimeout(() => {
       if (password === 'password') { // Simulate success
-        console.log(`Successfully logged in as ${email}!`);
         setIsLoginModalOpen(false);
       } else { // Simulate failure
         setLoginError('Invalid email or password. Try "password".');
@@ -231,18 +229,16 @@ const ComponentLibrary = () => {
   
   // Mock handlers for other login-related actions
   const handleMockSignUpClick = () => {
-    console.log('Sign up clicked');
+    // // console.log('Sign up clicked');
   };
   
   const handleMockForgotPasswordClick = () => {
-    console.log('Forgot password clicked');
+    // // console.log('Forgot password clicked');
   };
   
   const handleMockGoogleLogin = () => {
     setIsLoginLoading(true);
-    console.log('Google login initiated');
     setTimeout(() => {
-      console.log('Google login successful!');
       setIsLoginModalOpen(false);
       setIsLoginLoading(false);
     }, 1500);
@@ -250,9 +246,7 @@ const ComponentLibrary = () => {
   
   const handleMockAppleLogin = () => {
     setIsLoginLoading(true);
-    console.log('Apple login initiated');
     setTimeout(() => {
-      console.log('Apple login successful!');
       setIsLoginModalOpen(false);
       setIsLoginLoading(false);
     }, 1500);
@@ -1311,10 +1305,10 @@ toastService.dismissAll(); // Dismiss all toasts`}
               "Rare Cards",
               "PSA Graded"
             ]}
-            onCollectionChange={(collection) => console.log('Collection changed:', collection)}
+            onCollectionChange={(collection) => {/* Collection changed */}}
             currentView="cards"
-            onViewChange={(view) => console.log('View changed:', view)}
-            onSettingsClick={() => console.log('Settings clicked')}
+            onViewChange={(view) => {/* View changed */}}
+            onSettingsClick={() => {/* Settings clicked */}}
           />
         </div>
         
@@ -1403,7 +1397,7 @@ toastService.dismissAll(); // Dismiss all toasts`}
           <div className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
             <Modal 
               isOpen={true} 
-              onClose={() => console.log('Close clicked')} 
+              onClose={() => {/* Close clicked */}} 
               title="Example Modal"
               showOverlay={false} // Don't show the overlay
               showAsStatic={true}  // Show as a static component, not a true modal
@@ -1415,13 +1409,13 @@ toastService.dismissAll(); // Dismiss all toasts`}
                 <div className="flex justify-end space-x-3">
                   <Button 
                     variant="secondary"
-                    onClick={() => console.log('Cancel clicked')}
+                    onClick={() => {/* Cancel clicked */}}
                   >
                     Cancel
                   </Button>
                   <Button 
                     variant="primary"
-                    onClick={() => console.log('Confirm clicked')}
+                    onClick={() => {/* Confirm clicked */}}
                   >
                     Confirm
                   </Button>
@@ -1450,7 +1444,7 @@ toastService.dismissAll(); // Dismiss all toasts`}
           <div className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
             <CardDetailsModal
               isOpen={true}
-              onClose={() => console.log('Close clicked')}
+              onClose={() => {/* Close clicked */}}
               card={{
                 id: '123',
                 name: 'Charizard',
@@ -1463,10 +1457,10 @@ toastService.dismissAll(); // Dismiss all toasts`}
                 imageUrl: 'https://assets.pokemon.com/assets/cms2/img/cards/web/SWSH45/SWSH45_EN_TG01.png'
               }}
               onSave={(card) => {
-                console.log('Card saved:', card);
+                // // console.log('Card saved:', card);
               }}
               onDelete={(card) => {
-                console.log('Card deleted:', card);
+                // // console.log('Card deleted:', card);
               }}
               showAsStatic={true} // Add a prop to show it as a static display rather than modal
             />
@@ -1492,7 +1486,7 @@ toastService.dismissAll(); // Dismiss all toasts`}
           <div className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
             <LoginModal 
               isOpen={true} 
-              onClose={() => console.log('Close clicked')} 
+              onClose={() => {/* Close clicked */}} 
               onLoginSubmit={handleMockLogin}
               onSignUpClick={handleMockSignUpClick}
               onForgotPasswordClick={handleMockForgotPasswordClick}
@@ -1544,22 +1538,22 @@ toastService.dismissAll(); // Dismiss all toasts`}
                 collections={mockCollections}
                 selectedCollection={mockCollections[0]}
                 onRenameCollection={(oldName, newName) => {
-                  console.log(`Rename collection from ${oldName} to ${newName}`);
+                  // // console.log(`Rename collection from ${oldName} to ${newName}`);
                   toastService.success(`Collection renamed to "${newName}"`);
                 }}
                 onDeleteCollection={(name) => {
-                  console.log(`Delete collection ${name}`);
+                  // // console.log(`Delete collection ${name}`);
                   toastService.success(`Collection "${name}" deleted`);
                 }}
-                onImportCollection={() => console.log('Import collection')}
-                onImportBaseData={() => console.log('Import base data')}
+                onImportCollection={() => {/* Import collection */}}
+                onImportBaseData={() => {/* Import base data */}}
                 userData={mockUserData}
-                onSignOut={() => console.log('Sign out')}
-                onResetData={() => console.log('Reset data')}
-                onStartTutorial={() => console.log('Start tutorial')}
-                onImportAndCloudMigrate={() => console.log('Import and cloud migrate')}
-                onUploadImagesFromZip={() => console.log('Upload images from zip')}
-                onImportSoldItemsFromZip={() => console.log('Import sold items from zip')}
+                onSignOut={() => {/* Sign out */}}
+                onResetData={() => {/* Reset data */}}
+                onStartTutorial={() => {/* Start tutorial */}}
+                onImportAndCloudMigrate={() => {/* Import and cloud migrate */}}
+                onUploadImagesFromZip={() => {/* Upload images from zip */}}
+                onImportSoldItemsFromZip={() => {/* Import sold items from zip */}}
               />
             </div>
           </div>
@@ -1729,7 +1723,7 @@ const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 
     // Mock function for printing an invoice
     const handlePrintInvoice = (invoice) => {
-      console.log('Print invoice:', invoice);
+      // // console.log('Print invoice:', invoice);
       toastService.info(`Printing invoice for ${invoice.buyer}`);
     };
 

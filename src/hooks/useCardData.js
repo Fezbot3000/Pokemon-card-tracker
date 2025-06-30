@@ -138,11 +138,6 @@ const useCardData = () => {
     // Check for either id or slabSerial as the card identifier
     const cardId = updatedCard?.id || updatedCard?.slabSerial;
     
-    console.log(`[useCardData] updateCard called for card: ${cardId}`, {
-      debug: updatedCard._saveDebug || false,
-      timestamp: new Date().toISOString()
-    });
-    
     if (!updatedCard || !cardId) {
       logger.error("Update card failed: Invalid card data or missing ID.", updatedCard);
       setError("Failed to update card: Invalid data.");
@@ -156,7 +151,6 @@ const useCardData = () => {
       // Track if we're already updating this card to prevent loops
       const updateStartTime = Date.now();
       logger.debug(`Starting card update for ${cardId} at ${updateStartTime}`);
-      console.log(`[useCardData] Starting Firestore update for ${cardId}`);
       
       // Find the existing card to compare for real changes
       const existingCard = cards.find(card => 
@@ -178,18 +172,10 @@ const useCardData = () => {
           normalizedCard.slabSerial = updatedCard.slabSerial;
         }
         
-        console.log(`[useCardData] Calling repository.updateCard for card: ${cardId}`);
-        const repoStart = performance.now();
-        
-        // Pass the entire normalized card object to match the repository's function signature
         await repository.updateCard(normalizedCard);
-        
-        const repoEnd = performance.now();
-        console.log(`[useCardData] repository.updateCard completed in ${(repoEnd - repoStart).toFixed(2)}ms`);
       }
 
       // Optimistic UI update (or update after successful Firestore operation)
-      console.log(`[useCardData] Updating local state for card: ${cardId}`);
       setCards(prevCards => 
         prevCards.map(card => 
           (card.id === cardId || card.slabSerial === cardId) ? updatedCard : card
@@ -201,8 +187,6 @@ const useCardData = () => {
           ? updatedCard 
           : prevSelected
       );
-      
-      console.log(`[useCardData] Card update for ${cardId} completed successfully`);
 
     } catch (err) {
       console.error(`[useCardData] Error updating card ${cardId}:`, err);

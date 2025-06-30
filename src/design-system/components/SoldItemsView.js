@@ -237,7 +237,7 @@ const SoldItemsView = ({
 
   // Handle printing an invoice
   const handlePrintInvoice = (invoice) => {
-    console.log("Print invoice requested:", invoice);
+    // console.log("Print invoice requested:", invoice);
     toastService.info(`Printing invoice for ${invoice.buyer}`);
     if (onPrintInvoice) {
       onPrintInvoice(invoice);

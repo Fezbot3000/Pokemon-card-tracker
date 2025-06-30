@@ -119,8 +119,8 @@ const styles = StyleSheet.create({
 
 const InvoicePDF = ({ buyer, date, cards, invoiceId, profile }) => {
   // Debug: Log the cards data to see what fields are available
-  console.log('Cards data received in InvoicePDF:', cards);
-  console.log('First card data:', cards[0]);
+  // console.log('Cards data received in InvoicePDF:', cards);
+  // console.log('First card data:', cards[0]);
   
   // Calculate totals by parsing strings to numbers first
   const totalInvestment = cards.reduce((sum, card) => {
@@ -132,7 +132,7 @@ const InvoicePDF = ({ buyer, date, cards, invoiceId, profile }) => {
       card.investmentInPreferredCurrency ||
       0
     );
-    console.log(`Card ${card.card || card.name}: investment = ${investment} (from fields: originalInvestmentAmount=${card.originalInvestmentAmount}, investmentAUD=${card.investmentAUD}, investment=${card.investment})`);
+    // console.log(`Card ${card.card || card.name}: investment = ${investment} (from fields: originalInvestmentAmount=${card.originalInvestmentAmount}, investmentAUD=${card.investmentAUD}, investment=${card.investment})`);
     return sum + investment;
   }, 0);
 
@@ -157,7 +157,7 @@ const InvoicePDF = ({ buyer, date, cards, invoiceId, profile }) => {
       );
     }
     
-    console.log(`Card ${card.card || card.name}: sale price = ${effectiveSalePrice} (from fields: effectiveSalePrice=${card.effectiveSalePrice}, soldPrice=${card.soldPrice}, finalValueAUD=${card.finalValueAUD})`);
+    // console.log(`Card ${card.card || card.name}: sale price = ${effectiveSalePrice} (from fields: effectiveSalePrice=${card.effectiveSalePrice}, soldPrice=${card.soldPrice}, finalValueAUD=${card.finalValueAUD})`);
     return sum + effectiveSalePrice;
   }, 0);
 

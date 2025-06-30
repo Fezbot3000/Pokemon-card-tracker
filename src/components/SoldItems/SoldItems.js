@@ -118,7 +118,7 @@ const SoldItems = () => {
       
       // Only log the start of the process
       if (soldCards.length > 0) {
-        console.log(`Loading images for ${soldCards.length} sold cards`);
+        // console.log(`Loading images for ${soldCards.length} sold cards`);
       }
       
       for (const card of soldCards) {
@@ -172,7 +172,7 @@ const SoldItems = () => {
       // Only log the final result
       if (soldCards.length > 0) {
         const loadedCount = Object.keys(images).length;
-        console.log(`Loaded ${loadedCount} images out of ${soldCards.length} cards`);
+        // console.log(`Loaded ${loadedCount} images out of ${soldCards.length} cards`);
       }
       
       setCardImages(images);

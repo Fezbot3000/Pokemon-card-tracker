@@ -30,12 +30,12 @@ export async function moveCards({
   isAllCardsView = false
 }) {
   try {
-    console.log('[MoveCardsHandler] Starting move operation:', {
-      cardsCount: cardsToMove.length,
-      targetCollection,
-      sourceCollection,
-      isAllCardsView
-    });
+    // // console.log('[MoveCardsHandler] Starting move operation:', {
+    //   cardsCount: cardsToMove.length,
+    //   targetCollection,
+    //   sourceCollection,
+    //   isAllCardsView
+    // });
 
     // Validation
     if (!cardsToMove || cardsToMove.length === 0) {
@@ -58,21 +58,21 @@ export async function moveCards({
     
     // Ensure target collection exists and is an array
     if (!updatedCollections[targetCollection]) {
-      console.log(`[MoveCardsHandler] Creating new collection: ${targetCollection}`);
+
       updatedCollections[targetCollection] = [];
     } else if (!Array.isArray(updatedCollections[targetCollection])) {
       // Try to preserve data if it's an object with card data
       if (typeof updatedCollections[targetCollection] === 'object') {
         const values = Object.values(updatedCollections[targetCollection]);
         if (values.length > 0 && values[0] && typeof values[0] === 'object' && values[0].slabSerial) {
-          console.log(`[MoveCardsHandler] Converting collection ${targetCollection} from object to array, preserving ${values.length} cards`);
+
           updatedCollections[targetCollection] = values;
         } else {
-          console.log(`[MoveCardsHandler] Converting collection ${targetCollection} to empty array (no valid card data found)`);
+
           updatedCollections[targetCollection] = [];
         }
       } else {
-        console.log(`[MoveCardsHandler] Converting collection ${targetCollection} to empty array`);
+
         updatedCollections[targetCollection] = [];
       }
     }
@@ -124,7 +124,7 @@ export async function moveCards({
               );
               const removed = updatedCollections[actualSourceCollection].length < originalLength;
               if (removed) {
-                console.log(`[MoveCardsHandler] Removed card ${cardId} from ${actualSourceCollection}`);
+
               }
             } else {
               console.warn(`[MoveCardsHandler] Source collection ${actualSourceCollection} is not an array, cannot remove card`);
@@ -140,7 +140,7 @@ export async function moveCards({
               );
               const removed = updatedCollections[sourceCollection].length < originalLength;
               if (removed) {
-                console.log(`[MoveCardsHandler] Removed card ${cardId} from ${sourceCollection}`);
+
               }
             } else {
               console.warn(`[MoveCardsHandler] Source collection ${sourceCollection} is not an array, cannot remove card`);
@@ -178,7 +178,7 @@ export async function moveCards({
       };
       
       await db.saveCollections(updatedCollections, saveOptions.preserveSold, saveOptions);
-      console.log('[MoveCardsHandler] Collections saved to database');
+
     } catch (saveError) {
       console.error('[MoveCardsHandler] Error saving collections:', saveError);
       toast.error('Failed to save collections. Changes may not persist.');
@@ -212,12 +212,7 @@ export async function moveCards({
       sourceCollection
     }));
 
-    console.log('[MoveCardsHandler] Move operation completed:', {
-      successful: successfulMoves.length,
-      failed: failedMoves.length,
-      targetCollection,
-      sourceCollection
-    });
+
 
     return successfulMoves.length > 0;
 
@@ -253,7 +248,7 @@ export function validateCollectionsStructure(collections) {
       
       if (isArrayLike && keys.length > 0) {
         validatedCollections[collectionName] = Object.values(collection);
-        console.log(`[MoveCardsHandler] Converted collection ${collectionName} from object to array (${keys.length} items)`);
+        // // console.log(`[MoveCardsHandler] Converted collection ${collectionName} from object to array (${keys.length} items)`);
       } else if (keys.length === 0) {
         // Empty object, convert to empty array
         validatedCollections[collectionName] = [];
@@ -262,7 +257,7 @@ export function validateCollectionsStructure(collections) {
         const values = Object.values(collection);
         if (values.length > 0 && values[0] && typeof values[0] === 'object') {
           validatedCollections[collectionName] = values;
-          console.log(`[MoveCardsHandler] Preserved collection ${collectionName} data as array (${values.length} items)`);
+          // // console.log(`[MoveCardsHandler] Preserved collection ${collectionName} data as array (${values.length} items)`);
         } else {
           validatedCollections[collectionName] = [];
           console.warn(`[MoveCardsHandler] Collection ${collectionName} has invalid structure, reset to empty array`);

@@ -196,12 +196,12 @@ const CardDetailsForm = ({
 
   useEffect(() => {
     const updateAvailableSets = () => {
-      console.log('[CardDetailsForm/updateAvailableSets] Updating available sets. Current card state:', {
-        category: card?.category,
-        year: card?.year,
-        set: card?.set, // Log original card.set for context
-        setName: card?.setName // This is the field driving the dropdown
-      });
+      // console.log('[CardDetailsForm/updateAvailableSets] Updating available sets. Current card state:', {
+      //   category: card?.category,
+      //   year: card?.year,
+      //   set: card?.set, // Log original card.set for context
+      //   setName: card?.setName // This is the field driving the dropdown
+      // });
 
       let filteredSets = [];
       
@@ -209,7 +209,7 @@ const CardDetailsForm = ({
       if (card?.category) {
         // Get all sets for the selected category
         const categorySets = getSetsByCategory(card.category);
-        console.log(`[CardDetailsForm/updateAvailableSets] Found ${categorySets.length} sets for category '${card.category}'`);
+        // console.log(`[CardDetailsForm/updateAvailableSets] Found ${categorySets.length} sets for category '${card.category}'`);
         
         // If we have sets for this category, use them
         if (categorySets && categorySets.length > 0) {
@@ -219,15 +219,15 @@ const CardDetailsForm = ({
           if (card.category === 'pokemon' && card?.year) {
             const parsedYear = parseInt(card.year, 10);
             if (!isNaN(parsedYear)) {
-              console.log(`[CardDetailsForm/updateAvailableSets] Filtering Pokemon sets for year: ${parsedYear}`);
+              // console.log(`[CardDetailsForm/updateAvailableSets] Filtering Pokemon sets for year: ${parsedYear}`);
               const yearSets = getPokemonSetsByYear(parsedYear);
               
               // Only use year-filtered sets if we found some
               if (yearSets && yearSets.length > 0) {
                 filteredSets = yearSets;
-                console.log(`[CardDetailsForm/updateAvailableSets] Found ${yearSets.length} sets for year ${parsedYear}`);
+                // console.log(`[CardDetailsForm/updateAvailableSets] Found ${yearSets.length} sets for year ${parsedYear}`);
               } else {
-                console.log(`[CardDetailsForm/updateAvailableSets] No sets found for year ${parsedYear}, keeping all Pokemon sets`);
+                // console.log(`[CardDetailsForm/updateAvailableSets] No sets found for year ${parsedYear}, keeping all Pokemon sets`);
               }
             }
           }
@@ -236,11 +236,11 @@ const CardDetailsForm = ({
         // If no category but we have a year, default to Pokemon sets for that year
         const parsedYear = parseInt(card.year, 10);
         if (!isNaN(parsedYear)) {
-          console.log(`[CardDetailsForm/updateAvailableSets] No category, getting Pokemon sets for year: ${parsedYear}`);
+          // console.log(`[CardDetailsForm/updateAvailableSets] No category, getting Pokemon sets for year: ${parsedYear}`);
           const yearSets = getPokemonSetsByYear(parsedYear);
           if (yearSets && yearSets.length > 0) {
             filteredSets = yearSets;
-            console.log(`[CardDetailsForm/updateAvailableSets] Found ${yearSets.length} sets for year ${parsedYear}`);
+            // console.log(`[CardDetailsForm/updateAvailableSets] Found ${yearSets.length} sets for year ${parsedYear}`);
           }
         }
       }
@@ -267,7 +267,7 @@ const CardDetailsForm = ({
         const setExists = formattedSets.some(set => set.value === currentCardSetName);
         
         if (!setExists) {
-          console.log(`[CardDetailsForm/updateAvailableSets] Adding current set "${currentCardSetName}" to available sets`);
+          // console.log(`[CardDetailsForm/updateAvailableSets] Adding current set "${currentCardSetName}" to available sets`);
           formattedSets.push({ value: currentCardSetName, label: currentCardSetName });
         }
       }
@@ -286,11 +286,11 @@ const CardDetailsForm = ({
       // Step 6: Sort alphabetically by label
       uniqueSets.sort((a, b) => a.label.localeCompare(b.label));
       
-      console.log(`[CardDetailsForm/updateAvailableSets] Final available sets for dropdown: ${uniqueSets.length} sets`);
+      // console.log(`[CardDetailsForm/updateAvailableSets] Final available sets for dropdown: ${uniqueSets.length} sets`);
       setAvailableSets(uniqueSets);
     };
     
-    console.log('[CardDetailsForm] useEffect for availableSets triggered. Dependencies: Category:', card?.category, 'Year:', card?.year, 'setName:', card?.setName);
+    // console.log('[CardDetailsForm] useEffect for availableSets triggered. Dependencies: Category:', card?.category, 'Year:', card?.year, 'setName:', card?.setName);
     updateAvailableSets();
   }, [card?.category, card?.year, card?.setName]); // Dependency now on card.setName
 
@@ -340,7 +340,7 @@ const CardDetailsForm = ({
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    console.log(`[CardDetailsForm/handleInputChange] Event - Name: ${name}, Value: ${value}`);
+    // console.log(`[CardDetailsForm/handleInputChange] Event - Name: ${name}, Value: ${value}`);
     
     let newCardData = { ...card };
 
@@ -352,7 +352,7 @@ const CardDetailsForm = ({
         set: '',        // Reset raw set (PSA Brand)
         setName: '',    // Reset display set name
       };
-      console.log('[CardDetailsForm/handleInputChange] Category changed to:', value);
+      // console.log('[CardDetailsForm/handleInputChange] Category changed to:', value);
       
       // When category changes, update available years
       if (value === 'pokemon') {
@@ -367,7 +367,7 @@ const CardDetailsForm = ({
         set: '',        // Reset raw set
         setName: '',    // Reset display set name
       };
-      console.log('[CardDetailsForm/handleInputChange] Year changed to:', value);
+      // console.log('[CardDetailsForm/handleInputChange] Year changed to:', value);
     } else if (name === 'set') { // This 'set' name comes from the Set SelectField's name attribute
       newCardData = {
         ...card,
@@ -375,7 +375,7 @@ const CardDetailsForm = ({
         // Also update the raw set value to keep them in sync
         set: value, 
       };
-      console.log('[CardDetailsForm/handleInputChange] Set changed to:', value);
+      // console.log('[CardDetailsForm/handleInputChange] Set changed to:', value);
     } else if (name === 'gradingCompany') {
       setSelectedCompany(value); // Local state for grade options
       newCardData = { ...card, gradingCompany: value, grade: '' }; // Reset grade in card data
@@ -549,22 +549,22 @@ const CardDetailsForm = ({
   };
 
   const handleAddCustomSet = async (newSet, year) => {
-    console.log('Adding custom set:', newSet, 'for year:', year);
+    // console.log('Adding custom set:', newSet, 'for year:', year);
     
     if (!newSet || newSet.trim() === '') return '';
     
-    console.log(`Adding custom set "${newSet}" for year ${year}`);
+    // console.log(`Adding custom set "${newSet}" for year ${year}`);
     
     const addedSet = await addCustomSet(newSet, year);
-    console.log(`Custom set added: ${addedSet}`);
+    // console.log(`Custom set added: ${addedSet}`);
     
     if (card.year) {
       const updatedSets = getPokemonSetsByYear(card.year);
-      console.log(`Updated sets for year ${card.year} after adding:`, updatedSets);
+      // console.log(`Updated sets for year ${card.year} after adding:`, updatedSets);
       setAvailableSets(updatedSets);
     } else {
       const allSets = getAllPokemonSets();
-      console.log('All sets after adding:', allSets);
+      // console.log('All sets after adding:', allSets);
       setAvailableSets(allSets);
     }
     
@@ -632,7 +632,7 @@ const CardDetailsForm = ({
                     className="max-h-[380px] max-w-full h-auto object-contain cursor-pointer"
                     onClick={onImageClick}
                     onError={(e) => {
-                      console.log('Image failed to load:', e);
+                      // console.log('Image failed to load:', e);
                       if (onImageRetry) onImageRetry();
                     }}
                   />

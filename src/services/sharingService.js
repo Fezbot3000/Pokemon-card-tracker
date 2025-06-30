@@ -83,12 +83,9 @@ class SharingService {
    * @returns {string|null} The best image URL or null if none found
    */
   findBestCardImage(cards) {
-    if (!cards || cards.length === 0) {
-      console.log('findBestCardImage: No cards provided');
+        if (!cards || cards.length === 0) {
       return null;
     }
-
-    console.log(`findBestCardImage: Processing ${cards.length} cards`);
 
     // First, try to find the highest value card with an image
     const cardsWithImages = cards.filter(card => 
@@ -97,10 +94,7 @@ class SharingService {
       !card.imageUrl.startsWith('data:') // Exclude data URLs as they're too long for meta tags
     );
 
-    console.log(`findBestCardImage: Found ${cardsWithImages.length} cards with valid images`);
-
-    if (cardsWithImages.length === 0) {
-      console.log('findBestCardImage: No cards with valid images found');
+        if (cardsWithImages.length === 0) {
       return null;
     }
 
@@ -114,9 +108,7 @@ class SharingService {
     const bestCard = sortedByValue[0];
     const bestValue = bestCard.originalCurrentValueAmount || bestCard.currentValueAUD || bestCard.currentValue || 0;
     
-    console.log(`findBestCardImage: Selected card "${bestCard.cardName || bestCard.name || 'Unknown'}" with value ${bestValue} and image: ${bestCard.imageUrl}`);
-
-    return bestCard.imageUrl;
+        return bestCard.imageUrl;
   }
 
   /**
@@ -136,9 +128,6 @@ class SharingService {
       const cardImage = this.findBestCardImage(cards);
       if (cardImage) {
         shareImage = cardImage;
-        console.log('Using dynamic card image for sharing:', cardImage);
-      } else {
-        console.log('No suitable card image found, using default logo');
       }
     }
     
@@ -202,35 +191,15 @@ class SharingService {
    * @returns {Object} Formatted statistics
    */
   formatCollectionStats(cards) {
-    console.log('=== FORMATTING COLLECTION STATS ===');
-    console.log('Cards received:', cards);
-    console.log('Cards length:', cards.length);
-    
-    if (cards.length > 0) {
-      console.log('Sample card structure:', cards[0]);
-      console.log('Sample card fields:', Object.keys(cards[0]));
-    }
-    
     const totalCards = cards.length;
     const gradedCards = cards.filter(card => card.gradingCompany || card.gradeCompany).length;
     const categories = [...new Set(cards.map(card => card.category).filter(Boolean))];
     
-    console.log('Calculating total value...');
     const totalValue = cards.reduce((total, card, index) => {
       const value = card.originalCurrentValueAmount || card.currentValueAUD || card.currentValue || 0;
-      if (index < 3) { // Log first 3 cards
-        console.log(`Card ${index} value calculation:`, {
-          originalCurrentValueAmount: card.originalCurrentValueAmount,
-          currentValueAUD: card.currentValueAUD,
-          currentValue: card.currentValue,
-          finalValue: value,
-          cardName: card.cardName || card.card || card.name
-        });
-      }
       return total + value;
     }, 0);
     
-    console.log('Total value calculated:', totalValue);
     const averageValue = totalCards > 0 ? totalValue / totalCards : 0;
 
     // Grade distribution
@@ -271,7 +240,6 @@ class SharingService {
       categoryList: categories
     };
     
-    console.log('Final stats result:', result);
     return result;
   }
 

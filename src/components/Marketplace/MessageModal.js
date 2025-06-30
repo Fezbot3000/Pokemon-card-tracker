@@ -44,7 +44,7 @@ const MessageModal = ({ isOpen, onClose, listing, prefilledMessage = '', onViewC
     }
     
     // Log the current user ID for debugging
-    console.log('Current user ID:', user.uid);
+    // console.log('Current user ID:', user.uid);
     
     try {
       setLoading(true);
@@ -168,14 +168,6 @@ const MessageModal = ({ isOpen, onClose, listing, prefilledMessage = '', onViewC
           createdAt: serverTimestamp(),
           isGeneralChat: listing.isGeneralChat || false
         };
-        
-        // Log the chat data for debugging
-        console.log('Chat document data:', {
-          chatId,
-          participants: chatData.participants,
-          buyerId: chatData.buyerId,
-          sellerId: chatData.sellerId
-        });
         
         // Log the chat data for debugging
         logger.debug('Creating chat with data:', {
