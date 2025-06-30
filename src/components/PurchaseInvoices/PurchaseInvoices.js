@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { useAuth, StatisticsSummary } from '../../design-system';
+import { useAuth, StatisticsSummary, SimpleSearchBar } from '../../design-system';
 import db from '../../services/firestore/dbAdapter';
 import { toast } from 'react-hot-toast';
 import CreateInvoiceModal from './CreateInvoiceModal';
@@ -622,29 +622,20 @@ const PurchaseInvoices = () => {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <div className="flex flex-col gap-4 mb-4">
-              <div className="w-full">
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="Search invoices..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full px-4 py-2 pl-10 rounded-lg 
-                            border border-gray-200 dark:border-gray-700/50 
-                            bg-white dark:bg-black text-gray-900 dark:text-white
-                            focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary
-                            placeholder-gray-500 dark:placeholder-gray-400"
-                  />
-                  <span className="material-icons absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                    search
-                  </span>
-                </div>
-                <div className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-                  {filteredInvoices.length} of {invoices.length} {invoices.length === 1 ? 'invoice' : 'invoices'} found
-                </div>
-              </div>
-              
+            {/* Search Section */}
+            <SimpleSearchBar
+              searchValue={searchQuery}
+              onSearchChange={setSearchQuery}
+              placeholder="Search by name, set, or serial number..."
+              className="mb-4"
+            />
+            
+            {/* Results Count */}
+            <div className="text-sm text-gray-500 dark:text-gray-400 mb-4 px-4">
+              {filteredInvoices.length} of {invoices.length} {invoices.length === 1 ? 'invoice' : 'invoices'} found
+            </div>
+            
+            <div className="flex flex-col gap-4 mb-4 px-4">
               <div className="flex flex-col sm:flex-row gap-2 w-full">
                 {isGeneratingBatch ? (
                   <div className="px-4 py-2 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 flex items-center gap-2">

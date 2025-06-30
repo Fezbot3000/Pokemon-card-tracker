@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Icon } from '../../design-system';
+import { Icon, SimpleSearchBar } from '../../design-system';
 
 // Import the same predefined grading companies and grades used in CardDetailsForm
 const gradingCompaniesOptions = [
@@ -202,24 +202,21 @@ function MarketplaceSearchFilters({ onFilterChange, listings, initialFilters }) 
     onFilterChange(resetFilters);
   };
 
+  // Handle search change separately to maintain compatibility
+  const handleSearchChange = (value) => {
+    const updatedFilters = { ...filters, search: value };
+    setFilters(updatedFilters);
+    onFilterChange(updatedFilters);
+  };
+
   return (
     <div className="mb-4 space-y-3">
       {/* Search input */}
-      <div className="relative">
-        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-          <Icon name="search" className="text-gray-400" />
-        </div>
-        <input
-          type="text"
-          name="search"
-          value={filters.search}
-          onChange={handleChange}
-          placeholder="Search by card name, brand, category..."
-          className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md 
-                     bg-white dark:bg-[#0F0F0F] text-gray-900 dark:text-white 
-                     focus:outline-none focus:ring-1 focus:ring-blue-500"
-        />
-      </div>
+      <SimpleSearchBar
+        searchValue={filters.search}
+        onSearchChange={handleSearchChange}
+        placeholder="Search by card name, brand, category..."
+      />
       
       {/* Filter dropdowns */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">

@@ -55,6 +55,7 @@ export { default as ConfirmDialog } from './molecules/ConfirmDialog';
 export { default as Header } from './components/Header';
 export { default as StatisticsSummary } from './components/StatisticsSummary';
 export { default as SearchToolbar } from './components/SearchToolbar';
+export { default as SimpleSearchBar } from './components/SimpleSearchBar';
 export { default as Card } from './components/Card';
 export { default as CardOptimized } from './components/CardOptimized';
 export { default as CardDetailsForm } from './components/CardDetailsForm';

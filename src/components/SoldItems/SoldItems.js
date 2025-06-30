@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import ReactDOM from 'react-dom';
-import { useTheme, SoldItemsView, Icon, StatisticsSummary } from '../../design-system'; 
+import { useTheme, SoldItemsView, Icon, StatisticsSummary, SimpleSearchBar } from '../../design-system'; 
 import { formatCondensed } from '../../utils/formatters';
 import db from '../../services/firestore/dbAdapter';
 import { PDFDownloadLink, pdf } from '@react-pdf/renderer';
@@ -1262,28 +1262,17 @@ const SoldItems = () => {
       <div className="bg-white dark:bg-black rounded-xl shadow-md">
         {soldCards && Array.isArray(soldCards) && soldCards.length > 0 ? (
           <div className="overflow-x-auto">
-            <div className="flex flex-col gap-4 mb-4 p-4 sm:p-6">
-              <div className="w-full">
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="Search sold items..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full px-4 py-2 pl-10 rounded-lg 
-                            border border-gray-200 dark:border-gray-700/50 
-                            bg-white dark:bg-black text-gray-900 dark:text-white
-                            focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary
-                            placeholder-gray-500 dark:placeholder-gray-400"
-                  />
-                  <span className="material-icons absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                    search
-                  </span>
-                </div>
-                <div className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-                  {filteredInvoices.length} of {Object.keys(invoiceTotals).length} {Object.keys(invoiceTotals).length === 1 ? 'sale' : 'sales'} found
-                </div>
-              </div>
+            {/* Search Section */}
+            <SimpleSearchBar
+              searchValue={searchQuery}
+              onSearchChange={setSearchQuery}
+              placeholder="Search by name, set, or serial number..."
+              className="mb-4"
+            />
+            
+            {/* Results Count */}
+            <div className="text-sm text-gray-500 dark:text-gray-400 mb-4 px-4">
+              {filteredInvoices.length} of {Object.keys(invoiceTotals).length} {Object.keys(invoiceTotals).length === 1 ? 'sale' : 'sales'} found
             </div>
             
             {/* Desktop Table View */}
