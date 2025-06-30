@@ -162,16 +162,6 @@ const CardDetailsModal = ({
   // Update local state when props change or modal opens
   useEffect(() => {
     if (isOpen) {
-      // console.log(
-      //   '[CardDetailsModal] Main useEffect. isOpen:', isOpen, 
-      //   'Card ID:', card?.id, 
-      //   'CollectionID:', card?.collectionId, 
-      //   'Set:', card?.set, 
-      //   'Card Name:', card?.card
-      //   // Consider logging the full card object if issues persist, but be mindful of verbosity
-      //   // JSON.stringify(card)
-      // );
-
       // On mobile, only load content when the modal opens
       if (isMobile) {
         // Set a short delay to allow the modal animation to complete
@@ -191,10 +181,6 @@ const CardDetailsModal = ({
       }
 
       // --- REVISED ERROR CLEARING LOGIC ---
-      // If the modal is open, and this effect is running (which it will if 'card',
-      // 'card.collectionId', 'card.set', or 'card.card' changes, as they are dependencies),
-      // then clear previous validation states.
-      // console.log('[CardDetailsModal] Relevant card data changed or modal opened. Clearing errors and save message.');
       setErrors({});
       setSaveMessage('');
       // --- END REVISED ERROR CLEARING LOGIC ---
@@ -203,12 +189,6 @@ const CardDetailsModal = ({
       // Reset animation class and content loaded state when modal closes
       setAnimClass('fade-out');
       setContentLoaded(false); // Reset content loaded state
-      // Optionally reset other states like cardImage if they should not persist
-      // setCardImage(null); 
-      // setLocalImageLoadingState('idle');
-      // It might also be a good idea to clear errors when the modal closes completely
-      // setErrors({});
-      // setSaveMessage('');
     }
     // Dependencies that should trigger this effect. 'image' and 'isMobile' are for content loading.
     // 'card', 'card.collectionId', 'card.set', 'card.card' are critical for resetting form/error state.
@@ -368,22 +348,6 @@ const CardDetailsModal = ({
       }
     }
   };
-
-  // Update local state when props change or modal opens
-  useEffect(() => {
-    if (isOpen) {
-      // console.log(
-      //   '[CardDetailsModal] Main useEffect. isOpen:', isOpen, 
-      //   'Card ID:', card?.id, 
-      //   'CollectionID:', card?.collectionId, 
-      //   'Set:', card?.set, 
-      //   'Card Name:', card?.card
-      //   // Consider logging the full card object if issues persist, but be mindful of verbosity
-      //   // JSON.stringify(card)
-      // );
-      setContentLoaded(true);
-    }
-  }, [isOpen, card]);
 
   return (
     <>

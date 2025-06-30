@@ -20,21 +20,6 @@ export const toast = (message, type = 'info', duration = 3000) => {
     listener({ message, type, duration });
   });
   
-  // Log to console as a fallback
-  switch (type) {
-    case 'success':
-      // console.log(`%c✓ ${message}`, 'color: green');
-      break;
-    case 'error':
-      console.error(`✗ ${message}`);
-      break;
-    case 'warning':
-      console.warn(`⚠ ${message}`);
-      break;
-    default:
-      console.info(`ℹ ${message}`);
-  }
-  
   return {
     message,
     type,

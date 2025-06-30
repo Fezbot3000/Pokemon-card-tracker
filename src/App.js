@@ -890,11 +890,7 @@ function AppContent({ currentView, setCurrentView }) {
         />
       )}
       
-      {/* Trial Status Banner */}
-      
-      <TrialStatusBanner />
-      
-      <main className="main-content mobile-dashboard max-w-[1920px] mx-auto">
+      <main className="main-content mobile-dashboard max-w-[1920px] mx-auto mt-4">
         {/* Settings Modal - Available for all views */}
         {showSettings && !isMobile && (
           <SettingsModal
@@ -930,7 +926,9 @@ function AppContent({ currentView, setCurrentView }) {
             {/* Main content */}
             <div className="p-4 sm:p-6 pb-20">
 
-              
+              {/* Trial Status Banner - now in correct place */}
+              <TrialStatusBanner />
+
               {/* Card List */}
               {loading ? (
                 <div className="w-full px-1 sm:px-2 pb-20">

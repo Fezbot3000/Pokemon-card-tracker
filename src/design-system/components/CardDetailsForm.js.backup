@@ -218,7 +218,6 @@ const CardDetailsForm = ({
           const yearSets = getPokemonSetsByYear(parsedYear);
           if (yearSets && yearSets.length > 0) {
             filteredSets = yearSets;
-            console.log(`[CardDetailsForm/updateAvailableSets] Found ${yearSets.length} sets for year ${parsedYear}`);
           }
         }
       }
@@ -245,7 +244,6 @@ const CardDetailsForm = ({
         const setExists = formattedSets.some(set => set.value === currentCardSetName);
         
         if (!setExists) {
-          console.log(`[CardDetailsForm/updateAvailableSets] Adding current set "${currentCardSetName}" to available sets`);
           formattedSets.push({ value: currentCardSetName, label: currentCardSetName });
         }
       }
@@ -264,11 +262,9 @@ const CardDetailsForm = ({
       // Step 6: Sort alphabetically by label
       uniqueSets.sort((a, b) => a.label.localeCompare(b.label));
       
-      console.log(`[CardDetailsForm/updateAvailableSets] Final available sets for dropdown: ${uniqueSets.length} sets`);
       setAvailableSets(uniqueSets);
     };
     
-    console.log('[CardDetailsForm] useEffect for availableSets triggered. Dependencies: Category:', card?.category, 'Year:', card?.year, 'setName:', card?.setName);
     updateAvailableSets();
   }, [card?.category, card?.year, card?.setName]); // Dependency now on card.setName
 
@@ -300,7 +296,6 @@ const CardDetailsForm = ({
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    console.log(`[CardDetailsForm/handleInputChange] Event - Name: ${name}, Value: ${value}`);
     
     let newCardData = { ...card };
 
@@ -312,7 +307,6 @@ const CardDetailsForm = ({
         set: '',        // Reset raw set (PSA Brand)
         setName: '',    // Reset display set name
       };
-      console.log('[CardDetailsForm/handleInputChange] Category changed to:', value);
       
       // When category changes, update available years
       if (value === 'pokemon') {
@@ -327,7 +321,6 @@ const CardDetailsForm = ({
         set: '',        // Reset raw set
         setName: '',    // Reset display set name
       };
-      console.log('[CardDetailsForm/handleInputChange] Year changed to:', value);
     } else if (name === 'set') { // This 'set' name comes from the Set SelectField's name attribute
       newCardData = {
         ...card,
@@ -335,7 +328,6 @@ const CardDetailsForm = ({
         // Also update the raw set value to keep them in sync
         set: value, 
       };
-      console.log('[CardDetailsForm/handleInputChange] Set changed to:', value);
     } else if (name === 'gradingCompany') {
       setSelectedCompany(value); // Local state for grade options
       newCardData = { ...card, gradingCompany: value, grade: '' }; // Reset grade in card data
@@ -444,22 +436,17 @@ const CardDetailsForm = ({
   };
 
   const handleAddCustomSet = async (newSet, year) => {
-    console.log('Adding custom set:', newSet, 'for year:', year);
     
     if (!newSet || newSet.trim() === '') return '';
     
-    console.log(`Adding custom set "${newSet}" for year ${year}`);
     
     const addedSet = await addCustomSet(newSet, year);
-    console.log(`Custom set added: ${addedSet}`);
     
     if (card.year) {
       const updatedSets = getPokemonSetsByYear(card.year);
-      console.log(`Updated sets for year ${card.year} after adding:`, updatedSets);
       setAvailableSets(updatedSets);
     } else {
       const allSets = getAllPokemonSets();
-      console.log('All sets after adding:', allSets);
       setAvailableSets(allSets);
     }
     
@@ -527,7 +514,6 @@ const CardDetailsForm = ({
                     className="max-h-[380px] max-w-full h-auto object-contain cursor-pointer"
                     onClick={onImageClick}
                     onError={(e) => {
-                      console.log('Image failed to load:', e);
                       if (onImageRetry) onImageRetry();
                     }}
                   />
