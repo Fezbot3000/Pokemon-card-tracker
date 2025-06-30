@@ -60,7 +60,6 @@ const SoldItemsView = ({
     
     // Check if date is valid before formatting
     if (isNaN(date.getTime())) {
-      console.warn('Invalid date:', dateValue);
       return 'Invalid date';
     }
     
@@ -102,7 +101,6 @@ const SoldItemsView = ({
         
         // Check if date is valid
         if (isNaN(date.getTime())) {
-          console.warn('Invalid date in getFinancialYear:', dateStr);
           return "Unknown Year";
         }
         
@@ -116,7 +114,6 @@ const SoldItemsView = ({
           return `${year - 1} - ${year}`;
         }
       } catch (error) {
-        console.error("Error calculating financial year for date:", dateStr, error);
         return "Unknown Year";
       }
     };

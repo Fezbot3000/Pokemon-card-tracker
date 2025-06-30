@@ -186,20 +186,12 @@ const CardDetailsForm = ({
 
   useEffect(() => {
     const updateAvailableSets = () => {
-      console.log('[CardDetailsForm/updateAvailableSets] Updating available sets. Current card state:', {
-        category: card?.category,
-        year: card?.year,
-        set: card?.set, // Log original card.set for context
-        setName: card?.setName // This is the field driving the dropdown
-      });
-
       let filteredSets = [];
       
       // Step 1: Always get sets based on category first
       if (card?.category) {
         // Get all sets for the selected category
         const categorySets = getSetsByCategory(card.category);
-        console.log(`[CardDetailsForm/updateAvailableSets] Found ${categorySets.length} sets for category '${card.category}'`);
         
         // If we have sets for this category, use them
         if (categorySets && categorySets.length > 0) {
@@ -209,15 +201,12 @@ const CardDetailsForm = ({
           if (card.category === 'pokemon' && card?.year) {
             const parsedYear = parseInt(card.year, 10);
             if (!isNaN(parsedYear)) {
-              console.log(`[CardDetailsForm/updateAvailableSets] Filtering Pokemon sets for year: ${parsedYear}`);
               const yearSets = getPokemonSetsByYear(parsedYear);
               
               // Only use year-filtered sets if we found some
               if (yearSets && yearSets.length > 0) {
                 filteredSets = yearSets;
-                console.log(`[CardDetailsForm/updateAvailableSets] Found ${yearSets.length} sets for year ${parsedYear}`);
               } else {
-                console.log(`[CardDetailsForm/updateAvailableSets] No sets found for year ${parsedYear}, keeping all Pokemon sets`);
               }
             }
           }
@@ -226,7 +215,6 @@ const CardDetailsForm = ({
         // If no category but we have a year, default to Pokemon sets for that year
         const parsedYear = parseInt(card.year, 10);
         if (!isNaN(parsedYear)) {
-          console.log(`[CardDetailsForm/updateAvailableSets] No category, getting Pokemon sets for year: ${parsedYear}`);
           const yearSets = getPokemonSetsByYear(parsedYear);
           if (yearSets && yearSets.length > 0) {
             filteredSets = yearSets;

@@ -20,7 +20,6 @@ export const RestoreProvider = ({ children }) => {
     const timestamp = new Date().toLocaleTimeString();
     const logEntry = `[${timestamp}] ${message}`;
     setRestoreLogs(prevLogs => [...prevLogs, logEntry]);
-    // console.log(message); // Keep console logging as well
   };
 
   /**

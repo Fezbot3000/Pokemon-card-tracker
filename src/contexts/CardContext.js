@@ -36,27 +36,16 @@ export function CardProvider({ children }) {
 
   // Initialize repository when user changes
   useEffect(() => {
-    // console.log(' CardContext useEffect triggered - currentUser:', currentUser ? 'exists' : 'null');
     let mounted = true;
     
     const initializeRepository = async () => {
-      try {
-        // console.log(' initializeRepository called - currentUser:', currentUser ? currentUser.uid : 'null');
-        if (currentUser) {
-          const repo = new CardRepository(currentUser.uid);
-          setRepository(repo);
-          // console.log(' Repository created, calling loadInitialData...');
-          
-          if (mounted) {
-            await loadInitialData(repo);
-          }
-        } else {
-          // console.log(' No currentUser available, skipping repository initialization');
+      if (currentUser) {
+        const repo = new CardRepository(currentUser.uid);
+        setRepository(repo);
+        
+        if (mounted) {
+          await loadInitialData(repo);
         }
-      } catch (error) {
-        console.error('Error initializing repository:', error);
-        setError('Failed to initialize app data. Please try refreshing the page.');
-        setLoading(false);
       }
     };
     
@@ -69,7 +58,6 @@ export function CardProvider({ children }) {
 
   // Helper function to verify cards against the sold card list
   const verifyCardsAgainstSoldList = useCallback((cardsToVerify) => {
-    // This verifies cards aren't in our local list of sold card IDs
     const currentSoldCardIds = Array.from(soldCardIds);
     
     if (currentSoldCardIds.length === 0) {
@@ -83,8 +71,6 @@ export function CardProvider({ children }) {
 
   // Load initial data (collections, cards, etc)
   const loadInitialData = useCallback(async (repo) => {
-    // console.log('📊 loadInitialData called with repo:', repo ? 'exists' : 'null');
-    
     if (!repo) {
       console.error('No repository provided to loadInitialData');
       return { success: false, message: 'No repository available' };
@@ -94,7 +80,6 @@ export function CardProvider({ children }) {
       setLoading(true);
       setError(null);
       setSyncStatus('syncing');
-      // console.log('🔄 Starting data load process...');
       
       // Load collections
       let collectionsFromRepo = [];
@@ -454,7 +439,6 @@ export function CardProvider({ children }) {
   const markCardAsSold = useCallback(async (cardId, soldData) => {
     try {
       setSyncStatus('syncing');
-      // console.log(`Attempting to mark card ${cardId} as sold`);
       
       // Ensure we have valid data before proceeding
       if (!cardId) {
@@ -498,7 +482,6 @@ export function CardProvider({ children }) {
       // First try the direct approach - use createSoldCardDirectly
       // This is more reliable than the standard markCardAsSold method
       try {
-        // console.log(`Using direct method to sell card ${cardId}`);
         
         // Create a complete sold card object with all necessary data
         const completeCardData = {
@@ -518,7 +501,6 @@ export function CardProvider({ children }) {
         
         // Use the direct method to create the sold card
         const savedSoldCard = await repository.createSoldCardDirectly(completeCardData);
-        // console.log(`Successfully sold card ${cardId} using direct method`);
         
         // Update sold cards state
         setSoldCards(prev => [savedSoldCard, ...prev]);
@@ -554,7 +536,6 @@ export function CardProvider({ children }) {
         try {
           // Call the repository function with the normalized data
           const soldCard = await repository.markCardAsSold(cardId, normalizedSoldData);
-          // console.log(`Successfully sold card ${cardId} using standard method`);
           
           // Update sold cards state
           setSoldCards(prev => [soldCard, ...prev]);
