@@ -218,7 +218,6 @@ function Dashboard() {
                   }
                 }
               } catch (error) {
-                console.error('Error changing view from BottomNavBar:', error);
                 // Fallback: try direct view change
                 setCurrentView(view);
               }
@@ -250,7 +249,6 @@ function DashboardIndex() {
         window.history.replaceState({}, '', location.pathname);
       }
     } catch (error) {
-      console.error('Error handling navigation state from settings:', error);
       // Fallback: just clear the state
       if (location.state?.targetView) {
         window.history.replaceState({}, '', location.pathname);
@@ -326,7 +324,7 @@ function AppContent({ currentView, setCurrentView }) {
     } catch (error) {
       // Example: logger.error('Failed to update card:', error);
       // Example: toast.error('Failed to update card.');
-      console.error('Failed to update card in handleCardUpdate:', error); 
+      // Silently handle card update errors 
       // Depending on requirements, you might want to re-throw or handle UI feedback here.
     }
   };
@@ -451,7 +449,6 @@ function AppContent({ currentView, setCurrentView }) {
         // If currentView is already set to a valid dashboard view, preserve it
       }
     } catch (error) {
-      console.error('Error updating current view based on location:', error);
       // Fallback: only set to cards if we don't have a current view
       if (!currentView) {
         setCurrentView('cards');

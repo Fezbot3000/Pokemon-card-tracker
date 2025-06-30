@@ -116,6 +116,7 @@ export const processImportedData = (importedData, existingCards, options = {}) =
           'Year': 'year',
           'Category': 'category',
           'Condition': 'condition',
+          'Holo State': 'holoState',
           'Population': 'population',
           'Date Purchased': 'datePurchased'
         };
@@ -192,6 +193,7 @@ export const processMultipleCollectionsUpdate = (importedData, allCollections, o
         year: 0,
         category: 0,
         condition: 0,
+        holoState: 0,
         population: 0,
         datePurchased: 0
       }
@@ -233,6 +235,7 @@ export const processMultipleCollectionsUpdate = (importedData, allCollections, o
             { csvField: 'Year', cardField: 'year', statField: 'year' },
             { csvField: 'Category', cardField: 'category', statField: 'category' },
             { csvField: 'Condition', cardField: 'condition', statField: 'condition' },
+            { csvField: 'Holo State', cardField: 'holoState', statField: 'holoState' },
             { csvField: 'Population', cardField: 'population', statField: 'population' },
             { csvField: 'Date Purchased', cardField: 'datePurchased', statField: 'datePurchased' }
           ];

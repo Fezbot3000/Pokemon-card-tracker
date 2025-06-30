@@ -7,6 +7,7 @@ import { toast } from 'react-hot-toast';
 import PSADetailModal from './PSADetailModal';
 import NewCollectionModal from './NewCollectionModal';
 import { searchByCertNumber, parsePSACardData } from '../services/psaSearch';
+import { useSubscription } from '../hooks/useSubscription';
 // import Spinner from './Spinner'; // Import Spinner for loading state
 
 /**
@@ -32,6 +33,7 @@ const AddCardModal = ({
     year: '',
     category: '', 
     condition: '',
+    holoState: '',
     certificationNumber: '', 
     datePurchased: new Date().toISOString().split('T')[0],
     investmentAUD: '',
@@ -76,6 +78,9 @@ const AddCardModal = ({
 
   // Refs
   const messageTimeoutRef = useRef(null);
+  
+  // Subscription check
+  const { hasFeature } = useSubscription();
 
   // Set animation class when open state changes
   useEffect(() => {
@@ -243,6 +248,12 @@ const AddCardModal = ({
 
   // Handle PSA certificate lookup
   const handlePsaLookup = async () => {
+    // Check subscription access first
+    if (!hasFeature('PSA_SEARCH')) {
+      toast.error('PSA search is available with Premium. Upgrade to access this feature!');
+      return;
+    }
+    
     if (!psaSerial) {
       toast.error('Please enter a PSA serial number');
       return;
@@ -382,11 +393,21 @@ const AddCardModal = ({
               <Button
                 variant="primary"
                 onClick={handlePsaLookup}
-                disabled={isSearching || !psaSerial.trim()}
+                disabled={isSearching || !psaSerial.trim() || !hasFeature('PSA_SEARCH')}
                 className="whitespace-nowrap"
+                title={!hasFeature('PSA_SEARCH') ? 'PSA search requires Premium subscription' : 'Search PSA database'}
               >
-                <span className="material-icons mr-1" style={{ fontSize: '16px' }}>search</span>
-                Search PSA
+                {!hasFeature('PSA_SEARCH') ? (
+                  <>
+                    <span className="material-icons mr-1" style={{ fontSize: '16px' }}>lock</span>
+                    Premium Feature
+                  </>
+                ) : (
+                  <>
+                    <span className="material-icons mr-1" style={{ fontSize: '16px' }}>search</span>
+                    Search PSA
+                  </>
+                )}
               </Button>
             </div>
             

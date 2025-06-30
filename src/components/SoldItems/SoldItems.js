@@ -13,8 +13,149 @@ import { ref, getDownloadURL } from 'firebase/storage';
 import logger from '../../utils/logger';
 import { useUserPreferences, availableCurrencies } from '../../contexts/UserPreferencesContext';
 import { calculateSoldCardStatistics } from '../../utils/cardStatistics';
+import { useSubscription } from '../../hooks/useSubscription';
+import FeatureGate from '../FeatureGate';
 
 const SoldItems = () => {
+  // All hooks must be called before any conditional returns
+  const { hasFeature } = useSubscription();
+  const { isDarkMode } = useTheme();
+  const { user } = useAuth();
+  const { preferredCurrency, convertToUserCurrency } = useUserPreferences();
+  
+  const [soldCards, setSoldCards] = useState([]);
+  const [sortField, setSortField] = useState('dateSold');
+  const [sortDirection, setSortDirection] = useState('desc');
+  const [filter, setFilter] = useState('');
+  const [showSortDropdown, setShowSortDropdown] = useState(false);
+  const [cardImages, setCardImages] = useState({});
+  const [searchTerm, setSearchTerm] = useState('');
+  const [invoicesMap, setInvoicesMap] = useState({});
+  const [profile, setProfile] = useState(null);
+  const [expandedYears, setExpandedYears] = useState(new Set());
+  const [expandedInvoices, setExpandedInvoices] = useState(new Set());
+  const [expandedBuyers, setExpandedBuyers] = useState(new Set());
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // If user doesn't have sold items access, show feature gate
+  if (!hasFeature('SOLD_ITEMS')) {
+    return (
+      <div className="p-4 sm:p-6 pb-20 pt-16 sm:pt-4">
+        <FeatureGate 
+          feature="SOLD_ITEMS"
+          customMessage="Track your sold items, generate invoices, and analyze your profit trends. This feature is available with Premium."
+        />
+      </div>
+    );
+  }
+
+  // Initialize all invoices as expanded by default when soldCards change
+  useEffect(() => {
+    if (soldCards && Array.isArray(soldCards) && soldCards.length > 0) {
+      // Group cards by buyer to get all buyer IDs
+      const buyerIds = Object.keys(soldCards.reduce((groups, card) => {
+        const key = card.buyer || 'Unknown';
+        groups[key] = true;
+        return groups;
+      }, {}));
+      
+      // Set all buyers as collapsed by default (empty set)
+      setExpandedBuyers(new Set());
+    }
+  }, [soldCards]);
+
+  // Load card images from local IndexedDB and Firebase Storage
+  useEffect(() => {
+    // Disable image loading completely to prevent CORS errors
+    return;
+    
+    // Cleanup function
+    return () => {
+      // Revoke all blob URLs when component unmounts
+      Object.values(cardImages).forEach(url => {
+        if (url && url.startsWith('blob:')) {
+          URL.revokeObjectURL(url);
+        }
+      });
+    };
+  }, [soldCards, user, cardImages]);
+
+  // Load profile when user changes
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        // Try Firestore first if online
+        if (user && user.uid && navigator.onLine) {
+          const profileRef = doc(firestoreDb, 'users', user.uid);
+          const profileDoc = await getDoc(profileRef);
+          
+          if (profileDoc.exists()) {
+            const firestoreProfile = profileDoc.data();
+            setProfile(firestoreProfile);
+            
+            // Save to IndexedDB in the background
+            db.saveProfile(firestoreProfile).catch(console.error);
+            return;
+          }
+        }
+        
+        // Fall back to IndexedDB
+        const userProfile = await db.getProfile();
+        if (userProfile) {
+          setProfile(userProfile);
+        }
+      } catch (error) {
+        console.error('Error loading profile:', error);
+      }
+    };
+
+    if (user) {
+      loadProfile();
+    }
+  }, [user]);
+
+  // Load sold cards data
+  useEffect(() => {
+    const loadSoldCards = async () => {
+      try {
+        setIsLoading(true);
+        
+        if (!user || !user.uid) {
+          setSoldCards([]);
+          setIsLoading(false);
+          return;
+        }
+        
+        // Load sold cards from local database
+        const soldCardsResult = await db.getSoldCards(user.uid) || { data: [] };
+        const localSoldCards = soldCardsResult.data || [];
+        
+        // Also try loading from "sold" collection as a fallback
+        let soldFromCollection = [];
+        try {
+          const soldCollectionCards = await db.getCards('sold') || [];
+          soldFromCollection = Array.isArray(soldCollectionCards) ? soldCollectionCards : [];
+        } catch (error) {
+          console.log('No sold collection found:', error.message);
+        }
+        
+
+        
+        // Use sold items if available, otherwise fall back to sold collection
+        const finalSoldCards = localSoldCards.length > 0 ? localSoldCards : soldFromCollection;
+        setSoldCards(finalSoldCards);
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Error loading sold cards:', error);
+        toast.error('Failed to load sold items');
+        setIsLoading(false);
+      }
+    };
+
+    loadSoldCards();
+  }, [user]);
+
   // Helper function to determine financial year from date
   // Defined inside component to avoid temporal dead zone issues
   const getFinancialYear = (dateStr) => {
@@ -44,10 +185,6 @@ const SoldItems = () => {
       return `${year}/${year+1}`;
     }
   };
-
-  const { isDarkMode } = useTheme();
-  const { user } = useAuth();
-  const { preferredCurrency, convertToUserCurrency } = useUserPreferences();
   
   // Local formatCurrency function as a fallback
   const formatUserCurrency = (amount, currencyCode) => {
@@ -70,164 +207,7 @@ const SoldItems = () => {
     return isNegative ? `-${currency.symbol}${formattedAmount}` : `${currency.symbol}${formattedAmount}`;
   };
 
-  const [soldCards, setSoldCards] = useState([]);
-  const [sortField, setSortField] = useState('dateSold');
-  const [sortDirection, setSortDirection] = useState('desc');
-  const [filter, setFilter] = useState('');
-  const [showSortDropdown, setShowSortDropdown] = useState(false);
-  const [cardImages, setCardImages] = useState({});
-  const [searchTerm, setSearchTerm] = useState('');
-  const [invoicesMap, setInvoicesMap] = useState({});
-  const [profile, setProfile] = useState(null);
-  const [expandedYears, setExpandedYears] = useState(new Set());
-  const [expandedInvoices, setExpandedInvoices] = useState(new Set());
-  const [expandedBuyers, setExpandedBuyers] = useState(new Set());
-  const [isLoading, setIsLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  
-  // Initialize all invoices as expanded by default when soldCards change
-  useEffect(() => {
-    if (soldCards.length > 0) {
-      // Group cards by buyer to get all buyer IDs
-      const buyerIds = Object.keys(soldCards.reduce((groups, card) => {
-        const key = card.buyer || 'Unknown';
-        groups[key] = true;
-        return groups;
-      }, {}));
-      
-      // Set all buyers as collapsed by default (empty set)
-      setExpandedBuyers(new Set());
-    }
-  }, [soldCards]);
 
-  // Load card images from local IndexedDB and Firebase Storage
-  useEffect(() => {
-    // Disable image loading completely to prevent CORS errors
-    return;
-    
-    /* Original image loading code commented out
-    const loadCardImages = async () => {
-      // Clear previous object URLs to prevent memory leaks
-      Object.values(cardImages).forEach(url => {
-        if (url && url.startsWith('blob:')) {
-          URL.revokeObjectURL(url);
-        }
-      });
-      
-      const images = {};
-      
-      // Only log the start of the process
-      if (soldCards.length > 0) {
-        // console.log(`Loading images for ${soldCards.length} sold cards`);
-      }
-      
-      for (const card of soldCards) {
-        const cardId = card.slabSerial || card.id;
-        if (!cardId) continue;
-        
-        try {
-          // First check if the card already has direct image URLs
-          if (card.imageUrl) {
-            images[cardId] = card.imageUrl;
-            continue;
-          }
-          
-          if (card.cloudImageUrl) {
-            images[cardId] = card.cloudImageUrl;
-            continue;
-          }
-          
-          // Try to get image from local database
-          const imageBlob = await db.getImage(cardId);
-          if (imageBlob) {
-            const imageUrl = URL.createObjectURL(imageBlob);
-            images[cardId] = imageUrl;
-            continue;
-          }
-          
-          // If not in local database and user is logged in, try Firebase Storage
-          if (user) {
-            try {
-              // Try with card ID
-              const storageRef = ref(storage, `users/${user.uid}/card-images/${cardId}`);
-              const imageUrl = await getDownloadURL(storageRef);
-              images[cardId] = imageUrl;
-            } catch (storageError) {
-              // Try alternative paths if the main one fails
-              try {
-                // Some cards might be stored with different paths
-                const altStorageRef = ref(storage, `users/${user.uid}/images/${cardId}`);
-                const altImageUrl = await getDownloadURL(altStorageRef);
-                images[cardId] = altImageUrl;
-              } catch (altError) {
-                // Silently fail - no need to log every missing image
-              }
-            }
-          }
-        } catch (error) {
-          // Silently fail - no need to log every error
-        }
-      }
-      
-      // Only log the final result
-      if (soldCards.length > 0) {
-        const loadedCount = Object.keys(images).length;
-        // console.log(`Loaded ${loadedCount} images out of ${soldCards.length} cards`);
-      }
-      
-      setCardImages(images);
-    };
-
-    if (soldCards.length > 0) {
-      loadCardImages();
-    }
-    */
-    
-    // Cleanup function
-    return () => {
-      // Revoke all blob URLs when component unmounts
-      Object.values(cardImages).forEach(url => {
-        if (url && url.startsWith('blob:')) {
-          URL.revokeObjectURL(url);
-        }
-      });
-    };
-  }, [soldCards, user]);
-
-  // Load profile data
-  const loadProfile = async () => {
-    try {
-      // Try Firestore first if online
-      if (user && user.uid && navigator.onLine) {
-        const profileRef = doc(firestoreDb, 'users', user.uid);
-        const profileDoc = await getDoc(profileRef);
-        
-        if (profileDoc.exists()) {
-          const firestoreProfile = profileDoc.data();
-          setProfile(firestoreProfile);
-          
-          // Save to IndexedDB in the background
-          db.saveProfile(firestoreProfile).catch(console.error);
-          return;
-        }
-      }
-      
-      // Fall back to IndexedDB
-      const userProfile = await db.getProfile();
-      if (userProfile) {
-        setProfile(userProfile);
-      }
-    } catch (error) {
-      console.error('Error loading profile:', error);
-    }
-  };
-
-  // Load profile when user changes
-  useEffect(() => {
-    if (user) {
-      loadProfile();
-    }
-  }, [user]);
 
   // Handle downloading a sold invoice as PDF
   const handleDownloadInvoice = async (buyer, invoice) => {
@@ -293,101 +273,6 @@ const SoldItems = () => {
       toast.error('Error generating PDF', { id: 'pdf-download' });
     }
   };
-
-  // Load sold cards from IndexedDB and Firestore
-  useEffect(() => {
-    // Safety timeout to prevent infinite loading state
-    const loadingTimeout = setTimeout(() => {
-      setIsLoading(false);
-    }, 5000); // 5 second timeout
-    
-    const loadSoldCards = async () => {
-      setIsLoading(true);
-      try {
-        // Get local sold cards from IndexedDB
-        const localSoldCards = await db.getSoldCards() || [];
-        
-        // Handle both array and object formats
-        const soldCardsArray = Array.isArray(localSoldCards) 
-          ? localSoldCards 
-          : (localSoldCards.data || []);
-        
-        // Create a map of existing cards by ID to avoid duplicates
-        const existingCardsMap = new Map();
-        soldCardsArray.forEach(card => {
-          const cardId = card.id || card.slabSerial;
-          if (cardId) {
-            existingCardsMap.set(cardId, card);
-          }
-        });
-        
-        // If user is logged in, fetch sold items from Firestore as well
-        if (user) {
-          try {
-            logger.log('Fetching sold items from Firestore');
-            const soldItemsRef = collection(firestoreDb, `users/${user.uid}/sold-items`);
-            const soldItemsSnapshot = await getDocs(soldItemsRef);
-            
-            // Process Firestore sold items
-            soldItemsSnapshot.forEach(doc => {
-              const soldItem = doc.data();
-              const cardId = soldItem.id || soldItem.slabSerial;
-              
-              // Only add if not already in the local database or if the cloud version is newer
-              if (cardId && (!existingCardsMap.has(cardId) || 
-                  (soldItem.updatedAt && 
-                   (!existingCardsMap.get(cardId).updatedAt || 
-                    soldItem.updatedAt > existingCardsMap.get(cardId).updatedAt)))) {
-                existingCardsMap.set(cardId, soldItem);
-              }
-            });
-            
-            logger.log(`Found ${soldItemsSnapshot.size} sold items in Firestore`);
-          } catch (firestoreError) {
-            console.error('Error fetching sold items from Firestore:', firestoreError);
-          }
-        }
-        
-        // Convert map back to array
-        const mergedSoldCards = Array.from(existingCardsMap.values());
-        
-        // Update state with merged data
-        setSoldCards(mergedSoldCards);
-        
-        // Also update local database with the merged data to keep it in sync
-        if (mergedSoldCards.length > localSoldCards.length) {
-          await db.saveSoldCards(mergedSoldCards);
-        }
-      } catch (error) {
-        console.error('Error loading sold cards:', error);
-        setSoldCards([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadSoldCards();
-    
-    // Add a window event listener to catch when import is complete
-    const handleImportComplete = () => {
-      loadSoldCards();
-    };
-    
-    // Add listener for sold items updates (from import or marking as sold)
-    const handleSoldItemsUpdated = () => {
-      loadSoldCards();
-    };
-    
-    window.addEventListener('import-complete', handleImportComplete);
-    window.addEventListener('sold-items-updated', handleSoldItemsUpdated);
-    
-    // Clean up the event listeners
-    return () => {
-      window.removeEventListener('import-complete', handleImportComplete);
-      window.removeEventListener('sold-items-updated', handleSoldItemsUpdated);
-      clearTimeout(loadingTimeout);
-    };
-  }, []);
 
   // Group cards by invoice ID with proper currency handling
   const groupCardsByInvoice = (cards) => {
@@ -466,11 +351,16 @@ const SoldItems = () => {
     return Object.values(invoices);
   }, [soldCards, preferredCurrency]);
 
-  const filteredCards = soldCards.filter(card => 
-    card.card?.toLowerCase().includes(filter.toLowerCase()) ||
-    card.set?.toLowerCase().includes(filter.toLowerCase()) ||
-    card.buyer?.toLowerCase().includes(filter.toLowerCase())
-  );
+  const filteredCards = useMemo(() => {
+    if (!soldCards || !Array.isArray(soldCards)) {
+      return [];
+    }
+    return soldCards.filter(card => 
+      card.card?.toLowerCase().includes(filter.toLowerCase()) ||
+      card.set?.toLowerCase().includes(filter.toLowerCase()) ||
+      card.buyer?.toLowerCase().includes(filter.toLowerCase())
+    );
+  }, [soldCards, filter]);
 
   const sortedInvoices = useMemo(() => {
     const invoicesArray = Array.isArray(groupedInvoices) ? [...groupedInvoices] : Object.values(groupedInvoices);
@@ -496,6 +386,11 @@ const SoldItems = () => {
 
   // Prepare data for display, organized by financial year
   const displayData = useMemo(() => {
+    // Safety check for soldCards
+    if (!soldCards || !Array.isArray(soldCards)) {
+      return [];
+    }
+    
     // If we have no invoices but have cards, create a simple display structure
     if ((!sortedInvoices || sortedInvoices.length === 0) && soldCards.length > 0) {
       // Create a simple structure with all cards in one group
@@ -547,6 +442,11 @@ const SoldItems = () => {
 
   // Calculate invoice totals for display
   const invoiceTotals = useMemo(() => {
+    // Safety check for soldCards
+    if (!soldCards || !Array.isArray(soldCards)) {
+      return {};
+    }
+    
     // Group cards by buyer
     const buyerGroups = {};
     
@@ -595,11 +495,15 @@ const SoldItems = () => {
   
   // Calculate statistics from sold cards using utility function
   const statistics = useMemo(() => {
-    const stats = calculateSoldCardStatistics(soldCards, invoiceTotals, convertToUserCurrency);
+    // Ensure soldCards is a valid array before passing to utility function
+    const validSoldCards = soldCards && Array.isArray(soldCards) ? soldCards : [];
+    const validInvoiceTotals = invoiceTotals || {};
+    
+    const stats = calculateSoldCardStatistics(validSoldCards, validInvoiceTotals, convertToUserCurrency);
     // Fix invoice count to show actual number of unique buyers
     return {
       ...stats,
-      invoiceCount: Object.keys(invoiceTotals).length
+      invoiceCount: Object.keys(validInvoiceTotals).length
     };
   }, [soldCards, invoiceTotals, convertToUserCurrency]);
 
@@ -644,6 +548,11 @@ const SoldItems = () => {
   
   // Group and sort invoices by financial year
   const groupedInvoicesByYear = useMemo(() => {
+    // Safety check for soldCards
+    if (!soldCards || !Array.isArray(soldCards)) {
+      return [];
+    }
+    
     const groups = {};
     const invoicesObj = groupCardsByInvoice(
       soldCards.filter(card =>
@@ -1224,10 +1133,119 @@ const SoldItems = () => {
 
   if (isLoading) {
     return (
-      <div className="text-center py-8 sm:py-12">
-        <span className="material-icons text-4xl sm:text-5xl mb-3 sm:mb-4 text-gray-400 dark:text-gray-600">inventory_2</span>
-        <h3 className="text-sm sm:text-base font-medium text-gray-900 dark:text-white mb-1 sm:mb-2">Loading sold items...</h3>
-        <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-6">Please wait while we load your sold items.</p>
+      <div className="p-4 sm:p-6 pb-20 pt-16 sm:pt-4">
+        {/* Statistics Summary Skeleton - only show skeleton, no data */}
+        <div className="mb-6">
+          <div className="bg-white dark:bg-black rounded-xl shadow-md p-6">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {[
+                { label: 'INVESTMENT TOTAL', width: 'w-20' },
+                { label: 'SOLD FOR', width: 'w-16' },
+                { label: 'PROFIT', width: 'w-12' },
+                { label: 'SOLD INVOICES', width: 'w-4' }
+              ].map((stat, index) => (
+                <div key={index} className="text-center">
+                  <div className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 sm:mb-2 uppercase">
+                    {stat.label}
+                  </div>
+                  <div className={`h-8 ${stat.width} bg-gray-200 dark:bg-gray-700 rounded animate-pulse mx-auto`}></div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Main Content - Keep search functional, skeleton the data */}
+        <div className="bg-white dark:bg-black rounded-xl shadow-md">
+          <div className="overflow-x-auto">
+            {/* Keep search section functional */}
+            <div className="flex flex-col gap-4 mb-4 p-4 sm:p-6">
+              <div className="w-full">
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Search sold items..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full px-4 py-2 pl-10 rounded-lg 
+                            border border-gray-200 dark:border-gray-700/50 
+                            bg-white dark:bg-black text-gray-900 dark:text-white
+                            focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary
+                            placeholder-gray-500 dark:placeholder-gray-400"
+                  />
+                  <span className="material-icons absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                    search
+                  </span>
+                </div>
+                <div className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                  Loading sold items...
+                </div>
+              </div>
+            </div>
+            
+            {/* Desktop Table Skeleton - exact table structure */}
+            <div className="hidden md:block">
+              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead className="bg-gray-50 dark:bg-black">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      Buyer
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      Date
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      Investment
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      Sold For
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      Profit
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      # of Cards
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white dark:bg-black divide-y divide-gray-200 dark:divide-gray-700">
+                  {[...Array(7)].map((_, i) => (
+                    <tr key={i}>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse max-w-[150px]"></div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-20"></div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right">
+                        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-16 ml-auto"></div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right">
+                        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-16 ml-auto"></div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right">
+                        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-16 ml-auto"></div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-4"></div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex space-x-3">
+                          <div className="h-8 w-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                          <div className="h-8 w-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                          <div className="h-8 w-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -1235,14 +1253,14 @@ const SoldItems = () => {
   return (
     <div className="p-4 sm:p-6 pb-20 pt-16 sm:pt-4">
       {/* Statistics Summary */}
-      {soldCards.length > 0 && (
+      {soldCards && Array.isArray(soldCards) && soldCards.length > 0 && (
         <div className="mb-6">
           <StatisticsSummary statistics={formattedStatistics} />
         </div>
       )}
       
       <div className="bg-white dark:bg-black rounded-xl shadow-md">
-        {soldCards.length > 0 ? (
+        {soldCards && Array.isArray(soldCards) && soldCards.length > 0 ? (
           <div className="overflow-x-auto">
             <div className="flex flex-col gap-4 mb-4 p-4 sm:p-6">
               <div className="w-full">

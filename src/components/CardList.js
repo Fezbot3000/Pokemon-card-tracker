@@ -17,6 +17,7 @@ import { useAuth } from '../design-system';
 import { calculateCardTotals, formatStatisticsForDisplay } from '../utils/cardStatistics';
 import { useCardSelection } from '../hooks';
 import { moveCards, validateCollectionsStructure } from '../utils/moveCardsHandler';
+import { useSubscription } from '../hooks/useSubscription';
 
 // Replace FinancialSummary component with individual stat cards
 const StatCard = memo(({ label, value, isProfit = false }) => {
@@ -98,6 +99,7 @@ const CardList = ({
   const navigate = useNavigate();
   const { user } = useAuth() || { user: null };
   const { formatAmountForDisplay: formatUserCurrency, preferredCurrency } = useUserPreferences();
+  const { hasFeature } = useSubscription();
 
   const [filter, setFilter] = useState('');
   const [sortField, setSortField] = useState(
@@ -133,7 +135,8 @@ const CardList = ({
         (card.card && card.card.toLowerCase().includes(lowerFilter)) ||
         (card.set && card.set.toLowerCase().includes(lowerFilter)) ||
         (card.slabSerial && card.slabSerial.toLowerCase().includes(lowerFilter)) ||
-        (card.player && card.player.toLowerCase().includes(lowerFilter))
+        (card.player && card.player.toLowerCase().includes(lowerFilter)) ||
+        (card.holoState && card.holoState.toLowerCase().includes(lowerFilter))
       );
     }
     
@@ -1150,32 +1153,64 @@ const CardList = ({
               {/* Sell Button */}
               <button
                 onClick={() => {
+                  // Check subscription access first
+                  if (!hasFeature('SOLD_ITEMS')) {
+                    toast.error('Sold items tracking is available with Premium. Upgrade to track your sales!');
+                    return;
+                  }
                   setSelectedCardsForSale(cards.filter(card => selectedCards.has(card.slabSerial)));
                   setShowSaleModal(true);
                 }}
-                className="group flex flex-col items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-xl bg-green-500 hover:bg-green-600 text-white transition-all duration-200 shadow-md hover:shadow-lg hover:scale-105 active:scale-95 flex-shrink-0"
-                title="Sell selected cards"
+                className={`group flex flex-col items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-xl transition-all duration-200 shadow-md flex-shrink-0 ${
+                  hasFeature('SOLD_ITEMS') 
+                    ? 'bg-green-500 hover:bg-green-600 text-white hover:shadow-lg hover:scale-105 active:scale-95' 
+                    : 'bg-gray-400 text-gray-200 cursor-not-allowed opacity-75'
+                }`}
+                title={hasFeature('SOLD_ITEMS') ? "Sell selected cards" : "Sell selected cards (Premium feature)"}
               >
-                <span className="material-icons text-sm sm:text-lg mb-0 sm:mb-0.5 group-hover:scale-110 transition-transform duration-200">sell</span>
+                <span className={`material-icons text-sm sm:text-lg mb-0 sm:mb-0.5 transition-transform duration-200 ${
+                  hasFeature('SOLD_ITEMS') ? 'group-hover:scale-110' : ''
+                }`}>
+                  {hasFeature('SOLD_ITEMS') ? 'sell' : 'lock'}
+                </span>
                 <span className="text-xs font-medium hidden sm:block">Sell</span>
               </button>
               
               {/* Purchase Invoice Button */}
               <button
                 onClick={() => {
+                  // Check subscription access first
+                  if (!hasFeature('INVOICING')) {
+                    toast.error('Purchase invoices are available with Premium. Upgrade to create and manage invoices!');
+                    return;
+                  }
                   setSelectedCardsForPurchase(cards.filter(card => selectedCards.has(card.slabSerial)));
                   setShowPurchaseInvoiceModal(true);
                 }}
-                className="group flex flex-col items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-xl bg-blue-500 hover:bg-blue-600 text-white transition-all duration-200 shadow-md hover:shadow-lg hover:scale-105 active:scale-95 flex-shrink-0"
-                title="Create purchase invoice"
+                className={`group flex flex-col items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-xl transition-all duration-200 shadow-md flex-shrink-0 ${
+                  hasFeature('INVOICING') 
+                    ? 'bg-blue-500 hover:bg-blue-600 text-white hover:shadow-lg hover:scale-105 active:scale-95' 
+                    : 'bg-gray-400 text-gray-200 cursor-not-allowed opacity-75'
+                }`}
+                title={hasFeature('INVOICING') ? "Create purchase invoice" : "Create purchase invoice (Premium feature)"}
               >
-                <span className="material-icons text-sm sm:text-lg mb-0 sm:mb-0.5 group-hover:scale-110 transition-transform duration-200">receipt</span>
+                <span className={`material-icons text-sm sm:text-lg mb-0 sm:mb-0.5 transition-transform duration-200 ${
+                  hasFeature('INVOICING') ? 'group-hover:scale-110' : ''
+                }`}>
+                  {hasFeature('INVOICING') ? 'receipt' : 'lock'}
+                </span>
                 <span className="text-xs font-medium hidden sm:block">Invoice</span>
               </button>
               
               {/* List on Marketplace Button */}
               <button
                 onClick={() => {
+                  // Check subscription access first
+                  if (!hasFeature('MARKETPLACE_SELLING')) {
+                    toast.error('Marketplace selling is available with Premium. Upgrade to list your cards for sale!');
+                    return;
+                  }
+
                   // Use the existing bulk listing logic
                   (async () => {
                     try {
@@ -1262,11 +1297,21 @@ const CardList = ({
                     }
                   })();
                 }}
-                className="group flex flex-col items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-xl bg-purple-500 hover:bg-purple-600 text-white transition-all duration-200 shadow-md hover:shadow-lg hover:scale-105 active:scale-95 flex-shrink-0"
-                title="List on marketplace"
+                className={`group flex flex-col items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-xl transition-all duration-200 shadow-md flex-shrink-0 ${
+                  hasFeature('MARKETPLACE_SELLING') 
+                    ? 'bg-purple-500 hover:bg-purple-600 text-white hover:shadow-lg hover:scale-105 active:scale-95' 
+                    : 'bg-gray-400 text-gray-200 cursor-not-allowed opacity-75'
+                }`}
+                title={hasFeature('MARKETPLACE_SELLING') ? "List on marketplace" : "List on marketplace (Premium feature)"}
               >
-                <span className="material-icons text-sm sm:text-lg mb-0 sm:mb-0.5 group-hover:scale-110 transition-transform duration-200">storefront</span>
-                <span className="text-xs font-medium hidden sm:block">List</span>
+                <span className={`material-icons text-sm sm:text-lg mb-0 sm:mb-0.5 transition-transform duration-200 ${
+                  hasFeature('MARKETPLACE_SELLING') ? 'group-hover:scale-110' : ''
+                }`}>
+                  {hasFeature('MARKETPLACE_SELLING') ? 'storefront' : 'lock'}
+                </span>
+                <span className="text-xs font-medium hidden sm:block">
+                  {hasFeature('MARKETPLACE_SELLING') ? 'List' : 'List'}
+                </span>
               </button>
               
               {/* Move Button */}

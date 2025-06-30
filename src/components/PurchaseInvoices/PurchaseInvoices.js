@@ -10,6 +10,8 @@ import { doc, getDoc, collection, query, getDocs } from 'firebase/firestore';
 import { db as firestoreDb, functions, httpsCallable } from '../../services/firebase';
 import featureFlags from '../../utils/featureFlags';
 import logger from '../../utils/logger';
+import { useSubscription } from '../../hooks/useSubscription';
+import FeatureGate from '../FeatureGate';
 
 /**
  * PurchaseInvoices component
@@ -17,6 +19,8 @@ import logger from '../../utils/logger';
  * Displays and manages purchase invoices for Pokemon cards
  */
 const PurchaseInvoices = () => {
+  // All hooks must be called before any conditional returns
+  const { hasFeature } = useSubscription();
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -27,13 +31,129 @@ const PurchaseInvoices = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isGeneratingBatch, setIsGeneratingBatch] = useState(false);
   const { currentUser } = useAuth();
-  
+
+  // Define functions that will be used in useEffect
+  const loadInvoices = useCallback(async () => {
+    try {
+      setLoading(true);
+      
+      // Load directly from Firestore if online
+      if (currentUser && navigator.onLine && featureFlags.enableFirestoreSync) {
+        try {
+          // Create a reference to the user's purchase invoices collection
+          const invoicesRef = collection(firestoreDb, 'users', currentUser.uid, 'purchaseInvoices');
+          const q = query(invoicesRef);
+          
+          // Get all purchase invoices for the current user
+          const querySnapshot = await getDocs(q);
+          
+          if (!querySnapshot.empty) {
+            const firestoreInvoices = querySnapshot.docs.map(doc => {
+              const data = doc.data();
+              return { ...data, id: doc.id };
+            });
+            
+            // Set invoices from Firestore immediately
+            setInvoices(firestoreInvoices);
+            
+            // Update local database in the background (don't await)
+            Promise.resolve().then(async () => {
+              for (const invoice of firestoreInvoices) {
+                const cleanedInvoice = {};
+                Object.entries(invoice).forEach(([key, value]) => {
+                  if (value !== undefined) {
+                    cleanedInvoice[key] = value;
+                  }
+                });
+                await db.savePurchaseInvoice(cleanedInvoice);
+              }
+            });
+            
+            return; // Exit early if we loaded from Firestore
+          }
+        } catch (firestoreError) {
+          console.error('Error loading invoices from Firestore:', firestoreError);
+        }
+      }
+      
+      // Fall back to local database only if Firestore failed
+      const purchaseInvoices = await db.getPurchaseInvoices(currentUser?.uid) || [];
+      setInvoices(purchaseInvoices);
+    } catch (error) {
+      console.error('Error loading purchase invoices:', error);
+      toast.error('Failed to load purchase invoices');
+    } finally {
+      setLoading(false);
+    }
+  }, [currentUser]);
+
+  const loadProfile = useCallback(async () => {
+    try {
+      // Try Firestore first if online
+      if (currentUser && currentUser.uid && navigator.onLine) {
+        const profileRef = doc(firestoreDb, 'users', currentUser.uid);
+        const profileDoc = await getDoc(profileRef);
+        
+        if (profileDoc.exists()) {
+          const firestoreProfile = profileDoc.data();
+          setProfile(firestoreProfile);
+          
+          // Save to IndexedDB in the background
+          db.saveProfile(firestoreProfile).catch(console.error);
+          return;
+        }
+      }
+      
+      // Fall back to IndexedDB
+      const userProfile = await db.getProfile();
+      if (userProfile) {
+        setProfile(userProfile);
+      }
+    } catch (error) {
+      console.error('Error loading profile:', error);
+    }
+  }, [currentUser]);
+
+  // Load purchase invoices with improved cloud synchronization
+  useEffect(() => {
+    if (currentUser) {
+      loadInvoices();
+      loadProfile();
+    }
+  }, [currentUser, loadInvoices, loadProfile]);
+
+  // Filter invoices based on search query
+  const filteredInvoices = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return invoices;
+    }
+    
+    const query = searchQuery.toLowerCase();
+    return invoices.filter(invoice => {
+      return (
+        // Search in invoice number
+        (invoice.invoiceNumber && invoice.invoiceNumber.toLowerCase().includes(query)) ||
+        // Search in seller
+        (invoice.seller && invoice.seller.toLowerCase().includes(query)) ||
+        // Search in date
+        (invoice.date && invoice.date.toLowerCase().includes(query)) ||
+        // Search in notes
+        (invoice.notes && invoice.notes.toLowerCase().includes(query)) ||
+        // Search in card names (if available)
+        (invoice.cards && Array.isArray(invoice.cards) && invoice.cards.some(card => 
+          (card.name && card.name.toLowerCase().includes(query)) ||
+          (card.set && card.set.toLowerCase().includes(query))
+        ))
+      );
+    });
+  }, [invoices, searchQuery]);
+
   // Handle editing an invoice
   const handleEditInvoice = (invoice) => {
     setEditingInvoice(invoice);
     setShowCreateModal(true);
   };
-  
+
   // Handle server-side batch PDF generation
   const handleServerBatchGeneration = async () => {
     if (invoices.length === 0) {
@@ -101,6 +221,17 @@ const PurchaseInvoices = () => {
     }
   };
   
+  // Get ordinal suffix for a number (1st, 2nd, 3rd, etc.)
+  const getOrdinalSuffix = (day) => {
+    if (day > 3 && day < 21) return 'th';
+    switch (day % 10) {
+      case 1: return 'st';
+      case 2: return 'nd';
+      case 3: return 'rd';
+      default: return 'th';
+    }
+  };
+  
   // Format date to "17th Feb 25" format
   const formatDate = (dateString) => {
     if (!dateString) return '';
@@ -134,43 +265,6 @@ const PurchaseInvoices = () => {
       maximumFractionDigits: 2
     });
   };
-  
-  // Get ordinal suffix for a number (1st, 2nd, 3rd, etc.)
-  const getOrdinalSuffix = (day) => {
-    if (day > 3 && day < 21) return 'th';
-    switch (day % 10) {
-      case 1: return 'st';
-      case 2: return 'nd';
-      case 3: return 'rd';
-      default: return 'th';
-    }
-  };
-  
-  // Filter invoices based on search query
-  const filteredInvoices = useMemo(() => {
-    if (!searchQuery.trim()) {
-      return invoices;
-    }
-    
-    const query = searchQuery.toLowerCase();
-    return invoices.filter(invoice => {
-      return (
-        // Search in invoice number
-        (invoice.invoiceNumber && invoice.invoiceNumber.toLowerCase().includes(query)) ||
-        // Search in seller
-        (invoice.seller && invoice.seller.toLowerCase().includes(query)) ||
-        // Search in date
-        (invoice.date && invoice.date.toLowerCase().includes(query)) ||
-        // Search in notes
-        (invoice.notes && invoice.notes.toLowerCase().includes(query)) ||
-        // Search in card names (if available)
-        (invoice.cards && Array.isArray(invoice.cards) && invoice.cards.some(card => 
-          (card.name && card.name.toLowerCase().includes(query)) ||
-          (card.set && card.set.toLowerCase().includes(query))
-        ))
-      );
-    });
-  }, [invoices, searchQuery]);
 
   // Get sorted invoices
   const getSortedInvoices = () => {
@@ -249,7 +343,7 @@ const PurchaseInvoices = () => {
       }
     ];
   };
-  
+
   // Handle downloading an invoice as PDF
   const handleDownloadInvoice = async (invoice, options = {}) => {
     // Debug profile data if needed
@@ -354,100 +448,17 @@ const PurchaseInvoices = () => {
     }
   };
 
-  const loadInvoices = async () => {
-    try {
-      setLoading(true);
-      
-      // Load directly from Firestore if online
-      if (currentUser && navigator.onLine && featureFlags.enableFirestoreSync) {
-        try {
-          // Create a reference to the user's purchase invoices collection
-          const invoicesRef = collection(firestoreDb, 'users', currentUser.uid, 'purchaseInvoices');
-          const q = query(invoicesRef);
-          
-          // Get all purchase invoices for the current user
-          const querySnapshot = await getDocs(q);
-          
-          if (!querySnapshot.empty) {
-            const firestoreInvoices = querySnapshot.docs.map(doc => {
-              const data = doc.data();
-              return { ...data, id: doc.id };
-            });
-            
-            // Set invoices from Firestore immediately
-            setInvoices(firestoreInvoices);
-            // console.log(`Loaded ${firestoreInvoices.length} invoices from Firestore`);
-            
-            // Update local database in the background (don't await)
-            Promise.resolve().then(async () => {
-              for (const invoice of firestoreInvoices) {
-                const cleanedInvoice = {};
-                Object.entries(invoice).forEach(([key, value]) => {
-                  if (value !== undefined) {
-                    cleanedInvoice[key] = value;
-                  }
-                });
-                await db.savePurchaseInvoice(cleanedInvoice);
-              }
-            });
-            
-            return; // Exit early if we loaded from Firestore
-          }
-        } catch (firestoreError) {
-          console.error('Error loading invoices from Firestore:', firestoreError);
-        }
-      }
-      
-      // Fall back to local database only if Firestore failed
-      const purchaseInvoices = await db.getPurchaseInvoices(currentUser?.uid) || [];
-      setInvoices(purchaseInvoices);
-      // console.log(`Loaded ${purchaseInvoices.length} invoices from local database`);
-    } catch (error) {
-      console.error('Error loading purchase invoices:', error);
-      toast.error('Failed to load purchase invoices');
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  const loadProfile = async () => {
-    try {
-      // Try Firestore first if online
-      if (currentUser && currentUser.uid && navigator.onLine) {
-        const profileRef = doc(firestoreDb, 'users', currentUser.uid);
-        const profileDoc = await getDoc(profileRef);
-        
-        if (profileDoc.exists()) {
-          const firestoreProfile = profileDoc.data();
-          setProfile(firestoreProfile);
-          
-          // Save to IndexedDB in the background
-          db.saveProfile(firestoreProfile).catch(console.error);
-          return;
-        }
-      }
-      
-      // Fall back to IndexedDB
-      const userProfile = await db.getProfile();
-      if (userProfile) {
-        setProfile(userProfile);
-      }
-    } catch (error) {
-      console.error('Error loading profile:', error);
-    }
-  };
-
-  // Memoize load functions to prevent unnecessary re-renders
-  const memoizedLoadInvoices = useCallback(loadInvoices, [currentUser]);
-  const memoizedLoadProfile = useCallback(loadProfile, [currentUser]);
-  
-  // Load purchase invoices with improved cloud synchronization
-  useEffect(() => {
-    if (currentUser) {
-      memoizedLoadInvoices();
-      memoizedLoadProfile();
-    }
-  }, [currentUser, memoizedLoadInvoices, memoizedLoadProfile]);
+  // If user doesn't have invoicing access, show feature gate
+  if (!hasFeature('INVOICING')) {
+    return (
+      <div className="p-4 sm:p-6 pb-20 pt-16 sm:pt-4">
+        <FeatureGate 
+          feature="INVOICING"
+          customMessage="Create and manage purchase invoices for your card transactions. Track your investments and generate professional invoices. This feature is available with Premium."
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 sm:p-6 pb-20 pt-16 sm:pt-4">
@@ -464,8 +475,107 @@ const PurchaseInvoices = () => {
       <div className="bg-white dark:bg-black rounded-xl shadow-md">
         
         {loading ? (
-          <div className="flex justify-center items-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+          <div className="overflow-x-auto">
+            {/* Search Section Skeleton - matches exact real layout */}
+            <div className="flex flex-col gap-4 mb-4">
+              <div className="w-full">
+                <div className="relative">
+                  <div className="w-full h-10 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"></div>
+                  <div className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 bg-gray-300 dark:bg-gray-600 rounded animate-pulse"></div>
+                </div>
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-32 mt-2"></div>
+              </div>
+              
+              <div className="flex flex-col sm:flex-row gap-2 w-full">
+                <div className="w-full sm:w-auto h-10 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse sm:w-48"></div>
+              </div>
+            </div>
+            
+            {/* Desktop Table Skeleton - matches exact table structure */}
+            <div className="hidden md:block">
+              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead className="bg-gray-50 dark:bg-black">
+                  <tr>
+                    <th className="px-6 py-3 text-left">
+                      <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded animate-pulse w-16"></div>
+                    </th>
+                    <th className="px-6 py-3 text-left">
+                      <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded animate-pulse w-8"></div>
+                    </th>
+                    <th className="px-6 py-3 text-left">
+                      <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded animate-pulse w-10"></div>
+                    </th>
+                    <th className="px-6 py-3 text-right">
+                      <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded animate-pulse w-20 ml-auto"></div>
+                    </th>
+                    <th className="px-6 py-3 text-left">
+                      <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded animate-pulse w-14"></div>
+                    </th>
+                    <th className="px-6 py-3 text-left">
+                      <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded animate-pulse w-12"></div>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white dark:bg-black divide-y divide-gray-200 dark:divide-gray-700">
+                  {[...Array(2)].map((_, i) => (
+                    <tr key={i}>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-32"></div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-20"></div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse max-w-[150px]"></div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right">
+                        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-16 ml-auto"></div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-4"></div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex space-x-3">
+                          <div className="h-8 w-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                          <div className="h-8 w-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                          <div className="h-8 w-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Cards Skeleton - matches exact mobile layout */}
+            <div className="md:hidden space-y-4">
+              {[...Array(2)].map((_, i) => (
+                <div key={i} className="bg-white/5 dark:bg-white/5 rounded-xl p-4 border border-gray-200/20 dark:border-gray-700/30">
+                  <div className="flex justify-between items-start mb-3">
+                    <div>
+                      <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mb-2 w-28"></div>
+                      <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-20"></div>
+                    </div>
+                    <div className="h-6 w-16 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse"></div>
+                  </div>
+                  <div className="flex justify-between items-center mb-4">
+                    <div className="flex-1">
+                      <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mb-1 w-10"></div>
+                      <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-24"></div>
+                    </div>
+                    <div className="text-right">
+                      <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mb-1 w-16 ml-auto"></div>
+                      <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-20"></div>
+                    </div>
+                  </div>
+                  <div className="flex space-x-2">
+                    <div className="h-10 w-10 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"></div>
+                    <div className="h-10 w-10 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"></div>
+                    <div className="h-10 w-10 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         ) : invoices.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 px-4">

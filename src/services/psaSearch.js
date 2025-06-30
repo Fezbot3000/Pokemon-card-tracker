@@ -247,6 +247,61 @@ const searchByCertNumber = async (certNumber, forceRefresh = false) => {
 };
 
 /**
+ * Extract holo state from PSA data
+ * @param {string} variety - PSA variety field
+ * @param {string} cardName - Card name
+ * @param {string} category - Card category
+ * @returns {string} - Holo state value
+ */
+const extractHoloState = (variety, cardName, category) => {
+  const combinedText = [variety, cardName, category].filter(Boolean).join(' ').toLowerCase();
+  
+  // Check for specific holo states in order of specificity
+  if (/rainbow\s*(rare|variant)/i.test(combinedText)) {
+    return 'rainbow';
+  }
+  if (/secret\s*rare/i.test(combinedText)) {
+    return 'secret-rare';
+  }
+  if (/ultra\s*rare/i.test(combinedText)) {
+    return 'ultra-rare';
+  }
+  if (/full\s*art/i.test(combinedText)) {
+    return 'full-art';
+  }
+  if (/alternate\s*art|alt\s*art/i.test(combinedText)) {
+    return 'alternate-art';
+  }
+  if (/reverse\s*holo/i.test(combinedText)) {
+    return 'reverse-holo';
+  }
+  if (/gold/i.test(combinedText)) {
+    return 'gold';
+  }
+  if (/shiny/i.test(combinedText)) {
+    return 'shiny';
+  }
+  if (/promo/i.test(combinedText)) {
+    return 'promo';
+  }
+  if (/1st\s*edition|first\s*edition/i.test(combinedText)) {
+    return 'first-edition';
+  }
+  if (/shadowless/i.test(combinedText)) {
+    return 'shadowless';
+  }
+  if (/unlimited/i.test(combinedText)) {
+    return 'unlimited';
+  }
+  if (/holo/i.test(combinedText)) {
+    return 'holo';
+  }
+  
+  // Default to non-holo if no specific indicators found
+  return 'non-holo';
+};
+
+/**
  * Parse PSA card data from API response to a format compatible with the app
  * @param {Object} psaData - Raw PSA API response
  * @returns {Object} - Parsed card data
@@ -316,6 +371,8 @@ const parsePSACardData = (psaData) => {
     certificationDate: cert.CertDate || '',
     // Show edition info (e.g., '1st Edition', 'Unlimited') in player field if present, otherwise fallback to character/player
     player: (cert.Variety && !/(N\/A|NONE)/i.test(cert.Variety) && /(Edition|Unlimited|1st|Promo|Holo|Reverse)/i.test(cert.Variety)) ? cert.Variety : (cert.Subject || ''), // Expected: card.player in form
+    // Extract holo state from variety and card name
+    holoState: extractHoloState(cert.Variety, cleanCardName, cert.Category),
     brand: cert.Brand || '',
     psaUrl: `https://www.psacard.com/cert/${cert.CertNumber || ''}`,
     isPSAAuthenticated: true,
@@ -393,6 +450,7 @@ const mergeWithExistingCard = (existingCardData, psaCardData) => {
   if (psaCardData.slabSerial) mergedData.slabSerial = psaCardData.slabSerial;
   if (psaCardData.population) mergedData.population = psaCardData.population;
   if (psaCardData.psaUrl) mergedData.psaUrl = psaCardData.psaUrl;
+  if (psaCardData.holoState) mergedData.holoState = psaCardData.holoState;
   
   // Refined Category Detection:
   // Combine relevant fields into a single string for keyword checking (lowercase)

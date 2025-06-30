@@ -103,7 +103,7 @@ const Header = ({
           <div className="flex items-center justify-between h-16">
             {/* Logo and Collection Dropdown */}
             <div className="flex items-center gap-2 sm:gap-4 flex-shrink min-w-0 max-w-[45%] sm:max-w-[60%] md:max-w-[70%]">
-              <Link to="/" className="flex-shrink-0">
+              <Link to="/cards" className="flex-shrink-0">
                 <img src="/favicon-192x192.png" alt="MyCardTracker" className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl object-contain" />
               </Link>
               <div className="relative min-w-0 flex-shrink" ref={dropdownRef}>

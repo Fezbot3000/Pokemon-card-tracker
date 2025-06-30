@@ -19,8 +19,6 @@ const SUBSCRIPTION_FEATURES = {
 export const useSubscription = () => {
   const { subscriptionData } = useAuth();
   
-  console.log('🔍 useSubscription - Raw subscription data from AuthContext:', subscriptionData);
-  
   /**
    * Check if user has access to a specific feature
    * @param {string} feature - Feature name from SUBSCRIPTION_FEATURES
@@ -28,8 +26,6 @@ export const useSubscription = () => {
    */
   const hasFeature = (feature) => {
     const { status } = subscriptionData;
-    
-    console.log('🔍 useSubscription - hasFeature check:', { feature, status });
     
     // Premium users have everything
     if (status === 'premium') return true;
@@ -119,7 +115,7 @@ export const useSubscription = () => {
     return 'low';
   };
 
-  const result = {
+  return {
     // Subscription data
     subscription: subscriptionData,
     
@@ -144,10 +140,6 @@ export const useSubscription = () => {
     // Feature constants for reference
     FEATURES: SUBSCRIPTION_FEATURES
   };
-  
-  console.log('🔍 useSubscription - Returning result:', result);
-  
-  return result;
 };
 
 export default useSubscription; 

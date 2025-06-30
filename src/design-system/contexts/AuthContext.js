@@ -90,17 +90,13 @@ export const AuthProvider = ({ children }) => {
 
   // Check subscription status for a user
   const checkUserSubscription = async (userId) => {
-    console.log('🔍 AuthContext - Starting subscription check for user:', userId);
     try {
       const userRef = doc(db, 'users', userId);
       const userSnap = await getDoc(userRef);
       const userData = userSnap.exists() ? userSnap.data() : {};
       
-      console.log('🔍 AuthContext - User data from Firestore:', userData);
-      
       // Check if user has subscription data
       if (!userData.subscriptionStatus) {
-        console.log('🔍 AuthContext - No subscription status found, starting free trial');
         // User without subscription data - start free trial
         // This includes both new users and existing users who haven't been migrated yet
         const trialEndsAt = new Date();
@@ -115,8 +111,6 @@ export const AuthProvider = ({ children }) => {
           daysRemaining: 7
         };
         
-        console.log('🔍 AuthContext - New subscription data to save:', newSubscriptionData);
-        
         // Save to Firestore (merge with existing user data if any)
         await setDoc(userRef, {
           subscriptionStatus: 'free_trial',
@@ -126,7 +120,6 @@ export const AuthProvider = ({ children }) => {
         }, { merge: true });
         
         setSubscriptionData(newSubscriptionData);
-        console.log('🔍 AuthContext - Started 7-day free trial for user (new or existing without subscription data)');
         
         // Show a welcome message for the trial
         setTimeout(() => {
@@ -136,15 +129,11 @@ export const AuthProvider = ({ children }) => {
         }, 1000);
         
       } else {
-        console.log('🔍 AuthContext - Existing subscription data found:', userData.subscriptionStatus);
         // Existing user with subscription data - check current status
         const daysRemaining = calculateDaysRemaining(userData.trialEndsAt, userData.subscriptionStatus);
         
-        console.log('🔍 AuthContext - Calculated days remaining:', daysRemaining);
-        
         // Check if trial has expired
         if (userData.subscriptionStatus === 'free_trial' && daysRemaining <= 0) {
-          console.log('🔍 AuthContext - Trial expired, moving to free plan');
           // Trial expired - move to free plan
           await updateDoc(userRef, {
             subscriptionStatus: 'free',
@@ -161,8 +150,6 @@ export const AuthProvider = ({ children }) => {
             daysRemaining: 0
           });
           
-          console.log('🔍 AuthContext - Trial expired - moved user to free plan');
-          
           // Show trial expired message
           setTimeout(() => {
             toast.error('Your free trial has expired. Upgrade to Premium to continue using all features!', {
@@ -171,7 +158,6 @@ export const AuthProvider = ({ children }) => {
           }, 1000);
           
         } else {
-          console.log('🔍 AuthContext - Using existing subscription data');
           // Use existing subscription data
           setSubscriptionData({
             status: userData.subscriptionStatus,
@@ -181,12 +167,9 @@ export const AuthProvider = ({ children }) => {
             customerId: userData.customerId || null,
             daysRemaining: daysRemaining
           });
-          
-          console.log('🔍 AuthContext - Loaded existing subscription data:', userData.subscriptionStatus);
         }
       }
     } catch (error) {
-      console.error('❌ AuthContext - Error checking subscription:', error);
       setSubscriptionData({
         status: 'free',
         planType: 'free',
@@ -202,26 +185,20 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     let isMounted = true;
     
-    console.log('🔍 AuthContext - Setting up auth state listener');
-    
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      console.log('🔍 AuthContext - Auth state changed:', user ? `User: ${user.email}` : 'No user');
       
       if (!isMounted) return;
       
       if (user) {
         try {
-          console.log('🔍 AuthContext - Setting user and checking subscription');
           // Set the current user
           setUser(user);
           // Check subscription status
           await checkUserSubscription(user.uid);
         } catch (err) {
-          console.error("❌ AuthContext - Error handling user:", err);
           setUser(user);
         }
       } else {
-        console.log('🔍 AuthContext - No user, resetting subscription data');
         setUser(null);
         setSubscriptionData({
           status: 'loading',
@@ -236,14 +213,12 @@ export const AuthProvider = ({ children }) => {
       // Add a small delay to prevent flashing
       setTimeout(() => {
         if (isMounted) {
-          console.log('🔍 AuthContext - Setting loading to false');
           setLoading(false);
         }
       }, 100);
     });
 
     return () => {
-      console.log('🔍 AuthContext - Cleaning up auth state listener');
       isMounted = false;
       unsubscribe();
     };
@@ -477,7 +452,9 @@ export const AuthProvider = ({ children }) => {
 
   // Update subscription status (for when user upgrades/downgrades)
   const updateSubscriptionStatus = async (newStatus, additionalData = {}) => {
-    if (!user) return;
+    if (!user) {
+      throw new Error('No user logged in');
+    }
     
     try {
       const userRef = doc(db, 'users', user.uid);
@@ -488,20 +465,25 @@ export const AuthProvider = ({ children }) => {
         ...additionalData
       };
       
+      // Update Firestore
       await updateDoc(userRef, updateData);
       
-      // Update local state
+      // Calculate days remaining for the new status
+      const daysRemaining = calculateDaysRemaining(additionalData.trialEndsAt || null, newStatus);
+      
+      // Update local state immediately
       setSubscriptionData(prev => ({
         ...prev,
         status: newStatus,
         planType: newStatus,
         ...additionalData,
-        daysRemaining: calculateDaysRemaining(additionalData.trialEndsAt || prev.trialEndsAt, newStatus)
+        daysRemaining: daysRemaining
       }));
       
-      console.log('Subscription status updated:', newStatus);
+      return true;
     } catch (error) {
       console.error('Error updating subscription status:', error);
+      throw error;
     }
   };
   

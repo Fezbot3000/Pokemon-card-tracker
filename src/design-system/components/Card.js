@@ -160,9 +160,14 @@ const Card = ({
         <h3 className="font-medium text-gray-900 dark:text-white text-lg mb-1 truncate">
           {(card.cardName || card.card || card.name || card.player || 'Unnamed Card').toUpperCase()}
         </h3>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mb-3 truncate">
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-1 truncate">
           {card.set || 'Pokemon Game'}{card.number ? ` · ${card.number}` : ''}
         </p>
+        {card.holoState && (
+          <p className="text-xs text-purple-600 dark:text-purple-400 mb-2 truncate">
+            {card.holoState.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+          </p>
+        )}
         
         {/* Financial Details - Consolidated Box */}
         <div className="flex flex-col">

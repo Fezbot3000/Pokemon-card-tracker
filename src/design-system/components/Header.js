@@ -115,12 +115,9 @@ const Header = ({
             <div className="flex items-center">
               <img 
                 src="/favicon-192x192.png" 
-                alt="MyCardTracker" 
+                alt="Logo" 
                 className="w-8 h-8 rounded-md mr-3"
               />
-              <span className="text-lg font-semibold text-gray-900 dark:text-white">
-                MyCardTracker
-              </span>
             </div>
             <button className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -138,22 +135,19 @@ const Header = ({
     <header className="bg-white dark:bg-black fixed top-0 left-0 right-0 z-50 header-responsive">
       {/* Combined navigation bar */}
       <div className="border-b border-gray-200 dark:border-[#ffffff1a] h-full flex items-center px-4">
-        <div className="max-w-7xl mx-auto flex justify-between items-center w-full">
-          {/* Left side - Logo (hidden on mobile) */}
-          <div className="hidden sm:flex items-center">
+        <div className="max-w-7xl mx-auto flex items-center w-full">
+          {/* Left side - Logo (hidden on mobile) - Fixed width to balance right side */}
+          <div className="hidden sm:flex items-center w-48">
             <Link to="/dashboard" className="flex items-center">
               <img 
                 src="/favicon-192x192.png" 
-                alt="MyCardTracker" 
+                alt="Logo" 
                 className="w-8 h-8 rounded-md"
               />
-              <span className="ml-2 font-medium text-gray-900 dark:text-white hidden xs:inline">
-                MyCardTracker
-              </span>
             </Link>
           </div>
           
-          {/* Center - Navigation tabs */}
+          {/* Center - Navigation tabs - Absolutely centered */}
           {onViewChange && (
             <div className="flex-1 flex justify-center">
               {/* Desktop navigation - always visible on larger screens */}
@@ -332,10 +326,10 @@ const Header = ({
             </div>
           )}
           
-          {/* Right side - action buttons */}
-          <div className="flex items-center space-x-2">
-            {/* Currency Dropdown - Hidden on mobile, visible on larger screens */}
-            <div className="relative hidden sm:block" ref={currencyDropdownRef}>
+          {/* Right side - action buttons - Fixed width to balance left side */}
+          <div className="hidden sm:flex items-center justify-end space-x-2 w-48">
+            {/* Currency Dropdown */}
+            <div className="relative" ref={currencyDropdownRef}>
               <button
                 onClick={() => setCurrencyDropdownOpen(!currencyDropdownOpen)}
                 className="px-2 py-1 flex items-center justify-center rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200"
@@ -367,8 +361,8 @@ const Header = ({
               )}
             </div>
             
-            {/* Other buttons - Hidden on mobile */}
-            <div className="hidden sm:flex items-center space-x-2">
+            {/* Other buttons */}
+            <div className="flex items-center space-x-2">
             
             <button
               onClick={toggleTheme}
@@ -390,6 +384,19 @@ const Header = ({
             
             {/* Upload icon removed from main navigation and moved to developer settings */}
             </div>
+          </div>
+          
+          {/* Mobile right side - Show settings button only */}
+          <div className="sm:hidden flex items-center justify-end flex-1">
+            {onSettingsClick && (
+              <button
+                onClick={onSettingsClick}
+                className="p-1 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+                aria-label="Settings"
+              >
+                <Icon name="settings" />
+              </button>
+            )}
           </div>
         </div>
       </div>

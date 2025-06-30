@@ -12,7 +12,8 @@ import Icon from '../atoms/Icon';
 import { gradients } from '../styles/colors';
 import PSALookupButton from '../../components/PSALookupButton'; 
 import { getAllPokemonSets, getPokemonSetsByYear, getSetsByCategory, addCustomSet, getAvailableYears } from '../../data/pokemonSets';
-import { useUserPreferences } from '../../contexts/UserPreferencesContext'; 
+import { useUserPreferences } from '../../contexts/UserPreferencesContext';
+import { useSubscription } from '../../hooks/useSubscription';
 import '../styles/formFixes.css'; 
 
 const cardCategories = [
@@ -34,6 +35,25 @@ const cardCategories = [
   { value: 'sports', label: 'Other Sports' },
   { value: 'other', label: 'Other' },
   // Add more categories as needed
+];
+
+const holoStates = [
+  { value: '', label: 'Select Holo State...' },
+  { value: 'non-holo', label: 'Non-Holo' },
+  { value: 'holo', label: 'Holo' },
+  { value: 'reverse-holo', label: 'Reverse Holo' },
+  { value: 'full-art', label: 'Full Art' },
+  { value: 'rainbow', label: 'Rainbow' },
+  { value: 'gold', label: 'Gold' },
+  { value: 'secret-rare', label: 'Secret Rare' },
+  { value: 'ultra-rare', label: 'Ultra Rare' },
+  { value: 'shiny', label: 'Shiny' },
+  { value: 'alternate-art', label: 'Alternate Art' },
+  { value: 'promo', label: 'Promo' },
+  { value: 'first-edition', label: 'First Edition' },
+  { value: 'shadowless', label: 'Shadowless' },
+  { value: 'unlimited', label: 'Unlimited' },
+  { value: 'other', label: 'Other' },
 ];
 
 const gradingCompanies = [
@@ -186,6 +206,8 @@ const CardDetailsForm = ({
     formatAmountForDisplay, 
     formatPreferredCurrency 
   } = useUserPreferences();
+  
+  const { hasFeature } = useSubscription();
 
   const [selectedCompany, setSelectedCompany] = useState('');
   const [selectedGrade, setSelectedGrade] = useState('');
@@ -625,11 +647,23 @@ const CardDetailsForm = ({
                 <div className="flex flex-col space-y-2 w-full">
                   {!card.psaUrl && (
                     <button
-                      onClick={() => onPsaSearch && onPsaSearch(card.slabSerial)}
-                      disabled={!card.slabSerial || isPsaSearching}
+                      onClick={() => {
+                        if (!hasFeature('PSA_SEARCH')) {
+                          toast.error('PSA search is available with Premium. Upgrade to access this feature!');
+                          return;
+                        }
+                        onPsaSearch && onPsaSearch(card.slabSerial);
+                      }}
+                      disabled={!card.slabSerial || isPsaSearching || !hasFeature('PSA_SEARCH')}
                       className="w-full inline-flex items-center justify-center font-medium rounded-lg transition-colors focus:outline-none px-4 py-2 text-base bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                       data-component-name="CardDetailsForm"
-                      title={!card.slabSerial ? "Enter a serial number first" : "Search PSA database"}
+                      title={
+                        !hasFeature('PSA_SEARCH') 
+                          ? "PSA search requires Premium subscription" 
+                          : !card.slabSerial 
+                            ? "Enter a serial number first" 
+                            : "Search PSA database"
+                      }
                     >
                       {isPsaSearching ? (
                         <>
@@ -638,6 +672,11 @@ const CardDetailsForm = ({
                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                           </svg>
                           Searching...
+                        </>
+                      ) : !hasFeature('PSA_SEARCH') ? (
+                        <>
+                          <Icon name="lock" className="mr-2" />
+                          Premium Feature
                         </>
                       ) : (
                         <>
@@ -662,12 +701,23 @@ const CardDetailsForm = ({
                       
                       {card.slabSerial && onPsaSearch && (
                         <button
-                          onClick={() => onPsaSearch(card.slabSerial)}
-                          className="w-full inline-flex items-center justify-center font-medium rounded-lg transition-colors focus:outline-none px-4 py-2 text-base bg-gradient-to-r from-green-500 to-green-700 text-white hover:opacity-90 shadow-sm"
-                          title="Reload data from PSA"
+                          onClick={() => {
+                            if (!hasFeature('PSA_SEARCH')) {
+                              toast.error('PSA search is available with Premium. Upgrade to access this feature!');
+                              return;
+                            }
+                            onPsaSearch(card.slabSerial);
+                          }}
+                          disabled={!hasFeature('PSA_SEARCH')}
+                          className={`w-full inline-flex items-center justify-center font-medium rounded-lg transition-colors focus:outline-none px-4 py-2 text-base shadow-sm ${
+                            !hasFeature('PSA_SEARCH') 
+                              ? 'bg-gray-400 text-gray-600 cursor-not-allowed' 
+                              : 'bg-gradient-to-r from-green-500 to-green-700 text-white hover:opacity-90'
+                          }`}
+                          title={!hasFeature('PSA_SEARCH') ? "PSA search requires Premium subscription" : "Reload data from PSA"}
                         >
-                          <Icon name="refresh" className="mr-2" />
-                          Reload PSA Data
+                          <Icon name={!hasFeature('PSA_SEARCH') ? "lock" : "refresh"} className="mr-2" />
+                          {!hasFeature('PSA_SEARCH') ? 'Premium Feature' : 'Reload PSA Data'}
                         </button>
                       )}
                     </div>
@@ -740,6 +790,21 @@ const CardDetailsForm = ({
                 error={errors.cardName}
                 className={errors.cardName ? 'error' : ''}
                 required
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 mt-4">
+            <div>
+              <SelectField
+                label="Holo State"
+                name="holoState"
+                value={card?.holoState || ''}
+                onChange={handleInputChange}
+                options={holoStates}
+                error={errors.holoState}
+                required={false}
+                testId="holo-state-select"
               />
             </div>
           </div>
@@ -946,6 +1011,7 @@ CardDetailsForm.propTypes = {
     year: PropTypes.string,
     category: PropTypes.string,
     condition: PropTypes.string,
+    holoState: PropTypes.string,
     population: PropTypes.oneOfType([PropTypes.string, PropTypes.number]), 
     slabSerial: PropTypes.string,
     datePurchased: PropTypes.string,

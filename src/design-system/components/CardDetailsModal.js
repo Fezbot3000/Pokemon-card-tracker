@@ -9,6 +9,7 @@ import { searchByCertNumber, parsePSACardData } from '../../services/psaSearch';
 import { toast } from 'react-hot-toast';
 import '../styles/animations.css';
 import { useUserPreferences } from '../../contexts/UserPreferencesContext';
+import { useSubscription } from '../../hooks/useSubscription';
 
 // Helper function to format date
 const formatDate = (dateString) => {
@@ -58,6 +59,9 @@ const CardDetailsModal = ({
   
   // Get currency formatting functions
   const { formatPreferredCurrency, formatAmountForDisplay } = useUserPreferences();
+  
+  // Get subscription status
+  const { hasFeature } = useSubscription();
 
 
   // PriceCharting functionality removed
@@ -97,6 +101,12 @@ const CardDetailsModal = ({
   
   // Handle PSA search
   const handlePsaSearch = async (serialNumber) => {
+    // Check subscription access first
+    if (!hasFeature('PSA_SEARCH')) {
+      toast.error('PSA search is available with Premium. Upgrade to access this feature!');
+      return;
+    }
+    
     if (!serialNumber) {
       toast.error('Please enter a serial number to search');
       return;
