@@ -43,9 +43,6 @@ const MessageModal = ({ isOpen, onClose, listing, prefilledMessage = '', onViewC
       return;
     }
     
-    // Log the current user ID for debugging
-    // console.log('Current user ID:', user.uid);
-    
     try {
       setLoading(true);
       setError(null);

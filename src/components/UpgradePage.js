@@ -55,7 +55,6 @@ const UpgradePage = () => {
     try {
       // TODO: Implement Stripe checkout
       toast.success('Stripe checkout will be implemented next!');
-      // // console.log('User wants to upgrade:', user.uid);
     } catch (error) {
       console.error('Upgrade error:', error);
       toast.error('Failed to start upgrade process');

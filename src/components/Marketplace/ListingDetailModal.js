@@ -19,12 +19,9 @@ function ListingDetailModal({
   onMarkAsSold,
   onViewChange
 }) {
-  // console.log('🚀 ListingDetailModal component loaded - DEBUG VERSION');
-  
   // Temporary test to verify our changes are loading
   if (typeof window !== 'undefined' && !window.debugTestRan) {
     window.debugTestRan = true;
-    // console.log('✅ UPDATED COMPONENT IS LOADING!');
   }
   
   const { user } = useAuth();
@@ -50,21 +47,12 @@ function ListingDetailModal({
     const cardName = listing.card?.name || listing.title || 'Trading Card';
     const price = listing.price ? `$${listing.price}` : 'Price on request';
     
-    // console.log('Sharing listing:', {
-    //   shareUrl, 
-    //   cardName, 
-    //   price 
-    // });
-    
     if (navigator.share) {
-      // Use native sharing if available (mobile)
       navigator.share({
         title: `${cardName} - ${price}`,
         text: `Check out this ${cardName} for sale on MyCardTracker!`,
         url: shareUrl
       }).catch(err => {
-        // console.log('Error sharing:', err);
-        // Fallback to clipboard if native sharing fails
         fallbackToClipboard(shareUrl);
       });
     } else {
@@ -204,7 +192,6 @@ function ListingDetailModal({
         if (existingChat) {
           setHasExistingChat(true);
           setExistingChatId(existingChat.id);
-          // console.log('Found existing chat:', existingChat.id);
         }
       }
     } catch (error) {

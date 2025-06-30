@@ -24,11 +24,6 @@ const DataManagementSection = () => {
       
       const userId = currentUser.uid;
       
-      // Log the current user ID for verification
-          // // // console.log('🔒 SECURITY VERIFICATION');
-    // // // console.log('------------------------');
-    // // // console.log(`Current user ID: ${userId}`);
-      
       // Open IndexedDB to check data
       const request = indexedDB.open('pokemonCardTracker', 1);
       
@@ -93,20 +88,17 @@ const DataManagementSection = () => {
             securityStatus.cardsCount = totalCards;
             securityStatus.anonymousDataFound = anonymousCollections.length > 0;
             
-            // Log collections data
-                  // // // console.log(`✅ Found ${userCollections.length} collections linked to your user ID`);
-      // // // console.log(`✅ Total cards linked to your user ID: ${totalCards}`);
-            if (anonymousCollections.length > 0) {
-                      // // // console.log(`⚠️ Found ${anonymousCollections.length} collections still linked to anonymous ID`);
-      } else {
-        // // // console.log('✅ No anonymous collections found - good!');
-      }
+            // Security summary
+            if (securityStatus.collectionsVerified) {
+              securityStatus.summary = securityStatus.anonymousDataFound 
+                ? 'Security partially verified: Your data is linked to your user ID, but some anonymous data remains.'
+                : 'Security fully verified: All data is properly linked to your user ID.';
+            } else {
+              securityStatus.summary = 'Security verification failed: Could not verify collections.';
+            }
             
-            // Detailed collection names
-                  // // // console.log('\nYour collections:');
-      // userCollections.forEach(collection => {
-      //   // // console.log(`- ${collection.name}: ${Array.isArray(collection.data) ? collection.data.length : 0} cards`);
-      // });
+            // Display success toast with instructions to check console
+            toast.success('Security verification complete. Check the browser console (F12) for details.');
           }
           
           // Security summary
@@ -114,17 +106,8 @@ const DataManagementSection = () => {
             securityStatus.summary = securityStatus.anonymousDataFound 
               ? 'Security partially verified: Your data is linked to your user ID, but some anonymous data remains.'
               : 'Security fully verified: All data is properly linked to your user ID.';
-              
-            // Log final summary
-                  // // // console.log('\n------------------------');
-      // // // console.log('SECURITY VERIFICATION SUMMARY:');
-      // // // console.log(securityStatus.summary);
-      // // // console.log('------------------------');
           } else {
             securityStatus.summary = 'Security verification failed: Could not verify collections.';
-                  // // // console.log('\n------------------------');
-      // // // console.log('⚠️ SECURITY VERIFICATION FAILED');
-      // // // console.log('------------------------');
           }
           
           // Display success toast with instructions to check console

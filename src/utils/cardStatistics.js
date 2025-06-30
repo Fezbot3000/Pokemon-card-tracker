@@ -12,19 +12,6 @@ export const calculateCardTotals = (cards) => {
     return { investment: 0, value: 0, profit: 0 };
   }
   
-  // For debugging - log the first card's structure
-  if (cards.length > 0 && process.env.NODE_ENV === 'development') {
-    // // console.log('Card structure sample:', {
-    //   card: cards[0].card || cards[0].cardName || cards[0].player,
-    //   hasOriginalInvestmentAmount: 'originalInvestmentAmount' in cards[0],
-    //   hasOriginalCurrentValueAmount: 'originalCurrentValueAmount' in cards[0],
-    //   originalInvestmentAmount: cards[0].originalInvestmentAmount,
-    //   originalCurrentValueAmount: cards[0].originalCurrentValueAmount,
-    //   investmentAUD: cards[0].investmentAUD,
-    //   currentValueAUD: cards[0].currentValueAUD
-    // });
-  }
-  
   return cards.reduce((acc, card) => {
     // IMPORTANT: Based on the provided data structure, we know exactly which fields to use
     // The cards have originalInvestmentAmount and originalCurrentValueAmount as the primary fields

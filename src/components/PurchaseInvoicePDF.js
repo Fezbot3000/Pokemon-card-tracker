@@ -124,10 +124,6 @@ const styles = StyleSheet.create({
 });
 
 const PurchaseInvoicePDF = ({ seller, date, cards, invoiceNumber, notes, totalAmount, profile }) => {
-  // Debug log the cards data
-  // // console.log('Cards data received in PDF component:', cards);
-  // // console.log('Total amount received:', totalAmount);
-  // // console.log('Number of cards:', cards.length);
   return (
     <Document>
       <Page size="A4" style={styles.page}>

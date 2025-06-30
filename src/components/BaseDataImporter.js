@@ -39,12 +39,6 @@ const BaseDataImporter = ({ onImport, loading }) => {
   const handleFiles = (file) => {
     setImportError(null);
     
-    // console.log("File received:", {
-      name: file.name,
-      type: file.type,
-      size: file.size
-    });
-    
     // Check file type - more permissive for iOS which may not report MIME types correctly
     if (!file.name.toLowerCase().endsWith('.csv')) {
       setImportError("Please upload a CSV file (.csv extension required)");

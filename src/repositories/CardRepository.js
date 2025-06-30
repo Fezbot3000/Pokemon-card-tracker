@@ -160,11 +160,8 @@ class CardRepository {
 
   async deleteCollection(collectionId) {
     try {
-      // // // // console.log(`CardRepository: Deleting collection ${collectionId}`);
-      
       // Get all cards in the collection first
       const cards = await this.getCardsForCollection(collectionId);
-      // // // // console.log(`Found ${cards.length} cards to delete in collection ${collectionId}`);
       
       // Extract card IDs for image cleanup
       const cardIds = cards.map(card => card.id || card.slabSerial).filter(Boolean);
@@ -172,11 +169,9 @@ class CardRepository {
       // Delete all images for these cards from IndexedDB
       try {
         const { deleted, failed } = await db.deleteImagesForCards(cardIds);
-        // // // // console.log(`Deleted ${deleted} images, ${failed} failed during collection deletion`);
         
         // Dispatch event to notify components to clean up blob URLs
         if (cardIds.length > 0) {
-          // // // // console.log(`Dispatching card-images-cleanup event for ${cardIds.length} cards`);
           window.dispatchEvent(new CustomEvent('card-images-cleanup', { 
             detail: { cardIds } 
           }));
@@ -203,8 +198,6 @@ class CardRepository {
       if (cards.length > 0) {
         await batch.commit();
       }
-      
-      // // // // console.log(`Successfully deleted collection ${collectionId} and all its cards`);
     } catch (error) {
       console.error(`Error deleting collection ${collectionId}:`, error);
       throw error;
@@ -234,8 +227,6 @@ class CardRepository {
         const existingCardById = await this.getCard(cardId);
         
         if (existingCardById) {
-          // // // // console.log(`Card with ID/slabSerial ${cardId} already exists, updating instead of creating`);
-          
           // If the existing card has a collection but the new data doesn't, preserve it
           if (!cardData.collection && !cardData.collectionId) {
             if (existingCardById.collection || existingCardById.collectionId) {
@@ -266,15 +257,11 @@ class CardRepository {
       let imageUrl = cardData.imageUrl || null;
       if (imageFile) {
         try {
-          // // // // console.log(`Attempting to upload image for card ${finalCardId}, image type: ${imageFile.type}, size: ${imageFile.size} bytes`);
-          
           // Use storage reference to upload the image
           const storageRef = ref(storage, `users/${this.userId}/cards/${finalCardId}.jpg`);
           const uploadResult = await uploadBytes(storageRef, imageFile);
-          // // // // console.log(`Image upload successful for card ${finalCardId}, metadata:`, uploadResult.metadata);
           
           imageUrl = await getDownloadURL(storageRef);
-          // // // // console.log(`Image URL generated for card ${finalCardId}: ${imageUrl}`);
         } catch (error) {
           console.error(`Error uploading image for card ${finalCardId}:`, error);
           // Continue with card creation even if image upload fails
@@ -301,7 +288,6 @@ class CardRepository {
       
       // Create the card document
       await setDoc(cardRef, newCardData);
-      // // // // console.log(`Card ${finalCardId} created in Firestore`);
       
       // Return the created card data (with local timestamp instead of server timestamp)
       return {
@@ -336,7 +322,6 @@ class CardRepository {
           return { id: cardId, ...cardSnap.data() };
         }
         
-        // // // // console.log(`Card ${cardId} not found in Firestore (batch operation)`);
         return null;
       }
       
@@ -361,7 +346,6 @@ class CardRepository {
         }
       }
       
-      // // // // console.log(`Card ${cardId} not found in Firestore`);
       return null;
     } catch (error) {
       console.error(`Error getting card ${cardId}:`, error);
@@ -414,8 +398,6 @@ class CardRepository {
         limit(1000)
       );
 
-      // // // // console.log(`CardRepository: Getting all cards for user ${this.userId}`);
-      
       // Execute the query
       const querySnapshot = await getDocs(q);
       
@@ -437,8 +419,6 @@ class CardRepository {
         
         cards.push(cardData);
       });
-      
-      // // // // console.log(`CardRepository: Found ${cards.length} cards for user ${this.userId}`);
       
       // Return the array of cards
       return cards;
@@ -695,8 +675,6 @@ class CardRepository {
         throw new Error('Invalid input: Card ID is invalid');
       }
       
-      // // // // console.log(`Attempting to delete card with ID: ${id}`);
-      
       const cardRef = doc(this.cardsRef, id);
       const storageRef = ref(storage, `users/${this.userId}/cards/${id}.jpg`);
       
@@ -705,40 +683,32 @@ class CardRepository {
         // Delete image from Firebase storage
         try {
           await deleteObject(storageRef);
-          // // // // console.log(`Image for card ${id} deleted from Firebase storage`);
         } catch (error) {
-          // // // // console.log('Error deleting image from Firebase storage:', error);
           // Continue with deletion even if image deletion fails
         }
         
         // Delete image from IndexedDB
         try {
           await db.deleteImage(id);
-          // // // // console.log(`Image for card ${id} deleted from IndexedDB`);
         } catch (error) {
-          // // // // console.log('Error deleting image from IndexedDB:', error);
           // Continue with deletion even if image deletion fails
         }
       }
       
       // Delete the card document from Firestore
       await deleteDoc(cardRef);
-      // // // // console.log(`Card ${id} deleted from Firestore`);
       
       // Check if card exists in Firestore
       const docSnap = await getDoc(cardRef);
       
       if (!docSnap.exists()) {
-        // // // // console.log(`Card ${id} not found in Firestore, cleaning up local data...`);
         // If card doesn't exist in Firestore but exists locally, clean it up
         try {
           await db.deleteImage(id);
-          // // // // console.log(`Image for card ${id} deleted from IndexedDB`);
           // Force a cleanup of any local state for this card
           await db.cleanupGhostCard(id);
           return true;
         } catch (error) {
-          // // // // console.log('Error cleaning up local data:', error);
           return false;
         }
       }
@@ -773,7 +743,6 @@ class CardRepository {
       const cardDoc = await getDoc(cardRef);
       if (!cardDoc.exists()) {
         // Document doesn't exist, create it instead of updating
-        // // // // console.log(`Card ${cardId} doesn't exist yet, creating it with the fields`);
         
         // Add timestamps to the new document
         const newDocData = {
@@ -918,7 +887,6 @@ class CardRepository {
       // After successfully marking as sold, delete the original card from the 'cards' collection.
       try {
         await this.deleteCard(cardId, { preserveImages: false }); // Set preserveImages based on desired behavior
-        // // // // console.log(`Card ${cardId} successfully moved to sold items and deleted from active collection.`);
       } catch (deleteError) {
         console.error(`Failed to delete original card ${cardId} after marking as sold:`, deleteError);
         // Consider how to handle this: The card is sold, but not removed from active. 
@@ -1029,7 +997,6 @@ class CardRepository {
 
       // Write to Firestore
       await setDoc(soldCardRef, cleanData);
-      // // // // console.log(`Successfully created sold card directly with ID: ${soldCardRef.id}`);
 
       // If the card belonged to a collection, update the collection's card count
       if (cleanData.collectionId) {
@@ -1043,7 +1010,6 @@ class CardRepository {
               cardCount: Math.max((collectionData.cardCount || 0) - 1, 0),
               updatedAt: serverTimestamp()
             });
-            // // // // console.log(`Updated collection ${cleanData.collectionId} card count after selling`);
           }
         } catch (collectionError) {
           console.error("Error updating collection card count:", collectionError);
@@ -1577,11 +1543,8 @@ class CardRepository {
 
   async deleteCollection(collectionId) {
     try {
-      // // // // console.log(`CardRepository: Deleting collection ${collectionId}`);
-      
       // Get all cards in the collection first
       const cards = await this.getCardsForCollection(collectionId);
-      // // // // console.log(`Found ${cards.length} cards to delete in collection ${collectionId}`);
       
       // Extract card IDs for image cleanup
       const cardIds = cards.map(card => card.id || card.slabSerial).filter(Boolean);
@@ -1589,11 +1552,9 @@ class CardRepository {
       // Delete all images for these cards from IndexedDB
       try {
         const { deleted, failed } = await db.deleteImagesForCards(cardIds);
-        // // // // console.log(`Deleted ${deleted} images, ${failed} failed during collection deletion`);
         
         // Dispatch event to notify components to clean up blob URLs
         if (cardIds.length > 0) {
-          // // // // console.log(`Dispatching card-images-cleanup event for ${cardIds.length} cards`);
           window.dispatchEvent(new CustomEvent('card-images-cleanup', { 
             detail: { cardIds } 
           }));
@@ -1620,8 +1581,6 @@ class CardRepository {
       if (cards.length > 0) {
         await batch.commit();
       }
-      
-      // // // // console.log(`Successfully deleted collection ${collectionId} and all its cards`);
     } catch (error) {
       console.error(`Error deleting collection ${collectionId}:`, error);
       throw error;
@@ -1631,7 +1590,6 @@ class CardRepository {
   // Delete all cloud data for the current user
   async deleteAllUserData() {
     try {
-      // // // // console.log(`Starting complete data deletion for user: ${this.userId}`);
       const batchSize = 500; // Firestore batch limit
       
       // Helper function to delete all documents in a collection
@@ -1640,7 +1598,6 @@ class CardRepository {
           const snapshot = await getDocs(collectionRef);
           
           if (snapshot.empty) {
-            // // // // console.log(`No documents found in ${logName} collection`);
             return 0;
           }
           
@@ -1658,7 +1615,6 @@ class CardRepository {
             
             // When batch reaches limit, store it and create a new one
             if (count >= batchSize) {
-              // // // // console.log(`Created batch of ${count} ${logName} deletions`);
               batches.push(currentBatch);
               currentBatch = writeBatch(firestoreDb);
               count = 0;
@@ -1667,19 +1623,16 @@ class CardRepository {
           
           // Add the final batch if it has operations
           if (count > 0) {
-            // // // // console.log(`Created final batch of ${count} ${logName} deletions`);
             batches.push(currentBatch);
           }
           
           // Commit all batches sequentially
           if (batches.length > 0) {
-            // // // // console.log(`Committing ${batches.length} batches for ${logName}`);
             for (const batch of batches) {
               await batch.commit();
             }
           }
           
-          // // // // console.log(`Successfully deleted ${totalDeleted} ${logName} documents`);
           return totalDeleted;
         } catch (error) {
           console.error(`Error deleting ${logName} collection:`, error);
@@ -1689,26 +1642,20 @@ class CardRepository {
       
       // 1. Delete all cards in Firestore - use direct approach first
       try {
-        // // // // console.log('Attempting direct card deletion for user:', this.userId);
         // Get all cards first
         const cardsSnapshot = await getDocs(this.cardsRef);
         
         if (!cardsSnapshot.empty) {
-          // // // // console.log(`Found ${cardsSnapshot.size} cards to delete directly`);
           
           // Delete each card individually to ensure they're removed
           const deletePromises = [];
           
           cardsSnapshot.forEach(cardDoc => {
-            // // // // console.log(`Directly deleting card: ${cardDoc.id}`);
             deletePromises.push(deleteDoc(cardDoc.ref));
           });
           
           // Wait for all direct deletions to complete
           await Promise.all(deletePromises);
-          // // // // console.log('Direct card deletion completed successfully');
-        } else {
-          // // // // console.log('No cards found for direct deletion');
         }
       } catch (directDeleteError) {
         console.error('Error during direct card deletion:', directDeleteError);
@@ -1747,7 +1694,6 @@ class CardRepository {
             await deleteCollection(collRef, collName);
           } catch (collError) {
             // This collection might not exist, which is fine
-            // // // // console.log(`Collection ${collName} might not exist or error:`, collError);
           }
         }
       } catch (otherCollError) {
@@ -1757,7 +1703,6 @@ class CardRepository {
       
       // 6. Delete all images in Firebase Storage
       try {
-        // // // // console.log('Deleting all user images from Firebase Storage');
         const storageRef = ref(storage, `users/${this.userId}`);
         const listResult = await listAll(storageRef);
         
@@ -1766,7 +1711,6 @@ class CardRepository {
         
         // Delete all files in the main directory
         if (listResult.items.length > 0) {
-          // // // // console.log(`Found ${listResult.items.length} files in main storage directory`);
           listResult.items.forEach(itemRef => {
             deleteImagePromises.push(deleteObject(itemRef));
           });
@@ -1775,11 +1719,9 @@ class CardRepository {
         // Process all subdirectories
         for (const prefix of listResult.prefixes) {
           try {
-            // // // // console.log(`Checking subdirectory: ${prefix.fullPath}`);
             const subDirResult = await listAll(prefix);
             
             if (subDirResult.items.length > 0) {
-              // // // // console.log(`Found ${subDirResult.items.length} files in ${prefix.fullPath}`);
               subDirResult.items.forEach(itemRef => {
                 deleteImagePromises.push(deleteObject(itemRef));
               });
@@ -1802,17 +1744,12 @@ class CardRepository {
         }
         
         if (deleteImagePromises.length > 0) {
-          // // // // console.log(`Deleting ${deleteImagePromises.length} total files from storage`);
           await Promise.allSettled(deleteImagePromises); // Use allSettled to continue even if some deletions fail
-          // // // // console.log('Storage cleanup completed');
-        } else {
-          // // // // console.log('No files found in storage to delete');
         }
       } catch (storageError) {
         console.warn("Error during storage cleanup, continuing with reset:", storageError);
       }
       
-      // // // // console.log('All user data deletion completed successfully');
       return { success: true };
     } catch (error) {
       console.error("Error deleting all user data:", error);
@@ -1844,7 +1781,6 @@ class CardRepository {
         try {
           const imageRef = ref(storage, path);
           await deleteObject(imageRef);
-          // // // // console.log(`Successfully deleted ghost card image from path: ${path}`);
           imageDeleted = true;
           break; // Exit loop after successful deletion
         } catch (storageError) {

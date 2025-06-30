@@ -32,7 +32,6 @@ const PSALookupButton = ({ currentCardData, onCardUpdate, iconOnly = false, butt
   const handleLookupClick = () => {
     // If we already have a serial number on the card, use it directly
     if (currentCardData && currentCardData.slabSerial) {
-      // // console.log('[PSALookupButton] Using existing serial number:', currentCardData.slabSerial);
       setCertNumber(currentCardData.slabSerial);
       setIsLoading(true);
       setIsModalOpen(true);

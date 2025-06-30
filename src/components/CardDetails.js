@@ -62,7 +62,6 @@ const CardDetails = memo(({
         psaSearched: card.psaSearched || false
       };
       
-      // // // console.log('Setting edited card with complete data:', completeCard);
       setEditedCard(completeCard);
       // Also reset unsaved changes flag when the card prop changes
       setHasUnsavedChanges(false);
@@ -77,8 +76,6 @@ const CardDetails = memo(({
 
   // Effect to load card image on mount
   useEffect(() => {
-    // Remove noisy debug logs for cleaner console
-    // // // console.log('[CardDetails] Component mounted, loading image...');
     loadCardImage();
     
     // Effect to handle body scroll locking
@@ -122,7 +119,6 @@ const CardDetails = memo(({
         if (cardImage) {
           try {
             URL.revokeObjectURL(cardImage);
-            // // // console.log(`Revoked blob URL for card ${card.id || card.slabSerial} in CardDetails component`);
           } catch (error) {
             console.error(`Error revoking blob URL for card ${card.id || card.slabSerial}:`, error);
           }
@@ -151,7 +147,6 @@ const CardDetails = memo(({
     try {
       // Prioritize Firestore image URL if available in the current card data
       if (editedCard.imageUrl) {
-        // // // console.log('[CardDetails] Using Firestore image URL:', editedCard.imageUrl);
         // Revoke existing blob URL if necessary before setting the new URL
         if (cardImage && cardImage.startsWith('blob:')) {
           URL.revokeObjectURL(cardImage);
@@ -161,7 +156,6 @@ const CardDetails = memo(({
       } else {
         // Fallback: Try loading from IndexedDB if no Firestore URL
         const id = editedCard.id || editedCard.slabSerial || card.id || card.slabSerial;
-        // // // console.log('[CardDetails] No Firestore URL, attempting to load image from IndexedDB for ID:', id);
         const imageBlob = await db.getImage(id);
         
         if (imageBlob) {
@@ -174,11 +168,9 @@ const CardDetails = memo(({
           }
           
           const blobUrl = URL.createObjectURL(imageBlob);
-          // // // console.log('[CardDetails] Image loaded from IndexedDB, Blob URL:', blobUrl);
           setCardImage(blobUrl);
           setImageLoadingState('idle');
         } else {
-          // // // console.log('[CardDetails] No image found in IndexedDB for ID:', id);
           // Ensure any previous image (blob or Firestore URL) is cleared
           if (cardImage && cardImage.startsWith('blob:')) {
             URL.revokeObjectURL(cardImage);
@@ -208,14 +200,10 @@ const CardDetails = memo(({
         // Use the appropriate ID for the image
         const id = card.id || card.slabSerial;
         
-        // Log for debugging
-        // // // console.log(`Processing image for card ${id}, file type: ${file.type}, size: ${file.size} bytes`);
-        
         // Check if there's already a blob URL to revoke
         if (editedCard._blobUrl) {
           try {
             URL.revokeObjectURL(editedCard._blobUrl);
-            // // // console.log('Revoked previous blob URL');
           } catch (e) {
             console.warn('Failed to revoke previous blob URL', e);
           }
@@ -288,7 +276,6 @@ const CardDetails = memo(({
     if (editedCard && editedCard._blobUrl && editedCard._blobUrl.startsWith('blob:')) {
       try {
         URL.revokeObjectURL(editedCard._blobUrl);
-        // // // console.log('Cleaned up blob URL on close');
       } catch (e) {
         console.warn('Failed to revoke blob URL on close:', e);
       }
@@ -321,16 +308,12 @@ const CardDetails = memo(({
 
   // Handle save action
   const handleSave = async () => {
-    // // // console.log('=========== CARD SAVE FLOW START ===========');
-    // // // console.log('[CardDetails] handleSave called with card:', card.id);
-    
     try {
       // Prepare the final card data
       let finalCardData = { ...editedCard };
       
       // Check if this card has a pending image to upload
       if (editedCard._pendingImageFile) {
-        // // // console.log('[CardDetails] Uploading pending image before saving card');
         
         try {
           // Store the old blob URL for cleanup
@@ -378,7 +361,6 @@ const CardDetails = memo(({
           const img = new Image();
           img.src = imageUrl;
           img.onload = () => {
-            // // // console.log('[CardDetails] Image preloaded successfully');
           };
           
           // We don't use the blob URL anymore since we have the Firebase URL
@@ -391,7 +373,6 @@ const CardDetails = memo(({
             }
           }
           
-          // // // console.log('[CardDetails] Image uploaded successfully with URL:', isDataUrl ? 'data:URL (truncated)' : imageUrl);
           toast.success('Image uploaded successfully');
         } catch (imageError) {
           console.error('[CardDetails] Error uploading image:', imageError);
@@ -432,15 +413,7 @@ const CardDetails = memo(({
       delete processedCard._pendingImageFile; // Remove the file object before saving to Firestore
       delete processedCard._blobUrl; // Remove the blob URL reference
       
-      // // // console.log('[CardDetails] Saving processed card:', {
-      //   id: processedCard.id,
-      //   collection: processedCard.collection,
-      //   date: processedCard.datePurchased,
-      //   timestamp: new Date().toISOString()
-      // });
-      
       // Update the card in the database
-      // // // console.log('[CardDetails] Calling updateCard...');
       const saveStart = performance.now();
       
       // Make sure we're using the function from props
@@ -452,7 +425,6 @@ const CardDetails = memo(({
       await onUpdateCard(processedCard);
       
       const saveEnd = performance.now();
-      // // // console.log(`[CardDetails] updateCard finished in ${(saveEnd - saveStart).toFixed(2)}ms`);
       
       // Now update the editedCard state to match what we saved
       setEditedCard(finalCardData);
@@ -462,9 +434,6 @@ const CardDetails = memo(({
       
       // Show success message
       toast.success('Card saved successfully!');
-      
-          // // // console.log('[CardDetails] Card saved successfully, closing modal');
-    // // // console.log('=========== CARD SAVE FLOW END ===========');
       
       // Close the modal with success flag
       handleClose(true);
@@ -489,7 +458,6 @@ const CardDetails = memo(({
       if (editedCard && editedCard._blobUrl && editedCard._blobUrl.startsWith('blob:')) {
         try {
           URL.revokeObjectURL(editedCard._blobUrl);
-          // // // console.log('Cleaned up blob URL on unmount');
         } catch (e) {
           console.warn('Failed to revoke blob URL on unmount:', e);
         }
@@ -511,7 +479,6 @@ const CardDetails = memo(({
           // This check prevents revoking a URL that might still be in use
           if (currentBlobUrl && currentBlobUrl !== editedCard.imageUrl) {
             URL.revokeObjectURL(currentBlobUrl);
-            // // // console.log('Cleaned up stale blob URL');
           }
         } catch (e) {
           console.warn('Failed to revoke stale blob URL:', e);
@@ -552,7 +519,6 @@ const CardDetails = memo(({
         try {
           // First get the existing sold cards
           let soldCards = await db.getSoldCards() || [];
-          // // // console.log("Current sold cards:", soldCards);
           
           // Add the current card to the sold cards list
           soldCards.push({

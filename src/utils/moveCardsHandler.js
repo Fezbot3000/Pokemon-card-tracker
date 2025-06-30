@@ -30,13 +30,6 @@ export async function moveCards({
   isAllCardsView = false
 }) {
   try {
-    // // console.log('[MoveCardsHandler] Starting move operation:', {
-    //   cardsCount: cardsToMove.length,
-    //   targetCollection,
-    //   sourceCollection,
-    //   isAllCardsView
-    // });
-
     // Validation
     if (!cardsToMove || cardsToMove.length === 0) {
       toast.error('No cards selected to move');
@@ -248,7 +241,6 @@ export function validateCollectionsStructure(collections) {
       
       if (isArrayLike && keys.length > 0) {
         validatedCollections[collectionName] = Object.values(collection);
-        // // console.log(`[MoveCardsHandler] Converted collection ${collectionName} from object to array (${keys.length} items)`);
       } else if (keys.length === 0) {
         // Empty object, convert to empty array
         validatedCollections[collectionName] = [];
@@ -257,7 +249,6 @@ export function validateCollectionsStructure(collections) {
         const values = Object.values(collection);
         if (values.length > 0 && values[0] && typeof values[0] === 'object') {
           validatedCollections[collectionName] = values;
-          // // console.log(`[MoveCardsHandler] Preserved collection ${collectionName} data as array (${values.length} items)`);
         } else {
           validatedCollections[collectionName] = [];
           console.warn(`[MoveCardsHandler] Collection ${collectionName} has invalid structure, reset to empty array`);
