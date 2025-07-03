@@ -1038,7 +1038,7 @@ exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
         
         if (userId) {
           // Update user subscription to premium
-          await admin.firestore().doc(`users/${userId}`).update({
+          await admin.firestore().doc(`users/${userId}/profile/data`).update({
             subscriptionStatus: 'premium',
             planType: 'premium',
             customerId: session.customer,
@@ -1057,7 +1057,7 @@ exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
         console.log(`Processing subscription creation for customer: ${createdCustomerId}`);
         
         // Find user by customer ID and update subscription status
-        const createdUsersRef = admin.firestore().collection('users');
+        const createdUsersRef = admin.firestore().collectionGroup('data');
         const createdUserQuery = await createdUsersRef.where('customerId', '==', createdCustomerId).limit(1).get();
         
         if (!createdUserQuery.empty) {
@@ -1081,7 +1081,7 @@ exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
         console.log(`Processing subscription update for customer: ${customerId}`);
         
         // Find user by customer ID and update subscription status
-        const usersRef = admin.firestore().collection('users');
+        const usersRef = admin.firestore().collectionGroup('data');
         const userQuery = await usersRef.where('customerId', '==', customerId).limit(1).get();
         
         if (!userQuery.empty) {
@@ -1104,7 +1104,7 @@ exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
         console.log(`Processing subscription cancellation for customer: ${deletedCustomerId}`);
         
         // Find user by customer ID and update to free status
-        const deletedUsersRef = admin.firestore().collection('users');
+        const deletedUsersRef = admin.firestore().collectionGroup('data');
         const deletedUserQuery = await deletedUsersRef.where('customerId', '==', deletedCustomerId).limit(1).get();
         
         if (!deletedUserQuery.empty) {
@@ -1126,7 +1126,7 @@ exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
         console.log(`Processing payment failure for customer: ${failedCustomerId}`);
         
         // Find user and potentially update status or send notification
-        const failedUsersRef = admin.firestore().collection('users');
+        const failedUsersRef = admin.firestore().collectionGroup('data');
         const failedUserQuery = await failedUsersRef.where('customerId', '==', failedCustomerId).limit(1).get();
         
         if (!failedUserQuery.empty) {
