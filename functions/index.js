@@ -1050,59 +1050,6 @@ exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
         }
         break;
         
-      case 'customer.subscription.created':
-        const createdSubscription = event.data.object;
-        const createdCustomerId = createdSubscription.customer;
-        
-        console.log(`Processing subscription creation for customer: ${createdCustomerId}`);
-        
-        // Find user by customer ID and update subscription status
-        const createdUsersRef = admin.firestore().collection('users');
-        const createdUserQuery = await createdUsersRef.where('stripeCustomerId', '==', createdCustomerId).limit(1).get();
-        
-        if (!createdUserQuery.empty) {
-          const userDoc = createdUserQuery.docs[0];
-          const updateData = {
-            subscriptionStatus: 'premium',
-            planType: 'premium',
-            subscriptionId: createdSubscription.id,
-            updatedAt: admin.firestore.FieldValue.serverTimestamp()
-          };
-          
-          await userDoc.ref.update(updateData);
-          console.log(`Updated user ${userDoc.id} to premium after subscription creation`);
-        } else {
-          console.log(`No user found with customer ID: ${createdCustomerId}`);
-        }
-        break;
-        
-      case 'invoice.payment_succeeded':
-        const invoice = event.data.object;
-        const invoiceCustomerId = invoice.customer;
-        const invoiceSubscriptionId = invoice.subscription;
-        
-        console.log(`Processing successful payment for customer: ${invoiceCustomerId}, subscription: ${invoiceSubscriptionId}`);
-        
-        // Find user by customer ID and ensure they're premium
-        const invoiceUsersRef = admin.firestore().collection('users');
-        const invoiceUserQuery = await invoiceUsersRef.where('stripeCustomerId', '==', invoiceCustomerId).limit(1).get();
-        
-        if (!invoiceUserQuery.empty) {
-          const userDoc = invoiceUserQuery.docs[0];
-          const updateData = {
-            subscriptionStatus: 'premium',
-            planType: 'premium',
-            subscriptionId: invoiceSubscriptionId,
-            updatedAt: admin.firestore.FieldValue.serverTimestamp()
-          };
-          
-          await userDoc.ref.update(updateData);
-          console.log(`Updated user ${userDoc.id} to premium after successful payment`);
-        } else {
-          console.log(`No user found with customer ID: ${invoiceCustomerId}`);
-        }
-        break;
-        
       case 'customer.subscription.updated':
         const subscription = event.data.object;
         const customerId = subscription.customer;
