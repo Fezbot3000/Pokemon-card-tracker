@@ -34,10 +34,15 @@ const UpgradeModal = ({ isOpen, onClose, daysRemaining }) => {
     try {
       // Step 1: Check environment variables
       console.log('🔍 Checking environment variables...');
+      console.log('🔍 All process.env:', Object.keys(process.env).filter(key => key.startsWith('REACT_APP')));
+      console.log('🔍 REACT_APP_STRIPE_PUBLISHABLE_KEY exists:', !!process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
+      console.log('🔍 REACT_APP_STRIPE_PUBLISHABLE_KEY value preview:', process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY?.substring(0, 15) + '...');
+      
       const stripePublishableKey = process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY;
       
       if (!stripePublishableKey) {
         console.error('❌ REACT_APP_STRIPE_PUBLISHABLE_KEY is not set');
+        console.error('❌ Available REACT_APP env vars:', Object.keys(process.env).filter(key => key.startsWith('REACT_APP')));
         toast.error('Stripe configuration missing. Please contact support.');
         setLoading(false);
         return;
