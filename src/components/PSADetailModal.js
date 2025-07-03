@@ -88,6 +88,7 @@ const PSADetailModal = ({
       const psaGrade = data.grade ? String(data.grade).trim() : '';                // e.g., "GEM MT 10"
       const psaCertNumber = data.certNumber ? String(data.certNumber).trim() : '';
       const psaPsaUrl = data.psaUrl ? String(data.psaUrl).trim() : '';
+      const psaHoloState = data.holoState ? String(data.holoState).trim() : '';     // e.g., "holo", "non-holo", etc.
 
       // Start with a clean slate for the fields we want to set in order
       let mergedData = {
@@ -127,6 +128,15 @@ const PSADetailModal = ({
       // Other card details: Use PSA if available, else current, else empty/default
       mergedData.cardName = psaCardName || (currentCardData.cardName ? String(currentCardData.cardName).trim() : '');
       mergedData.cardNumber = psaCardNumber || (currentCardData.cardNumber ? String(currentCardData.cardNumber).trim() : '');
+      
+      // Holo State: Use PSA holo state if available, else keep current
+      if (psaHoloState) {
+        mergedData.holoState = psaHoloState;
+      } else if (currentCardData.holoState) {
+        mergedData.holoState = String(currentCardData.holoState).trim();
+      } else {
+        mergedData.holoState = '';
+      }
       
       // Grade related fields
       mergedData.grade = psaGrade || currentCardData.grade || ''; // General grade field, can be from PSA

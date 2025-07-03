@@ -256,48 +256,70 @@ const searchByCertNumber = async (certNumber, forceRefresh = false) => {
 const extractHoloState = (variety, cardName, category) => {
   const combinedText = [variety, cardName, category].filter(Boolean).join(' ').toLowerCase();
   
+  // Debug logging to see what data we're working with
+  console.log('🔍 PSA Holo State Detection Debug:');
+  console.log('  Variety:', variety);
+  console.log('  Card Name:', cardName);
+  console.log('  Category:', category);
+  console.log('  Combined Text:', combinedText);
+  
   // Check for specific holo states in order of specificity
   if (/rainbow\s*(rare|variant)/i.test(combinedText)) {
+    console.log('  ✅ Detected: rainbow');
     return 'rainbow';
   }
-  if (/secret\s*rare/i.test(combinedText)) {
+  if (/secret\s*rare|sr\b/i.test(combinedText)) {
+    console.log('  ✅ Detected: secret-rare');
     return 'secret-rare';
   }
-  if (/ultra\s*rare/i.test(combinedText)) {
+  if (/ultra\s*rare|ur\b/i.test(combinedText)) {
+    console.log('  ✅ Detected: ultra-rare');
     return 'ultra-rare';
   }
-  if (/full\s*art/i.test(combinedText)) {
+  // Improved Full Art detection - check for "FA", "full art", or "FA/" patterns
+  if (/full\s*art|(?:^|\s|\/|-)fa(?:\s|$|\/|-)|fa\/|\/fa/i.test(combinedText)) {
+    console.log('  ✅ Detected: full-art');
     return 'full-art';
   }
-  if (/alternate\s*art|alt\s*art/i.test(combinedText)) {
+  if (/alternate\s*art|alt\s*art|aa\b/i.test(combinedText)) {
+    console.log('  ✅ Detected: alternate-art');
     return 'alternate-art';
   }
-  if (/reverse\s*holo/i.test(combinedText)) {
+  if (/reverse\s*holo|rh\b/i.test(combinedText)) {
+    console.log('  ✅ Detected: reverse-holo');
     return 'reverse-holo';
   }
-  if (/gold/i.test(combinedText)) {
+  if (/gold|golden/i.test(combinedText)) {
+    console.log('  ✅ Detected: gold');
     return 'gold';
   }
-  if (/shiny/i.test(combinedText)) {
+  if (/shiny|shining/i.test(combinedText)) {
+    console.log('  ✅ Detected: shiny');
     return 'shiny';
   }
-  if (/promo/i.test(combinedText)) {
+  if (/promo|promotional/i.test(combinedText)) {
+    console.log('  ✅ Detected: promo');
     return 'promo';
   }
-  if (/1st\s*edition|first\s*edition/i.test(combinedText)) {
+  if (/1st\s*edition|first\s*edition|1st\s*ed/i.test(combinedText)) {
+    console.log('  ✅ Detected: first-edition');
     return 'first-edition';
   }
   if (/shadowless/i.test(combinedText)) {
+    console.log('  ✅ Detected: shadowless');
     return 'shadowless';
   }
   if (/unlimited/i.test(combinedText)) {
+    console.log('  ✅ Detected: unlimited');
     return 'unlimited';
   }
-  if (/holo/i.test(combinedText)) {
+  if (/holo|holographic/i.test(combinedText)) {
+    console.log('  ✅ Detected: holo');
     return 'holo';
   }
   
   // Default to non-holo if no specific indicators found
+  console.log('  ❌ Defaulting to: non-holo');
   return 'non-holo';
 };
 
@@ -313,6 +335,15 @@ const parsePSACardData = (psaData) => {
   
   // Handle different PSA API response structures
   const cert = psaData.PSACert || psaData.data?.PSACert || psaData;
+
+  // Debug logging to see what PSA data we're working with
+  console.log('🔍 PSA Data Debug - Raw cert object:');
+  console.log('  cert.Variety:', cert.Variety);
+  console.log('  cert.Subject:', cert.Subject);
+  console.log('  cert.Title:', cert.Title);
+  console.log('  cert.Category:', cert.Category);
+  console.log('  cert.Brand:', cert.Brand);
+  console.log('  cert.SetName:', cert.SetName);
 
   // Construct a more descriptive card name
   const cardName = [
@@ -371,13 +402,18 @@ const parsePSACardData = (psaData) => {
     certificationDate: cert.CertDate || '',
     // Show edition info (e.g., '1st Edition', 'Unlimited') in player field if present, otherwise fallback to character/player
     player: (cert.Variety && !/(N\/A|NONE)/i.test(cert.Variety) && /(Edition|Unlimited|1st|Promo|Holo|Reverse)/i.test(cert.Variety)) ? cert.Variety : (cert.Subject || ''), // Expected: card.player in form
-    // Extract holo state from variety and card name
-    holoState: extractHoloState(cert.Variety, cleanCardName, cert.Category),
+    // Extract holo state from variety and card name - pass more comprehensive data
+    holoState: extractHoloState(cert.Variety, cert.Subject || cert.Title, cert.Category),
     brand: cert.Brand || '',
     psaUrl: `https://www.psacard.com/cert/${cert.CertNumber || ''}`,
     isPSAAuthenticated: true,
     _rawPsaData: cert // Include raw data for debugging or future use
   };
+
+  console.log('🔍 PSA Parsed Result:');
+  console.log('  Detected holoState:', result.holoState);
+  console.log('  Player field:', result.player);
+  console.log('  Card name:', result.cardName);
 
   return result;
 };
