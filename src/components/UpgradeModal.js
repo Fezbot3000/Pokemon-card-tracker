@@ -28,16 +28,33 @@ const UpgradeModal = ({ isOpen, onClose, daysRemaining }) => {
     setLoading(true);
     
     try {
-      // TODO: Implement Stripe checkout
-      toast.success('Stripe checkout will be implemented next!');
-      // For now, just show a success message
-      setTimeout(() => {
-        onClose();
-      }, 2000);
+      const { loadStripe } = await import('@stripe/stripe-js');
+      const stripe = await loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
+      
+      if (!stripe) {
+        throw new Error('Stripe failed to load');
+      }
+
+      // Create checkout session via Firebase Functions
+      const { httpsCallable } = await import('firebase/functions');
+      const { functions } = await import('../firebase');
+      
+      const createCheckoutSession = httpsCallable(functions, 'createCheckoutSession');
+      const result = await createCheckoutSession({
+        priceId: process.env.REACT_APP_STRIPE_PREMIUM_PLAN_PRICE_ID
+      });
+      
+      // Redirect to Stripe Checkout
+      const { error } = await stripe.redirectToCheckout({
+        sessionId: result.data.sessionId
+      });
+      
+      if (error) {
+        throw error;
+      }
     } catch (error) {
       console.error('Upgrade error:', error);
-      toast.error('Failed to start upgrade process');
-    } finally {
+      toast.error('Failed to start checkout process');
       setLoading(false);
     }
   };

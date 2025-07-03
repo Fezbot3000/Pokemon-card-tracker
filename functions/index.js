@@ -850,3 +850,165 @@ exports.getUserCards = functions.https.onCall(async (data, context) => {
     throw new HttpsError('internal', error.message);
   }
 });
+
+// Create Checkout Session for Premium Subscription
+exports.createCheckoutSession = functions.https.onCall(async (data, context) => {
+  // Ensure user is authenticated
+  if (!context.auth) {
+    throw new HttpsError('unauthenticated', 'User must be authenticated to create checkout session');
+  }
+
+  try {
+    // Initialize Stripe with secret key from environment
+    const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+    
+    const userId = context.auth.uid;
+    const userEmail = context.auth.token.email;
+    const priceId = data.priceId || process.env.REACT_APP_STRIPE_PREMIUM_PLAN_PRICE_ID;
+    
+    console.log(`Creating Stripe checkout session for user: ${userId} (${userEmail})`);
+
+    // Create checkout session
+    const session = await stripe.checkout.sessions.create({
+      mode: 'subscription',
+      payment_method_types: ['card'],
+      line_items: [{
+        price: priceId,
+        quantity: 1,
+      }],
+      customer_email: userEmail,
+      metadata: {
+        userId: userId,
+        planType: 'premium'
+      },
+      success_url: 'https://www.mycardtracker.com.au/dashboard?upgraded=true',
+      cancel_url: 'https://www.mycardtracker.com.au/upgrade?cancelled=true',
+      allow_promotion_codes: true,
+      billing_address_collection: 'auto',
+    });
+
+    console.log(`Stripe checkout session created successfully: ${session.id}`);
+    
+    return {
+      success: true,
+      url: session.url,
+      sessionId: session.id
+    };
+  } catch (error) {
+    console.error('Error creating Stripe checkout session:', error);
+    throw new HttpsError('internal', `Failed to create checkout session: ${error.message}`);
+  }
+});
+
+// Stripe Webhook Handler
+exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
+  const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+  const sig = req.headers['stripe-signature'];
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  
+  let event;
+  
+  try {
+    // Verify webhook signature
+    event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
+    console.log(`Stripe webhook event received: ${event.type}`);
+  } catch (err) {
+    console.error('Webhook signature verification failed:', err.message);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+
+  try {
+    // Handle the event
+    switch (event.type) {
+      case 'checkout.session.completed':
+        const session = event.data.object;
+        const userId = session.metadata.userId;
+        
+        console.log(`Processing successful checkout for user: ${userId}`);
+        
+        if (userId) {
+          // Update user subscription to premium
+          await admin.firestore().doc(`users/${userId}`).update({
+            subscriptionStatus: 'premium',
+            planType: 'premium',
+            customerId: session.customer,
+            subscriptionId: session.subscription,
+            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+          });
+          
+          console.log(`Successfully updated user ${userId} to premium subscription`);
+        }
+        break;
+        
+      case 'customer.subscription.updated':
+        const subscription = event.data.object;
+        const customerId = subscription.customer;
+        
+        console.log(`Processing subscription update for customer: ${customerId}`);
+        
+        // Find user by customer ID and update subscription status
+        const usersRef = admin.firestore().collection('users');
+        const userQuery = await usersRef.where('customerId', '==', customerId).limit(1).get();
+        
+        if (!userQuery.empty) {
+          const userDoc = userQuery.docs[0];
+          const updateData = {
+            subscriptionStatus: subscription.status === 'active' ? 'premium' : subscription.status,
+            subscriptionId: subscription.id,
+            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+          };
+          
+          await userDoc.ref.update(updateData);
+          console.log(`Updated subscription status for user: ${userDoc.id}`);
+        }
+        break;
+        
+      case 'customer.subscription.deleted':
+        const deletedSubscription = event.data.object;
+        const deletedCustomerId = deletedSubscription.customer;
+        
+        console.log(`Processing subscription cancellation for customer: ${deletedCustomerId}`);
+        
+        // Find user by customer ID and update to free status
+        const deletedUsersRef = admin.firestore().collection('users');
+        const deletedUserQuery = await deletedUsersRef.where('customerId', '==', deletedCustomerId).limit(1).get();
+        
+        if (!deletedUserQuery.empty) {
+          const userDoc = deletedUserQuery.docs[0];
+          await userDoc.ref.update({
+            subscriptionStatus: 'free',
+            planType: 'free',
+            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+          });
+          
+          console.log(`Updated user ${userDoc.id} to free plan after subscription cancellation`);
+        }
+        break;
+        
+      case 'invoice.payment_failed':
+        const failedInvoice = event.data.object;
+        const failedCustomerId = failedInvoice.customer;
+        
+        console.log(`Processing payment failure for customer: ${failedCustomerId}`);
+        
+        // Find user and potentially update status or send notification
+        const failedUsersRef = admin.firestore().collection('users');
+        const failedUserQuery = await failedUsersRef.where('customerId', '==', failedCustomerId).limit(1).get();
+        
+        if (!failedUserQuery.empty) {
+          const userDoc = failedUserQuery.docs[0];
+          console.log(`Payment failed for user: ${userDoc.id}`);
+          // Could send email notification or update status here
+        }
+        break;
+        
+      default:
+        console.log(`Unhandled event type: ${event.type}`);
+    }
+
+    res.json({ received: true });
+  } catch (error) {
+    console.error('Error processing webhook:', error);
+    res.status(500).send('Webhook processing failed');
+  }
+});
