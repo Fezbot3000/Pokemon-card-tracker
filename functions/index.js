@@ -1050,6 +1050,30 @@ exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
         }
         break;
         
+      case 'customer.subscription.created':
+        const createdSubscription = event.data.object;
+        const createdCustomerId = createdSubscription.customer;
+        
+        console.log(`Processing subscription creation for customer: ${createdCustomerId}`);
+        
+        // Find user by customer ID and update subscription status
+        const createdUsersRef = admin.firestore().collection('users');
+        const createdUserQuery = await createdUsersRef.where('customerId', '==', createdCustomerId).limit(1).get();
+        
+        if (!createdUserQuery.empty) {
+          const userDoc = createdUserQuery.docs[0];
+          const updateData = {
+            subscriptionStatus: 'premium',
+            planType: 'premium',
+            subscriptionId: createdSubscription.id,
+            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+          };
+          
+          await userDoc.ref.update(updateData);
+          console.log(`Updated user ${userDoc.id} to premium subscription after creation`);
+        }
+        break;
+        
       case 'customer.subscription.updated':
         const subscription = event.data.object;
         const customerId = subscription.customer;
