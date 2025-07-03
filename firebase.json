@@ -2,9 +2,6 @@
   "functions": [
     {
       "source": "functions",
-      "predeploy": [
-        "npm --prefix \"$RESOURCE_DIR\" install"
-      ],
       "codebase": "default"
     }
   ],
