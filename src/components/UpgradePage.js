@@ -65,9 +65,7 @@ const UpgradePage = () => {
       const { functions } = await import('../firebase');
       
       const createCheckoutSession = httpsCallable(functions, 'createCheckoutSession');
-      const result = await createCheckoutSession({
-        priceId: process.env.REACT_APP_STRIPE_PREMIUM_PLAN_PRICE_ID
-      });
+      const result = await createCheckoutSession({});
       
       // Redirect to Stripe Checkout
       const { error } = await stripe.redirectToCheckout({

@@ -859,12 +859,12 @@ exports.createCheckoutSession = functions.https.onCall(async (data, context) => 
   }
 
   try {
-    // Initialize Stripe with secret key from environment
-    const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+    // Initialize Stripe with secret key from Firebase config
+    const stripe = require('stripe')(functions.config().stripe.secret_key);
     
     const userId = context.auth.uid;
     const userEmail = context.auth.token.email;
-    const priceId = data.priceId || process.env.REACT_APP_STRIPE_PREMIUM_PLAN_PRICE_ID;
+    const priceId = functions.config().stripe.premium_plan_price_id;
     
     console.log(`Creating Stripe checkout session for user: ${userId} (${userEmail})`);
 
@@ -902,9 +902,9 @@ exports.createCheckoutSession = functions.https.onCall(async (data, context) => 
 
 // Stripe Webhook Handler
 exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
-  const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+  const stripe = require('stripe')(functions.config().stripe.secret_key);
   const sig = req.headers['stripe-signature'];
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  const webhookSecret = functions.config().stripe.webhook_secret;
   
   let event;
   
