@@ -278,7 +278,7 @@ const SharedCollection = () => {
                 )}
               </div>
             </div>
-            <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between">
               <div className="text-left">
                 <div className="text-xl font-bold text-gray-900 dark:text-white">
                   {stats && formatCurrency(stats.totalValue, 'AUD')}
