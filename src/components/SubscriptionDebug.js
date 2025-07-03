@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../design-system/contexts/AuthContext';
 import { useSubscription } from '../hooks/useSubscription';
 import { toast } from 'react-hot-toast';
+import Button from '../design-system/atoms/Button';
+import StripeDebugger from './StripeDebugger';
 
 /**
  * SubscriptionDebug Component
@@ -13,6 +15,8 @@ const SubscriptionDebug = () => {
   const subscription = useSubscription();
   const [isExpanded, setIsExpanded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [testResults, setTestResults] = useState([]);
+  const [showStripeDebugger, setShowStripeDebugger] = useState(false);
 
   // Only show in development
   if (process.env.NODE_ENV !== 'development') {
@@ -212,46 +216,170 @@ const SubscriptionDebug = () => {
       },
       color: 'bg-gray-700'
     },
-          {
-        title: 'Test Notifications',
-        action: () => {
-          const status = subscriptionData.status;
-          if (status === 'free_trial') {
-            const days = subscriptionData.daysRemaining;
-            if (days <= 1) {
-              toast.error('⏰ Your free trial expires tomorrow! Upgrade now to keep all features.');
-            } else if (days <= 3) {
-              toast.error(`⏰ ${days} days left in your trial. Consider upgrading to Premium!`);
-            } else {
-              toast.success(`🎉 Enjoying your trial? ${days} days of Premium features remaining!`);
-            }
-          } else if (status === 'free') {
-            toast.error('🔒 This feature requires Premium. Upgrade for just $9.99/month!');
-          } else if (status === 'premium') {
-            toast.success('✨ Premium feature unlocked! Enjoy unlimited access.');
+    {
+      title: 'Test Notifications',
+      action: () => {
+        const status = subscriptionData.status;
+        if (status === 'free_trial') {
+          const days = subscriptionData.daysRemaining;
+          if (days <= 1) {
+            toast.error('⏰ Your free trial expires tomorrow! Upgrade now to keep all features.');
+          } else if (days <= 3) {
+            toast.error(`⏰ ${days} days left in your trial. Consider upgrading to Premium!`);
+          } else {
+            toast.success(`🎉 Enjoying your trial? ${days} days of Premium features remaining!`);
           }
-        },
-        color: 'bg-indigo-500'
+        } else if (status === 'free') {
+          toast.error('🔒 This feature requires Premium. Upgrade for just $9.99/month!');
+        } else if (status === 'premium') {
+          toast.success('✨ Premium feature unlocked! Enjoy unlimited access.');
+        }
       },
-      {
-        title: 'Debug Connection',
-        action: async () => {
-          try {
-            const { doc, getDoc } = await import('firebase/firestore');
-            const { db } = await import('../firebase');
-            const userRef = doc(db, 'users', user.uid);
-            const userSnap = await getDoc(userRef);
-            const userData = userSnap.exists() ? userSnap.data() : {};
-            toast.success(`DB Connection OK. Current status: ${userData.subscriptionStatus || 'none'}`);
-            console.log('Debug: Current user data:', userData);
-          } catch (error) {
-            toast.error(`DB Connection failed: ${error.message}`);
-            console.error('Debug: DB connection error:', error);
-          }
-        },
-        color: 'bg-teal-500'
-      }
+      color: 'bg-indigo-500'
+    },
+    {
+      title: 'Debug Connection',
+      action: async () => {
+        try {
+          const { doc, getDoc } = await import('firebase/firestore');
+          const { db } = await import('../firebase');
+          const userRef = doc(db, 'users', user.uid);
+          const userSnap = await getDoc(userRef);
+          const userData = userSnap.exists() ? userSnap.data() : {};
+          toast.success(`DB Connection OK. Current status: ${userData.subscriptionStatus || 'none'}`);
+          console.log('Debug: Current user data:', userData);
+        } catch (error) {
+          toast.error(`DB Connection failed: ${error.message}`);
+          console.error('Debug: DB connection error:', error);
+        }
+      },
+      color: 'bg-teal-500'
+    }
   ];
+
+  // Environment variable check
+  const checkEnvironmentVariables = () => {
+    const envVars = [
+      'REACT_APP_STRIPE_PUBLISHABLE_KEY',
+      'REACT_APP_STRIPE_PREMIUM_PLAN_PRICE_ID',
+      'REACT_APP_FIREBASE_API_KEY',
+      'REACT_APP_FIREBASE_PROJECT_ID'
+    ];
+
+    const results = envVars.map(varName => ({
+      name: varName,
+      value: process.env[varName],
+      status: process.env[varName] ? '✅ Set' : '❌ Missing'
+    }));
+
+    return results;
+  };
+
+  const runEnvironmentCheck = () => {
+    console.log('🔍 Running environment variable check...');
+    const envResults = checkEnvironmentVariables();
+    
+    envResults.forEach(result => {
+      console.log(`${result.status} ${result.name}:`, result.value ? '[HIDDEN]' : 'undefined');
+    });
+
+    setTestResults(prev => [...prev, {
+      test: 'Environment Variables',
+      results: envResults,
+      timestamp: new Date().toISOString()
+    }]);
+  };
+
+  const testStripeConnection = async () => {
+    console.log('🧪 Testing Stripe connection...');
+    setIsLoading(true);
+    
+    try {
+      const stripeKey = process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY;
+      if (!stripeKey) {
+        throw new Error('REACT_APP_STRIPE_PUBLISHABLE_KEY not found');
+      }
+
+      const { loadStripe } = await import('@stripe/stripe-js');
+      const stripe = await loadStripe(stripeKey);
+      
+      if (!stripe) {
+        throw new Error('Failed to load Stripe');
+      }
+
+      console.log('✅ Stripe loaded successfully');
+      setTestResults(prev => [...prev, {
+        test: 'Stripe Connection',
+        status: '✅ Success',
+        details: 'Stripe SDK loaded successfully',
+        timestamp: new Date().toISOString()
+      }]);
+      
+      toast.success('Stripe connection test passed');
+    } catch (error) {
+      console.error('❌ Stripe connection test failed:', error);
+      setTestResults(prev => [...prev, {
+        test: 'Stripe Connection',
+        status: '❌ Failed',
+        error: error.message,
+        timestamp: new Date().toISOString()
+      }]);
+      
+      toast.error(`Stripe test failed: ${error.message}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const testFirebaseFunction = async () => {
+    console.log('🧪 Testing Firebase function...');
+    setIsLoading(true);
+    
+    try {
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
+      const { httpsCallable } = await import('firebase/functions');
+      const { functions } = await import('../firebase');
+      
+      const createCheckoutSession = httpsCallable(functions, 'createCheckoutSession');
+      
+      console.log('📞 Calling createCheckoutSession function...');
+      const result = await createCheckoutSession({});
+      
+      console.log('✅ Function call successful:', result.data);
+      setTestResults(prev => [...prev, {
+        test: 'Firebase Function',
+        status: '✅ Success',
+        details: result.data,
+        timestamp: new Date().toISOString()
+      }]);
+      
+      toast.success('Firebase function test passed');
+    } catch (error) {
+      console.error('❌ Firebase function test failed:', error);
+      setTestResults(prev => [...prev, {
+        test: 'Firebase Function',
+        status: '❌ Failed',
+        error: {
+          message: error.message,
+          code: error.code,
+          details: error.details
+        },
+        timestamp: new Date().toISOString()
+      }]);
+      
+      toast.error(`Firebase function test failed: ${error.message}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const clearResults = () => {
+    setTestResults([]);
+    console.clear();
+  };
 
   return (
     <div className={`fixed bottom-4 left-4 bg-black text-white rounded-lg text-xs z-50 opacity-95 transition-all duration-300 ${
@@ -294,14 +422,14 @@ const SubscriptionDebug = () => {
             <div className="font-semibold mb-2">⚡ Quick Actions:</div>
             <div className="grid grid-cols-2 gap-2">
               {quickActions.map((action, index) => (
-                                  <button
-                    key={index}
-                    onClick={action.action}
-                    disabled={isLoading}
-                    className={`${action.color} hover:opacity-80 disabled:opacity-50 text-white px-2 py-1 rounded text-xs font-medium transition-opacity`}
-                  >
-                    {action.title}
-                  </button>
+                <button
+                  key={index}
+                  onClick={action.action}
+                  disabled={isLoading}
+                  className={`${action.color} hover:opacity-80 disabled:opacity-50 text-white px-2 py-1 rounded text-xs font-medium transition-opacity`}
+                >
+                  {action.title}
+                </button>
               ))}
             </div>
           </div>
@@ -402,6 +530,91 @@ const SubscriptionDebug = () => {
               <div>• Verify PSA search access based on subscription level</div>
             </div>
           </div>
+
+          {/* Test Buttons */}
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Button 
+              onClick={runEnvironmentCheck}
+              variant="secondary"
+              size="sm"
+            >
+              Check Environment
+            </Button>
+            <Button 
+              onClick={testStripeConnection}
+              variant="secondary"
+              size="sm"
+              loading={isLoading}
+            >
+              Test Stripe
+            </Button>
+            <Button 
+              onClick={testFirebaseFunction}
+              variant="secondary"
+              size="sm"
+              loading={isLoading}
+              disabled={!user}
+            >
+              Test Firebase Function
+            </Button>
+            <Button 
+              onClick={clearResults}
+              variant="secondary"
+              size="sm"
+            >
+              Clear Results
+            </Button>
+          </div>
+
+          {/* Test Results */}
+          {testResults.length > 0 && (
+            <div className="space-y-4 mt-4">
+              <h3 className="font-semibold text-gray-900 dark:text-white">Test Results</h3>
+              {testResults.map((result, index) => (
+                <div key={index} className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="font-medium text-gray-900 dark:text-white">{result.test}</span>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                      {new Date(result.timestamp).toLocaleTimeString()}
+                    </span>
+                  </div>
+                  
+                  {result.status && (
+                    <div className="mb-2">
+                      <span className={result.status.includes('✅') ? 'text-green-600' : 'text-red-600'}>
+                        {result.status}
+                      </span>
+                    </div>
+                  )}
+                  
+                  {result.details && (
+                    <pre className="text-xs bg-gray-100 dark:bg-gray-600 p-2 rounded overflow-x-auto">
+                      {JSON.stringify(result.details, null, 2)}
+                    </pre>
+                  )}
+                  
+                  {result.error && (
+                    <pre className="text-xs bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 p-2 rounded overflow-x-auto">
+                      {JSON.stringify(result.error, null, 2)}
+                    </pre>
+                  )}
+                  
+                  {result.results && (
+                    <div className="space-y-1">
+                      {result.results.map((envResult, i) => (
+                        <div key={i} className="flex justify-between text-xs">
+                          <span className="text-gray-700 dark:text-gray-300">{envResult.name}:</span>
+                          <span className={envResult.value ? 'text-green-600' : 'text-red-600'}>
+                            {envResult.status}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
 
           {isLoading && (
             <div className="text-center text-blue-400 bg-gray-800 p-2 rounded">

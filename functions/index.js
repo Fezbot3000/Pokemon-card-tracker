@@ -853,23 +853,97 @@ exports.getUserCards = functions.https.onCall(async (data, context) => {
 
 // Create Checkout Session for Premium Subscription
 exports.createCheckoutSession = functions.https.onCall(async (data, context) => {
+  console.log('🚀 createCheckoutSession called with data:', data);
+  console.log('📋 Context:', {
+    auth: context.auth ? {
+      uid: context.auth.uid,
+      email: context.auth.token?.email
+    } : null,
+    rawRequest: context.rawRequest ? {
+      headers: Object.keys(context.rawRequest.headers),
+      method: context.rawRequest.method
+    } : null
+  });
+
   // Ensure user is authenticated
   if (!context.auth) {
+    console.error('❌ Authentication failed - no context.auth');
     throw new HttpsError('unauthenticated', 'User must be authenticated to create checkout session');
   }
 
   try {
+    console.log('🔍 Checking Firebase config...');
+    
+    // Try to get config with error handling
+    let stripeConfig;
+    try {
+      stripeConfig = functionsBase.config().stripe;
+      console.log('✅ Config retrieved successfully');
+    } catch (configError) {
+      console.error('❌ Error getting functions.config():', configError.message);
+      throw new HttpsError('internal', `Configuration error: ${configError.message}`);
+    }
+    
+    console.log('Stripe config keys:', stripeConfig ? Object.keys(stripeConfig) : 'No stripe config found');
+    
+    if (!stripeConfig) {
+      console.error('❌ No stripe config found');
+      throw new HttpsError('internal', 'Stripe configuration not found');
+    }
+    
+    if (!stripeConfig.secret_key) {
+      console.error('❌ Stripe secret key not found in Firebase config');
+      throw new HttpsError('internal', 'Stripe secret key configuration missing');
+    }
+    
+    if (!stripeConfig.premium_plan_price_id) {
+      console.error('❌ Stripe premium plan price ID not found in Firebase config');
+      throw new HttpsError('internal', 'Stripe price configuration missing');
+    }
+
     // Initialize Stripe with secret key from Firebase config
-    const stripe = require('stripe')(functions.config().stripe.secret_key);
+    console.log('📦 Initializing Stripe...');
+    console.log('🔑 Using secret key type:', stripeConfig.secret_key.startsWith('sk_live_') ? 'LIVE' : 'TEST');
+    
+    let stripe;
+    try {
+      stripe = require('stripe')(stripeConfig.secret_key);
+      console.log('✅ Stripe initialized successfully');
+    } catch (stripeInitError) {
+      console.error('❌ Stripe initialization failed:', stripeInitError.message);
+      throw new HttpsError('internal', `Stripe initialization error: ${stripeInitError.message}`);
+    }
     
     const userId = context.auth.uid;
     const userEmail = context.auth.token.email;
-    const priceId = functions.config().stripe.premium_plan_price_id;
+    const priceId = stripeConfig.premium_plan_price_id;
     
-    console.log(`Creating Stripe checkout session for user: ${userId} (${userEmail})`);
+    console.log('✅ Creating Stripe checkout session for user:', {
+      userId,
+      userEmail,
+      priceId,
+      keyType: stripeConfig.secret_key.startsWith('sk_live_') ? 'LIVE' : 'TEST'
+    });
+
+    // Validate the price exists first
+    console.log('🏷️ Validating price ID...');
+    try {
+      const price = await stripe.prices.retrieve(priceId);
+      console.log('✅ Price validation successful:', {
+        id: price.id,
+        active: price.active,
+        currency: price.currency,
+        amount: price.unit_amount,
+        interval: price.recurring?.interval
+      });
+    } catch (priceError) {
+      console.error('❌ Price validation failed:', priceError.message);
+      throw new HttpsError('invalid-argument', `Invalid price ID: ${priceError.message}`);
+    }
 
     // Create checkout session
-    const session = await stripe.checkout.sessions.create({
+    console.log('💳 Calling Stripe checkout session create...');
+    const sessionConfig = {
       mode: 'subscription',
       payment_method_types: ['card'],
       line_items: [{
@@ -885,9 +959,18 @@ exports.createCheckoutSession = functions.https.onCall(async (data, context) => 
       cancel_url: 'https://www.mycardtracker.com.au/upgrade?cancelled=true',
       allow_promotion_codes: true,
       billing_address_collection: 'auto',
-    });
+    };
 
-    console.log(`Stripe checkout session created successfully: ${session.id}`);
+    console.log('📝 Session configuration:', JSON.stringify(sessionConfig, null, 2));
+
+    const session = await stripe.checkout.sessions.create(sessionConfig);
+
+    console.log('✅ Stripe checkout session created successfully:', {
+      sessionId: session.id,
+      url: session.url,
+      mode: session.mode,
+      status: session.status
+    });
     
     return {
       success: true,
@@ -895,16 +978,39 @@ exports.createCheckoutSession = functions.https.onCall(async (data, context) => 
       sessionId: session.id
     };
   } catch (error) {
-    console.error('Error creating Stripe checkout session:', error);
+    console.error('💥 Error creating Stripe checkout session:', {
+      message: error.message,
+      type: error.type,
+      code: error.code,
+      param: error.param,
+      stack: error.stack,
+      statusCode: error.statusCode,
+      requestId: error.requestId
+    });
+    
+    // More specific error handling
+    if (error.type === 'StripeInvalidRequestError') {
+      if (error.message.includes('price')) {
+        throw new HttpsError('invalid-argument', `Price configuration error: ${error.message}`);
+      }
+      throw new HttpsError('invalid-argument', `Stripe configuration error: ${error.message}`);
+    } else if (error.type === 'StripeAuthenticationError') {
+      throw new HttpsError('internal', 'Stripe authentication failed - check secret key');
+    } else if (error.type === 'StripeConnectionError') {
+      throw new HttpsError('unavailable', 'Unable to connect to Stripe');
+    } else if (error.type === 'StripePermissionError') {
+      throw new HttpsError('permission-denied', 'Stripe permission error - check account settings');
+    }
+    
     throw new HttpsError('internal', `Failed to create checkout session: ${error.message}`);
   }
 });
 
 // Stripe Webhook Handler
 exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
-  const stripe = require('stripe')(functions.config().stripe.secret_key);
+  const stripe = require('stripe')(functionsBase.config().stripe.secret_key);
   const sig = req.headers['stripe-signature'];
-  const webhookSecret = functions.config().stripe.webhook_secret;
+  const webhookSecret = functionsBase.config().stripe.webhook_secret;
   
   let event;
   

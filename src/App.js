@@ -49,6 +49,7 @@ import CloudSync from './components/CloudSync';
 import ComponentLibrary from './pages/ComponentLibrary';
 import TrialStatusBanner from './components/TrialStatusBanner';
 import SubscriptionDebug from './components/SubscriptionDebug';
+import StripeDebugger from './components/StripeDebugger';
 
 import logger from './utils/logger'; // Import the logger utility
 import RestoreListener from './components/RestoreListener';

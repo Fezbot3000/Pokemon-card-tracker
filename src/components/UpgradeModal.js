@@ -20,39 +20,85 @@ const UpgradeModal = ({ isOpen, onClose, daysRemaining }) => {
   const [loading, setLoading] = useState(false);
 
   const handleUpgrade = async () => {
+    console.log('🚀 Starting upgrade process...');
+    
     if (!user) {
+      console.error('❌ No user found - user must be logged in');
       toast.error('Please log in to upgrade');
       return;
     }
 
+    console.log('✅ User authenticated:', { uid: user.uid, email: user.email });
     setLoading(true);
     
     try {
-      const { loadStripe } = await import('@stripe/stripe-js');
-      const stripe = await loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
+      // Step 1: Check environment variables
+      console.log('🔍 Checking environment variables...');
+      const stripePublishableKey = process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY;
       
-      if (!stripe) {
-        throw new Error('Stripe failed to load');
+      if (!stripePublishableKey) {
+        console.error('❌ REACT_APP_STRIPE_PUBLISHABLE_KEY is not set');
+        toast.error('Stripe configuration missing. Please contact support.');
+        setLoading(false);
+        return;
       }
 
-      // Create checkout session via Firebase Functions
+      // Step 2: Create checkout session on server (OFFICIAL STRIPE APPROACH)
+      console.log('🔥 Creating checkout session via Firebase Functions...');
       const { httpsCallable } = await import('firebase/functions');
       const { functions } = await import('../firebase');
       
       const createCheckoutSession = httpsCallable(functions, 'createCheckoutSession');
       const result = await createCheckoutSession({});
       
-      // Redirect to Stripe Checkout
+      console.log('✅ Server-side session created:', result.data);
+
+      // Step 3: Load Stripe and redirect to checkout with session ID
+      console.log('📦 Loading Stripe...');
+      const { loadStripe } = await import('@stripe/stripe-js');
+      const stripe = await loadStripe(stripePublishableKey);
+      
+      if (!stripe) {
+        console.error('❌ Stripe failed to load');
+        throw new Error('Stripe failed to load');
+      }
+      
+      console.log('✅ Stripe loaded successfully');
+
+      // Step 4: Redirect to Stripe Checkout with session ID (OFFICIAL APPROACH)
+      console.log('💳 Redirecting to Stripe Checkout...');
       const { error } = await stripe.redirectToCheckout({
         sessionId: result.data.sessionId
       });
       
       if (error) {
+        console.error('❌ Stripe redirect error:', error);
         throw error;
       }
+      
+      console.log('✅ Successfully redirected to Stripe Checkout');
     } catch (error) {
-      console.error('Upgrade error:', error);
-      toast.error('Failed to start checkout process');
+      console.error('💥 Upgrade error details:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        stack: error.stack
+      });
+      
+      // More specific error messages
+      let errorMessage = 'Failed to start checkout process';
+      
+      if (error.message && error.message.includes('functions.config is not a function')) {
+        errorMessage = 'Server configuration error. Please contact support.';
+      } else if (error.message && error.message.includes('price')) {
+        errorMessage = 'Invalid price configuration. Please contact support.';
+      } else if (error.message && error.message.includes('Stripe')) {
+        errorMessage = 'Payment system error. Please try again.';
+      } else if (error.message && error.message.includes('network')) {
+        errorMessage = 'Network error. Please check your connection and try again.';
+      }
+      
+      toast.error(errorMessage);
       setLoading(false);
     }
   };
