@@ -3,59 +3,62 @@ const functions = require('firebase-functions');
 const fetch = require('node-fetch');
 const cors = require('cors')({ origin: true });
 
-// HTTP version of the PSA lookup function with explicit CORS handling
+// PSA Lookup HTTP Function
 exports.psaLookupHttp = functions.https.onRequest((req, res) => {
-  // Enable CORS using the cors middleware
   return cors(req, res, async () => {
     try {
-      // Allow both GET and POST requests
-      const certNumber = req.method === 'POST' ? req.body.certNumber : req.query.certNumber;
-      const forceRefresh = req.method === 'POST' ? req.body.forceRefresh : req.query.forceRefresh === 'true';
+      const { certNumber, forceRefresh } = req.query;
       
       if (!certNumber) {
         res.status(400).json({
           success: false,
-          error: 'Certification number is required'
+          error: 'MISSING_CERT_NUMBER',
+          message: 'Certificate number is required'
         });
         return;
       }
-
+      
+      console.log(`PSA lookup request for cert #${certNumber}, forceRefresh: ${forceRefresh}`);
+      
       const db = admin.firestore();
       const PSA_COLLECTION = 'psa_cards';
       
-      // Check if we have this card in our database already
-      const docRef = db.collection(PSA_COLLECTION).doc(certNumber);
-      const docSnap = await docRef.get();
-      
-      // If we have the card and it's not too old, return it
-      if (!forceRefresh && docSnap.exists) {
-        const data = docSnap.data();
+      // Check Firebase cache first (if not forcing refresh)
+      if (forceRefresh !== 'true') {
+        const docRef = db.collection(PSA_COLLECTION).doc(certNumber);
+        const docSnap = await docRef.get();
         
-        // Check if data is fresh (less than 30 days old)
-        const thirtyDaysInMs = 30 * 24 * 60 * 60 * 1000;
-        if (data.timestamp && (Date.now() - data.timestamp) < thirtyDaysInMs) {
-          console.log(`Serving PSA data from database for cert #${certNumber}`);
+        if (docSnap.exists) {
+          const cachedData = docSnap.data();
           
-          // Update access count
-          await docRef.update({
-            accessCount: admin.firestore.FieldValue.increment(1),
-            lastAccessed: Date.now()
-          });
-          
-          res.status(200).json({
-            success: true,
-            fromCache: true,
-            data: data.cardData
-          });
-          return;
+          // Check if data is fresh (less than 30 days old)
+          const thirtyDaysInMs = 30 * 24 * 60 * 60 * 1000;
+          if (cachedData.timestamp && (Date.now() - cachedData.timestamp) < thirtyDaysInMs) {
+            console.log(`Returning cached PSA data for cert #${certNumber}`);
+            
+            // Update access tracking
+            await docRef.update({
+              accessCount: admin.firestore.FieldValue.increment(1),
+              lastAccessed: Date.now()
+            });
+            
+            res.status(200).json({
+              success: true,
+              fromCache: true,
+              data: cachedData.cardData
+            });
+            return;
+          } else {
+            console.log(`PSA cache expired for cert #${certNumber}, fetching fresh data`);
+          }
         }
       }
       
       // If we don't have the card or it's too old, fetch from PSA API
       console.log(`Fetching fresh PSA data for cert #${certNumber}`);
       
-      // Get PSA API token from environment variable
-      const psaToken = functions.config().psa?.api_token || '';
+      // Get PSA API token from environment variable - no fallback
+      const psaToken = functions.config().psa?.api_token;
       
       if (!psaToken) {
         console.error('PSA API token not configured. Please set using firebase functions:config:set psa.api_token="YOUR_TOKEN"');
@@ -138,18 +141,20 @@ exports.psaLookupHttp = functions.https.onRequest((req, res) => {
       }
       
       // If we get here, all endpoints failed
-      const errorMessage = `All PSA API endpoints failed: ${errors.join('; ')}`;
-      console.error(errorMessage);
-      
+      console.error('All PSA API endpoints failed:', errors);
       res.status(500).json({
         success: false,
-        error: errorMessage
+        error: 'API_ERROR',
+        message: 'Failed to fetch data from PSA API after trying multiple endpoints',
+        details: errors
       });
+      
     } catch (error) {
-      console.error('Error in PSA lookup HTTP function:', error);
+      console.error('PSA lookup error:', error);
       res.status(500).json({
         success: false,
-        error: error.message
+        error: 'INTERNAL_ERROR',
+        message: 'An internal error occurred while processing your request'
       });
     }
   });

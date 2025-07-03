@@ -9,6 +9,7 @@
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import psaDataService from './psaDataService';
 import logger from '../utils/logger';
+import { getFirebaseConfig } from '../config/secrets';
 
 // Suppress Firebase network errors globally
 const originalFetch = window.fetch;
@@ -87,8 +88,9 @@ async function initializeFirestoreCollections() {
  */
 function checkStorageConfiguration() {
   try {
-    // Get the storage bucket from environment
-    const storageBucket = process.env.REACT_APP_FIREBASE_STORAGE_BUCKET;
+    // Get the storage bucket from Firebase config
+    const firebaseConfig = getFirebaseConfig();
+    const storageBucket = firebaseConfig.storageBucket;
     
     // Check if the storage bucket is using the new format
     if (storageBucket && storageBucket.includes('.appspot.com')) {

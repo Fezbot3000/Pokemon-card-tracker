@@ -127,24 +127,11 @@ exports.psaLookup = functions.https.onCall(async (data, context) => {
 
     console.log(`Looking up PSA cert #${certNumber}`);
 
-    // Get PSA API token from Firebase config or environment variables
-    let psaToken;
-    
-    // Try to get token from Firebase functions config first (for deployed environment)
-    try {
-      const config = functionsBase.config();
-      psaToken = config.psa?.api_token;
-    } catch (configError) {
-      console.log('Firebase config not available (likely running locally):', configError.message);
-    }
-    
-    // Fallback to environment variable (for local development)
-    if (!psaToken) {
-      psaToken = process.env.PSA_API_TOKEN;
-    }
+    // Get PSA API token from environment variable - no fallback
+    let psaToken = process.env.PSA_API_TOKEN;
     
     if (!psaToken) {
-      console.warn('PSA_API_TOKEN not configured in Firebase config or environment variables');
+      console.warn('PSA_API_TOKEN not configured in environment variables');
       return {
         success: false,
         error: 'PSA_API_NOT_CONFIGURED',

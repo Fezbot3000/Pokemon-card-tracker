@@ -2,14 +2,10 @@
  * Centralized Secret Management
  * 
  * This module provides a single source of truth for all API keys and secrets.
- * Priority order for secrets:
- * 1. Environment variables (REACT_APP_*)
- * 2. Local development secrets (from local-config.js, not committed to git)
- * 3. Fallback values (as a last resort)
+ * All secrets are sourced exclusively from environment variables.
+ * Missing environment variables will cause the application to fail with clear error messages.
  */
 
-// Import local development secrets (these will be undefined in production)
-import * as localConfig from './local-config';
 import logger from '../utils/logger';
 
 // Track which secrets are being used
@@ -33,30 +29,53 @@ const usageTracker = {
 // Schedule a usage report after the app has been running
 setTimeout(() => {
   usageTracker.logReport();
-}, 10000); // Log after 10 seconds
+}, 10000);
 
 /**
- * Get Firebase configuration with proper fallbacks
+ * Validate that a required environment variable is present
+ * @param {string} envVar - The environment variable name
+ * @param {string} description - Human-readable description of the variable
+ * @returns {string} - The environment variable value
+ * @throws {Error} - If the environment variable is not set
+ */
+const requireEnvVar = (envVar, description) => {
+  const value = process.env[envVar];
+  if (!value) {
+    throw new Error(`Missing required environment variable: ${envVar} (${description}). Please check your .env file.`);
+  }
+  return value;
+};
+
+/**
+ * Get an optional environment variable
+ * @param {string} envVar - The environment variable name
+ * @returns {string|null} - The environment variable value or null if not set
+ */
+const getOptionalEnvVar = (envVar) => {
+  return process.env[envVar] || null;
+};
+
+/**
+ * Get Firebase configuration from environment variables
  */
 export const getFirebaseConfig = () => {
   usageTracker.track('firebase.config');
   return {
-    apiKey: process.env.REACT_APP_FIREBASE_API_KEY || "AIzaSyDIxG9wMoOm0xO72YCAs4RO9YVrGjRcvLQ",
-    authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN || "mycardtracker-c8479.firebaseapp.com",
-    projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID || "mycardtracker-c8479",
-    storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET || "mycardtracker-c8479.firebasestorage.app",
-    messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID || "726820232287",
-    appId: process.env.REACT_APP_FIREBASE_APP_ID || "1:726820232287:web:fc27495f506950a78dcfea"
+    apiKey: requireEnvVar('REACT_APP_FIREBASE_API_KEY', 'Firebase API Key'),
+    authDomain: requireEnvVar('REACT_APP_FIREBASE_AUTH_DOMAIN', 'Firebase Auth Domain'),
+    projectId: requireEnvVar('REACT_APP_FIREBASE_PROJECT_ID', 'Firebase Project ID'),
+    storageBucket: requireEnvVar('REACT_APP_FIREBASE_STORAGE_BUCKET', 'Firebase Storage Bucket'),
+    messagingSenderId: requireEnvVar('REACT_APP_FIREBASE_MESSAGING_SENDER_ID', 'Firebase Messaging Sender ID'),
+    appId: requireEnvVar('REACT_APP_FIREBASE_APP_ID', 'Firebase App ID')
   };
 };
 
 /**
- * Get Google Auth client ID
+ * Get Google Auth client ID (optional)
  */
 export const getGoogleClientId = () => {
   usageTracker.track('googleClientId');
-  return process.env.REACT_APP_FIREBASE_CLIENT_ID || 
-    "726820232287-qcmvs1a9u5g5vf5rjb5uf8c7m7i7qdnv.apps.googleusercontent.com";
+  return getOptionalEnvVar('REACT_APP_FIREBASE_CLIENT_ID');
 };
 
 /**
@@ -64,9 +83,31 @@ export const getGoogleClientId = () => {
  */
 export const getSendGridApiKey = () => {
   usageTracker.track('sendgridApiKey');
-  return process.env.REACT_APP_SENDGRID_API_KEY || 
-    localConfig.SENDGRID_API_KEY || 
-    null; // No fallback for security
+  return requireEnvVar('REACT_APP_SENDGRID_API_KEY', 'SendGrid API Key');
+};
+
+/**
+ * Get Pokemon TCG API key
+ */
+export const getPokemonTcgApiKey = () => {
+  usageTracker.track('pokemonTcgApiKey');
+  return requireEnvVar('REACT_APP_POKEMON_TCG_API_KEY', 'Pokemon TCG API Key');
+};
+
+/**
+ * Get Stripe Publishable Key
+ */
+export const getStripePublishableKey = () => {
+  usageTracker.track('stripePublishableKey');
+  return requireEnvVar('REACT_APP_STRIPE_PUBLISHABLE_KEY', 'Stripe Publishable Key');
+};
+
+/**
+ * Get Stripe Premium Plan Price ID
+ */
+export const getStripePremiumPlanPriceId = () => {
+  usageTracker.track('stripePremiumPlanPriceId');
+  return requireEnvVar('REACT_APP_STRIPE_PREMIUM_PLAN_PRICE_ID', 'Stripe Premium Plan Price ID');
 };
 
 /**
@@ -76,20 +117,21 @@ export const getConfigSources = () => {
   usageTracker.track('configSources');
   const sources = {};
   
-  // Firebase config sources
+  // All sources are now environment variables
   sources.firebase = {
-    apiKey: !!process.env.REACT_APP_FIREBASE_API_KEY ? 'Environment' : 'Fallback',
-    authDomain: !!process.env.REACT_APP_FIREBASE_AUTH_DOMAIN ? 'Environment' : 'Fallback',
-    projectId: !!process.env.REACT_APP_FIREBASE_PROJECT_ID ? 'Environment' : 'Fallback',
-    storageBucket: !!process.env.REACT_APP_FIREBASE_STORAGE_BUCKET ? 'Environment' : 'Fallback',
-    messagingSenderId: !!process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID ? 'Environment' : 'Fallback',
-    appId: !!process.env.REACT_APP_FIREBASE_APP_ID ? 'Environment' : 'Fallback'
+    apiKey: 'Environment',
+    authDomain: 'Environment',
+    projectId: 'Environment',
+    storageBucket: 'Environment',
+    messagingSenderId: 'Environment',
+    appId: 'Environment'
   };
   
-  // Additional API keys
-  sources.googleClientId = !!process.env.REACT_APP_FIREBASE_CLIENT_ID ? 'Environment' : 'Fallback';
-  sources.sendgridApiKey = !!process.env.REACT_APP_SENDGRID_API_KEY ? 'Environment' : 
-    !!localConfig.SENDGRID_API_KEY ? 'Local Config' : 'Fallback';
+  sources.googleClientId = getOptionalEnvVar('REACT_APP_FIREBASE_CLIENT_ID') ? 'Environment' : 'Not Set (Optional)';
+  sources.sendgridApiKey = 'Environment';
+  sources.pokemonTcgApiKey = 'Environment';
+  sources.stripePublishableKey = 'Environment';
+  sources.stripePremiumPlanPriceId = 'Environment';
                                
   return sources;
 };

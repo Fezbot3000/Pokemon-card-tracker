@@ -83,8 +83,8 @@ exports.psaLookup = functions.https.onCall(async (data, context) => {
     // Layer 3: Fetch from PSA API
     console.log(`Fetching fresh PSA data for cert #${certNumber}`);
     
-    // Get PSA API token from Firebase Functions config
-    const psaToken = functions.config().psa?.api_token || '';
+    // Get PSA API token from Firebase Functions config - no fallback
+    const psaToken = functions.config().psa?.api_token;
     
     if (!psaToken) {
       console.error('PSA API token not configured. Please set using firebase functions:config:set psa.api_token="YOUR_TOKEN"');
@@ -372,8 +372,8 @@ exports.pokemonTcgLookup = functions.https.onCall(async (data, context) => {
   }
   
   try {
-    // Get Pokemon TCG API key from Firebase Functions config
-    const apiKey = functions.config().pokemon_tcg?.api_key || '';
+    // Get Pokemon TCG API key from Firebase Functions config - no fallback
+    const apiKey = functions.config().pokemon_tcg?.api_key;
     
     if (!apiKey) {
       console.error('Pokemon TCG API key not configured. Please set using firebase functions:config:set pokemon_tcg.api_key="YOUR_KEY"');

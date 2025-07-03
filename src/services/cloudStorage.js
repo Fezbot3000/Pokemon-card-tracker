@@ -2,6 +2,7 @@ import { storage } from './firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import logger from '../utils/logger';
 import { getFunctions, httpsCallable } from 'firebase/functions';
+import { getFirebaseConfig } from '../config/secrets';
 
 /**
  * Fix Firebase Storage URL to use the correct domain
@@ -36,8 +37,9 @@ function fixStorageUrl(url) {
  * @returns {string} The correct storage bucket name
  */
 function getCorrectBucketName() {
-  // Get the storage bucket from the environment
-  const storageBucket = process.env.REACT_APP_FIREBASE_STORAGE_BUCKET || '';
+  // Get the storage bucket from the Firebase config
+  const firebaseConfig = getFirebaseConfig();
+  const storageBucket = firebaseConfig.storageBucket;
   
   // If it's already using the new format, return it
   if (storageBucket.includes('.firebasestorage.app')) {

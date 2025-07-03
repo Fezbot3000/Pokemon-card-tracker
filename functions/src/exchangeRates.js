@@ -20,10 +20,14 @@ exports.getExchangeRates = functions.https.onRequest((request, response) => {
   
   return cors(request, response, async () => {
     try {
-  
+      // Get API key from environment variable - no fallback
+      const API_KEY = process.env.EXCHANGERATE_API_KEY;
       
-      // Your API key and endpoint
-      const API_KEY = process.env.EXCHANGERATE_API_KEY || '43d6478dcf6ef5175ef60b73';
+      if (!API_KEY) {
+        console.error('EXCHANGERATE_API_KEY environment variable is not set');
+        throw new Error('Exchange rate service not configured');
+      }
+      
       const API_URL = `https://v6.exchangerate-api.com/v6/${API_KEY}/latest/USD`;
       
       // Fetch live rates from the API
@@ -38,8 +42,6 @@ exports.getExchangeRates = functions.https.onRequest((request, response) => {
       if (data.result !== 'success') {
         throw new Error('API returned unsuccessful result');
       }
-      
-
       
       // Return the data in the expected format
       return response.status(200).json({
@@ -59,7 +61,6 @@ exports.getExchangeRates = functions.https.onRequest((request, response) => {
       console.error('Error fetching exchange rates:', error);
       
       // Return fallback static rates on error
-
       const fallbackRates = {
         "result": "success",
         "error": false,

@@ -1,54 +1,48 @@
 // Basic Firebase initialization without any extra complexity
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, setPersistence, browserLocalPersistence } from 'firebase/auth';
-import { getFirestore, enableIndexedDbPersistence, doc, getDoc } from 'firebase/firestore';
+import { getFirestore, connectFirestoreEmulator, initializeFirestore, CACHE_SIZE_UNLIMITED } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { getFunctions } from 'firebase/functions';
 
 // Import the env validation
 import './env';
 
-// Development fallback configuration - ONLY used for local development when env vars are missing
-// These will NOT be used in production if environment variables are properly set
-const devFallbackConfig = {
-  apiKey: "AIzaSyCVy6jUYutMLSyTCVBww38JNdKbAS6W9ak",
-  authDomain: "mycardtracker-c8479.firebaseapp.com",
-  projectId: "mycardtracker-c8479",
-  storageBucket: "mycardtracker-c8479.firebasestorage.app",
-  messagingSenderId: "726820232287",
-  appId: "1:726820232287:web:fc2749f506950a78dcfea"
-};
-
-// Check if we're in development mode
-const isDevelopment = process.env.NODE_ENV === 'development';
-
-// Basic Firebase configuration with fallbacks for local development only
-const firebaseConfig = {
-  apiKey: process.env.REACT_APP_FIREBASE_API_KEY || (isDevelopment ? devFallbackConfig.apiKey : null),
-  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN || (isDevelopment ? devFallbackConfig.authDomain : null),
-  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID || (isDevelopment ? devFallbackConfig.projectId : null),
-  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET || (isDevelopment ? devFallbackConfig.storageBucket : null),
-  messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID || (isDevelopment ? devFallbackConfig.messagingSenderId : null),
-  appId: process.env.REACT_APP_FIREBASE_APP_ID || (isDevelopment ? devFallbackConfig.appId : null)
-};
-
-// Log configuration status
-if (isDevelopment) {
-  if (!process.env.REACT_APP_FIREBASE_API_KEY) {
-    console.info('Using development fallback Firebase configuration. For better security, consider setting up environment variables.');
-  } else {
-    console.info('Using environment variables for Firebase configuration.');
+/**
+ * Validate that a required environment variable is present
+ * @param {string} envVar - The environment variable name
+ * @param {string} description - Human-readable description of the variable
+ * @returns {string} - The environment variable value
+ * @throws {Error} - If the environment variable is not set
+ */
+const requireEnvVar = (envVar, description) => {
+  const value = process.env[envVar];
+  if (!value) {
+    throw new Error(`Missing required environment variable: ${envVar} (${description}). Please check your .env file.`);
   }
-}
+  return value;
+};
 
-// Only log error if a required config is missing
-if (!firebaseConfig.apiKey || !firebaseConfig.authDomain || !firebaseConfig.projectId) {
-  console.error('Firebase configuration is incomplete. Please check your environment variables.');
-}
+// Firebase configuration from environment variables only
+const firebaseConfig = {
+  apiKey: requireEnvVar('REACT_APP_FIREBASE_API_KEY', 'Firebase API Key'),
+  authDomain: requireEnvVar('REACT_APP_FIREBASE_AUTH_DOMAIN', 'Firebase Auth Domain'),
+  projectId: requireEnvVar('REACT_APP_FIREBASE_PROJECT_ID', 'Firebase Project ID'),
+  storageBucket: requireEnvVar('REACT_APP_FIREBASE_STORAGE_BUCKET', 'Firebase Storage Bucket'),
+  messagingSenderId: requireEnvVar('REACT_APP_FIREBASE_MESSAGING_SENDER_ID', 'Firebase Messaging Sender ID'),
+  appId: requireEnvVar('REACT_APP_FIREBASE_APP_ID', 'Firebase App ID')
+};
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+
+// Initialize Firestore with new persistence API
+const db = initializeFirestore(app, {
+  cache: {
+    sizeBytes: CACHE_SIZE_UNLIMITED
+  }
+});
+
 const storage = getStorage(app);
 const auth = getAuth(app);
 const googleProvider = new GoogleAuthProvider();
@@ -58,61 +52,24 @@ const functions = getFunctions(app, 'us-central1'); // Specify the region where 
 googleProvider.addScope('https://www.googleapis.com/auth/userinfo.email');
 googleProvider.addScope('https://www.googleapis.com/auth/userinfo.profile');
 
-// Add the client ID for restricted API keys
-if (process.env.REACT_APP_FIREBASE_CLIENT_ID) {
+// Configure Google OAuth client ID if available
+const googleClientId = process.env.REACT_APP_FIREBASE_CLIENT_ID;
+if (googleClientId) {
   googleProvider.setCustomParameters({
-    client_id: process.env.REACT_APP_FIREBASE_CLIENT_ID,
+    client_id: googleClientId,
     prompt: 'select_account'
   });
-} else {
-  // Removed: console.error('Missing CLIENT_ID for Google provider');
 }
 
-// Set authentication persistence
-setPersistence(auth, browserLocalPersistence);
-
-// Add this section to handle ad blockers that might block Firestore
-const handleFirestoreBlocking = () => {
-  // Check if Firestore is being blocked
-  const testFirestore = async () => {
-    try {
-      // Try a simple Firestore operation
-      const testDoc = doc(db, '_test_connection', 'test');
-      await getDoc(testDoc);
-      return true; // Firestore is working
-    } catch (error) {
-      // Check if the error is related to being blocked
-      if (error.message && (
-        error.message.includes('Failed to fetch') || 
-        error.message.includes('Network Error') ||
-        error.message.includes('blocked') ||
-        error.message.includes('ERR_BLOCKED_BY_CLIENT')
-      )) {
-        console.warn('Firestore appears to be blocked by a browser extension. Enabling offline mode.');
-        return false;
-      }
-      // Other errors might not be related to blocking
-      return true;
-    }
-  };
-
-  // Test Firestore and enable offline persistence if needed
-  testFirestore().then(isWorking => {
-    if (!isWorking) {
-      // Enable offline persistence to work around blocking
-      enableIndexedDbPersistence(db)
-        .then(() => {
-          // console.log('Offline persistence enabled as a fallback');
-        })
-        .catch(err => {
-          console.error('Error enabling offline persistence:', err);
-        });
-    }
+// Set persistence for authentication
+setPersistence(auth, browserLocalPersistence)
+  .then(() => {
+    console.log('Auth persistence set to local');
+  })
+  .catch((error) => {
+    console.error('Error setting auth persistence:', error);
   });
-};
 
-// Call the handler to check for Firestore blocking
-handleFirestoreBlocking();
-
-// Export the Firebase services
-export { app, auth, googleProvider, db, storage, functions };
+// Export Firebase services
+export { db, storage, auth, googleProvider, functions };
+export default app;
