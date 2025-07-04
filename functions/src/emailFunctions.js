@@ -133,8 +133,8 @@ exports.sendMarketplaceMessageNotification = functions.firestore
     }
   });
 
-// Send listing sold notification
-exports.sendListingSoldNotification = functions.firestore
+// Send listing sold notification (Firestore trigger)
+exports.sendListingSoldNotificationTrigger = functions.firestore
   .document('marketplaceItems/{listingId}')
   .onUpdate(async (change, context) => {
     try {

@@ -17,7 +17,7 @@ if (!admin.apps.length) {
 // Export email functions
 exports.sendWelcomeEmail = emailFunctions.sendWelcomeEmail;
 exports.sendMarketplaceMessageNotification = emailFunctions.sendMarketplaceMessageNotification;
-exports.sendListingSoldNotification = emailFunctions.sendListingSoldNotification;
+exports.sendListingSoldNotificationTrigger = emailFunctions.sendListingSoldNotificationTrigger;
 exports.sendCustomEmail = emailFunctions.sendCustomEmail;
 
 // Export test email function

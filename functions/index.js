@@ -18,6 +18,7 @@ const { testPsaToken } = require('./src/psaTokenTest');
 
 // Import email functions
 const { sendWelcomeEmail, sendMarketplaceMessageEmail, sendListingSoldEmail, sendEmailVerificationEmail, sendCustomEmail } = require('./src/emailService');
+const emailFunctions = require('./src/emailFunctions');
 const { testEmail } = require('./src/testEmail');
 const { testAllEmails } = require('./src/emailTester');
 
@@ -48,6 +49,9 @@ exports.onUserDelete = onUserDelete;
 // Export marketplace notifications
 exports.sendEmailNotification = sendEmailNotification;
 exports.sendListingSoldNotificationManual = sendListingSoldNotificationManual;
+
+// Export email trigger functions
+exports.sendListingSoldNotificationTrigger = emailFunctions.sendListingSoldNotificationTrigger;
 
 // Configure CORS: Allow requests from local dev and production domain
 const allowedOrigins = [
