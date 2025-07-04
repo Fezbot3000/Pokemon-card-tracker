@@ -9,6 +9,7 @@ import { functions } from '../firebase';
 import CollectionManagement from './settings/CollectionManagement';
 import MarketplaceProfile from './settings/MarketplaceProfile';
 import MarketplaceReviews from './settings/MarketplaceReviews';
+import SubscriptionStatus from './settings/SubscriptionStatus';
 import CollectionSharing from './CollectionSharing';
 import db from '../services/firestore/dbAdapter';
 import ErrorBoundary from './ErrorBoundary';
@@ -317,6 +318,16 @@ const Settings = () => {
 
           {activeTab === 'account' && (
             <div className="space-y-6">
+              {/* Subscription Status */}
+              <div className="bg-white dark:bg-black border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Subscription</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Manage your subscription and billing information.</p>
+                
+                <ErrorBoundary>
+                  <SubscriptionStatus />
+                </ErrorBoundary>
+              </div>
+
               {/* Sign Out */}
               <div className="bg-white dark:bg-black border border-gray-200 dark:border-gray-700 rounded-lg p-6">
                 <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Sign Out</h3>

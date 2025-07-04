@@ -8,6 +8,7 @@ const { psaLookupHttp } = require('./psaLookupHttp');
 const emailFunctions = require('./emailFunctions');
 const testEmail = require('./testEmail');
 const exchangeRates = require('./exchangeRates');
+const stripePortal = require('./stripePortal');
 
 // Initialize Firebase Admin SDK (only if not already initialized)
 if (!admin.apps.length) {
@@ -26,6 +27,9 @@ exports.testEmail = testEmail.testEmail;
 // Export PSA database functions
 exports.cleanupPSADatabase = psaDatabase.cleanupPSADatabase;
 exports.getPSADatabaseStats = psaDatabase.getPSADatabaseStats;
+
+// Export Stripe portal function
+exports.createPortalSession = stripePortal.createPortalSession;
 
 // Export the HTTP PSA lookup function
 exports.psaLookupHttp = psaLookupHttp;

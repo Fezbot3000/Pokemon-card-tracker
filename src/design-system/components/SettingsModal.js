@@ -25,6 +25,7 @@ import { useUserPreferences, availableCurrencies } from '../../contexts/UserPref
 import SelectField from '../atoms/SelectField'; // Added import
 import MarketplaceProfile from '../../components/settings/MarketplaceProfile'; // Import MarketplaceProfile
 import MarketplaceReviews from '../../components/settings/MarketplaceReviews'; // Import MarketplaceReviews
+import SubscriptionStatus from '../../components/settings/SubscriptionStatus'; // Import SubscriptionStatus
 import CollectionSharing from '../../components/CollectionSharing'; // Import CollectionSharing
 
 /**
@@ -981,6 +982,13 @@ const SettingsModal = ({
             
             {activeTab === 'account' && (
               <div className="space-y-6">
+                <SettingsPanel
+                  title="Subscription"
+                  description="Manage your subscription and billing information."
+                >
+                  <SubscriptionStatus />
+                </SettingsPanel>
+
                 <SettingsPanel
                   title="Sign Out"
                   description="Sign out of your account and return to the login screen."
