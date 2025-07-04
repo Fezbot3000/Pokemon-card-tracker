@@ -216,6 +216,47 @@ const StripeDebugger = () => {
     }
   };
 
+  const testEnvironmentDifferences = async () => {
+    try {
+      console.log('🧪 ENVIRONMENT TEST: Starting diagnostic test');
+      
+      const { httpsCallable } = await import('firebase/functions');
+      const { functions } = await import('../firebase');
+      
+      const testStripeConfig = httpsCallable(functions, 'testStripeConfig');
+      const result = await testStripeConfig({});
+      
+      console.log('🧪 ENVIRONMENT TEST: Diagnostic result:', result);
+      
+      if (result.data.success) {
+        console.log('🧪 ENVIRONMENT ANALYSIS:');
+        console.log('🧪 Has Auth:', result.data.environment.hasAuth);
+        console.log('🧪 User ID:', result.data.environment.userId);
+        console.log('🧪 Has Config:', result.data.environment.hasConfig);
+        console.log('🧪 Has Stripe Config:', result.data.environment.hasStripeConfig);
+        console.log('🧪 Stripe Config Keys:', result.data.environment.stripeConfigKeys);
+        console.log('🧪 Has Secret Key:', result.data.environment.hasSecretKey);
+        console.log('🧪 Has Premium Price ID:', result.data.environment.hasPremiumPriceId);
+        console.log('🧪 Has Webhook Secret:', result.data.environment.hasWebhookSecret);
+        console.log('🧪 Has Env Secret Key:', result.data.environment.hasEnvSecretKey);
+        console.log('🧪 Has Env Price ID:', result.data.environment.hasEnvPriceId);
+        console.log('🧪 Stripe Init Test:', result.data.environment.stripeInitTest);
+        console.log('🧪 Stripe Error:', result.data.environment.stripeError);
+        console.log('🧪 Origin:', result.data.environment.origin);
+        console.log('🧪 Timestamp:', result.data.environment.timestamp);
+        
+        alert(`Environment Test Complete!\nCheck console for detailed results.\n\nKey findings:\n- Auth: ${result.data.environment.hasAuth}\n- Config: ${result.data.environment.hasConfig}\n- Stripe Config: ${result.data.environment.hasStripeConfig}\n- Secret Key: ${result.data.environment.hasSecretKey}\n- Stripe Init: ${result.data.environment.stripeInitTest}`);
+      } else {
+        console.error('🧪 ENVIRONMENT TEST: Failed -', result.data.error);
+        alert(`Environment Test Failed!\nError: ${result.data.error}\nCheck console for details.`);
+      }
+      
+    } catch (error) {
+      console.error('🧪 ENVIRONMENT TEST: Error -', error);
+      alert(`Environment Test Error!\nError: ${error.message}\nCheck console for details.`);
+    }
+  };
+
   // Run all tests
   const runFullDiagnostic = async () => {
     setIsRunning(true);
@@ -331,6 +372,12 @@ const StripeDebugger = () => {
           >
             Test Checkout
           </Button>
+          <button 
+            onClick={testEnvironmentDifferences}
+            className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors"
+          >
+            🧪 Test Environment Differences
+          </button>
         </div>
         <div className="flex gap-2">
           <Button 

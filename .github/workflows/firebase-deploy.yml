@@ -70,6 +70,9 @@ jobs:
           echo "REACT_APP_EBAY_APP_ID=''" >> .env
           echo "REACT_APP_FIREBASE_CLIENT_ID=${{ secrets.REACT_APP_FIREBASE_CLIENT_ID }}" >> .env
           echo "REACT_APP_PSA_API_TOKEN=${{ secrets.PSA_API_TOKEN }}" >> .env
+          # Add Stripe environment variables
+          echo "REACT_APP_STRIPE_PUBLISHABLE_KEY=${{ secrets.REACT_APP_STRIPE_PUBLISHABLE_KEY }}" >> .env
+          echo "REACT_APP_STRIPE_PREMIUM_PLAN_PRICE_ID=${{ secrets.REACT_APP_STRIPE_PREMIUM_PLAN_PRICE_ID }}" >> .env
       
       - name: Set Firebase Functions Environment Variables
         run: |
