@@ -6,6 +6,7 @@
     }
   ],
   "hosting": {
+    "site": "mycardtracker-c8479",
     "public": "build",
     "ignore": [
       "firebase.json",
