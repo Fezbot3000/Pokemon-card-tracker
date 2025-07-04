@@ -58,16 +58,17 @@ function Marketplace({ currentView, onViewChange }) {
   useEffect(() => {
     if (!user) return;
 
-    const fetchExistingChats = async () => {
+    // Set up real-time listener for chats to update button states immediately
+    const chatsRef = collection(firestoreDb, 'chats');
+    const userChatsQuery = query(chatsRef, where('participants', 'array-contains', user.uid));
+    
+    const unsubscribeChats = onSnapshot(userChatsQuery, (chatsSnapshot) => {
       try {
-        const chatsRef = collection(firestoreDb, 'chats');
-        const userChatsQuery = query(chatsRef, where('participants', 'array-contains', user.uid));
-        const chatsSnapshot = await getDocs(userChatsQuery);
-
         const chatsData = {};
         chatsSnapshot.forEach(doc => {
           const chatData = doc.data();
-          if (chatData.cardId) {
+          // Only include chats that haven't been hidden by the current user
+          if (chatData.cardId && (!chatData.hiddenBy || !chatData.hiddenBy[user.uid])) {
             chatsData[chatData.cardId] = doc.id;
           }
         });
@@ -76,9 +77,12 @@ function Marketplace({ currentView, onViewChange }) {
       } catch (error) {
         logger.error('Error fetching existing chats:', error);
       }
-    };
+    });
 
-    fetchExistingChats();
+    // Cleanup listener on unmount
+    return () => {
+      unsubscribeChats();
+    };
   }, [user]);
 
   useEffect(() => {

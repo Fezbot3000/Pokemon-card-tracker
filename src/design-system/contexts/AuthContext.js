@@ -218,13 +218,20 @@ export const AuthProvider = ({ children }) => {
                   daysRemaining: daysRemaining
                 });
                 
-                // Show success message for premium upgrades
+                // Show success message for premium upgrades (only once)
                 if (userData.subscriptionStatus === 'premium') {
-                  setTimeout(() => {
-                    toast.success('🎉 Welcome to Premium! All features are now unlocked.', {
-                      duration: 5000
-                    });
-                  }, 1000);
+                  const hasShownPremiumWelcome = localStorage.getItem('hasShownPremiumWelcome');
+                  if (!hasShownPremiumWelcome) {
+                    localStorage.setItem('hasShownPremiumWelcome', 'true');
+                    setTimeout(() => {
+                      toast.success('🎉 Welcome to Premium! All features are now unlocked.', {
+                        duration: 5000
+                      });
+                    }, 1000);
+                  }
+                } else {
+                  // Clear the flag if user is no longer premium (downgraded/cancelled)
+                  localStorage.removeItem('hasShownPremiumWelcome');
                 }
               }
             }
@@ -460,6 +467,10 @@ export const AuthProvider = ({ children }) => {
     try {
       setError(null);
       await firebaseSignOut(auth);
+      
+      // Clear premium welcome flag so it can be shown again on next upgrade
+      localStorage.removeItem('hasShownPremiumWelcome');
+      
       toast.success('Signed out successfully!');
     } catch (err) {
       const errorMessage = handleFirebaseError(err);

@@ -80,6 +80,22 @@
     overflow-y: auto;
     max-height: calc(var(--vh, 1vh) * 100 - 120px); /* Account for header and footer */
   }
+  
+  /* Fix for toast notifications to respect safe area */
+  [data-react-hot-toast] {
+    top: calc(20px + env(safe-area-inset-top, 0px)) !important;
+    left: calc(20px + env(safe-area-inset-left, 0px)) !important;
+    right: calc(20px + env(safe-area-inset-right, 0px)) !important;
+  }
+  
+  /* Specific positioning for top toasts on mobile */
+  @media (max-width: 640px) {
+    [data-react-hot-toast] {
+      top: calc(16px + env(safe-area-inset-top, 0px)) !important;
+      left: calc(16px + env(safe-area-inset-left, 0px)) !important;
+      right: calc(16px + env(safe-area-inset-right, 0px)) !important;
+    }
+  }
 }
 
 /* Fix for iOS Safari position:fixed issues with keyboard open */
