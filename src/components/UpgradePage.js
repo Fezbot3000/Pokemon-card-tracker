@@ -5,6 +5,7 @@ import { useSubscription } from '../hooks/useSubscription';
 import Button from '../design-system/atoms/Button';
 import Icon from '../design-system/atoms/Icon';
 import { toast } from 'react-hot-toast';
+import { getStripePublishableKey } from '../config/secrets';
 
 /**
  * UpgradePage Component
@@ -59,14 +60,7 @@ const UpgradePage = () => {
     try {
       // Step 1: Check environment variables
       console.log('🔍 Checking environment variables...');
-      const stripePublishableKey = process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY;
-      
-      if (!stripePublishableKey) {
-        console.error('❌ REACT_APP_STRIPE_PUBLISHABLE_KEY is not set');
-        toast.error('Stripe configuration missing. Please contact support.');
-        setLoading(false);
-        return;
-      }
+      const stripePublishableKey = getStripePublishableKey();
 
       // Step 2: Create checkout session on server (OFFICIAL STRIPE APPROACH)
       console.log('🔥 Creating checkout session via Firebase Functions...');
