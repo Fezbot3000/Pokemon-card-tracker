@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import Icon from './Icon';
 
 /**
  * Button component that supports various visual styles and sizes
@@ -62,7 +63,19 @@ const Button = ({
   // Determine icon classes based on variant and size
   const iconSizeClass = size === 'sm' ? 'text-sm' : size === 'lg' ? 'text-xl' : 'text-base';
   // Adjust icon color based on variant to match text color
-  const iconColorClass = ''; // Remove specific color, let it inherit
+  const getIconColor = (variant) => {
+    switch (variant) {
+      case 'primary':
+      case 'success':
+      case 'danger':
+        return 'white';
+      case 'secondary':
+        return 'white'; // Secondary has white text on dark background
+      default:
+        return 'default';
+    }
+  };
+  const iconColor = getIconColor(variant);
   
   // Remove props that shouldn't be passed to the DOM element
   const {
@@ -92,16 +105,22 @@ const Button = ({
         <>
           {finalIconLeft && (
             <span className={`${children ? 'mr-2' : ''}`}>
-              {React.isValidElement(finalIconLeft) ? React.cloneElement(finalIconLeft, { className: `${iconSizeClass} ${finalIconLeft.props.className || ''}` }) : (
-                <Icon name={finalIconLeft} className={`${iconSizeClass}`} data-component-name="Button" />
+              {React.isValidElement(finalIconLeft) ? React.cloneElement(finalIconLeft, { 
+                className: `${iconSizeClass} ${finalIconLeft.props.className || ''}`,
+                color: iconColor
+              }) : (
+                <Icon name={finalIconLeft} className={`${iconSizeClass}`} color={iconColor} data-component-name="Button" />
               )}
             </span>
           )}
           {children}
           {finalIconRight && (
             <span className={`${children ? 'ml-2' : ''}`}>
-              {React.isValidElement(finalIconRight) ? React.cloneElement(finalIconRight, { className: `${iconSizeClass} ${finalIconRight.props.className || ''}` }) : (
-                <Icon name={finalIconRight} className={`${iconSizeClass}`} data-component-name="Button" />
+              {React.isValidElement(finalIconRight) ? React.cloneElement(finalIconRight, { 
+                className: `${iconSizeClass} ${finalIconRight.props.className || ''}`,
+                color: iconColor
+              }) : (
+                <Icon name={finalIconRight} className={`${iconSizeClass}`} color={iconColor} data-component-name="Button" />
               )}
             </span>
           )}

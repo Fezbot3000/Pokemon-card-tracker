@@ -276,6 +276,7 @@ function EditListingModal({ isOpen, onClose, listing, onListingDeleted }) {
         onClose={onClose}
         title="Edit Listing"
         size="2xl"
+        closeOnClickOutside={true}
         footer={
           <div className="flex flex-col sm:flex-row-reverse gap-3">
             <button

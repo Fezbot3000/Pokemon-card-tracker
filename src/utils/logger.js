@@ -9,7 +9,7 @@ const isProduction = process.env.NODE_ENV === 'production';
 
 // Force silence certain logs even in development mode
 // This is set to true for production readiness
-const forceSilence = false; // Temporarily disabled for subscription debugging
+const forceSilence = true; // Disable debug logging in production
 
 // Configure logging levels
 // Set to true to show that type of log, false to hide

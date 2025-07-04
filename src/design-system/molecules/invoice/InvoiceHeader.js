@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import Icon from '../../atoms/Icon';
 import Button from '../../atoms/Button';
-import { stripDebugProps } from '../../../utils/stripDebugProps';
+
 
 /**
  * InvoiceHeader Component
@@ -44,7 +44,7 @@ const InvoiceHeader = ({
   };
 
   return (
-    <div className={headerClasses} onClick={onToggle} {...stripDebugProps(props)}>
+    <div className={headerClasses} onClick={onToggle} {...props}>
       {/* Left side - Invoice info and expand icon */}
       <div className="flex items-center gap-3 flex-1 min-w-0">
         <CleanIcon 

@@ -54,7 +54,7 @@ const MoveCardsModal = ({
       title="Move Cards to Another Collection"
       position="center"
       size="lg"
-      closeOnClickOutside={false}
+      closeOnClickOutside={true}
       footer={
         <div className="flex justify-between w-full">
           <Button 

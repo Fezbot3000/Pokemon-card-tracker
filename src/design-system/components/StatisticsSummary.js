@@ -5,7 +5,7 @@ import { colors } from '../tokens';
 import { useTheme } from '../contexts/ThemeContext';
 import { useUserPreferences } from '../../contexts/UserPreferencesContext';
 import logger from '../../utils/logger';
-import { stripDebugProps } from '../../utils/stripDebugProps';
+
 
 /**
  * StatisticsSummary Component
@@ -25,7 +25,7 @@ const StatisticsSummary = ({
   return (
     <div 
       className={`w-full bg-white dark:bg-[#1B2131] rounded-md ${isDarkMode ? 'shadow-sm' : ''} overflow-hidden border border-[#ffffff33] dark:border-[#ffffff1a] ${className}`}
-      {...stripDebugProps(props)}
+      {...props}
     >
       <div className="rounded-md p-2 sm:p-4 md:p-6">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-0">

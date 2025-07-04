@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { storage, functions, httpsCallable, db as firestoreDb } from '../../services/firebase';
-import { stripDebugProps } from '../../utils/stripDebugProps';
+
 import { Modal, Button, ConfirmDialog, Icon, toast as toastService } from '../';
 import FormField from '../molecules/FormField';
 import SettingsPanel from '../molecules/SettingsPanel';
@@ -720,10 +720,10 @@ const SettingsModal = ({
         className={`w-full sm:w-[80%] md:w-[70%] max-w-screen-xl mx-auto ${className}`}
         ariaLabel="Settings"
         size="full"
-        closeOnClickOutside={false}
-        {...stripDebugProps(props)}
+        closeOnClickOutside={true}
+        {...props}
       >
-        <div className="flex flex-col lg:flex-row h-full" {...stripDebugProps(props)}>
+                  <div className="flex flex-col lg:flex-row h-full" {...props}>
           {/* Navigation sidebar */}
           <nav className="w-full lg:w-48 shrink-0 border-b lg:border-b-0 lg:border-r border-gray-200 dark:border-indigo-900/20 mb-4 lg:mb-0 lg:pr-4">
             <div className="flex flex-row lg:flex-col space-x-4 lg:space-x-0 lg:space-y-2 p-4">

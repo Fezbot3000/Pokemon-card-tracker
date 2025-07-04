@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import Icon from '../atoms/Icon';
 import { useTheme } from '../contexts/ThemeContext';
-import { stripDebugProps } from '../../utils/stripDebugProps';
+
 
 /**
  * SimpleSearchBar Component
@@ -25,7 +25,7 @@ const SimpleSearchBar = ({
   return (
     <div 
       className={containerClass} 
-      {...stripDebugProps(props)}
+      {...props}
     >
       {/* Search Input */}
       <div className="relative w-full">

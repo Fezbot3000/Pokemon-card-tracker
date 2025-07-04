@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import ReactDOM from 'react-dom';
-import { useTheme, SoldItemsView, Icon, StatisticsSummary, SimpleSearchBar } from '../../design-system'; 
+import { useTheme, SoldItemsView, Icon, StatisticsSummary, SimpleSearchBar, ConfirmDialog } from '../../design-system'; 
 import { formatCondensed } from '../../utils/formatters';
 import db from '../../services/firestore/dbAdapter';
 import { PDFDownloadLink, pdf } from '@react-pdf/renderer';
@@ -51,6 +51,7 @@ const SoldItems = () => {
   const [expandedBuyers, setExpandedBuyers] = useState(new Set());
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [deleteConfirmation, setDeleteConfirmation] = useState({ isOpen: false, invoiceId: null, buyer: null });
 
   // Initialize all invoices as expanded by default when soldCards change
   useEffect(() => {
@@ -622,53 +623,7 @@ const SoldItems = () => {
     }), { totalInvestment: 0, totalValue: 0, totalProfit: 0 });
   }, [groupedInvoicesByYear]);
 
-  const debugIndexedDB = () => {
-    // Debug function to check what's in IndexedDB
-    try {
-      const dbRequest = window.indexedDB.open("pokemonCardTracker", 1);
-      
-      dbRequest.onerror = (event) => {
-        console.error("Database error:", event.target.error);
-        alert("Error accessing database: " + event.target.error);
-      };
-      
-      dbRequest.onsuccess = (event) => {
-        const db = event.target.result;
-        
-        // Check if the collections store exists before trying to use it
-        if (db.objectStoreNames.contains("collections")) {
-          const transaction = db.transaction(["collections"], "readonly");
-          const store = transaction.objectStore("collections");
-          const request = store.getAll();
-          
-          request.onsuccess = function() {
-            const soldCollection = request.result.find(item => item.name === 'sold');
-            
-            if (soldCollection && Array.isArray(soldCollection.data)) {
-              alert(`Found ${soldCollection.data.length} sold items in database. Check browser console for details.`);
-            } else {
-              alert("No sold items found in database. Check browser console for details.");
-            }
-          };
-          
-          request.onerror = function(event) {
-            console.error("Error getting collections:", event.target.error);
-            alert("Error accessing database collections: " + event.target.error);
-          };
-        } else {
-          alert("The 'collections' object store does not exist. Database may be corrupted.");
-        }
-      };
-      
-      dbRequest.onerror = (event) => {
-        console.error("Error opening database:", event.target.error);
-        alert("Error opening database: " + event.target.error);
-      };
-    } catch (error) {
-      console.error("Debug error:", error);
-      alert("Error debugging database: " + error.message);
-    }
-  };
+
 
   const fixDatabaseStructure = () => {
     if (window.confirm("This will delete and recreate the database to fix structure issues. Continue?")) {
@@ -1021,12 +976,12 @@ const SoldItems = () => {
   };
 
   // Delete a specific invoice/receipt
+  const showDeleteConfirmation = (invoiceId, buyer = null) => {
+    setDeleteConfirmation({ isOpen: true, invoiceId, buyer });
+  };
+
   const handleDeleteInvoice = async (invoiceId) => {
     try {
-      // Confirm deletion
-      if (!window.confirm('Are you sure you want to delete this receipt? This action cannot be undone.')) {
-        return;
-      }
 
       // 1. Identify card IDs to delete associated with the invoiceId
       const cardIdsToDelete = soldCards
@@ -1138,7 +1093,7 @@ const SoldItems = () => {
       <div className="p-4 sm:p-6 pb-20 pt-16 sm:pt-4">
         {/* Statistics Summary Skeleton - only show skeleton, no data */}
         <div className="mb-6">
-          <div className="bg-white dark:bg-black rounded-xl shadow-md p-6">
+          <div className="bg-white dark:bg-black rounded-xl p-6">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {[
                 { label: 'INVESTMENT TOTAL', width: 'w-20' },
@@ -1158,7 +1113,7 @@ const SoldItems = () => {
         </div>
 
         {/* Main Content - Keep search functional, skeleton the data */}
-        <div className="bg-white dark:bg-black rounded-xl shadow-md">
+        <div className="bg-white dark:bg-black rounded-xl">
           <div className="overflow-x-auto">
             {/* Keep search section functional */}
             <div className="flex flex-col gap-4 mb-4 p-4 sm:p-6">
@@ -1261,7 +1216,7 @@ const SoldItems = () => {
         </div>
       )}
       
-      <div className="bg-white dark:bg-black rounded-xl shadow-md">
+      <div className="bg-white dark:bg-black rounded-xl">
         {soldCards && Array.isArray(soldCards) && soldCards.length > 0 ? (
           <div className="overflow-x-auto">
             {/* Search Section */}
@@ -1375,7 +1330,7 @@ const SoldItems = () => {
                           </button>
                           <button 
                             className="text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 transition-colors p-2"
-                            onClick={() => handleDeleteInvoice(buyer)}
+                            onClick={() => showDeleteConfirmation(buyer, buyer)}
                             title="Delete Sale"
                           >
                             <span className="material-icons text-xl">delete</span>
@@ -1386,7 +1341,7 @@ const SoldItems = () => {
                       {expandedBuyers.has(buyer) && (
                         <tr>
                           <td colSpan="7" className="px-0 py-0">
-                            <div className="bg-black border-t border-gray-200 dark:border-gray-700">
+                            <div className="bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
                               <div className="p-6">
                                 <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-4">Card Details</h4>
                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -1494,7 +1449,7 @@ const SoldItems = () => {
                       </button>
                       <button 
                         className="flex items-center justify-center w-10 h-10 rounded-lg bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors"
-                        onClick={() => handleDeleteInvoice(buyer)}
+                        onClick={() => showDeleteConfirmation(buyer, buyer)}
                         title="Delete Sale"
                       >
                         <span className="material-icons text-lg">delete</span>
@@ -1504,7 +1459,7 @@ const SoldItems = () => {
 
                   {/* Expandable Card Details (inline with each invoice) */}
                   {expandedBuyers.has(buyer) && (
-                    <div className="border-t border-gray-200/20 dark:border-gray-700/30 bg-black p-4">
+                    <div className="border-t border-gray-200/20 dark:border-gray-700/30 bg-gray-50 dark:bg-gray-800 p-4">
                       <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-3">Card Details</h4>
                       <div className="space-y-3">
                         {invoice.cards.map((card, index) => (
@@ -1555,6 +1510,21 @@ const SoldItems = () => {
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmDialog
+        isOpen={deleteConfirmation.isOpen}
+        onClose={() => setDeleteConfirmation({ isOpen: false, invoiceId: null, buyer: null })}
+        onConfirm={() => {
+          handleDeleteInvoice(deleteConfirmation.invoiceId);
+          setDeleteConfirmation({ isOpen: false, invoiceId: null, buyer: null });
+        }}
+        title="Delete Sale Receipt"
+        message={`Are you sure you want to delete this sale receipt${deleteConfirmation.buyer ? ` for ${deleteConfirmation.buyer}` : ''}? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+      />
     </div>
   );
 };

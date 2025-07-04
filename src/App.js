@@ -48,8 +48,6 @@ import BottomNavBar from './components/BottomNavBar';
 import CloudSync from './components/CloudSync';
 import ComponentLibrary from './pages/ComponentLibrary';
 import TrialStatusBanner from './components/TrialStatusBanner';
-import SubscriptionDebug from './components/SubscriptionDebug';
-import StripeDebugger from './components/StripeDebugger';
 
 import logger from './utils/logger'; // Import the logger utility
 import RestoreListener from './components/RestoreListener';
@@ -513,15 +511,14 @@ function AppContent({ currentView, setCurrentView }) {
           
           // Instead of forcing a reset immediately, first try to open the database normally
           await db.silentInitialize();
-          logger.debug('Database initialization complete');
-        } catch (initError) {
-          logger.debug('Silent initialization failed, will try normal operations', initError);
+                } catch (initError) {
+        logger.warn('Silent initialization failed, will try normal operations', initError);
           // Continue anyway - we'll try to recover with normal operations
         }
         
         // Attempt to load collections from IndexedDB
         const savedCollections = await db.getCollections().catch(error => {
-          logger.debug('Failed to load collections, using default collection');
+          logger.warn('Failed to load collections, using default collection');
           return { 'Default Collection': [] };
         });
         
@@ -534,10 +531,10 @@ function AppContent({ currentView, setCurrentView }) {
           // Always default to 'All Cards' when the app loads, regardless of what's in localStorage
           setSelectedCollection('All Cards');
           localStorage.setItem('selectedCollection', 'All Cards');
-          logger.debug('Setting collection to All Cards by default');
+
         } else {
           // No collections found in DB at all
-          logger.debug('No collections found in DB, setting up Default Collection.');
+
           const defaultCollections = { 'Default Collection': [] };
           setCollections(defaultCollections);
           
@@ -546,7 +543,7 @@ function AppContent({ currentView, setCurrentView }) {
           localStorage.setItem('selectedCollection', 'All Cards');
         }
       } catch (error) {
-        logger.debug('Error during initialization, using default collections');
+        logger.warn('Error during initialization, using default collections');
         
         // Set default collections as fallback
         const defaultCollections = { 'Default Collection': [] };
@@ -1216,7 +1213,6 @@ function AppContent({ currentView, setCurrentView }) {
 
       <TutorialModal />
       <SyncStatusIndicator />
-      <SubscriptionDebug />
     </div>
   );
 }

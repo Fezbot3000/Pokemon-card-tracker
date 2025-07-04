@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { useAuth, StatisticsSummary, SimpleSearchBar } from '../../design-system';
+import { useAuth, StatisticsSummary, SimpleSearchBar, ConfirmDialog } from '../../design-system';
 import db from '../../services/firestore/dbAdapter';
 import { toast } from 'react-hot-toast';
 import CreateInvoiceModal from './CreateInvoiceModal';
@@ -44,6 +44,7 @@ const PurchaseInvoices = () => {
   const [sortDirection, setSortDirection] = useState('desc'); // 'asc' or 'desc'
   const [searchQuery, setSearchQuery] = useState('');
   const [isGeneratingBatch, setIsGeneratingBatch] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState({ isOpen: false, invoice: null });
   const { currentUser } = useAuth();
 
   // Define functions that will be used in useEffect
@@ -166,6 +167,22 @@ const PurchaseInvoices = () => {
   const handleEditInvoice = (invoice) => {
     setEditingInvoice(invoice);
     setShowCreateModal(true);
+  };
+
+  // Handle delete confirmation
+  const showDeleteConfirmation = (invoice) => {
+    setDeleteConfirmation({ isOpen: true, invoice });
+  };
+
+  const handleDeleteInvoice = async (invoice) => {
+    try {
+      await db.deletePurchaseInvoice(invoice.id);
+      setInvoices(prev => prev.filter(i => i.id !== invoice.id));
+      toast.success('Invoice deleted successfully');
+    } catch (error) {
+      console.error('Error deleting invoice:', error);
+      toast.error('Failed to delete invoice');
+    }
   };
 
   // Handle server-side batch PDF generation
@@ -474,7 +491,7 @@ const PurchaseInvoices = () => {
         </div>
       )}
       
-      <div className="bg-white dark:bg-black rounded-xl shadow-md">
+      <div className="bg-white dark:bg-black rounded-xl">
         
         {loading ? (
           <div className="overflow-x-auto">
@@ -754,18 +771,7 @@ const PurchaseInvoices = () => {
                         </button>
                         <button 
                           className="text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 transition-colors p-2"
-                          onClick={async () => {
-                            if (window.confirm('Are you sure you want to delete this invoice?')) {
-                              try {
-                                await db.deletePurchaseInvoice(invoice.id);
-                                setInvoices(prev => prev.filter(i => i.id !== invoice.id));
-                                toast.success('Invoice deleted successfully');
-                              } catch (error) {
-                                console.error('Error deleting invoice:', error);
-                                toast.error('Failed to delete invoice');
-                              }
-                            }
-                          }}
+                          onClick={() => showDeleteConfirmation(invoice)}
                           title="Delete Invoice"
                         >
                           <span className="material-icons text-xl">delete</span>
@@ -830,18 +836,7 @@ const PurchaseInvoices = () => {
                     </button>
                     <button 
                       className="flex items-center justify-center w-10 h-10 rounded-lg bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors"
-                      onClick={async () => {
-                        if (window.confirm('Are you sure you want to delete this invoice?')) {
-                          try {
-                            await db.deletePurchaseInvoice(invoice.id);
-                            setInvoices(prev => prev.filter(i => i.id !== invoice.id));
-                            toast.success('Invoice deleted successfully');
-                          } catch (error) {
-                            console.error('Error deleting invoice:', error);
-                            toast.error('Failed to delete invoice');
-                          }
-                        }
-                      }}
+                      onClick={() => showDeleteConfirmation(invoice)}
                       title="Delete Invoice"
                     >
                       <span className="material-icons text-lg">delete</span>
@@ -889,6 +884,21 @@ const PurchaseInvoices = () => {
           }
         }, [editingInvoice])}
         editingInvoice={editingInvoice}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmDialog
+        isOpen={deleteConfirmation.isOpen}
+        onClose={() => setDeleteConfirmation({ isOpen: false, invoice: null })}
+        onConfirm={() => {
+          handleDeleteInvoice(deleteConfirmation.invoice);
+          setDeleteConfirmation({ isOpen: false, invoice: null });
+        }}
+        title="Delete Invoice"
+        message={`Are you sure you want to delete invoice #${deleteConfirmation.invoice?.invoiceNumber}? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
       />
     </div>
   );

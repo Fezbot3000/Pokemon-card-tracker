@@ -173,7 +173,7 @@ const CreateInvoiceModal = ({ isOpen, onClose, onSave, editingInvoice = null, pr
         title={editingInvoice ? "Edit Invoice Details" : "Invoice Details"}
         position="right"
         size="2xl"
-        closeOnClickOutside={false}
+        closeOnClickOutside={true}
         footer={
           <div className="flex justify-between w-full">
             <Button 

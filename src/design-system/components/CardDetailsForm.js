@@ -678,7 +678,7 @@ const CardDetailsForm = ({
                         rel="noopener noreferrer"
                         className="w-full inline-flex items-center justify-center font-medium rounded-lg transition-colors focus:outline-none px-4 py-2 text-base bg-gradient-to-r from-blue-500 to-blue-700 text-white hover:opacity-90 shadow-sm"
                       >
-                        <Icon name="open_in_new" className="mr-2" />
+                        <Icon name="open_in_new" className="mr-2" color="white" />
                         View on PSA Website
                       </a>
                       
@@ -699,7 +699,7 @@ const CardDetailsForm = ({
                           }`}
                           title={!hasFeature('PSA_SEARCH') ? "PSA search requires Premium subscription" : "Reload data from PSA"}
                         >
-                          <Icon name={!hasFeature('PSA_SEARCH') ? "lock" : "refresh"} className="mr-2" />
+                          <Icon name={!hasFeature('PSA_SEARCH') ? "lock" : "refresh"} className="mr-2" color="white" />
                           {!hasFeature('PSA_SEARCH') ? 'Premium Feature' : 'Reload PSA Data'}
                         </button>
                       )}

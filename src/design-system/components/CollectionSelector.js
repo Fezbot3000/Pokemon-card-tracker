@@ -88,7 +88,7 @@ const CollectionSelector = ({
       >
         <div className={`flex items-center ${forMobileSheet ? 'justify-center' : ''}`}>
           <Icon name={hasFeature('MULTIPLE_COLLECTIONS') ? "add" : "lock"} size="sm" className="mr-1" />
-          <span>{hasFeature('MULTIPLE_COLLECTIONS') ? '+ New Collection' : '+ New Collection (Premium)'}</span>
+          <span>{hasFeature('MULTIPLE_COLLECTIONS') ? 'New Collection' : 'New Collection (Premium)'}</span>
         </div>
       </button>
       
@@ -124,7 +124,6 @@ const CollectionSelector = ({
     <>
       <div className={`relative ${className}`} ref={dropdownRef}>
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-medium text-gray-900 dark:text-white mr-2">Collection:</h2>
           <button 
             onClick={handleTriggerClick} // Use new handler
             className="flex items-center bg-white dark:bg-[#000000] border border-gray-300 dark:border-gray-700 rounded-lg px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
@@ -142,7 +141,7 @@ const CollectionSelector = ({
         
         {/* Desktop Dropdown */}
         {!isMobileView && isDropdownOpen && (
-          <div className="absolute left-0 right-0 sm:left-auto sm:right-0 mt-2 w-full sm:w-56 rounded-md shadow-lg bg-white dark:bg-[#000] ring-1 ring-black ring-opacity-5 z-50 max-h-[60vh] overflow-y-auto">
+          <div className="absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white dark:bg-[#000] ring-1 ring-black ring-opacity-5 z-50 max-h-[60vh] overflow-y-auto">
             {renderCollectionItems(false)}
           </div>
         )}

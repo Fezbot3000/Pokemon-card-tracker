@@ -366,9 +366,10 @@ const CardDetailsModal = ({
         onClose={onClose}
         title={null}
         position="right"
-        closeOnClickOutside={false}
+        closeOnClickOutside={true}
         size="2xl"
         className={`${className} ${animClass}`}
+        noContentPadding={true}
         footer={
           <div className="flex justify-between w-full">
             <Button 
@@ -410,8 +411,8 @@ const CardDetailsModal = ({
       >
         <div className="flex flex-col h-full">
           {/* Tabs - Moved to the top to replace the modal title */}
-          <div className="sticky top-0 z-10 bg-white dark:bg-[#0F0F0F] py-2 -mt-6 -mx-6 px-6">
-            <div className="flex border-b border-gray-200 dark:border-gray-700 mt-2">
+          <div className="sticky top-0 z-10 bg-white dark:bg-[#0F0F0F] px-6 pt-4 pb-2">
+            <div className="flex border-b border-gray-200 dark:border-gray-700">
               <button
                 className={`py-2 px-4 font-medium text-sm ${
                   activeTab === 'details'
@@ -449,7 +450,7 @@ const CardDetailsModal = ({
                 </div>
               )}
               
-              <div className="p-6">
+              <div className="px-6 py-6">
                 <CardDetailsForm
                   card={card}
                   cardImage={localImageLoadingState === 'loading' ? null : (cardImage || image)}

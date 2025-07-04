@@ -549,33 +549,7 @@ const CardDetails = memo(({
       onImageRetry={loadCardImage}
       className="fade-in"
       isPsaLoading={isPsaLoading}
-      additionalSerialContent={
-        <PSALookupButton 
-          currentCardData={editedCard}
-          onCardUpdate={(updatedData) => {
-            // Store reference to any existing blob URL before updating
-            const existingBlobUrl = editedCard._blobUrl;
-            
-            setEditedCard(prev => {
-              const newData = {
-                ...prev,
-                ...updatedData,
-                // Preserve image-related properties from the previous state
-                imageUrl: prev.imageUrl,
-                _pendingImageFile: prev._pendingImageFile,
-                _blobUrl: prev._blobUrl,
-                hasImage: prev.hasImage
-              };
-              return newData;
-            });
-            
-            setHasUnsavedChanges(true);
-            toast.success("Card details updated from PSA data");
-          }}
-          onLoadingChange={setIsPsaLoading}
-          iconOnly={true}
-        />
-      }
+      additionalSerialContent={null}
       collections={collections}
       initialCollectionName={initialCollectionName}
     />

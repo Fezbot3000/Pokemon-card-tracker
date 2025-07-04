@@ -372,9 +372,10 @@ const AddCardModal = ({
         footer={modalFooter}
         position="right"
         className={`${animClass} ${className}`}
-        closeOnClickOutside={!showEnlargedImage}
+        closeOnClickOutside={true}
+        noContentPadding={true}
       >
-        <div className="space-y-6 pb-4">
+        <div className="space-y-6 px-6 py-6">
           {/* PSA Certificate Lookup Section */}
           <div className="mb-6">
             <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">PSA Certificate Lookup</h3>

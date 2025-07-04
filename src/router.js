@@ -30,7 +30,6 @@ import PublicMarketplace from './components/PublicMarketplace';
 import ProtectedRoute from './components/ProtectedRoute';
 import SharedCollection from './components/SharedCollection';
 import UpgradePage from './components/UpgradePage';
-import StripeDebugger from './components/StripeDebugger';
 
 // Root providers wrapper component
 export const RootProviders = () => (
@@ -158,10 +157,6 @@ export const router = createBrowserRouter([
       {
         path: 'upgrade',
         element: <UpgradePage />,
-      },
-      {
-        path: 'debug-stripe',
-        element: <StripeDebugger />,
       },
       {
         path: '*',

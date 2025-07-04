@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { stripDebugProps } from '../../utils/stripDebugProps';
+
 
 /**
  * SettingsPanel Component
@@ -16,7 +16,7 @@ const SettingsPanel = ({
   ...props 
 }) => {
   return (
-    <div className={`mb-6 ${className}`} {...stripDebugProps(props)}>
+    <div className={`mb-6 ${className}`} {...props}>
       {title && (
         <h3 className="text-base font-medium text-gray-900 dark:text-white mb-1 flex items-center">
           {title}

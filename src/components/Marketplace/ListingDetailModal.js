@@ -430,7 +430,7 @@ function ListingDetailModal({
         title="Listing Details"
         position="right"
         size="2xl"
-        closeOnClickOutside={false}
+        closeOnClickOutside={true}
         footer={renderFooter()}
       >
         <div className="space-y-6">

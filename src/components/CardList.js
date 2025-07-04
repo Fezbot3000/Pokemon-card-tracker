@@ -941,43 +941,44 @@ const CardList = ({
         />
       </div>
 
-      <CollectionSelector
-        selectedCollection={selectedCollection}
-        collections={[
-          'All Cards', 
-          ...Object.keys(collections)
-            .filter(collection => {
-              const lowerCase = collection.toLowerCase();
-              // Hide 'Default Collection' if it's empty
-              if (lowerCase === 'default collection' && 
-                  Array.isArray(collections[collection]) && 
-                  collections[collection].length === 0) {
-                return false;
-              }
-              // Filter out sold collections
-              return lowerCase !== 'sold' && !lowerCase.includes('sold');
-            })
-            // Sort collections alphabetically
-            .sort((a, b) => a.localeCompare(b))
-        ]}
-        onCollectionChange={onCollectionChange}
-        onAddCollection={(newCollectionName) => {
-          // Create a new collection
-          const updatedCollections = {
-            ...collections,
-            [newCollectionName]: []
-          };
-          setCollections(updatedCollections);
-          // Save to database
-          db.saveCollections(updatedCollections);
-          
-          // After creating a new collection, select it
-          if (typeof onCollectionChange === 'function') {
-            onCollectionChange(newCollectionName);
-          }
-        }}
-        className="mb-2"
-      />
+      <div className="flex justify-end mb-2">
+        <CollectionSelector
+          selectedCollection={selectedCollection}
+          collections={[
+            'All Cards', 
+            ...Object.keys(collections)
+              .filter(collection => {
+                const lowerCase = collection.toLowerCase();
+                // Hide 'Default Collection' if it's empty
+                if (lowerCase === 'default collection' && 
+                    Array.isArray(collections[collection]) && 
+                    collections[collection].length === 0) {
+                  return false;
+                }
+                // Filter out sold collections
+                return lowerCase !== 'sold' && !lowerCase.includes('sold');
+              })
+              // Sort collections alphabetically
+              .sort((a, b) => a.localeCompare(b))
+          ]}
+          onCollectionChange={onCollectionChange}
+          onAddCollection={(newCollectionName) => {
+            // Create a new collection
+            const updatedCollections = {
+              ...collections,
+              [newCollectionName]: []
+            };
+            setCollections(updatedCollections);
+            // Save to database
+            db.saveCollections(updatedCollections);
+            
+            // After creating a new collection, select it
+            if (typeof onCollectionChange === 'function') {
+              onCollectionChange(newCollectionName);
+            }
+          }}
+        />
+      </div>
 
       {/* Cards Display */}
       {filteredCards.length === 0 ? (
@@ -1136,7 +1137,11 @@ const CardList = ({
 
       {/* Selected Cards Actions - Modern FAB Style */}
       {selectedCards.size > 0 && (
-        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
+        <>
+          {/* Bottom shadow overlay for better contrast */}
+          <div className="fixed inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/50 via-black/20 to-transparent pointer-events-none z-40"></div>
+          
+          <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
           {/* Selection Count Badge */}
           <div className="mb-3 flex justify-center">
             <div className="bg-white dark:bg-[#1B2131] border border-gray-200 dark:border-gray-700 rounded-full px-4 py-2 shadow-lg backdrop-blur-sm">
@@ -1355,7 +1360,7 @@ const CardList = ({
             {/* Full-width Clear Selection Button */}
             <button
               onClick={clearSelection}
-              className="w-full bg-gray-400 hover:bg-gray-500 text-white rounded-xl px-4 py-3 transition-all duration-200 shadow-md hover:shadow-lg font-medium"
+              className="w-full bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded-xl px-4 py-3 transition-all duration-200 shadow-md hover:shadow-lg font-medium"
               title="Clear selection"
             >
               <span className="material-icons text-lg mr-2 align-middle">clear</span>
@@ -1363,6 +1368,7 @@ const CardList = ({
             </button>
           </div>
         </div>
+        </>
       )}
 
       {/* Card Details Modal */}

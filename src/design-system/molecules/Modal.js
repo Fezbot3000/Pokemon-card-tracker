@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import Button from '../atoms/Button';
 import Icon from '../atoms/Icon';
-import { stripDebugProps } from '../../utils/stripDebugProps';
+
 import '../styles/animations.css';
 
 /**
@@ -26,6 +26,7 @@ const Modal = ({
   maxWidth = 'max-w-2xl',
   ariaLabel,
   zIndex = 50,
+  noContentPadding = false,
   ...props
 }) => {
   const modalRef = useRef(null);
@@ -286,7 +287,7 @@ const Modal = ({
           height: window.innerWidth < 640 ? 'calc(100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))' : undefined,
           maxHeight: window.innerWidth < 640 ? 'calc(100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))' : undefined
         }}
-        {...stripDebugProps(props)}
+        {...props}
       >
         {/* Modal Header - Sticky */}
         {title && (
@@ -309,7 +310,7 @@ const Modal = ({
         )}
 
         {/* Modal Content - Scrollable */}
-        <div className={`flex-1 overflow-y-auto scrollbar-hide px-6 py-6 modal-content`}>
+        <div className={`flex-1 overflow-y-auto scrollbar-hide ${noContentPadding ? 'px-6' : 'px-6 py-6'} modal-content`}>
           {children}
         </div>
 
@@ -344,7 +345,8 @@ Modal.propTypes = {
   showAsStatic: PropTypes.bool,
   maxWidth: PropTypes.string,
   ariaLabel: PropTypes.string,
-  zIndex: PropTypes.number
+  zIndex: PropTypes.number,
+  noContentPadding: PropTypes.bool
 };
 
 export default Modal;

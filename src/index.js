@@ -17,8 +17,7 @@ import logger from './utils/logger';
 import { initUnifiedErrorHandler } from './utils/unifiedErrorHandler';
 import ErrorBoundary from './components/ErrorBoundary';
 
-// Disable Firebase debug logging for production readiness
-window.localStorage.removeItem('debug');
+
 
 // Initialize unified error handler
 initUnifiedErrorHandler();
@@ -26,7 +25,7 @@ initUnifiedErrorHandler();
 // Initialize the application
 initializeApp()
   .then(() => {
-    logger.debug('App initialization complete, rendering React app');
+    
   })
   .catch(error => {
     logger.error('Error during app initialization:', error);

@@ -112,7 +112,7 @@ const SaleModal = ({ isOpen, onClose, selectedCards, onConfirm }) => {
       title="Mark Cards as Sold"
       position="right"
       size="2xl"
-      closeOnClickOutside={false}
+      closeOnClickOutside={true}
       footer={
         <div className="flex justify-between w-full">
           <Button 

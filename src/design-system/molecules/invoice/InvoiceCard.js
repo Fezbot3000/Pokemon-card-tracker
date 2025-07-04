@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import { stripDebugProps } from '../../../utils/stripDebugProps';
+
 
 /**
  * InvoiceCard Component
@@ -76,7 +76,7 @@ const InvoiceCard = ({
     <div
       id={`invoice-card-${card.id || card.slabSerial}`}
       className={`flex flex-col bg-white dark:bg-[#1B2131] rounded-md border border-gray-200 dark:border-[#ffffff1a] overflow-hidden ${className}`}
-      {...stripDebugProps(props)}
+      {...props}
     >
       {/* Card Title - Optimized format */}
       <div className="p-3 border-b border-gray-200 dark:border-[#ffffff1a]">
