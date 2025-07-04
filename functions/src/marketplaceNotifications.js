@@ -66,8 +66,8 @@ exports.sendEmailNotification = functions.https.onCall(async (data, context) => 
   }
 });
 
-// Send email when listing is sold
-exports.sendListingSoldNotification = functions.https.onCall(async (data, context) => {
+// Send email when listing is sold (manual trigger)
+exports.sendListingSoldNotificationManual = functions.https.onCall(async (data, context) => {
   // Verify authentication
   if (!context.auth) {
     throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');

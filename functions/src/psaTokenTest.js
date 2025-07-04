@@ -8,8 +8,18 @@ exports.testPsaToken = functions.https.onRequest((req, res) => {
     // Use a known valid cert number for testing
     const certNumber = req.query.certNumber || '10249374'; // Default test cert
     
-    // Get PSA API token from environment variable - no fallback
-    const psaToken = functions.config().psa?.api_token;
+    // Get PSA API token from environment variables with optional Firebase config fallback
+    let psaToken = process.env.PSA_API_TOKEN;
+    
+    // Try to get token from Firebase functions config as fallback (if available)
+    try {
+      const config = functions?.config?.();
+      if (config?.psa?.api_token) {
+        psaToken = config.psa.api_token;
+      }
+    } catch (e) {
+      console.warn('Skipping functions.config() fallback, using process.env instead:', e.message);
+    }
     
     if (!psaToken) {
       return res.status(500).json({

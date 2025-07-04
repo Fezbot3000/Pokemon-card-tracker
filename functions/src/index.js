@@ -7,9 +7,12 @@ const cors = require('cors')({ origin: true });
 const { psaLookupHttp } = require('./psaLookupHttp');
 const emailFunctions = require('./emailFunctions');
 const testEmail = require('./testEmail');
+const exchangeRates = require('./exchangeRates');
 
-// Initialize Firebase Admin SDK
-admin.initializeApp();
+// Initialize Firebase Admin SDK (only if not already initialized)
+if (!admin.apps.length) {
+  admin.initializeApp();
+}
 
 // Export email functions
 exports.sendWelcomeEmail = emailFunctions.sendWelcomeEmail;
@@ -26,6 +29,9 @@ exports.getPSADatabaseStats = psaDatabase.getPSADatabaseStats;
 
 // Export the HTTP PSA lookup function
 exports.psaLookupHttp = psaLookupHttp;
+
+// Export exchange rates function
+// exports.getExchangeRates = exchangeRates.getExchangeRates;
 
 // PSA Lookup Function - implements 3-layer cache system
 exports.psaLookup = functions.https.onCall(async (data, context) => {
@@ -83,15 +89,25 @@ exports.psaLookup = functions.https.onCall(async (data, context) => {
     // Layer 3: Fetch from PSA API
     console.log(`Fetching fresh PSA data for cert #${certNumber}`);
     
-    // Get PSA API token from Firebase Functions config - no fallback
-    const psaToken = functions.config().psa?.api_token;
+    // Get PSA API token from environment variables with optional Firebase config fallback
+    let psaToken = process.env.PSA_API_TOKEN;
+    
+    // Try to get token from Firebase functions config as fallback (if available)
+    try {
+      const config = functions?.config?.();
+      if (config?.psa?.api_token) {
+        psaToken = config.psa.api_token;
+      }
+    } catch (e) {
+      console.warn('Skipping functions.config() fallback, using process.env instead:', e.message);
+    }
     
     if (!psaToken) {
-      console.error('PSA API token not configured. Please set using firebase functions:config:set psa.api_token="YOUR_TOKEN"');
+      console.warn('PSA_API_TOKEN not configured in Firebase config or environment variables');
       return {
         success: false,
-        error: 'CONFIGURATION_ERROR',
-        message: 'PSA API is not properly configured. Please contact support.'
+        error: 'PSA_API_NOT_CONFIGURED',
+        message: 'PSA API is not currently configured. Please contact support for assistance.'
       };
     }
     
@@ -311,46 +327,8 @@ exports.psaLookupWithCache = functions.https.onCall(async (data, context) => {
   return result;
 });
 
-// Add HTTP version of PSA lookup for direct API access
-exports.psaLookupHttp = functions.https.onRequest((request, response) => {
-  // Set CORS headers for preflight requests
-  response.set('Access-Control-Allow-Origin', '*');
-  response.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  response.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  
-  // Handle preflight OPTIONS request
-  if (request.method === 'OPTIONS') {
-    response.status(204).send('');
-    return;
-  }
-  
-  // Process the request using CORS middleware
-  return cors(request, response, async () => {
-    try {
-      // Extract cert number from request
-      const certNumber = request.query.certNumber || (request.body && request.body.certNumber);
-      
-      if (!certNumber) {
-        return response.status(400).json({
-          success: false,
-          error: 'MISSING_CERT_NUMBER',
-          message: 'Certification number is required'
-        });
-      }
-      
-      // Call the same logic as the callable function
-      const result = await exports.psaLookup({ certNumber }, { auth: { uid: 'http-api-user' } });
-      return response.json(result);
-    } catch (error) {
-      console.error('Error in HTTP PSA lookup:', error);
-      return response.status(500).json({
-        success: false,
-        error: 'SERVER_ERROR',
-        message: error.message
-      });
-    }
-  });
-});
+// Note: psaLookupHttp is exported from the dedicated psaLookupHttp.js file
+// The duplicate export has been removed to prevent conflicts
 
 // Pokemon TCG Lookup Function - fetches card pricing data
 exports.pokemonTcgLookup = functions.https.onCall(async (data, context) => {
@@ -372,8 +350,18 @@ exports.pokemonTcgLookup = functions.https.onCall(async (data, context) => {
   }
   
   try {
-    // Get Pokemon TCG API key from Firebase Functions config - no fallback
-    const apiKey = functions.config().pokemon_tcg?.api_key;
+    // Get Pokemon TCG API key from environment variables with optional Firebase config fallback
+    let apiKey = process.env.POKEMON_TCG_API_KEY || '';
+    
+    // Try to get API key from Firebase functions config as fallback (if available)
+    try {
+      const config = functions?.config?.();
+      if (config?.pokemon_tcg?.api_key) {
+        apiKey = config.pokemon_tcg.api_key;
+      }
+    } catch (e) {
+      console.warn('Skipping functions.config() fallback for Pokemon TCG API, using process.env instead:', e.message);
+    }
     
     if (!apiKey) {
       console.error('Pokemon TCG API key not configured. Please set using firebase functions:config:set pokemon_tcg.api_key="YOUR_KEY"');

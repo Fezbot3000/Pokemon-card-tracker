@@ -8,8 +8,10 @@ const PDFDocument = require('pdfkit');
 const AdmZip = require('adm-zip');
 const { Readable } = require('stream');
 
-// Initialize Firebase Admin
-admin.initializeApp();
+// Initialize Firebase Admin (only if not already initialized)
+if (!admin.apps.length) {
+  admin.initializeApp();
+}
 
 // Import PSA-related functions
 const { testPsaToken } = require('./src/psaTokenTest');
@@ -23,7 +25,7 @@ const { testAllEmails } = require('./src/emailTester');
 const { onUserCreate, onUserDelete } = require('./src/authTriggers');
 
 // Import marketplace notifications
-const { sendEmailNotification, sendListingSoldNotification } = require('./src/marketplaceNotifications');
+const { sendEmailNotification, sendListingSoldNotificationManual } = require('./src/marketplaceNotifications');
 
 // Export PSA token test function
 exports.testPsaToken = testPsaToken;
@@ -45,7 +47,7 @@ exports.onUserDelete = onUserDelete;
 
 // Export marketplace notifications
 exports.sendEmailNotification = sendEmailNotification;
-exports.sendListingSoldNotification = sendListingSoldNotification;
+exports.sendListingSoldNotificationManual = sendListingSoldNotificationManual;
 
 // Configure CORS: Allow requests from local dev and production domain
 const allowedOrigins = [
@@ -71,18 +73,7 @@ const cors = require('cors')({
   }
 });
 
-// Additional Firebase Admin SDK initialization error handling
-try {
-  if (!admin.apps.length) {
-    console.log('Initializing Firebase Admin SDK');
-    admin.initializeApp();
-    console.log('Firebase Admin SDK initialized successfully');
-  } else {
-    console.log('Firebase Admin SDK already initialized');
-  }
-} catch (error) {
-  console.error('Error initializing Firebase Admin SDK:', error);
-}
+// Firebase Admin SDK is initialized in src/index.js
 
 // Add a function to send feedback email
 exports.sendFeedbackEmail = functions.https.onCall(async (data, context) => {
@@ -872,42 +863,43 @@ exports.createCheckoutSession = functions.https.onCall(async (data, context) => 
   }
 
   try {
-    console.log('🔍 Checking Firebase config...');
+    console.log('🔍 Checking Stripe configuration...');
     
-    // Try to get config with error handling
-    let stripeConfig;
+    // Get Stripe configuration with safe fallback
+    let stripeConfig = {};
     try {
-      stripeConfig = functionsBase.config().stripe;
-      console.log('✅ Config retrieved successfully');
-    } catch (configError) {
-      console.error('❌ Error getting functions.config():', configError.message);
-      throw new HttpsError('internal', `Configuration error: ${configError.message}`);
+      const config = functionsBase?.config?.();
+      if (config?.stripe) {
+        stripeConfig = config.stripe;
+        console.log('✅ Config retrieved from Firebase functions config');
+      }
+    } catch (e) {
+      console.warn('Skipping functions.config() for Stripe, using process.env instead:', e.message);
     }
     
-    console.log('Stripe config keys:', stripeConfig ? Object.keys(stripeConfig) : 'No stripe config found');
+    // Use environment variables as fallback
+    const secretKey = stripeConfig.secret_key || process.env.STRIPE_SECRET_KEY;
+    const premiumPlanPriceId = stripeConfig.premium_plan_price_id || process.env.STRIPE_PREMIUM_PLAN_PRICE_ID;
     
-    if (!stripeConfig) {
-      console.error('❌ No stripe config found');
-      throw new HttpsError('internal', 'Stripe configuration not found');
-    }
+    console.log('Stripe config keys:', stripeConfig ? Object.keys(stripeConfig) : 'Using environment variables');
     
-    if (!stripeConfig.secret_key) {
-      console.error('❌ Stripe secret key not found in Firebase config');
+    if (!secretKey) {
+      console.error('❌ Stripe secret key not found in Firebase config or environment variables');
       throw new HttpsError('internal', 'Stripe secret key configuration missing');
     }
     
-    if (!stripeConfig.premium_plan_price_id) {
-      console.error('❌ Stripe premium plan price ID not found in Firebase config');
+    if (!premiumPlanPriceId) {
+      console.error('❌ Stripe premium plan price ID not found in Firebase config or environment variables');
       throw new HttpsError('internal', 'Stripe price configuration missing');
     }
 
-    // Initialize Stripe with secret key from Firebase config
+    // Initialize Stripe with secret key
     console.log('📦 Initializing Stripe...');
-    console.log('🔑 Using secret key type:', stripeConfig.secret_key.startsWith('sk_live_') ? 'LIVE' : 'TEST');
+    console.log('🔑 Using secret key type:', secretKey.startsWith('sk_live_') ? 'LIVE' : 'TEST');
     
     let stripe;
     try {
-      stripe = require('stripe')(stripeConfig.secret_key);
+      stripe = require('stripe')(secretKey);
       console.log('✅ Stripe initialized successfully');
     } catch (stripeInitError) {
       console.error('❌ Stripe initialization failed:', stripeInitError.message);
@@ -916,13 +908,13 @@ exports.createCheckoutSession = functions.https.onCall(async (data, context) => 
     
     const userId = context.auth.uid;
     const userEmail = context.auth.token.email;
-    const priceId = stripeConfig.premium_plan_price_id;
+    const priceId = premiumPlanPriceId;
     
     console.log('✅ Creating Stripe checkout session for user:', {
       userId,
       userEmail,
       priceId,
-      keyType: stripeConfig.secret_key.startsWith('sk_live_') ? 'LIVE' : 'TEST'
+      keyType: secretKey.startsWith('sk_live_') ? 'LIVE' : 'TEST'
     });
 
     // Validate the price exists first
@@ -1008,9 +1000,22 @@ exports.createCheckoutSession = functions.https.onCall(async (data, context) => 
 
 // Stripe Webhook Handler
 exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
-  const stripe = require('stripe')(functionsBase.config().stripe.secret_key);
+  // Get Stripe configuration with safe fallback
+  let stripeConfig = {};
+  try {
+    const config = functionsBase?.config?.();
+    if (config?.stripe) {
+      stripeConfig = config.stripe;
+    }
+  } catch (e) {
+    console.warn('Skipping functions.config() for Stripe webhook, using process.env instead:', e.message);
+  }
+  
+  const secretKey = stripeConfig.secret_key || process.env.STRIPE_SECRET_KEY;
+  const webhookSecret = stripeConfig.webhook_secret || process.env.STRIPE_WEBHOOK_SECRET;
+  
+  const stripe = require('stripe')(secretKey);
   const sig = req.headers['stripe-signature'];
-  const webhookSecret = functionsBase.config().stripe.webhook_secret;
   
   let event;
   

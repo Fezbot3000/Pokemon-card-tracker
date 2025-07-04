@@ -2,12 +2,23 @@ const functions = require('firebase-functions');
 const admin = require('firebase-admin'); // Add this line
 const sgMail = require('@sendgrid/mail');
 
-// Initialize SendGrid with API key from Firebase config (proper v1 approach)
-const apiKey = functions.config().sendgrid?.api_key;
+// Initialize SendGrid with API key from environment variables with optional Firebase config fallback
+let apiKey = process.env.SENDGRID_API_KEY;
+
+// Try to get API key from Firebase functions config as fallback (if available)
+try {
+  const config = functions?.config?.();
+  if (config?.sendgrid?.api_key) {
+    apiKey = config.sendgrid.api_key;
+  }
+} catch (e) {
+  console.warn('Skipping functions.config() fallback for SendGrid API, using process.env instead:', e.message);
+}
+
 if (apiKey) {
   sgMail.setApiKey(apiKey);
 } else {
-  console.warn('SendGrid API key not configured. Please set using: firebase functions:config:set sendgrid.api_key="YOUR_KEY"');
+  console.warn('SendGrid API key not configured. Please set using: firebase functions:config:set sendgrid.api_key="YOUR_KEY" or SENDGRID_API_KEY environment variable');
 }
 
 // Email templates - Updated with real SendGrid template IDs
