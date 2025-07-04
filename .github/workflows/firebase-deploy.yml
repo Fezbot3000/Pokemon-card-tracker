@@ -77,6 +77,24 @@ jobs:
           
       - name: Delete existing functions (if needed)
         run: |
+          # Delete old functions that no longer exist in source code
+          npx firebase-tools functions:delete createCheckoutSession --region us-central1 --project mycardtracker-c8479 --token "${{ secrets.FIREBASE_TOKEN }}" --force
+          npx firebase-tools functions:delete generateInvoiceBatch --region us-central1 --project mycardtracker-c8479 --token "${{ secrets.FIREBASE_TOKEN }}" --force
+          npx firebase-tools functions:delete getBackupDownloadUrl --region us-central1 --project mycardtracker-c8479 --token "${{ secrets.FIREBASE_TOKEN }}" --force
+          npx firebase-tools functions:delete getBackupFileContent --region us-central1 --project mycardtracker-c8479 --token "${{ secrets.FIREBASE_TOKEN }}" --force
+          npx firebase-tools functions:delete getCarPrice --region us-central1 --project mycardtracker-c8479 --token "${{ secrets.FIREBASE_TOKEN }}" --force
+          npx firebase-tools functions:delete getCarValueFromAdmin --region us-central1 --project mycardtracker-c8479 --token "${{ secrets.FIREBASE_TOKEN }}" --force
+          npx firebase-tools functions:delete getUserCards --region us-central1 --project mycardtracker-c8479 --token "${{ secrets.FIREBASE_TOKEN }}" --force
+          npx firebase-tools functions:delete listBackupFiles --region us-central1 --project mycardtracker-c8479 --token "${{ secrets.FIREBASE_TOKEN }}" --force
+          npx firebase-tools functions:delete onUserCreate --region us-central1 --project mycardtracker-c8479 --token "${{ secrets.FIREBASE_TOKEN }}" --force
+          npx firebase-tools functions:delete onUserDelete --region us-central1 --project mycardtracker-c8479 --token "${{ secrets.FIREBASE_TOKEN }}" --force
+          npx firebase-tools functions:delete sendEmailNotification --region us-central1 --project mycardtracker-c8479 --token "${{ secrets.FIREBASE_TOKEN }}" --force
+          npx firebase-tools functions:delete sendFeedbackEmail --region us-central1 --project mycardtracker-c8479 --token "${{ secrets.FIREBASE_TOKEN }}" --force
+          npx firebase-tools functions:delete sendListingSoldNotification --region us-central1 --project mycardtracker-c8479 --token "${{ secrets.FIREBASE_TOKEN }}" --force
+          npx firebase-tools functions:delete stripeWebhook --region us-central1 --project mycardtracker-c8479 --token "${{ secrets.FIREBASE_TOKEN }}" --force
+          npx firebase-tools functions:delete testAllEmails --region us-central1 --project mycardtracker-c8479 --token "${{ secrets.FIREBASE_TOKEN }}" --force
+          npx firebase-tools functions:delete testPsaToken --region us-central1 --project mycardtracker-c8479 --token "${{ secrets.FIREBASE_TOKEN }}" --force
+          npx firebase-tools functions:delete uploadBackup --region us-central1 --project mycardtracker-c8479 --token "${{ secrets.FIREBASE_TOKEN }}" --force
           npx firebase-tools functions:delete proxyPriceCharting --region us-central1 --project mycardtracker-c8479 --token "${{ secrets.FIREBASE_TOKEN }}" --force
         continue-on-error: true
       
