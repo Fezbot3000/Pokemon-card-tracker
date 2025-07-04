@@ -37,24 +37,7 @@ const cardCategories = [
   // Add more categories as needed
 ];
 
-const holoStates = [
-  { value: '', label: 'Select Holo State...' },
-  { value: 'non-holo', label: 'Non-Holo' },
-  { value: 'holo', label: 'Holo' },
-  { value: 'reverse-holo', label: 'Reverse Holo' },
-  { value: 'full-art', label: 'Full Art' },
-  { value: 'rainbow', label: 'Rainbow' },
-  { value: 'gold', label: 'Gold' },
-  { value: 'secret-rare', label: 'Secret Rare' },
-  { value: 'ultra-rare', label: 'Ultra Rare' },
-  { value: 'shiny', label: 'Shiny' },
-  { value: 'alternate-art', label: 'Alternate Art' },
-  { value: 'promo', label: 'Promo' },
-  { value: 'first-edition', label: 'First Edition' },
-  { value: 'shadowless', label: 'Shadowless' },
-  { value: 'unlimited', label: 'Unlimited' },
-  { value: 'other', label: 'Other' },
-];
+
 
 const gradingCompanies = [
   { value: '', label: 'Select Company...' },
@@ -794,20 +777,7 @@ const CardDetailsForm = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-4 mt-4">
-            <div>
-              <SelectField
-                label="Holo State"
-                name="holoState"
-                value={card?.holoState || ''}
-                onChange={handleInputChange}
-                options={holoStates}
-                error={errors.holoState}
-                required={false}
-                testId="holo-state-select"
-              />
-            </div>
-          </div>
+
 
           <div className="grid grid-cols-1 gap-4 mt-4">
             <div>
@@ -1011,7 +981,7 @@ CardDetailsForm.propTypes = {
     year: PropTypes.string,
     category: PropTypes.string,
     condition: PropTypes.string,
-    holoState: PropTypes.string,
+
     population: PropTypes.oneOfType([PropTypes.string, PropTypes.number]), 
     slabSerial: PropTypes.string,
     datePurchased: PropTypes.string,

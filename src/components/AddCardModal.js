@@ -33,7 +33,7 @@ const AddCardModal = ({
     year: '',
     category: '', 
     condition: '',
-    holoState: '',
+
     certificationNumber: '', 
     datePurchased: new Date().toISOString().split('T')[0],
     investmentAUD: '',

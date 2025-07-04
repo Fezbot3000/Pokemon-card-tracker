@@ -14,7 +14,7 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
     year: '',
     category: '',
     condition: '',
-    holoState: '',
+
     slabSerial: '',
     datePurchased: '',
     investmentUSD: '',
@@ -576,7 +576,7 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
 
                 {/* Card Information Section */}
                 <div className="md:col-span-2 space-y-4">
-                  {['player', 'card', 'set', 'year', 'category', 'condition', 'holoState', 'slabSerial', 'datePurchased', 'investmentUSD', 'currentValueUSD', 'investmentAUD', 'currentValueAUD'].map((field) => {
+                  {['player', 'card', 'set', 'year', 'category', 'condition', 'slabSerial', 'datePurchased', 'investmentUSD', 'currentValueUSD', 'investmentAUD', 'currentValueAUD'].map((field) => {
                     const isRequired = ['card', 'set', 'year', 'category'].includes(field);
                     const isNumeric = ['year'].includes(field);
                     const isCurrency = ['investment', 'currentValue'].some(prefix => field.startsWith(prefix));
@@ -587,7 +587,7 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
                       year: 'Year',
                       category: 'Category',
                       condition: 'Condition',
-                      holoState: 'Holo State',
+
                       slabSerial: 'Serial Number',
                       datePurchased: 'Date Purchased',
                       investmentAUD: 'Purchase Price (AUD)',
@@ -638,32 +638,6 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
                           >
                             <option value="" disabled>Select Category...</option>
                             {/* Add category options here */}
-                          </select>
-                        ) : field === 'holoState' ? (
-                          <select
-                            id={fieldName}
-                            name={fieldName}
-                            value={formData[fieldName]}
-                            onChange={handleInputChange}
-                            required={isRequired}
-                            className={commonInputClasses}
-                          >
-                            <option value="">Select Holo State...</option>
-                            <option value="non-holo">Non-Holo</option>
-                            <option value="holo">Holo</option>
-                            <option value="reverse-holo">Reverse Holo</option>
-                            <option value="full-art">Full Art</option>
-                            <option value="rainbow">Rainbow</option>
-                            <option value="gold">Gold</option>
-                            <option value="secret-rare">Secret Rare</option>
-                            <option value="ultra-rare">Ultra Rare</option>
-                            <option value="shiny">Shiny</option>
-                            <option value="alternate-art">Alternate Art</option>
-                            <option value="promo">Promo</option>
-                            <option value="first-edition">First Edition</option>
-                            <option value="shadowless">Shadowless</option>
-                            <option value="unlimited">Unlimited</option>
-                            <option value="other">Other</option>
                           </select>
                         ) : (
                           <input
@@ -732,7 +706,7 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
                     ? 'bg-gray-800 text-green-300' 
                     : 'bg-gray-100 text-green-600'
                 }`}>
-                  player,card,set,year,category,condition,holoState,slabSerial,datePurchased,investmentAUD,currentValueAUD
+                  player,card,set,year,category,condition,slabSerial,datePurchased,investmentAUD,currentValueAUD
                 </div>
                 
                 <div
@@ -820,8 +794,8 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
                     type="button"
                     onClick={() => {
                       // Generate template CSV
-                      const headers = "player,card,set,year,category,condition,holoState,slabSerial,datePurchased,investmentAUD,currentValueAUD";
-                      const example = "Charizard,Base Set,Pokemon Base Set,1999,Pokemon,PSA 10,holo,12345678,2022-01-01,1000,1500";
+                                      const headers = "player,card,set,year,category,condition,slabSerial,datePurchased,investmentAUD,currentValueAUD";
+                const example = "Charizard,Base Set,Pokemon Base Set,1999,Pokemon,PSA 10,12345678,2022-01-01,1000,1500";
                       const csvContent = `${headers}\n${example}`;
                       
                       // Create and download the file
