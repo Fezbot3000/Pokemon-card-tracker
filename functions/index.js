@@ -959,7 +959,22 @@ exports.createCheckoutSession = functions.https.onCall(async (data, context) => 
 
     console.log('📝 Session configuration:', JSON.stringify(sessionConfig, null, 2));
 
-    const session = await stripe.checkout.sessions.create(sessionConfig);
+    let session;
+    try {
+      session = await stripe.checkout.sessions.create(sessionConfig);
+    } catch (stripeError) {
+      console.error('🔥 Stripe session creation failed:', {
+        message: stripeError.message,
+        type: stripeError.type,
+        code: stripeError.code,
+        param: stripeError.param,
+        detail: stripeError.detail,
+        statusCode: stripeError.statusCode,
+        requestId: stripeError.requestId,
+        raw: stripeError
+      });
+      throw new HttpsError('internal', `Stripe error: ${stripeError.message}`);
+    }
 
     console.log('✅ Stripe checkout session created successfully:', {
       sessionId: session.id,
