@@ -13,7 +13,7 @@ import {
   setPersistence,
   browserLocalPersistence
 } from 'firebase/auth';
-import { doc, setDoc, getDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc, serverTimestamp, updateDoc, onSnapshot } from 'firebase/firestore';
 import { auth, db, googleProvider } from '../../firebase'; // Import from the main app's firebase config
 import { toast } from 'react-hot-toast';
 
@@ -184,6 +184,7 @@ export const AuthProvider = ({ children }) => {
   // Set up the auth state listener
   useEffect(() => {
     let isMounted = true;
+    let unsubscribeSubscription = null;
     
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       
@@ -195,6 +196,42 @@ export const AuthProvider = ({ children }) => {
           setUser(user);
           // Check subscription status
           await checkUserSubscription(user.uid);
+          
+          // Set up real-time subscription listener - ADDED for immediate updates
+          const userRef = doc(db, 'users', user.uid);
+          unsubscribeSubscription = onSnapshot(userRef, (doc) => {
+            if (doc.exists()) {
+              const userData = doc.data();
+              if (userData.subscriptionStatus || userData.planType) {
+                console.log('🔄 Subscription updated in real-time:', userData.subscriptionStatus, userData.planType);
+                
+                // Calculate days remaining for real-time updates
+                const daysRemaining = calculateDaysRemaining(userData.trialEndsAt, userData.subscriptionStatus);
+                
+                // Update subscription data immediately
+                setSubscriptionData({
+                  status: userData.subscriptionStatus,
+                  planType: userData.planType || userData.subscriptionStatus,
+                  trialEndsAt: userData.trialEndsAt,
+                  subscriptionId: userData.subscriptionId || null,
+                  customerId: userData.customerId || null,
+                  daysRemaining: daysRemaining
+                });
+                
+                // Show success message for premium upgrades
+                if (userData.subscriptionStatus === 'premium') {
+                  setTimeout(() => {
+                    toast.success('🎉 Welcome to Premium! All features are now unlocked.', {
+                      duration: 5000
+                    });
+                  }, 1000);
+                }
+              }
+            }
+          }, (error) => {
+            console.error('Subscription listener error:', error);
+          });
+          
         } catch (err) {
           setUser(user);
         }
@@ -208,6 +245,12 @@ export const AuthProvider = ({ children }) => {
           customerId: null,
           daysRemaining: null
         });
+        
+        // Clean up subscription listener when user logs out
+        if (unsubscribeSubscription) {
+          unsubscribeSubscription();
+          unsubscribeSubscription = null;
+        }
       }
       
       // Add a small delay to prevent flashing
@@ -221,6 +264,9 @@ export const AuthProvider = ({ children }) => {
     return () => {
       isMounted = false;
       unsubscribe();
+      if (unsubscribeSubscription) {
+        unsubscribeSubscription();
+      }
     };
   }, []);
 

@@ -536,6 +536,14 @@ exports.createCheckoutSession = functions.https.onCall(async (data, context) => 
 
     // Create checkout session
     console.log('💳 Calling Stripe checkout session create...');
+    
+    // Determine base URL from request headers for localhost support
+    const baseUrl = context.rawRequest?.headers?.origin || 
+                   context.rawRequest?.headers?.referer?.split('/').slice(0, 3).join('/') || 
+                   'https://www.mycardtracker.com.au';
+    
+    console.log('🌐 Using base URL for redirects:', baseUrl);
+    
     const sessionConfig = {
       mode: 'subscription',
       payment_method_types: ['card'],
@@ -548,8 +556,8 @@ exports.createCheckoutSession = functions.https.onCall(async (data, context) => 
         userId: userId,
         planType: 'premium'
       },
-      success_url: 'https://www.mycardtracker.com.au/dashboard?upgraded=true',
-      cancel_url: 'https://www.mycardtracker.com.au/upgrade?cancelled=true',
+      success_url: `${baseUrl}/dashboard?upgraded=true`,
+      cancel_url: `${baseUrl}/upgrade?cancelled=true`,
       allow_promotion_codes: true,
       billing_address_collection: 'auto',
     };
@@ -658,8 +666,8 @@ exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
         console.log(`Processing successful checkout for user: ${userId}`);
         
         if (userId) {
-          // Update user subscription to premium
-          await admin.firestore().doc(`users/${userId}/profile/data`).update({
+          // Update user subscription to premium - FIXED: Use correct Firestore path
+          await admin.firestore().doc(`users/${userId}`).update({
             subscriptionStatus: 'premium',
             planType: 'premium',
             customerId: session.customer,
