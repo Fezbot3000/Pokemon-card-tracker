@@ -78,7 +78,7 @@ jobs:
       - name: Delete existing functions (if needed)
         run: |
           # Delete old functions that no longer exist in source code
-          npx firebase-tools functions:delete createCheckoutSession --region us-central1 --project mycardtracker-c8479 --token "${{ secrets.FIREBASE_TOKEN }}" --force
+          # npx firebase-tools functions:delete createCheckoutSession --region us-central1 --project mycardtracker-c8479 --token "${{ secrets.FIREBASE_TOKEN }}" --force
           npx firebase-tools functions:delete generateInvoiceBatch --region us-central1 --project mycardtracker-c8479 --token "${{ secrets.FIREBASE_TOKEN }}" --force
           npx firebase-tools functions:delete getBackupDownloadUrl --region us-central1 --project mycardtracker-c8479 --token "${{ secrets.FIREBASE_TOKEN }}" --force
           npx firebase-tools functions:delete getBackupFileContent --region us-central1 --project mycardtracker-c8479 --token "${{ secrets.FIREBASE_TOKEN }}" --force
