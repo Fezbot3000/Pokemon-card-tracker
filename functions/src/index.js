@@ -445,17 +445,22 @@ exports.pokemonTcgLookup = functions.https.onCall(async (data, context) => {
 
 // Create Checkout Session for Premium Subscription
 exports.createCheckoutSession = functions.https.onCall(async (data, context) => {
-  console.log('🚀 createCheckoutSession called with data:', data);
-  console.log('📋 Context:', {
-    auth: context.auth ? {
-      uid: context.auth.uid,
-      email: context.auth.token?.email
-    } : null,
-    rawRequest: context.rawRequest ? {
-      headers: Object.keys(context.rawRequest.headers),
-      method: context.rawRequest.method
-    } : null
-  });
+  console.log('🔥 FUNCTION DEBUG: createCheckoutSession called');
+  console.log('🔥 FUNCTION DEBUG: Input data:', JSON.stringify(data, null, 2));
+  console.log('🔥 FUNCTION DEBUG: Context:', JSON.stringify({
+    auth: context.auth ? 'Present' : 'Missing',
+    origin: context.rawRequest?.headers?.origin
+  }, null, 2));
+  
+  try {
+    // Check Stripe configuration
+    const config = functions?.config?.();
+    console.log('🔥 FUNCTION DEBUG: Functions config available:', !!config);
+    console.log('🔥 FUNCTION DEBUG: Stripe config keys:', Object.keys(config?.stripe || {}));
+    
+    const stripeSecretKey = config?.stripe?.secret_key || process.env.STRIPE_SECRET_KEY;
+    console.log('🔥 FUNCTION DEBUG: Stripe secret key available:', !!stripeSecretKey);
+    console.log('🔥 FUNCTION DEBUG: Stripe secret key prefix:', stripeSecretKey?.substring(0, 12));
 
   // Ensure user is authenticated
   if (!context.auth) {
@@ -593,6 +598,12 @@ exports.createCheckoutSession = functions.https.onCall(async (data, context) => 
       url: session.url,
       sessionId: session.id
     };
+  } catch (error) {
+    console.error('🔥 FUNCTION DEBUG: Error in createCheckoutSession:', error);
+    console.error('🔥 FUNCTION DEBUG: Error stack:', error.stack);
+    throw error;
+  }
+  
   } catch (error) {
     console.error('💥 Error creating Stripe checkout session:', {
       message: error.message,

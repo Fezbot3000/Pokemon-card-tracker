@@ -21,70 +21,73 @@ const UpgradeModal = ({ isOpen, onClose, daysRemaining }) => {
   const [loading, setLoading] = useState(false);
 
   const handleUpgrade = async () => {
-    console.log('🚀 Starting upgrade process...');
-    
-    if (!user) {
-      console.error('❌ No user found - user must be logged in');
-      toast.error('Please log in to upgrade');
-      return;
-    }
-
-    console.log('✅ User authenticated:', { uid: user.uid, email: user.email });
+    console.log('🚀 PRODUCTION DEBUG: Starting upgrade process');
     setLoading(true);
     
     try {
-      // Step 1: Check environment variables
-      console.log('🔍 Checking environment variables...');
-      console.log('🔍 All process.env:', Object.keys(process.env).filter(key => key.startsWith('REACT_APP')));
+      console.log('📡 PRODUCTION DEBUG: About to call createCheckoutSession');
+      console.log('📡 PRODUCTION DEBUG: User ID:', user?.uid);
       
-      const stripePublishableKey = getStripePublishableKey();
-      console.log('🔍 REACT_APP_STRIPE_PUBLISHABLE_KEY exists:', !!stripePublishableKey);
-      console.log('🔍 REACT_APP_STRIPE_PUBLISHABLE_KEY value preview:', stripePublishableKey?.substring(0, 15) + '...');
-
-      // Step 2: Create checkout session on server (OFFICIAL STRIPE APPROACH)
-      console.log('🔥 Creating checkout session via Firebase Functions...');
       const { httpsCallable } = await import('firebase/functions');
       const { functions } = await import('../firebase');
       
-      const createCheckoutSession = httpsCallable(functions, 'createCheckoutSession');
-      const result = await createCheckoutSession({});
+      console.log('📡 PRODUCTION DEBUG: Functions instance:', functions);
       
-      console.log('✅ Server-side session created:', result.data);
-
+      const createCheckoutSession = httpsCallable(functions, 'createCheckoutSession');
+      
+      // Get the premium plan price ID from environment or use default
+      const STRIPE_PREMIUM_PLAN_PRICE_ID = process.env.REACT_APP_STRIPE_PREMIUM_PLAN_PRICE_ID || 'price_1RfTouGIULGXhjjBvCFuEoQH';
+      
+      console.log('📡 PRODUCTION DEBUG: Calling function with data:', {
+        priceId: STRIPE_PREMIUM_PLAN_PRICE_ID,
+        userId: user?.uid
+      });
+      
+      const result = await createCheckoutSession({
+        priceId: STRIPE_PREMIUM_PLAN_PRICE_ID,
+        userId: user?.uid
+      });
+      
+      console.log('✅ PRODUCTION DEBUG: Function call successful:', result);
+      console.log('✅ PRODUCTION DEBUG: Session URL:', result.data?.url);
+      console.log('✅ PRODUCTION DEBUG: Session ID:', result.data?.sessionId);
+      
       // Step 3: Load Stripe and redirect to checkout with session ID
-      console.log('📦 Loading Stripe...');
+      console.log('📦 PRODUCTION DEBUG: Loading Stripe...');
+      const stripePublishableKey = getStripePublishableKey();
+      console.log('📦 PRODUCTION DEBUG: Stripe key available:', !!stripePublishableKey);
+      
       const { loadStripe } = await import('@stripe/stripe-js');
       const stripe = await loadStripe(stripePublishableKey);
       
       if (!stripe) {
-        console.error('❌ Stripe failed to load');
+        console.error('❌ PRODUCTION DEBUG: Stripe failed to load');
         throw new Error('Stripe failed to load');
       }
       
-      console.log('✅ Stripe loaded successfully');
+      console.log('✅ PRODUCTION DEBUG: Stripe loaded successfully');
 
-      // Step 4: Redirect to Stripe Checkout with session ID (OFFICIAL APPROACH)
-      console.log('💳 Redirecting to Stripe Checkout...');
+      // Step 4: Redirect to Stripe Checkout with session ID
+      console.log('💳 PRODUCTION DEBUG: Redirecting to Stripe Checkout...');
       const { error } = await stripe.redirectToCheckout({
         sessionId: result.data.sessionId
       });
       
       if (error) {
-        console.error('❌ Stripe redirect error:', error);
+        console.error('❌ PRODUCTION DEBUG: Stripe redirect error:', error);
         throw error;
       }
       
-      console.log('✅ Successfully redirected to Stripe Checkout');
+      console.log('✅ PRODUCTION DEBUG: Successfully redirected to Stripe Checkout');
+      
     } catch (error) {
-      console.error('💥 Upgrade error details:', {
-        message: error.message,
-        code: error.code,
-        details: error.details,
-        stack: error.stack
-      });
+      console.error('❌ PRODUCTION DEBUG: Error caught:', error);
+      console.error('❌ PRODUCTION DEBUG: Error message:', error.message);
+      console.error('❌ PRODUCTION DEBUG: Error code:', error.code);
+      console.error('❌ PRODUCTION DEBUG: Full error object:', JSON.stringify(error, null, 2));
       
       // More specific error messages
-      let errorMessage = 'Failed to start checkout process';
+      let errorMessage = 'Payment system error';
       
       if (error.message && error.message.includes('functions.config is not a function')) {
         errorMessage = 'Server configuration error. Please contact support.';
