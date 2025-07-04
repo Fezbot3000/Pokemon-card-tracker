@@ -149,14 +149,14 @@ const MessageModal = ({ isOpen, onClose, listing, prefilledMessage = '', onViewC
           participants: [user.uid, listing.userId],
           
           // Additional metadata fields
-          cardId: listing.isGeneralChat ? null : listing.id,
+          cardId: listing.isGeneralChat ? null : (listing.id || null),
           lastMessage: newMessage.trim(),
           lastUpdated: serverTimestamp(),
           cardTitle: listing.isGeneralChat ? 'General Discussion' : (listing.cardName || listing.card?.name || listing.card?.cardName || listing.card?.card || 'Card Listing'),
           cardImage: listing.isGeneralChat ? null : (listing.card?.imageUrl || listing.card?.cloudImageUrl || null),
-          listingPrice: listing.isGeneralChat ? null : (listing.priceAUD || listing.price),
+          listingPrice: listing.isGeneralChat ? null : (listing.priceAUD || listing.price || listing.listingPrice || null),
           currency: listing.isGeneralChat ? null : (listing.currency || 'AUD'),
-          location: listing.isGeneralChat ? null : listing.location,
+          location: listing.isGeneralChat ? null : (listing.location || null),
           status: listing.isGeneralChat ? null : (listing.status || 'for sale'),
           sellerName,
           buyerName,
@@ -171,7 +171,21 @@ const MessageModal = ({ isOpen, onClose, listing, prefilledMessage = '', onViewC
           chatId,
           participants: chatData.participants,
           buyerId: chatData.buyerId,
-          sellerId: chatData.sellerId
+          sellerId: chatData.sellerId,
+          listingPrice: chatData.listingPrice,
+          cardId: chatData.cardId,
+          location: chatData.location
+        });
+        
+        // Debug log the original listing data
+        logger.debug('Original listing data:', {
+          id: listing.id,
+          priceAUD: listing.priceAUD,
+          price: listing.price,
+          listingPrice: listing.listingPrice,
+          location: listing.location,
+          currency: listing.currency,
+          status: listing.status
         });
         
         // Create the chat document first

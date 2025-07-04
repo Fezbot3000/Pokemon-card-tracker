@@ -334,7 +334,7 @@ const Settings = () => {
                 <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Sign out of your account and return to the login screen.</p>
                 
                 {userData && (
-                  <div className="flex items-center space-x-4 mb-6 bg-gray-100 dark:bg-gray-800 p-4 rounded-lg">
+                  <div className="flex items-center space-x-4 mb-6 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 p-4 rounded-lg">
                     <div className="w-12 h-12 bg-indigo-600 rounded-full flex items-center justify-center text-white font-medium">
                       {userData.firstName ? userData.firstName.charAt(0) : '?'}
                     </div>
