@@ -786,3 +786,76 @@ exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
     res.status(500).json({ error: 'Webhook processing failed' });
   }
 });
+
+// Diagnostic function to test environment differences
+exports.testStripeConfig = functions.https.onCall(async (data, context) => {
+  console.log('🧪 TEST: Diagnostic function called');
+  
+  try {
+    // Check authentication
+    console.log('🧪 Auth present:', !!context.auth);
+    console.log('🧪 User ID:', context.auth?.uid);
+    
+    // Check functions config
+    const config = functions?.config?.();
+    console.log('🧪 Functions config available:', !!config);
+    console.log('🧪 Stripe config available:', !!config?.stripe);
+    console.log('🧪 Stripe config keys:', config?.stripe ? Object.keys(config.stripe) : 'No stripe config');
+    console.log('🧪 Secret key available:', !!config?.stripe?.secret_key);
+    console.log('🧪 Premium price ID available:', !!config?.stripe?.premium_plan_price_id);
+    console.log('🧪 Webhook secret available:', !!config?.stripe?.webhook_secret);
+    
+    // Check environment variables
+    console.log('🧪 Process env STRIPE_SECRET_KEY:', !!process.env.STRIPE_SECRET_KEY);
+    console.log('🧪 Process env STRIPE_PREMIUM_PLAN_PRICE_ID:', !!process.env.STRIPE_PREMIUM_PLAN_PRICE_ID);
+    
+    // Test Stripe initialization
+    let stripeInitTest = false;
+    let stripeError = null;
+    try {
+      const secretKey = config?.stripe?.secret_key || process.env.STRIPE_SECRET_KEY;
+      if (secretKey) {
+        const stripe = require('stripe')(secretKey);
+        stripeInitTest = true;
+        console.log('🧪 Stripe initialization: SUCCESS');
+      } else {
+        console.log('🧪 Stripe initialization: FAILED - No secret key');
+      }
+    } catch (error) {
+      stripeError = error.message;
+      console.log('🧪 Stripe initialization: ERROR -', error.message);
+    }
+    
+    // Check request origin
+    const origin = context.rawRequest?.headers?.origin;
+    console.log('🧪 Request origin:', origin);
+    
+    return {
+      success: true,
+      environment: {
+        hasAuth: !!context.auth,
+        userId: context.auth?.uid,
+        hasConfig: !!config,
+        hasStripeConfig: !!config?.stripe,
+        stripeConfigKeys: config?.stripe ? Object.keys(config.stripe) : [],
+        hasSecretKey: !!config?.stripe?.secret_key,
+        hasPremiumPriceId: !!config?.stripe?.premium_plan_price_id,
+        hasWebhookSecret: !!config?.stripe?.webhook_secret,
+        hasEnvSecretKey: !!process.env.STRIPE_SECRET_KEY,
+        hasEnvPriceId: !!process.env.STRIPE_PREMIUM_PLAN_PRICE_ID,
+        stripeInitTest: stripeInitTest,
+        stripeError: stripeError,
+        origin: origin,
+        timestamp: new Date().toISOString()
+      }
+    };
+    
+  } catch (error) {
+    console.error('🧪 TEST ERROR:', error);
+    return {
+      success: false,
+      error: error.message,
+      stack: error.stack
+    };
+  }
+});
