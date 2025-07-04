@@ -38,12 +38,23 @@ jobs:
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
       
-      - name: Verify Firebase Configuration
+      - name: Create Firebase Configuration
         run: |
-          echo "Using existing .firebaserc and firebase.json files"
+          echo '{
+            "projects": {
+              "default": "mycardtracker-c8479"
+            },
+            "targets": {
+              "mycardtracker-c8479": {
+                "hosting": {
+                  "default": ["mycardtracker-c8479"]
+                }
+              }
+            }
+          }' > .firebaserc
+          
+          echo "Created .firebaserc with hosting targets"
           cat .firebaserc
-          echo "---"
-          cat firebase.json
       
       - name: Create .env file
         run: |
