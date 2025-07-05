@@ -646,3 +646,41 @@ html.dark body {
   padding-top: 5rem;
   padding-bottom: 0;
 }
+
+/* PWA-specific safe area handling (only when running as home screen app) */
+@media (display-mode: standalone) {
+  /* PWA mode: Add safe area padding to body */
+  body {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  /* PWA mode: Adjust main content to account for safe areas */
+  .main-content {
+    padding-top: calc(var(--header-total-height-mobile) + env(safe-area-inset-top, 0px));
+    padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
+  }
+  
+  @media (min-width: 640px) {
+    .main-content {
+      padding-top: calc(var(--header-total-height-desktop) + env(safe-area-inset-top, 0px));
+      padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+    }
+  }
+  
+  /* PWA mode: Adjust header positioning */
+  .header {
+    top: env(safe-area-inset-top);
+  }
+  
+  /* PWA mode: Adjust bottom nav positioning */
+  .bottom-nav-container {
+    bottom: env(safe-area-inset-bottom);
+  }
+  
+  /* PWA mode: Adjust modals to account for safe areas */
+  .modal-backdrop {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
