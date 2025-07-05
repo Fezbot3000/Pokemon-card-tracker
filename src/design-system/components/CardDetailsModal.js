@@ -483,7 +483,7 @@ const CardDetailsModal = ({
       {/* Enlarged Image Modal */}
       {showEnlargedImage && cardImage && (
         <div 
-          className="fixed inset-0 z-[60] bg-black/90 flex items-center justify-center cursor-zoom-out modal-backdrop-ios-safe" 
+          className="fixed inset-0 z-[60] bg-black/90 flex items-center justify-center cursor-zoom-out" 
           onClick={(e) => {
             e.stopPropagation();
             setShowEnlargedImage(false);

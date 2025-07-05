@@ -104,25 +104,6 @@ const Modal = ({
     const setIOSHeight = () => {
       const vh = window.innerHeight * 0.01;
       document.documentElement.style.setProperty('--vh', `${vh}px`);
-      
-      // Add CSS variables for iOS safe areas if they don't exist in the stylesheet
-      if (!document.querySelector('.safe-area-css-vars')) {
-        const style = document.createElement('style');
-        style.className = 'safe-area-css-vars';
-        style.innerHTML = `
-          .pt-safe {
-            padding-top: env(safe-area-inset-top, 0px) !important;
-          }
-          .pb-safe {
-            padding-bottom: env(safe-area-inset-bottom, 0px) !important;
-          }
-          .modal-ios-fix {
-            padding-top: env(safe-area-inset-top, 0px);
-            padding-bottom: env(safe-area-inset-bottom, 0px);
-          }
-        `;
-        document.head.appendChild(style);
-      }
     };
     
     setIOSHeight();
@@ -201,8 +182,8 @@ const Modal = ({
     right: 'flex items-start justify-end'
   };
   
-  // Build the classes based on theme with iOS safe area handling
-  const backdropClasses = `fixed inset-0 ${positionClasses[position]} bg-black/50 backdrop-blur-sm h-screen min-h-screen modal-backdrop-ios-safe`;
+  // Build the classes based on theme
+  const backdropClasses = `fixed inset-0 ${positionClasses[position]} bg-black/50 backdrop-blur-sm h-screen min-h-screen`;
   
   const modalClasses = forceDarkMode 
     ? `bg-[#0F0F0F]/95 backdrop-blur-sm rounded-lg shadow-xl text-white` 

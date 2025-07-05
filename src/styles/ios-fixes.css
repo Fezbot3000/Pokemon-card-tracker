@@ -113,36 +113,7 @@
     }
   }
   
-  /* Fix for iOS modal safe area background */
-  .modal-backdrop-ios-safe {
-    /* Ensure the backdrop fills the full viewport including safe areas */
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: 0 !important;
-    /* Use viewport height that includes safe areas */
-    height: 100vh !important;
-    min-height: 100vh !important;
-  }
-  
-  /* Set proper background that extends into safe areas */
-  .dark .modal-backdrop-ios-safe {
-    background-color: rgba(0, 0, 0, 0.5) !important;
-  }
-  
-  html:not(.dark) .modal-backdrop-ios-safe {
-    background-color: rgba(0, 0, 0, 0.5) !important;
-  }
-  
-  /* Ensure body background matches theme in safe areas */
-  .dark body {
-    background-color: #0F0F0F !important;
-  }
-  
-  html:not(.dark) body {
-    background-color: white !important;
-  }
+
 }
 
 /* Fix for iOS Safari position:fixed issues with keyboard open */

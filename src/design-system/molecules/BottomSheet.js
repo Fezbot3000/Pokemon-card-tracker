@@ -40,7 +40,7 @@ const BottomSheet = ({ isOpen, onClose, title, children }) => {
   return (
     // Backdrop
     <div 
-      className="fixed inset-0 z-[1000] bg-black/50 backdrop-blur-sm modal-backdrop-ios-safe"
+      className="fixed inset-0 z-[1000] bg-black/50 backdrop-blur-sm"
       onClick={onClose}
     >
       {/* Sheet Content */}
