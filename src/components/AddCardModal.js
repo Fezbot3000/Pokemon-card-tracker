@@ -381,20 +381,20 @@ const AddCardModal = ({
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
               Search your PSA serial number to pre-populate the page.
             </p>
-            <div className="flex gap-2">
+            <div className="space-y-3">
               <input
                 type="text"
                 value={psaSerial}
                 onChange={(e) => setPsaSerial(e.target.value)}
                 placeholder="Enter PSA serial number"
-                className="flex-1 px-3 py-2 border border-[#ffffff33] dark:border-[#ffffff1a] rounded-lg bg-white dark:bg-[#0F0F0F] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="w-full px-3 py-2 border border-[#ffffff33] dark:border-[#ffffff1a] rounded-lg bg-white dark:bg-[#0F0F0F] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/20"
                 disabled={isSearching}
               />
               <Button
                 variant="primary"
                 onClick={handlePsaLookup}
                 disabled={isSearching || !psaSerial.trim() || !hasFeature('PSA_SEARCH')}
-                className="whitespace-nowrap"
+                className="w-full"
                 title={!hasFeature('PSA_SEARCH') ? 'PSA search requires Premium subscription' : 'Search PSA database'}
               >
                 {!hasFeature('PSA_SEARCH') ? (

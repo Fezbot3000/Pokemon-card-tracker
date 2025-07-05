@@ -197,7 +197,7 @@ const Settings = () => {
                 onClick={() => handleTabChange(tab.id)}
                 className={`px-2 py-1 rounded-md text-xs font-medium transition-colors duration-200 ${
                   activeTab === tab.id
-                    ? 'bg-gradient-to-r from-[#ef4444] to-[#db2777] text-white'
+                    ? 'bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] text-white'
                     : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200/50 dark:hover:bg-gray-700/50'
                 }`}
               >

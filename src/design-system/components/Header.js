@@ -222,7 +222,9 @@ const Header = ({
               </div>
               
               {/* Mobile navigation - contextual based on current view */}
-              <div className="sm:hidden flex space-x-1 justify-center">
+              <div className={`sm:hidden flex space-x-1 justify-center ${
+                (isSoldSection() || isMarketplaceSection()) ? 'w-full' : ''
+              }`}>
                 {/* Hide header completely on Cards page */}
                 {currentView === 'cards' ? null : (
                   <>
@@ -386,18 +388,20 @@ const Header = ({
             </div>
           </div>
           
-          {/* Mobile right side - Show settings button only */}
-          <div className="sm:hidden flex items-center justify-end flex-1">
-            {onSettingsClick && (
-              <button
-                onClick={onSettingsClick}
-                className="p-1 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
-                aria-label="Settings"
-              >
-                <Icon name="settings" />
-              </button>
-            )}
-          </div>
+          {/* Mobile right side - Hide completely on invoices and marketplace pages for proper centering */}
+          {!isSoldSection() && !isMarketplaceSection() && (
+            <div className="sm:hidden flex items-center justify-end flex-1">
+              {onSettingsClick && (
+                <button
+                  onClick={onSettingsClick}
+                  className="p-1 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+                  aria-label="Settings"
+                >
+                  <Icon name="settings" />
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </div>
       
