@@ -529,7 +529,7 @@ const AddCardModal = ({
       {/* Enlarged Image Modal */}
       {showEnlargedImage && cardImage && (
         <div 
-          className="fixed inset-0 z-[60] bg-black/90 flex items-center justify-center cursor-zoom-out" 
+          className="fixed inset-0 z-[60] bg-black/90 flex items-center justify-center cursor-zoom-out modal-backdrop-ios-safe" 
           onClick={(e) => {
             e.stopPropagation();
             setShowEnlargedImage(false);

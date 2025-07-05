@@ -112,6 +112,38 @@
       right: calc(16px + env(safe-area-inset-right, 0px)) !important;
     }
   }
+  
+  /* Fix for iOS modal backdrop safe area extension */
+  .modal-backdrop-ios-safe {
+    /* Extend backdrop into all safe areas */
+    top: calc(0px - env(safe-area-inset-top, 0px)) !important;
+    bottom: calc(0px - env(safe-area-inset-bottom, 0px)) !important;
+    left: calc(0px - env(safe-area-inset-left, 0px)) !important;
+    right: calc(0px - env(safe-area-inset-right, 0px)) !important;
+  }
+  
+  /* Ensure modal backdrop fills safe areas with correct color */
+  .modal-backdrop-dark-safe,
+  .dark .modal-backdrop-ios-safe {
+    background: linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0.5) 0%,
+      rgba(0, 0, 0, 0.5) calc(100% - env(safe-area-inset-bottom, 0px)),
+      #0F0F0F calc(100% - env(safe-area-inset-bottom, 0px)),
+      #0F0F0F 100%
+    ) !important;
+  }
+  
+  .modal-backdrop-light-safe,
+  html:not(.dark) .modal-backdrop-ios-safe {
+    background: linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0.5) 0%,
+      rgba(0, 0, 0, 0.5) calc(100% - env(safe-area-inset-bottom, 0px)),
+      white calc(100% - env(safe-area-inset-bottom, 0px)),
+      white 100%
+    ) !important;
+  }
 }
 
 /* Fix for iOS Safari position:fixed issues with keyboard open */

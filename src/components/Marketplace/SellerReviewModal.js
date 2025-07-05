@@ -122,7 +122,7 @@ const SellerReviewModal = ({ isOpen, onClose, sellerId, listingId, chatId }) => 
 
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 modal-backdrop-ios-safe"
       style={{
         height: '100vh',
         minHeight: '100vh',

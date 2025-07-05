@@ -407,7 +407,6 @@ const CardDetailsModal = ({
         size="2xl"
         className={`${className} ${animClass}`}
         footer={modalFooter}
-        disableBodyScrollManagement={true}
       >
         <div className="space-y-6">
           {/* Profit/Loss Display */}
@@ -484,7 +483,7 @@ const CardDetailsModal = ({
       {/* Enlarged Image Modal */}
       {showEnlargedImage && cardImage && (
         <div 
-          className="fixed inset-0 z-[60] bg-black/90 flex items-center justify-center cursor-zoom-out" 
+          className="fixed inset-0 z-[60] bg-black/90 flex items-center justify-center cursor-zoom-out modal-backdrop-ios-safe" 
           onClick={(e) => {
             e.stopPropagation();
             setShowEnlargedImage(false);

@@ -513,11 +513,6 @@ html.dark body {
   display: none;
 }
 
-/* Hide bottom nav when iOS modal is open */
-.ios-modal-open .bottom-nav {
-  display: none;
-}
-
 /* Ensure dark mode settings icon is styled */
 .dark .settings-button-class svg {
   fill: white; /* Or your desired dark mode icon color */

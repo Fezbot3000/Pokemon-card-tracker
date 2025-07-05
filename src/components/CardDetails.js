@@ -7,7 +7,6 @@ import { toast } from 'react-hot-toast';
 import { formatDate } from '../utils/dateUtils';
 import CardDetailsModal from '../design-system/components/CardDetailsModal';
 import PSALookupButton from './PSALookupButton';
-import { preventBodyScroll, restoreBodyScroll } from '../utils/modalUtils';
 
 const CardDetails = memo(({
   card = null,
@@ -80,11 +79,16 @@ const CardDetails = memo(({
     loadCardImage();
     
     // Effect to handle body scroll locking
-    preventBodyScroll();
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+    document.body.style.overflow = 'hidden';
+    document.body.style.paddingRight = `${scrollbarWidth}px`;
+    document.body.classList.add('modal-open');
     
     return () => {
       // Restore scrolling on unmount
-      restoreBodyScroll();
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+      document.body.classList.remove('modal-open');
       
       // Clean up timeouts
       if (messageTimeoutRef.current) {

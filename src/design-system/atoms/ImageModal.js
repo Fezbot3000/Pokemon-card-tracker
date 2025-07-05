@@ -6,7 +6,7 @@ const ImageModal = ({ isOpen, onClose, imageUrl, alt }) => {
 
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4 modal-backdrop-ios-safe"
       onClick={onClose}
       style={{
         height: '100vh',

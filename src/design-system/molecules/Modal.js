@@ -27,7 +27,6 @@ const Modal = ({
   ariaLabel,
   zIndex = 50,
   noContentPadding = false,
-  disableBodyScrollManagement = false, // New prop to disable body scroll management
   ...props
 }) => {
   const modalRef = useRef(null);
@@ -51,8 +50,8 @@ const Modal = ({
         setAnimationClass('animate-modal-scale-in');
       }
       
-      // Only prevent background scroll if modal is open and not static and body scroll management is enabled
-      if (!showAsStatic && !disableBodyScrollManagement) {
+      // Only prevent background scroll if modal is open and not static
+      if (!showAsStatic) {
         // Store current scroll position when modal opens - do this FIRST
         scrollPosRef.current = {
           x: window.scrollX,
@@ -79,7 +78,7 @@ const Modal = ({
     }
     
     return () => {
-      if (isOpen && !disableBodyScrollManagement) {
+      if (isOpen) {
         if (isMobile && !showAsStatic) {
           // Mobile cleanup: restore position and scroll
           const scrollY = parseInt(document.body.style.top || '0') * -1;
@@ -97,7 +96,7 @@ const Modal = ({
         }
       }
     };
-  }, [isOpen, position, showAsStatic, disableBodyScrollManagement]);
+  }, [isOpen, position, showAsStatic]);
 
   // Add iOS viewport height fix - always call this hook regardless of conditions
   useEffect(() => {
@@ -202,8 +201,8 @@ const Modal = ({
     right: 'flex items-start justify-end'
   };
   
-  // Build the classes based on theme
-  const backdropClasses = `fixed inset-0 ${positionClasses[position]} bg-black/50 backdrop-blur-sm h-screen min-h-screen`;
+  // Build the classes based on theme with iOS safe area handling
+  const backdropClasses = `fixed inset-0 ${positionClasses[position]} bg-black/50 backdrop-blur-sm h-screen min-h-screen modal-backdrop-ios-safe`;
   
   const modalClasses = forceDarkMode 
     ? `bg-[#0F0F0F]/95 backdrop-blur-sm rounded-lg shadow-xl text-white` 
@@ -351,8 +350,7 @@ Modal.propTypes = {
   maxWidth: PropTypes.string,
   ariaLabel: PropTypes.string,
   zIndex: PropTypes.number,
-  noContentPadding: PropTypes.bool,
-  disableBodyScrollManagement: PropTypes.bool
+  noContentPadding: PropTypes.bool
 };
 
 export default Modal;

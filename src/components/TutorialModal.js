@@ -92,7 +92,7 @@ const TutorialModal = () => {
 
   return (
     <div 
-      className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 modal-backdrop-ios-safe"
       style={{
         height: '100vh',
         minHeight: '100vh',
