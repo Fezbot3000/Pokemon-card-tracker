@@ -1,6 +1,6 @@
 /**
  * Utility functions for modal components
- * Helps with preventing background scrolling on iOS and other devices
+ * Helps with preventing background scrolling when modals are open
  */
 
 // Track modal state
@@ -24,7 +24,6 @@ export const preventBodyScroll = () => {
       position: document.body.style.position,
       top: document.body.style.top,
       width: document.body.style.width,
-      height: document.body.style.height,
       left: document.body.style.left
     };
 
@@ -34,26 +33,6 @@ export const preventBodyScroll = () => {
     document.body.style.top = `-${originalBodyPosition}px`;
     document.body.style.width = '100%';
     document.body.style.left = '0';
-    
-    // iOS-specific fixes
-    if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
-      document.body.style.height = '100%';
-      
-      // Prevent all non-modal touchmove events
-      document.addEventListener('touchmove', preventTouchMove, { passive: false });
-      
-      // Add a special class for iOS scrolling fixes
-      document.body.classList.add('ios-modal-open');
-      
-      // Handle all body elements to prevent interactions
-      Array.from(document.body.children).forEach(child => {
-        if (!child.classList.contains('modal-content') && 
-            !child.classList.contains('settings-modal-content') && 
-            !child.classList.contains('card-details-content')) {
-          child.style.pointerEvents = 'none';
-        }
-      });
-    }
   }
 
   modalCount++;
@@ -73,32 +52,9 @@ export const restoreBodyScroll = () => {
     document.body.style.position = originalBodyStyle.position;
     document.body.style.top = originalBodyStyle.top;
     document.body.style.width = originalBodyStyle.width;
-    document.body.style.height = originalBodyStyle.height;
     document.body.style.left = originalBodyStyle.left;
 
     // Restore scroll position
     window.scrollTo(0, originalBodyPosition);
-    
-    // Remove iOS-specific handlers
-    if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
-      document.removeEventListener('touchmove', preventTouchMove);
-      document.body.classList.remove('ios-modal-open');
-      
-      // Restore pointer events
-      Array.from(document.body.children).forEach(child => {
-        child.style.pointerEvents = '';
-      });
-    }
-  }
-};
-
-// Helper function to prevent touchmove events on iOS
-const preventTouchMove = (e) => {
-  // Allow scrolling within the modal content
-  const isModalContent = e.target.closest('.modal-content') || 
-                        e.target.closest('.settings-modal-content') || 
-                        e.target.closest('.card-details-content');
-  if (!isModalContent) {
-    e.preventDefault();
   }
 };

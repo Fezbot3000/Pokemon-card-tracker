@@ -38,7 +38,7 @@ import InvoiceProvider from './contexts/InvoiceContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import './styles/main.css';
 import './styles/black-background.css'; 
-import './styles/ios-fixes.css'; 
+ 
 import SoldItems from './components/SoldItems/SoldItems';
 import PurchaseInvoices from './components/PurchaseInvoices/PurchaseInvoices';
 import Marketplace from './components/Marketplace/Marketplace';

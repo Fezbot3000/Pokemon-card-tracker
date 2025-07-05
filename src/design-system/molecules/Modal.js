@@ -98,21 +98,7 @@ const Modal = ({
     };
   }, [isOpen, position, showAsStatic]);
 
-  // Add iOS viewport height fix - always call this hook regardless of conditions
-  useEffect(() => {
-    // Fix for iOS viewport height issues
-    const setIOSHeight = () => {
-      const vh = window.innerHeight * 0.01;
-      document.documentElement.style.setProperty('--vh', `${vh}px`);
-    };
-    
-    setIOSHeight();
-    window.addEventListener('resize', setIOSHeight);
-    
-    return () => {
-      window.removeEventListener('resize', setIOSHeight);
-    };
-  }, []);
+
 
   // Custom close handler with animation
   const handleClose = () => {

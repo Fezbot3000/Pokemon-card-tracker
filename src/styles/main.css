@@ -661,16 +661,7 @@ html.dark body {
   }
 }
 
-/* Content with safe area only (no header spacing) */
-.content-safe-area-only {
-  padding-top: 0;
-}
 
-@media (min-width: 640px) {
-  .content-safe-area-only {
-    padding-top: var(--header-total-height-desktop);
-  }
-}
 
 /* Mobile dashboard without header - reduced top margin */
 .main-content.mobile-dashboard {
