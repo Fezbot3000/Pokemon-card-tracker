@@ -64,6 +64,7 @@ const Modal = ({
             // Mobile-specific approach: fixed position with negative top
             document.body.style.position = 'fixed';
             document.body.style.width = '100%';
+            document.body.style.height = '100%';
             document.body.style.top = `-${scrollPosRef.current.y}px`;
             document.body.style.overflow = 'hidden';
           } else {
@@ -81,6 +82,7 @@ const Modal = ({
           const scrollY = parseInt(document.body.style.top || '0') * -1;
           document.body.style.position = '';
           document.body.style.width = '';
+          document.body.style.height = '';
           document.body.style.top = '';
           document.body.style.overflow = '';
           window.scrollTo(0, scrollY || scrollPosRef.current?.y || 0);
@@ -196,7 +198,7 @@ const Modal = ({
   };
   
   // Build the classes based on theme
-  const backdropClasses = `fixed inset-0 ${positionClasses[position]} bg-red-500/50 backdrop-blur-sm h-screen min-h-screen`;
+  const backdropClasses = `fixed inset-0 ${positionClasses[position]} bg-black/50 backdrop-blur-sm h-screen min-h-screen`;
   
   const modalClasses = forceDarkMode 
     ? `bg-[#0F0F0F]/95 backdrop-blur-sm rounded-lg shadow-xl text-white` 

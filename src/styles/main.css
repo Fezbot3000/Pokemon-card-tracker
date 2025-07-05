@@ -418,7 +418,7 @@ body.modal-open {
 
 /* Dark theme */
 html.dark body {
-  background-color: red;
+  background-color: #0B0F19;
   color: white;
 }
 
