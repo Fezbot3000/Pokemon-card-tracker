@@ -266,9 +266,7 @@ const Modal = ({
         zIndex, 
         height: '100vh', 
         minHeight: '100vh', 
-        maxHeight: '100vh', 
-        paddingTop: 'env(safe-area-inset-top)', 
-        paddingBottom: 'env(safe-area-inset-bottom)' 
+        maxHeight: '100vh'
       }}
       onClick={handleBackdropClick}
     >
