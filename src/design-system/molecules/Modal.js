@@ -196,7 +196,7 @@ const Modal = ({
   };
   
   // Build the classes based on theme
-  const backdropClasses = `fixed inset-0 ${positionClasses[position]} bg-black/50 backdrop-blur-sm h-screen min-h-screen`;
+  const backdropClasses = `fixed inset-0 ${positionClasses[position]} backdrop-blur-sm h-screen min-h-screen`;
   
   const modalClasses = forceDarkMode 
     ? `bg-[#0F0F0F]/95 backdrop-blur-sm rounded-lg shadow-xl text-white` 
