@@ -93,10 +93,7 @@ const TutorialModal = () => {
   return (
     <div 
       className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
-      style={{
-        height: '100vh',
-        minHeight: '100vh'
-      }}
+
     >
       {/* Blurred Background Overlay */}
       <div 

@@ -490,9 +490,7 @@ const CardDetailsModal = ({
           }}
           onMouseDown={(e) => e.stopPropagation()} 
           style={{ 
-            backdropFilter: 'blur(8px)',
-            height: '100vh',
-            minHeight: '100vh'
+            backdropFilter: 'blur(8px)'
           }}
         >
           <div 

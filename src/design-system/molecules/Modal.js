@@ -234,10 +234,7 @@ const Modal = ({
     <div 
       className={`${backdropClasses} ${darkModeClass} ${isAnimatingOut ? 'animate-backdrop-fade-out' : 'animate-backdrop-fade-in'}`}
       style={{ 
-        zIndex, 
-        height: '100vh', 
-        minHeight: '100vh', 
-        maxHeight: '100vh'
+        zIndex
       }}
       onClick={handleBackdropClick}
     >
@@ -254,10 +251,7 @@ const Modal = ({
         aria-modal="true"
         aria-labelledby={title ? 'modal-title' : undefined}
         aria-label={ariaLabel}
-        style={{
-          height: window.innerWidth < 640 ? '100vh' : undefined,
-          maxHeight: window.innerWidth < 640 ? '100vh' : undefined
-        }}
+
         {...props}
       >
         {/* Modal Header - Sticky */}
