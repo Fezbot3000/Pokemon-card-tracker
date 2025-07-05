@@ -160,7 +160,7 @@ const Modal = ({
   };
   
   // Mobile full width override - but keep rounded corners
-  const mobileFullWidth = window.innerWidth < 640 ? 'w-screen max-w-none h-screen min-h-screen rounded-lg m-0 fixed top-0 left-0 right-0 bottom-0 z-[9999]' : '';
+  const mobileFullWidth = window.innerWidth < 640 ? 'w-screen max-w-none rounded-lg m-0 fixed top-0 left-0 right-0 bottom-0 z-[9999]' : '';
   
   // Position variations
   const positionClasses = {
@@ -169,7 +169,7 @@ const Modal = ({
   };
   
   // Build the classes based on theme
-  const backdropClasses = `fixed inset-0 ${positionClasses[position]} bg-black/50 backdrop-blur-sm h-screen min-h-screen`;
+  const backdropClasses = `fixed inset-0 ${positionClasses[position]} bg-black/50 backdrop-blur-sm`;
   
   const modalClasses = forceDarkMode 
     ? `bg-[#0F0F0F]/95 backdrop-blur-sm rounded-lg shadow-xl text-white` 
@@ -243,8 +243,8 @@ const Modal = ({
         className={`${modalClasses} flex flex-col ${animationClass} ${
           position === 'right' 
             ? (window.innerWidth < 640 
-                ? 'w-screen max-w-none h-screen min-h-screen rounded-lg m-0 fixed top-0 left-0 right-0 bottom-0 z-[9999] overflow-auto' 
-                : 'w-[55%] h-screen min-h-screen rounded-l-lg rounded-r-none mr-0 fixed top-0 right-0 z-[9999]')
+                ? 'w-screen max-w-none rounded-lg m-0 fixed top-0 left-0 right-0 bottom-0 z-[9999] overflow-auto' 
+                : 'w-[55%] rounded-l-lg rounded-r-none mr-0 fixed top-0 right-0 z-[9999]')
             : (mobileFullWidth || (size === 'custom' ? maxWidth : sizeClasses[size] || 'w-[55%]'))
         } ${className}`}
         role="dialog"
