@@ -17,8 +17,8 @@ export const formatCurrency = (value, currency = 'AUD', locale = 'en-AU') => {
   return new Intl.NumberFormat(locale, {
     style: 'currency',
     currency,
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+    minimumFractionDigits: currency === 'JPY' ? 0 : 2,
+    maximumFractionDigits: currency === 'JPY' ? 0 : 2,
   }).format(value);
 };
 

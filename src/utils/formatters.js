@@ -1,21 +1,23 @@
-export function formatCurrency(value) {
-    return `$${Number(value).toFixed(2)}`;
-  }
+export function formatCurrency(value, currency = 'AUD', locale = 'en-AU') {
+  if (value === null || value === undefined) return '';
   
-export function formatValue(value) {
+  return new Intl.NumberFormat(locale, {
+    style: 'currency',
+    currency,
+    minimumFractionDigits: currency === 'JPY' ? 0 : 2,
+    maximumFractionDigits: currency === 'JPY' ? 0 : 2,
+  }).format(value);
+}
+  
+export function formatValue(value, currency = 'AUD', locale = 'en-AU') {
   if (value === null || value === undefined) return 'N/A';
   if (typeof value === 'number') {
-    // Format as currency with dollar sign, but without the 'A' prefix
-    const formatted = new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat(locale, {
       style: 'currency',
-      currency: 'AUD',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-      currencyDisplay: 'symbol'
+      currency,
+      minimumFractionDigits: currency === 'JPY' ? 0 : 2,
+      maximumFractionDigits: currency === 'JPY' ? 0 : 2,
     }).format(value);
-    
-    // Replace the 'A$' with just '$'
-    return formatted.replace('A$', '$');
   }
   return String(value);
 }

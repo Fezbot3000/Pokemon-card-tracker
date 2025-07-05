@@ -444,7 +444,10 @@ const CardDetailsModal = ({
                 errors={errors}
                 additionalValueContent={additionalValueContent}
                 additionalSerialContent={additionalSerialContent}
-                collections={collections}
+                collections={collections.filter(collection => 
+                  collection.toLowerCase() !== 'sold' && 
+                  !collection.toLowerCase().includes('sold')
+                )}
                 initialCollectionName={initialCollectionName}
                 onPsaSearch={handlePsaSearch}
                 isPsaSearching={isPsaSearching}
