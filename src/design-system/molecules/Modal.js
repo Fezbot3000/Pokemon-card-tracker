@@ -159,8 +159,15 @@ const Modal = ({
     full: 'w-full max-w-full',
   };
   
-  // Mobile full width override - but keep rounded corners
-  const mobileFullWidth = window.innerWidth < 640 ? 'w-screen max-w-none rounded-lg m-0 fixed top-0 left-0 right-0 bottom-0 z-[9999]' : '';
+  // Detect PWA mode
+  const isPWA = window.matchMedia('(display-mode: standalone)').matches;
+  
+  // Mobile full width override - with PWA safe area handling
+  const mobileFullWidth = window.innerWidth < 640 ? 
+    (isPWA 
+      ? 'w-screen max-w-none rounded-lg m-0 fixed z-[9999]' // PWA: Let CSS handle positioning
+      : 'w-screen max-w-none rounded-lg m-0 fixed top-0 left-0 right-0 bottom-0 z-[9999]' // Browser: Full positioning
+    ) : '';
   
   // Position variations
   const positionClasses = {
@@ -168,8 +175,10 @@ const Modal = ({
     right: 'flex items-start justify-end'
   };
   
-  // Build the classes based on theme
-  const backdropClasses = `fixed inset-0 ${positionClasses[position]} bg-black/50 backdrop-blur-sm`;
+  // Build the classes based on theme - with PWA safe area handling
+  const backdropClasses = isPWA 
+    ? `fixed ${positionClasses[position]} bg-black/50 backdrop-blur-sm pwa-modal-backdrop` // PWA: Let CSS handle positioning
+    : `fixed inset-0 ${positionClasses[position]} bg-black/50 backdrop-blur-sm`; // Browser: Full positioning
   
   const modalClasses = forceDarkMode 
     ? `bg-[#0F0F0F]/95 backdrop-blur-sm rounded-lg shadow-xl text-white` 
@@ -243,8 +252,15 @@ const Modal = ({
         className={`${modalClasses} flex flex-col ${animationClass} ${
           position === 'right' 
             ? (window.innerWidth < 640 
-                ? 'w-screen max-w-none rounded-lg m-0 fixed top-0 left-0 right-0 bottom-0 z-[9999] overflow-auto' 
-                : 'w-[55%] rounded-l-lg rounded-r-none mr-0 fixed top-0 right-0 z-[9999]')
+                ? (isPWA 
+                    ? 'w-screen max-w-none rounded-lg m-0 fixed z-[9999] overflow-auto pwa-modal-right-mobile' // PWA: Let CSS handle positioning
+                    : 'w-screen max-w-none rounded-lg m-0 fixed top-0 left-0 right-0 bottom-0 z-[9999] overflow-auto' // Browser: Full positioning
+                  )
+                : (isPWA
+                    ? 'w-[55%] rounded-l-lg rounded-r-none mr-0 fixed z-[9999] pwa-modal-right-desktop' // PWA: Let CSS handle positioning  
+                    : 'w-[55%] rounded-l-lg rounded-r-none mr-0 fixed top-0 right-0 z-[9999]' // Browser: Full positioning
+                  )
+              )
             : (mobileFullWidth || (size === 'custom' ? maxWidth : sizeClasses[size] || 'w-[55%]'))
         } ${className}`}
         role="dialog"

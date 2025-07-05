@@ -678,9 +678,26 @@ html.dark body {
     bottom: env(safe-area-inset-bottom);
   }
   
-  /* PWA mode: Adjust modals to account for safe areas */
-  .modal-backdrop {
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
+  /* PWA mode: Modal backdrop positioning with safe areas */
+  .pwa-modal-backdrop {
+    top: env(safe-area-inset-top);
+    left: 0;
+    right: 0;
+    bottom: env(safe-area-inset-bottom);
+  }
+  
+  /* PWA mode: Right modal mobile positioning with safe areas */
+  .pwa-modal-right-mobile {
+    top: env(safe-area-inset-top);
+    left: 0;
+    right: 0;
+    bottom: env(safe-area-inset-bottom);
+  }
+  
+  /* PWA mode: Right modal desktop positioning with safe areas */
+  .pwa-modal-right-desktop {
+    top: env(safe-area-inset-top);
+    right: 0;
+    bottom: env(safe-area-inset-bottom);
   }
 }
