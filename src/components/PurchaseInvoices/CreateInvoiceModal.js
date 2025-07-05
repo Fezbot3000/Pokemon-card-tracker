@@ -175,7 +175,7 @@ const CreateInvoiceModal = ({ isOpen, onClose, onSave, editingInvoice = null, pr
         size="2xl"
         closeOnClickOutside={true}
         footer={
-          <div className="flex justify-between w-full">
+          <>
             <Button 
               variant="secondary" 
               onClick={handleClose}
@@ -189,7 +189,7 @@ const CreateInvoiceModal = ({ isOpen, onClose, onSave, editingInvoice = null, pr
             >
               {editingInvoice ? 'Save Changes' : 'Create Invoice'}
             </Button>
-          </div>
+          </>
         }
       >
         <div className="space-y-6">

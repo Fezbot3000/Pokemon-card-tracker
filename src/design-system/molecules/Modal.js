@@ -203,8 +203,8 @@ const Modal = ({
     : `bg-white/95 dark:bg-[#0F0F0F]/95 backdrop-blur-sm rounded-lg shadow-xl`;
     
   const headerClasses = forceDarkMode
-    ? 'sticky top-0 z-10 flex items-center justify-between p-6 border-b border-gray-700/50 bg-[#0F0F0F]/95 backdrop-blur-sm'
-    : 'sticky top-0 z-10 flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700/50 bg-white/95 dark:bg-[#0F0F0F]/95 backdrop-blur-sm';
+    ? 'sticky top-0 z-10 flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-700/50 bg-[#0F0F0F]/95 backdrop-blur-sm'
+    : 'sticky top-0 z-10 flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-200 dark:border-gray-700/50 bg-white/95 dark:bg-[#0F0F0F]/95 backdrop-blur-sm';
     
   const titleClasses = forceDarkMode
     ? 'text-xl font-medium text-gray-200'
@@ -215,8 +215,8 @@ const Modal = ({
     : 'text-2xl text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors';
     
   const footerClasses = forceDarkMode
-    ? 'sticky bottom-0 z-10 flex items-center justify-end gap-2 p-6 border-t border-gray-700/50 bg-[#0F0F0F]/95 backdrop-blur-sm'
-    : 'sticky bottom-0 z-10 flex items-center justify-end gap-2 p-6 border-t border-gray-200 dark:border-gray-700/50 bg-white/95 dark:bg-[#0F0F0F]/95 backdrop-blur-sm';
+    ? 'sticky bottom-0 z-10 flex items-center justify-between gap-2 px-6 pt-4 pb-6 border-t border-gray-700/50 bg-[#0F0F0F]/95 backdrop-blur-sm'
+    : 'sticky bottom-0 z-10 flex items-center justify-between gap-2 px-6 pt-4 pb-6 border-t border-gray-200 dark:border-gray-700/50 bg-white/95 dark:bg-[#0F0F0F]/95 backdrop-blur-sm';
   
   // Force the dark class if needed
   const darkModeClass = forceDarkMode ? 'dark' : '';
@@ -226,7 +226,7 @@ const Modal = ({
     return (
       <div className={`${maxWidth} w-full bg-white dark:bg-[#0F0F0F] rounded-lg shadow-xl overflow-hidden`}>
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-800">
+        <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-200 dark:border-gray-800">
           <h3 className="text-lg font-medium text-gray-900 dark:text-white">
             {title}
           </h3>
@@ -248,7 +248,7 @@ const Modal = ({
         
         {/* Footer */}
         {footer && (
-          <div className="border-t border-gray-200 dark:border-gray-800 px-6 py-4">
+          <div className="flex items-center justify-between gap-2 border-t border-gray-200 dark:border-gray-800 px-6 pt-4 pb-6">
             {footer}
           </div>
         )}
@@ -294,7 +294,7 @@ const Modal = ({
           <div 
             className={headerClasses}
             style={{
-              paddingTop: window.innerWidth < 640 ? 'calc(1.5rem + env(safe-area-inset-top, 0px))' : undefined
+              paddingTop: window.innerWidth < 640 ? 'calc(1rem + env(safe-area-inset-top, 0px))' : undefined
             }}
           >
             <h2 id="modal-title" className={titleClasses}>{title}</h2>
@@ -319,7 +319,7 @@ const Modal = ({
           <div 
             className={footerClasses}
             style={{
-              paddingBottom: window.innerWidth < 640 ? 'calc(2rem + env(safe-area-inset-bottom, 0px))' : undefined
+              paddingBottom: window.innerWidth < 640 ? 'calc(1rem + env(safe-area-inset-bottom, 0px))' : undefined
             }}
           >
             {footer}

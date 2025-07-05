@@ -409,7 +409,7 @@ const ComponentLibrary = () => {
       <div className="flex bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden p-1 w-max mb-8">
          {/* Example of Active Tab Style */}
         <Button 
-          className="px-4 py-1 flex items-center bg-gradient-to-r from-[#ef4444] to-[#db2777] text-white rounded-full" // Active styles applied directly
+          className="px-4 py-1 flex items-center bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] text-white rounded-full" // Active styles applied directly
         >
           <Icon name="style" className="mr-1" color="white" />
           <span>Active Tab</span>
@@ -970,7 +970,7 @@ const ComponentLibrary = () => {
             <div>
               <Dropdown
                 trigger={
-                  <button className="flex items-center justify-between w-40 px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-[#ef4444] to-[#db2777] rounded-lg hover:opacity-90">
+                  <button className="flex items-center justify-between w-40 px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] rounded-lg hover:opacity-90">
                     <span>{selectedItem}</span>
                     <Icon name="expand_more" className="ml-2" />
                   </button>
@@ -994,7 +994,7 @@ const ComponentLibrary = () => {
             <div>
               <Dropdown
                 trigger={
-                  <button className="flex items-center justify-between px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-[#ef4444] to-[#db2777] rounded-lg hover:opacity-90">
+                  <button className="flex items-center justify-between px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] rounded-lg hover:opacity-90">
                     <span>Actions</span>
                     <Icon name="expand_more" className="ml-2" />
                   </button>
@@ -1033,7 +1033,7 @@ const ComponentLibrary = () => {
             <div className="flex items-center gap-4">
               <Dropdown
                 trigger={
-                  <button className="flex items-center justify-between w-40 px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-[#ef4444] to-[#db2777] rounded-lg hover:opacity-90">
+                  <button className="flex items-center justify-between w-40 px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] rounded-lg hover:opacity-90">
                     <span>Controlled</span>
                     <Icon name="expand_more" className="ml-2" />
                   </button>
@@ -1052,7 +1052,7 @@ const ComponentLibrary = () => {
               </Dropdown>
               
               <button 
-                className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-[#ef4444] to-[#db2777] rounded-lg hover:opacity-90"
+                className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] rounded-lg hover:opacity-90"
                 onClick={() => setDropdownIsOpen(!dropdownIsOpen)}
               >
                 Toggle Dropdown
@@ -1072,7 +1072,7 @@ const ComponentLibrary = () => {
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">Left Aligned (Default)</p>
               <Dropdown
                 trigger={
-                  <button className="flex items-center justify-between w-40 px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-[#ef4444] to-[#db2777] rounded-lg hover:opacity-90">
+                  <button className="flex items-center justify-between w-40 px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] rounded-lg hover:opacity-90">
                     <span>Left</span>
                     <Icon name="expand_more" className="ml-2" />
                   </button>
@@ -1088,7 +1088,7 @@ const ComponentLibrary = () => {
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">Center Aligned</p>
               <Dropdown
                 trigger={
-                  <button className="flex items-center justify-between w-40 px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-[#ef4444] to-[#db2777] rounded-lg hover:opacity-90">
+                  <button className="flex items-center justify-between w-40 px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] rounded-lg hover:opacity-90">
                     <span>Center</span>
                     <Icon name="expand_more" className="ml-2" />
                   </button>
@@ -1104,7 +1104,7 @@ const ComponentLibrary = () => {
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">Right Aligned</p>
               <Dropdown
                 trigger={
-                  <button className="flex items-center justify-between w-40 px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-[#ef4444] to-[#db2777] rounded-lg hover:opacity-90">
+                  <button className="flex items-center justify-between w-40 px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] rounded-lg hover:opacity-90">
                     <span>Right</span>
                     <Icon name="expand_more" className="ml-2" />
                   </button>

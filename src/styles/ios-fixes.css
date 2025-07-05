@@ -16,6 +16,22 @@
     padding-top: env(safe-area-inset-top);
   }
   
+  /* Standardized iOS modal safe area handling */
+  .modal-ios-safe-area {
+    padding-top: calc(1rem + env(safe-area-inset-top, 0px));
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+  }
+  
+  /* Modal header standardized safe area */
+  .modal-header-ios {
+    padding-top: calc(1rem + env(safe-area-inset-top, 0px)) !important;
+  }
+  
+  /* Modal footer standardized safe area */
+  .modal-footer-ios {
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px)) !important;
+  }
+  
   /* Fix for iOS main content area to account for header with safe area */
   .dashboard-page main {
     padding-top: calc(1rem + env(safe-area-inset-top, 0px) + 4rem); /* 1rem base + safe area + header height */
@@ -108,4 +124,9 @@
 /* Add CSS variable for viewport height - used by JS */
 :root {
   --vh: 1vh;
+  /* Standardized safe area variables */
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-left: env(safe-area-inset-left, 0px);
+  --safe-area-right: env(safe-area-inset-right, 0px);
 }

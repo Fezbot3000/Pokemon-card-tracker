@@ -56,7 +56,7 @@ const MoveCardsModal = ({
       size="lg"
       closeOnClickOutside={true}
       footer={
-        <div className="flex justify-between w-full">
+        <>
           <Button 
             variant="secondary" 
             onClick={onClose}
@@ -71,7 +71,7 @@ const MoveCardsModal = ({
           >
             Move
           </Button>
-        </div>
+        </>
       }
     >
       <div className="space-y-4">

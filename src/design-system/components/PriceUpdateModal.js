@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import Modal from '../molecules/Modal';
 import Button from '../atoms/Button';
+import { formatCurrency } from '../utils/formatters';
 
 /**
  * Modal component for updating card prices based on AI analysis
@@ -19,12 +20,6 @@ const PriceUpdateModal = ({
   const [customValue, setCustomValue] = useState(
     suggestedValue !== null ? suggestedValue.toFixed(2) : '0.00'
   );
-  
-  // Format dollar amounts
-  const formatCurrency = (value) => {
-    if (value === null || value === undefined || isNaN(value)) return '$0.00';
-    return `$${parseFloat(value).toFixed(2)}`;
-  };
   
   // Calculate the change in value
   const valueChange = suggestedValue - currentValue;

@@ -114,7 +114,7 @@ const SaleModal = ({ isOpen, onClose, selectedCards, onConfirm }) => {
       size="2xl"
       closeOnClickOutside={true}
       footer={
-        <div className="flex justify-between w-full">
+        <>
           <Button 
             variant="secondary" 
             onClick={handleClose}
@@ -128,7 +128,7 @@ const SaleModal = ({ isOpen, onClose, selectedCards, onConfirm }) => {
           >
             Confirm Sale
           </Button>
-        </div>
+        </>
       }
     >
       <div className="space-y-6">

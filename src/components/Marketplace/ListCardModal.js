@@ -287,7 +287,7 @@ function ListCardModal({ isOpen, onClose, selectedCards }) {
       size="2xl"
       closeOnClickOutside={false}
       footer={
-        <div className="flex justify-between w-full">
+        <>
           <Button 
             variant="secondary" 
             onClick={onClose}
@@ -310,7 +310,7 @@ function ListCardModal({ isOpen, onClose, selectedCards }) {
               'List on Marketplace'
             )}
           </Button>
-        </div>
+        </>
       }
     >
       <form id="listing-form" onSubmit={handleSubmit} className="space-y-6">

@@ -356,7 +356,7 @@ const MessageModal = ({ isOpen, onClose, listing, prefilledMessage = '', onViewC
       closeOnClickOutside={false}
       zIndex={60}
       footer={
-        <div className="flex justify-between w-full">
+        <>
           <Button 
             variant="secondary" 
             onClick={onClose}
@@ -378,7 +378,7 @@ const MessageModal = ({ isOpen, onClose, listing, prefilledMessage = '', onViewC
               'Send Message'
             )}
           </Button>
-        </div>
+        </>
       }
     >
       <div className="space-y-6">

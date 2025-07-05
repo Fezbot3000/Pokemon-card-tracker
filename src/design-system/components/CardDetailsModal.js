@@ -44,7 +44,7 @@ const CardDetailsModal = ({
   initialCollectionName = null, // Default to null
   isPsaLoading = false
 }) => {
-  const [activeTab, setActiveTab] = useState('details');
+
   const [cardImage, setCardImage] = useState(null); // Start with null to implement lazy loading
   const [localImageLoadingState, setLocalImageLoadingState] = useState('idle');
   const [showEnlargedImage, setShowEnlargedImage] = useState(false);
@@ -359,86 +359,69 @@ const CardDetailsModal = ({
     }
   };
 
+  // Modal footer buttons (like AddCardModal pattern)
+  const modalFooter = (
+    <div className="flex space-x-2">
+      <Button 
+        variant="secondary" 
+        onClick={onClose}
+        disabled={isPsaLoading || isSaving}
+      >
+        Cancel
+      </Button>
+      {onMarkAsSold && (
+        <Button 
+          variant="secondary" 
+          onClick={handleMarkAsSold}
+          disabled={isPsaLoading || isSaving}
+        >
+          Mark as Sold
+        </Button>
+      )}
+      <Button 
+        variant="primary" 
+        onClick={handleSave}
+        disabled={isPsaLoading || isSaving}
+      >
+        {isSaving ? (
+          <>
+            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Saving...
+          </>
+        ) : 'Save'}
+      </Button>
+    </div>
+  );
+
   return (
     <>
       <Modal
         isOpen={isOpen}
         onClose={onClose}
-        title={null}
+        title="Card Details"
         position="right"
         closeOnClickOutside={true}
         size="2xl"
         className={`${className} ${animClass}`}
-        noContentPadding={true}
-        footer={
-          <div className="flex justify-between w-full">
-            <Button 
-              variant="secondary" 
-              onClick={onClose}
-              disabled={isPsaLoading || isSaving}
-            >
-              Cancel
-            </Button>
-            <div className="flex space-x-2">
-              {onMarkAsSold && (
-                <Button 
-                  variant="secondary" 
-                  onClick={handleMarkAsSold}
-                  leftIcon={<Icon name="tag" />}
-                  disabled={isPsaLoading || isSaving}
-                >
-                  Mark as Sold
-                </Button>
-              )}
-              <Button 
-                variant="primary" 
-                onClick={handleSave}
-                disabled={isPsaLoading || isSaving}
-              >
-                {isSaving ? (
-                  <>
-                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Saving...
-                  </>
-                ) : 'Save'}
-              </Button>
-            </div>
-          </div>
-        }
+        footer={modalFooter}
       >
-        <div className="flex flex-col h-full">
-          {/* Tabs - Moved to the top to replace the modal title */}
-          <div className="sticky top-0 z-10 bg-white dark:bg-[#0F0F0F] px-6 pt-4 pb-2">
-            <div className="flex border-b border-gray-200 dark:border-gray-700">
-              <button
-                className={`py-2 px-4 font-medium text-sm ${
-                  activeTab === 'details'
-                    ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400'
-                    : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
-                }`}
-                onClick={() => setActiveTab('details')}
-              >
-                Card Details
-              </button>
-              {/* Price history tab removed */}
-              
-              {/* Profit/Loss Display */}
-              <div className="ml-auto flex items-center">
-                <span
-                  className={`font-medium ${getProfit() >= 0 ? 'text-green-600 dark:text-green-500' : 'text-red-600 dark:text-red-500'}`}
-                  data-component-name="CardDetailsModal"
-                >
-                  {formatPreferredCurrency(Math.abs(getProfit()))} {getProfit() >= 0 ? 'profit' : 'loss'}
-                </span>
-              </div>
-            </div>
+        <div className="space-y-6">
+          {/* Profit/Loss Display */}
+          <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+            <span className="text-sm text-gray-600 dark:text-gray-400">Current Status:</span>
+            <span
+              className={`font-medium ${getProfit() >= 0 ? 'text-green-600 dark:text-green-500' : 'text-red-600 dark:text-red-500'}`}
+              data-component-name="CardDetailsModal"
+            >
+              {formatPreferredCurrency(Math.abs(getProfit()))} {getProfit() >= 0 ? 'profit' : 'loss'}
+            </span>
           </div>
 
           {/* Main Content */}
-          {contentLoaded && activeTab === 'details' && (
+          {contentLoaded && (
             <div className={`${animClass} relative`}>
               {/* PSA Search Loading Overlay */}
               {(isPsaSearching || isPsaLoading) && (
@@ -450,24 +433,22 @@ const CardDetailsModal = ({
                 </div>
               )}
               
-              <div className="px-6 py-6">
-                <CardDetailsForm
-                  card={card}
-                  cardImage={localImageLoadingState === 'loading' ? null : (cardImage || image)}
-                  imageLoadingState={localImageLoadingState}
-                  onChange={onChange}
-                  onImageChange={handleImageChange}
-                  onImageRetry={onImageRetry}
-                  onImageClick={() => setShowEnlargedImage(true)}
-                  errors={errors}
-                  additionalValueContent={additionalValueContent}
-                  additionalSerialContent={additionalSerialContent}
-                  collections={collections}
-                  initialCollectionName={initialCollectionName}
-                  onPsaSearch={handlePsaSearch}
-                  isPsaSearching={isPsaSearching}
-                />
-              </div>
+              <CardDetailsForm
+                card={card}
+                cardImage={localImageLoadingState === 'loading' ? null : (cardImage || image)}
+                imageLoadingState={localImageLoadingState}
+                onChange={onChange}
+                onImageChange={handleImageChange}
+                onImageRetry={onImageRetry}
+                onImageClick={() => setShowEnlargedImage(true)}
+                errors={errors}
+                additionalValueContent={additionalValueContent}
+                additionalSerialContent={additionalSerialContent}
+                collections={collections}
+                initialCollectionName={initialCollectionName}
+                onPsaSearch={handlePsaSearch}
+                isPsaSearching={isPsaSearching}
+              />
             </div>
           )}
 

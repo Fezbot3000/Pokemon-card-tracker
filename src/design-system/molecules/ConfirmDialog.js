@@ -64,12 +64,8 @@ const ConfirmDialog = ({
       title={title}
       size="lg"
       closeOnClickOutside={true}
-    >
-      <div className="p-6">
-        <div className="text-gray-700 dark:text-gray-300 mb-6">
-          {message}
-        </div>
-        <div className="flex justify-end gap-3">
+      footer={
+        <>
           <Button
             variant="secondary"
             onClick={handleClose}
@@ -84,6 +80,12 @@ const ConfirmDialog = ({
           >
             {confirmText}
           </Button>
+        </>
+      }
+    >
+      <div className="p-6">
+        <div className="text-gray-700 dark:text-gray-300 mb-6">
+          {message}
         </div>
       </div>
     </Modal>

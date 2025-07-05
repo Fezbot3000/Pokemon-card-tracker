@@ -308,7 +308,7 @@ function ListingDetailModal({
     if (isOwnListing) {
       // Seller's own listing - show management actions
       return (
-        <div className="flex justify-between w-full">
+        <>
           <Button 
             variant="secondary" 
             onClick={onClose}
@@ -338,12 +338,12 @@ function ListingDetailModal({
               Edit
             </Button>
           </div>
-        </div>
+        </>
       );
     } else {
       // Other user's listing - show contact action
       return (
-        <div className="flex justify-between w-full">
+        <>
           <Button 
             variant="secondary" 
             onClick={onClose}
@@ -359,7 +359,7 @@ function ListingDetailModal({
           >
             {hasExistingChat ? 'Continue Conversation' : 'Send Seller a Message'}
           </Button>
-        </div>
+        </>
       );
     }
   };

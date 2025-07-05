@@ -211,7 +211,7 @@ const Header = ({
       {isNewCollectionModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div ref={newCollectionModalRef} className="bg-white dark:bg-[#1B2131] rounded-xl w-full max-w-md mx-4">
-            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700/50">
+            <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-200 dark:border-gray-700/50">
               <h2 className="text-xl font-medium text-gray-800 dark:text-gray-200">New Collection</h2>
               <button 
                 className="text-2xl text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
@@ -240,28 +240,28 @@ const Header = ({
                 placeholder="Enter collection name"
                 autoFocus
               />
-              
-              <div className="flex justify-end gap-2 mt-6">
-                <button 
-                  className="px-4 py-2 rounded-lg
-                           bg-gray-100 dark:bg-[#252B3B] 
-                           text-gray-700 dark:text-gray-300
-                           hover:bg-gray-200 dark:hover:bg-[#323B4B]
-                           transition-colors"
-                  onClick={() => setIsNewCollectionModalOpen(false)}
-                >
-                  Cancel
-                </button>
-                <button 
-                  className="px-4 py-2 rounded-lg
-                           bg-primary text-white
-                           hover:bg-primary/90
-                           transition-colors"
-                  onClick={handleCreateCollection}
-                >
-                  Create
-                </button>
-              </div>
+            </div>
+            
+            <div className="flex justify-between gap-2 px-6 pt-4 pb-6 border-t border-gray-200 dark:border-gray-700/50">
+              <button 
+                className="px-4 py-2 rounded-lg
+                         bg-gray-100 dark:bg-[#252B3B] 
+                         text-gray-700 dark:text-gray-300
+                         hover:bg-gray-200 dark:hover:bg-[#323B4B]
+                         transition-colors"
+                onClick={() => setIsNewCollectionModalOpen(false)}
+              >
+                Cancel
+              </button>
+              <button 
+                className="px-4 py-2 rounded-lg
+                         bg-primary text-white
+                         hover:bg-primary/90
+                         transition-colors"
+                onClick={handleCreateCollection}
+              >
+                Create
+              </button>
             </div>
           </div>
         </div>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useAuth, StatisticsSummary, SimpleSearchBar, ConfirmDialog } from '../../design-system';
+import { formatCurrency } from '../../design-system/utils/formatters';
 import db from '../../services/firestore/dbAdapter';
 import { toast } from 'react-hot-toast';
 import CreateInvoiceModal from './CreateInvoiceModal';
@@ -284,18 +285,7 @@ const PurchaseInvoices = () => {
     return `${day}${ordinalSuffix} ${month} ${year}`;
   };
   
-  // Format currency with commas and 2 decimal places
-  const formatCurrency = (amount) => {
-    // Convert to number and handle invalid values
-    const num = parseFloat(amount || 0);
-    if (isNaN(num)) return '$0.00';
-    
-    // Format with commas and 2 decimal places
-    return '$' + num.toLocaleString('en-US', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    });
-  };
+
 
   // Get sorted invoices
   const getSortedInvoices = () => {

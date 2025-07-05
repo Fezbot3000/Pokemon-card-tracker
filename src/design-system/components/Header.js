@@ -156,7 +156,7 @@ const Header = ({
                   onClick={() => handleViewChange('cards')}
                   className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors duration-200 ${
                     currentView === 'cards' 
-                      ? 'bg-gradient-to-r from-[#ef4444] to-[#db2777] text-white' 
+                      ? 'bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] text-white' 
                       : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200/50 dark:hover:bg-gray-700/50'
                   }`}
                 >
@@ -173,7 +173,7 @@ const Header = ({
                   onClick={() => handleViewChange('purchase-invoices')}
                   className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors duration-200 ${
                     currentView === 'purchase-invoices' 
-                      ? 'bg-gradient-to-r from-[#ef4444] to-[#db2777] text-white' 
+                      ? 'bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] text-white' 
                       : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200/50 dark:hover:bg-gray-700/50'
                   }`}
                 >
@@ -190,7 +190,7 @@ const Header = ({
                   onClick={() => handleViewChange('sold-items')}
                   className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors duration-200 ${
                     currentView === 'sold-items' 
-                      ? 'bg-gradient-to-r from-[#ef4444] to-[#db2777] text-white' 
+                      ? 'bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] text-white' 
                       : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200/50 dark:hover:bg-gray-700/50'
                   }`}
                 >
@@ -207,7 +207,7 @@ const Header = ({
                   onClick={() => handleViewChange('marketplace')}
                   className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors duration-200 ${
                     currentView === 'marketplace' 
-                      ? 'bg-gradient-to-r from-[#ef4444] to-[#db2777] text-white' 
+                      ? 'bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] text-white' 
                       : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200/50 dark:hover:bg-gray-700/50'
                   }`}
                 >
@@ -233,7 +233,7 @@ const Header = ({
                           onClick={() => handleViewChange('purchase-invoices')}
                           className={`px-2 py-1 rounded-md text-xs font-medium transition-colors duration-200 ${
                             currentView === 'purchase-invoices' 
-                              ? 'bg-gradient-to-r from-[#ef4444] to-[#db2777] text-white' 
+                              ? 'bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] text-white' 
                               : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200/50 dark:hover:bg-gray-700/50'
                           }`}
                         >
@@ -250,7 +250,7 @@ const Header = ({
                           onClick={() => handleViewChange('sold-items')}
                           className={`px-2 py-1 rounded-md text-xs font-medium transition-colors duration-200 ${
                             currentView === 'sold-items' 
-                              ? 'bg-gradient-to-r from-[#ef4444] to-[#db2777] text-white' 
+                              ? 'bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] text-white' 
                               : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200/50 dark:hover:bg-gray-700/50'
                           }`}
                         >
@@ -272,7 +272,7 @@ const Header = ({
                           onClick={() => handleViewChange('marketplace')}
                           className={`px-2 py-1 rounded-md text-xs font-medium transition-colors duration-200 ${
                             currentView === 'marketplace' 
-                              ? 'bg-gradient-to-r from-[#ef4444] to-[#db2777] text-white' 
+                              ? 'bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] text-white' 
                               : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200/50 dark:hover:bg-gray-700/50'
                           }`}
                         >
@@ -289,7 +289,7 @@ const Header = ({
                           onClick={() => handleViewChange('marketplace-selling')}
                           className={`px-2 py-1 rounded-md text-xs font-medium transition-colors duration-200 ${
                             currentView === 'marketplace-selling' 
-                              ? 'bg-gradient-to-r from-[#ef4444] to-[#db2777] text-white' 
+                              ? 'bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] text-white' 
                               : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200/50 dark:hover:bg-gray-700/50'
                           }`}
                         >
@@ -306,7 +306,7 @@ const Header = ({
                           onClick={() => handleViewChange('marketplace-messages')}
                           className={`px-2 py-1 rounded-md text-xs font-medium transition-colors duration-200 ${
                             currentView === 'marketplace-messages' 
-                              ? 'bg-gradient-to-r from-[#ef4444] to-[#db2777] text-white' 
+                              ? 'bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] text-white' 
                               : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200/50 dark:hover:bg-gray-700/50'
                           }`}
                         >

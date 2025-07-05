@@ -114,7 +114,7 @@ const TutorialModal = () => {
         }}
       >
         {/* Modal Header */}
-        <div className="border-b border-gray-200 dark:border-gray-700/50 px-6 py-4 flex justify-between items-center">
+        <div className="border-b border-gray-200 dark:border-gray-700/50 px-6 pt-6 pb-4 flex justify-between items-center">
           <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
             {content.title}
           </h3>
@@ -168,7 +168,7 @@ const TutorialModal = () => {
         </div>
         
         {/* Modal Footer with Fixed Buttons */}
-        <div className="border-t border-gray-200 dark:border-gray-700/50 px-6 py-4 flex justify-between bg-gray-50 dark:bg-gray-800/50">
+        <div className="border-t border-gray-200 dark:border-gray-700/50 px-6 pt-4 pb-6 flex justify-between bg-gray-50 dark:bg-gray-800/50">
           <button
             onClick={endTutorial}
             className="px-6 py-3 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 font-medium transition-colors"

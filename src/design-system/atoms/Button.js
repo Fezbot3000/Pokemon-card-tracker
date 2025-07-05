@@ -37,12 +37,14 @@ const Button = ({
   
   // Variant variations using color system
   const variantClasses = {
-    primary: `bg-gradient-to-r from-[#ef4444] to-[#db2777] text-white hover:opacity-90 shadow-sm ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`,
+    primary: `bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] text-white hover:opacity-90 shadow-sm ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`,
+    constructive: `bg-gradient-to-r from-[#10b981] to-[#059669] text-white hover:opacity-90 shadow-sm ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`,
     // Secondary button - styled primarily for dark contexts or consistent look
     secondary: `bg-[#000] text-gray-300 border border-gray-700 hover:opacity-90 ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`,
     outline: `border border-gray-200 dark:border-gray-700 bg-transparent text-gray-700 dark:text-gray-300 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-800 dark:hover:text-white ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`,
     text: `bg-transparent text-gray-700 dark:text-gray-300 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-800 dark:hover:text-white ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`,
-    danger: `bg-red-500 text-white hover:opacity-90 ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`,
+    danger: `bg-gradient-to-r from-[#ef4444] to-[#db2777] text-white hover:opacity-90 shadow-sm ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`,
+    destructive: `bg-gradient-to-r from-[#ef4444] to-[#db2777] text-white hover:opacity-90 shadow-sm ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`,
     success: `bg-green-500 text-white hover:opacity-90 ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`,
     icon: `w-10 h-10 p-0 flex items-center justify-center text-gray-600 dark:text-gray-300 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-800 dark:hover:text-white ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`,
   };
@@ -66,8 +68,10 @@ const Button = ({
   const getIconColor = (variant) => {
     switch (variant) {
       case 'primary':
+      case 'constructive':
       case 'success':
       case 'danger':
+      case 'destructive':
         return 'white';
       case 'secondary':
         return 'white'; // Secondary has white text on dark background
@@ -132,7 +136,7 @@ const Button = ({
 
 Button.propTypes = {
   children: PropTypes.node,
-  variant: PropTypes.oneOf(['primary', 'secondary', 'outline', 'text', 'danger', 'success', 'icon']),
+  variant: PropTypes.oneOf(['primary', 'constructive', 'secondary', 'outline', 'text', 'danger', 'destructive', 'success', 'icon']),
   size: PropTypes.oneOf(['sm', 'md', 'lg']),
   iconLeft: PropTypes.node,
   iconRight: PropTypes.node,

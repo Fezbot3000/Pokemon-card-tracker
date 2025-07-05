@@ -7,11 +7,11 @@
 /**
  * Format a number as currency
  * @param {number} value - The value to format
- * @param {string} currency - The currency code (default: 'USD')
- * @param {string} locale - The locale to use for formatting (default: 'en-US')
+ * @param {string} currency - The currency code (default: 'AUD')
+ * @param {string} locale - The locale to use for formatting (default: 'en-AU')
  * @returns {string} The formatted currency string
  */
-export const formatCurrency = (value, currency = 'USD', locale = 'en-US') => {
+export const formatCurrency = (value, currency = 'AUD', locale = 'en-AU') => {
   if (value === null || value === undefined) return '';
   
   return new Intl.NumberFormat(locale, {
@@ -25,11 +25,11 @@ export const formatCurrency = (value, currency = 'USD', locale = 'en-US') => {
 /**
  * Format a number as currency with K/M/B suffixes for thousands/millions/billions
  * @param {number} value - The value to format
- * @param {string} currency - The currency code (default: 'USD')
- * @param {string} locale - The locale to use for formatting (default: 'en-US')
+ * @param {string} currency - The currency code (default: 'AUD')
+ * @param {string} locale - The locale to use for formatting (default: 'en-AU')
  * @returns {string} The formatted currency string with appropriate suffix
  */
-export const formatCurrencyK = (value, currency = 'USD', locale = 'en-US') => {
+export const formatCurrencyK = (value, currency = 'AUD', locale = 'en-AU') => {
   if (value === null || value === undefined) return '';
   
   const absValue = Math.abs(value);

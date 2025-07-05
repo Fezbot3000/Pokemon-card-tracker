@@ -107,7 +107,7 @@ const CollectionSelector = ({
           className={`block w-full text-left px-4 py-2 text-sm 
             ${forMobileSheet 
               ? `text-center rounded-lg ${collection === selectedCollection 
-                  ? 'bg-gradient-to-r from-[#ef4444] to-[#db2777] text-white font-semibold' 
+                  ? 'bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] text-white font-semibold' 
                   : 'bg-white dark:bg-[#000] text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700'} 
                 hover:opacity-90 py-3`
               : `${collection === selectedCollection ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}

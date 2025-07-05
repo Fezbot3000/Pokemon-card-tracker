@@ -65,7 +65,7 @@ const NewCollectionModal = ({ isOpen, onClose, onCreate, existingCollections = [
       size="lg"
       closeOnClickOutside={false}
       footer={
-        <div className="flex justify-between w-full">
+        <>
           <Button 
             variant="secondary" 
             onClick={handleClose}
@@ -79,7 +79,7 @@ const NewCollectionModal = ({ isOpen, onClose, onCreate, existingCollections = [
           >
             Create
           </Button>
-        </div>
+        </>
       }
     >
       <div className="space-y-4">
