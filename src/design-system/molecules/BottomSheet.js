@@ -50,7 +50,7 @@ const BottomSheet = ({ isOpen, onClose, title, children }) => {
         style={{ 
           maxHeight: '90vh',
           transform: isVisible ? 'translateY(0)' : 'translateY(100%)',
-          paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom, 0px))'
+          paddingBottom: '0.75rem'
         }}
         onTransitionEnd={() => {
           if (!isVisible) setIsAnimating(false);

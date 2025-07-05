@@ -125,16 +125,11 @@ const SellerReviewModal = ({ isOpen, onClose, sellerId, listingId, chatId }) => 
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
       style={{
         height: '100vh',
-        minHeight: '100vh',
-        paddingTop: 'calc(1rem + env(safe-area-inset-top, 0px))',
-        paddingBottom: 'calc(1rem + env(safe-area-inset-bottom, 0px))'
+        minHeight: '100vh'
       }}
     >
       <div 
         className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto"
-        style={{
-          maxHeight: 'calc(90vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))'
-        }}
       >
         <div className="p-6">
           <div className="flex justify-between items-center mb-4">

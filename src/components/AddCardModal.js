@@ -538,16 +538,14 @@ const AddCardModal = ({
           style={{ 
             backdropFilter: 'blur(8px)',
             height: '100vh',
-            minHeight: '100vh',
-            paddingTop: 'calc(1rem + env(safe-area-inset-top, 0px))',
-            paddingBottom: 'calc(1rem + env(safe-area-inset-bottom, 0px))'
+            minHeight: '100vh'
           }}
         >
           <div 
             className="relative max-w-[90vw] flex items-center justify-center"
             onClick={e => e.stopPropagation()}
             style={{
-              maxHeight: 'calc(90vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))'
+              maxHeight: '90vh'
             }}
           >
             <img 
@@ -555,7 +553,7 @@ const AddCardModal = ({
               alt="Card preview (enlarged)" 
               className="w-auto h-auto object-contain rounded-lg" 
               style={{
-                maxHeight: 'calc(90vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))',
+                maxHeight: '90vh',
                 maxWidth: '90vw'
               }}
             />

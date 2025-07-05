@@ -10,9 +10,7 @@ const ImageModal = ({ isOpen, onClose, imageUrl, alt }) => {
       onClick={onClose}
       style={{
         height: '100vh',
-        minHeight: '100vh',
-        paddingTop: 'calc(1rem + env(safe-area-inset-top, 0px))',
-        paddingBottom: 'calc(1rem + env(safe-area-inset-bottom, 0px))'
+        minHeight: '100vh'
       }}
     >
       <div className="relative w-full max-w-2xl">
@@ -27,13 +25,13 @@ const ImageModal = ({ isOpen, onClose, imageUrl, alt }) => {
         </button>
         <div 
           className="relative w-full" 
-          style={{ maxHeight: 'calc(100vh - 6rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))' }}
+          style={{ maxHeight: 'calc(100vh - 6rem)' }}
         >
           <img
             src={imageUrl}
             alt={alt}
             className="w-full h-auto object-contain rounded-lg"
-            style={{ maxHeight: 'calc(100vh - 6rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))' }}
+            style={{ maxHeight: 'calc(100vh - 6rem)' }}
           />
         </div>
       </div>

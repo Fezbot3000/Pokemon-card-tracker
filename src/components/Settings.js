@@ -213,7 +213,7 @@ const Settings = () => {
         </div>
 
         {/* Tab Content */}
-        <div className="pt-[var(--header-total-height-mobile)] pb-[calc(4rem+env(safe-area-inset-bottom,0px))] px-4 lg:pt-[var(--header-total-height-desktop)] lg:pb-4 mt-4">
+        <div className="pt-[var(--header-total-height-mobile)] pb-16 px-4 lg:pt-[var(--header-total-height-desktop)] lg:pb-4 mt-4">
           {activeTab === 'general' && (
             <div className="space-y-6">
               {/* Appearance */}

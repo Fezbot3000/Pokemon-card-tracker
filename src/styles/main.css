@@ -154,9 +154,8 @@
   /* Header heights for consistent layout */
   --header-height-mobile: 4rem; /* 64px */
   --header-height-desktop: 5rem; /* 80px */
-  --safe-area-top: env(safe-area-inset-top, 0px);
-  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
-  --header-total-height-mobile: calc(var(--header-height-mobile) + var(--safe-area-top));
+
+  --header-total-height-mobile: var(--header-height-mobile);
   --header-total-height-desktop: var(--header-height-desktop);
 }
 
@@ -605,29 +604,7 @@ html.dark body {
   display: none; /* Chrome, Safari and Opera */
 }
 
-/* Safe Area Utility Classes for iOS Devices */
-.safe-top {
-  padding-top: var(--safe-area-top);
-}
 
-.safe-bottom {
-  padding-bottom: var(--safe-area-bottom);
-}
-
-.safe-left {
-  padding-left: env(safe-area-inset-left, 0px);
-}
-
-.safe-right {
-  padding-right: env(safe-area-inset-right, 0px);
-}
-
-.safe-all {
-  padding-top: var(--safe-area-top);
-  padding-bottom: var(--safe-area-bottom);
-  padding-left: env(safe-area-inset-left, 0px);
-  padding-right: env(safe-area-inset-right, 0px);
-}
 
 /* Header height compensation for content */
 .content-with-header {
@@ -643,7 +620,7 @@ html.dark body {
 /* Main layout classes for consistent spacing */
 .main-content {
   padding-top: var(--header-total-height-mobile);
-  padding-bottom: calc(5rem + var(--safe-area-bottom)); /* Bottom nav + safe area */
+  padding-bottom: 5rem; /* Bottom nav */
 }
 
 @media (min-width: 640px) {
@@ -666,7 +643,6 @@ html.dark body {
 /* Header responsive height class */
 .header-responsive {
   height: var(--header-total-height-mobile);
-  padding-top: var(--safe-area-top);
 }
 
 @media (min-width: 640px) {
@@ -687,7 +663,7 @@ html.dark body {
 
 /* Content with safe area only (no header spacing) */
 .content-safe-area-only {
-  padding-top: var(--safe-area-top);
+  padding-top: 0;
 }
 
 @media (min-width: 640px) {
@@ -698,8 +674,8 @@ html.dark body {
 
 /* Mobile dashboard without header - reduced top margin */
 .main-content.mobile-dashboard {
-  padding-top: calc(var(--safe-area-top) + 1rem);
-  padding-bottom: calc(5rem + var(--safe-area-bottom)); /* Bottom nav + safe area */
+  padding-top: 1rem;
+  padding-bottom: 5rem; /* Bottom nav */
 }
 
 @media (min-width: 640px) {
@@ -715,9 +691,9 @@ html.dark body {
   padding-top: var(--header-height);
 }
 
-/* Logged-out page layout with safe area support */
+/* Logged-out page layout */
 .logged-out-page {
-  min-height: calc(100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
-  padding-top: calc(5rem + env(safe-area-inset-top, 0px));
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  min-height: 100vh;
+  padding-top: 5rem;
+  padding-bottom: 0;
 }

@@ -186,9 +186,9 @@ const ChatThread = ({ chatId, onBack, cardInfo }) => {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px)-200px)] md:h-[calc(100vh-150px)]">
+    <div className="flex flex-col h-[calc(100vh-200px)] md:h-[calc(100vh-150px)]">
       {/* Chat header */}
-      <div className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700" style={{ paddingTop: window.innerWidth < 640 ? 'calc(1rem + env(safe-area-inset-top, 0px))' : undefined }}>
+      <div className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700" >
         <div className="flex items-center">
           <button 
             className="mr-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
