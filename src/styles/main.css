@@ -668,8 +668,11 @@ html.dark body {
     }
   }
   
-  /* PWA mode: Adjust header positioning */
-  .header-responsive {
+  /* PWA mode: Adjust header positioning - FORCE override Tailwind */
+  header.bg-white.dark\:bg-black.fixed.top-0,
+  header.header-responsive.fixed,
+  .fixed.top-0.header-responsive,
+  header[class*="top-0"] {
     top: env(safe-area-inset-top) !important;
   }
   
