@@ -669,13 +669,13 @@ html.dark body {
   }
   
   /* PWA mode: Adjust header positioning */
-  .header {
-    top: env(safe-area-inset-top);
+  .header-responsive {
+    top: env(safe-area-inset-top) !important;
   }
   
   /* PWA mode: Adjust bottom nav positioning */
-  .bottom-nav-container {
-    bottom: env(safe-area-inset-bottom);
+  .lg\:hidden.fixed.bottom-0.z-40 {
+    bottom: env(safe-area-inset-bottom) !important;
   }
   
   /* PWA mode: Modal backdrop positioning with safe areas */
