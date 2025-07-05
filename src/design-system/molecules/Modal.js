@@ -282,8 +282,8 @@ const Modal = ({
         aria-labelledby={title ? 'modal-title' : undefined}
         aria-label={ariaLabel}
         style={{
-          height: window.innerWidth < 640 ? 'calc(100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))' : undefined,
-          maxHeight: window.innerWidth < 640 ? 'calc(100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))' : undefined
+          height: window.innerWidth < 640 ? '100vh' : undefined,
+          maxHeight: window.innerWidth < 640 ? '100vh' : undefined
         }}
         {...props}
       >
