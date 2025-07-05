@@ -215,8 +215,8 @@ const Modal = ({
     : 'text-2xl text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors';
     
   const footerClasses = forceDarkMode
-    ? 'sticky bottom-0 z-10 flex items-center justify-between gap-2 px-6 pt-4 pb-6 border-t border-gray-700/50 bg-[#0F0F0F]/95 backdrop-blur-sm'
-    : 'sticky bottom-0 z-10 flex items-center justify-between gap-2 px-6 pt-4 pb-6 border-t border-gray-200 dark:border-gray-700/50 bg-white/95 dark:bg-[#0F0F0F]/95 backdrop-blur-sm';
+    ? 'sticky bottom-0 z-10 flex items-center justify-between gap-2 px-6 pt-4 pb-[env(safe-area-inset-bottom,24px)] border-t border-gray-700/50 bg-[#0F0F0F]/95 backdrop-blur-sm'
+    : 'sticky bottom-0 z-10 flex items-center justify-between gap-2 px-6 pt-4 pb-[env(safe-area-inset-bottom,24px)] border-t border-gray-200 dark:border-gray-700/50 bg-white/95 dark:bg-[#0F0F0F]/95 backdrop-blur-sm';
   
   // Force the dark class if needed
   const darkModeClass = forceDarkMode ? 'dark' : '';
@@ -316,12 +316,7 @@ const Modal = ({
 
         {/* Modal Footer - Sticky, only shown if footer content is provided */}
         {footer && (
-          <div 
-            className={footerClasses}
-            style={{
-              paddingBottom: window.innerWidth < 640 ? 'calc(1rem + env(safe-area-inset-bottom, 0px))' : undefined
-            }}
-          >
+          <div className={footerClasses}>
             {footer}
           </div>
         )}
