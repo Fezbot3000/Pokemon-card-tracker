@@ -196,7 +196,7 @@ const Modal = ({
   };
   
   // Build the classes based on theme
-  const backdropClasses = `fixed inset-0 ${positionClasses[position]} backdrop-blur-sm h-screen min-h-screen`;
+  const backdropClasses = `fixed inset-0 ${positionClasses[position]} bg-black/50 backdrop-blur-sm h-screen min-h-screen`;
   
   const modalClasses = forceDarkMode 
     ? `bg-[#0F0F0F]/95 backdrop-blur-sm rounded-lg shadow-xl text-white` 
@@ -215,8 +215,8 @@ const Modal = ({
     : 'text-2xl text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors';
     
   const footerClasses = forceDarkMode
-    ? 'sticky bottom-0 z-10 flex items-center justify-between gap-2 px-6 pt-4 pb-[env(safe-area-inset-bottom,24px)] border-t border-gray-700/50 bg-[#0F0F0F]/95 backdrop-blur-sm'
-    : 'sticky bottom-0 z-10 flex items-center justify-between gap-2 px-6 pt-4 pb-[env(safe-area-inset-bottom,24px)] border-t border-gray-200 dark:border-gray-700/50 bg-white/95 dark:bg-[#0F0F0F]/95 backdrop-blur-sm';
+    ? 'sticky bottom-0 z-10 flex items-center justify-between gap-2 px-6 pt-4 pb-6 border-t border-gray-700/50 bg-red-500/95 backdrop-blur-sm'
+    : 'sticky bottom-0 z-10 flex items-center justify-between gap-2 px-6 pt-4 pb-6 border-t border-gray-200 dark:border-gray-700/50 bg-white/95 dark:bg-red-500/95 backdrop-blur-sm';
   
   // Force the dark class if needed
   const darkModeClass = forceDarkMode ? 'dark' : '';
@@ -261,10 +261,12 @@ const Modal = ({
     <div 
       className={`${backdropClasses} ${darkModeClass} ${isAnimatingOut ? 'animate-backdrop-fade-out' : 'animate-backdrop-fade-in'}`}
       style={{ 
-        zIndex,
-        height: '100vh',
+        zIndex, 
+        height: '100vh', 
         minHeight: '100vh', 
-        maxHeight: '100vh'
+        maxHeight: '100vh', 
+        paddingTop: 'env(safe-area-inset-top)', 
+        paddingBottom: 'env(safe-area-inset-bottom)' 
       }}
       onClick={handleBackdropClick}
     >
@@ -282,8 +284,8 @@ const Modal = ({
         aria-labelledby={title ? 'modal-title' : undefined}
         aria-label={ariaLabel}
         style={{
-          height: window.innerWidth < 640 ? '100vh' : undefined,
-          maxHeight: window.innerWidth < 640 ? '100vh' : undefined
+          height: window.innerWidth < 640 ? 'calc(100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))' : undefined,
+          maxHeight: window.innerWidth < 640 ? 'calc(100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))' : undefined
         }}
         {...props}
       >
@@ -314,7 +316,12 @@ const Modal = ({
 
         {/* Modal Footer - Sticky, only shown if footer content is provided */}
         {footer && (
-          <div className={footerClasses}>
+          <div 
+            className={footerClasses}
+            style={{
+              paddingBottom: window.innerWidth < 640 ? 'calc(1rem + env(safe-area-inset-bottom, 0px))' : undefined
+            }}
+          >
             {footer}
           </div>
         )}
