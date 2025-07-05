@@ -67,6 +67,8 @@ const Modal = ({
             document.body.style.height = '100%';
             document.body.style.top = `-${scrollPosRef.current.y}px`;
             document.body.style.overflow = 'hidden';
+            // Also add modal-open class to hide bottom nav
+            document.body.classList.add('modal-open');
           } else {
             // Desktop approach: just add the modal-open class
             document.body.classList.add('modal-open');
@@ -85,6 +87,8 @@ const Modal = ({
           document.body.style.height = '';
           document.body.style.top = '';
           document.body.style.overflow = '';
+          // Also remove modal-open class
+          document.body.classList.remove('modal-open');
           window.scrollTo(0, scrollY || scrollPosRef.current?.y || 0);
         } else {
           // Desktop cleanup: just remove the class
