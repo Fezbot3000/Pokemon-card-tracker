@@ -27,6 +27,7 @@ const Modal = ({
   ariaLabel,
   zIndex = 50,
   noContentPadding = false,
+  disableBodyScrollManagement = false, // New prop to disable body scroll management
   ...props
 }) => {
   const modalRef = useRef(null);
@@ -50,8 +51,8 @@ const Modal = ({
         setAnimationClass('animate-modal-scale-in');
       }
       
-      // Only prevent background scroll if modal is open and not static
-      if (!showAsStatic) {
+      // Only prevent background scroll if modal is open and not static and body scroll management is enabled
+      if (!showAsStatic && !disableBodyScrollManagement) {
         // Store current scroll position when modal opens - do this FIRST
         scrollPosRef.current = {
           x: window.scrollX,
@@ -78,7 +79,7 @@ const Modal = ({
     }
     
     return () => {
-      if (isOpen) {
+      if (isOpen && !disableBodyScrollManagement) {
         if (isMobile && !showAsStatic) {
           // Mobile cleanup: restore position and scroll
           const scrollY = parseInt(document.body.style.top || '0') * -1;
@@ -96,7 +97,7 @@ const Modal = ({
         }
       }
     };
-  }, [isOpen, position, showAsStatic]);
+  }, [isOpen, position, showAsStatic, disableBodyScrollManagement]);
 
   // Add iOS viewport height fix - always call this hook regardless of conditions
   useEffect(() => {
@@ -350,7 +351,8 @@ Modal.propTypes = {
   maxWidth: PropTypes.string,
   ariaLabel: PropTypes.string,
   zIndex: PropTypes.number,
-  noContentPadding: PropTypes.bool
+  noContentPadding: PropTypes.bool,
+  disableBodyScrollManagement: PropTypes.bool
 };
 
 export default Modal;

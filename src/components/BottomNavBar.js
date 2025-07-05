@@ -61,7 +61,7 @@ const BottomNavBar = ({
   }
 
   return (
-    <div className="fixed sm:hidden bottom-0 left-0 w-full z-40 bg-white dark:bg-[#1B2131] border-t border-gray-200 dark:border-gray-800 pb-[env(safe-area-inset-bottom,0px)]">
+    <div className="fixed sm:hidden bottom-0 left-0 w-full z-40 bg-white dark:bg-[#1B2131] border-t border-gray-200 dark:border-gray-800 pb-[env(safe-area-inset-bottom,0px)] bottom-nav">
       <div className="flex justify-around items-center py-2">
         <button
           className={`flex flex-col items-center justify-center px-4 py-1 ${

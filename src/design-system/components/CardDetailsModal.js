@@ -407,6 +407,7 @@ const CardDetailsModal = ({
         size="2xl"
         className={`${className} ${animClass}`}
         footer={modalFooter}
+        disableBodyScrollManagement={true}
       >
         <div className="space-y-6">
           {/* Profit/Loss Display */}
