@@ -6,6 +6,7 @@
  */
 
 /* Base dark mode styles */
+html.dark,
 html.dark body {
   background-color: var(--bg-primary);
 }
