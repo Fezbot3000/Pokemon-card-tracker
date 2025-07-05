@@ -113,36 +113,35 @@
     }
   }
   
-  /* Fix for iOS modal backdrop safe area extension */
+  /* Fix for iOS modal safe area background */
   .modal-backdrop-ios-safe {
-    /* Extend backdrop into all safe areas */
-    top: calc(0px - env(safe-area-inset-top, 0px)) !important;
-    bottom: calc(0px - env(safe-area-inset-bottom, 0px)) !important;
-    left: calc(0px - env(safe-area-inset-left, 0px)) !important;
-    right: calc(0px - env(safe-area-inset-right, 0px)) !important;
+    /* Ensure the backdrop fills the full viewport including safe areas */
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    /* Use viewport height that includes safe areas */
+    height: 100vh !important;
+    min-height: 100vh !important;
   }
   
-  /* Ensure modal backdrop fills safe areas with correct color */
-  .modal-backdrop-dark-safe,
+  /* Set proper background that extends into safe areas */
   .dark .modal-backdrop-ios-safe {
-    background: linear-gradient(
-      to bottom,
-      rgba(0, 0, 0, 0.5) 0%,
-      rgba(0, 0, 0, 0.5) calc(100% - env(safe-area-inset-bottom, 0px)),
-      #0F0F0F calc(100% - env(safe-area-inset-bottom, 0px)),
-      #0F0F0F 100%
-    ) !important;
+    background-color: rgba(0, 0, 0, 0.5) !important;
   }
   
-  .modal-backdrop-light-safe,
   html:not(.dark) .modal-backdrop-ios-safe {
-    background: linear-gradient(
-      to bottom,
-      rgba(0, 0, 0, 0.5) 0%,
-      rgba(0, 0, 0, 0.5) calc(100% - env(safe-area-inset-bottom, 0px)),
-      white calc(100% - env(safe-area-inset-bottom, 0px)),
-      white 100%
-    ) !important;
+    background-color: rgba(0, 0, 0, 0.5) !important;
+  }
+  
+  /* Ensure body background matches theme in safe areas */
+  .dark body {
+    background-color: #0F0F0F !important;
+  }
+  
+  html:not(.dark) body {
+    background-color: white !important;
   }
 }
 

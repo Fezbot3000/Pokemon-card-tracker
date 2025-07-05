@@ -295,12 +295,7 @@ const Modal = ({
       >
         {/* Modal Header - Sticky */}
         {title && (
-          <div 
-            className={headerClasses}
-            style={{
-              paddingTop: window.innerWidth < 640 ? 'calc(1rem + env(safe-area-inset-top, 0px))' : undefined
-            }}
-          >
+          <div className={headerClasses}>
             <h2 id="modal-title" className={titleClasses}>{title}</h2>
             <button 
               onClick={handleClose}
@@ -320,12 +315,7 @@ const Modal = ({
 
         {/* Modal Footer - Sticky, only shown if footer content is provided */}
         {footer && (
-          <div 
-            className={footerClasses}
-            style={{
-              paddingBottom: window.innerWidth < 640 ? 'calc(1rem + env(safe-area-inset-bottom, 0px))' : undefined
-            }}
-          >
+          <div className={footerClasses}>
             {footer}
           </div>
         )}
