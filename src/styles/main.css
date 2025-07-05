@@ -508,9 +508,9 @@ html.dark body {
   width: 100%;
 }
 
-/* Override modal-open hiding bottom nav */
+/* Hide bottom nav when modals are open to prevent overlap */
 .modal-open .bottom-nav {
-  display: grid;
+  display: none;
 }
 
 /* Ensure dark mode settings icon is styled */
