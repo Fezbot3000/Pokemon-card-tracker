@@ -35,6 +35,10 @@ const Modal = ({
   const [isAnimatingOut, setIsAnimatingOut] = useState(false);
   const [animationClass, setAnimationClass] = useState('');
   
+  // Detect iOS device
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+               (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  
   // Preserve scroll position and prevent background scrolling
   useEffect(() => {
     const isMobile = window.innerWidth < 768;
@@ -176,7 +180,7 @@ const Modal = ({
   };
   
   // Build the classes based on theme
-  const backdropClasses = `fixed inset-0 ${positionClasses[position]} bg-black/50 backdrop-blur-sm`;
+  const backdropClasses = `fixed inset-0 modal-backdrop ${positionClasses[position]} bg-black/50 backdrop-blur-sm`;
   
   const modalClasses = forceDarkMode 
     ? `bg-[#0F0F0F]/95 backdrop-blur-sm rounded-lg shadow-xl text-white` 
@@ -195,8 +199,8 @@ const Modal = ({
     : 'text-2xl text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors';
     
   const footerClasses = forceDarkMode
-    ? 'sticky bottom-0 z-10 flex items-center justify-between gap-2 px-6 pt-4 pb-6 border-t border-gray-700/50 bg-[#0F0F0F]/95 backdrop-blur-sm'
-    : 'sticky bottom-0 z-10 flex items-center justify-between gap-2 px-6 pt-4 pb-6 border-t border-gray-200 dark:border-gray-700/50 bg-white/95 dark:bg-[#0F0F0F]/95 backdrop-blur-sm';
+    ? `${isIOS ? 'modal-footer-ios-fix' : 'sticky bottom-0 z-10'} flex items-center justify-between gap-2 px-6 pt-4 pb-6 border-t border-gray-700/50 bg-[#0F0F0F]/95 backdrop-blur-sm`
+    : `${isIOS ? 'modal-footer-ios-fix' : 'sticky bottom-0 z-10'} flex items-center justify-between gap-2 px-6 pt-4 pb-6 border-t border-gray-200 dark:border-gray-700/50 bg-white/95 dark:bg-[#0F0F0F]/95 backdrop-blur-sm`;
   
   // Force the dark class if needed
   const darkModeClass = forceDarkMode ? 'dark' : '';
@@ -247,7 +251,7 @@ const Modal = ({
     >
       <div 
         ref={modalRef}
-        className={`${modalClasses} flex flex-col ${animationClass} ${
+        className={`${modalClasses} flex flex-col modal-container ${animationClass} ${
           position === 'right' 
             ? (window.innerWidth < 640 
                 ? 'w-screen max-w-none rounded-lg m-0 fixed top-0 left-0 right-0 bottom-0 z-[9999] overflow-auto' 
@@ -277,7 +281,7 @@ const Modal = ({
         )}
 
         {/* Modal Content - Scrollable */}
-        <div className={`flex-1 overflow-y-auto scrollbar-hide ${noContentPadding ? 'px-6' : 'px-6 py-6'} modal-content`}>
+        <div className={`flex-1 overflow-y-auto scrollbar-hide ${noContentPadding ? 'px-6' : 'px-6 py-6'} modal-content ${isIOS && footer ? 'modal-content-with-absolute-footer' : ''}`}>
           {children}
         </div>
 

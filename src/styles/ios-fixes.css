@@ -1,1 +1,155 @@
-/* iOS-specific fixes - CLEARED */
+/* iOS-specific fixes for modal scrolling and sticky positioning */
+
+/* iOS Safari viewport height fix */
+@supports (-webkit-touch-callout: none) {
+  .modal-container {
+    max-height: 100vh;
+    max-height: 100dvh; /* Use dynamic viewport height on iOS */
+  }
+}
+
+/* iOS Safari sticky footer fix within flex containers */
+@supports (-webkit-touch-callout: none) {
+  /* Force proper flex behavior on iOS */
+  .modal-container {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: 0; /* Important for iOS flex behavior */
+  }
+  
+  /* Ensure content area scrolls properly */
+  .modal-content {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+    position: relative;
+    min-height: 0; /* Important for iOS flex behavior */
+  }
+  
+  /* Fix sticky footer on iOS - use absolute positioning as fallback */
+  .modal-footer-ios-fix {
+    position: absolute !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 10 !important;
+    background: inherit !important;
+    border-top: 1px solid var(--color-border) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+  }
+  
+  /* Add bottom padding to content when footer is absolute positioned */
+  .modal-content-with-absolute-footer {
+    padding-bottom: 120px !important; /* Adjust based on footer height */
+  }
+}
+
+/* iOS Safari specific modal positioning fixes */
+@supports (-webkit-touch-callout: none) {
+  /* Fix modal positioning with iOS viewport changes */
+  .modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh; /* Use dynamic viewport height */
+    overflow: hidden;
+  }
+  
+  /* Prevent iOS zoom on form inputs */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="tel"],
+  input[type="url"],
+  input[type="search"],
+  textarea,
+  select {
+    font-size: 16px !important; /* Prevent iOS zoom */
+  }
+}
+
+/* iOS Safari scroll behavior fixes */
+@supports (-webkit-touch-callout: none) {
+  /* Fix scroll momentum and prevent bouncing */
+  .modal-content {
+    -webkit-overflow-scrolling: touch;
+    overflow-scrolling: touch;
+  }
+  
+  /* Prevent body scroll when modal is open */
+  body.modal-open {
+    position: fixed !important;
+    width: 100% !important;
+    height: 100% !important;
+    overflow: hidden !important;
+  }
+}
+
+/* iOS PWA specific fixes */
+@supports (-webkit-touch-callout: none) {
+  @media (display-mode: standalone) {
+    .modal-backdrop {
+      padding-top: env(safe-area-inset-top);
+      padding-bottom: env(safe-area-inset-bottom);
+      height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+      height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    }
+    
+    .modal-footer-ios-fix {
+      bottom: env(safe-area-inset-bottom) !important;
+      padding-bottom: calc(1.5rem + env(safe-area-inset-bottom)) !important;
+    }
+  }
+}
+
+/* iOS Safari button tap area fixes */
+@supports (-webkit-touch-callout: none) {
+  /* Improve button tap targets on iOS */
+  .modal-footer button {
+    min-height: 44px; /* iOS recommended minimum tap target */
+    min-width: 44px;
+    touch-action: manipulation; /* Prevent double-tap zoom */
+  }
+}
+
+/* iOS Safari form input fixes */
+@supports (-webkit-touch-callout: none) {
+  /* Fix iOS form input appearance */
+  input, textarea, select {
+    -webkit-appearance: none;
+    appearance: none;
+    border-radius: 0;
+  }
+  
+  /* Fix iOS input focus behavior */
+  input:focus, textarea:focus, select:focus {
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+/* iOS Safari animation performance fixes */
+@supports (-webkit-touch-callout: none) {
+  /* Improve animation performance on iOS */
+  .modal-container {
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    -webkit-perspective: 1000;
+    perspective: 1000;
+  }
+  
+  .modal-content {
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+  }
+}
