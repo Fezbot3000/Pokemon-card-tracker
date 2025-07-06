@@ -69,7 +69,7 @@ const CardOptimized = memo(({
               type="button"
               aria-label={isSelected ? 'Deselect card' : 'Select card'}
               tabIndex={0}
-              className={`w-2 h-2 rounded-full flex items-center justify-center focus:outline-none transition-all
+              className={`w-4 h-4 rounded-full flex items-center justify-center focus:outline-none transition-all
                 border-2
                 bg-white dark:bg-[#18181b]
                 ${isSelected ? 'border-purple-500' : 'border-gray-300 dark:border-gray-600'}
@@ -122,7 +122,7 @@ const CardOptimized = memo(({
           type="button"
           aria-label={isSelected ? 'Deselect card' : 'Select card'}
           tabIndex={0}
-          className={`w-2 h-2 rounded-full flex items-center justify-center focus:outline-none transition-all
+          className={`w-4 h-4 rounded-full flex items-center justify-center focus:outline-none transition-all
             border-2
             bg-white dark:bg-[#18181b]
             ${isSelected ? 'border-purple-500' : 'border-gray-300 dark:border-gray-600'}

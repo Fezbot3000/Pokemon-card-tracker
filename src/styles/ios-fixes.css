@@ -41,6 +41,13 @@
       max-width: 100%;
       box-sizing: border-box;
     }
+    
+    /* PWA-specific checkbox size reduction */
+    .modal-container input[type="checkbox"],
+    .modal-container button[aria-label*="Select"] {
+      width: 0.5rem !important;
+      height: 0.5rem !important;
+    }
   }
   
   /* iOS PWA modal header safe area */
