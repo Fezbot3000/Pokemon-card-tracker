@@ -71,7 +71,7 @@ const SearchToolbar = ({
   // Sort dropdown trigger
   const sortDropdownTrigger = (
     <div 
-      className="inline-flex items-center justify-center font-medium rounded-lg transition-colors focus:outline-none px-3 py-2 text-sm bg-white dark:bg-[#000] text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[#111] cursor-pointer"
+      className="dropdown-trigger inline-flex items-center justify-center font-medium rounded-lg transition-colors focus:outline-none px-3 py-2 text-sm bg-white dark:bg-[#000] text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[#111] cursor-pointer"
       onClick={() => setIsSortDropdownOpen(!isSortDropdownOpen)}
       data-component-name="SearchToolbar"
     >
@@ -98,7 +98,7 @@ const SearchToolbar = ({
     </div>
   );
 
-  const toolbarClass = `w-full bg-white dark:bg-[#1B2131] py-3 px-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 ${isDarkMode ? 'shadow-sm' : ''} rounded-md border border-[#ffffff33] dark:border-[#ffffff1a] ${className}`;
+  const toolbarClass = `search-toolbar w-full bg-white dark:bg-[#1B2131] py-3 px-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 ${isDarkMode ? 'shadow-sm' : ''} rounded-md border border-[#ffffff33] dark:border-[#ffffff1a] ${className}`;
 
   return (
     <div 
@@ -122,7 +122,7 @@ const SearchToolbar = ({
       {/* Controls Group (View Mode, Sort, Add Card) */}
       <div className="flex items-center justify-between sm:justify-start gap-3 w-full sm:w-auto">
         {/* View Mode Selector */}
-        <div className="flex bg-gray-100 dark:bg-[#252B3B] rounded-lg p-1 relative">
+        <div className="view-selector flex bg-gray-100 dark:bg-[#252B3B] rounded-lg p-1 relative">
           {/* Animated Background Indicator */}
           <div 
             className="absolute top-1 bottom-1 rounded-md bg-gradient-to-r from-[#ef4444] to-[#db2777] transition-transform duration-300 ease-in-out z-0"

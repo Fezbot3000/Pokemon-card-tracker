@@ -1,3 +1,9 @@
+/* Modal height fix for all desktop modals */
+.modal-container {
+  height: 100vh;
+  height: 100dvh; /* Dynamic viewport height for better compatibility */
+}
+
 /* iOS Safari specific fixes */
 @supports (-webkit-touch-callout: none) {
   /* Fix logged-out navigation bar positioning on iOS to account for notch/dynamic island */
@@ -8,13 +14,6 @@
   /* Fix logged-in header positioning on iOS to account for notch/dynamic island */
   header.fixed.top-0 {
     top: env(safe-area-inset-top, 0px);
-  }
-  
-  /* iOS Safari viewport height fix */
-  /* Use dynamic viewport height for better iOS compatibility */
-  .modal-container {
-    height: 100vh;
-    height: 100dvh; /* Dynamic viewport height for iOS */
   }
   
   /* iOS Safari modal fixes */
@@ -42,9 +41,18 @@
       box-sizing: border-box;
     }
     
-    /* PWA-specific checkbox size reduction */
-    .modal-container input[type="checkbox"],
-    .modal-container button[aria-label*="Select"] {
+    /* PWA-specific checkbox size reduction for all mobile devices */
+    input[type="checkbox"],
+    button[aria-label*="Select"],
+    button[aria-label*="Deselect"],
+    .w-4.h-4 {
+      width: 0.5rem !important;
+      height: 0.5rem !important;
+    }
+    
+    /* Additional targeting for card selection buttons */
+    .absolute.top-2.right-2 button,
+    .absolute.top-2.right-2 input {
       width: 0.5rem !important;
       height: 0.5rem !important;
     }
@@ -106,6 +114,32 @@
   @media (min-width: 641px) and (max-width: 768px) {
     div.ios-safe-nav.fixed.top-0 {
       padding-top: calc(0.75rem + env(safe-area-inset-top, 0px));
+    }
+  }
+  
+  /* iPad PWA specific fixes */
+  @media (min-width: 768px) and (max-width: 1024px) and (display-mode: standalone) {
+    /* Fix search toolbar alignment on iPad PWA */
+    .search-toolbar {
+      align-items: center !important;
+    }
+    
+    /* Fix filter button positioning */
+    .search-toolbar button,
+    .search-toolbar .dropdown-trigger {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+    }
+    
+    /* Fix view selector alignment */
+    .search-toolbar .view-selector {
+      align-items: center !important;
+    }
+    
+    /* Ensure proper button heights */
+    .search-toolbar button {
+      min-height: 40px !important;
     }
   }
   
