@@ -16,29 +16,29 @@ const Footer = () => {
           <div className="col-span-1">
             <h4 className="font-semibold mb-4">Platform</h4>
             <ul className="space-y-2 text-sm text-gray-400">
-              <li><Link to="/login" onClick={() => window.scrollTo(0, 0)} className="hover:text-white transition-colors">Sign Up</Link></li>
-              <li><Link to="/features" onClick={() => window.scrollTo(0, 0)} className="hover:text-white transition-colors">Features</Link></li>
-              <li><Link to="/pricing" onClick={() => window.scrollTo(0, 0)} className="hover:text-white transition-colors">Pricing</Link></li>
+              <li><Link to="/login" className="hover:text-white transition-colors">Sign Up</Link></li>
+              <li><Link to="/features" className="hover:text-white transition-colors">Features</Link></li>
+              <li><Link to="/pricing" className="hover:text-white transition-colors">Pricing</Link></li>
             </ul>
           </div>
           
           <div className="col-span-1">
             <h4 className="font-semibold mb-4">Card Guides</h4>
             <ul className="space-y-2 text-sm text-gray-400">
-              <li><Link to="/collecting-guide" onClick={() => window.scrollTo(0, 0)} className="hover:text-white transition-colors">Collecting Guide</Link></li>
-              <li><Link to="/pokemon-sets" onClick={() => window.scrollTo(0, 0)} className="hover:text-white transition-colors">Card Sets & Prices</Link></li>
-              <li><Link to="/pokemon-investment-guide" onClick={() => window.scrollTo(0, 0)} className="hover:text-white transition-colors">Investment Guide</Link></li>
-              <li><Link to="/grading-integration" onClick={() => window.scrollTo(0, 0)} className="hover:text-white transition-colors">Grading Integration</Link></li>
+              <li><Link to="/collecting-guide" className="hover:text-white transition-colors">Collecting Guide</Link></li>
+              <li><Link to="/pokemon-sets" className="hover:text-white transition-colors">Card Sets & Prices</Link></li>
+              <li><Link to="/pokemon-investment-guide" className="hover:text-white transition-colors">Investment Guide</Link></li>
+              <li><Link to="/grading-integration" className="hover:text-white transition-colors">Grading Integration</Link></li>
             </ul>
           </div>
           
           <div className="col-span-1">
             <h4 className="font-semibold mb-4">Support</h4>
             <ul className="space-y-2 text-sm text-gray-400">
-              <li><Link to="/help-center" onClick={() => window.scrollTo(0, 0)} className="hover:text-white transition-colors">Help Center</Link></li>
-              <li><Link to="/about" onClick={() => window.scrollTo(0, 0)} className="hover:text-white transition-colors">About</Link></li>
-              <li><Link to="/privacy" onClick={() => window.scrollTo(0, 0)} className="hover:text-white transition-colors">Privacy</Link></li>
-              <li><Link to="/terms" onClick={() => window.scrollTo(0, 0)} className="hover:text-white transition-colors">Terms</Link></li>
+              <li><Link to="/help-center" className="hover:text-white transition-colors">Help Center</Link></li>
+              <li><Link to="/about" className="hover:text-white transition-colors">About</Link></li>
+              <li><Link to="/privacy" className="hover:text-white transition-colors">Privacy</Link></li>
+              <li><Link to="/terms" className="hover:text-white transition-colors">Terms</Link></li>
             </ul>
           </div>
         </div>

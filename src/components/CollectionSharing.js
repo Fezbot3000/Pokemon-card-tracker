@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { createPortal } from 'react-dom';
 import { 
   collection, 
   doc, 
@@ -22,6 +21,7 @@ import {
   Toggle, 
   Modal
 } from '../design-system';
+import SelectField from '../design-system/atoms/SelectField';
 import { toast } from 'react-hot-toast';
 import SharingQuickStart from './SharingQuickStart';
 import sharingService from '../services/sharingService';
@@ -551,174 +551,161 @@ const CollectionSharing = ({ isInModal = false }) => {
         )}
       </div>
 
-      {/* Create Modal - RENDERED AS PORTAL TO AVOID NESTING */}
-      {showCreateModal && createPortal(
-        <div 
-          className="fixed inset-0 flex items-center justify-center p-4"
-          style={{ 
-            backgroundColor: 'rgba(0, 0, 0, 0.7)',
-            backdropFilter: 'blur(4px)',
-            WebkitBackdropFilter: 'blur(4px)',
-            zIndex: 99999
-          }}
-        >
-          <div 
-            className="rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto"
-            style={{
-              backgroundColor: 'rgb(0, 0, 0)',
-              border: '1px solid rgba(55, 65, 81, 0.5)',
-              zIndex: 100000
-            }}
-          >
-            <div className="p-4 sm:p-6">
-              <h3 className="text-lg font-semibold text-white mb-4">
-                Share Collection
-              </h3>
-              
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">
-                    Title *
-                  </label>
-                  <Input
-                    value={createForm.title}
-                    onChange={(e) => setCreateForm({...createForm, title: e.target.value})}
-                    placeholder="My Amazing Card Collection"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">
-                    Description
-                  </label>
-                  <Textarea
-                    value={createForm.description}
-                    onChange={(e) => setCreateForm({...createForm, description: e.target.value})}
-                    placeholder="Tell others about your collection..."
-                    rows={3}
-                  />
-                </div>
-                
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="block text-sm font-medium text-gray-300">
-                      Collection to Share
-                    </label>
-                    <Button
-                      onClick={refreshCardCounts}
-                      disabled={isRefreshing}
-                      variant="outline"
-                      size="sm"
-                      className="text-xs px-2 py-1"
-                    >
-                      {isRefreshing ? '🔄' : '🔄'} {isRefreshing ? 'Refreshing...' : 'Refresh'}
-                    </Button>
-                  </div>
-                  <Select
-                    value={createForm.collectionId}
-                    onChange={(e) => setCreateForm({...createForm, collectionId: e.target.value})}
-                  >
-                    <option value="all">All Collections</option>
-                    {availableCollections.map((collection) => (
-                      <option key={collection.id} value={collection.id}>
-                        {collection.name}
-                      </option>
-                    ))}
-                  </Select>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">
-                    Expires After
-                  </label>
-                  <Select
-                    value={createForm.expiresIn}
-                    onChange={(e) => setCreateForm({...createForm, expiresIn: e.target.value})}
-                  >
-                    <option value="never">Never</option>
-                    <option value="7d">7 days</option>
-                    <option value="30d">30 days</option>
-                    <option value="90d">90 days</option>
-                    <option value="1y">1 year</option>
-                  </Select>
-                </div>
-                
-                <div>
-                  <Switch
-                    checked={createForm.isActive}
-                    onChange={(checked) => setCreateForm({...createForm, isActive: checked})}
-                    label="Make active immediately"
-                  />
-                </div>
-
-                {/* Preview Image Section */}
-                {(() => {
-                  if (!Array.isArray(cards) || cards.length === 0) return null;
-                  
-                  let collectionCards = cards;
-                  if (createForm.collectionId !== 'all') {
-                    collectionCards = cards.filter(card => {
-                      return (
-                        card.collectionId === createForm.collectionId ||
-                        card.collection === createForm.collectionId ||
-                        card.collectionName === createForm.collectionId
-                      );
-                    });
-                  }
-                  
-                  const previewImage = sharingService.findBestCardImage(collectionCards);
-                  
-                  if (!previewImage) return null;
-                  
-                  return (
-                    <div className="border-t border-gray-700 pt-4">
-                      <label className="block text-sm font-medium text-gray-300 mb-2">
-                        Share Preview Image
-                      </label>
-                      <div className="flex items-center space-x-3 p-3 bg-gray-800 rounded-lg">
-                        <img 
-                          src={previewImage} 
-                          alt="Share preview" 
-                          className="w-16 h-20 object-cover rounded border border-gray-600"
-                          onError={(e) => {
-                            e.target.style.display = 'none';
-                          }}
-                        />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm text-gray-300">
-                            This image will be shown when your collection is shared on social media
-                          </p>
-                          <p className="text-xs text-gray-500 mt-1 truncate">
-                            From your highest value card with an image
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })()}
-              </div>
-              
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end space-y-2 sm:space-y-0 sm:space-x-3 mt-6">
-                <Button
-                  onClick={() => setShowCreateModal(false)}
-                  variant="outline"
-                  className="w-full sm:w-auto"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={createSharedCollection}
-                  disabled={!createForm.title.trim()}
-                  className="w-full sm:w-auto"
-                >
-                  Create Share Link
-                </Button>
-              </div>
-            </div>
+      {/* Create Modal - Using proper Modal component */}
+      <Modal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        title="Share Collection"
+        position="right"
+        size="lg"
+        closeOnClickOutside={false}
+        footer={
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end space-y-2 sm:space-y-0 sm:space-x-3 w-full">
+            <Button
+              onClick={() => setShowCreateModal(false)}
+              variant="outline"
+              className="w-full sm:w-auto"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={createSharedCollection}
+              disabled={!createForm.title.trim()}
+              className="w-full sm:w-auto"
+            >
+              Create Share Link
+            </Button>
           </div>
-        </div>,
-        document.body
-      )}
+        }
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Title *
+            </label>
+            <TextField
+              name="title"
+              value={createForm.title}
+              onChange={(e) => setCreateForm({...createForm, title: e.target.value})}
+              placeholder="My Amazing Card Collection"
+              required
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Description
+            </label>
+            <TextField
+              name="description"
+              value={createForm.description}
+              onChange={(e) => setCreateForm({...createForm, description: e.target.value})}
+              placeholder="Tell others about your collection..."
+              multiline
+              rows={3}
+            />
+          </div>
+          
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Collection to Share
+              </label>
+              <Button
+                onClick={refreshCardCounts}
+                disabled={isRefreshing}
+                variant="outline"
+                size="sm"
+                className="text-xs px-2 py-1"
+              >
+                {isRefreshing ? '🔄' : '🔄'} {isRefreshing ? 'Refreshing...' : 'Refresh'}
+              </Button>
+            </div>
+            <SelectField
+              name="collectionId"
+              value={createForm.collectionId}
+              onChange={(e) => setCreateForm({...createForm, collectionId: e.target.value})}
+              options={[
+                { value: 'all', label: 'All Collections' },
+                ...availableCollections.map((collection) => ({
+                  value: collection.id,
+                  label: collection.name
+                }))
+              ]}
+            />
+          </div>
+          
+          <div>
+            <SelectField
+              label="Expires After"
+              name="expiresIn"
+              value={createForm.expiresIn}
+              onChange={(e) => setCreateForm({...createForm, expiresIn: e.target.value})}
+              options={[
+                { value: 'never', label: 'Never' },
+                { value: '7d', label: '7 days' },
+                { value: '30d', label: '30 days' },
+                { value: '90d', label: '90 days' },
+                { value: '1y', label: '1 year' }
+              ]}
+            />
+          </div>
+          
+          <div>
+            <Toggle
+              checked={createForm.isActive}
+              onChange={(checked) => setCreateForm({...createForm, isActive: checked})}
+              label="Make active immediately"
+            />
+          </div>
+
+          {/* Preview Image Section */}
+          {(() => {
+            if (!Array.isArray(cards) || cards.length === 0) return null;
+            
+            let collectionCards = cards;
+            if (createForm.collectionId !== 'all') {
+              collectionCards = cards.filter(card => {
+                return (
+                  card.collectionId === createForm.collectionId ||
+                  card.collection === createForm.collectionId ||
+                  card.collectionName === createForm.collectionId
+                );
+              });
+            }
+            
+            const previewImage = sharingService.findBestCardImage(collectionCards);
+            
+            if (!previewImage) return null;
+            
+            return (
+              <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Share Preview Image
+                </label>
+                <div className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                  <img 
+                    src={previewImage} 
+                    alt="Share preview" 
+                    className="w-16 h-20 object-cover rounded border border-gray-300 dark:border-gray-600"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                    }}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-gray-700 dark:text-gray-300">
+                      This image will be shown when your collection is shared on social media
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-500 mt-1 truncate">
+                      From your highest value card with an image
+                    </p>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+      </Modal>
     </>
   );
 };

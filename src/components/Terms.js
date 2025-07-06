@@ -200,14 +200,12 @@ const Terms = () => {
           <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center">
             <Link 
               to="/help-center" 
-              onClick={() => window.scrollTo(0, 0)} 
               className="w-full sm:w-auto bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 px-8 py-4 rounded-2xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl text-center"
             >
               Contact Support
             </Link>
             <Link 
               to="/privacy" 
-              onClick={() => window.scrollTo(0, 0)} 
               className="w-full sm:w-auto bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 px-8 py-4 rounded-2xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 text-center"
             >
               Privacy Policy

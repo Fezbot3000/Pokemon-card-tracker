@@ -1055,7 +1055,7 @@ const CardList = ({
                       type="checkbox"
                       checked={selectedCards.has(card.slabSerial)}
                       onChange={(e) => handleSelectCard(e, card.slabSerial)}
-                      className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-blue-600 bg-white dark:bg-gray-800 focus:ring-blue-500 dark:focus:ring-blue-600 focus:ring-2 cursor-pointer"
+                      className="w-2 h-2 rounded border-gray-300 dark:border-gray-600 text-blue-600 bg-white dark:bg-gray-800 focus:ring-blue-500 dark:focus:ring-blue-600 focus:ring-2 cursor-pointer"
                       aria-label={`Select ${card.card}`}
                       onClick={(e) => e.stopPropagation()}
                     />

@@ -30,6 +30,8 @@ import PublicMarketplace from './components/PublicMarketplace';
 import ProtectedRoute from './components/ProtectedRoute';
 import SharedCollection from './components/SharedCollection';
 import UpgradePage from './components/UpgradePage';
+import Pricing from './components/Pricing';
+import ScrollToTop from './components/ScrollToTop';
 
 // Root providers wrapper component
 export const RootProviders = () => (
@@ -58,6 +60,7 @@ export const RootProviders = () => (
                         }
                       }}
                     />
+                    <ScrollToTop />
                     <Outlet />
                   </InvoiceProvider>
                 </RestoreProvider>
@@ -123,6 +126,10 @@ export const router = createBrowserRouter([
       {
         path: 'pokemon-investment-guide',
         element: <PokemonInvestmentGuide />,
+      },
+      {
+        path: 'pricing',
+        element: <Pricing />,
       },
       {
         path: 'marketplace',

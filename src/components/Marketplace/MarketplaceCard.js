@@ -50,7 +50,7 @@ const MarketplaceCard = ({
               type="button"
               aria-label={isSelected ? 'Deselect card' : 'Select card'}
               tabIndex={0}
-              className={`w-6 h-6 rounded-full flex items-center justify-center focus:outline-none transition-all
+              className={`w-2 h-2 rounded-full flex items-center justify-center focus:outline-none transition-all
                 border-2
                 bg-white dark:bg-[#18181b]
                 ${isSelected ? 'border-purple-500' : 'border-gray-300 dark:border-gray-600'}
@@ -62,10 +62,10 @@ const MarketplaceCard = ({
                 onSelect(!isSelected);
               }}
             >
-              <span
-                className={`block w-4 h-4 rounded-full flex items-center justify-center transition-all
-                  ${isSelected ? 'bg-white dark:bg-[#23272F]' : 'bg-transparent'}`}
-              >
+                      <span
+          className={`block w-3 h-3 rounded-full flex items-center justify-center transition-all
+            ${isSelected ? 'bg-white dark:bg-[#23272F]' : 'bg-transparent'}`}
+        >
                 {isSelected && (
                   <Icon name="check" className="text-purple-600 text-base" />
                 )}
@@ -92,24 +92,24 @@ const MarketplaceCard = ({
       {/* Selection checkbox (only shown when onSelect is provided) */}
       {onSelect && (
         <div className="absolute top-2 right-2 z-10">
-          <button
-            type="button"
-            aria-label={isSelected ? 'Deselect card' : 'Select card'}
-            tabIndex={0}
-            className={`w-6 h-6 rounded-full flex items-center justify-center focus:outline-none transition-all
-              border-2
-              bg-white dark:bg-[#18181b]
-              ${isSelected ? 'border-purple-500' : 'border-gray-300 dark:border-gray-600'}
-              ${isSelected ? 'ring-2 ring-purple-300' : 'hover:border-purple-400 dark:hover:border-purple-400'}
-              shadow
-            `}
+                  <button
+          type="button"
+          aria-label={isSelected ? 'Deselect card' : 'Select card'}
+          tabIndex={0}
+          className={`w-2 h-2 rounded-full flex items-center justify-center focus:outline-none transition-all
+            border-2
+            bg-white dark:bg-[#18181b]
+            ${isSelected ? 'border-purple-500' : 'border-gray-300 dark:border-gray-600'}
+            ${isSelected ? 'ring-2 ring-purple-300' : 'hover:border-purple-400 dark:hover:border-purple-400'}
+            shadow
+          `}
             onClick={e => {
               e.stopPropagation();
               onSelect(!isSelected);
             }}
           >
             <span
-              className={`block w-4 h-4 rounded-full flex items-center justify-center transition-all
+              className={`block w-3 h-3 rounded-full flex items-center justify-center transition-all
                 ${isSelected ? 'bg-white dark:bg-[#23272F]' : 'bg-transparent'}`}
             >
               {isSelected && (

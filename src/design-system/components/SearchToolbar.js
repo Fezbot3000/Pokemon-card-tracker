@@ -71,7 +71,7 @@ const SearchToolbar = ({
   // Sort dropdown trigger
   const sortDropdownTrigger = (
     <div 
-      className="inline-flex items-center justify-center font-medium rounded-lg transition-colors focus:outline-none px-4 py-2 text-base bg-white dark:bg-[#000] text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[#111] cursor-pointer"
+      className="inline-flex items-center justify-center font-medium rounded-lg transition-colors focus:outline-none px-3 py-2 text-sm bg-white dark:bg-[#000] text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[#111] cursor-pointer"
       onClick={() => setIsSortDropdownOpen(!isSortDropdownOpen)}
       data-component-name="SearchToolbar"
     >
@@ -138,7 +138,7 @@ const SearchToolbar = ({
             className={`w-9 h-9 flex items-center justify-center rounded-md z-10 relative transition-colors duration-300 ${
               viewMode === 'grid' ? 'text-white' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-200/50 dark:hover:bg-gray-700/50'
             }`}
-            onClick={() => onViewModeChange('grid')}
+            onClick={() => onViewModeChange?.('grid')}
             aria-label="Grid view"
           >
             <span className={`material-icons text-sm ${viewMode === 'grid' ? 'text-white' : 'text-gray-600 dark:text-gray-300'}`}>
@@ -150,7 +150,7 @@ const SearchToolbar = ({
             className={`w-9 h-9 flex items-center justify-center rounded-md z-10 relative transition-colors duration-300 ${
               viewMode === 'list' ? 'text-white' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-200/50 dark:hover:bg-gray-700/50'
             }`}
-            onClick={() => onViewModeChange('list')}
+            onClick={() => onViewModeChange?.('list')}
             aria-label="List view"
           >
             <span className={`material-icons text-sm ${viewMode === 'list' ? 'text-white' : 'text-gray-600 dark:text-gray-300'}`}>

@@ -64,6 +64,14 @@ function Login() {
     return () => setErrors({});
   }, []);
 
+  // Check URL parameters to default to signup mode
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    if (searchParams.get('signup') === 'true') {
+      setIsLogin(false); // Default to signup mode
+    }
+  }, [location.search]);
+
   // Form validation
   const validateForm = () => {
     const newErrors = {};
