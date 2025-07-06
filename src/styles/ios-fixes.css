@@ -6,6 +6,33 @@
     max-height: 100vh;
     max-height: 100dvh; /* Use dynamic viewport height on iOS */
   }
+  
+  /* Mobile specific fixes for viewport height issues */
+  @media (max-width: 768px) {
+    .modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
+      min-height: 100vh;
+      min-height: 100dvh;
+    }
+    
+    .modal-backdrop .modal-container {
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
+      min-height: 100vh;
+      min-height: 100dvh;
+      max-height: 100vh;
+      max-height: 100dvh;
+      border-radius: 0; /* Remove border radius on mobile for full coverage */
+    }
+  }
 }
 
 /* iOS Safari sticky footer fix within flex containers */
@@ -15,9 +42,13 @@
     position: relative;
     display: flex;
     flex-direction: column;
-    min-height: 90vh; /* Ensure minimum height for small content */
-    max-height: 90vh; /* Prevent overflow */
-    height: 90vh; /* Force consistent height */
+    min-height: 100vh; /* Ensure minimum height for small content */
+    max-height: 100vh; /* Prevent overflow */
+    height: 100vh; /* Force consistent height */
+    min-height: 100dvh; /* Use dynamic viewport height for iOS */
+    max-height: 100dvh; /* Use dynamic viewport height for iOS */
+    height: 100dvh; /* Use dynamic viewport height for iOS */
+    margin: 0; /* Remove any margins */
   }
   
   /* Ensure content area scrolls properly */
@@ -62,6 +93,8 @@
     height: 100vh;
     height: 100dvh; /* Use dynamic viewport height */
     overflow: hidden;
+    margin: 0; /* Remove any margins */
+    padding: 0; /* Remove any padding */
   }
   
   /* Prevent iOS zoom on form inputs */
@@ -99,6 +132,13 @@
 @supports (-webkit-touch-callout: none) {
   @media (display-mode: standalone) {
     .modal-backdrop {
+      padding-top: 0; /* Don't add padding, let modal handle it */
+      padding-bottom: 0; /* Don't add padding, let modal handle it */
+      height: 100vh; /* Full viewport height */
+      height: 100dvh; /* Use dynamic viewport height */
+    }
+    
+    .modal-backdrop .modal-container {
       padding-top: env(safe-area-inset-top);
       padding-bottom: env(safe-area-inset-bottom);
       height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
