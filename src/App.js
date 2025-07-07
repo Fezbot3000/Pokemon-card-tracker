@@ -36,8 +36,8 @@ import { TutorialProvider, useTutorial } from './contexts/TutorialContext';
 import { UserPreferencesProvider } from './contexts/UserPreferencesContext'; // Added import
 import InvoiceProvider from './contexts/InvoiceContext';
 import ErrorBoundary from './components/ErrorBoundary';
-import './styles/main.css';
-import './styles/black-background.css'; 
+import './styles/globals.css';
+import './styles/utilities.css'; 
  
 import SoldItems from './components/SoldItems/SoldItems';
 import PurchaseInvoices from './components/PurchaseInvoices/PurchaseInvoices';
@@ -91,9 +91,9 @@ function NewUserRoute() {
 
   // Show loading while redirecting
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-black flex items-center justify-center">
+    <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-black">
       <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+        <div className="mx-auto mb-4 size-12 animate-spin rounded-full border-b-2 border-blue-600"></div>
         <p className="text-gray-600 dark:text-gray-400">Setting up your account...</p>
       </div>
     </div>
@@ -110,7 +110,7 @@ function Dashboard() {
   // Show loading indicator while auth state is being determined
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-100 dark:bg-black dashboard-page">
+      <div className="dashboard-page min-h-screen bg-gray-100 dark:bg-black">
         {/* Keep actual Header during loading */}
         <Header
           className="header"
@@ -123,13 +123,13 @@ function Dashboard() {
           onAddCollection={() => {}}
         />
         
-        <main className="main-content mobile-dashboard max-w-[1920px] mx-auto">
-          <div className="p-4 sm:p-6 pb-20">
-            <div className="w-full px-1 sm:px-2 pb-20">
+        <main className="main-content mobile-dashboard mx-auto max-w-[1920px]">
+          <div className="p-4 pb-20 sm:p-6">
+            <div className="w-full px-1 pb-20 sm:px-2">
               {/* Statistics Summary Skeleton */}
-              <div className="w-full bg-white dark:bg-[#111] rounded-md border border-[#ffffff33] dark:border-[#ffffff1a] mb-3 sm:mb-4">
+              <div className="mb-3 w-full rounded-md border border-[#ffffff33] bg-white dark:border-[#ffffff1a] dark:bg-black sm:mb-4">
                 <div className="rounded-md p-2 sm:p-4 md:p-6">
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-0">
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-0">
                     {[
                       { label: 'CARDS', width: 'w-8' },
                       { label: 'PAID', width: 'w-16' },
@@ -138,12 +138,12 @@ function Dashboard() {
                     ].map((stat, index) => (
                       <div
                         key={index}
-                        className="flex flex-col items-center justify-center p-2 sm:p-3 md:p-4 py-3 sm:py-4 md:py-6 border-none"
+                        className="flex flex-col items-center justify-center border-none p-2 py-3 sm:p-3 sm:py-4 md:p-4 md:py-6"
                       >
-                        <div className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 sm:mb-2 uppercase">
+                        <div className="mb-1 text-xs font-medium uppercase text-gray-500 dark:text-gray-400 sm:mb-2 sm:text-sm">
                           {stat.label}
                         </div>
-                        <div className={`h-6 ${stat.width} bg-gray-200 dark:bg-[#333] rounded animate-pulse`}></div>
+                        <div className={`h-6 ${stat.width} animate-pulse rounded bg-gray-200 dark:bg-[#333]`}></div>
                       </div>
                     ))}
                   </div>
@@ -152,29 +152,29 @@ function Dashboard() {
               
               {/* Search toolbar skeleton */}
               <div className="mb-4">
-                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center justify-between bg-white dark:bg-[#111] p-3 sm:p-4 rounded-lg border border-gray-200 dark:border-[#333]">
-                  <div className="flex-1 min-w-0">
-                    <div className="w-full h-10 bg-gray-200 dark:bg-[#333] rounded-lg animate-pulse"></div>
+                <div className="flex flex-col items-stretch justify-between gap-3 rounded-lg border border-gray-200 bg-white p-3 dark:border-[#333] dark:bg-black sm:flex-row sm:items-center sm:gap-4 sm:p-4">
+                  <div className="min-w-0 flex-1">
+                    <div className="h-10 w-full animate-pulse rounded-lg bg-gray-200 dark:bg-[#333]"></div>
                   </div>
                   <div className="flex items-center gap-2 sm:gap-3">
-                    <div className="w-20 h-10 bg-gray-200 dark:bg-[#333] rounded-lg animate-pulse"></div>
-                    <div className="w-24 h-10 bg-gray-200 dark:bg-[#333] rounded-lg animate-pulse"></div>
+                    <div className="h-10 w-20 animate-pulse rounded-lg bg-gray-200 dark:bg-[#333]"></div>
+                    <div className="h-10 w-24 animate-pulse rounded-lg bg-gray-200 dark:bg-[#333]"></div>
                   </div>
                 </div>
               </div>
               
               {/* Card grid skeleton */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-1 sm:gap-2">
+              <div className="grid grid-cols-2 gap-1 sm:grid-cols-3 sm:gap-2 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7">
                 {Array.from({ length: 14 }, (_, index) => (
                   <div
                     key={index}
-                    className="bg-white dark:bg-[#111] rounded-lg border border-gray-200 dark:border-[#333] overflow-hidden animate-pulse"
+                    className="animate-pulse overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-[#333] dark:bg-black"
                   >
                     <div className="aspect-[2.5/3.5] bg-gradient-to-br from-gray-200 to-gray-300 dark:from-[#333] dark:to-[#444]"></div>
-                    <div className="p-2 space-y-2">
-                      <div className="h-3 bg-gray-200 dark:bg-[#333] rounded w-3/4"></div>
-                      <div className="h-2 bg-gray-200 dark:bg-[#333] rounded w-1/2"></div>
-                      <div className="h-4 bg-gray-200 dark:bg-[#333] rounded w-2/3"></div>
+                    <div className="space-y-2 p-2">
+                      <div className="h-3 w-3/4 rounded bg-gray-200 dark:bg-[#333]"></div>
+                      <div className="h-2 w-1/2 rounded bg-gray-200 dark:bg-[#333]"></div>
+                      <div className="h-4 w-2/3 rounded bg-gray-200 dark:bg-[#333]"></div>
                     </div>
                   </div>
                 ))}
@@ -198,7 +198,7 @@ function Dashboard() {
       
       {/* Mobile Bottom Navigation - Available across all dashboard routes */}
       {!location.pathname.includes('/pricing') && (
-        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40">
+        <div className="fixed inset-x-0 bottom-0 z-40 lg:hidden">
           <BottomNavBar
             currentView={location.pathname.includes('/settings') ? 'settings' : currentView}
             onViewChange={(view) => {
@@ -758,7 +758,7 @@ function AppContent({ currentView, setCurrentView }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-100 dark:bg-black dashboard-page">
+      <div className="dashboard-page min-h-screen bg-gray-100 dark:bg-black">
         {/* Keep actual Header during loading */}
         <Header
           className="header"
@@ -771,13 +771,13 @@ function AppContent({ currentView, setCurrentView }) {
           onAddCollection={() => {}}
         />
         
-        <main className="main-content mobile-dashboard max-w-[1920px] mx-auto">
-          <div className="p-4 sm:p-6 pb-20">
-            <div className="w-full px-1 sm:px-2 pb-20">
+        <main className="main-content mobile-dashboard mx-auto max-w-[1920px]">
+          <div className="p-4 pb-20 sm:p-6">
+            <div className="w-full px-1 pb-20 sm:px-2">
               {/* Statistics Summary Skeleton */}
-              <div className="w-full bg-white dark:bg-[#111] rounded-md border border-[#ffffff33] dark:border-[#ffffff1a] mb-3 sm:mb-4">
+              <div className="mb-3 w-full rounded-md border border-[#ffffff33] bg-white dark:border-[#ffffff1a] dark:bg-[#111] sm:mb-4">
                 <div className="rounded-md p-2 sm:p-4 md:p-6">
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-0">
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-0">
                     {[
                       { label: 'CARDS', width: 'w-8' },
                       { label: 'PAID', width: 'w-16' },
@@ -786,12 +786,12 @@ function AppContent({ currentView, setCurrentView }) {
                     ].map((stat, index) => (
                       <div
                         key={index}
-                        className="flex flex-col items-center justify-center p-2 sm:p-3 md:p-4 py-3 sm:py-4 md:py-6 border-none"
+                        className="flex flex-col items-center justify-center border-none p-2 py-3 sm:p-3 sm:py-4 md:p-4 md:py-6"
                       >
-                        <div className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 sm:mb-2 uppercase">
+                        <div className="mb-1 text-xs font-medium uppercase text-gray-500 dark:text-gray-400 sm:mb-2 sm:text-sm">
                           {stat.label}
                         </div>
-                        <div className={`h-6 ${stat.width} bg-gray-200 dark:bg-[#333] rounded animate-pulse`}></div>
+                        <div className={`h-6 ${stat.width} animate-pulse rounded bg-gray-200 dark:bg-[#333]`}></div>
                       </div>
                     ))}
                   </div>
@@ -800,29 +800,29 @@ function AppContent({ currentView, setCurrentView }) {
               
               {/* Search toolbar skeleton */}
               <div className="mb-4">
-                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center justify-between bg-white dark:bg-[#111] p-3 sm:p-4 rounded-lg border border-gray-200 dark:border-[#333]">
-                  <div className="flex-1 min-w-0">
-                    <div className="w-full h-10 bg-gray-200 dark:bg-[#333] rounded-lg animate-pulse"></div>
+                <div className="flex flex-col items-stretch justify-between gap-3 rounded-lg border border-gray-200 bg-white p-3 dark:border-[#333] dark:bg-[#111] sm:flex-row sm:items-center sm:gap-4 sm:p-4">
+                  <div className="min-w-0 flex-1">
+                    <div className="h-10 w-full animate-pulse rounded-lg bg-gray-200 dark:bg-[#333]"></div>
                   </div>
                   <div className="flex items-center gap-2 sm:gap-3">
-                    <div className="w-20 h-10 bg-gray-200 dark:bg-[#333] rounded-lg animate-pulse"></div>
-                    <div className="w-24 h-10 bg-gray-200 dark:bg-[#333] rounded-lg animate-pulse"></div>
+                    <div className="h-10 w-20 animate-pulse rounded-lg bg-gray-200 dark:bg-[#333]"></div>
+                    <div className="h-10 w-24 animate-pulse rounded-lg bg-gray-200 dark:bg-[#333]"></div>
                   </div>
                 </div>
               </div>
               
               {/* Card grid skeleton */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-1 sm:gap-2">
+              <div className="grid grid-cols-2 gap-1 sm:grid-cols-3 sm:gap-2 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7">
                 {Array.from({ length: 14 }, (_, index) => (
                   <div
                     key={index}
-                    className="bg-white dark:bg-[#111] rounded-lg border border-gray-200 dark:border-[#333] overflow-hidden animate-pulse"
+                    className="animate-pulse overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-[#333] dark:bg-[#111]"
                   >
                     <div className="aspect-[2.5/3.5] bg-gradient-to-br from-gray-200 to-gray-300 dark:from-[#333] dark:to-[#444]"></div>
-                    <div className="p-2 space-y-2">
-                      <div className="h-3 bg-gray-200 dark:bg-[#333] rounded w-3/4"></div>
-                      <div className="h-2 bg-gray-200 dark:bg-[#333] rounded w-1/2"></div>
-                      <div className="h-4 bg-gray-200 dark:bg-[#333] rounded w-2/3"></div>
+                    <div className="space-y-2 p-2">
+                      <div className="h-3 w-3/4 rounded bg-gray-200 dark:bg-[#333]"></div>
+                      <div className="h-2 w-1/2 rounded bg-gray-200 dark:bg-[#333]"></div>
+                      <div className="h-4 w-2/3 rounded bg-gray-200 dark:bg-[#333]"></div>
                     </div>
                   </div>
                 ))}
@@ -835,7 +835,7 @@ function AppContent({ currentView, setCurrentView }) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-black dashboard-page">
+    <div className="dashboard-page min-h-screen bg-gray-100 dark:bg-black">
       {/* Hide Header on mobile when in settings or cards view */}
       {!(isMobile && (currentView === 'settings' || currentView === 'cards')) && (
         <Header
@@ -885,7 +885,7 @@ function AppContent({ currentView, setCurrentView }) {
         />
       )}
       
-      <main className="main-content mobile-dashboard max-w-[1920px] mx-auto mt-4">
+      <main className="main-content mobile-dashboard mx-auto mt-4 max-w-[1920px]">
         {/* Settings Modal - Available for all views */}
         {showSettings && !isMobile && (
           <SettingsModal
@@ -919,18 +919,18 @@ function AppContent({ currentView, setCurrentView }) {
         {currentView === 'cards' ? (
           <div className="flex-1 overflow-y-auto">
             {/* Main content */}
-            <div className="p-4 sm:p-6 pb-20">
+            <div className="p-4 pb-20 sm:p-6">
 
               {/* Trial Status Banner - now in correct place */}
               <TrialStatusBanner />
 
               {/* Card List */}
               {loading ? (
-                <div className="w-full px-1 sm:px-2 pb-20">
+                <div className="w-full px-1 pb-20 sm:px-2">
                   {/* Skeleton Statistics Summary */}
-                  <div className="w-full bg-white dark:bg-[#111] rounded-md border border-[#ffffff33] dark:border-[#ffffff1a] mb-3 sm:mb-4">
+                  <div className="mb-3 w-full rounded-md border border-[#ffffff33] bg-white dark:border-[#ffffff1a] dark:bg-black sm:mb-4">
                     <div className="rounded-md p-2 sm:p-4 md:p-6">
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-0">
+                      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-0">
                         {[
                           { label: 'CARDS', width: 'w-8' },
                           { label: 'PAID', width: 'w-16' },
@@ -939,12 +939,12 @@ function AppContent({ currentView, setCurrentView }) {
                         ].map((stat, index) => (
                           <div
                             key={index}
-                            className="flex flex-col items-center justify-center p-2 sm:p-3 md:p-4 py-3 sm:py-4 md:py-6 border-none"
+                            className="flex flex-col items-center justify-center border-none p-2 py-3 sm:p-3 sm:py-4 md:p-4 md:py-6"
                           >
-                            <div className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 sm:mb-2 uppercase">
+                            <div className="mb-1 text-xs font-medium uppercase text-gray-500 dark:text-gray-400 sm:mb-2 sm:text-sm">
                               {stat.label}
                             </div>
-                            <div className={`h-6 ${stat.width} bg-gray-200 dark:bg-[#333] rounded animate-pulse`}></div>
+                            <div className={`h-6 ${stat.width} animate-pulse rounded bg-gray-200 dark:bg-[#333]`}></div>
                           </div>
                         ))}
                       </div>
@@ -953,15 +953,15 @@ function AppContent({ currentView, setCurrentView }) {
 
                   {/* Search Toolbar - Keep functional */}
                   <div className="mb-4">
-                    <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center justify-between bg-white dark:bg-[#111] p-3 sm:p-4 rounded-lg border border-gray-200 dark:border-[#333]">
+                    <div className="flex flex-col items-stretch justify-between gap-3 rounded-lg border border-gray-200 bg-white p-3 dark:border-[#333] dark:bg-black sm:flex-row sm:items-center sm:gap-4 sm:p-4">
                       {/* Search Input */}
-                      <div className="flex-1 min-w-0">
+                      <div className="min-w-0 flex-1">
                         <div className="relative">
-                          <span className="material-icons absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg">search</span>
+                          <span className="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-lg text-gray-400">search</span>
                           <input
                             type="text"
                             placeholder="Search cards..."
-                            className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className="w-full rounded-lg border border-gray-300 bg-white py-2 pl-10 pr-4 text-gray-900 placeholder:text-gray-500 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-400"
                             disabled
                           />
                         </div>
@@ -970,11 +970,11 @@ function AppContent({ currentView, setCurrentView }) {
                       {/* View Mode and Sort Controls */}
                       <div className="flex items-center gap-2 sm:gap-3">
                         {/* View Mode Toggle */}
-                        <div className="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
-                          <button className="p-2 rounded-md bg-blue-600 text-white" disabled>
+                        <div className="flex rounded-lg bg-gray-100 p-1 dark:bg-gray-800">
+                          <button className="rounded-md bg-blue-600 p-2 text-white" disabled>
                             <span className="material-icons text-lg">grid_view</span>
                           </button>
-                          <button className="p-2 rounded-md text-gray-600 dark:text-gray-400" disabled>
+                          <button className="rounded-md p-2 text-gray-600 dark:text-gray-400" disabled>
                             <span className="material-icons text-lg">view_list</span>
                           </button>
                         </div>
@@ -982,9 +982,9 @@ function AppContent({ currentView, setCurrentView }) {
                         {/* Add Card Button */}
                         <button
                           onClick={() => openNewCardForm()}
-                          className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
+                          className="inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 font-medium text-white transition-colors hover:bg-blue-700"
                         >
-                          <span className="material-icons text-lg mr-2">add</span>
+                          <span className="material-icons mr-2 text-lg">add</span>
                           <span className="hidden sm:inline">Add Card</span>
                         </button>
                       </div>
@@ -993,44 +993,44 @@ function AppContent({ currentView, setCurrentView }) {
 
                   {/* Collection Selector Skeleton */}
                   <div className="mb-2">
-                    <div className="bg-white dark:bg-[#111] border border-gray-200 dark:border-[#333] rounded-lg p-3">
+                    <div className="rounded-lg border border-gray-200 bg-white p-3 dark:border-[#333] dark:bg-black">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-3">
-                          <div className="w-6 h-6 bg-gray-200 dark:bg-[#333] rounded animate-pulse"></div>
-                          <div className="w-32 h-4 bg-gray-200 dark:bg-[#333] rounded animate-pulse"></div>
+                          <div className="size-6 animate-pulse rounded bg-gray-200 dark:bg-[#333]"></div>
+                          <div className="h-4 w-32 animate-pulse rounded bg-gray-200 dark:bg-[#333]"></div>
                         </div>
-                        <div className="w-4 h-4 bg-gray-200 dark:bg-[#333] rounded animate-pulse"></div>
+                        <div className="size-4 animate-pulse rounded bg-gray-200 dark:bg-[#333]"></div>
                       </div>
                     </div>
                   </div>
 
                   {/* Skeleton Card Grid */}
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-1 sm:gap-2">
+                  <div className="grid grid-cols-2 gap-1 sm:grid-cols-3 sm:gap-2 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7">
                     {Array.from({ length: 14 }, (_, index) => (
                       <div
                         key={index}
-                        className="bg-white dark:bg-[#111] rounded-lg border border-gray-200 dark:border-[#333] overflow-hidden animate-pulse"
+                        className="animate-pulse overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-[#333] dark:bg-black"
                       >
                         {/* Card Image Skeleton */}
-                        <div className="aspect-[2.5/3.5] bg-gradient-to-br from-gray-200 to-gray-300 dark:from-[#333] dark:to-[#444] relative">
-                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 animate-pulse"></div>
+                        <div className="relative aspect-[2.5/3.5] bg-gradient-to-br from-gray-200 to-gray-300 dark:from-[#333] dark:to-[#444]">
+                          <div className="via-white/20 absolute inset-0 -skew-x-12 animate-pulse bg-gradient-to-r from-transparent to-transparent"></div>
                         </div>
                         
                         {/* Card Content Skeleton */}
-                        <div className="p-2 space-y-2">
+                        <div className="space-y-2 p-2">
                           {/* Title */}
-                          <div className="h-3 bg-gray-200 dark:bg-[#333] rounded w-3/4"></div>
+                          <div className="h-3 w-3/4 rounded bg-gray-200 dark:bg-[#333]"></div>
                           
                           {/* Subtitle */}
-                          <div className="h-2 bg-gray-200 dark:bg-[#333] rounded w-1/2"></div>
+                          <div className="h-2 w-1/2 rounded bg-gray-200 dark:bg-[#333]"></div>
                           
                           {/* Price */}
-                          <div className="h-4 bg-gray-200 dark:bg-[#333] rounded w-2/3"></div>
+                          <div className="h-4 w-2/3 rounded bg-gray-200 dark:bg-[#333]"></div>
                           
                           {/* Grade */}
-                          <div className="flex justify-between items-center">
-                            <div className="h-3 bg-gray-200 dark:bg-[#333] rounded w-1/3"></div>
-                            <div className="w-6 h-6 bg-gray-200 dark:bg-[#333] rounded"></div>
+                          <div className="flex items-center justify-between">
+                            <div className="h-3 w-1/3 rounded bg-gray-200 dark:bg-[#333]"></div>
+                            <div className="size-6 rounded bg-gray-200 dark:bg-[#333]"></div>
                           </div>
                         </div>
                       </div>
@@ -1038,17 +1038,17 @@ function AppContent({ currentView, setCurrentView }) {
                   </div>
                 </div>
               ) : cards.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-full min-h-[400px]">
-                  <span className="material-icons text-6xl mb-4 text-gray-400 dark:text-gray-600">inventory_2</span>
-                  <h2 className="text-lg font-bold mb-2 text-gray-900 dark:text-white">No cards in your collection</h2>
-                  <p className="text-gray-500 dark:text-gray-400 mb-6 text-center max-w-md">
+                <div className="flex h-full min-h-[400px] flex-col items-center justify-center">
+                  <span className="material-icons mb-4 text-6xl text-gray-400 dark:text-gray-600">inventory_2</span>
+                  <h2 className="mb-2 text-lg font-bold text-gray-900 dark:text-white">No cards in your collection</h2>
+                  <p className="mb-6 max-w-md text-center text-gray-500 dark:text-gray-400">
                     Start building your Pokemon card collection by adding your first card!
                   </p>
                   <button
                     onClick={() => openNewCardForm()}
-                    className="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
+                    className="inline-flex items-center rounded-lg bg-blue-600 px-6 py-3 font-medium text-white transition-colors hover:bg-blue-700"
                   >
-                    <span className="material-icons text-lg mr-2">add</span>
+                    <span className="material-icons mr-2 text-lg">add</span>
                     Add Your First Card
                   </button>
                 </div>
@@ -1090,7 +1090,7 @@ function AppContent({ currentView, setCurrentView }) {
               {!selectedCards.size && (
                 <button
                   onClick={() => openNewCardForm()}
-                  className="sm:hidden fixed right-4 z-50 w-14 h-14 bg-[#ef4444] hover:bg-[#dc2626] text-white rounded-full shadow-lg border-2 border-white dark:border-gray-800 flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95"
+                  className="fixed right-4 z-50 flex size-14 items-center justify-center rounded-full border-2 border-white bg-[#ef4444] text-white shadow-lg transition-all duration-200 hover:scale-105 hover:bg-[#dc2626] active:scale-95 dark:border-gray-800 sm:hidden"
                   style={{
                     bottom: 'calc(4rem + 8px)'
                   }}

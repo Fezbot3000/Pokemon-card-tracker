@@ -80,7 +80,7 @@ function MarketplaceReviews() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+        <div className="size-8 animate-spin rounded-full border-b-2 border-purple-600"></div>
       </div>
     );
   }
@@ -88,17 +88,17 @@ function MarketplaceReviews() {
   return (
     <div className="space-y-6">
       {/* Stats Overview */}
-      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-900">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
           {/* Average Rating */}
           <div className="text-center">
             <div className="text-3xl font-bold text-gray-900 dark:text-white">
               {stats.averageRating.toFixed(1)}
             </div>
-            <div className="flex justify-center mt-1">
+            <div className="mt-1 flex justify-center">
               {renderStars(Math.round(stats.averageRating))}
             </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+            <div className="mt-1 text-sm text-gray-600 dark:text-gray-400">
               Average Rating
             </div>
           </div>
@@ -108,7 +108,7 @@ function MarketplaceReviews() {
             <div className="text-3xl font-bold text-gray-900 dark:text-white">
               {stats.totalReviews}
             </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+            <div className="mt-1 text-sm text-gray-600 dark:text-gray-400">
               Total Reviews
             </div>
           </div>
@@ -117,13 +117,13 @@ function MarketplaceReviews() {
           <div className="space-y-1">
             {[5, 4, 3, 2, 1].map((rating) => (
               <div key={rating} className="flex items-center gap-2">
-                <span className="text-sm text-gray-600 dark:text-gray-400 w-3">
+                <span className="w-3 text-sm text-gray-600 dark:text-gray-400">
                   {rating}
                 </span>
                 <span className="material-icons text-sm text-yellow-500">star</span>
-                <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                <div className="h-2 flex-1 rounded-full bg-gray-200 dark:bg-gray-700">
                   <div
-                    className="bg-yellow-500 h-2 rounded-full"
+                    className="h-2 rounded-full bg-yellow-500"
                     style={{
                       width: `${
                         stats.totalReviews > 0
@@ -133,7 +133,7 @@ function MarketplaceReviews() {
                     }}
                   />
                 </div>
-                <span className="text-sm text-gray-600 dark:text-gray-400 w-8 text-right">
+                <span className="w-8 text-right text-sm text-gray-600 dark:text-gray-400">
                   {stats.ratingBreakdown[rating]}
                 </span>
               </div>
@@ -144,29 +144,29 @@ function MarketplaceReviews() {
 
       {/* Reviews List */}
       <div>
-        <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        <h4 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
           Recent Reviews
         </h4>
         
         {reviews.length === 0 ? (
-          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-            <span className="material-icons text-4xl mb-2">rate_review</span>
+          <div className="py-8 text-center text-gray-500 dark:text-gray-400">
+            <span className="material-icons mb-2 text-4xl">rate_review</span>
             <p>No reviews yet</p>
-            <p className="text-sm mt-1">Start selling to receive your first review!</p>
+            <p className="mt-1 text-sm">Start selling to receive your first review!</p>
           </div>
         ) : (
           <div className="space-y-4">
             {reviews.map((review) => (
               <div
                 key={review.id}
-                className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4"
+                className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"
               >
-                <div className="flex items-start justify-between mb-2">
+                <div className="mb-2 flex items-start justify-between">
                   <div>
                     <div className="font-medium text-gray-900 dark:text-white">
                       {review.buyerName || 'Anonymous'}
                     </div>
-                    <div className="flex items-center gap-2 mt-1">
+                    <div className="mt-1 flex items-center gap-2">
                       {renderStars(review.rating)}
                       <span className="text-sm text-gray-500 dark:text-gray-400">
                         {new Date(review.createdAt?.toDate?.() || review.createdAt).toLocaleDateString()}
@@ -181,7 +181,7 @@ function MarketplaceReviews() {
                 </div>
                 
                 {review.comment && (
-                  <p className="text-gray-700 dark:text-gray-300 mt-2">
+                  <p className="mt-2 text-gray-700 dark:text-gray-300">
                     {review.comment}
                   </p>
                 )}

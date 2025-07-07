@@ -1,5 +1,5 @@
 import React from 'react';
-import './styles/component-library.css';
+// Component library styles now integrated into global design system
 import * as Components from './index';
 import SettingsComponentsLibrary from './SettingsComponentsLibrary';
 

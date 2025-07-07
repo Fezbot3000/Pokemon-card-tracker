@@ -48,7 +48,7 @@ const ApplicationSettings = ({ onStartTutorial }) => {
         )}
         
         {/* Feature Flag Toggle - Cloud Sync */}
-        <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800">
+        <div className="mt-4 border-t border-gray-100 pt-4 dark:border-gray-800">
           <div className="flex items-center justify-between py-2">
             <div>
               <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Cloud Sync</p>
@@ -67,8 +67,8 @@ const ApplicationSettings = ({ onStartTutorial }) => {
         </div>
         
         {/* Preferred Currency Setting */}
-        <div className="bg-white dark:bg-[#1B2131] rounded-lg p-4 border border-gray-200 dark:border-indigo-900/20 max-w-md">
-          <h4 className="font-medium text-gray-900 dark:text-white mb-2 flex items-center">
+        <div className="max-w-md rounded-lg border border-gray-200 bg-white p-4 dark:border-indigo-900/20 dark:bg-[#1B2131]">
+          <h4 className="mb-2 flex items-center font-medium text-gray-900 dark:text-white">
             <Icon name="language" className="mr-2" />
             Display Currency
           </h4>

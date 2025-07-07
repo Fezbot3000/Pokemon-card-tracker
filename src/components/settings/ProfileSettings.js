@@ -12,7 +12,7 @@ const ProfileSettings = ({ profile, onProfileChange, onProfileSave }) => {
       description="Update your personal information and profile settings."
     >
       {/* Profile form fields */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <FormField
           id="firstName"
           label="First Name"
@@ -56,7 +56,7 @@ const ProfileSettings = ({ profile, onProfileChange, onProfileSave }) => {
           />
         </div>
       </div>
-      <div className="flex justify-end mt-4">
+      <div className="mt-4 flex justify-end">
         <Button 
           variant="primary"
           onClick={onProfileSave}

@@ -25,8 +25,8 @@
   
   /* Dark Mode Colors */
   --dark-bg-primary: var(--black);
-  --dark-bg-secondary: #0F0F0F;
-  --dark-bg-tertiary: #1F2937;
+  --dark-bg-secondary: var(--black);
+  --dark-bg-tertiary: var(--black);
   --dark-text-primary: var(--white);
   --dark-text-secondary: #D1D5DB;
   --dark-text-tertiary: #9CA3AF;

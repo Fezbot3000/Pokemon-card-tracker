@@ -371,7 +371,7 @@ const MessageModal = ({ isOpen, onClose, listing, prefilledMessage = '', onViewC
           >
             {loading ? (
               <div className="flex items-center gap-2">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                <div className="size-4 animate-spin rounded-full border-b-2 border-white"></div>
                 Sending...
               </div>
             ) : (
@@ -383,26 +383,26 @@ const MessageModal = ({ isOpen, onClose, listing, prefilledMessage = '', onViewC
     >
       <div className="space-y-6">
         {/* Card Information */}
-        <div className="bg-white dark:bg-[#0F0F0F] rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Contact about:</h3>
+        <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-[#0F0F0F]">
+          <h3 className="mb-3 text-lg font-semibold text-gray-900 dark:text-white">Contact about:</h3>
           <div className="flex items-center gap-4">
             {cardImage ? (
               <img 
                 src={cardImage} 
                 alt={cardName}
-                className="w-16 h-16 object-cover rounded-lg border border-gray-200 dark:border-gray-700 flex-shrink-0" 
+                className="size-16 shrink-0 rounded-lg border border-gray-200 object-cover dark:border-gray-700" 
               />
             ) : (
-              <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center text-gray-400 flex-shrink-0">
+              <div className="flex size-16 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-400 dark:bg-gray-800">
                 <Icon name="image" size="lg" />
               </div>
             )}
-            <div className="flex-1 min-w-0">
-              <p className="font-semibold text-gray-900 dark:text-white text-lg mb-1 truncate">
+            <div className="min-w-0 flex-1">
+              <p className="mb-1 truncate text-lg font-semibold text-gray-900 dark:text-white">
                 {listing?.isGeneralChat ? 'General Discussion' : cardName}
               </p>
               {!listing?.isGeneralChat && price && (
-                <p className="text-gray-600 dark:text-gray-400 font-medium">
+                <p className="font-medium text-gray-600 dark:text-gray-400">
                   ${price} {currency}
                 </p>
               )}
@@ -417,17 +417,17 @@ const MessageModal = ({ isOpen, onClose, listing, prefilledMessage = '', onViewC
         
         {/* Error Message */}
         {error && (
-          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+          <div className="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20">
             <div className="flex items-center gap-2">
               <Icon name="error" className="text-red-500" />
-              <p className="text-red-700 dark:text-red-400 text-sm font-medium">{error}</p>
+              <p className="text-sm font-medium text-red-700 dark:text-red-400">{error}</p>
             </div>
           </div>
         )}
         
         {/* Message Form */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
             Your Message <span className="text-red-500">*</span>
           </label>
           <textarea
@@ -436,7 +436,7 @@ const MessageModal = ({ isOpen, onClose, listing, prefilledMessage = '', onViewC
             placeholder={listing?.isGeneralChat ? 
               "Hi! I'd like to discuss your Pokemon cards." : 
               "Hi! I'm interested in this card. Is it still available?"}
-            className="w-full px-3 py-2 border border-[#ffffff33] dark:border-[#ffffff1a] rounded-lg bg-white dark:bg-[#0F0F0F] text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[120px] resize-none"
+            className="min-h-[120px] w-full resize-none rounded-lg border border-[#ffffff33] bg-white px-3 py-2 text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-[#ffffff1a] dark:bg-[#0F0F0F] dark:text-white dark:placeholder:text-gray-400"
             disabled={loading}
           />
         </div>

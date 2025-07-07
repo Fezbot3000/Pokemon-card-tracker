@@ -231,36 +231,36 @@ const PublicMarketplace = () => {
       <NavigationBar />
       
       {/* Hero Section */}
-      <section className="relative pt-24 pb-16 sm:pt-28 sm:pb-20 md:pt-32 md:pb-24 px-4 sm:px-6 lg:px-8 overflow-hidden">
+      <section className="relative overflow-hidden px-4 pb-16 pt-24 sm:px-6 sm:pb-20 sm:pt-28 md:pb-24 md:pt-32 lg:px-8">
         <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 via-purple-600/10 to-pink-600/10"></div>
         
-        <div className="relative z-10 max-w-4xl mx-auto text-center">
-          <div className="inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 bg-white/10 backdrop-blur-sm rounded-full text-xs sm:text-sm font-medium mb-6 sm:mb-8 border border-white/20">
-            <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-400 rounded-full mr-2"></span>
+        <div className="relative z-10 mx-auto max-w-4xl text-center">
+          <div className="bg-white/10 border-white/20 mb-6 inline-flex items-center rounded-full border px-3 py-1.5 text-xs font-medium backdrop-blur-sm sm:mb-8 sm:px-4 sm:py-2 sm:text-sm">
+            <span className="mr-2 size-1.5 rounded-full bg-green-400 sm:size-2"></span>
             Secure Trading Platform
           </div>
           
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 leading-tight">
+          <h1 className="mb-4 text-3xl font-bold leading-tight sm:mb-6 sm:text-4xl md:text-5xl lg:text-6xl">
             Pokemon Card
             <span className="block bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
               Marketplace
             </span>
           </h1>
           
-          <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-300 mb-8 sm:mb-12 max-w-3xl mx-auto leading-relaxed">
+          <p className="mx-auto mb-8 max-w-3xl text-base leading-relaxed text-gray-300 sm:mb-12 sm:text-lg md:text-xl lg:text-2xl">
             Discover rare Pokemon cards, graded collectibles, and vintage treasures from trusted sellers across Australia.
           </p>
           
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex flex-col justify-center gap-4 sm:flex-row">
             <button
               onClick={handleSignUpPrompt}
-              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-300 transform hover:scale-105"
+              className="rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-3 font-semibold text-white transition-all duration-300 hover:scale-105 hover:from-blue-700 hover:to-purple-700"
             >
               Join to Buy & Sell
             </button>
             <button
               onClick={() => setShowLoginModal(true)}
-              className="px-6 py-3 bg-white/10 backdrop-blur-sm text-white font-semibold rounded-xl hover:bg-white/20 transition-all duration-300 border border-white/20"
+              className="bg-white/10 hover:bg-white/20 border-white/20 rounded-xl border px-6 py-3 font-semibold text-white backdrop-blur-sm transition-all duration-300"
             >
               Contact Sellers
             </button>
@@ -269,27 +269,27 @@ const PublicMarketplace = () => {
       </section>
 
       {/* Marketplace Content */}
-      <section className="py-12 sm:py-16 md:py-24 px-4 sm:px-6 lg:px-8 bg-black">
-        <div className="max-w-7xl mx-auto">
+      <section className="bg-black px-4 py-12 sm:px-6 sm:py-16 md:py-24 lg:px-8">
+        <div className="mx-auto max-w-7xl">
           <div className="mb-8">
-            <h2 className="text-2xl sm:text-3xl font-bold mb-4">Latest Listings</h2>
+            <h2 className="mb-4 text-2xl font-bold sm:text-3xl">Latest Listings</h2>
             <p className="text-gray-400">Browse the newest Pokemon cards available in our marketplace</p>
           </div>
 
           {loading && (
-            <div className="flex justify-center items-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+            <div className="flex items-center justify-center py-12">
+              <div className="size-12 animate-spin rounded-full border-b-2 border-blue-500"></div>
             </div>
           )}
 
           {error && (
-            <div className="text-center py-12">
-              <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-6 max-w-md mx-auto">
-                <div className="text-red-400 text-4xl mb-4">⚠️</div>
-                <p className="text-red-300 mb-4">{error}</p>
+            <div className="py-12 text-center">
+              <div className="mx-auto max-w-md rounded-xl border border-red-500/20 bg-red-500/10 p-6">
+                <div className="mb-4 text-4xl text-red-400">⚠️</div>
+                <p className="mb-4 text-red-300">{error}</p>
                 <button
                   onClick={() => window.location.reload()}
-                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                  className="rounded-lg bg-red-600 px-4 py-2 text-white transition-colors hover:bg-red-700"
                 >
                   Try Again
                 </button>
@@ -298,14 +298,14 @@ const PublicMarketplace = () => {
           )}
 
           {!loading && !error && listings.length === 0 && (
-            <div className="text-center py-12">
-              <div className="bg-white/5 rounded-xl p-8 max-w-md mx-auto">
-                <div className="text-6xl mb-4">📦</div>
-                <h3 className="text-xl font-semibold mb-2">No listings yet</h3>
-                <p className="text-gray-400 mb-6">Be the first to list your Pokemon cards!</p>
+            <div className="py-12 text-center">
+              <div className="bg-white/5 mx-auto max-w-md rounded-xl p-8">
+                <div className="mb-4 text-6xl">📦</div>
+                <h3 className="mb-2 text-xl font-semibold">No listings yet</h3>
+                <p className="mb-6 text-gray-400">Be the first to list your Pokemon cards!</p>
                 <button
                   onClick={handleSignUpPrompt}
-                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  className="rounded-lg bg-blue-600 px-6 py-3 text-white transition-colors hover:bg-blue-700"
                 >
                   Create First Listing
                 </button>
@@ -314,53 +314,53 @@ const PublicMarketplace = () => {
           )}
 
           {!loading && !error && listings.length > 0 && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
               {listings.map((listing) => (
-                <div key={listing.id} className="bg-white/5 rounded-xl overflow-hidden hover:bg-white/10 transition-all duration-300 group">
-                  <div className="aspect-square relative overflow-hidden">
+                <div key={listing.id} className="bg-white/5 hover:bg-white/10 group overflow-hidden rounded-xl transition-all duration-300">
+                  <div className="relative aspect-square overflow-hidden">
                     {getCardImage(listing) ? (
                       <img
                         src={getCardImage(listing)}
                         alt={getCardName(listing)}
-                        className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300 cursor-pointer"
+                        className="size-full cursor-pointer object-contain transition-transform duration-300 group-hover:scale-105"
                         onClick={() => setSelectedImage({
                           src: getCardImage(listing),
                           alt: getCardName(listing)
                         })}
                       />
                     ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-gray-700 to-gray-800 flex items-center justify-center">
+                      <div className="flex size-full items-center justify-center bg-gradient-to-br from-gray-700 to-gray-800">
                         <span className="text-4xl">🎴</span>
                       </div>
                     )}
                     {listing.card?.grade && (
-                      <div className="absolute top-2 right-2 bg-yellow-500 text-black px-2 py-1 rounded-lg text-xs font-bold">
+                      <div className="absolute right-2 top-2 rounded-lg bg-yellow-500 px-2 py-1 text-xs font-bold text-black">
                         {listing.card.grader ? `${listing.card.grader} ${listing.card.grade}` : listing.card.grade}
                       </div>
                     )}
                   </div>
                   
                   <div className="p-4">
-                    <h3 className="font-semibold text-white mb-2 line-clamp-2">{getCardName(listing)}</h3>
-                    <div className="flex justify-between items-center mb-3">
+                    <h3 className="mb-2 line-clamp-2 font-semibold text-white">{getCardName(listing)}</h3>
+                    <div className="mb-3 flex items-center justify-between">
                       <span className="text-2xl font-bold text-green-400">
                         {formatPrice(listing.listingPrice || listing.priceAUD || listing.price)}
                       </span>
                       {listing.condition && (
-                        <span className="text-xs bg-white/10 px-2 py-1 rounded-full text-gray-300">
+                        <span className="bg-white/10 rounded-full px-2 py-1 text-xs text-gray-300">
                           {listing.condition}
                         </span>
                       )}
                     </div>
                     
                     {listing.location && (
-                      <p className="text-gray-400 text-sm mb-3">📍 {listing.location}</p>
+                      <p className="mb-3 text-sm text-gray-400">📍 {listing.location}</p>
                     )}
                     
                     <div className="space-y-2">
                       <button
                         onClick={() => setShowLoginModal(true)}
-                        className="w-full px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-colors border border-white/20"
+                        className="bg-white/10 hover:bg-white/20 border-white/20 w-full rounded-lg border px-4 py-2 text-white transition-colors"
                       >
                         Contact Seller
                       </button>
@@ -372,13 +372,13 @@ const PublicMarketplace = () => {
           )}
 
           {!loading && !error && listings.length > 0 && (
-            <div className="text-center mt-12">
-              <div className="bg-white/5 rounded-xl p-8 max-w-2xl mx-auto">
-                <h3 className="text-xl font-semibold mb-4">Want to see more listings?</h3>
-                <p className="text-gray-400 mb-6">Join our community to access all marketplace features, contact sellers, and list your own cards for sale.</p>
+            <div className="mt-12 text-center">
+              <div className="bg-white/5 mx-auto max-w-2xl rounded-xl p-8">
+                <h3 className="mb-4 text-xl font-semibold">Want to see more listings?</h3>
+                <p className="mb-6 text-gray-400">Join our community to access all marketplace features, contact sellers, and list your own cards for sale.</p>
                 <button
                   onClick={handleSignUpPrompt}
-                  className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-300 transform hover:scale-105"
+                  className="rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-8 py-3 font-semibold text-white transition-all duration-300 hover:scale-105 hover:from-blue-700 hover:to-purple-700"
                 >
                   Join MyCardTracker
                 </button>

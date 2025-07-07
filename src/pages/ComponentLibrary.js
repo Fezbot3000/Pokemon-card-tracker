@@ -158,7 +158,7 @@ const ComponentLibrary = () => {
       '--background-light': '#FFFFFF',
       '--background-dark': '#000000',
       '--content-light': '#FFFFFF',
-      '--content-dark': '#0F0F0F',
+      '--content-dark': '#000000',
       '--text-light': '#1A1A1A',
       '--text-dark': '#FFFFFF',
     };
@@ -280,8 +280,8 @@ const ComponentLibrary = () => {
     return (
       <div className="space-y-8">
         <div className="max-w-4xl">
-          <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-4">Color System</h2>
-          <p className="text-gray-700 dark:text-gray-300 mb-8">
+          <h2 className="mb-4 text-2xl font-semibold text-gray-900 dark:text-white">Color System</h2>
+          <p className="mb-8 text-gray-700 dark:text-gray-300">
             The Pokemon Card Tracker uses a carefully crafted color palette to create a cohesive visual
             language. Colors are organized into functional groups: primary brand colors, backgrounds, and
             text colors.
@@ -306,16 +306,16 @@ const ComponentLibrary = () => {
         
         {/* Primary Colors */}
         <ColorCategory title="Primary Palette">
-          <div className="flex flex-col rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+          <div className="flex flex-col overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
             <div 
-              className="h-24 flex items-center justify-center text-white"
+              className="flex h-24 items-center justify-center text-white"
               style={{ background: gradients.primary }}
             >
-              <span className="font-mono text-sm text-center px-2">Gradient</span>
+              <span className="px-2 text-center font-mono text-sm">Gradient</span>
             </div>
-            <div className="p-2 bg-white dark:bg-gray-800">
-              <p className="font-medium text-sm text-gray-900 dark:text-white">Primary Default</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Red to Pink gradient</p>
+            <div className="bg-white p-2 dark:bg-gray-800">
+              <p className="text-sm font-medium text-gray-900 dark:text-white">Primary Default</p>
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Red to Pink gradient</p>
             </div>
           </div>
           <ColorSwatch key="primary-hover" colorValue={baseColors.primaryHover} name="Primary Hover" />
@@ -342,74 +342,74 @@ const ComponentLibrary = () => {
       </p>
       
       {/* Standard Variants */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
+      <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
         <div>
-          <h4 className="font-medium mb-2 text-gray-800 dark:text-gray-200">Primary</h4>
+          <h4 className="mb-2 font-medium text-gray-800 dark:text-gray-200">Primary</h4>
           <Button variant="primary">Primary Action</Button>
         </div>
         <div>
-          <h4 className="font-medium mb-2 text-gray-800 dark:text-gray-200">Secondary</h4>
+          <h4 className="mb-2 font-medium text-gray-800 dark:text-gray-200">Secondary</h4>
           <Button variant="secondary">Secondary Action</Button>
         </div>
         <div>
-          <h4 className="font-medium mb-2 text-gray-800 dark:text-gray-200">Outline</h4>
+          <h4 className="mb-2 font-medium text-gray-800 dark:text-gray-200">Outline</h4>
           <Button variant="outline">Outline Action</Button>
         </div>
         <div>
-          <h4 className="font-medium mb-2 text-gray-800 dark:text-gray-200">Text</h4>
+          <h4 className="mb-2 font-medium text-gray-800 dark:text-gray-200">Text</h4>
           <Button variant="text">Text Action</Button>
         </div>
         <div>
-          <h4 className="font-medium mb-2 text-gray-800 dark:text-gray-200">Danger</h4>
+          <h4 className="mb-2 font-medium text-gray-800 dark:text-gray-200">Danger</h4>
           <Button variant="danger">Danger Action</Button>
         </div>
         <div>
-          <h4 className="font-medium mb-2 text-gray-800 dark:text-gray-200">Success</h4>
+          <h4 className="mb-2 font-medium text-gray-800 dark:text-gray-200">Success</h4>
           <Button variant="success">Success Action</Button>
         </div>
         <div>
-          <h4 className="font-medium mb-2 text-gray-800 dark:text-gray-200">Icon</h4>
+          <h4 className="mb-2 font-medium text-gray-800 dark:text-gray-200">Icon</h4>
           <Button variant="icon" aria-label="Add Item">
             <Icon name="add" />
           </Button>
         </div>
         <div>
-          <h4 className="font-medium mb-2 text-gray-800 dark:text-gray-200">Disabled</h4>
+          <h4 className="mb-2 font-medium text-gray-800 dark:text-gray-200">Disabled</h4>
           <Button variant="primary" disabled>Disabled</Button>
         </div>
       </div>
 
       {/* Sizes */}
-      <h3 className="text-xl font-semibold mb-4 mt-8 text-gray-900 dark:text-white">Sizes</h3>
-      <div className="flex items-center space-x-4 mb-8">
+      <h3 className="mb-4 mt-8 text-xl font-semibold text-gray-900 dark:text-white">Sizes</h3>
+      <div className="mb-8 flex items-center space-x-4">
         <Button size="sm">Small</Button>
         <Button size="md">Medium (Default)</Button>
         <Button size="lg">Large</Button>
       </div>
       
       {/* With Icons */}
-      <h3 className="text-xl font-semibold mb-4 mt-8 text-gray-900 dark:text-white">With Icons</h3>
-      <div className="flex items-center space-x-4 mb-8">
+      <h3 className="mb-4 mt-8 text-xl font-semibold text-gray-900 dark:text-white">With Icons</h3>
+      <div className="mb-8 flex items-center space-x-4">
         <Button iconLeft={<Icon name="favorite" />}>Icon Left</Button>
         <Button iconRight={<Icon name="arrow_forward" />}>Icon Right</Button>
         <Button variant="primary" iconLeft={<Icon name="cloud_upload" color="white" />} size="lg">Upload</Button>
       </div>
 
       {/* Full Width */}
-      <h3 className="text-xl font-semibold mb-4 mt-8 text-gray-900 dark:text-white">Full Width</h3>
+      <h3 className="mb-4 mt-8 text-xl font-semibold text-gray-900 dark:text-white">Full Width</h3>
       <div className="mb-8">
         <Button fullWidth>Full Width Button</Button>
       </div>
       
       {/* Tab Navigation Style Example */}
-      <h3 className="text-xl font-semibold mb-4 mt-8 text-gray-900 dark:text-white">Tab Navigation Style Example</h3>
+      <h3 className="mb-4 mt-8 text-xl font-semibold text-gray-900 dark:text-white">Tab Navigation Style Example</h3>
       <p className="mb-4 text-gray-600 dark:text-gray-400">
         Demonstrates the styling used for active/inactive tabs, often achieved by applying conditional classes to standard buttons based on state (e.g., like the 'Cards'/'Sold Items' toggle in the Header).
       </p>
-      <div className="flex bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden p-1 w-max mb-8">
+      <div className="mb-8 flex w-max overflow-hidden rounded-full bg-gray-100 p-1 dark:bg-gray-800">
          {/* Example of Active Tab Style */}
         <Button 
-          className="px-4 py-1 flex items-center bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] text-white rounded-full" // Active styles applied directly
+          className="flex items-center rounded-full bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] px-4 py-1 text-white" // Active styles applied directly
         >
           <Icon name="style" className="mr-1" color="white" />
           <span>Active Tab</span>
@@ -417,7 +417,7 @@ const ComponentLibrary = () => {
         {/* Example of Inactive Tab Style */}
         <Button 
           variant="text" // Use text variant for base styling
-          className="px-4 py-1 flex items-center text-gray-700 dark:text-gray-300 rounded-full" // Standard inactive styles
+          className="flex items-center rounded-full px-4 py-1 text-gray-700 dark:text-gray-300" // Standard inactive styles
         >
           <Icon name="inventory_2" className="mr-1" />
           <span>Inactive Tab</span>
@@ -428,12 +428,12 @@ const ComponentLibrary = () => {
 
   const renderCardSection = () => (
     <div id="cards" className="mb-12">
-      <h2 className="text-2xl font-semibold mb-6 text-gray-800 dark:text-gray-100">Cards</h2>
+      <h2 className="mb-6 text-2xl font-semibold text-gray-800 dark:text-gray-100">Cards</h2>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+      <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2">
         {/* Container-style Card */}
         <div>
-          <h3 className="text-lg font-medium mb-4 text-gray-700 dark:text-gray-300">Container Card</h3>
+          <h3 className="mb-4 text-lg font-medium text-gray-700 dark:text-gray-300">Container Card</h3>
           <Card 
             style={{
               backgroundColor: customColors['--card-background-color'],
@@ -454,7 +454,7 @@ const ComponentLibrary = () => {
         
         {/* Pokemon Card Style */}
         <div>
-          <h3 className="text-lg font-medium mb-4 text-gray-700 dark:text-gray-300">Pokemon Card</h3>
+          <h3 className="mb-4 text-lg font-medium text-gray-700 dark:text-gray-300">Pokemon Card</h3>
           <Card 
             card={{
               name: 'Charizard',
@@ -468,10 +468,10 @@ const ComponentLibrary = () => {
         </div>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+      <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2">
         {/* Card with Profit */}
         <div>
-          <h3 className="text-lg font-medium mb-4 text-gray-700 dark:text-gray-300">Card with Profit</h3>
+          <h3 className="mb-4 text-lg font-medium text-gray-700 dark:text-gray-300">Card with Profit</h3>
           <Card 
             card={{
               name: 'Pikachu',
@@ -485,7 +485,7 @@ const ComponentLibrary = () => {
         
         {/* Card with Loss */}
         <div>
-          <h3 className="text-lg font-medium mb-4 text-gray-700 dark:text-gray-300">Card with Loss</h3>
+          <h3 className="mb-4 text-lg font-medium text-gray-700 dark:text-gray-300">Card with Loss</h3>
           <Card 
             card={{
               name: 'Mewtwo',
@@ -518,9 +518,9 @@ const ComponentLibrary = () => {
       <ComponentSection title="Form Elements" id="form-elements">
         <div className="space-y-8">
           {/* Text Fields */}
-          <div className="bg-white dark:bg-[#0F0F0F] rounded-lg overflow-hidden shadow-sm border border-gray-200 dark:border-gray-800 p-6">
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Text Fields</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="overflow-hidden rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-[#0F0F0F]">
+            <h3 className="mb-4 text-lg font-medium text-gray-900 dark:text-white">Text Fields</h3>
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div>
                 <FormLabel htmlFor="default-text">Default</FormLabel>
                 <TextField
@@ -569,9 +569,9 @@ const ComponentLibrary = () => {
           </div>
           
           {/* Number Fields */}
-          <div className="bg-white dark:bg-[#0F0F0F] rounded-lg overflow-hidden shadow-sm border border-gray-200 dark:border-gray-800 p-6">
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Number Fields</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="overflow-hidden rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-[#0F0F0F]">
+            <h3 className="mb-4 text-lg font-medium text-gray-900 dark:text-white">Number Fields</h3>
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div>
                 <FormLabel htmlFor="default-number">Default</FormLabel>
                 <NumberField
@@ -622,9 +622,9 @@ const ComponentLibrary = () => {
           </div>
           
           {/* Form Labels */}
-          <div className="bg-white dark:bg-[#0F0F0F] rounded-lg overflow-hidden shadow-sm border border-gray-200 dark:border-gray-800 p-6">
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Form Labels</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="overflow-hidden rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-[#0F0F0F]">
+            <h3 className="mb-4 text-lg font-medium text-gray-900 dark:text-white">Form Labels</h3>
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div>
                 <FormLabel htmlFor="default-label">Default Label</FormLabel>
                 <TextField id="default-label" placeholder="Field with label" />
@@ -648,19 +648,19 @@ const ComponentLibrary = () => {
           </div>
           
           {/* Props Tables */}
-          <div className="p-4 bg-white dark:bg-[#0F0F0F] rounded-lg border border-gray-200 dark:border-gray-800">
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Form Element Props</h3>
+          <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-[#0F0F0F]">
+            <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-white">Form Element Props</h3>
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
                 <thead className="bg-gray-50 dark:bg-[#0F0F0F]">
                   <tr>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Component</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Prop</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Type</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Description</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Component</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Prop</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Type</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Description</th>
                   </tr>
                 </thead>
-                <tbody className="bg-white dark:bg-[#0F0F0F] divide-y divide-gray-200 dark:divide-gray-800">
+                <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-800 dark:bg-[#0F0F0F]">
                   <tr>
                     <td className="px-4 py-2 text-sm text-gray-900 dark:text-white" rowSpan="4">TextField</td>
                     <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">value</td>
@@ -759,61 +759,61 @@ const ComponentLibrary = () => {
     return (
       <ComponentSection title="Icons" id="icons">
         <div className="space-y-6">
-          <div className="bg-white dark:bg-[#0F0F0F] rounded-lg overflow-hidden shadow-sm border border-gray-200 dark:border-gray-800 p-6">
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Available Icons</h3>
-            <p className="text-gray-500 dark:text-gray-400 mb-6">
+          <div className="overflow-hidden rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-[#0F0F0F]">
+            <h3 className="mb-4 text-lg font-medium text-gray-900 dark:text-white">Available Icons</h3>
+            <p className="mb-6 text-gray-500 dark:text-gray-400">
               The application uses Material Icons. Here are the most commonly used icons:
             </p>
             
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
               {iconNames.map(name => (
-                <div key={name} className="flex flex-col items-center p-3 bg-gray-50 dark:bg-[#0F0F0F] rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-                  <Icon name={name} className="text-2xl text-gray-900 dark:text-white mb-2" />
-                  <span className="text-xs text-gray-500 dark:text-gray-400 text-center">{name}</span>
+                <div key={name} className="flex flex-col items-center rounded-lg bg-gray-50 p-3 transition-colors hover:bg-gray-100 dark:bg-[#0F0F0F] dark:hover:bg-gray-700">
+                  <Icon name={name} className="mb-2 text-2xl text-gray-900 dark:text-white" />
+                  <span className="text-center text-xs text-gray-500 dark:text-gray-400">{name}</span>
                 </div>
               ))}
             </div>
           </div>
           
-          <div className="bg-white dark:bg-[#0F0F0F] rounded-lg overflow-hidden shadow-sm border border-gray-200 dark:border-gray-800 p-6">
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Icon Sizes</h3>
+          <div className="overflow-hidden rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-[#0F0F0F]">
+            <h3 className="mb-4 text-lg font-medium text-gray-900 dark:text-white">Icon Sizes</h3>
             <div className="flex flex-wrap items-end gap-6">
               <div className="flex flex-col items-center">
-                <Icon name="style" size="xs" className="text-gray-900 dark:text-white mb-2" />
+                <Icon name="style" size="xs" className="mb-2 text-gray-900 dark:text-white" />
                 <span className="text-xs text-gray-500 dark:text-gray-400">xs</span>
               </div>
               <div className="flex flex-col items-center">
-                <Icon name="style" size="sm" className="text-gray-900 dark:text-white mb-2" />
+                <Icon name="style" size="sm" className="mb-2 text-gray-900 dark:text-white" />
                 <span className="text-xs text-gray-500 dark:text-gray-400">sm</span>
               </div>
               <div className="flex flex-col items-center">
-                <Icon name="style" size="md" className="text-gray-900 dark:text-white mb-2" />
+                <Icon name="style" size="md" className="mb-2 text-gray-900 dark:text-white" />
                 <span className="text-xs text-gray-500 dark:text-gray-400">md (default)</span>
               </div>
               <div className="flex flex-col items-center">
-                <Icon name="style" size="lg" className="text-gray-900 dark:text-white mb-2" />
+                <Icon name="style" size="lg" className="mb-2 text-gray-900 dark:text-white" />
                 <span className="text-xs text-gray-500 dark:text-gray-400">lg</span>
               </div>
               <div className="flex flex-col items-center">
-                <Icon name="style" size="xl" className="text-gray-900 dark:text-white mb-2" />
+                <Icon name="style" size="xl" className="mb-2 text-gray-900 dark:text-white" />
                 <span className="text-xs text-gray-500 dark:text-gray-400">xl</span>
               </div>
             </div>
           </div>
           
-          <div className="p-4 bg-white dark:bg-[#0F0F0F] rounded-lg border border-gray-200 dark:border-gray-800">
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Icon Props</h3>
+          <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-[#0F0F0F]">
+            <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-white">Icon Props</h3>
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
                 <thead className="bg-gray-50 dark:bg-[#0F0F0F]">
                   <tr>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Prop</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Type</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Default</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Description</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Prop</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Type</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Default</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Description</th>
                   </tr>
                 </thead>
-                <tbody className="bg-white dark:bg-[#0F0F0F] divide-y divide-gray-200 dark:divide-gray-800">
+                <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-800 dark:bg-[#0F0F0F]">
                   <tr>
                     <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">name</td>
                     <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">string</td>
@@ -844,11 +844,11 @@ const ComponentLibrary = () => {
   const renderToggleSection = () => (
     <ComponentSection title="Toggle" id="toggle">
       <div className="space-y-8">
-        <div className="bg-white dark:bg-[#0F0F0F] rounded-lg overflow-hidden shadow-sm border border-gray-200 dark:border-gray-800 p-6">
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Toggle Sizes</h3>
+        <div className="overflow-hidden rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-[#0F0F0F]">
+          <h3 className="mb-4 text-lg font-medium text-gray-900 dark:text-white">Toggle Sizes</h3>
           <div className="flex flex-col space-y-6">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-500 dark:text-gray-400 w-24">Small</span>
+              <span className="w-24 text-sm text-gray-500 dark:text-gray-400">Small</span>
               <Toggle 
                 size="sm"
                 checked={toggleStates.small} 
@@ -856,7 +856,7 @@ const ComponentLibrary = () => {
               />
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-500 dark:text-gray-400 w-24">Medium (default)</span>
+              <span className="w-24 text-sm text-gray-500 dark:text-gray-400">Medium (default)</span>
               <Toggle 
                 size="md"
                 checked={toggleStates.medium} 
@@ -864,7 +864,7 @@ const ComponentLibrary = () => {
               />
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-500 dark:text-gray-400 w-24">Large</span>
+              <span className="w-24 text-sm text-gray-500 dark:text-gray-400">Large</span>
               <Toggle 
                 size="lg"
                 checked={toggleStates.large} 
@@ -874,18 +874,18 @@ const ComponentLibrary = () => {
           </div>
         </div>
 
-        <div className="bg-white dark:bg-[#0F0F0F] rounded-lg overflow-hidden shadow-sm border border-gray-200 dark:border-gray-800 p-6">
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Toggle States</h3>
+        <div className="overflow-hidden rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-[#0F0F0F]">
+          <h3 className="mb-4 text-lg font-medium text-gray-900 dark:text-white">Toggle States</h3>
           <div className="flex flex-col space-y-6">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-500 dark:text-gray-400 w-24">Default</span>
+              <span className="w-24 text-sm text-gray-500 dark:text-gray-400">Default</span>
               <Toggle 
                 checked={toggleStates.default} 
                 onChange={() => handleToggleChange('default')} 
               />
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-500 dark:text-gray-400 w-24">With Label</span>
+              <span className="w-24 text-sm text-gray-500 dark:text-gray-400">With Label</span>
               <Toggle 
                 label="Toggle me"
                 checked={toggleStates.withLabel} 
@@ -893,7 +893,7 @@ const ComponentLibrary = () => {
               />
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-500 dark:text-gray-400 w-24">Disabled</span>
+              <span className="w-24 text-sm text-gray-500 dark:text-gray-400">Disabled</span>
               <Toggle 
                 disabled
                 checked={toggleStates.disabled} 
@@ -903,19 +903,19 @@ const ComponentLibrary = () => {
           </div>
         </div>
 
-        <div className="p-4 bg-white dark:bg-[#0F0F0F] rounded-lg border border-gray-200 dark:border-gray-800">
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Toggle Props</h3>
+        <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-[#0F0F0F]">
+          <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-white">Toggle Props</h3>
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
               <thead className="bg-gray-50 dark:bg-[#0F0F0F]">
                 <tr>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Prop</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Type</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Default</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Description</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Prop</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Type</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Default</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Description</th>
                 </tr>
               </thead>
-              <tbody className="bg-white dark:bg-[#0F0F0F] divide-y divide-gray-200 dark:divide-gray-800">
+              <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-800 dark:bg-[#0F0F0F]">
                 <tr>
                   <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">checked</td>
                   <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">boolean</td>
@@ -964,13 +964,13 @@ const ComponentLibrary = () => {
     <ComponentSection title="Dropdown" id="dropdown">
       <div className="space-y-8">
         {/* Basic Dropdown */}
-        <div className="bg-white dark:bg-[#0F0F0F] rounded-lg overflow-hidden shadow-sm border border-gray-200 dark:border-gray-800 p-6">
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Basic Dropdown</h3>
+        <div className="overflow-hidden rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-[#0F0F0F]">
+          <h3 className="mb-4 text-lg font-medium text-gray-900 dark:text-white">Basic Dropdown</h3>
           <div className="flex flex-wrap gap-6">
             <div>
               <Dropdown
                 trigger={
-                  <button className="flex items-center justify-between w-40 px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] rounded-lg hover:opacity-90">
+                  <button className="flex w-40 items-center justify-between rounded-lg bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] px-4 py-2 text-sm font-medium text-white hover:opacity-90">
                     <span>{selectedItem}</span>
                     <Icon name="expand_more" className="ml-2" />
                   </button>
@@ -994,7 +994,7 @@ const ComponentLibrary = () => {
             <div>
               <Dropdown
                 trigger={
-                  <button className="flex items-center justify-between px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] rounded-lg hover:opacity-90">
+                  <button className="flex items-center justify-between rounded-lg bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] px-4 py-2 text-sm font-medium text-white hover:opacity-90">
                     <span>Actions</span>
                     <Icon name="expand_more" className="ml-2" />
                   </button>
@@ -1027,13 +1027,13 @@ const ComponentLibrary = () => {
         </div>
         
         {/* Controlled Dropdown */}
-        <div className="bg-white dark:bg-[#0F0F0F] rounded-lg overflow-hidden shadow-sm border border-gray-200 dark:border-gray-800 p-6">
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Controlled Dropdown</h3>
+        <div className="overflow-hidden rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-[#0F0F0F]">
+          <h3 className="mb-4 text-lg font-medium text-gray-900 dark:text-white">Controlled Dropdown</h3>
           <div className="flex flex-col gap-4">
             <div className="flex items-center gap-4">
               <Dropdown
                 trigger={
-                  <button className="flex items-center justify-between w-40 px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] rounded-lg hover:opacity-90">
+                  <button className="flex w-40 items-center justify-between rounded-lg bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] px-4 py-2 text-sm font-medium text-white hover:opacity-90">
                     <span>Controlled</span>
                     <Icon name="expand_more" className="ml-2" />
                   </button>
@@ -1052,7 +1052,7 @@ const ComponentLibrary = () => {
               </Dropdown>
               
               <button 
-                className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] rounded-lg hover:opacity-90"
+                className="rounded-lg bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] px-4 py-2 text-sm font-medium text-white hover:opacity-90"
                 onClick={() => setDropdownIsOpen(!dropdownIsOpen)}
               >
                 Toggle Dropdown
@@ -1065,14 +1065,14 @@ const ComponentLibrary = () => {
         </div>
         
         {/* Dropdown Alignment */}
-        <div className="bg-white dark:bg-[#0F0F0F] rounded-lg overflow-hidden shadow-sm border border-gray-200 dark:border-gray-800 p-6">
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Dropdown Alignment</h3>
+        <div className="overflow-hidden rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-[#0F0F0F]">
+          <h3 className="mb-4 text-lg font-medium text-gray-900 dark:text-white">Dropdown Alignment</h3>
           <div className="flex flex-wrap gap-6">
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">Left Aligned (Default)</p>
+              <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">Left Aligned (Default)</p>
               <Dropdown
                 trigger={
-                  <button className="flex items-center justify-between w-40 px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] rounded-lg hover:opacity-90">
+                  <button className="flex w-40 items-center justify-between rounded-lg bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] px-4 py-2 text-sm font-medium text-white hover:opacity-90">
                     <span>Left</span>
                     <Icon name="expand_more" className="ml-2" />
                   </button>
@@ -1085,10 +1085,10 @@ const ComponentLibrary = () => {
             </div>
             
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">Center Aligned</p>
+              <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">Center Aligned</p>
               <Dropdown
                 trigger={
-                  <button className="flex items-center justify-between w-40 px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] rounded-lg hover:opacity-90">
+                  <button className="flex w-40 items-center justify-between rounded-lg bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] px-4 py-2 text-sm font-medium text-white hover:opacity-90">
                     <span>Center</span>
                     <Icon name="expand_more" className="ml-2" />
                   </button>
@@ -1101,10 +1101,10 @@ const ComponentLibrary = () => {
             </div>
             
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">Right Aligned</p>
+              <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">Right Aligned</p>
               <Dropdown
                 trigger={
-                  <button className="flex items-center justify-between w-40 px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] rounded-lg hover:opacity-90">
+                  <button className="flex w-40 items-center justify-between rounded-lg bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] px-4 py-2 text-sm font-medium text-white hover:opacity-90">
                     <span>Right</span>
                     <Icon name="expand_more" className="ml-2" />
                   </button>
@@ -1119,19 +1119,19 @@ const ComponentLibrary = () => {
         </div>
         
         {/* Props Table */}
-        <div className="p-4 bg-white dark:bg-[#0F0F0F] rounded-lg border border-gray-200 dark:border-gray-800">
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Dropdown Props</h3>
+        <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-[#0F0F0F]">
+          <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-white">Dropdown Props</h3>
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
               <thead className="bg-gray-50 dark:bg-[#0F0F0F]">
                 <tr>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Component</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Prop</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Type</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Description</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Component</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Prop</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Type</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Description</th>
                 </tr>
               </thead>
-              <tbody className="bg-white dark:bg-[#0F0F0F] divide-y divide-gray-200 dark:divide-gray-800">
+              <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-800 dark:bg-[#0F0F0F]">
                 <tr>
                   <td className="px-4 py-2 text-sm text-gray-900 dark:text-white" rowSpan="5">Dropdown</td>
                   <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">trigger</td>
@@ -1259,8 +1259,8 @@ const ComponentLibrary = () => {
           {/* Code Example */}
           <div className="space-y-4">
             <h3 className="text-base font-medium text-gray-900 dark:text-white">Usage Examples</h3>
-            <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg">
-              <pre className="text-sm text-gray-800 dark:text-gray-200 overflow-auto">
+            <div className="rounded-lg bg-gray-100 p-4 dark:bg-gray-800">
+              <pre className="overflow-auto text-sm text-gray-800 dark:text-gray-200">
 {`// Import the toast service
 import { toastService } from '../../design-system';
 
@@ -1297,7 +1297,7 @@ toastService.dismissAll(); // Dismiss all toasts`}
     <ComponentSection title="Header" id="header">
       <div className="space-y-6">
         {/* Full Header with Collection and View Toggle */}
-        <div className="bg-white dark:bg-[#0F0F0F] rounded-lg overflow-hidden shadow-sm border border-gray-200 dark:border-gray-800">
+        <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-[#0F0F0F]">
           <Header 
             selectedCollection="Default Collection"
             collections={[
@@ -1313,19 +1313,19 @@ toastService.dismissAll(); // Dismiss all toasts`}
         </div>
         
         {/* Header Props Table */}
-        <div className="p-4 bg-white dark:bg-[#0F0F0F] rounded-lg border border-gray-200 dark:border-gray-800">
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Header Props</h3>
+        <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-[#0F0F0F]">
+          <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-white">Header Props</h3>
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
               <thead className="bg-gray-50 dark:bg-[#0F0F0F]">
                 <tr>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Prop</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Type</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Default</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Description</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Prop</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Type</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Default</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Description</th>
                 </tr>
               </thead>
-              <tbody className="bg-white dark:bg-[#0F0F0F] divide-y divide-gray-200 dark:divide-gray-800">
+              <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-800 dark:bg-[#0F0F0F]">
                 <tr>
                   <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">selectedCollection</td>
                   <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">string</td>
@@ -1390,11 +1390,11 @@ toastService.dismissAll(); // Dismiss all toasts`}
         </p>
         
         {/* Display the Modal directly without a button click */}
-        <div className="mt-8 border border-gray-200 dark:border-gray-700 p-4 rounded-lg bg-gray-50 dark:bg-gray-900">
-          <h3 className="text-lg font-medium mb-4 text-gray-800 dark:text-gray-200">Modal Example</h3>
+        <div className="mt-8 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900">
+          <h3 className="mb-4 text-lg font-medium text-gray-800 dark:text-gray-200">Modal Example</h3>
           
           {/* Using the Modal component with showModal={false} to display it inline */}
-          <div className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
+          <div className="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
             <Modal 
               isOpen={true} 
               onClose={() => {/* Close clicked */}} 
@@ -1403,7 +1403,7 @@ toastService.dismissAll(); // Dismiss all toasts`}
               showAsStatic={true}  // Show as a static component, not a true modal
             >
               <div className="p-6">
-                <p className="text-gray-700 dark:text-gray-300 mb-4">
+                <p className="mb-4 text-gray-700 dark:text-gray-300">
                   This is an example of modal content. In a real implementation, this would appear as a popup.
                 </p>
                 <div className="flex justify-end space-x-3">
@@ -1431,17 +1431,17 @@ toastService.dismissAll(); // Dismiss all toasts`}
   const renderCardDetailsModalSection = () => {
     return (
       <div id="card-details-modal" className="mb-12">
-        <h2 className="text-2xl font-semibold mb-6 text-gray-800 dark:text-gray-100">Card Details Modal</h2>
+        <h2 className="mb-6 text-2xl font-semibold text-gray-800 dark:text-gray-100">Card Details Modal</h2>
         <p className="mb-6 text-gray-600 dark:text-gray-400">
           A specialized modal for displaying and editing card details.
         </p>
         
         {/* Display CardDetailsModal directly without requiring a button click */}
-        <div className="mt-8 border border-gray-200 dark:border-gray-700 p-4 rounded-lg bg-gray-50 dark:bg-gray-900">
-          <h3 className="text-lg font-medium mb-4 text-gray-800 dark:text-gray-200">Card Details Modal Example</h3>
+        <div className="mt-8 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900">
+          <h3 className="mb-4 text-lg font-medium text-gray-800 dark:text-gray-200">Card Details Modal Example</h3>
           
           {/* Using the CardDetailsModal component displayed inline */}
-          <div className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
+          <div className="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
             <CardDetailsModal
               isOpen={true}
               onClose={() => {/* Close clicked */}}
@@ -1479,11 +1479,11 @@ toastService.dismissAll(); // Dismiss all toasts`}
         </p>
         
         {/* Display LoginModal directly without requiring a button click */}
-        <div className="mt-8 border border-gray-200 dark:border-gray-700 p-4 rounded-lg bg-gray-50 dark:bg-gray-900">
-          <h3 className="text-lg font-medium mb-4 text-gray-800 dark:text-gray-200">Login Modal Example</h3>
+        <div className="mt-8 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900">
+          <h3 className="mb-4 text-lg font-medium text-gray-800 dark:text-gray-200">Login Modal Example</h3>
           
           {/* Using the LoginModal component with showModal={false} to display it inline */}
-          <div className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
+          <div className="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
             <LoginModal 
               isOpen={true} 
               onClose={() => {/* Close clicked */}} 
@@ -1521,8 +1521,8 @@ toastService.dismissAll(); // Dismiss all toasts`}
         </p>
         
         <div className="space-y-4">
-          <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
-            <h3 className="text-base font-medium mb-4">Example</h3>
+          <div className="rounded-lg bg-gray-50 p-4 dark:bg-black">
+            <h3 className="mb-4 text-base font-medium">Example</h3>
             
             <div className="flex items-center justify-center">
               <Button 
@@ -1560,7 +1560,7 @@ toastService.dismissAll(); // Dismiss all toasts`}
 
           <div className="space-y-2">
             <h3 className="text-base font-medium">Usage</h3>
-            <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto text-xs">
+            <pre className="overflow-x-auto rounded-lg bg-gray-900 p-4 text-xs text-gray-100">
               {`import { SettingsModal } from '../design-system';
 
 // In your component
@@ -1588,10 +1588,10 @@ const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
               <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead>
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Prop</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Default</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Prop</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Type</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Default</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Description</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
@@ -1734,12 +1734,12 @@ const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
           Features collapsible sections, profit calculations, and invoice printing capabilities.
         </p>
         
-        <div className="mt-8 border border-gray-200 dark:border-gray-700 p-4 rounded-lg bg-gray-50 dark:bg-gray-900">
-          <h3 className="text-lg font-medium mb-4 text-gray-800 dark:text-gray-200">
+        <div className="mt-8 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900">
+          <h3 className="mb-4 text-lg font-medium text-gray-800 dark:text-gray-200">
             Sold Items View Example
           </h3>
           
-          <div className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
+          <div className="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
             <SoldItemsView 
               items={exampleSoldItems}
               getCardImageUrl={getCardImageUrl}
@@ -1750,8 +1750,8 @@ const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
         </div>
         
         <div className="mt-8">
-          <h3 className="text-lg font-medium mb-4 text-gray-800 dark:text-gray-200">Usage</h3>
-          <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg overflow-auto">
+          <h3 className="mb-4 text-lg font-medium text-gray-800 dark:text-gray-200">Usage</h3>
+          <div className="overflow-auto rounded-lg bg-gray-100 p-4 dark:bg-gray-800">
             <pre className="text-sm text-gray-900 dark:text-gray-300">
 {`// Import component
 import { SoldItemsView } from '../design-system';
@@ -1770,40 +1770,40 @@ return (
         </div>
         
         <div className="mt-8">
-          <h3 className="text-lg font-medium mb-4 text-gray-800 dark:text-gray-200">Props</h3>
+          <h3 className="mb-4 text-lg font-medium text-gray-800 dark:text-gray-200">Props</h3>
           <table className="w-full border-collapse">
             <thead>
               <tr className="bg-gray-100 dark:bg-gray-800">
-                <th className="border border-gray-200 dark:border-gray-800 p-2 text-left">Prop</th>
-                <th className="border border-gray-200 dark:border-gray-800 p-2 text-left">Type</th>
-                <th className="border border-gray-200 dark:border-gray-800 p-2 text-left">Description</th>
+                <th className="border border-gray-200 p-2 text-left dark:border-gray-800">Prop</th>
+                <th className="border border-gray-200 p-2 text-left dark:border-gray-800">Type</th>
+                <th className="border border-gray-200 p-2 text-left dark:border-gray-800">Description</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td className="border border-gray-200 dark:border-gray-800 p-2">items</td>
-                <td className="border border-gray-200 dark:border-gray-800 p-2">Array</td>
-                <td className="border border-gray-200 dark:border-gray-800 p-2">Array of sold items grouped by invoice. Each invoice should have an ID, buyer, date sold, and cards array.</td>
+                <td className="border border-gray-200 p-2 dark:border-gray-800">items</td>
+                <td className="border border-gray-200 p-2 dark:border-gray-800">Array</td>
+                <td className="border border-gray-200 p-2 dark:border-gray-800">Array of sold items grouped by invoice. Each invoice should have an ID, buyer, date sold, and cards array.</td>
               </tr>
               <tr>
-                <td className="border border-gray-200 dark:border-gray-800 p-2">getCardImageUrl</td>
-                <td className="border border-gray-200 dark:border-gray-800 p-2">Function</td>
-                <td className="border border-gray-200 dark:border-gray-800 p-2">Function that takes a card object and returns its image URL.</td>
+                <td className="border border-gray-200 p-2 dark:border-gray-800">getCardImageUrl</td>
+                <td className="border border-gray-200 p-2 dark:border-gray-800">Function</td>
+                <td className="border border-gray-200 p-2 dark:border-gray-800">Function that takes a card object and returns its image URL.</td>
               </tr>
               <tr>
-                <td className="border border-gray-200 dark:border-gray-800 p-2">onPrintInvoice</td>
-                <td className="border border-gray-200 dark:border-gray-800 p-2">Function</td>
-                <td className="border border-gray-200 dark:border-gray-800 p-2">Function called when the print button is clicked. Receives the invoice object.</td>
+                <td className="border border-gray-200 p-2 dark:border-gray-800">onPrintInvoice</td>
+                <td className="border border-gray-200 p-2 dark:border-gray-800">Function</td>
+                <td className="border border-gray-200 p-2 dark:border-gray-800">Function called when the print button is clicked. Receives the invoice object.</td>
               </tr>
               <tr>
-                <td className="border border-gray-200 dark:border-gray-800 p-2">formatDate</td>
-                <td className="border border-gray-200 dark:border-gray-800 p-2">Function</td>
-                <td className="border border-gray-200 dark:border-gray-800 p-2">Function to format date strings for display.</td>
+                <td className="border border-gray-200 p-2 dark:border-gray-800">formatDate</td>
+                <td className="border border-gray-200 p-2 dark:border-gray-800">Function</td>
+                <td className="border border-gray-200 p-2 dark:border-gray-800">Function to format date strings for display.</td>
               </tr>
               <tr>
-                <td className="border border-gray-200 dark:border-gray-800 p-2">className</td>
-                <td className="border border-gray-200 dark:border-gray-800 p-2">String</td>
-                <td className="border border-gray-200 dark:border-gray-800 p-2">Additional CSS classes to apply to the component.</td>
+                <td className="border border-gray-200 p-2 dark:border-gray-800">className</td>
+                <td className="border border-gray-200 p-2 dark:border-gray-800">String</td>
+                <td className="border border-gray-200 p-2 dark:border-gray-800">Additional CSS classes to apply to the component.</td>
               </tr>
             </tbody>
           </table>
@@ -1816,8 +1816,8 @@ return (
     <ComponentSection title="Statistics Summary" id="statistics-summary">
       <div className="space-y-6">
         {/* Light Mode Statistics Summary */}
-        <div className="bg-white dark:bg-[#0F0F0F] rounded-lg overflow-hidden shadow-sm border border-gray-200 dark:border-gray-800 p-6">
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Light Mode</h3>
+        <div className="overflow-hidden rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-[#0F0F0F]">
+          <h3 className="mb-4 text-lg font-medium text-gray-900 dark:text-white">Light Mode</h3>
           <StatisticsSummary 
             statistics={[
               { label: 'PAID', value: 1000, formattedValue: '$1.00K' },
@@ -1829,9 +1829,9 @@ return (
         </div>
         
         {/* Dark Mode Statistics Summary */}
-        <div className="bg-black rounded-lg overflow-hidden shadow-sm border border-gray-800 p-6">
-          <h3 className="text-lg font-medium text-white mb-4">Dark Mode</h3>
-          <div className="bg-[#0F0F0F] rounded-lg">
+        <div className="overflow-hidden rounded-lg border border-gray-800 bg-black p-6 shadow-sm">
+          <h3 className="mb-4 text-lg font-medium text-white">Dark Mode</h3>
+          <div className="rounded-lg bg-[#0F0F0F]">
             <StatisticsSummary 
               statistics={[
                 { label: 'PAID', value: 1000, formattedValue: '$1.00K' },
@@ -1844,8 +1844,8 @@ return (
         </div>
         
         {/* Negative Profit Example */}
-        <div className="bg-white dark:bg-[#0F0F0F] rounded-lg overflow-hidden shadow-sm border border-gray-200 dark:border-gray-800 p-6">
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">With Negative Profit</h3>
+        <div className="overflow-hidden rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-[#0F0F0F]">
+          <h3 className="mb-4 text-lg font-medium text-gray-900 dark:text-white">With Negative Profit</h3>
           <StatisticsSummary 
             statistics={[
               { label: 'PAID', value: 3000, formattedValue: '$3.00K' },
@@ -1857,19 +1857,19 @@ return (
         </div>
         
         {/* Props Table */}
-        <div className="p-4 bg-white dark:bg-[#0F0F0F] rounded-lg border border-gray-200 dark:border-gray-800">
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Statistics Summary Props</h3>
+        <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-[#0F0F0F]">
+          <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-white">Statistics Summary Props</h3>
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
               <thead className="bg-gray-50 dark:bg-[#0F0F0F]">
                 <tr>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Prop</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Type</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Default</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Description</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Prop</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Type</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Default</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Description</th>
                 </tr>
               </thead>
-              <tbody className="bg-white dark:bg-[#0F0F0F] divide-y divide-gray-200 dark:divide-gray-800">
+              <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-800 dark:bg-[#0F0F0F]">
                 <tr>
                   <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">statistics</td>
                   <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">array</td>
@@ -1922,9 +1922,9 @@ return (
 
   const renderSearchToolbarSection = () => (
     <div id="search-toolbar" className="mb-12">
-      <h2 className="text-2xl font-semibold mb-6 text-gray-800 dark:text-gray-100">Search Toolbar</h2>
+      <h2 className="mb-6 text-2xl font-semibold text-gray-800 dark:text-gray-100">Search Toolbar</h2>
       
-      <div className="p-6 bg-white dark:bg-[#0F0F0F] rounded-lg shadow-sm">
+      <div className="rounded-lg bg-white p-6 shadow-sm dark:bg-[#0F0F0F]">
         <SearchToolbar 
           onSearch={() => {}}
           onFilterChange={() => {}}
@@ -1938,10 +1938,10 @@ return (
   const NavItem = ({ id, label, isActive, onClick }) => (
     <a
       href={`#${id}`}
-      className={`block py-2 px-4 rounded-md transition-colors ${
+      className={`block rounded-md px-4 py-2 transition-colors ${
         isActive 
-          ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 font-medium' 
-          : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+          ? 'bg-purple-100 font-medium text-purple-700 dark:bg-purple-900/30 dark:text-purple-300' 
+          : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800'
       }`}
       onClick={(e) => {
         e.preventDefault();
@@ -1954,16 +1954,16 @@ return (
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+    <div className="min-h-screen bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-gray-100">
       {/* Header */}
-      <header className="sticky top-0 z-10 bg-white dark:bg-[#0F0F0F] shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
+      <header className="sticky top-0 z-10 bg-white shadow-sm dark:bg-[#0F0F0F]">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex h-16 items-center justify-between">
             <h1 className="text-xl font-bold">Pokemon Card Tracker - Component Library</h1>
             <div className="flex items-center space-x-4">
               <button
                 onClick={toggleTheme}
-                className="p-2 rounded-full bg-gray-100 dark:bg-[#0F0F0F] text-gray-700 dark:text-gray-300"
+                className="rounded-full bg-gray-100 p-2 text-gray-700 dark:bg-[#0F0F0F] dark:text-gray-300"
                 aria-label="Toggle theme"
               >
                 <Icon name={theme === 'dark' ? 'light_mode' : 'dark_mode'} />
@@ -1974,15 +1974,15 @@ return (
       </header>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Tab Navigation */}
         <div className="mb-8 flex justify-center">
-          <div className="inline-flex rounded-md shadow-sm bg-white dark:bg-[#0F0F0F] p-1">
+          <div className="inline-flex rounded-md bg-white p-1 shadow-sm dark:bg-[#0F0F0F]">
             <button
-              className={`py-2 px-4 text-sm font-medium rounded-md focus:outline-none ${
+              className={`rounded-md px-4 py-2 text-sm font-medium focus:outline-none ${
                 activeTab === 'atomic' 
-                  ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300' 
-                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+                  ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300' 
+                  : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'
               }`}
               onClick={() => {
                 setActiveTab('atomic');
@@ -1992,10 +1992,10 @@ return (
               Atomic Components
             </button>
             <button
-              className={`py-2 px-4 text-sm font-medium rounded-md focus:outline-none ${
+              className={`rounded-md px-4 py-2 text-sm font-medium focus:outline-none ${
                 activeTab === 'composite' 
-                  ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300' 
-                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+                  ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300' 
+                  : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'
               }`}
               onClick={() => {
                 setActiveTab('composite');
@@ -2008,11 +2008,11 @@ return (
         </div>
 
         {/* Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-4">
           {/* Sidebar */}
           <div className="lg:col-span-1">
-            <div className="sticky top-24 bg-white dark:bg-[#0F0F0F] rounded-lg shadow-sm p-4">
-              <h2 className="text-lg font-medium mb-4 text-gray-800 dark:text-gray-200">
+            <div className="sticky top-24 rounded-lg bg-white p-4 shadow-sm dark:bg-[#0F0F0F]">
+              <h2 className="mb-4 text-lg font-medium text-gray-800 dark:text-gray-200">
                 {activeTab === 'atomic' ? 'Atomic Components' : 'Composite Components'}
               </h2>
               <nav className="space-y-1">
@@ -2042,7 +2042,7 @@ return (
           </div>
 
           {/* Main Content */}
-          <div className="lg:col-span-3 bg-white dark:bg-[#0F0F0F] rounded-lg shadow-sm p-6">
+          <div className="rounded-lg bg-white p-6 shadow-sm dark:bg-[#0F0F0F] lg:col-span-3">
             {activeTab === 'atomic' && (
               <>
                 {activeSection === 'colors' && renderColorSystemSection()}
@@ -2073,8 +2073,8 @@ return (
       </div>
 
       {/* Footer */}
-      <footer className="bg-white dark:bg-[#0F0F0F] shadow-sm mt-12 py-6">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <footer className="mt-12 bg-white py-6 shadow-sm dark:bg-[#0F0F0F]">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <p className="text-center text-sm text-gray-500 dark:text-gray-400">
             Pokemon Card Tracker Design System {new Date().getFullYear()}
           </p>

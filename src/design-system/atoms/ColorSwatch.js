@@ -21,17 +21,17 @@ const ColorSwatch = ({ colorValue, name, description = '' }) => {
   };
 
   return (
-    <div className="flex flex-col rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+    <div className="flex flex-col overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
       <div 
-        className={`h-24 flex items-center justify-center ${getTextColor(colorValue)}`}
+        className={`flex h-24 items-center justify-center ${getTextColor(colorValue)}`}
         style={{ backgroundColor: colorValue }}
       >
         <span className="font-mono text-sm">{colorValue}</span>
       </div>
-      <div className="p-2 bg-white dark:bg-gray-800">
-        <p className="font-medium text-sm text-gray-900 dark:text-white">{name}</p>
+      <div className="bg-white p-2 dark:bg-gray-800">
+        <p className="text-sm font-medium text-gray-900 dark:text-white">{name}</p>
         {description && (
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{description}</p>
+          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{description}</p>
         )}
       </div>
     </div>

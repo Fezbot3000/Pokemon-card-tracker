@@ -60,7 +60,7 @@ const QuickShareButton = ({ className = '' }) => {
       {/* Sharing Modal - MADE MORE TRANSPARENT */}
       {showSharingModal && (
         <div 
-          className="fixed inset-0 flex items-center justify-center z-50 p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
           style={{ 
             backgroundColor: 'rgba(0, 0, 0, 0.3)',
             backdropFilter: 'blur(4px)',
@@ -68,7 +68,7 @@ const QuickShareButton = ({ className = '' }) => {
           }}
         >
           <div 
-            className="rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto border shadow-2xl"
+            className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-lg border shadow-2xl"
             style={{
               backgroundColor: isDarkMode ? 'rgb(0, 0, 0)' : 'rgb(255, 255, 255)',
               borderColor: isDarkMode ? 'rgba(55, 65, 81, 0.5)' : 'rgba(229, 231, 235, 0.5)',
@@ -77,15 +77,15 @@ const QuickShareButton = ({ className = '' }) => {
             }}
           >
             <div className="p-6">
-              <div className="flex justify-between items-center mb-6">
+              <div className="mb-6 flex items-center justify-between">
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
                   Share Your Collection
                 </h2>
                 <button
                   onClick={() => setShowSharingModal(false)}
-                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-1 rounded-full hover:bg-gray-100 hover:bg-opacity-50 dark:hover:bg-gray-800 dark:hover:bg-opacity-50 transition-colors"
+                  className="rounded-full p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:bg-opacity-50 hover:text-gray-600 dark:hover:bg-gray-800 dark:hover:bg-opacity-50 dark:hover:text-gray-300"
                 >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
@@ -94,16 +94,16 @@ const QuickShareButton = ({ className = '' }) => {
               <CollectionSharing isInModal={true} />
               
               <div 
-                className="mt-6 pt-4 border-t"
+                className="mt-6 border-t pt-4"
                 style={{
                   borderColor: isDarkMode ? 'rgba(55, 65, 81, 0.5)' : 'rgba(229, 231, 235, 0.5)'
                 }}
               >
-                <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
+                <p className="text-center text-sm text-gray-500 dark:text-gray-400">
                   You can also access sharing settings from{' '}
                   <button
                     onClick={handleSettingsShare}
-                    className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 underline"
+                    className="text-blue-600 underline hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
                   >
                     Settings → Collection Sharing
                   </button>

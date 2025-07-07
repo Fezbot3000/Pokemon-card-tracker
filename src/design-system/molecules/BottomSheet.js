@@ -40,13 +40,13 @@ const BottomSheet = ({ isOpen, onClose, title, children }) => {
   return (
     // Backdrop
     <div 
-      className="fixed inset-0 z-[1000] bg-black/50 backdrop-blur-sm"
+      className="bg-black/50 fixed inset-0 z-[1000] backdrop-blur-sm"
       onClick={onClose}
     >
       {/* Sheet Content */}
       <div 
         ref={sheetRef}
-        className="fixed bottom-0 left-0 right-0 w-full bg-white dark:bg-[#0F0F0F] rounded-t-xl shadow-xl transform transition-transform duration-500 ease-out pt-3 px-3 z-[1001]"
+        className="fixed inset-x-0 bottom-0 z-[1001] w-full rounded-t-xl bg-white px-3 pt-3 shadow-xl transition-transform duration-500 ease-out dark:bg-[#0F0F0F]"
         style={{ 
           maxHeight: '90vh',
           transform: isVisible ? 'translateY(0)' : 'translateY(100%)',
@@ -58,12 +58,12 @@ const BottomSheet = ({ isOpen, onClose, title, children }) => {
         onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside the sheet
       >
         {/* Optional Grabber Handle (visual cue) */}
-        <div className="w-10 h-1 bg-gray-300 dark:bg-gray-700 rounded-full mx-auto mb-3"></div>
+        <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-gray-300 dark:bg-gray-700"></div>
 
         {/* Header with Title and Close Button */}
         {(title || onClose) && (
-          <div className="flex justify-between items-center mb-3 px-1">
-            <h3 className="text-base font-semibold text-gray-700 dark:text-white text-center flex-grow">
+          <div className="mb-3 flex items-center justify-between px-1">
+            <h3 className="grow text-center text-base font-semibold text-gray-700 dark:text-white">
               {title}
             </h3>
           </div>

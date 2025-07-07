@@ -10,10 +10,10 @@ const FormLabel = ({ children, htmlFor, required, className = '' }) => {
   return (
     <label 
       htmlFor={htmlFor}
-      className={`block text-sm font-medium text-gray-800 dark:text-gray-200 mb-1 ${className}`}
+      className={`mb-1 block text-sm font-medium text-gray-800 dark:text-gray-200 ${className}`}
     >
       {children}
-      {required && <span className="text-red-500 ml-1">*</span>}
+      {required && <span className="ml-1 text-red-500">*</span>}
     </label>
   );
 };

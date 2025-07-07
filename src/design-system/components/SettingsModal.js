@@ -707,7 +707,7 @@ const SettingsModal = ({
         onClose={onClose}
         title="Settings"
         footer={
-          <div className="flex items-center justify-end w-full">
+          <div className="flex w-full items-center justify-end">
             <Button
               variant="secondary"
               onClick={onClose}
@@ -717,16 +717,16 @@ const SettingsModal = ({
           </div>
         }
         position="right"
-        className={`w-full sm:w-[80%] md:w-[70%] max-w-screen-xl mx-auto ${className}`}
+        className={`mx-auto w-full max-w-screen-xl sm:w-4/5 md:w-[70%] ${className}`}
         ariaLabel="Settings"
         size="full"
         closeOnClickOutside={true}
         {...props}
       >
-                  <div className="flex flex-col lg:flex-row h-full" {...props}>
+                  <div className="flex h-full flex-col lg:flex-row" {...props}>
           {/* Navigation sidebar */}
-          <nav className="w-full lg:w-48 shrink-0 border-b lg:border-b-0 lg:border-r border-gray-200 dark:border-indigo-900/20 mb-4 lg:mb-0 lg:pr-4">
-            <div className="flex flex-row lg:flex-col space-x-4 lg:space-x-0 lg:space-y-2 p-4">
+          <nav className="mb-4 w-full shrink-0 border-b border-gray-200 dark:border-indigo-900/20 lg:mb-0 lg:w-48 lg:border-b-0 lg:border-r lg:pr-4">
+            <div className="flex flex-row space-x-4 p-4 lg:flex-col lg:space-x-0 lg:space-y-2">
               <SettingsNavItem 
                 icon="settings" 
                 label="General" 
@@ -755,47 +755,47 @@ const SettingsModal = ({
           </nav>
 
           {/* Content area */}
-          <div className="w-full lg:flex-1 overflow-y-auto scrollbar-hide px-2 sm:px-4 py-4">
+          <div className="scrollbar-hide w-full overflow-y-auto px-2 py-4 sm:px-4 lg:flex-1">
             {activeTab === 'general' && (
               <div className="space-y-6">
                 <SettingsPanel
                   title="Appearance"
                   description="Choose your preferred light or dark theme."
                 >
-                  <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="flex flex-col gap-4 sm:flex-row">
                     <div 
                       className={`
-                        flex-1 p-4 rounded-lg border-2 cursor-pointer transition-all duration-200
+                        flex-1 cursor-pointer rounded-lg border-2 p-4 transition-all duration-200
                         ${!isDarkMode ? 'border-blue-500 bg-blue-50' : 'border-gray-200 dark:border-gray-700'}
                       `}
                       onClick={() => toggleTheme('light')}
                     >
-                      <div className="flex items-center justify-between mb-2">
+                      <div className="mb-2 flex items-center justify-between">
                         <h4 className="font-medium text-gray-900 dark:text-white">Light Mode</h4>
                         {!isDarkMode && <Icon name="check_circle" className="text-blue-500" />}
                       </div>
-                      <div className="bg-white border border-gray-200 rounded-md p-2">
-                        <div className="h-2 w-8 bg-blue-500 rounded mb-2"></div>
-                        <div className="h-2 w-16 bg-gray-300 rounded mb-2"></div>
-                        <div className="h-2 w-10 bg-gray-300 rounded"></div>
+                      <div className="rounded-md border border-gray-200 bg-white p-2">
+                        <div className="mb-2 h-2 w-8 rounded bg-blue-500"></div>
+                        <div className="mb-2 h-2 w-16 rounded bg-gray-300"></div>
+                        <div className="h-2 w-10 rounded bg-gray-300"></div>
                       </div>
                     </div>
                     
                     <div 
                       className={`
-                        flex-1 p-4 rounded-lg border-2 cursor-pointer transition-all duration-200
+                        flex-1 cursor-pointer rounded-lg border-2 p-4 transition-all duration-200
                         ${isDarkMode ? 'border-blue-500 bg-gray-800' : 'border-gray-200 dark:border-gray-700'}
                       `}
                       onClick={() => toggleTheme('dark')}
                     >
-                      <div className="flex items-center justify-between mb-2">
+                      <div className="mb-2 flex items-center justify-between">
                         <h4 className="font-medium text-gray-900 dark:text-white">Dark Mode</h4>
                         {isDarkMode && <Icon name="check_circle" className="text-blue-500" />}
                       </div>
-                      <div className="bg-gray-900 border border-gray-700 rounded-md p-2">
-                        <div className="h-2 w-8 bg-blue-500 rounded mb-2"></div>
-                        <div className="h-2 w-16 bg-gray-700 rounded mb-2"></div>
-                        <div className="h-2 w-10 bg-gray-700 rounded"></div>
+                      <div className="rounded-md border border-gray-700 bg-gray-900 p-2">
+                        <div className="mb-2 h-2 w-8 rounded bg-blue-500"></div>
+                        <div className="mb-2 h-2 w-16 rounded bg-gray-700"></div>
+                        <div className="h-2 w-10 rounded bg-gray-700"></div>
                       </div>
                     </div>
                   </div>
@@ -819,7 +819,7 @@ const SettingsModal = ({
                     )}
                     
                     {/* Feature Flag Toggle - Moved from Developer Settings */}
-                    <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800">
+                    <div className="mt-4 border-t border-gray-100 pt-4 dark:border-gray-800">
                       <div className="flex items-center justify-between py-2">
                         <div>
                           <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Cloud Sync</p>
@@ -846,8 +846,8 @@ const SettingsModal = ({
                     </div>
                     
                     {/* Preferred Currency Setting */}
-                    <div className="bg-white dark:bg-[#1B2131] rounded-lg p-4 border border-gray-200 dark:border-indigo-900/20 max-w-md">
-                      <h4 className="font-medium text-gray-900 dark:text-white mb-2 flex items-center">
+                    <div className="max-w-md rounded-lg border border-gray-200 bg-white p-4 dark:border-indigo-900/20 dark:bg-[#1B2131]">
+                      <h4 className="mb-2 flex items-center font-medium text-gray-900 dark:text-white">
                         <Icon name="language" className="mr-2" /> {/* Using 'language' icon as a placeholder for currency */}
                         Display Currency
                       </h4>
@@ -875,19 +875,19 @@ const SettingsModal = ({
                   title="Manage Collections"
                   description="Rename or delete your card collections."
                 >
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
                     {/* Rename Collection Section */}
-                    <div className="bg-white dark:bg-[#1B2131] rounded-lg p-4 border border-gray-200 dark:border-indigo-900/20">
-                      <h4 className="font-medium text-gray-900 dark:text-white mb-3 flex items-center">
-                        <Icon name="edit" className="text-indigo-400 mr-2" />
+                    <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-indigo-900/20 dark:bg-[#1B2131]">
+                      <h4 className="mb-3 flex items-center font-medium text-gray-900 dark:text-white">
+                        <Icon name="edit" className="mr-2 text-indigo-400" />
                         Rename Collection
                       </h4>
                       <div className="space-y-3">
                         <select 
-                          className={`w-full rounded-lg p-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
+                          className={`w-full rounded-lg p-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 ${
                             isDarkMode 
-                              ? 'bg-[#0F0F0F] text-white border border-[#ffffff1a]' 
-                              : 'bg-white text-gray-800 border border-gray-300'
+                              ? 'border border-[#ffffff1a] bg-[#0F0F0F] text-white' 
+                              : 'border border-gray-300 bg-white text-gray-800'
                           }`}
                           value={collectionToRename}
                           onChange={(e) => setCollectionToRename(e.target.value)}
@@ -925,17 +925,17 @@ const SettingsModal = ({
                     </div>
                     
                     {/* Delete Collection Section */}
-                    <div className="bg-white dark:bg-[#1B2131] rounded-lg p-4 border border-gray-200 dark:border-indigo-900/20">
-                      <h4 className="font-medium text-gray-900 dark:text-white mb-3 flex items-center">
-                        <Icon name="delete" className="text-red-500 mr-2" />
+                    <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-indigo-900/20 dark:bg-[#1B2131]">
+                      <h4 className="mb-3 flex items-center font-medium text-gray-900 dark:text-white">
+                        <Icon name="delete" className="mr-2 text-red-500" />
                         Delete Collection
                       </h4>
                       <div className="space-y-3">
                         <select 
-                          className={`w-full rounded-lg p-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
+                          className={`w-full rounded-lg p-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 ${
                             isDarkMode 
-                              ? 'bg-[#0F0F0F] text-white border border-[#ffffff1a]' 
-                              : 'bg-white text-gray-800 border border-gray-300'
+                              ? 'border border-[#ffffff1a] bg-[#0F0F0F] text-white' 
+                              : 'border border-gray-300 bg-white text-gray-800'
                           }`}
                           value={collectionToDelete}
                           onChange={(e) => setCollectionToDelete(e.target.value)}
@@ -995,15 +995,15 @@ const SettingsModal = ({
                 >
                   {userData && (
                     <div 
-                      className="flex items-center space-x-4 mb-6 bg-gray-100 dark:bg-gray-800 p-4 rounded-lg"
+                      className="mb-6 flex items-center space-x-4 rounded-lg bg-gray-100 p-4 dark:bg-gray-800"
                       data-component-name="SettingsModal"
                     >
-                      <div className="w-12 h-12 bg-indigo-600 rounded-full flex items-center justify-center text-white font-medium">
+                      <div className="flex size-12 items-center justify-center rounded-full bg-indigo-600 font-medium text-white">
                         {userData.firstName ? userData.firstName.charAt(0) : '?'}
                       </div>
                       <div>
-                        <div className="text-gray-900 dark:text-white font-medium">{userData.firstName} {userData.lastName}</div>
-                        <div className="text-gray-600 dark:text-gray-400 text-sm">{user ? user.email : 'Not signed in'}</div>
+                        <div className="font-medium text-gray-900 dark:text-white">{userData.firstName} {userData.lastName}</div>
+                        <div className="text-sm text-gray-600 dark:text-gray-400">{user ? user.email : 'Not signed in'}</div>
                       </div>
                     </div>
                   )}
@@ -1024,7 +1024,7 @@ const SettingsModal = ({
                   description="Update your personal information and profile settings."
                 >
                   {/* Profile form fields */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <FormField
                       id="firstName"
                       label="First Name"
@@ -1068,7 +1068,7 @@ const SettingsModal = ({
                       />
                     </div>
                   </div>
-                  <div className="flex justify-end mt-4">
+                  <div className="mt-4 flex justify-end">
                     <Button 
                       variant="primary"
                       onClick={handleProfileSave}
@@ -1082,7 +1082,7 @@ const SettingsModal = ({
                   title="Reset All Data"
                   description="Permanently delete all your data from both local storage and the cloud."
                 >
-                  <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-4">
+                  <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20">
                     <p className="text-sm text-red-800 dark:text-red-200">
                       <strong>Warning:</strong> This action will permanently delete all your cards, collections, sales history, and images. This cannot be undone.
                     </p>
@@ -1164,7 +1164,7 @@ const SettingsModal = ({
             <p className="text-sm text-gray-600 dark:text-gray-300">
               The following data will be deleted:
             </p>
-            <ul className="text-sm text-gray-600 dark:text-gray-300 list-disc pl-5 space-y-1">
+            <ul className="list-disc space-y-1 pl-5 text-sm text-gray-600 dark:text-gray-300">
               <li>All cards in your collection (Dashboard)</li>
               <li>All sold items and sales history</li>
               <li>All purchase invoices and purchase history</li>
@@ -1173,15 +1173,15 @@ const SettingsModal = ({
               <li>All local data (browser storage)</li>
               <li>All cloud data (if you're signed in)</li>
             </ul>
-            <p className="text-sm text-gray-600 dark:text-gray-300 mt-2">
+            <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
               Your account will remain active, but all data associated with it will be removed.
             </p>
-            <p className="text-sm font-medium mt-2">
+            <p className="mt-2 text-sm font-medium">
               Type "RESET" below to confirm this action:
             </p>
             <input
               type="text"
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md"
+              className="w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-600"
               placeholder="Type RESET to confirm"
               value={resetConfirmText}
               onChange={(e) => setResetConfirmText(e.target.value)}
@@ -1201,7 +1201,7 @@ const SettingsModal = ({
         title="Rename Collection"
         size="sm"
       >
-        <div className="p-6 space-y-4">
+        <div className="space-y-4 p-6">
           <p className="text-sm text-gray-600 dark:text-gray-300">
             Enter a new name for the collection <span className="font-semibold">"{collectionToRename}"</span>:
           </p>

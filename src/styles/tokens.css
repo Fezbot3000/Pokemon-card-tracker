@@ -1,0 +1,268 @@
+/**
+ * Design Tokens - Pokemon Card Tracker
+ * 
+ * This file contains all design tokens used throughout the application.
+ * These tokens are consumed by Tailwind CSS and components.
+ */
+
+:root {
+  /* ==================== COLOR TOKENS ==================== */
+  
+  /* Base Colors */
+  --color-white: #ffffff;
+  --color-black: #000000;
+  
+  /* Primary Color Scale */
+  --color-primary-50: #fef2f2;
+  --color-primary-100: #fee2e2;
+  --color-primary-200: #fecaca;
+  --color-primary-300: #fca5a5;
+  --color-primary-400: #f87171;
+  --color-primary-500: #ef4444;
+  --color-primary-600: #dc2626;
+  --color-primary-700: #b91c1c;
+  --color-primary-800: #991b1b;
+  --color-primary-900: #7f1d1d;
+  --color-primary-950: #450a0a;
+  
+  /* Accent Color Scale (Pink for gradients) */
+  --color-accent-50: #fdf2f8;
+  --color-accent-100: #fce7f3;
+  --color-accent-200: #fbcfe8;
+  --color-accent-300: #f9a8d4;
+  --color-accent-400: #f472b6;
+  --color-accent-500: #ec4899;
+  --color-accent-600: #db2777;
+  --color-accent-700: #be185d;
+  --color-accent-800: #9d174d;
+  --color-accent-900: #831843;
+  --color-accent-950: #500724;
+  
+  /* Gray Scale */
+  --color-gray-50: #f9fafb;
+  --color-gray-100: #f3f4f6;
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #d1d5db;
+  --color-gray-400: #9ca3af;
+  --color-gray-500: #6b7280;
+  --color-gray-600: #4b5563;
+  --color-gray-700: #374151;
+  --color-gray-800: #1f2937;
+  --color-gray-900: #111827;
+  --color-gray-950: #030712;
+  
+  /* Semantic Colors */
+  --color-success-50: #f0fdf4;
+  --color-success-100: #dcfce7;
+  --color-success-200: #bbf7d0;
+  --color-success-300: #86efac;
+  --color-success-400: #4ade80;
+  --color-success-500: #22c55e;
+  --color-success-600: #16a34a;
+  --color-success-700: #15803d;
+  --color-success-800: #166534;
+  --color-success-900: #14532d;
+  --color-success-950: #052e16;
+  
+  --color-warning-50: #fffbeb;
+  --color-warning-100: #fef3c7;
+  --color-warning-200: #fde68a;
+  --color-warning-300: #fcd34d;
+  --color-warning-400: #fbbf24;
+  --color-warning-500: #f59e0b;
+  --color-warning-600: #d97706;
+  --color-warning-700: #b45309;
+  --color-warning-800: #92400e;
+  --color-warning-900: #78350f;
+  --color-warning-950: #451a03;
+  
+  --color-error-50: #fef2f2;
+  --color-error-100: #fee2e2;
+  --color-error-200: #fecaca;
+  --color-error-300: #fca5a5;
+  --color-error-400: #f87171;
+  --color-error-500: #ef4444;
+  --color-error-600: #dc2626;
+  --color-error-700: #b91c1c;
+  --color-error-800: #991b1b;
+  --color-error-900: #7f1d1d;
+  --color-error-950: #450a0a;
+  
+  --color-info-50: #eff6ff;
+  --color-info-100: #dbeafe;
+  --color-info-200: #bfdbfe;
+  --color-info-300: #93c5fd;
+  --color-info-400: #60a5fa;
+  --color-info-500: #3b82f6;
+  --color-info-600: #2563eb;
+  --color-info-700: #1d4ed8;
+  --color-info-800: #1e40af;
+  --color-info-900: #1e3a8a;
+  --color-info-950: #172554;
+  
+  /* ==================== SURFACE TOKENS ==================== */
+  
+  /* Light Mode Surfaces */
+  --surface-light-primary: var(--color-white);
+  --surface-light-secondary: var(--color-gray-50);
+  --surface-light-tertiary: var(--color-gray-100);
+  --surface-light-quaternary: var(--color-gray-200);
+  
+  /* Dark Mode Surfaces */
+  --surface-dark-primary: var(--color-black);
+  --surface-dark-secondary: var(--color-black);
+  --surface-dark-tertiary: var(--color-black);
+  --surface-dark-quaternary: var(--color-gray-900);
+  
+  /* ==================== TEXT TOKENS ==================== */
+  
+  /* Light Mode Text */
+  --text-light-primary: var(--color-gray-900);
+  --text-light-secondary: var(--color-gray-700);
+  --text-light-tertiary: var(--color-gray-500);
+  --text-light-quaternary: var(--color-gray-400);
+  
+  /* Dark Mode Text */
+  --text-dark-primary: var(--color-gray-50);
+  --text-dark-secondary: var(--color-gray-300);
+  --text-dark-tertiary: var(--color-gray-400);
+  --text-dark-quaternary: var(--color-gray-500);
+  
+  /* ==================== BORDER TOKENS ==================== */
+  
+  --border-light: var(--color-gray-200);
+  --border-light-hover: var(--color-gray-300);
+  --border-dark: var(--color-gray-700);
+  --border-dark-hover: var(--color-gray-600);
+  
+  /* ==================== SPACING TOKENS ==================== */
+  
+  --space-1: 0.25rem;     /* 4px */
+  --space-2: 0.5rem;      /* 8px */
+  --space-3: 0.75rem;     /* 12px */
+  --space-4: 1rem;        /* 16px */
+  --space-5: 1.25rem;     /* 20px */
+  --space-6: 1.5rem;      /* 24px */
+  --space-8: 2rem;        /* 32px */
+  --space-10: 2.5rem;     /* 40px */
+  --space-12: 3rem;       /* 48px */
+  --space-16: 4rem;       /* 64px */
+  --space-20: 5rem;       /* 80px */
+  --space-24: 6rem;       /* 96px */
+  
+  /* ==================== TYPOGRAPHY TOKENS ==================== */
+  
+  /* Font Sizes */
+  --font-size-xs: 0.75rem;      /* 12px */
+  --font-size-sm: 0.875rem;     /* 14px */
+  --font-size-base: 1rem;       /* 16px */
+  --font-size-lg: 1.125rem;     /* 18px */
+  --font-size-xl: 1.25rem;      /* 20px */
+  --font-size-2xl: 1.5rem;      /* 24px */
+  --font-size-3xl: 1.875rem;    /* 30px */
+  --font-size-4xl: 2.25rem;     /* 36px */
+  
+  /* Font Weights */
+  --font-weight-light: 300;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  
+  /* Line Heights */
+  --line-height-tight: 1.25;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.75;
+  
+  /* ==================== BORDER RADIUS TOKENS ==================== */
+  
+  --radius-none: 0;
+  --radius-sm: 0.375rem;         /* 6px */
+  --radius-md: 0.5rem;           /* 8px */
+  --radius-lg: 0.75rem;          /* 12px */
+  --radius-xl: 1rem;             /* 16px */
+  --radius-2xl: 1.5rem;          /* 24px */
+  --radius-full: 9999px;
+  
+  /* ==================== SHADOW TOKENS ==================== */
+  
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  
+  /* ==================== Z-INDEX TOKENS ==================== */
+  
+  --z-base: 1;
+  --z-dropdown: 1000;
+  --z-sticky: 1020;
+  --z-fixed: 1030;
+  --z-modal-backdrop: 1040;
+  --z-modal: 1050;
+  --z-popover: 1060;
+  --z-tooltip: 1070;
+  --z-toast: 1080;
+  --z-settings: 2000;
+  --z-header: 2500;
+  --z-bottom-nav: 3000;
+  
+  /* ==================== COMPONENT TOKENS ==================== */
+  
+  /* Button Tokens */
+  --btn-height-sm: 2rem;         /* 32px */
+  --btn-height-md: 2.5rem;       /* 40px */
+  --btn-height-lg: 2.75rem;      /* 44px */
+  --btn-padding-x-sm: 0.75rem;   /* 12px */
+  --btn-padding-x-md: 1rem;      /* 16px */
+  --btn-padding-x-lg: 1.25rem;   /* 20px */
+  --btn-font-size: var(--font-size-sm);
+  --btn-font-weight: var(--font-weight-medium);
+  --btn-radius: var(--radius-lg);
+  --btn-icon-size: 1.25rem;      /* 20px */
+  
+  /* Header Tokens */
+  --header-height-mobile: 4rem;  /* 64px */
+  --header-height-desktop: 5rem; /* 80px */
+  
+  /* ==================== GRADIENT TOKENS ==================== */
+  
+  --gradient-primary: linear-gradient(to right, var(--color-primary-500), var(--color-accent-600));
+  --gradient-primary-hover: linear-gradient(to right, var(--color-primary-600), var(--color-accent-700));
+  
+  /* ==================== SEMANTIC THEME TOKENS ==================== */
+  
+  /* These are the active theme tokens that components should use */
+  /* They are automatically switched based on light/dark mode */
+  
+  /* Default to light mode */
+  --color-surface-primary: var(--surface-light-primary);
+  --color-surface-secondary: var(--surface-light-secondary);
+  --color-surface-tertiary: var(--surface-light-tertiary);
+  --color-surface-quaternary: var(--surface-light-quaternary);
+  
+  --color-text-primary: var(--text-light-primary);
+  --color-text-secondary: var(--text-light-secondary);
+  --color-text-tertiary: var(--text-light-tertiary);
+  --color-text-quaternary: var(--text-light-quaternary);
+  
+  --color-border: var(--border-light);
+  --color-border-hover: var(--border-light-hover);
+}
+
+/* ==================== DARK MODE THEME SWITCHING ==================== */
+
+.dark {
+  /* Override semantic tokens for dark mode */
+  --color-surface-primary: var(--surface-dark-primary);
+  --color-surface-secondary: var(--surface-dark-secondary);
+  --color-surface-tertiary: var(--surface-dark-tertiary);
+  --color-surface-quaternary: var(--surface-dark-quaternary);
+  
+  --color-text-primary: var(--text-dark-primary);
+  --color-text-secondary: var(--text-dark-secondary);
+  --color-text-tertiary: var(--text-dark-tertiary);
+  --color-text-quaternary: var(--text-dark-quaternary);
+  
+  --color-border: var(--border-dark);
+  --color-border-hover: var(--border-dark-hover);
+} 

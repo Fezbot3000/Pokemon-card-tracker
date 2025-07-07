@@ -64,7 +64,7 @@ const FeatureGate = ({
   if (inline) {
     return (
       <>
-        <div className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+        <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 p-2 dark:border-gray-700 dark:bg-gray-800">
           <Icon name="lock" size="sm" className="text-gray-400" />
           <span className="text-sm text-gray-600 dark:text-gray-400">
             Premium feature
@@ -90,20 +90,20 @@ const FeatureGate = ({
   // Full upgrade prompt
   return (
     <>
-      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-6 text-center border border-gray-200 dark:border-gray-700">
-        <div className="w-12 h-12 mx-auto mb-4 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center">
+      <div className="rounded-lg border border-gray-200 bg-gray-50 p-6 text-center dark:border-gray-700 dark:bg-gray-800">
+        <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900">
           <Icon name="lock" className="text-purple-600 dark:text-purple-400" />
         </div>
         
-        <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">
+        <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
           {getFeatureName()}
         </h3>
         
-        <p className="text-gray-600 dark:text-gray-400 mb-4 max-w-md mx-auto">
+        <p className="mx-auto mb-4 max-w-md text-gray-600 dark:text-gray-400">
           {getUpgradeMessage()}
         </p>
         
-        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+        <div className="flex flex-col justify-center gap-3 sm:flex-row">
           <Button 
             variant="primary" 
             onClick={() => setShowUpgradeModal(true)}
@@ -115,7 +115,7 @@ const FeatureGate = ({
         </div>
         
         {fallback && (
-          <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+          <div className="mt-6 border-t border-gray-200 pt-4 dark:border-gray-700">
             {fallback}
           </div>
         )}

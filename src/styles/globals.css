@@ -1,0 +1,210 @@
+/**
+ * Global Styles - Pokemon Card Tracker
+ * 
+ * This file contains:
+ * - Font imports
+ * - Tailwind CSS imports
+ * - Global resets and base styles
+ * - Essential global utilities
+ */
+
+/* ==================== FONT IMPORTS ==================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@300;400;500;600;700&display=swap');
+
+/* ==================== DESIGN TOKENS ==================== */
+
+@import './tokens.css';
+
+/* ==================== TAILWIND CSS ==================== */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ==================== GLOBAL RESETS ==================== */
+
+html {
+  font-family: 'Noto Sans', -apple-system, BlinkMacSystemFont, system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  letter-spacing: 0;
+  scrollbar-width: thin;
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-surface-primary);
+  color: var(--color-text-primary);
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Reset for common elements */
+* {
+  box-sizing: border-box;
+}
+
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* ==================== GLOBAL SCROLLBAR STYLING ==================== */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--color-gray-400);
+  border-radius: var(--radius-full);
+  transition: background-color 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-gray-500);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background-color: var(--color-gray-600);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-gray-500);
+}
+
+/* ==================== GLOBAL TYPOGRAPHY ==================== */
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-tight);
+  letter-spacing: -0.01em;
+}
+
+h1 {
+  font-size: var(--font-size-2xl);
+}
+
+h2 {
+  font-size: var(--font-size-xl);
+}
+
+h3 {
+  font-size: var(--font-size-lg);
+}
+
+h4 {
+  font-size: var(--font-size-base);
+}
+
+p {
+  line-height: var(--line-height-normal);
+}
+
+/* ==================== GLOBAL UTILITIES ==================== */
+
+/* Modal utilities */
+body.modal-open {
+  overflow: hidden;
+}
+
+/* Line clamp utilities */
+.line-clamp-1 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+}
+
+.line-clamp-2 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.line-clamp-3 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+/* Hide scrollbar utility */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* ==================== PWA SPECIFIC STYLES ==================== */
+
+/* PWA display mode styles */
+@media (display-mode: standalone) {
+  body {
+    /* Adjust for PWA environment */
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  .main-content {
+    /* Account for PWA status bar */
+    padding-top: var(--space-4);
+  }
+}
+
+/* ==================== RESPONSIVE UTILITIES ==================== */
+
+/* Content container utilities */
+.content-with-header {
+  padding-top: var(--header-height-mobile);
+}
+
+@media (min-width: 640px) {
+  .content-with-header {
+    padding-top: var(--header-height-desktop);
+  }
+}
+
+/* ==================== FOCUS STYLES ==================== */
+
+/* Improved focus styles for accessibility */
+:focus {
+  outline: 2px solid var(--color-primary-500);
+  outline-offset: 2px;
+}
+
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-primary-500);
+  outline-offset: 2px;
+}
+
+/* ==================== SELECTION STYLES ==================== */
+
+::selection {
+  background-color: var(--color-primary-200);
+  color: var(--color-primary-900);
+}
+
+.dark ::selection {
+  background-color: var(--color-primary-700);
+  color: var(--color-primary-100);
+} 

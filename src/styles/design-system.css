@@ -63,8 +63,8 @@
 .dark {
   /* Theme-specific tokens - Dark mode */
   --bg-primary: var(--color-black);
-  --bg-secondary: #0F0F0F;  /* Custom dark gray */
-  --bg-tertiary: var(--color-gray-800);
+  --bg-secondary: var(--color-black);  /* Changed from #0F0F0F to pure black */
+  --bg-tertiary: var(--color-black);
   
   --text-primary: var(--color-white);
   --text-secondary: var(--color-gray-300);

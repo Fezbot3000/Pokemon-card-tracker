@@ -18,10 +18,10 @@ const SettingsNavItem = ({
   return (
     <button
       onClick={onClick}
-      className={`flex items-center w-full p-2 rounded-lg text-left ${
+      className={`flex w-full items-center rounded-lg p-2 text-left ${
         isActive
-          ? 'bg-purple-100 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400'
-          : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800/50'
+          ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400'
+          : 'dark:hover:bg-gray-800/50 text-gray-600 hover:bg-gray-100 dark:text-gray-300'
       } ${className}`}
       {...props}
     >

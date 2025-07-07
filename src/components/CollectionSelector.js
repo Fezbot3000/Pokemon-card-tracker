@@ -10,10 +10,10 @@ const CollectionSelector = ({ collections, selectedCollection, onCollectionChang
   
   // Dropdown trigger component
   const trigger = (
-    <div className="collection-name w-full flex items-center justify-between p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800">
+    <div className="collection-name flex w-full items-center justify-between rounded-md p-2 hover:bg-gray-100 dark:hover:bg-gray-800">
       <div className="flex items-center">
         <Icon name="folder" className="mr-2" />
-        <span className="truncate flex-1">{selectedCollection}</span>
+        <span className="flex-1 truncate">{selectedCollection}</span>
       </div>
       <Icon name={isOpen ? 'keyboard_arrow_up' : 'keyboard_arrow_down'} />
     </div>
@@ -21,7 +21,7 @@ const CollectionSelector = ({ collections, selectedCollection, onCollectionChang
   
   return (
     <div className="w-full">
-      <div className="text-sm font-medium mb-1 text-gray-500 dark:text-gray-400">
+      <div className="mb-1 text-sm font-medium text-gray-500 dark:text-gray-400">
         Collections
       </div>
       <Dropdown 

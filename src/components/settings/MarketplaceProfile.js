@@ -92,7 +92,7 @@ function MarketplaceProfile() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+        <div className="size-8 animate-spin rounded-full border-b-2 border-purple-600"></div>
       </div>
     );
   }
@@ -100,37 +100,37 @@ function MarketplaceProfile() {
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
           Marketplace Profile
         </h3>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+        <p className="mb-6 text-sm text-gray-600 dark:text-gray-400">
           Customize how buyers see you in the marketplace
         </p>
       </div>
 
       {/* Display Name */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
           Display Name
         </label>
         <input
           type="text"
           value={profile.displayName}
           onChange={(e) => setProfile(prev => ({ ...prev, displayName: e.target.value }))}
-          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 dark:bg-[#0F0F0F] dark:text-white"
+          className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 dark:border-gray-600 dark:bg-[#0F0F0F] dark:text-white"
           placeholder="Your marketplace name"
         />
       </div>
 
       {/* Bio */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
           Bio
         </label>
         <textarea
           value={profile.bio}
           onChange={(e) => setProfile(prev => ({ ...prev, bio: e.target.value }))}
-          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 dark:bg-[#0F0F0F] dark:text-white"
+          className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 dark:border-gray-600 dark:bg-[#0F0F0F] dark:text-white"
           rows={3}
           placeholder="Tell buyers a bit about yourself..."
         />
@@ -138,21 +138,21 @@ function MarketplaceProfile() {
 
       {/* Location */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
           Location
         </label>
         <input
           type="text"
           value={profile.location}
           onChange={(e) => setProfile(prev => ({ ...prev, location: e.target.value }))}
-          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 dark:bg-[#0F0F0F] dark:text-white"
+          className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 dark:border-gray-600 dark:bg-[#0F0F0F] dark:text-white"
           placeholder="City, State/Country"
         />
       </div>
 
       {/* Preferred Payment Methods */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
           Preferred Payment Methods
         </label>
         <div className="grid grid-cols-2 gap-3">
@@ -160,10 +160,10 @@ function MarketplaceProfile() {
             <button
               key={method.id}
               onClick={() => togglePaymentMethod(method.id)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
+              className={`flex items-center gap-2 rounded-lg border px-4 py-2 transition-colors ${
                 profile.preferredPaymentMethods.includes(method.id)
-                  ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300'
-                  : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
+                  ? 'border-purple-500 bg-purple-50 text-purple-700 dark:bg-purple-900/20 dark:text-purple-300'
+                  : 'border-gray-300 hover:border-gray-400 dark:border-gray-600 dark:hover:border-gray-500'
               }`}
             >
               <span className="material-icons text-sm">{method.icon}</span>
@@ -175,13 +175,13 @@ function MarketplaceProfile() {
 
       {/* Response Time */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
           Typical Response Time
         </label>
         <select
           value={profile.responseTime}
           onChange={(e) => setProfile(prev => ({ ...prev, responseTime: e.target.value }))}
-          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 dark:bg-[#0F0F0F] dark:text-white"
+          className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 dark:border-gray-600 dark:bg-[#0F0F0F] dark:text-white"
         >
           {responseTimeOptions.map(option => (
             <option key={option.value} value={option.value}>
@@ -193,13 +193,13 @@ function MarketplaceProfile() {
 
       {/* Auto Reply Message */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
           Auto Reply Message (Optional)
         </label>
         <textarea
           value={profile.autoReplyMessage}
           onChange={(e) => setProfile(prev => ({ ...prev, autoReplyMessage: e.target.value }))}
-          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 dark:bg-[#0F0F0F] dark:text-white"
+          className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 dark:border-gray-600 dark:bg-[#0F0F0F] dark:text-white"
           rows={2}
           placeholder="Thanks for your interest! I'll get back to you soon."
         />
@@ -207,7 +207,7 @@ function MarketplaceProfile() {
 
       {/* Settings */}
       <div className="space-y-3">
-        <label className="flex items-center justify-between cursor-pointer">
+        <label className="flex cursor-pointer items-center justify-between">
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
             Show ratings on profile
           </span>
@@ -218,14 +218,14 @@ function MarketplaceProfile() {
             }`}
           >
             <span
-              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+              className={`inline-block size-4 rounded-full bg-white transition-transform${
                 profile.showRatings ? 'translate-x-6' : 'translate-x-1'
               }`}
             />
           </button>
         </label>
 
-        <label className="flex items-center justify-between cursor-pointer">
+        <label className="flex cursor-pointer items-center justify-between">
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
             Allow buyers to make offers
           </span>
@@ -236,7 +236,7 @@ function MarketplaceProfile() {
             }`}
           >
             <span
-              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+              className={`inline-block size-4 rounded-full bg-white transition-transform${
                 profile.allowOffers ? 'translate-x-6' : 'translate-x-1'
               }`}
             />
@@ -249,11 +249,11 @@ function MarketplaceProfile() {
         <button
           onClick={handleSave}
           disabled={saving}
-          className="w-full py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          className="flex w-full items-center justify-center gap-2 rounded-lg bg-purple-600 py-3 text-white transition-colors hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {saving ? (
             <>
-              <span className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></span>
+              <span className="size-4 animate-spin rounded-full border-y-2 border-white"></span>
               <span>Saving...</span>
             </>
           ) : (

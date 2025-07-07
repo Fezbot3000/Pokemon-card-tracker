@@ -3,48 +3,48 @@ import { Link } from 'react-router-dom';
 
 const Footer = () => {
   return (
-    <footer className="py-16 px-4 sm:px-6 lg:px-8 border-t border-white/10 bg-black">
-      <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
+    <footer className="border-white/10 border-t bg-black px-4 py-16 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-12 grid grid-cols-1 gap-8 md:grid-cols-4">
           <div className="col-span-1 md:col-span-1">
-            <h3 className="text-xl font-bold mb-4">MyCardTracker</h3>
-            <p className="text-gray-400 text-sm mb-6">
+            <h3 className="mb-4 text-xl font-bold">MyCardTracker</h3>
+            <p className="mb-6 text-sm text-gray-400">
               Australia's most trusted platform for trading card collection management and trading.
             </p>
           </div>
           
           <div className="col-span-1">
-            <h4 className="font-semibold mb-4">Platform</h4>
+            <h4 className="mb-4 font-semibold">Platform</h4>
             <ul className="space-y-2 text-sm text-gray-400">
-              <li><Link to="/login" className="hover:text-white transition-colors">Sign Up</Link></li>
-              <li><Link to="/features" className="hover:text-white transition-colors">Features</Link></li>
-              <li><Link to="/pricing" className="hover:text-white transition-colors">Pricing</Link></li>
+              <li><Link to="/login" className="transition-colors hover:text-white">Sign Up</Link></li>
+              <li><Link to="/features" className="transition-colors hover:text-white">Features</Link></li>
+              <li><Link to="/pricing" className="transition-colors hover:text-white">Pricing</Link></li>
             </ul>
           </div>
           
           <div className="col-span-1">
-            <h4 className="font-semibold mb-4">Card Guides</h4>
+            <h4 className="mb-4 font-semibold">Card Guides</h4>
             <ul className="space-y-2 text-sm text-gray-400">
-              <li><Link to="/collecting-guide" className="hover:text-white transition-colors">Collecting Guide</Link></li>
-              <li><Link to="/pokemon-sets" className="hover:text-white transition-colors">Card Sets & Prices</Link></li>
-              <li><Link to="/pokemon-investment-guide" className="hover:text-white transition-colors">Investment Guide</Link></li>
-              <li><Link to="/grading-integration" className="hover:text-white transition-colors">Grading Integration</Link></li>
+              <li><Link to="/collecting-guide" className="transition-colors hover:text-white">Collecting Guide</Link></li>
+              <li><Link to="/pokemon-sets" className="transition-colors hover:text-white">Card Sets & Prices</Link></li>
+              <li><Link to="/pokemon-investment-guide" className="transition-colors hover:text-white">Investment Guide</Link></li>
+              <li><Link to="/grading-integration" className="transition-colors hover:text-white">Grading Integration</Link></li>
             </ul>
           </div>
           
           <div className="col-span-1">
-            <h4 className="font-semibold mb-4">Support</h4>
+            <h4 className="mb-4 font-semibold">Support</h4>
             <ul className="space-y-2 text-sm text-gray-400">
-              <li><Link to="/help-center" className="hover:text-white transition-colors">Help Center</Link></li>
-              <li><Link to="/about" className="hover:text-white transition-colors">About</Link></li>
-              <li><Link to="/privacy" className="hover:text-white transition-colors">Privacy</Link></li>
-              <li><Link to="/terms" className="hover:text-white transition-colors">Terms</Link></li>
+              <li><Link to="/help-center" className="transition-colors hover:text-white">Help Center</Link></li>
+              <li><Link to="/about" className="transition-colors hover:text-white">About</Link></li>
+              <li><Link to="/privacy" className="transition-colors hover:text-white">Privacy</Link></li>
+              <li><Link to="/terms" className="transition-colors hover:text-white">Terms</Link></li>
             </ul>
           </div>
         </div>
         
-        <div className="pt-8 border-t border-white/10 text-center">
-          <p className="text-gray-400 text-sm">
+        <div className="border-white/10 border-t pt-8 text-center">
+          <p className="text-sm text-gray-400">
             {new Date().getFullYear()} MyCardTracker Australia. Made with ❤️ for card collectors worldwide.
           </p>
         </div>

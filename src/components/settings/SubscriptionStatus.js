@@ -90,15 +90,15 @@ const SubscriptionStatus = () => {
   return (
     <div className="space-y-4">
       {/* Current Plan */}
-      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-        <div className="flex items-center justify-between mb-3">
+      <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
+        <div className="mb-3 flex items-center justify-between">
           <h4 className="text-sm font-medium text-gray-900 dark:text-white">Current Plan</h4>
-          <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusBadgeColor()}`}>
+          <span className={`rounded-full px-2 py-1 text-xs font-medium ${getStatusBadgeColor()}`}>
             {getPlanName()}
           </span>
         </div>
         
-        <div className="flex items-center space-x-2 mb-2">
+        <div className="mb-2 flex items-center space-x-2">
           <Icon name={getStatusIcon()} className={`text-lg ${getStatusColor()}`} />
           <span className="text-sm text-gray-700 dark:text-gray-300">
             {getStatusMessage()}
@@ -107,9 +107,9 @@ const SubscriptionStatus = () => {
 
         {/* Trial specific info */}
         {isOnTrial && (
-          <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+          <div className="mt-3 rounded-lg bg-blue-50 p-3 dark:bg-blue-900/20">
             <div className="flex items-center space-x-2">
-              <Icon name="schedule" className="text-blue-600 dark:text-blue-400 text-sm" />
+              <Icon name="schedule" className="text-sm text-blue-600 dark:text-blue-400" />
               <span className="text-sm text-blue-700 dark:text-blue-300">
                 {getTrialDaysRemaining()} day{getTrialDaysRemaining() !== 1 ? 's' : ''} remaining in your free trial
               </span>
@@ -119,9 +119,9 @@ const SubscriptionStatus = () => {
 
         {/* Premium benefits */}
         {isPremium && (
-          <div className="mt-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+          <div className="mt-3 rounded-lg bg-green-50 p-3 dark:bg-green-900/20">
             <div className="flex items-center space-x-2">
-              <Icon name="check_circle" className="text-green-600 dark:text-green-400 text-sm" />
+              <Icon name="check_circle" className="text-sm text-green-600 dark:text-green-400" />
               <span className="text-sm text-green-700 dark:text-green-300">
                 All premium features unlocked
               </span>
@@ -132,9 +132,9 @@ const SubscriptionStatus = () => {
 
       {/* Billing Management */}
       {(isPremium || subscription?.customerId) && (
-        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-          <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-3">Billing Management</h4>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+        <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
+          <h4 className="mb-3 text-sm font-medium text-gray-900 dark:text-white">Billing Management</h4>
+          <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">
             Manage your subscription, update payment methods, view billing history, or cancel your subscription.
           </p>
           
@@ -152,9 +152,9 @@ const SubscriptionStatus = () => {
 
       {/* Upgrade Section for Free Users */}
       {!isPremium && !isOnTrial && (
-        <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-lg p-4">
-          <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-2">Upgrade to Premium</h4>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+        <div className="rounded-lg bg-gradient-to-r from-blue-50 to-purple-50 p-4 dark:from-blue-900/20 dark:to-purple-900/20">
+          <h4 className="mb-2 text-sm font-medium text-gray-900 dark:text-white">Upgrade to Premium</h4>
+          <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">
             Unlock all features including unlimited collections, marketplace selling, and advanced tools.
           </p>
           

@@ -103,32 +103,32 @@ function MarketplaceListing() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-black flex items-center justify-center">
-        <div className="w-full max-w-4xl mx-auto p-4">
+      <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-black">
+        <div className="mx-auto w-full max-w-4xl p-4">
           {/* Header skeleton */}
-          <div className="bg-white dark:bg-[#0F0F0F] rounded-lg border border-gray-200 dark:border-gray-800 p-6 mb-6">
+          <div className="mb-6 rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-[#0F0F0F]">
             <div className="flex items-center space-x-4">
-              <div className="w-16 h-16 bg-gray-200 dark:bg-[#0F0F0F] rounded-lg animate-pulse"></div>
+              <div className="size-16 animate-pulse rounded-lg bg-gray-200 dark:bg-[#0F0F0F]"></div>
               <div className="flex-1">
-                <div className="h-6 bg-gray-200 dark:bg-[#0F0F0F] rounded w-3/4 mb-2 animate-pulse"></div>
-                <div className="h-4 bg-gray-200 dark:bg-[#0F0F0F] rounded w-1/2 animate-pulse"></div>
+                <div className="mb-2 h-6 w-3/4 animate-pulse rounded bg-gray-200 dark:bg-[#0F0F0F]"></div>
+                <div className="h-4 w-1/2 animate-pulse rounded bg-gray-200 dark:bg-[#0F0F0F]"></div>
               </div>
             </div>
           </div>
           
           {/* Content skeleton */}
-          <div className="bg-white dark:bg-[#0F0F0F] rounded-lg border border-gray-200 dark:border-gray-800 p-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-[#0F0F0F]">
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
               {/* Image skeleton */}
-              <div className="aspect-[2.5/3.5] bg-gray-200 dark:bg-[#0F0F0F] rounded-lg animate-pulse"></div>
+              <div className="aspect-[2.5/3.5] animate-pulse rounded-lg bg-gray-200 dark:bg-[#0F0F0F]"></div>
               
               {/* Details skeleton */}
               <div className="space-y-4">
-                <div className="h-8 bg-gray-200 dark:bg-[#0F0F0F] rounded w-3/4 animate-pulse"></div>
-                <div className="h-6 bg-gray-200 dark:bg-[#0F0F0F] rounded w-1/2 animate-pulse"></div>
-                <div className="h-4 bg-gray-200 dark:bg-[#0F0F0F] rounded w-full animate-pulse"></div>
-                <div className="h-4 bg-gray-200 dark:bg-[#0F0F0F] rounded w-5/6 animate-pulse"></div>
-                <div className="h-10 bg-gray-200 dark:bg-[#0F0F0F] rounded w-1/3 animate-pulse"></div>
+                <div className="h-8 w-3/4 animate-pulse rounded bg-gray-200 dark:bg-[#0F0F0F]"></div>
+                <div className="h-6 w-1/2 animate-pulse rounded bg-gray-200 dark:bg-[#0F0F0F]"></div>
+                <div className="h-4 w-full animate-pulse rounded bg-gray-200 dark:bg-[#0F0F0F]"></div>
+                <div className="h-4 w-5/6 animate-pulse rounded bg-gray-200 dark:bg-[#0F0F0F]"></div>
+                <div className="h-10 w-1/3 animate-pulse rounded bg-gray-200 dark:bg-[#0F0F0F]"></div>
               </div>
             </div>
           </div>
@@ -153,12 +153,12 @@ function MarketplaceListing() {
             <meta property="twitter:description" content="The requested marketplace listing could not be found." />
           </Helmet>
         )}
-        <div className="min-h-screen bg-gray-50 dark:bg-[#0F0F0F] flex items-center justify-center">
+        <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-[#0F0F0F]">
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            <h1 className="mb-4 text-2xl font-bold text-gray-900 dark:text-white">
               {error === 'Listing not found' ? 'Listing Not Found' : 'Error Loading Listing'}
             </h1>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
+            <p className="mb-6 text-gray-600 dark:text-gray-400">
               {error === 'Listing not found' 
                 ? 'The listing you\'re looking for doesn\'t exist or has been removed.'
                 : 'There was an error loading this listing. Please try again later.'
@@ -166,7 +166,7 @@ function MarketplaceListing() {
             </p>
             <button
               onClick={() => navigate('/dashboard')}
-              className="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg transition-colors"
+              className="rounded-lg bg-red-500 px-6 py-2 text-white transition-colors hover:bg-red-600"
             >
               Go to Marketplace
             </button>

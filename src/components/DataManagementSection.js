@@ -125,19 +125,19 @@ const DataManagementSection = () => {
   };
   
   return (
-    <div className="py-4 space-y-6">
+    <div className="space-y-6 py-4">
       <div>
-        <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+        <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-white">
           Data Management
         </h3>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+        <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">
           Analyze and manage your local card data storage
         </p>
         
         <div className="flex flex-col gap-4">
           <button
             onClick={handleVerifySecurity}
-            className="px-4 py-2 font-medium text-white bg-green-600 hover:bg-green-700 rounded-md shadow-sm transition-colors"
+            className="rounded-md bg-green-600 px-4 py-2 font-medium text-white shadow-sm transition-colors hover:bg-green-700"
           >
             Verify Data Security
           </button>

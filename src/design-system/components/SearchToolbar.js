@@ -71,7 +71,7 @@ const SearchToolbar = ({
   // Sort dropdown trigger
   const sortDropdownTrigger = (
     <div 
-      className="dropdown-trigger inline-flex items-center justify-center font-medium rounded-lg transition-colors focus:outline-none px-3 py-2 text-sm bg-white dark:bg-[#000] text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[#111] cursor-pointer"
+      className="dropdown-trigger inline-flex cursor-pointer items-center justify-center rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none dark:border-gray-700 dark:bg-[#000] dark:text-gray-300 dark:hover:bg-[#111]"
       onClick={() => setIsSortDropdownOpen(!isSortDropdownOpen)}
       data-component-name="SearchToolbar"
     >
@@ -84,7 +84,7 @@ const SearchToolbar = ({
             e.stopPropagation(); // Prevent dropdown opening
             toggleSortDirection(e);
           }}
-          className="ml-1 bg-transparent border-0 p-0 cursor-pointer"
+          className="ml-1 cursor-pointer border-0 bg-transparent p-0"
         >
           <Icon 
             name={currentSortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward'} 
@@ -98,7 +98,7 @@ const SearchToolbar = ({
     </div>
   );
 
-  const toolbarClass = `search-toolbar w-full bg-white dark:bg-[#1B2131] py-3 px-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 ${isDarkMode ? 'shadow-sm' : ''} rounded-md border border-[#ffffff33] dark:border-[#ffffff1a] ${className}`;
+  const toolbarClass = `search-toolbar w-full bg-white dark:bg-black py-3 px-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 ${isDarkMode ? 'shadow-sm' : ''} rounded-md border border-[#ffffff33] dark:border-[#ffffff1a] ${className}`;
 
   return (
     <div 
@@ -107,7 +107,7 @@ const SearchToolbar = ({
     >
       {/* Search Input */}
       <div className="relative w-full sm:flex-1">
-        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
           <Icon name="search" size="sm" className="text-gray-400" />
         </div>
         <input
@@ -115,17 +115,17 @@ const SearchToolbar = ({
           value={searchValue}
           onChange={(e) => onSearchChange?.(e.target.value)}
           placeholder="Search by name, set, or serial number..."
-          className="w-full pl-10 pr-4 py-2 bg-white dark:bg-[#000] border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-[var(--primary-light)]/20 focus:outline-none dark:focus:bg-[#000]"
+          className="focus:ring-[var(--primary-light)]/20 w-full rounded-lg border border-gray-300 bg-white py-2 pl-10 pr-4 text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 dark:border-gray-700 dark:bg-[#000] dark:text-white dark:placeholder:text-gray-400 dark:focus:bg-[#000]"
         />
       </div>
 
       {/* Controls Group (View Mode, Sort, Add Card) */}
-      <div className="flex items-center justify-between sm:justify-start gap-3 w-full sm:w-auto">
+      <div className="flex w-full items-center justify-between gap-3 sm:w-auto sm:justify-start">
         {/* View Mode Selector */}
-        <div className="view-selector flex bg-gray-100 dark:bg-[#252B3B] rounded-lg p-1 relative">
+        <div className="view-selector relative flex rounded-lg bg-gray-100 p-1 dark:bg-black">
           {/* Animated Background Indicator */}
           <div 
-            className="absolute top-1 bottom-1 rounded-md bg-gradient-to-r from-[#ef4444] to-[#db2777] transition-transform duration-300 ease-in-out z-0"
+            className="absolute inset-y-1 z-0 rounded-md bg-gradient-to-r from-[#ef4444] to-[#db2777] transition-transform duration-300 ease-in-out"
             style={{
               left: '4px',
               width: '36px',
@@ -135,8 +135,8 @@ const SearchToolbar = ({
           />
           {/* Grid View Button */}
           <button
-            className={`w-9 h-9 flex items-center justify-center rounded-md z-10 relative transition-colors duration-300 ${
-              viewMode === 'grid' ? 'text-white' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-200/50 dark:hover:bg-gray-700/50'
+            className={`relative z-10 flex size-9 items-center justify-center rounded-md transition-colors duration-300 ${
+              viewMode === 'grid' ? 'text-white' : 'hover:bg-gray-200/50 dark:hover:bg-gray-700/50 text-gray-500 dark:text-gray-400'
             }`}
             onClick={() => onViewModeChange?.('grid')}
             aria-label="Grid view"
@@ -147,8 +147,8 @@ const SearchToolbar = ({
           </button>
           {/* List View Button */}
           <button
-            className={`w-9 h-9 flex items-center justify-center rounded-md z-10 relative transition-colors duration-300 ${
-              viewMode === 'list' ? 'text-white' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-200/50 dark:hover:bg-gray-700/50'
+            className={`relative z-10 flex size-9 items-center justify-center rounded-md transition-colors duration-300 ${
+              viewMode === 'list' ? 'text-white' : 'hover:bg-gray-200/50 dark:hover:bg-gray-700/50 text-gray-500 dark:text-gray-400'
             }`}
             onClick={() => onViewModeChange?.('list')}
             aria-label="List view"
@@ -178,7 +178,7 @@ const SearchToolbar = ({
               }}
               className={sortOption === option ? 'bg-gray-100 dark:bg-black' : ''}
             >
-              <div className="flex items-center justify-between w-full">
+              <div className="flex w-full items-center justify-between">
                 <span>{option}</span>
                 {sortOption === option && (
                   <Icon 
@@ -197,7 +197,7 @@ const SearchToolbar = ({
           variant="primary"
           onClick={onAddCard}
           iconLeft={<Icon name="add" size="sm" />}
-          className="hidden sm:inline-flex bg-[var(--primary)] hover:bg-[var(--primary-dark)] text-white dark:text-white"
+          className="hidden bg-[var(--primary)] text-white hover:bg-[var(--primary-dark)] dark:text-white sm:inline-flex"
         >
           Add Card
         </Button>

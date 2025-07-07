@@ -22,7 +22,7 @@ const SettingsComponentsLibrary = () => {
         title="Settings Navigation Items"
         description="Navigation items used in the settings sidebar."
       >
-        <div className="p-6 bg-[#121212] w-52">
+        <div className="w-52 bg-[#121212] p-6">
           <SettingsNavItem
             icon="settings"
             label="General"
@@ -48,7 +48,7 @@ const SettingsComponentsLibrary = () => {
         title="Settings Panels"
         description="Content panels used in the settings modal."
       >
-        <div className="p-6 bg-[#121212] max-w-lg">
+        <div className="max-w-lg bg-[#121212] p-6">
           <SettingsPanel
             title="Appearance"
             description="Choose your preferred light or dark theme."
@@ -77,7 +77,7 @@ const SettingsComponentsLibrary = () => {
         title="Settings Form Panel"
         description="Panel with form fields for settings."
       >
-        <div className="p-6 bg-[#121212] max-w-lg">
+        <div className="max-w-lg bg-[#121212] p-6">
           <SettingsPanel
             title="Profile Information"
             description="Update your user profile information."
@@ -123,12 +123,12 @@ const SettingsComponentsLibrary = () => {
         title="Settings Dropdown Panel"
         description="Panel with dropdown selection."
       >
-        <div className="p-6 bg-[#121212] max-w-lg">
+        <div className="max-w-lg bg-[#121212] p-6">
           <SettingsPanel
             title="Currency Settings"
             description="Select the default currency for display."
           >
-            <select className="w-full p-2 bg-gray-900 text-white border border-gray-700 rounded-lg">
+            <select className="w-full rounded-lg border border-gray-700 bg-gray-900 p-2 text-white">
               <option>AUD (A$)</option>
               <option>USD ($)</option>
               <option>EUR (€)</option>
@@ -143,13 +143,13 @@ const SettingsComponentsLibrary = () => {
         title="Settings Layout Example"
         description="Example of a settings layout with sidebar and content."
       >
-        <div className="border border-gray-700 rounded-lg overflow-hidden max-w-3xl">
-          <div className="bg-[#121212] p-4 border-b border-gray-800">
+        <div className="max-w-3xl overflow-hidden rounded-lg border border-gray-700">
+          <div className="border-b border-gray-800 bg-[#121212] p-4">
             <h2 className="text-lg font-medium text-white">Settings</h2>
           </div>
           <div className="flex h-[350px]">
             {/* Sidebar */}
-            <div className="w-52 bg-[#121212] border-r border-gray-800 p-2">
+            <div className="w-52 border-r border-gray-800 bg-[#121212] p-2">
               <div className="space-y-1">
                 {['general', 'data', 'profile', 'account'].map((tab) => (
                   <SettingsNavItem
@@ -169,7 +169,7 @@ const SettingsComponentsLibrary = () => {
             </div>
             
             {/* Content */}
-            <div className="flex-1 bg-[#121212] p-6 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto bg-[#121212] p-6">
               {activeTab === 'general' && (
                 <div className="space-y-4">
                   <SettingsPanel
@@ -255,8 +255,8 @@ const SettingsComponentsLibrary = () => {
                     title="Account Information"
                     description="Manage your account."
                   >
-                    <div className="flex items-center space-x-3 mb-4">
-                      <Icon name="account_circle" className="text-gray-400 text-2xl" />
+                    <div className="mb-4 flex items-center space-x-3">
+                      <Icon name="account_circle" className="text-2xl text-gray-400" />
                       <div>
                         <p className="font-medium text-white">Demo User</p>
                         <p className="text-sm text-gray-400">user@example.com</p>

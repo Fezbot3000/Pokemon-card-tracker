@@ -12,7 +12,7 @@ const Badge = ({ children, variant = 'primary', className = '' }) => {
   };
   
   return (
-    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${variants[variant]} ${className}`}>
+    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${variants[variant]} ${className}`}>
       {children}
     </span>
   );
@@ -26,12 +26,12 @@ const SharingQuickStart = ({ onClose }) => {
       title: "Welcome to Collection Sharing!",
       content: (
         <div className="text-center">
-          <div className="text-6xl mb-4">🔗</div>
-          <p className="text-gray-600 dark:text-gray-400 mb-4">
+          <div className="mb-4 text-6xl">🔗</div>
+          <p className="mb-4 text-gray-600 dark:text-gray-400">
             Share your collections with the world! Create public links that allow anyone to view your cards, 
             perfect for selling, showcasing, or getting feedback on your collection.
           </p>
-          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+          <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20">
             <p className="text-sm text-blue-800 dark:text-blue-200">
               <strong>💡 Pro Tip:</strong> Shared collections are perfect for social media, forums, 
               or when selling your collection to potential buyers.
@@ -44,7 +44,7 @@ const SharingQuickStart = ({ onClose }) => {
       title: "Step 1: Create a Share Link",
       content: (
         <div>
-          <div className="text-4xl mb-4 text-center">📝</div>
+          <div className="mb-4 text-center text-4xl">📝</div>
           <div className="space-y-4">
             <div className="flex items-start space-x-3">
               <Badge variant="primary" className="mt-1">1</Badge>
@@ -78,32 +78,32 @@ const SharingQuickStart = ({ onClose }) => {
       title: "Step 2: Share Your Link",
       content: (
         <div>
-          <div className="text-4xl mb-4 text-center">📤</div>
+          <div className="mb-4 text-center text-4xl">📤</div>
           <div className="space-y-4">
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
+            <p className="mb-4 text-gray-600 dark:text-gray-400">
               Once created, you can share your collection in multiple ways:
             </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <Card className="p-4">
-                <h4 className="font-semibold text-gray-900 dark:text-white mb-2">📋 Copy Link</h4>
+                <h4 className="mb-2 font-semibold text-gray-900 dark:text-white">📋 Copy Link</h4>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   Copy the link to your clipboard and paste it anywhere
                 </p>
               </Card>
               <Card className="p-4">
-                <h4 className="font-semibold text-gray-900 dark:text-white mb-2">👁️ Preview</h4>
+                <h4 className="mb-2 font-semibold text-gray-900 dark:text-white">👁️ Preview</h4>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   Preview how your collection looks to visitors
                 </p>
               </Card>
               <Card className="p-4">
-                <h4 className="font-semibold text-gray-900 dark:text-white mb-2">📱 Social Share</h4>
+                <h4 className="mb-2 font-semibold text-gray-900 dark:text-white">📱 Social Share</h4>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   Use the share button for social media and messaging apps
                 </p>
               </Card>
               <Card className="p-4">
-                <h4 className="font-semibold text-gray-900 dark:text-white mb-2">⚙️ Manage</h4>
+                <h4 className="mb-2 font-semibold text-gray-900 dark:text-white">⚙️ Manage</h4>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   Toggle active/inactive or delete shares anytime
                 </p>
@@ -117,8 +117,8 @@ const SharingQuickStart = ({ onClose }) => {
       title: "Step 3: What Visitors See",
       content: (
         <div>
-          <div className="text-4xl mb-4 text-center">👀</div>
-          <p className="text-gray-600 dark:text-gray-400 mb-4">
+          <div className="mb-4 text-center text-4xl">👀</div>
+          <p className="mb-4 text-gray-600 dark:text-gray-400">
             Your shared collection page includes:
           </p>
           <div className="space-y-3">
@@ -143,7 +143,7 @@ const SharingQuickStart = ({ onClose }) => {
               <span className="text-gray-600 dark:text-gray-400">Professional, mobile-friendly design</span>
             </div>
           </div>
-          <div className="mt-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+          <div className="mt-4 rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-900/20">
             <p className="text-sm text-green-800 dark:text-green-200">
               <strong>🔒 Privacy:</strong> Visitors can only see what you choose to share. 
               Your personal information and purchase prices remain private.
@@ -156,24 +156,24 @@ const SharingQuickStart = ({ onClose }) => {
       title: "Ready to Share!",
       content: (
         <div className="text-center">
-          <div className="text-6xl mb-4">🎉</div>
-          <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+          <div className="mb-4 text-6xl">🎉</div>
+          <h3 className="mb-4 text-xl font-semibold text-gray-900 dark:text-white">
             You're all set!
           </h3>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">
+          <p className="mb-6 text-gray-600 dark:text-gray-400">
             Start creating your first shared collection and showcase your cards to the world. 
             You can always manage, edit, or delete your shared collections later.
           </p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-            <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+          <div className="grid grid-cols-1 gap-4 text-sm md:grid-cols-3">
+            <div className="rounded-lg bg-gray-50 p-3 dark:bg-gray-800">
               <div className="font-semibold text-gray-900 dark:text-white">Great for Selling</div>
               <div className="text-gray-600 dark:text-gray-400">Share with potential buyers</div>
             </div>
-            <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+            <div className="rounded-lg bg-gray-50 p-3 dark:bg-gray-800">
               <div className="font-semibold text-gray-900 dark:text-white">Social Sharing</div>
               <div className="text-gray-600 dark:text-gray-400">Show off on social media</div>
             </div>
-            <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+            <div className="rounded-lg bg-gray-50 p-3 dark:bg-gray-800">
               <div className="font-semibold text-gray-900 dark:text-white">Get Feedback</div>
               <div className="text-gray-600 dark:text-gray-400">Ask for opinions from experts</div>
             </div>
@@ -214,7 +214,7 @@ const SharingQuickStart = ({ onClose }) => {
           {steps.map((_, index) => (
             <div
               key={index}
-              className={`w-3 h-3 rounded-full ${
+              className={`size-3 rounded-full ${
                 index === currentStep
                   ? 'bg-blue-500'
                   : index < currentStep
@@ -231,7 +231,7 @@ const SharingQuickStart = ({ onClose }) => {
         </div>
 
         {/* Navigation buttons */}
-        <div className="flex justify-between items-center pt-4 border-t border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between border-t border-gray-200 pt-4 dark:border-gray-700">
           <div>
             {currentStep > 0 && (
               <Button

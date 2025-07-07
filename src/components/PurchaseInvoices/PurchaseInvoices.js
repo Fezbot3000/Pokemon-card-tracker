@@ -26,7 +26,7 @@ const PurchaseInvoices = () => {
   // If user doesn't have invoicing access, show feature gate
   if (!hasFeature('INVOICING')) {
     return (
-      <div className="p-4 sm:p-6 pb-20 pt-16 sm:pt-4">
+      <div className="p-4 pb-20 pt-16 sm:p-6 sm:pt-4">
         <FeatureGate 
           feature="INVOICING"
           customMessage="Create and manage purchase invoices for your card transactions. Track your investments and generate professional invoices. This feature is available with Premium."
@@ -470,7 +470,7 @@ const PurchaseInvoices = () => {
   };
 
   return (
-    <div className="p-4 sm:p-6 pb-20 pt-16 sm:pt-4">
+    <div className="p-4 pb-20 pt-16 sm:p-6 sm:pt-4">
       {/* Statistics Summary */}
       {!loading && invoices.length > 0 && (
         <div className="mb-6">
@@ -481,22 +481,22 @@ const PurchaseInvoices = () => {
         </div>
       )}
       
-      <div className="bg-white dark:bg-black rounded-xl">
+      <div className="rounded-xl bg-white dark:bg-black">
         
         {loading ? (
           <div className="overflow-x-auto">
             {/* Search Section Skeleton - matches exact real layout */}
-            <div className="flex flex-col gap-4 mb-4">
+            <div className="mb-4 flex flex-col gap-4">
               <div className="w-full">
                 <div className="relative">
-                  <div className="w-full h-10 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"></div>
-                  <div className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 bg-gray-300 dark:bg-gray-600 rounded animate-pulse"></div>
+                  <div className="h-10 w-full animate-pulse rounded-lg bg-gray-200 dark:bg-gray-700"></div>
+                  <div className="absolute left-3 top-1/2 size-5 -translate-y-1/2 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
                 </div>
-                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-32 mt-2"></div>
+                <div className="mt-2 h-4 w-32 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
               </div>
               
-              <div className="flex flex-col sm:flex-row gap-2 w-full">
-                <div className="w-full sm:w-auto h-10 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse sm:w-48"></div>
+              <div className="flex w-full flex-col gap-2 sm:flex-row">
+                <div className="h-10 w-full animate-pulse rounded-lg bg-gray-200 dark:bg-gray-700 sm:w-48 sm:w-auto"></div>
               </div>
             </div>
             
@@ -506,48 +506,48 @@ const PurchaseInvoices = () => {
                 <thead className="bg-gray-50 dark:bg-black">
                   <tr>
                     <th className="px-6 py-3 text-left">
-                      <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded animate-pulse w-16"></div>
+                      <div className="h-3 w-16 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
                     </th>
                     <th className="px-6 py-3 text-left">
-                      <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded animate-pulse w-8"></div>
+                      <div className="h-3 w-8 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
                     </th>
                     <th className="px-6 py-3 text-left">
-                      <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded animate-pulse w-10"></div>
+                      <div className="h-3 w-10 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
                     </th>
                     <th className="px-6 py-3 text-right">
-                      <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded animate-pulse w-20 ml-auto"></div>
+                      <div className="ml-auto h-3 w-20 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
                     </th>
                     <th className="px-6 py-3 text-left">
-                      <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded animate-pulse w-14"></div>
+                      <div className="h-3 w-14 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
                     </th>
                     <th className="px-6 py-3 text-left">
-                      <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded animate-pulse w-12"></div>
+                      <div className="h-3 w-12 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white dark:bg-black divide-y divide-gray-200 dark:divide-gray-700">
+                <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-black">
                   {[...Array(2)].map((_, i) => (
                     <tr key={i}>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-32"></div>
+                      <td className="whitespace-nowrap px-6 py-4">
+                        <div className="h-4 w-32 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-20"></div>
+                      <td className="whitespace-nowrap px-6 py-4">
+                        <div className="h-4 w-20 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse max-w-[150px]"></div>
+                      <td className="whitespace-nowrap px-6 py-4">
+                        <div className="h-4 max-w-[150px] animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right">
-                        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-16 ml-auto"></div>
+                      <td className="whitespace-nowrap px-6 py-4 text-right">
+                        <div className="ml-auto h-4 w-16 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-4"></div>
+                      <td className="whitespace-nowrap px-6 py-4">
+                        <div className="size-4 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="whitespace-nowrap px-6 py-4">
                         <div className="flex space-x-3">
-                          <div className="h-8 w-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-                          <div className="h-8 w-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-                          <div className="h-8 w-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                          <div className="size-8 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
+                          <div className="size-8 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
+                          <div className="size-8 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
                         </div>
                       </td>
                     </tr>
@@ -557,59 +557,59 @@ const PurchaseInvoices = () => {
             </div>
 
             {/* Mobile Cards Skeleton - matches exact mobile layout */}
-            <div className="md:hidden space-y-4">
+            <div className="space-y-4 md:hidden">
               {[...Array(2)].map((_, i) => (
-                <div key={i} className="bg-white/5 dark:bg-white/5 rounded-xl p-4 border border-gray-200/20 dark:border-gray-700/30">
-                  <div className="flex justify-between items-start mb-3">
+                <div key={i} className="bg-white/5 dark:bg-white/5 border-gray-200/20 dark:border-gray-700/30 rounded-xl border p-4">
+                  <div className="mb-3 flex items-start justify-between">
                     <div>
-                      <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mb-2 w-28"></div>
-                      <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-20"></div>
+                      <div className="mb-2 h-4 w-28 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
+                      <div className="h-3 w-20 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
                     </div>
-                    <div className="h-6 w-16 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse"></div>
+                    <div className="h-6 w-16 animate-pulse rounded-full bg-gray-200 dark:bg-gray-700"></div>
                   </div>
-                  <div className="flex justify-between items-center mb-4">
+                  <div className="mb-4 flex items-center justify-between">
                     <div className="flex-1">
-                      <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mb-1 w-10"></div>
-                      <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-24"></div>
+                      <div className="mb-1 h-3 w-10 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
+                      <div className="h-4 w-24 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
                     </div>
                     <div className="text-right">
-                      <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mb-1 w-16 ml-auto"></div>
-                      <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-20"></div>
+                      <div className="mb-1 ml-auto h-3 w-16 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
+                      <div className="h-5 w-20 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
                     </div>
                   </div>
                   <div className="flex space-x-2">
-                    <div className="h-10 w-10 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"></div>
-                    <div className="h-10 w-10 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"></div>
-                    <div className="h-10 w-10 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"></div>
+                    <div className="size-10 animate-pulse rounded-lg bg-gray-200 dark:bg-gray-700"></div>
+                    <div className="size-10 animate-pulse rounded-lg bg-gray-200 dark:bg-gray-700"></div>
+                    <div className="size-10 animate-pulse rounded-lg bg-gray-200 dark:bg-gray-700"></div>
                   </div>
                 </div>
               ))}
             </div>
           </div>
         ) : invoices.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 px-4">
+          <div className="flex flex-col items-center justify-center px-4 py-16">
             {/* Invoice Icon */}
-            <div className="w-24 h-24 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-6">
+            <div className="mb-6 flex size-24 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
               <span className="material-icons text-4xl text-gray-400 dark:text-gray-600">receipt_long</span>
             </div>
             
             {/* Main Message */}
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2 text-center">
+            <h3 className="mb-2 text-center text-xl font-semibold text-gray-900 dark:text-white">
               No Purchase Invoices Yet
             </h3>
             
             {/* Description */}
-            <p className="text-gray-600 dark:text-gray-400 text-center max-w-md mb-8 leading-relaxed">
+            <p className="mb-8 max-w-md text-center leading-relaxed text-gray-600 dark:text-gray-400">
               Keep track of your card purchases by creating invoices. This helps you monitor your investments and calculate profits when you sell.
             </p>
             
             {/* Instructions */}
-            <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-6 max-w-md mx-auto mb-8">
-              <h4 className="text-lg font-medium text-blue-900 dark:text-blue-100 mb-3 flex items-center gap-2">
+            <div className="mx-auto mb-8 max-w-md rounded-lg bg-blue-50 p-6 dark:bg-blue-900/20">
+              <h4 className="mb-3 flex items-center gap-2 text-lg font-medium text-blue-900 dark:text-blue-100">
                 <span className="material-icons text-xl">info</span>
                 How to Create an Invoice
               </h4>
-              <ol className="text-sm text-blue-800 dark:text-blue-200 space-y-2 list-decimal list-inside">
+              <ol className="list-inside list-decimal space-y-2 text-sm text-blue-800 dark:text-blue-200">
                 <li>Go to your Cards page</li>
                 <li>Use multi-select to choose cards</li>
                 <li>Click "Create Invoice" from the actions menu</li>
@@ -618,10 +618,10 @@ const PurchaseInvoices = () => {
             
             {/* Additional Info */}
             <div className="mt-8 text-center">
-              <p className="text-sm text-gray-500 dark:text-gray-500 mb-2">
+              <p className="mb-2 text-sm text-gray-500 dark:text-gray-500">
                 💡 Benefits of tracking purchases:
               </p>
-              <ul className="text-sm text-gray-500 dark:text-gray-500 space-y-1">
+              <ul className="space-y-1 text-sm text-gray-500 dark:text-gray-500">
                 <li>• Track your investment amounts</li>
                 <li>• Calculate profit/loss on sales</li>
                 <li>• Organize purchases by seller</li>
@@ -640,21 +640,21 @@ const PurchaseInvoices = () => {
             />
             
             {/* Results Count */}
-            <div className="text-sm text-gray-500 dark:text-gray-400 mb-4 px-4">
+            <div className="mb-4 px-4 text-sm text-gray-500 dark:text-gray-400">
               {filteredInvoices.length} of {invoices.length} {invoices.length === 1 ? 'invoice' : 'invoices'} found
             </div>
             
-            <div className="flex flex-col gap-4 mb-4 px-4">
-              <div className="flex flex-col sm:flex-row gap-2 w-full">
+            <div className="mb-4 flex flex-col gap-4 px-4">
+              <div className="flex w-full flex-col gap-2 sm:flex-row">
                 {isGeneratingBatch ? (
-                  <div className="px-4 py-2 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 flex items-center gap-2">
+                  <div className="flex items-center gap-2 rounded-lg bg-blue-100 px-4 py-2 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
                     <span className="material-icons animate-spin">autorenew</span>
                     <span className="hidden sm:inline">Generating PDFs on server...</span>
                     <span className="sm:hidden">Generating...</span>
                   </div>
                 ) : (
                   <button
-                    className="w-full sm:w-auto px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 text-sm"
+                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white transition-colors hover:bg-blue-700 sm:w-auto"
                     onClick={handleServerBatchGeneration}
                     disabled={invoices.length === 0}
                     title="Generate PDF invoices for all items"
@@ -673,7 +673,7 @@ const PurchaseInvoices = () => {
                   <tr>
                     <th
                       scope="col"
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                      className="cursor-pointer px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
                       onClick={() => handleSort('invoiceNumber')}
                     >
                       Invoice # {sortField === 'invoiceNumber' && (
@@ -682,7 +682,7 @@ const PurchaseInvoices = () => {
                     </th>
                     <th
                       scope="col"
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                      className="cursor-pointer px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
                       onClick={() => handleSort('date')}
                     >
                       Date {sortField === 'date' && (
@@ -691,7 +691,7 @@ const PurchaseInvoices = () => {
                     </th>
                     <th
                       scope="col"
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                      className="cursor-pointer px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
                       onClick={() => handleSort('seller')}
                     >
                       Seller {sortField === 'seller' && (
@@ -700,7 +700,7 @@ const PurchaseInvoices = () => {
                     </th>
                     <th
                       scope="col"
-                      className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                      className="cursor-pointer px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
                       onClick={() => handleSort('totalAmount')}
                     >
                       Total Amount {sortField === 'totalAmount' && (
@@ -709,7 +709,7 @@ const PurchaseInvoices = () => {
                     </th>
                     <th
                       scope="col"
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                      className="cursor-pointer px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
                       onClick={() => handleSort('cardCount')}
                     >
                       # of Cards {sortField === 'cardCount' && (
@@ -718,49 +718,49 @@ const PurchaseInvoices = () => {
                     </th>
                     <th
                       scope="col"
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                      className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
                     >
                       Actions
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white dark:bg-black divide-y divide-gray-200 dark:divide-gray-700">
+                <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-black">
                   {getSortedInvoices().map((invoice) => (
                     <tr key={invoice.id}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                      <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900 dark:text-white">
                         {invoice.invoiceNumber}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                      <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900 dark:text-white">
                         {formatDate(invoice.date)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                      <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900 dark:text-white">
                         <div className="max-w-[150px] truncate" title={invoice.seller}>
                           {invoice.seller}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white text-right">
+                      <td className="whitespace-nowrap px-6 py-4 text-right text-sm text-gray-900 dark:text-white">
                         {formatCurrency(invoice.totalAmount)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                      <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900 dark:text-white">
                         {invoice.cardCount}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 flex">
+                      <td className="flex whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
                         <button 
-                          className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors mr-3 p-2"
+                          className="mr-3 p-2 text-gray-700 transition-colors hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400"
                           onClick={() => handleDownloadInvoice(invoice)}
                           title="Download PDF"
                         >
                           <span className="material-icons text-xl">download</span>
                         </button>
                         <button 
-                          className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors mr-3 p-2"
+                          className="mr-3 p-2 text-gray-700 transition-colors hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400"
                           onClick={() => handleEditInvoice(invoice)}
                           title="Edit Invoice"
                         >
                           <span className="material-icons text-xl">edit</span>
                         </button>
                         <button 
-                          className="text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 transition-colors p-2"
+                          className="p-2 text-gray-700 transition-colors hover:text-red-600 dark:text-gray-300 dark:hover:text-red-400"
                           onClick={() => showDeleteConfirmation(invoice)}
                           title="Delete Invoice"
                         >
@@ -774,34 +774,34 @@ const PurchaseInvoices = () => {
             </div>
 
             {/* Mobile Card View */}
-            <div className="md:hidden space-y-4">
+            <div className="space-y-4 md:hidden">
               {getSortedInvoices().map((invoice) => (
-                <div key={invoice.id} className="bg-white/5 dark:bg-white/5 rounded-xl p-4 border border-gray-200/20 dark:border-gray-700/30">
+                <div key={invoice.id} className="bg-white/5 dark:bg-white/5 border-gray-200/20 dark:border-gray-700/30 rounded-xl border p-4">
                   {/* Header with Invoice Number and Date */}
-                  <div className="flex justify-between items-start mb-3">
+                  <div className="mb-3 flex items-start justify-between">
                     <div>
                       <h3 className="text-sm font-medium text-gray-900 dark:text-white">
                         Invoice #{invoice.invoiceNumber}
                       </h3>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                         {formatDate(invoice.date)}
                       </p>
                     </div>
-                    <span className="text-xs bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-full text-gray-600 dark:text-gray-300">
+                    <span className="rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-600 dark:bg-gray-800 dark:text-gray-300">
                       {invoice.cardCount} cards
                     </span>
                   </div>
 
                   {/* Main Content: Seller and Amount */}
-                  <div className="flex justify-between items-center mb-4">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Seller</p>
-                      <p className="text-sm font-medium text-gray-900 dark:text-white truncate" title={invoice.seller}>
+                  <div className="mb-4 flex items-center justify-between">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Seller</p>
+                      <p className="truncate text-sm font-medium text-gray-900 dark:text-white" title={invoice.seller}>
                         {invoice.seller}
                       </p>
                     </div>
-                    <div className="text-right ml-4">
-                      <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Amount</p>
+                    <div className="ml-4 text-right">
+                      <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Amount</p>
                       <p className="text-lg font-semibold text-gray-900 dark:text-white">
                         {formatCurrency(invoice.totalAmount)}
                       </p>
@@ -809,23 +809,23 @@ const PurchaseInvoices = () => {
                   </div>
 
                   {/* Actions */}
-                  <div className="flex justify-end space-x-2 pt-3 border-t border-gray-200/20 dark:border-gray-700/30">
+                  <div className="border-gray-200/20 dark:border-gray-700/30 flex justify-end space-x-2 border-t pt-3">
                     <button 
-                      className="flex items-center justify-center w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
+                      className="flex size-10 items-center justify-center rounded-lg bg-blue-50 text-blue-600 transition-colors hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50"
                       onClick={() => handleDownloadInvoice(invoice)}
                       title="Download PDF"
                     >
                       <span className="material-icons text-lg">download</span>
                     </button>
                     <button 
-                      className="flex items-center justify-center w-10 h-10 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                      className="flex size-10 items-center justify-center rounded-lg bg-gray-50 text-gray-600 transition-colors hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
                       onClick={() => handleEditInvoice(invoice)}
                       title="Edit Invoice"
                     >
                       <span className="material-icons text-lg">edit</span>
                     </button>
                     <button 
-                      className="flex items-center justify-center w-10 h-10 rounded-lg bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors"
+                      className="flex size-10 items-center justify-center rounded-lg bg-red-50 text-red-600 transition-colors hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50"
                       onClick={() => showDeleteConfirmation(invoice)}
                       title="Delete Invoice"
                     >

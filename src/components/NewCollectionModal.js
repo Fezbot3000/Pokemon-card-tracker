@@ -84,12 +84,12 @@ const NewCollectionModal = ({ isOpen, onClose, onCreate, existingCollections = [
     >
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
             Collection Name <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
-            className="w-full px-3 py-2 border border-[#ffffff33] dark:border-[#ffffff1a] rounded-lg bg-white dark:bg-[#0F0F0F] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[var(--primary-default)]/20 focus:border-[var(--primary-default)] placeholder-gray-500 dark:placeholder-gray-400"
+            className="focus:ring-[var(--primary-default)]/20 w-full rounded-lg border border-[#ffffff33] bg-white px-3 py-2 text-gray-900 placeholder:text-gray-500 focus:border-[var(--primary-default)] focus:outline-none focus:ring-2 dark:border-[#ffffff1a] dark:bg-[#0F0F0F] dark:text-white dark:placeholder:text-gray-400"
             placeholder="Enter collection name"
             value={collectionName}
             onChange={e => setCollectionName(e.target.value)}
@@ -99,7 +99,7 @@ const NewCollectionModal = ({ isOpen, onClose, onCreate, existingCollections = [
             autoFocus
           />
           {error && (
-            <div className="mt-2 flex items-center text-red-600 dark:text-red-400 text-sm">
+            <div className="mt-2 flex items-center text-sm text-red-600 dark:text-red-400">
               <Icon name="error" className="mr-1 text-sm" />
               {error}
             </div>

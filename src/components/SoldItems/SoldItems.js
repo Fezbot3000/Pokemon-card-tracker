@@ -23,7 +23,7 @@ const SoldItems = () => {
   // If user doesn't have sold items access, show feature gate
   if (!hasFeature('SOLD_ITEMS')) {
     return (
-      <div className="p-4 sm:p-6 pb-20 pt-16 sm:pt-4">
+      <div className="p-4 pb-20 pt-16 sm:p-6 sm:pt-4">
         <FeatureGate 
           feature="SOLD_ITEMS"
           customMessage="Track your sold items, generate invoices, and analyze your profit trends. This feature is available with Premium."
@@ -1090,11 +1090,11 @@ const SoldItems = () => {
 
   if (isLoading) {
     return (
-      <div className="p-4 sm:p-6 pb-20 pt-16 sm:pt-4">
+      <div className="p-4 pb-20 pt-16 sm:p-6 sm:pt-4">
         {/* Statistics Summary Skeleton - only show skeleton, no data */}
         <div className="mb-6">
-          <div className="bg-white dark:bg-black rounded-xl p-6">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div className="rounded-xl bg-white p-6 dark:bg-black">
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
               {[
                 { label: 'INVESTMENT TOTAL', width: 'w-20' },
                 { label: 'SOLD FOR', width: 'w-16' },
@@ -1102,10 +1102,10 @@ const SoldItems = () => {
                 { label: 'SOLD INVOICES', width: 'w-4' }
               ].map((stat, index) => (
                 <div key={index} className="text-center">
-                  <div className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 sm:mb-2 uppercase">
+                  <div className="mb-1 text-xs font-medium uppercase text-gray-500 dark:text-gray-400 sm:mb-2 sm:text-sm">
                     {stat.label}
                   </div>
-                  <div className={`h-8 ${stat.width} bg-gray-200 dark:bg-gray-700 rounded animate-pulse mx-auto`}></div>
+                  <div className={`h-8 ${stat.width} mx-auto animate-pulse rounded bg-gray-200 dark:bg-gray-700`}></div>
                 </div>
               ))}
             </div>
@@ -1113,10 +1113,10 @@ const SoldItems = () => {
         </div>
 
         {/* Main Content - Keep search functional, skeleton the data */}
-        <div className="bg-white dark:bg-black rounded-xl">
+        <div className="rounded-xl bg-white dark:bg-black">
           <div className="overflow-x-auto">
             {/* Keep search section functional */}
-            <div className="flex flex-col gap-4 mb-4 p-4 sm:p-6">
+            <div className="mb-4 flex flex-col gap-4 p-4 sm:p-6">
               <div className="w-full">
                 <div className="relative">
                   <input
@@ -1124,17 +1124,17 @@ const SoldItems = () => {
                     placeholder="Search sold items..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full px-4 py-2 pl-10 rounded-lg 
-                            border border-gray-200 dark:border-gray-700/50 
-                            bg-white dark:bg-black text-gray-900 dark:text-white
-                            focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary
-                            placeholder-gray-500 dark:placeholder-gray-400"
+                    className="dark:border-gray-700/50 focus:ring-primary/20 w-full rounded-lg border 
+                            border-gray-200 bg-white px-4 
+                            py-2 pl-10 text-gray-900 placeholder:text-gray-500
+                            focus:border-primary focus:outline-none focus:ring-2 dark:bg-black
+                            dark:text-white dark:placeholder:text-gray-400"
                   />
-                  <span className="material-icons absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                  <span className="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
                     search
                   </span>
                 </div>
-                <div className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
                   Loading sold items...
                 </div>
               </div>
@@ -1145,55 +1145,55 @@ const SoldItems = () => {
               <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead className="bg-gray-50 dark:bg-black">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
                       Buyer
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
                       Date
                     </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
                       Investment
                     </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
                       Sold For
                     </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
                       Profit
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
                       # of Cards
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
                       Actions
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white dark:bg-black divide-y divide-gray-200 dark:divide-gray-700">
+                <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-black">
                   {[...Array(7)].map((_, i) => (
                     <tr key={i}>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse max-w-[150px]"></div>
+                      <td className="whitespace-nowrap px-6 py-4">
+                        <div className="h-4 max-w-[150px] animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-20"></div>
+                      <td className="whitespace-nowrap px-6 py-4">
+                        <div className="h-4 w-20 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right">
-                        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-16 ml-auto"></div>
+                      <td className="whitespace-nowrap px-6 py-4 text-right">
+                        <div className="ml-auto h-4 w-16 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right">
-                        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-16 ml-auto"></div>
+                      <td className="whitespace-nowrap px-6 py-4 text-right">
+                        <div className="ml-auto h-4 w-16 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right">
-                        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-16 ml-auto"></div>
+                      <td className="whitespace-nowrap px-6 py-4 text-right">
+                        <div className="ml-auto h-4 w-16 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-4"></div>
+                      <td className="whitespace-nowrap px-6 py-4">
+                        <div className="size-4 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="whitespace-nowrap px-6 py-4">
                         <div className="flex space-x-3">
-                          <div className="h-8 w-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-                          <div className="h-8 w-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-                          <div className="h-8 w-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                          <div className="size-8 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
+                          <div className="size-8 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
+                          <div className="size-8 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
                         </div>
                       </td>
                     </tr>
@@ -1208,7 +1208,7 @@ const SoldItems = () => {
   }
 
   return (
-    <div className="p-4 sm:p-6 pb-20 pt-16 sm:pt-4">
+    <div className="p-4 pb-20 pt-16 sm:p-6 sm:pt-4">
       {/* Statistics Summary */}
       {soldCards && Array.isArray(soldCards) && soldCards.length > 0 && (
         <div className="mb-6">
@@ -1216,7 +1216,7 @@ const SoldItems = () => {
         </div>
       )}
       
-      <div className="bg-white dark:bg-black rounded-xl">
+      <div className="rounded-xl bg-white dark:bg-black">
         {soldCards && Array.isArray(soldCards) && soldCards.length > 0 ? (
           <div className="overflow-x-auto">
             {/* Search Section */}
@@ -1228,7 +1228,7 @@ const SoldItems = () => {
             />
             
             {/* Results Count */}
-            <div className="text-sm text-gray-500 dark:text-gray-400 mb-4 px-4">
+            <div className="mb-4 px-4 text-sm text-gray-500 dark:text-gray-400">
               {filteredInvoices.length} of {Object.keys(invoiceTotals).length} {Object.keys(invoiceTotals).length === 1 ? 'sale' : 'sales'} found
             </div>
             
@@ -1239,82 +1239,82 @@ const SoldItems = () => {
                   <tr>
                     <th
                       scope="col"
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                      className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
                     >
                       Buyer
                     </th>
                     <th
                       scope="col"
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                      className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
                     >
                       Date
                     </th>
                     <th
                       scope="col"
-                      className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                      className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
                     >
                       Investment
                     </th>
                     <th
                       scope="col"
-                      className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                      className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
                     >
                       Sold For
                     </th>
                     <th
                       scope="col"
-                      className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                      className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
                     >
                       Profit
                     </th>
                     <th
                       scope="col"
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                      className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
                     >
                       # of Cards
                     </th>
                     <th
                       scope="col"
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                      className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
                     >
                       Actions
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white dark:bg-black divide-y divide-gray-200 dark:divide-gray-700">
+                <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-black">
                   {filteredInvoices.map(([buyer, invoice]) => (
                     <React.Fragment key={buyer}>
                       <tr>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                        <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900 dark:text-white">
                           <div className="max-w-[150px] truncate" title={buyer}>
                             {buyer}
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                        <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900 dark:text-white">
                           {formatDateSafely(invoice.date)}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white text-right">
+                        <td className="whitespace-nowrap px-6 py-4 text-right text-sm text-gray-900 dark:text-white">
                           {formatUserCurrency(invoice.totalInvestment, preferredCurrency.code)}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white text-right">
+                        <td className="whitespace-nowrap px-6 py-4 text-right text-sm text-gray-900 dark:text-white">
                           {formatUserCurrency(invoice.totalSale, preferredCurrency.code)}
                         </td>
-                        <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium text-right ${invoice.totalProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        <td className={`whitespace-nowrap px-6 py-4 text-right text-sm font-medium ${invoice.totalProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                           {formatUserCurrency(invoice.totalProfit, preferredCurrency.code)}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                        <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900 dark:text-white">
                           {invoice.cards.length}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 flex">
+                        <td className="flex whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
                           <button 
-                            className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors mr-3 p-2"
+                            className="mr-3 p-2 text-gray-700 transition-colors hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400"
                             onClick={() => handleDownloadInvoice(buyer, invoice)}
                             title="Download PDF"
                           >
                             <span className="material-icons text-xl">download</span>
                           </button>
                           <button 
-                            className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors mr-3 p-2"
+                            className="mr-3 p-2 text-gray-700 transition-colors hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400"
                             onClick={() => setExpandedBuyers(prev => {
                               const newSet = new Set(prev);
                               if (newSet.has(buyer)) {
@@ -1329,7 +1329,7 @@ const SoldItems = () => {
                             <span className="material-icons text-xl">{expandedBuyers.has(buyer) ? 'visibility_off' : 'visibility'}</span>
                           </button>
                           <button 
-                            className="text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 transition-colors p-2"
+                            className="p-2 text-gray-700 transition-colors hover:text-red-600 dark:text-gray-300 dark:hover:text-red-400"
                             onClick={() => showDeleteConfirmation(buyer, buyer)}
                             title="Delete Sale"
                           >
@@ -1340,16 +1340,16 @@ const SoldItems = () => {
                       {/* Expandable Card Details Row */}
                       {expandedBuyers.has(buyer) && (
                         <tr>
-                          <td colSpan="7" className="px-0 py-0">
-                            <div className="bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+                          <td colSpan="7" className="p-0">
+                            <div className="border-t border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800">
                               <div className="p-6">
-                                <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-4">Card Details</h4>
-                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                <h4 className="mb-4 text-sm font-medium text-gray-900 dark:text-white">Card Details</h4>
+                                <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                                   {invoice.cards.map((card, index) => (
-                                    <div key={card.id || card.slabSerial || index} className="bg-white dark:bg-black rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                                      <div className="flex justify-between items-start">
-                                        <div className="flex-1 min-w-0">
-                                          <h5 className="font-medium text-gray-900 dark:text-white truncate">
+                                    <div key={card.id || card.slabSerial || index} className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-black">
+                                      <div className="flex items-start justify-between">
+                                        <div className="min-w-0 flex-1">
+                                          <h5 className="truncate font-medium text-gray-900 dark:text-white">
                                             {card.name || card.card || card.cardName || 'Unnamed Card'}
                                           </h5>
                                           <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -1361,7 +1361,7 @@ const SoldItems = () => {
                                             </p>
                                           )}
                                         </div>
-                                        <div className="text-right ml-4">
+                                        <div className="ml-4 text-right">
                                           <p className="text-sm text-gray-600 dark:text-gray-400">
                                             Investment: {formatUserCurrency(convertToUserCurrency(parseFloat(card.originalInvestmentAmount || card.investmentAUD || card.investment || 0), card.originalInvestmentCurrency || 'AUD'), preferredCurrency.code)}
                                           </p>
@@ -1388,35 +1388,35 @@ const SoldItems = () => {
             </div>
 
             {/* Mobile Card View */}
-            <div className="md:hidden space-y-4 p-4">
+            <div className="space-y-4 p-4 md:hidden">
               {filteredInvoices.map(([buyer, invoice]) => (
-                <div key={buyer} className="bg-white/5 dark:bg-white/5 rounded-xl border border-gray-200/20 dark:border-gray-700/30 overflow-hidden">
+                <div key={buyer} className="bg-white/5 dark:bg-white/5 border-gray-200/20 dark:border-gray-700/30 overflow-hidden rounded-xl border">
                   {/* Header with Buyer and Date */}
                   <div className="p-4">
-                    <div className="flex justify-between items-start mb-3">
+                    <div className="mb-3 flex items-start justify-between">
                       <div>
                         <h3 className="text-sm font-medium text-gray-900 dark:text-white">
                           Sold to: {buyer}
                         </h3>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                           {formatDateSafely(invoice.date)}
                         </p>
                       </div>
-                      <span className="text-xs bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-full text-gray-600 dark:text-gray-300">
+                      <span className="rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-600 dark:bg-gray-800 dark:text-gray-300">
                         {invoice.cards.length} cards
                       </span>
                     </div>
 
                     {/* Main Content: Investment and Profit */}
-                    <div className="flex justify-between items-center mb-4">
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Investment</p>
+                    <div className="mb-4 flex items-center justify-between">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Investment</p>
                         <p className="text-sm font-medium text-gray-900 dark:text-white">
                           {formatUserCurrency(invoice.totalInvestment, preferredCurrency.code)}
                         </p>
                       </div>
-                      <div className="text-right ml-4">
-                        <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Profit</p>
+                      <div className="ml-4 text-right">
+                        <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Profit</p>
                         <p className={`text-lg font-semibold ${invoice.totalProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                           {formatUserCurrency(invoice.totalProfit, preferredCurrency.code)}
                         </p>
@@ -1424,16 +1424,16 @@ const SoldItems = () => {
                     </div>
 
                     {/* Actions */}
-                    <div className="flex justify-end space-x-2 pt-3 border-t border-gray-200/20 dark:border-gray-700/30">
+                    <div className="border-gray-200/20 dark:border-gray-700/30 flex justify-end space-x-2 border-t pt-3">
                       <button 
-                        className="flex items-center justify-center w-10 h-10 rounded-lg bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/50 transition-colors"
+                        className="flex size-10 items-center justify-center rounded-lg bg-green-50 text-green-600 transition-colors hover:bg-green-100 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50"
                         onClick={() => handleDownloadInvoice(buyer, invoice)}
                         title="Download PDF"
                       >
                         <span className="material-icons text-lg">download</span>
                       </button>
                       <button 
-                        className="flex items-center justify-center w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
+                        className="flex size-10 items-center justify-center rounded-lg bg-blue-50 text-blue-600 transition-colors hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50"
                         onClick={() => setExpandedBuyers(prev => {
                           const newSet = new Set(prev);
                           if (newSet.has(buyer)) {
@@ -1448,7 +1448,7 @@ const SoldItems = () => {
                         <span className="material-icons text-lg">{expandedBuyers.has(buyer) ? 'visibility_off' : 'visibility'}</span>
                       </button>
                       <button 
-                        className="flex items-center justify-center w-10 h-10 rounded-lg bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors"
+                        className="flex size-10 items-center justify-center rounded-lg bg-red-50 text-red-600 transition-colors hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50"
                         onClick={() => showDeleteConfirmation(buyer, buyer)}
                         title="Delete Sale"
                       >
@@ -1459,14 +1459,14 @@ const SoldItems = () => {
 
                   {/* Expandable Card Details (inline with each invoice) */}
                   {expandedBuyers.has(buyer) && (
-                    <div className="border-t border-gray-200/20 dark:border-gray-700/30 bg-gray-50 dark:bg-gray-800 p-4">
-                      <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-3">Card Details</h4>
+                    <div className="border-gray-200/20 dark:border-gray-700/30 border-t bg-gray-50 p-4 dark:bg-gray-800">
+                      <h4 className="mb-3 text-sm font-medium text-gray-900 dark:text-white">Card Details</h4>
                       <div className="space-y-3">
                         {invoice.cards.map((card, index) => (
-                          <div key={card.id || card.slabSerial || index} className="bg-white dark:bg-black rounded-lg p-3 border border-gray-200 dark:border-gray-700">
-                            <div className="flex justify-between items-start">
-                              <div className="flex-1 min-w-0">
-                                <h5 className="font-medium text-gray-900 dark:text-white truncate">
+                          <div key={card.id || card.slabSerial || index} className="rounded-lg border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-black">
+                            <div className="flex items-start justify-between">
+                              <div className="min-w-0 flex-1">
+                                <h5 className="truncate font-medium text-gray-900 dark:text-white">
                                   {card.name || card.card || card.cardName || 'Unnamed Card'}
                                 </h5>
                                 <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -1478,7 +1478,7 @@ const SoldItems = () => {
                                   </p>
                                 )}
                               </div>
-                              <div className="text-right ml-4">
+                              <div className="ml-4 text-right">
                                 <p className="text-sm text-gray-600 dark:text-gray-400">
                                   Investment: {formatUserCurrency(convertToUserCurrency(parseFloat(card.originalInvestmentAmount || card.investmentAUD || card.investment || 0), card.originalInvestmentCurrency || 'AUD'), preferredCurrency.code)}
                                 </p>
@@ -1503,10 +1503,10 @@ const SoldItems = () => {
             {/* Removed */}
           </div>
         ) : (
-          <div className="text-center py-8 sm:py-12">
-            <span className="material-icons text-4xl sm:text-5xl mb-3 sm:mb-4 text-gray-400 dark:text-gray-600">inventory_2</span>
-            <h3 className="text-sm sm:text-base font-medium text-gray-900 dark:text-white mb-1 sm:mb-2">No sold cards found</h3>
-            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-6">When you sell cards from your collection, they will appear here.</p>
+          <div className="py-8 text-center sm:py-12">
+            <span className="material-icons mb-3 text-4xl text-gray-400 dark:text-gray-600 sm:mb-4 sm:text-5xl">inventory_2</span>
+            <h3 className="mb-1 text-sm font-medium text-gray-900 dark:text-white sm:mb-2 sm:text-base">No sold cards found</h3>
+            <p className="mb-6 text-xs text-gray-600 dark:text-gray-400 sm:text-sm">When you sell cards from your collection, they will appear here.</p>
           </div>
         )}
       </div>

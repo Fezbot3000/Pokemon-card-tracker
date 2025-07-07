@@ -25,9 +25,9 @@ const ColorCustomizer = ({ componentName, colorVariables, availableColors, onSav
   };
 
   return (
-    <div className="mt-6 p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
+    <div className="mt-6 rounded-lg border border-gray-200 p-4 dark:border-gray-700">
       <button
-        className="flex items-center justify-between w-full text-left text-gray-700 dark:text-gray-300 font-medium"
+        className="flex w-full items-center justify-between text-left font-medium text-gray-700 dark:text-gray-300"
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <span>Customize {componentName} Colors</span>
@@ -42,7 +42,7 @@ const ColorCustomizer = ({ componentName, colorVariables, availableColors, onSav
                 {variableName}
               </label>
               <select
-                className="block w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                className="block w-full rounded-md border border-gray-300 bg-white p-2 text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
                 value={selectedColors[variableName] || defaultValue}
                 onChange={(e) => handleColorChange(variableName, e.target.value)}
               >

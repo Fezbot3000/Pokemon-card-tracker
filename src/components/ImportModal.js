@@ -114,8 +114,8 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading 
   if (!modalVisible) return null;
 
   return (
-    <div className="fixed inset-0 bg-white dark:bg-[#0B0F19] z-50 flex flex-col modal-content">
-      <div className="sticky top-0 z-10 flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
+    <div className="modal-content fixed inset-0 z-50 flex flex-col bg-white dark:bg-[#0B0F19]">
+      <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-200 p-4 dark:border-gray-700">
         <h1 className="text-xl font-semibold text-gray-800 dark:text-white">Update Card Data</h1>
         <button 
           onClick={onClose}
@@ -125,11 +125,11 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading 
         </button>
       </div>
 
-      <div className="max-w-4xl mx-auto p-6 overflow-y-auto flex-1" onScroll={(e) => e.stopPropagation()}>
+      <div className="mx-auto max-w-4xl flex-1 overflow-y-auto p-6" onScroll={(e) => e.stopPropagation()}>
         <div
-          className={`border-2 border-dashed rounded-lg p-8 text-center mb-6 ${
+          className={`mb-6 rounded-lg border-2 border-dashed p-8 text-center ${
             dragActive
-              ? 'border-primary bg-primary/10'
+              ? 'bg-primary/10 border-primary'
               : 'border-gray-300 dark:border-gray-700'
           }`}
           onDragEnter={handleDrag}
@@ -150,13 +150,13 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading 
             <span className="material-icons text-4xl text-gray-400 dark:text-gray-600">upload_file</span>
           </div>
           
-          <p className="text-gray-600 dark:text-gray-400 mb-4">
+          <p className="mb-4 text-gray-600 dark:text-gray-400">
             Drop your CSV file(s) here or
           </p>
           
           <button
             onClick={triggerFileInput}
-            className="px-4 py-2 font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md shadow-sm transition-colors"
+            className="rounded-md bg-blue-600 px-4 py-2 font-medium text-white shadow-sm transition-colors hover:bg-blue-700"
           >
             Select Files
           </button>
@@ -164,15 +164,15 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading 
 
         {mode === 'priceUpdate' && selectedFiles.length > 0 && (
           <div className="mb-8">
-            <div className="flex items-center justify-between mb-4">
+            <div className="mb-4 flex items-center justify-between">
               <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
                 Selected Files ({selectedFiles.length})
               </h3>
               <button
                 onClick={handleSubmitFiles}
                 disabled={loading || selectedFiles.length === 0}
-                className={`px-4 py-2 font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md shadow-sm transition-colors ${
-                  (loading || selectedFiles.length === 0) ? 'opacity-50 cursor-not-allowed' : ''
+                className={`rounded-md bg-blue-600 px-4 py-2 font-medium text-white shadow-sm transition-colors hover:bg-blue-700 ${
+                  (loading || selectedFiles.length === 0) ? 'cursor-not-allowed opacity-50' : ''
                 }`}
               >
                 {loading ? 'Processing...' : 'Update Cards'}
@@ -183,10 +183,10 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading 
               {selectedFiles.map((file, index) => (
                 <li 
                   key={`${file.name}-${index}`}
-                  className="flex items-center justify-between bg-gray-50 dark:bg-[#1B2131] p-3 rounded-lg"
+                  className="flex items-center justify-between rounded-lg bg-gray-50 p-3 dark:bg-[#1B2131]"
                 >
                   <div className="flex items-center">
-                    <span className="material-icons text-primary mr-2">description</span>
+                    <span className="material-icons mr-2 text-primary">description</span>
                     <span className="text-gray-900 dark:text-white">{file.name}</span>
                   </div>
                   <button 
@@ -205,7 +205,7 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading 
           <select
             value={importCurrency}
             onChange={(e) => setImportCurrency(e.target.value)}
-            className="block w-full p-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800"
+            className="block w-full rounded-md border border-gray-300 bg-white p-2 dark:border-gray-700 dark:bg-gray-800"
           >
             <option value="USD">USD (US Dollar)</option>
             <option value="AUD">AUD (Australian Dollar)</option>
@@ -240,9 +240,9 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading 
           </div>
         </div>
 
-        <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg text-sm text-gray-600 dark:text-gray-400">
-          <p className="font-medium mb-2">Required CSV columns:</p>
-          <ul className="list-disc list-inside space-y-1">
+        <div className="mt-6 rounded-lg bg-gray-50 p-4 text-sm text-gray-600 dark:bg-gray-800 dark:text-gray-400">
+          <p className="mb-2 font-medium">Required CSV columns:</p>
+          <ul className="list-inside list-disc space-y-1">
             <li>Slab Serial # (required)</li>
             <li>Current Value</li>
             <li>Card, Player, Year, Set, Category, Condition, Population (optional)</li>

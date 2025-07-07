@@ -449,39 +449,39 @@ const HelpCenter = () => {
       <NavigationBar />
       
       {/* Hero Section */}
-      <section className="relative pt-24 pb-16 sm:pt-28 sm:pb-20 md:pt-32 md:pb-24 px-4 sm:px-6 lg:px-8 overflow-hidden">
+      <section className="relative overflow-hidden px-4 pb-16 pt-24 sm:px-6 sm:pb-20 sm:pt-28 md:pb-24 md:pt-32 lg:px-8">
         <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 via-purple-600/10 to-pink-600/10"></div>
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl"></div>
+        <div className="absolute left-1/4 top-1/4 size-96 rounded-full bg-blue-500/5 blur-3xl"></div>
+        <div className="absolute bottom-1/4 right-1/4 size-96 rounded-full bg-purple-500/5 blur-3xl"></div>
         
-        <div className="relative z-10 max-w-4xl mx-auto text-center">
-          <div className="inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 bg-white/10 backdrop-blur-sm rounded-full text-xs sm:text-sm font-medium mb-6 sm:mb-8 border border-white/20">
-            <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-400 rounded-full mr-2"></span>
+        <div className="relative z-10 mx-auto max-w-4xl text-center">
+          <div className="bg-white/10 border-white/20 mb-6 inline-flex items-center rounded-full border px-3 py-1.5 text-xs font-medium backdrop-blur-sm sm:mb-8 sm:px-4 sm:py-2 sm:text-sm">
+            <span className="mr-2 size-1.5 rounded-full bg-green-400 sm:size-2"></span>
             24/7 Support Available
           </div>
           
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 leading-tight">
+          <h1 className="mb-4 text-3xl font-bold leading-tight sm:mb-6 sm:text-4xl md:text-5xl lg:text-6xl">
             Help Center
             <span className="block bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
               & Support
             </span>
           </h1>
           
-          <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-300 mb-8 sm:mb-12 max-w-3xl mx-auto leading-relaxed">
+          <p className="mx-auto mb-8 max-w-3xl text-base leading-relaxed text-gray-300 sm:mb-12 sm:text-lg md:text-xl lg:text-2xl">
             Find answers to your questions and learn how to get the most out of Collectibles Tracker
           </p>
 
           {/* Search Bar */}
-          <div className="max-w-2xl mx-auto mb-8">
+          <div className="mx-auto mb-8 max-w-2xl">
             <div className="relative">
               <input
                 type="text"
                 placeholder="Search for help articles..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-6 py-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl text-white placeholder-gray-400 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all duration-300"
+                className="bg-white/10 border-white/20 w-full rounded-2xl border px-6 py-4 text-white backdrop-blur-sm transition-all duration-300 placeholder:text-gray-400 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400/20"
               />
-              <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400">
+              <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">
                 🔍
               </div>
             </div>
@@ -490,17 +490,17 @@ const HelpCenter = () => {
       </section>
 
       {/* Categories */}
-      <section className="py-8 px-4 sm:px-6 lg:px-8 bg-black">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-wrap gap-3 justify-center">
+      <section className="bg-black px-4 py-8 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <div className="flex flex-wrap justify-center gap-3">
             {categories.map((category) => (
               <button
                 key={category.id}
                 onClick={() => setSelectedCategory(category.id)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
+                className={`rounded-full px-4 py-2 text-sm font-medium transition-all duration-300 ${
                   selectedCategory === category.id
                     ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white'
-                    : 'bg-white/10 backdrop-blur-sm border border-white/20 text-gray-300 hover:bg-white/20'
+                    : 'bg-white/10 border-white/20 hover:bg-white/20 border text-gray-300 backdrop-blur-sm'
                 }`}
               >
                 <span className="mr-2">{category.icon}</span>
@@ -512,28 +512,28 @@ const HelpCenter = () => {
       </section>
 
       {/* Help Articles */}
-      <section className="py-12 sm:py-16 md:py-24 px-4 sm:px-6 lg:px-8 bg-black">
-        <div className="max-w-4xl mx-auto">
+      <section className="bg-black px-4 py-12 sm:px-6 sm:py-16 md:py-24 lg:px-8">
+        <div className="mx-auto max-w-4xl">
           {filteredArticles.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="text-6xl mb-4">🔍</div>
-              <h3 className="text-2xl font-bold mb-2">No articles found</h3>
+            <div className="py-12 text-center">
+              <div className="mb-4 text-6xl">🔍</div>
+              <h3 className="mb-2 text-2xl font-bold">No articles found</h3>
               <p className="text-gray-400">Try adjusting your search terms or category filter</p>
             </div>
           ) : (
             <div className="space-y-4">
               {filteredArticles.map((article) => (
-                <div key={article.id} className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm rounded-2xl border border-white/10 hover:border-white/20 transition-all duration-300">
+                <div key={article.id} className="from-white/10 to-white/5 border-white/10 hover:border-white/20 rounded-2xl border bg-gradient-to-br backdrop-blur-sm transition-all duration-300">
                   <button
                     onClick={() => toggleArticle(article.id)}
-                    className="w-full p-6 text-left flex items-center justify-between hover:bg-white/5 rounded-2xl transition-all duration-300"
+                    className="hover:bg-white/5 flex w-full items-center justify-between rounded-2xl p-6 text-left transition-all duration-300"
                   >
                     <div>
-                      <h3 className="text-xl font-bold mb-2">{article.title}</h3>
+                      <h3 className="mb-2 text-xl font-bold">{article.title}</h3>
                       <p className="text-gray-400">{article.content}</p>
-                      <div className="flex flex-wrap gap-2 mt-3">
+                      <div className="mt-3 flex flex-wrap gap-2">
                         {article.tags.slice(0, 3).map((tag) => (
-                          <span key={tag} className="px-2 py-1 bg-blue-500/20 text-blue-300 text-xs rounded-full">
+                          <span key={tag} className="rounded-full bg-blue-500/20 px-2 py-1 text-xs text-blue-300">
                             {tag}
                           </span>
                         ))}
@@ -546,15 +546,15 @@ const HelpCenter = () => {
                   
                   {expandedArticle === article.id && (
                     <div className="px-6 pb-6">
-                      <div className="border-t border-white/10 pt-6">
+                      <div className="border-white/10 border-t pt-6">
                         <div className="prose prose-invert max-w-none">
                           {article.fullContent.split('\n').map((line, index) => {
                             if (line.trim().startsWith('**') && line.trim().endsWith('**')) {
-                              return <h4 key={index} className="text-lg font-bold text-blue-400 mt-6 mb-3">{line.replace(/\*\*/g, '')}</h4>;
+                              return <h4 key={index} className="mb-3 mt-6 text-lg font-bold text-blue-400">{line.replace(/\*\*/g, '')}</h4>;
                             } else if (line.trim().startsWith('- ')) {
-                              return <li key={index} className="text-gray-300 ml-4">{line.substring(2)}</li>;
+                              return <li key={index} className="ml-4 text-gray-300">{line.substring(2)}</li>;
                             } else if (line.trim()) {
-                              return <p key={index} className="text-gray-300 mb-4 leading-relaxed">{line}</p>;
+                              return <p key={index} className="mb-4 leading-relaxed text-gray-300">{line}</p>;
                             }
                             return null;
                           })}
@@ -570,42 +570,42 @@ const HelpCenter = () => {
       </section>
 
       {/* Contact Support */}
-      <section className="py-12 sm:py-16 md:py-24 px-4 sm:px-6 lg:px-8 bg-black">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 sm:mb-6">
+      <section className="bg-black px-4 py-12 sm:px-6 sm:py-16 md:py-24 lg:px-8">
+        <div className="mx-auto max-w-4xl text-center">
+          <h2 className="mb-4 text-2xl font-bold sm:mb-6 sm:text-3xl md:text-4xl">
             Still Need Help?
           </h2>
-          <p className="text-base sm:text-lg text-gray-300 mb-8 sm:mb-12 max-w-2xl mx-auto">
+          <p className="mx-auto mb-8 max-w-2xl text-base text-gray-300 sm:mb-12 sm:text-lg">
             Our support team is here to help you with any questions or issues you might have.
           </p>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10 hover:border-white/20 transition-all duration-300">
-              <div className="text-4xl mb-4">💬</div>
-              <h3 className="text-xl font-bold mb-2">Live Chat</h3>
-              <p className="text-gray-400 mb-4">Get instant help from our support team</p>
-              <button className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 px-4 py-2 rounded-xl font-medium transition-all duration-300">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="from-white/10 to-white/5 border-white/10 hover:border-white/20 rounded-2xl border bg-gradient-to-br p-6 backdrop-blur-sm transition-all duration-300">
+              <div className="mb-4 text-4xl">💬</div>
+              <h3 className="mb-2 text-xl font-bold">Live Chat</h3>
+              <p className="mb-4 text-gray-400">Get instant help from our support team</p>
+              <button className="w-full rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 px-4 py-2 font-medium transition-all duration-300 hover:from-blue-600 hover:to-purple-700">
                 Start Chat
               </button>
             </div>
             
-            <div className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10 hover:border-white/20 transition-all duration-300">
-              <div className="text-4xl mb-4">📧</div>
-              <h3 className="text-xl font-bold mb-2">Email Support</h3>
-              <p className="text-gray-400 mb-4">Send us a detailed message</p>
+            <div className="from-white/10 to-white/5 border-white/10 hover:border-white/20 rounded-2xl border bg-gradient-to-br p-6 backdrop-blur-sm transition-all duration-300">
+              <div className="mb-4 text-4xl">📧</div>
+              <h3 className="mb-2 text-xl font-bold">Email Support</h3>
+              <p className="mb-4 text-gray-400">Send us a detailed message</p>
               <a 
                 href="mailto:support@collectiblestracker.com"
-                className="block w-full bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 px-4 py-2 rounded-xl font-medium transition-all duration-300 text-center"
+                className="bg-white/10 border-white/20 hover:bg-white/20 block w-full rounded-xl border px-4 py-2 text-center font-medium backdrop-blur-sm transition-all duration-300"
               >
                 Send Email
               </a>
             </div>
             
-            <div className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10 hover:border-white/20 transition-all duration-300">
-              <div className="text-4xl mb-4">🎥</div>
-              <h3 className="text-xl font-bold mb-2">Video Tutorials</h3>
-              <p className="text-gray-400 mb-4">Watch step-by-step guides</p>
-              <button className="w-full bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 px-4 py-2 rounded-xl font-medium transition-all duration-300">
+            <div className="from-white/10 to-white/5 border-white/10 hover:border-white/20 rounded-2xl border bg-gradient-to-br p-6 backdrop-blur-sm transition-all duration-300">
+              <div className="mb-4 text-4xl">🎥</div>
+              <h3 className="mb-2 text-xl font-bold">Video Tutorials</h3>
+              <p className="mb-4 text-gray-400">Watch step-by-step guides</p>
+              <button className="bg-white/10 border-white/20 hover:bg-white/20 w-full rounded-xl border px-4 py-2 font-medium backdrop-blur-sm transition-all duration-300">
                 Watch Videos
               </button>
             </div>

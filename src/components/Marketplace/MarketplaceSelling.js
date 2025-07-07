@@ -386,7 +386,7 @@ function MarketplaceSelling({ currentView, onViewChange }) {
   };
 
   return (
-    <div className="p-4 sm:p-6 pb-20 pt-16 sm:pt-4"> 
+    <div className="p-4 pb-20 pt-16 sm:p-6 sm:pt-4"> 
       <MarketplaceNavigation currentView={currentView} onViewChange={onViewChange} />
       
       {/* Search and Filter Component */}
@@ -396,30 +396,30 @@ function MarketplaceSelling({ currentView, onViewChange }) {
       />
       
       {loading ? (
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900 dark:border-white"></div>
+        <div className="flex h-64 items-center justify-center">
+          <div className="size-12 animate-spin rounded-full border-y-2 border-gray-900 dark:border-white"></div>
         </div>
       ) : allListings.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 px-4">
+        <div className="flex flex-col items-center justify-center px-4 py-16">
           {/* Selling Icon */}
-          <div className="w-24 h-24 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-6">
+          <div className="mb-6 flex size-24 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
             <span className="material-icons text-4xl text-gray-400 dark:text-gray-600">sell</span>
           </div>
           
           {/* Main Message */}
-          <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2 text-center">
+          <h3 className="mb-2 text-center text-xl font-semibold text-gray-900 dark:text-white">
             No Cards Listed for Sale
           </h3>
           
           {/* Description */}
-          <p className="text-gray-600 dark:text-gray-400 text-center max-w-md mb-8 leading-relaxed">
+          <p className="mb-8 max-w-md text-center leading-relaxed text-gray-600 dark:text-gray-400">
             You haven't listed any cards for sale yet. Start selling by listing your valuable cards from your collection.
           </p>
           
           {/* Action Button */}
           <button
             onClick={() => onViewChange('cards')}
-            className="bg-red-500 hover:bg-red-600 text-white px-8 py-3 rounded-lg font-medium transition-colors flex items-center gap-2 shadow-lg"
+            className="flex items-center gap-2 rounded-lg bg-red-500 px-8 py-3 font-medium text-white shadow-lg transition-colors hover:bg-red-600"
           >
             <span className="material-icons text-lg">add_business</span>
             List Cards for Sale
@@ -433,19 +433,19 @@ function MarketplaceSelling({ currentView, onViewChange }) {
           </div>
         </div>
       ) : filteredListings.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 px-4">
+        <div className="flex flex-col items-center justify-center px-4 py-16">
           {/* Search Icon */}
-          <div className="w-20 h-20 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-6">
+          <div className="mb-6 flex size-20 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
             <span className="material-icons text-3xl text-gray-400 dark:text-gray-600">search_off</span>
           </div>
           
           {/* Main Message */}
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 text-center">
+          <h3 className="mb-2 text-center text-lg font-semibold text-gray-900 dark:text-white">
             No Matching Listings
           </h3>
           
           {/* Description */}
-          <p className="text-gray-600 dark:text-gray-400 text-center max-w-md mb-6 leading-relaxed">
+          <p className="mb-6 max-w-md text-center leading-relaxed text-gray-600 dark:text-gray-400">
             No listings match your current filters. Try adjusting your search criteria.
           </p>
           
@@ -457,17 +457,17 @@ function MarketplaceSelling({ currentView, onViewChange }) {
               gradingCompany: '',
               grade: ''
             })}
-            className="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2"
+            className="flex items-center gap-2 rounded-lg bg-red-500 px-6 py-3 font-medium text-white transition-colors hover:bg-red-600"
           >
             <span className="material-icons text-lg">clear_all</span>
             Clear All Filters
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-2 sm:gap-3">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
           {filteredListings.map(listing => (
-            <div key={listing.id} className="flex flex-col h-full overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-black">
-              <div className="flex-grow">
+            <div key={listing.id} className="flex h-full flex-col overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-black">
+              <div className="grow">
                 <MarketplaceCard 
                   card={listing.card}
                   cardImage={cardImages[listing.card?.slabSerial || listing.card?.id || listing.cardId]}
@@ -477,7 +477,7 @@ function MarketplaceSelling({ currentView, onViewChange }) {
                   formatUserCurrency={formatUserCurrency}
                 />
               </div>
-              <div className="bg-white dark:bg-gray-800 p-3 rounded-b-lg">
+              <div className="rounded-b-lg bg-white p-3 dark:bg-gray-800">
                 <div className="flex flex-col items-center space-y-2">
                   <div className="text-center">
                     <p className="font-semibold text-gray-900 dark:text-white">
@@ -487,7 +487,7 @@ function MarketplaceSelling({ currentView, onViewChange }) {
                       {listing.location || 'No location'}
                     </p>
                     {listing.status && listing.status !== 'available' && (
-                      <p className={`text-xs font-semibold mt-1 ${
+                      <p className={`mt-1 text-xs font-semibold ${
                         listing.status === 'sold' ? 'text-red-600 dark:text-red-400' : 
                         listing.status === 'pending' ? 'text-yellow-600 dark:text-yellow-400' : ''
                       }`}>
@@ -498,7 +498,7 @@ function MarketplaceSelling({ currentView, onViewChange }) {
                   <div className="w-full space-y-1">
                     <button
                       onClick={() => handleEditClick(listing)}
-                      className="w-full px-3 py-1.5 bg-blue-500 text-white text-sm rounded-md hover:bg-blue-600 transition-colors"
+                      className="w-full rounded-md bg-blue-500 px-3 py-1.5 text-sm text-white transition-colors hover:bg-blue-600"
                     >
                       Edit
                     </button>
@@ -506,13 +506,13 @@ function MarketplaceSelling({ currentView, onViewChange }) {
                       <>
                         <button
                           onClick={() => handleMarkAsPending(listing)}
-                          className="w-full px-3 py-1.5 bg-yellow-500 text-white text-sm rounded-md hover:bg-yellow-600 transition-colors"
+                          className="w-full rounded-md bg-yellow-500 px-3 py-1.5 text-sm text-white transition-colors hover:bg-yellow-600"
                         >
                           Mark as Pending
                         </button>
                         <button
                           onClick={() => handleMarkAsSold(listing)}
-                          className="w-full px-3 py-1.5 bg-red-500 text-white text-sm rounded-md hover:bg-red-600 transition-colors"
+                          className="w-full rounded-md bg-red-500 px-3 py-1.5 text-sm text-white transition-colors hover:bg-red-600"
                         >
                           Mark as Sold
                         </button>
@@ -533,7 +533,7 @@ function MarketplaceSelling({ currentView, onViewChange }) {
                             toast.error('Failed to mark listing as available');
                           }
                         }}
-                        className="w-full px-3 py-1.5 bg-green-500 text-white text-sm rounded-md hover:bg-green-600 transition-colors"
+                        className="w-full rounded-md bg-green-500 px-3 py-1.5 text-sm text-white transition-colors hover:bg-green-600"
                       >
                         Mark as Available
                       </button>

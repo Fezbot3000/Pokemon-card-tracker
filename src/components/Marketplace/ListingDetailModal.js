@@ -374,12 +374,12 @@ function ListingDetailModal({
     >
       <div className="space-y-4">
         {/* Rating Summary */}
-        <div className="bg-white dark:bg-[#0F0F0F] rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+        <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-[#0F0F0F]">
           <div className="flex items-center gap-4">
             <div className="text-center">
               <div className="text-3xl font-bold">{averageRating.toFixed(1)}</div>
               {renderStars(Math.round(averageRating))}
-              <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+              <div className="mt-1 text-sm text-gray-600 dark:text-gray-400">
                 {totalReviews} {totalReviews === 1 ? 'review' : 'reviews'}
               </div>
             </div>
@@ -389,19 +389,19 @@ function ListingDetailModal({
         {/* Reviews List */}
         <div className="space-y-4">
           {sellerReviews.length === 0 ? (
-            <p className="text-center text-gray-500 dark:text-gray-400 py-8">
+            <p className="py-8 text-center text-gray-500 dark:text-gray-400">
               No reviews yet
             </p>
           ) : (
             sellerReviews.map((review) => (
               <div
                 key={review.id}
-                className="border border-gray-200 dark:border-gray-700 rounded-lg p-4"
+                className="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
               >
-                <div className="flex items-start justify-between mb-2">
+                <div className="mb-2 flex items-start justify-between">
                   <div>
                     <div className="font-medium">{review.buyerName || 'Anonymous'}</div>
-                    <div className="flex items-center gap-2 mt-1">
+                    <div className="mt-1 flex items-center gap-2">
                       {renderStars(review.rating)}
                       <span className="text-sm text-gray-500">
                         {formatDate(review.createdAt)}
@@ -410,7 +410,7 @@ function ListingDetailModal({
                   </div>
                 </div>
                 {review.comment && (
-                  <p className="text-gray-700 dark:text-gray-300 mt-2">
+                  <p className="mt-2 text-gray-700 dark:text-gray-300">
                     "{review.comment}"
                   </p>
                 )}
@@ -434,17 +434,17 @@ function ListingDetailModal({
         footer={renderFooter()}
       >
         <div className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-8">
             {/* Left Column - Images */}
             <div className="space-y-4">
               {/* Main Image */}
-              <div className="relative bg-white dark:bg-[#000] rounded-lg overflow-hidden aspect-square border border-gray-200 dark:border-gray-700">
+              <div className="relative aspect-square overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-[#000]">
                 {images.length > 0 ? (
                   <>
                     <img
                       src={images[imageIndex]}
                       alt={card.name || 'Card image'}
-                      className="w-full h-full object-contain"
+                      className="size-full object-contain"
                       onError={(e) => {
                         e.target.onerror = null;
                         e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400"%3E%3Crect width="400" height="400" fill="%23e5e7eb"/%3E%3Ctext x="200" y="200" font-family="Arial" font-size="20" fill="%236b7280" text-anchor="middle" dominant-baseline="middle"%3ENo Image Available%3C/text%3E%3C/svg%3E';
@@ -456,13 +456,13 @@ function ListingDetailModal({
                       <>
                         <button
                           onClick={handlePrevImage}
-                          className="absolute left-2 top-1/2 -translate-y-1/2 p-2 bg-white/80 dark:bg-[#0F0F0F]/80 rounded-full hover:bg-white dark:hover:bg-[#0F0F0F] transition-colors"
+                          className="bg-white/80 absolute left-2 top-1/2 -translate-y-1/2 rounded-full p-2 transition-colors hover:bg-white dark:bg-[#0F0F0F]/80 dark:hover:bg-[#0F0F0F]"
                         >
                           <Icon name="chevron_left" size="md" />
                         </button>
                         <button
                           onClick={handleNextImage}
-                          className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-white/80 dark:bg-[#0F0F0F]/80 rounded-full hover:bg-white dark:hover:bg-[#0F0F0F] transition-colors"
+                          className="bg-white/80 absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-2 transition-colors hover:bg-white dark:bg-[#0F0F0F]/80 dark:hover:bg-[#0F0F0F]"
                         >
                           <Icon name="chevron_right" size="md" />
                         </button>
@@ -470,9 +470,9 @@ function ListingDetailModal({
                     )}
                   </>
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center">
+                  <div className="flex size-full items-center justify-center">
                     <div className="text-center">
-                      <Icon name="image" size="xl" className="text-gray-400 mb-2" />
+                      <Icon name="image" size="xl" className="mb-2 text-gray-400" />
                       <p className="text-gray-500">No image available</p>
                     </div>
                   </div>
@@ -486,7 +486,7 @@ function ListingDetailModal({
                     <button
                       key={index}
                       onClick={() => setImageIndex(index)}
-                      className={`w-2 h-2 rounded-full transition-colors ${
+                      className={`size-2 rounded-full transition-colors ${
                         index === imageIndex
                           ? 'bg-gray-800 dark:bg-white'
                           : 'bg-gray-300 dark:bg-gray-600'
@@ -501,15 +501,15 @@ function ListingDetailModal({
             <div className="space-y-6">
               {/* Title and Price */}
               <div>
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                <h1 className="mb-2 text-2xl font-bold text-gray-900 dark:text-white">
                   {card.name || card.cardName || 'Pokemon Card'}
                 </h1>
-                <div className="flex items-center gap-3 mb-2">
+                <div className="mb-2 flex items-center gap-3">
                   <p className="text-3xl font-bold text-gray-900 dark:text-white">
                     ${listing.listingPrice}
                   </p>
                   {/* Status Tag */}
-                  <div className={`px-3 py-1 rounded-full text-sm font-medium ${
+                  <div className={`rounded-full px-3 py-1 text-sm font-medium ${
                     listing.status === 'sold' 
                       ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
                       : listing.status === 'pending'
@@ -519,25 +519,25 @@ function ListingDetailModal({
                     {listing.status === 'sold' ? 'SOLD' : listing.status === 'pending' ? 'PENDING' : 'FOR SALE'}
                   </div>
                 </div>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
                   Listed in {listing.location}
                 </p>
               </div>
 
               {/* Seller Information (only for other user's listings) */}
               {!isOwnListing && (
-                <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-                  <h2 className="text-lg font-semibold mb-4">Seller Information</h2>
+                <div className="border-t border-gray-200 pt-6 dark:border-gray-700">
+                  <h2 className="mb-4 text-lg font-semibold">Seller Information</h2>
                   
                   {loadingSellerData ? (
                     <div className="flex items-center justify-center py-8">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+                      <div className="size-8 animate-spin rounded-full border-b-2 border-purple-600"></div>
                     </div>
                   ) : (
                     <div className="space-y-4">
                       {/* Seller Profile */}
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-full bg-purple-100 dark:bg-purple-900/20 flex items-center justify-center">
+                        <div className="flex size-12 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900/20">
                           <span className="text-lg font-semibold text-purple-600 dark:text-purple-400">
                             {sellerProfile?.displayName?.charAt(0) || 'S'}
                           </span>
@@ -545,7 +545,7 @@ function ListingDetailModal({
                         <div className="flex-1">
                           <button
                             onClick={handleViewSellerProfile}
-                            className="font-medium text-gray-900 dark:text-white hover:text-purple-600 dark:hover:text-purple-400"
+                            className="font-medium text-gray-900 hover:text-purple-600 dark:text-white dark:hover:text-purple-400"
                           >
                             {sellerProfile?.displayName || 'Seller'}
                           </button>
@@ -555,7 +555,7 @@ function ListingDetailModal({
                         </div>
                         <button
                           onClick={handleViewSellerProfile}
-                          className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                          className="text-sm text-blue-600 hover:underline dark:text-blue-400"
                         >
                           Seller details
                         </button>
@@ -563,7 +563,7 @@ function ListingDetailModal({
 
                       {/* Reviews Summary */}
                       {sellerReviews.length > 0 && (
-                        <div className="bg-white dark:bg-[#0F0F0F] rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                        <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-[#0F0F0F]">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               {renderStars(Math.round(averageRating))}
@@ -574,7 +574,7 @@ function ListingDetailModal({
                             </div>
                             <button
                               onClick={() => setShowAllReviews(true)}
-                              className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                              className="text-sm text-blue-600 hover:underline dark:text-blue-400"
                             >
                               View all
                             </button>
@@ -582,8 +582,8 @@ function ListingDetailModal({
                           
                           {/* Latest Review */}
                           {sellerReviews[0] && (
-                            <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
-                              <div className="flex items-center gap-2 mb-1">
+                            <div className="mt-3 border-t border-gray-200 pt-3 dark:border-gray-700">
+                              <div className="mb-1 flex items-center gap-2">
                                 {renderStars(sellerReviews[0].rating)}
                                 <span className="text-sm text-gray-500">
                                   {formatDate(sellerReviews[0].createdAt)}
@@ -604,8 +604,8 @@ function ListingDetailModal({
               )}
 
               {/* Details Section */}
-              <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-                <h2 className="text-lg font-semibold mb-4">Details</h2>
+              <div className="border-t border-gray-200 pt-6 dark:border-gray-700">
+                <h2 className="mb-4 text-lg font-semibold">Details</h2>
                 <dl className="grid grid-cols-2 gap-4">
                   <div>
                     <dt className="text-sm text-gray-600 dark:text-gray-400">Condition</dt>
@@ -657,7 +657,7 @@ function ListingDetailModal({
                 
                 {listing.note && (
                   <div className="mt-4">
-                    <dt className="text-sm text-gray-600 dark:text-gray-400 mb-1">Description</dt>
+                    <dt className="mb-1 text-sm text-gray-600 dark:text-gray-400">Description</dt>
                     <dd className="text-gray-900 dark:text-white">{listing.note}</dd>
                   </div>
                 )}
@@ -665,8 +665,8 @@ function ListingDetailModal({
 
               {/* Map Section */}
               {listing.location && (
-                <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-                  <h2 className="text-lg font-semibold mb-4">Location</h2>
+                <div className="border-t border-gray-200 pt-6 dark:border-gray-700">
+                  <h2 className="mb-4 text-lg font-semibold">Location</h2>
                   <MapView 
                     location={listing.location} 
                     cardName={card.name || card.cardName || 'Pokemon Card'}

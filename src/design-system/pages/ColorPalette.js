@@ -14,10 +14,10 @@ const ColorPalette = () => {
   
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-semibold mb-8">Color Palette</h1>
+      <h1 className="mb-8 text-3xl font-semibold">Color Palette</h1>
       
       {/* Base Colors */}
-      <h2 className="text-2xl font-medium mb-6">Base Colors</h2>
+      <h2 className="mb-6 text-2xl font-medium">Base Colors</h2>
       
       <ColorCategory title="Neutrals">
         <ColorSwatch 
@@ -123,7 +123,7 @@ const ColorPalette = () => {
       
       {/* Light Mode Theme */}
       <div className={isDarkMode ? 'opacity-50' : ''}>
-        <h2 className="text-2xl font-medium mb-6 mt-12">Light Mode Theme</h2>
+        <h2 className="mb-6 mt-12 text-2xl font-medium">Light Mode Theme</h2>
         
         <ColorCategory title="Light Background Colors">
           <ColorSwatch 
@@ -164,7 +164,7 @@ const ColorPalette = () => {
       
       {/* Dark Mode Theme */}
       <div className={!isDarkMode ? 'opacity-50' : ''}>
-        <h2 className="text-2xl font-medium mb-6 mt-12">Dark Mode Theme</h2>
+        <h2 className="mb-6 mt-12 text-2xl font-medium">Dark Mode Theme</h2>
         
         <ColorCategory title="Dark Background Colors">
           <ColorSwatch 
@@ -205,7 +205,7 @@ const ColorPalette = () => {
       
       {/* Semantic Colors */}
       <div className="mt-12">
-        <h2 className="text-2xl font-medium mb-6">Semantic Colors</h2>
+        <h2 className="mb-6 text-2xl font-medium">Semantic Colors</h2>
         
         <ColorCategory title="Primary Brand Colors">
           <ColorSwatch 

@@ -21,15 +21,15 @@ const UpgradePage = () => {
   // Redirect premium users
   if (isPremium) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-black flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white dark:bg-gray-900 rounded-lg shadow-lg p-6 text-center">
-          <div className="w-16 h-16 mx-auto mb-4 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
-            <Icon name="check_circle" className="text-green-600 dark:text-green-400 text-2xl" />
+      <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4 dark:bg-black">
+        <div className="w-full max-w-md rounded-lg bg-white p-6 text-center shadow-lg dark:bg-gray-900">
+          <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
+            <Icon name="check_circle" className="text-2xl text-green-600 dark:text-green-400" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+          <h2 className="mb-2 text-2xl font-bold text-gray-900 dark:text-white">
             You're Already Premium!
           </h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">
+          <p className="mb-6 text-gray-600 dark:text-gray-400">
             You have access to all premium features. Enjoy your Pokemon Card Tracker experience!
           </p>
           <Button 
@@ -158,12 +158,12 @@ const UpgradePage = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-black">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <div className="border-b border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900">
+        <div className="mx-auto max-w-7xl p-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
             <button
               onClick={() => navigate('/dashboard')}
-              className="flex items-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+              className="flex items-center text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
             >
               <Icon name="arrow_back" className="mr-2" />
               Back to Dashboard
@@ -176,11 +176,11 @@ const UpgradePage = () => {
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Trial Status */}
         {isOnTrial && (
-          <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg p-6 mb-8 text-center">
-            <h2 className="text-2xl font-bold mb-2">
+          <div className="mb-8 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 p-6 text-center text-white">
+            <h2 className="mb-2 text-2xl font-bold">
               {getTrialDaysRemaining()} Day{getTrialDaysRemaining() !== 1 ? 's' : ''} Left in Your Free Trial
             </h2>
             <p className="text-purple-100">
@@ -190,10 +190,10 @@ const UpgradePage = () => {
         )}
 
         {/* Pricing Card */}
-        <div className="bg-white dark:bg-gray-900 rounded-lg shadow-lg overflow-hidden mb-8">
-          <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-6 text-center">
-            <h2 className="text-3xl font-bold mb-2">Premium Plan</h2>
-            <div className="text-5xl font-bold mb-2">
+        <div className="mb-8 overflow-hidden rounded-lg bg-white shadow-lg dark:bg-gray-900">
+          <div className="bg-gradient-to-r from-purple-500 to-pink-500 p-6 text-center text-white">
+            <h2 className="mb-2 text-3xl font-bold">Premium Plan</h2>
+            <div className="mb-2 text-5xl font-bold">
               $9.99
               <span className="text-xl font-normal">/month</span>
             </div>
@@ -208,28 +208,28 @@ const UpgradePage = () => {
               size="lg"
               onClick={handleUpgrade}
               loading={loading}
-              className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-lg py-4"
+              className="w-full bg-gradient-to-r from-purple-500 to-pink-500 py-4 text-lg hover:from-purple-600 hover:to-pink-600"
             >
               <Icon name="star" className="mr-2" />
               {loading ? 'Processing...' : 'Upgrade to Premium'}
             </Button>
             
-            <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-4">
+            <p className="mt-4 text-center text-sm text-gray-500 dark:text-gray-400">
               Cancel anytime • Secure payment via Stripe
             </p>
           </div>
         </div>
 
         {/* Features Grid */}
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid gap-6 md:grid-cols-2">
           {features.map((feature, index) => (
-            <div key={index} className="bg-white dark:bg-gray-900 rounded-lg p-6 shadow-md">
+            <div key={index} className="rounded-lg bg-white p-6 shadow-md dark:bg-gray-900">
               <div className="flex items-start">
-                <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
+                <div className="mr-4 flex size-12 shrink-0 items-center justify-center rounded-lg bg-purple-100 dark:bg-purple-900">
                   <Icon name={feature.icon} className="text-purple-600 dark:text-purple-400" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                  <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
                     {feature.title}
                   </h3>
                   <p className="text-gray-600 dark:text-gray-400">
@@ -242,14 +242,14 @@ const UpgradePage = () => {
         </div>
 
         {/* FAQ Section */}
-        <div className="mt-12 bg-white dark:bg-gray-900 rounded-lg p-6 shadow-md">
-          <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
+        <div className="mt-12 rounded-lg bg-white p-6 shadow-md dark:bg-gray-900">
+          <h3 className="mb-6 text-xl font-semibold text-gray-900 dark:text-white">
             Frequently Asked Questions
           </h3>
           
           <div className="space-y-4">
             <div>
-              <h4 className="font-medium text-gray-900 dark:text-white mb-2">
+              <h4 className="mb-2 font-medium text-gray-900 dark:text-white">
                 Can I cancel anytime?
               </h4>
               <p className="text-gray-600 dark:text-gray-400">
@@ -258,7 +258,7 @@ const UpgradePage = () => {
             </div>
             
             <div>
-              <h4 className="font-medium text-gray-900 dark:text-white mb-2">
+              <h4 className="mb-2 font-medium text-gray-900 dark:text-white">
                 What happens to my data if I cancel?
               </h4>
               <p className="text-gray-600 dark:text-gray-400">
@@ -267,7 +267,7 @@ const UpgradePage = () => {
             </div>
             
             <div>
-              <h4 className="font-medium text-gray-900 dark:text-white mb-2">
+              <h4 className="mb-2 font-medium text-gray-900 dark:text-white">
                 Is my payment information secure?
               </h4>
               <p className="text-gray-600 dark:text-gray-400">

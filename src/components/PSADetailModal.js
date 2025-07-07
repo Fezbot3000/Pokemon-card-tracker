@@ -197,7 +197,7 @@ const PSADetailModal = ({
   // We'll create a specialized modal backdrop that doesn't close when clicked
   return (
     <div 
-      className="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center"
+      className="bg-black/50 fixed inset-0 z-[100] flex items-center justify-center"
       onClick={(e) => {
         e.stopPropagation(); 
         e.preventDefault();
@@ -205,14 +205,14 @@ const PSADetailModal = ({
       style={{ display: isOpen ? 'flex' : 'none' }}
     >
       <div 
-        className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-auto"
+        className="max-h-[90vh] w-full max-w-2xl overflow-auto rounded-lg bg-white shadow-xl dark:bg-gray-800"
         onClick={(e) => {
           e.stopPropagation();
           e.preventDefault();
         }}
       >
         {/* Modal Header */}
-        <div className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between border-b border-gray-200 p-4 dark:border-gray-700">
           <h2 className="text-xl font-bold text-gray-900 dark:text-white">
             PSA Card Details: {certNumber}
           </h2>
@@ -224,7 +224,7 @@ const PSADetailModal = ({
               onClose();
             }}
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <svg className="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
@@ -233,14 +233,14 @@ const PSADetailModal = ({
         {/* Modal Content */}
         <div className="p-4">
           {isLoading && (
-            <div className="text-center py-8">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-500 border-t-transparent"></div>
+            <div className="py-8 text-center">
+              <div className="inline-block size-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
               <p className="mt-2 text-gray-600 dark:text-gray-400">Searching PSA for cert number: {certNumber}</p>
             </div>
           )}
 
           {error && (
-            <div className="bg-red-100 dark:bg-red-900/20 border border-red-400 text-red-700 dark:text-red-400 px-4 py-3 rounded relative">
+            <div className="relative rounded border border-red-400 bg-red-100 px-4 py-3 text-red-700 dark:bg-red-900/20 dark:text-red-400">
               <p className="font-bold">Error</p>
               <p>{error}</p>
             </div>
@@ -250,7 +250,7 @@ const PSADetailModal = ({
             <div className="space-y-6">
               {/* Card details section */}
               <div>
-                <h3 className="text-lg font-semibold mb-2">Card Details</h3>
+                <h3 className="mb-2 text-lg font-semibold">Card Details</h3>
                 <CardDetailsForm
                   card={parsedData}
                   onChange={(updatedCard) => {
@@ -262,33 +262,33 @@ const PSADetailModal = ({
               
               {/* Grading details section */}
               <div>
-                <h3 className="text-lg font-semibold mb-2">Grading Details</h3>
+                <h3 className="mb-2 text-lg font-semibold">Grading Details</h3>
                 <div className="grid grid-cols-4 gap-4">
-                  <div className="bg-gray-100 dark:bg-gray-800 p-3 rounded-lg">
-                    <div className="text-gray-500 dark:text-gray-400 text-sm">PSA Grade</div>
-                    <div className="text-xl font-bold text-center">{parsedData.grade || 'N/A'}</div>
+                  <div className="rounded-lg bg-gray-100 p-3 dark:bg-gray-800">
+                    <div className="text-sm text-gray-500 dark:text-gray-400">PSA Grade</div>
+                    <div className="text-center text-xl font-bold">{parsedData.grade || 'N/A'}</div>
                   </div>
                   
-                  <div className="bg-gray-100 dark:bg-gray-800 p-3 rounded-lg">
-                    <div className="text-gray-500 dark:text-gray-400 text-sm">Cert #</div>
-                    <div className="text-lg font-bold text-center truncate">{parsedData.slabSerial || 'N/A'}</div>
+                  <div className="rounded-lg bg-gray-100 p-3 dark:bg-gray-800">
+                    <div className="text-sm text-gray-500 dark:text-gray-400">Cert #</div>
+                    <div className="truncate text-center text-lg font-bold">{parsedData.slabSerial || 'N/A'}</div>
                   </div>
                   
-                  <div className="bg-gray-100 dark:bg-gray-800 p-3 rounded-lg">
-                    <div className="text-gray-500 dark:text-gray-400 text-sm">Population</div>
-                    <div className="text-xl font-bold text-center">{parsedData.population || '0'}</div>
+                  <div className="rounded-lg bg-gray-100 p-3 dark:bg-gray-800">
+                    <div className="text-sm text-gray-500 dark:text-gray-400">Population</div>
+                    <div className="text-center text-xl font-bold">{parsedData.population || '0'}</div>
                   </div>
                   
-                  <div className="bg-gray-100 dark:bg-gray-800 p-3 rounded-lg">
-                    <div className="text-gray-500 dark:text-gray-400 text-sm">Higher Grades</div>
-                    <div className="text-xl font-bold text-center">{parsedData.populationHigher || '0'}</div>
+                  <div className="rounded-lg bg-gray-100 p-3 dark:bg-gray-800">
+                    <div className="text-sm text-gray-500 dark:text-gray-400">Higher Grades</div>
+                    <div className="text-center text-xl font-bold">{parsedData.populationHigher || '0'}</div>
                   </div>
                 </div>
               </div>
               
               {/* Additional details section */}
               <div>
-                <h3 className="text-lg font-semibold mb-2">Additional Details</h3>
+                <h3 className="mb-2 text-lg font-semibold">Additional Details</h3>
                 <div className="grid grid-cols-2 gap-2">
                   <div className="text-gray-500 dark:text-gray-400">Certified:</div>
                   <div className="font-medium">
@@ -301,7 +301,7 @@ const PSADetailModal = ({
               </div>
               
               {/* Action buttons */}
-              <div className="flex justify-end space-x-3 mt-4">
+              <div className="mt-4 flex justify-end space-x-3">
                 <Button 
                   variant="secondary" 
                   onClick={(e) => {
@@ -332,7 +332,7 @@ const PSADetailModal = ({
                 href={`https://www.psacard.com/cert/${certNumber}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:underline text-sm"
+                className="inline-flex items-center text-sm text-blue-600 hover:underline dark:text-blue-400"
               >
                 View on PSA Website
                 <span className="material-icons ml-1 text-xs">open_in_new</span>
@@ -341,7 +341,7 @@ const PSADetailModal = ({
           )}
 
           {!isLoading && !parsedData && !error && (
-            <div className="text-center py-8">
+            <div className="py-8 text-center">
               <p>No PSA data available for this certification number.</p>
             </div>
           )}

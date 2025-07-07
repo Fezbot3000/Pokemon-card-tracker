@@ -1,0 +1,482 @@
+/**
+ * Utilities - Pokemon Card Tracker
+ * 
+ * This file contains:
+ * - Custom utility classes
+ * - Component-specific styles that aren't in the UI library
+ * - Application-specific utilities
+ */
+
+/* ==================== LAYOUT UTILITIES ==================== */
+
+/* Container utilities */
+.container-fluid {
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+  padding-left: var(--space-4);
+  padding-right: var(--space-4);
+}
+
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-left: var(--space-4);
+  padding-right: var(--space-4);
+}
+
+@media (min-width: 768px) {
+  .container-fluid,
+  .container {
+    padding-left: var(--space-6);
+    padding-right: var(--space-6);
+  }
+}
+
+/* Page layout utilities */
+.page-container {
+  min-height: 100vh;
+  background-color: var(--color-surface-primary);
+}
+
+.main-content {
+  padding-top: var(--header-height-mobile);
+  padding-bottom: var(--space-20);
+}
+
+@media (min-width: 640px) {
+  .main-content {
+    padding-top: var(--header-height-desktop);
+  }
+}
+
+/* Dashboard specific layouts */
+.dashboard-page {
+  background-color: var(--color-surface-primary);
+  min-height: 100vh;
+}
+
+.mobile-dashboard {
+  padding-bottom: var(--space-20);
+}
+
+@media (min-width: 640px) {
+  .mobile-dashboard {
+    padding-bottom: var(--space-6);
+  }
+}
+
+/* ==================== NAVIGATION UTILITIES ==================== */
+
+/* Header utilities */
+.header-responsive {
+  height: var(--header-height-mobile);
+  background-color: var(--color-surface-primary);
+  border-bottom: 1px solid var(--color-border);
+}
+
+@media (min-width: 640px) {
+  .header-responsive {
+    height: var(--header-height-desktop);
+  }
+}
+
+/* Bottom navigation utilities */
+.bottom-nav {
+  height: var(--space-16);
+  background-color: var(--color-surface-primary);
+  border-top: 1px solid var(--color-border);
+  z-index: var(--z-bottom-nav);
+}
+
+.bottom-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-2);
+  color: var(--color-text-tertiary);
+  transition: color 0.2s ease;
+}
+
+.bottom-nav-item.active {
+  color: var(--color-primary-500);
+}
+
+.bottom-nav-item:hover {
+  color: var(--color-text-secondary);
+}
+
+.bottom-nav-item.active:hover {
+  color: var(--color-primary-600);
+}
+
+/* Bottom nav responsive hiding */
+.bottom-nav-hidden {
+  transform: translateY(100%);
+  transition: transform 0.3s ease;
+}
+
+@media (min-width: 1024px) {
+  .bottom-nav {
+    display: none;
+  }
+}
+
+/* ==================== COLLECTION UTILITIES ==================== */
+
+/* Collection dropdown styling */
+.collection-dropdown {
+  background-color: var(--color-surface-primary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: var(--z-dropdown);
+}
+
+@media (max-width: 639px) {
+  .collection-dropdown {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    max-height: 50vh;
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    border: none;
+    border-top: 1px solid var(--color-border);
+  }
+}
+
+.collection-item {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.collection-item:last-child {
+  border-bottom: none;
+}
+
+.collection-item:hover {
+  background-color: var(--color-surface-secondary);
+}
+
+.collection-name {
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+  display: block;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.collection-name:hover {
+  color: var(--color-primary-500);
+}
+
+.collection-divider {
+  height: 1px;
+  background-color: var(--color-border);
+  margin: var(--space-2) 0;
+}
+
+/* ==================== CARD UTILITIES ==================== */
+
+/* Financial detail boxes */
+.financial-detail-box {
+  background-color: var(--color-surface-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  text-align: center;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.dark .financial-detail-box {
+  background-color: var(--color-black);
+  border-color: var(--color-border);
+}
+
+.financial-detail-label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-tertiary);
+  margin-bottom: var(--space-1);
+}
+
+.financial-detail-value {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+/* ==================== FORM UTILITIES ==================== */
+
+/* Sort dropdown utilities */
+.sort-dropdown {
+  background-color: var(--color-surface-primary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text-primary);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--font-size-sm);
+}
+
+.sort-dropdown:focus {
+  outline: none;
+  border-color: var(--color-primary-500);
+  box-shadow: 0 0 0 2px var(--color-primary-200);
+}
+
+.dark .sort-dropdown:focus {
+  box-shadow: 0 0 0 2px var(--color-primary-700);
+}
+
+/* Form layout utilities */
+.form-label-nowrap {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.financial-details-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+@media (max-width: 640px) {
+  .financial-details-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Collection selector fixes */
+.collection-selector .absolute {
+  max-height: 300px;
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.collection-selector .absolute::-webkit-scrollbar {
+  display: none;
+}
+
+/* Header collections dropdown fixes */
+header .max-h-60.overflow-y-auto {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+header .max-h-60.overflow-y-auto::-webkit-scrollbar {
+  display: none;
+}
+
+/* ==================== MODAL UTILITIES ==================== */
+
+/* Modal state utilities */
+.modal-open .bottom-nav {
+  transform: translateY(100%);
+}
+
+.modal-open .header button {
+  pointer-events: none;
+}
+
+/* ==================== ACCORDION UTILITIES ==================== */
+
+.accordion-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.accordion-content.open {
+  max-height: 1000px;
+}
+
+/* ==================== ANIMATION UTILITIES ==================== */
+
+/* Fade in animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease;
+}
+
+/* Slide up animation */
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.slide-up {
+  animation: slideUp 0.3s ease;
+}
+
+/* Modal Animation Classes */
+.animate-backdrop-fade-in {
+  animation: backdropFadeIn 0.25s ease forwards;
+}
+
+.animate-backdrop-fade-out {
+  animation: backdropFadeOut 0.2s ease forwards;
+}
+
+.animate-modal-scale-in {
+  animation: modalScaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.animate-modal-enter {
+  animation: modalScaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.animate-modal-exit {
+  animation: modalExit 0.2s ease-in forwards;
+}
+
+.animate-modal-slide-in-right {
+  animation: modalSlideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-modal-exit-right {
+  animation: modalExitRight 0.2s ease-in forwards;
+}
+
+/* Modal backdrop keyframes */
+@keyframes backdropFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes backdropFadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* Modal content keyframes */
+@keyframes modalScaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes modalExit {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
+
+@keyframes modalSlideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes modalExitRight {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ==================== GRADIENT UTILITIES ==================== */
+
+.bg-primary-gradient {
+  background: var(--gradient-primary);
+}
+
+.hover\:bg-primary-gradient-hover:hover {
+  background: var(--gradient-primary-hover);
+}
+
+/* ==================== ACCESSIBILITY UTILITIES ==================== */
+
+/* Screen reader only */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Focus trap for modals */
+.focus-trap {
+  outline: none;
+}
+
+/* ==================== PRINT UTILITIES ==================== */
+
+@media print {
+  .no-print {
+    display: none;
+  }
+  
+  .print-only {
+    display: block;
+  }
+  
+  body {
+    background: white !important;
+    color: black !important;
+  }
+} 

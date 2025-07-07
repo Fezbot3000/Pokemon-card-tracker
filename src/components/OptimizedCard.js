@@ -112,11 +112,11 @@ const OptimizedCard = memo(({ card, onCardClick, ...props }) => {
       </div>
       
       <div className="card-details">
-        <div className="flex justify-between items-start">
+        <div className="flex items-start justify-between">
           <h3 className="card-title">{(card.card || card.cardName || card.pokemonName || card.name || card.player || 'Unnamed Card').toUpperCase()}</h3>
           {isCardInInvoice && card.id && isCardInInvoice(card.id) && (
             <span 
-              className="material-icons text-sm text-blue-500 dark:text-blue-400 ml-1" 
+              className="material-icons ml-1 text-sm text-blue-500 dark:text-blue-400" 
               title="This card is attached to a purchase invoice"
             >
               receipt

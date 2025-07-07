@@ -186,12 +186,12 @@ const ChatThread = ({ chatId, onBack, cardInfo }) => {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-200px)] md:h-[calc(100vh-150px)]">
+    <div className="flex h-[calc(100vh-200px)] flex-col md:h-[calc(100vh-150px)]">
       {/* Chat header */}
-      <div className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700" >
+      <div className="flex items-center justify-between border-b border-gray-200 p-4 dark:border-gray-700" >
         <div className="flex items-center">
           <button 
-            className="mr-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+            className="mr-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
             onClick={onBack}
           >
             <span className="material-icons">arrow_back</span>
@@ -201,11 +201,11 @@ const ChatThread = ({ chatId, onBack, cardInfo }) => {
               <img 
                 src={cardInfo.imageUrl} 
                 alt={cardInfo.title || 'Card'} 
-                className="w-10 h-10 object-cover rounded-md mr-3" 
+                className="mr-3 size-10 rounded-md object-cover" 
               />
             )}
             {!cardInfo?.imageUrl && (
-              <div className="w-10 h-10 bg-gray-200 dark:bg-gray-600 rounded-md flex items-center justify-center text-gray-500 dark:text-gray-400 mr-3">
+              <div className="mr-3 flex size-10 items-center justify-center rounded-md bg-gray-200 text-gray-500 dark:bg-gray-600 dark:text-gray-400">
                 <span className="material-icons">style</span>
               </div>
             )}
@@ -222,7 +222,7 @@ const ChatThread = ({ chatId, onBack, cardInfo }) => {
         
         {/* Leave chat button */}
         <button
-          className={`px-3 py-1 rounded-md text-xs font-medium ${hasLeft ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30'}`}
+          className={`rounded-md px-3 py-1 text-xs font-medium ${hasLeft ? 'cursor-not-allowed bg-gray-200 text-gray-500' : 'bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30'}`}
           onClick={handleLeaveChat}
           disabled={hasLeft}
           title={hasLeft ? 'You have left this chat' : 'Leave this chat'}
@@ -232,15 +232,15 @@ const ChatThread = ({ chatId, onBack, cardInfo }) => {
       </div>
       
       {/* Messages container */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 space-y-4 overflow-y-auto p-4">
         {loading ? (
-          <div className="flex justify-center items-center h-32">
-            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-900 dark:border-white"></div>
+          <div className="flex h-32 items-center justify-center">
+            <div className="size-8 animate-spin rounded-full border-y-2 border-gray-900 dark:border-white"></div>
           </div>
         ) : messages.length === 0 ? (
-          <div className="text-center py-12">
+          <div className="py-12 text-center">
             <p className="text-gray-600 dark:text-gray-400">No messages yet</p>
-            <p className="text-gray-500 dark:text-gray-500 mt-2">
+            <p className="mt-2 text-gray-500 dark:text-gray-500">
               Start the conversation by sending a message below.
             </p>
           </div>
@@ -255,8 +255,8 @@ const ChatThread = ({ chatId, onBack, cardInfo }) => {
             if (isSystemMessage) {
               // Render system message
               return (
-                <div key={message.id} className="flex justify-center my-2">
-                  <div className="bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 text-xs px-3 py-1 rounded-full">
+                <div key={message.id} className="my-2 flex justify-center">
+                  <div className="rounded-full bg-gray-100 px-3 py-1 text-xs text-gray-500 dark:bg-gray-800 dark:text-gray-400">
                     {message.text}
                   </div>
                 </div>
@@ -273,11 +273,11 @@ const ChatThread = ({ chatId, onBack, cardInfo }) => {
                   className={`max-w-[80%] rounded-lg px-4 py-2 ${
                     isFromCurrentUser
                       ? 'bg-blue-500 text-white' 
-                      : 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white'
+                      : 'bg-gray-200 text-gray-900 dark:bg-gray-700 dark:text-white'
                   }`}
                 >
                   <div className="text-sm">{message.text}</div>
-                  <div className="text-xs mt-1 opacity-70 text-right">
+                  <div className="mt-1 text-right text-xs opacity-70">
                     {formatTimestamp(message.timestamp)}
                   </div>
                 </div>
@@ -290,17 +290,17 @@ const ChatThread = ({ chatId, onBack, cardInfo }) => {
       
       {/* Notification when other party has left */}
       {otherPartyLeft && (
-        <div className="bg-yellow-50 dark:bg-yellow-900/20 border-t border-b border-yellow-100 dark:border-yellow-900/30 p-2">
-          <p className="text-xs text-center text-yellow-700 dark:text-yellow-500">
+        <div className="border-y border-yellow-100 bg-yellow-50 p-2 dark:border-yellow-900/30 dark:bg-yellow-900/20">
+          <p className="text-center text-xs text-yellow-700 dark:text-yellow-500">
             The other party has left this chat. You can still view the conversation but no new messages can be sent.
           </p>
         </div>
       )}
       
       {/* Message input - disabled when user has left or other party has left */}
-      <form onSubmit={handleSendMessage} className="border-t border-gray-200 dark:border-gray-700 p-4">
+      <form onSubmit={handleSendMessage} className="border-t border-gray-200 p-4 dark:border-gray-700">
         {hasLeft && (
-          <div className="mb-2 text-xs text-center text-gray-500 dark:text-gray-400">
+          <div className="mb-2 text-center text-xs text-gray-500 dark:text-gray-400">
             You have left this chat. You cannot send new messages.
           </div>
         )}
@@ -310,12 +310,12 @@ const ChatThread = ({ chatId, onBack, cardInfo }) => {
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             placeholder={hasLeft || otherPartyLeft ? "You cannot send messages in this chat" : "Type a message..."}
-            className="flex-1 bg-gray-100 dark:bg-gray-800 border-none rounded-full py-2 px-4 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 rounded-full border-none bg-gray-100 px-4 py-2 text-gray-900 placeholder:text-gray-500 focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-400 dark:focus:ring-blue-400"
             disabled={sending || hasLeft || otherPartyLeft}
           />
           <button
             type="submit"
-            className="bg-blue-500 hover:bg-blue-600 text-white rounded-full p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="rounded-full bg-blue-500 p-2 text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50 dark:focus:ring-blue-400"
             disabled={!newMessage.trim() || sending || hasLeft || otherPartyLeft}
           >
             <span className="material-icons">send</span>

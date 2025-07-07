@@ -21,10 +21,10 @@ const CollectingGuide = () => {
       case 'getting-started':
         return (
           <div className="space-y-8">
-            <h2 className="text-3xl font-bold mb-6">Getting Started with Pokémon Card Collecting</h2>
+            <h2 className="mb-6 text-3xl font-bold">Getting Started with Pokémon Card Collecting</h2>
             
             <div className="bg-white/5 rounded-xl p-6">
-              <h3 className="text-xl font-bold text-blue-400 mb-4">🎯 Define Your Collection Goals</h3>
+              <h3 className="mb-4 text-xl font-bold text-blue-400">🎯 Define Your Collection Goals</h3>
               <ul className="space-y-2 text-gray-300">
                 <li>• Choose your focus: specific sets, Pokémon, or eras</li>
                 <li>• Set a realistic budget for your collection</li>
@@ -33,10 +33,10 @@ const CollectingGuide = () => {
               </ul>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div className="bg-white/5 rounded-xl p-6">
-                <h3 className="text-xl font-bold text-green-400 mb-4">💰 Budget Planning</h3>
-                <ul className="space-y-2 text-gray-300 text-sm">
+                <h3 className="mb-4 text-xl font-bold text-green-400">💰 Budget Planning</h3>
+                <ul className="space-y-2 text-sm text-gray-300">
                   <li>• Start with lower-value cards to learn</li>
                   <li>• Allocate funds for storage and protection</li>
                   <li>• Track your spending with our tools</li>
@@ -45,8 +45,8 @@ const CollectingGuide = () => {
               </div>
               
               <div className="bg-white/5 rounded-xl p-6">
-                <h3 className="text-xl font-bold text-purple-400 mb-4">📚 Research & Education</h3>
-                <ul className="space-y-2 text-gray-300 text-sm">
+                <h3 className="mb-4 text-xl font-bold text-purple-400">📚 Research & Education</h3>
+                <ul className="space-y-2 text-sm text-gray-300">
                   <li>• Study price guides and market trends</li>
                   <li>• Join collecting communities</li>
                   <li>• Learn about card variations</li>
@@ -60,13 +60,13 @@ const CollectingGuide = () => {
       case 'card-conditions':
         return (
           <div className="space-y-8">
-            <h2 className="text-3xl font-bold mb-6">Understanding Pokémon Card Conditions</h2>
+            <h2 className="mb-6 text-3xl font-bold">Understanding Pokémon Card Conditions</h2>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
               <div className="bg-white/5 rounded-xl p-6">
-                <h3 className="text-xl font-bold text-green-400 mb-4">💎 Mint (M)</h3>
-                <p className="text-gray-300 text-sm mb-4">Perfect condition, no visible flaws</p>
-                <ul className="space-y-1 text-gray-400 text-xs">
+                <h3 className="mb-4 text-xl font-bold text-green-400">💎 Mint (M)</h3>
+                <p className="mb-4 text-sm text-gray-300">Perfect condition, no visible flaws</p>
+                <ul className="space-y-1 text-xs text-gray-400">
                   <li>• Sharp corners</li>
                   <li>• Perfect centering</li>
                   <li>• No surface wear</li>
@@ -75,9 +75,9 @@ const CollectingGuide = () => {
               </div>
               
               <div className="bg-white/5 rounded-xl p-6">
-                <h3 className="text-xl font-bold text-blue-400 mb-4">⭐ Near Mint (NM)</h3>
-                <p className="text-gray-300 text-sm mb-4">Excellent condition with minor flaws</p>
-                <ul className="space-y-1 text-gray-400 text-xs">
+                <h3 className="mb-4 text-xl font-bold text-blue-400">⭐ Near Mint (NM)</h3>
+                <p className="mb-4 text-sm text-gray-300">Excellent condition with minor flaws</p>
+                <ul className="space-y-1 text-xs text-gray-400">
                   <li>• Very minor edge wear</li>
                   <li>• Slight centering issues</li>
                   <li>• Minimal surface scratches</li>
@@ -86,9 +86,9 @@ const CollectingGuide = () => {
               </div>
               
               <div className="bg-white/5 rounded-xl p-6">
-                <h3 className="text-xl font-bold text-yellow-400 mb-4">✨ Excellent (EX)</h3>
-                <p className="text-gray-300 text-sm mb-4">Good condition with noticeable wear</p>
-                <ul className="space-y-1 text-gray-400 text-xs">
+                <h3 className="mb-4 text-xl font-bold text-yellow-400">✨ Excellent (EX)</h3>
+                <p className="mb-4 text-sm text-gray-300">Good condition with noticeable wear</p>
+                <ul className="space-y-1 text-xs text-gray-400">
                   <li>• Light edge wear</li>
                   <li>• Minor corner wear</li>
                   <li>• Some surface scratches</li>
@@ -102,7 +102,7 @@ const CollectingGuide = () => {
       default:
         return (
           <div className="space-y-8">
-            <h2 className="text-3xl font-bold mb-6">Coming Soon</h2>
+            <h2 className="mb-6 text-3xl font-bold">Coming Soon</h2>
             <p className="text-gray-300">This section is under development. Check back soon for comprehensive guides!</p>
           </div>
         );
@@ -122,45 +122,45 @@ const CollectingGuide = () => {
       <NavigationBar />
       
       {/* Hero Section */}
-      <section className="relative pt-24 pb-16 sm:pt-28 sm:pb-20 md:pt-32 md:pb-24 px-4 sm:px-6 lg:px-8 overflow-hidden">
+      <section className="relative overflow-hidden px-4 pb-16 pt-24 sm:px-6 sm:pb-20 sm:pt-28 md:pb-24 md:pt-32 lg:px-8">
         <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 via-purple-600/10 to-pink-600/10"></div>
         
-        <div className="relative z-10 max-w-4xl mx-auto text-center">
-          <div className="inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 bg-white/10 backdrop-blur-sm rounded-full text-xs sm:text-sm font-medium mb-6 sm:mb-8 border border-white/20">
-            <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-400 rounded-full mr-2"></span>
+        <div className="relative z-10 mx-auto max-w-4xl text-center">
+          <div className="bg-white/10 border-white/20 mb-6 inline-flex items-center rounded-full border px-3 py-1.5 text-xs font-medium backdrop-blur-sm sm:mb-8 sm:px-4 sm:py-2 sm:text-sm">
+            <span className="mr-2 size-1.5 rounded-full bg-green-400 sm:size-2"></span>
             Expert Knowledge Base
           </div>
           
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 leading-tight">
+          <h1 className="mb-4 text-3xl font-bold leading-tight sm:mb-6 sm:text-4xl md:text-5xl lg:text-6xl">
             Collecting
             <span className="block bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
               Guide
             </span>
           </h1>
           
-          <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-300 mb-8 sm:mb-12 max-w-3xl mx-auto leading-relaxed">
+          <p className="mx-auto mb-8 max-w-3xl text-base leading-relaxed text-gray-300 sm:mb-12 sm:text-lg md:text-xl lg:text-2xl">
             Everything you need to know about collecting, grading, and protecting your valuable Pokémon cards.
           </p>
         </div>
       </section>
 
       {/* Navigation & Content */}
-      <section className="py-12 sm:py-16 md:py-24 px-4 sm:px-6 lg:px-8 bg-black">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+      <section className="bg-black px-4 py-12 sm:px-6 sm:py-16 md:py-24 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-4">
             {/* Sidebar Navigation */}
             <div className="lg:col-span-1">
               <div className="sticky top-8">
-                <h3 className="text-lg font-bold mb-4">Guide Sections</h3>
+                <h3 className="mb-4 text-lg font-bold">Guide Sections</h3>
                 <nav className="space-y-2">
                   {sections.map((section) => (
                     <button
                       key={section.id}
                       onClick={() => setActiveSection(section.id)}
-                      className={`w-full text-left px-4 py-3 rounded-xl transition-all duration-300 flex items-center ${
+                      className={`flex w-full items-center rounded-xl px-4 py-3 text-left transition-all duration-300 ${
                         activeSection === section.id
                           ? 'bg-blue-600 text-white'
-                          : 'bg-white/5 text-gray-300 hover:bg-white/10'
+                          : 'bg-white/5 hover:bg-white/10 text-gray-300'
                       }`}
                     >
                       <span className="mr-3">{section.icon}</span>

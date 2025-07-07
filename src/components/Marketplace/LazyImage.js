@@ -53,13 +53,13 @@ function LazyImage({ src, alt, className, placeholder, onLoad, onError, onClick 
     <div className={`relative ${className}`} ref={setImageRef} onClick={onClick}>
       {/* Placeholder or loading state */}
       {!isLoaded && !isError && (
-        <div className="absolute inset-0 bg-gray-200 dark:bg-gray-700 animate-pulse rounded" />
+        <div className="absolute inset-0 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
       )}
       
       {/* Error state */}
       {isError && (
-        <div className="absolute inset-0 bg-gray-200 dark:bg-gray-700 flex items-center justify-center rounded">
-          <span className="material-icons text-gray-400 dark:text-gray-600 text-4xl">broken_image</span>
+        <div className="absolute inset-0 flex items-center justify-center rounded bg-gray-200 dark:bg-gray-700">
+          <span className="material-icons text-4xl text-gray-400 dark:text-gray-600">broken_image</span>
         </div>
       )}
       

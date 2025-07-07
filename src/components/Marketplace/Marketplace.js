@@ -469,7 +469,7 @@ function Marketplace({ currentView, onViewChange }) {
   };
 
   return (
-    <div className="p-4 sm:p-6 pb-20 pt-16 sm:pt-4 bg-gray-100 dark:bg-black min-h-screen">
+    <div className="min-h-screen bg-gray-100 p-4 pb-20 pt-16 dark:bg-black sm:p-6 sm:pt-4">
       <MarketplaceNavigation currentView={currentView} onViewChange={onViewChange} />
 
       {/* Search and Filter Component */}
@@ -480,50 +480,50 @@ function Marketplace({ currentView, onViewChange }) {
       />
 
       {loading ? (
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900 dark:border-white"></div>
+        <div className="flex h-64 items-center justify-center">
+          <div className="size-12 animate-spin rounded-full border-y-2 border-gray-900 dark:border-white"></div>
         </div>
       ) : indexBuildingError ? (
-        <div className="text-center py-12">
-          <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg p-4 mb-4">
+        <div className="py-12 text-center">
+          <div className="mb-4 rounded-lg border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-700 dark:bg-yellow-900/20">
             <div className="flex items-center">
-              <span className="material-icons text-yellow-500 mr-2">info</span>
+              <span className="material-icons mr-2 text-yellow-500">info</span>
               <p className="text-yellow-700 dark:text-yellow-400">The marketplace index is still being built. Some features may be limited until it's ready.</p>
             </div>
           </div>
           {allListings.length === 0 ? (
-            <p className="text-gray-600 dark:text-gray-400 text-lg">No cards currently listed in the marketplace.</p>
+            <p className="text-lg text-gray-600 dark:text-gray-400">No cards currently listed in the marketplace.</p>
           ) : null}
         </div>
       ) : allListings.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 px-4">
+        <div className="flex flex-col items-center justify-center px-4 py-16">
           {/* Marketplace Icon */}
-          <div className="w-24 h-24 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-6">
+          <div className="mb-6 flex size-24 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
             <span className="material-icons text-4xl text-gray-400 dark:text-gray-600">storefront</span>
           </div>
           
           {/* Main Message */}
-          <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2 text-center">
+          <h3 className="mb-2 text-center text-xl font-semibold text-gray-900 dark:text-white">
             No Cards in Marketplace
           </h3>
           
           {/* Description */}
-          <p className="text-gray-600 dark:text-gray-400 text-center max-w-md mb-8 leading-relaxed">
+          <p className="mb-8 max-w-md text-center leading-relaxed text-gray-600 dark:text-gray-400">
             The marketplace is currently empty. Be the first to list a card for sale, or check back later to see what other collectors are offering.
           </p>
           
           {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-3 w-full max-w-sm">
+          <div className="flex w-full max-w-sm flex-col gap-3 sm:flex-row">
             <button
               onClick={() => onViewChange('cards')}
-              className="flex-1 bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+              className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-red-500 px-6 py-3 font-medium text-white transition-colors hover:bg-red-600"
             >
               <span className="material-icons text-lg">add_circle</span>
               List Your Cards
             </button>
             <button
               onClick={() => window.location.reload()}
-              className="flex-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 px-6 py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+              className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-gray-200 px-6 py-3 font-medium text-gray-700 transition-colors hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
             >
               <span className="material-icons text-lg">refresh</span>
               Refresh
@@ -538,19 +538,19 @@ function Marketplace({ currentView, onViewChange }) {
           </div>
         </div>
       ) : filteredListings.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 px-4">
+        <div className="flex flex-col items-center justify-center px-4 py-16">
           {/* Search Icon */}
-          <div className="w-20 h-20 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-6">
+          <div className="mb-6 flex size-20 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
             <span className="material-icons text-3xl text-gray-400 dark:text-gray-600">search_off</span>
           </div>
           
           {/* Main Message */}
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 text-center">
+          <h3 className="mb-2 text-center text-lg font-semibold text-gray-900 dark:text-white">
             No Matching Cards Found
           </h3>
           
           {/* Description */}
-          <p className="text-gray-600 dark:text-gray-400 text-center max-w-md mb-6 leading-relaxed">
+          <p className="mb-6 max-w-md text-center leading-relaxed text-gray-600 dark:text-gray-400">
             We couldn't find any cards matching your current filters. Try adjusting your search criteria or clearing the filters.
           </p>
           
@@ -562,7 +562,7 @@ function Marketplace({ currentView, onViewChange }) {
               gradingCompany: '',
               grade: ''
             })}
-            className="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2"
+            className="flex items-center gap-2 rounded-lg bg-red-500 px-6 py-3 font-medium text-white transition-colors hover:bg-red-600"
           >
             <span className="material-icons text-lg">clear_all</span>
             Clear All Filters
@@ -570,26 +570,26 @@ function Marketplace({ currentView, onViewChange }) {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-2 sm:gap-3">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
             {paginatedListings.map(listing => (
-              <div key={listing.id} className="flex flex-col h-full overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0F0F0F]">
-                <div className="flex-grow relative aspect-square">
+              <div key={listing.id} className="flex h-full flex-col overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-[#0F0F0F]">
+                <div className="relative aspect-square grow">
                   <LazyImage
                     src={cardImages[listing.card?.slabSerial || listing.card?.id || listing.cardId] || '/placeholder-card.png'}
                     alt={listing.card?.name || 'Pokemon Card'}
-                    className="w-full h-full object-cover cursor-pointer"
+                    className="size-full cursor-pointer object-cover"
                     onClick={() => handleCardClick(listing)}
                   />
                   {listing.card?.grade && (
-                    <span className="absolute top-2 right-2 px-2 py-1 bg-black bg-opacity-70 text-white text-xs rounded">
+                    <span className="absolute right-2 top-2 rounded bg-black bg-opacity-70 px-2 py-1 text-xs text-white">
                       {listing.card.gradingCompany} {listing.card.grade}
                     </span>
                   )}
                 </div>
-                <div className="bg-white dark:bg-[#0F0F0F] p-3 rounded-b-lg">
+                <div className="rounded-b-lg bg-white p-3 dark:bg-[#0F0F0F]">
                   <div className="flex flex-col items-center space-y-2">
-                    <div className="text-center w-full">
-                      <p className="font-semibold text-gray-900 dark:text-white truncate">
+                    <div className="w-full text-center">
+                      <p className="truncate font-semibold text-gray-900 dark:text-white">
                         {listing.cardName || listing.card?.name || listing.card?.cardName || 'Unknown Card'}
                       </p>
                       <p className="font-semibold text-gray-900 dark:text-white">
@@ -601,7 +601,7 @@ function Marketplace({ currentView, onViewChange }) {
                     </div>
                     <button
                       onClick={() => handleContactSeller(listing)}
-                      className={`w-full px-3 py-1.5 text-white text-sm rounded-md transition-colors ${
+                      className={`w-full rounded-md px-3 py-1.5 text-sm text-white transition-colors ${
                         existingChats[listing.id] 
                           ? 'bg-green-500 hover:bg-green-600' 
                           : 'bg-red-500 hover:bg-red-600'

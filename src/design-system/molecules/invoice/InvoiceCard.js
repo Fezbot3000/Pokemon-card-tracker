@@ -75,12 +75,12 @@ const InvoiceCard = ({
   return (
     <div
       id={`invoice-card-${card.id || card.slabSerial}`}
-      className={`flex flex-col bg-white dark:bg-[#1B2131] rounded-md border border-gray-200 dark:border-[#ffffff1a] overflow-hidden ${className}`}
+      className={`flex flex-col overflow-hidden rounded-md border border-gray-200 bg-white dark:border-[#ffffff1a] dark:bg-[#1B2131] ${className}`}
       {...props}
     >
       {/* Card Title - Optimized format */}
-      <div className="p-3 border-b border-gray-200 dark:border-[#ffffff1a]">
-        <div className="text-sm font-medium text-gray-900 dark:text-white truncate" title={card.card}>
+      <div className="border-b border-gray-200 p-3 dark:border-[#ffffff1a]">
+        <div className="truncate text-sm font-medium text-gray-900 dark:text-white" title={card.card}>
           {formatCardName(card.card)}
         </div>
       </div>
@@ -88,19 +88,19 @@ const InvoiceCard = ({
       {/* Financial Details - Simplified and better aligned */}
       <div className="grid grid-cols-3 p-3">
         <div className="flex flex-col items-center">
-          <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Paid</div>
+          <div className="mb-1 text-xs text-gray-500 dark:text-gray-400">Paid</div>
           <div className="text-xs font-medium text-gray-900 dark:text-white">
             ${paid.toFixed(2)}
           </div>
         </div>
         <div className="flex flex-col items-center border-x border-gray-200 dark:border-[#ffffff1a]">
-          <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Sold</div>
+          <div className="mb-1 text-xs text-gray-500 dark:text-gray-400">Sold</div>
           <div className="text-xs font-medium text-gray-900 dark:text-white">
             ${sold.toFixed(2)}
           </div>
         </div>
         <div className="flex flex-col items-center">
-          <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Profit</div>
+          <div className="mb-1 text-xs text-gray-500 dark:text-gray-400">Profit</div>
           <div className={`text-xs font-medium ${profit >= 0 ? 'text-green-500' : 'text-red-500'}`}>
             {profit >= 0 ? '' : '-'}${Math.abs(profit).toFixed(2)}
           </div>

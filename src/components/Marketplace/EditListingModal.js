@@ -229,8 +229,8 @@ function EditListingModal({ isOpen, onClose, listing, onListingDeleted }) {
     >
       <div className="p-6">
         <div className="mb-4 text-center">
-          <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900/20 mb-4">
-            <svg className="h-6 w-6 text-red-600 dark:text-red-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/20">
+            <svg className="size-6 text-red-600 dark:text-red-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
           </div>
@@ -239,16 +239,16 @@ function EditListingModal({ isOpen, onClose, listing, onListingDeleted }) {
             This action will permanently remove the listing from the marketplace. This action cannot be undone.
           </p>
         </div>
-        <div className="mt-5 sm:mt-6 flex flex-col sm:flex-row-reverse gap-3">
+        <div className="mt-5 flex flex-col gap-3 sm:mt-6 sm:flex-row-reverse">
           <button
             type="button"
             disabled={isDeleting}
             onClick={handleDeleteListing}
-            className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:w-auto sm:text-sm"
+            className="inline-flex w-full justify-center rounded-md border border-transparent bg-red-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 sm:w-auto sm:text-sm"
           >
             {isDeleting ? (
               <>
-                <span className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></span>
+                <span className="mr-2 size-4 animate-spin rounded-full border-y-2 border-white"></span>
                 Deleting...
               </>
             ) : (
@@ -259,7 +259,7 @@ function EditListingModal({ isOpen, onClose, listing, onListingDeleted }) {
             type="button"
             disabled={isDeleting}
             onClick={() => setShowDeleteConfirmation(false)}
-            className="w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-[#0F0F0F] text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 sm:w-auto sm:text-sm"
+            className="inline-flex w-full justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-base font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 dark:border-gray-600 dark:bg-[#0F0F0F] dark:text-gray-300 dark:hover:bg-gray-900 sm:w-auto sm:text-sm"
           >
             Cancel
           </button>
@@ -283,7 +283,7 @@ function EditListingModal({ isOpen, onClose, listing, onListingDeleted }) {
               type="button"
               onClick={() => setShowDeleteConfirmation(true)}
               disabled={isSubmitting || isDeleting}
-              className="inline-flex items-center justify-center font-medium rounded-lg transition-colors focus:outline-none px-4 py-2 text-base bg-white dark:bg-[#0F0F0F] text-red-700 dark:text-red-400 border border-red-300 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-900/20 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center justify-center rounded-lg border border-red-300 bg-white px-4 py-2 text-base font-medium text-red-700 shadow-sm transition-colors hover:bg-red-50 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:border-red-800 dark:bg-[#0F0F0F] dark:text-red-400 dark:hover:bg-red-900/20"
             >
               Delete Listing
             </button>
@@ -291,7 +291,7 @@ function EditListingModal({ isOpen, onClose, listing, onListingDeleted }) {
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="inline-flex items-center justify-center font-medium rounded-lg transition-colors focus:outline-none px-4 py-2 text-base bg-white dark:bg-[#0F0F0F] text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-900 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-base font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-[#0F0F0F] dark:text-gray-300 dark:hover:bg-gray-900"
             >
               Cancel
             </button>
@@ -299,11 +299,11 @@ function EditListingModal({ isOpen, onClose, listing, onListingDeleted }) {
               type="submit"
               form="edit-listing-form"
               disabled={isSubmitting}
-              className="inline-flex items-center justify-center font-medium rounded-lg transition-colors focus:outline-none px-4 py-2 text-base bg-purple-600 text-white hover:bg-purple-700 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center justify-center rounded-lg bg-purple-600 px-4 py-2 text-base font-medium text-white shadow-sm transition-colors hover:bg-purple-700 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isSubmitting ? (
                 <>
-                  <span className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></span>
+                  <span className="mr-2 size-4 animate-spin rounded-full border-y-2 border-white"></span>
                   {formData.markAsSold ? 'Processing...' : 'Updating...'}
                 </>
               ) : (
@@ -320,16 +320,16 @@ function EditListingModal({ isOpen, onClose, listing, onListingDeleted }) {
                 type="checkbox"
                 checked={formData.markAsSold}
                 onChange={(e) => handleInputChange('markAsSold', e.target.checked)}
-                className="h-5 w-5 text-purple-600 bg-white dark:bg-[#1B2131] border-gray-300 dark:border-gray-600 rounded focus:ring-purple-500 dark:focus:ring-purple-400 focus:ring-2"
+                className="size-5 rounded border-gray-300 bg-white text-purple-600 focus:ring-2 focus:ring-purple-500 dark:border-gray-600 dark:bg-[#1B2131] dark:focus:ring-purple-400"
               />
               <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">Mark as sold</span>
             </label>
           </div>
 
           {!formData.markAsSold && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Price ({preferredCurrency.code}) *
                 </label>
                 <div className="relative">
@@ -340,7 +340,7 @@ function EditListingModal({ isOpen, onClose, listing, onListingDeleted }) {
                     type="number"
                     value={formData.price}
                     onChange={(e) => handleInputChange('price', e.target.value)}
-                    className="w-full pl-8 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-[#1B2131] text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    className="w-full rounded-lg border border-gray-300 bg-white py-3 pl-8 pr-4 text-gray-900 placeholder:text-gray-500 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500 dark:border-gray-600 dark:bg-[#1B2131] dark:text-white dark:placeholder:text-gray-400"
                     placeholder="0.00"
                     step="0.01"
                     min="0.01"
@@ -350,14 +350,14 @@ function EditListingModal({ isOpen, onClose, listing, onListingDeleted }) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Location (Optional)
                 </label>
                 <input
                   type="text"
                   value={formData.location}
                   onChange={(e) => handleInputChange('location', e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-[#1B2131] text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                  className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-500 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500 dark:border-gray-600 dark:bg-[#1B2131] dark:text-white dark:placeholder:text-gray-400"
                   placeholder="Enter your location (e.g., Sydney)"
                 />
               </div>
@@ -366,13 +366,13 @@ function EditListingModal({ isOpen, onClose, listing, onListingDeleted }) {
 
           {!formData.markAsSold && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Note (Optional)
               </label>
               <textarea
                 value={formData.note}
                 onChange={(e) => handleInputChange('note', e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-[#1B2131] text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-500 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500 dark:border-gray-600 dark:bg-[#1B2131] dark:text-white dark:placeholder:text-gray-400"
                 placeholder="Add a note about this card..."
                 rows="4"
               />
@@ -380,10 +380,10 @@ function EditListingModal({ isOpen, onClose, listing, onListingDeleted }) {
           )}
 
           {formData.markAsSold && (
-            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-900/30 rounded-md p-4">
+            <div className="rounded-md border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-900/30 dark:bg-yellow-900/20">
               <div className="flex">
-                <div className="flex-shrink-0">
-                  <svg className="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <div className="shrink-0">
+                  <svg className="size-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                     <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                   </svg>
                 </div>

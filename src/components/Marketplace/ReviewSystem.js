@@ -191,7 +191,7 @@ function ReviewSystem({ sellerId, listingId, onReviewSubmitted }) {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+        <div className="size-8 animate-spin rounded-full border-b-2 border-purple-600"></div>
       </div>
     );
   }
@@ -200,20 +200,20 @@ function ReviewSystem({ sellerId, listingId, onReviewSubmitted }) {
     <div className="space-y-6">
       {/* Seller Stats */}
       {sellerStats && (
-        <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        <div className="rounded-lg bg-gray-50 p-6 dark:bg-gray-800">
+          <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
             Seller Rating
           </h3>
           
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
             <div className="text-center">
               <div className="text-2xl font-bold text-gray-900 dark:text-white">
                 {sellerStats.averageRating.toFixed(1)}
               </div>
-              <div className="flex justify-center mt-1">
+              <div className="mt-1 flex justify-center">
                 {renderStars(Math.round(sellerStats.averageRating))}
               </div>
-              <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+              <div className="mt-1 text-sm text-gray-600 dark:text-gray-400">
                 Average Rating
               </div>
             </div>
@@ -222,7 +222,7 @@ function ReviewSystem({ sellerId, listingId, onReviewSubmitted }) {
               <div className="text-2xl font-bold text-gray-900 dark:text-white">
                 {sellerStats.totalReviews}
               </div>
-              <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+              <div className="mt-1 text-sm text-gray-600 dark:text-gray-400">
                 Total Reviews
               </div>
             </div>
@@ -231,7 +231,7 @@ function ReviewSystem({ sellerId, listingId, onReviewSubmitted }) {
               <div className="text-2xl font-bold text-gray-900 dark:text-white">
                 {sellerStats.recommendationRate.toFixed(0)}%
               </div>
-              <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+              <div className="mt-1 text-sm text-gray-600 dark:text-gray-400">
                 Would Recommend
               </div>
             </div>
@@ -240,7 +240,7 @@ function ReviewSystem({ sellerId, listingId, onReviewSubmitted }) {
               <div className="text-2xl font-bold text-gray-900 dark:text-white">
                 {sellerStats.totalSales || 0}
               </div>
-              <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+              <div className="mt-1 text-sm text-gray-600 dark:text-gray-400">
                 Total Sales
               </div>
             </div>
@@ -252,7 +252,7 @@ function ReviewSystem({ sellerId, listingId, onReviewSubmitted }) {
       {canReview && !showReviewForm && (
         <button
           onClick={() => setShowReviewForm(true)}
-          className="w-full py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center gap-2"
+          className="flex w-full items-center justify-center gap-2 rounded-lg bg-purple-600 py-3 text-white transition-colors hover:bg-purple-700"
         >
           <span className="material-icons text-sm">rate_review</span>
           <span>Write a Review</span>
@@ -260,14 +260,14 @@ function ReviewSystem({ sellerId, listingId, onReviewSubmitted }) {
       )}
 
       {showReviewForm && (
-        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-900">
+          <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
             Write a Review
           </h3>
           
           {/* Rating */}
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
               Rating
             </label>
             <div className="flex gap-2">
@@ -275,7 +275,7 @@ function ReviewSystem({ sellerId, listingId, onReviewSubmitted }) {
                 <button
                   key={star}
                   onClick={() => setReviewData(prev => ({ ...prev, rating: star }))}
-                  className="p-1 hover:scale-110 transition-transform"
+                  className="p-1 transition-transform hover:scale-110"
                 >
                   <span
                     className={`material-icons text-2xl ${
@@ -291,13 +291,13 @@ function ReviewSystem({ sellerId, listingId, onReviewSubmitted }) {
 
           {/* Comment */}
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
               Comment
             </label>
             <textarea
               value={reviewData.comment}
               onChange={(e) => setReviewData(prev => ({ ...prev, comment: e.target.value }))}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 dark:bg-gray-800 dark:text-white"
+              className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
               rows={4}
               placeholder="Share your experience with this seller..."
             />
@@ -305,12 +305,12 @@ function ReviewSystem({ sellerId, listingId, onReviewSubmitted }) {
 
           {/* Would Recommend */}
           <div className="mb-6">
-            <label className="flex items-center cursor-pointer">
+            <label className="flex cursor-pointer items-center">
               <input
                 type="checkbox"
                 checked={reviewData.wouldRecommend}
                 onChange={(e) => setReviewData(prev => ({ ...prev, wouldRecommend: e.target.checked }))}
-                className="mr-2 w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                className="mr-2 size-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
               />
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 I would recommend this seller
@@ -323,13 +323,13 @@ function ReviewSystem({ sellerId, listingId, onReviewSubmitted }) {
             <button
               onClick={handleSubmitReview}
               disabled={submitting}
-              className="flex-1 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 rounded-lg bg-purple-600 py-2 text-white transition-colors hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {submitting ? 'Submitting...' : 'Submit Review'}
             </button>
             <button
               onClick={() => setShowReviewForm(false)}
-              className="flex-1 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+              className="flex-1 rounded-lg border border-gray-300 py-2 text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
             >
               Cancel
             </button>
@@ -347,17 +347,17 @@ function ReviewSystem({ sellerId, listingId, onReviewSubmitted }) {
           {reviews.map((review) => (
             <div
               key={review.id}
-              className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4"
+              className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900"
             >
-              <div className="flex items-start justify-between mb-2">
+              <div className="mb-2 flex items-start justify-between">
                 <div>
                   <div className="font-medium text-gray-900 dark:text-white">
                     {review.buyerName}
                   </div>
-                  <div className="flex items-center gap-2 mt-1">
+                  <div className="mt-1 flex items-center gap-2">
                     {renderStars(review.rating)}
                     {review.wouldRecommend && (
-                      <span className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1">
+                      <span className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
                         <span className="material-icons text-xs">check_circle</span>
                         Recommends
                       </span>
@@ -370,7 +370,7 @@ function ReviewSystem({ sellerId, listingId, onReviewSubmitted }) {
               </div>
               
               {review.comment && (
-                <p className="text-gray-700 dark:text-gray-300 text-sm">
+                <p className="text-sm text-gray-700 dark:text-gray-300">
                   {review.comment}
                 </p>
               )}

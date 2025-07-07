@@ -26,7 +26,7 @@ const FormField = ({
   const hasError = !!error;
   
   return (
-    <div className={`w-full form-field ${className} ${hasError ? 'error' : ''}`}>
+    <div className={`form-field w-full ${className} ${hasError ? 'error' : ''}`}>
       {label && (
         <FormLabel htmlFor={fieldId} required={required}>
           {label}{required && <span className="required">*</span>}

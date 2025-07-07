@@ -195,16 +195,16 @@ const PokemonSets = () => {
       <NavigationBar />
       
       {/* Hero Section with proper spacing */}
-      <section className="relative pt-32 pb-16 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto text-center">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent">
+      <section className="relative px-4 pb-16 pt-32 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl text-center">
+          <h1 className="mb-6 bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-4xl font-bold text-transparent md:text-6xl">
             Pokemon Card Sets Price Guide
           </h1>
-          <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto">
+          <p className="mx-auto mb-8 max-w-3xl text-xl text-gray-300">
             More current estimates for PSA 10 (Gem Mint) holographic cards. These are general estimates subject to significant market fluctuations. Prices for ungraded or lower-graded cards will be considerably less.
           </p>
-          <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4 mb-8 max-w-4xl mx-auto">
-            <p className="text-yellow-400 text-sm">
+          <div className="mx-auto mb-8 max-w-4xl rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-4">
+            <p className="text-sm text-yellow-400">
               <strong>Important:</strong> "Investment Potential" is a general guide and not financial advice. Always cross-reference prices and consider the condition and grading of the card when assessing its value.
             </p>
           </div>
@@ -212,20 +212,20 @@ const PokemonSets = () => {
       </section>
 
       {/* Set Selection Tabs */}
-      <section className="px-4 sm:px-6 lg:px-8 pb-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+      <section className="px-4 pb-8 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-4">
             {pokemonSets.map((set) => (
               <button
                 key={set.id}
                 onClick={() => setSelectedSet(set.id)}
-                className={`p-4 rounded-lg text-left transition-all ${
+                className={`rounded-lg p-4 text-left transition-all ${
                   selectedSet === set.id
-                    ? 'bg-purple-500/30 border-2 border-purple-500'
-                    : 'bg-white/5 border border-gray-600 hover:bg-white/10'
+                    ? 'border-2 border-purple-500 bg-purple-500/30'
+                    : 'bg-white/5 hover:bg-white/10 border border-gray-600'
                 }`}
               >
-                <h3 className="font-bold text-white mb-2">{set.name}</h3>
+                <h3 className="mb-2 font-bold text-white">{set.name}</h3>
                 <p className="text-sm text-gray-400">{set.description}</p>
               </button>
             ))}
@@ -234,33 +234,33 @@ const PokemonSets = () => {
       </section>
 
       {/* Selected Set Details */}
-      <section className="px-4 sm:px-6 lg:px-8 pb-16">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <section className="px-4 pb-16 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
             
             {/* Set Information */}
             <div className="space-y-6">
-              <h2 className="text-3xl font-bold text-white mb-6">{currentSet.name}</h2>
-              <p className="text-gray-300 text-lg leading-relaxed">{currentSet.description}</p>
+              <h2 className="mb-6 text-3xl font-bold text-white">{currentSet.name}</h2>
+              <p className="text-lg leading-relaxed text-gray-300">{currentSet.description}</p>
               
-              <div className="bg-white/5 rounded-xl p-6 space-y-4 border border-white/10">
+              <div className="bg-white/5 border-white/10 space-y-4 rounded-xl border p-6">
                 <div className="space-y-3">
-                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
-                    <span className="text-gray-400 font-medium">Average Price Range:</span>
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                    <span className="font-medium text-gray-400">Average Price Range:</span>
                     <div className="text-right">
-                      <div className="text-green-400 font-bold text-lg">{currentSet.averagePrice}</div>
+                      <div className="text-lg font-bold text-green-400">{currentSet.averagePrice}</div>
                     </div>
                   </div>
-                  <div className="border-t border-white/10 pt-3">
-                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
-                      <span className="text-gray-400 font-medium">Rarity Level:</span>
-                      <span className="text-yellow-400 font-semibold">{currentSet.rarity}</span>
+                  <div className="border-white/10 border-t pt-3">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                      <span className="font-medium text-gray-400">Rarity Level:</span>
+                      <span className="font-semibold text-yellow-400">{currentSet.rarity}</span>
                     </div>
                   </div>
-                  <div className="border-t border-white/10 pt-3">
-                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
-                      <span className="text-gray-400 font-medium">Investment Potential:</span>
-                      <span className="text-purple-400 font-semibold">{currentSet.investment}</span>
+                  <div className="border-white/10 border-t pt-3">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                      <span className="font-medium text-gray-400">Investment Potential:</span>
+                      <span className="font-semibold text-purple-400">{currentSet.investment}</span>
                     </div>
                   </div>
                 </div>
@@ -272,15 +272,15 @@ const PokemonSets = () => {
               <h3 className="text-2xl font-bold text-white">Key Cards to Track</h3>
               <div className="space-y-4">
                 {currentSet.keyCards.map((card, index) => (
-                  <div key={index} className="bg-white/5 rounded-lg p-4 border border-white/10">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div key={index} className="bg-white/5 border-white/10 rounded-lg border p-4">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                       <div className="flex items-center gap-3">
-                        <span className="text-white font-semibold">{card.name}</span>
-                        <span className="bg-orange-500/20 text-orange-400 px-3 py-1 rounded-full text-sm whitespace-nowrap">
+                        <span className="font-semibold text-white">{card.name}</span>
+                        <span className="whitespace-nowrap rounded-full bg-orange-500/20 px-3 py-1 text-sm text-orange-400">
                           🔥 High Demand
                         </span>
                       </div>
-                      <div className="text-gray-400 text-sm">
+                      <div className="text-sm text-gray-400">
                         <div className="sm:text-right">
                           <div>1st Ed: <span className="text-green-400">{card.firstEd}</span></div>
                           <div>Unlimited: <span className="text-blue-400">{card.unlimited}</span></div>
@@ -291,9 +291,9 @@ const PokemonSets = () => {
                 ))}
               </div>
               
-              <div className="bg-gradient-to-r from-purple-500/20 to-blue-500/20 rounded-xl p-6 border border-purple-500/30">
-                <h4 className="font-bold text-white mb-3">💡 Collector Tip</h4>
-                <p className="text-gray-300 text-sm">
+              <div className="rounded-xl border border-purple-500/30 bg-gradient-to-r from-purple-500/20 to-blue-500/20 p-6">
+                <h4 className="mb-3 font-bold text-white">💡 Collector Tip</h4>
+                <p className="text-sm text-gray-300">
                   {currentSet.collectorTip}
                 </p>
               </div>
@@ -302,21 +302,21 @@ const PokemonSets = () => {
 
           {/* CTA Section */}
           <div className="mt-16 text-center">
-            <div className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-2xl p-8 border border-purple-500/30">
-              <h3 className="text-2xl font-bold text-white mb-4">Start Tracking Your Pokemon Cards</h3>
-              <p className="text-gray-300 mb-6 max-w-2xl mx-auto">
+            <div className="rounded-2xl border border-purple-500/30 bg-gradient-to-r from-purple-500/20 to-pink-500/20 p-8">
+              <h3 className="mb-4 text-2xl font-bold text-white">Start Tracking Your Pokemon Cards</h3>
+              <p className="mx-auto mb-6 max-w-2xl text-gray-300">
                 Use our Pokemon Card Tracker to monitor your collection values, track PSA grades, and identify investment opportunities.
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
                 <Link
                   to="/login"
-                  className="w-full sm:w-auto bg-gradient-to-r from-purple-500 to-pink-600 text-white px-8 py-3 rounded-lg font-semibold hover:from-purple-600 hover:to-pink-700 transition-all transform hover:scale-105"
+                  className="w-full rounded-lg bg-gradient-to-r from-purple-500 to-pink-600 px-8 py-3 font-semibold text-white transition-all hover:scale-105 hover:from-purple-600 hover:to-pink-700 sm:w-auto"
                 >
                   Start Tracking Free
                 </Link>
                 <Link
                   to="/pokemon-investment-guide"
-                  className="w-full sm:w-auto bg-white/10 text-white px-8 py-3 rounded-lg font-semibold hover:bg-white/20 transition-all"
+                  className="bg-white/10 hover:bg-white/20 w-full rounded-lg px-8 py-3 font-semibold text-white transition-all sm:w-auto"
                 >
                   Investment Guide
                 </Link>
@@ -327,59 +327,59 @@ const PokemonSets = () => {
       </section>
 
       {/* Pricing Resources Section */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <h2 className="text-3xl font-bold text-center mb-12 bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
+      <section className="px-4 py-16 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <h2 className="mb-12 bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-center text-3xl font-bold text-transparent">
             Accurate Pricing Resources
           </h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-            <div className="bg-white/5 rounded-xl p-6 border border-white/10">
-              <h3 className="font-bold text-white mb-3">PSA Price Guide</h3>
-              <p className="text-gray-400 text-sm mb-4">
+          <div className="mb-12 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+            <div className="bg-white/5 border-white/10 rounded-xl border p-6">
+              <h3 className="mb-3 font-bold text-white">PSA Price Guide</h3>
+              <p className="mb-4 text-sm text-gray-400">
                 Comprehensive guide based on graded card sales data
               </p>
-              <span className="text-green-400 text-sm font-semibold">Recommended</span>
+              <span className="text-sm font-semibold text-green-400">Recommended</span>
             </div>
             
-            <div className="bg-white/5 rounded-xl p-6 border border-white/10">
-              <h3 className="font-bold text-white mb-3">eBay Sold Listings</h3>
-              <p className="text-gray-400 text-sm mb-4">
+            <div className="bg-white/5 border-white/10 rounded-xl border p-6">
+              <h3 className="mb-3 font-bold text-white">eBay Sold Listings</h3>
+              <p className="mb-4 text-sm text-gray-400">
                 Filter by "Sold Items" to see actual selling prices
               </p>
-              <span className="text-blue-400 text-sm font-semibold">Real-time Data</span>
+              <span className="text-sm font-semibold text-blue-400">Real-time Data</span>
             </div>
             
-            <div className="bg-white/5 rounded-xl p-6 border border-white/10">
-              <h3 className="font-bold text-white mb-3">TCGPlayer</h3>
-              <p className="text-gray-400 text-sm mb-4">
+            <div className="bg-white/5 border-white/10 rounded-xl border p-6">
+              <h3 className="mb-3 font-bold text-white">TCGPlayer</h3>
+              <p className="mb-4 text-sm text-gray-400">
                 Excellent for raw (ungraded) card prices and market trends
               </p>
-              <span className="text-purple-400 text-sm font-semibold">Market Trends</span>
+              <span className="text-sm font-semibold text-purple-400">Market Trends</span>
             </div>
             
-            <div className="bg-white/5 rounded-xl p-6 border border-white/10">
-              <h3 className="font-bold text-white mb-3">CardLadder</h3>
-              <p className="text-gray-400 text-sm mb-4">
+            <div className="bg-white/5 border-white/10 rounded-xl border p-6">
+              <h3 className="mb-3 font-bold text-white">CardLadder</h3>
+              <p className="mb-4 text-sm text-gray-400">
                 Detailed market data, indices, and individual card tracking
               </p>
-              <span className="text-orange-400 text-sm font-semibold">Premium Data</span>
+              <span className="text-sm font-semibold text-orange-400">Premium Data</span>
             </div>
           </div>
           
-          <div className="bg-gradient-to-r from-red-500/20 to-orange-500/20 rounded-xl p-8 border border-red-500/30 text-center">
-            <h3 className="text-2xl font-bold text-white mb-4">Why Price Discrepancies Exist</h3>
-            <p className="text-gray-300 mb-6 max-w-4xl mx-auto">
+          <div className="rounded-xl border border-red-500/30 bg-gradient-to-r from-red-500/20 to-orange-500/20 p-8 text-center">
+            <h3 className="mb-4 text-2xl font-bold text-white">Why Price Discrepancies Exist</h3>
+            <p className="mx-auto mb-6 max-w-4xl text-gray-300">
               The Pokemon card market has seen immense growth and volatility, especially in recent years. High-grade, rare cards consistently command top dollar, while lower-grade cards are much more affordable. Always consider condition, grading, and recent sales when assessing value.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
-              <span className="bg-red-500/20 text-red-400 px-4 py-2 rounded-full border border-red-500/30">
+              <span className="rounded-full border border-red-500/30 bg-red-500/20 px-4 py-2 text-red-400">
                 🎯 Condition Matters
               </span>
-              <span className="bg-orange-500/20 text-orange-400 px-4 py-2 rounded-full border border-orange-500/30">
+              <span className="rounded-full border border-orange-500/30 bg-orange-500/20 px-4 py-2 text-orange-400">
                 📊 Market Volatility
               </span>
-              <span className="bg-yellow-500/20 text-yellow-400 px-4 py-2 rounded-full border border-yellow-500/30">
+              <span className="rounded-full border border-yellow-500/30 bg-yellow-500/20 px-4 py-2 text-yellow-400">
                 🔍 Cross-Reference Prices
               </span>
             </div>

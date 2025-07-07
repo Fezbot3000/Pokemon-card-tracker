@@ -81,8 +81,8 @@ const ImageUploadButton = ({
         onClick={handleUploadClick}
         className={`w-full flex items-center justify-center gap-2 px-4 py-2 
           ${isDragging 
-            ? 'bg-[#E6185C]/10 text-[#E6185C] border-[#E6185C]' 
-            : 'bg-gray-100 dark:bg-[#0F0F0F] text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-[#1B2131]'} 
+            ? 'border-[#E6185C] bg-[#E6185C]/10 text-[#E6185C]' 
+            : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-[#0F0F0F] dark:text-white dark:hover:bg-[#1B2131]'} 
           rounded-lg text-sm font-medium transition-colors border border-transparent`}
       >
         <Icon name="upload" />

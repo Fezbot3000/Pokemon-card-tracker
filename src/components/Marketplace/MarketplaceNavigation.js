@@ -7,10 +7,10 @@ function MarketplaceNavigation({ currentView = 'marketplace', onViewChange = () 
   };
 
   return (
-    <div className="hidden lg:flex items-center space-x-6 mb-6">
+    <div className="mb-6 hidden items-center space-x-6 lg:flex">
       <button
         onClick={() => onViewChange('marketplace')}
-        className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+        className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
           isActive('marketplace')
             ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
             : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-[#0F0F0F]'
@@ -24,7 +24,7 @@ function MarketplaceNavigation({ currentView = 'marketplace', onViewChange = () 
       
       <button
         onClick={() => onViewChange('marketplace-selling')}
-        className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+        className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
           isActive('marketplace-selling')
             ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
             : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-[#0F0F0F]'
@@ -38,7 +38,7 @@ function MarketplaceNavigation({ currentView = 'marketplace', onViewChange = () 
       
       <button
         onClick={() => onViewChange('marketplace-messages')}
-        className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+        className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
           isActive('marketplace-messages')
             ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
             : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-[#0F0F0F]'

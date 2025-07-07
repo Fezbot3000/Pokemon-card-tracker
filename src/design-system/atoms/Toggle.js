@@ -42,7 +42,7 @@ const Toggle = ({
   const currentSize = sizes[size] || sizes.md;
   
   return (
-    <label className={`inline-flex items-center cursor-pointer ${disabled ? 'opacity-50 cursor-not-allowed' : ''} ${className}`}>
+    <label className={`inline-flex cursor-pointer items-center ${disabled ? 'cursor-not-allowed opacity-50' : ''} ${className}`}>
       <div className="relative">
         <input
           type="checkbox"
@@ -59,7 +59,7 @@ const Toggle = ({
                       rounded-full transition-colors duration-200 ease-in-out`}
         />
         <div
-          className={`absolute top-0.5 left-0.5 ${currentSize.circle} bg-white rounded-full 
+          className={`absolute left-0.5 top-0.5 ${currentSize.circle} bg-white rounded-full 
                       shadow transform transition-transform duration-200 ease-in-out
                       ${checked ? currentSize.translate : 'translate-x-0'}`}
         />

@@ -11,7 +11,7 @@ const AppearanceSettings = ({ isDarkMode, toggleTheme }) => {
       title="Appearance"
       description="Choose your preferred light or dark theme."
     >
-      <div className="flex flex-col sm:flex-row gap-4">
+      <div className="flex flex-col gap-4 sm:flex-row">
         <div 
           className={`
             flex-1 p-4 rounded-lg border-2 cursor-pointer transition-all duration-200
@@ -19,14 +19,14 @@ const AppearanceSettings = ({ isDarkMode, toggleTheme }) => {
           `}
           onClick={() => toggleTheme('light')}
         >
-          <div className="flex items-center justify-between mb-2">
+          <div className="mb-2 flex items-center justify-between">
             <h4 className="font-medium text-gray-900 dark:text-white">Light Mode</h4>
             {!isDarkMode && <Icon name="check_circle" className="text-blue-500" />}
           </div>
-          <div className="bg-white border border-gray-200 rounded-md p-2">
-            <div className="h-2 w-8 bg-blue-500 rounded mb-2"></div>
-            <div className="h-2 w-16 bg-gray-300 rounded mb-2"></div>
-            <div className="h-2 w-10 bg-gray-300 rounded"></div>
+          <div className="rounded-md border border-gray-200 bg-white p-2">
+            <div className="mb-2 h-2 w-8 rounded bg-blue-500"></div>
+            <div className="mb-2 h-2 w-16 rounded bg-gray-300"></div>
+            <div className="h-2 w-10 rounded bg-gray-300"></div>
           </div>
         </div>
         
@@ -37,14 +37,14 @@ const AppearanceSettings = ({ isDarkMode, toggleTheme }) => {
           `}
           onClick={() => toggleTheme('dark')}
         >
-          <div className="flex items-center justify-between mb-2">
+          <div className="mb-2 flex items-center justify-between">
             <h4 className="font-medium text-gray-900 dark:text-white">Dark Mode</h4>
             {isDarkMode && <Icon name="check_circle" className="text-blue-500" />}
           </div>
-          <div className="bg-gray-900 border border-gray-700 rounded-md p-2">
-            <div className="h-2 w-8 bg-blue-500 rounded mb-2"></div>
-            <div className="h-2 w-16 bg-gray-700 rounded mb-2"></div>
-            <div className="h-2 w-10 bg-gray-700 rounded"></div>
+          <div className="rounded-md border border-gray-700 bg-gray-900 p-2">
+            <div className="mb-2 h-2 w-8 rounded bg-blue-500"></div>
+            <div className="mb-2 h-2 w-16 rounded bg-gray-700"></div>
+            <div className="h-2 w-10 rounded bg-gray-700"></div>
           </div>
         </div>
       </div>

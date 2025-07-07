@@ -47,7 +47,7 @@ function MarketplacePagination({
   const endItem = Math.min(currentPage * itemsPerPage, totalItems);
 
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6">
+    <div className="mt-6 flex flex-col items-center justify-between gap-4 sm:flex-row">
       <div className="text-sm text-gray-600 dark:text-gray-400">
         Showing {startItem}-{endItem} of {totalItems} listings
       </div>
@@ -56,10 +56,10 @@ function MarketplacePagination({
         <button
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
-          className={`px-3 py-2 rounded-md ${
+          className={`rounded-md px-3 py-2 ${
             currentPage === 1
-              ? 'bg-gray-100 dark:bg-[#0F0F0F] text-gray-400 cursor-not-allowed'
-              : 'bg-white dark:bg-[#0F0F0F] text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600'
+              ? 'cursor-not-allowed bg-gray-100 text-gray-400 dark:bg-[#0F0F0F]'
+              : 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-[#0F0F0F] dark:text-gray-300 dark:hover:bg-gray-700'
           }`}
         >
           <span className="material-icons text-sm">chevron_left</span>
@@ -70,12 +70,12 @@ function MarketplacePagination({
             key={index}
             onClick={() => typeof page === 'number' && onPageChange(page)}
             disabled={page === '...'}
-            className={`px-3 py-2 rounded-md ${
+            className={`rounded-md px-3 py-2 ${
               page === currentPage
                 ? 'bg-purple-600 text-white'
                 : page === '...'
                 ? 'cursor-default text-gray-500 dark:text-gray-400'
-                : 'bg-white dark:bg-[#0F0F0F] text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600'
+                : 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-[#0F0F0F] dark:text-gray-300 dark:hover:bg-gray-700'
             }`}
           >
             {page}
@@ -85,10 +85,10 @@ function MarketplacePagination({
         <button
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
-          className={`px-3 py-2 rounded-md ${
+          className={`rounded-md px-3 py-2 ${
             currentPage === totalPages
-              ? 'bg-gray-100 dark:bg-[#0F0F0F] text-gray-400 cursor-not-allowed'
-              : 'bg-white dark:bg-[#0F0F0F] text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600'
+              ? 'cursor-not-allowed bg-gray-100 text-gray-400 dark:bg-[#0F0F0F]'
+              : 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-[#0F0F0F] dark:text-gray-300 dark:hover:bg-gray-700'
           }`}
         >
           <span className="material-icons text-sm">chevron_right</span>

@@ -74,9 +74,9 @@ const ImageUpload = ({
   // Loading state UI
   if (loadingState === 'loading') {
     return (
-      <div className={`w-full h-full flex items-center justify-center bg-gray-50 dark:bg-[#1A1A1A] rounded-lg ${className}`}>
+      <div className={`flex size-full items-center justify-center rounded-lg bg-gray-50 dark:bg-[#1A1A1A] ${className}`}>
         <div className="flex flex-col items-center justify-center">
-          <div className="animate-spin h-8 w-8 border-4 border-[#E6185C] border-t-transparent rounded-full mb-2"></div>
+          <div className="mb-2 size-8 animate-spin rounded-full border-4 border-[#E6185C] border-t-transparent"></div>
           <span className="text-sm text-gray-500 dark:text-gray-400">Loading image...</span>
         </div>
       </div>
@@ -86,12 +86,12 @@ const ImageUpload = ({
   // Error state UI
   if (loadingState === 'error') {
     return (
-      <div className={`w-full h-full flex flex-col items-center justify-center bg-gray-50 dark:bg-[#1A1A1A] rounded-lg ${className}`}>
-        <Icon name="error_outline" size="lg" className="text-red-500 mb-2" />
-        <span className="text-sm text-gray-500 dark:text-gray-400 mb-3">Failed to load image</span>
+      <div className={`flex size-full flex-col items-center justify-center rounded-lg bg-gray-50 dark:bg-[#1A1A1A] ${className}`}>
+        <Icon name="error_outline" size="lg" className="mb-2 text-red-500" />
+        <span className="mb-3 text-sm text-gray-500 dark:text-gray-400">Failed to load image</span>
         <button 
           onClick={onRetry}
-          className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-white rounded-full text-sm hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+          className="rounded-full bg-gray-100 px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-200 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600"
         >
           Retry
         </button>
@@ -103,29 +103,29 @@ const ImageUpload = ({
   if (imageUrl) {
     return (
       <div 
-        className={`relative w-full h-full group rounded-lg overflow-hidden ${className}`}
+        className={`group relative size-full overflow-hidden rounded-lg ${className}`}
         onDragEnter={handleDragEnter}
         onDragLeave={handleDragLeave}
         onDragOver={handleDragOver}
         onDrop={handleDrop}
       >
         <div 
-          className="w-full h-full cursor-pointer flex items-center justify-center bg-gray-50 dark:bg-[#1A1A1A]" 
+          className="flex size-full cursor-pointer items-center justify-center bg-gray-50 dark:bg-[#1A1A1A]" 
           onClick={onClick}
         >
           <img
             src={imageUrl}
             alt="Card"
-            className="max-w-full max-h-full object-contain"
+            className="max-h-full max-w-full object-contain"
           />
         </div>
         
         {/* Upload overlay on hover */}
-        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-opacity duration-200">
+        <div className="bg-black/50 absolute inset-0 flex flex-col items-center justify-center opacity-0 transition-opacity duration-200 group-hover:opacity-100">
           <button
             type="button"
             onClick={handleUploadClick}
-            className="mb-2 bg-white/10 hover:bg-white/20 text-white rounded-full p-2 transition-colors"
+            className="bg-white/10 hover:bg-white/20 mb-2 rounded-full p-2 text-white transition-colors"
           >
             <Icon name="upload" size="lg" />
           </button>
@@ -160,14 +160,14 @@ const ImageUpload = ({
       <Icon 
         name="image" 
         size="xl" 
-        className={`text-gray-400 dark:text-gray-500 mb-3 ${isDragging ? 'text-[#E6185C] dark:text-[#E6185C]' : ''}`} 
+        className={`mb-3 text-gray-400 dark:text-gray-500 ${isDragging ? 'text-[#E6185C] dark:text-[#E6185C]' : ''}`} 
       />
-      <span className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+      <span className="mb-2 text-sm text-gray-500 dark:text-gray-400">
         {isDragging ? 'Drop image here' : 'No image available'}
       </span>
       <button
         type="button"
-        className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-white rounded-full text-sm hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+        className="rounded-full bg-gray-100 px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-200 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600"
       >
         Upload Image
       </button>

@@ -219,16 +219,16 @@ function MarketplaceSearchFilters({ onFilterChange, listings, initialFilters }) 
       />
       
       {/* Filter dropdowns */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
         {/* Category filter */}
         <div>
           <select
             name="category"
             value={filters.category}
             onChange={handleChange}
-            className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md 
-                       bg-white dark:bg-[#0F0F0F] text-gray-900 dark:text-white 
-                       focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 
+                       text-gray-900 focus:outline-none focus:ring-1 focus:ring-blue-500 
+                       dark:border-gray-700 dark:bg-[#0F0F0F] dark:text-white"
           >
             <option value="">All Categories</option>
             {predefinedCategories.map(category => (
@@ -243,9 +243,9 @@ function MarketplaceSearchFilters({ onFilterChange, listings, initialFilters }) 
             name="gradingCompany"
             value={filters.gradingCompany}
             onChange={handleChange}
-            className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md 
-                       bg-white dark:bg-[#0F0F0F] text-gray-900 dark:text-white 
-                       focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 
+                       text-gray-900 focus:outline-none focus:ring-1 focus:ring-blue-500 
+                       dark:border-gray-700 dark:bg-[#0F0F0F] dark:text-white"
           >
             {gradingCompaniesOptions.map(company => (
               <option key={company.value} value={company.value}>{company.label}</option>
@@ -263,7 +263,7 @@ function MarketplaceSearchFilters({ onFilterChange, listings, initialFilters }) 
             className={`block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md 
                       bg-white dark:bg-[#0F0F0F] text-gray-900 dark:text-white 
                       focus:outline-none focus:ring-1 focus:ring-blue-500
-                      ${!filters.gradingCompany ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      ${!filters.gradingCompany ? 'cursor-not-allowed opacity-50' : ''}`}
           >
             {gradeOptions.map(grade => (
               <option key={grade.value} value={grade.value}>{grade.label}</option>
@@ -277,7 +277,7 @@ function MarketplaceSearchFilters({ onFilterChange, listings, initialFilters }) 
         <div className="flex justify-end">
           <button
             onClick={clearFilters}
-            className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 flex items-center"
+            className="flex items-center text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
           >
             <Icon name="close" className="mr-1 text-sm" />
             Clear filters

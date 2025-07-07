@@ -234,62 +234,62 @@ const CreateInvoiceModal = ({ isOpen, onClose, onSave, editingInvoice = null, pr
                 rows={3}
               />
               
-              <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+              <div className="border-t border-gray-200 pt-4 dark:border-gray-700">
+                <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-white">
                   Selected Cards
                 </h3>
-                <div className="overflow-y-auto max-h-64 border border-gray-200 dark:border-gray-700 rounded-lg">
+                <div className="max-h-64 overflow-y-auto rounded-lg border border-gray-200 dark:border-gray-700">
                   <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                     <thead className="bg-gray-50 dark:bg-black">
                       <tr>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
                           Card
                         </th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
                           Set / Year
                         </th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
                           Price
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="bg-white dark:bg-[#0F0F0F] divide-y divide-gray-200 dark:divide-gray-700">
+                    <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-[#0F0F0F]">
                       {selectedCards.map((card) => (
                         <tr key={card.id}>
                           <td className="px-6 py-4">
                             <div className="flex items-center space-x-3">
                               {/* Card Image - Desktop Only */}
-                              <div className="hidden md:block flex-shrink-0">
+                              <div className="hidden shrink-0 md:block">
                                 {card.imageUrl || card.image ? (
                                   <img
                                     src={card.imageUrl || card.image}
                                     alt={card.name || card.player || 'Card'}
-                                    className="h-12 w-8 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
+                                    className="h-12 w-8 cursor-pointer rounded object-cover transition-opacity hover:opacity-80"
                                     onClick={() => handleImageClick(card.imageUrl || card.image, card.name || card.player)}
                                     onError={(e) => {
                                       e.target.style.display = 'none';
                                     }}
                                   />
                                 ) : (
-                                  <div className="h-12 w-8 bg-gray-200 dark:bg-gray-700 rounded flex items-center justify-center">
-                                    <span className="material-icons text-gray-400 text-sm">image</span>
+                                  <div className="flex h-12 w-8 items-center justify-center rounded bg-gray-200 dark:bg-gray-700">
+                                    <span className="material-icons text-sm text-gray-400">image</span>
                                   </div>
                                 )}
                               </div>
                               
                               {/* Card Details */}
-                              <div className="flex-1 min-w-0">
-                                <div className="text-sm font-medium text-gray-900 dark:text-white truncate" title={card.name || card.player || 'Unnamed Card'}>
+                              <div className="min-w-0 flex-1">
+                                <div className="truncate text-sm font-medium text-gray-900 dark:text-white" title={card.name || card.player || 'Unnamed Card'}>
                                   {card.name || card.player || 'Unnamed Card'}
                                 </div>
-                                <div className="text-sm text-gray-500 dark:text-gray-400 truncate" title={`#${card.cardNumber}`}>
+                                <div className="truncate text-sm text-gray-500 dark:text-gray-400" title={`#${card.cardNumber}`}>
                                   #{card.cardNumber}
                                 </div>
                               </div>
                             </div>
                           </td>
                           <td className="px-6 py-4">
-                            <div className="text-sm text-gray-900 dark:text-white truncate" title={card.set || card.setName}>
+                            <div className="truncate text-sm text-gray-900 dark:text-white" title={card.set || card.setName}>
                               {card.set || card.setName}
                             </div>
                             <div className="text-sm text-gray-500 dark:text-gray-400">
@@ -306,8 +306,8 @@ const CreateInvoiceModal = ({ isOpen, onClose, onSave, editingInvoice = null, pr
                 </div>
               </div>
               
-              <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-                <div className="flex justify-between items-center p-4 bg-gray-50 dark:bg-black rounded-lg">
+              <div className="border-t border-gray-200 pt-4 dark:border-gray-700">
+                <div className="flex items-center justify-between rounded-lg bg-gray-50 p-4 dark:bg-black">
                   <div className="text-lg font-medium text-gray-900 dark:text-white">
                     Total Amount:
                   </div>
@@ -324,25 +324,25 @@ const CreateInvoiceModal = ({ isOpen, onClose, onSave, editingInvoice = null, pr
       {/* Enlarged Image Modal */}
       {enlargedImage && (
         <div 
-          className="fixed inset-0 z-[9999] bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-8"
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black bg-opacity-50 p-8 backdrop-blur-sm"
           onClick={handleEnlargedImageClose}
         >
-          <div className="relative bg-white dark:bg-gray-900 rounded-xl shadow-2xl max-w-md w-full max-h-[70vh] overflow-hidden">
+          <div className="relative max-h-[70vh] w-full max-w-md overflow-hidden rounded-xl bg-white shadow-2xl dark:bg-gray-900">
             {/* Close Button */}
             <button
               onClick={handleEnlargedImageClose}
-              className="absolute top-3 right-3 z-10 bg-black bg-opacity-50 hover:bg-opacity-70 rounded-full p-1.5 text-white transition-all"
+              className="absolute right-3 top-3 z-10 rounded-full bg-black bg-opacity-50 p-1.5 text-white transition-all hover:bg-opacity-70"
             >
               <span className="material-icons text-lg">close</span>
             </button>
             
             {/* Image Container */}
             <div className="p-4">
-              <div className="bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden">
+              <div className="overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800">
                 <img
                   src={enlargedImage.url}
                   alt={enlargedImage.name}
-                  className="w-full h-auto object-contain max-h-[50vh]"
+                  className="h-auto max-h-[50vh] w-full object-contain"
                   onClick={(e) => e.stopPropagation()}
                 />
               </div>

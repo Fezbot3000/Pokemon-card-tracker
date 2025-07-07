@@ -453,7 +453,7 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
     <>
       {/* Semi-transparent overlay that covers the entire screen */}
       <div 
-        className={`fixed inset-0 z-40 transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'} bg-black/40 dark:bg-black/60`}
+        className={`fixed inset-0 z-40 transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'pointer-events-none opacity-0'} bg-black/40 dark:bg-black/60`}
         aria-hidden="true"
       ></div>
 
@@ -475,29 +475,29 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
           onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside content
         >
           {/* Header */}
-          <div className={`flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700/50`}>
+          <div className={`dark:border-gray-700/50 flex items-center justify-between border-b border-gray-200 p-4`}>
             <h2 className={`text-lg font-semibold text-gray-900 dark:text-white`}>Add New Card</h2>
-            <button onClick={handleClose} className={`p-1 rounded-full text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white`}>
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            <button onClick={handleClose} className={`rounded-full p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white`}>
+              <svg className="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
           </div>
 
           {/* Tabs */} 
-          <div className={`border-b border-gray-200 dark:border-gray-700/50`}>
+          <div className={`dark:border-gray-700/50 border-b border-gray-200`}>
             <nav className="-mb-px flex space-x-6 px-4" aria-label="Tabs">
               <button 
                 onClick={() => setActiveTab('single')}
-                className={`whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm ${activeTab === 'single' 
+                className={`whitespace-nowrap border-b-2 px-1 py-3 text-sm font-medium ${activeTab === 'single' 
                   ? 'border-primary text-primary' 
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:border-gray-500'}`}
+                  : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:border-gray-500 dark:hover:text-gray-200'}`}
               >
                 Single Card Entry
               </button>
               <button 
                 onClick={() => setActiveTab('batch')}
-                className={`whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm ${activeTab === 'batch' 
+                className={`whitespace-nowrap border-b-2 px-1 py-3 text-sm font-medium ${activeTab === 'batch' 
                   ? 'border-primary text-primary' 
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:border-gray-500'}`}
+                  : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:border-gray-500 dark:hover:text-gray-200'}`}
               >
                 Batch Import from CSV
               </button>
@@ -506,11 +506,11 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
           
           {/* Conditional Content based on activeTab */} 
           {activeTab === 'single' && (
-            <form id="cardForm" onSubmit={handleSubmit} className="overflow-y-auto flex-grow" onScroll={preventPropagation}>
+            <form id="cardForm" onSubmit={handleSubmit} className="grow overflow-y-auto" onScroll={preventPropagation}>
               {/* Form content */}
-              <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 gap-6 p-6 md:grid-cols-3">
                 {/* Card Image Section */}
-                <div className="md:col-span-1 space-y-4">
+                <div className="space-y-4 md:col-span-1">
                   <label className={`block text-sm font-medium text-gray-700 dark:text-gray-300`}>Card Image</label>
                   <div 
                     ref={dropZoneRef}
@@ -535,12 +535,12 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
                       <img 
                         src={imagePreview} 
                         alt="Card Preview" 
-                        className="mx-auto h-48 w-auto object-contain rounded"
+                        className="mx-auto h-48 w-auto rounded object-contain"
                         onClick={(e) => { e.stopPropagation(); setShowEnlargedImage(true); }} // Prevent click opening file dialog
                       />
                     ) : (
-                      <div className="flex flex-col items-center justify-center h-48">
-                        <svg className={`mx-auto h-12 w-12 text-gray-400 dark:text-gray-500`} stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                      <div className="flex h-48 flex-col items-center justify-center">
+                        <svg className={`mx-auto size-12 text-gray-400 dark:text-gray-500`} stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
                           <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
                         <span className="mt-2 block text-sm font-medium">{isDragging ? 'Drop image here' : 'No image available'}</span>
@@ -559,23 +559,23 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
                         border-gray-300 text-gray-700 bg-white hover:bg-gray-50 
                         dark:border-gray-600 dark:text-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600`}
                     >
-                      <svg className="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                      <svg className="-ml-1 mr-2 size-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                         <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
                       </svg>
                       Replace Image
                     </button>
                   )}
                   {/* Profit/Loss Display */} 
-                  <div className={`rounded-lg p-3 text-center bg-gray-100 dark:bg-[#252B3B]`}>
+                  <div className={`rounded-lg bg-gray-100 p-3 text-center dark:bg-black`}>
                     <span className={`block text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400`}>Profit/Loss</span>
-                    <span className={`block text-xl font-bold mt-1 ${profit >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'}`}>
+                    <span className={`mt-1 block text-xl font-bold ${profit >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'}`}>
                       {formatValue(profit, 'AUD', exchangeRate)}
                     </span>
                   </div>
                 </div>
 
                 {/* Card Information Section */}
-                <div className="md:col-span-2 space-y-4">
+                <div className="space-y-4 md:col-span-2">
                   {['player', 'card', 'set', 'year', 'category', 'condition', 'slabSerial', 'datePurchased', 'investmentUSD', 'currentValueUSD', 'investmentAUD', 'currentValueAUD'].map((field) => {
                     const isRequired = ['card', 'set', 'year', 'category'].includes(field);
                     const isNumeric = ['year'].includes(field);
@@ -605,7 +605,7 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
                     
                     const commonInputClasses = `block w-full sm:text-sm rounded-md shadow-sm focus:ring-primary focus:border-primary 
                                               bg-white border-gray-300 text-gray-900 placeholder-gray-400 
-                                              dark:bg-[#252B3B] dark:border-gray-600 dark:text-gray-200 dark:placeholder-gray-500`;
+                                              dark:bg-black dark:border-gray-600 dark:text-gray-200 dark:placeholder-gray-500`;
                     const commonLabelClasses = `block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300`;
 
                     // Render Select or Input based on field type
@@ -613,7 +613,7 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
                       <div key={fieldName}>
                         <label htmlFor={fieldName} className={commonLabelClasses}>
                           {labelMap[fieldName]}
-                          {isRequired && <span className="text-red-500 ml-1">*</span>}
+                          {isRequired && <span className="ml-1 text-red-500">*</span>}
                         </label>
                         {field === 'set' ? (
                           <select
@@ -674,7 +674,7 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
                           <button
                             type="button"
                             onClick={handleCurrencyToggle}
-                            className={`mt-2 text-xs px-2 py-1 rounded bg-gray-200 text-gray-600 hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-300 dark:hover:bg-gray-500`}
+                            className={`mt-2 rounded bg-gray-200 px-2 py-1 text-xs text-gray-600 hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-300 dark:hover:bg-gray-500`}
                           >
                             Switch to {inputCurrency === 'AUD' ? 'USD' : 'AUD'}
                           </button>
@@ -688,20 +688,20 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
           )}
           {activeTab === 'batch' && (
             <div className="flex-1 overflow-y-auto p-6">
-              <div className={`rounded-lg p-6 mb-6 ${
+              <div className={`mb-6 rounded-lg p-6 ${
                 isDarkMode 
-                  ? 'bg-[#252B3B] border border-gray-700' 
-                  : 'bg-gray-50 border border-gray-200'
+                  ? 'border border-gray-700 bg-[#252B3B]' 
+                  : 'border border-gray-200 bg-gray-50'
               }`}>
-                <h3 className={`text-lg font-medium mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                <h3 className={`mb-2 text-lg font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                   Import Multiple Cards
                 </h3>
-                <p className={`text-sm mb-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                <p className={`mb-4 text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
                   Upload a CSV file with multiple card entries. 
                   The file must have the following headers:
                 </p>
                 
-                <div className={`p-3 rounded mb-4 font-mono text-xs whitespace-nowrap overflow-x-auto ${
+                <div className={`mb-4 overflow-x-auto whitespace-nowrap rounded p-3 font-mono text-xs ${
                   isDarkMode 
                     ? 'bg-gray-800 text-green-300' 
                     : 'bg-gray-100 text-green-600'
@@ -710,7 +710,7 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
                 </div>
                 
                 <div
-                  className={`border-2 border-dashed rounded-lg p-8 mb-4 text-center cursor-pointer ${
+                  className={`mb-4 cursor-pointer rounded-lg border-2 border-dashed p-8 text-center ${
                     batchImportDragActive
                       ? (isDarkMode ? 'border-purple-400 bg-purple-900/20' : 'border-purple-400 bg-purple-50')
                       : (isDarkMode ? 'border-gray-700 hover:border-purple-400 hover:bg-purple-900/10' : 'border-gray-300 hover:border-purple-400 hover:bg-purple-50')
@@ -733,7 +733,7 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
                   onClick={() => batchFileInputRef.current?.click()}
                 >
                   <div className="flex flex-col items-center">
-                    <span className={`material-icons text-4xl mb-2 ${
+                    <span className={`material-icons mb-2 text-4xl ${
                       batchImportDragActive
                         ? 'text-purple-400'
                         : (isDarkMode ? 'text-gray-500' : 'text-gray-400')
@@ -742,12 +742,12 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
                     </span>
                     {importLoading ? (
                       <div className="flex flex-col items-center">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-2"></div>
+                        <div className="mb-2 size-8 animate-spin rounded-full border-b-2 border-primary"></div>
                         <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Processing...</p>
                       </div>
                     ) : (
                       <>
-                        <p className={`font-medium mb-1 ${isDarkMode ? 'text-white' : 'text-gray-700'}`}>
+                        <p className={`mb-1 font-medium ${isDarkMode ? 'text-white' : 'text-gray-700'}`}>
                           {batchImportDragActive ? 'Drop your file here' : 'Drag and drop your CSV file here'}
                         </p>
                         <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
@@ -766,21 +766,21 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
                 </div>
                 
                 {importSuccess && (
-                  <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-200 rounded-lg">
+                  <div className="mb-4 rounded-lg bg-green-50 p-3 text-green-800 dark:bg-green-900/20 dark:text-green-200">
                     <p className="flex items-start">
-                      <span className="material-icons text-green-500 mr-2">check_circle</span>
+                      <span className="material-icons mr-2 text-green-500">check_circle</span>
                       <span>{importSuccess}</span>
                     </p>
                   </div>
                 )}
                 
                 {importErrors.length > 0 && (
-                  <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200 rounded-lg">
-                    <p className="font-medium mb-1 flex items-center">
-                      <span className="material-icons text-red-500 mr-2">error</span>
+                  <div className="mb-4 rounded-lg bg-red-50 p-3 text-red-800 dark:bg-red-900/20 dark:text-red-200">
+                    <p className="mb-1 flex items-center font-medium">
+                      <span className="material-icons mr-2 text-red-500">error</span>
                       <span>Import Errors</span>
                     </p>
-                    <ul className="list-disc ml-8 text-sm space-y-1 mt-2">
+                    <ul className="ml-8 mt-2 list-disc space-y-1 text-sm">
                       {importErrors.map((error, index) => (
                         <li key={index}>{error}</li>
                       ))}
@@ -788,8 +788,8 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
                   </div>
                 )}
                 
-                <div className="text-sm mt-4">
-                  <p className={`font-medium mb-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Need a template?</p>
+                <div className="mt-4 text-sm">
+                  <p className={`mb-1 font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Need a template?</p>
                   <button
                     type="button"
                     onClick={() => {
@@ -817,11 +817,11 @@ const NewCardForm = ({ onSubmit, onClose, exchangeRate = 1.5, collections = {}, 
               
               <div className={`rounded-lg p-6 ${
                 isDarkMode 
-                  ? 'bg-[#252B3B] border border-gray-700' 
-                  : 'bg-gray-50 border border-gray-200'
+                  ? 'border border-gray-700 bg-[#252B3B]' 
+                  : 'border border-gray-200 bg-gray-50'
               }`}>
-                <h4 className={`font-medium mb-3 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Import Tips</h4>
-                <ul className={`text-sm space-y-2 list-disc pl-5 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                <h4 className={`mb-3 font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Import Tips</h4>
+                <ul className={`list-disc space-y-2 pl-5 text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
                   <li>Make sure your CSV file has the correct header row</li>
                   <li>Dates should be in YYYY-MM-DD format</li>
                   <li>Use the slabSerial field as a unique identifier</li>

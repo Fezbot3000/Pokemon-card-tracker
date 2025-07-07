@@ -24,11 +24,11 @@ const StatisticsSummary = ({
 
   return (
     <div 
-      className={`w-full bg-white dark:bg-[#1B2131] rounded-md ${isDarkMode ? 'shadow-sm' : ''} overflow-hidden border border-[#ffffff33] dark:border-[#ffffff1a] ${className}`}
+      className={`w-full rounded-md bg-white dark:bg-black ${isDarkMode ? 'shadow-sm' : ''} overflow-hidden border border-[#ffffff33] dark:border-[#ffffff1a] ${className}`}
       {...props}
     >
       <div className="rounded-md p-2 sm:p-4 md:p-6">
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-0">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-0">
           {statistics.map((stat, index) => {
             let displayValue;
             const isMonetaryStat = stat.isMonetary !== undefined ? stat.isMonetary : ['PAID', 'VALUE', 'PROFIT'].includes(stat.label.toUpperCase());
@@ -58,9 +58,9 @@ const StatisticsSummary = ({
             return (
               <div
                 key={index}
-                className="flex flex-col items-center justify-center p-2 sm:p-3 md:p-4 py-3 sm:py-4 md:py-6 border-none"
+                className="flex flex-col items-center justify-center border-none p-2 py-3 sm:p-3 sm:py-4 md:p-4 md:py-6"
               >
-                <div className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 sm:mb-2 uppercase">
+                <div className="mb-1 text-xs font-medium uppercase text-gray-500 dark:text-gray-400 sm:mb-2 sm:text-sm">
                   {stat.label}
                 </div>
                 <div className={`font-medium flex items-center gap-1 whitespace-nowrap overflow-hidden
@@ -74,7 +74,7 @@ const StatisticsSummary = ({
                   }}
                 >
                   {stat.icon && (
-                    <span className="text-gray-500 dark:text-gray-400 flex-shrink-0">
+                    <span className="shrink-0 text-gray-500 dark:text-gray-400">
                       <Icon name={stat.icon} size="sm" />
                     </span>
                   )}

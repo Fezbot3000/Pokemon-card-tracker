@@ -71,9 +71,9 @@ function MapView({ location, cardName, price }) {
 
   if (loading) {
     return (
-      <div className="bg-gray-100 dark:bg-gray-800 rounded-lg h-64 flex items-center justify-center">
+      <div className="flex h-64 items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-800">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto mb-2"></div>
+          <div className="mx-auto mb-2 size-8 animate-spin rounded-full border-b-2 border-purple-600"></div>
           <p className="text-gray-600 dark:text-gray-400">Loading map...</p>
         </div>
       </div>
@@ -82,11 +82,11 @@ function MapView({ location, cardName, price }) {
 
   if (error || !coordinates) {
     return (
-      <div className="bg-gray-100 dark:bg-gray-800 rounded-lg h-64 flex items-center justify-center">
+      <div className="flex h-64 items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-800">
         <div className="text-center">
-          <span className="material-icons text-4xl text-gray-400 mb-2">location_on</span>
+          <span className="material-icons mb-2 text-4xl text-gray-400">location_on</span>
           <p className="text-gray-600 dark:text-gray-400">{location}</p>
-          <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-500">
             {error || 'Map unavailable'}
           </p>
         </div>
@@ -95,7 +95,7 @@ function MapView({ location, cardName, price }) {
   }
 
   return (
-    <div className="rounded-lg overflow-hidden h-64 border border-gray-200 dark:border-gray-700">
+    <div className="h-64 overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
       <MapContainer
         center={coordinates}
         zoom={13}

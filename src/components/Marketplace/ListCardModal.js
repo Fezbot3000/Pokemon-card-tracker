@@ -303,7 +303,7 @@ function ListCardModal({ isOpen, onClose, selectedCards }) {
           >
             {isSubmitting ? (
               <>
-                <span className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></span>
+                <span className="mr-2 size-4 animate-spin rounded-full border-y-2 border-white"></span>
                 Listing...
               </>
             ) : (
@@ -316,14 +316,14 @@ function ListCardModal({ isOpen, onClose, selectedCards }) {
       <form id="listing-form" onSubmit={handleSubmit} className="space-y-6">
         {selectedCards.map((card, index) => {
           return (
-            <div key={card.slabSerial || card.id || card._id || JSON.stringify(card)} className="bg-white dark:bg-[#0F0F0F] rounded-lg p-6 border border-gray-200 dark:border-gray-700">
-              <div className="flex flex-col md:flex-row gap-6">
+            <div key={card.slabSerial || card.id || card._id || JSON.stringify(card)} className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-[#0F0F0F]">
+              <div className="flex flex-col gap-6 md:flex-row">
                 {/* Card Image */}
-                <div className="flex-shrink-0">
+                <div className="shrink-0">
                   <img
                     src={card.imageUrl || card.cloudImageUrl || card.image || card.imageURL || card.img || '/placeholder-card.png'}
                     alt={card.card || card.name || 'Card'}
-                    className="w-32 h-44 object-contain bg-gray-100 dark:bg-black rounded-lg shadow-md"
+                    className="h-44 w-32 rounded-lg bg-gray-100 object-contain shadow-md dark:bg-black"
                     onError={(e) => {
                       e.target.src = '/placeholder-card.png';
                     }}
@@ -334,30 +334,30 @@ function ListCardModal({ isOpen, onClose, selectedCards }) {
                 <div className="flex-1 space-y-4">
                   {/* Card Info */}
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                    <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
                       {card.card || card.name || 'Unnamed Card'}
                     </h3>
                     <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
                       <div>
                         <span className="text-gray-500 dark:text-gray-400">Set:</span>
-                        <p className="text-gray-900 dark:text-white font-medium">{card.set || card.setName || 'Unknown Set'}</p>
+                        <p className="font-medium text-gray-900 dark:text-white">{card.set || card.setName || 'Unknown Set'}</p>
                       </div>
                       <div>
                         <span className="text-gray-500 dark:text-gray-400">Year:</span>
-                        <p className="text-gray-900 dark:text-white font-medium">{card.year || 'Unknown'}</p>
+                        <p className="font-medium text-gray-900 dark:text-white">{card.year || 'Unknown'}</p>
                       </div>
                       <div>
                         <span className="text-gray-500 dark:text-gray-400">Grade:</span>
-                        <p className="text-gray-900 dark:text-white font-medium">PSA {card.grade || 'Ungraded'}</p>
+                        <p className="font-medium text-gray-900 dark:text-white">PSA {card.grade || 'Ungraded'}</p>
                       </div>
                       <div>
                         <span className="text-gray-500 dark:text-gray-400">Slab Serial:</span>
-                        <p className="text-gray-900 dark:text-white font-medium">{card.slabSerial || 'N/A'}</p>
+                        <p className="font-medium text-gray-900 dark:text-white">{card.slabSerial || 'N/A'}</p>
                       </div>
                       {(card.currentValueAUD || card.value || card.marketValue || card.currentValue) && (
                         <div>
                           <span className="text-gray-500 dark:text-gray-400">Current Value:</span>
-                          <p className="text-gray-900 dark:text-white font-medium">
+                          <p className="font-medium text-gray-900 dark:text-white">
                             {preferredCurrency?.symbol || '$'}{card.currentValueAUD || card.value || card.marketValue || card.currentValue || '0'}
                           </p>
                         </div>
@@ -365,7 +365,7 @@ function ListCardModal({ isOpen, onClose, selectedCards }) {
                       {(card.paidPriceAUD || card.purchasePrice || card.paidPrice || card.paid || card.cost) && (
                         <div>
                           <span className="text-gray-500 dark:text-gray-400">Purchase Price:</span>
-                          <p className="text-gray-900 dark:text-white font-medium">
+                          <p className="font-medium text-gray-900 dark:text-white">
                             {preferredCurrency?.symbol || '$'}{card.paidPriceAUD || card.purchasePrice || card.paidPrice || card.paid || card.cost || '0'}
                           </p>
                         </div>
@@ -374,20 +374,20 @@ function ListCardModal({ isOpen, onClose, selectedCards }) {
                   </div>
                   
                   {/* Form Fields */}
-                  <div className="space-y-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                  <div className="space-y-4 border-t border-gray-200 pt-4 dark:border-gray-700">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                         Listing Price ({preferredCurrency?.code || 'USD'}) <span className="text-red-500">*</span>
                       </label>
                       <div className="relative">
-                        <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400">
                           {preferredCurrency?.symbol || '$'}
                         </span>
                         <input
                           type="number"
                           value={listingData[card.slabSerial || card.id || card._id || JSON.stringify(card)]?.price || ''}
                           onChange={(e) => handleInputChange(card.slabSerial || card.id || card._id || JSON.stringify(card), 'price', e.target.value)}
-                          className="w-full pl-8 pr-4 py-2 border border-[#ffffff33] dark:border-[#ffffff1a] rounded-lg bg-white dark:bg-[#0F0F0F] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[var(--primary-default)]/20 focus:border-[var(--primary-default)] placeholder-gray-500 dark:placeholder-gray-400"
+                          className="focus:ring-[var(--primary-default)]/20 w-full rounded-lg border border-[#ffffff33] bg-white py-2 pl-8 pr-4 text-gray-900 placeholder:text-gray-500 focus:border-[var(--primary-default)] focus:outline-none focus:ring-2 dark:border-[#ffffff1a] dark:bg-[#0F0F0F] dark:text-white dark:placeholder:text-gray-400"
                           placeholder="0.00"
                           step="0.01"
                           min="0.01"
@@ -396,29 +396,29 @@ function ListCardModal({ isOpen, onClose, selectedCards }) {
                       </div>
                     </div>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                           Note (Optional)
                         </label>
                         <textarea
                           value={listingData[card.slabSerial || card.id || card._id || JSON.stringify(card)]?.note || ''}
                           onChange={(e) => handleInputChange(card.slabSerial || card.id || card._id || JSON.stringify(card), 'note', e.target.value)}
-                          className="w-full px-4 py-2 border border-[#ffffff33] dark:border-[#ffffff1a] rounded-lg bg-white dark:bg-[#0F0F0F] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[var(--primary-default)]/20 focus:border-[var(--primary-default)] placeholder-gray-500 dark:placeholder-gray-400"
+                          className="focus:ring-[var(--primary-default)]/20 w-full rounded-lg border border-[#ffffff33] bg-white px-4 py-2 text-gray-900 placeholder:text-gray-500 focus:border-[var(--primary-default)] focus:outline-none focus:ring-2 dark:border-[#ffffff1a] dark:bg-[#0F0F0F] dark:text-white dark:placeholder:text-gray-400"
                           placeholder="Add a note about this card..."
                           rows="3"
                         />
                       </div>
                       
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                           Location (Optional)
                         </label>
                         <input
                           type="text"
                           value={listingData[card.slabSerial || card.id || card._id || JSON.stringify(card)]?.location || ''}
                           onChange={(e) => handleInputChange(card.slabSerial || card.id || card._id || JSON.stringify(card), 'location', e.target.value)}
-                          className="w-full px-4 py-2 border border-[#ffffff33] dark:border-[#ffffff1a] rounded-lg bg-white dark:bg-[#0F0F0F] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[var(--primary-default)]/20 focus:border-[var(--primary-default)] placeholder-gray-500 dark:placeholder-gray-400"
+                          className="focus:ring-[var(--primary-default)]/20 w-full rounded-lg border border-[#ffffff33] bg-white px-4 py-2 text-gray-900 placeholder:text-gray-500 focus:border-[var(--primary-default)] focus:outline-none focus:ring-2 dark:border-[#ffffff1a] dark:bg-[#0F0F0F] dark:text-white dark:placeholder:text-gray-400"
                           placeholder="Enter your location (e.g., Sydney)"
                         />
                       </div>

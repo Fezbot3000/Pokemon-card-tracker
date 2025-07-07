@@ -599,61 +599,61 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-5rem)] p-4 sm:p-6 pb-20">
+    <div className="flex h-[calc(100vh-5rem)] flex-col p-4 pb-20 sm:p-6">
       <MarketplaceNavigation currentView={currentView} onViewChange={onViewChange} />
-      <div className="flex flex-1 overflow-hidden -mx-4 sm:-mx-6">
+      <div className="-mx-4 flex flex-1 overflow-hidden sm:-mx-6">
       {/* Chat list - 1/3 width on desktop */}
-      <div className="w-1/3 border-r border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col">
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+      <div className="flex w-1/3 flex-col overflow-hidden border-r border-gray-200 dark:border-gray-700">
+        <div className="border-b border-gray-200 p-4 dark:border-gray-700">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Messages</h2>
         </div>
         
         {loading ? (
-          <div className="flex-1 flex justify-center items-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-900 dark:border-white"></div>
+          <div className="flex flex-1 items-center justify-center">
+            <div className="size-8 animate-spin rounded-full border-y-2 border-gray-900 dark:border-white"></div>
           </div>
         ) : conversations.length === 0 ? (
-          <div className="flex-1 flex flex-col items-center justify-center px-4">
+          <div className="flex flex-1 flex-col items-center justify-center px-4">
             {/* Messages Icon */}
-            <div className="w-20 h-20 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
+            <div className="mb-4 flex size-20 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
               <span className="material-icons text-3xl text-gray-400 dark:text-gray-600">chat_bubble_outline</span>
             </div>
             
             {/* Main Message */}
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 text-center">
+            <h3 className="mb-2 text-center text-lg font-semibold text-gray-900 dark:text-white">
               No Conversations
             </h3>
             
             {/* Description */}
-            <p className="text-gray-600 dark:text-gray-400 text-center text-sm leading-relaxed">
+            <p className="text-center text-sm leading-relaxed text-gray-600 dark:text-gray-400">
               When you contact sellers, conversations will appear here.
             </p>
             
             {/* Action Button */}
             <button
               onClick={() => onViewChange('marketplace')}
-              className="mt-4 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+              className="mt-4 flex items-center gap-2 rounded-lg bg-red-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-600"
             >
               <span className="material-icons text-sm">storefront</span>
               Browse Marketplace
             </button>
           </div>
         ) : (
-          <div className="flex-1 overflow-y-auto hide-scrollbar">
+          <div className="hide-scrollbar flex-1 overflow-y-auto">
             {conversations.map(chat => (
               <div 
                 key={chat.id}
                 onClick={() => setActiveChat(chat)}
-                className={`p-4 border-b border-gray-200 dark:border-gray-700 cursor-pointer transition-colors ${
+                className={`cursor-pointer border-b border-gray-200 p-4 transition-colors dark:border-gray-700 ${
                   activeChat?.id === chat.id 
                     ? 'bg-blue-50 dark:bg-blue-900/20' 
                     : 'hover:bg-gray-50 dark:hover:bg-gray-800'
                 }`}
               >
-                <div className="flex justify-between items-start">
-                  <div className="flex-1 min-w-0">
+                <div className="flex items-start justify-between">
+                  <div className="min-w-0 flex-1">
                     <h3 
-                      className="font-medium text-gray-900 dark:text-white truncate hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer"
+                      className="cursor-pointer truncate font-medium text-gray-900 transition-colors hover:text-blue-600 dark:text-white dark:hover:text-blue-400"
                       onClick={(e) => {
                         e.stopPropagation();
                         try {
@@ -673,11 +673,11 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
                     >
                       {chat.otherParticipantName}
                     </h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 truncate mt-1">
+                    <p className="mt-1 truncate text-sm text-gray-600 dark:text-gray-400">
                       {chat.card?.card || 'Card discussion'}
                     </p>
                   </div>
-                  <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                  <span className="whitespace-nowrap text-xs text-gray-500 dark:text-gray-400">
                     {formatDate(chat.timestamp)}
                   </span>
                 </div>
@@ -688,12 +688,12 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
       </div>
       
       {/* Chat messages - 2/3 width on desktop */}
-      <div className="w-2/3 flex flex-col overflow-hidden">
+      <div className="flex w-2/3 flex-col overflow-hidden">
         {!activeChat ? (
-          <div className="flex-1 flex justify-center items-center">
-            <div className="text-center p-4">
+          <div className="flex flex-1 items-center justify-center">
+            <div className="p-4 text-center">
               <p className="text-gray-600 dark:text-gray-400">Select a conversation</p>
-              <p className="text-gray-500 dark:text-gray-500 mt-2">
+              <p className="mt-2 text-gray-500 dark:text-gray-500">
                 Choose a conversation from the list to view messages.
               </p>
             </div>
@@ -701,12 +701,12 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
         ) : (
           <>
             {/* Chat header */}
-            <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+            <div className="border-b border-gray-200 p-4 dark:border-gray-700">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <div className="flex-1 min-w-0">
+                  <div className="min-w-0 flex-1">
                     <h3 
-                      className="font-medium text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer transition-colors"
+                      className="cursor-pointer font-medium text-gray-900 transition-colors hover:text-blue-600 dark:text-white dark:hover:text-blue-400"
                       onClick={() => {
                         const otherUserId = activeChat.buyerId === user.uid ? activeChat.sellerId : activeChat.buyerId;
                         handleViewSellerProfile(otherUserId);
@@ -714,7 +714,7 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
                     >
                       {activeChat.otherParticipantName}
                     </h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
+                    <p className="truncate text-sm text-gray-600 dark:text-gray-400">
                       {activeChat.card?.card || 'Card discussion'}
                     </p>
                   </div>
@@ -727,14 +727,14 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
                      (user.uid === activeChat.sellerId && activeChat.leftBy.seller))) ? (
                     <button
                       disabled
-                      className="px-3 py-1 text-sm text-gray-400 dark:text-gray-500 border border-gray-400 dark:border-gray-500 rounded-md cursor-not-allowed"
+                      className="cursor-not-allowed rounded-md border border-gray-400 px-3 py-1 text-sm text-gray-400 dark:border-gray-500 dark:text-gray-500"
                     >
                       Chat Left
                     </button>
                   ) : (
                     <button
                       onClick={handleLeaveChat}
-                      className="px-3 py-1 text-sm text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 border border-red-600 dark:border-red-400 rounded-md transition-colors"
+                      className="rounded-md border border-red-600 px-3 py-1 text-sm text-red-600 transition-colors hover:text-red-800 dark:border-red-400 dark:text-red-400 dark:hover:text-red-300"
                     >
                       Leave Chat
                     </button>
@@ -743,7 +743,7 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
                   {/* Delete Chat button */}
                   <button
                     onClick={handleDeleteChat}
-                    className="px-3 py-1 text-sm text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 border border-red-600 dark:border-red-400 rounded-md transition-colors"
+                    className="rounded-md border border-red-600 px-3 py-1 text-sm text-red-600 transition-colors hover:text-red-800 dark:border-red-400 dark:text-red-400 dark:hover:text-red-300"
                   >
                     Delete Chat
                   </button>
@@ -753,7 +753,7 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
             
             {/* Left chat notification banner */}
             {activeChat.leftBy && (activeChat.leftBy.buyer || activeChat.leftBy.seller) && (
-              <div className="bg-yellow-100 dark:bg-yellow-900/20 border-l-4 border-yellow-500 text-yellow-700 dark:text-yellow-300 p-4">
+              <div className="border-l-4 border-yellow-500 bg-yellow-100 p-4 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-300">
                 <p>
                   {activeChat.leftBy.buyer && activeChat.leftBy.seller 
                     ? 'Both users have left this chat.' 
@@ -767,18 +767,18 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
             {/* Card Info Section - Show what item they're discussing */}
             {activeChat && activeChat.cardId && (
               <div 
-                className="bg-gray-50 dark:bg-[#0F0F0F] border-b border-gray-200 dark:border-gray-700 p-4 cursor-pointer hover:bg-gray-100 dark:hover:bg-[#0F0F0F] transition-colors"
+                className="cursor-pointer border-b border-gray-200 bg-gray-50 p-4 transition-colors hover:bg-gray-100 dark:border-gray-700 dark:bg-[#0F0F0F] dark:hover:bg-[#0F0F0F]"
                 onClick={() => handleShowCardDetails(activeChat)}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     {/* Card Image */}
                     {(cardImages[activeChat.cardId] || activeChat.cardImage) && (
-                      <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-200 dark:bg-gray-700 flex-shrink-0">
+                      <div className="size-12 shrink-0 overflow-hidden rounded-lg bg-gray-200 dark:bg-gray-700">
                         <img 
                           src={cardImages[activeChat.cardId] || activeChat.cardImage} 
                           alt="Card" 
-                          className="w-full h-full object-cover"
+                          className="size-full object-cover"
                           onError={(e) => {
                             e.target.style.display = 'none';
                           }}
@@ -786,13 +786,13 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
                       </div>
                     )}
                     
-                    <div className="flex-1 min-w-0">
+                    <div className="min-w-0 flex-1">
                       <div className="flex items-center space-x-2">
-                        <h4 className="font-medium text-gray-900 dark:text-white text-sm truncate">
+                        <h4 className="truncate text-sm font-medium text-gray-900 dark:text-white">
                           {activeChat.cardTitle || activeChat.cardName || activeChat.card?.name || activeChat.card?.cardName || activeChat.card?.card || 'Card discussion'}
                         </h4>
                         {/* Status Tag */}
-                        <div className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                        <div className={`rounded-full px-2 py-0.5 text-xs font-medium ${
                           activeChat.status === 'sold' 
                             ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
                             : activeChat.status === 'pending'
@@ -820,7 +820,7 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
                   
                   {/* Click indicator */}
                   <div className="text-gray-400 dark:text-gray-500">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
                   </div>
@@ -829,11 +829,11 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
             )}
             
             {/* Messages container */}
-            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 hide-scrollbar">
+            <div className="hide-scrollbar flex-1 space-y-4 overflow-y-auto p-4">
               {messages.length === 0 ? (
-                <div className="text-center py-12">
+                <div className="py-12 text-center">
                   <p className="text-gray-600 dark:text-gray-400">No messages yet</p>
-                  <p className="text-gray-500 dark:text-gray-500 mt-2">
+                  <p className="mt-2 text-gray-500 dark:text-gray-500">
                     Start the conversation by sending a message below.
                   </p>
                 </div>
@@ -847,11 +847,11 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
                       className={`max-w-[60%] rounded-lg px-4 py-2 ${
                         message.senderId === user?.uid 
                           ? 'bg-blue-500 text-white' 
-                          : 'bg-gray-200 dark:bg-[#0F0F0F] text-gray-900 dark:text-white'
+                          : 'bg-gray-200 text-gray-900 dark:bg-[#0F0F0F] dark:text-white'
                       }`}
                     >
                       <div className="text-sm">{message.text}</div>
-                      <div className="text-xs mt-1 opacity-70 text-right">
+                      <div className="mt-1 text-right text-xs opacity-70">
                         {formatTimestamp(message.timestamp)}
                       </div>
                     </div>
@@ -863,7 +863,7 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
             
             {/* Message input */}
             {activeChat?.leftBy && (activeChat.leftBy.buyer || activeChat.leftBy.seller) ? (
-              <div className="border-t border-gray-200 dark:border-gray-700 p-4 bg-gray-100 dark:bg-[#0F0F0F] text-center">
+              <div className="border-t border-gray-200 bg-gray-100 p-4 text-center dark:border-gray-700 dark:bg-[#0F0F0F]">
                 <p className="text-gray-600 dark:text-gray-400">
                   {activeChat.leftBy.buyer && activeChat.leftBy.seller ? 
                     'Both users have left this chat' : 
@@ -871,19 +871,19 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
                 </p>
               </div>
             ) : (
-              <form onSubmit={handleSendMessage} className="border-t border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-[#0F0F0F]">
+              <form onSubmit={handleSendMessage} className="border-t border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-[#0F0F0F]">
                 <div className="flex items-center space-x-2">
                   <input
                     type="text"
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     placeholder="Type a message..."
-                    className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-[#0F0F0F] dark:text-white"
+                    className="flex-1 rounded-md border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-[#0F0F0F] dark:text-white"
                     disabled={sendingMessage}
                   />
                   <button
                     type="submit"
-                    className={`px-4 py-2 rounded-md ${sendingMessage || !newMessage.trim() ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed' : 'bg-blue-500 text-white hover:bg-blue-600'}`}
+                    className={`rounded-md px-4 py-2 ${sendingMessage || !newMessage.trim() ? 'cursor-not-allowed bg-gray-300 text-gray-500 dark:bg-gray-700 dark:text-gray-400' : 'bg-blue-500 text-white hover:bg-blue-600'}`}
                     disabled={sendingMessage || !newMessage.trim()}
                   >
                     <span className="material-icons">send</span>

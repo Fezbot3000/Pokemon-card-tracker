@@ -8,8 +8,8 @@ import React from 'react';
 const ColorCategory = ({ title, children }) => {
   return (
     <div className="mb-8">
-      <h3 className="text-xl font-medium mb-4 text-gray-700 dark:text-gray-300">{title}</h3>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+      <h3 className="mb-4 text-xl font-medium text-gray-700 dark:text-gray-300">{title}</h3>
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
         {children}
       </div>
     </div>

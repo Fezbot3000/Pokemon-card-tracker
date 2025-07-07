@@ -9,10 +9,10 @@ const ProfitChangeModal = ({ isOpen, onClose, profitChangeData, oldProfit, newPr
   const difference = currentProfit - previousProfit;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white dark:bg-[#1B2131] rounded-xl shadow-lg max-w-md w-full mx-4">
+    <div className="bg-black/50 fixed inset-0 z-50 flex items-center justify-center">
+      <div className="mx-4 w-full max-w-md rounded-xl bg-white shadow-lg dark:bg-[#1B2131]">
         <div className="p-6">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+          <h2 className="mb-4 text-xl font-semibold text-gray-900 dark:text-white">
             Profit Change Summary
           </h2>
           

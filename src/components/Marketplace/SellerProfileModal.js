@@ -342,35 +342,35 @@ function SellerProfileModal({ isOpen, onClose, sellerId, onOpenListing, cardImag
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="xl" title="Seller Profile" className="rounded-2xl overflow-hidden">
+    <Modal isOpen={isOpen} onClose={onClose} size="xl" title="Seller Profile" className="overflow-hidden rounded-2xl">
       {loading ? (
         <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+          <div className="size-8 animate-spin rounded-full border-b-2 border-purple-600"></div>
         </div>
       ) : (
         <div className="space-y-8 pb-8">
           {/* Header Section */}
-          <div className="bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl p-8 text-white -mx-6 mt-6">
+          <div className="-mx-6 mt-6 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-600 p-8 text-white">
             <div className="flex items-center gap-6 px-4">
               {/* Avatar */}
-              <div className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center flex-shrink-0">
+              <div className="bg-white/20 flex size-20 shrink-0 items-center justify-center rounded-2xl backdrop-blur-sm">
                 <Icon name="person" size="xl" className="text-white" />
               </div>
               
               {/* Seller Info */}
               <div className="flex-1">
-                <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                   <div className="flex-1">
-                    <h2 className="text-3xl font-bold mb-2">
+                    <h2 className="mb-2 text-3xl font-bold">
                       {sellerProfile?.displayName || 'Seller'}
                     </h2>
                     <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-white/90">
+                      <div className="text-white/90 flex items-center gap-2">
                         <Icon name="calendar_today" size="sm" />
                         <span className="text-sm">Member since {formatDate(sellerProfile?.createdAt)}</span>
                       </div>
                       {sellerProfile?.location && (
-                        <div className="flex items-center gap-2 text-white/90">
+                        <div className="text-white/90 flex items-center gap-2">
                           <Icon name="location_on" size="sm" />
                           <span className="text-sm">{sellerProfile.location}</span>
                         </div>
@@ -384,7 +384,7 @@ function SellerProfileModal({ isOpen, onClose, sellerId, onOpenListing, cardImag
                           onClick={handleMessageSeller}
                           variant="secondary"
                           size="md"
-                          className="bg-white/10 backdrop-blur-sm border-white/20 text-white hover:bg-white/20 transition-all duration-200 w-full"
+                          className="bg-white/10 border-white/20 hover:bg-white/20 w-full text-white backdrop-blur-sm transition-all duration-200"
                         >
                           <Icon name="message" size="sm" className="mr-2" />
                           Message Seller
@@ -400,7 +400,7 @@ function SellerProfileModal({ isOpen, onClose, sellerId, onOpenListing, cardImag
                         onClick={handleMessageSeller}
                         variant="secondary"
                         size="md"
-                        className="bg-white/10 backdrop-blur-sm border-white/20 text-white hover:bg-white/20 transition-all duration-200"
+                        className="bg-white/10 border-white/20 hover:bg-white/20 text-white backdrop-blur-sm transition-all duration-200"
                       >
                         <Icon name="message" size="sm" className="mr-2" />
                         Message Seller
@@ -413,32 +413,32 @@ function SellerProfileModal({ isOpen, onClose, sellerId, onOpenListing, cardImag
           </div>
 
           {/* Navigation Tabs */}
-          <div className="border-b border-gray-200 dark:border-gray-700 -mx-6 px-6">
+          <div className="-mx-6 border-b border-gray-200 px-6 dark:border-gray-700">
             <div className="flex gap-8">
               <button
                 onClick={() => setActiveTab('listings')}
-                className={`pb-4 px-2 font-semibold transition-all duration-200 relative ${
+                className={`relative px-2 pb-4 font-semibold transition-all duration-200 ${
                   activeTab === 'listings'
                     ? 'text-purple-600 dark:text-purple-400'
-                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                    : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200'
                 }`}
               >
                 Listings ({activeListings.length})
                 {activeTab === 'listings' && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-purple-600 dark:bg-purple-400 rounded-full" />
+                  <div className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-purple-600 dark:bg-purple-400" />
                 )}
               </button>
               <button
                 onClick={() => setActiveTab('reviews')}
-                className={`pb-4 px-2 font-semibold transition-all duration-200 relative ${
+                className={`relative px-2 pb-4 font-semibold transition-all duration-200 ${
                   activeTab === 'reviews'
                     ? 'text-purple-600 dark:text-purple-400'
-                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                    : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200'
                 }`}
               >
                 Reviews ({totalReviews})
                 {activeTab === 'reviews' && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-purple-600 dark:bg-purple-400 rounded-full" />
+                  <div className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-purple-600 dark:bg-purple-400" />
                 )}
               </button>
             </div>
@@ -448,15 +448,15 @@ function SellerProfileModal({ isOpen, onClose, sellerId, onOpenListing, cardImag
           {activeTab === 'listings' ? (
             <div>
               {activeListings.length === 0 ? (
-                <div className="text-center py-12">
-                  <Icon name="rate_review" size="xl" className="text-gray-400 mb-2" />
+                <div className="py-12 text-center">
+                  <Icon name="rate_review" size="xl" className="mb-2 text-gray-400" />
                   <p className="text-gray-500 dark:text-gray-400">No active listings</p>
-                  <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">
+                  <p className="mt-1 text-sm text-gray-400 dark:text-gray-500">
                     Start selling to receive your first review!
                   </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                   {activeListings.map((listing) => (
                     <div
                       key={listing.id}
@@ -465,11 +465,11 @@ function SellerProfileModal({ isOpen, onClose, sellerId, onOpenListing, cardImag
                         onClose();
                         onOpenListing(listing);
                       }}
-                      className="group bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-6 hover:shadow-lg hover:border-purple-300 dark:hover:border-purple-600 cursor-pointer transition-all duration-300 transform hover:-translate-y-1"
+                      className="group cursor-pointer rounded-2xl border border-gray-200 bg-white p-6 transition-all duration-300 hover:-translate-y-1 hover:border-purple-300 hover:shadow-lg dark:border-gray-700 dark:bg-gray-800 dark:hover:border-purple-600"
                     >
                       <div className="flex items-start gap-4">
                         {/* Card Image */}
-                        <div className="w-20 h-20 bg-gray-100 dark:bg-gray-700 rounded-xl overflow-hidden flex-shrink-0 shadow-md">
+                        <div className="size-20 shrink-0 overflow-hidden rounded-xl bg-gray-100 shadow-md dark:bg-gray-700">
                           {(() => {
                             const cardImageKey = listing.card?.slabSerial || listing.card?.id || listing.cardId;
                             const cardImage = sellerCardImages?.[cardImageKey];
@@ -481,7 +481,7 @@ function SellerProfileModal({ isOpen, onClose, sellerId, onOpenListing, cardImag
                                 <img
                                   src={imageUrl}
                                   alt={listing.card?.name || 'Card image'}
-                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                  className="size-full object-cover transition-transform duration-300 group-hover:scale-105"
                                   onError={(e) => {
                                     e.target.style.display = 'none';
                                     e.target.nextSibling.style.display = 'flex';
@@ -490,7 +490,7 @@ function SellerProfileModal({ isOpen, onClose, sellerId, onOpenListing, cardImag
                               );
                             } else {
                               return (
-                                <div className="w-full h-full flex items-center justify-center text-gray-400">
+                                <div className="flex size-full items-center justify-center text-gray-400">
                                   <Icon name="image" size="md" />
                                 </div>
                               );
@@ -499,13 +499,13 @@ function SellerProfileModal({ isOpen, onClose, sellerId, onOpenListing, cardImag
                         </div>
                         
                         {/* Card Details */}
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-semibold text-gray-900 dark:text-white line-clamp-2 text-base mb-2 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                        <div className="min-w-0 flex-1">
+                          <h4 className="mb-2 line-clamp-2 text-base font-semibold text-gray-900 transition-colors group-hover:text-purple-600 dark:text-white dark:group-hover:text-purple-400">
                             {listing.cardName || listing.card?.name || listing.card?.cardName || listing.title || 'Unknown Card'}
                           </h4>
                           
                           <div className="space-y-2">
-                            <p className="text-purple-600 dark:text-purple-400 font-bold text-xl">
+                            <p className="text-xl font-bold text-purple-600 dark:text-purple-400">
                               {(() => {
                                 const price = listing.listingPrice || listing.priceAUD || listing.price || listing.askingPrice || listing.amount || listing.cost || 0;
                                 const currency = listing.currency || 'AUD';
@@ -514,15 +514,15 @@ function SellerProfileModal({ isOpen, onClose, sellerId, onOpenListing, cardImag
                             </p>
                             
                             {listing.card?.set && (
-                              <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
-                                <Icon name="collections" size="xs" className="inline mr-1" />
+                              <p className="truncate text-sm text-gray-600 dark:text-gray-400">
+                                <Icon name="collections" size="xs" className="mr-1 inline" />
                                 {listing.card.set}
                               </p>
                             )}
                             
                             {listing.condition && (
                               <p className="text-sm text-gray-600 dark:text-gray-400">
-                                <Icon name="star" size="xs" className="inline mr-1" />
+                                <Icon name="star" size="xs" className="mr-1 inline" />
                                 {listing.condition}
                               </p>
                             )}
@@ -531,11 +531,11 @@ function SellerProfileModal({ isOpen, onClose, sellerId, onOpenListing, cardImag
                       </div>
                       
                       {/* View Details Button */}
-                      <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+                      <div className="mt-4 border-t border-gray-100 pt-4 dark:border-gray-700">
                         <Button
                           variant="primary"
                           size="sm"
-                          className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 border-0 shadow-md"
+                          className="w-full border-0 bg-gradient-to-r from-purple-600 to-blue-600 shadow-md hover:from-purple-700 hover:to-blue-700"
                         >
                           <Icon name="visibility" size="sm" className="mr-2" />
                           View Details
@@ -549,15 +549,15 @@ function SellerProfileModal({ isOpen, onClose, sellerId, onOpenListing, cardImag
           ) : (
             <div className="space-y-8">
               {/* Rating Overview */}
-              <div className="bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-2xl p-8">
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Rating Overview</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="rounded-2xl bg-gradient-to-br from-purple-50 to-blue-50 p-8 dark:from-purple-900/20 dark:to-blue-900/20">
+                <h3 className="mb-6 text-2xl font-bold text-gray-900 dark:text-white">Rating Overview</h3>
+                <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
                   {/* Average Rating */}
                   <div className="text-center">
-                    <div className="text-5xl font-bold text-purple-600 dark:text-purple-400 mb-2">
+                    <div className="mb-2 text-5xl font-bold text-purple-600 dark:text-purple-400">
                       {averageRating.toFixed(1)}
                     </div>
-                    <div className="flex justify-center mb-2">
+                    <div className="mb-2 flex justify-center">
                       {renderStars(Math.round(averageRating))}
                     </div>
                     <div className="text-sm text-gray-600 dark:text-gray-400">
@@ -567,30 +567,30 @@ function SellerProfileModal({ isOpen, onClose, sellerId, onOpenListing, cardImag
 
                   {/* Total Reviews */}
                   <div className="text-center">
-                    <div className="text-5xl font-bold text-blue-600 dark:text-blue-400 mb-2">
+                    <div className="mb-2 text-5xl font-bold text-blue-600 dark:text-blue-400">
                       {totalReviews}
                     </div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    <div className="mt-1 text-sm text-gray-600 dark:text-gray-400">
                       Total Reviews
                     </div>
                   </div>
 
                   {/* Rating Breakdown */}
                   <div className="space-y-3">
-                    <h4 className="font-semibold text-gray-900 dark:text-white mb-3">Rating Distribution</h4>
+                    <h4 className="mb-3 font-semibold text-gray-900 dark:text-white">Rating Distribution</h4>
                     {[5, 4, 3, 2, 1].map((rating) => (
                       <div key={rating} className="flex items-center gap-3">
-                        <span className="text-sm font-medium w-3">{rating}</span>
+                        <span className="w-3 text-sm font-medium">{rating}</span>
                         <Icon name="star" size="sm" className="text-yellow-500" />
-                        <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 overflow-hidden">
+                        <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
                           <div
-                            className="bg-gradient-to-r from-yellow-400 to-yellow-500 h-full transition-all duration-500"
+                            className="h-full bg-gradient-to-r from-yellow-400 to-yellow-500 transition-all duration-500"
                             style={{
                               width: totalReviews > 0 ? `${(ratingBreakdown[rating] / totalReviews) * 100}%` : '0%'
                             }}
                           />
                         </div>
-                        <span className="text-sm text-gray-600 dark:text-gray-400 w-8 text-right font-medium">
+                        <span className="w-8 text-right text-sm font-medium text-gray-600 dark:text-gray-400">
                           {ratingBreakdown[rating]}
                         </span>
                       </div>
@@ -601,25 +601,25 @@ function SellerProfileModal({ isOpen, onClose, sellerId, onOpenListing, cardImag
 
               {/* Recent Reviews */}
               <div>
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Recent Reviews</h3>
+                <h3 className="mb-6 text-2xl font-bold text-gray-900 dark:text-white">Recent Reviews</h3>
                 {sellerReviews.length === 0 ? (
-                  <div className="text-center py-16 bg-gray-50 dark:bg-gray-800 rounded-2xl">
-                    <Icon name="rate_review" size="2xl" className="text-gray-400 mb-4" />
-                    <p className="text-xl text-gray-500 dark:text-gray-400 mb-2">No reviews yet</p>
+                  <div className="rounded-2xl bg-gray-50 py-16 text-center dark:bg-gray-800">
+                    <Icon name="rate_review" size="2xl" className="mb-4 text-gray-400" />
+                    <p className="mb-2 text-xl text-gray-500 dark:text-gray-400">No reviews yet</p>
                     <p className="text-sm text-gray-400 dark:text-gray-500">
                       Start selling to receive your first review!
                     </p>
                   </div>
                 ) : (
-                  <div className="space-y-4 max-h-96 overflow-y-auto">
+                  <div className="max-h-96 space-y-4 overflow-y-auto">
                     {sellerReviews.map((review) => (
                       <div
                         key={review.id}
-                        className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200"
+                        className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition-shadow duration-200 hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
                       >
-                        <div className="flex items-start justify-between mb-4">
+                        <div className="mb-4 flex items-start justify-between">
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center">
+                            <div className="flex size-10 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-blue-500">
                               <Icon name="person" size="sm" className="text-white" />
                             </div>
                             <div>
@@ -637,14 +637,14 @@ function SellerProfileModal({ isOpen, onClose, sellerId, onOpenListing, cardImag
                         </div>
                         
                         {review.comment && (
-                          <p className="text-gray-700 dark:text-gray-300 mb-3 leading-relaxed">
+                          <p className="mb-3 leading-relaxed text-gray-700 dark:text-gray-300">
                             {review.comment}
                           </p>
                         )}
                         
                         {review.itemTitle && (
-                          <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-3">
-                            <p className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-2">
+                          <div className="rounded-xl bg-gray-50 p-3 dark:bg-gray-700">
+                            <p className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                               <Icon name="shopping_cart" size="sm" className="text-purple-500" />
                               <span className="font-medium">Item:</span> {review.itemTitle}
                             </p>

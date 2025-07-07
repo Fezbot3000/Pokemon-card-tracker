@@ -20,7 +20,7 @@ const SimpleSearchBar = ({
   const { theme } = useTheme();
   const isDarkMode = theme === 'dark';
 
-  const containerClass = `w-full bg-white dark:bg-[#1B2131] py-3 px-4 ${isDarkMode ? 'shadow-sm' : ''} rounded-md border border-[#ffffff33] dark:border-[#ffffff1a] ${className}`;
+  const containerClass = `w-full bg-white dark:bg-black py-3 px-4 ${isDarkMode ? 'shadow-sm' : ''} rounded-md border border-[#ffffff33] dark:border-[#ffffff1a] ${className}`;
 
   return (
     <div 
@@ -29,7 +29,7 @@ const SimpleSearchBar = ({
     >
       {/* Search Input */}
       <div className="relative w-full">
-        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
           <Icon name="search" size="sm" className="text-gray-400" />
         </div>
         <input
@@ -37,7 +37,7 @@ const SimpleSearchBar = ({
           value={searchValue}
           onChange={(e) => onSearchChange?.(e.target.value)}
           placeholder={placeholder}
-          className="w-full pl-10 pr-4 py-2 bg-white dark:bg-[#000] border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-[var(--primary-light)]/20 focus:outline-none dark:focus:bg-[#000]"
+          className="focus:ring-[var(--primary-light)]/20 w-full rounded-lg border border-gray-300 bg-white py-2 pl-10 pr-4 text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 dark:border-gray-700 dark:bg-[#000] dark:text-white dark:placeholder:text-gray-400 dark:focus:bg-[#000]"
           data-component-name="SimpleSearchBar"
         />
       </div>

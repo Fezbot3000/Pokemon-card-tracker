@@ -22,24 +22,24 @@ const ErrorFallback = ({ error, resetErrorBoundary }) => {
 
   if (isChunkError) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-100 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
-          <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-red-50 to-orange-100 p-4">
+        <div className="w-full max-w-md rounded-2xl bg-white p-8 text-center shadow-xl">
+          <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-orange-100">
+            <svg className="size-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
             </svg>
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Loading Issue</h2>
-          <p className="text-gray-600 mb-6">
+          <h2 className="mb-2 text-2xl font-bold text-gray-900">Loading Issue</h2>
+          <p className="mb-6 text-gray-600">
             The app is updating. Please wait while we refresh the page...
           </p>
-          <div className="flex items-center justify-center mb-4">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-orange-600"></div>
+          <div className="mb-4 flex items-center justify-center">
+            <div className="size-6 animate-spin rounded-full border-b-2 border-orange-600"></div>
             <span className="ml-2 text-gray-600">Refreshing automatically...</span>
           </div>
           <button
             onClick={() => window.location.reload()}
-            className="w-full bg-orange-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-orange-700 transition-colors"
+            className="w-full rounded-lg bg-orange-600 px-6 py-3 font-medium text-white transition-colors hover:bg-orange-700"
           >
             Refresh Now
           </button>
@@ -49,13 +49,13 @@ const ErrorFallback = ({ error, resetErrorBoundary }) => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <div className={`max-w-md w-full p-6 rounded-xl border ${
-        isDarkMode ? 'bg-[#1B2131] border-gray-700/50' : 'bg-white border-gray-200'
+    <div className="flex min-h-screen items-center justify-center p-4">
+      <div className={`w-full max-w-md rounded-xl border p-6 ${
+        isDarkMode ? 'border-gray-700/50 bg-[#1B2131]' : 'border-gray-200 bg-white'
       }`}>
-        <div className="text-center mb-6">
-          <span className="material-icons text-6xl text-red-500 mb-4">error_outline</span>
-          <h2 className={`text-2xl font-semibold mb-2 ${
+        <div className="mb-6 text-center">
+          <span className="material-icons mb-4 text-6xl text-red-500">error_outline</span>
+          <h2 className={`mb-2 text-2xl font-semibold ${
             isDarkMode ? 'text-gray-200' : 'text-gray-900'
           }`}>
             Something went wrong
@@ -70,14 +70,14 @@ const ErrorFallback = ({ error, resetErrorBoundary }) => {
         <div className="space-y-4">
           <button
             onClick={resetErrorBoundary}
-            className="w-full btn btn-primary"
+            className="btn btn-primary w-full"
           >
             Try again
           </button>
           
           <button
             onClick={() => window.location.reload()}
-            className="w-full btn btn-secondary"
+            className="btn btn-secondary w-full"
           >
             Reload page
           </button>

@@ -71,18 +71,18 @@ const CollectionSelector = ({
   };
 
   const renderCollectionItems = (forMobileSheet) => (
-    <div className={`py-1 ${forMobileSheet ? 'px-2 space-y-2' : ''}`}>
+    <div className={`py-1 ${forMobileSheet ? 'space-y-2 px-2' : ''}`}>
       {/* New Collection button at the top */}
       <button
         onClick={handleNewCollectionClick}
         className={`block w-full text-left px-4 py-2 text-sm 
           ${!hasFeature('MULTIPLE_COLLECTIONS') 
-            ? 'opacity-50 cursor-not-allowed' 
+            ? 'cursor-not-allowed opacity-50' 
             : 'hover:opacity-90'
           }
           ${forMobileSheet 
-            ? 'text-center rounded-lg bg-white dark:bg-[#000] text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 py-3'
-            : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`
+            ? 'rounded-lg border border-gray-200 bg-white py-3 text-center text-gray-700 dark:border-gray-700 dark:bg-[#000] dark:text-gray-300'
+            : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'}`
         }
         disabled={!hasFeature('MULTIPLE_COLLECTIONS')}
       >
@@ -106,11 +106,11 @@ const CollectionSelector = ({
           }}
           className={`block w-full text-left px-4 py-2 text-sm 
             ${forMobileSheet 
-              ? `text-center rounded-lg ${collection === selectedCollection 
-                  ? 'bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] text-white font-semibold' 
-                  : 'bg-white dark:bg-[#000] text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700'} 
+              ? `rounded-lg text-center ${collection === selectedCollection 
+                  ? 'bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] font-semibold text-white' 
+                  : 'border border-gray-200 bg-white text-gray-700 dark:border-gray-700 dark:bg-[#000] dark:text-gray-300'} 
                 hover:opacity-90 py-3`
-              : `${collection === selectedCollection ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+              : `${collection === selectedCollection ? 'bg-gray-100 text-gray-900 dark:bg-gray-700 dark:text-white' : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'}`}
           `}
         >
           {collection}
@@ -126,10 +126,10 @@ const CollectionSelector = ({
         <div className="flex items-center justify-between">
           <button 
             onClick={handleTriggerClick} // Use new handler
-            className="flex items-center bg-white dark:bg-[#000000] border border-gray-300 dark:border-gray-700 rounded-lg px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+            className="flex items-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-[#000000] dark:text-gray-300 dark:hover:bg-gray-700"
             data-component-name="CollectionSelector"
           >
-            <span className="mr-2 font-medium truncate max-w-[200px]">
+            <span className="mr-2 max-w-[200px] truncate font-medium">
               {selectedCollection}
             </span>
             <Icon 
@@ -141,7 +141,7 @@ const CollectionSelector = ({
         
         {/* Desktop Dropdown */}
         {!isMobileView && isDropdownOpen && (
-          <div className="absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white dark:bg-[#000] ring-1 ring-black ring-opacity-5 z-50 max-h-[60vh] overflow-y-auto">
+          <div className="absolute right-0 z-50 mt-2 max-h-[60vh] w-56 overflow-y-auto rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 dark:bg-[#000]">
             {renderCollectionItems(false)}
           </div>
         )}
@@ -154,14 +154,14 @@ const CollectionSelector = ({
           onClose={() => setIsBottomSheetOpen(false)} 
           title="Select Collection"
         >
-          <div className="flex flex-col h-full">
-            <div className="flex-grow overflow-y-auto scrollbar-hide" style={{ maxHeight: 'calc(85vh - 130px)' }}>
+          <div className="flex h-full flex-col">
+            <div className="scrollbar-hide grow overflow-y-auto" style={{ maxHeight: 'calc(85vh - 130px)' }}>
               {renderCollectionItems(true)}
             </div>
-            <div className="sticky bottom-0 left-0 right-0 pt-2 mt-2 border-t border-gray-700 bg-black">
+            <div className="sticky inset-x-0 bottom-0 mt-2 border-t border-gray-700 bg-black pt-2">
               <button
                 onClick={() => setIsBottomSheetOpen(false)}
-                className="block w-full text-center px-4 py-3 text-sm rounded-lg bg-gray-800 text-gray-300 border border-gray-700 hover:opacity-90 font-semibold mb-2"
+                className="mb-2 block w-full rounded-lg border border-gray-700 bg-gray-800 px-4 py-3 text-center text-sm font-semibold text-gray-300 hover:opacity-90"
               >
                 Cancel
               </button>
@@ -178,7 +178,7 @@ const CollectionSelector = ({
       >
         <div className="p-4">
           <div className="mb-4">
-            <label htmlFor="newCollectionName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label htmlFor="newCollectionName" className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
               Collection Name
             </label>
             <input
@@ -186,7 +186,7 @@ const CollectionSelector = ({
               id="newCollectionName"
               value={newCollectionName}
               onChange={(e) => setNewCollectionName(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary dark:bg-gray-800 dark:text-white"
+              className="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary dark:border-gray-700 dark:bg-gray-800 dark:text-white"
               placeholder="Enter collection name"
             />
           </div>

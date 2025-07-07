@@ -6,7 +6,7 @@ const ImageModal = ({ isOpen, onClose, imageUrl, alt }) => {
 
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 p-4"
       onClick={onClose}
 
     >
@@ -16,7 +16,7 @@ const ImageModal = ({ isOpen, onClose, imageUrl, alt }) => {
             e.stopPropagation();
             onClose();
           }}
-          className="absolute -top-8 right-0 text-white hover:text-gray-300 p-1"
+          className="absolute -top-8 right-0 p-1 text-white hover:text-gray-300"
         >
           <span className="material-icons">close</span>
         </button>
@@ -26,7 +26,7 @@ const ImageModal = ({ isOpen, onClose, imageUrl, alt }) => {
           <img
             src={imageUrl}
             alt={alt}
-            className="w-full h-auto object-contain rounded-lg"
+            className="h-auto w-full rounded-lg object-contain"
           />
         </div>
       </div>

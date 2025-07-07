@@ -21,7 +21,7 @@
 
   /* Dark mode backgrounds */
   --color-dark-bg-primary: #000000;
-  --color-dark-bg-secondary: #0F0F0F;
+  --color-dark-bg-secondary: #000000;
 
   /* Light mode text */
   --color-light-text-primary: #111827; /* gray-900 */

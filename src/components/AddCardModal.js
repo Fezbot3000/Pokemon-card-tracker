@@ -334,7 +334,7 @@ const AddCardModal = ({
 
   // Create modal footer with buttons
   const modalFooter = (
-    <div className="flex flex-wrap items-center justify-between gap-2 w-full">
+    <div className="flex w-full flex-wrap items-center justify-between gap-2">
       {/* Cancel button - left aligned */}
       <div>
         <Button
@@ -377,8 +377,8 @@ const AddCardModal = ({
         <div className="space-y-6">
           {/* PSA Certificate Lookup Section */}
           <div className="mb-6">
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">PSA Certificate Lookup</h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+            <h3 className="mb-3 text-lg font-medium text-gray-900 dark:text-white">PSA Certificate Lookup</h3>
+            <p className="mb-3 text-sm text-gray-500 dark:text-gray-400">
               Search your PSA serial number to pre-populate the page.
             </p>
             <div className="space-y-3">
@@ -387,7 +387,7 @@ const AddCardModal = ({
                 value={psaSerial}
                 onChange={(e) => setPsaSerial(e.target.value)}
                 placeholder="Enter PSA serial number"
-                className="w-full px-3 py-2 border border-[#ffffff33] dark:border-[#ffffff1a] rounded-lg bg-white dark:bg-[#0F0F0F] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="focus:ring-primary/20 w-full rounded-lg border border-[#ffffff33] bg-white px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 dark:border-[#ffffff1a] dark:bg-[#0F0F0F] dark:text-white"
                 disabled={isSearching}
               />
               <Button
@@ -413,17 +413,17 @@ const AddCardModal = ({
             
             {/* PSA Messages */}
             {saveMessage && saveMessage === 'PSA data applied successfully' && (
-              <div className="mt-4 px-4 py-2 rounded-lg text-sm transition-all bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+              <div className="mt-4 rounded-lg bg-green-100 px-4 py-2 text-sm text-green-700 transition-all dark:bg-green-900/30 dark:text-green-400">
                 PSA data applied successfully
               </div>
             )}
             {saveMessage && saveMessage.startsWith('Searching PSA') && (
-              <div className="mt-4 px-4 py-2 rounded-lg text-sm transition-all bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+              <div className="mt-4 rounded-lg bg-blue-100 px-4 py-2 text-sm text-blue-700 transition-all dark:bg-blue-900/30 dark:text-blue-400">
                 {saveMessage}
               </div>
             )}
             {saveMessage && (saveMessage.startsWith('Failed to find PSA') || saveMessage.startsWith('Failed to search PSA')) && (
-              <div className="mt-4 px-4 py-2 rounded-lg text-sm transition-all bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
+              <div className="mt-4 rounded-lg bg-red-100 px-4 py-2 text-sm text-red-700 transition-all dark:bg-red-900/30 dark:text-red-400">
                 {saveMessage}
               </div>
             )}
@@ -431,8 +431,8 @@ const AddCardModal = ({
 
           {/* Collection Selection */}
           <div className="mb-6">
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">Select Collection</h3>
-            <div className="flex gap-2 items-center">
+            <h3 className="mb-3 text-lg font-medium text-gray-900 dark:text-white">Select Collection</h3>
+            <div className="flex items-center gap-2">
               <select
                 value={selectedCollection}
                 onChange={(e) => {
@@ -442,9 +442,9 @@ const AddCardModal = ({
                     setSelectedCollection(e.target.value);
                   }
                 }}
-                className="w-full px-3 py-2 rounded-lg border border-[#ffffff33] dark:border-[#ffffff1a]
-                         bg-white dark:bg-[#0F0F0F] text-gray-900 dark:text-white
-                         focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="focus:ring-primary/20 w-full rounded-lg border border-[#ffffff33] bg-white px-3
+                         py-2 text-gray-900 focus:outline-none focus:ring-2
+                         dark:border-[#ffffff1a] dark:bg-[#0F0F0F] dark:text-white"
               >
                 <option value="" disabled>Select Collection...</option>
                 {collections
@@ -461,7 +461,7 @@ const AddCardModal = ({
                 variant="primary"
                 type="button"
                 onClick={() => setShowNewCollectionModal(true)}
-                className="flex-shrink-0"
+                className="shrink-0"
                 aria-label="Add new collection"
               >
                 <span className="material-icons">add</span>
@@ -479,7 +479,7 @@ const AddCardModal = ({
                 href={newCard.psaUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full inline-flex items-center justify-center font-medium rounded-lg transition-colors focus:outline-none px-4 py-2 text-base bg-gradient-to-r from-blue-500 to-blue-700 text-white hover:opacity-90 shadow-sm"
+                className="inline-flex w-full items-center justify-center rounded-lg bg-gradient-to-r from-blue-500 to-blue-700 px-4 py-2 text-base font-medium text-white shadow-sm transition-colors hover:opacity-90 focus:outline-none"
               >
                 <span className="material-icons mr-2">open_in_new</span>
                 View on PSA Website
@@ -513,7 +513,7 @@ const AddCardModal = ({
            !saveMessage.startsWith('Searching PSA') && 
            !saveMessage.startsWith('Failed to find PSA') && 
            !saveMessage.startsWith('Failed to search PSA') && (
-            <div className={`mt-4 px-4 py-2 rounded-lg text-sm transition-all ${
+            <div className={`mt-4 rounded-lg px-4 py-2 text-sm transition-all ${
               saveMessage.startsWith('Error') || saveMessage.startsWith('Please fix') || saveMessage.startsWith('Failed')
                 ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' 
                 : saveMessage === 'No changes to save' || saveMessage.startsWith('Searching')
@@ -529,7 +529,7 @@ const AddCardModal = ({
       {/* Enlarged Image Modal */}
       {showEnlargedImage && cardImage && (
         <div 
-          className="fixed inset-0 z-[60] bg-black/90 flex items-center justify-center cursor-zoom-out" 
+          className="bg-black/90 fixed inset-0 z-[60] flex cursor-zoom-out items-center justify-center" 
           onClick={(e) => {
             e.stopPropagation();
             setShowEnlargedImage(false);
@@ -540,7 +540,7 @@ const AddCardModal = ({
           }}
         >
           <div 
-            className="relative max-w-[90vw] flex items-center justify-center"
+            className="relative flex max-w-[90vw] items-center justify-center"
             onClick={e => e.stopPropagation()}
             style={{
               maxHeight: '90vh'
@@ -549,14 +549,14 @@ const AddCardModal = ({
             <img 
               src={cardImage} 
               alt="Card preview (enlarged)" 
-              className="w-auto h-auto object-contain rounded-lg" 
+              className="size-auto rounded-lg object-contain" 
               style={{
                 maxHeight: '90vh',
                 maxWidth: '90vw'
               }}
             />
             <button 
-              className="absolute top-4 right-4 p-2 bg-black/70 rounded-full text-white"
+              className="bg-black/70 absolute right-4 top-4 rounded-full p-2 text-white"
               onClick={() => setShowEnlargedImage(false)}
             >
               <span className="material-icons">close</span>

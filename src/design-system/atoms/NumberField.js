@@ -43,9 +43,9 @@ const NumberField = ({
   };
 
   return (
-    <div className="w-full relative">
+    <div className="relative w-full">
       {prefix && (
-        <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 text-sm">
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-500 dark:text-gray-400">
           {prefix}
         </span>
       )}
@@ -78,7 +78,7 @@ const NumberField = ({
         {...props}
       />
       {suffix && (
-        <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 text-sm">
+        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500 dark:text-gray-400">
           {suffix}
         </span>
       )}

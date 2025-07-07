@@ -46,14 +46,14 @@ const InvoiceHeader = ({
   return (
     <div className={headerClasses} onClick={onToggle} {...props}>
       {/* Left side - Invoice info and expand icon */}
-      <div className="flex items-center gap-3 flex-1 min-w-0">
+      <div className="flex min-w-0 flex-1 items-center gap-3">
         <CleanIcon 
           name={isExpanded ? "expand_less" : "expand_more"} 
           size="md"
-          className="text-gray-400 dark:text-gray-500 flex-shrink-0" 
+          className="shrink-0 text-gray-400 dark:text-gray-500" 
         />
-        <div className="flex flex-col min-w-0">
-          <h3 className="text-base font-semibold text-gray-900 dark:text-white truncate" title={`Sold to: ${title}`}>
+        <div className="flex min-w-0 flex-col">
+          <h3 className="truncate text-base font-semibold text-gray-900 dark:text-white" title={`Sold to: ${title}`}>
             Sold to: {title}
           </h3>
           <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
@@ -66,21 +66,21 @@ const InvoiceHeader = ({
       {/* Right side - Financial summary and actions */}
       <div className="flex items-center gap-4">
         {/* Financial summary - Horizontal layout */}
-        <div className="hidden sm:flex items-center gap-6">
+        <div className="hidden items-center gap-6 sm:flex">
           <div className="text-right">
-            <div className="text-xs text-gray-500 dark:text-gray-400 uppercase">Investment</div>
+            <div className="text-xs uppercase text-gray-500 dark:text-gray-400">Investment</div>
             <div className="text-base font-medium text-gray-900 dark:text-white">
               {formatUserCurrency ? formatUserCurrency(totalInvestment, originalCurrencyCode) : `$${parseFloat(totalInvestment || 0).toFixed(2)}`}
             </div>
           </div>
           <div className="text-right">
-            <div className="text-xs text-gray-500 dark:text-gray-400 uppercase">Sold for</div>
+            <div className="text-xs uppercase text-gray-500 dark:text-gray-400">Sold for</div>
             <div className="text-base font-medium text-gray-900 dark:text-white">
               {formatUserCurrency ? formatUserCurrency(totalSale, originalCurrencyCode) : `$${parseFloat(totalSale || 0).toFixed(2)}`}
             </div>
           </div>
           <div className="text-right">
-            <div className="text-xs text-gray-500 dark:text-gray-400 uppercase">Profit</div>
+            <div className="text-xs uppercase text-gray-500 dark:text-gray-400">Profit</div>
             <div className={`text-base font-medium ${totalProfit >= 0 ? 'text-green-500' : 'text-red-500'}`}>
               {formatUserCurrency ? formatUserCurrency(totalProfit, originalCurrencyCode) : `${totalProfit >= 0 ? '' : '-'}$${Math.abs(parseFloat(totalProfit || 0)).toFixed(2)}`}
             </div>
@@ -88,9 +88,9 @@ const InvoiceHeader = ({
         </div>
 
         {/* Mobile financial summary */}
-        <div className="flex sm:hidden text-right">
+        <div className="flex text-right sm:hidden">
           <div>
-            <div className="text-xs text-gray-500 dark:text-gray-400 uppercase">Profit</div>
+            <div className="text-xs uppercase text-gray-500 dark:text-gray-400">Profit</div>
             <div className={`text-base font-medium ${totalProfit >= 0 ? 'text-green-500' : 'text-red-500'}`}>
               {formatUserCurrency ? formatUserCurrency(totalProfit, originalCurrencyCode) : `${totalProfit >= 0 ? '' : '-'}$${Math.abs(parseFloat(totalProfit || 0)).toFixed(2)}`}
             </div>
@@ -99,7 +99,7 @@ const InvoiceHeader = ({
         
         {/* Action buttons */}
         {(onPrint || onDelete) && (
-          <div className="flex items-center gap-1 border-l border-gray-200 dark:border-gray-700 pl-4">
+          <div className="flex items-center gap-1 border-l border-gray-200 pl-4 dark:border-gray-700">
             {onPrint && (
               <Button 
                 variant="text" 
@@ -109,7 +109,7 @@ const InvoiceHeader = ({
                   e.stopPropagation();
                   onPrint();
                 }}
-                className="!p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                className="!p-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
                 title="Download PDF"
               />
             )}
@@ -123,7 +123,7 @@ const InvoiceHeader = ({
                   e.stopPropagation();
                   onDelete();
                 }}
-                className="!p-2 text-gray-600 dark:text-gray-400 hover:text-red-500"
+                className="!p-2 text-gray-600 hover:text-red-500 dark:text-gray-400"
                 title="Delete receipt"
               />
             )}

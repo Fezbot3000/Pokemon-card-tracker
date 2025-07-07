@@ -22,12 +22,12 @@ const CardImage = ({
   const shouldShowImage = src && !imageError && !hideSoldImages;
 
   return (
-    <div className={`${width} flex-shrink-0 ${className}`}>
+    <div className={`${width} shrink-0 ${className}`}>
       {shouldShowImage ? (
         <img
           src={src}
           alt={alt}
-          className="w-full h-full object-contain rounded-lg"
+          className="size-full rounded-lg object-contain"
           loading="lazy"
           onError={() => {
             console.error(`Failed to load image: ${src}`);
@@ -36,7 +36,7 @@ const CardImage = ({
           {...props}
         />
       ) : (
-        <div className="w-full h-full flex items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-800">
+        <div className="flex size-full items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-800">
           <Icon name="image" className="text-gray-400 dark:text-gray-600" />
         </div>
       )}

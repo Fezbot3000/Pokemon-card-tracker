@@ -122,7 +122,7 @@ const Dropdown = ({
           onClose={() => handleOpenChange(false)} 
           title={title || 'Select Option'}
         >
-          <div className="py-1 px-2 space-y-2">
+          <div className="space-y-2 px-2 py-1">
             {React.Children.map(children, child => {
               // Skip dividers in bottom sheet
               if (child.type === DropdownDivider) return null;
@@ -159,7 +159,7 @@ const Dropdown = ({
             {/* Cancel Button */}
             <button
               onClick={() => handleOpenChange(false)}
-              className="block w-full text-center px-4 py-3 mt-3 text-sm rounded-lg bg-[#000] text-gray-300 border border-gray-700 hover:opacity-90 font-semibold"
+              className="mt-3 block w-full rounded-lg border border-gray-700 bg-[#000] px-4 py-3 text-center text-sm font-semibold text-gray-300 hover:opacity-90"
             >
               Cancel
             </button>
@@ -195,8 +195,8 @@ export const DropdownItem = ({
       disabled={disabled}
       {...props}
     >
-      {icon && <span className="mr-2 flex-shrink-0">{icon}</span>}
-      <span className="truncate w-full text-left">{children}</span>
+      {icon && <span className="mr-2 shrink-0">{icon}</span>}
+      <span className="w-full truncate text-left">{children}</span>
     </button>
   );
 };
@@ -208,7 +208,7 @@ export const DropdownItem = ({
  */
 export const DropdownDivider = ({ className = '', ...props }) => (
   <div 
-    className={`my-1 border-t border-gray-200 dark:border-gray-700/50 ${className}`} 
+    className={`dark:border-gray-700/50 my-1 border-t border-gray-200 ${className}`} 
     {...props} 
   />
 );

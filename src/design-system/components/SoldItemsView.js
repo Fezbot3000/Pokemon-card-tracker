@@ -255,10 +255,10 @@ const SoldItemsView = ({
             {Object.entries(groupedByYear).map(([year, yearGroup]) => (
               <div key={year} className="mb-6">
                 <button 
-                  className="w-full flex flex-col"
+                  className="flex w-full flex-col"
                   onClick={() => toggleYear(year)}
                 >
-                  <div className="flex items-center justify-between p-4 bg-white dark:bg-black rounded-t-md border border-gray-200 dark:border-[#ffffff1a]">
+                  <div className="flex items-center justify-between rounded-t-md border border-gray-200 bg-white p-4 dark:border-[#ffffff1a] dark:bg-black">
                     <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
                       {year} Financial Year
                     </h2>
@@ -269,23 +269,23 @@ const SoldItemsView = ({
                   </div>
 
                   {/* Year Summary */}
-                  <div className="grid grid-cols-3 w-full bg-white dark:bg-black rounded-b-md border-x border-b border-gray-200 dark:border-[#ffffff1a]">
+                  <div className="grid w-full grid-cols-3 rounded-b-md border-x border-b border-gray-200 bg-white dark:border-[#ffffff1a] dark:bg-black">
                     {/* Investment */}
-                    <div className="py-4 px-4 flex flex-col items-center">
-                      <span className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 uppercase mb-1">Investment</span>
-                      <span className="text-sm sm:text-base font-medium text-gray-900 dark:text-white">${yearGroup.totalInvestment.toFixed(2)}</span>
+                    <div className="flex flex-col items-center p-4">
+                      <span className="mb-1 text-xs font-medium uppercase text-gray-500 dark:text-gray-400 sm:text-sm">Investment</span>
+                      <span className="text-sm font-medium text-gray-900 dark:text-white sm:text-base">${yearGroup.totalInvestment.toFixed(2)}</span>
                     </div>
                     
                     {/* Sale */}
-                    <div className="py-4 px-4 flex flex-col items-center border-x border-gray-200 dark:border-[#ffffff1a]">
-                      <span className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 uppercase mb-1">Sale</span>
-                      <span className="text-sm sm:text-base font-medium text-gray-900 dark:text-white">${yearGroup.totalSale.toFixed(2)}</span>
+                    <div className="flex flex-col items-center border-x border-gray-200 p-4 dark:border-[#ffffff1a]">
+                      <span className="mb-1 text-xs font-medium uppercase text-gray-500 dark:text-gray-400 sm:text-sm">Sale</span>
+                      <span className="text-sm font-medium text-gray-900 dark:text-white sm:text-base">${yearGroup.totalSale.toFixed(2)}</span>
                     </div>
                     
                     {/* Profit */}
-                    <div className="py-4 px-4 flex flex-col items-center">
-                      <span className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 uppercase mb-1">Profit</span>
-                      <span className={`text-sm sm:text-base font-medium ${yearGroup.totalProfit >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                    <div className="flex flex-col items-center p-4">
+                      <span className="mb-1 text-xs font-medium uppercase text-gray-500 dark:text-gray-400 sm:text-sm">Profit</span>
+                      <span className={`text-sm font-medium sm:text-base ${yearGroup.totalProfit >= 0 ? 'text-green-500' : 'text-red-500'}`}>
                         {yearGroup.totalProfit >= 0 ? '' : '-'}${Math.abs(yearGroup.totalProfit).toFixed(2)}
                       </span>
                     </div>
@@ -304,7 +304,7 @@ const SoldItemsView = ({
                         return (
                           <div 
                             key={invoice.id || Math.random().toString(36).substring(2, 15)} 
-                            className="bg-white dark:bg-black rounded-md border border-gray-200 dark:border-[#ffffff1a] overflow-hidden"
+                            className="overflow-hidden rounded-md border border-gray-200 bg-white dark:border-[#ffffff1a] dark:bg-black"
                           >
                             {/* Invoice Header */}
                             <InvoiceHeader
@@ -325,7 +325,7 @@ const SoldItemsView = ({
                             {/* Invoice Cards */}
                             <div className={`accordion-content ${expandedInvoices.has(invoice.id) ? 'open' : ''}`}>
                               {expandedInvoices.has(invoice.id) && (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-4 sm:p-6">
+                                <div className="grid grid-cols-1 gap-6 p-4 sm:grid-cols-2 sm:p-6 lg:grid-cols-3">
                                   {/* Only load images if this invoice has been marked for loading */}
                                   {cards.map((card) => (
                                     <InvoiceCard
@@ -349,9 +349,9 @@ const SoldItemsView = ({
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center py-12">
-            <Icon name="receipt_long" size="xl" className="text-gray-400 dark:text-gray-600 mb-4" />
-            <h3 className="text-xl font-medium text-gray-900 dark:text-white mb-2">No Sold Items</h3>
-            <p className="text-gray-600 dark:text-gray-400 text-center max-w-md">
+            <Icon name="receipt_long" size="xl" className="mb-4 text-gray-400 dark:text-gray-600" />
+            <h3 className="mb-2 text-xl font-medium text-gray-900 dark:text-white">No Sold Items</h3>
+            <p className="max-w-md text-center text-gray-600 dark:text-gray-400">
               You haven't sold any cards yet. When you do, they'll appear here.
             </p>
           </div>

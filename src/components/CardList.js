@@ -911,7 +911,7 @@ const CardList = ({
   };
 
   return (
-    <div className="w-full px-1 sm:px-2 pb-20">
+    <div className="w-full px-1 pb-20 sm:px-2">
       {/* Stats Section - Only show if there are cards */}
       {filteredCards.length > 0 && (
         <StatisticsSummary 
@@ -941,7 +941,7 @@ const CardList = ({
         />
       </div>
 
-      <div className="flex justify-end mb-2">
+      <div className="mb-2 flex justify-end">
         <CollectionSelector
           selectedCollection={selectedCollection}
           collections={[
@@ -982,10 +982,10 @@ const CardList = ({
 
       {/* Cards Display */}
       {filteredCards.length === 0 ? (
-        <div className="text-center py-8 sm:py-12">
-          <span className="material-icons text-4xl sm:text-5xl mb-3 sm:mb-4 text-gray-400 dark:text-gray-600">inventory_2</span>
-          <h3 className="text-sm sm:text-base font-medium text-gray-900 dark:text-white mb-1 sm:mb-2">No cards found</h3>
-          <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-4">
+        <div className="py-8 text-center sm:py-12">
+          <span className="material-icons mb-3 text-4xl text-gray-400 dark:text-gray-600 sm:mb-4 sm:text-5xl">inventory_2</span>
+          <h3 className="mb-1 text-sm font-medium text-gray-900 dark:text-white sm:mb-2 sm:text-base">No cards found</h3>
+          <p className="mb-4 text-xs text-gray-600 dark:text-gray-400 sm:text-sm">
             {cards.length === 0 
               ? "Start building your collection by adding your first card!" 
               : "Try adjusting your search or filters"
@@ -994,16 +994,16 @@ const CardList = ({
           {cards.length === 0 && (
             <button
               onClick={onAddCard}
-              className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+              className="inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
             >
-              <span className="material-icons text-sm mr-2">add</span>
+              <span className="material-icons mr-2 text-sm">add</span>
               Add Your First Card
             </button>
           )}
         </div>
       ) : viewMode === 'grid' ? (
         <div className="flex flex-col">
-          <div className={`grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-1 sm:gap-2`}>
+          <div className={`grid grid-cols-2 gap-1 sm:grid-cols-3 sm:gap-2 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7`}>
             {paginatedCards.map(card => (
               <Card
                 key={card._uniqueKey}
@@ -1027,11 +1027,11 @@ const CardList = ({
           {paginatedCards.length < filteredCards.length && (
             <div 
               ref={loadMoreRef}
-              className="flex justify-center items-center py-4 mt-2"
+              className="mt-2 flex items-center justify-center py-4"
             >
               {isLoadingMore ? (
                 <div className="flex items-center space-x-2">
-                  <div className="w-5 h-5 border-t-2 border-b-2 border-blue-500 rounded-full animate-spin"></div>
+                  <div className="size-5 animate-spin rounded-full border-y-2 border-blue-500"></div>
                   <span className="text-sm text-gray-600 dark:text-gray-400">Loading more cards...</span>
                 </div>
               ) : (
@@ -1042,20 +1042,20 @@ const CardList = ({
         </div>
       ) : (
         <div className="flex flex-col">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
             {paginatedCards.map(card => (
               <div
                 key={card._uniqueKey}
-                className={`bg-white dark:bg-[#0F0F0F] rounded-lg overflow-hidden transition-all duration-200 hover:shadow-md ${selectedCards.has(card.slabSerial) ? 'ring-2 ring-[#E6185C]' : 'border border-[#ffffff33] dark:border-[#ffffff1a]'}`}
+                className={`overflow-hidden rounded-lg bg-white transition-all duration-200 hover:shadow-md dark:bg-[#0F0F0F] ${selectedCards.has(card.slabSerial) ? 'ring-2 ring-[#E6185C]' : 'border border-[#ffffff33] dark:border-[#ffffff1a]'}`}
               >
-                <div className="flex p-3 items-start">
+                <div className="flex items-start p-3">
                   {/* Card selection checkbox */}
                   <div className="mr-3 mt-1">
                     <input
                       type="checkbox"
                       checked={selectedCards.has(card.slabSerial)}
                       onChange={(e) => handleSelectCard(e, card.slabSerial)}
-                      className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-blue-600 bg-white dark:bg-gray-800 focus:ring-blue-500 dark:focus:ring-blue-600 focus:ring-2 cursor-pointer"
+                      className="size-4 cursor-pointer rounded border-gray-300 bg-white text-blue-600 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:focus:ring-blue-600"
                       aria-label={`Select ${card.card}`}
                       onClick={(e) => e.stopPropagation()}
                     />
@@ -1063,29 +1063,29 @@ const CardList = ({
                   
                   {/* Card image (better size) */}
                   <div 
-                    className="relative w-16 h-20 flex-shrink-0 rounded overflow-hidden cursor-pointer mr-3"
+                    className="relative mr-3 h-20 w-16 shrink-0 cursor-pointer overflow-hidden rounded"
                     onClick={() => onCardClick(card)}
                   >
                     {cardImages[card.slabSerial] ? (
                       <img
                         src={cardImages[card.slabSerial]} 
                         alt={`${card.player} - ${card.card}`} 
-                        className="w-full h-full object-contain"
+                        className="size-full object-contain"
                         loading="lazy"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gray-100 dark:bg-[#1B2131]">
+                      <div className="flex size-full items-center justify-center bg-gray-100 dark:bg-[#1B2131]">
                         <span className="material-icons text-lg text-gray-400 dark:text-gray-600">image</span>
                       </div>
                     )}
                   </div>
                   
                   {/* Card details */}
-                  <div className="flex-grow min-w-0 cursor-pointer" onClick={() => onCardClick(card)}>
-                    <h3 className="font-semibold text-gray-900 dark:text-white mb-1 text-base truncate">
+                  <div className="min-w-0 grow cursor-pointer" onClick={() => onCardClick(card)}>
+                    <h3 className="mb-1 truncate text-base font-semibold text-gray-900 dark:text-white">
                       {card.card}
                     </h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-2 truncate">
+                    <p className="mb-2 truncate text-sm text-gray-500 dark:text-gray-400">
                       {card.player || 'Unknown Player'}
                     </p>
                     
@@ -1120,11 +1120,11 @@ const CardList = ({
           {paginatedCards.length < filteredCards.length && (
             <div 
               ref={loadMoreRef}
-              className="flex justify-center items-center py-4 mt-2"
+              className="mt-2 flex items-center justify-center py-4"
             >
               {isLoadingMore ? (
                 <div className="flex items-center space-x-2">
-                  <div className="w-5 h-5 border-t-2 border-b-2 border-blue-500 rounded-full animate-spin"></div>
+                  <div className="size-5 animate-spin rounded-full border-y-2 border-blue-500"></div>
                   <span className="text-sm text-gray-600 dark:text-gray-400">Loading more cards...</span>
                 </div>
               ) : (
@@ -1139,12 +1139,12 @@ const CardList = ({
       {selectedCards.size > 0 && (
         <>
           {/* Bottom shadow overlay for better contrast */}
-          <div className="fixed inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/50 via-black/20 to-transparent pointer-events-none z-40"></div>
+          <div className="from-black/50 via-black/20 pointer-events-none fixed inset-x-0 bottom-0 z-40 h-1/3 bg-gradient-to-t to-transparent"></div>
           
-          <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
+          <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2">
           {/* Selection Count Badge */}
           <div className="mb-3 flex justify-center">
-            <div className="bg-white dark:bg-[#1B2131] border border-gray-200 dark:border-gray-700 rounded-full px-4 py-2 shadow-lg backdrop-blur-sm">
+            <div className="rounded-full border border-gray-200 bg-white px-4 py-2 shadow-lg backdrop-blur-sm dark:border-gray-700 dark:bg-[#1B2131]">
               <span className="text-sm font-medium text-gray-900 dark:text-white">
                 {selectedCards.size} card{selectedCards.size > 1 ? 's' : ''} selected
               </span>
@@ -1154,7 +1154,7 @@ const CardList = ({
           {/* Action Buttons */}
           <div className="flex flex-col items-center gap-3">
             {/* Main Action Buttons Row */}
-            <div className="flex items-center gap-2 sm:gap-3 bg-white dark:bg-[#1B2131] rounded-2xl p-2 sm:p-3 shadow-xl border border-gray-200 dark:border-gray-700 backdrop-blur-sm max-w-[95vw] overflow-x-auto">
+            <div className="flex max-w-[95vw] items-center gap-2 overflow-x-auto rounded-2xl border border-gray-200 bg-white p-2 shadow-xl backdrop-blur-sm dark:border-gray-700 dark:bg-[#1B2131] sm:gap-3 sm:p-3">
               {/* Sell Button */}
               <button
                 onClick={() => {
@@ -1166,19 +1166,19 @@ const CardList = ({
                   setSelectedCardsForSale(cards.filter(card => selectedCards.has(card.slabSerial)));
                   setShowSaleModal(true);
                 }}
-                className={`group flex flex-col items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-xl transition-all duration-200 shadow-md flex-shrink-0 ${
+                className={`group flex size-12 shrink-0 flex-col items-center justify-center rounded-xl shadow-md transition-all duration-200 sm:size-16 ${
                   hasFeature('SOLD_ITEMS') 
-                    ? 'bg-green-500 hover:bg-green-600 text-white hover:shadow-lg hover:scale-105 active:scale-95' 
-                    : 'bg-gray-400 text-gray-200 cursor-not-allowed opacity-75'
+                    ? 'bg-green-500 text-white hover:scale-105 hover:bg-green-600 hover:shadow-lg active:scale-95' 
+                    : 'cursor-not-allowed bg-gray-400 text-gray-200 opacity-75'
                 }`}
                 title={hasFeature('SOLD_ITEMS') ? "Sell selected cards" : "Sell selected cards (Premium feature)"}
               >
-                <span className={`material-icons text-sm sm:text-lg mb-0 sm:mb-0.5 transition-transform duration-200 ${
+                <span className={`material-icons mb-0 text-sm transition-transform duration-200 sm:mb-0.5 sm:text-lg ${
                   hasFeature('SOLD_ITEMS') ? 'group-hover:scale-110' : ''
                 }`}>
                   {hasFeature('SOLD_ITEMS') ? 'sell' : 'lock'}
                 </span>
-                <span className="text-xs font-medium hidden sm:block">Sell</span>
+                <span className="hidden text-xs font-medium sm:block">Sell</span>
               </button>
               
               {/* Purchase Invoice Button */}
@@ -1192,19 +1192,19 @@ const CardList = ({
                   setSelectedCardsForPurchase(cards.filter(card => selectedCards.has(card.slabSerial)));
                   setShowPurchaseInvoiceModal(true);
                 }}
-                className={`group flex flex-col items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-xl transition-all duration-200 shadow-md flex-shrink-0 ${
+                className={`group flex size-12 shrink-0 flex-col items-center justify-center rounded-xl shadow-md transition-all duration-200 sm:size-16 ${
                   hasFeature('INVOICING') 
-                    ? 'bg-blue-500 hover:bg-blue-600 text-white hover:shadow-lg hover:scale-105 active:scale-95' 
-                    : 'bg-gray-400 text-gray-200 cursor-not-allowed opacity-75'
+                    ? 'bg-blue-500 text-white hover:scale-105 hover:bg-blue-600 hover:shadow-lg active:scale-95' 
+                    : 'cursor-not-allowed bg-gray-400 text-gray-200 opacity-75'
                 }`}
                 title={hasFeature('INVOICING') ? "Create purchase invoice" : "Create purchase invoice (Premium feature)"}
               >
-                <span className={`material-icons text-sm sm:text-lg mb-0 sm:mb-0.5 transition-transform duration-200 ${
+                <span className={`material-icons mb-0 text-sm transition-transform duration-200 sm:mb-0.5 sm:text-lg ${
                   hasFeature('INVOICING') ? 'group-hover:scale-110' : ''
                 }`}>
                   {hasFeature('INVOICING') ? 'receipt' : 'lock'}
                 </span>
-                <span className="text-xs font-medium hidden sm:block">Invoice</span>
+                <span className="hidden text-xs font-medium sm:block">Invoice</span>
               </button>
               
               {/* List on Marketplace Button */}
@@ -1302,19 +1302,19 @@ const CardList = ({
                     }
                   })();
                 }}
-                className={`group flex flex-col items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-xl transition-all duration-200 shadow-md flex-shrink-0 ${
+                className={`group flex size-12 shrink-0 flex-col items-center justify-center rounded-xl shadow-md transition-all duration-200 sm:size-16 ${
                   hasFeature('MARKETPLACE_SELLING') 
-                    ? 'bg-purple-500 hover:bg-purple-600 text-white hover:shadow-lg hover:scale-105 active:scale-95' 
-                    : 'bg-gray-400 text-gray-200 cursor-not-allowed opacity-75'
+                    ? 'bg-purple-500 text-white hover:scale-105 hover:bg-purple-600 hover:shadow-lg active:scale-95' 
+                    : 'cursor-not-allowed bg-gray-400 text-gray-200 opacity-75'
                 }`}
                 title={hasFeature('MARKETPLACE_SELLING') ? "List on marketplace" : "List on marketplace (Premium feature)"}
               >
-                <span className={`material-icons text-sm sm:text-lg mb-0 sm:mb-0.5 transition-transform duration-200 ${
+                <span className={`material-icons mb-0 text-sm transition-transform duration-200 sm:mb-0.5 sm:text-lg ${
                   hasFeature('MARKETPLACE_SELLING') ? 'group-hover:scale-110' : ''
                 }`}>
                   {hasFeature('MARKETPLACE_SELLING') ? 'storefront' : 'lock'}
                 </span>
-                <span className="text-xs font-medium hidden sm:block">
+                <span className="hidden text-xs font-medium sm:block">
                   {hasFeature('MARKETPLACE_SELLING') ? 'List' : 'List'}
                 </span>
               </button>
@@ -1322,36 +1322,36 @@ const CardList = ({
               {/* Move Button */}
               <button
                 onClick={handleMoveCards}
-                className="group flex flex-col items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-xl bg-orange-500 hover:bg-orange-600 text-white transition-all duration-200 shadow-md hover:shadow-lg hover:scale-105 active:scale-95 flex-shrink-0"
+                className="group flex size-12 shrink-0 flex-col items-center justify-center rounded-xl bg-orange-500 text-white shadow-md transition-all duration-200 hover:scale-105 hover:bg-orange-600 hover:shadow-lg active:scale-95 sm:size-16"
                 title="Move to collection"
               >
-                <span className="material-icons text-sm sm:text-lg mb-0 sm:mb-0.5 group-hover:scale-110 transition-transform duration-200">drive_file_move</span>
-                <span className="text-xs font-medium hidden sm:block">Move</span>
+                <span className="material-icons mb-0 text-sm transition-transform duration-200 group-hover:scale-110 sm:mb-0.5 sm:text-lg">drive_file_move</span>
+                <span className="hidden text-xs font-medium sm:block">Move</span>
               </button>
               
               {/* Delete Button */}
               <button
                 onClick={handleDeleteClick}
-                className="group flex flex-col items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-xl bg-red-500 hover:bg-red-600 text-white transition-all duration-200 shadow-md hover:shadow-lg hover:scale-105 active:scale-95 flex-shrink-0"
+                className="group flex size-12 shrink-0 flex-col items-center justify-center rounded-xl bg-red-500 text-white shadow-md transition-all duration-200 hover:scale-105 hover:bg-red-600 hover:shadow-lg active:scale-95 sm:size-16"
                 title="Delete selected cards"
               >
-                <span className="material-icons text-sm sm:text-lg mb-0 sm:mb-0.5 group-hover:scale-110 transition-transform duration-200">delete</span>
-                <span className="text-xs font-medium hidden sm:block">Delete</span>
+                <span className="material-icons mb-0 text-sm transition-transform duration-200 group-hover:scale-110 sm:mb-0.5 sm:text-lg">delete</span>
+                <span className="hidden text-xs font-medium sm:block">Delete</span>
               </button>
               
               {/* Divider */}
-              <div className="w-px h-12 bg-gray-200 dark:bg-gray-700 mx-1"></div>
+              <div className="mx-1 h-12 w-px bg-gray-200 dark:bg-gray-700"></div>
               
               {/* Select All Button */}
               <button
                 onClick={handleSelectAll}
-                className="group flex flex-col items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-xl bg-gray-500 hover:bg-gray-600 text-white transition-all duration-200 shadow-md hover:shadow-lg hover:scale-105 active:scale-95 flex-shrink-0"
+                className="group flex size-12 shrink-0 flex-col items-center justify-center rounded-xl bg-gray-500 text-white shadow-md transition-all duration-200 hover:scale-105 hover:bg-gray-600 hover:shadow-lg active:scale-95 sm:size-16"
                 title={selectedCards.size === cards.length ? "Deselect all" : "Select all"}
               >
-                <span className="material-icons text-sm sm:text-lg mb-0 sm:mb-0.5 group-hover:scale-110 transition-transform duration-200">
+                <span className="material-icons mb-0 text-sm transition-transform duration-200 group-hover:scale-110 sm:mb-0.5 sm:text-lg">
                   {selectedCards.size === cards.length ? 'deselect' : 'select_all'}
                 </span>
-                <span className="text-xs font-medium hidden sm:block">
+                <span className="hidden text-xs font-medium sm:block">
                   {selectedCards.size === cards.length ? 'Deselect' : 'All'}
                 </span>
               </button>
@@ -1360,10 +1360,10 @@ const CardList = ({
             {/* Full-width Clear Selection Button */}
             <button
               onClick={clearSelection}
-              className="w-full bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded-xl px-4 py-3 transition-all duration-200 shadow-md hover:shadow-lg font-medium"
+              className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 font-medium text-gray-900 shadow-md transition-all duration-200 hover:bg-gray-50 hover:shadow-lg dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
               title="Clear selection"
             >
-              <span className="material-icons text-lg mr-2 align-middle">clear</span>
+              <span className="material-icons mr-2 align-middle text-lg">clear</span>
               Clear Selection
             </button>
           </div>

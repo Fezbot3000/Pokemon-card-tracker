@@ -211,16 +211,16 @@ const BuyerSelectionModal = ({ isOpen, onClose, listing }) => {
       <div className="space-y-4">
 
           <div className="mb-4">
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
+            <p className="mb-4 text-gray-600 dark:text-gray-400">
               Who purchased <strong>{listing?.cardTitle || listing?.card?.name || 'this item'}</strong>?
             </p>
             
             {loading ? (
               <div className="flex justify-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+                <div className="size-8 animate-spin rounded-full border-y-2 border-blue-500"></div>
               </div>
             ) : potentialBuyers.length === 0 ? (
-              <div className="text-center py-8">
+              <div className="py-8 text-center">
                 <p className="text-gray-500 dark:text-gray-400">
                   No potential buyers found. Only users who have messaged you about this item will appear here.
                 </p>
@@ -230,7 +230,7 @@ const BuyerSelectionModal = ({ isOpen, onClose, listing }) => {
                 {potentialBuyers.map((buyer) => (
                   <label
                     key={buyer.id}
-                    className="flex items-center p-3 border border-gray-200 dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700"
+                    className="flex cursor-pointer items-center rounded-lg border border-gray-200 p-3 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-700"
                   >
                     <input
                       type="radio"
@@ -255,8 +255,8 @@ const BuyerSelectionModal = ({ isOpen, onClose, listing }) => {
           </div>
 
           {/* Sold Invoice Option */}
-          <div className="mb-4 p-4 border border-gray-200 dark:border-gray-600 rounded-lg">
-            <label className="flex items-center mb-3">
+          <div className="mb-4 rounded-lg border border-gray-200 p-4 dark:border-gray-600">
+            <label className="mb-3 flex items-center">
               <input
                 type="checkbox"
                 checked={createSoldInvoice}
@@ -270,7 +270,7 @@ const BuyerSelectionModal = ({ isOpen, onClose, listing }) => {
             
             {createSoldInvoice && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Final Sale Price (AUD)
                 </label>
                 <input
@@ -279,9 +279,9 @@ const BuyerSelectionModal = ({ isOpen, onClose, listing }) => {
                   value={soldPrice}
                   onChange={(e) => setSoldPrice(e.target.value)}
                   placeholder="Enter final sale price"
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                 />
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                   This will create an invoice record for your sold item
                 </p>
               </div>

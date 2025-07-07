@@ -133,9 +133,9 @@ const SaleModal = ({ isOpen, onClose, selectedCards, onConfirm }) => {
     >
       <div className="space-y-6">
         {/* Buyer and Date */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
               Buyer <span className="text-red-500">*</span>
             </label>
             <input
@@ -143,28 +143,28 @@ const SaleModal = ({ isOpen, onClose, selectedCards, onConfirm }) => {
               value={buyer}
               onChange={(e) => setBuyer(e.target.value)}
               placeholder="Enter buyer name"
-              className="w-full px-3 py-2 border border-[#ffffff33] dark:border-[#ffffff1a] rounded-lg bg-white dark:bg-[#0F0F0F] text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full rounded-lg border border-[#ffffff33] bg-white px-3 py-2 text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-[#ffffff1a] dark:bg-[#0F0F0F] dark:text-white dark:placeholder:text-gray-400"
             />
             {errors.buyer && (
-              <p className="text-red-500 text-sm mt-1">{errors.buyer}</p>
+              <p className="mt-1 text-sm text-red-500">{errors.buyer}</p>
             )}
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
               Date Sold
             </label>
             <input
               type="date"
               value={dateSold}
               onChange={(e) => setDateSold(e.target.value)}
-              className="w-full px-3 py-2 border border-[#ffffff33] dark:border-[#ffffff1a] rounded-lg bg-white dark:bg-[#0F0F0F] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full rounded-lg border border-[#ffffff33] bg-white px-3 py-2 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-[#ffffff1a] dark:bg-[#0F0F0F] dark:text-white"
             />
           </div>
         </div>
 
         {/* Selected Cards */}
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
             Selected Cards
           </h3>
           <div className="space-y-4">
@@ -177,7 +177,7 @@ const SaleModal = ({ isOpen, onClose, selectedCards, onConfirm }) => {
               return (
                 <div 
                   key={card.slabSerial}
-                  className="border border-gray-200 dark:border-gray-700 rounded-lg p-4"
+                  className="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
                 >
                   <div className="space-y-4">
                     <div>
@@ -190,11 +190,11 @@ const SaleModal = ({ isOpen, onClose, selectedCards, onConfirm }) => {
                     </div>
                     
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                         Sold Price ({preferredCurrency.code}) <span className="text-red-500">*</span>
                       </label>
                       <div className="relative">
-                        <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400">
                           {preferredCurrency.symbol}
                         </span>
                         <input
@@ -204,14 +204,14 @@ const SaleModal = ({ isOpen, onClose, selectedCards, onConfirm }) => {
                           onChange={(e) => handlePriceChange(card.slabSerial, e.target.value)}
                           step="0.01"
                           min="0"
-                          className="w-full pl-8 pr-4 py-2 border border-[#ffffff33] dark:border-[#ffffff1a] rounded-lg bg-white dark:bg-[#0F0F0F] text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full rounded-lg border border-[#ffffff33] bg-white py-2 pl-8 pr-4 text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-[#ffffff1a] dark:bg-[#0F0F0F] dark:text-white dark:placeholder:text-gray-400"
                           placeholder="0.00"
                         />
                       </div>
                       {errors[card.slabSerial] && (
-                        <p className="text-red-500 text-sm mt-1">{errors[card.slabSerial]}</p>
+                        <p className="mt-1 text-sm text-red-500">{errors[card.slabSerial]}</p>
                       )}
-                      <div className="text-sm mt-2">
+                      <div className="mt-2 text-sm">
                         <span className="text-gray-600 dark:text-gray-400">Profit: </span>
                         <span className={profit >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}>
                           {formatAmountForDisplay(profit, preferredCurrency.code)}
@@ -226,8 +226,8 @@ const SaleModal = ({ isOpen, onClose, selectedCards, onConfirm }) => {
         </div>
 
         {/* Totals */}
-        <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-          <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+        <div className="border-t border-gray-200 pt-4 dark:border-gray-700">
+          <div className="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <span className="text-sm text-gray-600 dark:text-gray-400">Total Sale Price:</span>

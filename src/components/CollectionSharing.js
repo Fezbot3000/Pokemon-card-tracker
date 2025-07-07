@@ -29,7 +29,7 @@ import sharingService from '../services/sharingService';
 // Simple components to replace missing design system components
 const Spinner = ({ size = 'medium' }) => (
   <div className={`animate-spin rounded-full border-4 border-gray-300 border-t-blue-600 ${
-    size === 'large' ? 'h-12 w-12' : 'h-6 w-6'
+    size === 'large' ? 'size-12' : 'size-6'
   }`}></div>
 );
 
@@ -43,7 +43,7 @@ const Badge = ({ children, variant = 'primary', className = '' }) => {
   };
   
   return (
-    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${variants[variant]} ${className}`}>
+    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${variants[variant]} ${className}`}>
       {children}
     </span>
   );
@@ -51,14 +51,14 @@ const Badge = ({ children, variant = 'primary', className = '' }) => {
 
 const Input = ({ className = '', ...props }) => (
   <input
-    className={`w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent ${className}`}
+    className={`w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white ${className}`}
     {...props}
   />
 );
 
 const Select = ({ className = '', children, ...props }) => (
   <select
-    className={`w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent ${className}`}
+    className={`w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white ${className}`}
     {...props}
   >
     {children}
@@ -67,7 +67,7 @@ const Select = ({ className = '', children, ...props }) => (
 
 const Textarea = ({ className = '', ...props }) => (
   <textarea
-    className={`w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-vertical ${className}`}
+    className={`resize-vertical w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white ${className}`}
     {...props}
   />
 );
@@ -76,14 +76,14 @@ const Switch = ({ checked, onChange, label, ...props }) => (
   <div className="flex items-center">
     <button
       type="button"
-      className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
         checked ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-700'
       }`}
       onClick={() => onChange(!checked)}
       {...props}
     >
       <span
-        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+        className={`pointer-events-none inline-block size-5 rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out${
           checked ? 'translate-x-5' : 'translate-x-0'
         }`}
       />
@@ -443,14 +443,14 @@ const CollectionSharing = ({ isInModal = false }) => {
     <>
       <div className={`space-y-6 ${isInModal ? '' : 'p-4 sm:p-6'}`}>
         {/* Header - FIXED FOR MOBILE */}
-        <div className="space-y-4 sm:space-y-0 sm:flex sm:items-center sm:justify-between">
+        <div className="space-y-4 sm:flex sm:items-center sm:justify-between sm:space-y-0">
           <div>
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Collection Sharing</h2>
-            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white sm:text-2xl">Collection Sharing</h2>
+            <p className="mt-1 text-sm text-gray-600 dark:text-gray-400 sm:text-base">
               Share your collections with others through public links
             </p>
           </div>
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
+          <div className="flex flex-col items-stretch space-y-2 sm:flex-row sm:items-center sm:space-x-3 sm:space-y-0">
             <Button
               onClick={() => setShowQuickStart(true)}
               variant="outline"
@@ -475,23 +475,23 @@ const CollectionSharing = ({ isInModal = false }) => {
 
         {/* Shared Collections List */}
         {sharedCollections.length === 0 ? (
-          <Card className={`text-center py-8 sm:py-12 ${isInModal ? 'bg-white bg-opacity-50 dark:bg-gray-800 dark:bg-opacity-50 border-gray-200 border-opacity-30 dark:border-gray-700 dark:border-opacity-30' : ''}`}>
-            <div className="text-4xl sm:text-6xl mb-4">🔗</div>
-            <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-2">
+          <Card className={`py-8 text-center sm:py-12 ${isInModal ? 'border-gray-200 border-opacity-30 bg-white bg-opacity-50 dark:border-gray-700 dark:border-opacity-30 dark:bg-gray-800 dark:bg-opacity-50' : ''}`}>
+            <div className="mb-4 text-4xl sm:text-6xl">🔗</div>
+            <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white sm:text-xl">
               No Shared Collections
             </h3>
-            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-6 px-4">
+            <p className="mb-6 px-4 text-sm text-gray-600 dark:text-gray-400 sm:text-base">
               Create shareable links to showcase your collections to others
             </p>
           </Card>
         ) : (
           <div className="grid gap-4">
             {sharedCollections.map((shared) => (
-              <Card key={shared.id} className={`p-4 sm:p-6 ${isInModal ? 'bg-white bg-opacity-50 dark:bg-gray-800 dark:bg-opacity-50 border-gray-200 border-opacity-30 dark:border-gray-700 dark:border-opacity-30' : ''}`}>
-                <div className="space-y-4 sm:space-y-0 sm:flex sm:items-start sm:justify-between">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-3 mb-2">
-                      <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white truncate">
+              <Card key={shared.id} className={`p-4 sm:p-6 ${isInModal ? 'border-gray-200 border-opacity-30 bg-white bg-opacity-50 dark:border-gray-700 dark:border-opacity-30 dark:bg-gray-800 dark:bg-opacity-50' : ''}`}>
+                <div className="space-y-4 sm:flex sm:items-start sm:justify-between sm:space-y-0">
+                  <div className="min-w-0 flex-1">
+                    <div className="mb-2 flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-x-3 sm:space-y-0">
+                      <h3 className="truncate text-base font-semibold text-gray-900 dark:text-white sm:text-lg">
                         {shared.title}
                       </h3>
                       <Badge variant={shared.isActive ? 'success' : 'secondary'} className="self-start sm:self-auto">
@@ -500,12 +500,12 @@ const CollectionSharing = ({ isInModal = false }) => {
                     </div>
                     
                     {shared.description && (
-                      <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">
+                      <p className="mb-3 line-clamp-2 text-sm text-gray-600 dark:text-gray-400 sm:text-base">
                         {shared.description}
                       </p>
                     )}
                     
-                    <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-4 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                    <div className="flex flex-col space-y-1 text-xs text-gray-500 dark:text-gray-400 sm:flex-row sm:items-center sm:space-x-4 sm:space-y-0 sm:text-sm">
                       <span className="truncate">Collection: {shared.collectionId === 'all' ? 'All Collections' : shared.collectionId}</span>
                       <span>Views: {shared.viewCount || 0}</span>
                       <span className="hidden sm:inline">Created: {shared.createdAt?.toDate?.()?.toLocaleDateString() || 'Unknown'}</span>
@@ -513,7 +513,7 @@ const CollectionSharing = ({ isInModal = false }) => {
                   </div>
                   
                   {/* FIXED MOBILE BUTTON LAYOUT */}
-                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-2 sm:ml-4 w-full sm:w-auto">
+                  <div className="flex w-full flex-col items-stretch space-y-2 sm:ml-4 sm:w-auto sm:flex-row sm:items-center sm:space-x-2 sm:space-y-0">
                     <Button
                       onClick={() => copyShareLink(shared.id)}
                       variant="outline"
@@ -534,7 +534,7 @@ const CollectionSharing = ({ isInModal = false }) => {
                       onClick={() => deleteSharedCollection(shared.id)}
                       variant="outline"
                       size="sm"
-                      className="text-xs sm:text-sm text-red-600 hover:text-red-700"
+                      className="text-xs text-red-600 hover:text-red-700 sm:text-sm"
                     >
                       Delete
                     </Button>
@@ -561,7 +561,7 @@ const CollectionSharing = ({ isInModal = false }) => {
         closeOnClickOutside={false}
         className="modal-header-ios-safe"
         footer={
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end space-y-2 sm:space-y-0 sm:space-x-3 w-full">
+          <div className="flex w-full flex-col items-stretch justify-end space-y-2 sm:flex-row sm:items-center sm:space-x-3 sm:space-y-0">
             <Button
               onClick={() => setShowCreateModal(false)}
               variant="outline"
@@ -581,7 +581,7 @@ const CollectionSharing = ({ isInModal = false }) => {
       >
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
               Title *
             </label>
             <TextField
@@ -594,7 +594,7 @@ const CollectionSharing = ({ isInModal = false }) => {
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
               Description
             </label>
             <TextField
@@ -608,7 +608,7 @@ const CollectionSharing = ({ isInModal = false }) => {
           </div>
           
           <div>
-            <div className="flex items-center justify-between mb-1">
+            <div className="mb-1 flex items-center justify-between">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Collection to Share
               </label>
@@ -617,7 +617,7 @@ const CollectionSharing = ({ isInModal = false }) => {
                 disabled={isRefreshing}
                 variant="outline"
                 size="sm"
-                className="text-xs px-2 py-1"
+                className="px-2 py-1 text-xs"
               >
                 {isRefreshing ? '🔄' : '🔄'} {isRefreshing ? 'Refreshing...' : 'Refresh'}
               </Button>
@@ -680,24 +680,24 @@ const CollectionSharing = ({ isInModal = false }) => {
             if (!previewImage) return null;
             
             return (
-              <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <div className="border-t border-gray-200 pt-4 dark:border-gray-700">
+                <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Share Preview Image
                 </label>
-                <div className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <div className="flex items-center space-x-3 rounded-lg bg-gray-50 p-3 dark:bg-gray-800">
                   <img 
                     src={previewImage} 
                     alt="Share preview" 
-                    className="w-16 h-20 object-cover rounded border border-gray-300 dark:border-gray-600"
+                    className="h-20 w-16 rounded border border-gray-300 object-cover dark:border-gray-600"
                     onError={(e) => {
                       e.target.style.display = 'none';
                     }}
                   />
-                  <div className="flex-1 min-w-0">
+                  <div className="min-w-0 flex-1">
                     <p className="text-sm text-gray-700 dark:text-gray-300">
                       This image will be shown when your collection is shared on social media
                     </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-500 mt-1 truncate">
+                    <p className="mt-1 truncate text-xs text-gray-500 dark:text-gray-500">
                       From your highest value card with an image
                     </p>
                   </div>

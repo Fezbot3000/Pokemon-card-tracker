@@ -108,19 +108,19 @@ const Header = ({
   // If this is being used in the component library, render a simplified version
   if (isComponentLibrary) {
     return (
-      <header className="bg-white dark:bg-black fixed top-0 left-0 right-0 z-50 header-responsive">
+      <header className="header-responsive fixed inset-x-0 top-0 z-50 bg-white dark:bg-black">
         {/* Top bar */}
-        <div className="border-b border-gray-200 dark:border-[#ffffff1a] h-full flex items-center px-4">
-          <div className="max-w-7xl mx-auto flex justify-between items-center w-full">
+        <div className="flex h-full items-center border-b border-gray-200 px-4 dark:border-[#ffffff1a]">
+          <div className="mx-auto flex w-full max-w-7xl items-center justify-between">
             <div className="flex items-center">
               <img 
                 src="/favicon-192x192.png" 
                 alt="Logo" 
-                className="w-8 h-8 rounded-md mr-3"
+                className="mr-3 size-8 rounded-md"
               />
             </div>
-            <button className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button className="rounded-lg p-2 hover:bg-gray-100 dark:hover:bg-gray-800">
+              <svg className="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
@@ -132,32 +132,32 @@ const Header = ({
 
   // Main header implementation for the actual application
   return (
-    <header className="bg-white dark:bg-black fixed top-0 left-0 right-0 z-50 header-responsive">
+    <header className="header-responsive fixed inset-x-0 top-0 z-50 bg-white dark:bg-black">
       {/* Combined navigation bar */}
-      <div className="border-b border-gray-200 dark:border-[#ffffff1a] h-full flex items-center px-4">
-        <div className="max-w-7xl mx-auto flex items-center w-full">
+      <div className="flex h-full items-center border-b border-gray-200 px-4 dark:border-[#ffffff1a]">
+        <div className="mx-auto flex w-full max-w-7xl items-center">
           {/* Left side - Logo (hidden on mobile) - Fixed width to balance right side */}
-          <div className="hidden sm:flex items-center w-48">
+          <div className="hidden w-48 items-center sm:flex">
             <Link to="/dashboard" className="flex items-center">
               <img 
                 src="/favicon-192x192.png" 
                 alt="Logo" 
-                className="w-8 h-8 rounded-md"
+                className="size-8 rounded-md"
               />
             </Link>
           </div>
           
           {/* Center - Navigation tabs - Absolutely centered */}
           {onViewChange && (
-            <div className="flex-1 flex justify-center">
+            <div className="flex flex-1 justify-center">
               {/* Desktop navigation - always visible on larger screens */}
-              <div className="hidden sm:flex space-x-1">
+              <div className="hidden space-x-1 sm:flex">
                 <button 
                   onClick={() => handleViewChange('cards')}
-                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors duration-200 ${
+                  className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors duration-200 ${
                     currentView === 'cards' 
                       ? 'bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] text-white' 
-                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200/50 dark:hover:bg-gray-700/50'
+                      : 'hover:bg-gray-200/50 dark:hover:bg-gray-700/50 text-gray-700 dark:text-gray-300'
                   }`}
                 >
                   <Icon 
@@ -171,10 +171,10 @@ const Header = ({
                 
                 <button 
                   onClick={() => handleViewChange('purchase-invoices')}
-                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors duration-200 ${
+                  className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors duration-200 ${
                     currentView === 'purchase-invoices' 
                       ? 'bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] text-white' 
-                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200/50 dark:hover:bg-gray-700/50'
+                      : 'hover:bg-gray-200/50 dark:hover:bg-gray-700/50 text-gray-700 dark:text-gray-300'
                   }`}
                 >
                   <Icon 
@@ -188,10 +188,10 @@ const Header = ({
                 
                 <button 
                   onClick={() => handleViewChange('sold-items')}
-                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors duration-200 ${
+                  className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors duration-200 ${
                     currentView === 'sold-items' 
                       ? 'bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] text-white' 
-                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200/50 dark:hover:bg-gray-700/50'
+                      : 'hover:bg-gray-200/50 dark:hover:bg-gray-700/50 text-gray-700 dark:text-gray-300'
                   }`}
                 >
                   <Icon 
@@ -205,10 +205,10 @@ const Header = ({
                 
                 <button 
                   onClick={() => handleViewChange('marketplace')}
-                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors duration-200 ${
+                  className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors duration-200 ${
                     currentView === 'marketplace' 
                       ? 'bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] text-white' 
-                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200/50 dark:hover:bg-gray-700/50'
+                      : 'hover:bg-gray-200/50 dark:hover:bg-gray-700/50 text-gray-700 dark:text-gray-300'
                   }`}
                 >
                   <Icon 
@@ -222,7 +222,7 @@ const Header = ({
               </div>
               
               {/* Mobile navigation - contextual based on current view */}
-              <div className={`sm:hidden flex space-x-1 justify-center ${
+              <div className={`flex justify-center space-x-1 sm:hidden ${
                 (isSoldSection() || isMarketplaceSection()) ? 'w-full' : ''
               }`}>
                 {/* Hide header completely on Cards page */}
@@ -233,10 +233,10 @@ const Header = ({
                       <>
                         <button 
                           onClick={() => handleViewChange('purchase-invoices')}
-                          className={`px-2 py-1 rounded-md text-xs font-medium transition-colors duration-200 ${
+                          className={`rounded-md px-2 py-1 text-xs font-medium transition-colors duration-200 ${
                             currentView === 'purchase-invoices' 
                               ? 'bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] text-white' 
-                              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200/50 dark:hover:bg-gray-700/50'
+                              : 'hover:bg-gray-200/50 dark:hover:bg-gray-700/50 text-gray-700 dark:text-gray-300'
                           }`}
                         >
                           <Icon 
@@ -250,10 +250,10 @@ const Header = ({
                         
                         <button 
                           onClick={() => handleViewChange('sold-items')}
-                          className={`px-2 py-1 rounded-md text-xs font-medium transition-colors duration-200 ${
+                          className={`rounded-md px-2 py-1 text-xs font-medium transition-colors duration-200 ${
                             currentView === 'sold-items' 
                               ? 'bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] text-white' 
-                              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200/50 dark:hover:bg-gray-700/50'
+                              : 'hover:bg-gray-200/50 dark:hover:bg-gray-700/50 text-gray-700 dark:text-gray-300'
                           }`}
                         >
                           <Icon 
@@ -272,10 +272,10 @@ const Header = ({
                       <>
                         <button 
                           onClick={() => handleViewChange('marketplace')}
-                          className={`px-2 py-1 rounded-md text-xs font-medium transition-colors duration-200 ${
+                          className={`rounded-md px-2 py-1 text-xs font-medium transition-colors duration-200 ${
                             currentView === 'marketplace' 
                               ? 'bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] text-white' 
-                              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200/50 dark:hover:bg-gray-700/50'
+                              : 'hover:bg-gray-200/50 dark:hover:bg-gray-700/50 text-gray-700 dark:text-gray-300'
                           }`}
                         >
                           <Icon 
@@ -289,10 +289,10 @@ const Header = ({
                         
                         <button 
                           onClick={() => handleViewChange('marketplace-selling')}
-                          className={`px-2 py-1 rounded-md text-xs font-medium transition-colors duration-200 ${
+                          className={`rounded-md px-2 py-1 text-xs font-medium transition-colors duration-200 ${
                             currentView === 'marketplace-selling' 
                               ? 'bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] text-white' 
-                              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200/50 dark:hover:bg-gray-700/50'
+                              : 'hover:bg-gray-200/50 dark:hover:bg-gray-700/50 text-gray-700 dark:text-gray-300'
                           }`}
                         >
                           <Icon 
@@ -306,10 +306,10 @@ const Header = ({
                         
                         <button 
                           onClick={() => handleViewChange('marketplace-messages')}
-                          className={`px-2 py-1 rounded-md text-xs font-medium transition-colors duration-200 ${
+                          className={`rounded-md px-2 py-1 text-xs font-medium transition-colors duration-200 ${
                             currentView === 'marketplace-messages' 
                               ? 'bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] text-white' 
-                              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200/50 dark:hover:bg-gray-700/50'
+                              : 'hover:bg-gray-200/50 dark:hover:bg-gray-700/50 text-gray-700 dark:text-gray-300'
                           }`}
                         >
                           <Icon 
@@ -329,12 +329,12 @@ const Header = ({
           )}
           
           {/* Right side - action buttons - Fixed width to balance left side */}
-          <div className="hidden sm:flex items-center justify-end space-x-2 w-48">
+          <div className="hidden w-48 items-center justify-end space-x-2 sm:flex">
             {/* Currency Dropdown */}
             <div className="relative" ref={currencyDropdownRef}>
               <button
                 onClick={() => setCurrencyDropdownOpen(!currencyDropdownOpen)}
-                className="px-2 py-1 flex items-center justify-center rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200"
+                className="flex items-center justify-center rounded-md px-2 py-1 text-sm font-medium text-gray-700 transition-colors duration-200 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
                 aria-label="Change currency"
               >
                 <span className="mr-1">{preferredCurrency.symbol}</span>
@@ -344,12 +344,12 @@ const Header = ({
               
               {currencyDropdownOpen && (
                 <div 
-                  className="absolute right-0 mt-1 w-48 bg-white dark:bg-gray-900 rounded-md shadow-lg py-1 z-50 border border-gray-200 dark:border-gray-700"
+                  className="absolute right-0 z-50 mt-1 w-48 rounded-md border border-gray-200 bg-white py-1 shadow-lg dark:border-gray-700 dark:bg-gray-900"
                 >
                   {availableCurrencies.map((currency) => (
                     <button
                       key={currency.code}
-                      className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 ${currency.code === preferredCurrency.code ? 'bg-gray-100 dark:bg-gray-800 font-medium' : ''}`}
+                      className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-800 ${currency.code === preferredCurrency.code ? 'bg-gray-100 font-medium dark:bg-gray-800' : ''}`}
                       onClick={() => {
                         updatePreferredCurrency(currency);
                         setCurrencyDropdownOpen(false);
@@ -368,7 +368,7 @@ const Header = ({
             
             <button
               onClick={toggleTheme}
-              className="p-1 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+              className="rounded-full p-1 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
               aria-label="Toggle theme"
             >
               <Icon name={theme === 'dark' ? 'light_mode' : 'dark_mode'} />
@@ -377,7 +377,7 @@ const Header = ({
             {onSettingsClick && (
               <button
                 onClick={onSettingsClick}
-                className="p-1 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+                className="rounded-full p-1 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
                 aria-label="Settings"
               >
                 <Icon name="settings" />
@@ -390,11 +390,11 @@ const Header = ({
           
           {/* Mobile right side - Hide completely on invoices and marketplace pages for proper centering */}
           {!isSoldSection() && !isMarketplaceSection() && (
-            <div className="sm:hidden flex items-center justify-end flex-1">
+            <div className="flex flex-1 items-center justify-end sm:hidden">
               {onSettingsClick && (
                 <button
                   onClick={onSettingsClick}
-                  className="p-1 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+                  className="rounded-full p-1 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
                   aria-label="Settings"
                 >
                   <Icon name="settings" />

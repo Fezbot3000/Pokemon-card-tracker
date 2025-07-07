@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import Button from '../atoms/Button';
 import Icon from '../atoms/Icon';
 
-import '../styles/animations.css';
+
 
 /**
  * Modal component
@@ -208,13 +208,13 @@ const Modal = ({
   const backdropClasses = `fixed inset-0 ${positionClasses[position]} bg-black/50 backdrop-blur-sm`;
   
   const modalClasses = forceDarkMode 
-    ? `bg-[#0F0F0F]/95 backdrop-blur-sm rounded-lg shadow-xl text-white` 
-    : `bg-white/95 dark:bg-[#0F0F0F]/95 backdrop-blur-sm rounded-lg shadow-xl`;
+    ? `bg-black backdrop-blur-sm rounded-lg shadow-xl text-white` 
+    : `bg-white dark:bg-black backdrop-blur-sm rounded-lg shadow-xl`;
     
   const iosHeaderSafeClass = isIOSDevice() ? 'modal-header-ios-safe' : '';
   const headerClasses = forceDarkMode
-    ? `sticky top-0 z-10 flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-700/50 bg-[#0F0F0F]/95 backdrop-blur-sm ${iosHeaderSafeClass}`
-    : `sticky top-0 z-10 flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-200 dark:border-gray-700/50 bg-white/95 dark:bg-[#0F0F0F]/95 backdrop-blur-sm ${iosHeaderSafeClass}`;
+    ? `sticky top-0 z-10 flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-700/50 bg-black backdrop-blur-sm ${iosHeaderSafeClass}`
+    : `sticky top-0 z-10 flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-200 dark:border-gray-700/50 bg-white dark:bg-black backdrop-blur-sm ${iosHeaderSafeClass}`;
     
   const titleClasses = forceDarkMode
     ? 'text-xl font-medium text-gray-200'
@@ -225,8 +225,8 @@ const Modal = ({
     : 'text-2xl text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors';
     
   const footerClasses = forceDarkMode
-    ? 'sticky bottom-0 z-10 flex items-center justify-between gap-2 px-6 pt-4 pb-6 border-t border-gray-700/50 bg-[#0F0F0F]/95 backdrop-blur-sm'
-    : 'sticky bottom-0 z-10 flex items-center justify-between gap-2 px-6 pt-4 pb-6 border-t border-gray-200 dark:border-gray-700/50 bg-white/95 dark:bg-[#0F0F0F]/95 backdrop-blur-sm';
+    ? 'sticky bottom-0 z-10 flex items-center justify-between gap-2 px-6 pt-4 pb-6 border-t border-gray-700/50 bg-black backdrop-blur-sm'
+    : 'sticky bottom-0 z-10 flex items-center justify-between gap-2 px-6 pt-4 pb-6 border-t border-gray-200 dark:border-gray-700/50 bg-white dark:bg-black backdrop-blur-sm';
   
   // Force the dark class if needed
   const darkModeClass = forceDarkMode ? 'dark' : '';
@@ -234,16 +234,16 @@ const Modal = ({
   // If modal is static, just render the content without the backdrop and positioning
   if (showAsStatic) {
     return (
-      <div className={`${maxWidth} w-full bg-white dark:bg-[#0F0F0F] rounded-lg shadow-xl overflow-hidden`}>
+      <div className={`${maxWidth} w-full overflow-hidden rounded-lg bg-white shadow-xl dark:bg-black`}>
         {/* Header */}
-        <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-200 dark:border-gray-800">
+        <div className="flex items-center justify-between border-b border-gray-200 px-6 pb-4 pt-6 dark:border-gray-800">
           <h3 className="text-lg font-medium text-gray-900 dark:text-white">
             {title}
           </h3>
           {onClose && (
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 focus:outline-none"
+              className="text-gray-400 hover:text-gray-500 focus:outline-none dark:hover:text-gray-300"
               aria-label="Close"
             >
               <Icon name="close" size="md" />
@@ -258,7 +258,7 @@ const Modal = ({
         
         {/* Footer */}
         {footer && (
-          <div className="flex items-center justify-between gap-2 border-t border-gray-200 dark:border-gray-800 px-6 pt-4 pb-6">
+          <div className="flex items-center justify-between gap-2 border-t border-gray-200 px-6 pb-6 pt-4 dark:border-gray-800">
             {footer}
           </div>
         )}
@@ -280,8 +280,8 @@ const Modal = ({
         className={`${modalClasses} flex flex-col ${animationClass} modal-container ${
           position === 'right' 
             ? (window.innerWidth < 640 
-                ? 'w-screen max-w-none rounded-lg m-0 fixed top-0 left-0 right-0 bottom-0 z-[9999] overflow-auto' 
-                : 'w-[55%] rounded-l-lg rounded-r-none mr-0 fixed top-0 right-0 z-[9999]')
+                ? 'fixed inset-0 z-[9999] m-0 w-screen max-w-none overflow-auto rounded-lg' 
+                : 'fixed right-0 top-0 z-[9999] mr-0 w-[55%] rounded-l-lg rounded-r-none')
             : (mobileFullWidth || (size === 'custom' ? maxWidth : sizeClasses[size] || 'w-[55%]'))
         } ${className}`}
         role="dialog"
@@ -300,7 +300,7 @@ const Modal = ({
         )}
 
         {/* Modal Content - Scrollable */}
-        <div className={`flex-1 overflow-y-auto scrollbar-hide ${noContentPadding ? 'px-6' : 'px-6 py-6'} modal-content modal-body ${contentClasses}`}>
+        <div className={`scrollbar-hide flex-1 overflow-y-auto ${noContentPadding ? 'px-6' : 'p-6'} modal-content modal-body ${contentClasses}`}>
           {children}
         </div>
 

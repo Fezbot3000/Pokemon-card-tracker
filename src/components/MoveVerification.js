@@ -220,9 +220,9 @@ const MoveVerification = () => {
 
   if (!lastMoveData && !lastChangeData) {
     return (
-      <div className="p-4 bg-white dark:bg-[#1B2131] rounded-lg shadow mb-4 mt-16 sm:mt-20">
-        <h2 className="text-lg font-semibold mb-2">Card Movement Verification</h2>
-        <p className="text-gray-600 dark:text-gray-400 mb-4">
+      <div className="mb-4 mt-16 rounded-lg bg-white p-4 shadow dark:bg-[#1B2131] sm:mt-20">
+        <h2 className="mb-2 text-lg font-semibold">Card Movement Verification</h2>
+        <p className="mb-4 text-gray-600 dark:text-gray-400">
           No recent card movements detected. Move some cards between collections to verify.
         </p>
       </div>
@@ -230,8 +230,8 @@ const MoveVerification = () => {
   }
 
   return (
-    <div className="p-4 bg-white dark:bg-[#1B2131] rounded-lg shadow mb-4 mt-16 sm:mt-20">
-      <h2 className="text-lg font-semibold mb-2">Card Movement Verification</h2>
+    <div className="mb-4 mt-16 rounded-lg bg-white p-4 shadow dark:bg-[#1B2131] sm:mt-20">
+      <h2 className="mb-2 text-lg font-semibold">Card Movement Verification</h2>
       
       {lastMoveData && (
         <div className="mb-4">
@@ -259,16 +259,16 @@ const MoveVerification = () => {
       )}
       
       {verificationResults && (
-        <div className="mt-4 border-t pt-4 border-gray-200 dark:border-gray-700">
-          <h3 className="font-medium text-gray-900 dark:text-white mb-2">Verification Results</h3>
+        <div className="mt-4 border-t border-gray-200 pt-4 dark:border-gray-700">
+          <h3 className="mb-2 font-medium text-gray-900 dark:text-white">Verification Results</h3>
           
           <div className="mb-3">
             <div className="flex items-center">
-              <span className="font-medium mr-2">Local Storage:</span>
+              <span className="mr-2 font-medium">Local Storage:</span>
               {verificationResults.localVerification.success === true ? (
-                <span className="text-green-500 font-medium">✓ Success</span>
+                <span className="font-medium text-green-500">✓ Success</span>
               ) : (
-                <span className="text-red-500 font-medium">✗ Failed</span>
+                <span className="font-medium text-red-500">✗ Failed</span>
               )}
             </div>
             <ul className="mt-1 text-sm">
@@ -288,13 +288,13 @@ const MoveVerification = () => {
           
           <div className="mb-3">
             <div className="flex items-center">
-              <span className="font-medium mr-2">Cloud Storage:</span>
+              <span className="mr-2 font-medium">Cloud Storage:</span>
               {verificationResults.cloudVerification.success === true ? (
-                <span className="text-green-500 font-medium">✓ Success</span>
+                <span className="font-medium text-green-500">✓ Success</span>
               ) : verificationResults.cloudVerification.success === 'skipped' ? (
-                <span className="text-gray-500 font-medium">⚠ Skipped</span>
+                <span className="font-medium text-gray-500">⚠ Skipped</span>
               ) : (
-                <span className="text-red-500 font-medium">✗ Failed</span>
+                <span className="font-medium text-red-500">✗ Failed</span>
               )}
             </div>
             <ul className="mt-1 text-sm">
@@ -311,7 +311,7 @@ const MoveVerification = () => {
           </div>
           
           {verificationResults.error && (
-            <div className="text-red-500 mt-2">
+            <div className="mt-2 text-red-500">
               Error during verification: {verificationResults.error}
             </div>
           )}
@@ -322,13 +322,13 @@ const MoveVerification = () => {
         <button 
           onClick={verifyCardMovements}
           disabled={isVerifying}
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
+          className="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600 disabled:opacity-50"
         >
           {isVerifying ? 'Verifying...' : 'Verify Movements'}
         </button>
         <button 
           onClick={clearVerificationData}
-          className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white rounded hover:bg-gray-300 dark:hover:bg-gray-600"
+          className="rounded bg-gray-200 px-4 py-2 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600"
         >
           Clear Data
         </button>

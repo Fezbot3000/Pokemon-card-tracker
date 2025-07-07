@@ -14,7 +14,7 @@ import PSALookupButton from '../../components/PSALookupButton';
 import { getAllPokemonSets, getPokemonSetsByYear, getSetsByCategory, addCustomSet, getAvailableYears } from '../../data/pokemonSets';
 import { useUserPreferences } from '../../contexts/UserPreferencesContext';
 import { useSubscription } from '../../hooks/useSubscription';
-import '../styles/formFixes.css'; 
+ 
 
 const cardCategories = [
   { value: 'pokemon', label: 'Pokemon' },
@@ -574,26 +574,26 @@ const CardDetailsForm = ({
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+      <div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2">
         <div>
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Card Image</h3>
+          <h3 className="mb-4 text-lg font-medium text-gray-900 dark:text-white">Card Image</h3>
           <div className="relative">
             <div 
-              className="relative overflow-hidden rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-black flex items-center justify-center w-full"
+              className="relative flex w-full items-center justify-center overflow-hidden rounded-lg border border-gray-300 bg-white dark:border-gray-700 dark:bg-black"
               style={{ height: '400px', width: '100%', maxWidth: '100%', margin: '0 auto' }}
             >
               {imageLoadingState === 'loading' ? (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/5 dark:bg-white/5">
-                  <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full"></div>
+                <div className="bg-black/5 dark:bg-white/5 absolute inset-0 flex items-center justify-center">
+                  <div className="size-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
                 </div>
               ) : imageLoadingState === 'error' ? (
-                <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center bg-red-50 dark:bg-red-900/20">
-                  <Icon name="error" className="text-red-500 text-4xl mb-2" />
-                  <p className="text-red-600 dark:text-red-400 mb-2">Failed to load image</p>
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-red-50 p-4 text-center dark:bg-red-900/20">
+                  <Icon name="error" className="mb-2 text-4xl text-red-500" />
+                  <p className="mb-2 text-red-600 dark:text-red-400">Failed to load image</p>
                   {onImageRetry && (
                     <button 
                       onClick={onImageRetry}
-                      className="px-3 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded hover:bg-red-200 dark:hover:bg-red-800/30"
+                      className="rounded bg-red-100 px-3 py-1 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-800/30"
                     >
                       Retry
                     </button>
@@ -602,11 +602,11 @@ const CardDetailsForm = ({
               ) : null}
               
               {cardImage ? (
-                <div className="relative w-full h-full flex items-center justify-center">
+                <div className="relative flex size-full items-center justify-center">
                   <img 
                     src={cardImage} 
                     alt="Card preview" 
-                    className="max-h-[380px] max-w-full h-auto object-contain cursor-pointer"
+                    className="h-auto max-h-[380px] max-w-full cursor-pointer object-contain"
                     onClick={onImageClick}
                     onError={(e) => {
                       if (onImageRetry) onImageRetry();
@@ -615,8 +615,8 @@ const CardDetailsForm = ({
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center p-6 text-center">
-                  <Icon name="image" className="text-gray-400 text-4xl mb-2" />
-                  <p className="text-gray-500 dark:text-gray-400 mb-4">No image available</p>
+                  <Icon name="image" className="mb-2 text-4xl text-gray-400" />
+                  <p className="mb-4 text-gray-500 dark:text-gray-400">No image available</p>
                 </div>
               )}
             </div>
@@ -627,7 +627,7 @@ const CardDetailsForm = ({
             
             {!hidePsaSearchButton && selectedCompany !== 'RAW' && (
               <div className="mt-3 space-y-2">
-                <div className="flex flex-col space-y-2 w-full">
+                <div className="flex w-full flex-col space-y-2">
                   {!card.psaUrl && (
                     <button
                       onClick={() => {
@@ -638,7 +638,7 @@ const CardDetailsForm = ({
                         onPsaSearch && onPsaSearch(card.slabSerial);
                       }}
                       disabled={!card.slabSerial || isPsaSearching || !hasFeature('PSA_SEARCH')}
-                      className="w-full inline-flex items-center justify-center font-medium rounded-lg transition-colors focus:outline-none px-4 py-2 text-base bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="inline-flex w-full items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-base font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
                       data-component-name="CardDetailsForm"
                       title={
                         !hasFeature('PSA_SEARCH') 
@@ -650,7 +650,7 @@ const CardDetailsForm = ({
                     >
                       {isPsaSearching ? (
                         <>
-                          <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <svg className="-ml-1 mr-3 size-5 animate-spin text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                           </svg>
@@ -676,7 +676,7 @@ const CardDetailsForm = ({
                         href={card.psaUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="w-full inline-flex items-center justify-center font-medium rounded-lg transition-colors focus:outline-none px-4 py-2 text-base bg-gradient-to-r from-blue-500 to-blue-700 text-white hover:opacity-90 shadow-sm"
+                        className="inline-flex w-full items-center justify-center rounded-lg bg-gradient-to-r from-blue-500 to-blue-700 px-4 py-2 text-base font-medium text-white shadow-sm transition-colors hover:opacity-90 focus:outline-none"
                       >
                         <Icon name="open_in_new" className="mr-2" color="white" />
                         View on PSA Website
@@ -692,9 +692,9 @@ const CardDetailsForm = ({
                             onPsaSearch(card.slabSerial);
                           }}
                           disabled={!hasFeature('PSA_SEARCH')}
-                          className={`w-full inline-flex items-center justify-center font-medium rounded-lg transition-colors focus:outline-none px-4 py-2 text-base shadow-sm ${
+                          className={`inline-flex w-full items-center justify-center rounded-lg px-4 py-2 text-base font-medium shadow-sm transition-colors focus:outline-none ${
                             !hasFeature('PSA_SEARCH') 
-                              ? 'bg-gray-400 text-gray-600 cursor-not-allowed' 
+                              ? 'cursor-not-allowed bg-gray-400 text-gray-600' 
                               : 'bg-gradient-to-r from-green-500 to-green-700 text-white hover:opacity-90'
                           }`}
                           title={!hasFeature('PSA_SEARCH') ? "PSA search requires Premium subscription" : "Reload data from PSA"}
@@ -714,7 +714,7 @@ const CardDetailsForm = ({
         </div>
         
         <div>
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Financial Details</h3>
+          <h3 className="mb-4 text-lg font-medium text-gray-900 dark:text-white">Financial Details</h3>
           <div className="financial-details-grid">
             <div>
               <div className="form-label-nowrap">
@@ -749,7 +749,7 @@ const CardDetailsForm = ({
             </div>
           </div>
           
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white mt-8 mb-4">Card Details</h3>
+          <h3 className="mb-4 mt-8 text-lg font-medium text-gray-900 dark:text-white">Card Details</h3>
           
           <div className="grid grid-cols-1 gap-4">
             <div>
@@ -763,7 +763,7 @@ const CardDetailsForm = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-4 mt-4">
+          <div className="mt-4 grid grid-cols-1 gap-4">
             <div>
               <FormField
                 label="Card Name"
@@ -779,7 +779,7 @@ const CardDetailsForm = ({
 
 
 
-          <div className="grid grid-cols-1 gap-4 mt-4">
+          <div className="mt-4 grid grid-cols-1 gap-4">
             <div>
               <SelectField
                 label="Category"
@@ -797,7 +797,7 @@ const CardDetailsForm = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-4 mt-4">
+          <div className="mt-4 grid grid-cols-1 gap-4">
             <div>
               <SelectField
                 label="Year"
@@ -816,7 +816,7 @@ const CardDetailsForm = ({
             </div>
           </div>
           
-          <div className="grid grid-cols-1 gap-4 mt-4">
+          <div className="mt-4 grid grid-cols-1 gap-4">
             <div>
               <SelectField
                 label="Set"
@@ -838,7 +838,7 @@ const CardDetailsForm = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+          <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
               <div className="form-label-nowrap">
                 <FormLabel htmlFor="gradingCompany">Grading Company</FormLabel>
@@ -847,7 +847,7 @@ const CardDetailsForm = ({
                     id="gradingCompany"
                     value={selectedCompany}
                     onChange={handleCompanyChange}
-                    className="w-full px-4 py-2 border rounded-md border-[#ffffff33] dark:border-[#ffffff1a] bg-white dark:bg-[#0F0F0F] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none pr-10"
+                    className="w-full appearance-none rounded-md border border-[#ffffff33] bg-white px-4 py-2 pr-10 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-[#ffffff1a] dark:bg-[#0F0F0F] dark:text-white"
                     data-component-name="CardDetailsForm"
                   >
                     {gradingCompanies.map(company => (
@@ -855,7 +855,7 @@ const CardDetailsForm = ({
                     ))}
                   </select>
                   <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 dark:text-gray-300">
-                    <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                    <svg className="size-4 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
                       <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
                     </svg>
                   </div>
@@ -870,7 +870,7 @@ const CardDetailsForm = ({
                     id="grade"
                     value={selectedGrade}
                     onChange={handleGradeChange}
-                    className="w-full px-4 py-2 border rounded-md border-[#ffffff33] dark:border-[#ffffff1a] bg-white dark:bg-[#0F0F0F] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none pr-10"
+                    className="w-full appearance-none rounded-md border border-[#ffffff33] bg-white px-4 py-2 pr-10 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-[#ffffff1a] dark:bg-[#0F0F0F] dark:text-white"
                     data-component-name="CardDetailsForm"
                   >
                     {selectedCompany === 'RAW' ? (
@@ -898,7 +898,7 @@ const CardDetailsForm = ({
                     )}
                   </select>
                   <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 dark:text-gray-300">
-                    <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                    <svg className="size-4 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
                       <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
                     </svg>
                   </div>
@@ -907,7 +907,7 @@ const CardDetailsForm = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+          <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
             {selectedCompany !== 'RAW' && (
               <div>
                 <div className="form-label-nowrap">
@@ -940,7 +940,7 @@ const CardDetailsForm = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+          <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
               <div className="form-label-nowrap">
                 <FormField

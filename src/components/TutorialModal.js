@@ -97,41 +97,41 @@ const TutorialModal = () => {
     >
       {/* Blurred Background Overlay */}
       <div 
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        className="bg-black/50 absolute inset-0 backdrop-blur-sm"
         onClick={endTutorial}
       />
       
       {/* Modal Container */}
       <div 
-        className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-4xl w-full overflow-hidden border border-gray-200 dark:border-gray-700"
+        className="relative w-full max-w-4xl overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-900"
         style={{
           maxHeight: '90vh'
         }}
       >
         {/* Modal Header */}
-        <div className="border-b border-gray-200 dark:border-gray-700/50 px-6 pt-6 pb-4 flex justify-between items-center">
+        <div className="dark:border-gray-700/50 flex items-center justify-between border-b border-gray-200 px-6 pb-4 pt-6">
           <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
             {content.title}
           </h3>
           <button
             onClick={endTutorial}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-2xl font-bold transition-colors"
+            className="text-2xl font-bold text-gray-400 transition-colors hover:text-gray-600 dark:hover:text-gray-300"
           >
             ✕
           </button>
         </div>
         
         {/* Modal Content */}
-        <div className="p-6 overflow-y-auto">
-          <div className="grid md:grid-cols-2 gap-8 items-center">
+        <div className="overflow-y-auto p-6">
+          <div className="grid items-center gap-8 md:grid-cols-2">
             {/* Image Section - Much larger */}
             <div className="order-2 md:order-1">
               {content.imageSrc ? (
-                <div className="rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/30 shadow-lg">
+                <div className="dark:bg-gray-800/30 overflow-hidden rounded-xl border border-gray-200 bg-gray-50 shadow-lg dark:border-gray-700">
                   <img 
                     src={content.imageSrc} 
                     alt={content.imageAlt} 
-                    className="w-full h-auto object-contain max-h-[400px]"
+                    className="h-auto max-h-[400px] w-full object-contain"
                     onError={(e) => {
                       console.error(`Failed to load image: ${content.imageSrc}`);
                       e.target.style.display = 'none';
@@ -144,9 +144,9 @@ const TutorialModal = () => {
                   />
                 </div>
               ) : (
-                <div className="h-64 flex items-center justify-center rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/30">
-                  <div className="text-gray-400 dark:text-gray-600 text-center">
-                    <div className="text-4xl mb-4">🚀</div>
+                <div className="dark:bg-gray-800/30 flex h-64 items-center justify-center rounded-xl border border-gray-200 bg-gray-50 dark:border-gray-700">
+                  <div className="text-center text-gray-400 dark:text-gray-600">
+                    <div className="mb-4 text-4xl">🚀</div>
                     <p className="text-lg">{content.imageAlt}</p>
                   </div>
                 </div>
@@ -155,7 +155,7 @@ const TutorialModal = () => {
             
             {/* Description Text */}
             <div className="order-1 md:order-2">
-              <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed">
+              <p className="text-lg leading-relaxed text-gray-700 dark:text-gray-300">
                 {content.content}
               </p>
             </div>
@@ -163,16 +163,16 @@ const TutorialModal = () => {
         </div>
         
         {/* Modal Footer with Fixed Buttons */}
-        <div className="border-t border-gray-200 dark:border-gray-700/50 px-6 pt-4 pb-6 flex justify-between bg-gray-50 dark:bg-gray-800/50">
+        <div className="dark:border-gray-700/50 dark:bg-gray-800/50 flex justify-between border-t border-gray-200 bg-gray-50 px-6 pb-6 pt-4">
           <button
             onClick={endTutorial}
-            className="px-6 py-3 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 font-medium transition-colors"
+            className="px-6 py-3 font-medium text-gray-600 transition-colors hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
           >
             Skip Tutorial
           </button>
           <button
             onClick={nextStep}
-            className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors shadow-lg"
+            className="rounded-lg bg-blue-600 px-8 py-3 font-medium text-white shadow-lg transition-colors hover:bg-blue-700"
           >
             {currentStep === tutorialSteps.GET_STARTED ? 'Start Collecting' : 'Next'}
           </button>

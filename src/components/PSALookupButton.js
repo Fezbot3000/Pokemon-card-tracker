@@ -104,9 +104,9 @@ const PSALookupButton = ({ currentCardData, onCardUpdate, iconOnly = false, butt
           <button
             type="button"
             onClick={handleLookupClick}
-            className={`p-2 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+            className={`rounded-full p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
               !hasFeature('PSA_SEARCH') 
-                ? 'bg-gray-300 dark:bg-gray-600 cursor-not-allowed' 
+                ? 'cursor-not-allowed bg-gray-300 dark:bg-gray-600' 
                 : 'hover:bg-gray-100 dark:hover:bg-gray-700'
             }`}
             aria-label={
@@ -118,7 +118,7 @@ const PSALookupButton = ({ currentCardData, onCardUpdate, iconOnly = false, butt
             title={!hasFeature('PSA_SEARCH') ? "PSA search requires Premium subscription" : undefined}
           >
             {isLoading ? (
-              <div className="w-5 h-5 border-2 border-t-transparent border-blue-500 rounded-full animate-spin"></div>
+              <div className="size-5 animate-spin rounded-full border-2 border-blue-500 border-t-transparent"></div>
             ) : !hasFeature('PSA_SEARCH') ? (
               <Icon name="lock" size="sm" />
             ) : (
@@ -134,7 +134,7 @@ const PSALookupButton = ({ currentCardData, onCardUpdate, iconOnly = false, butt
             title={!hasFeature('PSA_SEARCH') ? "PSA search requires Premium subscription" : undefined}
           >
             {isLoading ? (
-              <div className="w-4 h-4 border-2 border-t-transparent border-current rounded-full animate-spin"></div>
+              <div className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent"></div>
             ) : !hasFeature('PSA_SEARCH') ? (
               <Icon name="lock" size="sm" />
             ) : (
@@ -150,7 +150,7 @@ const PSALookupButton = ({ currentCardData, onCardUpdate, iconOnly = false, butt
             value={certNumber}
             onChange={(e) => setCertNumber(e.target.value)}
             placeholder="Enter PSA cert #"
-            className="px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-[var(--primary-light)]/20 focus:border-[var(--primary)]"
+            className="focus:ring-[var(--primary-light)]/20 rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:border-[var(--primary)] focus:ring-2 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
             autoFocus
           />
           <Button 
@@ -161,7 +161,7 @@ const PSALookupButton = ({ currentCardData, onCardUpdate, iconOnly = false, butt
             title={!hasFeature('PSA_SEARCH') ? "PSA search requires Premium subscription" : undefined}
           >
             {isLoading ? (
-              <div className="w-4 h-4 border-2 border-t-transparent border-current rounded-full animate-spin"></div>
+              <div className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent"></div>
             ) : !hasFeature('PSA_SEARCH') ? (
               "Premium"
             ) : (

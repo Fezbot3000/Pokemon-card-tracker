@@ -7,7 +7,7 @@ import CardDetailsForm from './CardDetailsForm';
 import SaleModal from '../../components/SaleModal'; 
 import { searchByCertNumber, parsePSACardData } from '../../services/psaSearch';
 import { toast } from 'react-hot-toast';
-import '../styles/animations.css';
+
 import { useUserPreferences } from '../../contexts/UserPreferencesContext';
 import { useSubscription } from '../../hooks/useSubscription';
 
@@ -385,7 +385,7 @@ const CardDetailsModal = ({
       >
         {isSaving ? (
           <>
-            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <svg className="-ml-1 mr-3 size-5 animate-spin text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
@@ -410,7 +410,7 @@ const CardDetailsModal = ({
       >
         <div className="space-y-6">
           {/* Profit/Loss Display */}
-          <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+          <div className="flex items-center justify-between rounded-lg bg-gray-50 dark:bg-black p-4">
             <span className="text-sm text-gray-600 dark:text-gray-400">Current Status:</span>
             <span
               className={`font-medium ${getProfit() >= 0 ? 'text-green-600 dark:text-green-500' : 'text-red-600 dark:text-red-500'}`}
@@ -425,9 +425,9 @@ const CardDetailsModal = ({
             <div className={`${animClass} relative`}>
               {/* PSA Search Loading Overlay */}
               {(isPsaSearching || isPsaLoading) && (
-                <div className="absolute inset-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm z-10 flex items-center justify-center rounded-lg">
+                <div className="bg-white dark:bg-black absolute inset-0 z-10 flex items-center justify-center rounded-lg backdrop-blur-sm">
                   <div className="text-center">
-                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-500 border-t-transparent mb-2"></div>
+                    <div className="mb-2 inline-block size-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
                     <p className="text-gray-600 dark:text-gray-400">Looking up PSA information...</p>
                   </div>
                 </div>
@@ -460,14 +460,14 @@ const CardDetailsModal = ({
           {/* Loading indicator when content is not yet loaded */}
           {!contentLoaded && (
             <div className="flex items-center justify-center py-12">
-              <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full"></div>
+              <div className="size-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
               <span className="ml-3 text-gray-600 dark:text-gray-400">Loading card details...</span>
             </div>
           )}
           
           {/* Status message */}
           {saveMessage && (
-            <div className={`mt-4 px-4 py-2 rounded-lg text-sm transition-all ${
+            <div className={`mt-4 rounded-lg px-4 py-2 text-sm transition-all ${
               saveMessage.startsWith('Error') || saveMessage.startsWith('Please fix')
                 ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' 
                 : saveMessage.startsWith('No changes to save')
@@ -483,7 +483,7 @@ const CardDetailsModal = ({
       {/* Enlarged Image Modal */}
       {showEnlargedImage && cardImage && (
         <div 
-          className="fixed inset-0 z-[60] bg-black/90 flex items-center justify-center cursor-zoom-out" 
+          className="bg-black/90 fixed inset-0 z-[60] flex cursor-zoom-out items-center justify-center" 
           onClick={(e) => {
             e.stopPropagation();
             setShowEnlargedImage(false);
@@ -494,7 +494,7 @@ const CardDetailsModal = ({
           }}
         >
           <div 
-            className="relative max-w-[90vw] flex items-center justify-center"
+            className="relative flex max-w-[90vw] items-center justify-center"
             onClick={e => e.stopPropagation()}
             style={{
               maxHeight: '90vh'
@@ -503,14 +503,14 @@ const CardDetailsModal = ({
             <img 
               src={cardImage} 
               alt="Card preview (enlarged)" 
-              className="w-auto h-auto object-contain rounded-lg" 
+              className="size-auto rounded-lg object-contain" 
               style={{
                 maxHeight: '90vh',
                 maxWidth: '90vw'
               }}
             />
             <button 
-              className="absolute top-4 right-4 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors"
+              className="bg-black/50 hover:bg-black/70 absolute right-4 top-4 rounded-full p-2 text-white transition-colors"
               onClick={(e) => {
                 e.stopPropagation();
                 setShowEnlargedImage(false);

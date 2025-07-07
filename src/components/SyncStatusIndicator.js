@@ -98,7 +98,7 @@ const SyncStatusIndicator = () => {
   
   return (
     <div 
-      className="fixed bottom-4 right-4 z-50 p-2 rounded-full bg-white dark:bg-gray-800 shadow-md cursor-pointer"
+      className="fixed bottom-4 right-4 z-50 cursor-pointer rounded-full bg-white p-2 shadow-md dark:bg-gray-800"
       title={tooltip}
     >
       <Icon 

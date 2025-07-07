@@ -79,11 +79,11 @@ function SellerProfile({ sellerId, onClose, onViewListing }) {
     // This would be expanded with actual seller performance data
     
     return badges.length > 0 ? (
-      <div className="flex flex-wrap gap-2 mt-3">
+      <div className="mt-3 flex flex-wrap gap-2">
         {badges.map((badge, index) => (
           <div
             key={index}
-            className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm ${badge.color}`}
+            className={`flex items-center gap-1 rounded-full px-3 py-1 text-sm ${badge.color}`}
           >
             <span className="material-icons text-xs">{badge.icon}</span>
             <span>{badge.label}</span>
@@ -124,14 +124,14 @@ function SellerProfile({ sellerId, onClose, onViewListing }) {
     >
       {loading ? (
         <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+          <div className="size-8 animate-spin rounded-full border-b-2 border-purple-600"></div>
         </div>
       ) : (
         <div className="space-y-6">
           {/* Seller Info Header */}
-          <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-6">
+          <div className="rounded-lg bg-gray-50 p-6 dark:bg-gray-800">
             <div className="flex items-start gap-4">
-              <div className="w-20 h-20 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center">
+              <div className="flex size-20 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900">
                 <Icon name="person" size="xl" className="text-purple-600 dark:text-purple-400" />
               </div>
               <div className="flex-1">
@@ -139,13 +139,13 @@ function SellerProfile({ sellerId, onClose, onViewListing }) {
                   {sellerProfile?.displayName || 'Seller'}
                 </h2>
                 {sellerProfile?.location && (
-                  <p className="text-gray-600 dark:text-gray-400 mt-1">
-                    <Icon name="location_on" size="sm" className="inline mr-1" />
+                  <p className="mt-1 text-gray-600 dark:text-gray-400">
+                    <Icon name="location_on" size="sm" className="mr-1 inline" />
                     {sellerProfile.location}
                   </p>
                 )}
                 {sellerProfile?.bio && (
-                  <p className="text-gray-700 dark:text-gray-300 mt-3">
+                  <p className="mt-3 text-gray-700 dark:text-gray-300">
                     {sellerProfile.bio}
                   </p>
                 )}
@@ -158,20 +158,20 @@ function SellerProfile({ sellerId, onClose, onViewListing }) {
           <div className="flex border-b border-gray-200 dark:border-gray-700">
             <button
               onClick={() => setActiveTab('listings')}
-              className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${
+              className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
                 activeTab === 'listings'
-                  ? 'text-purple-600 border-b-2 border-purple-600'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                  ? 'border-b-2 border-purple-600 text-purple-600'
+                  : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'
               }`}
             >
               Listings ({sellerListings.length})
             </button>
             <button
               onClick={() => setActiveTab('reviews')}
-              className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${
+              className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
                 activeTab === 'reviews'
-                  ? 'text-purple-600 border-b-2 border-purple-600'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                  ? 'border-b-2 border-purple-600 text-purple-600'
+                  : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'
               }`}
             >
               Reviews
@@ -181,28 +181,28 @@ function SellerProfile({ sellerId, onClose, onViewListing }) {
           {/* Content */}
           <div className="flex-1 overflow-y-auto p-6">
             {activeTab === 'listings' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {sellerListings.map((listing) => (
                   <div
                     key={listing.id}
                     onClick={() => onViewListing(listing)}
-                    className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
+                    className="cursor-pointer overflow-hidden rounded-lg border border-gray-200 bg-white transition-shadow hover:shadow-lg dark:border-gray-700 dark:bg-gray-800"
                   >
-                    <div className="aspect-square relative">
+                    <div className="relative aspect-square">
                       <LazyImage
                         src={listing.images?.[0] || '/placeholder-card.png'}
                         alt={listing.cardName}
-                        className="w-full h-full object-cover"
+                        className="size-full object-cover"
                       />
                       {listing.condition && (
-                        <span className="absolute top-2 right-2 px-2 py-1 bg-black bg-opacity-70 text-white text-xs rounded">
+                        <span className="absolute right-2 top-2 rounded bg-black bg-opacity-70 px-2 py-1 text-xs text-white">
                           {listing.condition}
                         </span>
                       )}
                     </div>
                     
                     <div className="p-4">
-                      <h3 className="font-semibold text-gray-900 dark:text-white line-clamp-2">
+                      <h3 className="line-clamp-2 font-semibold text-gray-900 dark:text-white">
                         {listing.cardName}
                       </h3>
                       <div className="mt-2 flex items-center justify-between">
@@ -218,7 +218,7 @@ function SellerProfile({ sellerId, onClose, onViewListing }) {
                 ))}
                 
                 {sellerListings.length === 0 && (
-                  <div className="col-span-full text-center py-12 text-gray-500 dark:text-gray-400">
+                  <div className="col-span-full py-12 text-center text-gray-500 dark:text-gray-400">
                     No active listings
                   </div>
                 )}

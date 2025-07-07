@@ -8,6 +8,8 @@
     "@stripe/stripe-js": "^7.4.0",
     "@testing-library/jest-dom": "^6.6.3",
     "chart.js": "^4.4.8",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
     "file-saver": "^2.0.5",
     "firebase": "^10.8.0",
     "firebase-admin": "^13.4.0",
@@ -24,6 +26,7 @@
     "react-router-dom": "^7.5.1",
     "react-scripts": "5.0.1",
     "stripe": "^18.3.0",
+    "tailwind-merge": "^3.3.1",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
@@ -39,7 +42,13 @@
     "deploy:functions": "firebase deploy --only functions --non-interactive",
     "clean": "rimraf node_modules/.cache && rimraf build",
     "firebase-init": "firebase init",
-    "firebase-deploy": "firebase deploy --non-interactive"
+    "firebase-deploy": "firebase deploy --non-interactive",
+    "analyze": "npm run build && npx webpack-bundle-analyzer build/static/js/*.js",
+    "analyze:css": "npm run build && node scripts/analyze-css.js",
+    "baseline": "npm run build && node scripts/baseline-metrics.js",
+    "lint": "eslint src/**/*.{js,jsx,ts,tsx} --fix",
+    "format": "prettier --write src/**/*.{js,jsx,ts,tsx,css,json}",
+    "type-check": "tsc --noEmit"
   },
   "eslintConfig": {
     "extends": [
@@ -61,15 +70,23 @@
   },
   "devDependencies": {
     "@craco/craco": "^7.1.0",
+    "@types/node": "^24.0.10",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
     "autoprefixer": "^10.4.17",
+    "cssnano": "^7.0.7",
     "dotenv": "^16.4.7",
     "eslint-config-react-app": "^7.0.1",
+    "eslint-plugin-tailwindcss": "^3.18.0",
     "firebase-tools": "^14.1.0",
     "gh-pages": "^6.3.0",
     "node-fetch": "^2.7.0",
     "postcss": "^8.4.35",
+    "prettier-plugin-tailwindcss": "^0.6.13",
     "prop-types": "^15.8.1",
     "rimraf": "^5.0.10",
-    "tailwindcss": "^3.4.1"
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5.8.3",
+    "webpack-bundle-analyzer": "^4.10.2"
   }
 }

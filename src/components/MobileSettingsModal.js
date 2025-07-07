@@ -54,15 +54,15 @@ const MobileSettingsModal = ({ isOpen, onClose, onResetData }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black bg-opacity-75 flex items-end justify-center">
-      <div className="bg-white dark:bg-[#1B2131] w-full rounded-t-2xl p-6 max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-center mb-6">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black bg-opacity-75">
+      <div className="max-h-[90vh] w-full overflow-y-auto rounded-t-2xl bg-white p-6 dark:bg-[#1B2131]">
+        <div className="mb-6 flex items-center justify-between">
           <h2 className="text-xl font-bold text-gray-900 dark:text-white">Settings</h2>
           <button 
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" className="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
@@ -70,22 +70,22 @@ const MobileSettingsModal = ({ isOpen, onClose, onResetData }) => {
 
         <div className="space-y-6">
           {/* User Info */}
-          <div className="pb-4 border-b border-gray-200 dark:border-gray-700">
+          <div className="border-b border-gray-200 pb-4 dark:border-gray-700">
             <p className="text-sm text-gray-600 dark:text-gray-400">Signed in as</p>
             <p className="font-medium text-gray-900 dark:text-white">{user?.email}</p>
           </div>
 
           {/* Theme Toggle */}
-          <div className="flex justify-between items-center">
+          <div className="flex items-center justify-between">
             <span className="text-gray-900 dark:text-white">Dark Mode</span>
             <button 
               onClick={handleThemeToggle} 
-              className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors focus:outline-none ${
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
                 theme === 'dark' ? 'bg-blue-600' : 'bg-gray-300'
               }`}
             >
               <span 
-                className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform ${
+                className={`inline-block size-4 rounded-full bg-white transition-transform${
                   theme === 'dark' ? 'translate-x-6' : 'translate-x-1'
                 }`} 
               />
@@ -94,14 +94,14 @@ const MobileSettingsModal = ({ isOpen, onClose, onResetData }) => {
 
           {/* Currency Selector */}
           <div>
-            <label htmlFor="currency" className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+            <label htmlFor="currency" className="mb-2 block text-sm font-medium text-gray-900 dark:text-white">
               Currency
             </label>
             <select
               id="currency"
               value={currency}
               onChange={handleCurrencyChange}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm bg-white dark:bg-[#2D3748] text-gray-900 dark:text-white"
+              className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 shadow-sm dark:border-gray-700 dark:bg-[#2D3748] dark:text-white"
             >
               <option value="USD">USD ($)</option>
               <option value="EUR">EUR (€)</option>
@@ -116,7 +116,7 @@ const MobileSettingsModal = ({ isOpen, onClose, onResetData }) => {
           <div>
             <button
               onClick={handleRestartTutorial}
-              className="block w-full text-center px-4 py-2 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              className="block w-full rounded-md border border-gray-300 px-4 py-2 text-center text-gray-900 transition-colors hover:bg-gray-100 dark:border-gray-700 dark:text-white dark:hover:bg-gray-800"
             >
               Restart Tutorial
             </button>
@@ -126,7 +126,7 @@ const MobileSettingsModal = ({ isOpen, onClose, onResetData }) => {
           <div>
             <button
               onClick={onResetData}
-              className="block w-full text-center px-4 py-2 border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+              className="block w-full rounded-md border border-red-300 px-4 py-2 text-center text-red-600 transition-colors hover:bg-red-50 dark:border-red-700 dark:text-red-400 dark:hover:bg-red-900/20"
             >
               Reset All Data
             </button>
@@ -136,7 +136,7 @@ const MobileSettingsModal = ({ isOpen, onClose, onResetData }) => {
           <div>
             <button
               onClick={handleSignOut}
-              className="block w-full text-center px-4 py-2 bg-[#ef4444] hover:bg-[#dc2626] text-white rounded-md transition-colors"
+              className="block w-full rounded-md bg-[#ef4444] px-4 py-2 text-center text-white transition-colors hover:bg-[#dc2626]"
             >
               Sign Out
             </button>

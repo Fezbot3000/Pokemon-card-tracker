@@ -49,7 +49,7 @@ const GradingIntegration = () => {
 
     return (
       <div className="space-y-8">
-        <div className="flex items-center gap-4 mb-6">
+        <div className="mb-6 flex items-center gap-4">
           <span className="text-4xl">{service.logo}</span>
           <div>
             <h2 className="text-3xl font-bold">{service.name}</h2>
@@ -57,10 +57,10 @@ const GradingIntegration = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <div className="bg-white/5 rounded-xl p-6">
-            <h3 className="text-xl font-bold text-blue-400 mb-4">📊 Grading Scale</h3>
-            <div className="grid grid-cols-5 gap-2 mb-4">
+            <h3 className="mb-4 text-xl font-bold text-blue-400">📊 Grading Scale</h3>
+            <div className="mb-4 grid grid-cols-5 gap-2">
               {service.grades.map(grade => (
                 <div key={grade} className="bg-white/10 rounded-lg p-2 text-center text-sm">
                   {grade}
@@ -70,7 +70,7 @@ const GradingIntegration = () => {
             <div className="space-y-2">
               <h4 className="font-semibold text-green-400">Special Grades:</h4>
               {service.specialGrades.map(grade => (
-                <span key={grade} className="inline-block bg-green-600/20 text-green-400 px-2 py-1 rounded text-xs mr-2">
+                <span key={grade} className="mr-2 inline-block rounded bg-green-600/20 px-2 py-1 text-xs text-green-400">
                   {grade}
                 </span>
               ))}
@@ -78,7 +78,7 @@ const GradingIntegration = () => {
           </div>
 
           <div className="bg-white/5 rounded-xl p-6">
-            <h3 className="text-xl font-bold text-purple-400 mb-4">⏱️ Service Details</h3>
+            <h3 className="mb-4 text-xl font-bold text-purple-400">⏱️ Service Details</h3>
             <div className="space-y-3">
               <div>
                 <span className="font-semibold text-gray-300">Turnaround: </span>
@@ -97,8 +97,8 @@ const GradingIntegration = () => {
         </div>
 
         <div className="bg-white/5 rounded-xl p-6">
-          <h3 className="text-xl font-bold text-yellow-400 mb-4">🔗 Integration Features</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <h3 className="mb-4 text-xl font-bold text-yellow-400">🔗 Integration Features</h3>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <ul className="space-y-2 text-gray-300">
               <li>• Automatic cert number verification</li>
               <li>• Grade tracking and history</li>
@@ -122,40 +122,40 @@ const GradingIntegration = () => {
       <NavigationBar />
       
       {/* Hero Section */}
-      <section className="relative pt-24 pb-16 sm:pt-28 sm:pb-20 md:pt-32 md:pb-24 px-4 sm:px-6 lg:px-8 overflow-hidden">
+      <section className="relative overflow-hidden px-4 pb-16 pt-24 sm:px-6 sm:pb-20 sm:pt-28 md:pb-24 md:pt-32 lg:px-8">
         <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 via-purple-600/10 to-pink-600/10"></div>
         
-        <div className="relative z-10 max-w-4xl mx-auto text-center">
-          <div className="inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 bg-white/10 backdrop-blur-sm rounded-full text-xs sm:text-sm font-medium mb-6 sm:mb-8 border border-white/20">
-            <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-400 rounded-full mr-2"></span>
+        <div className="relative z-10 mx-auto max-w-4xl text-center">
+          <div className="bg-white/10 border-white/20 mb-6 inline-flex items-center rounded-full border px-3 py-1.5 text-xs font-medium backdrop-blur-sm sm:mb-8 sm:px-4 sm:py-2 sm:text-sm">
+            <span className="mr-2 size-1.5 rounded-full bg-green-400 sm:size-2"></span>
             Professional Authentication
           </div>
           
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 leading-tight">
+          <h1 className="mb-4 text-3xl font-bold leading-tight sm:mb-6 sm:text-4xl md:text-5xl lg:text-6xl">
             Grading
             <span className="block bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
               Integration
             </span>
           </h1>
           
-          <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-300 mb-8 sm:mb-12 max-w-3xl mx-auto leading-relaxed">
+          <p className="mx-auto mb-8 max-w-3xl text-base leading-relaxed text-gray-300 sm:mb-12 sm:text-lg md:text-xl lg:text-2xl">
             Seamlessly integrate with PSA, BGS, SGC and other major grading services to track your certified cards.
           </p>
         </div>
       </section>
 
       {/* Service Selection */}
-      <section className="py-12 px-4 sm:px-6 lg:px-8 bg-black">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-wrap justify-center gap-4 mb-12">
+      <section className="bg-black px-4 py-12 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <div className="mb-12 flex flex-wrap justify-center gap-4">
             {gradingServices.map((service) => (
               <button
                 key={service.id}
                 onClick={() => setActiveService(service.id)}
-                className={`flex items-center gap-3 px-6 py-4 rounded-xl transition-all duration-300 ${
+                className={`flex items-center gap-3 rounded-xl px-6 py-4 transition-all duration-300 ${
                   activeService === service.id
                     ? 'bg-blue-600 text-white shadow-lg'
-                    : 'bg-white/5 text-gray-300 hover:bg-white/10'
+                    : 'bg-white/5 hover:bg-white/10 text-gray-300'
                 }`}
               >
                 <span className="text-2xl">{service.logo}</span>
@@ -174,26 +174,26 @@ const GradingIntegration = () => {
       </section>
 
       {/* Integration Benefits */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <h2 className="text-3xl font-bold text-center mb-12">Why Use Grading Integration?</h2>
+      <section className="px-4 py-16 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <h2 className="mb-12 text-center text-3xl font-bold">Why Use Grading Integration?</h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
             <div className="bg-white/5 rounded-xl p-6 text-center">
-              <div className="text-4xl mb-4">📈</div>
-              <h3 className="text-xl font-bold mb-3">Accurate Valuations</h3>
+              <div className="mb-4 text-4xl">📈</div>
+              <h3 className="mb-3 text-xl font-bold">Accurate Valuations</h3>
               <p className="text-gray-400">Get real-time market values based on actual graded card sales data.</p>
             </div>
             
             <div className="bg-white/5 rounded-xl p-6 text-center">
-              <div className="text-4xl mb-4">🔒</div>
-              <h3 className="text-xl font-bold mb-3">Authentication</h3>
+              <div className="mb-4 text-4xl">🔒</div>
+              <h3 className="mb-3 text-xl font-bold">Authentication</h3>
               <p className="text-gray-400">Verify certificate numbers and ensure your cards are legitimate.</p>
             </div>
             
             <div className="bg-white/5 rounded-xl p-6 text-center">
-              <div className="text-4xl mb-4">📊</div>
-              <h3 className="text-xl font-bold mb-3">Population Data</h3>
+              <div className="mb-4 text-4xl">📊</div>
+              <h3 className="mb-3 text-xl font-bold">Population Data</h3>
               <p className="text-gray-400">Access population reports to understand card rarity and market positioning.</p>
             </div>
           </div>

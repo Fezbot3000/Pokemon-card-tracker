@@ -19,7 +19,7 @@ export const baseColors = {
 
   // Backgrounds - Dark mode
   darkBackgroundPrimary: '#000000', // Black (IMPORTANT: Must be kept as #000000)
-  darkBackgroundSecondary: '#0F0F0F', // Custom dark gray
+  darkBackgroundSecondary: '#000000', // Pure black instead of custom dark gray
   
   // Text colors - Light mode
   lightTextPrimary: '#111827', // Gray-900

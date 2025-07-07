@@ -96,22 +96,22 @@ const PokemonInvestmentGuide = () => {
       <NavigationBar />
       
       {/* Hero Section */}
-      <section className="relative pt-32 pb-16 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto text-center">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-green-400 via-blue-500 to-purple-500 bg-clip-text text-transparent">
+      <section className="relative px-4 pb-16 pt-32 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl text-center">
+          <h1 className="mb-6 bg-gradient-to-r from-green-400 via-blue-500 to-purple-500 bg-clip-text text-4xl font-bold text-transparent md:text-6xl">
             Pokemon Card Investment Guide
           </h1>
-          <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto">
+          <p className="mx-auto mb-8 max-w-3xl text-xl text-gray-300">
             Master the art of Pokemon card investing with data-driven strategies, market analysis, and ROI insights for Australian collectors.
           </p>
-          <div className="flex flex-wrap justify-center gap-4 mb-8">
-            <span className="bg-green-500/20 text-green-400 px-4 py-2 rounded-full border border-green-500/30">
+          <div className="mb-8 flex flex-wrap justify-center gap-4">
+            <span className="rounded-full border border-green-500/30 bg-green-500/20 px-4 py-2 text-green-400">
               📈 15-40% Annual ROI Potential
             </span>
-            <span className="bg-blue-500/20 text-blue-400 px-4 py-2 rounded-full border border-blue-500/30">
+            <span className="rounded-full border border-blue-500/30 bg-blue-500/20 px-4 py-2 text-blue-400">
               🏆 PSA Grading Impact Analysis
             </span>
-            <span className="bg-purple-500/20 text-purple-400 px-4 py-2 rounded-full border border-purple-500/30">
+            <span className="rounded-full border border-purple-500/30 bg-purple-500/20 px-4 py-2 text-purple-400">
               🇦🇺 Australia Market Focus
             </span>
           </div>
@@ -119,9 +119,9 @@ const PokemonInvestmentGuide = () => {
       </section>
 
       {/* Tab Navigation */}
-      <section className="px-4 sm:px-6 lg:px-8 pb-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-wrap justify-center gap-4 mb-8">
+      <section className="px-4 pb-8 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <div className="mb-8 flex flex-wrap justify-center gap-4">
             {[
               { id: 'getting-started', label: 'Getting Started', icon: '🚀' },
               { id: 'strategies', label: 'Investment Strategies', icon: '💰' },
@@ -132,10 +132,10 @@ const PokemonInvestmentGuide = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-6 py-3 rounded-lg font-semibold transition-all ${
+                className={`rounded-lg px-6 py-3 font-semibold transition-all ${
                   activeTab === tab.id
                     ? 'bg-blue-500 text-white'
-                    : 'bg-white/10 text-gray-300 hover:bg-white/20'
+                    : 'bg-white/10 hover:bg-white/20 text-gray-300'
                 }`}
               >
                 {tab.icon} {tab.label}
@@ -146,17 +146,17 @@ const PokemonInvestmentGuide = () => {
       </section>
 
       {/* Content Sections */}
-      <section className="px-4 sm:px-6 lg:px-8 pb-16">
-        <div className="max-w-7xl mx-auto">
+      <section className="px-4 pb-16 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
           
           {/* Getting Started */}
           {activeTab === 'getting-started' && (
             <div className="space-y-8">
-              <h2 className="text-3xl font-bold mb-6">Pokemon Card Investment Fundamentals</h2>
+              <h2 className="mb-6 text-3xl font-bold">Pokemon Card Investment Fundamentals</h2>
               
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
                 <div className="bg-white/5 rounded-xl p-6">
-                  <h3 className="text-xl font-bold text-green-400 mb-4">💡 Why Pokemon Cards as Investments?</h3>
+                  <h3 className="mb-4 text-xl font-bold text-green-400">💡 Why Pokemon Cards as Investments?</h3>
                   <ul className="space-y-3 text-gray-300">
                     <li>• <strong>Proven Track Record:</strong> Base Set Charizard: $6 (1998) → $350,000+ (2022)</li>
                     <li>• <strong>Global Demand:</strong> 25+ years of sustained popularity across generations</li>
@@ -167,7 +167,7 @@ const PokemonInvestmentGuide = () => {
                 </div>
 
                 <div className="bg-white/5 rounded-xl p-6">
-                  <h3 className="text-xl font-bold text-red-400 mb-4">⚠️ Investment Risks to Consider</h3>
+                  <h3 className="mb-4 text-xl font-bold text-red-400">⚠️ Investment Risks to Consider</h3>
                   <ul className="space-y-3 text-gray-300">
                     <li>• <strong>Market Volatility:</strong> Prices can fluctuate 20-50% year-over-year</li>
                     <li>• <strong>Condition Sensitivity:</strong> Small condition differences = massive value gaps</li>
@@ -178,22 +178,22 @@ const PokemonInvestmentGuide = () => {
                 </div>
               </div>
 
-              <div className="bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-xl p-8 border border-blue-500/30">
-                <h3 className="text-2xl font-bold mb-4">🎯 Investment Allocation Strategy</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="rounded-xl border border-blue-500/30 bg-gradient-to-r from-blue-500/20 to-purple-500/20 p-8">
+                <h3 className="mb-4 text-2xl font-bold">🎯 Investment Allocation Strategy</h3>
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
                   <div className="text-center">
-                    <div className="text-3xl font-bold text-green-400 mb-2">60%</div>
-                    <div className="font-semibold mb-2">Blue Chip Cards</div>
+                    <div className="mb-2 text-3xl font-bold text-green-400">60%</div>
+                    <div className="mb-2 font-semibold">Blue Chip Cards</div>
                     <div className="text-sm text-gray-300">Base Set holos, PSA 9-10 vintage staples</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-3xl font-bold text-yellow-400 mb-2">30%</div>
-                    <div className="font-semibold mb-2">Growth Picks</div>
+                    <div className="mb-2 text-3xl font-bold text-yellow-400">30%</div>
+                    <div className="mb-2 font-semibold">Growth Picks</div>
                     <div className="text-sm text-gray-300">Undervalued sets, modern chase cards</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-3xl font-bold text-purple-400 mb-2">10%</div>
-                    <div className="font-semibold mb-2">Speculative</div>
+                    <div className="mb-2 text-3xl font-bold text-purple-400">10%</div>
+                    <div className="mb-2 font-semibold">Speculative</div>
                     <div className="text-sm text-gray-300">Japanese exclusives, error cards, promos</div>
                   </div>
                 </div>
@@ -204,31 +204,31 @@ const PokemonInvestmentGuide = () => {
           {/* Investment Strategies */}
           {activeTab === 'strategies' && (
             <div className="space-y-8">
-              <h2 className="text-3xl font-bold mb-6">Proven Investment Strategies</h2>
+              <h2 className="mb-6 text-3xl font-bold">Proven Investment Strategies</h2>
               
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
                 {investmentStrategies.map((strategy, index) => (
-                  <div key={strategy.id} className="bg-white/5 rounded-xl p-6 border border-gray-600">
-                    <h3 className="text-xl font-bold text-blue-400 mb-4">{strategy.title}</h3>
+                  <div key={strategy.id} className="bg-white/5 rounded-xl border border-gray-600 p-6">
+                    <h3 className="mb-4 text-xl font-bold text-blue-400">{strategy.title}</h3>
                     
-                    <div className="space-y-3 mb-6">
+                    <div className="mb-6 space-y-3">
                       <div className="flex justify-between">
                         <span className="text-gray-400">Expected ROI:</span>
-                        <span className="text-green-400 font-semibold">{strategy.roi}</span>
+                        <span className="font-semibold text-green-400">{strategy.roi}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-400">Risk Level:</span>
-                        <span className="text-yellow-400 font-semibold">{strategy.risk}</span>
+                        <span className="font-semibold text-yellow-400">{strategy.risk}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-400">Time Horizon:</span>
-                        <span className="text-purple-400 font-semibold">{strategy.timeframe}</span>
+                        <span className="font-semibold text-purple-400">{strategy.timeframe}</span>
                       </div>
                     </div>
 
                     <div className="mb-4">
-                      <h4 className="font-semibold mb-2 text-gray-300">Key Examples:</h4>
-                      <ul className="text-sm space-y-1">
+                      <h4 className="mb-2 font-semibold text-gray-300">Key Examples:</h4>
+                      <ul className="space-y-1 text-sm">
                         {strategy.examples.map((example, idx) => (
                           <li key={idx} className="text-gray-400">• {example}</li>
                         ))}
@@ -243,14 +243,14 @@ const PokemonInvestmentGuide = () => {
           {/* Market Analysis */}
           {activeTab === 'market-analysis' && (
             <div className="space-y-8">
-              <h2 className="text-3xl font-bold mb-6">Pokemon Card Market Trends & Analysis</h2>
+              <h2 className="mb-6 text-3xl font-bold">Pokemon Card Market Trends & Analysis</h2>
               
               <div className="space-y-6">
                 {marketTrends.map((trend, index) => (
                   <div key={index} className="bg-white/5 rounded-xl p-6">
-                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-4">
+                    <div className="mb-4 flex flex-col lg:flex-row lg:items-center lg:justify-between">
                       <h3 className="text-xl font-bold text-blue-400">{trend.period}</h3>
-                      <span className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${
+                      <span className={`inline-block rounded-full px-3 py-1 text-sm font-semibold ${
                         trend.impact === 'High' ? 'bg-red-500/20 text-red-400' :
                         trend.impact === 'Medium-High' ? 'bg-orange-500/20 text-orange-400' :
                         'bg-yellow-500/20 text-yellow-400'
@@ -263,11 +263,11 @@ const PokemonInvestmentGuide = () => {
                 ))}
               </div>
 
-              <div className="bg-gradient-to-r from-green-500/20 to-blue-500/20 rounded-xl p-8 border border-green-500/30">
-                <h3 className="text-2xl font-bold mb-4">🔮 2024-2025 Market Predictions</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="rounded-xl border border-green-500/30 bg-gradient-to-r from-green-500/20 to-blue-500/20 p-8">
+                <h3 className="mb-4 text-2xl font-bold">🔮 2024-2025 Market Predictions</h3>
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                   <div>
-                    <h4 className="font-bold text-green-400 mb-3">Bullish Factors</h4>
+                    <h4 className="mb-3 font-bold text-green-400">Bullish Factors</h4>
                     <ul className="space-y-2 text-gray-300">
                       <li>• Pokemon's 30th anniversary approaching (2026)</li>
                       <li>• Continued celebrity and influencer involvement</li>
@@ -276,7 +276,7 @@ const PokemonInvestmentGuide = () => {
                     </ul>
                   </div>
                   <div>
-                    <h4 className="font-bold text-red-400 mb-3">Bearish Risks</h4>
+                    <h4 className="mb-3 font-bold text-red-400">Bearish Risks</h4>
                     <ul className="space-y-2 text-gray-300">
                       <li>• Economic recession reducing discretionary spending</li>
                       <li>• Overproduction of modern sets</li>
@@ -291,20 +291,20 @@ const PokemonInvestmentGuide = () => {
 
           {/* CTA Section */}
           <div className="mt-16 text-center">
-            <div className="bg-gradient-to-r from-purple-500/20 to-blue-500/20 rounded-2xl p-8 border border-purple-500/30">
-              <h3 className="text-2xl font-bold mb-4">Start Building Your Pokemon Card Investment Portfolio</h3>
-              <p className="text-gray-300 mb-6">
+            <div className="rounded-2xl border border-purple-500/30 bg-gradient-to-r from-purple-500/20 to-blue-500/20 p-8">
+              <h3 className="mb-4 text-2xl font-bold">Start Building Your Pokemon Card Investment Portfolio</h3>
+              <p className="mb-6 text-gray-300">
                 Track your investments, monitor market trends, and maximize your ROI with our advanced Pokemon Card Tracker.
               </p>
               <Link
                 to="/login"
-                className="inline-block bg-gradient-to-r from-green-500 to-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:from-green-600 hover:to-blue-700 transition-all transform hover:scale-105 mr-4"
+                className="mr-4 inline-block rounded-lg bg-gradient-to-r from-green-500 to-blue-600 px-8 py-3 font-semibold text-white transition-all hover:scale-105 hover:from-green-600 hover:to-blue-700"
               >
                 Start Tracking Investments
               </Link>
               <Link
                 to="/pokemon-sets"
-                className="inline-block bg-white/10 text-white px-8 py-3 rounded-lg font-semibold hover:bg-white/20 transition-all"
+                className="bg-white/10 hover:bg-white/20 inline-block rounded-lg px-8 py-3 font-semibold text-white transition-all"
               >
                 Browse Pokemon Sets
               </Link>

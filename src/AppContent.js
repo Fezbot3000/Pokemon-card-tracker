@@ -475,9 +475,9 @@ function AppContent() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-dark-bg">
+      <div className="bg-dark-bg flex min-h-screen items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <div className="mx-auto mb-4 size-12 animate-spin rounded-full border-b-2 border-primary"></div>
           <p className="text-gray-400">Loading your collection...</p>
         </div>
       </div>
@@ -485,7 +485,7 @@ function AppContent() {
   }
 
   return (
-    <div className="min-h-screen bg-dark-bg text-white flex flex-col">
+    <div className="bg-dark-bg flex min-h-screen flex-col text-white">
       {/* Desktop Header */}
       {!isMobile && (
         <Header 

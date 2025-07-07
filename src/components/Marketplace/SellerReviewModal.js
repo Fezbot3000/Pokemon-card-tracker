@@ -122,14 +122,14 @@ const SellerReviewModal = ({ isOpen, onClose, sellerId, listingId, chatId }) => 
 
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4"
 
     >
       <div 
-        className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto"
+        className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-lg bg-white dark:bg-gray-800"
       >
         <div className="p-6">
-          <div className="flex justify-between items-center mb-4">
+          <div className="mb-4 flex items-center justify-between">
             <h2 className="text-xl font-bold text-gray-900 dark:text-white">
               Review Seller
             </h2>
@@ -142,13 +142,13 @@ const SellerReviewModal = ({ isOpen, onClose, sellerId, listingId, chatId }) => 
           </div>
 
           <div className="mb-6">
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
+            <p className="mb-4 text-gray-600 dark:text-gray-400">
               How was your experience with this seller?
             </p>
             
             {/* Star Rating */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Rating *
               </label>
               <div className="flex space-x-1">
@@ -160,14 +160,14 @@ const SellerReviewModal = ({ isOpen, onClose, sellerId, listingId, chatId }) => 
                     className={`text-2xl transition-colors ${
                       star <= rating 
                         ? 'text-yellow-400' 
-                        : 'text-gray-300 dark:text-gray-600 hover:text-yellow-300'
+                        : 'text-gray-300 hover:text-yellow-300 dark:text-gray-600'
                     }`}
                   >
                     <span className="material-icons">star</span>
                   </button>
                 ))}
               </div>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                 {rating === 0 && 'Click to rate'}
                 {rating === 1 && 'Poor'}
                 {rating === 2 && 'Fair'}
@@ -179,7 +179,7 @@ const SellerReviewModal = ({ isOpen, onClose, sellerId, listingId, chatId }) => 
 
             {/* Comment */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Comment (Optional)
               </label>
               <textarea
@@ -188,9 +188,9 @@ const SellerReviewModal = ({ isOpen, onClose, sellerId, listingId, chatId }) => 
                 placeholder="Share your experience with this seller..."
                 rows={4}
                 maxLength={500}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white resize-none"
+                className="w-full resize-none rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
               />
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                 {comment.length}/500 characters
               </p>
             </div>
@@ -199,14 +199,14 @@ const SellerReviewModal = ({ isOpen, onClose, sellerId, listingId, chatId }) => 
           <div className="flex space-x-3">
             <button
               onClick={handleClose}
-              className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700"
+              className="flex-1 rounded-md border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
             >
               Cancel
             </button>
             <button
               onClick={handleSubmit}
               disabled={rating === 0 || submitting}
-              className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
+              className="flex-1 rounded-md bg-blue-500 px-4 py-2 text-white hover:bg-blue-600 disabled:cursor-not-allowed disabled:bg-gray-300"
             >
               {submitting ? 'Submitting...' : 'Submit Review'}
             </button>

@@ -1,9 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 // Import CSS files in the correct order to ensure proper cascade
-import './styles/design-system.css';  // Base design tokens and variables
-import './styles/main.css';           // Core styles with Tailwind
-import './styles/black-background.css'; // Dark mode styling
+import './styles/globals.css';         // Modernized global styles with design tokens
+import './styles/utilities.css';       // Custom utility classes
 import './styles/ios-fixes.css';      // iOS Safari specific fixes
 import App from './App';
 import { router } from './router';

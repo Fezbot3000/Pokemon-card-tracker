@@ -18,12 +18,12 @@ const SettingsPanel = ({
   return (
     <div className={`mb-6 ${className}`} {...props}>
       {title && (
-        <h3 className="text-base font-medium text-gray-900 dark:text-white mb-1 flex items-center">
+        <h3 className="mb-1 flex items-center text-base font-medium text-gray-900 dark:text-white">
           {title}
         </h3>
       )}
       {description && (
-        <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">{description}</p>
+        <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">{description}</p>
       )}
       <div className="space-y-4">
         {children}

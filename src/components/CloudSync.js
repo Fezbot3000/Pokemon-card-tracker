@@ -196,13 +196,13 @@ const CloudSync = ({ onExportData, onImportCollection }) => {
   };
 
   return (
-    <div className="py-4 space-y-4">
-      <div className="flex flex-col gap-2 mb-4">
+    <div className="space-y-4 py-4">
+      <div className="mb-4 flex flex-col gap-2">
         <p className="text-sm text-gray-500 dark:text-gray-400">
           Last synced: {getLastSyncTime()}
         </p>
         {(isSyncing || isImporting) && (
-          <p className="text-sm text-blue-600 dark:text-blue-400 animate-pulse">
+          <p className="animate-pulse text-sm text-blue-600 dark:text-blue-400">
             {isSyncing 
               ? `Backup in progress: ${Math.round(syncProgress)}% complete`
               : `Restore in progress: ${Math.round(syncProgress)}% complete`
@@ -246,8 +246,8 @@ const CloudSync = ({ onExportData, onImportCollection }) => {
       </div>
       
       {(isSyncing || isImporting) && (
-        <div className="w-full mt-4">
-          <div className="flex items-center justify-between mb-1">
+        <div className="mt-4 w-full">
+          <div className="mb-1 flex items-center justify-between">
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
               {isSyncing 
                 ? `Creating backup (${Math.round(syncProgress)}%)` 
@@ -258,9 +258,9 @@ const CloudSync = ({ onExportData, onImportCollection }) => {
               {`${Math.round(syncProgress)}%`}
             </span>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+          <div className="h-2.5 w-full rounded-full bg-gray-200 dark:bg-gray-700">
             <div 
-              className="bg-blue-600 h-2.5 rounded-full transition-all duration-300 ease-in-out" 
+              className="h-2.5 rounded-full bg-blue-600 transition-all duration-300 ease-in-out" 
               style={{ width: `${syncProgress}%` }}
             ></div>
           </div>
@@ -275,7 +275,7 @@ const CloudSync = ({ onExportData, onImportCollection }) => {
       )}
       
       {!currentUser && (
-        <p className="text-sm text-amber-500 dark:text-amber-400 mt-2">
+        <p className="mt-2 text-sm text-amber-500 dark:text-amber-400">
           You need to be logged in to use cloud sync features.
         </p>
       )}

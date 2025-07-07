@@ -121,39 +121,39 @@ const About = () => {
       <NavigationBar />
       
       {/* Hero Section */}
-      <section className="relative pt-24 pb-16 sm:pt-28 sm:pb-20 md:pt-32 md:pb-24 px-4 sm:px-6 lg:px-8 overflow-hidden">
+      <section className="relative overflow-hidden px-4 pb-16 pt-24 sm:px-6 sm:pb-20 sm:pt-28 md:pb-24 md:pt-32 lg:px-8">
         <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 via-purple-600/10 to-pink-600/10"></div>
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl"></div>
+        <div className="absolute left-1/4 top-1/4 size-96 rounded-full bg-blue-500/5 blur-3xl"></div>
+        <div className="absolute bottom-1/4 right-1/4 size-96 rounded-full bg-purple-500/5 blur-3xl"></div>
         
-        <div className="relative z-10 max-w-4xl mx-auto text-center">
-          <div className="inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 bg-white/10 backdrop-blur-sm rounded-full text-xs sm:text-sm font-medium mb-6 sm:mb-8 border border-white/20">
-            <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-400 rounded-full mr-2"></span>
+        <div className="relative z-10 mx-auto max-w-4xl text-center">
+          <div className="bg-white/10 border-white/20 mb-6 inline-flex items-center rounded-full border px-3 py-1.5 text-xs font-medium backdrop-blur-sm sm:mb-8 sm:px-4 sm:py-2 sm:text-sm">
+            <span className="mr-2 size-1.5 rounded-full bg-green-400 sm:size-2"></span>
             Trusted by 50,000+ Collectors
           </div>
           
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 leading-tight">
+          <h1 className="mb-4 text-3xl font-bold leading-tight sm:mb-6 sm:text-4xl md:text-5xl lg:text-6xl">
             About
             <span className="block bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
               Collectibles Tracker
             </span>
           </h1>
           
-          <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-300 mb-8 sm:mb-12 max-w-3xl mx-auto leading-relaxed">
+          <p className="mx-auto mb-8 max-w-3xl text-base leading-relaxed text-gray-300 sm:mb-12 sm:text-lg md:text-xl lg:text-2xl">
             We're on a mission to empower collectors worldwide with professional-grade tools to manage, track, and grow their collections.
           </p>
         </div>
       </section>
 
       {/* Our Story */}
-      <section className="py-12 sm:py-16 md:py-24 px-4 sm:px-6 lg:px-8 bg-black">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+      <section className="bg-black px-4 py-12 sm:px-6 sm:py-16 md:py-24 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2">
             <div>
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-6">
+              <h2 className="mb-6 text-2xl font-bold sm:text-3xl md:text-4xl">
                 Our Story
               </h2>
-              <div className="space-y-6 text-gray-300 leading-relaxed">
+              <div className="space-y-6 leading-relaxed text-gray-300">
                 <p>
                   Collectibles Tracker was born from a simple frustration: the lack of professional tools for serious collectors. 
                   Our founder, Matthew, was managing a growing collection using spreadsheets and basic apps that couldn't 
@@ -177,14 +177,14 @@ const About = () => {
             </div>
             
             <div className="relative">
-              <div className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm rounded-3xl p-8 border border-white/10">
+              <div className="from-white/10 to-white/5 border-white/10 rounded-3xl border bg-gradient-to-br p-8 backdrop-blur-sm">
                 <div className="grid grid-cols-2 gap-6">
                   {stats.map((stat, index) => (
                     <div key={index} className="text-center">
-                      <div className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-2">
+                      <div className="mb-2 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-2xl font-bold text-transparent sm:text-3xl">
                         {stat.number}
                       </div>
-                      <div className="text-gray-400 text-sm">{stat.label}</div>
+                      <div className="text-sm text-gray-400">{stat.label}</div>
                     </div>
                   ))}
                 </div>
@@ -195,25 +195,25 @@ const About = () => {
       </section>
 
       {/* Our Mission & Values */}
-      <section className="py-12 sm:py-16 md:py-24 px-4 sm:px-6 lg:px-8 bg-black">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12 sm:mb-16">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 sm:mb-6">
+      <section className="bg-black px-4 py-12 sm:px-6 sm:py-16 md:py-24 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <div className="mb-12 text-center sm:mb-16">
+            <h2 className="mb-4 text-2xl font-bold sm:mb-6 sm:text-3xl md:text-4xl">
               Our Mission & Values
             </h2>
-            <p className="text-base sm:text-lg text-gray-300 max-w-2xl mx-auto">
+            <p className="mx-auto max-w-2xl text-base text-gray-300 sm:text-lg">
               Guided by principles that put collectors first and drive innovation in the industry
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-8 lg:grid-cols-3">
             {values.map((value, index) => (
-              <div key={index} className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10 hover:border-white/20 transition-all duration-300 group text-center">
-                <div className="text-4xl mb-4 group-hover:scale-110 transition-transform duration-300">
+              <div key={index} className="from-white/10 to-white/5 border-white/10 hover:border-white/20 group rounded-2xl border bg-gradient-to-br p-6 text-center backdrop-blur-sm transition-all duration-300">
+                <div className="mb-4 text-4xl transition-transform duration-300 group-hover:scale-110">
                   {value.icon}
                 </div>
-                <h3 className="text-xl font-bold mb-3">{value.title}</h3>
-                <p className="text-gray-400 leading-relaxed">{value.description}</p>
+                <h3 className="mb-3 text-xl font-bold">{value.title}</h3>
+                <p className="leading-relaxed text-gray-400">{value.description}</p>
               </div>
             ))}
           </div>
@@ -221,35 +221,35 @@ const About = () => {
       </section>
 
       {/* Timeline */}
-      <section className="py-12 sm:py-16 md:py-24 px-4 sm:px-6 lg:px-8 bg-black">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-12 sm:mb-16">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 sm:mb-6">
+      <section className="bg-black px-4 py-12 sm:px-6 sm:py-16 md:py-24 lg:px-8">
+        <div className="mx-auto max-w-5xl">
+          <div className="mb-12 text-center sm:mb-16">
+            <h2 className="mb-4 text-2xl font-bold sm:mb-6 sm:text-3xl md:text-4xl">
               Our Journey
             </h2>
-            <p className="text-base sm:text-lg text-gray-300 max-w-2xl mx-auto">
+            <p className="mx-auto max-w-2xl text-base text-gray-300 sm:text-lg">
               From a personal project to serving collectors worldwide
             </p>
           </div>
 
           <div className="relative">
             {/* Timeline line */}
-            <div className="absolute left-1/2 transform -translate-x-1/2 w-1 h-full bg-gradient-to-b from-blue-500 to-purple-500 rounded-full"></div>
+            <div className="absolute left-1/2 h-full w-1 -translate-x-1/2 rounded-full bg-gradient-to-b from-blue-500 to-purple-500"></div>
             
             <div className="space-y-12">
               {milestones.map((milestone, index) => (
                 <div key={index} className={`flex items-center ${index % 2 === 0 ? 'flex-row' : 'flex-row-reverse'}`}>
                   <div className={`w-1/2 ${index % 2 === 0 ? 'pr-8 text-right' : 'pl-8 text-left'}`}>
-                    <div className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
-                      <div className="text-3xl mb-3">{milestone.icon}</div>
-                      <div className="text-blue-400 font-bold text-lg mb-2">{milestone.year}</div>
-                      <h3 className="text-xl font-bold mb-2">{milestone.title}</h3>
+                    <div className="from-white/10 to-white/5 border-white/10 rounded-2xl border bg-gradient-to-br p-6 backdrop-blur-sm">
+                      <div className="mb-3 text-3xl">{milestone.icon}</div>
+                      <div className="mb-2 text-lg font-bold text-blue-400">{milestone.year}</div>
+                      <h3 className="mb-2 text-xl font-bold">{milestone.title}</h3>
                       <p className="text-gray-400">{milestone.description}</p>
                     </div>
                   </div>
                   
                   {/* Timeline dot */}
-                  <div className="relative z-10 w-4 h-4 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full border-4 border-[#1B2131]"></div>
+                  <div className="relative z-10 size-4 rounded-full border-4 border-[#1B2131] bg-gradient-to-r from-blue-500 to-purple-500"></div>
                   
                   <div className="w-1/2"></div>
                 </div>
@@ -260,29 +260,29 @@ const About = () => {
       </section>
 
       {/* Team */}
-      <section className="py-12 sm:py-16 md:py-24 px-4 sm:px-6 lg:px-8 bg-black">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12 sm:mb-16">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 sm:mb-6">
+      <section className="bg-black px-4 py-12 sm:px-6 sm:py-16 md:py-24 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <div className="mb-12 text-center sm:mb-16">
+            <h2 className="mb-4 text-2xl font-bold sm:mb-6 sm:text-3xl md:text-4xl">
               Meet Our Team
             </h2>
-            <p className="text-base sm:text-lg text-gray-300 max-w-2xl mx-auto">
+            <p className="mx-auto max-w-2xl text-base text-gray-300 sm:text-lg">
               Passionate collectors and technologists working to build the future of collection management
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-8 lg:grid-cols-4">
             {teamMembers.map((member, index) => (
-              <div key={index} className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10 hover:border-white/20 transition-all duration-300 group text-center">
-                <div className="w-20 h-20 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-full mx-auto mb-4 flex items-center justify-center">
+              <div key={index} className="from-white/10 to-white/5 border-white/10 hover:border-white/20 group rounded-2xl border bg-gradient-to-br p-6 text-center backdrop-blur-sm transition-all duration-300">
+                <div className="mx-auto mb-4 flex size-20 items-center justify-center rounded-full bg-gradient-to-br from-blue-500/20 to-purple-500/20">
                   <span className="text-2xl">👤</span>
                 </div>
-                <h3 className="text-xl font-bold mb-1">{member.name}</h3>
-                <p className="text-blue-400 font-medium mb-3">{member.role}</p>
-                <p className="text-gray-400 text-sm mb-4 leading-relaxed">{member.bio}</p>
-                <div className="flex flex-wrap gap-1 justify-center">
+                <h3 className="mb-1 text-xl font-bold">{member.name}</h3>
+                <p className="mb-3 font-medium text-blue-400">{member.role}</p>
+                <p className="mb-4 text-sm leading-relaxed text-gray-400">{member.bio}</p>
+                <div className="flex flex-wrap justify-center gap-1">
                   {member.expertise.map((skill, skillIndex) => (
-                    <span key={skillIndex} className="px-2 py-1 bg-blue-500/20 text-blue-300 text-xs rounded-full">
+                    <span key={skillIndex} className="rounded-full bg-blue-500/20 px-2 py-1 text-xs text-blue-300">
                       {skill}
                     </span>
                   ))}
@@ -294,22 +294,22 @@ const About = () => {
       </section>
 
       {/* Technology & Security */}
-      <section className="py-12 sm:py-16 md:py-24 px-4 sm:px-6 lg:px-8 bg-black">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+      <section className="bg-black px-4 py-12 sm:px-6 sm:py-16 md:py-24 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
             <div>
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-6">
+              <h2 className="mb-6 text-2xl font-bold sm:text-3xl md:text-4xl">
                 Technology & Security
               </h2>
-              <div className="space-y-6 text-gray-300 leading-relaxed">
+              <div className="space-y-6 leading-relaxed text-gray-300">
                 <p>
                   Our platform is built on modern, scalable technology that ensures reliability, security, and performance. 
                   We use industry-leading practices to protect your data and provide a seamless experience across all devices.
                 </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="bg-white/5 rounded-xl p-4">
-                    <h4 className="font-bold text-blue-400 mb-2">🔒 Security</h4>
-                    <ul className="text-sm space-y-1">
+                    <h4 className="mb-2 font-bold text-blue-400">🔒 Security</h4>
+                    <ul className="space-y-1 text-sm">
                       <li>• End-to-end encryption</li>
                       <li>• SOC 2 Type II compliance</li>
                       <li>• Regular security audits</li>
@@ -317,8 +317,8 @@ const About = () => {
                     </ul>
                   </div>
                   <div className="bg-white/5 rounded-xl p-4">
-                    <h4 className="font-bold text-blue-400 mb-2">⚡ Performance</h4>
-                    <ul className="text-sm space-y-1">
+                    <h4 className="mb-2 font-bold text-blue-400">⚡ Performance</h4>
+                    <ul className="space-y-1 text-sm">
                       <li>• 99.9% uptime guarantee</li>
                       <li>• Global CDN network</li>
                       <li>• Real-time synchronization</li>
@@ -326,8 +326,8 @@ const About = () => {
                     </ul>
                   </div>
                   <div className="bg-white/5 rounded-xl p-4">
-                    <h4 className="font-bold text-blue-400 mb-2">📊 Analytics</h4>
-                    <ul className="text-sm space-y-1">
+                    <h4 className="mb-2 font-bold text-blue-400">📊 Analytics</h4>
+                    <ul className="space-y-1 text-sm">
                       <li>• Real-time market data</li>
                       <li>• Advanced reporting</li>
                       <li>• Custom dashboards</li>
@@ -335,8 +335,8 @@ const About = () => {
                     </ul>
                   </div>
                   <div className="bg-white/5 rounded-xl p-4">
-                    <h4 className="font-bold text-blue-400 mb-2">🌍 Global</h4>
-                    <ul className="text-sm space-y-1">
+                    <h4 className="mb-2 font-bold text-blue-400">🌍 Global</h4>
+                    <ul className="space-y-1 text-sm">
                       <li>• Multi-language support</li>
                       <li>• Local currency options</li>
                       <li>• Regional compliance</li>
@@ -348,37 +348,37 @@ const About = () => {
             </div>
             
             <div className="space-y-6">
-              <div className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
-                <h3 className="text-xl font-bold mb-4">🏆 Awards & Recognition</h3>
+              <div className="from-white/10 to-white/5 border-white/10 rounded-2xl border bg-gradient-to-br p-6 backdrop-blur-sm">
+                <h3 className="mb-4 text-xl font-bold">🏆 Awards & Recognition</h3>
                 <div className="space-y-3">
                   <div className="flex items-center">
-                    <span className="w-2 h-2 bg-yellow-400 rounded-full mr-3"></span>
+                    <span className="mr-3 size-2 rounded-full bg-yellow-400"></span>
                     <span className="text-gray-300">Best Collectibles App 2024 - Collectors Choice Awards</span>
                   </div>
                   <div className="flex items-center">
-                    <span className="w-2 h-2 bg-yellow-400 rounded-full mr-3"></span>
+                    <span className="mr-3 size-2 rounded-full bg-yellow-400"></span>
                     <span className="text-gray-300">Innovation in FinTech 2023 - TechCrunch</span>
                   </div>
                   <div className="flex items-center">
-                    <span className="w-2 h-2 bg-yellow-400 rounded-full mr-3"></span>
+                    <span className="mr-3 size-2 rounded-full bg-yellow-400"></span>
                     <span className="text-gray-300">Top Startup 2022 - Australian Tech Awards</span>
                   </div>
                 </div>
               </div>
               
-              <div className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
-                <h3 className="text-xl font-bold mb-4">🤝 Partnerships</h3>
+              <div className="from-white/10 to-white/5 border-white/10 rounded-2xl border bg-gradient-to-br p-6 backdrop-blur-sm">
+                <h3 className="mb-4 text-xl font-bold">🤝 Partnerships</h3>
                 <div className="space-y-3">
                   <div className="flex items-center">
-                    <span className="w-2 h-2 bg-blue-400 rounded-full mr-3"></span>
+                    <span className="mr-3 size-2 rounded-full bg-blue-400"></span>
                     <span className="text-gray-300">PSA Authentication Services</span>
                   </div>
                   <div className="flex items-center">
-                    <span className="w-2 h-2 bg-blue-400 rounded-full mr-3"></span>
+                    <span className="mr-3 size-2 rounded-full bg-blue-400"></span>
                     <span className="text-gray-300">Beckett Grading Services</span>
                   </div>
                   <div className="flex items-center">
-                    <span className="w-2 h-2 bg-blue-400 rounded-full mr-3"></span>
+                    <span className="mr-3 size-2 rounded-full bg-blue-400"></span>
                     <span className="text-gray-300">Major Card Distributors</span>
                   </div>
                 </div>
@@ -389,25 +389,25 @@ const About = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-12 sm:py-16 md:py-24 px-4 sm:px-6 lg:px-8 bg-black">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 sm:mb-6">
+      <section className="bg-black px-4 py-12 sm:px-6 sm:py-16 md:py-24 lg:px-8">
+        <div className="mx-auto max-w-4xl text-center">
+          <h2 className="mb-4 text-2xl font-bold sm:mb-6 sm:text-3xl md:text-4xl">
             Join Our Community
           </h2>
-          <p className="text-base sm:text-lg md:text-xl text-gray-300 mb-8 sm:mb-12 max-w-2xl mx-auto">
+          <p className="mx-auto mb-8 max-w-2xl text-base text-gray-300 sm:mb-12 sm:text-lg md:text-xl">
             Become part of a global community of collectors who trust Collectibles Tracker to manage their valuable collections.
           </p>
           
-          <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center">
+          <div className="flex flex-col items-center justify-center gap-4 sm:flex-row sm:gap-6">
             <Link 
               to="/login?signup=true" 
-              className="w-full sm:w-auto bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 px-8 py-4 rounded-2xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl text-center"
+              className="w-full rounded-2xl bg-gradient-to-r from-blue-500 to-purple-600 px-8 py-4 text-center text-lg font-semibold shadow-lg transition-all duration-300 hover:scale-105 hover:from-blue-600 hover:to-purple-700 hover:shadow-xl sm:w-auto"
             >
               Start Your Journey
             </Link>
             <Link 
               to="/help-center" 
-              className="w-full sm:w-auto bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 px-8 py-4 rounded-2xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 text-center"
+              className="bg-white/10 border-white/20 hover:bg-white/20 w-full rounded-2xl border px-8 py-4 text-center text-lg font-semibold backdrop-blur-sm transition-all duration-300 hover:scale-105 sm:w-auto"
             >
               Contact Us
             </Link>
