@@ -117,6 +117,19 @@ p {
 /* Modal utilities */
 body.modal-open {
   overflow: hidden;
+  /* Prevent iOS Safari bounce scrolling */
+  position: fixed;
+  width: 100%;
+  /* Prevent scrolling on touch devices */
+  touch-action: none;
+  /* Additional scroll prevention */
+  overscroll-behavior: none;
+}
+
+/* Ensure modal content can still scroll */
+.modal-content {
+  touch-action: auto;
+  overscroll-behavior: contain;
 }
 
 /* Line clamp utilities */

@@ -37,9 +37,7 @@ const Modal = ({
   
   // Preserve scroll position and prevent background scrolling
   useEffect(() => {
-    const isMobile = window.innerWidth < 768;
-    
-    if (isOpen) {
+    if (isOpen && !showAsStatic) {
       setIsMounted(true);
       setIsAnimatingOut(false);
       
@@ -50,52 +48,40 @@ const Modal = ({
         setAnimationClass('animate-modal-scale-in');
       }
       
-      // Only prevent background scroll if modal is open and not static
-      if (!showAsStatic) {
-        // Store current scroll position when modal opens - do this FIRST
-        scrollPosRef.current = {
-          x: window.scrollX,
-          y: window.scrollY
-        };
-        
-        // Use requestAnimationFrame to delay DOM modifications until after the current frame
-        requestAnimationFrame(() => {
-          if (isMobile) {
-            // Mobile-specific approach: fixed position with negative top
-            document.body.style.position = 'fixed';
-            document.body.style.width = '100%';
-            document.body.style.height = '100%';
-            document.body.style.top = `-${scrollPosRef.current.y}px`;
-            document.body.style.overflow = 'hidden';
-            // Also add modal-open class to hide bottom nav
-            document.body.classList.add('modal-open');
-          } else {
-            // Desktop approach: just add the modal-open class
-            document.body.classList.add('modal-open');
-          }
-        });
+      // Store current scroll position when modal opens
+      scrollPosRef.current = {
+        x: window.scrollX,
+        y: window.scrollY
+      };
+      
+      // Use requestAnimationFrame to delay DOM modifications until after the current frame
+      requestAnimationFrame(() => {
+        // Set the top offset for all devices to maintain scroll position
+        document.body.style.top = `-${scrollPosRef.current.y}px`;
+        // Add modal-open class which applies position: fixed via CSS
+        document.body.classList.add('modal-open');
+      });
+      
+      // Cleanup function
+      return () => {
+        // Get the scroll position from the negative top value
+        const scrollY = parseInt(document.body.style.top || '0') * -1;
+        // Remove modal-open class to restore normal scrolling
+        document.body.classList.remove('modal-open');
+        // Clear the top style
+        document.body.style.top = '';
+        // Restore scroll position
+        window.scrollTo(0, scrollY || scrollPosRef.current?.y || 0);
+      };
+    } else if (!isOpen) {
+      // If modal was just closed, make sure to clean up
+      const scrollY = parseInt(document.body.style.top || '0') * -1;
+      document.body.classList.remove('modal-open');
+      document.body.style.top = '';
+      if (scrollPosRef.current) {
+        window.scrollTo(0, scrollY || scrollPosRef.current.y || 0);
       }
     }
-    
-    return () => {
-      if (isOpen) {
-        if (isMobile && !showAsStatic) {
-          // Mobile cleanup: restore position and scroll
-          const scrollY = parseInt(document.body.style.top || '0') * -1;
-          document.body.style.position = '';
-          document.body.style.width = '';
-          document.body.style.height = '';
-          document.body.style.top = '';
-          document.body.style.overflow = '';
-          // Also remove modal-open class
-          document.body.classList.remove('modal-open');
-          window.scrollTo(0, scrollY || scrollPosRef.current?.y || 0);
-        } else {
-          // Desktop cleanup: just remove the class
-          document.body.classList.remove('modal-open');
-        }
-      }
-    };
   }, [isOpen, position, showAsStatic]);
 
 
@@ -146,6 +132,24 @@ const Modal = ({
       }
     }
   };
+
+  // Prevent scroll events on backdrop from propagating to background
+  const handleBackdropScroll = (e) => {
+    // If the scroll is happening on the backdrop (not inside the modal), prevent it
+    if (modalRef.current && !modalRef.current.contains(e.target)) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  };
+
+  // Handle wheel events to prevent background scrolling
+  const handleBackdropWheel = (e) => {
+    // If the wheel event is happening on the backdrop (not inside the modal), prevent it
+    if (modalRef.current && !modalRef.current.contains(e.target)) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  };
   
   // Handle escape key to close modal
   useEffect(() => {
@@ -176,6 +180,7 @@ const Modal = ({
     '5xl': 'max-w-5xl', // ~1024px
     'modal-width': 'w-[55%]', // exactly 55% width
     full: 'w-full max-w-full',
+    contextual: 'w-full max-w-md', // Contextual modals - consistent width, auto height
   };
   
   // iOS device detection
@@ -274,6 +279,9 @@ const Modal = ({
         zIndex
       }}
       onClick={handleBackdropClick}
+      onWheel={handleBackdropWheel}
+      onScroll={handleBackdropScroll}
+      onTouchMove={handleBackdropScroll}
     >
       <div 
         ref={modalRef}
@@ -335,3 +343,4 @@ Modal.propTypes = {
 };
 
 export default Modal;
+

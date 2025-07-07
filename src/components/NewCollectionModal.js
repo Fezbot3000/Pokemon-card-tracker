@@ -45,7 +45,7 @@ const NewCollectionModal = ({ isOpen, onClose, onCreate, existingCollections = [
         onClose={handleClose}
         title="Create New Collection"
         position="center"
-        size="lg"
+        size="contextual"
         closeOnClickOutside={false}
       >
         <FeatureGate 
@@ -62,7 +62,7 @@ const NewCollectionModal = ({ isOpen, onClose, onCreate, existingCollections = [
       onClose={handleClose}
       title="Create New Collection"
       position="center"
-      size="lg"
+      size="contextual"
       closeOnClickOutside={false}
       footer={
         <>

@@ -62,7 +62,7 @@ const ConfirmDialog = ({
       isOpen={isOpen}
       onClose={handleClose}
       title={title}
-      size="lg"
+      size="contextual"
       closeOnClickOutside={true}
       footer={
         <>

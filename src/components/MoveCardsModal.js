@@ -53,7 +53,7 @@ const MoveCardsModal = ({
       onClose={onClose}
       title="Move Cards to Another Collection"
       position="center"
-      size="lg"
+      size="contextual"
       closeOnClickOutside={true}
       footer={
         <>
