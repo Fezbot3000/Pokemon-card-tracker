@@ -715,8 +715,8 @@ const NewCardForm = ({
                     }
 
                     const commonInputClasses = `block w-full sm:text-sm rounded-md shadow-sm focus:ring-primary focus:border-primary 
-                                              bg-white border-gray-300 text-gray-900 placeholder-gray-400 
-                                              dark:bg-black dark:border-gray-600 dark:text-gray-200 dark:placeholder-gray-500`;
+                                              bg-white border-gray-300 text-gray-900 placeholder:text-gray-400 
+                                              dark:bg-black dark:border-gray-600 dark:text-gray-200 dark:placeholder:text-gray-500`;
                     const commonLabelClasses = `block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300`;
 
                     // Render Select or Input based on field type

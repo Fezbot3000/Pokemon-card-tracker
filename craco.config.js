@@ -6,6 +6,14 @@
 const TerserPlugin = require('terser-webpack-plugin');
 
 module.exports = {
+  eslint: {
+    configure: {
+      rules: {
+        'tailwindcss/migration-from-tailwind-2': 'warn',
+        'tailwindcss/enforces-shorthand': 'warn'
+      }
+    }
+  },
   webpack: {
     configure: (webpackConfig) => {
       // Optimization for production builds

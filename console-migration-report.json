@@ -1,0 +1,2551 @@
+{
+  "timestamp": "2025-07-07T05:56:44.938Z",
+  "stats": {
+    "filesProcessed": 262,
+    "consoleStatementsFound": 439,
+    "consoleStatementsReplaced": 420,
+    "errorsEncountered": 8
+  },
+  "migrations": [
+    {
+      "file": "src\\repositories\\CardRepository.js",
+      "consoleStatementsFound": 72,
+      "consoleStatementsReplaced": 72,
+      "changes": [
+        {
+          "original": "console.error('Error creating collection:', error)",
+          "replacement": "logger.error('Error creating collection:', error, { context: {\"file\":\"CardRepository\",\"purpose\":\"error-handling\"} })",
+          "line": 66
+        },
+        {
+          "original": "console.error(\n        `Error creating collection with ID ${collectionId}:`,\n        error\n      )",
+          "replacement": "logger.error(, { context: {\"file\":\"CardRepository\",\"purpose\":\"error-handling\"} })",
+          "line": 105
+        },
+        {
+          "original": "console.error('Error getting collections:', error)",
+          "replacement": "logger.error('Error getting collections:', error, { context: {\"file\":\"CardRepository\",\"purpose\":\"error-handling\"} })",
+          "line": 129
+        },
+        {
+          "original": "console.error('Error getting collection:', error)",
+          "replacement": "logger.error('Error getting collection:', error, { context: {\"file\":\"CardRepository\",\"purpose\":\"error-handling\"} })",
+          "line": 149
+        },
+        {
+          "original": "console.error('Error updating collection:', error)",
+          "replacement": "logger.error('Error updating collection:', error, { context: {\"file\":\"CardRepository\",\"purpose\":\"error-handling\"} })",
+          "line": 170
+        },
+        {
+          "original": "console.error(\n          'Error cleaning up images during collection deletion:',\n          imageError\n        )",
+          "replacement": "logger.error(, { context: {\"file\":\"CardRepository\",\"purpose\":\"error-handling\"} })",
+          "line": 198
+        },
+        {
+          "original": "console.error(`Error deleting collection ${collectionId}:`, error)",
+          "replacement": "logger.error(`Error deleting collection ${collectionId}:`, error, { context: {\"file\":\"CardRepository\",\"purpose\":\"error-handling\"} })",
+          "line": 229
+        },
+        {
+          "original": "console.error(\n            `Error uploading image for card ${finalCardId}:`,\n            error\n          )",
+          "replacement": "logger.error(, { context: {\"file\":\"CardRepository\",\"purpose\":\"error-handling\"} })",
+          "line": 298
+        },
+        {
+          "original": "console.error('Error creating card:', error)",
+          "replacement": "logger.error('Error creating card:', error, { context: {\"file\":\"CardRepository\",\"purpose\":\"error-handling\"} })",
+          "line": 336
+        },
+        {
+          "original": "console.error(`Error getting card ${cardId}:`, error)",
+          "replacement": "logger.error(`Error getting card ${cardId}:`, error, { context: {\"file\":\"CardRepository\",\"purpose\":\"error-handling\"} })",
+          "line": 388
+        },
+        {
+          "original": "console.error('Error getting cards:', error)",
+          "replacement": "logger.error('Error getting cards:', error, { context: {\"file\":\"CardRepository\",\"purpose\":\"error-handling\"} })",
+          "line": 419
+        },
+        {
+          "original": "console.error('CardRepository: Cannot get all cards without a user ID')",
+          "replacement": "logger.error('CardRepository: Cannot get all cards without a user ID', { context: {\"file\":\"CardRepository\",\"purpose\":\"error-handling\"} })",
+          "line": 426
+        },
+        {
+          "original": "console.error('CardRepository: Error getting all cards:', error)",
+          "replacement": "logger.error('CardRepository: Error getting all cards:', error, { context: {\"file\":\"CardRepository\",\"purpose\":\"error-handling\"} })",
+          "line": 466
+        },
+        {
+          "original": "console.error('Cannot update card: No card ID provided', dataCopy)",
+          "replacement": "logger.error('Cannot update card: No card ID provided', dataCopy, { context: {\"file\":\"CardRepository\",\"purpose\":\"error-handling\"} })",
+          "line": 492
+        },
+        {
+          "original": "console.log(`[CardRepository] Processing tracked card update for ${cardId} (${dataCopy._lastUpdateTime})",
+          "replacement": "logger.debug(`[CardRepository] Processing tracked card update for ${cardId} (${dataCopy._lastUpdateTime}, { context: {\"file\":\"CardRepository\"} })",
+          "line": 513
+        },
+        {
+          "original": "console.warn(\n          '[CardRepository] No collection specified for card update'\n        )",
+          "replacement": "logger.warn(, { context: {\"file\":\"CardRepository\"} })",
+          "line": 525
+        },
+        {
+          "original": "console.log(`[CardRepository] Checking if card ${cardId} exists in Firestore`)",
+          "replacement": "logger.debug(`[CardRepository] Checking if card ${cardId} exists in Firestore`, { context: {\"file\":\"CardRepository\"} })",
+          "line": 531
+        },
+        {
+          "original": "console.log(`[CardRepository] Card ${cardId} found in Firestore, updating...`)",
+          "replacement": "logger.debug(`[CardRepository] Card ${cardId} found in Firestore, updating...`, { context: {\"file\":\"CardRepository\"} })",
+          "line": 542
+        },
+        {
+          "original": "console.error(\n            `[CardRepository] No collection found for card ${cardId}`\n          )",
+          "replacement": "logger.error(, { context: {\"file\":\"CardRepository\",\"purpose\":\"error-handling\"} })",
+          "line": 582
+        },
+        {
+          "original": "console.log(`[CardRepository] Card ${cardId} is moving from collection '${oldCollection}' to '${targetCollection}'`)",
+          "replacement": "logger.debug(`[CardRepository] Card ${cardId} is moving from collection '${oldCollection}' to '${targetCollection}'`, { context: {\"file\":\"CardRepository\"} })",
+          "line": 595
+        },
+        {
+          "original": "console.log(`[CardRepository] Card ${cardId} moved to collection '${targetCollection}' in ${(updateEnd - updateStart)",
+          "replacement": "logger.debug(`[CardRepository] Card ${cardId} moved to collection '${targetCollection}' in ${(updateEnd - updateStart, { context: {\"file\":\"CardRepository\",\"purpose\":\"debugging\"} })",
+          "line": 606
+        },
+        {
+          "original": "console.log(`[CardRepository] Card ${cardId} updated (no collection change)",
+          "replacement": "logger.debug(`[CardRepository] Card ${cardId} updated (no collection change, { context: {\"file\":\"CardRepository\"} })",
+          "line": 615
+        },
+        {
+          "original": "console.log(`[CardRepository] Card ${cardId} doesn't exist, creating it...`)",
+          "replacement": "logger.debug(`[CardRepository] Card ${cardId} doesn't exist, creating it...`, { context: {\"file\":\"CardRepository\"} })",
+          "line": 621
+        },
+        {
+          "original": "console.error(`[CardRepository] Error updating card:`, error)",
+          "replacement": "logger.error(`[CardRepository] Error updating card:`, error, { context: {\"file\":\"CardRepository\",\"purpose\":\"error-handling\"} })",
+          "line": 676
+        },
+        {
+          "original": "console.error(`Error updating image for card ${cardId}:`, error)",
+          "replacement": "logger.error(`Error updating image for card ${cardId}:`, error, { context: {\"file\":\"CardRepository\",\"purpose\":\"error-handling\"} })",
+          "line": 711
+        },
+        {
+          "original": "console.error('Invalid card ID provided to deleteCard:', cardId)",
+          "replacement": "logger.error('Invalid card ID provided to deleteCard:', cardId, { context: {\"file\":\"CardRepository\",\"purpose\":\"error-handling\"} })",
+          "line": 720
+        },
+        {
+          "original": "console.error('Invalid card ID after conversion:', id)",
+          "replacement": "logger.error('Invalid card ID after conversion:', id, { context: {\"file\":\"CardRepository\",\"purpose\":\"error-handling\"} })",
+          "line": 729
+        },
+        {
+          "original": "console.error(`Error deleting card ${cardId}:`, error)",
+          "replacement": "logger.error(`Error deleting card ${cardId}:`, error, { context: {\"file\":\"CardRepository\",\"purpose\":\"error-handling\"} })",
+          "line": 773
+        },
+        {
+          "original": "console.error(`Error updating fields for card ${cardId}:`, error)",
+          "replacement": "logger.error(`Error updating fields for card ${cardId}:`, error, { context: {\"file\":\"CardRepository\",\"purpose\":\"error-handling\"} })",
+          "line": 826
+        },
+        {
+          "original": "console.error('Collection ID is required to get cards')",
+          "replacement": "logger.error('Collection ID is required to get cards', { context: {\"file\":\"CardRepository\",\"purpose\":\"error-handling\"} })",
+          "line": 834
+        },
+        {
+          "original": "console.error(\n        `Error getting cards for collection ${collectionId}:`,\n        error\n      )",
+          "replacement": "logger.error(, { context: {\"file\":\"CardRepository\",\"purpose\":\"error-handling\"} })",
+          "line": 861
+        },
+        {
+          "original": "console.warn(\n            `Card ${cardId} not found in 'cards' collection, but already exists in 'sold-items'. Assuming already processed.`\n          )",
+          "replacement": "logger.warn(, { context: {\"file\":\"CardRepository\"} })",
+          "line": 882
+        },
+        {
+          "original": "console.warn(\n          `Card ${card.id} (${card.name || card.card})",
+          "replacement": "logger.warn(${card.name || card.card}, { context: {\"file\":\"CardRepository\"} })",
+          "line": 905
+        },
+        {
+          "original": "console.warn(\n            'Invalid dateSold string, using current date for soldDate:',\n            soldData.dateSold,\n            e\n          )",
+          "replacement": "logger.warn(, { context: {\"file\":\"CardRepository\"} })",
+          "line": 925
+        },
+        {
+          "original": "console.error(\n          `Failed to delete original card ${cardId} after marking as sold:`,\n          deleteError\n        )",
+          "replacement": "logger.error(, { context: {\"file\":\"CardRepository\",\"purpose\":\"error-handling\"} })",
+          "line": 978
+        },
+        {
+          "original": "console.error('Error marking card as sold:', error)",
+          "replacement": "logger.error('Error marking card as sold:', error, { context: {\"file\":\"CardRepository\",\"purpose\":\"error-handling\"} })",
+          "line": 993
+        },
+        {
+          "original": "console.error('Error getting sold cards:', error)",
+          "replacement": "logger.error('Error getting sold cards:', error, { context: {\"file\":\"CardRepository\",\"purpose\":\"error-handling\"} })",
+          "line": 1020
+        },
+        {
+          "original": "console.error(\n            'Error updating collection card count:',\n            collectionError\n          )",
+          "replacement": "logger.error(, { context: {\"file\":\"CardRepository\",\"purpose\":\"error-handling\"} })",
+          "line": 1126
+        },
+        {
+          "original": "console.error('Error creating sold card directly:', error)",
+          "replacement": "logger.error('Error creating sold card directly:', error, { context: {\"file\":\"CardRepository\",\"purpose\":\"error-handling\"} })",
+          "line": 1143
+        },
+        {
+          "original": "console.error('Error getting existing sold cards:', error)",
+          "replacement": "logger.error('Error getting existing sold cards:', error, { context: {\"file\":\"CardRepository\",\"purpose\":\"error-handling\"} })",
+          "line": 1167
+        },
+        {
+          "original": "console.error('Error saving sold cards to IndexedDB:', dbError)",
+          "replacement": "logger.error('Error saving sold cards to IndexedDB:', dbError, { context: {\"file\":\"CardRepository\",\"purpose\":\"error-handling\"} })",
+          "line": 1186
+        },
+        {
+          "original": "console.error('Error importing sold cards from backup:', error)",
+          "replacement": "logger.error('Error importing sold cards from backup:', error, { context: {\"file\":\"CardRepository\",\"purpose\":\"error-handling\"} })",
+          "line": 1201
+        },
+        {
+          "original": "console.error('Error getting user profile:', error)",
+          "replacement": "logger.error('Error getting user profile:', error, { context: {\"file\":\"CardRepository\",\"purpose\":\"error-handling\"} })",
+          "line": 1262
+        },
+        {
+          "original": "console.error('Error updating user profile:', error)",
+          "replacement": "logger.error('Error updating user profile:', error, { context: {\"file\":\"CardRepository\",\"purpose\":\"error-handling\"} })",
+          "line": 1294
+        },
+        {
+          "original": "console.error('Error importing cards:', error)",
+          "replacement": "logger.error('Error importing cards:', error, { context: {\"file\":\"CardRepository\",\"purpose\":\"error-handling\"} })",
+          "line": 1398
+        },
+        {
+          "original": "console.error(`Error processing card:`, cardError)",
+          "replacement": "logger.error(`Error processing card:`, cardError, { context: {\"file\":\"CardRepository\",\"purpose\":\"error-handling\"} })",
+          "line": 1479
+        },
+        {
+          "original": "console.error(`Error committing final batch:`, batchError)",
+          "replacement": "logger.error(`Error committing final batch:`, batchError, { context: {\"file\":\"CardRepository\",\"purpose\":\"error-handling\"} })",
+          "line": 1490
+        },
+        {
+          "original": "console.error(\n          `Error updating collection ${collectionId} card count:`,\n          collectionError\n        )",
+          "replacement": "logger.error(, { context: {\"file\":\"CardRepository\",\"purpose\":\"error-handling\"} })",
+          "line": 1507
+        },
+        {
+          "original": "console.error('Error importing cards from backup:', error)",
+          "replacement": "logger.error('Error importing cards from backup:', error, { context: {\"file\":\"CardRepository\",\"purpose\":\"error-handling\"} })",
+          "line": 1521
+        },
+        {
+          "original": "console.error(\n        `Error getting card count for collection ${collectionId}:`,\n        error\n      )",
+          "replacement": "logger.error(, { context: {\"file\":\"CardRepository\",\"purpose\":\"error-handling\"} })",
+          "line": 1535
+        },
+        {
+          "original": "console.error(`Error getting or creating collection \"${name}\":`, error)",
+          "replacement": "logger.error(`Error getting or creating collection \"${name}\":`, error, { context: {\"file\":\"CardRepository\",\"purpose\":\"error-handling\"} })",
+          "line": 1563
+        },
+        {
+          "original": "console.error(\n        `Error updating collection ${collectionId} card count:`,\n        error\n      )",
+          "replacement": "logger.error(, { context: {\"file\":\"CardRepository\",\"purpose\":\"error-handling\"} })",
+          "line": 1589
+        },
+        {
+          "original": "console.warn(\n                `Error deleting image from IndexedDB for card ${cardId}:`,\n                indexedDbError\n              )",
+          "replacement": "logger.warn(, { context: {\"file\":\"CardRepository\",\"purpose\":\"error-handling\"} })",
+          "line": 1635
+        },
+        {
+          "original": "console.error(\n            `Error processing card ${cardId} for deletion:`,\n            cardError\n          )",
+          "replacement": "logger.error(, { context: {\"file\":\"CardRepository\",\"purpose\":\"error-handling\"} })",
+          "line": 1663
+        },
+        {
+          "original": "console.error(`Error committing final deletion batch:`, batchError)",
+          "replacement": "logger.error(`Error committing final deletion batch:`, batchError, { context: {\"file\":\"CardRepository\",\"purpose\":\"error-handling\"} })",
+          "line": 1677
+        },
+        {
+          "original": "console.error('Error deleting cards:', error)",
+          "replacement": "logger.error('Error deleting cards:', error, { context: {\"file\":\"CardRepository\",\"purpose\":\"error-handling\"} })",
+          "line": 1690
+        },
+        {
+          "original": "console.error(\n          'Error cleaning up images during collection deletion:',\n          imageError\n        )",
+          "replacement": "logger.error(, { context: {\"file\":\"CardRepository\",\"purpose\":\"error-handling\"} })",
+          "line": 1718
+        },
+        {
+          "original": "console.error(`Error deleting collection ${collectionId}:`, error)",
+          "replacement": "logger.error(`Error deleting collection ${collectionId}:`, error, { context: {\"file\":\"CardRepository\",\"purpose\":\"error-handling\"} })",
+          "line": 1749
+        },
+        {
+          "original": "console.error(`Error deleting ${logName} collection:`, error)",
+          "replacement": "logger.error(`Error deleting ${logName} collection:`, error, { context: {\"file\":\"CardRepository\",\"purpose\":\"error-handling\"} })",
+          "line": 1802
+        },
+        {
+          "original": "console.error('Error during direct card deletion:', directDeleteError)",
+          "replacement": "logger.error('Error during direct card deletion:', directDeleteError, { context: {\"file\":\"CardRepository\",\"purpose\":\"error-handling\"} })",
+          "line": 1824
+        },
+        {
+          "original": "console.warn('Error checking for other collections:', otherCollError)",
+          "replacement": "logger.warn('Error checking for other collections:', otherCollError, { context: {\"file\":\"CardRepository\",\"purpose\":\"error-handling\"} })",
+          "line": 1878
+        },
+        {
+          "original": "console.warn(\n                  `Error listing nested directory ${nestedPrefix.fullPath}:`,\n                  nestedError\n                )",
+          "replacement": "logger.warn(, { context: {\"file\":\"CardRepository\",\"purpose\":\"error-handling\"} })",
+          "line": 1916
+        },
+        {
+          "original": "console.warn(\n              `Error listing subdirectory ${prefix.fullPath}:`,\n              subDirError\n            )",
+          "replacement": "logger.warn(, { context: {\"file\":\"CardRepository\",\"purpose\":\"error-handling\"} })",
+          "line": 1923
+        },
+        {
+          "original": "console.warn(\n          'Error during storage cleanup, continuing with reset:',\n          storageError\n        )",
+          "replacement": "logger.warn(, { context: {\"file\":\"CardRepository\",\"purpose\":\"error-handling\"} })",
+          "line": 1934
+        },
+        {
+          "original": "console.error('Error deleting all user data:', error)",
+          "replacement": "logger.error('Error deleting all user data:', error, { context: {\"file\":\"CardRepository\",\"purpose\":\"error-handling\"} })",
+          "line": 1942
+        },
+        {
+          "original": "console.warn('Invalid card ID provided for cleanup:', cardId)",
+          "replacement": "logger.warn('Invalid card ID provided for cleanup:', cardId, { context: {\"file\":\"CardRepository\"} })",
+          "line": 1952
+        },
+        {
+          "original": "console.debug(`No image at path ${path}:`, storageError)",
+          "replacement": "logger.debug(`No image at path ${path}:`, storageError, { context: {\"file\":\"CardRepository\",\"purpose\":\"error-handling\"} })",
+          "line": 1975
+        },
+        {
+          "original": "console.warn('Error cleaning up local image cache:', imageError)",
+          "replacement": "logger.warn('Error cleaning up local image cache:', imageError, { context: {\"file\":\"CardRepository\",\"purpose\":\"error-handling\"} })",
+          "line": 1988
+        },
+        {
+          "original": "console.error('Error cleaning up ghost card:', error)",
+          "replacement": "logger.error('Error cleaning up ghost card:', error, { context: {\"file\":\"CardRepository\",\"purpose\":\"error-handling\"} })",
+          "line": 1993
+        },
+        {
+          "original": "console.warn('Invalid card ID provided for deletion:', cardId)",
+          "replacement": "logger.warn('Invalid card ID provided for deletion:', cardId, { context: {\"file\":\"CardRepository\"} })",
+          "line": 2003
+        },
+        {
+          "original": "console.warn(\n          'Card not found in Firestore, attempting cleanup:',\n          firestoreError\n        )",
+          "replacement": "logger.warn(, { context: {\"file\":\"CardRepository\",\"purpose\":\"error-handling\"} })",
+          "line": 2013
+        },
+        {
+          "original": "console.error('Error deleting card:', error)",
+          "replacement": "logger.error('Error deleting card:', error, { context: {\"file\":\"CardRepository\",\"purpose\":\"error-handling\"} })",
+          "line": 2024
+        }
+      ]
+    },
+    {
+      "file": "src\\components\\CardList.js",
+      "consoleStatementsFound": 40,
+      "consoleStatementsReplaced": 40,
+      "changes": [
+        {
+          "original": "console.warn('Invalid date in CardList:', dateValue)",
+          "replacement": "logger.warn('Invalid date in CardList:', dateValue, { context: {\"file\":\"CardList\"} })",
+          "line": 98
+        },
+        {
+          "original": "console.error('Error formatting date:', error)",
+          "replacement": "logger.error('Error formatting date:', error, { context: {\"file\":\"CardList\",\"purpose\":\"error-handling\"} })",
+          "line": 109
+        },
+        {
+          "original": "console.log('[CardList] Clearing stale selection state after cards changed')",
+          "replacement": "logger.debug('[CardList] Clearing stale selection state after cards changed', { context: {\"file\":\"CardList\"} })",
+          "line": 305
+        },
+        {
+          "original": "console.warn('Failed to revoke potential blob URL:', url, error)",
+          "replacement": "logger.warn('Failed to revoke potential blob URL:', url, error, { context: {\"file\":\"CardList\",\"purpose\":\"error-handling\"} })",
+          "line": 399
+        },
+        {
+          "original": "console.error(\n              `Error loading image for card ${card.slabSerial} from IndexedDB:`,\n              error\n            )",
+          "replacement": "logger.error(, { context: {\"file\":\"CardList\",\"purpose\":\"error-handling\"} })",
+          "line": 421
+        },
+        {
+          "original": "console.warn(\n              'Failed to revoke potential blob URL during cleanup:',\n              url,\n              error\n            )",
+          "replacement": "logger.warn(, { context: {\"file\":\"CardList\",\"purpose\":\"error-handling\"} })",
+          "line": 441
+        },
+        {
+          "original": "console.error(`Error refreshing image for card ${cardId}:`, error)",
+          "replacement": "logger.error(`Error refreshing image for card ${cardId}:`, error, { context: {\"file\":\"CardList\",\"purpose\":\"error-handling\"} })",
+          "line": 480
+        },
+        {
+          "original": "console.error('Error generating invoice ID:', error)",
+          "replacement": "logger.error('Error generating invoice ID:', error, { context: {\"file\":\"CardList\",\"purpose\":\"error-handling\"} })",
+          "line": 675
+        },
+        {
+          "original": "console.error('Error marking cards as sold:', error)",
+          "replacement": "logger.error('Error marking cards as sold:', error, { context: {\"file\":\"CardList\",\"purpose\":\"error-handling\"} })",
+          "line": 743
+        },
+        {
+          "original": "console.error('Invalid card ID for deletion:', cardToDelete)",
+          "replacement": "logger.error('Invalid card ID for deletion:', cardToDelete, { context: {\"file\":\"CardList\",\"purpose\":\"error-handling\"} })",
+          "line": 790
+        },
+        {
+          "original": "console.error('Error deleting card:', error)",
+          "replacement": "logger.error('Error deleting card:', error, { context: {\"file\":\"CardList\",\"purpose\":\"error-handling\"} })",
+          "line": 803
+        },
+        {
+          "original": "console.log('%c DELETION DEBUG - STARTING DELETION PROCESS', 'background: #ff0000; color: white; font-size: 14px;')",
+          "replacement": "logger.debug('%c DELETION DEBUG - STARTING DELETION PROCESS', 'background: #ff0000; color: white; font-size: 14px;', { context: {\"file\":\"CardList\",\"purpose\":\"debugging\"} })",
+          "line": 814
+        },
+        {
+          "original": "console.log('Cards to delete:', cardsToDelete)",
+          "replacement": "logger.debug('Cards to delete:', cardsToDelete, { context: {\"file\":\"CardList\"} })",
+          "line": 815
+        },
+        {
+          "original": "console.log('Card IDs for deletion:', cardIds)",
+          "replacement": "logger.debug('Card IDs for deletion:', cardIds, { context: {\"file\":\"CardList\"} })",
+          "line": 825
+        },
+        {
+          "original": "console.log('Current collections before deletion:', JSON.parse(JSON.stringify(collections)",
+          "replacement": "logger.debug('Current collections before deletion:', JSON.parse(JSON.stringify(collections, { context: {\"file\":\"CardList\"} })",
+          "line": 826
+        },
+        {
+          "original": "console.log('Found card to delete:', {\n            //   cardId,\n            //   slabSerial: cardInCollection.slabSerial,\n            //   id: cardInCollection.id,\n            //   card: cardInCollection.card,\n            //   collection: cardInCollection.collection\n            // })",
+          "replacement": "logger.debug(, { context: {\"file\":\"CardList\"} })",
+          "line": 835
+        },
+        {
+          "original": "console.warn('Card not found in any collection:', cardId)",
+          "replacement": "logger.warn('Card not found in any collection:', cardId, { context: {\"file\":\"CardList\"} })",
+          "line": 843
+        },
+        {
+          "original": "console.log(`Collection \"${collectionName}\": removed ${beforeCount - afterCount} cards`)",
+          "replacement": "logger.debug(`Collection \"${collectionName}\": removed ${beforeCount - afterCount} cards`, { context: {\"file\":\"CardList\"} })",
+          "line": 863
+        },
+        {
+          "original": "console.log('Saving updated collections to database...')",
+          "replacement": "logger.debug('Saving updated collections to database...', { context: {\"file\":\"CardList\"} })",
+          "line": 870
+        },
+        {
+          "original": "console.log('Database save successful')",
+          "replacement": "logger.debug('Database save successful', { context: {\"file\":\"CardList\",\"purpose\":\"success-state\"} })",
+          "line": 877
+        },
+        {
+          "original": "console.error('Database save failed:', dbError)",
+          "replacement": "logger.error('Database save failed:', dbError, { context: {\"file\":\"CardList\",\"purpose\":\"error-handling\"} })",
+          "line": 881
+        },
+        {
+          "original": "console.log('Calling onDeleteCards with:', cardIds)",
+          "replacement": "logger.debug('Calling onDeleteCards with:', cardIds, { context: {\"file\":\"CardList\"} })",
+          "line": 889
+        },
+        {
+          "original": "console.log('onDeleteCards completed successfully')",
+          "replacement": "logger.debug('onDeleteCards completed successfully', { context: {\"file\":\"CardList\",\"purpose\":\"success-state\"} })",
+          "line": 895
+        },
+        {
+          "original": "console.log('Using onDeleteCard for each card')",
+          "replacement": "logger.debug('Using onDeleteCard for each card', { context: {\"file\":\"CardList\"} })",
+          "line": 899
+        },
+        {
+          "original": "console.log('Deleting individual card:', cardId)",
+          "replacement": "logger.debug('Deleting individual card:', cardId, { context: {\"file\":\"CardList\"} })",
+          "line": 904
+        },
+        {
+          "original": "console.log('All individual deletions completed')",
+          "replacement": "logger.debug('All individual deletions completed', { context: {\"file\":\"CardList\",\"purpose\":\"success-state\"} })",
+          "line": 911
+        },
+        {
+          "original": "console.warn(\n            'No deletion handler provided (onDeleteCards or onDeleteCard)",
+          "replacement": "logger.warn(onDeleteCards or onDeleteCard, { context: {\"file\":\"CardList\"} })",
+          "line": 914
+        },
+        {
+          "original": "console.error('Error updating app state after deletion:', innerError)",
+          "replacement": "logger.error('Error updating app state after deletion:', innerError, { context: {\"file\":\"CardList\",\"purpose\":\"error-handling\"} })",
+          "line": 920
+        },
+        {
+          "original": "console.warn(\n          'Warning: Error updating app state after deletion, but database was updated successfully.'\n        )",
+          "replacement": "logger.warn(, { context: {\"file\":\"CardList\",\"purpose\":\"error-handling\"} })",
+          "line": 921
+        },
+        {
+          "original": "console.error('Deletion failed with error:', error)",
+          "replacement": "logger.error('Deletion failed with error:', error, { context: {\"file\":\"CardList\",\"purpose\":\"error-handling\"} })",
+          "line": 945
+        },
+        {
+          "original": "console.log('[CardList] Move operation completed successfully')",
+          "replacement": "logger.debug('[CardList] Move operation completed successfully', { context: {\"file\":\"CardList\",\"purpose\":\"success-state\"} })",
+          "line": 1028
+        },
+        {
+          "original": "console.warn('[CardList] Move operation failed or partially failed')",
+          "replacement": "logger.warn('[CardList] Move operation failed or partially failed', { context: {\"file\":\"CardList\",\"purpose\":\"error-handling\"} })",
+          "line": 1030
+        },
+        {
+          "original": "console.error('[CardList] Error in handleMoveConfirm:', error)",
+          "replacement": "logger.error('[CardList] Error in handleMoveConfirm:', error, { context: {\"file\":\"CardList\",\"purpose\":\"error-handling\"} })",
+          "line": 1034
+        },
+        {
+          "original": "console.log(\"Starting bulk listing flow\")",
+          "replacement": "logger.debug(\"Starting bulk listing flow\", { context: {\"file\":\"CardList\"} })",
+          "line": 1440
+        },
+        {
+          "original": "console.error(\n                                  `Error checking listing status for ${card.slabSerial}:`,\n                                  error\n                                )",
+          "replacement": "logger.error(, { context: {\"file\":\"CardList\",\"purpose\":\"error-handling\"} })",
+          "line": 1481
+        },
+        {
+          "original": "console.log(`Found ${cardsNeedingUpdate.length} cards with out-of-sync isListed flags`)",
+          "replacement": "logger.debug(`Found ${cardsNeedingUpdate.length} cards with out-of-sync isListed flags`, { context: {\"file\":\"CardList\"} })",
+          "line": 1504
+        },
+        {
+          "original": "console.log(`Updated isListed flag for ${card.card || card.slabSerial} to ${card.isActuallyListed}`)",
+          "replacement": "logger.debug(`Updated isListed flag for ${card.card || card.slabSerial} to ${card.isActuallyListed}`, { context: {\"file\":\"CardList\"} })",
+          "line": 1518
+        },
+        {
+          "original": "console.error(\n                                      `Error updating isListed flag for ${card.slabSerial}:`,\n                                      error\n                                    )",
+          "replacement": "logger.error(, { context: {\"file\":\"CardList\",\"purpose\":\"error-handling\"} })",
+          "line": 1521
+        },
+        {
+          "original": "console.error('Error in bulk listing flow:', error)",
+          "replacement": "logger.error('Error in bulk listing flow:', error, { context: {\"file\":\"CardList\",\"purpose\":\"error-handling\"} })",
+          "line": 1544
+        },
+        {
+          "original": "console.error('Error in bulk listing flow:', error)",
+          "replacement": "logger.error('Error in bulk listing flow:', error, { context: {\"file\":\"CardList\",\"purpose\":\"error-handling\"} })",
+          "line": 1548
+        }
+      ]
+    },
+    {
+      "file": "src\\components\\Marketplace\\SellerProfileModal.js",
+      "consoleStatementsFound": 27,
+      "consoleStatementsReplaced": 27,
+      "changes": [
+        {
+          "original": "console.log('SellerProfileModal: Not opening because:', { isOpen, sellerId })",
+          "replacement": "logger.debug('SellerProfileModal: Not opening because:', { isOpen, sellerId }, { context: {\"file\":\"SellerProfileModal\"} })",
+          "line": 45
+        },
+        {
+          "original": "console.log('=== SellerProfileModal Opening ===')",
+          "replacement": "logger.debug('=== SellerProfileModal Opening ===', { context: {\"file\":\"SellerProfileModal\"} })",
+          "line": 49
+        },
+        {
+          "original": "console.log('sellerId parameter:', sellerId)",
+          "replacement": "logger.debug('sellerId parameter:', sellerId, { context: {\"file\":\"SellerProfileModal\"} })",
+          "line": 50
+        },
+        {
+          "original": "console.log('sellerId type:', typeof sellerId)",
+          "replacement": "logger.debug('sellerId type:', typeof sellerId, { context: {\"file\":\"SellerProfileModal\"} })",
+          "line": 51
+        },
+        {
+          "original": "console.log('sellerId length:', sellerId?.length)",
+          "replacement": "logger.debug('sellerId length:', sellerId?.length, { context: {\"file\":\"SellerProfileModal\"} })",
+          "line": 52
+        },
+        {
+          "original": "console.log('Loading seller data for ID:', sellerId)",
+          "replacement": "logger.debug('Loading seller data for ID:', sellerId, { context: {\"file\":\"SellerProfileModal\",\"purpose\":\"loading-state\"} })",
+          "line": 58
+        },
+        {
+          "original": "console.log('No marketplace profile found, trying users collection...')",
+          "replacement": "logger.debug('No marketplace profile found, trying users collection...', { context: {\"file\":\"SellerProfileModal\"} })",
+          "line": 68
+        },
+        {
+          "original": "console.log('Found user data:', userData)",
+          "replacement": "logger.debug('Found user data:', userData, { context: {\"file\":\"SellerProfileModal\"} })",
+          "line": 75
+        },
+        {
+          "original": "console.log('No user data found, using fallback profile')",
+          "replacement": "logger.debug('No user data found, using fallback profile', { context: {\"file\":\"SellerProfileModal\"} })",
+          "line": 85
+        },
+        {
+          "original": "console.error('Error loading user data:', userError)",
+          "replacement": "logger.error('Error loading user data:', userError, { context: {\"file\":\"SellerProfileModal\",\"purpose\":\"error-handling\"} })",
+          "line": 94
+        },
+        {
+          "original": "console.log('=== DEBUGGING SELLER LISTINGS ===')",
+          "replacement": "logger.debug('=== DEBUGGING SELLER LISTINGS ===', { context: {\"file\":\"SellerProfileModal\",\"purpose\":\"debugging\"} })",
+          "line": 140
+        },
+        {
+          "original": "console.log('Looking for listings with sellerId:', sellerId)",
+          "replacement": "logger.debug('Looking for listings with sellerId:', sellerId, { context: {\"file\":\"SellerProfileModal\"} })",
+          "line": 141
+        },
+        {
+          "original": "console.log('Total available listings:', allListingsSnapshot.size)",
+          "replacement": "logger.debug('Total available listings:', allListingsSnapshot.size, { context: {\"file\":\"SellerProfileModal\"} })",
+          "line": 150
+        },
+        {
+          "original": "console.log('Found seller listings:', foundSellerListings.length)",
+          "replacement": "logger.debug('Found seller listings:', foundSellerListings.length, { context: {\"file\":\"SellerProfileModal\"} })",
+          "line": 163
+        },
+        {
+          "original": "console.log('=== END DEBUGGING ===')",
+          "replacement": "logger.debug('=== END DEBUGGING ===', { context: {\"file\":\"SellerProfileModal\",\"purpose\":\"debugging\"} })",
+          "line": 164
+        },
+        {
+          "original": "console.error('Listings query error:', listingsError)",
+          "replacement": "logger.error('Listings query error:', listingsError, { context: {\"file\":\"SellerProfileModal\",\"purpose\":\"error-handling\"} })",
+          "line": 179
+        },
+        {
+          "original": "console.error('=== SELLER PROFILE ERROR ===')",
+          "replacement": "logger.error('=== SELLER PROFILE ERROR ===', { context: {\"file\":\"SellerProfileModal\",\"purpose\":\"error-handling\"} })",
+          "line": 184
+        },
+        {
+          "original": "console.error('Error details:', error)",
+          "replacement": "logger.error('Error details:', error, { context: {\"file\":\"SellerProfileModal\",\"purpose\":\"error-handling\"} })",
+          "line": 185
+        },
+        {
+          "original": "console.error('Error message:', error.message)",
+          "replacement": "logger.error('Error message:', error.message, { context: {\"file\":\"SellerProfileModal\",\"purpose\":\"error-handling\"} })",
+          "line": 186
+        },
+        {
+          "original": "console.error('Error code:', error.code)",
+          "replacement": "logger.error('Error code:', error.code, { context: {\"file\":\"SellerProfileModal\",\"purpose\":\"error-handling\"} })",
+          "line": 187
+        },
+        {
+          "original": "console.error('SellerId that failed:', sellerId)",
+          "replacement": "logger.error('SellerId that failed:', sellerId, { context: {\"file\":\"SellerProfileModal\",\"purpose\":\"error-handling\"} })",
+          "line": 188
+        },
+        {
+          "original": "console.error('=== END ERROR ===')",
+          "replacement": "logger.error('=== END ERROR ===', { context: {\"file\":\"SellerProfileModal\",\"purpose\":\"error-handling\"} })",
+          "line": 189
+        },
+        {
+          "original": "console.log(`Using imageUrl for seller card ${cardId}:`, url)",
+          "replacement": "logger.debug(`Using imageUrl for seller card ${cardId}:`, url, { context: {\"file\":\"SellerProfileModal\"} })",
+          "line": 267
+        },
+        {
+          "original": "console.log(`Using image property for seller card ${cardId}:`, imageUrl)",
+          "replacement": "logger.debug(`Using image property for seller card ${cardId}:`, imageUrl, { context: {\"file\":\"SellerProfileModal\"} })",
+          "line": 277
+        },
+        {
+          "original": "console.log(`Using ${prop} for seller card ${cardId}:`, url)",
+          "replacement": "logger.debug(`Using ${prop} for seller card ${cardId}:`, url, { context: {\"file\":\"SellerProfileModal\"} })",
+          "line": 296
+        },
+        {
+          "original": "console.log(`Using IndexedDB image for seller card ${cardId}:`, blobUrl)",
+          "replacement": "logger.debug(`Using IndexedDB image for seller card ${cardId}:`, blobUrl, { context: {\"file\":\"SellerProfileModal\"} })",
+          "line": 311
+        },
+        {
+          "original": "console.log(`No image found for seller card ${cardId}`)",
+          "replacement": "logger.debug(`No image found for seller card ${cardId}`, { context: {\"file\":\"SellerProfileModal\"} })",
+          "line": 324
+        }
+      ]
+    },
+    {
+      "file": "src\\design-system\\contexts\\AuthContext.js",
+      "consoleStatementsFound": 21,
+      "consoleStatementsReplaced": 21,
+      "changes": [
+        {
+          "original": "console.error('Firebase authentication error:', error)",
+          "replacement": "logger.error('Firebase authentication error:', error, { context: {\"file\":\"AuthContext\",\"purpose\":\"error-handling\"} })",
+          "line": 43
+        },
+        {
+          "original": "console.log(\n                    '🔄 Subscription updated in real-time:',\n                    userData.subscriptionStatus,\n                    userData.planType\n                  )",
+          "replacement": "logger.debug(, { context: {\"file\":\"AuthContext\"} })",
+          "line": 239
+        },
+        {
+          "original": "console.error('Subscription listener error:', error)",
+          "replacement": "logger.error('Subscription listener error:', error, { context: {\"file\":\"AuthContext\",\"purpose\":\"error-handling\"} })",
+          "line": 285
+        },
+        {
+          "original": "console.log(\"User document created successfully\")",
+          "replacement": "logger.debug(\"User document created successfully\", { context: {\"file\":\"AuthContext\",\"purpose\":\"success-state\"} })",
+          "line": 345
+        },
+        {
+          "original": "console.error('Error creating user document:', error)",
+          "replacement": "logger.error('Error creating user document:', error, { context: {\"file\":\"AuthContext\",\"purpose\":\"error-handling\"} })",
+          "line": 348
+        },
+        {
+          "original": "console.log(\"Starting Google sign-in process...\")",
+          "replacement": "logger.debug(\"Starting Google sign-in process...\", { context: {\"file\":\"AuthContext\"} })",
+          "line": 414
+        },
+        {
+          "original": "console.log(\"Google sign-in successful:\", result.user?.email)",
+          "replacement": "logger.debug(\"Google sign-in successful:\", result.user?.email, { context: {\"file\":\"AuthContext\",\"purpose\":\"success-state\"} })",
+          "line": 418
+        },
+        {
+          "original": "console.log(\"User document created after Google sign-in\")",
+          "replacement": "logger.debug(\"User document created after Google sign-in\", { context: {\"file\":\"AuthContext\"} })",
+          "line": 426
+        },
+        {
+          "original": "console.error(\n          'Failed to create user document after Google sign-in:',\n          docError\n        )",
+          "replacement": "logger.error(, { context: {\"file\":\"AuthContext\",\"purpose\":\"error-handling\"} })",
+          "line": 428
+        },
+        {
+          "original": "console.log(\"Brand new Google account detected, setting isNewUser flag\")",
+          "replacement": "logger.debug(\"Brand new Google account detected, setting isNewUser flag\", { context: {\"file\":\"AuthContext\"} })",
+          "line": 447
+        },
+        {
+          "original": "console.log(\"Existing Google account detected, not setting isNewUser flag\")",
+          "replacement": "logger.debug(\"Existing Google account detected, not setting isNewUser flag\", { context: {\"file\":\"AuthContext\"} })",
+          "line": 451
+        },
+        {
+          "original": "console.error('Google sign-in error:', err)",
+          "replacement": "logger.error('Google sign-in error:', err, { context: {\"file\":\"AuthContext\",\"purpose\":\"error-handling\"} })",
+          "line": 458
+        },
+        {
+          "original": "console.log(\"Starting Apple sign-in process...\")",
+          "replacement": "logger.debug(\"Starting Apple sign-in process...\", { context: {\"file\":\"AuthContext\"} })",
+          "line": 474
+        },
+        {
+          "original": "console.log(\"Apple sign-in successful:\", result.user?.email)",
+          "replacement": "logger.debug(\"Apple sign-in successful:\", result.user?.email, { context: {\"file\":\"AuthContext\",\"purpose\":\"success-state\"} })",
+          "line": 479
+        },
+        {
+          "original": "console.log(\"User document created after Apple sign-in\")",
+          "replacement": "logger.debug(\"User document created after Apple sign-in\", { context: {\"file\":\"AuthContext\"} })",
+          "line": 487
+        },
+        {
+          "original": "console.error(\n          'Failed to create user document after Apple sign-in:',\n          docError\n        )",
+          "replacement": "logger.error(, { context: {\"file\":\"AuthContext\",\"purpose\":\"error-handling\"} })",
+          "line": 489
+        },
+        {
+          "original": "console.log(\"Brand new Apple account detected, setting isNewUser flag\")",
+          "replacement": "logger.debug(\"Brand new Apple account detected, setting isNewUser flag\", { context: {\"file\":\"AuthContext\"} })",
+          "line": 508
+        },
+        {
+          "original": "console.log(\"Existing Apple account detected, not setting isNewUser flag\")",
+          "replacement": "logger.debug(\"Existing Apple account detected, not setting isNewUser flag\", { context: {\"file\":\"AuthContext\"} })",
+          "line": 512
+        },
+        {
+          "original": "console.error('Apple sign-in error:', err)",
+          "replacement": "logger.error('Apple sign-in error:', err, { context: {\"file\":\"AuthContext\",\"purpose\":\"error-handling\"} })",
+          "line": 519
+        },
+        {
+          "original": "console.error('Error getting auth token:', error)",
+          "replacement": "logger.error('Error getting auth token:', error, { context: {\"file\":\"AuthContext\",\"purpose\":\"error-handling\"} })",
+          "line": 572
+        },
+        {
+          "original": "console.error('Error updating subscription status:', error)",
+          "replacement": "logger.error('Error updating subscription status:', error, { context: {\"file\":\"AuthContext\",\"purpose\":\"error-handling\"} })",
+          "line": 612
+        }
+      ]
+    },
+    {
+      "file": "src\\contexts\\CardContext.js",
+      "consoleStatementsFound": 20,
+      "consoleStatementsReplaced": 20,
+      "changes": [
+        {
+          "original": "console.warn('Failed to load sold card IDs from IndexedDB:', error)",
+          "replacement": "logger.warn('Failed to load sold card IDs from IndexedDB:', error, { context: {\"file\":\"CardContext\",\"purpose\":\"error-handling\"} })",
+          "line": 40
+        },
+        {
+          "original": "console.error('No repository provided to loadInitialData')",
+          "replacement": "logger.error('No repository provided to loadInitialData', { context: {\"file\":\"CardContext\",\"purpose\":\"error-handling\"} })",
+          "line": 91
+        },
+        {
+          "original": "console.error('Failed to load collections:', collectionsError)",
+          "replacement": "logger.error('Failed to load collections:', collectionsError, { context: {\"file\":\"CardContext\",\"purpose\":\"error-handling\"} })",
+          "line": 105
+        },
+        {
+          "original": "console.error('Failed to load cards:', cardsError)",
+          "replacement": "logger.error('Failed to load cards:', cardsError, { context: {\"file\":\"CardContext\",\"purpose\":\"error-handling\"} })",
+          "line": 114
+        },
+        {
+          "original": "console.warn('Failed to filter sold cards during initial load:', e)",
+          "replacement": "logger.warn('Failed to filter sold cards during initial load:', e, { context: {\"file\":\"CardContext\",\"purpose\":\"error-handling\"} })",
+          "line": 131
+        },
+        {
+          "original": "console.error('Failed to load sold cards:', soldCardsError)",
+          "replacement": "logger.error('Failed to load sold cards:', soldCardsError, { context: {\"file\":\"CardContext\",\"purpose\":\"error-handling\"} })",
+          "line": 139
+        },
+        {
+          "original": "console.error('Error in loadInitialData:', error)",
+          "replacement": "logger.error('Error in loadInitialData:', error, { context: {\"file\":\"CardContext\",\"purpose\":\"error-handling\"} })",
+          "line": 158
+        },
+        {
+          "original": "console.warn(\n                  'Failed to get pending sold cards from storage',\n                  e\n                )",
+          "replacement": "logger.warn(, { context: {\"file\":\"CardContext\",\"purpose\":\"error-handling\"} })",
+          "line": 211
+        },
+        {
+          "original": "console.warn('Failed to get pending sold cards from storage', e)",
+          "replacement": "logger.warn('Failed to get pending sold cards from storage', e, { context: {\"file\":\"CardContext\",\"purpose\":\"error-handling\"} })",
+          "line": 253
+        },
+        {
+          "original": "console.error('Error setting up subscription:', error)",
+          "replacement": "logger.error('Error setting up subscription:', error, { context: {\"file\":\"CardContext\",\"purpose\":\"error-handling\"} })",
+          "line": 270
+        },
+        {
+          "original": "console.error('Error setting up sold cards subscription:', error)",
+          "replacement": "logger.error('Error setting up sold cards subscription:', error, { context: {\"file\":\"CardContext\",\"purpose\":\"error-handling\"} })",
+          "line": 305
+        },
+        {
+          "original": "console.error('Error creating collection:', err)",
+          "replacement": "logger.error('Error creating collection:', err, { context: {\"file\":\"CardContext\",\"purpose\":\"error-handling\"} })",
+          "line": 345
+        },
+        {
+          "original": "console.error('Error creating card:', err)",
+          "replacement": "logger.error('Error creating card:', err, { context: {\"file\":\"CardContext\",\"purpose\":\"error-handling\"} })",
+          "line": 426
+        },
+        {
+          "original": "console.error('Error deleting multiple cards:', err)",
+          "replacement": "logger.error('Error deleting multiple cards:', err, { context: {\"file\":\"CardContext\",\"purpose\":\"error-handling\"} })",
+          "line": 488
+        },
+        {
+          "original": "console.error('No card ID provided to markCardAsSold')",
+          "replacement": "logger.error('No card ID provided to markCardAsSold', { context: {\"file\":\"CardContext\",\"purpose\":\"error-handling\"} })",
+          "line": 504
+        },
+        {
+          "original": "console.warn(\n            `Card with ID ${cardId} not found in local state, will try to proceed anyway`\n          )",
+          "replacement": "logger.warn(, { context: {\"file\":\"CardContext\"} })",
+          "line": 531
+        },
+        {
+          "original": "console.error(\n            'Direct method failed, falling back to standard method:',\n            directError\n          )",
+          "replacement": "logger.error(, { context: {\"file\":\"CardContext\",\"purpose\":\"error-handling\"} })",
+          "line": 597
+        },
+        {
+          "original": "console.error('Both methods failed to sell card:', standardError)",
+          "replacement": "logger.error('Both methods failed to sell card:', standardError, { context: {\"file\":\"CardContext\",\"purpose\":\"error-handling\"} })",
+          "line": 638
+        },
+        {
+          "original": "console.error('Error in markCardAsSold:', err)",
+          "replacement": "logger.error('Error in markCardAsSold:', err, { context: {\"file\":\"CardContext\",\"purpose\":\"error-handling\"} })",
+          "line": 657
+        },
+        {
+          "original": "console.error('Error in CardContext.importCards:', err)",
+          "replacement": "logger.error('Error in CardContext.importCards:', err, { context: {\"file\":\"CardContext\",\"purpose\":\"error-handling\"} })",
+          "line": 684
+        }
+      ]
+    },
+    {
+      "file": "src\\components\\SoldItems\\SoldItems.js",
+      "consoleStatementsFound": 19,
+      "consoleStatementsReplaced": 19,
+      "changes": [
+        {
+          "original": "console.error('Error loading profile:', error)",
+          "replacement": "logger.error('Error loading profile:', error, { context: {\"file\":\"SoldItems\",\"purpose\":\"error-handling\"} })",
+          "line": 115
+        },
+        {
+          "original": "console.log('No sold collection found:', error.message)",
+          "replacement": "logger.debug('No sold collection found:', error.message, { context: {\"file\":\"SoldItems\",\"purpose\":\"error-handling\"} })",
+          "line": 150
+        },
+        {
+          "original": "console.error('Error loading sold cards:', error)",
+          "replacement": "logger.error('Error loading sold cards:', error, { context: {\"file\":\"SoldItems\",\"purpose\":\"error-handling\"} })",
+          "line": 159
+        },
+        {
+          "original": "console.error('Error generating PDF:', error)",
+          "replacement": "logger.error('Error generating PDF:', error, { context: {\"file\":\"SoldItems\",\"purpose\":\"error-handling\"} })",
+          "line": 289
+        },
+        {
+          "original": "console.error(\n                'Error creating test sold item:',\n                event.target.error\n              )",
+          "replacement": "logger.error(, { context: {\"file\":\"SoldItems\",\"purpose\":\"error-handling\"} })",
+          "line": 765
+        },
+        {
+          "original": "console.error('Error creating database:', event.target.error)",
+          "replacement": "logger.error('Error creating database:', event.target.error, { context: {\"file\":\"SoldItems\",\"purpose\":\"error-handling\"} })",
+          "line": 774
+        },
+        {
+          "original": "console.error('Error deleting database:', event.target.error)",
+          "replacement": "logger.error('Error deleting database:', event.target.error, { context: {\"file\":\"SoldItems\",\"purpose\":\"error-handling\"} })",
+          "line": 780
+        },
+        {
+          "original": "console.error('Error resetting database:', error)",
+          "replacement": "logger.error('Error resetting database:', error, { context: {\"file\":\"SoldItems\",\"purpose\":\"error-handling\"} })",
+          "line": 784
+        },
+        {
+          "original": "console.error('Error importing sold items:', error)",
+          "replacement": "logger.error('Error importing sold items:', error, { context: {\"file\":\"SoldItems\",\"purpose\":\"error-handling\"} })",
+          "line": 877
+        },
+        {
+          "original": "console.error('Error force refreshing sold items:', e)",
+          "replacement": "logger.error('Error force refreshing sold items:', e, { context: {\"file\":\"SoldItems\",\"purpose\":\"error-handling\"} })",
+          "line": 892
+        },
+        {
+          "original": "console.error('Database error:', event.target.error)",
+          "replacement": "logger.error('Database error:', event.target.error, { context: {\"file\":\"SoldItems\",\"purpose\":\"error-handling\"} })",
+          "line": 902
+        },
+        {
+          "original": "console.error('Error getting sold items:', event.target.error)",
+          "replacement": "logger.error('Error getting sold items:', event.target.error, { context: {\"file\":\"SoldItems\",\"purpose\":\"error-handling\"} })",
+          "line": 931
+        },
+        {
+          "original": "console.error('Error in direct DB access:', error)",
+          "replacement": "logger.error('Error in direct DB access:', error, { context: {\"file\":\"SoldItems\",\"purpose\":\"error-handling\"} })",
+          "line": 943
+        },
+        {
+          "original": "console.warn('Invalid date:', dateStr)",
+          "replacement": "logger.warn('Invalid date:', dateStr, { context: {\"file\":\"SoldItems\",\"purpose\":\"debugging\"} })",
+          "line": 969
+        },
+        {
+          "original": "console.error('Error formatting date:', error)",
+          "replacement": "logger.error('Error formatting date:', error, { context: {\"file\":\"SoldItems\",\"purpose\":\"error-handling\"} })",
+          "line": 984
+        },
+        {
+          "original": "console.error('Error getting card image:', error)",
+          "replacement": "logger.error('Error getting card image:', error, { context: {\"file\":\"SoldItems\",\"purpose\":\"error-handling\"} })",
+          "line": 995
+        },
+        {
+          "original": "console.error('Error generating PDF:', error)",
+          "replacement": "logger.error('Error generating PDF:', error, { context: {\"file\":\"SoldItems\",\"purpose\":\"error-handling\"} })",
+          "line": 1037
+        },
+        {
+          "original": "console.error('Error resetting sold items:', error)",
+          "replacement": "logger.error('Error resetting sold items:', error, { context: {\"file\":\"SoldItems\",\"purpose\":\"error-handling\"} })",
+          "line": 1081
+        },
+        {
+          "original": "console.error('Error adding test sold item:', error)",
+          "replacement": "logger.error('Error adding test sold item:', error, { context: {\"file\":\"SoldItems\",\"purpose\":\"error-handling\"} })",
+          "line": 1180
+        }
+      ]
+    },
+    {
+      "file": "src\\components\\UpgradeModal.js",
+      "consoleStatementsFound": 19,
+      "consoleStatementsReplaced": 19,
+      "changes": [
+        {
+          "original": "console.log('🚀 PRODUCTION DEBUG: Starting upgrade process')",
+          "replacement": "logger.debug('🚀 PRODUCTION DEBUG: Starting upgrade process', { context: {\"file\":\"UpgradeModal\",\"purpose\":\"debugging\"} })",
+          "line": 24
+        },
+        {
+          "original": "console.log('📡 PRODUCTION DEBUG: About to call createCheckoutSession')",
+          "replacement": "logger.debug('📡 PRODUCTION DEBUG: About to call createCheckoutSession', { context: {\"file\":\"UpgradeModal\",\"purpose\":\"debugging\"} })",
+          "line": 28
+        },
+        {
+          "original": "console.log('📡 PRODUCTION DEBUG: User ID:', user?.uid)",
+          "replacement": "logger.debug('📡 PRODUCTION DEBUG: User ID:', user?.uid, { context: {\"file\":\"UpgradeModal\",\"purpose\":\"debugging\"} })",
+          "line": 29
+        },
+        {
+          "original": "console.log('📡 PRODUCTION DEBUG: Functions instance:', functions)",
+          "replacement": "logger.debug('📡 PRODUCTION DEBUG: Functions instance:', functions, { context: {\"file\":\"UpgradeModal\",\"purpose\":\"debugging\"} })",
+          "line": 34
+        },
+        {
+          "original": "console.log('📡 PRODUCTION DEBUG: Calling function with data:', {\n        priceId: STRIPE_PREMIUM_PLAN_PRICE_ID,\n        userId: user?.uid,\n      })",
+          "replacement": "logger.debug(, { context: {\"file\":\"UpgradeModal\",\"purpose\":\"debugging\"} })",
+          "line": 46
+        },
+        {
+          "original": "console.log('✅ PRODUCTION DEBUG: Function call successful:', result)",
+          "replacement": "logger.debug('✅ PRODUCTION DEBUG: Function call successful:', result, { context: {\"file\":\"UpgradeModal\",\"purpose\":\"success-state\"} })",
+          "line": 56
+        },
+        {
+          "original": "console.log('✅ PRODUCTION DEBUG: Session URL:', result.data?.url)",
+          "replacement": "logger.debug('✅ PRODUCTION DEBUG: Session URL:', result.data?.url, { context: {\"file\":\"UpgradeModal\",\"purpose\":\"debugging\"} })",
+          "line": 57
+        },
+        {
+          "original": "console.log('✅ PRODUCTION DEBUG: Session ID:', result.data?.sessionId)",
+          "replacement": "logger.debug('✅ PRODUCTION DEBUG: Session ID:', result.data?.sessionId, { context: {\"file\":\"UpgradeModal\",\"purpose\":\"debugging\"} })",
+          "line": 58
+        },
+        {
+          "original": "console.log('📦 PRODUCTION DEBUG: Loading Stripe...')",
+          "replacement": "logger.debug('📦 PRODUCTION DEBUG: Loading Stripe...', { context: {\"file\":\"UpgradeModal\",\"purpose\":\"loading-state\"} })",
+          "line": 61
+        },
+        {
+          "original": "console.log(\n        '📦 PRODUCTION DEBUG: Stripe key available:',\n        !!stripePublishableKey\n      )",
+          "replacement": "logger.debug(, { context: {\"file\":\"UpgradeModal\",\"purpose\":\"debugging\"} })",
+          "line": 63
+        },
+        {
+          "original": "console.error('❌ PRODUCTION DEBUG: Stripe failed to load')",
+          "replacement": "logger.error('❌ PRODUCTION DEBUG: Stripe failed to load', { context: {\"file\":\"UpgradeModal\",\"purpose\":\"error-handling\"} })",
+          "line": 72
+        },
+        {
+          "original": "console.log('✅ PRODUCTION DEBUG: Stripe loaded successfully')",
+          "replacement": "logger.debug('✅ PRODUCTION DEBUG: Stripe loaded successfully', { context: {\"file\":\"UpgradeModal\",\"purpose\":\"success-state\"} })",
+          "line": 76
+        },
+        {
+          "original": "console.log('💳 PRODUCTION DEBUG: Redirecting to Stripe Checkout...')",
+          "replacement": "logger.debug('💳 PRODUCTION DEBUG: Redirecting to Stripe Checkout...', { context: {\"file\":\"UpgradeModal\",\"purpose\":\"debugging\"} })",
+          "line": 79
+        },
+        {
+          "original": "console.error('❌ PRODUCTION DEBUG: Stripe redirect error:', error)",
+          "replacement": "logger.error('❌ PRODUCTION DEBUG: Stripe redirect error:', error, { context: {\"file\":\"UpgradeModal\",\"purpose\":\"error-handling\"} })",
+          "line": 85
+        },
+        {
+          "original": "console.log(\n        '✅ PRODUCTION DEBUG: Successfully redirected to Stripe Checkout'\n      )",
+          "replacement": "logger.debug(, { context: {\"file\":\"UpgradeModal\",\"purpose\":\"success-state\"} })",
+          "line": 89
+        },
+        {
+          "original": "console.error('❌ PRODUCTION DEBUG: Error caught:', error)",
+          "replacement": "logger.error('❌ PRODUCTION DEBUG: Error caught:', error, { context: {\"file\":\"UpgradeModal\",\"purpose\":\"error-handling\"} })",
+          "line": 93
+        },
+        {
+          "original": "console.error('❌ PRODUCTION DEBUG: Error message:', error.message)",
+          "replacement": "logger.error('❌ PRODUCTION DEBUG: Error message:', error.message, { context: {\"file\":\"UpgradeModal\",\"purpose\":\"error-handling\"} })",
+          "line": 94
+        },
+        {
+          "original": "console.error('❌ PRODUCTION DEBUG: Error code:', error.code)",
+          "replacement": "logger.error('❌ PRODUCTION DEBUG: Error code:', error.code, { context: {\"file\":\"UpgradeModal\",\"purpose\":\"error-handling\"} })",
+          "line": 95
+        },
+        {
+          "original": "console.error(\n        '❌ PRODUCTION DEBUG: Full error object:',\n        JSON.stringify(error, null, 2)",
+          "replacement": "logger.error(error, null, 2, { context: {\"file\":\"UpgradeModal\",\"purpose\":\"error-handling\"} })",
+          "line": 96
+        }
+      ]
+    },
+    {
+      "file": "src\\components\\CardDetails.js",
+      "consoleStatementsFound": 18,
+      "consoleStatementsReplaced": 18,
+      "changes": [
+        {
+          "original": "console.warn('Failed to revoke cardImage blob URL on unmount:', e)",
+          "replacement": "logger.warn('Failed to revoke cardImage blob URL on unmount:', e, { context: {\"file\":\"CardDetails\",\"purpose\":\"error-handling\"} })",
+          "line": 133
+        },
+        {
+          "original": "console.error(\n                `Error revoking blob URL for card ${card.id || card.slabSerial}:`,\n                error\n              )",
+          "replacement": "logger.error(, { context: {\"file\":\"CardDetails\",\"purpose\":\"error-handling\"} })",
+          "line": 151
+        },
+        {
+          "original": "console.error('Error loading card image:', error)",
+          "replacement": "logger.error('Error loading card image:', error, { context: {\"file\":\"CardDetails\",\"purpose\":\"error-handling\"} })",
+          "line": 221
+        },
+        {
+          "original": "console.warn('Failed to revoke previous blob URL', e)",
+          "replacement": "logger.warn('Failed to revoke previous blob URL', e, { context: {\"file\":\"CardDetails\",\"purpose\":\"error-handling\"} })",
+          "line": 246
+        },
+        {
+          "original": "console.error('Error processing image:', error)",
+          "replacement": "logger.error('Error processing image:', error, { context: {\"file\":\"CardDetails\",\"purpose\":\"error-handling\"} })",
+          "line": 277
+        },
+        {
+          "original": "console.error('Toast notification error:', toastError)",
+          "replacement": "logger.error('Toast notification error:', toastError, { context: {\"file\":\"CardDetails\",\"purpose\":\"error-handling\"} })",
+          "line": 286
+        },
+        {
+          "original": "console.warn(\n          `Invalid image file provided: ${file ? 'not a valid Blob/File' : 'null or undefined'}`\n        )",
+          "replacement": "logger.warn(, { context: {\"file\":\"CardDetails\"} })",
+          "line": 292
+        },
+        {
+          "original": "console.error('Toast notification error:', toastError)",
+          "replacement": "logger.error('Toast notification error:', toastError, { context: {\"file\":\"CardDetails\",\"purpose\":\"error-handling\"} })",
+          "line": 300
+        },
+        {
+          "original": "console.warn('Failed to revoke blob URL on close:', e)",
+          "replacement": "logger.warn('Failed to revoke blob URL on close:', e, { context: {\"file\":\"CardDetails\",\"purpose\":\"error-handling\"} })",
+          "line": 330
+        },
+        {
+          "original": "console.warn('Failed to revoke cardImage blob URL on close:', e)",
+          "replacement": "logger.warn('Failed to revoke cardImage blob URL on close:', e, { context: {\"file\":\"CardDetails\",\"purpose\":\"error-handling\"} })",
+          "line": 341
+        },
+        {
+          "original": "console.warn('Failed to revoke blob URL during save:', e)",
+          "replacement": "logger.warn('Failed to revoke blob URL during save:', e, { context: {\"file\":\"CardDetails\",\"purpose\":\"error-handling\"} })",
+          "line": 420
+        },
+        {
+          "original": "console.error('[CardDetails] Error uploading image:', imageError)",
+          "replacement": "logger.error('[CardDetails] Error uploading image:', imageError, { context: {\"file\":\"CardDetails\",\"purpose\":\"error-handling\"} })",
+          "line": 426
+        },
+        {
+          "original": "console.error('=========== CARD SAVE ERROR ===========')",
+          "replacement": "logger.error('=========== CARD SAVE ERROR ===========', { context: {\"file\":\"CardDetails\",\"purpose\":\"error-handling\"} })",
+          "line": 506
+        },
+        {
+          "original": "console.error('Error saving card:', error)",
+          "replacement": "logger.error('Error saving card:', error, { context: {\"file\":\"CardDetails\",\"purpose\":\"error-handling\"} })",
+          "line": 507
+        },
+        {
+          "original": "console.error('=========== CARD SAVE ERROR END ===========')",
+          "replacement": "logger.error('=========== CARD SAVE ERROR END ===========', { context: {\"file\":\"CardDetails\",\"purpose\":\"error-handling\"} })",
+          "line": 509
+        },
+        {
+          "original": "console.warn('Failed to revoke blob URL on unmount:', e)",
+          "replacement": "logger.warn('Failed to revoke blob URL on unmount:', e, { context: {\"file\":\"CardDetails\",\"purpose\":\"error-handling\"} })",
+          "line": 531
+        },
+        {
+          "original": "console.warn('Failed to revoke stale blob URL:', e)",
+          "replacement": "logger.warn('Failed to revoke stale blob URL:', e, { context: {\"file\":\"CardDetails\",\"purpose\":\"error-handling\"} })",
+          "line": 553
+        },
+        {
+          "original": "console.error('Error marking card as sold:', error)",
+          "replacement": "logger.error('Error marking card as sold:', error, { context: {\"file\":\"CardDetails\",\"purpose\":\"error-handling\"} })",
+          "line": 610
+        }
+      ]
+    },
+    {
+      "file": "src\\components\\UpgradePage.js",
+      "consoleStatementsFound": 13,
+      "consoleStatementsReplaced": 13,
+      "changes": [
+        {
+          "original": "console.log('🚀 Starting upgrade process from UpgradePage...')",
+          "replacement": "logger.debug('🚀 Starting upgrade process from UpgradePage...', { context: {\"file\":\"UpgradePage\"} })",
+          "line": 53
+        },
+        {
+          "original": "console.error('❌ No user found - user must be logged in')",
+          "replacement": "logger.error('❌ No user found - user must be logged in', { context: {\"file\":\"UpgradePage\",\"purpose\":\"error-handling\"} })",
+          "line": 56
+        },
+        {
+          "original": "console.log('✅ User authenticated:', { uid: user.uid, email: user.email })",
+          "replacement": "logger.debug('✅ User authenticated:', { uid: user.uid, email: user.email }, { context: {\"file\":\"UpgradePage\"} })",
+          "line": 62
+        },
+        {
+          "original": "console.log('🔍 Checking environment variables...')",
+          "replacement": "logger.debug('🔍 Checking environment variables...', { context: {\"file\":\"UpgradePage\"} })",
+          "line": 67
+        },
+        {
+          "original": "console.log('🔥 Creating checkout session via Firebase Functions...')",
+          "replacement": "logger.debug('🔥 Creating checkout session via Firebase Functions...', { context: {\"file\":\"UpgradePage\"} })",
+          "line": 71
+        },
+        {
+          "original": "console.log('✅ Server-side session created:', result.data)",
+          "replacement": "logger.debug('✅ Server-side session created:', result.data, { context: {\"file\":\"UpgradePage\"} })",
+          "line": 81
+        },
+        {
+          "original": "console.log('📦 Loading Stripe...')",
+          "replacement": "logger.debug('📦 Loading Stripe...', { context: {\"file\":\"UpgradePage\",\"purpose\":\"loading-state\"} })",
+          "line": 84
+        },
+        {
+          "original": "console.error('❌ Stripe failed to load')",
+          "replacement": "logger.error('❌ Stripe failed to load', { context: {\"file\":\"UpgradePage\",\"purpose\":\"error-handling\"} })",
+          "line": 89
+        },
+        {
+          "original": "console.log('✅ Stripe loaded successfully')",
+          "replacement": "logger.debug('✅ Stripe loaded successfully', { context: {\"file\":\"UpgradePage\",\"purpose\":\"success-state\"} })",
+          "line": 93
+        },
+        {
+          "original": "console.log('💳 Redirecting to Stripe Checkout...')",
+          "replacement": "logger.debug('💳 Redirecting to Stripe Checkout...', { context: {\"file\":\"UpgradePage\"} })",
+          "line": 96
+        },
+        {
+          "original": "console.error('❌ Stripe redirect error:', error)",
+          "replacement": "logger.error('❌ Stripe redirect error:', error, { context: {\"file\":\"UpgradePage\",\"purpose\":\"error-handling\"} })",
+          "line": 102
+        },
+        {
+          "original": "console.log('✅ Successfully redirected to Stripe Checkout')",
+          "replacement": "logger.debug('✅ Successfully redirected to Stripe Checkout', { context: {\"file\":\"UpgradePage\",\"purpose\":\"success-state\"} })",
+          "line": 106
+        },
+        {
+          "original": "console.error('💥 Upgrade error details:', {\n        message: error.message,\n        code: error.code,\n        details: error.details,\n        stack: error.stack,\n      })",
+          "replacement": "logger.error(, { context: {\"file\":\"UpgradePage\",\"purpose\":\"error-handling\"} })",
+          "line": 108
+        }
+      ]
+    },
+    {
+      "file": "src\\components\\PurchaseInvoices\\PurchaseInvoices.js",
+      "consoleStatementsFound": 12,
+      "consoleStatementsReplaced": 12,
+      "changes": [
+        {
+          "original": "console.error('Error handling invoice save:', error)",
+          "replacement": "logger.error('Error handling invoice save:', error, { context: {\"file\":\"PurchaseInvoices\",\"purpose\":\"error-handling\"} })",
+          "line": 73
+        },
+        {
+          "original": "console.error(\n            'Error loading invoices from Firestore:',\n            firestoreError\n          )",
+          "replacement": "logger.error(, { context: {\"file\":\"PurchaseInvoices\",\"purpose\":\"error-handling\"} })",
+          "line": 125
+        },
+        {
+          "original": "console.error('Error loading purchase invoices:', error)",
+          "replacement": "logger.error('Error loading purchase invoices:', error, { context: {\"file\":\"PurchaseInvoices\",\"purpose\":\"error-handling\"} })",
+          "line": 137
+        },
+        {
+          "original": "console.error('Error loading profile:', error)",
+          "replacement": "logger.error('Error loading profile:', error, { context: {\"file\":\"PurchaseInvoices\",\"purpose\":\"error-handling\"} })",
+          "line": 167
+        },
+        {
+          "original": "console.error('Error deleting invoice:', error)",
+          "replacement": "logger.error('Error deleting invoice:', error, { context: {\"file\":\"PurchaseInvoices\",\"purpose\":\"error-handling\"} })",
+          "line": 238
+        },
+        {
+          "original": "console.error('Error in server batch PDF generation:', error)",
+          "replacement": "logger.error('Error in server batch PDF generation:', error, { context: {\"file\":\"PurchaseInvoices\",\"purpose\":\"error-handling\"} })",
+          "line": 290
+        },
+        {
+          "original": "console.log('Invoice data for PDF generation:', invoice)",
+          "replacement": "logger.debug('Invoice data for PDF generation:', invoice, { context: {\"file\":\"PurchaseInvoices\"} })",
+          "line": 467
+        },
+        {
+          "original": "console.log('Card details for PDF:', cardDetails)",
+          "replacement": "logger.debug('Card details for PDF:', cardDetails, { context: {\"file\":\"PurchaseInvoices\"} })",
+          "line": 468
+        },
+        {
+          "original": "console.log('First card details:', cardDetails[0])",
+          "replacement": "logger.debug('First card details:', cardDetails[0], { context: {\"file\":\"PurchaseInvoices\"} })",
+          "line": 469
+        },
+        {
+          "original": "console.log('Card data from invoice:', invoice.cards)",
+          "replacement": "logger.debug('Card data from invoice:', invoice.cards, { context: {\"file\":\"PurchaseInvoices\"} })",
+          "line": 529
+        },
+        {
+          "original": "console.log('Processed cards for PDF:', processedCards)",
+          "replacement": "logger.debug('Processed cards for PDF:', processedCards, { context: {\"file\":\"PurchaseInvoices\"} })",
+          "line": 552
+        },
+        {
+          "original": "console.error('Error fetching card details:', error)",
+          "replacement": "logger.error('Error fetching card details:', error, { context: {\"file\":\"PurchaseInvoices\",\"purpose\":\"error-handling\"} })",
+          "line": 557
+        }
+      ]
+    },
+    {
+      "file": "src\\utils\\moveCardsHandler.js",
+      "consoleStatementsFound": 12,
+      "consoleStatementsReplaced": 12,
+      "changes": [
+        {
+          "original": "console.warn('[MoveCardsHandler] Card missing ID:', card)",
+          "replacement": "logger.warn('[MoveCardsHandler] Card missing ID:', card, { context: {\"file\":\"moveCardsHandler\"} })",
+          "line": 85
+        },
+        {
+          "original": "console.warn(`[MoveCardsHandler] Skipping duplicate card: ${cardId}`)",
+          "replacement": "logger.warn(`[MoveCardsHandler] Skipping duplicate card: ${cardId}`, { context: {\"file\":\"moveCardsHandler\"} })",
+          "line": 92
+        },
+        {
+          "original": "console.warn(\n                `[MoveCardsHandler] Source collection ${actualSourceCollection} is not an array, cannot remove card`\n              )",
+          "replacement": "logger.warn(, { context: {\"file\":\"moveCardsHandler\"} })",
+          "line": 129
+        },
+        {
+          "original": "console.warn(\n                `[MoveCardsHandler] Source collection ${sourceCollection} is not an array, cannot remove card`\n              )",
+          "replacement": "logger.warn(, { context: {\"file\":\"moveCardsHandler\"} })",
+          "line": 148
+        },
+        {
+          "original": "console.error(\n            `[MoveCardsHandler] Error syncing card ${cardId}:`,\n            syncError\n          )",
+          "replacement": "logger.error(, { context: {\"file\":\"moveCardsHandler\",\"purpose\":\"error-handling\"} })",
+          "line": 173
+        },
+        {
+          "original": "console.error('[MoveCardsHandler] Error processing card:', cardError)",
+          "replacement": "logger.error('[MoveCardsHandler] Error processing card:', cardError, { context: {\"file\":\"moveCardsHandler\",\"purpose\":\"error-handling\"} })",
+          "line": 184
+        },
+        {
+          "original": "console.error('[MoveCardsHandler] Error saving collections:', saveError)",
+          "replacement": "logger.error('[MoveCardsHandler] Error saving collections:', saveError, { context: {\"file\":\"moveCardsHandler\",\"purpose\":\"error-handling\"} })",
+          "line": 206
+        },
+        {
+          "original": "console.warn(\n        '[MoveCardsHandler] Some cards failed to move:',\n        failedMoves\n      )",
+          "replacement": "logger.warn(, { context: {\"file\":\"moveCardsHandler\",\"purpose\":\"error-handling\"} })",
+          "line": 227
+        },
+        {
+          "original": "console.error(\n      '[MoveCardsHandler] Critical error during move operation:',\n      error\n    )",
+          "replacement": "logger.error(, { context: {\"file\":\"moveCardsHandler\",\"purpose\":\"error-handling\"} })",
+          "line": 250
+        },
+        {
+          "original": "console.warn(\n      '[MoveCardsHandler] Invalid collections structure, creating empty object'\n    )",
+          "replacement": "logger.warn(, { context: {\"file\":\"moveCardsHandler\"} })",
+          "line": 266
+        },
+        {
+          "original": "console.warn(\n            `[MoveCardsHandler] Collection ${collectionName} has invalid structure, reset to empty array`\n          )",
+          "replacement": "logger.warn(, { context: {\"file\":\"moveCardsHandler\"} })",
+          "line": 297
+        },
+        {
+          "original": "console.warn(\n        `[MoveCardsHandler] Collection ${collectionName} is not an array or object, reset to empty array`\n      )",
+          "replacement": "logger.warn(, { context: {\"file\":\"moveCardsHandler\"} })",
+          "line": 304
+        }
+      ]
+    },
+    {
+      "file": "src\\components\\settings\\SubscriptionStatus.js",
+      "consoleStatementsFound": 9,
+      "consoleStatementsReplaced": 9,
+      "changes": [
+        {
+          "original": "console.log('🔗 Starting billing portal process')",
+          "replacement": "logger.debug('🔗 Starting billing portal process', { context: {\"file\":\"SubscriptionStatus\"} })",
+          "line": 33
+        },
+        {
+          "original": "console.log('🔗 User ID:', user?.uid)",
+          "replacement": "logger.debug('🔗 User ID:', user?.uid, { context: {\"file\":\"SubscriptionStatus\"} })",
+          "line": 34
+        },
+        {
+          "original": "console.log('🔗 Functions instance:', functions)",
+          "replacement": "logger.debug('🔗 Functions instance:', functions, { context: {\"file\":\"SubscriptionStatus\"} })",
+          "line": 39
+        },
+        {
+          "original": "console.log('🔗 Calling createPortalSession function')",
+          "replacement": "logger.debug('🔗 Calling createPortalSession function', { context: {\"file\":\"SubscriptionStatus\"} })",
+          "line": 47
+        },
+        {
+          "original": "console.log('✅ Portal session created:', result)",
+          "replacement": "logger.debug('✅ Portal session created:', result, { context: {\"file\":\"SubscriptionStatus\"} })",
+          "line": 53
+        },
+        {
+          "original": "console.log('✅ Portal URL:', result.data?.url)",
+          "replacement": "logger.debug('✅ Portal URL:', result.data?.url, { context: {\"file\":\"SubscriptionStatus\"} })",
+          "line": 54
+        },
+        {
+          "original": "console.error('❌ Error creating portal session:', error)",
+          "replacement": "logger.error('❌ Error creating portal session:', error, { context: {\"file\":\"SubscriptionStatus\",\"purpose\":\"error-handling\"} })",
+          "line": 63
+        },
+        {
+          "original": "console.error('❌ Error message:', error.message)",
+          "replacement": "logger.error('❌ Error message:', error.message, { context: {\"file\":\"SubscriptionStatus\",\"purpose\":\"error-handling\"} })",
+          "line": 64
+        },
+        {
+          "original": "console.error('❌ Error code:', error.code)",
+          "replacement": "logger.error('❌ Error code:', error.code, { context: {\"file\":\"SubscriptionStatus\",\"purpose\":\"error-handling\"} })",
+          "line": 65
+        }
+      ]
+    },
+    {
+      "file": "src\\pages\\ComponentLibrary.js",
+      "consoleStatementsFound": 9,
+      "consoleStatementsReplaced": 9,
+      "changes": [
+        {
+          "original": "console.log('Card saved:', card)",
+          "replacement": "logger.debug('Card saved:', card, { context: {\"file\":\"ComponentLibrary\"} })",
+          "line": 232
+        },
+        {
+          "original": "console.log('Card deleted:', card)",
+          "replacement": "logger.debug('Card deleted:', card, { context: {\"file\":\"ComponentLibrary\"} })",
+          "line": 236
+        },
+        {
+          "original": "console.log('Sign up clicked')",
+          "replacement": "logger.debug('Sign up clicked', { context: {\"file\":\"ComponentLibrary\"} })",
+          "line": 262
+        },
+        {
+          "original": "console.log('Forgot password clicked')",
+          "replacement": "logger.debug('Forgot password clicked', { context: {\"file\":\"ComponentLibrary\"} })",
+          "line": 266
+        },
+        {
+          "original": "console.log('Card saved:', card)",
+          "replacement": "logger.debug('Card saved:', card, { context: {\"file\":\"ComponentLibrary\"} })",
+          "line": 2126
+        },
+        {
+          "original": "console.log('Card deleted:', card)",
+          "replacement": "logger.debug('Card deleted:', card, { context: {\"file\":\"ComponentLibrary\"} })",
+          "line": 2129
+        },
+        {
+          "original": "console.log(`Rename collection from ${oldName} to ${newName}`)",
+          "replacement": "logger.debug(`Rename collection from ${oldName} to ${newName}`, { context: {\"file\":\"ComponentLibrary\"} })",
+          "line": 2221
+        },
+        {
+          "original": "console.log(`Delete collection ${name}`)",
+          "replacement": "logger.debug(`Delete collection ${name}`, { context: {\"file\":\"ComponentLibrary\"} })",
+          "line": 2225
+        },
+        {
+          "original": "console.log('Print invoice:', invoice)",
+          "replacement": "logger.debug('Print invoice:', invoice, { context: {\"file\":\"ComponentLibrary\"} })",
+          "line": 2452
+        }
+      ]
+    },
+    {
+      "file": "src\\pages\\ComponentLibrary.jsx",
+      "consoleStatementsFound": 9,
+      "consoleStatementsReplaced": 9,
+      "changes": [
+        {
+          "original": "console.log('Card saved:', card)",
+          "replacement": "logger.debug('Card saved:', card, { context: {\"file\":\"ComponentLibrary\"} })",
+          "line": 283
+        },
+        {
+          "original": "console.log('Card deleted:', card)",
+          "replacement": "logger.debug('Card deleted:', card, { context: {\"file\":\"ComponentLibrary\"} })",
+          "line": 287
+        },
+        {
+          "original": "console.log('Sign up clicked')",
+          "replacement": "logger.debug('Sign up clicked', { context: {\"file\":\"ComponentLibrary\"} })",
+          "line": 313
+        },
+        {
+          "original": "console.log('Forgot password clicked')",
+          "replacement": "logger.debug('Forgot password clicked', { context: {\"file\":\"ComponentLibrary\"} })",
+          "line": 317
+        },
+        {
+          "original": "console.log('Card saved:', card)",
+          "replacement": "logger.debug('Card saved:', card, { context: {\"file\":\"ComponentLibrary\"} })",
+          "line": 2180
+        },
+        {
+          "original": "console.log('Card deleted:', card)",
+          "replacement": "logger.debug('Card deleted:', card, { context: {\"file\":\"ComponentLibrary\"} })",
+          "line": 2183
+        },
+        {
+          "original": "console.log(`Rename collection from ${oldName} to ${newName}`)",
+          "replacement": "logger.debug(`Rename collection from ${oldName} to ${newName}`, { context: {\"file\":\"ComponentLibrary\"} })",
+          "line": 2275
+        },
+        {
+          "original": "console.log(`Delete collection ${name}`)",
+          "replacement": "logger.debug(`Delete collection ${name}`, { context: {\"file\":\"ComponentLibrary\"} })",
+          "line": 2279
+        },
+        {
+          "original": "console.log('Print invoice:', invoice)",
+          "replacement": "logger.debug('Print invoice:', invoice, { context: {\"file\":\"ComponentLibrary\"} })",
+          "line": 2506
+        }
+      ]
+    },
+    {
+      "file": "src\\utils\\migrateLogger.js",
+      "consoleStatementsFound": 7,
+      "consoleStatementsReplaced": 7,
+      "changes": [
+        {
+          "original": "console.log('Analyzing logger usage in the codebase...\\n')",
+          "replacement": "logger.debug('Analyzing logger usage in the codebase...\\n', { context: {\"file\":\"migrateLogger\"} })",
+          "line": 80
+        },
+        {
+          "original": "console.log(`Files using logger: ${results.filesWithLogger.length}`)",
+          "replacement": "logger.debug(`Files using logger: ${results.filesWithLogger.length}`, { context: {\"file\":\"migrateLogger\"} })",
+          "line": 84
+        },
+        {
+          "original": "console.log(`Total logger calls: ${results.totalLoggerCalls}\\n`)",
+          "replacement": "logger.debug(`Total logger calls: ${results.totalLoggerCalls}\\n`, { context: {\"file\":\"migrateLogger\"} })",
+          "line": 85
+        },
+        {
+          "original": "console.log('Logger calls by type:')",
+          "replacement": "logger.debug('Logger calls by type:', { context: {\"file\":\"migrateLogger\"} })",
+          "line": 87
+        },
+        {
+          "original": "console.log(`  ${type}: ${count}`)",
+          "replacement": "logger.debug(`  ${type}: ${count}`, { context: {\"file\":\"migrateLogger\"} })",
+          "line": 89
+        },
+        {
+          "original": "console.log('\\nFiles with logger (sorted by usage)",
+          "replacement": "logger.debug('\\nFiles with logger (sorted by usage, { context: {\"file\":\"migrateLogger\"} })",
+          "line": 92
+        },
+        {
+          "original": "console.log(`  ${file}: ${calls} calls`)",
+          "replacement": "logger.debug(`  ${file}: ${calls} calls`, { context: {\"file\":\"migrateLogger\"} })",
+          "line": 96
+        }
+      ]
+    },
+    {
+      "file": "src\\components\\Marketplace\\MarketplaceMessages.js",
+      "consoleStatementsFound": 6,
+      "consoleStatementsReplaced": 6,
+      "changes": [
+        {
+          "original": "console.error('Error sending message:', error)",
+          "replacement": "logger.error('Error sending message:', error, { context: {\"file\":\"MarketplaceMessages\",\"purpose\":\"error-handling\"} })",
+          "line": 470
+        },
+        {
+          "original": "console.log('Could not add system message, but chat was left')",
+          "replacement": "logger.debug('Could not add system message, but chat was left', { context: {\"file\":\"MarketplaceMessages\"} })",
+          "line": 564
+        },
+        {
+          "original": "console.error('Error leaving chat:', error)",
+          "replacement": "logger.error('Error leaving chat:', error, { context: {\"file\":\"MarketplaceMessages\",\"purpose\":\"error-handling\"} })",
+          "line": 571
+        },
+        {
+          "original": "console.error('Error deleting chat:', error)",
+          "replacement": "logger.error('Error deleting chat:', error, { context: {\"file\":\"MarketplaceMessages\",\"purpose\":\"error-handling\"} })",
+          "line": 623
+        },
+        {
+          "original": "console.log('Active chat data:', activeChat)",
+          "replacement": "logger.debug('Active chat data:', activeChat, { context: {\"file\":\"MarketplaceMessages\"} })",
+          "line": 852
+        },
+        {
+          "original": "console.log('Active chat data:', activeChat)",
+          "replacement": "logger.debug('Active chat data:', activeChat, { context: {\"file\":\"MarketplaceMessages\"} })",
+          "line": 865
+        }
+      ]
+    },
+    {
+      "file": "src\\components\\CollectionSharing.js",
+      "consoleStatementsFound": 6,
+      "consoleStatementsReplaced": 6,
+      "changes": [
+        {
+          "original": "console.error('Error loading shared collections:', error)",
+          "replacement": "logger.error('Error loading shared collections:', error, { context: {\"file\":\"CollectionSharing\",\"purpose\":\"error-handling\"} })",
+          "line": 140
+        },
+        {
+          "original": "console.error('Error creating shared collection:', error)",
+          "replacement": "logger.error('Error creating shared collection:', error, { context: {\"file\":\"CollectionSharing\",\"purpose\":\"error-handling\"} })",
+          "line": 225
+        },
+        {
+          "original": "console.error('Error toggling active status:', error)",
+          "replacement": "logger.error('Error toggling active status:', error, { context: {\"file\":\"CollectionSharing\",\"purpose\":\"error-handling\"} })",
+          "line": 257
+        },
+        {
+          "original": "console.error('Error deleting shared collection:', error)",
+          "replacement": "logger.error('Error deleting shared collection:', error, { context: {\"file\":\"CollectionSharing\",\"purpose\":\"error-handling\"} })",
+          "line": 276
+        },
+        {
+          "original": "console.warn(\n                `Failed to update card count for collection ${collection.name}:`,\n                error\n              )",
+          "replacement": "logger.warn(, { context: {\"file\":\"CollectionSharing\",\"purpose\":\"error-handling\"} })",
+          "line": 313
+        },
+        {
+          "original": "console.error('Error refreshing collections:', error)",
+          "replacement": "logger.error('Error refreshing collections:', error, { context: {\"file\":\"CollectionSharing\",\"purpose\":\"error-handling\"} })",
+          "line": 350
+        }
+      ]
+    },
+    {
+      "file": "src\\services\\psaSearch.js",
+      "consoleStatementsFound": 6,
+      "consoleStatementsReplaced": 6,
+      "changes": [
+        {
+          "original": "console.warn('Failed to load PSA search cache from localStorage:', e)",
+          "replacement": "logger.warn('Failed to load PSA search cache from localStorage:', e, { context: {\"file\":\"psaSearch\",\"purpose\":\"error-handling\"} })",
+          "line": 55
+        },
+        {
+          "original": "console.warn('Failed to save PSA search cache to localStorage:', e)",
+          "replacement": "logger.warn('Failed to save PSA search cache to localStorage:', e, { context: {\"file\":\"psaSearch\",\"purpose\":\"error-handling\"} })",
+          "line": 69
+        },
+        {
+          "original": "console.warn('Failed to save PSA result to Firestore:', error)",
+          "replacement": "logger.warn('Failed to save PSA result to Firestore:', error, { context: {\"file\":\"psaSearch\",\"purpose\":\"error-handling\"} })",
+          "line": 112
+        },
+        {
+          "original": "console.error('PSA lookup failed:', result.data)",
+          "replacement": "logger.error('PSA lookup failed:', result.data, { context: {\"file\":\"psaSearch\",\"purpose\":\"error-handling\"} })",
+          "line": 224
+        },
+        {
+          "original": "console.error('Error details:', result.data.error)",
+          "replacement": "logger.error('Error details:', result.data.error, { context: {\"file\":\"psaSearch\",\"purpose\":\"error-handling\"} })",
+          "line": 227
+        },
+        {
+          "original": "console.error('Error searching PSA card by cert number:', error)",
+          "replacement": "logger.error('Error searching PSA card by cert number:', error, { context: {\"file\":\"psaSearch\",\"purpose\":\"error-handling\"} })",
+          "line": 255
+        }
+      ]
+    },
+    {
+      "file": "src\\components\\Settings.js",
+      "consoleStatementsFound": 5,
+      "consoleStatementsReplaced": 5,
+      "changes": [
+        {
+          "original": "console.error('Error loading collections:', error)",
+          "replacement": "logger.error('Error loading collections:', error, { context: {\"file\":\"Settings\",\"purpose\":\"error-handling\"} })",
+          "line": 52
+        },
+        {
+          "original": "console.error('Error resetting data:', error)",
+          "replacement": "logger.error('Error resetting data:', error, { context: {\"file\":\"Settings\",\"purpose\":\"error-handling\"} })",
+          "line": 109
+        },
+        {
+          "original": "console.error('Error renaming collection:', error)",
+          "replacement": "logger.error('Error renaming collection:', error, { context: {\"file\":\"Settings\",\"purpose\":\"error-handling\"} })",
+          "line": 153
+        },
+        {
+          "original": "console.error('Error deleting collection:', error)",
+          "replacement": "logger.error('Error deleting collection:', error, { context: {\"file\":\"Settings\",\"purpose\":\"error-handling\"} })",
+          "line": 171
+        },
+        {
+          "original": "console.error('Error changing tab:', error)",
+          "replacement": "logger.error('Error changing tab:', error, { context: {\"file\":\"Settings\",\"purpose\":\"error-handling\"} })",
+          "line": 182
+        }
+      ]
+    },
+    {
+      "file": "src\\components\\SharedCollection.js",
+      "consoleStatementsFound": 5,
+      "consoleStatementsReplaced": 5,
+      "changes": [
+        {
+          "original": "console.warn(`Query ${index + 1} failed:`, error)",
+          "replacement": "logger.warn(`Query ${index + 1} failed:`, error, { context: {\"file\":\"SharedCollection\",\"purpose\":\"error-handling\"} })",
+          "line": 155
+        },
+        {
+          "original": "console.error('=== ERROR LOADING SHARED COLLECTION ===')",
+          "replacement": "logger.error('=== ERROR LOADING SHARED COLLECTION ===', { context: {\"file\":\"SharedCollection\",\"purpose\":\"error-handling\"} })",
+          "line": 211
+        },
+        {
+          "original": "console.error('Error details:', err)",
+          "replacement": "logger.error('Error details:', err, { context: {\"file\":\"SharedCollection\",\"purpose\":\"error-handling\"} })",
+          "line": 212
+        },
+        {
+          "original": "console.error('Error message:', err.message)",
+          "replacement": "logger.error('Error message:', err.message, { context: {\"file\":\"SharedCollection\",\"purpose\":\"error-handling\"} })",
+          "line": 213
+        },
+        {
+          "original": "console.error('Error stack:', err.stack)",
+          "replacement": "logger.error('Error stack:', err.stack, { context: {\"file\":\"SharedCollection\",\"purpose\":\"error-handling\"} })",
+          "line": 214
+        }
+      ]
+    },
+    {
+      "file": "src\\services\\emailService.js",
+      "consoleStatementsFound": 5,
+      "consoleStatementsReplaced": 5,
+      "changes": [
+        {
+          "original": "console.error('Error sending marketplace message email:', error)",
+          "replacement": "logger.error('Error sending marketplace message email:', error, { context: {\"file\":\"emailService\",\"purpose\":\"error-handling\"} })",
+          "line": 43
+        },
+        {
+          "original": "console.error('Error sending listing sold email:', error)",
+          "replacement": "logger.error('Error sending listing sold email:', error, { context: {\"file\":\"emailService\",\"purpose\":\"error-handling\"} })",
+          "line": 64
+        },
+        {
+          "original": "console.error('Error sending email verification:', error)",
+          "replacement": "logger.error('Error sending email verification:', error, { context: {\"file\":\"emailService\",\"purpose\":\"error-handling\"} })",
+          "line": 78
+        },
+        {
+          "original": "console.error('Error sending custom email:', error)",
+          "replacement": "logger.error('Error sending custom email:', error, { context: {\"file\":\"emailService\",\"purpose\":\"error-handling\"} })",
+          "line": 89
+        },
+        {
+          "original": "console.error('Error sending feedback email:', error)",
+          "replacement": "logger.error('Error sending feedback email:', error, { context: {\"file\":\"emailService\",\"purpose\":\"error-handling\"} })",
+          "line": 100
+        }
+      ]
+    },
+    {
+      "file": "src\\services\\pokemonTcgService.js",
+      "consoleStatementsFound": 5,
+      "consoleStatementsReplaced": 5,
+      "changes": [
+        {
+          "original": "console.warn(\n            `Search attempt ${i + 1} failed with status: ${response.status}`\n          )",
+          "replacement": "logger.warn(, { context: {\"file\":\"pokemonTcgService\",\"purpose\":\"error-handling\"} })",
+          "line": 97
+        },
+        {
+          "original": "console.warn(`Search attempt ${i + 1} error:`, searchError.message)",
+          "replacement": "logger.warn(`Search attempt ${i + 1} error:`, searchError.message, { context: {\"file\":\"pokemonTcgService\",\"purpose\":\"error-handling\"} })",
+          "line": 152
+        },
+        {
+          "original": "console.error('Direct Pokemon TCG API error:', error)",
+          "replacement": "logger.error('Direct Pokemon TCG API error:', error, { context: {\"file\":\"pokemonTcgService\",\"purpose\":\"error-handling\"} })",
+          "line": 163
+        },
+        {
+          "original": "console.warn(\n        'Firebase Function failed, trying direct API call:',\n        firebaseError.message\n      )",
+          "replacement": "logger.warn(, { context: {\"file\":\"pokemonTcgService\",\"purpose\":\"error-handling\"} })",
+          "line": 210
+        },
+        {
+          "original": "console.error('Error fetching Pokemon TCG card pricing:', error)",
+          "replacement": "logger.error('Error fetching Pokemon TCG card pricing:', error, { context: {\"file\":\"pokemonTcgService\",\"purpose\":\"error-handling\"} })",
+          "line": 231
+        }
+      ]
+    },
+    {
+      "file": "src\\components\\Marketplace\\BuyerSelectionModal.js",
+      "consoleStatementsFound": 4,
+      "consoleStatementsReplaced": 4,
+      "changes": [
+        {
+          "original": "console.error('Error fetching buyer details:', error)",
+          "replacement": "logger.error('Error fetching buyer details:', error, { context: {\"file\":\"BuyerSelectionModal\",\"purpose\":\"error-handling\"} })",
+          "line": 72
+        },
+        {
+          "original": "console.error('Error fetching potential buyers:', error)",
+          "replacement": "logger.error('Error fetching potential buyers:', error, { context: {\"file\":\"BuyerSelectionModal\",\"purpose\":\"error-handling\"} })",
+          "line": 78
+        },
+        {
+          "original": "console.error('Error creating sold invoice:', invoiceError)",
+          "replacement": "logger.error('Error creating sold invoice:', invoiceError, { context: {\"file\":\"BuyerSelectionModal\",\"purpose\":\"error-handling\"} })",
+          "line": 147
+        },
+        {
+          "original": "console.error('Error marking as sold:', error)",
+          "replacement": "logger.error('Error marking as sold:', error, { context: {\"file\":\"BuyerSelectionModal\",\"purpose\":\"error-handling\"} })",
+          "line": 189
+        }
+      ]
+    },
+    {
+      "file": "src\\components\\AddCardModal.js",
+      "consoleStatementsFound": 4,
+      "consoleStatementsReplaced": 4,
+      "changes": [
+        {
+          "original": "console.error('Error changing card image:', error)",
+          "replacement": "logger.error('Error changing card image:', error, { context: {\"file\":\"AddCardModal\",\"purpose\":\"error-handling\"} })",
+          "line": 135
+        },
+        {
+          "original": "console.error('Error adding card:', error)",
+          "replacement": "logger.error('Error adding card:', error, { context: {\"file\":\"AddCardModal\",\"purpose\":\"error-handling\"} })",
+          "line": 246
+        },
+        {
+          "original": "console.error('PSA search error:', psaData.error)",
+          "replacement": "logger.error('PSA search error:', psaData.error, { context: {\"file\":\"AddCardModal\",\"purpose\":\"error-handling\"} })",
+          "line": 295
+        },
+        {
+          "original": "console.error('Error searching PSA:', error)",
+          "replacement": "logger.error('Error searching PSA:', error, { context: {\"file\":\"AddCardModal\",\"purpose\":\"error-handling\"} })",
+          "line": 337
+        }
+      ]
+    },
+    {
+      "file": "src\\components\\MoveVerification.js",
+      "consoleStatementsFound": 4,
+      "consoleStatementsReplaced": 4,
+      "changes": [
+        {
+          "original": "console.error('Error loading verification data:', error)",
+          "replacement": "logger.error('Error loading verification data:', error, { context: {\"file\":\"MoveVerification\",\"purpose\":\"error-handling\"} })",
+          "line": 33
+        },
+        {
+          "original": "console.error(\n                `Error verifying card ${movedCard.id} in cloud:`,\n                error\n              )",
+          "replacement": "logger.error(, { context: {\"file\":\"MoveVerification\",\"purpose\":\"error-handling\"} })",
+          "line": 160
+        },
+        {
+          "original": "console.error(\n              `Error verifying card ${lastChangeData.cardId} in cloud:`,\n              error\n            )",
+          "replacement": "logger.error(, { context: {\"file\":\"MoveVerification\",\"purpose\":\"error-handling\"} })",
+          "line": 199
+        },
+        {
+          "original": "console.error('Error verifying card movements:', error)",
+          "replacement": "logger.error('Error verifying card movements:', error, { context: {\"file\":\"MoveVerification\",\"purpose\":\"error-handling\"} })",
+          "line": 222
+        }
+      ]
+    },
+    {
+      "file": "src\\design-system\\components\\SettingsModal.js",
+      "consoleStatementsFound": 4,
+      "consoleStatementsReplaced": 4,
+      "changes": [
+        {
+          "original": "console.error('Error saving profile:', error)",
+          "replacement": "logger.error('Error saving profile:', error, { context: {\"file\":\"SettingsModal\",\"purpose\":\"error-handling\"} })",
+          "line": 187
+        },
+        {
+          "original": "console.error('Error renaming collection:', error)",
+          "replacement": "logger.error('Error renaming collection:', error, { context: {\"file\":\"SettingsModal\",\"purpose\":\"error-handling\"} })",
+          "line": 219
+        },
+        {
+          "original": "console.error(\n        'Verification prerequisites not met. User:',\n        user,\n        'Repo:',\n        cardRepository,\n        'Verifying:',\n        isVerifyingBackup\n      )",
+          "replacement": "logger.error(, { context: {\"file\":\"SettingsModal\",\"purpose\":\"error-handling\"} })",
+          "line": 711
+        },
+        {
+          "original": "console.error('Error during verification process:', error)",
+          "replacement": "logger.error('Error during verification process:', error, { context: {\"file\":\"SettingsModal\",\"purpose\":\"error-handling\"} })",
+          "line": 767
+        }
+      ]
+    },
+    {
+      "file": "src\\design-system\\components\\CardDetailsModal.js",
+      "consoleStatementsFound": 4,
+      "consoleStatementsReplaced": 4,
+      "changes": [
+        {
+          "original": "console.error('PSA search error:', psaData.error)",
+          "replacement": "logger.error('PSA search error:', psaData.error, { context: {\"file\":\"CardDetailsModal\",\"purpose\":\"error-handling\"} })",
+          "line": 145
+        },
+        {
+          "original": "console.error('Error searching PSA:', error)",
+          "replacement": "logger.error('Error searching PSA:', error, { context: {\"file\":\"CardDetailsModal\",\"purpose\":\"error-handling\"} })",
+          "line": 188
+        },
+        {
+          "original": "console.error('Error in onSave:', saveError)",
+          "replacement": "logger.error('Error in onSave:', saveError, { context: {\"file\":\"CardDetailsModal\",\"purpose\":\"error-handling\"} })",
+          "line": 391
+        },
+        {
+          "original": "console.error('Error saving card:', error)",
+          "replacement": "logger.error('Error saving card:', error, { context: {\"file\":\"CardDetailsModal\",\"purpose\":\"error-handling\"} })",
+          "line": 408
+        }
+      ]
+    },
+    {
+      "file": "src\\services\\sharingService.js",
+      "consoleStatementsFound": 4,
+      "consoleStatementsReplaced": 4,
+      "changes": [
+        {
+          "original": "console.error('Error getting shared collection:', error)",
+          "replacement": "logger.error('Error getting shared collection:', error, { context: {\"file\":\"sharingService\",\"purpose\":\"error-handling\"} })",
+          "line": 49
+        },
+        {
+          "original": "console.warn('Failed to increment view count:', error)",
+          "replacement": "logger.warn('Failed to increment view count:', error, { context: {\"file\":\"sharingService\",\"purpose\":\"error-handling\"} })",
+          "line": 66
+        },
+        {
+          "original": "console.error('Failed to copy to clipboard:', error)",
+          "replacement": "logger.error('Failed to copy to clipboard:', error, { context: {\"file\":\"sharingService\",\"purpose\":\"error-handling\"} })",
+          "line": 170
+        },
+        {
+          "original": "console.error('Failed to share:', error)",
+          "replacement": "logger.error('Failed to share:', error, { context: {\"file\":\"sharingService\",\"purpose\":\"error-handling\"} })",
+          "line": 203
+        }
+      ]
+    },
+    {
+      "file": "src\\components\\PurchaseInvoices\\CreateInvoiceModal.js",
+      "consoleStatementsFound": 3,
+      "consoleStatementsReplaced": 3,
+      "changes": [
+        {
+          "original": "console.log('Initializing form with editing invoice data:', memoizedEditingInvoice)",
+          "replacement": "logger.debug('Initializing form with editing invoice data:', memoizedEditingInvoice, { context: {\"file\":\"CreateInvoiceModal\"} })",
+          "line": 57
+        },
+        {
+          "original": "console.log('Initializing form with pre-selected cards')",
+          "replacement": "logger.debug('Initializing form with pre-selected cards', { context: {\"file\":\"CreateInvoiceModal\"} })",
+          "line": 70
+        },
+        {
+          "original": "console.error('Error saving invoice:', error)",
+          "replacement": "logger.error('Error saving invoice:', error, { context: {\"file\":\"CreateInvoiceModal\",\"purpose\":\"error-handling\"} })",
+          "line": 184
+        }
+      ]
+    },
+    {
+      "file": "src\\components\\Login.js",
+      "consoleStatementsFound": 3,
+      "consoleStatementsReplaced": 3,
+      "changes": [
+        {
+          "original": "console.error('Authentication error:', error)",
+          "replacement": "logger.error('Authentication error:', error, { context: {\"file\":\"Login\",\"purpose\":\"error-handling\"} })",
+          "line": 121
+        },
+        {
+          "original": "console.error('Google sign in error:', error)",
+          "replacement": "logger.error('Google sign in error:', error, { context: {\"file\":\"Login\",\"purpose\":\"error-handling\"} })",
+          "line": 139
+        },
+        {
+          "original": "console.error('Apple sign in error:', error)",
+          "replacement": "logger.error('Apple sign in error:', error, { context: {\"file\":\"Login\",\"purpose\":\"error-handling\"} })",
+          "line": 159
+        }
+      ]
+    },
+    {
+      "file": "src\\components\\NewCardForm.js",
+      "consoleStatementsFound": 3,
+      "consoleStatementsReplaced": 3,
+      "changes": [
+        {
+          "original": "console.error('Error saving to database:', error)",
+          "replacement": "logger.error('Error saving to database:', error, { context: {\"file\":\"NewCardForm\",\"purpose\":\"error-handling\"} })",
+          "line": 446
+        },
+        {
+          "original": "console.error('Batch import error:', error)",
+          "replacement": "logger.error('Batch import error:', error, { context: {\"file\":\"NewCardForm\",\"purpose\":\"error-handling\"} })",
+          "line": 450
+        },
+        {
+          "original": "console.log(\"PSA Data Fetched:\", data)",
+          "replacement": "logger.debug(\"PSA Data Fetched:\", data, { context: {\"file\":\"NewCardForm\"} })",
+          "line": 796
+        }
+      ]
+    },
+    {
+      "file": "src\\components\\PSADetailModal.js",
+      "consoleStatementsFound": 3,
+      "consoleStatementsReplaced": 3,
+      "changes": [
+        {
+          "original": "console.error('Error parsing PSA data:', parseError)",
+          "replacement": "logger.error('Error parsing PSA data:', parseError, { context: {\"file\":\"PSADetailModal\",\"purpose\":\"error-handling\"} })",
+          "line": 64
+        },
+        {
+          "original": "console.error('Error fetching PSA data:', err)",
+          "replacement": "logger.error('Error fetching PSA data:', err, { context: {\"file\":\"PSADetailModal\",\"purpose\":\"error-handling\"} })",
+          "line": 70
+        },
+        {
+          "original": "console.error('Error applying PSA data:', err)",
+          "replacement": "logger.error('Error applying PSA data:', err, { context: {\"file\":\"PSADetailModal\",\"purpose\":\"error-handling\"} })",
+          "line": 196
+        }
+      ]
+    },
+    {
+      "file": "src\\components\\PublicMarketplace.js",
+      "consoleStatementsFound": 3,
+      "consoleStatementsReplaced": 3,
+      "changes": [
+        {
+          "original": "console.warn('Error processing image for listing:', listing.id, error)",
+          "replacement": "logger.warn('Error processing image for listing:', listing.id, error, { context: {\"file\":\"PublicMarketplace\",\"purpose\":\"error-handling\"} })",
+          "line": 147
+        },
+        {
+          "original": "console.warn(\n            'Using fallback query due to index building:',\n            indexError\n          )",
+          "replacement": "logger.warn(, { context: {\"file\":\"PublicMarketplace\",\"purpose\":\"error-handling\"} })",
+          "line": 173
+        },
+        {
+          "original": "console.error('Error fetching marketplace listings:', err)",
+          "replacement": "logger.error('Error fetching marketplace listings:', err, { context: {\"file\":\"PublicMarketplace\",\"purpose\":\"error-handling\"} })",
+          "line": 207
+        }
+      ]
+    },
+    {
+      "file": "src\\components\\PSANotifications.js",
+      "consoleStatementsFound": 2,
+      "consoleStatementsReplaced": 2,
+      "changes": [
+        {
+          "original": "console.error(`PSA error (${errorType})",
+          "replacement": "logger.error(`PSA error (${errorType}, { context: {\"file\":\"PSANotifications\",\"purpose\":\"error-handling\"} })",
+          "line": 20
+        },
+        {
+          "original": "console.error('Error applying PSA data:', error)",
+          "replacement": "logger.error('Error applying PSA data:', error, { context: {\"file\":\"PSANotifications\",\"purpose\":\"error-handling\"} })",
+          "line": 102
+        }
+      ]
+    },
+    {
+      "file": "src\\components\\Marketplace\\DesktopMarketplaceMessages.js",
+      "consoleStatementsFound": 2,
+      "consoleStatementsReplaced": 2,
+      "changes": [
+        {
+          "original": "console.error('Error sending message:', error)",
+          "replacement": "logger.error('Error sending message:', error, { context: {\"file\":\"DesktopMarketplaceMessages\",\"purpose\":\"error-handling\"} })",
+          "line": 488
+        },
+        {
+          "original": "console.error(\n                              'Error opening seller profile:',\n                              error\n                            )",
+          "replacement": "logger.error(, { context: {\"file\":\"DesktopMarketplaceMessages\",\"purpose\":\"error-handling\"} })",
+          "line": 750
+        }
+      ]
+    },
+    {
+      "file": "src\\components\\Marketplace\\ListCardModal.js",
+      "consoleStatementsFound": 2,
+      "consoleStatementsReplaced": 2,
+      "changes": [
+        {
+          "original": "console.error(\n            `Error listing card ${card.card || cardId}:`,\n            cardError\n          )",
+          "replacement": "logger.error(, { context: {\"file\":\"ListCardModal\",\"purpose\":\"error-handling\"} })",
+          "line": 299
+        },
+        {
+          "original": "console.error('Error listing cards:', error)",
+          "replacement": "logger.error('Error listing cards:', error, { context: {\"file\":\"ListCardModal\",\"purpose\":\"error-handling\"} })",
+          "line": 324
+        }
+      ]
+    },
+    {
+      "file": "src\\components\\Marketplace\\MarketplaceSelling.js",
+      "consoleStatementsFound": 2,
+      "consoleStatementsReplaced": 2,
+      "changes": [
+        {
+          "original": "console.error('Error parsing saved filters:', error)",
+          "replacement": "logger.error('Error parsing saved filters:', error, { context: {\"file\":\"MarketplaceSelling\",\"purpose\":\"error-handling\"} })",
+          "line": 183
+        },
+        {
+          "original": "console.log('Marking listing as pending:', { id: listing.id, currentStatus: listing.status })",
+          "replacement": "logger.debug('Marking listing as pending:', { id: listing.id, currentStatus: listing.status }, { context: {\"file\":\"MarketplaceSelling\"} })",
+          "line": 423
+        }
+      ]
+    },
+    {
+      "file": "src\\components\\Marketplace\\Marketplace.js",
+      "consoleStatementsFound": 2,
+      "consoleStatementsReplaced": 2,
+      "changes": [
+        {
+          "original": "console.error('Error parsing saved filters:', error)",
+          "replacement": "logger.error('Error parsing saved filters:', error, { context: {\"file\":\"Marketplace\",\"purpose\":\"error-handling\"} })",
+          "line": 410
+        },
+        {
+          "original": "console.log('Opening seller profile for sellerId:', sellerId)",
+          "replacement": "logger.debug('Opening seller profile for sellerId:', sellerId, { context: {\"file\":\"Marketplace\"} })",
+          "line": 493
+        }
+      ]
+    },
+    {
+      "file": "src\\components\\Marketplace\\MarketplaceCard.js",
+      "consoleStatementsFound": 2,
+      "consoleStatementsReplaced": 2,
+      "changes": [
+        {
+          "original": "console.warn('Unable to extract valid image URL from:', imageData)",
+          "replacement": "logger.warn('Unable to extract valid image URL from:', imageData, { context: {\"file\":\"MarketplaceCard\"} })",
+          "line": 185
+        },
+        {
+          "original": "console.warn('Image failed to load:', alt)",
+          "replacement": "logger.warn('Image failed to load:', alt, { context: {\"file\":\"MarketplaceCard\",\"purpose\":\"error-handling\"} })",
+          "line": 209
+        }
+      ]
+    },
+    {
+      "file": "src\\components\\BottomNavBar.js",
+      "consoleStatementsFound": 2,
+      "consoleStatementsReplaced": 2,
+      "changes": [
+        {
+          "original": "console.error('Error navigating to view:', targetView, error)",
+          "replacement": "logger.error('Error navigating to view:', targetView, error, { context: {\"file\":\"BottomNavBar\",\"purpose\":\"error-handling\"} })",
+          "line": 39
+        },
+        {
+          "original": "console.error('Error opening settings:', error)",
+          "replacement": "logger.error('Error opening settings:', error, { context: {\"file\":\"BottomNavBar\",\"purpose\":\"error-handling\"} })",
+          "line": 54
+        }
+      ]
+    },
+    {
+      "file": "src\\contexts\\InvoiceContext.js",
+      "consoleStatementsFound": 2,
+      "consoleStatementsReplaced": 2,
+      "changes": [
+        {
+          "original": "console.error('Error loading invoice cards:', error)",
+          "replacement": "logger.error('Error loading invoice cards:', error, { context: {\"file\":\"InvoiceContext\",\"purpose\":\"error-handling\"} })",
+          "line": 39
+        },
+        {
+          "original": "console.error('Error refreshing invoice cards:', error)",
+          "replacement": "logger.error('Error refreshing invoice cards:', error, { context: {\"file\":\"InvoiceContext\",\"purpose\":\"error-handling\"} })",
+          "line": 76
+        }
+      ]
+    },
+    {
+      "file": "src\\design-system\\atoms\\ImageUpload.js",
+      "consoleStatementsFound": 2,
+      "consoleStatementsReplaced": 2,
+      "changes": [
+        {
+          "original": "console.warn('ImageUpload: onImageChange prop is not a function')",
+          "replacement": "logger.warn('ImageUpload: onImageChange prop is not a function', { context: {\"file\":\"ImageUpload\"} })",
+          "line": 57
+        },
+        {
+          "original": "console.warn('ImageUpload: onImageChange prop is not a function')",
+          "replacement": "logger.warn('ImageUpload: onImageChange prop is not a function', { context: {\"file\":\"ImageUpload\"} })",
+          "line": 69
+        }
+      ]
+    },
+    {
+      "file": "src\\design-system\\atoms\\ImageUploadButton.js",
+      "consoleStatementsFound": 2,
+      "consoleStatementsReplaced": 2,
+      "changes": [
+        {
+          "original": "console.warn(\n            'ImageUploadButton: onImageChange prop is not a function'\n          )",
+          "replacement": "logger.warn(, { context: {\"file\":\"ImageUploadButton\"} })",
+          "line": 51
+        },
+        {
+          "original": "console.warn('ImageUploadButton: onImageChange prop is not a function')",
+          "replacement": "logger.warn('ImageUploadButton: onImageChange prop is not a function', { context: {\"file\":\"ImageUploadButton\"} })",
+          "line": 65
+        }
+      ]
+    },
+    {
+      "file": "src\\firebase.js",
+      "consoleStatementsFound": 2,
+      "consoleStatementsReplaced": 2,
+      "changes": [
+        {
+          "original": "console.log('Auth persistence set to local')",
+          "replacement": "logger.debug('Auth persistence set to local', { context: {\"file\":\"firebase\"} })",
+          "line": 91
+        },
+        {
+          "original": "console.error('Error setting auth persistence:', error)",
+          "replacement": "logger.error('Error setting auth persistence:', error, { context: {\"file\":\"firebase\",\"purpose\":\"error-handling\"} })",
+          "line": 94
+        }
+      ]
+    },
+    {
+      "file": "src\\components\\Marketplace\\ListingDetailModal.js",
+      "consoleStatementsFound": 1,
+      "consoleStatementsReplaced": 1,
+      "changes": [
+        {
+          "original": "console.error('Failed to copy to clipboard:', err)",
+          "replacement": "logger.error('Failed to copy to clipboard:', err, { context: {\"file\":\"ListingDetailModal\",\"purpose\":\"error-handling\"} })",
+          "line": 106
+        }
+      ]
+    },
+    {
+      "file": "src\\components\\Marketplace\\MapView.js",
+      "consoleStatementsFound": 1,
+      "consoleStatementsReplaced": 1,
+      "changes": [
+        {
+          "original": "console.error('Geocoding error:', err)",
+          "replacement": "logger.error('Geocoding error:', err, { context: {\"file\":\"MapView\",\"purpose\":\"error-handling\"} })",
+          "line": 68
+        }
+      ]
+    },
+    {
+      "file": "src\\components\\Marketplace\\SellerReviewModal.js",
+      "consoleStatementsFound": 1,
+      "consoleStatementsReplaced": 1,
+      "changes": [
+        {
+          "original": "console.error('Error submitting review:', error)",
+          "replacement": "logger.error('Error submitting review:', error, { context: {\"file\":\"SellerReviewModal\",\"purpose\":\"error-handling\"} })",
+          "line": 120
+        }
+      ]
+    },
+    {
+      "file": "src\\components\\DataManagementSection.js",
+      "consoleStatementsFound": 1,
+      "consoleStatementsReplaced": 1,
+      "changes": [
+        {
+          "original": "console.error('Security verification error:', error)",
+          "replacement": "logger.error('Security verification error:', error, { context: {\"file\":\"DataManagementSection\",\"purpose\":\"error-handling\"} })",
+          "line": 123
+        }
+      ]
+    },
+    {
+      "file": "src\\components\\PSADatabaseStats.js",
+      "consoleStatementsFound": 1,
+      "consoleStatementsReplaced": 1,
+      "changes": [
+        {
+          "original": "console.error('Error fetching PSA database stats:', error)",
+          "replacement": "logger.error('Error fetching PSA database stats:', error, { context: {\"file\":\"PSADatabaseStats\",\"purpose\":\"error-handling\"} })",
+          "line": 25
+        }
+      ]
+    },
+    {
+      "file": "src\\components\\PokemonSets.js",
+      "consoleStatementsFound": 1,
+      "consoleStatementsReplaced": 1,
+      "changes": [
+        {
+          "original": "console.warn('Error parsing price string:', priceString, error)",
+          "replacement": "logger.warn('Error parsing price string:', priceString, error, { context: {\"file\":\"PokemonSets\",\"purpose\":\"error-handling\"} })",
+          "line": 42
+        }
+      ]
+    },
+    {
+      "file": "src\\components\\SyncStatusIndicator.js",
+      "consoleStatementsFound": 1,
+      "consoleStatementsReplaced": 1,
+      "changes": [
+        {
+          "original": "console.error('Error parsing feature flags:', error)",
+          "replacement": "logger.error('Error parsing feature flags:', error, { context: {\"file\":\"SyncStatusIndicator\",\"purpose\":\"error-handling\"} })",
+          "line": 30
+        }
+      ]
+    },
+    {
+      "file": "src\\components\\TutorialModal.js",
+      "consoleStatementsFound": 1,
+      "consoleStatementsReplaced": 1,
+      "changes": [
+        {
+          "original": "console.error(\n                        `Failed to load image: ${content.imageSrc}`\n                      )",
+          "replacement": "logger.error(, { context: {\"file\":\"TutorialModal\",\"purpose\":\"error-handling\"} })",
+          "line": 145
+        }
+      ]
+    },
+    {
+      "file": "src\\components\\MobileSettingsModal.js",
+      "consoleStatementsFound": 1,
+      "consoleStatementsReplaced": 1,
+      "changes": [
+        {
+          "original": "console.error('Error signing out:', error)",
+          "replacement": "logger.error('Error signing out:', error, { context: {\"file\":\"MobileSettingsModal\",\"purpose\":\"error-handling\"} })",
+          "line": 40
+        }
+      ]
+    },
+    {
+      "file": "src\\contexts\\TutorialContext.js",
+      "consoleStatementsFound": 1,
+      "consoleStatementsReplaced": 1,
+      "changes": [
+        {
+          "original": "console.error('Failed to save onboarding state', error)",
+          "replacement": "logger.error('Failed to save onboarding state', error, { context: {\"file\":\"TutorialContext\",\"purpose\":\"error-handling\"} })",
+          "line": 52
+        }
+      ]
+    },
+    {
+      "file": "src\\design-system\\atoms\\CardImage.js",
+      "consoleStatementsFound": 1,
+      "consoleStatementsReplaced": 1,
+      "changes": [
+        {
+          "original": "console.error(`Failed to load image: ${src}`)",
+          "replacement": "logger.error(`Failed to load image: ${src}`, { context: {\"file\":\"CardImage\",\"purpose\":\"error-handling\"} })",
+          "line": 33
+        }
+      ]
+    },
+    {
+      "file": "src\\design-system\\components\\Header.js",
+      "consoleStatementsFound": 1,
+      "consoleStatementsReplaced": 1,
+      "changes": [
+        {
+          "original": "console.error('Error changing view in Header:', error)",
+          "replacement": "logger.error('Error changing view in Header:', error, { context: {\"file\":\"Header\",\"purpose\":\"error-handling\"} })",
+          "line": 110
+        }
+      ]
+    },
+    {
+      "file": "src\\design-system\\molecules\\ConfirmDialog.js",
+      "consoleStatementsFound": 1,
+      "consoleStatementsReplaced": 1,
+      "changes": [
+        {
+          "original": "console.error('Error in confirmation action:', error)",
+          "replacement": "logger.error('Error in confirmation action:', error, { context: {\"file\":\"ConfirmDialog\",\"purpose\":\"error-handling\"} })",
+          "line": 45
+        }
+      ]
+    },
+    {
+      "file": "src\\hooks\\useCardData.js",
+      "consoleStatementsFound": 1,
+      "consoleStatementsReplaced": 1,
+      "changes": [
+        {
+          "original": "console.error(`[useCardData] Error updating card ${cardId}:`, err)",
+          "replacement": "logger.error(`[useCardData] Error updating card ${cardId}:`, err, { context: {\"file\":\"useCardData\",\"purpose\":\"error-handling\"} })",
+          "line": 215
+        }
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "file": "src\\utils\\CacheManager.js",
+      "error": "Invalid count value: -1"
+    },
+    {
+      "file": "src\\utils\\featureFlags.js",
+      "error": "Invalid count value: -1"
+    },
+    {
+      "file": "src\\utils\\ImageCache.js",
+      "error": "Invalid count value: -1"
+    },
+    {
+      "file": "src\\utils\\ImagePersistenceManager.js",
+      "error": "Invalid count value: -1"
+    },
+    {
+      "file": "src\\utils\\memoryOptimizer.js",
+      "error": "Invalid count value: -1"
+    },
+    {
+      "file": "src\\utils\\settingsManager.js",
+      "error": "Invalid count value: -1"
+    },
+    {
+      "file": "src\\utils\\productionLogger.js",
+      "error": "Invalid count value: -1"
+    },
+    {
+      "file": "src\\utils\\performanceMonitor.js",
+      "error": "Invalid count value: -1"
+    }
+  ]
+}

@@ -29,7 +29,7 @@ const TextField = ({
     text-gray-900 dark:text-white text-sm
     focus:outline-none focus:ring-2 focus:ring-[var(--primary-default)]/20 focus:border-[var(--primary-default)]
     disabled:opacity-60 disabled:cursor-not-allowed
-    placeholder-gray-500 dark:placeholder-gray-400
+    placeholder:text-gray-500 dark:placeholder:text-gray-400
     transition-colors
     ${className}
   `;
