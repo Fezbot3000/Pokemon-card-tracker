@@ -3,10 +3,9 @@ import PropTypes from 'prop-types';
 import Icon from '../atoms/Icon';
 import { useTheme } from '../contexts/ThemeContext';
 
-
 /**
  * SimpleSearchBar Component
- * 
+ *
  * A simplified search bar that matches the SearchToolbar styling but only includes
  * the search input. Used for Purchase Invoices, Sold Items, and Marketplace pages.
  */
@@ -23,10 +22,7 @@ const SimpleSearchBar = ({
   const containerClass = `w-full bg-white dark:bg-black py-3 px-4 ${isDarkMode ? 'shadow-sm' : ''} rounded-md border border-[#ffffff33] dark:border-[#ffffff1a] ${className}`;
 
   return (
-    <div 
-      className={containerClass} 
-      {...props}
-    >
+    <div className={containerClass} {...props}>
       {/* Search Input */}
       <div className="relative w-full">
         <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
@@ -35,7 +31,7 @@ const SimpleSearchBar = ({
         <input
           type="text"
           value={searchValue}
-          onChange={(e) => onSearchChange?.(e.target.value)}
+          onChange={e => onSearchChange?.(e.target.value)}
           placeholder={placeholder}
           className="focus:ring-[var(--primary-light)]/20 w-full rounded-lg border border-gray-300 bg-white py-2 pl-10 pr-4 text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 dark:border-gray-700 dark:bg-[#000] dark:text-white dark:placeholder:text-gray-400 dark:focus:bg-[#000]"
           data-component-name="SimpleSearchBar"
@@ -49,7 +45,7 @@ SimpleSearchBar.propTypes = {
   searchValue: PropTypes.string,
   onSearchChange: PropTypes.func,
   placeholder: PropTypes.string,
-  className: PropTypes.string
+  className: PropTypes.string,
 };
 
-export default SimpleSearchBar; 
+export default SimpleSearchBar;

@@ -3,19 +3,19 @@ import PropTypes from 'prop-types';
 
 /**
  * Toggle Switch Component
- * 
+ *
  * A customizable toggle switch for boolean inputs.
  */
-const Toggle = ({ 
-  checked = false, 
-  onChange, 
-  disabled = false, 
+const Toggle = ({
+  checked = false,
+  onChange,
+  disabled = false,
   label,
   id,
   name,
   size = 'md',
   className = '',
-  ...props 
+  ...props
 }) => {
   // Define sizes
   const sizes = {
@@ -23,26 +23,28 @@ const Toggle = ({
       toggle: 'w-8 h-4',
       circle: 'w-3 h-3',
       translate: 'translate-x-4',
-      text: 'text-sm'
+      text: 'text-sm',
     },
     md: {
       toggle: 'w-11 h-6',
       circle: 'w-5 h-5',
       translate: 'translate-x-5',
-      text: 'text-base'
+      text: 'text-base',
     },
     lg: {
       toggle: 'w-14 h-7',
       circle: 'w-6 h-6',
       translate: 'translate-x-7',
-      text: 'text-lg'
-    }
+      text: 'text-lg',
+    },
   };
 
   const currentSize = sizes[size] || sizes.md;
-  
+
   return (
-    <label className={`inline-flex cursor-pointer items-center ${disabled ? 'cursor-not-allowed opacity-50' : ''} ${className}`}>
+    <label
+      className={`inline-flex cursor-pointer items-center ${disabled ? 'cursor-not-allowed opacity-50' : ''} ${className}`}
+    >
       <div className="relative">
         <input
           type="checkbox"
@@ -55,17 +57,16 @@ const Toggle = ({
           {...props}
         />
         <div
-          className={`${currentSize.toggle} ${checked ? 'bg-gradient-to-r from-[#ef4444] to-[#db2777]' : 'bg-gray-200 dark:bg-gray-700'} 
-                      rounded-full transition-colors duration-200 ease-in-out`}
+          className={`${currentSize.toggle} ${checked ? 'bg-gradient-to-r from-[#ef4444] to-[#db2777]' : 'bg-gray-200 dark:bg-gray-700'} rounded-full transition-colors duration-200 ease-in-out`}
         />
         <div
-          className={`absolute left-0.5 top-0.5 ${currentSize.circle} bg-white rounded-full 
-                      shadow transform transition-transform duration-200 ease-in-out
-                      ${checked ? currentSize.translate : 'translate-x-0'}`}
+          className={`absolute left-0.5 top-0.5 ${currentSize.circle} rounded-full bg-white shadow transition-transform duration-200 ease-in-out ${checked ? currentSize.translate : 'translate-x-0'}`}
         />
       </div>
       {label && (
-        <span className={`ml-3 ${currentSize.text} text-gray-900 dark:text-gray-100`}>
+        <span
+          className={`ml-3 ${currentSize.text} text-gray-900 dark:text-gray-100`}
+        >
           {label}
         </span>
       )}
@@ -81,7 +82,7 @@ Toggle.propTypes = {
   id: PropTypes.string,
   name: PropTypes.string,
   size: PropTypes.oneOf(['sm', 'md', 'lg']),
-  className: PropTypes.string
+  className: PropTypes.string,
 };
 
 export default Toggle;

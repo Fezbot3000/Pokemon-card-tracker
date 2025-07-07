@@ -15,20 +15,20 @@ const OptimizedCard = memo(({ card, onCardClick, ...props }) => {
   const imageRef = useRef(null);
   const hasLoadedRef = useRef(false);
   const { isCardInInvoice } = useInvoiceContext();
-  
+
   // Load card image with caching
   useEffect(() => {
     if (!card || !card.id) return;
-    
+
     const loadImage = async () => {
       // First check if we already have the image URL set in state
       if (imageUrl && !isImageLoading) {
         return;
       }
-      
+
       // Check if image is already cached
       const cachedUrl = ImagePersistenceManager.getCachedImage(card.id);
-      
+
       if (cachedUrl) {
         // Use cached image
         setImageUrl(cachedUrl);
@@ -36,24 +36,24 @@ const OptimizedCard = memo(({ card, onCardClick, ...props }) => {
         hasLoadedRef.current = true;
         return;
       }
-      
+
       // No cached image, load from database
       setIsImageLoading(true);
-      
+
       try {
         // Get image from database
         const cardImage = await db.getCardImage(card.id);
-        
+
         if (cardImage) {
           // Create object URL and cache it
           const objectUrl = URL.createObjectURL(cardImage);
           setImageUrl(objectUrl);
-          
+
           // Store in cache
           ImagePersistenceManager.cacheImage(card.id, objectUrl);
-          
+
           // Add cleanup for the blob URL
-          window.addEventListener('card-images-cleanup', (event) => {
+          window.addEventListener('card-images-cleanup', event => {
             if (event.detail && event.detail.cardIds.includes(card.id)) {
               URL.revokeObjectURL(objectUrl);
             }
@@ -74,21 +74,21 @@ const OptimizedCard = memo(({ card, onCardClick, ...props }) => {
         hasLoadedRef.current = true;
       }
     };
-    
+
     loadImage();
-    
+
     // Cleanup function
     return () => {
       // The blob URLs will be cleaned up on card-images-cleanup event
     };
   }, [card?.id, imageUrl, isImageLoading]);
-  
-  const handleCardClick = (e) => {
+
+  const handleCardClick = e => {
     if (onCardClick) {
       onCardClick(e, card);
     }
   };
-  
+
   return (
     <div className="card-container" onClick={handleCardClick} {...props}>
       <div className="card-image-container">
@@ -97,10 +97,10 @@ const OptimizedCard = memo(({ card, onCardClick, ...props }) => {
             <span className="loading-spinner"></span>
           </div>
         ) : imageUrl ? (
-          <img 
+          <img
             ref={imageRef}
-            src={imageUrl} 
-            alt={card.pokemonName || 'Card'} 
+            src={imageUrl}
+            alt={card.pokemonName || 'Card'}
             className="card-image"
             loading="lazy"
           />
@@ -110,13 +110,22 @@ const OptimizedCard = memo(({ card, onCardClick, ...props }) => {
           </div>
         )}
       </div>
-      
+
       <div className="card-details">
         <div className="flex items-start justify-between">
-          <h3 className="card-title">{(card.card || card.cardName || card.pokemonName || card.name || card.player || 'Unnamed Card').toUpperCase()}</h3>
+          <h3 className="card-title">
+            {(
+              card.card ||
+              card.cardName ||
+              card.pokemonName ||
+              card.name ||
+              card.player ||
+              'Unnamed Card'
+            ).toUpperCase()}
+          </h3>
           {isCardInInvoice && card.id && isCardInInvoice(card.id) && (
-            <span 
-              className="material-icons ml-1 text-sm text-blue-500 dark:text-blue-400" 
+            <span
+              className="material-icons ml-1 text-sm text-blue-500 dark:text-blue-400"
               title="This card is attached to a purchase invoice"
             >
               receipt

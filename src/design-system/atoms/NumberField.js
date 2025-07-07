@@ -3,10 +3,10 @@ import PropTypes from 'prop-types';
 
 /**
  * NumberField Component
- * 
+ *
  * A specialized input field for numerical values with formatting options.
  */
-const NumberField = ({ 
+const NumberField = ({
   id,
   name,
   value,
@@ -25,9 +25,9 @@ const NumberField = ({
   ...props
 }) => {
   // Handle numeric input with validation
-  const handleChange = (e) => {
+  const handleChange = e => {
     const { value } = e.target;
-    
+
     // Less restrictive validation to allow more input patterns
     // Allow empty string, valid numbers, and numbers being typed (like '3.')
     if (value === '' || /^-?\d*\.?\d*$/.test(value)) {
@@ -36,8 +36,8 @@ const NumberField = ({
         target: {
           ...e.target,
           name,
-          value: value === '' ? '' : value
-        }
+          value: value === '' ? '' : value,
+        },
       });
     }
   };
@@ -62,19 +62,7 @@ const NumberField = ({
         min={min}
         max={max}
         step={step}
-        className={`
-          w-full px-3 py-2 
-          ${prefix ? 'pl-7' : ''}
-          ${suffix ? 'pr-10' : ''}
-          border ${error ? 'border-red-500 dark:border-red-400' : 'border-[#ffffff33] dark:border-[#ffffff1a]'}
-          rounded-lg bg-white dark:bg-[#0F0F0F] 
-          text-gray-900 dark:text-white text-sm
-          focus:outline-none focus:ring-2 focus:ring-[#E6185C]/20 focus:border-[#E6185C]
-          disabled:opacity-60 disabled:cursor-not-allowed
-          placeholder-gray-500 dark:placeholder-gray-400
-          transition-colors
-          ${className}
-        `}
+        className={`w-full px-3 py-2 ${prefix ? 'pl-7' : ''} ${suffix ? 'pr-10' : ''} border ${error ? 'border-red-500 dark:border-red-400' : 'border-[#ffffff33] dark:border-[#ffffff1a]'} rounded-lg bg-white text-sm text-gray-900 transition-colors placeholder:text-gray-500 focus:border-[#E6185C] focus:outline-none focus:ring-2 focus:ring-[#E6185C]/20 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-[#0F0F0F] dark:text-white dark:placeholder:text-gray-400 ${className} `}
         {...props}
       />
       {suffix && (
@@ -102,7 +90,7 @@ NumberField.propTypes = {
   max: PropTypes.number,
   step: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
   error: PropTypes.string,
-  className: PropTypes.string
+  className: PropTypes.string,
 };
 
 export default NumberField;

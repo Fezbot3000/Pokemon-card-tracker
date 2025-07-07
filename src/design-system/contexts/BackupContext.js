@@ -49,7 +49,7 @@ export const BackupProvider = ({ children }) => {
   };
 
   // Add a log entry
-  const addBackupLog = (message) => {
+  const addBackupLog = message => {
     setBackupLogs(prev => [...prev, message]);
   };
 

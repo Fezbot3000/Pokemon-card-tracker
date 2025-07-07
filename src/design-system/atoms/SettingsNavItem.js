@@ -4,16 +4,16 @@ import Icon from './Icon';
 
 /**
  * SettingsNavItem Component
- * 
+ *
  * A navigation item for the settings sidebar.
  */
-const SettingsNavItem = ({ 
-  icon, 
-  label, 
-  isActive, 
+const SettingsNavItem = ({
+  icon,
+  label,
+  isActive,
   onClick,
   className = '',
-  ...props 
+  ...props
 }) => {
   return (
     <button
@@ -25,7 +25,12 @@ const SettingsNavItem = ({
       } ${className}`}
       {...props}
     >
-      {icon && <Icon name={icon} className={`mr-3 ${isActive ? "text-purple-700 dark:text-purple-400" : "text-gray-500 dark:text-gray-400"}`} />}
+      {icon && (
+        <Icon
+          name={icon}
+          className={`mr-3 ${isActive ? 'text-purple-700 dark:text-purple-400' : 'text-gray-500 dark:text-gray-400'}`}
+        />
+      )}
       <span>{label}</span>
     </button>
   );

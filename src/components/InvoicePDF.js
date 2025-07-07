@@ -1,5 +1,12 @@
 import React from 'react';
-import { Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer';
+import {
+  Document,
+  Page,
+  Text,
+  View,
+  StyleSheet,
+  Font,
+} from '@react-pdf/renderer';
 
 // Create styles
 const styles = StyleSheet.create({
@@ -122,21 +129,21 @@ const InvoicePDF = ({ buyer, date, cards, invoiceId, profile }) => {
   const totalInvestment = cards.reduce((sum, card) => {
     // Try multiple possible field names for investment amount
     const investment = parseFloat(
-      card.originalInvestmentAmount || 
-      card.investmentAUD || 
-      card.investment || 
-      card.investmentInPreferredCurrency ||
-      0
+      card.originalInvestmentAmount ||
+        card.investmentAUD ||
+        card.investment ||
+        card.investmentInPreferredCurrency ||
+        0
     );
     return sum + investment;
   }, 0);
 
   const totalSale = cards.reduce((sum, card) => {
     const cardId = card.id || card.slabSerial;
-    
+
     // Try multiple possible field names for sale price
     let effectiveSalePrice = 0;
-    
+
     // Check for individual sale prices first
     if (card.soldPrices && card.soldPrices[cardId]) {
       effectiveSalePrice = parseFloat(card.soldPrices[cardId]);
@@ -144,14 +151,14 @@ const InvoicePDF = ({ buyer, date, cards, invoiceId, profile }) => {
       // Try various field names for sale price
       effectiveSalePrice = parseFloat(
         card.effectiveSalePrice ||
-        card.soldPrice || 
-        card.salePrice ||
-        card.finalValueAUD ||
-        card.soldFor ||
-        0
+          card.soldPrice ||
+          card.salePrice ||
+          card.finalValueAUD ||
+          card.soldFor ||
+          0
       );
     }
-    
+
     return sum + effectiveSalePrice;
   }, 0);
 
@@ -161,24 +168,32 @@ const InvoicePDF = ({ buyer, date, cards, invoiceId, profile }) => {
     <Document>
       <Page size="A4" style={styles.page}>
         <Text style={styles.header}>Pokemon Card Sales</Text>
-        
+
         <View style={styles.invoiceInfo}>
           <Text style={styles.invoiceTitle}>INVOICE</Text>
-          
+
           {/* Invoice Details */}
           <View style={styles.section}>
             <Text style={styles.infoText}>Invoice #: {invoiceId}</Text>
             <Text style={styles.infoText}>Date: {date}</Text>
           </View>
-          
+
           {/* Seller Information */}
           {profile && (
             <View style={styles.infoBlock}>
               <Text style={styles.infoLabel}>From:</Text>
-              {profile.companyName && <Text style={styles.infoText}>{profile.companyName}</Text>}
-              <Text style={styles.infoText}>{`${profile.firstName || ''} ${profile.lastName || ''}`}</Text>
-              {profile.mobileNumber && <Text style={styles.infoText}>{profile.mobileNumber}</Text>}
-              {profile.address && <Text style={styles.infoText}>{profile.address}</Text>}
+              {profile.companyName && (
+                <Text style={styles.infoText}>{profile.companyName}</Text>
+              )}
+              <Text
+                style={styles.infoText}
+              >{`${profile.firstName || ''} ${profile.lastName || ''}`}</Text>
+              {profile.mobileNumber && (
+                <Text style={styles.infoText}>{profile.mobileNumber}</Text>
+              )}
+              {profile.address && (
+                <Text style={styles.infoText}>{profile.address}</Text>
+              )}
             </View>
           )}
 
@@ -207,19 +222,19 @@ const InvoicePDF = ({ buyer, date, cards, invoiceId, profile }) => {
           </View>
 
           {/* Table Body */}
-          {cards.map((card) => {
+          {cards.map(card => {
             // Use the same logic as in totals calculation
             const investment = parseFloat(
-              card.originalInvestmentAmount || 
-              card.investmentAUD || 
-              card.investment || 
-              card.investmentInPreferredCurrency ||
-              0
+              card.originalInvestmentAmount ||
+                card.investmentAUD ||
+                card.investment ||
+                card.investmentInPreferredCurrency ||
+                0
             );
-            
+
             const cardId = card.id || card.slabSerial;
             let effectiveSalePrice = 0;
-            
+
             // Check for individual sale prices first
             if (card.soldPrices && card.soldPrices[cardId]) {
               effectiveSalePrice = parseFloat(card.soldPrices[cardId]);
@@ -227,20 +242,22 @@ const InvoicePDF = ({ buyer, date, cards, invoiceId, profile }) => {
               // Try various field names for sale price
               effectiveSalePrice = parseFloat(
                 card.effectiveSalePrice ||
-                card.soldPrice || 
-                card.salePrice ||
-                card.finalValueAUD ||
-                card.soldFor ||
-                0
+                  card.soldPrice ||
+                  card.salePrice ||
+                  card.finalValueAUD ||
+                  card.soldFor ||
+                  0
               );
             }
-            
+
             const profit = effectiveSalePrice - investment;
 
             return (
               <View key={card.slabSerial || card.id} style={styles.tableRow}>
                 <View style={[styles.col1, styles.tableCell]}>
-                  <Text>{card.card} {card.player ? `- ${card.player}` : ''}</Text>
+                  <Text>
+                    {card.card} {card.player ? `- ${card.player}` : ''}
+                  </Text>
                   <Text style={{ fontSize: 9, color: '#6b7280', marginTop: 2 }}>
                     Serial: {card.slabSerial || card.id}
                   </Text>
@@ -263,15 +280,21 @@ const InvoicePDF = ({ buyer, date, cards, invoiceId, profile }) => {
         <View style={styles.summary}>
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>Total Investment:</Text>
-            <Text style={styles.summaryValue}>{totalInvestment.toFixed(2)}</Text>
+            <Text style={styles.summaryValue}>
+              {totalInvestment.toFixed(2)}
+            </Text>
           </View>
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>Total Sale:</Text>
             <Text style={styles.summaryValue}>{totalSale.toFixed(2)}</Text>
           </View>
           <View style={styles.summaryRow}>
-            <Text style={[styles.summaryLabel, styles.totalProfit]}>Total Profit:</Text>
-            <Text style={[styles.summaryValue, styles.totalProfit]}>{totalProfit.toFixed(2)}</Text>
+            <Text style={[styles.summaryLabel, styles.totalProfit]}>
+              Total Profit:
+            </Text>
+            <Text style={[styles.summaryValue, styles.totalProfit]}>
+              {totalProfit.toFixed(2)}
+            </Text>
           </View>
         </View>
 
@@ -281,4 +304,4 @@ const InvoicePDF = ({ buyer, date, cards, invoiceId, profile }) => {
   );
 };
 
-export default InvoicePDF; 
+export default InvoicePDF;

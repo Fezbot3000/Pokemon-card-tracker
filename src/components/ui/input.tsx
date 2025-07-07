@@ -7,9 +7,12 @@ const inputVariants = cva(
   {
     variants: {
       variant: {
-        default: 'border-gray-200 focus-visible:ring-blue-500 dark:border-gray-800 dark:focus-visible:ring-blue-400',
-        error: 'border-red-500 focus-visible:ring-red-500 dark:border-red-400 dark:focus-visible:ring-red-400',
-        success: 'border-green-500 focus-visible:ring-green-500 dark:border-green-400 dark:focus-visible:ring-green-400',
+        default:
+          'border-gray-200 focus-visible:ring-blue-500 dark:border-gray-800 dark:focus-visible:ring-blue-400',
+        error:
+          'border-red-500 focus-visible:ring-red-500 dark:border-red-400 dark:focus-visible:ring-red-400',
+        success:
+          'border-green-500 focus-visible:ring-green-500 dark:border-green-400 dark:focus-visible:ring-green-400',
       },
       size: {
         default: 'h-10',
@@ -33,9 +36,12 @@ export interface InputProps
 }
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, variant, size, leftIcon, rightIcon, error, type, ...props }, ref) => {
+  (
+    { className, variant, size, leftIcon, rightIcon, error, type, ...props },
+    ref
+  ) => {
     const hasError = error || variant === 'error';
-    
+
     return (
       <div className="relative">
         {leftIcon && (
@@ -46,7 +52,11 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         <input
           type={type}
           className={cn(
-            inputVariants({ variant: hasError ? 'error' : variant, size, className }),
+            inputVariants({
+              variant: hasError ? 'error' : variant,
+              size,
+              className,
+            }),
             leftIcon && 'pl-10',
             rightIcon && 'pr-10'
           )}
@@ -68,4 +78,4 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
 
 Input.displayName = 'Input';
 
-export { Input, inputVariants }; 
+export { Input, inputVariants };

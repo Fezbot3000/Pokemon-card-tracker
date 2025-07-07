@@ -11,7 +11,13 @@ import Icon from '../../design-system/atoms/Icon';
 /**
  * Modal component for creating or editing a purchase invoice
  */
-const CreateInvoiceModal = ({ isOpen, onClose, onSave, editingInvoice = null, preSelectedCards = [] }) => {
+const CreateInvoiceModal = ({
+  isOpen,
+  onClose,
+  onSave,
+  editingInvoice = null,
+  preSelectedCards = [],
+}) => {
   const [selectedCards, setSelectedCards] = useState(preSelectedCards || []);
   const [seller, setSeller] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
@@ -20,13 +26,19 @@ const CreateInvoiceModal = ({ isOpen, onClose, onSave, editingInvoice = null, pr
   const [enlargedImage, setEnlargedImage] = useState(null);
   const { currentUser } = useAuth();
   const navigate = useNavigate();
-  
+
   // Memoize preSelectedCards to prevent unnecessary re-renders
-  const memoizedPreSelectedCards = useMemo(() => preSelectedCards, [preSelectedCards?.length, preSelectedCards?.[0]?.id]);
-  
+  const memoizedPreSelectedCards = useMemo(
+    () => preSelectedCards,
+    [preSelectedCards?.length, preSelectedCards?.[0]?.id]
+  );
+
   // Memoize editingInvoice to prevent unnecessary re-renders
-  const memoizedEditingInvoice = useMemo(() => editingInvoice, [editingInvoice?.id, editingInvoice?.invoiceNumber]);
-  
+  const memoizedEditingInvoice = useMemo(
+    () => editingInvoice,
+    [editingInvoice?.id, editingInvoice?.invoiceNumber]
+  );
+
   // Initialize form with editing invoice data or pre-selected cards
   useEffect(() => {
     if (!isOpen) {
@@ -39,151 +51,186 @@ const CreateInvoiceModal = ({ isOpen, onClose, onSave, editingInvoice = null, pr
       setEnlargedImage(null);
       return;
     }
-    
+
     if (memoizedEditingInvoice) {
       // We're in edit mode - populate form with invoice data
       // console.log('Initializing form with editing invoice data:', memoizedEditingInvoice);
       setSelectedCards(memoizedEditingInvoice.cards || []);
       setSeller(memoizedEditingInvoice.seller || '');
-      setDate(memoizedEditingInvoice.date || new Date().toISOString().split('T')[0]);
+      setDate(
+        memoizedEditingInvoice.date || new Date().toISOString().split('T')[0]
+      );
       setInvoiceNumber(memoizedEditingInvoice.invoiceNumber || '');
       setNotes(memoizedEditingInvoice.notes || '');
-    } else if (memoizedPreSelectedCards && memoizedPreSelectedCards.length > 0) {
+    } else if (
+      memoizedPreSelectedCards &&
+      memoizedPreSelectedCards.length > 0
+    ) {
       // Using pre-selected cards for a new invoice
       // console.log('Initializing form with pre-selected cards');
       setSelectedCards(memoizedPreSelectedCards);
-      
+
       // Pre-populate the purchase date from the first card's datePurchased field
       if (memoizedPreSelectedCards[0].datePurchased) {
         setDate(memoizedPreSelectedCards[0].datePurchased);
       }
-      
+
       // Generate a default invoice number based on date
       const today = new Date();
-      setInvoiceNumber(`INV-${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`);
-      
+      setInvoiceNumber(
+        `INV-${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}-${Math.floor(
+          Math.random() * 1000
+        )
+          .toString()
+          .padStart(3, '0')}`
+      );
+
       // Reset other fields for new invoice
       setSeller('');
       setNotes('');
     }
   }, [isOpen, memoizedEditingInvoice, memoizedPreSelectedCards]);
-  
+
   // Calculate total investment amount
   const totalInvestment = selectedCards.reduce((sum, card) => {
-    return sum + (parseFloat(card.originalInvestmentAmount || card.investmentAUD) || 0);
+    return (
+      sum +
+      (parseFloat(card.originalInvestmentAmount || card.investmentAUD) || 0)
+    );
   }, 0);
-  
+
   // Handle form submission
-  const handleSubmit = useCallback(async (e) => {
-    e.preventDefault();
-    
-    if (selectedCards.length === 0) {
-      toast.error('Please select at least one card');
-      return;
-    }
-    
-    if (!seller.trim()) {
-      toast.error('Please enter a seller name');
-      return;
-    }
-    
-    try {
-      // Prevent default form submission behavior that might cause navigation
-      e.stopPropagation();
-      
-      // Show loading toast
-      const loadingToast = toast.loading(memoizedEditingInvoice ? 'Updating invoice...' : 'Creating invoice...');
-      
-      // Prepare the card data - ensure all values are defined
-      const cardData = selectedCards.map(card => {
-        // Create a clean card object with no undefined values
-        const cleanCard = {
-          id: card.id || `card_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-          name: card.name || '',
-          player: card.player || '',
-          set: card.set || card.setName || '',
-          year: card.year || '',
-          cardNumber: card.cardNumber || '',
-          grade: card.grade || '',
-          gradeVendor: card.gradeVendor || '',
-          slabSerial: card.slabSerial || '',
-          // Use originalInvestmentAmount as primary source with investmentAUD as fallback
-          originalInvestmentAmount: parseFloat(card.originalInvestmentAmount || card.investmentAUD) || 0,
-          // Include image URL if available
-          imageUrl: card.imageUrl || card.image || '',
-          // Include all other properties that might be needed
-          ...card
+  const handleSubmit = useCallback(
+    async e => {
+      e.preventDefault();
+
+      if (selectedCards.length === 0) {
+        toast.error('Please select at least one card');
+        return;
+      }
+
+      if (!seller.trim()) {
+        toast.error('Please enter a seller name');
+        return;
+      }
+
+      try {
+        // Prevent default form submission behavior that might cause navigation
+        e.stopPropagation();
+
+        // Show loading toast
+        const loadingToast = toast.loading(
+          memoizedEditingInvoice ? 'Updating invoice...' : 'Creating invoice...'
+        );
+
+        // Prepare the card data - ensure all values are defined
+        const cardData = selectedCards.map(card => {
+          // Create a clean card object with no undefined values
+          const cleanCard = {
+            id:
+              card.id ||
+              `card_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            name: card.name || '',
+            player: card.player || '',
+            set: card.set || card.setName || '',
+            year: card.year || '',
+            cardNumber: card.cardNumber || '',
+            grade: card.grade || '',
+            gradeVendor: card.gradeVendor || '',
+            slabSerial: card.slabSerial || '',
+            // Use originalInvestmentAmount as primary source with investmentAUD as fallback
+            originalInvestmentAmount:
+              parseFloat(card.originalInvestmentAmount || card.investmentAUD) ||
+              0,
+            // Include image URL if available
+            imageUrl: card.imageUrl || card.image || '',
+            // Include all other properties that might be needed
+            ...card,
+          };
+
+          return cleanCard;
+        });
+
+        const invoiceData = {
+          id:
+            memoizedEditingInvoice?.id ||
+            `invoice_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          invoiceNumber: invoiceNumber.trim(),
+          seller: seller.trim(),
+          date,
+          notes: notes.trim(),
+          cards: cardData,
+          totalAmount: totalInvestment,
+          cardCount: cardData.length,
+          createdAt:
+            memoizedEditingInvoice?.createdAt || new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
         };
-        
-        return cleanCard;
-      });
-      
-      const invoiceData = {
-        id: memoizedEditingInvoice?.id || `invoice_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        invoiceNumber: invoiceNumber.trim(),
-        seller: seller.trim(),
-        date,
-        notes: notes.trim(),
-        cards: cardData,
-        totalAmount: totalInvestment,
-        cardCount: cardData.length,
-        createdAt: memoizedEditingInvoice?.createdAt || new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-      
-      // Call the onSave callback
-      await onSave(invoiceData);
-      
-      // Success feedback
-      toast.dismiss(loadingToast);
-      toast.success(memoizedEditingInvoice ? 'Invoice updated successfully!' : 'Invoice created successfully!');
-      
-      // Close modal
-      handleClose();
-      
-    } catch (error) {
-      console.error('Error saving invoice:', error);
-      toast.error('Failed to save invoice. Please try again.');
-    }
-  }, [selectedCards, seller, invoiceNumber, date, notes, totalInvestment, memoizedEditingInvoice, onSave]);
+
+        // Call the onSave callback
+        await onSave(invoiceData);
+
+        // Success feedback
+        toast.dismiss(loadingToast);
+        toast.success(
+          memoizedEditingInvoice
+            ? 'Invoice updated successfully!'
+            : 'Invoice created successfully!'
+        );
+
+        // Close modal
+        handleClose();
+      } catch (error) {
+        console.error('Error saving invoice:', error);
+        toast.error('Failed to save invoice. Please try again.');
+      }
+    },
+    [
+      selectedCards,
+      seller,
+      invoiceNumber,
+      date,
+      notes,
+      totalInvestment,
+      memoizedEditingInvoice,
+      onSave,
+    ]
+  );
 
   // Handle modal close
   const handleClose = useCallback(() => {
     setEnlargedImage(null);
     onClose();
   }, [onClose]);
-  
+
   // Handle image click to enlarge
   const handleImageClick = useCallback((imageUrl, cardName) => {
     setEnlargedImage({ url: imageUrl, name: cardName });
   }, []);
-  
+
   // Handle enlarged image close
   const handleEnlargedImageClose = useCallback(() => {
     setEnlargedImage(null);
   }, []);
-  
+
   if (!isOpen) return null;
-  
+
   return (
     <>
       <Modal
         isOpen={isOpen}
         onClose={handleClose}
-        title={editingInvoice ? "Edit Invoice Details" : "Invoice Details"}
+        title={editingInvoice ? 'Edit Invoice Details' : 'Invoice Details'}
         position="right"
         size="2xl"
         closeOnClickOutside={true}
         footer={
           <>
-            <Button 
-              variant="secondary" 
-              onClick={handleClose}
-            >
+            <Button variant="secondary" onClick={handleClose}>
               Cancel
             </Button>
-            <Button 
-              variant="primary" 
+            <Button
+              variant="primary"
               onClick={handleSubmit}
               leftIcon={<Icon name="receipt" />}
             >
@@ -201,39 +248,39 @@ const CreateInvoiceModal = ({ isOpen, onClose, onSave, editingInvoice = null, pr
                 name="invoiceNumber"
                 type="text"
                 value={invoiceNumber}
-                onChange={(e) => setInvoiceNumber(e.target.value)}
+                onChange={e => setInvoiceNumber(e.target.value)}
                 required={true}
               />
-              
+
               <FormField
                 label="Seller"
                 name="seller"
                 type="text"
                 value={seller}
-                onChange={(e) => setSeller(e.target.value)}
+                onChange={e => setSeller(e.target.value)}
                 placeholder="Enter seller name"
                 required={true}
               />
-              
+
               <FormField
                 label="Date"
                 name="date"
                 type="date"
                 value={date}
-                onChange={(e) => setDate(e.target.value)}
+                onChange={e => setDate(e.target.value)}
                 required={true}
               />
-              
+
               <FormField
                 label="Notes"
                 name="notes"
                 value={notes}
-                onChange={(e) => setNotes(e.target.value)}
+                onChange={e => setNotes(e.target.value)}
                 placeholder="Add any notes about this purchase"
                 multiline={true}
                 rows={3}
               />
-              
+
               <div className="border-t border-gray-200 pt-4 dark:border-gray-700">
                 <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-white">
                   Selected Cards
@@ -242,19 +289,28 @@ const CreateInvoiceModal = ({ isOpen, onClose, onSave, editingInvoice = null, pr
                   <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                     <thead className="bg-gray-50 dark:bg-black">
                       <tr>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                        <th
+                          scope="col"
+                          className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
+                        >
                           Card
                         </th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                        <th
+                          scope="col"
+                          className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
+                        >
                           Set / Year
                         </th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                        <th
+                          scope="col"
+                          className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
+                        >
                           Price
                         </th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-[#0F0F0F]">
-                      {selectedCards.map((card) => (
+                      {selectedCards.map(card => (
                         <tr key={card.id}>
                           <td className="px-6 py-4">
                             <div className="flex items-center space-x-3">
@@ -265,31 +321,49 @@ const CreateInvoiceModal = ({ isOpen, onClose, onSave, editingInvoice = null, pr
                                     src={card.imageUrl || card.image}
                                     alt={card.name || card.player || 'Card'}
                                     className="h-12 w-8 cursor-pointer rounded object-cover transition-opacity hover:opacity-80"
-                                    onClick={() => handleImageClick(card.imageUrl || card.image, card.name || card.player)}
-                                    onError={(e) => {
+                                    onClick={() =>
+                                      handleImageClick(
+                                        card.imageUrl || card.image,
+                                        card.name || card.player
+                                      )
+                                    }
+                                    onError={e => {
                                       e.target.style.display = 'none';
                                     }}
                                   />
                                 ) : (
                                   <div className="flex h-12 w-8 items-center justify-center rounded bg-gray-200 dark:bg-gray-700">
-                                    <span className="material-icons text-sm text-gray-400">image</span>
+                                    <span className="material-icons text-sm text-gray-400">
+                                      image
+                                    </span>
                                   </div>
                                 )}
                               </div>
-                              
+
                               {/* Card Details */}
                               <div className="min-w-0 flex-1">
-                                <div className="truncate text-sm font-medium text-gray-900 dark:text-white" title={card.name || card.player || 'Unnamed Card'}>
+                                <div
+                                  className="truncate text-sm font-medium text-gray-900 dark:text-white"
+                                  title={
+                                    card.name || card.player || 'Unnamed Card'
+                                  }
+                                >
                                   {card.name || card.player || 'Unnamed Card'}
                                 </div>
-                                <div className="truncate text-sm text-gray-500 dark:text-gray-400" title={`#${card.cardNumber}`}>
+                                <div
+                                  className="truncate text-sm text-gray-500 dark:text-gray-400"
+                                  title={`#${card.cardNumber}`}
+                                >
                                   #{card.cardNumber}
                                 </div>
                               </div>
                             </div>
                           </td>
                           <td className="px-6 py-4">
-                            <div className="truncate text-sm text-gray-900 dark:text-white" title={card.set || card.setName}>
+                            <div
+                              className="truncate text-sm text-gray-900 dark:text-white"
+                              title={card.set || card.setName}
+                            >
                               {card.set || card.setName}
                             </div>
                             <div className="text-sm text-gray-500 dark:text-gray-400">
@@ -297,7 +371,12 @@ const CreateInvoiceModal = ({ isOpen, onClose, onSave, editingInvoice = null, pr
                             </div>
                           </td>
                           <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
-                            ${parseFloat(card.originalInvestmentAmount || card.investmentAUD || 0).toFixed(2)}
+                            $
+                            {parseFloat(
+                              card.originalInvestmentAmount ||
+                                card.investmentAUD ||
+                                0
+                            ).toFixed(2)}
                           </td>
                         </tr>
                       ))}
@@ -305,7 +384,7 @@ const CreateInvoiceModal = ({ isOpen, onClose, onSave, editingInvoice = null, pr
                   </table>
                 </div>
               </div>
-              
+
               <div className="border-t border-gray-200 pt-4 dark:border-gray-700">
                 <div className="flex items-center justify-between rounded-lg bg-gray-50 p-4 dark:bg-black">
                   <div className="text-lg font-medium text-gray-900 dark:text-white">
@@ -323,7 +402,7 @@ const CreateInvoiceModal = ({ isOpen, onClose, onSave, editingInvoice = null, pr
 
       {/* Enlarged Image Modal */}
       {enlargedImage && (
-        <div 
+        <div
           className="bg-black/50 fixed inset-0 z-[9999] flex items-center justify-center p-8 backdrop-blur-sm"
           onClick={handleEnlargedImageClose}
         >
@@ -335,7 +414,7 @@ const CreateInvoiceModal = ({ isOpen, onClose, onSave, editingInvoice = null, pr
             >
               <span className="material-icons text-lg">close</span>
             </button>
-            
+
             {/* Image Container */}
             <div className="p-4">
               <div className="overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800">
@@ -343,10 +422,10 @@ const CreateInvoiceModal = ({ isOpen, onClose, onSave, editingInvoice = null, pr
                   src={enlargedImage.url}
                   alt={enlargedImage.name}
                   className="h-auto max-h-[50vh] w-full object-contain"
-                  onClick={(e) => e.stopPropagation()}
+                  onClick={e => e.stopPropagation()}
                 />
               </div>
-              
+
               {/* Card Name */}
               {enlargedImage.name && (
                 <div className="mt-3 text-center">

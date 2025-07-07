@@ -1,14 +1,21 @@
-import React, { useState, useEffect, useMemo, useCallback, useRef, Fragment } from 'react';
+import React, {
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+  useRef,
+  Fragment,
+} from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { 
-  Header, 
-  useTheme, 
+import {
+  Header,
+  useTheme,
   useAuth,
   toast,
-  SettingsModal, 
-  Icon
+  SettingsModal,
+  Icon,
 } from './design-system';
-import MobileSettingsModal from './components/MobileSettingsModal'; 
+import MobileSettingsModal from './components/MobileSettingsModal';
 import CardList from './components/CardList';
 import CardDetails from './components/CardDetails';
 import NewCardForm from './components/NewCardForm';
@@ -32,7 +39,16 @@ import RestoreListener from './components/RestoreListener';
 import SyncStatusIndicator from './components/SyncStatusIndicator';
 import featureFlags from './utils/featureFlags';
 import { CardRepository } from './repositories/CardRepository';
-import { doc, getDoc, setDoc, serverTimestamp, collection, getDocs, writeBatch, deleteDoc } from 'firebase/firestore';
+import {
+  doc,
+  getDoc,
+  setDoc,
+  serverTimestamp,
+  collection,
+  getDocs,
+  writeBatch,
+  deleteDoc,
+} from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, listAll } from 'firebase/storage';
 import { db as firestoreDb, storage } from './services/firebase';
 import shadowSync from './services/shadowSync';
@@ -56,7 +72,7 @@ function AppContent() {
   const [showProfitChangeModal, setShowProfitChangeModal] = useState(false);
   const [profitChangeData, setProfitChangeData] = useState({
     oldProfit: 0,
-    newProfit: 0
+    newProfit: 0,
   });
   const [currentView, setCurrentView] = useState('cards');
   const [initialCardCollection, setInitialCardCollection] = useState(null);
@@ -65,7 +81,7 @@ function AppContent() {
   const { currentUser } = useAuth();
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const location = useLocation();
-  
+
   const {
     cards,
     loading,
@@ -77,7 +93,7 @@ function AppContent() {
     clearSelectedCard,
     updateCard,
     deleteCard,
-    addCard
+    addCard,
   } = useCardData();
 
   const handleCloseDetailsModal = () => {
@@ -85,7 +101,11 @@ function AppContent() {
     setInitialCardCollection(null);
   };
 
-  const handleCardUpdate = async (cardId, updatedData, originalCollectionName) => {
+  const handleCardUpdate = async (
+    cardId,
+    updatedData,
+    originalCollectionName
+  ) => {
     try {
       await updateCard(cardId, updatedData, originalCollectionName);
       toast.success('Card updated successfully');
@@ -100,18 +120,30 @@ function AppContent() {
 
   // Update modal status whenever any modal opens/closes
   useEffect(() => {
-    const isModalOpen = showNewCardForm || importModalOpen || showSettings || showProfitChangeModal || selectedCard !== null;
+    const isModalOpen =
+      showNewCardForm ||
+      importModalOpen ||
+      showSettings ||
+      showProfitChangeModal ||
+      selectedCard !== null;
     setIsAnyModalOpen(isModalOpen);
-  }, [showNewCardForm, importModalOpen, showSettings, showProfitChangeModal, selectedCard]);
+  }, [
+    showNewCardForm,
+    importModalOpen,
+    showSettings,
+    showProfitChangeModal,
+    selectedCard,
+  ]);
 
   // Listen for modal open events from other components
   useEffect(() => {
-    const handleModalOpen = (event) => {
+    const handleModalOpen = event => {
       setIsAnyModalOpen(event.detail.isOpen);
     };
 
     window.addEventListener('modalStateChange', handleModalOpen);
-    return () => window.removeEventListener('modalStateChange', handleModalOpen);
+    return () =>
+      window.removeEventListener('modalStateChange', handleModalOpen);
   }, []);
 
   // Initialize collections from database
@@ -121,10 +153,15 @@ function AppContent() {
         const savedCollections = await db.getCollections();
         if (Object.keys(savedCollections).length > 0) {
           setCollections(savedCollections);
-          
+
           // Check if we have a saved selected collection
-          const savedSelectedCollection = localStorage.getItem('selectedCollection');
-          if (savedSelectedCollection && (savedSelectedCollection === 'All Cards' || savedCollections[savedSelectedCollection])) {
+          const savedSelectedCollection =
+            localStorage.getItem('selectedCollection');
+          if (
+            savedSelectedCollection &&
+            (savedSelectedCollection === 'All Cards' ||
+              savedCollections[savedSelectedCollection])
+          ) {
             setSelectedCollection(savedSelectedCollection);
           } else {
             // Default to 'All Cards' if no saved selection or saved selection doesn't exist
@@ -133,10 +170,10 @@ function AppContent() {
           }
         } else {
           // Create default collection if none exist
-          const defaultCollection = { 
-            id: 'default', 
-            name: 'Default Collection', 
-            cards: [] 
+          const defaultCollection = {
+            id: 'default',
+            name: 'Default Collection',
+            cards: [],
           };
           await db.saveCollection('Default Collection', defaultCollection);
           setCollections({ 'Default Collection': defaultCollection });
@@ -180,7 +217,7 @@ function AppContent() {
 
   // Keyboard shortcuts
   useEffect(() => {
-    const handleKeyDown = (e) => {
+    const handleKeyDown = e => {
       // Don't trigger shortcuts if user is typing in an input
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
         return;
@@ -217,14 +254,14 @@ function AppContent() {
   // Filter cards based on selected collection
   const filteredCards = useMemo(() => {
     if (!cards || cards.length === 0) return [];
-    
+
     if (selectedCollection === 'All Cards') {
       return cards;
     }
-    
+
     const collection = collections[selectedCollection];
     if (!collection || !collection.cards) return [];
-    
+
     return cards.filter(card => collection.cards.includes(card.id));
   }, [cards, selectedCollection, collections]);
 
@@ -243,7 +280,7 @@ function AppContent() {
     if (savedProfit && totalProfit !== parseFloat(savedProfit)) {
       setProfitChangeData({
         oldProfit: parseFloat(savedProfit),
-        newProfit: totalProfit
+        newProfit: totalProfit,
       });
       setShowProfitChangeModal(true);
     }
@@ -266,14 +303,14 @@ function AppContent() {
         if (collection) {
           const updatedCollection = {
             ...collection,
-            cards: [...(collection.cards || []), cardData.id]
+            cards: [...(collection.cards || []), cardData.id],
           };
-          
+
           await db.saveCollection(selectedCollection, updatedCollection);
-          
+
           setCollections(prev => ({
             ...prev,
-            [selectedCollection]: updatedCollection
+            [selectedCollection]: updatedCollection,
           }));
         }
       }
@@ -290,18 +327,18 @@ function AppContent() {
   const handleImportData = async (data, mode) => {
     try {
       const processedData = processImportedData(data, mode);
-      
+
       if (mode === 'priceUpdate') {
         // Update existing cards with new prices
         for (const update of processedData) {
-          const existingCard = cards.find(card => 
-            card.name === update.name || card.id === update.id
+          const existingCard = cards.find(
+            card => card.name === update.name || card.id === update.id
           );
-          
+
           if (existingCard) {
             await updateCard(existingCard.id, {
               currentValueAUD: update.currentValueAUD,
-              currentValueUSD: update.currentValueUSD
+              currentValueUSD: update.currentValueUSD,
             });
           }
         }
@@ -313,7 +350,7 @@ function AppContent() {
         }
         toast.success(`Imported ${processedData.length} cards`);
       }
-      
+
       setImportModalOpen(false);
     } catch (error) {
       logger.error('Error importing data:', error);
@@ -321,19 +358,21 @@ function AppContent() {
     }
   };
 
-  const handleDeleteCard = async (cardId) => {
+  const handleDeleteCard = async cardId => {
     try {
       await deleteCard(cardId);
-      
+
       // Remove card from all collections
       const updatedCollections = { ...collections };
-      for (const [collectionName, collection] of Object.entries(updatedCollections)) {
+      for (const [collectionName, collection] of Object.entries(
+        updatedCollections
+      )) {
         if (collection.cards && collection.cards.includes(cardId)) {
           collection.cards = collection.cards.filter(id => id !== cardId);
           await db.saveCollection(collectionName, collection);
         }
       }
-      
+
       setCollections(updatedCollections);
       toast.success('Card deleted successfully');
     } catch (error) {
@@ -342,26 +381,30 @@ function AppContent() {
     }
   };
 
-  const handleDeleteCards = async (cardIds) => {
+  const handleDeleteCards = async cardIds => {
     try {
       // Delete each card
       for (const cardId of cardIds) {
         await deleteCard(cardId);
       }
-      
+
       // Remove cards from all collections
       const updatedCollections = { ...collections };
-      for (const [collectionName, collection] of Object.entries(updatedCollections)) {
+      for (const [collectionName, collection] of Object.entries(
+        updatedCollections
+      )) {
         if (collection.cards) {
           const originalLength = collection.cards.length;
-          collection.cards = collection.cards.filter(id => !cardIds.includes(id));
-          
+          collection.cards = collection.cards.filter(
+            id => !cardIds.includes(id)
+          );
+
           if (collection.cards.length !== originalLength) {
             await db.saveCollection(collectionName, collection);
           }
         }
       }
-      
+
       setCollections(updatedCollections);
       toast.success(`Deleted ${cardIds.length} cards successfully`);
     } catch (error) {
@@ -370,17 +413,17 @@ function AppContent() {
     }
   };
 
-  const handleCollectionChange = (newCollection) => {
+  const handleCollectionChange = newCollection => {
     setSelectedCollection(newCollection);
     localStorage.setItem('selectedCollection', newCollection);
   };
 
-  const handleCardClick = (card) => {
+  const handleCardClick = card => {
     selectCard(card);
     setInitialCardCollection(selectedCollection);
   };
 
-  const handleImportClick = (mode) => {
+  const handleImportClick = mode => {
     setImportMode(mode);
     setImportModalOpen(true);
   };
@@ -389,19 +432,24 @@ function AppContent() {
   const initializeDatabaseAndLoadCollections = useCallback(async () => {
     try {
       setIsLoading(true);
-      
+
       // Ensure database is initialized
       await db.ensureDB();
-      
+
       // Load collections
       const savedCollections = await db.getCollections();
-      
+
       if (Object.keys(savedCollections).length > 0) {
         setCollections(savedCollections);
-        
+
         // Check if we have a saved selected collection
-        const savedSelectedCollection = localStorage.getItem('selectedCollection');
-        if (savedSelectedCollection && (savedSelectedCollection === 'All Cards' || savedCollections[savedSelectedCollection])) {
+        const savedSelectedCollection =
+          localStorage.getItem('selectedCollection');
+        if (
+          savedSelectedCollection &&
+          (savedSelectedCollection === 'All Cards' ||
+            savedCollections[savedSelectedCollection])
+        ) {
           setSelectedCollection(savedSelectedCollection);
         } else {
           setSelectedCollection('All Cards');
@@ -409,10 +457,10 @@ function AppContent() {
         }
       } else {
         // Create default collection if none exist
-        const defaultCollection = { 
-          id: 'default', 
-          name: 'Default Collection', 
-          cards: [] 
+        const defaultCollection = {
+          id: 'default',
+          name: 'Default Collection',
+          cards: [],
         };
         await db.saveCollection('Default Collection', defaultCollection);
         setCollections({ 'Default Collection': defaultCollection });
@@ -420,7 +468,10 @@ function AppContent() {
         localStorage.setItem('selectedCollection', 'Default Collection');
       }
     } catch (error) {
-      logger.error('Error initializing database and loading collections:', error);
+      logger.error(
+        'Error initializing database and loading collections:',
+        error
+      );
       toast.error('Failed to initialize database');
     } finally {
       setIsLoading(false);
@@ -463,14 +514,15 @@ function AppContent() {
     // Your existing reset data logic
   };
 
-  const handleModalOpenEvent = (event) => {
+  const handleModalOpenEvent = event => {
     setIsAnyModalOpen(event.detail.isOpen);
   };
 
   // Listen for modal state changes
   useEffect(() => {
     window.addEventListener('modalStateChange', handleModalOpenEvent);
-    return () => window.removeEventListener('modalStateChange', handleModalOpenEvent);
+    return () =>
+      window.removeEventListener('modalStateChange', handleModalOpenEvent);
   }, []);
 
   if (isLoading) {
@@ -488,7 +540,7 @@ function AppContent() {
     <div className="bg-dark-bg flex min-h-screen flex-col text-white">
       {/* Desktop Header */}
       {!isMobile && (
-        <Header 
+        <Header
           onAddCard={() => setShowNewCardForm(true)}
           onImportClick={handleImportClick}
           onExportClick={() => handleExportData()}
@@ -497,14 +549,16 @@ function AppContent() {
           onCollectionChange={handleCollectionChange}
           setCollections={setCollections}
           currentView={currentView}
-          onViewChange={(view) => {
+          onViewChange={view => {
             setCurrentView(view);
             if (view === 'settings') {
               setShowSettings(true);
             }
           }}
           onSettingsClick={handleSettingsClick}
-          isModalOpen={selectedCard !== null || showNewCardForm || isAnyModalOpen}
+          isModalOpen={
+            selectedCard !== null || showNewCardForm || isAnyModalOpen
+          }
         />
       )}
 
@@ -525,32 +579,22 @@ function AppContent() {
             onCollectionChange={handleCollectionChange}
           />
         )}
-        
-        {currentView === 'sold-items' && (
-          <SoldItems />
-        )}
-        
-        {currentView === 'purchase-invoices' && (
-          <PurchaseInvoices />
-        )}
-        
-        {currentView === 'marketplace' && (
-          <Marketplace />
-        )}
-        
-        {currentView === 'marketplace-selling' && (
-          <MarketplaceSelling />
-        )}
-        
-        {currentView === 'marketplace-messages' && (
-          <MarketplaceMessages />
-        )}
-        
+
+        {currentView === 'sold-items' && <SoldItems />}
+
+        {currentView === 'purchase-invoices' && <PurchaseInvoices />}
+
+        {currentView === 'marketplace' && <Marketplace />}
+
+        {currentView === 'marketplace-selling' && <MarketplaceSelling />}
+
+        {currentView === 'marketplace-messages' && <MarketplaceMessages />}
+
         {currentView === 'cloud-sync' && (
           <CloudSync
-            onImportAndMigrate={(file) => importAndCloudMigrate(file)}
-            onUploadImages={(file) => uploadImagesFromZip(file)}
-            onImportSoldItems={(file) => importSoldItemsFromZip(file)}
+            onImportAndMigrate={file => importAndCloudMigrate(file)}
+            onUploadImages={file => uploadImagesFromZip(file)}
+            onImportSoldItems={file => importSoldItemsFromZip(file)}
           />
         )}
       </div>
@@ -559,7 +603,7 @@ function AppContent() {
       {isMobile && (
         <BottomNavBar
           currentView={currentView}
-          onViewChange={(view) => {
+          onViewChange={view => {
             setCurrentView(view);
             if (view !== 'settings' && showSettings) {
               setShowSettings(false);
@@ -569,7 +613,9 @@ function AppContent() {
             }
           }}
           onSettingsClick={handleSettingsClick}
-          isModalOpen={selectedCard !== null || showNewCardForm || isAnyModalOpen}
+          isModalOpen={
+            selectedCard !== null || showNewCardForm || isAnyModalOpen
+          }
         />
       )}
 
@@ -590,7 +636,9 @@ function AppContent() {
           isOpen={showNewCardForm}
           onClose={() => setShowNewCardForm(false)}
           onSave={handleAddCard}
-          selectedCollection={selectedCollection === 'All Cards' ? null : selectedCollection}
+          selectedCollection={
+            selectedCollection === 'All Cards' ? null : selectedCollection
+          }
         />
       )}
 
@@ -632,23 +680,36 @@ function AppContent() {
       )}
 
       {/* Add RestoreListener at the App component level */}
-      <RestoreListener 
+      <RestoreListener
         onRefreshData={() => {
           logger.log('App: Refreshing data after restore/backup');
-          db.getCollections().then(savedCollections => {
-            if (Object.keys(savedCollections).length > 0) {
-              setCollections(savedCollections);
-              if (!selectedCollection || (selectedCollection !== 'All Cards' && !savedCollections[selectedCollection])) {
-                const newCollection = Object.keys(savedCollections)[0];
-                setSelectedCollection(newCollection);
-                localStorage.setItem('selectedCollection', newCollection);
-                logger.log(`App: Selected new collection after restore: ${newCollection}`);
+          db.getCollections()
+            .then(savedCollections => {
+              if (Object.keys(savedCollections).length > 0) {
+                setCollections(savedCollections);
+                if (
+                  !selectedCollection ||
+                  (selectedCollection !== 'All Cards' &&
+                    !savedCollections[selectedCollection])
+                ) {
+                  const newCollection = Object.keys(savedCollections)[0];
+                  setSelectedCollection(newCollection);
+                  localStorage.setItem('selectedCollection', newCollection);
+                  logger.log(
+                    `App: Selected new collection after restore: ${newCollection}`
+                  );
+                }
+                toast.success(
+                  'Data restored successfully! Your collections are now available.'
+                );
               }
-              toast.success('Data restored successfully! Your collections are now available.');
-            }
-          }).catch(error => {
-            logger.error('Error refreshing collections after restore:', error);
-          });
+            })
+            .catch(error => {
+              logger.error(
+                'Error refreshing collections after restore:',
+                error
+              );
+            });
         }}
       />
 

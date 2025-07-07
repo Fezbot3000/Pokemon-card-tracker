@@ -27,21 +27,21 @@ export const useLazyImage = (src, placeholder = '/placeholder.png') => {
               ) {
                 // Start loading the image
                 const img = new Image();
-                
+
                 img.onload = () => {
                   if (!didCancel) {
                     setImageSrc(src);
                     setIsLoaded(true);
                   }
                 };
-                
+
                 img.onerror = () => {
                   if (!didCancel) {
                     setIsError(true);
                     // Keep placeholder on error
                   }
                 };
-                
+
                 img.src = src;
                 observer.unobserve(imageRef.current);
               }

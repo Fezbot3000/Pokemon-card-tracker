@@ -1,7 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
+import {
+  collection,
+  query,
+  where,
+  orderBy,
+  limit,
+  getDocs,
+} from 'firebase/firestore';
 import { db as firestoreDb } from '../services/firebase';
 import NavigationBar from './NavigationBar';
 import Footer from './Footer';
@@ -18,7 +25,7 @@ const PublicMarketplace = () => {
   const navigate = useNavigate();
 
   // Helper function to ensure we have a string URL (same as authenticated marketplace)
-  const ensureStringUrl = (imageData) => {
+  const ensureStringUrl = imageData => {
     if (!imageData) return null;
 
     // If it's already a string, return it
@@ -39,7 +46,8 @@ const PublicMarketplace = () => {
       if (imageData.uri) return imageData.uri;
       if (imageData.href) return imageData.href;
       if (imageData.downloadURL) return imageData.downloadURL;
-      if (imageData.path && typeof imageData.path === 'string') return imageData.path;
+      if (imageData.path && typeof imageData.path === 'string')
+        return imageData.path;
 
       // If it has a toString method, try that
       if (typeof imageData.toString === 'function') {
@@ -51,7 +59,11 @@ const PublicMarketplace = () => {
     }
 
     // If it's a Blob with a type
-    if (imageData instanceof Blob && imageData.type && imageData.type.startsWith('image/')) {
+    if (
+      imageData instanceof Blob &&
+      imageData.type &&
+      imageData.type.startsWith('image/')
+    ) {
       return window.URL.createObjectURL(imageData);
     }
 
@@ -60,7 +72,7 @@ const PublicMarketplace = () => {
   };
 
   // Load card images (same logic as authenticated marketplace)
-  const loadCardImages = async (listingsData) => {
+  const loadCardImages = async listingsData => {
     if (!listingsData || listingsData.length === 0) return;
 
     const newCardImages = {};
@@ -93,7 +105,12 @@ const PublicMarketplace = () => {
         }
 
         // Check all other possible image properties
-        const possibleImageProps = ['frontImageUrl', 'backImageUrl', 'imageData', 'cardImageUrl'];
+        const possibleImageProps = [
+          'frontImageUrl',
+          'backImageUrl',
+          'imageData',
+          'cardImageUrl',
+        ];
         let foundImage = false;
 
         for (const prop of possibleImageProps) {
@@ -139,9 +156,9 @@ const PublicMarketplace = () => {
       try {
         setLoading(true);
         setError(null);
-        
+
         const marketplaceRef = collection(firestoreDb, 'marketplaceItems');
-        
+
         // First try with the same query structure as authenticated marketplace
         let marketplaceQuery;
         try {
@@ -153,37 +170,44 @@ const PublicMarketplace = () => {
           );
         } catch (indexError) {
           // Fallback to simpler query if index is building
-          console.warn('Using fallback query due to index building:', indexError);
+          console.warn(
+            'Using fallback query due to index building:',
+            indexError
+          );
           marketplaceQuery = query(
             marketplaceRef,
             where('status', '==', 'available'),
             limit(50)
           );
         }
-        
+
         const querySnapshot = await getDocs(marketplaceQuery);
         let listingsData = querySnapshot.docs.map(doc => ({
           id: doc.id,
-          ...doc.data()
+          ...doc.data(),
         }));
-        
+
         // Manual sort if we used fallback query
         if (listingsData.length > 0 && !listingsData[0].timestampListed) {
           // Try with different timestamp field names
           listingsData.sort((a, b) => {
-            const timeA = a.timestampListed?.seconds || a.createdAt?.seconds || 0;
-            const timeB = b.timestampListed?.seconds || b.createdAt?.seconds || 0;
+            const timeA =
+              a.timestampListed?.seconds || a.createdAt?.seconds || 0;
+            const timeB =
+              b.timestampListed?.seconds || b.createdAt?.seconds || 0;
             return timeB - timeA;
           });
         }
-        
+
         setListings(listingsData);
-        
+
         // Load card images after getting listings
         await loadCardImages(listingsData);
       } catch (err) {
         console.error('Error fetching marketplace listings:', err);
-        setError('Unable to load marketplace listings. Please try again later.');
+        setError(
+          'Unable to load marketplace listings. Please try again later.'
+        );
       } finally {
         setLoading(false);
       }
@@ -196,21 +220,28 @@ const PublicMarketplace = () => {
     navigate('/login');
   };
 
-  const formatPrice = (price) => {
+  const formatPrice = price => {
     return new Intl.NumberFormat('en-AU', {
       style: 'currency',
-      currency: 'AUD'
+      currency: 'AUD',
     }).format(price);
   };
 
   // Get card name using same logic as MarketplaceCard
-  const getCardName = (listing) => {
+  const getCardName = listing => {
     const card = listing.card || {};
-    return card.cardName || card.card || card.name || card.player || listing.title || 'Unnamed Card';
+    return (
+      card.cardName ||
+      card.card ||
+      card.name ||
+      card.player ||
+      listing.title ||
+      'Unnamed Card'
+    );
   };
 
   // Get card image using loaded images
-  const getCardImage = (listing) => {
+  const getCardImage = listing => {
     const card = listing.card || {};
     const cardId = card.slabSerial || card.id || listing.cardId;
     return cardImages[cardId] || null;
@@ -219,38 +250,59 @@ const PublicMarketplace = () => {
   return (
     <div className="min-h-screen bg-[#1B2131] text-white">
       <Helmet>
-        <title>Pokemon Card Marketplace Australia | Buy & Sell Trading Cards</title>
-        <meta name="description" content="Browse Pokemon cards for sale in Australia. Find graded cards, vintage collections, and rare Pokemon cards from trusted sellers. Join our secure marketplace today!" />
-        <meta name="keywords" content="pokemon cards for sale australia, buy pokemon cards online, sell pokemon cards australia, pokemon card marketplace, graded pokemon cards for sale, vintage pokemon cards australia, PSA pokemon cards, BGS pokemon cards, pokemon trading cards marketplace" />
-        <meta property="og:title" content="Pokemon Card Marketplace Australia | Buy & Sell Trading Cards" />
-        <meta property="og:description" content="Browse Pokemon cards for sale in Australia. Find graded cards, vintage collections, and rare Pokemon cards from trusted sellers." />
-        <meta property="og:url" content="https://www.mycardtracker.com.au/marketplace" />
+        <title>
+          Pokemon Card Marketplace Australia | Buy & Sell Trading Cards
+        </title>
+        <meta
+          name="description"
+          content="Browse Pokemon cards for sale in Australia. Find graded cards, vintage collections, and rare Pokemon cards from trusted sellers. Join our secure marketplace today!"
+        />
+        <meta
+          name="keywords"
+          content="pokemon cards for sale australia, buy pokemon cards online, sell pokemon cards australia, pokemon card marketplace, graded pokemon cards for sale, vintage pokemon cards australia, PSA pokemon cards, BGS pokemon cards, pokemon trading cards marketplace"
+        />
+        <meta
+          property="og:title"
+          content="Pokemon Card Marketplace Australia | Buy & Sell Trading Cards"
+        />
+        <meta
+          property="og:description"
+          content="Browse Pokemon cards for sale in Australia. Find graded cards, vintage collections, and rare Pokemon cards from trusted sellers."
+        />
+        <meta
+          property="og:url"
+          content="https://www.mycardtracker.com.au/marketplace"
+        />
         <meta property="og:type" content="website" />
-        <link rel="canonical" href="https://www.mycardtracker.com.au/marketplace" />
+        <link
+          rel="canonical"
+          href="https://www.mycardtracker.com.au/marketplace"
+        />
       </Helmet>
       <NavigationBar />
-      
+
       {/* Hero Section */}
       <section className="relative overflow-hidden px-4 pb-16 pt-24 sm:px-6 sm:pb-20 sm:pt-28 md:pb-24 md:pt-32 lg:px-8">
         <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 via-purple-600/10 to-pink-600/10"></div>
-        
+
         <div className="relative z-10 mx-auto max-w-4xl text-center">
           <div className="bg-white/10 border-white/20 mb-6 inline-flex items-center rounded-full border px-3 py-1.5 text-xs font-medium backdrop-blur-sm sm:mb-8 sm:px-4 sm:py-2 sm:text-sm">
             <span className="mr-2 size-1.5 rounded-full bg-green-400 sm:size-2"></span>
             Secure Trading Platform
           </div>
-          
+
           <h1 className="mb-4 text-3xl font-bold leading-tight sm:mb-6 sm:text-4xl md:text-5xl lg:text-6xl">
             Pokemon Card
             <span className="block bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
               Marketplace
             </span>
           </h1>
-          
+
           <p className="mx-auto mb-8 max-w-3xl text-base leading-relaxed text-gray-300 sm:mb-12 sm:text-lg md:text-xl lg:text-2xl">
-            Discover rare Pokemon cards, graded collectibles, and vintage treasures from trusted sellers across Australia.
+            Discover rare Pokemon cards, graded collectibles, and vintage
+            treasures from trusted sellers across Australia.
           </p>
-          
+
           <div className="flex flex-col justify-center gap-4 sm:flex-row">
             <button
               onClick={handleSignUpPrompt}
@@ -272,8 +324,12 @@ const PublicMarketplace = () => {
       <section className="bg-black px-4 py-12 sm:px-6 sm:py-16 md:py-24 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <div className="mb-8">
-            <h2 className="mb-4 text-2xl font-bold sm:text-3xl">Latest Listings</h2>
-            <p className="text-gray-400">Browse the newest Pokemon cards available in our marketplace</p>
+            <h2 className="mb-4 text-2xl font-bold sm:text-3xl">
+              Latest Listings
+            </h2>
+            <p className="text-gray-400">
+              Browse the newest Pokemon cards available in our marketplace
+            </p>
           </div>
 
           {loading && (
@@ -302,7 +358,9 @@ const PublicMarketplace = () => {
               <div className="bg-white/5 mx-auto max-w-md rounded-xl p-8">
                 <div className="mb-4 text-6xl">📦</div>
                 <h3 className="mb-2 text-xl font-semibold">No listings yet</h3>
-                <p className="mb-6 text-gray-400">Be the first to list your Pokemon cards!</p>
+                <p className="mb-6 text-gray-400">
+                  Be the first to list your Pokemon cards!
+                </p>
                 <button
                   onClick={handleSignUpPrompt}
                   className="rounded-lg bg-blue-600 px-6 py-3 text-white transition-colors hover:bg-blue-700"
@@ -315,18 +373,23 @@ const PublicMarketplace = () => {
 
           {!loading && !error && listings.length > 0 && (
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-              {listings.map((listing) => (
-                <div key={listing.id} className="bg-white/5 hover:bg-white/10 group overflow-hidden rounded-xl transition-all duration-300">
+              {listings.map(listing => (
+                <div
+                  key={listing.id}
+                  className="bg-white/5 hover:bg-white/10 group overflow-hidden rounded-xl transition-all duration-300"
+                >
                   <div className="relative aspect-square overflow-hidden">
                     {getCardImage(listing) ? (
                       <img
                         src={getCardImage(listing)}
                         alt={getCardName(listing)}
                         className="size-full cursor-pointer object-contain transition-transform duration-300 group-hover:scale-105"
-                        onClick={() => setSelectedImage({
-                          src: getCardImage(listing),
-                          alt: getCardName(listing)
-                        })}
+                        onClick={() =>
+                          setSelectedImage({
+                            src: getCardImage(listing),
+                            alt: getCardName(listing),
+                          })
+                        }
                       />
                     ) : (
                       <div className="flex size-full items-center justify-center bg-gradient-to-br from-gray-700 to-gray-800">
@@ -335,16 +398,24 @@ const PublicMarketplace = () => {
                     )}
                     {listing.card?.grade && (
                       <div className="absolute right-2 top-2 rounded-lg bg-yellow-500 px-2 py-1 text-xs font-bold text-black">
-                        {listing.card.grader ? `${listing.card.grader} ${listing.card.grade}` : listing.card.grade}
+                        {listing.card.grader
+                          ? `${listing.card.grader} ${listing.card.grade}`
+                          : listing.card.grade}
                       </div>
                     )}
                   </div>
-                  
+
                   <div className="p-4">
-                    <h3 className="mb-2 line-clamp-2 font-semibold text-white">{getCardName(listing)}</h3>
+                    <h3 className="mb-2 line-clamp-2 font-semibold text-white">
+                      {getCardName(listing)}
+                    </h3>
                     <div className="mb-3 flex items-center justify-between">
                       <span className="text-2xl font-bold text-green-400">
-                        {formatPrice(listing.listingPrice || listing.priceAUD || listing.price)}
+                        {formatPrice(
+                          listing.listingPrice ||
+                            listing.priceAUD ||
+                            listing.price
+                        )}
                       </span>
                       {listing.condition && (
                         <span className="bg-white/10 rounded-full px-2 py-1 text-xs text-gray-300">
@@ -352,11 +423,13 @@ const PublicMarketplace = () => {
                         </span>
                       )}
                     </div>
-                    
+
                     {listing.location && (
-                      <p className="mb-3 text-sm text-gray-400">📍 {listing.location}</p>
+                      <p className="mb-3 text-sm text-gray-400">
+                        📍 {listing.location}
+                      </p>
                     )}
-                    
+
                     <div className="space-y-2">
                       <button
                         onClick={() => setShowLoginModal(true)}
@@ -374,8 +447,13 @@ const PublicMarketplace = () => {
           {!loading && !error && listings.length > 0 && (
             <div className="mt-12 text-center">
               <div className="bg-white/5 mx-auto max-w-2xl rounded-xl p-8">
-                <h3 className="mb-4 text-xl font-semibold">Want to see more listings?</h3>
-                <p className="mb-6 text-gray-400">Join our community to access all marketplace features, contact sellers, and list your own cards for sale.</p>
+                <h3 className="mb-4 text-xl font-semibold">
+                  Want to see more listings?
+                </h3>
+                <p className="mb-6 text-gray-400">
+                  Join our community to access all marketplace features, contact
+                  sellers, and list your own cards for sale.
+                </p>
                 <button
                   onClick={handleSignUpPrompt}
                   className="rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-8 py-3 font-semibold text-white transition-all duration-300 hover:scale-105 hover:from-blue-700 hover:to-purple-700"

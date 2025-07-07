@@ -17,7 +17,7 @@ const toastService = {
     return toast.success(message, {
       icon: <Icon name="check_circle" color="white" />,
       className: 'design-system-toast success-toast',
-      ...options
+      ...options,
     });
   },
 
@@ -33,9 +33,9 @@ const toastService = {
       className: 'design-system-toast error-toast',
       style: {
         background: '#E53935',
-        ...options.style
+        ...options.style,
       },
-      ...options
+      ...options,
     });
   },
 
@@ -49,7 +49,7 @@ const toastService = {
     return toast(message, {
       icon: <Icon name="info" color="white" />,
       className: 'design-system-toast info-toast',
-      ...options
+      ...options,
     });
   },
 
@@ -65,9 +65,9 @@ const toastService = {
       className: 'design-system-toast warning-toast',
       style: {
         background: '#FF9800',
-        ...options.style
+        ...options.style,
       },
-      ...options
+      ...options,
     });
   },
 
@@ -80,7 +80,7 @@ const toastService = {
   loading: (message, options = {}) => {
     return toast.loading(message, {
       className: 'design-system-toast loading-toast',
-      ...options
+      ...options,
     });
   },
 
@@ -93,7 +93,7 @@ const toastService = {
   update: (toastId, message, options = {}) => {
     return toast.update(toastId, {
       render: message,
-      ...options
+      ...options,
     });
   },
 
@@ -101,7 +101,7 @@ const toastService = {
    * Dismiss a specific toast
    * @param {string} toastId - ID of toast to dismiss
    */
-  dismiss: (toastId) => {
+  dismiss: toastId => {
     toast.dismiss(toastId);
   },
 
@@ -110,7 +110,7 @@ const toastService = {
    */
   dismissAll: () => {
     toast.dismiss();
-  }
+  },
 };
 
 // Also export the raw toast function for advanced usage

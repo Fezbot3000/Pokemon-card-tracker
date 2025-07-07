@@ -12,13 +12,13 @@ export const PerformanceBenchmark: React.FC = () => {
   const runBenchmark = async () => {
     setIsRunning(true);
     const startTime = performance.now();
-    
+
     // Simulate component rendering stress test
     for (let i = 0; i < componentCount; i++) {
       setRenderCount(prev => prev + 1);
       await new Promise(resolve => setTimeout(resolve, 1));
     }
-    
+
     const endTime = performance.now();
     setRenderTime(endTime - startTime);
     setIsRunning(false);
@@ -52,22 +52,24 @@ export const PerformanceBenchmark: React.FC = () => {
                 min="1"
                 max="1000"
                 value={componentCount}
-                onChange={(e) => setComponentCount(parseInt(e.target.value) || 10)}
+                onChange={e =>
+                  setComponentCount(parseInt(e.target.value) || 10)
+                }
                 className="w-24 rounded-md border border-gray-300 bg-white px-3 py-1 text-sm text-gray-900 dark:border-gray-600 dark:bg-black dark:text-white"
                 disabled={isRunning}
               />
             </div>
-            
+
             <div className="flex space-x-2">
-              <Button 
-                onClick={runBenchmark} 
+              <Button
+                onClick={runBenchmark}
                 disabled={isRunning}
-                variant={isRunning ? "secondary" : "default"}
+                variant={isRunning ? 'secondary' : 'default'}
               >
                 {isRunning ? 'Running...' : 'Run Benchmark'}
               </Button>
-              <Button 
-                onClick={resetBenchmark} 
+              <Button
+                onClick={resetBenchmark}
                 variant="outline"
                 disabled={isRunning}
               >
@@ -92,7 +94,7 @@ export const PerformanceBenchmark: React.FC = () => {
                   Components Rendered
                 </div>
               </div>
-              
+
               <div className="text-center">
                 <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                   {renderTime ? `${renderTime.toFixed(2)}ms` : '--'}
@@ -101,10 +103,12 @@ export const PerformanceBenchmark: React.FC = () => {
                   Total Render Time
                 </div>
               </div>
-              
+
               <div className="text-center">
                 <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                  {renderTime && renderCount ? `${(renderTime / renderCount).toFixed(2)}ms` : '--'}
+                  {renderTime && renderCount
+                    ? `${(renderTime / renderCount).toFixed(2)}ms`
+                    : '--'}
                 </div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">
                   Average Per Component
@@ -122,35 +126,45 @@ export const PerformanceBenchmark: React.FC = () => {
           <CardContent>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Component Bundle Size</span>
+                <span className="text-sm font-medium">
+                  Component Bundle Size
+                </span>
                 <span className="text-sm text-green-600 dark:text-green-400">
                   ✓ Optimized
                 </span>
               </div>
-              
+
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Tree Shaking Support</span>
+                <span className="text-sm font-medium">
+                  Tree Shaking Support
+                </span>
                 <span className="text-sm text-green-600 dark:text-green-400">
                   ✓ Enabled
                 </span>
               </div>
-              
+
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">TypeScript Performance</span>
+                <span className="text-sm font-medium">
+                  TypeScript Performance
+                </span>
                 <span className="text-sm text-green-600 dark:text-green-400">
                   ✓ Optimized
                 </span>
               </div>
-              
+
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Re-render Optimization</span>
+                <span className="text-sm font-medium">
+                  Re-render Optimization
+                </span>
                 <span className="text-sm text-green-600 dark:text-green-400">
                   ✓ React.memo & forwardRef
                 </span>
               </div>
-              
+
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">CSS-in-JS Performance</span>
+                <span className="text-sm font-medium">
+                  CSS-in-JS Performance
+                </span>
                 <span className="text-sm text-green-600 dark:text-green-400">
                   ✓ CVA + Tailwind
                 </span>
@@ -172,14 +186,14 @@ export const PerformanceBenchmark: React.FC = () => {
                   className="flex aspect-square items-center justify-center rounded-md bg-gradient-to-br from-blue-500 to-purple-600 text-xs font-medium text-white"
                   style={{
                     animationDelay: `${i * 50}ms`,
-                    animation: isRunning ? 'pulse 1s infinite' : 'none'
+                    animation: isRunning ? 'pulse 1s infinite' : 'none',
                   }}
                 >
                   {i + 1}
                 </div>
               ))}
             </div>
-            
+
             {renderCount > 64 && (
               <div className="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
                 Showing first 64 of {renderCount} components
@@ -192,4 +206,4 @@ export const PerformanceBenchmark: React.FC = () => {
   );
 };
 
-export default PerformanceBenchmark; 
+export default PerformanceBenchmark;

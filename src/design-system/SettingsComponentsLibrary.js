@@ -10,12 +10,12 @@ import {
 
 /**
  * Settings Components Library
- * 
+ *
  * Showcases all the building blocks used in the Settings modal.
  */
 const SettingsComponentsLibrary = () => {
   const [activeTab, setActiveTab] = useState('general');
-  
+
   return (
     <div className="space-y-8">
       <ComponentSection
@@ -43,7 +43,7 @@ const SettingsComponentsLibrary = () => {
           />
         </div>
       </ComponentSection>
-      
+
       <ComponentSection
         title="Settings Panels"
         description="Content panels used in the settings modal."
@@ -72,7 +72,7 @@ const SettingsComponentsLibrary = () => {
           </SettingsPanel>
         </div>
       </ComponentSection>
-      
+
       <ComponentSection
         title="Settings Form Panel"
         description="Panel with form fields for settings."
@@ -107,10 +107,7 @@ const SettingsComponentsLibrary = () => {
                 placeholder="Your mobile number"
               />
               <div className="flex justify-end">
-                <Button 
-                  variant="primary" 
-                  iconLeft={<Icon name="save" />}
-                >
+                <Button variant="primary" iconLeft={<Icon name="save" />}>
                   Save Profile
                 </Button>
               </div>
@@ -118,7 +115,7 @@ const SettingsComponentsLibrary = () => {
           </SettingsPanel>
         </div>
       </ComponentSection>
-      
+
       <ComponentSection
         title="Settings Dropdown Panel"
         description="Panel with dropdown selection."
@@ -138,7 +135,7 @@ const SettingsComponentsLibrary = () => {
           </SettingsPanel>
         </div>
       </ComponentSection>
-      
+
       <ComponentSection
         title="Settings Layout Example"
         description="Example of a settings layout with sidebar and content."
@@ -151,14 +148,17 @@ const SettingsComponentsLibrary = () => {
             {/* Sidebar */}
             <div className="w-52 border-r border-gray-800 bg-[#121212] p-2">
               <div className="space-y-1">
-                {['general', 'data', 'profile', 'account'].map((tab) => (
+                {['general', 'data', 'profile', 'account'].map(tab => (
                   <SettingsNavItem
                     key={tab}
                     icon={
-                      tab === 'general' ? 'settings' : 
-                      tab === 'data' ? 'database' : 
-                      tab === 'profile' ? 'person' : 
-                      'account_circle'
+                      tab === 'general'
+                        ? 'settings'
+                        : tab === 'data'
+                          ? 'database'
+                          : tab === 'profile'
+                            ? 'person'
+                            : 'account_circle'
                     }
                     label={tab.charAt(0).toUpperCase() + tab.slice(1)}
                     isActive={activeTab === tab}
@@ -167,7 +167,7 @@ const SettingsComponentsLibrary = () => {
                 ))}
               </div>
             </div>
-            
+
             {/* Content */}
             <div className="flex-1 overflow-y-auto bg-[#121212] p-6">
               {activeTab === 'general' && (
@@ -195,7 +195,7 @@ const SettingsComponentsLibrary = () => {
                   </SettingsPanel>
                 </div>
               )}
-              
+
               {activeTab === 'profile' && (
                 <div className="space-y-4">
                   <SettingsPanel
@@ -211,8 +211,8 @@ const SettingsComponentsLibrary = () => {
                         placeholder="Your name"
                       />
                       <div className="flex justify-end">
-                        <Button 
-                          variant="primary" 
+                        <Button
+                          variant="primary"
                           iconLeft={<Icon name="save" />}
                         >
                           Save
@@ -222,7 +222,7 @@ const SettingsComponentsLibrary = () => {
                   </SettingsPanel>
                 </div>
               )}
-              
+
               {activeTab === 'data' && (
                 <div className="space-y-4">
                   <SettingsPanel
@@ -248,7 +248,7 @@ const SettingsComponentsLibrary = () => {
                   </SettingsPanel>
                 </div>
               )}
-              
+
               {activeTab === 'account' && (
                 <div className="space-y-4">
                   <SettingsPanel
@@ -256,10 +256,15 @@ const SettingsComponentsLibrary = () => {
                     description="Manage your account."
                   >
                     <div className="mb-4 flex items-center space-x-3">
-                      <Icon name="account_circle" className="text-2xl text-gray-400" />
+                      <Icon
+                        name="account_circle"
+                        className="text-2xl text-gray-400"
+                      />
                       <div>
                         <p className="font-medium text-white">Demo User</p>
-                        <p className="text-sm text-gray-400">user@example.com</p>
+                        <p className="text-sm text-gray-400">
+                          user@example.com
+                        </p>
                       </div>
                     </div>
                     <Button

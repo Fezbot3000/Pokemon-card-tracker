@@ -10,8 +10,10 @@ export const buttonVariants = cva(
       variant: {
         default: 'bg-primary-500 text-white hover:bg-primary-600',
         destructive: 'bg-error-500 text-white hover:bg-error-600',
-        outline: 'border border-primary-500 text-primary-500 hover:bg-primary-50',
-        secondary: 'bg-surface-secondary text-text-primary hover:bg-surface-tertiary',
+        outline:
+          'border border-primary-500 text-primary-500 hover:bg-primary-50',
+        secondary:
+          'bg-surface-secondary text-text-primary hover:bg-surface-tertiary',
         ghost: 'hover:bg-surface-secondary hover:text-text-primary',
         link: 'text-primary-500 underline-offset-4 hover:underline',
       },
@@ -56,9 +58,11 @@ export const inputVariants = cva(
   {
     variants: {
       variant: {
-        default: 'border-border focus:border-primary-500 focus:ring-primary-200',
+        default:
+          'border-border focus:border-primary-500 focus:ring-primary-200',
         error: 'border-error-500 focus:border-error-500 focus:ring-error-200',
-        success: 'border-success-500 focus:border-success-500 focus:ring-success-200',
+        success:
+          'border-success-500 focus:border-success-500 focus:ring-success-200',
       },
     },
     defaultVariants: {
@@ -76,7 +80,8 @@ export const badgeVariants = cva(
     variants: {
       variant: {
         default: 'hover:bg-primary/80 border-transparent bg-primary text-white',
-        secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80 border-transparent',
+        secondary:
+          'bg-secondary text-secondary-foreground hover:bg-secondary/80 border-transparent',
         destructive: 'hover:bg-error/80 border-transparent bg-error text-white',
         outline: 'text-foreground',
         success: 'hover:bg-success/80 border-transparent bg-success text-white',
@@ -111,4 +116,4 @@ export const cardVariants = cva(
       size: 'default',
     },
   }
-); 
+);

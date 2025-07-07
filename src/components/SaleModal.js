@@ -5,9 +5,12 @@ import Button from '../design-system/atoms/Button';
 import Icon from '../design-system/atoms/Icon';
 
 const SaleModal = ({ isOpen, onClose, selectedCards, onConfirm }) => {
-  const { formatAmountForDisplay, preferredCurrency, convertToUserCurrency } = useUserPreferences();
+  const { formatAmountForDisplay, preferredCurrency, convertToUserCurrency } =
+    useUserPreferences();
   const [buyer, setBuyer] = useState('');
-  const [dateSold, setDateSold] = useState(new Date().toISOString().split('T')[0]);
+  const [dateSold, setDateSold] = useState(
+    new Date().toISOString().split('T')[0]
+  );
   const [soldPrices, setSoldPrices] = useState({});
   const [errors, setErrors] = useState({});
   const [isInitialized, setIsInitialized] = useState(false);
@@ -18,52 +21,58 @@ const SaleModal = ({ isOpen, onClose, selectedCards, onConfirm }) => {
       // Initialize default values
       setBuyer('');
       setDateSold(new Date().toISOString().split('T')[0]);
-      
+
       // Initialize sold prices with empty strings for all cards
       const initialPrices = {};
       selectedCards.forEach(card => {
         initialPrices[card.slabSerial] = '';
       });
-      
+
       setSoldPrices(initialPrices);
       setErrors({});
       setIsInitialized(true);
     } else if (!isOpen) {
       setIsInitialized(false);
     }
-    
+
     // Cleanup on unmount
-    return () => {
-    };
+    return () => {};
   }, [isOpen, selectedCards]);
 
   // Calculate total investment with proper currency conversion
   const totalInvestment = selectedCards.reduce((sum, card) => {
-    const investment = parseFloat(card.originalInvestmentAmount || card.investmentAUD) || 0;
-    const investmentInPreferredCurrency = convertToUserCurrency(investment, card.originalInvestmentCurrency || preferredCurrency.code);
+    const investment =
+      parseFloat(card.originalInvestmentAmount || card.investmentAUD) || 0;
+    const investmentInPreferredCurrency = convertToUserCurrency(
+      investment,
+      card.originalInvestmentCurrency || preferredCurrency.code
+    );
     return sum + investmentInPreferredCurrency;
   }, 0);
-  
-  const totalSalePrice = Object.values(soldPrices).reduce((sum, price) => sum + (parseFloat(price) || 0), 0);
+
+  const totalSalePrice = Object.values(soldPrices).reduce(
+    (sum, price) => sum + (parseFloat(price) || 0),
+    0
+  );
   const totalProfit = totalSalePrice - totalInvestment;
 
   const handlePriceChange = (slabSerial, value) => {
     setSoldPrices(prev => ({
       ...prev,
-      [slabSerial]: value
+      [slabSerial]: value,
     }));
     // Clear error when user starts typing
     if (errors[slabSerial]) {
       setErrors(prev => ({
         ...prev,
-        [slabSerial]: null
+        [slabSerial]: null,
       }));
     }
   };
 
   const validate = () => {
     const newErrors = {};
-    
+
     if (!buyer.trim()) {
       newErrors.buyer = "Please enter the buyer's name";
     }
@@ -71,7 +80,7 @@ const SaleModal = ({ isOpen, onClose, selectedCards, onConfirm }) => {
     selectedCards.forEach(card => {
       const price = parseFloat(soldPrices[card.slabSerial]);
       if (!price || isNaN(price) || price <= 0) {
-        newErrors[card.slabSerial] = "Please enter a valid price";
+        newErrors[card.slabSerial] = 'Please enter a valid price';
       }
     });
 
@@ -86,7 +95,7 @@ const SaleModal = ({ isOpen, onClose, selectedCards, onConfirm }) => {
         dateSold,
         soldPrices,
         totalSalePrice,
-        totalProfit
+        totalProfit,
       });
     }
   };
@@ -98,7 +107,7 @@ const SaleModal = ({ isOpen, onClose, selectedCards, onConfirm }) => {
     setSoldPrices({});
     setErrors({});
     setIsInitialized(false);
-    
+
     // Call the onClose prop to notify parent component
     onClose();
   };
@@ -115,14 +124,11 @@ const SaleModal = ({ isOpen, onClose, selectedCards, onConfirm }) => {
       closeOnClickOutside={true}
       footer={
         <>
-          <Button 
-            variant="secondary" 
-            onClick={handleClose}
-          >
+          <Button variant="secondary" onClick={handleClose}>
             Cancel
           </Button>
-          <Button 
-            variant="primary" 
+          <Button
+            variant="primary"
             onClick={handleSubmit}
             leftIcon={<Icon name="sell" />}
           >
@@ -141,7 +147,7 @@ const SaleModal = ({ isOpen, onClose, selectedCards, onConfirm }) => {
             <input
               type="text"
               value={buyer}
-              onChange={(e) => setBuyer(e.target.value)}
+              onChange={e => setBuyer(e.target.value)}
               placeholder="Enter buyer name"
               className="w-full rounded-lg border border-[#ffffff33] bg-white px-3 py-2 text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-[#ffffff1a] dark:bg-[#0F0F0F] dark:text-white dark:placeholder:text-gray-400"
             />
@@ -156,7 +162,7 @@ const SaleModal = ({ isOpen, onClose, selectedCards, onConfirm }) => {
             <input
               type="date"
               value={dateSold}
-              onChange={(e) => setDateSold(e.target.value)}
+              onChange={e => setDateSold(e.target.value)}
               className="w-full rounded-lg border border-[#ffffff33] bg-white px-3 py-2 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-[#ffffff1a] dark:bg-[#0F0F0F] dark:text-white"
             />
           </div>
@@ -170,28 +176,43 @@ const SaleModal = ({ isOpen, onClose, selectedCards, onConfirm }) => {
           <div className="space-y-4">
             {selectedCards.map(card => {
               const soldPrice = parseFloat(soldPrices[card.slabSerial] || '0');
-              const investment = parseFloat(card.originalInvestmentAmount || card.investmentAUD) || 0;
-              const investmentInPreferredCurrency = convertToUserCurrency(investment, card.originalInvestmentCurrency || preferredCurrency.code);
+              const investment =
+                parseFloat(
+                  card.originalInvestmentAmount || card.investmentAUD
+                ) || 0;
+              const investmentInPreferredCurrency = convertToUserCurrency(
+                investment,
+                card.originalInvestmentCurrency || preferredCurrency.code
+              );
               const profit = soldPrice - investmentInPreferredCurrency;
 
               return (
-                <div 
+                <div
                   key={card.slabSerial}
                   className="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
                 >
                   <div className="space-y-4">
                     <div>
                       <h4 className="font-semibold text-gray-900 dark:text-white">
-                        {card.card || card.name || card.player || 'Unnamed Card'}
+                        {card.card ||
+                          card.name ||
+                          card.player ||
+                          'Unnamed Card'}
                       </h4>
                       <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Investment: {formatAmountForDisplay(investment, card.originalInvestmentCurrency || preferredCurrency.code)}
+                        Investment:{' '}
+                        {formatAmountForDisplay(
+                          investment,
+                          card.originalInvestmentCurrency ||
+                            preferredCurrency.code
+                        )}
                       </p>
                     </div>
-                    
+
                     <div>
                       <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Sold Price ({preferredCurrency.code}) <span className="text-red-500">*</span>
+                        Sold Price ({preferredCurrency.code}){' '}
+                        <span className="text-red-500">*</span>
                       </label>
                       <div className="relative">
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400">
@@ -201,7 +222,9 @@ const SaleModal = ({ isOpen, onClose, selectedCards, onConfirm }) => {
                           type="number"
                           inputMode="numeric"
                           value={soldPrices[card.slabSerial]}
-                          onChange={(e) => handlePriceChange(card.slabSerial, e.target.value)}
+                          onChange={e =>
+                            handlePriceChange(card.slabSerial, e.target.value)
+                          }
                           step="0.01"
                           min="0"
                           className="w-full rounded-lg border border-[#ffffff33] bg-white py-2 pl-8 pr-4 text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-[#ffffff1a] dark:bg-[#0F0F0F] dark:text-white dark:placeholder:text-gray-400"
@@ -209,12 +232,25 @@ const SaleModal = ({ isOpen, onClose, selectedCards, onConfirm }) => {
                         />
                       </div>
                       {errors[card.slabSerial] && (
-                        <p className="mt-1 text-sm text-red-500">{errors[card.slabSerial]}</p>
+                        <p className="mt-1 text-sm text-red-500">
+                          {errors[card.slabSerial]}
+                        </p>
                       )}
                       <div className="mt-2 text-sm">
-                        <span className="text-gray-600 dark:text-gray-400">Profit: </span>
-                        <span className={profit >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}>
-                          {formatAmountForDisplay(profit, preferredCurrency.code)}
+                        <span className="text-gray-600 dark:text-gray-400">
+                          Profit:{' '}
+                        </span>
+                        <span
+                          className={
+                            profit >= 0
+                              ? 'text-green-600 dark:text-green-400'
+                              : 'text-red-600 dark:text-red-400'
+                          }
+                        >
+                          {formatAmountForDisplay(
+                            profit,
+                            preferredCurrency.code
+                          )}
                         </span>
                       </div>
                     </div>
@@ -230,16 +266,27 @@ const SaleModal = ({ isOpen, onClose, selectedCards, onConfirm }) => {
           <div className="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <span className="text-sm text-gray-600 dark:text-gray-400">Total Sale Price:</span>
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  Total Sale Price:
+                </span>
                 <div className="font-semibold text-gray-900 dark:text-white">
-                  {formatAmountForDisplay(totalSalePrice, preferredCurrency.code)}
+                  {formatAmountForDisplay(
+                    totalSalePrice,
+                    preferredCurrency.code
+                  )}
                 </div>
               </div>
               <div>
-                <span className="text-sm text-gray-600 dark:text-gray-400">Total Profit:</span>
-                <div className={`font-semibold ${
-                  totalProfit >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
-                }`}>
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  Total Profit:
+                </span>
+                <div
+                  className={`font-semibold ${
+                    totalProfit >= 0
+                      ? 'text-green-600 dark:text-green-400'
+                      : 'text-red-600 dark:text-red-400'
+                  }`}
+                >
                   {formatAmountForDisplay(totalProfit, preferredCurrency.code)}
                 </div>
               </div>
@@ -251,4 +298,4 @@ const SaleModal = ({ isOpen, onClose, selectedCards, onConfirm }) => {
   );
 };
 
-export default SaleModal; 
+export default SaleModal;

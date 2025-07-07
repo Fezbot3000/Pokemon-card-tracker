@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 
-const FilterSection = ({ 
-  onSort, 
-  onViewChange, 
+const FilterSection = ({
+  onSort,
+  onViewChange,
   currentSort = 'Player Name',
   currentView = 'Paid',
-  sortDirection = 'ascending'
+  sortDirection = 'ascending',
 }) => {
   const [isSortOpen, setIsSortOpen] = useState(false);
   const [isViewOpen, setIsViewOpen] = useState(false);
@@ -16,7 +16,7 @@ const FilterSection = ({
     'Investment',
     'Profit',
     'Purchase Date',
-    'Player Name'
+    'Player Name',
   ];
 
   const viewOptions = ['Current Value', 'Paid', 'Profit'];
@@ -28,10 +28,10 @@ const FilterSection = ({
         placeholder="Search by name, set, or serial number..."
         className="search-input"
       />
-      
+
       <div className="filter-row">
         <div className="sort-container">
-          <button 
+          <button
             className="sort-button"
             onClick={() => setIsSortOpen(!isSortOpen)}
           >
@@ -44,7 +44,7 @@ const FilterSection = ({
 
           {isSortOpen && (
             <div className="sort-dropdown">
-              {sortOptions.map((option) => (
+              {sortOptions.map(option => (
                 <div
                   key={option}
                   className={`sort-option ${option === currentSort ? 'active' : ''}`}
@@ -59,11 +59,14 @@ const FilterSection = ({
                   {option}
                 </div>
               ))}
-              <div 
+              <div
                 className="sort-direction"
                 onClick={() => {
                   setIsAscending(!isAscending);
-                  onSort(currentSort, !isAscending ? 'ascending' : 'descending');
+                  onSort(
+                    currentSort,
+                    !isAscending ? 'ascending' : 'descending'
+                  );
                 }}
               >
                 <span className="material-icons">
@@ -76,7 +79,7 @@ const FilterSection = ({
         </div>
 
         <div className="view-container">
-          <button 
+          <button
             className="view-button"
             onClick={() => setIsViewOpen(!isViewOpen)}
           >
@@ -89,7 +92,7 @@ const FilterSection = ({
 
           {isViewOpen && (
             <div className="sort-dropdown">
-              {viewOptions.map((option) => (
+              {viewOptions.map(option => (
                 <div
                   key={option}
                   className={`sort-option ${option === currentView ? 'active' : ''}`}
@@ -124,4 +127,4 @@ const FilterSection = ({
   );
 };
 
-export default FilterSection; 
+export default FilterSection;

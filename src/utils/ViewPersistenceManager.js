@@ -4,7 +4,7 @@ class ViewPersistenceManager {
   constructor() {
     // Cache for components that should persist between navigation
     this.cachedViews = new Map();
-    
+
     // Image cache to prevent reloading images
     this.imageCache = new Map();
   }

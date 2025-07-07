@@ -7,11 +7,15 @@ import { getFunctions, httpsCallable } from 'firebase/functions';
 // Import environment validation to ensure all variables are loaded
 import '../env';
 import logger from '../utils/logger';
-import { getFirebaseConfig, getGoogleClientId, getConfigSources } from '../config/secrets';
+import {
+  getFirebaseConfig,
+  getGoogleClientId,
+  getConfigSources,
+} from '../config/secrets';
 
 /**
  * Firebase Configuration
- * 
+ *
  * This configuration uses environment variables exclusively.
  * All required environment variables must be set in your .env file:
  * - REACT_APP_FIREBASE_API_KEY
@@ -27,7 +31,8 @@ import { getFirebaseConfig, getGoogleClientId, getConfigSources } from '../confi
 const firebaseConfig = getFirebaseConfig();
 
 // Check if Firebase app is already initialized to prevent multiple instances
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+const app =
+  getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 
 // Initialize Firebase services - but don't enable persistence here since it's already done in firebase.js
 const db = getFirestore(app);
@@ -45,10 +50,12 @@ const googleClientId = getGoogleClientId();
 if (googleClientId) {
   googleProvider.setCustomParameters({
     client_id: googleClientId,
-    prompt: 'select_account'
+    prompt: 'select_account',
   });
 } else {
-  logger.warn('REACT_APP_FIREBASE_CLIENT_ID not set - Google OAuth will use default configuration');
+  logger.warn(
+    'REACT_APP_FIREBASE_CLIENT_ID not set - Google OAuth will use default configuration'
+  );
 }
 
 // Export Firebase services

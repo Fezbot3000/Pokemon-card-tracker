@@ -3,17 +3,17 @@ import PropTypes from 'prop-types';
 
 /**
  * Icon component for using Material Icons
- * 
+ *
  * This component makes it easier to use consistent icon styling
  * throughout the application, with support for different sizes and colors.
  */
-const Icon = ({ 
-  name, 
-  size = 'md', 
+const Icon = ({
+  name,
+  size = 'md',
   color = 'default',
   className = '',
   // Destructure 'data-component-name' to prevent it from being spread
-  "data-component-name": dataComponentName, 
+  'data-component-name': dataComponentName,
   ...rest // Collect remaining props
 }) => {
   // Size variations
@@ -25,7 +25,7 @@ const Icon = ({
     xl: 'text-xl',
     '2xl': 'text-2xl',
   };
-  
+
   // Color variations - these map to your tailwind text color classes
   const colorClasses = {
     default: 'text-gray-600 dark:text-gray-300',
@@ -37,10 +37,10 @@ const Icon = ({
     info: 'text-blue-500',
     white: 'text-white',
   };
-  
+
   // Combine the classes
   const iconClasses = `material-icons ${sizeClasses[size]} ${colorClasses[color]} ${className}`;
-  
+
   return (
     // Spread only the 'rest' of the props, excluding data-component-name
     <span className={iconClasses} {...rest}>
@@ -52,7 +52,16 @@ const Icon = ({
 Icon.propTypes = {
   name: PropTypes.string.isRequired,
   size: PropTypes.oneOf(['xs', 'sm', 'md', 'lg', 'xl', '2xl']),
-  color: PropTypes.oneOf(['default', 'primary', 'secondary', 'success', 'danger', 'warning', 'info', 'white']),
+  color: PropTypes.oneOf([
+    'default',
+    'primary',
+    'secondary',
+    'success',
+    'danger',
+    'warning',
+    'info',
+    'white',
+  ]),
   className: PropTypes.string,
 };
 

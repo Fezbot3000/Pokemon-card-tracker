@@ -15,32 +15,33 @@ const Terms = () => {
     { id: 'marketplace', title: 'Marketplace', icon: '🏪' },
     { id: 'termination', title: 'Termination', icon: '🚪' },
     { id: 'liability', title: 'Liability', icon: '⚖️' },
-    { id: 'contact', title: 'Contact', icon: '📞' }
+    { id: 'contact', title: 'Contact', icon: '📞' },
   ];
 
   return (
     <div className="min-h-screen bg-[#1B2131] text-white">
       <NavigationBar />
-      
+
       {/* Hero Section */}
       <section className="relative overflow-hidden px-4 pb-16 pt-24 sm:px-6 sm:pb-20 sm:pt-28 md:pb-24 md:pt-32 lg:px-8">
         <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 via-purple-600/10 to-pink-600/10"></div>
-        
+
         <div className="relative z-10 mx-auto max-w-4xl text-center">
           <div className="bg-white/10 border-white/20 mb-6 inline-flex items-center rounded-full border px-3 py-1.5 text-xs font-medium backdrop-blur-sm sm:mb-8 sm:px-4 sm:py-2 sm:text-sm">
             <span className="mr-2 size-1.5 rounded-full bg-green-400 sm:size-2"></span>
             Last Updated: January 2024
           </div>
-          
+
           <h1 className="mb-4 text-3xl font-bold leading-tight sm:mb-6 sm:text-4xl md:text-5xl lg:text-6xl">
             Terms of
             <span className="block bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
               Service
             </span>
           </h1>
-          
+
           <p className="mx-auto mb-8 max-w-3xl text-base leading-relaxed text-gray-300 sm:mb-12 sm:text-lg md:text-xl lg:text-2xl">
-            Please read these terms carefully before using our service. By using Collectibles Tracker, you agree to these terms.
+            Please read these terms carefully before using our service. By using
+            Collectibles Tracker, you agree to these terms.
           </p>
         </div>
       </section>
@@ -54,7 +55,7 @@ const Terms = () => {
               <div className="sticky top-8">
                 <h3 className="mb-4 text-lg font-bold">Quick Navigation</h3>
                 <nav className="space-y-2">
-                  {sections.map((section) => (
+                  {sections.map(section => (
                     <button
                       key={section.id}
                       onClick={() => setActiveSection(section.id)}
@@ -65,7 +66,9 @@ const Terms = () => {
                       }`}
                     >
                       <span className="mr-3">{section.icon}</span>
-                      <span className="text-sm font-medium">{section.title}</span>
+                      <span className="text-sm font-medium">
+                        {section.title}
+                      </span>
                     </button>
                   ))}
                 </nav>
@@ -76,14 +79,17 @@ const Terms = () => {
             <div className="lg:col-span-3">
               <div className="from-white/10 to-white/5 border-white/10 rounded-3xl border bg-gradient-to-br p-8 backdrop-blur-sm">
                 <div className="prose prose-invert max-w-none space-y-8">
-                  
                   {/* Overview */}
                   <section id="overview">
                     <h2 className="mb-4 flex items-center text-2xl font-bold">
                       <span className="mr-3">📋</span>Overview
                     </h2>
                     <div className="space-y-4 text-gray-300">
-                      <p>These Terms of Service govern your use of Collectibles Tracker and related services. By accessing or using our service, you agree to be bound by these terms.</p>
+                      <p>
+                        These Terms of Service govern your use of Collectibles
+                        Tracker and related services. By accessing or using our
+                        service, you agree to be bound by these terms.
+                      </p>
                     </div>
                   </section>
 
@@ -93,7 +99,12 @@ const Terms = () => {
                       <span className="mr-3">✅</span>Acceptance of Terms
                     </h2>
                     <div className="space-y-4 text-gray-300">
-                      <p>By creating an account or using our service, you acknowledge that you have read, understood, and agree to these terms. If you do not agree, please do not use our service.</p>
+                      <p>
+                        By creating an account or using our service, you
+                        acknowledge that you have read, understood, and agree to
+                        these terms. If you do not agree, please do not use our
+                        service.
+                      </p>
                     </div>
                   </section>
 
@@ -103,12 +114,21 @@ const Terms = () => {
                       <span className="mr-3">👤</span>User Accounts
                     </h2>
                     <div className="space-y-4 text-gray-300">
-                      <p>You are responsible for maintaining the security of your account and all activities under your account. You must provide accurate information and keep it updated.</p>
+                      <p>
+                        You are responsible for maintaining the security of your
+                        account and all activities under your account. You must
+                        provide accurate information and keep it updated.
+                      </p>
                       <ul className="ml-6 space-y-2">
-                        <li>• You must be at least 13 years old to create an account</li>
+                        <li>
+                          • You must be at least 13 years old to create an
+                          account
+                        </li>
                         <li>• One account per person</li>
                         <li>• Keep your login credentials secure</li>
-                        <li>• Notify us immediately of any unauthorized access</li>
+                        <li>
+                          • Notify us immediately of any unauthorized access
+                        </li>
                       </ul>
                     </div>
                   </section>
@@ -119,7 +139,10 @@ const Terms = () => {
                       <span className="mr-3">✔️</span>Acceptable Use
                     </h2>
                     <div className="space-y-4 text-gray-300">
-                      <p>You agree to use our service only for lawful purposes. Prohibited activities include:</p>
+                      <p>
+                        You agree to use our service only for lawful purposes.
+                        Prohibited activities include:
+                      </p>
                       <ul className="ml-6 space-y-2">
                         <li>• Violating any laws or regulations</li>
                         <li>• Infringing on intellectual property rights</li>
@@ -136,7 +159,12 @@ const Terms = () => {
                       <span className="mr-3">📝</span>User Content
                     </h2>
                     <div className="space-y-4 text-gray-300">
-                      <p>You retain ownership of content you upload but grant us license to use it for providing our services. You are responsible for ensuring you have rights to all content you upload.</p>
+                      <p>
+                        You retain ownership of content you upload but grant us
+                        license to use it for providing our services. You are
+                        responsible for ensuring you have rights to all content
+                        you upload.
+                      </p>
                     </div>
                   </section>
 
@@ -146,7 +174,11 @@ const Terms = () => {
                       <span className="mr-3">🏪</span>Marketplace Terms
                     </h2>
                     <div className="space-y-4 text-gray-300">
-                      <p>Our marketplace facilitates transactions between users. We are not a party to these transactions but provide tools and security measures to help ensure safe trading.</p>
+                      <p>
+                        Our marketplace facilitates transactions between users.
+                        We are not a party to these transactions but provide
+                        tools and security measures to help ensure safe trading.
+                      </p>
                     </div>
                   </section>
 
@@ -156,7 +188,12 @@ const Terms = () => {
                       <span className="mr-3">🚪</span>Termination
                     </h2>
                     <div className="space-y-4 text-gray-300">
-                      <p>Either party may terminate this agreement at any time. We may suspend or terminate accounts that violate these terms. Upon termination, you may export your data for 30 days.</p>
+                      <p>
+                        Either party may terminate this agreement at any time.
+                        We may suspend or terminate accounts that violate these
+                        terms. Upon termination, you may export your data for 30
+                        days.
+                      </p>
                     </div>
                   </section>
 
@@ -166,7 +203,11 @@ const Terms = () => {
                       <span className="mr-3">⚖️</span>Limitation of Liability
                     </h2>
                     <div className="space-y-4 text-gray-300">
-                      <p>Our service is provided "as is" without warranties. We are not liable for indirect damages. Our total liability is limited to the amount you paid in the last 12 months.</p>
+                      <p>
+                        Our service is provided "as is" without warranties. We
+                        are not liable for indirect damages. Our total liability
+                        is limited to the amount you paid in the last 12 months.
+                      </p>
                     </div>
                   </section>
 
@@ -176,10 +217,12 @@ const Terms = () => {
                       <span className="mr-3">📞</span>Contact Information
                     </h2>
                     <div className="space-y-4 text-gray-300">
-                      <p>For questions about these terms, contact us at legal@collectiblestracker.com</p>
+                      <p>
+                        For questions about these terms, contact us at
+                        legal@collectiblestracker.com
+                      </p>
                     </div>
                   </section>
-
                 </div>
               </div>
             </div>
@@ -194,18 +237,19 @@ const Terms = () => {
             Questions About Our Terms?
           </h2>
           <p className="mx-auto mb-8 max-w-2xl text-base text-gray-300 sm:mb-12 sm:text-lg md:text-xl">
-            Our legal team is available to help clarify any questions about our terms of service.
+            Our legal team is available to help clarify any questions about our
+            terms of service.
           </p>
-          
+
           <div className="flex flex-col items-center justify-center gap-4 sm:flex-row sm:gap-6">
-            <Link 
-              to="/help-center" 
+            <Link
+              to="/help-center"
               className="w-full rounded-2xl bg-gradient-to-r from-blue-500 to-purple-600 px-8 py-4 text-center text-lg font-semibold shadow-lg transition-all duration-300 hover:scale-105 hover:from-blue-600 hover:to-purple-700 hover:shadow-xl sm:w-auto"
             >
               Contact Support
             </Link>
-            <Link 
-              to="/privacy" 
+            <Link
+              to="/privacy"
               className="bg-white/10 border-white/20 hover:bg-white/20 w-full rounded-2xl border px-8 py-4 text-center text-lg font-semibold backdrop-blur-sm transition-all duration-300 hover:scale-105 sm:w-auto"
             >
               Privacy Policy

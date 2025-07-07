@@ -10,14 +10,20 @@ import { toast } from 'react-hot-toast';
  * PSA Lookup Button Component
  * Allows users to search for a card by PSA certification number
  */
-const PSALookupButton = ({ currentCardData, onCardUpdate, iconOnly = false, buttonText = "Search PSA", onLoadingChange }) => {
+const PSALookupButton = ({
+  currentCardData,
+  onCardUpdate,
+  iconOnly = false,
+  buttonText = 'Search PSA',
+  onLoadingChange,
+}) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [certNumber, setCertNumber] = useState('');
   const [showLookupForm, setShowLookupForm] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const { hasFeature } = useSubscription();
-  
+
   // Update certNumber when currentCardData changes
   useEffect(() => {
     if (currentCardData && currentCardData.slabSerial) {
@@ -36,10 +42,12 @@ const PSALookupButton = ({ currentCardData, onCardUpdate, iconOnly = false, butt
   const handleLookupClick = () => {
     // Check subscription access first
     if (!hasFeature('PSA_SEARCH')) {
-      toast.error('PSA search is available with Premium. Upgrade to access this feature!');
+      toast.error(
+        'PSA search is available with Premium. Upgrade to access this feature!'
+      );
       return;
     }
-    
+
     // If we already have a serial number on the card, use it directly
     if (currentCardData && currentCardData.slabSerial) {
       setCertNumber(currentCardData.slabSerial);
@@ -52,15 +60,17 @@ const PSALookupButton = ({ currentCardData, onCardUpdate, iconOnly = false, butt
   };
 
   // Handle the form submission to search PSA
-  const handleSubmit = (e) => {
+  const handleSubmit = e => {
     e.preventDefault();
-    
+
     // Check subscription access first
     if (!hasFeature('PSA_SEARCH')) {
-      toast.error('PSA search is available with Premium. Upgrade to access this feature!');
+      toast.error(
+        'PSA search is available with Premium. Upgrade to access this feature!'
+      );
       return;
     }
-    
+
     if (certNumber) {
       setIsLoading(true);
       setIsModalOpen(true);
@@ -78,7 +88,7 @@ const PSALookupButton = ({ currentCardData, onCardUpdate, iconOnly = false, butt
   };
 
   // Handle applying PSA details to the card
-  const handleApplyDetails = (updatedCardData) => {
+  const handleApplyDetails = updatedCardData => {
     onCardUpdate(updatedCardData);
     setIsModalOpen(false);
     setIsLoading(false);
@@ -105,24 +115,31 @@ const PSALookupButton = ({ currentCardData, onCardUpdate, iconOnly = false, butt
             type="button"
             onClick={handleLookupClick}
             className={`rounded-full p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-              !hasFeature('PSA_SEARCH') 
-                ? 'cursor-not-allowed bg-gray-300 dark:bg-gray-600' 
+              !hasFeature('PSA_SEARCH')
+                ? 'cursor-not-allowed bg-gray-300 dark:bg-gray-600'
                 : 'hover:bg-gray-100 dark:hover:bg-gray-700'
             }`}
             aria-label={
-              !hasFeature('PSA_SEARCH') 
-                ? "PSA search requires Premium subscription" 
-                : buttonText || "Reload PSA Data"
+              !hasFeature('PSA_SEARCH')
+                ? 'PSA search requires Premium subscription'
+                : buttonText || 'Reload PSA Data'
             }
             disabled={isLoading || !hasFeature('PSA_SEARCH')}
-            title={!hasFeature('PSA_SEARCH') ? "PSA search requires Premium subscription" : undefined}
+            title={
+              !hasFeature('PSA_SEARCH')
+                ? 'PSA search requires Premium subscription'
+                : undefined
+            }
           >
             {isLoading ? (
               <div className="size-5 animate-spin rounded-full border-2 border-blue-500 border-t-transparent"></div>
             ) : !hasFeature('PSA_SEARCH') ? (
               <Icon name="lock" size="sm" />
             ) : (
-              <Icon name={currentCardData?.slabSerial ? "refresh" : "search"} size="sm" />
+              <Icon
+                name={currentCardData?.slabSerial ? 'refresh' : 'search'}
+                size="sm"
+              />
             )}
           </button>
         ) : (
@@ -131,7 +148,11 @@ const PSALookupButton = ({ currentCardData, onCardUpdate, iconOnly = false, butt
             onClick={handleLookupClick}
             className="flex items-center gap-2"
             disabled={isLoading || !hasFeature('PSA_SEARCH')}
-            title={!hasFeature('PSA_SEARCH') ? "PSA search requires Premium subscription" : undefined}
+            title={
+              !hasFeature('PSA_SEARCH')
+                ? 'PSA search requires Premium subscription'
+                : undefined
+            }
           >
             {isLoading ? (
               <div className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent"></div>
@@ -148,27 +169,36 @@ const PSALookupButton = ({ currentCardData, onCardUpdate, iconOnly = false, butt
           <input
             type="text"
             value={certNumber}
-            onChange={(e) => setCertNumber(e.target.value)}
+            onChange={e => setCertNumber(e.target.value)}
             placeholder="Enter PSA cert #"
             className="focus:ring-[var(--primary-light)]/20 rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:border-[var(--primary)] focus:ring-2 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
             autoFocus
           />
-          <Button 
-            type="submit" 
-            variant="primary" 
-            size="sm" 
+          <Button
+            type="submit"
+            variant="primary"
+            size="sm"
             disabled={isLoading || !hasFeature('PSA_SEARCH')}
-            title={!hasFeature('PSA_SEARCH') ? "PSA search requires Premium subscription" : undefined}
+            title={
+              !hasFeature('PSA_SEARCH')
+                ? 'PSA search requires Premium subscription'
+                : undefined
+            }
           >
             {isLoading ? (
               <div className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent"></div>
             ) : !hasFeature('PSA_SEARCH') ? (
-              "Premium"
+              'Premium'
             ) : (
-              "Search"
+              'Search'
             )}
           </Button>
-          <Button type="button" variant="secondary" size="sm" onClick={handleCancel}>
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            onClick={handleCancel}
+          >
             Cancel
           </Button>
         </form>
@@ -191,7 +221,7 @@ PSALookupButton.propTypes = {
   onCardUpdate: PropTypes.func.isRequired,
   iconOnly: PropTypes.bool,
   buttonText: PropTypes.string,
-  onLoadingChange: PropTypes.func
+  onLoadingChange: PropTypes.func,
 };
 
 export default PSALookupButton;

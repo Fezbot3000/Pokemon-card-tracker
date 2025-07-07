@@ -23,82 +23,98 @@ const UpgradeModal = ({ isOpen, onClose, daysRemaining }) => {
   const handleUpgrade = async () => {
     console.log('🚀 PRODUCTION DEBUG: Starting upgrade process');
     setLoading(true);
-    
+
     try {
       console.log('📡 PRODUCTION DEBUG: About to call createCheckoutSession');
       console.log('📡 PRODUCTION DEBUG: User ID:', user?.uid);
-      
+
       const { httpsCallable } = await import('firebase/functions');
       const { functions } = await import('../firebase');
-      
+
       console.log('📡 PRODUCTION DEBUG: Functions instance:', functions);
-      
-      const createCheckoutSession = httpsCallable(functions, 'createCheckoutSession');
-      
+
+      const createCheckoutSession = httpsCallable(
+        functions,
+        'createCheckoutSession'
+      );
+
       // Get the premium plan price ID from environment or use default
-      const STRIPE_PREMIUM_PLAN_PRICE_ID = process.env.REACT_APP_STRIPE_PREMIUM_PLAN_PRICE_ID || 'price_1RfTouGIULGXhjjBvCFuEoQH';
-      
+      const STRIPE_PREMIUM_PLAN_PRICE_ID =
+        process.env.REACT_APP_STRIPE_PREMIUM_PLAN_PRICE_ID ||
+        'price_1RfTouGIULGXhjjBvCFuEoQH';
+
       console.log('📡 PRODUCTION DEBUG: Calling function with data:', {
         priceId: STRIPE_PREMIUM_PLAN_PRICE_ID,
-        userId: user?.uid
+        userId: user?.uid,
       });
-      
+
       const result = await createCheckoutSession({
         priceId: STRIPE_PREMIUM_PLAN_PRICE_ID,
-        userId: user?.uid
+        userId: user?.uid,
       });
-      
+
       console.log('✅ PRODUCTION DEBUG: Function call successful:', result);
       console.log('✅ PRODUCTION DEBUG: Session URL:', result.data?.url);
       console.log('✅ PRODUCTION DEBUG: Session ID:', result.data?.sessionId);
-      
+
       // Step 3: Load Stripe and redirect to checkout with session ID
       console.log('📦 PRODUCTION DEBUG: Loading Stripe...');
       const stripePublishableKey = getStripePublishableKey();
-      console.log('📦 PRODUCTION DEBUG: Stripe key available:', !!stripePublishableKey);
-      
+      console.log(
+        '📦 PRODUCTION DEBUG: Stripe key available:',
+        !!stripePublishableKey
+      );
+
       const { loadStripe } = await import('@stripe/stripe-js');
       const stripe = await loadStripe(stripePublishableKey);
-      
+
       if (!stripe) {
         console.error('❌ PRODUCTION DEBUG: Stripe failed to load');
         throw new Error('Stripe failed to load');
       }
-      
+
       console.log('✅ PRODUCTION DEBUG: Stripe loaded successfully');
 
       // Step 4: Redirect to Stripe Checkout with session ID
       console.log('💳 PRODUCTION DEBUG: Redirecting to Stripe Checkout...');
       const { error } = await stripe.redirectToCheckout({
-        sessionId: result.data.sessionId
+        sessionId: result.data.sessionId,
       });
-      
+
       if (error) {
         console.error('❌ PRODUCTION DEBUG: Stripe redirect error:', error);
         throw error;
       }
-      
-      console.log('✅ PRODUCTION DEBUG: Successfully redirected to Stripe Checkout');
-      
+
+      console.log(
+        '✅ PRODUCTION DEBUG: Successfully redirected to Stripe Checkout'
+      );
     } catch (error) {
       console.error('❌ PRODUCTION DEBUG: Error caught:', error);
       console.error('❌ PRODUCTION DEBUG: Error message:', error.message);
       console.error('❌ PRODUCTION DEBUG: Error code:', error.code);
-      console.error('❌ PRODUCTION DEBUG: Full error object:', JSON.stringify(error, null, 2));
-      
+      console.error(
+        '❌ PRODUCTION DEBUG: Full error object:',
+        JSON.stringify(error, null, 2)
+      );
+
       // More specific error messages
       let errorMessage = 'Payment system error';
-      
-      if (error.message && error.message.includes('functions.config is not a function')) {
+
+      if (
+        error.message &&
+        error.message.includes('functions.config is not a function')
+      ) {
         errorMessage = 'Server configuration error. Please contact support.';
       } else if (error.message && error.message.includes('price')) {
         errorMessage = 'Invalid price configuration. Please contact support.';
       } else if (error.message && error.message.includes('Stripe')) {
         errorMessage = 'Payment system error. Please try again.';
       } else if (error.message && error.message.includes('network')) {
-        errorMessage = 'Network error. Please check your connection and try again.';
+        errorMessage =
+          'Network error. Please check your connection and try again.';
       }
-      
+
       toast.error(errorMessage);
       setLoading(false);
     }
@@ -115,22 +131,32 @@ const UpgradeModal = ({ isOpen, onClose, daysRemaining }) => {
     >
       <div className="space-y-6">
         <div className="text-center">
-          <h2 className="mb-2 text-2xl font-bold">Choose the plan that fits you</h2>
+          <h2 className="mb-2 text-2xl font-bold">
+            Choose the plan that fits you
+          </h2>
           {typeof daysRemaining === 'number' && daysRemaining > 0 && (
             <div className="mb-4 flex items-center justify-center font-medium text-purple-600 dark:text-purple-400">
               <Icon name="schedule" className="mr-1" />
-              {daysRemaining} day{daysRemaining !== 1 ? 's' : ''} left in your free trial
+              {daysRemaining} day{daysRemaining !== 1 ? 's' : ''} left in your
+              free trial
             </div>
           )}
         </div>
         <div className="flex flex-col items-stretch justify-center gap-6 sm:flex-row">
           {/* Free Plan Card */}
           <div className="mx-auto flex max-w-xs flex-1 flex-col items-center rounded-xl border border-gray-200 bg-white p-6 shadow dark:border-gray-700 dark:bg-gray-900">
-            <h3 className="mb-2 text-lg font-bold text-gray-900 dark:text-white">Free Plan</h3>
-            <div className="mb-2 text-2xl font-bold text-gray-900 dark:text-white">A$0.00</div>
+            <h3 className="mb-2 text-lg font-bold text-gray-900 dark:text-white">
+              Free Plan
+            </h3>
+            <div className="mb-2 text-2xl font-bold text-gray-900 dark:text-white">
+              A$0.00
+            </div>
             <ul className="mb-4 w-full">
-              {features.map((f) => (
-                <li key={f.label} className="flex items-center gap-2 py-1 text-sm text-gray-700 dark:text-gray-300">
+              {features.map(f => (
+                <li
+                  key={f.label}
+                  className="flex items-center gap-2 py-1 text-sm text-gray-700 dark:text-gray-300"
+                >
                   {f.free ? (
                     <Icon name="check" className="text-green-500" />
                   ) : (
@@ -140,7 +166,9 @@ const UpgradeModal = ({ isOpen, onClose, daysRemaining }) => {
                 </li>
               ))}
             </ul>
-            <Button variant="secondary" disabled className="w-full">Current Plan</Button>
+            <Button variant="secondary" disabled className="w-full">
+              Current Plan
+            </Button>
           </div>
           {/* Divider for desktop */}
           <div className="mx-2 hidden w-0.5 rounded-full bg-gradient-to-b from-transparent via-gray-300 to-transparent dark:via-gray-700 sm:block"></div>
@@ -149,8 +177,11 @@ const UpgradeModal = ({ isOpen, onClose, daysRemaining }) => {
             <h3 className="mb-2 text-lg font-bold">Premium Plan</h3>
             <div className="mb-2 text-2xl font-bold">A$9.99/mo</div>
             <ul className="mb-4 w-full">
-              {features.map((f) => (
-                <li key={f.label} className="flex items-center gap-2 py-1 text-sm">
+              {features.map(f => (
+                <li
+                  key={f.label}
+                  className="flex items-center gap-2 py-1 text-sm"
+                >
                   {f.premium ? (
                     <Icon name="check" className="text-green-200" />
                   ) : (
@@ -160,8 +191,8 @@ const UpgradeModal = ({ isOpen, onClose, daysRemaining }) => {
                 </li>
               ))}
             </ul>
-            <Button 
-              variant="primary" 
+            <Button
+              variant="primary"
               onClick={handleUpgrade}
               loading={loading}
               className="bg-white/20 border-white/30 hover:bg-white/30 mt-auto w-full rounded border px-4 py-2 text-sm font-medium text-white"
@@ -178,4 +209,4 @@ const UpgradeModal = ({ isOpen, onClose, daysRemaining }) => {
   );
 };
 
-export default UpgradeModal; 
+export default UpgradeModal;

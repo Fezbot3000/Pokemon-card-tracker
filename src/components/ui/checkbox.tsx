@@ -7,9 +7,12 @@ const checkboxVariants = cva(
   {
     variants: {
       variant: {
-        default: 'border-gray-300 bg-white text-gray-900 checked:border-blue-600 checked:bg-blue-600 dark:border-gray-600 dark:bg-black dark:text-white',
-        error: 'border-red-500 bg-white text-gray-900 checked:border-red-600 checked:bg-red-600 dark:border-red-500 dark:bg-black dark:text-white',
-        success: 'border-green-500 bg-white text-gray-900 checked:border-green-600 checked:bg-green-600 dark:border-green-500 dark:bg-black dark:text-white',
+        default:
+          'border-gray-300 bg-white text-gray-900 checked:border-blue-600 checked:bg-blue-600 dark:border-gray-600 dark:bg-black dark:text-white',
+        error:
+          'border-red-500 bg-white text-gray-900 checked:border-red-600 checked:bg-red-600 dark:border-red-500 dark:bg-black dark:text-white',
+        success:
+          'border-green-500 bg-white text-gray-900 checked:border-green-600 checked:bg-green-600 dark:border-green-500 dark:bg-black dark:text-white',
       },
       size: {
         sm: 'size-3',
@@ -34,19 +37,35 @@ export interface CheckboxProps
 }
 
 const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
-  ({ className, variant, size, error, success, label, description, id, ...props }, ref) => {
+  (
+    {
+      className,
+      variant,
+      size,
+      error,
+      success,
+      label,
+      description,
+      id,
+      ...props
+    },
+    ref
+  ) => {
     // Determine variant based on state
     const computedVariant = error ? 'error' : success ? 'success' : variant;
-    
+
     // Generate unique ID if not provided
-    const checkboxId = id || `checkbox-${Math.random().toString(36).substr(2, 9)}`;
+    const checkboxId =
+      id || `checkbox-${Math.random().toString(36).substr(2, 9)}`;
 
     return (
       <div className="flex items-center space-x-2">
         <input
           type="checkbox"
           id={checkboxId}
-          className={cn(checkboxVariants({ variant: computedVariant, size, className }))}
+          className={cn(
+            checkboxVariants({ variant: computedVariant, size, className })
+          )}
           ref={ref}
           {...props}
         />
@@ -74,4 +93,4 @@ const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
 
 Checkbox.displayName = 'Checkbox';
 
-export { Checkbox, checkboxVariants }; 
+export { Checkbox, checkboxVariants };

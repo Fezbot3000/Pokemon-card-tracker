@@ -3,55 +3,54 @@ import PropTypes from 'prop-types';
 
 /**
  * AmountLabel Component
- * 
- * A component for displaying monetary values with appropriate 
+ *
+ * A component for displaying monetary values with appropriate
  * styling for profits (green) and losses (red).
  */
-const AmountLabel = ({ 
+const AmountLabel = ({
   amount,
   type = 'default', // 'default', 'profit', 'loss'
   currency = true,
   currencySymbol = '$',
   className = '',
   size = 'default', // 'sm', 'default', 'lg'
-  ...props 
+  ...props
 }) => {
   // Determine if this is a profit or loss based on the amount if type is not specified
-  const computedType = type === 'default' 
-    ? (amount >= 0 ? 'profit' : 'loss')
-    : type;
-  
+  const computedType =
+    type === 'default' ? (amount >= 0 ? 'profit' : 'loss') : type;
+
   // Format the amount with currency symbol if needed
   const formattedAmount = (() => {
     // Format as currency if needed
     const absoluteAmount = Math.abs(Number(amount));
-    const formatted = currency 
+    const formatted = currency
       ? `${currencySymbol}${absoluteAmount.toLocaleString(undefined, {
           minimumFractionDigits: 2,
-          maximumFractionDigits: 2
+          maximumFractionDigits: 2,
         })}`
       : absoluteAmount.toLocaleString();
-    
+
     // Add minus sign if needed (we handle this separately from the absolute value to ensure consistent positioning)
     return amount < 0 ? `-${formatted}` : formatted;
   })();
-  
+
   // Size classes
   const sizeClasses = {
     sm: 'text-xs',
     default: 'text-sm',
     lg: 'text-base',
   };
-  
+
   // Type classes for the text color
   const typeClasses = {
     default: 'text-gray-600 dark:text-gray-400',
     profit: 'text-green-600 dark:text-green-500',
-    loss: 'text-red-600 dark:text-red-500'
+    loss: 'text-red-600 dark:text-red-500',
   };
-  
+
   return (
-    <span 
+    <span
       className={`${sizeClasses[size]} font-medium ${typeClasses[computedType]} ${className}`}
       {...props}
     >

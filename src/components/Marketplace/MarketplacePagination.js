@@ -1,17 +1,17 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-function MarketplacePagination({ 
-  currentPage, 
-  totalPages, 
-  onPageChange, 
-  itemsPerPage, 
-  totalItems 
+function MarketplacePagination({
+  currentPage,
+  totalPages,
+  onPageChange,
+  itemsPerPage,
+  totalItems,
 }) {
   const getPageNumbers = () => {
     const pages = [];
     const maxVisiblePages = 5;
-    
+
     if (totalPages <= maxVisiblePages) {
       for (let i = 1; i <= totalPages; i++) {
         pages.push(i);
@@ -39,7 +39,7 @@ function MarketplacePagination({
         pages.push(totalPages);
       }
     }
-    
+
     return pages;
   };
 
@@ -51,7 +51,7 @@ function MarketplacePagination({
       <div className="text-sm text-gray-600 dark:text-gray-400">
         Showing {startItem}-{endItem} of {totalItems} listings
       </div>
-      
+
       <div className="flex items-center gap-2">
         <button
           onClick={() => onPageChange(currentPage - 1)}
@@ -64,7 +64,7 @@ function MarketplacePagination({
         >
           <span className="material-icons text-sm">chevron_left</span>
         </button>
-        
+
         {getPageNumbers().map((page, index) => (
           <button
             key={index}
@@ -74,14 +74,14 @@ function MarketplacePagination({
               page === currentPage
                 ? 'bg-purple-600 text-white'
                 : page === '...'
-                ? 'cursor-default text-gray-500 dark:text-gray-400'
-                : 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-[#0F0F0F] dark:text-gray-300 dark:hover:bg-gray-700'
+                  ? 'cursor-default text-gray-500 dark:text-gray-400'
+                  : 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-[#0F0F0F] dark:text-gray-300 dark:hover:bg-gray-700'
             }`}
           >
             {page}
           </button>
         ))}
-        
+
         <button
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
@@ -103,7 +103,7 @@ MarketplacePagination.propTypes = {
   totalPages: PropTypes.number.isRequired,
   onPageChange: PropTypes.func.isRequired,
   itemsPerPage: PropTypes.number.isRequired,
-  totalItems: PropTypes.number.isRequired
+  totalItems: PropTypes.number.isRequired,
 };
 
 export default MarketplacePagination;

@@ -6,7 +6,7 @@ module.exports = {
   ],
   plugins: ['tailwindcss'],
   rules: {
-    'tailwindcss/classnames-order': 'error',
+    'tailwindcss/classnames-order': 'warn',
     'tailwindcss/no-custom-classname': 'warn',
     'tailwindcss/no-contradicting-classname': 'error',
     'tailwindcss/enforces-negative-arbitrary-values': 'error',

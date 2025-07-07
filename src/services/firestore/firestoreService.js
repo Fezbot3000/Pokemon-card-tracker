@@ -1,25 +1,25 @@
 /**
  * Firestore Service
- * 
+ *
  * This service provides direct Firestore operations, replacing the complex
  * IndexedDB + shadow sync pattern. Firestore's built-in offline persistence
  * handles offline/online scenarios automatically.
  */
 
-import { 
-  collection, 
-  doc, 
-  getDoc, 
-  getDocs, 
-  setDoc, 
-  updateDoc, 
-  deleteDoc, 
-  query, 
-  where, 
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  setDoc,
+  updateDoc,
+  deleteDoc,
+  query,
+  where,
   orderBy,
   serverTimestamp,
   writeBatch,
-  onSnapshot
+  onSnapshot,
 } from 'firebase/firestore';
 import { db, auth } from '../../firebase';
 import logger from '../../utils/logger';
@@ -73,7 +73,7 @@ class FirestoreService {
 
       const collectionsRef = this.getUserCollection('collections');
       const snapshot = await getDocs(collectionsRef);
-      
+
       const collections = {};
       snapshot.forEach(doc => {
         collections[doc.id] = doc.data();
@@ -97,11 +97,14 @@ class FirestoreService {
       const userId = this.getCurrentUserId();
       if (!userId) throw new Error('No user ID');
 
-      const collectionRef = doc(this.getUserCollection('collections'), collectionName);
+      const collectionRef = doc(
+        this.getUserCollection('collections'),
+        collectionName
+      );
       await setDoc(collectionRef, {
         name: collectionName,
         data: data || [],
-        updatedAt: serverTimestamp()
+        updatedAt: serverTimestamp(),
       });
 
       logger.debug(`Collection ${collectionName} saved successfully`);
@@ -125,18 +128,18 @@ class FirestoreService {
       const cardsRef = collection(db, 'users', userId, 'cards');
       const q = query(cardsRef, where('collection', '==', collectionName));
       const snapshot = await getDocs(q);
-      
+
       // Delete each card in the collection
       const deletePromises = [];
-      snapshot.forEach((doc) => {
+      snapshot.forEach(doc => {
         deletePromises.push(deleteDoc(doc.ref));
       });
       await Promise.all(deletePromises);
-      
+
       // Try to delete the collection document - handle both possible storage formats
       const collectionsRef = this.getUserCollection('collections');
       let collectionDeleted = false;
-      
+
       // Method 1: Try deleting by document ID (collection name as document ID)
       try {
         const collectionDocRef = doc(collectionsRef, collectionName);
@@ -147,35 +150,48 @@ class FirestoreService {
           collectionDeleted = true;
         }
       } catch (docIdError) {
-        logger.debug(`Could not delete collection by document ID: ${docIdError.message}`);
+        logger.debug(
+          `Could not delete collection by document ID: ${docIdError.message}`
+        );
       }
-      
+
       // Method 2: If not found by ID, try finding by name field
       if (!collectionDeleted) {
         try {
-          const collectionQuery = query(collectionsRef, where('name', '==', collectionName));
+          const collectionQuery = query(
+            collectionsRef,
+            where('name', '==', collectionName)
+          );
           const collectionSnapshot = await getDocs(collectionQuery);
-          
+
           if (!collectionSnapshot.empty) {
             // Delete all documents that match (should typically be just one)
             const deleteCollectionPromises = [];
-            collectionSnapshot.forEach((doc) => {
+            collectionSnapshot.forEach(doc => {
               deleteCollectionPromises.push(deleteDoc(doc.ref));
             });
             await Promise.all(deleteCollectionPromises);
-            logger.debug(`Collection ${collectionName} document(s) deleted by name field`);
+            logger.debug(
+              `Collection ${collectionName} document(s) deleted by name field`
+            );
             collectionDeleted = true;
           }
         } catch (nameFieldError) {
-          logger.debug(`Could not delete collection by name field: ${nameFieldError.message}`);
+          logger.debug(
+            `Could not delete collection by name field: ${nameFieldError.message}`
+          );
         }
       }
-      
+
       if (!collectionDeleted) {
-        logger.warn(`Collection document not found for: ${collectionName} (this may be normal if collection was already deleted)`);
+        logger.warn(
+          `Collection document not found for: ${collectionName} (this may be normal if collection was already deleted)`
+        );
       }
 
-      logger.debug(`Collection ${collectionName} and ${deletePromises.length} cards deleted successfully`);
+      logger.debug(
+        `Collection ${collectionName} and ${deletePromises.length} cards deleted successfully`
+      );
     } catch (error) {
       logger.error(`Error deleting collection ${collectionName}:`, error);
       throw error;
@@ -194,7 +210,10 @@ class FirestoreService {
       const userId = this.getCurrentUserId();
       if (!userId) return [];
 
-      const collectionRef = doc(this.getUserCollection('collections'), collectionName);
+      const collectionRef = doc(
+        this.getUserCollection('collections'),
+        collectionName
+      );
       const collectionDoc = await getDoc(collectionRef);
 
       if (!collectionDoc.exists()) {
@@ -203,7 +222,10 @@ class FirestoreService {
 
       return collectionDoc.data().data || [];
     } catch (error) {
-      logger.error(`Error getting cards for collection ${collectionName}:`, error);
+      logger.error(
+        `Error getting cards for collection ${collectionName}:`,
+        error
+      );
       throw error;
     }
   }
@@ -243,11 +265,14 @@ class FirestoreService {
     try {
       const cards = await this.getCards(collectionName);
       const filteredCards = cards.filter(c => c.id !== cardId);
-      
+
       await this.saveCollection(collectionName, filteredCards);
       logger.debug(`Card ${cardId} deleted from collection ${collectionName}`);
     } catch (error) {
-      logger.error(`Error deleting card from collection ${collectionName}:`, error);
+      logger.error(
+        `Error deleting card from collection ${collectionName}:`,
+        error
+      );
       throw error;
     }
   }
@@ -265,7 +290,7 @@ class FirestoreService {
 
       const soldItemsRef = this.getUserCollection('sold-items');
       const snapshot = await getDocs(soldItemsRef);
-      
+
       const soldItems = [];
       snapshot.forEach(doc => {
         soldItems.push({ id: doc.id, ...doc.data() });
@@ -288,10 +313,13 @@ class FirestoreService {
       const userId = this.getCurrentUserId();
       if (!userId) throw new Error('No user ID');
 
-      const soldItemRef = doc(this.getUserCollection('sold-items'), soldItem.id);
+      const soldItemRef = doc(
+        this.getUserCollection('sold-items'),
+        soldItem.id
+      );
       await setDoc(soldItemRef, {
         ...soldItem,
-        updatedAt: serverTimestamp()
+        updatedAt: serverTimestamp(),
       });
 
       logger.debug(`Sold item ${soldItem.id} saved successfully`);
@@ -312,7 +340,7 @@ class FirestoreService {
       if (!userId) throw new Error('No user ID');
 
       const batch = writeBatch(db);
-      
+
       itemIds.forEach(itemId => {
         const itemRef = doc(this.getUserCollection('sold-items'), itemId);
         batch.delete(itemRef);
@@ -360,7 +388,7 @@ class FirestoreService {
       const profileRef = doc(this.getUserCollection('profile'), 'data');
       await setDoc(profileRef, {
         ...profileData,
-        updatedAt: serverTimestamp()
+        updatedAt: serverTimestamp(),
       });
 
       logger.debug('Profile saved successfully');
@@ -382,8 +410,10 @@ class FirestoreService {
       if (!userId) return [];
 
       const invoicesRef = this.getUserCollection('purchaseInvoices');
-      const snapshot = await getDocs(query(invoicesRef, orderBy('date', 'desc')));
-      
+      const snapshot = await getDocs(
+        query(invoicesRef, orderBy('date', 'desc'))
+      );
+
       const invoices = [];
       snapshot.forEach(doc => {
         invoices.push({ id: doc.id, ...doc.data() });
@@ -406,10 +436,13 @@ class FirestoreService {
       const userId = this.getCurrentUserId();
       if (!userId) throw new Error('No user ID');
 
-      const invoiceRef = doc(this.getUserCollection('purchaseInvoices'), invoice.id);
+      const invoiceRef = doc(
+        this.getUserCollection('purchaseInvoices'),
+        invoice.id
+      );
       await setDoc(invoiceRef, {
         ...invoice,
-        updatedAt: serverTimestamp()
+        updatedAt: serverTimestamp(),
       });
 
       logger.debug(`Purchase invoice ${invoice.id} saved successfully`);
@@ -429,7 +462,10 @@ class FirestoreService {
       const userId = this.getCurrentUserId();
       if (!userId) throw new Error('No user ID');
 
-      const invoiceRef = doc(this.getUserCollection('purchaseInvoices'), invoiceId);
+      const invoiceRef = doc(
+        this.getUserCollection('purchaseInvoices'),
+        invoiceId
+      );
       await deleteDoc(invoiceRef);
 
       logger.debug(`Purchase invoice ${invoiceId} deleted successfully`);
@@ -452,24 +488,37 @@ class FirestoreService {
       const userId = this.getCurrentUserId();
       if (!userId) return () => {};
 
-      const collectionRef = doc(this.getUserCollection('collections'), collectionName);
-      
-      const unsubscribe = onSnapshot(collectionRef, (doc) => {
-        if (doc.exists()) {
-          callback(doc.data().data || []);
-        } else {
-          callback([]);
+      const collectionRef = doc(
+        this.getUserCollection('collections'),
+        collectionName
+      );
+
+      const unsubscribe = onSnapshot(
+        collectionRef,
+        doc => {
+          if (doc.exists()) {
+            callback(doc.data().data || []);
+          } else {
+            callback([]);
+          }
+        },
+        error => {
+          logger.error(
+            `Error listening to collection ${collectionName}:`,
+            error
+          );
         }
-      }, (error) => {
-        logger.error(`Error listening to collection ${collectionName}:`, error);
-      });
+      );
 
       // Store unsubscriber
       this.unsubscribers.set(`collection-${collectionName}`, unsubscribe);
-      
+
       return unsubscribe;
     } catch (error) {
-      logger.error(`Error setting up listener for collection ${collectionName}:`, error);
+      logger.error(
+        `Error setting up listener for collection ${collectionName}:`,
+        error
+      );
       return () => {};
     }
   }

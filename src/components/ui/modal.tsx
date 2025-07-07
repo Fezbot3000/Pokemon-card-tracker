@@ -56,18 +56,21 @@ export interface ModalProps
 }
 
 const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
-  ({ 
-    className, 
-    backdrop, 
-    size, 
-    isOpen, 
-    onClose, 
-    closeOnOverlayClick = true,
-    closeOnEscape = true,
-    title,
-    children,
-    ...props 
-  }, ref) => {
+  (
+    {
+      className,
+      backdrop,
+      size,
+      isOpen,
+      onClose,
+      closeOnOverlayClick = true,
+      closeOnEscape = true,
+      title,
+      children,
+      ...props
+    },
+    ref
+  ) => {
     // Handle escape key press
     React.useEffect(() => {
       if (!closeOnEscape) return;
@@ -106,7 +109,7 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
       >
         <div
           className={cn(modalContentVariants({ size }))}
-          onClick={(e) => e.stopPropagation()}
+          onClick={e => e.stopPropagation()}
         >
           {title && (
             <div className="flex items-center justify-between border-b border-gray-200 p-6 dark:border-gray-700">
@@ -117,15 +120,23 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
                 onClick={onClose}
                 className="text-gray-400 transition-colors hover:text-gray-600 dark:hover:text-gray-300"
               >
-                <svg className="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <svg
+                  className="size-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>
           )}
-          <div className="p-6">
-            {children}
-          </div>
+          <div className="p-6">{children}</div>
         </div>
       </div>
     );
@@ -134,4 +145,4 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
 
 Modal.displayName = 'Modal';
 
-export { Modal, modalVariants, modalContentVariants }; 
+export { Modal, modalVariants, modalContentVariants };

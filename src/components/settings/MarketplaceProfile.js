@@ -17,21 +17,21 @@ function MarketplaceProfile() {
     responseTime: 'within-24h',
     autoReplyMessage: '',
     showRatings: true,
-    allowOffers: true
+    allowOffers: true,
   });
 
   const paymentMethods = [
     { id: 'cash', label: 'Cash', icon: 'payments' },
     { id: 'bank-transfer', label: 'Bank Transfer', icon: 'account_balance' },
     { id: 'paypal', label: 'PayPal', icon: 'payment' },
-    { id: 'crypto', label: 'Cryptocurrency', icon: 'currency_bitcoin' }
+    { id: 'crypto', label: 'Cryptocurrency', icon: 'currency_bitcoin' },
   ];
 
   const responseTimeOptions = [
     { value: 'within-1h', label: 'Within 1 hour' },
     { value: 'within-24h', label: 'Within 24 hours' },
     { value: 'within-3d', label: 'Within 3 days' },
-    { value: 'within-week', label: 'Within a week' }
+    { value: 'within-week', label: 'Within a week' },
   ];
 
   useEffect(() => {
@@ -41,12 +41,15 @@ function MarketplaceProfile() {
       try {
         const profileRef = doc(firestoreDb, 'marketplaceProfiles', user.uid);
         const profileSnap = await getDoc(profileRef);
-        
+
         if (profileSnap.exists()) {
           setProfile(prev => ({ ...prev, ...profileSnap.data() }));
         } else {
           // Initialize with user's display name
-          setProfile(prev => ({ ...prev, displayName: user.displayName || '' }));
+          setProfile(prev => ({
+            ...prev,
+            displayName: user.displayName || '',
+          }));
         }
       } catch (error) {
         logger.error('Error loading marketplace profile:', error);
@@ -65,11 +68,15 @@ function MarketplaceProfile() {
     setSaving(true);
     try {
       const profileRef = doc(firestoreDb, 'marketplaceProfiles', user.uid);
-      await setDoc(profileRef, {
-        ...profile,
-        userId: user.uid,
-        updatedAt: new Date()
-      }, { merge: true });
+      await setDoc(
+        profileRef,
+        {
+          ...profile,
+          userId: user.uid,
+          updatedAt: new Date(),
+        },
+        { merge: true }
+      );
 
       toastService.success('Marketplace profile updated successfully');
     } catch (error) {
@@ -80,12 +87,12 @@ function MarketplaceProfile() {
     }
   };
 
-  const togglePaymentMethod = (methodId) => {
+  const togglePaymentMethod = methodId => {
     setProfile(prev => ({
       ...prev,
       preferredPaymentMethods: prev.preferredPaymentMethods.includes(methodId)
         ? prev.preferredPaymentMethods.filter(id => id !== methodId)
-        : [...prev.preferredPaymentMethods, methodId]
+        : [...prev.preferredPaymentMethods, methodId],
     }));
   };
 
@@ -116,7 +123,9 @@ function MarketplaceProfile() {
         <input
           type="text"
           value={profile.displayName}
-          onChange={(e) => setProfile(prev => ({ ...prev, displayName: e.target.value }))}
+          onChange={e =>
+            setProfile(prev => ({ ...prev, displayName: e.target.value }))
+          }
           className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 dark:border-gray-600 dark:bg-[#0F0F0F] dark:text-white"
           placeholder="Your marketplace name"
         />
@@ -129,7 +138,7 @@ function MarketplaceProfile() {
         </label>
         <textarea
           value={profile.bio}
-          onChange={(e) => setProfile(prev => ({ ...prev, bio: e.target.value }))}
+          onChange={e => setProfile(prev => ({ ...prev, bio: e.target.value }))}
           className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 dark:border-gray-600 dark:bg-[#0F0F0F] dark:text-white"
           rows={3}
           placeholder="Tell buyers a bit about yourself..."
@@ -144,7 +153,9 @@ function MarketplaceProfile() {
         <input
           type="text"
           value={profile.location}
-          onChange={(e) => setProfile(prev => ({ ...prev, location: e.target.value }))}
+          onChange={e =>
+            setProfile(prev => ({ ...prev, location: e.target.value }))
+          }
           className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 dark:border-gray-600 dark:bg-[#0F0F0F] dark:text-white"
           placeholder="City, State/Country"
         />
@@ -180,7 +191,9 @@ function MarketplaceProfile() {
         </label>
         <select
           value={profile.responseTime}
-          onChange={(e) => setProfile(prev => ({ ...prev, responseTime: e.target.value }))}
+          onChange={e =>
+            setProfile(prev => ({ ...prev, responseTime: e.target.value }))
+          }
           className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 dark:border-gray-600 dark:bg-[#0F0F0F] dark:text-white"
         >
           {responseTimeOptions.map(option => (
@@ -198,7 +211,9 @@ function MarketplaceProfile() {
         </label>
         <textarea
           value={profile.autoReplyMessage}
-          onChange={(e) => setProfile(prev => ({ ...prev, autoReplyMessage: e.target.value }))}
+          onChange={e =>
+            setProfile(prev => ({ ...prev, autoReplyMessage: e.target.value }))
+          }
           className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 dark:border-gray-600 dark:bg-[#0F0F0F] dark:text-white"
           rows={2}
           placeholder="Thanks for your interest! I'll get back to you soon."
@@ -212,9 +227,13 @@ function MarketplaceProfile() {
             Show ratings on profile
           </span>
           <button
-            onClick={() => setProfile(prev => ({ ...prev, showRatings: !prev.showRatings }))}
+            onClick={() =>
+              setProfile(prev => ({ ...prev, showRatings: !prev.showRatings }))
+            }
             className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-              profile.showRatings ? 'bg-purple-600' : 'bg-gray-300 dark:bg-gray-600'
+              profile.showRatings
+                ? 'bg-purple-600'
+                : 'bg-gray-300 dark:bg-gray-600'
             }`}
           >
             <span
@@ -230,9 +249,13 @@ function MarketplaceProfile() {
             Allow buyers to make offers
           </span>
           <button
-            onClick={() => setProfile(prev => ({ ...prev, allowOffers: !prev.allowOffers }))}
+            onClick={() =>
+              setProfile(prev => ({ ...prev, allowOffers: !prev.allowOffers }))
+            }
             className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-              profile.allowOffers ? 'bg-purple-600' : 'bg-gray-300 dark:bg-gray-600'
+              profile.allowOffers
+                ? 'bg-purple-600'
+                : 'bg-gray-300 dark:bg-gray-600'
             }`}
           >
             <span

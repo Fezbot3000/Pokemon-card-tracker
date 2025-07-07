@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { doc, updateDoc, deleteDoc, serverTimestamp, getDoc, writeBatch } from 'firebase/firestore';
+import {
+  doc,
+  updateDoc,
+  deleteDoc,
+  serverTimestamp,
+  getDoc,
+  writeBatch,
+} from 'firebase/firestore';
 import { db as firestoreDb } from '../../services/firebase';
 import { toast } from 'react-hot-toast';
 import { useUserPreferences } from '../../contexts/UserPreferencesContext';
@@ -18,25 +25,25 @@ function EditListingModal({ isOpen, onClose, listing, onListingDeleted }) {
     price: '',
     note: '',
     location: '',
-    markAsSold: false
+    markAsSold: false,
   });
 
   // Initialize form data when listing changes
   useEffect(() => {
     if (!listing) return;
-    
+
     setFormData({
       price: listing.listingPrice || '',
       note: listing.note || '',
       location: listing.location || '',
-      markAsSold: false
+      markAsSold: false,
     });
   }, [listing]);
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
@@ -50,16 +57,16 @@ function EditListingModal({ isOpen, onClose, listing, onListingDeleted }) {
     return { isValid: true };
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault();
-    
+
     if (!listing) {
       toast.error('No listing data available');
       return;
     }
-    
+
     const { isValid, error } = validateForm();
-    
+
     if (!isValid) {
       toast.error(error);
       return;
@@ -78,12 +85,12 @@ function EditListingModal({ isOpen, onClose, listing, onListingDeleted }) {
           listingPrice: formData.price,
           note: formData.note,
           location: formData.location,
-          timestampUpdated: serverTimestamp()
+          timestampUpdated: serverTimestamp(),
         });
-        
+
         toast.success('Listing updated successfully');
       }
-      
+
       onClose(); // Close the modal after successful update
     } catch (error) {
       logger.error('Error updating listing:', error);
@@ -96,8 +103,11 @@ function EditListingModal({ isOpen, onClose, listing, onListingDeleted }) {
   const handleMarkAsSold = async () => {
     try {
       // 1. Create a new document in the sold-items collection
-      const soldItemsRef = collection(firestoreDb, `users/${listing.userId}/sold-items`);
-      
+      const soldItemsRef = collection(
+        firestoreDb,
+        `users/${listing.userId}/sold-items`
+      );
+
       // Prepare the sold item data
       const soldItemData = {
         ...listing.card,
@@ -108,16 +118,16 @@ function EditListingModal({ isOpen, onClose, listing, onListingDeleted }) {
         saleDate: new Date(),
         soldFrom: 'marketplace',
         soldNote: formData.note || '',
-        timestampSold: serverTimestamp()
+        timestampSold: serverTimestamp(),
       };
-      
+
       // Add to sold-items collection
       await addDoc(soldItemsRef, soldItemData);
-      
+
       // 2. Delete the listing from marketplaceItems
       const listingRef = doc(firestoreDb, 'marketplaceItems', listing.id);
       await deleteDoc(listingRef);
-      
+
       toast.success('Card marked as sold and moved to sold items');
     } catch (error) {
       logger.error('Error marking item as sold:', error);
@@ -149,68 +159,86 @@ function EditListingModal({ isOpen, onClose, listing, onListingDeleted }) {
     try {
       // Use a batch to ensure atomic operation
       const batch = writeBatch(firestoreDb);
-      
+
       // Get a direct reference to the document
       const listingRef = doc(firestoreDb, 'marketplaceItems', listing.id);
-      
+
       // First verify the document exists
       const docSnap = await getDoc(listingRef);
-      
+
       if (!docSnap.exists()) {
-        logger.warn(`Document at marketplaceItems/${listing.id} does not exist or has already been deleted`);
+        logger.warn(
+          `Document at marketplaceItems/${listing.id} does not exist or has already been deleted`
+        );
         toast.success('Listing has been removed');
         setShowDeleteConfirmation(false);
         onClose();
-        
+
         // Still notify parent to update UI
         if (typeof onListingDeleted === 'function') {
           onListingDeleted(listing.id);
         }
         return;
       }
-      
+
       // Update status to 'archived' first, then delete
-      batch.update(listingRef, { status: 'archived', timestampArchived: serverTimestamp() });
+      batch.update(listingRef, {
+        status: 'archived',
+        timestampArchived: serverTimestamp(),
+      });
       batch.delete(listingRef);
-      
+
       // Also update the isListed flag in the original card document
       if (listing.card && listing.card.slabSerial && listing.userId) {
-        const cardRef = doc(firestoreDb, `users/${listing.userId}/cards/${listing.card.slabSerial}`);
+        const cardRef = doc(
+          firestoreDb,
+          `users/${listing.userId}/cards/${listing.card.slabSerial}`
+        );
         // Check if the card document exists before updating
         const cardDoc = await getDoc(cardRef);
         if (cardDoc.exists()) {
-          logger.info(`Updating isListed flag for card: ${listing.card.slabSerial}`);
+          logger.info(
+            `Updating isListed flag for card: ${listing.card.slabSerial}`
+          );
           batch.update(cardRef, { isListed: false });
         } else {
-          logger.warn(`Card document not found for: ${listing.card.slabSerial}`);
+          logger.warn(
+            `Card document not found for: ${listing.card.slabSerial}`
+          );
         }
       }
-      
+
       // Commit the batch
       await batch.commit();
-      
+
       // Verify deletion was successful
       const verifySnap = await getDoc(listingRef);
       if (!verifySnap.exists()) {
-        logger.info(`Successfully deleted document at: marketplaceItems/${listing.id}`);
+        logger.info(
+          `Successfully deleted document at: marketplaceItems/${listing.id}`
+        );
         toast.success('Listing deleted successfully');
       } else {
         throw new Error('Document still exists after deletion');
       }
-      
+
       // Update UI
       setShowDeleteConfirmation(false);
-      
+
       // Notify parent component about the deletion
       if (typeof onListingDeleted === 'function') {
         onListingDeleted(listing.id);
       }
-      
+
       // Close the modal
       onClose();
     } catch (error) {
       logger.error('Error deleting listing:', error);
-      logger.error('Listing details:', { id: listing.id, userId: listing.userId, userAuth: user?.uid });
+      logger.error('Listing details:', {
+        id: listing.id,
+        userId: listing.userId,
+        userAuth: user?.uid,
+      });
       toast.error('Failed to delete listing. Please try again.');
     } finally {
       setIsDeleting(false);
@@ -218,7 +246,7 @@ function EditListingModal({ isOpen, onClose, listing, onListingDeleted }) {
   };
 
   if (!isOpen || !listing) return null;
-  
+
   // Delete confirmation modal
   const DeleteConfirmationModal = () => (
     <Modal
@@ -230,13 +258,27 @@ function EditListingModal({ isOpen, onClose, listing, onListingDeleted }) {
       <div className="p-6">
         <div className="mb-4 text-center">
           <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/20">
-            <svg className="size-6 text-red-600 dark:text-red-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            <svg
+              className="size-6 text-red-600 dark:text-red-400"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+              />
             </svg>
           </div>
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white">Are you sure you want to delete this listing?</h3>
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+            Are you sure you want to delete this listing?
+          </h3>
           <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-            This action will permanently remove the listing from the marketplace. This action cannot be undone.
+            This action will permanently remove the listing from the
+            marketplace. This action cannot be undone.
           </p>
         </div>
         <div className="mt-5 flex flex-col gap-3 sm:mt-6 sm:flex-row-reverse">
@@ -306,23 +348,33 @@ function EditListingModal({ isOpen, onClose, listing, onListingDeleted }) {
                   <span className="mr-2 size-4 animate-spin rounded-full border-y-2 border-white"></span>
                   {formData.markAsSold ? 'Processing...' : 'Updating...'}
                 </>
+              ) : formData.markAsSold ? (
+                'Mark as Sold'
               ) : (
-                formData.markAsSold ? 'Mark as Sold' : 'Update Listing'
+                'Update Listing'
               )}
             </button>
           </>
         }
       >
-        <form id="edit-listing-form" onSubmit={handleSubmit} className="space-y-6">
+        <form
+          id="edit-listing-form"
+          onSubmit={handleSubmit}
+          className="space-y-6"
+        >
           <div className="flex items-center">
             <label className="inline-flex items-center">
               <input
                 type="checkbox"
                 checked={formData.markAsSold}
-                onChange={(e) => handleInputChange('markAsSold', e.target.checked)}
+                onChange={e =>
+                  handleInputChange('markAsSold', e.target.checked)
+                }
                 className="size-5 rounded border-gray-300 bg-white text-purple-600 focus:ring-2 focus:ring-purple-500 dark:border-gray-600 dark:bg-[#1B2131] dark:focus:ring-purple-400"
               />
-              <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">Mark as sold</span>
+              <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
+                Mark as sold
+              </span>
             </label>
           </div>
 
@@ -339,7 +391,7 @@ function EditListingModal({ isOpen, onClose, listing, onListingDeleted }) {
                   <input
                     type="number"
                     value={formData.price}
-                    onChange={(e) => handleInputChange('price', e.target.value)}
+                    onChange={e => handleInputChange('price', e.target.value)}
                     className="w-full rounded-lg border border-gray-300 bg-white py-3 pl-8 pr-4 text-gray-900 placeholder:text-gray-500 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500 dark:border-gray-600 dark:bg-[#1B2131] dark:text-white dark:placeholder:text-gray-400"
                     placeholder="0.00"
                     step="0.01"
@@ -356,7 +408,7 @@ function EditListingModal({ isOpen, onClose, listing, onListingDeleted }) {
                 <input
                   type="text"
                   value={formData.location}
-                  onChange={(e) => handleInputChange('location', e.target.value)}
+                  onChange={e => handleInputChange('location', e.target.value)}
                   className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-500 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500 dark:border-gray-600 dark:bg-[#1B2131] dark:text-white dark:placeholder:text-gray-400"
                   placeholder="Enter your location (e.g., Sydney)"
                 />
@@ -371,7 +423,7 @@ function EditListingModal({ isOpen, onClose, listing, onListingDeleted }) {
               </label>
               <textarea
                 value={formData.note}
-                onChange={(e) => handleInputChange('note', e.target.value)}
+                onChange={e => handleInputChange('note', e.target.value)}
                 className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-500 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500 dark:border-gray-600 dark:bg-[#1B2131] dark:text-white dark:placeholder:text-gray-400"
                 placeholder="Add a note about this card..."
                 rows="4"
@@ -383,16 +435,29 @@ function EditListingModal({ isOpen, onClose, listing, onListingDeleted }) {
             <div className="rounded-md border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-900/30 dark:bg-yellow-900/20">
               <div className="flex">
                 <div className="shrink-0">
-                  <svg className="size-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  <svg
+                    className="size-5 text-yellow-400"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                 </div>
                 <div className="ml-3">
-                  <h3 className="text-sm font-medium text-yellow-800 dark:text-yellow-200">Attention</h3>
+                  <h3 className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
+                    Attention
+                  </h3>
                   <div className="mt-2 text-sm text-yellow-700 dark:text-yellow-300">
                     <p>
-                      Marking this card as sold will remove it from the marketplace and add it to your sold items.
-                      This action cannot be undone.
+                      Marking this card as sold will remove it from the
+                      marketplace and add it to your sold items. This action
+                      cannot be undone.
                     </p>
                   </div>
                 </div>

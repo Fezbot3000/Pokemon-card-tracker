@@ -14,11 +14,11 @@ const forceSilence = true; // Disable debug logging in production
 // Configure logging levels
 // Set to true to show that type of log, false to hide
 const config = {
-  showDebugLogs: !isProduction && !forceSilence,   // Hide debug logs in production and when forceSilence is true
-  showInfoLogs: !isProduction && !forceSilence,    // Hide info logs in production and when forceSilence is true
-  showWarnLogs: !forceSilence,                    // Show warnings unless forceSilence is true
-  showErrorLogs: true,                            // Always show errors
-  showCriticalLogs: true,                         // Always show critical logs
+  showDebugLogs: !isProduction && !forceSilence, // Hide debug logs in production and when forceSilence is true
+  showInfoLogs: !isProduction && !forceSilence, // Hide info logs in production and when forceSilence is true
+  showWarnLogs: !forceSilence, // Show warnings unless forceSilence is true
+  showErrorLogs: true, // Always show errors
+  showCriticalLogs: true, // Always show critical logs
 };
 
 // Silence ALL console logs except errors in production by overriding console methods
@@ -30,28 +30,28 @@ if (isProduction || forceSilence) {
     info: console.info,
     warn: console.warn,
     error: console.error,
-    debug: console.debug
+    debug: console.debug,
   };
 
   // Override console methods in production
-  console.log = function(...args) {
+  console.log = function (...args) {
     // Do nothing in production (silence logs)
   };
-  
-  console.info = function(...args) {
+
+  console.info = function (...args) {
     // Do nothing in production (silence info)
   };
-  
-  console.debug = function(...args) {
+
+  console.debug = function (...args) {
     // Do nothing in production (silence debug)
   };
-  
+
   // Keep warnings and errors functional
-  console.warn = function(...args) {
+  console.warn = function (...args) {
     originalConsole.warn.apply(console, args);
   };
-  
-  console.error = function(...args) {
+
+  console.error = function (...args) {
     originalConsole.error.apply(console, args);
   };
 }
@@ -63,41 +63,41 @@ const logger = {
       // console.log(...args);
     }
   },
-  
+
   // Shows in both dev and production, use sparingly
   info: (...args) => {
     if (config.showInfoLogs) {
       console.info(...args);
     }
   },
-  
+
   // Important warnings, shown in both environments
   warn: (...args) => {
     if (config.showWarnLogs) {
       console.warn(...args);
     }
   },
-  
+
   // Errors are always shown
   error: (...args) => {
     if (config.showErrorLogs) {
       console.error(...args);
     }
   },
-  
+
   // Critical information that should be shown even in production
   critical: (...args) => {
     if (config.showCriticalLogs) {
       // console.log('[CRITICAL]', ...args);
     }
   },
-  
+
   // Alias for log to make migration easier
   log: (...args) => {
     if (config.showDebugLogs) {
       // console.log(...args);
     }
-  }
+  },
 };
 
 export default logger;

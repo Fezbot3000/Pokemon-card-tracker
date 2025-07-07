@@ -1,6 +1,6 @@
 /**
  * Notification Service
- * 
+ *
  * Provides a centralized way to handle notifications in the application.
  */
 
@@ -13,7 +13,7 @@ const NotificationService = {
 
   showLookupNotification(type, details = {}) {
     toast.dismiss(); // Clear any existing notifications
-    
+
     switch (type) {
       case 'SUCCESS':
         toast.success('PSA data loaded successfully');
@@ -40,7 +40,7 @@ const NotificationService = {
       default:
         toast.error('An unknown error occurred');
     }
-  }
+  },
 };
 
 export default NotificationService;

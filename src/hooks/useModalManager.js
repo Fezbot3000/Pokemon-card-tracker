@@ -10,23 +10,23 @@ export function useModalManager() {
     importModal: false,
     settings: false,
     profitChange: false,
-    cardDetails: false
+    cardDetails: false,
   });
 
-  const openModal = useCallback((modalName) => {
+  const openModal = useCallback(modalName => {
     setModals(prev => ({ ...prev, [modalName]: true }));
   }, []);
 
-  const closeModal = useCallback((modalName) => {
+  const closeModal = useCallback(modalName => {
     setModals(prev => ({ ...prev, [modalName]: false }));
   }, []);
 
-  const toggleModal = useCallback((modalName) => {
+  const toggleModal = useCallback(modalName => {
     setModals(prev => ({ ...prev, [modalName]: !prev[modalName] }));
   }, []);
 
   const closeAllModals = useCallback(() => {
-    setModals(prev => 
+    setModals(prev =>
       Object.keys(prev).reduce((acc, key) => ({ ...acc, [key]: false }), {})
     );
   }, []);
@@ -36,7 +36,7 @@ export function useModalManager() {
     openModal,
     closeModal,
     toggleModal,
-    closeAllModals
+    closeAllModals,
   };
 }
 
@@ -46,7 +46,7 @@ export function useNewCardModal() {
   const open = useCallback(() => setIsOpen(true), []);
   const close = useCallback(() => setIsOpen(false), []);
   const toggle = useCallback(() => setIsOpen(prev => !prev), []);
-  
+
   return { isOpen, open, close, toggle };
 }
 
@@ -55,20 +55,20 @@ export function useSettingsModal() {
   const open = useCallback(() => setIsOpen(true), []);
   const close = useCallback(() => setIsOpen(false), []);
   const toggle = useCallback(() => setIsOpen(prev => !prev), []);
-  
+
   return { isOpen, open, close, toggle };
 }
 
 export function useImportModal() {
   const [isOpen, setIsOpen] = useState(false);
   const [mode, setMode] = useState('priceUpdate');
-  
+
   const open = useCallback((importMode = 'priceUpdate') => {
     setMode(importMode);
     setIsOpen(true);
   }, []);
-  
+
   const close = useCallback(() => setIsOpen(false), []);
-  
+
   return { isOpen, mode, open, close };
 }

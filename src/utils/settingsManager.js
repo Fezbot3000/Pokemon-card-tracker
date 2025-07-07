@@ -11,21 +11,26 @@ export const settingsManager = {
    * @param {Function} setShowSettings - Function to show/hide settings
    * @param {Function} navigate - Navigation function for routing (optional, for mobile)
    */
-  openSettings: (isMobile, setCurrentView, setShowSettings, navigate = null) => {
+  openSettings: (
+    isMobile,
+    setCurrentView,
+    setShowSettings,
+    navigate = null
+  ) => {
     try {
       document.body.classList.add('settings-open');
-      
+
       // For mobile, navigate to settings page instead of modal
       if (isMobile && navigate) {
         navigate('/dashboard/settings');
         return;
       }
-      
+
       // For desktop or when navigate is not provided, use modal
       if (isMobile) {
         setCurrentView('settings');
       }
-      
+
       // Always show settings regardless of device
       setShowSettings(true);
     } catch (error) {
@@ -43,17 +48,23 @@ export const settingsManager = {
    * @param {Function} setShowSettings - Function to show/hide settings
    * @param {string} targetView - Optional target view to navigate to after closing settings
    */
-  closeSettings: (isMobile, currentView, setCurrentView, setShowSettings, targetView = null) => {
+  closeSettings: (
+    isMobile,
+    currentView,
+    setCurrentView,
+    setShowSettings,
+    targetView = null
+  ) => {
     try {
       document.body.classList.remove('settings-open');
-      
+
       setShowSettings(false);
-      
+
       // Handle view transition after closing settings
       if (isMobile && currentView === 'settings') {
         // If a target view is specified, navigate to it, otherwise default to cards
         const nextView = targetView || 'cards';
-        
+
         // Use setTimeout to ensure state updates happen in the correct order
         setTimeout(() => {
           setCurrentView(nextView);
@@ -73,11 +84,22 @@ export const settingsManager = {
    * @param {Function} setShowSettings - Function to show/hide settings
    * @param {string} targetView - The view to navigate to
    */
-  navigateFromSettings: (isMobile, setCurrentView, setShowSettings, targetView) => {
+  navigateFromSettings: (
+    isMobile,
+    setCurrentView,
+    setShowSettings,
+    targetView
+  ) => {
     try {
       if (isMobile) {
         // First close settings, then navigate to target view
-        settingsManager.closeSettings(isMobile, 'settings', setCurrentView, setShowSettings, targetView);
+        settingsManager.closeSettings(
+          isMobile,
+          'settings',
+          setCurrentView,
+          setShowSettings,
+          targetView
+        );
       } else {
         // On desktop, just close the modal and set the view
         setShowSettings(false);
@@ -88,5 +110,5 @@ export const settingsManager = {
       // Fallback: just set the target view
       setCurrentView(targetView);
     }
-  }
+  },
 };

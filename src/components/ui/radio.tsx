@@ -7,9 +7,12 @@ const radioVariants = cva(
   {
     variants: {
       variant: {
-        default: 'border-gray-300 bg-white text-gray-900 checked:border-blue-600 checked:bg-blue-600 dark:border-gray-600 dark:bg-black dark:text-white',
-        error: 'border-red-500 bg-white text-gray-900 checked:border-red-600 checked:bg-red-600 dark:border-red-500 dark:bg-black dark:text-white',
-        success: 'border-green-500 bg-white text-gray-900 checked:border-green-600 checked:bg-green-600 dark:border-green-500 dark:bg-black dark:text-white',
+        default:
+          'border-gray-300 bg-white text-gray-900 checked:border-blue-600 checked:bg-blue-600 dark:border-gray-600 dark:bg-black dark:text-white',
+        error:
+          'border-red-500 bg-white text-gray-900 checked:border-red-600 checked:bg-red-600 dark:border-red-500 dark:bg-black dark:text-white',
+        success:
+          'border-green-500 bg-white text-gray-900 checked:border-green-600 checked:bg-green-600 dark:border-green-500 dark:bg-black dark:text-white',
       },
       size: {
         sm: 'size-3',
@@ -34,10 +37,23 @@ export interface RadioProps
 }
 
 const Radio = React.forwardRef<HTMLInputElement, RadioProps>(
-  ({ className, variant, size, error, success, label, description, id, ...props }, ref) => {
+  (
+    {
+      className,
+      variant,
+      size,
+      error,
+      success,
+      label,
+      description,
+      id,
+      ...props
+    },
+    ref
+  ) => {
     // Determine variant based on state
     const computedVariant = error ? 'error' : success ? 'success' : variant;
-    
+
     // Generate unique ID if not provided
     const radioId = id || `radio-${Math.random().toString(36).substr(2, 9)}`;
 
@@ -46,7 +62,9 @@ const Radio = React.forwardRef<HTMLInputElement, RadioProps>(
         <input
           type="radio"
           id={radioId}
-          className={cn(radioVariants({ variant: computedVariant, size, className }))}
+          className={cn(
+            radioVariants({ variant: computedVariant, size, className })
+          )}
           ref={ref}
           {...props}
         />
@@ -86,7 +104,9 @@ const RadioGroup = React.forwardRef<HTMLDivElement, RadioGroupProps>(
       <div
         className={cn(
           'grid gap-2',
-          orientation === 'horizontal' ? 'grid-flow-col auto-cols-max' : 'grid-flow-row',
+          orientation === 'horizontal'
+            ? 'auto-cols-max grid-flow-col'
+            : 'grid-flow-row',
           className
         )}
         ref={ref}
@@ -100,4 +120,4 @@ const RadioGroup = React.forwardRef<HTMLDivElement, RadioGroupProps>(
 
 RadioGroup.displayName = 'RadioGroup';
 
-export { Radio, RadioGroup, radioVariants }; 
+export { Radio, RadioGroup, radioVariants };

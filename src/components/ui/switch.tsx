@@ -7,10 +7,14 @@ const switchVariants = cva(
   {
     variants: {
       variant: {
-        default: 'bg-gray-200 checked:bg-blue-600 data-[state=checked]:bg-blue-600 dark:bg-gray-700',
-        success: 'bg-gray-200 checked:bg-green-600 data-[state=checked]:bg-green-600 dark:bg-gray-700',
-        warning: 'bg-gray-200 checked:bg-yellow-600 data-[state=checked]:bg-yellow-600 dark:bg-gray-700',
-        danger: 'bg-gray-200 checked:bg-red-600 data-[state=checked]:bg-red-600 dark:bg-gray-700',
+        default:
+          'bg-gray-200 checked:bg-blue-600 data-[state=checked]:bg-blue-600 dark:bg-gray-700',
+        success:
+          'bg-gray-200 checked:bg-green-600 data-[state=checked]:bg-green-600 dark:bg-gray-700',
+        warning:
+          'bg-gray-200 checked:bg-yellow-600 data-[state=checked]:bg-yellow-600 dark:bg-gray-700',
+        danger:
+          'bg-gray-200 checked:bg-red-600 data-[state=checked]:bg-red-600 dark:bg-gray-700',
       },
       size: {
         sm: 'h-4 w-7',
@@ -50,7 +54,20 @@ export interface SwitchProps
 }
 
 const Switch = React.forwardRef<HTMLInputElement, SwitchProps>(
-  ({ className, variant, size, label, description, onCheckedChange, id, onChange, ...props }, ref) => {
+  (
+    {
+      className,
+      variant,
+      size,
+      label,
+      description,
+      onCheckedChange,
+      id,
+      onChange,
+      ...props
+    },
+    ref
+  ) => {
     // Generate unique ID if not provided
     const switchId = id || `switch-${Math.random().toString(36).substr(2, 9)}`;
 
@@ -74,7 +91,12 @@ const Switch = React.forwardRef<HTMLInputElement, SwitchProps>(
             htmlFor={switchId}
             className={cn(switchVariants({ variant, size, className }))}
           >
-            <span className={cn(switchThumbVariants({ size }), 'bg-white dark:bg-black')} />
+            <span
+              className={cn(
+                switchThumbVariants({ size }),
+                'bg-white dark:bg-black'
+              )}
+            />
           </label>
         </div>
         {(label || description) && (
@@ -101,4 +123,4 @@ const Switch = React.forwardRef<HTMLInputElement, SwitchProps>(
 
 Switch.displayName = 'Switch';
 
-export { Switch, switchVariants }; 
+export { Switch, switchVariants };

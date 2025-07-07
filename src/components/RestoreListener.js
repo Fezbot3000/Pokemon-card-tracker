@@ -17,10 +17,14 @@ const RestoreListener = ({ onRefreshData }) => {
   // Listen for restore completion
   useEffect(() => {
     // Check if restore just completed (progress is 100%)
-    if (!isRestoring && restoreProgress === 100 && !hasTriggeredRestoreRef.current) {
+    if (
+      !isRestoring &&
+      restoreProgress === 100 &&
+      !hasTriggeredRestoreRef.current
+    ) {
       logger.log('RestoreListener: Restore completed, refreshing app data');
       hasTriggeredRestoreRef.current = true;
-      
+
       // Small delay to ensure all DB operations are complete
       setTimeout(() => {
         if (typeof onRefreshData === 'function') {
@@ -36,7 +40,11 @@ const RestoreListener = ({ onRefreshData }) => {
   // Listen for backup completion
   useEffect(() => {
     // Check if backup just completed (progress is 100%)
-    if (!isBackingUp && backupProgress === 100 && !hasTriggeredBackupRef.current) {
+    if (
+      !isBackingUp &&
+      backupProgress === 100 &&
+      !hasTriggeredBackupRef.current
+    ) {
       logger.log('RestoreListener: Backup completed');
       hasTriggeredBackupRef.current = true;
     } else if (isBackingUp) {

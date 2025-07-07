@@ -56,8 +56,8 @@ export const RootProviders = () => (
                           boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
                           borderRadius: '12px',
                           padding: '12px 24px',
-                          fontWeight: '500'
-                        }
+                          fontWeight: '500',
+                        },
                       }}
                     />
                     <ScrollToTop />
@@ -74,106 +74,109 @@ export const RootProviders = () => (
 );
 
 // Create and export the router
-export const router = createBrowserRouter([
+export const router = createBrowserRouter(
+  [
+    {
+      path: '/',
+      element: <RootProviders />,
+      children: [
+        {
+          index: true,
+          element: <Home />,
+        },
+        {
+          path: 'login',
+          element: <Login />,
+        },
+        {
+          path: 'forgot-password',
+          element: <ForgotPassword />,
+        },
+        {
+          path: 'features',
+          element: <Features />,
+        },
+        {
+          path: 'about',
+          element: <About />,
+        },
+        {
+          path: 'privacy',
+          element: <Privacy />,
+        },
+        {
+          path: 'terms',
+          element: <Terms />,
+        },
+        {
+          path: 'help-center',
+          element: <HelpCenter />,
+        },
+        {
+          path: 'collecting-guide',
+          element: <CollectingGuide />,
+        },
+        {
+          path: 'grading-integration',
+          element: <GradingIntegration />,
+        },
+        {
+          path: 'pokemon-sets',
+          element: <PokemonSets />,
+        },
+        {
+          path: 'pokemon-investment-guide',
+          element: <PokemonInvestmentGuide />,
+        },
+        {
+          path: 'pricing',
+          element: <Pricing />,
+        },
+        {
+          path: 'marketplace',
+          element: <PublicMarketplace />,
+        },
+        {
+          path: 'marketplace/listing/:listingId',
+          element: <MarketplaceListing />,
+        },
+        {
+          path: 'shared/:shareId',
+          element: <SharedCollection />,
+        },
+        {
+          path: 'dashboard',
+          element: <Dashboard />,
+          children: [
+            {
+              index: true,
+              element: <DashboardIndex />,
+            },
+            {
+              path: 'settings',
+              element: <Settings />,
+            },
+          ],
+        },
+        {
+          path: 'component-library',
+          element: <ComponentLibrary />,
+        },
+        {
+          path: 'upgrade',
+          element: <UpgradePage />,
+        },
+        {
+          path: '*',
+          element: <Navigate to="/" />,
+        },
+      ],
+    },
+  ],
   {
-    path: '/',
-    element: <RootProviders />,
-    children: [
-      {
-        index: true,
-        element: <Home />,
-      },
-      {
-        path: 'login',
-        element: <Login />,
-      },
-      {
-        path: 'forgot-password',
-        element: <ForgotPassword />,
-      },
-      {
-        path: 'features',
-        element: <Features />,
-      },
-      {
-        path: 'about',
-        element: <About />,
-      },
-      {
-        path: 'privacy',
-        element: <Privacy />,
-      },
-      {
-        path: 'terms',
-        element: <Terms />,
-      },
-      {
-        path: 'help-center',
-        element: <HelpCenter />,
-      },
-      {
-        path: 'collecting-guide',
-        element: <CollectingGuide />,
-      },
-      {
-        path: 'grading-integration',
-        element: <GradingIntegration />,
-      },
-      {
-        path: 'pokemon-sets',
-        element: <PokemonSets />,
-      },
-      {
-        path: 'pokemon-investment-guide',
-        element: <PokemonInvestmentGuide />,
-      },
-      {
-        path: 'pricing',
-        element: <Pricing />,
-      },
-      {
-        path: 'marketplace',
-        element: <PublicMarketplace />,
-      },
-      {
-        path: 'marketplace/listing/:listingId',
-        element: <MarketplaceListing />,
-      },
-      {
-        path: 'shared/:shareId',
-        element: <SharedCollection />,
-      },
-      {
-        path: 'dashboard',
-        element: <Dashboard />,
-        children: [
-          {
-            index: true,
-            element: <DashboardIndex />,
-          },
-          {
-            path: 'settings',
-            element: <Settings />,
-          },
-        ],
-      },
-      {
-        path: 'component-library',
-        element: <ComponentLibrary />,
-      },
-      {
-        path: 'upgrade',
-        element: <UpgradePage />,
-      },
-      {
-        path: '*',
-        element: <Navigate to="/" />,
-      },
-    ]
+    future: {
+      v7_startTransition: true,
+      v7_relativeSplatPath: true,
+    },
   }
-], {
-  future: {
-    v7_startTransition: true,
-    v7_relativeSplatPath: true,
-  },
-});
+);

@@ -3,10 +3,9 @@ import PropTypes from 'prop-types';
 import Icon from '../../atoms/Icon';
 import Button from '../../atoms/Button';
 
-
 /**
  * InvoiceHeader Component
- * 
+ *
  * A simplified collapsible header component for invoices that displays
  * a summary of the invoice and allows toggling its expanded state.
  */
@@ -23,7 +22,7 @@ const InvoiceHeader = ({
   cardCount = 0,
   className = '',
   // New props for currency formatting
-  formatUserCurrency, 
+  formatUserCurrency,
   originalCurrencyCode,
   ...props
 }) => {
@@ -35,7 +34,7 @@ const InvoiceHeader = ({
   `;
 
   // Clean wrapper for Icon component
-  const CleanIcon = (iconProps) => {
+  const CleanIcon = iconProps => {
     const cleanedProps = { ...iconProps };
     if (cleanedProps['data-component-name']) {
       delete cleanedProps['data-component-name'];
@@ -47,13 +46,16 @@ const InvoiceHeader = ({
     <div className={headerClasses} onClick={onToggle} {...props}>
       {/* Left side - Invoice info and expand icon */}
       <div className="flex min-w-0 flex-1 items-center gap-3">
-        <CleanIcon 
-          name={isExpanded ? "expand_less" : "expand_more"} 
+        <CleanIcon
+          name={isExpanded ? 'expand_less' : 'expand_more'}
           size="md"
-          className="shrink-0 text-gray-400 dark:text-gray-500" 
+          className="shrink-0 text-gray-400 dark:text-gray-500"
         />
         <div className="flex min-w-0 flex-col">
-          <h3 className="truncate text-base font-semibold text-gray-900 dark:text-white" title={`Sold to: ${title}`}>
+          <h3
+            className="truncate text-base font-semibold text-gray-900 dark:text-white"
+            title={`Sold to: ${title}`}
+          >
             Sold to: {title}
           </h3>
           <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
@@ -62,27 +64,41 @@ const InvoiceHeader = ({
           </div>
         </div>
       </div>
-      
+
       {/* Right side - Financial summary and actions */}
       <div className="flex items-center gap-4">
         {/* Financial summary - Horizontal layout */}
         <div className="hidden items-center gap-6 sm:flex">
           <div className="text-right">
-            <div className="text-xs uppercase text-gray-500 dark:text-gray-400">Investment</div>
+            <div className="text-xs uppercase text-gray-500 dark:text-gray-400">
+              Investment
+            </div>
             <div className="text-base font-medium text-gray-900 dark:text-white">
-              {formatUserCurrency ? formatUserCurrency(totalInvestment, originalCurrencyCode) : `$${parseFloat(totalInvestment || 0).toFixed(2)}`}
+              {formatUserCurrency
+                ? formatUserCurrency(totalInvestment, originalCurrencyCode)
+                : `$${parseFloat(totalInvestment || 0).toFixed(2)}`}
             </div>
           </div>
           <div className="text-right">
-            <div className="text-xs uppercase text-gray-500 dark:text-gray-400">Sold for</div>
+            <div className="text-xs uppercase text-gray-500 dark:text-gray-400">
+              Sold for
+            </div>
             <div className="text-base font-medium text-gray-900 dark:text-white">
-              {formatUserCurrency ? formatUserCurrency(totalSale, originalCurrencyCode) : `$${parseFloat(totalSale || 0).toFixed(2)}`}
+              {formatUserCurrency
+                ? formatUserCurrency(totalSale, originalCurrencyCode)
+                : `$${parseFloat(totalSale || 0).toFixed(2)}`}
             </div>
           </div>
           <div className="text-right">
-            <div className="text-xs uppercase text-gray-500 dark:text-gray-400">Profit</div>
-            <div className={`text-base font-medium ${totalProfit >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-              {formatUserCurrency ? formatUserCurrency(totalProfit, originalCurrencyCode) : `${totalProfit >= 0 ? '' : '-'}$${Math.abs(parseFloat(totalProfit || 0)).toFixed(2)}`}
+            <div className="text-xs uppercase text-gray-500 dark:text-gray-400">
+              Profit
+            </div>
+            <div
+              className={`text-base font-medium ${totalProfit >= 0 ? 'text-green-500' : 'text-red-500'}`}
+            >
+              {formatUserCurrency
+                ? formatUserCurrency(totalProfit, originalCurrencyCode)
+                : `${totalProfit >= 0 ? '' : '-'}$${Math.abs(parseFloat(totalProfit || 0)).toFixed(2)}`}
             </div>
           </div>
         </div>
@@ -90,22 +106,28 @@ const InvoiceHeader = ({
         {/* Mobile financial summary */}
         <div className="flex text-right sm:hidden">
           <div>
-            <div className="text-xs uppercase text-gray-500 dark:text-gray-400">Profit</div>
-            <div className={`text-base font-medium ${totalProfit >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-              {formatUserCurrency ? formatUserCurrency(totalProfit, originalCurrencyCode) : `${totalProfit >= 0 ? '' : '-'}$${Math.abs(parseFloat(totalProfit || 0)).toFixed(2)}`}
+            <div className="text-xs uppercase text-gray-500 dark:text-gray-400">
+              Profit
+            </div>
+            <div
+              className={`text-base font-medium ${totalProfit >= 0 ? 'text-green-500' : 'text-red-500'}`}
+            >
+              {formatUserCurrency
+                ? formatUserCurrency(totalProfit, originalCurrencyCode)
+                : `${totalProfit >= 0 ? '' : '-'}$${Math.abs(parseFloat(totalProfit || 0)).toFixed(2)}`}
             </div>
           </div>
         </div>
-        
+
         {/* Action buttons */}
         {(onPrint || onDelete) && (
           <div className="flex items-center gap-1 border-l border-gray-200 pl-4 dark:border-gray-700">
             {onPrint && (
-              <Button 
-                variant="text" 
-                size="sm" 
+              <Button
+                variant="text"
+                size="sm"
                 iconLeft={<CleanIcon name="picture_as_pdf" size="sm" />}
-                onClick={(e) => {
+                onClick={e => {
                   e.stopPropagation();
                   onPrint();
                 }}
@@ -113,13 +135,13 @@ const InvoiceHeader = ({
                 title="Download PDF"
               />
             )}
-            
+
             {onDelete && (
-              <Button 
-                variant="text" 
-                size="sm" 
+              <Button
+                variant="text"
+                size="sm"
                 iconLeft={<CleanIcon name="delete_outline" size="sm" />}
-                onClick={(e) => {
+                onClick={e => {
                   e.stopPropagation();
                   onDelete();
                 }}

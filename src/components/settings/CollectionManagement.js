@@ -1,5 +1,10 @@
 import React from 'react';
-import { Button, Icon, SettingsPanel, ConfirmDialog } from '../../design-system';
+import {
+  Button,
+  Icon,
+  SettingsPanel,
+  ConfirmDialog,
+} from '../../design-system';
 
 /**
  * Collection Management Component
@@ -13,18 +18,18 @@ const CollectionManagement = ({
   setCollectionToDelete,
   onStartRenaming,
   onDeleteCollection,
-  isDarkMode
+  isDarkMode,
 }) => {
   const collectionNames = Object.keys(collections);
-  
+
   // Filter out protected collections (case-insensitive)
   const protectedCollections = ['sold', 'all cards', 'default collection'];
-  const filterProtectedCollections = (names) => {
-    return names.filter(name => 
-      !protectedCollections.includes(name.toLowerCase())
+  const filterProtectedCollections = names => {
+    return names.filter(
+      name => !protectedCollections.includes(name.toLowerCase())
     );
   };
-  
+
   const renameableCollections = filterProtectedCollections(collectionNames);
   const deletableCollections = filterProtectedCollections(collectionNames);
 
@@ -36,7 +41,8 @@ const CollectionManagement = ({
   };
 
   const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false);
-  const [selectedCollectionToDelete, setSelectedCollectionToDelete] = React.useState('');
+  const [selectedCollectionToDelete, setSelectedCollectionToDelete] =
+    React.useState('');
 
   const handleDeleteClick = () => {
     if (collectionToDelete) {
@@ -73,18 +79,22 @@ const CollectionManagement = ({
               Rename Collection
             </h4>
             <div className="space-y-3">
-              <select 
+              <select
                 className={`w-full rounded-lg p-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 ${
-                  isDarkMode 
-                    ? 'border border-[#ffffff1a] bg-[#0F0F0F] text-white' 
+                  isDarkMode
+                    ? 'border border-[#ffffff1a] bg-[#0F0F0F] text-white'
                     : 'border border-gray-300 bg-white text-gray-800'
                 }`}
                 value={collectionToRename}
-                onChange={(e) => setCollectionToRename(e.target.value)}
+                onChange={e => setCollectionToRename(e.target.value)}
               >
-                <option value="" disabled>Select Collection...</option>
+                <option value="" disabled>
+                  Select Collection...
+                </option>
                 {renameableCollections.map(name => (
-                  <option key={name} value={name}>{name}</option>
+                  <option key={name} value={name}>
+                    {name}
+                  </option>
                 ))}
               </select>
               <Button
@@ -98,7 +108,7 @@ const CollectionManagement = ({
               </Button>
             </div>
           </div>
-          
+
           {/* Delete Collection Section */}
           <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-indigo-900/20 dark:bg-[#1B2131]">
             <h4 className="mb-3 flex items-center font-medium text-gray-900 dark:text-white">
@@ -106,18 +116,22 @@ const CollectionManagement = ({
               Delete Collection
             </h4>
             <div className="space-y-3">
-              <select 
+              <select
                 className={`w-full rounded-lg p-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 ${
-                  isDarkMode 
-                    ? 'border border-[#ffffff1a] bg-[#0F0F0F] text-white' 
+                  isDarkMode
+                    ? 'border border-[#ffffff1a] bg-[#0F0F0F] text-white'
                     : 'border border-gray-300 bg-white text-gray-800'
                 }`}
                 value={collectionToDelete}
-                onChange={(e) => setCollectionToDelete(e.target.value)}
+                onChange={e => setCollectionToDelete(e.target.value)}
               >
-                <option value="" disabled>Select Collection...</option>
+                <option value="" disabled>
+                  Select Collection...
+                </option>
                 {deletableCollections.map(name => (
-                  <option key={name} value={name}>{name}</option>
+                  <option key={name} value={name}>
+                    {name}
+                  </option>
                 ))}
               </select>
               <Button
@@ -142,7 +156,7 @@ const CollectionManagement = ({
         title="Delete Collection"
         message={`Are you sure you want to delete the collection "${selectedCollectionToDelete}"? All cards in this collection will be permanently removed.`}
         confirmButtonProps={{
-          variant: 'danger'
+          variant: 'danger',
         }}
       />
     </>

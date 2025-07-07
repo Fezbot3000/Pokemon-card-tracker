@@ -192,7 +192,9 @@
   border-radius: var(--radius-lg);
   padding: var(--space-4);
   text-align: center;
-  transition: background-color 0.2s ease, border-color 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .dark .financial-detail-box {
@@ -470,13 +472,13 @@ header .max-h-60.overflow-y-auto::-webkit-scrollbar {
   .no-print {
     display: none;
   }
-  
+
   .print-only {
     display: block;
   }
-  
+
   body {
     background: white !important;
     color: black !important;
   }
-} 
+}

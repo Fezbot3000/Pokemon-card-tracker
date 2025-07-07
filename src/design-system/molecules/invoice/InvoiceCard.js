@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 
-
 /**
  * InvoiceCard Component
- * 
+ *
  * A simplified card component displaying a sold Pokemon card with its details
  * and profit/loss amounts.
  */
@@ -23,7 +22,7 @@ const InvoiceCard = ({
     if (!lazyLoad || isVisible) return;
 
     const observer = new IntersectionObserver(
-      (entries) => {
+      entries => {
         if (entries[0].isIntersecting) {
           setIsVisible(true);
           observer.disconnect();
@@ -32,7 +31,9 @@ const InvoiceCard = ({
       { threshold: 0.1 }
     );
 
-    const currentElement = document.getElementById(`invoice-card-${card.id || card.slabSerial}`);
+    const currentElement = document.getElementById(
+      `invoice-card-${card.id || card.slabSerial}`
+    );
     if (currentElement) {
       observer.observe(currentElement);
     }
@@ -45,29 +46,31 @@ const InvoiceCard = ({
     };
   }, [lazyLoad, isVisible, card.id, card.slabSerial]);
 
-  const profit = (parseFloat(card.finalValueAUD) || 0) - (parseFloat(card.investmentAUD) || 0);
+  const profit =
+    (parseFloat(card.finalValueAUD) || 0) -
+    (parseFloat(card.investmentAUD) || 0);
   const paid = parseFloat(card.investmentAUD) || 0;
   const sold = parseFloat(card.finalValueAUD) || 0;
 
   // Format the card name to be more compact
-  const formatCardName = (name) => {
+  const formatCardName = name => {
     if (!name) return 'Unknown Card';
-    
+
     // Extract PSA grade if present
     const psaMatch = name.match(/PSA\s*(\d+)/i);
     const psaGrade = psaMatch ? psaMatch[1] : '';
-    
+
     // Remove common prefixes and suffixes
     let cleanName = name
       .replace(/\d{4}\s+Pokemon\s+/i, '')
       .replace(/\s+PSA\s*\d+\s*$/i, '')
       .replace(/\s+#\d+\s+PSA\s*\d+\s*$/i, '')
       .trim();
-    
+
     // Extract card number if present
     const cardNumberMatch = name.match(/#(\d+)/);
     const cardNumber = cardNumberMatch ? `#${cardNumberMatch[1]}` : '';
-    
+
     // Combine the important parts
     return `${cleanName} ${cardNumber} ${psaGrade ? `PSA ${psaGrade}` : ''}`.trim();
   };
@@ -80,7 +83,10 @@ const InvoiceCard = ({
     >
       {/* Card Title - Optimized format */}
       <div className="border-b border-gray-200 p-3 dark:border-[#ffffff1a]">
-        <div className="truncate text-sm font-medium text-gray-900 dark:text-white" title={card.card}>
+        <div
+          className="truncate text-sm font-medium text-gray-900 dark:text-white"
+          title={card.card}
+        >
           {formatCardName(card.card)}
         </div>
       </div>
@@ -88,20 +94,28 @@ const InvoiceCard = ({
       {/* Financial Details - Simplified and better aligned */}
       <div className="grid grid-cols-3 p-3">
         <div className="flex flex-col items-center">
-          <div className="mb-1 text-xs text-gray-500 dark:text-gray-400">Paid</div>
+          <div className="mb-1 text-xs text-gray-500 dark:text-gray-400">
+            Paid
+          </div>
           <div className="text-xs font-medium text-gray-900 dark:text-white">
             ${paid.toFixed(2)}
           </div>
         </div>
         <div className="flex flex-col items-center border-x border-gray-200 dark:border-[#ffffff1a]">
-          <div className="mb-1 text-xs text-gray-500 dark:text-gray-400">Sold</div>
+          <div className="mb-1 text-xs text-gray-500 dark:text-gray-400">
+            Sold
+          </div>
           <div className="text-xs font-medium text-gray-900 dark:text-white">
             ${sold.toFixed(2)}
           </div>
         </div>
         <div className="flex flex-col items-center">
-          <div className="mb-1 text-xs text-gray-500 dark:text-gray-400">Profit</div>
-          <div className={`text-xs font-medium ${profit >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+          <div className="mb-1 text-xs text-gray-500 dark:text-gray-400">
+            Profit
+          </div>
+          <div
+            className={`text-xs font-medium ${profit >= 0 ? 'text-green-500' : 'text-red-500'}`}
+          >
             {profit >= 0 ? '' : '-'}${Math.abs(profit).toFixed(2)}
           </div>
         </div>

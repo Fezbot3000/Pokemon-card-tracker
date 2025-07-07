@@ -7,7 +7,7 @@
  * @param {string} dateString - The date string to format
  * @returns {string} - Formatted date string or empty string if invalid
  */
-export const formatDate = (dateString) => {
+export const formatDate = dateString => {
   if (!dateString) return '';
   const date = new Date(dateString);
   return isNaN(date.getTime()) ? '' : date.toISOString().split('T')[0];
@@ -27,14 +27,14 @@ export const getCurrentDate = () => {
  * @param {string} dateString - The date string to format
  * @returns {string} - Formatted date string for display
  */
-export const formatDateForDisplay = (dateString) => {
+export const formatDateForDisplay = dateString => {
   if (!dateString) return '';
   const date = new Date(dateString);
   if (isNaN(date.getTime())) return '';
-  
+
   return date.toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short',
-    day: 'numeric'
+    day: 'numeric',
   });
 };

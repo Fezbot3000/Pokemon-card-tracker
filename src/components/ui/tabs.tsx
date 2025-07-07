@@ -29,9 +29,12 @@ const tabsTriggerVariants = cva(
   {
     variants: {
       variant: {
-        default: 'text-gray-600 data-[state=active]:bg-white data-[state=active]:text-gray-900 dark:text-gray-400 dark:data-[state=active]:bg-black dark:data-[state=active]:text-white',
-        pills: 'rounded-md text-gray-600 data-[state=active]:bg-white data-[state=active]:text-gray-900 dark:text-gray-400 dark:data-[state=active]:bg-gray-800 dark:data-[state=active]:text-white',
-        underline: 'rounded-none border-b-2 border-transparent bg-transparent text-gray-600 data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 dark:text-gray-400 dark:data-[state=active]:text-blue-400',
+        default:
+          'text-gray-600 data-[state=active]:bg-white data-[state=active]:text-gray-900 dark:text-gray-400 dark:data-[state=active]:bg-black dark:data-[state=active]:text-white',
+        pills:
+          'rounded-md text-gray-600 data-[state=active]:bg-white data-[state=active]:text-gray-900 dark:text-gray-400 dark:data-[state=active]:bg-gray-800 dark:data-[state=active]:text-white',
+        underline:
+          'rounded-none border-b-2 border-transparent bg-transparent text-gray-600 data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 dark:text-gray-400 dark:data-[state=active]:text-blue-400',
       },
       size: {
         sm: 'px-2 py-1 text-xs',
@@ -91,16 +94,33 @@ export interface TabsContentProps
   children: React.ReactNode;
 }
 
-const TabsContext = React.createContext<{
-  value?: string;
-  onValueChange?: (value: string) => void;
-  variant?: 'default' | 'pills' | 'underline';
-  size?: 'sm' | 'md' | 'lg';
-} | undefined>(undefined);
+const TabsContext = React.createContext<
+  | {
+      value?: string;
+      onValueChange?: (value: string) => void;
+      variant?: 'default' | 'pills' | 'underline';
+      size?: 'sm' | 'md' | 'lg';
+    }
+  | undefined
+>(undefined);
 
 const Tabs = React.forwardRef<HTMLDivElement, TabsProps>(
-  ({ className, variant, size, value, defaultValue, onValueChange, children, ...props }, ref) => {
-    const [currentValue, setCurrentValue] = React.useState(value || defaultValue || '');
+  (
+    {
+      className,
+      variant,
+      size,
+      value,
+      defaultValue,
+      onValueChange,
+      children,
+      ...props
+    },
+    ref
+  ) => {
+    const [currentValue, setCurrentValue] = React.useState(
+      value || defaultValue || ''
+    );
 
     React.useEffect(() => {
       if (value !== undefined) {
@@ -116,7 +136,14 @@ const Tabs = React.forwardRef<HTMLDivElement, TabsProps>(
     };
 
     return (
-      <TabsContext.Provider value={{ value: currentValue, onValueChange: handleValueChange, variant: variant || undefined, size: size || undefined }}>
+      <TabsContext.Provider
+        value={{
+          value: currentValue,
+          onValueChange: handleValueChange,
+          variant: variant || undefined,
+          size: size || undefined,
+        }}
+      >
         <div className={cn('', className)} ref={ref} {...props}>
           {children}
         </div>
@@ -133,7 +160,13 @@ const TabsList = React.forwardRef<HTMLDivElement, TabsListProps>(
 
     return (
       <div
-        className={cn(tabsVariants({ variant: computedVariant, size: computedSize, className }))}
+        className={cn(
+          tabsVariants({
+            variant: computedVariant,
+            size: computedSize,
+            className,
+          })
+        )}
         ref={ref}
         {...props}
       >
@@ -158,7 +191,13 @@ const TabsTrigger = React.forwardRef<HTMLButtonElement, TabsTriggerProps>(
     return (
       <button
         type="button"
-        className={cn(tabsTriggerVariants({ variant: computedVariant, size: computedSize, className }))}
+        className={cn(
+          tabsTriggerVariants({
+            variant: computedVariant,
+            size: computedSize,
+            className,
+          })
+        )}
         data-state={isActive ? 'active' : 'inactive'}
         onClick={handleClick}
         ref={ref}
@@ -180,7 +219,9 @@ const TabsContent = React.forwardRef<HTMLDivElement, TabsContentProps>(
 
     return (
       <div
-        className={cn(tabsContentVariants({ variant: computedVariant, className }))}
+        className={cn(
+          tabsContentVariants({ variant: computedVariant, className })
+        )}
         ref={ref}
         {...props}
       >
@@ -195,4 +236,12 @@ TabsList.displayName = 'TabsList';
 TabsTrigger.displayName = 'TabsTrigger';
 TabsContent.displayName = 'TabsContent';
 
-export { Tabs, TabsList, TabsTrigger, TabsContent, tabsVariants, tabsTriggerVariants, tabsContentVariants }; 
+export {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+  tabsVariants,
+  tabsTriggerVariants,
+  tabsContentVariants,
+};

@@ -8,21 +8,35 @@ class EmailServiceHelper {
   constructor() {
     // Initialize all email functions
     this.sendWelcomeEmail = httpsCallable(functions, 'sendWelcomeEmail');
-    this.sendMarketplaceMessageEmail = httpsCallable(functions, 'sendMarketplaceMessageEmail');
-    this.sendListingSoldEmail = httpsCallable(functions, 'sendListingSoldEmail');
-    this.sendEmailVerificationEmail = httpsCallable(functions, 'sendEmailVerificationEmail');
+    this.sendMarketplaceMessageEmail = httpsCallable(
+      functions,
+      'sendMarketplaceMessageEmail'
+    );
+    this.sendListingSoldEmail = httpsCallable(
+      functions,
+      'sendListingSoldEmail'
+    );
+    this.sendEmailVerificationEmail = httpsCallable(
+      functions,
+      'sendEmailVerificationEmail'
+    );
     this.sendCustomEmail = httpsCallable(functions, 'sendCustomEmail');
     this.sendFeedbackEmail = httpsCallable(functions, 'sendFeedbackEmail');
   }
 
   // Send marketplace message notification
-  async sendMarketplaceNotification(recipientEmail, senderName, message, listingTitle) {
+  async sendMarketplaceNotification(
+    recipientEmail,
+    senderName,
+    message,
+    listingTitle
+  ) {
     try {
       const result = await this.sendMarketplaceMessageEmail({
         recipientEmail,
         senderName,
         message,
-        listingTitle
+        listingTitle,
       });
       return result.data;
     } catch (error) {
@@ -32,13 +46,18 @@ class EmailServiceHelper {
   }
 
   // Send listing sold notification
-  async sendListingSoldNotification(userEmail, userName, listingTitle, salePrice) {
+  async sendListingSoldNotification(
+    userEmail,
+    userName,
+    listingTitle,
+    salePrice
+  ) {
     try {
       const result = await this.sendListingSoldEmail({
         userEmail,
         userName,
         listingTitle,
-        salePrice
+        salePrice,
       });
       return result.data;
     } catch (error) {
@@ -50,7 +69,10 @@ class EmailServiceHelper {
   // Send email verification
   async sendEmailVerification(userEmail, verificationLink) {
     try {
-      const result = await this.sendEmailVerificationEmail({ userEmail, verificationLink });
+      const result = await this.sendEmailVerificationEmail({
+        userEmail,
+        verificationLink,
+      });
       return result.data;
     } catch (error) {
       console.error('Error sending email verification:', error);

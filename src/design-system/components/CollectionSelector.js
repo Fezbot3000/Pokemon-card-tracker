@@ -9,7 +9,7 @@ import { useSubscription } from '../../hooks/useSubscription';
 
 /**
  * CollectionSelector component
- * 
+ *
  * A dropdown component for selecting collections in the Pokemon Card Tracker app.
  * Includes subscription gating for multiple collections feature.
  */
@@ -18,11 +18,12 @@ const CollectionSelector = ({
   collections = [],
   onCollectionChange,
   onAddCollection,
-  className = ''
+  className = '',
 }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false); // State for BottomSheet
-  const [isNewCollectionModalOpen, setIsNewCollectionModalOpen] = useState(false);
+  const [isNewCollectionModalOpen, setIsNewCollectionModalOpen] =
+    useState(false);
   const [newCollectionName, setNewCollectionName] = useState('');
   const dropdownRef = useRef(null);
   const [isMobileView, setIsMobileView] = useState(false);
@@ -39,13 +40,13 @@ const CollectionSelector = ({
 
   // Close dropdown/bottomsheet when clicking outside
   useEffect(() => {
-    const handleClickOutside = (event) => {
+    const handleClickOutside = event => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         if (isDropdownOpen) setIsDropdownOpen(false);
         // Note: BottomSheet handles its own outside click via backdrop
       }
     };
-    
+
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
@@ -62,56 +63,71 @@ const CollectionSelector = ({
 
   const handleNewCollectionClick = () => {
     if (!hasFeature('MULTIPLE_COLLECTIONS')) {
-      toast.error('Multiple collections are available with Premium. Upgrade to create unlimited collections!');
+      toast.error(
+        'Multiple collections are available with Premium. Upgrade to create unlimited collections!'
+      );
       return;
     }
-    
+
     setIsNewCollectionModalOpen(true);
     isMobileView ? setIsBottomSheetOpen(false) : setIsDropdownOpen(false);
   };
 
-  const renderCollectionItems = (forMobileSheet) => (
+  const renderCollectionItems = forMobileSheet => (
     <div className={`py-1 ${forMobileSheet ? 'space-y-2 px-2' : ''}`}>
       {/* New Collection button at the top */}
       <button
         onClick={handleNewCollectionClick}
-        className={`block w-full text-left px-4 py-2 text-sm 
-          ${!hasFeature('MULTIPLE_COLLECTIONS') 
-            ? 'cursor-not-allowed opacity-50' 
+        className={`block w-full px-4 py-2 text-left text-sm ${
+          !hasFeature('MULTIPLE_COLLECTIONS')
+            ? 'cursor-not-allowed opacity-50'
             : 'hover:opacity-90'
-          }
-          ${forMobileSheet 
+        } ${
+          forMobileSheet
             ? 'rounded-lg border border-gray-200 bg-white py-3 text-center text-gray-700 dark:border-gray-700 dark:bg-[#000] dark:text-gray-300'
-            : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'}`
-        }
+            : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'
+        }`}
         disabled={!hasFeature('MULTIPLE_COLLECTIONS')}
       >
-        <div className={`flex items-center ${forMobileSheet ? 'justify-center' : ''}`}>
-          <Icon name={hasFeature('MULTIPLE_COLLECTIONS') ? "add" : "lock"} size="sm" className="mr-1" />
-          <span>{hasFeature('MULTIPLE_COLLECTIONS') ? 'New Collection' : 'New Collection (Premium)'}</span>
+        <div
+          className={`flex items-center ${forMobileSheet ? 'justify-center' : ''}`}
+        >
+          <Icon
+            name={hasFeature('MULTIPLE_COLLECTIONS') ? 'add' : 'lock'}
+            size="sm"
+            className="mr-1"
+          />
+          <span>
+            {hasFeature('MULTIPLE_COLLECTIONS')
+              ? 'New Collection'
+              : 'New Collection (Premium)'}
+          </span>
         </div>
       </button>
-      
-      <div 
+
+      <div
         className={`my-1 ${forMobileSheet ? 'border-t-0' : 'border-t border-gray-200 dark:border-gray-700'}`}
       ></div>
-      
+
       {/* Collection list */}
-      {collections.map((collection) => (
+      {collections.map(collection => (
         <button
           key={collection}
           onClick={() => {
             onCollectionChange?.(collection);
-            isMobileView ? setIsBottomSheetOpen(false) : setIsDropdownOpen(false);
+            isMobileView
+              ? setIsBottomSheetOpen(false)
+              : setIsDropdownOpen(false);
           }}
-          className={`block w-full text-left px-4 py-2 text-sm 
-            ${forMobileSheet 
-              ? `rounded-lg text-center ${collection === selectedCollection 
-                  ? 'bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] font-semibold text-white' 
-                  : 'border border-gray-200 bg-white text-gray-700 dark:border-gray-700 dark:bg-[#000] dark:text-gray-300'} 
-                hover:opacity-90 py-3`
-              : `${collection === selectedCollection ? 'bg-gray-100 text-gray-900 dark:bg-gray-700 dark:text-white' : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'}`}
-          `}
+          className={`block w-full px-4 py-2 text-left text-sm ${
+            forMobileSheet
+              ? `rounded-lg text-center ${
+                  collection === selectedCollection
+                    ? 'bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] font-semibold text-white'
+                    : 'border border-gray-200 bg-white text-gray-700 dark:border-gray-700 dark:bg-[#000] dark:text-gray-300'
+                } py-3 hover:opacity-90`
+              : `${collection === selectedCollection ? 'bg-gray-100 text-gray-900 dark:bg-gray-700 dark:text-white' : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'}`
+          } `}
         >
           {collection}
         </button>
@@ -124,7 +140,7 @@ const CollectionSelector = ({
     <>
       <div className={`relative ${className}`} ref={dropdownRef}>
         <div className="flex items-center justify-between">
-          <button 
+          <button
             onClick={handleTriggerClick} // Use new handler
             className="flex items-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-[#000000] dark:text-gray-300 dark:hover:bg-gray-700"
             data-component-name="CollectionSelector"
@@ -132,13 +148,17 @@ const CollectionSelector = ({
             <span className="mr-2 max-w-[200px] truncate font-medium">
               {selectedCollection}
             </span>
-            <Icon 
-              name={(isDropdownOpen || isBottomSheetOpen) ? 'expand_less' : 'expand_more'} 
-              size="sm" 
+            <Icon
+              name={
+                isDropdownOpen || isBottomSheetOpen
+                  ? 'expand_less'
+                  : 'expand_more'
+              }
+              size="sm"
             />
           </button>
         </div>
-        
+
         {/* Desktop Dropdown */}
         {!isMobileView && isDropdownOpen && (
           <div className="ring-black/5 absolute right-0 z-50 mt-2 max-h-[60vh] w-56 overflow-y-auto rounded-md bg-white shadow-lg ring-1 dark:bg-[#000]">
@@ -149,13 +169,16 @@ const CollectionSelector = ({
 
       {/* Mobile Bottom Sheet */}
       {isMobileView && (
-        <BottomSheet 
-          isOpen={isBottomSheetOpen} 
-          onClose={() => setIsBottomSheetOpen(false)} 
+        <BottomSheet
+          isOpen={isBottomSheetOpen}
+          onClose={() => setIsBottomSheetOpen(false)}
           title="Select Collection"
         >
           <div className="flex h-full flex-col">
-            <div className="scrollbar-hide grow overflow-y-auto" style={{ maxHeight: 'calc(85vh - 130px)' }}>
+            <div
+              className="scrollbar-hide grow overflow-y-auto"
+              style={{ maxHeight: 'calc(85vh - 130px)' }}
+            >
               {renderCollectionItems(true)}
             </div>
             <div className="sticky inset-x-0 bottom-0 mt-2 border-t border-gray-700 bg-black pt-2">
@@ -175,22 +198,11 @@ const CollectionSelector = ({
         isOpen={isNewCollectionModalOpen}
         onClose={() => setIsNewCollectionModalOpen(false)}
         title="Create New Collection"
-      >
-        <div className="p-4">
-          <div className="mb-4">
-            <label htmlFor="newCollectionName" className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-              Collection Name
-            </label>
-            <input
-              type="text"
-              id="newCollectionName"
-              value={newCollectionName}
-              onChange={(e) => setNewCollectionName(e.target.value)}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary dark:border-gray-700 dark:bg-gray-800 dark:text-white"
-              placeholder="Enter collection name"
-            />
-          </div>
-          <div className="flex justify-end space-x-2">
+        size="contextual"
+        position="center"
+        closeOnClickOutside={true}
+        footer={
+          <>
             <Button
               variant="secondary"
               onClick={() => setIsNewCollectionModalOpen(false)}
@@ -211,6 +223,26 @@ const CollectionSelector = ({
             >
               Create
             </Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <div>
+            <label
+              htmlFor="newCollectionName"
+              className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
+              Collection Name <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              id="newCollectionName"
+              value={newCollectionName}
+              onChange={e => setNewCollectionName(e.target.value)}
+              className="focus:ring-[var(--primary-default)]/20 w-full rounded-lg border border-[#ffffff33] bg-white px-3 py-2 text-gray-900 placeholder:text-gray-500 focus:border-[var(--primary-default)] focus:outline-none focus:ring-2 dark:border-[#ffffff1a] dark:bg-[#0F0F0F] dark:text-white dark:placeholder:text-gray-400"
+              placeholder="Enter collection name"
+              autoFocus
+            />
           </div>
         </div>
       </Modal>
@@ -223,7 +255,7 @@ CollectionSelector.propTypes = {
   collections: PropTypes.array,
   onCollectionChange: PropTypes.func,
   onAddCollection: PropTypes.func,
-  className: PropTypes.string
+  className: PropTypes.string,
 };
 
 export default CollectionSelector;

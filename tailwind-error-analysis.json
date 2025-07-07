@@ -1,0 +1,72 @@
+{
+  "timestamp": "2025-07-07T05:40:05.371Z",
+  "summary": {
+    "totalFindings": 5,
+    "totalSolutions": 4,
+    "severity": "high"
+  },
+  "findings": [
+    {
+      "file": "src/components/AddCardModal.js",
+      "line": 533,
+      "classes": "fixed inset-0 z-[60] flex cursor-zoom-out items-center justify-center bg-black/90",
+      "issue": "Class order violation: flex (layout) should come before previous positioning classes",
+      "suggestion": "inset-0 z-[60] bg-black/90 cursor-zoom-out fixed flex items-center justify-center"
+    },
+    {
+      "file": "src/design-system/components/CardDetailsModal.js",
+      "line": 491,
+      "classes": "fixed inset-0 z-[60] flex cursor-zoom-out items-center justify-center bg-black/90",
+      "issue": "Class order violation: flex (layout) should come before previous positioning classes",
+      "suggestion": "inset-0 z-[60] bg-black/90 cursor-zoom-out fixed flex items-center justify-center"
+    },
+    {
+      "file": "src/components/HelpCenter.js",
+      "line": 530,
+      "classes": "flex w-full items-center justify-between rounded-2xl p-6 text-left transition-all duration-300 hover:bg-white/5",
+      "issue": "Class order violation: p-6 (spacing) should come before previous border classes",
+      "suggestion": "w-full p-6 text-left rounded-2xl hover:bg-white/5 flex items-center justify-between transition-all duration-300"
+    },
+    {
+      "type": "config",
+      "issue": "CSS custom properties in Tailwind config may cause class validation issues",
+      "suggestion": "Consider using standard Tailwind color values or ensure custom properties are properly defined"
+    },
+    {
+      "type": "eslint",
+      "issue": "tailwindcss/classnames-order is set to error, causing compilation failures",
+      "suggestion": "Consider changing to \"warn\" or configure prettier-plugin-tailwindcss for automatic sorting"
+    }
+  ],
+  "solutions": [
+    {
+      "title": "Fix Class Order Issues",
+      "description": "Reorder Tailwind classes according to recommended order",
+      "priority": "high",
+      "implementation": "Apply the suggested class orders to the problematic files"
+    },
+    {
+      "title": "Configure Automatic Class Sorting",
+      "description": "Set up prettier-plugin-tailwindcss for automatic class sorting",
+      "priority": "high",
+      "implementation": "Install and configure prettier-plugin-tailwindcss"
+    },
+    {
+      "title": "Adjust ESLint Rules",
+      "description": "Change tailwindcss/classnames-order from error to warn",
+      "priority": "medium",
+      "implementation": "Update .eslintrc.js to use warn instead of error"
+    },
+    {
+      "title": "Fix Tailwind Configuration",
+      "description": "Ensure content paths are properly configured",
+      "priority": "medium",
+      "implementation": "Update tailwind.config.js content paths"
+    }
+  ],
+  "rootCause": [
+    "Tailwind configuration issues",
+    "ESLint rule set to error instead of warn",
+    "Manual class ordering violations"
+  ]
+}

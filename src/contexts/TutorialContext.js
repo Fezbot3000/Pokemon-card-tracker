@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useEffect,
+} from 'react';
 
 const TutorialContext = createContext();
 
@@ -12,7 +18,7 @@ export const tutorialSteps = {
   INVOICES: 'invoices',
   MESSAGING: 'messaging',
   MOBILE: 'mobile',
-  GET_STARTED: 'get_started'
+  GET_STARTED: 'get_started',
 };
 
 export function TutorialProvider({ children }) {
@@ -37,13 +43,13 @@ export function TutorialProvider({ children }) {
   const endTutorial = useCallback(() => {
     setIsTutorialActive(false);
     setCurrentStep(null);
-    
+
     // Mark onboarding as complete
     try {
       localStorage.setItem(ONBOARDING_KEY, 'true');
       setOnboardingComplete(true);
     } catch (error) {
-      console.error("Failed to save onboarding state", error);
+      console.error('Failed to save onboarding state', error);
     }
   }, []);
 
@@ -77,7 +83,7 @@ export function TutorialProvider({ children }) {
     }
   }, [currentStep, onAddCardOpen, endTutorial]);
 
-  const registerAddCardCallback = useCallback((callback) => {
+  const registerAddCardCallback = useCallback(callback => {
     setOnAddCardOpen(() => callback);
   }, []);
 
@@ -87,7 +93,7 @@ export function TutorialProvider({ children }) {
       startTutorial();
     }
   }, [onboardingComplete, startTutorial]);
-  
+
   const contextValue = {
     isTutorialActive,
     currentStep,

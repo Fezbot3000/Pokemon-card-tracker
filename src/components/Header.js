@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useTheme } from '../design-system';
-import db from '../services/firestore/dbAdapter';  // Use the correct db service
+import db from '../services/firestore/dbAdapter'; // Use the correct db service
 import { useAuth } from '../design-system'; // Import auth context
 import JSZip from 'jszip';
 import CollectionSelector from './CollectionSelector';
@@ -8,10 +8,10 @@ import { toast } from 'react-hot-toast';
 import { Link, useNavigate } from 'react-router-dom';
 import PropTypes from 'prop-types';
 
-const Header = ({ 
-  selectedCollection, 
-  collections, 
-  onCollectionChange, 
+const Header = ({
+  selectedCollection,
+  collections,
+  onCollectionChange,
   onImportClick,
   onSettingsClick,
   currentView,
@@ -20,12 +20,13 @@ const Header = ({
   onAddCollection,
   onRenameCollection,
   onDeleteCollection,
-  className = ''
+  className = '',
 }) => {
   const { isDarkMode, toggleTheme } = useTheme();
   const { currentUser } = useAuth();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [isNewCollectionModalOpen, setIsNewCollectionModalOpen] = useState(false);
+  const [isNewCollectionModalOpen, setIsNewCollectionModalOpen] =
+    useState(false);
   const [newCollectionName, setNewCollectionName] = useState('');
   const dropdownRef = useRef(null);
   const newCollectionModalRef = useRef(null);
@@ -34,16 +35,18 @@ const Header = ({
 
   // Close dropdowns and modals when clicking outside
   useEffect(() => {
-    const handleClickOutside = (event) => {
+    const handleClickOutside = event => {
       // Handle collection dropdown
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsDropdownOpen(false);
       }
-      
+
       // Handle new collection modal
-      if (newCollectionModalRef.current && 
-          !newCollectionModalRef.current.contains(event.target) && 
-          isNewCollectionModalOpen) {
+      if (
+        newCollectionModalRef.current &&
+        !newCollectionModalRef.current.contains(event.target) &&
+        isNewCollectionModalOpen
+      ) {
         setIsNewCollectionModalOpen(false);
         setNewCollectionName('');
       }
@@ -65,14 +68,14 @@ const Header = ({
     setIsDropdownOpen(!isDropdownOpen);
   };
 
-  const handleCollectionSelect = (collection) => {
+  const handleCollectionSelect = collection => {
     if (typeof onCollectionChange === 'function') {
       onCollectionChange(collection);
       setIsDropdownOpen(false);
     }
   };
 
-  const handleAddNewCollection = (e) => {
+  const handleAddNewCollection = e => {
     if (e) {
       e.preventDefault();
       e.stopPropagation();
@@ -82,7 +85,10 @@ const Header = ({
   };
 
   const handleCreateCollection = () => {
-    if (newCollectionName.trim() && !collections.includes(newCollectionName.trim())) {
+    if (
+      newCollectionName.trim() &&
+      !collections.includes(newCollectionName.trim())
+    ) {
       onAddCollection(newCollectionName.trim());
       setNewCollectionName('');
       setIsNewCollectionModalOpen(false);
@@ -90,7 +96,7 @@ const Header = ({
     }
   };
 
-  const handleNewCollectionKeyDown = (e) => {
+  const handleNewCollectionKeyDown = e => {
     if (e.key === 'Enter') {
       handleCreateCollection();
     }
@@ -98,21 +104,29 @@ const Header = ({
 
   return (
     <>
-      <header className="dark:border-gray-700/50 fixed inset-x-0 top-0 z-40 hidden w-full border-b border-gray-200 bg-white shadow-md dark:bg-[#1B2131] sm:flex" style={{position: 'fixed'}}>
+      <header
+        className="dark:border-gray-700/50 fixed inset-x-0 top-0 z-40 hidden w-full border-b border-gray-200 bg-white shadow-md dark:bg-[#1B2131] sm:flex"
+        style={{ position: 'fixed' }}
+      >
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             {/* Logo and Collection Dropdown */}
             <div className="flex min-w-0 max-w-[45%] shrink items-center gap-2 sm:max-w-[60%] sm:gap-4 md:max-w-[70%]">
               <Link to="/cards" className="shrink-0">
-                <img src="/favicon-192x192.png" alt="MyCardTracker" className="size-8 rounded-xl object-contain sm:size-10" />
+                <img
+                  src="/favicon-192x192.png"
+                  alt="MyCardTracker"
+                  className="size-8 rounded-xl object-contain sm:size-10"
+                />
               </Link>
               <div className="relative min-w-0 shrink" ref={dropdownRef}>
                 <button
                   onClick={toggleDropdown}
-                  className="flex items-center gap-1 whitespace-nowrap rounded-lg p-2 text-gray-700 transition-colors hover:bg-white dark:text-gray-200 
-                           dark:hover:bg-[#252B3B] sm:gap-2 sm:px-3"
+                  className="flex items-center gap-1 whitespace-nowrap rounded-lg p-2 text-gray-700 transition-colors hover:bg-white dark:text-gray-200 dark:hover:bg-[#252B3B] sm:gap-2 sm:px-3"
                 >
-                  <span className="max-w-[120px] truncate text-sm font-medium sm:max-w-[180px] md:max-w-[250px]">{selectedCollection}</span>
+                  <span className="max-w-[120px] truncate text-sm font-medium sm:max-w-[180px] md:max-w-[250px]">
+                    {selectedCollection}
+                  </span>
                   <span className="material-icons shrink-0 text-gray-600 dark:text-gray-300">
                     {isDropdownOpen ? 'expand_less' : 'expand_more'}
                   </span>
@@ -120,9 +134,8 @@ const Header = ({
 
                 {isDropdownOpen && (
                   <div className="absolute left-0 top-full z-50 mt-1 w-56 rounded-lg bg-white py-1 shadow-[0_4px_12px_rgba(0,0,0,0.08)] dark:bg-[#1B2131]">
-                    <div 
-                      className="cursor-pointer px-4 py-2 text-gray-700 hover:bg-gray-50
-                               dark:text-gray-200 dark:hover:bg-[#252B3B]"
+                    <div
+                      className="cursor-pointer px-4 py-2 text-gray-700 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-[#252B3B]"
                       onClick={() => handleCollectionSelect('All Cards')}
                     >
                       All Cards
@@ -130,20 +143,18 @@ const Header = ({
                     {collections
                       .filter(collection => collection !== 'All Cards')
                       .sort((a, b) => a.localeCompare(b)) // Sort alphabetically
-                      .map((collection) => (
+                      .map(collection => (
                         <div
                           key={collection}
-                          className="cursor-pointer truncate px-4 py-2 text-gray-700
-                                   hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-[#252B3B]"
+                          className="cursor-pointer truncate px-4 py-2 text-gray-700 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-[#252B3B]"
                           onClick={() => handleCollectionSelect(collection)}
                         >
                           {collection}
                         </div>
                       ))}
                     <div className="my-1 h-px bg-gray-100 dark:bg-gray-800" />
-                    <div 
-                      className="flex cursor-pointer items-center justify-between px-4
-                               py-2 text-primary hover:bg-gray-50 dark:hover:bg-[#252B3B]"
+                    <div
+                      className="flex cursor-pointer items-center justify-between px-4 py-2 text-primary hover:bg-gray-50 dark:hover:bg-[#252B3B]"
                       onClick={handleAddNewCollection}
                     >
                       <span>New Collection</span>
@@ -153,7 +164,7 @@ const Header = ({
                 )}
               </div>
             </div>
-            
+
             {/* View switcher - Desktop Only */}
             <div className="hidden items-center space-x-2 lg:flex">
               <button
@@ -177,7 +188,7 @@ const Header = ({
                 Sold Items
               </button>
             </div>
-            
+
             {/* Right side actions */}
             <div className="flex shrink-0 items-center space-x-2 sm:space-x-3">
               {/* Desktop Actions - keep theme and settings only on desktop */}
@@ -192,7 +203,7 @@ const Header = ({
                     {isDarkMode ? 'light_mode' : 'dark_mode'}
                   </span>
                 </button>
-                
+
                 <button
                   onClick={onSettingsClick}
                   className="dark:hover:bg-gray-800/50 flex hidden size-10 items-center justify-center rounded-lg text-gray-600 hover:bg-gray-100 dark:text-gray-300 lg:flex"
@@ -210,17 +221,22 @@ const Header = ({
       {/* New Collection Modal */}
       {isNewCollectionModalOpen && (
         <div className="bg-black/50 fixed inset-0 z-50 flex items-center justify-center">
-          <div ref={newCollectionModalRef} className="mx-4 w-full max-w-md rounded-xl bg-white dark:bg-[#1B2131]">
+          <div
+            ref={newCollectionModalRef}
+            className="mx-4 w-full max-w-md rounded-xl bg-white dark:bg-[#1B2131]"
+          >
             <div className="dark:border-gray-700/50 flex items-center justify-between border-b border-gray-200 px-6 pb-4 pt-6">
-              <h2 className="text-xl font-medium text-gray-800 dark:text-gray-200">New Collection</h2>
-              <button 
+              <h2 className="text-xl font-medium text-gray-800 dark:text-gray-200">
+                New Collection
+              </h2>
+              <button
                 className="text-2xl text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
                 onClick={() => setIsNewCollectionModalOpen(false)}
               >
                 ×
               </button>
             </div>
-            
+
             <div className="p-6">
               <label className="mb-2 block text-gray-700 dark:text-gray-300">
                 Collection Name:
@@ -229,35 +245,23 @@ const Header = ({
                 ref={newCollectionInputRef}
                 type="text"
                 value={newCollectionName}
-                onChange={(e) => setNewCollectionName(e.target.value)}
+                onChange={e => setNewCollectionName(e.target.value)}
                 onKeyDown={handleNewCollectionKeyDown}
-                className="dark:border-gray-700/50 focus:ring-primary/20 w-full rounded-xl 
-                         border border-gray-200 bg-white 
-                         px-4 py-2
-                         text-gray-900 placeholder:text-gray-500
-                         focus:border-primary focus:outline-none focus:ring-2 dark:bg-black
-                         dark:text-white dark:placeholder:text-gray-400"
+                className="dark:border-gray-700/50 focus:ring-primary/20 w-full rounded-xl border border-gray-200 bg-white px-4 py-2 text-gray-900 placeholder:text-gray-500 focus:border-primary focus:outline-none focus:ring-2 dark:bg-black dark:text-white dark:placeholder:text-gray-400"
                 placeholder="Enter collection name"
                 autoFocus
               />
             </div>
-            
+
             <div className="dark:border-gray-700/50 flex justify-between gap-2 border-t border-gray-200 px-6 pb-6 pt-4">
-              <button 
-                className="rounded-lg bg-gray-100 px-4
-                         py-2 text-gray-700 
-                         transition-colors hover:bg-gray-200
-                         dark:bg-black dark:text-gray-300
-                         dark:hover:bg-[#323B4B]"
+              <button
+                className="rounded-lg bg-gray-100 px-4 py-2 text-gray-700 transition-colors hover:bg-gray-200 dark:bg-black dark:text-gray-300 dark:hover:bg-[#323B4B]"
                 onClick={() => setIsNewCollectionModalOpen(false)}
               >
                 Cancel
               </button>
-              <button 
-                className="hover:bg-primary/90 rounded-lg bg-primary
-                         px-4 py-2
-                         text-white
-                         transition-colors"
+              <button
+                className="hover:bg-primary/90 rounded-lg bg-primary px-4 py-2 text-white transition-colors"
                 onClick={handleCreateCollection}
               >
                 Create
@@ -271,7 +275,14 @@ const Header = ({
 };
 
 Header.propTypes = {
-  currentView: PropTypes.oneOf(['cards', 'sold-items', 'purchase-invoices', 'grid', 'list', 'settings']).isRequired,
+  currentView: PropTypes.oneOf([
+    'cards',
+    'sold-items',
+    'purchase-invoices',
+    'grid',
+    'list',
+    'settings',
+  ]).isRequired,
 };
 
 export default Header;

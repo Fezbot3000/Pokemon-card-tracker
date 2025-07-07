@@ -7,11 +7,16 @@ import { useSubscription } from '../hooks/useSubscription';
 
 /**
  * NewCollectionModal Component
- * 
+ *
  * A modal for creating a new collection. Accepts a name and calls onCreate when submitted.
  * Includes subscription gating for multiple collections feature.
  */
-const NewCollectionModal = ({ isOpen, onClose, onCreate, existingCollections = [] }) => {
+const NewCollectionModal = ({
+  isOpen,
+  onClose,
+  onCreate,
+  existingCollections = [],
+}) => {
   const [collectionName, setCollectionName] = useState('');
   const [error, setError] = useState('');
   const { hasFeature } = useSubscription();
@@ -22,7 +27,11 @@ const NewCollectionModal = ({ isOpen, onClose, onCreate, existingCollections = [
       setError('Collection name is required.');
       return;
     }
-    if (existingCollections.map(c => c.toLowerCase()).includes(trimmed.toLowerCase())) {
+    if (
+      existingCollections
+        .map(c => c.toLowerCase())
+        .includes(trimmed.toLowerCase())
+    ) {
       setError('A collection with this name already exists.');
       return;
     }
@@ -40,15 +49,15 @@ const NewCollectionModal = ({ isOpen, onClose, onCreate, existingCollections = [
   // Check if user has access to multiple collections feature
   if (!hasFeature('MULTIPLE_COLLECTIONS')) {
     return (
-      <Modal 
-        isOpen={isOpen} 
+      <Modal
+        isOpen={isOpen}
         onClose={handleClose}
         title="Create New Collection"
         position="center"
         size="contextual"
         closeOnClickOutside={false}
       >
-        <FeatureGate 
+        <FeatureGate
           feature="MULTIPLE_COLLECTIONS"
           customMessage="Create unlimited collections to organize your cards by set, type, or any way you prefer. This feature is available with Premium."
         />
@@ -57,8 +66,8 @@ const NewCollectionModal = ({ isOpen, onClose, onCreate, existingCollections = [
   }
 
   return (
-    <Modal 
-      isOpen={isOpen} 
+    <Modal
+      isOpen={isOpen}
       onClose={handleClose}
       title="Create New Collection"
       position="center"
@@ -66,14 +75,11 @@ const NewCollectionModal = ({ isOpen, onClose, onCreate, existingCollections = [
       closeOnClickOutside={false}
       footer={
         <>
-          <Button 
-            variant="secondary" 
-            onClick={handleClose}
-          >
+          <Button variant="secondary" onClick={handleClose}>
             Cancel
           </Button>
-          <Button 
-            variant="primary" 
+          <Button
+            variant="primary"
             onClick={handleCreate}
             leftIcon={<Icon name="create_new_folder" />}
           >

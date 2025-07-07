@@ -1,20 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Button } from '../../design-system';
 import { useAuth } from '../../design-system';
-import { 
-  collection, 
-  addDoc, 
-  doc, 
-  getDoc, 
-  updateDoc, 
-  runTransaction, 
-  serverTimestamp 
+import {
+  collection,
+  addDoc,
+  doc,
+  getDoc,
+  updateDoc,
+  runTransaction,
+  serverTimestamp,
 } from 'firebase/firestore';
 import { db as firestoreDb } from '../../services/firebase';
 import logger from '../../utils/logger';
 import toast from 'react-hot-toast';
 
-const SellerReviewModal = ({ isOpen, onClose, sellerId, listingId, chatId }) => {
+const SellerReviewModal = ({
+  isOpen,
+  onClose,
+  sellerId,
+  listingId,
+  chatId,
+}) => {
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -29,7 +35,7 @@ const SellerReviewModal = ({ isOpen, onClose, sellerId, listingId, chatId }) => 
     setSubmitting(true);
     try {
       // Use a transaction to ensure data consistency
-      await runTransaction(firestoreDb, async (transaction) => {
+      await runTransaction(firestoreDb, async transaction => {
         // Add the review to the reviews collection
         const reviewsRef = collection(firestoreDb, 'sellerReviews');
         const reviewData = {
@@ -41,9 +47,9 @@ const SellerReviewModal = ({ isOpen, onClose, sellerId, listingId, chatId }) => 
           rating,
           comment: comment.trim(),
           createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp()
+          updatedAt: serverTimestamp(),
         };
-        
+
         // Add the review
         const reviewDocRef = doc(reviewsRef);
         transaction.set(reviewDocRef, reviewData);
@@ -51,28 +57,33 @@ const SellerReviewModal = ({ isOpen, onClose, sellerId, listingId, chatId }) => 
         // Update the seller's rating statistics
         const sellerRef = doc(firestoreDb, 'users', sellerId);
         const sellerDoc = await transaction.get(sellerRef);
-        
+
         if (sellerDoc.exists()) {
           const sellerData = sellerDoc.data();
           const currentRating = sellerData.sellerRating || 0;
           const currentReviewCount = sellerData.reviewCount || 0;
-          
+
           // Calculate new average rating
           const newReviewCount = currentReviewCount + 1;
-          const newRating = ((currentRating * currentReviewCount) + rating) / newReviewCount;
-          
+          const newRating =
+            (currentRating * currentReviewCount + rating) / newReviewCount;
+
           transaction.update(sellerRef, {
             sellerRating: newRating,
             reviewCount: newReviewCount,
-            lastReviewAt: serverTimestamp()
+            lastReviewAt: serverTimestamp(),
           });
         } else {
           // If seller document doesn't exist, create it with initial rating
-          transaction.set(sellerRef, {
-            sellerRating: rating,
-            reviewCount: 1,
-            lastReviewAt: serverTimestamp()
-          }, { merge: true });
+          transaction.set(
+            sellerRef,
+            {
+              sellerRating: rating,
+              reviewCount: 1,
+              lastReviewAt: serverTimestamp(),
+            },
+            { merge: true }
+          );
         }
 
         // Remove the pending review from the chat
@@ -82,18 +93,23 @@ const SellerReviewModal = ({ isOpen, onClose, sellerId, listingId, chatId }) => 
             pendingReview: null,
             reviewCompleted: {
               completedAt: serverTimestamp(),
-              reviewId: reviewDocRef.id
-            }
+              reviewId: reviewDocRef.id,
+            },
           });
 
           // Add a system message to the chat
-          const messagesRef = collection(firestoreDb, 'chats', chatId, 'messages');
+          const messagesRef = collection(
+            firestoreDb,
+            'chats',
+            chatId,
+            'messages'
+          );
           const messageDocRef = doc(messagesRef);
           transaction.set(messageDocRef, {
             text: `✅ Thank you for your review! You rated this seller ${rating} out of 5 stars.`,
             senderId: 'system',
             timestamp: serverTimestamp(),
-            type: 'review_completed'
+            type: 'review_completed',
           });
         }
       });
@@ -121,13 +137,8 @@ const SellerReviewModal = ({ isOpen, onClose, sellerId, listingId, chatId }) => 
   if (!isOpen) return null;
 
   return (
-    <div 
-      className="bg-black/50 fixed inset-0 z-50 flex items-center justify-center p-4"
-
-    >
-      <div 
-        className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-lg bg-white dark:bg-gray-800"
-      >
+    <div className="bg-black/50 fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-lg bg-white dark:bg-gray-800">
         <div className="p-6">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-xl font-bold text-gray-900 dark:text-white">
@@ -145,21 +156,21 @@ const SellerReviewModal = ({ isOpen, onClose, sellerId, listingId, chatId }) => 
             <p className="mb-4 text-gray-600 dark:text-gray-400">
               How was your experience with this seller?
             </p>
-            
+
             {/* Star Rating */}
             <div className="mb-4">
               <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Rating *
               </label>
               <div className="flex space-x-1">
-                {[1, 2, 3, 4, 5].map((star) => (
+                {[1, 2, 3, 4, 5].map(star => (
                   <button
                     key={star}
                     type="button"
                     onClick={() => setRating(star)}
                     className={`text-2xl transition-colors ${
-                      star <= rating 
-                        ? 'text-yellow-400' 
+                      star <= rating
+                        ? 'text-yellow-400'
                         : 'text-gray-300 hover:text-yellow-300 dark:text-gray-600'
                     }`}
                   >
@@ -184,7 +195,7 @@ const SellerReviewModal = ({ isOpen, onClose, sellerId, listingId, chatId }) => 
               </label>
               <textarea
                 value={comment}
-                onChange={(e) => setComment(e.target.value)}
+                onChange={e => setComment(e.target.value)}
                 placeholder="Share your experience with this seller..."
                 rows={4}
                 maxLength={500}

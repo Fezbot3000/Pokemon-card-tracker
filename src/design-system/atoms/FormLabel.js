@@ -3,12 +3,12 @@ import PropTypes from 'prop-types';
 
 /**
  * FormLabel Component
- * 
+ *
  * A consistent label for form fields with appropriate styling.
  */
 const FormLabel = ({ children, htmlFor, required, className = '' }) => {
   return (
-    <label 
+    <label
       htmlFor={htmlFor}
       className={`mb-1 block text-sm font-medium text-gray-800 dark:text-gray-200 ${className}`}
     >
@@ -22,7 +22,7 @@ FormLabel.propTypes = {
   children: PropTypes.node.isRequired,
   htmlFor: PropTypes.string,
   required: PropTypes.bool,
-  className: PropTypes.string
+  className: PropTypes.string,
 };
 
 export default FormLabel;

@@ -6,29 +6,29 @@ const BaseDataImporter = ({ onImport, loading }) => {
   const fileInputRef = useRef(null);
 
   // Handle file drop
-  const handleDrop = (e) => {
+  const handleDrop = e => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-    
+
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       handleFiles(e.dataTransfer.files[0]);
     }
   };
 
   // Handle drag events
-  const handleDrag = (e) => {
+  const handleDrag = e => {
     e.preventDefault();
     e.stopPropagation();
-    if (e.type === "dragenter" || e.type === "dragover") {
+    if (e.type === 'dragenter' || e.type === 'dragover') {
       setDragActive(true);
-    } else if (e.type === "dragleave") {
+    } else if (e.type === 'dragleave') {
       setDragActive(false);
     }
   };
 
   // Handle file selection from file input
-  const handleChange = (e) => {
+  const handleChange = e => {
     e.preventDefault();
     if (e.target.files && e.target.files[0]) {
       handleFiles(e.target.files[0]);
@@ -36,12 +36,12 @@ const BaseDataImporter = ({ onImport, loading }) => {
   };
 
   // Process the selected file
-  const handleFiles = (file) => {
+  const handleFiles = file => {
     setImportError(null);
-    
+
     // Check file type - more permissive for iOS which may not report MIME types correctly
     if (!file.name.toLowerCase().endsWith('.csv')) {
-      setImportError("Please upload a CSV file (.csv extension required)");
+      setImportError('Please upload a CSV file (.csv extension required)');
       return;
     }
 
@@ -59,7 +59,7 @@ const BaseDataImporter = ({ onImport, loading }) => {
   return (
     <div className="csv-importer">
       <h2>Import Base Card Data</h2>
-      <div 
+      <div
         className={`drop-area ${dragActive ? 'active' : ''} ${loading ? 'loading' : ''}`}
         onDragEnter={handleDrag}
         onDragLeave={handleDrag}
@@ -67,40 +67,62 @@ const BaseDataImporter = ({ onImport, loading }) => {
         onDrop={handleDrop}
         onClick={triggerFileInput}
       >
-        <input 
-          type="file" 
-          id="base-data-upload" 
-          accept=".csv" 
+        <input
+          type="file"
+          id="base-data-upload"
+          accept=".csv"
           onChange={handleChange}
           disabled={loading}
           ref={fileInputRef}
         />
         <label htmlFor="base-data-upload" className={loading ? 'disabled' : ''}>
-          {loading ? 'Processing...' : 'Tap to select a CSV file or drag and drop'}
+          {loading
+            ? 'Processing...'
+            : 'Tap to select a CSV file or drag and drop'}
         </label>
       </div>
-      
-      {importError && (
-        <div className="error-message">
-          {importError}
-        </div>
-      )}
-      
+
+      {importError && <div className="error-message">{importError}</div>}
+
       <div className="import-instructions">
         <h3>Import Instructions</h3>
         <p>Your CSV file should include the following columns:</p>
         <ul>
-          <li><strong>Slab Serial #</strong> - Unique identifier for each card</li>
-          <li><strong>Date Purchased</strong> - When you bought the card</li>
-          <li><strong>Quantity</strong> - Number of cards</li>
-          <li><strong>Current Value</strong> - Current value in USD (will be converted to AUD)</li>
-          <li><strong>Investment</strong> - Amount invested in USD (will be converted to AUD)</li>
-          <li><strong>Card</strong> - Card name</li>
-          <li><strong>Player</strong> - Pokémon name</li>
-          <li><strong>Year</strong> - Card year</li>
-          <li><strong>Set</strong> - Card set</li>
+          <li>
+            <strong>Slab Serial #</strong> - Unique identifier for each card
+          </li>
+          <li>
+            <strong>Date Purchased</strong> - When you bought the card
+          </li>
+          <li>
+            <strong>Quantity</strong> - Number of cards
+          </li>
+          <li>
+            <strong>Current Value</strong> - Current value in USD (will be
+            converted to AUD)
+          </li>
+          <li>
+            <strong>Investment</strong> - Amount invested in USD (will be
+            converted to AUD)
+          </li>
+          <li>
+            <strong>Card</strong> - Card name
+          </li>
+          <li>
+            <strong>Player</strong> - Pokémon name
+          </li>
+          <li>
+            <strong>Year</strong> - Card year
+          </li>
+          <li>
+            <strong>Set</strong> - Card set
+          </li>
         </ul>
-        <p>This import will capture all base data including investment values. All USD values will be converted to AUD using the current exchange rate.</p>
+        <p>
+          This import will capture all base data including investment values.
+          All USD values will be converted to AUD using the current exchange
+          rate.
+        </p>
       </div>
     </div>
   );

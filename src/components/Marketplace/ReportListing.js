@@ -19,12 +19,12 @@ function ReportListing({ listingId, sellerId, onClose }) {
     { value: 'duplicate', label: 'Duplicate listing' },
     { value: 'prohibited', label: 'Prohibited item' },
     { value: 'misleading', label: 'Misleading information' },
-    { value: 'other', label: 'Other' }
+    { value: 'other', label: 'Other' },
   ];
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault();
-    
+
     if (!reason) {
       toast.error('Please select a reason for reporting');
       return;
@@ -39,7 +39,7 @@ function ReportListing({ listingId, sellerId, onClose }) {
     try {
       const reportId = `${listingId}_${user.uid}_${Date.now()}`;
       const reportRef = doc(firestoreDb, 'reports', reportId);
-      
+
       await setDoc(reportRef, {
         listingId,
         sellerId,
@@ -48,7 +48,7 @@ function ReportListing({ listingId, sellerId, onClose }) {
         reason,
         details,
         status: 'pending',
-        createdAt: serverTimestamp()
+        createdAt: serverTimestamp(),
       });
 
       toast.success('Report submitted successfully. We will review it soon.');
@@ -78,7 +78,8 @@ function ReportListing({ listingId, sellerId, onClose }) {
           </div>
 
           <p className="mb-6 text-sm text-gray-600 dark:text-gray-400">
-            Help us maintain a safe marketplace by reporting inappropriate listings.
+            Help us maintain a safe marketplace by reporting inappropriate
+            listings.
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -88,12 +89,12 @@ function ReportListing({ listingId, sellerId, onClose }) {
               </label>
               <select
                 value={reason}
-                onChange={(e) => setReason(e.target.value)}
+                onChange={e => setReason(e.target.value)}
                 className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
                 required
               >
                 <option value="">Select a reason</option>
-                {reportReasons.map((option) => (
+                {reportReasons.map(option => (
                   <option key={option.value} value={option.value}>
                     {option.label}
                   </option>
@@ -107,7 +108,7 @@ function ReportListing({ listingId, sellerId, onClose }) {
               </label>
               <textarea
                 value={details}
-                onChange={(e) => setDetails(e.target.value)}
+                onChange={e => setDetails(e.target.value)}
                 className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
                 rows={4}
                 placeholder="Please provide any additional information that might help us review this report..."
@@ -150,7 +151,7 @@ function ReportListing({ listingId, sellerId, onClose }) {
 ReportListing.propTypes = {
   listingId: PropTypes.string.isRequired,
   sellerId: PropTypes.string.isRequired,
-  onClose: PropTypes.func.isRequired
+  onClose: PropTypes.func.isRequired,
 };
 
 export default ReportListing;

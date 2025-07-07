@@ -1,12 +1,32 @@
-import React, { useState, useRef, useEffect, useCallback, memo, useMemo } from 'react';
+import React, {
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  memo,
+  useMemo,
+} from 'react';
 import { useInView } from 'react-intersection-observer';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../design-system';
-import { collection, query, where, doc, updateDoc, getDocs } from 'firebase/firestore';
+import {
+  collection,
+  query,
+  where,
+  doc,
+  updateDoc,
+  getDocs,
+} from 'firebase/firestore';
 import db from '../services/firestore/dbAdapter';
 import { db as firestoreDb } from '../services/firebase';
 import { toast } from 'react-hot-toast';
-import { StatisticsSummary, SearchToolbar, Card, ConfirmDialog, CardDetailsModal } from '../design-system';
+import {
+  StatisticsSummary,
+  SearchToolbar,
+  Card,
+  ConfirmDialog,
+  CardDetailsModal,
+} from '../design-system';
 import CollectionSelector from '../design-system/components/CollectionSelector';
 import SaleModal from './SaleModal';
 import MoveCardsModal from './MoveCardsModal';
@@ -14,20 +34,28 @@ import CreateInvoiceModal from './PurchaseInvoices/CreateInvoiceModal';
 import ListCardModal from './Marketplace/ListCardModal';
 import { useUserPreferences } from '../contexts/UserPreferencesContext';
 import { useAuth } from '../design-system';
-import { calculateCardTotals, formatStatisticsForDisplay } from '../utils/cardStatistics';
+import {
+  calculateCardTotals,
+  formatStatisticsForDisplay,
+} from '../utils/cardStatistics';
 import { useCardSelection } from '../hooks';
-import { moveCards, validateCollectionsStructure } from '../utils/moveCardsHandler';
+import {
+  moveCards,
+  validateCollectionsStructure,
+} from '../utils/moveCardsHandler';
 import { useSubscription } from '../hooks/useSubscription';
 
 // Replace FinancialSummary component with individual stat cards
 const StatCard = memo(({ label, value, isProfit = false }) => {
   // Determine color class based on profit status
   const colorClass = isProfit
-    ? value >= 0 ? 'text-green-500 dark:text-green-400' : 'text-red-500 dark:text-red-400'
+    ? value >= 0
+      ? 'text-green-500 dark:text-green-400'
+      : 'text-red-500 dark:text-red-400'
     : 'text-gray-900 dark:text-white';
-    
+
   // Helper function to format value
-  const formatValue = (value) => {
+  const formatValue = value => {
     if (typeof value === 'number') {
       return value.toLocaleString();
     }
@@ -36,9 +64,7 @@ const StatCard = memo(({ label, value, isProfit = false }) => {
 
   return (
     <div className="stat-card">
-      <div className="stat-label">
-        {label}
-      </div>
+      <div className="stat-label">{label}</div>
       <div className={`text-2xl font-medium ${colorClass}`}>
         {formatValue(value)}
       </div>
@@ -47,32 +73,37 @@ const StatCard = memo(({ label, value, isProfit = false }) => {
 });
 
 // Helper function to format date
-const formatDate = (dateValue) => {
+const formatDate = dateValue => {
   if (!dateValue) return 'N/A';
-  
+
   try {
     let date;
-    
+
     // Check if this is a Firestore Timestamp object
-    if (dateValue && typeof dateValue === 'object' && 'seconds' in dateValue && 'nanoseconds' in dateValue) {
+    if (
+      dateValue &&
+      typeof dateValue === 'object' &&
+      'seconds' in dateValue &&
+      'nanoseconds' in dateValue
+    ) {
       // Convert Firestore Timestamp to JavaScript Date
       date = new Date(dateValue.seconds * 1000);
     } else {
       // Regular date string or Date object
       date = new Date(dateValue);
     }
-    
+
     // Check if valid date
     if (isNaN(date.getTime())) {
       console.warn('Invalid date in CardList:', dateValue);
       return 'Invalid date';
     }
-    
+
     // Format as DD/MM/YYYY
     return date.toLocaleDateString('en-AU', {
       day: '2-digit',
       month: '2-digit',
-      year: 'numeric'
+      year: 'numeric',
     });
   } catch (error) {
     console.error('Error formatting date:', error);
@@ -81,24 +112,25 @@ const formatDate = (dateValue) => {
   }
 };
 
-const CardList = ({ 
-  cards, 
-  exchangeRate, 
-  onCardClick, 
-  onDeleteCard, 
-  onDeleteCards, 
-  onUpdateCard, 
+const CardList = ({
+  cards,
+  exchangeRate,
+  onCardClick,
+  onDeleteCard,
+  onDeleteCards,
+  onUpdateCard,
   onAddCard,
   selectedCollection,
   collections,
   setCollections,
   onCollectionChange,
-  onSelectionChange
+  onSelectionChange,
 }) => {
   // Initialize navigate function from React Router
   const navigate = useNavigate();
   const { user } = useAuth() || { user: null };
-  const { formatAmountForDisplay: formatUserCurrency, preferredCurrency } = useUserPreferences();
+  const { formatAmountForDisplay: formatUserCurrency, preferredCurrency } =
+    useUserPreferences();
   const { hasFeature } = useSubscription();
 
   const [filter, setFilter] = useState('');
@@ -108,60 +140,77 @@ const CardList = ({
   const [sortDirection, setSortDirection] = useState(
     localStorage.getItem('cardListSortDirection') || 'desc'
   );
-  const [viewMode, setViewMode] = useState(localStorage.getItem('cardListViewMode') || 'grid');
+  const [viewMode, setViewMode] = useState(
+    localStorage.getItem('cardListViewMode') || 'grid'
+  );
   const [showSortDropdown, setShowSortDropdown] = useState(false);
   const [displayMetric, setDisplayMetric] = useState(() => {
     const saved = localStorage.getItem('cardListDisplayMetric');
     return saved || 'currentValueAUD';
   });
-  
+
   // Memoized filtered and sorted cards
   const filteredCards = useMemo(() => {
     if (!cards || cards.length === 0) return [];
-    
+
     // First filter by collection
     let filtered = cards;
     if (selectedCollection && selectedCollection !== 'All Cards') {
-      filtered = filtered.filter(card => 
-        card.collection === selectedCollection || 
-        card.collectionId === selectedCollection
+      filtered = filtered.filter(
+        card =>
+          card.collection === selectedCollection ||
+          card.collectionId === selectedCollection
       );
     }
-    
+
     // Then apply search filter
     if (filter) {
       const lowerFilter = filter.toLowerCase();
-      filtered = filtered.filter(card => 
-        (card.card && card.card.toLowerCase().includes(lowerFilter)) ||
-        (card.set && card.set.toLowerCase().includes(lowerFilter)) ||
-        (card.slabSerial && card.slabSerial.toLowerCase().includes(lowerFilter)) ||
-        (card.player && card.player.toLowerCase().includes(lowerFilter)) ||
-        (card.holoState && card.holoState.toLowerCase().includes(lowerFilter))
+      filtered = filtered.filter(
+        card =>
+          (card.card && card.card.toLowerCase().includes(lowerFilter)) ||
+          (card.set && card.set.toLowerCase().includes(lowerFilter)) ||
+          (card.slabSerial &&
+            card.slabSerial.toLowerCase().includes(lowerFilter)) ||
+          (card.player && card.player.toLowerCase().includes(lowerFilter)) ||
+          (card.holoState && card.holoState.toLowerCase().includes(lowerFilter))
       );
     }
-    
+
     // Create a completely new sorted array to avoid mutation issues
     filtered = [...filtered];
-    
+
     // Apply a multi-level sorting strategy for consistent ordering
     filtered.sort((a, b) => {
       // 1. First sort by the user-selected field and direction
       // Handle different field names between accounts
       let aValue, bValue;
-      
+
       // Special handling for monetary fields that might have different naming conventions
       if (sortField === 'currentValueAUD') {
-        aValue = parseFloat(a.originalCurrentValueAmount || a.currentValueAUD || 0);
-        bValue = parseFloat(b.originalCurrentValueAmount || b.currentValueAUD || 0);
+        aValue = parseFloat(
+          a.originalCurrentValueAmount || a.currentValueAUD || 0
+        );
+        bValue = parseFloat(
+          b.originalCurrentValueAmount || b.currentValueAUD || 0
+        );
       } else if (sortField === 'investmentAUD') {
         aValue = parseFloat(a.originalInvestmentAmount || a.investmentAUD || 0);
         bValue = parseFloat(b.originalInvestmentAmount || b.investmentAUD || 0);
       } else if (sortField === 'potentialProfit') {
         // Calculate profit from the available fields
-        const aInvestment = parseFloat(a.originalInvestmentAmount || a.investmentAUD || 0);
-        const aCurrentValue = parseFloat(a.originalCurrentValueAmount || a.currentValueAUD || 0);
-        const bInvestment = parseFloat(b.originalInvestmentAmount || b.investmentAUD || 0);
-        const bCurrentValue = parseFloat(b.originalCurrentValueAmount || b.currentValueAUD || 0);
+        const aInvestment = parseFloat(
+          a.originalInvestmentAmount || a.investmentAUD || 0
+        );
+        const aCurrentValue = parseFloat(
+          a.originalCurrentValueAmount || a.currentValueAUD || 0
+        );
+        const bInvestment = parseFloat(
+          b.originalInvestmentAmount || b.investmentAUD || 0
+        );
+        const bCurrentValue = parseFloat(
+          b.originalCurrentValueAmount || b.currentValueAUD || 0
+        );
         aValue = aCurrentValue - aInvestment;
         bValue = bCurrentValue - bInvestment;
       } else {
@@ -169,67 +218,73 @@ const CardList = ({
         aValue = a[sortField] ?? 0;
         bValue = b[sortField] ?? 0;
       }
-      
+
       // Handle different types of values appropriately
       let primarySort = 0;
-      
+
       // Handle numeric values
       if (typeof aValue === 'number' && typeof bValue === 'number') {
-        primarySort = sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
-      } 
+        primarySort =
+          sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
+      }
       // Handle string values
       else if (typeof aValue === 'string' && typeof bValue === 'string') {
-        primarySort = sortDirection === 'asc' ? 
-          aValue.localeCompare(bValue) : 
-          bValue.localeCompare(aValue);
+        primarySort =
+          sortDirection === 'asc'
+            ? aValue.localeCompare(bValue)
+            : bValue.localeCompare(aValue);
       }
       // Handle mixed types (convert to string for comparison)
       else {
         const aStr = String(aValue);
         const bStr = String(bValue);
-        primarySort = sortDirection === 'asc' ? 
-          aStr.localeCompare(bStr) : 
-          bStr.localeCompare(aStr);
+        primarySort =
+          sortDirection === 'asc'
+            ? aStr.localeCompare(bStr)
+            : bStr.localeCompare(aStr);
       }
-      
+
       // If primary sort doesn't determine order, use secondary sorting criteria
       if (primarySort === 0) {
         // 2. Secondary sort by card name
         const aName = (a.card || '').toLowerCase();
         const bName = (b.card || '').toLowerCase();
         const nameSort = aName.localeCompare(bName);
-        
+
         if (nameSort !== 0) return nameSort;
-        
+
         // 3. Tertiary sort by set
         const aSet = (a.set || '').toLowerCase();
         const bSet = (b.set || '').toLowerCase();
         const setSort = aSet.localeCompare(bSet);
-        
+
         if (setSort !== 0) return setSort;
-        
+
         // 4. Final sort by slabSerial for absolute consistency
         const aSerial = (a.slabSerial || '').toLowerCase();
         const bSerial = (b.slabSerial || '').toLowerCase();
         return aSerial.localeCompare(bSerial);
       }
-      
+
       return primarySort;
     });
     // Ensure uniqueness by combining slabSerial and collection as fallback key
-    return filtered.map((card, idx) => ({ ...card, _uniqueKey: `${card.slabSerial || 'unknown'}-${card.collection || 'none'}-${idx}` }));
+    return filtered.map((card, idx) => ({
+      ...card,
+      _uniqueKey: `${card.slabSerial || 'unknown'}-${card.collection || 'none'}-${idx}`,
+    }));
   }, [cards, filter, sortField, sortDirection, selectedCollection]);
 
   // Use card selection hook with filtered cards
-  const { 
-    selectedCards, 
+  const {
+    selectedCards,
     selectedCount,
-    handleSelectCard, 
-    handleSelectAll, 
+    handleSelectCard,
+    handleSelectAll,
     clearSelection,
     getSelectedCards,
-    isCardSelected 
-      } = useCardSelection(filteredCards);
+    isCardSelected,
+  } = useCardSelection(filteredCards);
 
   useEffect(() => {
     if (onSelectionChange) {
@@ -242,8 +297,10 @@ const CardList = ({
   useEffect(() => {
     const currentCardIds = new Set(filteredCards.map(card => card.slabSerial));
     const selectedCardIds = Array.from(selectedCards);
-    const hasStaleSelections = selectedCardIds.some(id => !currentCardIds.has(id));
-    
+    const hasStaleSelections = selectedCardIds.some(
+      id => !currentCardIds.has(id)
+    );
+
     if (hasStaleSelections && selectedCards.size > 0) {
       // console.log('[CardList] Clearing stale selection state after cards changed');
       clearSelection();
@@ -265,7 +322,8 @@ const CardList = ({
   const [selectedCardsToMove, setSelectedCardsToMove] = useState([]);
   const [showCardDetails, setShowCardDetails] = useState(false);
   const [selectedCard, setSelectedCard] = useState(null);
-  const [showPurchaseInvoiceModal, setShowPurchaseInvoiceModal] = useState(false);
+  const [showPurchaseInvoiceModal, setShowPurchaseInvoiceModal] =
+    useState(false);
   const [selectedCardsForPurchase, setSelectedCardsForPurchase] = useState([]);
   const [showListCardModal, setShowListCardModal] = useState(false);
   const [selectedCardsForListing, setSelectedCardsForListing] = useState([]);
@@ -273,7 +331,7 @@ const CardList = ({
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const { ref: loadMoreRef, inView } = useInView({
     threshold: 0.1,
-    triggerOnce: false
+    triggerOnce: false,
   });
 
   const valueDropdownRef = useRef(null);
@@ -282,14 +340,23 @@ const CardList = ({
 
   // Handle click outside dropdowns
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (sortDropdownRef.current && !sortDropdownRef.current.contains(event.target)) {
+    const handleClickOutside = event => {
+      if (
+        sortDropdownRef.current &&
+        !sortDropdownRef.current.contains(event.target)
+      ) {
         setShowSortDropdown(false);
       }
-      if (metricDropdownRef.current && !metricDropdownRef.current.contains(event.target)) {
+      if (
+        metricDropdownRef.current &&
+        !metricDropdownRef.current.contains(event.target)
+      ) {
         setIsMetricDropdownOpen(false);
       }
-      if (valueDropdownRef.current && !valueDropdownRef.current.contains(event.target)) {
+      if (
+        valueDropdownRef.current &&
+        !valueDropdownRef.current.contains(event.target)
+      ) {
         setIsValueDropdownOpen(false);
       }
     };
@@ -333,12 +400,12 @@ const CardList = ({
           }
         }
       });
-      
+
       const images = {};
       for (const card of cards) {
         if (card.imageUrl) {
           // Prioritize Firestore image URL if available
-          images[card.slabSerial] = card.imageUrl; 
+          images[card.slabSerial] = card.imageUrl;
         } else {
           // Fallback: Try loading from IndexedDB if no Firestore URL
           try {
@@ -348,10 +415,13 @@ const CardList = ({
               images[card.slabSerial] = blobUrl;
             } else {
               // Explicitly set to null or undefined if not found anywhere
-              images[card.slabSerial] = null; 
+              images[card.slabSerial] = null;
             }
           } catch (error) {
-            console.error(`Error loading image for card ${card.slabSerial} from IndexedDB:`, error);
+            console.error(
+              `Error loading image for card ${card.slabSerial} from IndexedDB:`,
+              error
+            );
             images[card.slabSerial] = null; // Ensure it's null on error
           }
         }
@@ -368,7 +438,11 @@ const CardList = ({
           try {
             URL.revokeObjectURL(url);
           } catch (error) {
-            console.warn('Failed to revoke potential blob URL during cleanup:', url, error);
+            console.warn(
+              'Failed to revoke potential blob URL during cleanup:',
+              url,
+              error
+            );
           }
         }
       });
@@ -376,7 +450,7 @@ const CardList = ({
   }, [cards]); // Dependency remains on 'cards'
 
   // Function to refresh a single card's image
-  const refreshCardImage = async (cardId) => {
+  const refreshCardImage = async cardId => {
     const card = cards.find(c => c.slabSerial === cardId);
     if (!card) return; // Card not found
 
@@ -385,7 +459,7 @@ const CardList = ({
       if (cardImages[cardId] && cardImages[cardId].startsWith('blob:')) {
         URL.revokeObjectURL(cardImages[cardId]);
       }
-      
+
       let newImageUrl = null;
       if (card.imageUrl) {
         // Prioritize updated Firestore URL
@@ -395,34 +469,36 @@ const CardList = ({
         const imageBlob = await db.getImage(cardId);
         if (imageBlob) {
           newImageUrl = URL.createObjectURL(imageBlob);
-        } 
+        }
       }
 
       setCardImages(prev => ({
         ...prev,
-        [cardId]: newImageUrl // Store the new URL (Firestore or Blob)
+        [cardId]: newImageUrl, // Store the new URL (Firestore or Blob)
       }));
-
     } catch (error) {
       console.error(`Error refreshing image for card ${cardId}:`, error);
       // Optionally set to null or keep the old image on error
       setCardImages(prev => ({
         ...prev,
-        [cardId]: prev[cardId] // Keep existing on error, or set to null
+        [cardId]: prev[cardId], // Keep existing on error, or set to null
       }));
     }
   };
 
   // Wrap the onUpdateCard function to handle image refreshing
-  const handleCardUpdate = useCallback(async (updatedCard) => {
-    // If the card has an updated image, refresh it immediately
-    if (updatedCard.imageUpdatedAt) {
-      await refreshCardImage(updatedCard.slabSerial);
-    }
-    
-    // Call the original onUpdateCard function
-    onUpdateCard(updatedCard);
-  }, [onUpdateCard, refreshCardImage]);
+  const handleCardUpdate = useCallback(
+    async updatedCard => {
+      // If the card has an updated image, refresh it immediately
+      if (updatedCard.imageUpdatedAt) {
+        await refreshCardImage(updatedCard.slabSerial);
+      }
+
+      // Call the original onUpdateCard function
+      onUpdateCard(updatedCard);
+    },
+    [onUpdateCard, refreshCardImage]
+  );
 
   // Sort options
   const sortOptions = [
@@ -433,34 +509,35 @@ const CardList = ({
     { field: 'datePurchased', label: 'Purchase Date' },
     { field: 'player', label: 'Player Name' },
     { field: 'cardNumber', label: 'Card Number' },
-    { field: 'set', label: 'Set Name' }
+    { field: 'set', label: 'Set Name' },
   ];
 
   // Function to get the label for a sort field
-  const getSortFieldLabel = (field) => {
+  const getSortFieldLabel = field => {
     // Handle different format variations (like 'currentValue' vs 'currentValueAUD')
     const normalizedField = field.replace(/AUD$/, ''); // Remove AUD suffix if present
-    
+
     // First, try to find an exact match
     let option = sortOptions.find(opt => opt.field === field);
-    
+
     // If no exact match, try with normalized field
     if (!option) {
-      option = sortOptions.find(opt => 
-        opt.field.toLowerCase().includes(normalizedField.toLowerCase()) || 
-        normalizedField.toLowerCase().includes(opt.field.toLowerCase())
+      option = sortOptions.find(
+        opt =>
+          opt.field.toLowerCase().includes(normalizedField.toLowerCase()) ||
+          normalizedField.toLowerCase().includes(opt.field.toLowerCase())
       );
     }
-    
+
     return option ? option.label : field;
   };
 
-  const handleSortChange = (field) => {
+  const handleSortChange = field => {
     if (field === sortField) {
       toggleSortDirection();
     } else {
       setSortField(field);
-      setSortDirection('desc');  // Default to descending for new sort fields
+      setSortDirection('desc'); // Default to descending for new sort fields
     }
   };
 
@@ -470,7 +547,7 @@ const CardList = ({
     setEditValue(card.investmentAUD.toString());
   };
 
-  const handleInvestmentChange = (e) => {
+  const handleInvestmentChange = e => {
     setEditValue(e.target.value);
   };
 
@@ -481,7 +558,7 @@ const CardList = ({
       const updatedCard = {
         ...card,
         investmentAUD: newValue,
-        potentialProfit: card.currentValueAUD - newValue
+        potentialProfit: card.currentValueAUD - newValue,
       };
       handleCardUpdate(updatedCard);
     }
@@ -502,7 +579,10 @@ const CardList = ({
   }, [filteredCards, visibleCardCount]);
 
   // Calculate totals using the utility function - updated to use filtered cards for selected collection
-  const totals = useMemo(() => calculateCardTotals(filteredCards), [filteredCards]);
+  const totals = useMemo(
+    () => calculateCardTotals(filteredCards),
+    [filteredCards]
+  );
 
   // Reset state when collection changes
   useEffect(() => {
@@ -516,25 +596,35 @@ const CardList = ({
 
   // Load more cards when user scrolls to the bottom
   useEffect(() => {
-    if (inView && !isLoadingMore && paginatedCards.length < filteredCards.length) {
+    if (
+      inView &&
+      !isLoadingMore &&
+      paginatedCards.length < filteredCards.length
+    ) {
       setIsLoadingMore(true);
       // Simulate loading delay for better UX
       setTimeout(() => {
         setVisibleCardCount(prevCount => {
           // Calculate cards per row based on screen size
-          const cardsPerRow = window.innerWidth < 640 ? 2 : // mobile
-                             window.innerWidth < 768 ? 3 : // sm
-                             window.innerWidth < 1024 ? 5 : // md
-                             window.innerWidth < 1280 ? 6 : 7; // lg and xl
-          
+          const cardsPerRow =
+            window.innerWidth < 640
+              ? 2 // mobile
+              : window.innerWidth < 768
+                ? 3 // sm
+                : window.innerWidth < 1024
+                  ? 5 // md
+                  : window.innerWidth < 1280
+                    ? 6
+                    : 7; // lg and xl
+
           // Load 2 more rows of cards
-          return prevCount + (cardsPerRow * 2);
+          return prevCount + cardsPerRow * 2;
         });
         setIsLoadingMore(false);
       }, 300);
     }
   }, [inView, isLoadingMore, paginatedCards.length, filteredCards.length]);
-  
+
   // Reset pagination when filter changes
   useEffect(() => {
     setVisibleCardCount(24);
@@ -546,7 +636,9 @@ const CardList = ({
       return;
     }
     // Get the full card data for selected cards
-    const selectedCardData = cards.filter(card => selectedCards.has(card.slabSerial));
+    const selectedCardData = cards.filter(card =>
+      selectedCards.has(card.slabSerial)
+    );
     setSelectedCardsForSale(selectedCardData);
     setShowSaleModal(true);
   };
@@ -555,9 +647,11 @@ const CardList = ({
   const generateInvoiceId = async () => {
     try {
       // Get existing sold cards directly from Firestore
-      const firestoreService = (await import('../services/firestore/firestoreService.js')).default;
+      const firestoreService = (
+        await import('../services/firestore/firestoreService.js')
+      ).default;
       const existingSoldItems = await firestoreService.getSoldItems();
-      
+
       // Get the highest invoice number
       let highestNumber = 0;
       existingSoldItems.forEach(item => {
@@ -571,10 +665,10 @@ const CardList = ({
           }
         }
       });
-      
+
       // Generate next invoice number
       const nextNumber = highestNumber + 1;
-      
+
       // Format with leading zeros (e.g., INV-0001)
       return `INV-${String(nextNumber).padStart(4, '0')}`;
     } catch (error) {
@@ -584,30 +678,39 @@ const CardList = ({
     }
   };
 
-  const handleSaleConfirm = async ({ buyer, dateSold, soldPrices, totalSalePrice, totalProfit }) => {
+  const handleSaleConfirm = async ({
+    buyer,
+    dateSold,
+    soldPrices,
+    totalSalePrice,
+    totalProfit,
+  }) => {
     try {
       // Generate a new invoice ID for this transaction
       const invoiceId = await generateInvoiceId();
-      
+
       const selectedCardsData = selectedCardsForSale.map(card => ({
         ...card,
         id: card.slabSerial || card.id, // Ensure each sold item has an id field
         finalValueAUD: parseFloat(soldPrices[card.slabSerial]),
-        finalProfitAUD: parseFloat(soldPrices[card.slabSerial]) - card.investmentAUD,
+        finalProfitAUD:
+          parseFloat(soldPrices[card.slabSerial]) - card.investmentAUD,
         dateSold,
         buyer,
-        invoiceId // Add the invoice ID to each card
+        invoiceId, // Add the invoice ID to each card
       }));
 
       // Save each sold card directly to Firestore
-      const firestoreService = (await import('../services/firestore/firestoreService.js')).default;
+      const firestoreService = (
+        await import('../services/firestore/firestoreService.js')
+      ).default;
       for (const soldCard of selectedCardsData) {
         await firestoreService.saveSoldItem(soldCard);
       }
 
       // Remove cards from collections using the proper delete handler
       const cardIds = selectedCardsData.map(card => card.slabSerial);
-      
+
       // Use the parent's delete handler which properly manages collections
       if (onDeleteCards) {
         await onDeleteCards(cardIds);
@@ -624,29 +727,35 @@ const CardList = ({
       setSelectedCardsForSale([]);
 
       // Show success message
-      toast.success(`${selectedCardsData.length} card${selectedCardsData.length > 1 ? 's' : ''} marked as sold`, {
-        id: 'sale-success',
-        duration: 2000,
-      });
-      
+      toast.success(
+        `${selectedCardsData.length} card${selectedCardsData.length > 1 ? 's' : ''} marked as sold`,
+        {
+          id: 'sale-success',
+          duration: 2000,
+        }
+      );
+
       // Refresh page to show updated state
       setTimeout(() => {
         window.location.reload();
       }, 500);
     } catch (error) {
       console.error('Error marking cards as sold:', error);
-      toast.error(`Failed to mark cards as sold: ${error.message || 'Please try again.'}`);
+      toast.error(
+        `Failed to mark cards as sold: ${error.message || 'Please try again.'}`
+      );
     }
   };
 
   // Toggle sort direction
-  const toggleSortDirection = (newDirection) => {
+  const toggleSortDirection = newDirection => {
     // If a direction is provided, use it; otherwise toggle the current direction
-    const direction = newDirection || (sortDirection === 'asc' ? 'desc' : 'asc');
+    const direction =
+      newDirection || (sortDirection === 'asc' ? 'desc' : 'asc');
     setSortDirection(direction);
     localStorage.setItem('cardListSortDirection', direction);
   };
-  
+
   // Sort dropdown toggle
   const toggleSortDropdown = () => {
     // Close other dropdowns
@@ -655,7 +764,7 @@ const CardList = ({
     // Toggle sort dropdown
     setShowSortDropdown(!showSortDropdown);
   };
-  
+
   // Metric dropdown toggle
   const toggleMetricDropdown = () => {
     // Close other dropdowns
@@ -664,7 +773,7 @@ const CardList = ({
     // Toggle metric dropdown
     setIsMetricDropdownOpen(!isMetricDropdownOpen);
   };
-  
+
   // Value dropdown toggle
   const toggleValueDropdown = () => {
     // Close other dropdowns
@@ -674,7 +783,7 @@ const CardList = ({
     setIsValueDropdownOpen(!isValueDropdownOpen);
   };
 
-  const handleCardDelete = async (cardToDelete) => {
+  const handleCardDelete = async cardToDelete => {
     try {
       const cardId = cardToDelete?.id || cardToDelete;
       if (!cardId) {
@@ -685,7 +794,7 @@ const CardList = ({
 
       await onDeleteCard(cardId);
       toast.success('Card deleted successfully');
-      
+
       // Clear selection if the deleted card was selected
       if (selectedCards.has(cardId)) {
         handleSelectCard(false, cardId);
@@ -696,30 +805,32 @@ const CardList = ({
     }
   };
 
-  const handleBulkDelete = async (cardsToDelete) => {
+  const handleBulkDelete = async cardsToDelete => {
     try {
       // Only add detailed logging in development mode
       const isDevMode = process.env.NODE_ENV === 'development';
-      
+
       if (isDevMode) {
         // console.log('%c DELETION DEBUG - STARTING DELETION PROCESS', 'background: #ff0000; color: white; font-size: 14px;');
         // console.log('Cards to delete:', cardsToDelete);
       }
-      
+
       // Create a copy of the collections
       const updatedCollections = { ...collections };
-      const cardIds = Array.isArray(cardsToDelete) ? cardsToDelete : [cardsToDelete];
-      
+      const cardIds = Array.isArray(cardsToDelete)
+        ? cardsToDelete
+        : [cardsToDelete];
+
       if (isDevMode) {
         // console.log('Card IDs for deletion:', cardIds);
         // console.log('Current collections before deletion:', JSON.parse(JSON.stringify(collections)));
-        
+
         // Log each card's properties to check ID consistency
         cardIds.forEach(cardId => {
           const cardInCollection = Object.values(collections)
             .flat()
             .find(card => card.slabSerial === cardId || card.id === cardId);
-          
+
           if (cardInCollection) {
             // console.log('Found card to delete:', {
             //   cardId,
@@ -738,14 +849,16 @@ const CardList = ({
       Object.keys(updatedCollections).forEach(collectionName => {
         if (Array.isArray(updatedCollections[collectionName])) {
           const beforeCount = updatedCollections[collectionName].length;
-          updatedCollections[collectionName] = updatedCollections[collectionName].filter(
-            card => {
-              // Check both id and slabSerial to ensure we catch all cards
-              return !(cardIds.includes(card.id) || cardIds.includes(card.slabSerial));
-            }
-          );
+          updatedCollections[collectionName] = updatedCollections[
+            collectionName
+          ].filter(card => {
+            // Check both id and slabSerial to ensure we catch all cards
+            return !(
+              cardIds.includes(card.id) || cardIds.includes(card.slabSerial)
+            );
+          });
           const afterCount = updatedCollections[collectionName].length;
-          
+
           if (isDevMode) {
             // console.log(`Collection "${collectionName}": removed ${beforeCount - afterCount} cards`);
           }
@@ -756,10 +869,10 @@ const CardList = ({
       if (isDevMode) {
         // console.log('Saving updated collections to database...');
       }
-      
+
       try {
         await db.saveCollections(updatedCollections);
-        
+
         if (isDevMode) {
           // console.log('Database save successful');
         }
@@ -768,16 +881,16 @@ const CardList = ({
         console.error('Database save failed:', dbError);
         throw dbError; // Re-throw to be caught by outer try/catch
       }
-      
+
       // Update state in parent first
       try {
         if (onDeleteCards) {
           if (isDevMode) {
             // console.log('Calling onDeleteCards with:', cardIds);
           }
-          
+
           await onDeleteCards(cardIds);
-          
+
           if (isDevMode) {
             // console.log('onDeleteCards completed successfully');
           }
@@ -785,25 +898,29 @@ const CardList = ({
           if (isDevMode) {
             // console.log('Using onDeleteCard for each card');
           }
-          
+
           for (const cardId of cardIds) {
             if (isDevMode) {
               // console.log('Deleting individual card:', cardId);
             }
-            
+
             await onDeleteCard(cardId);
           }
-          
+
           if (isDevMode) {
             // console.log('All individual deletions completed');
           }
         } else {
-          console.warn('No deletion handler provided (onDeleteCards or onDeleteCard)');
+          console.warn(
+            'No deletion handler provided (onDeleteCards or onDeleteCard)'
+          );
         }
       } catch (innerError) {
         // Always log errors, even in production
         console.error('Error updating app state after deletion:', innerError);
-        console.warn('Warning: Error updating app state after deletion, but database was updated successfully.');
+        console.warn(
+          'Warning: Error updating app state after deletion, but database was updated successfully.'
+        );
       }
 
       // Update local state after parent state is updated
@@ -812,13 +929,16 @@ const CardList = ({
       setShowDeleteModal(false);
       setShowCardDetails(false);
       setSelectedCard(null);
-      
+
       // Always show success message, but don't refresh the page
-      toast.success(`${cardIds.length} card${cardIds.length > 1 ? 's' : ''} deleted`, {
-        id: 'delete-success', // Add an ID to prevent duplicate toasts
-        duration: 3000,
-      });
-      
+      toast.success(
+        `${cardIds.length} card${cardIds.length > 1 ? 's' : ''} deleted`,
+        {
+          id: 'delete-success', // Add an ID to prevent duplicate toasts
+          duration: 3000,
+        }
+      );
+
       // Return true to indicate success
       return true;
     } catch (error) {
@@ -849,33 +969,41 @@ const CardList = ({
 
   const handleMoveCards = () => {
     if (selectedCards.size === 0) return;
-    
+
     // Get the cards to move
-    const cardsToMove = filteredCards.filter(card => selectedCards.has(card.slabSerial));
+    const cardsToMove = filteredCards.filter(card =>
+      selectedCards.has(card.slabSerial)
+    );
     setSelectedCardsToMove(cardsToMove);
-    
+
     // Filter collections to remove both "Sold" and lowercase "sold"
     const filteredCollections = Object.keys(collections).filter(collection => {
       const lowerCase = collection.toLowerCase();
-      return collection !== 'All Cards' && 
-             collection !== selectedCollection &&
-             lowerCase !== 'sold' &&
-             !lowerCase.includes('sold');
+      return (
+        collection !== 'All Cards' &&
+        collection !== selectedCollection &&
+        lowerCase !== 'sold' &&
+        !lowerCase.includes('sold')
+      );
     });
-    
+
     // Only show modal if there are valid collections to move to
     if (filteredCollections.length > 0) {
       setShowMoveModal(true);
     } else {
-      toast.error('No valid collections to move cards to. Create a new collection first.');
+      toast.error(
+        'No valid collections to move cards to. Create a new collection first.'
+      );
     }
   };
 
-  const handleMoveConfirm = async (targetCollection) => {
+  const handleMoveConfirm = async targetCollection => {
     try {
       // Get the cards to move
-      const cardsToMove = cards.filter(card => selectedCards.has(card.slabSerial));
-      
+      const cardsToMove = cards.filter(card =>
+        selectedCards.has(card.slabSerial)
+      );
+
       if (cardsToMove.length === 0) {
         toast.error('No cards selected to move');
         return;
@@ -889,20 +1017,19 @@ const CardList = ({
         collections,
         setCollections,
         clearSelection,
-        isAllCardsView: selectedCollection === 'All Cards'
+        isAllCardsView: selectedCollection === 'All Cards',
       });
 
       if (success) {
         // Clear UI state only on success
         setShowMoveModal(false);
         setSelectedCardsToMove([]);
-        
+
         // console.log('[CardList] Move operation completed successfully');
       } else {
         console.warn('[CardList] Move operation failed or partially failed');
         // Don't clear the modal on failure so user can retry
       }
-      
     } catch (error) {
       console.error('[CardList] Error in handleMoveConfirm:', error);
       toast.error('Failed to move cards. Please try again.');
@@ -914,22 +1041,26 @@ const CardList = ({
     <div className="w-full px-1 pb-20 sm:px-2">
       {/* Stats Section - Only show if there are cards */}
       {filteredCards.length > 0 && (
-        <StatisticsSummary 
-          statistics={formatStatisticsForDisplay(totals, filteredCards.length, paginatedCards.length)}
+        <StatisticsSummary
+          statistics={formatStatisticsForDisplay(
+            totals,
+            filteredCards.length,
+            paginatedCards.length
+          )}
           className="mb-3 sm:mb-4"
         />
       )}
 
       {/* Controls Section - Always show so users can add cards */}
       <div className="mb-4">
-        <SearchToolbar 
+        <SearchToolbar
           searchValue={filter}
           onSearchChange={setFilter}
           viewMode={viewMode}
           onViewModeChange={setViewMode}
           sortOption={getSortFieldLabel(sortField)}
           sortOptions={sortOptions.map(option => option.label)}
-          onSortChange={(optionLabel) => {
+          onSortChange={optionLabel => {
             const option = sortOptions.find(o => o.label === optionLabel);
             if (option) {
               handleSortChange(option.field);
@@ -945,33 +1076,35 @@ const CardList = ({
         <CollectionSelector
           selectedCollection={selectedCollection}
           collections={[
-            'All Cards', 
+            'All Cards',
             ...Object.keys(collections)
               .filter(collection => {
                 const lowerCase = collection.toLowerCase();
                 // Hide 'Default Collection' if it's empty
-                if (lowerCase === 'default collection' && 
-                    Array.isArray(collections[collection]) && 
-                    collections[collection].length === 0) {
+                if (
+                  lowerCase === 'default collection' &&
+                  Array.isArray(collections[collection]) &&
+                  collections[collection].length === 0
+                ) {
                   return false;
                 }
                 // Filter out sold collections
                 return lowerCase !== 'sold' && !lowerCase.includes('sold');
               })
               // Sort collections alphabetically
-              .sort((a, b) => a.localeCompare(b))
+              .sort((a, b) => a.localeCompare(b)),
           ]}
           onCollectionChange={onCollectionChange}
-          onAddCollection={(newCollectionName) => {
+          onAddCollection={newCollectionName => {
             // Create a new collection
             const updatedCollections = {
               ...collections,
-              [newCollectionName]: []
+              [newCollectionName]: [],
             };
             setCollections(updatedCollections);
             // Save to database
             db.saveCollections(updatedCollections);
-            
+
             // After creating a new collection, select it
             if (typeof onCollectionChange === 'function') {
               onCollectionChange(newCollectionName);
@@ -983,13 +1116,16 @@ const CardList = ({
       {/* Cards Display */}
       {filteredCards.length === 0 ? (
         <div className="py-8 text-center sm:py-12">
-          <span className="material-icons mb-3 text-4xl text-gray-400 dark:text-gray-600 sm:mb-4 sm:text-5xl">inventory_2</span>
-          <h3 className="mb-1 text-sm font-medium text-gray-900 dark:text-white sm:mb-2 sm:text-base">No cards found</h3>
+          <span className="material-icons mb-3 text-4xl text-gray-400 dark:text-gray-600 sm:mb-4 sm:text-5xl">
+            inventory_2
+          </span>
+          <h3 className="mb-1 text-sm font-medium text-gray-900 dark:text-white sm:mb-2 sm:text-base">
+            No cards found
+          </h3>
           <p className="mb-4 text-xs text-gray-600 dark:text-gray-400 sm:text-sm">
-            {cards.length === 0 
-              ? "Start building your collection by adding your first card!" 
-              : "Try adjusting your search or filters"
-            }
+            {cards.length === 0
+              ? 'Start building your collection by adding your first card!'
+              : 'Try adjusting your search or filters'}
           </p>
           {cards.length === 0 && (
             <button
@@ -1003,39 +1139,51 @@ const CardList = ({
         </div>
       ) : viewMode === 'grid' ? (
         <div className="flex flex-col">
-          <div className={`grid grid-cols-2 gap-1 sm:grid-cols-3 sm:gap-2 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7`}>
+          <div
+            className={`grid grid-cols-2 gap-1 sm:grid-cols-3 sm:gap-2 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7`}
+          >
             {paginatedCards.map(card => (
               <Card
                 key={card._uniqueKey}
                 card={card}
-                investmentAUD={parseFloat(card.originalInvestmentAmount || card.investmentAUD || 0)}
-                currentValueAUD={parseFloat(card.originalCurrentValueAmount || card.currentValueAUD || 0)}
+                investmentAUD={parseFloat(
+                  card.originalInvestmentAmount || card.investmentAUD || 0
+                )}
+                currentValueAUD={parseFloat(
+                  card.originalCurrentValueAmount || card.currentValueAUD || 0
+                )}
                 formatUserCurrency={formatUserCurrency}
                 preferredCurrency={preferredCurrency}
                 originalInvestmentCurrency={card.originalInvestmentCurrency}
                 originalCurrentValueCurrency={card.originalCurrentValueCurrency}
                 cardImage={cardImages[card.slabSerial]}
-                onClick={() => onCardClick(card)} 
+                onClick={() => onCardClick(card)}
                 isSelected={selectedCards.has(card.slabSerial)}
-                onSelect={(selected) => handleSelectCard(selected, card.slabSerial)}
+                onSelect={selected =>
+                  handleSelectCard(selected, card.slabSerial)
+                }
                 className=""
               />
             ))}
           </div>
-          
+
           {/* Load more indicator */}
           {paginatedCards.length < filteredCards.length && (
-            <div 
+            <div
               ref={loadMoreRef}
               className="mt-2 flex items-center justify-center py-4"
             >
               {isLoadingMore ? (
                 <div className="flex items-center space-x-2">
                   <div className="size-5 animate-spin rounded-full border-y-2 border-blue-500"></div>
-                  <span className="text-sm text-gray-600 dark:text-gray-400">Loading more cards...</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    Loading more cards...
+                  </span>
                 </div>
               ) : (
-                <span className="text-sm text-gray-600 dark:text-gray-400">Scroll to load more</span>
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  Scroll to load more
+                </span>
               )}
             </div>
           )}
@@ -1054,59 +1202,98 @@ const CardList = ({
                     <input
                       type="checkbox"
                       checked={selectedCards.has(card.slabSerial)}
-                      onChange={(e) => handleSelectCard(e, card.slabSerial)}
+                      onChange={e => handleSelectCard(e, card.slabSerial)}
                       className="size-4 cursor-pointer rounded border-gray-300 bg-white text-blue-600 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:focus:ring-blue-600"
                       aria-label={`Select ${card.card}`}
-                      onClick={(e) => e.stopPropagation()}
+                      onClick={e => e.stopPropagation()}
                     />
                   </div>
-                  
+
                   {/* Card image (better size) */}
-                  <div 
+                  <div
                     className="relative mr-3 h-20 w-16 shrink-0 cursor-pointer overflow-hidden rounded"
                     onClick={() => onCardClick(card)}
                   >
                     {cardImages[card.slabSerial] ? (
                       <img
-                        src={cardImages[card.slabSerial]} 
-                        alt={`${card.player} - ${card.card}`} 
+                        src={cardImages[card.slabSerial]}
+                        alt={`${card.player} - ${card.card}`}
                         className="size-full object-contain"
                         loading="lazy"
                       />
                     ) : (
                       <div className="flex size-full items-center justify-center bg-gray-100 dark:bg-[#1B2131]">
-                        <span className="material-icons text-lg text-gray-400 dark:text-gray-600">image</span>
+                        <span className="material-icons text-lg text-gray-400 dark:text-gray-600">
+                          image
+                        </span>
                       </div>
                     )}
                   </div>
-                  
+
                   {/* Card details */}
-                  <div className="min-w-0 grow cursor-pointer" onClick={() => onCardClick(card)}>
+                  <div
+                    className="min-w-0 grow cursor-pointer"
+                    onClick={() => onCardClick(card)}
+                  >
                     <h3 className="mb-1 truncate text-base font-semibold text-gray-900 dark:text-white">
                       {card.card}
                     </h3>
                     <p className="mb-2 truncate text-sm text-gray-500 dark:text-gray-400">
                       {card.player || 'Unknown Player'}
                     </p>
-                    
+
                     {/* Card metadata - Compact */}
                     <div className="space-y-1">
                       <div className="flex justify-between text-xs">
-                        <span className="text-gray-600 dark:text-gray-400">Paid:</span>
+                        <span className="text-gray-600 dark:text-gray-400">
+                          Paid:
+                        </span>
                         <span className="font-medium text-gray-900 dark:text-white">
-                          {formatUserCurrency(parseFloat(card.originalInvestmentAmount || card.investmentAUD || 0), card.originalInvestmentCurrency)}
+                          {formatUserCurrency(
+                            parseFloat(
+                              card.originalInvestmentAmount ||
+                                card.investmentAUD ||
+                                0
+                            ),
+                            card.originalInvestmentCurrency
+                          )}
                         </span>
                       </div>
                       <div className="flex justify-between text-xs">
-                        <span className="text-gray-600 dark:text-gray-400">Value:</span>
+                        <span className="text-gray-600 dark:text-gray-400">
+                          Value:
+                        </span>
                         <span className="font-medium text-gray-900 dark:text-white">
-                          {formatUserCurrency(parseFloat(card.originalCurrentValueAmount || card.currentValueAUD || 0), card.originalCurrentValueCurrency)}
+                          {formatUserCurrency(
+                            parseFloat(
+                              card.originalCurrentValueAmount ||
+                                card.currentValueAUD ||
+                                0
+                            ),
+                            card.originalCurrentValueCurrency
+                          )}
                         </span>
                       </div>
                       <div className="flex justify-between text-xs">
-                        <span className="text-gray-600 dark:text-gray-400">Profit:</span>
-                        <span className={`font-medium ${(parseFloat(card.originalCurrentValueAmount || card.currentValueAUD || 0) - parseFloat(card.originalInvestmentAmount || card.investmentAUD || 0)) >= 0 ? 'text-green-500 dark:text-green-400' : 'text-red-500 dark:text-red-400'}`}>
-                          {formatUserCurrency(parseFloat(card.originalCurrentValueAmount || card.currentValueAUD || 0) - parseFloat(card.originalInvestmentAmount || card.investmentAUD || 0), card.originalCurrentValueCurrency)}
+                        <span className="text-gray-600 dark:text-gray-400">
+                          Profit:
+                        </span>
+                        <span
+                          className={`font-medium ${parseFloat(card.originalCurrentValueAmount || card.currentValueAUD || 0) - parseFloat(card.originalInvestmentAmount || card.investmentAUD || 0) >= 0 ? 'text-green-500 dark:text-green-400' : 'text-red-500 dark:text-red-400'}`}
+                        >
+                          {formatUserCurrency(
+                            parseFloat(
+                              card.originalCurrentValueAmount ||
+                                card.currentValueAUD ||
+                                0
+                            ) -
+                              parseFloat(
+                                card.originalInvestmentAmount ||
+                                  card.investmentAUD ||
+                                  0
+                              ),
+                            card.originalCurrentValueCurrency
+                          )}
                         </span>
                       </div>
                     </div>
@@ -1115,20 +1302,24 @@ const CardList = ({
               </div>
             ))}
           </div>
-          
+
           {/* Load more indicator for list view */}
           {paginatedCards.length < filteredCards.length && (
-            <div 
+            <div
               ref={loadMoreRef}
               className="mt-2 flex items-center justify-center py-4"
             >
               {isLoadingMore ? (
                 <div className="flex items-center space-x-2">
                   <div className="size-5 animate-spin rounded-full border-y-2 border-blue-500"></div>
-                  <span className="text-sm text-gray-600 dark:text-gray-400">Loading more cards...</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    Loading more cards...
+                  </span>
                 </div>
               ) : (
-                <span className="text-sm text-gray-600 dark:text-gray-400">Scroll to load more</span>
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  Scroll to load more
+                </span>
               )}
             </div>
           )}
@@ -1140,234 +1331,314 @@ const CardList = ({
         <>
           {/* Bottom shadow overlay for better contrast */}
           <div className="from-black/50 via-black/20 pointer-events-none fixed inset-x-0 bottom-0 z-40 h-1/3 bg-gradient-to-t to-transparent"></div>
-          
-          <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2">
-          {/* Selection Count Badge */}
-          <div className="mb-3 flex justify-center">
-            <div className="rounded-full border border-gray-200 bg-white px-4 py-2 shadow-lg backdrop-blur-sm dark:border-gray-700 dark:bg-[#1B2131]">
-              <span className="text-sm font-medium text-gray-900 dark:text-white">
-                {selectedCards.size} card{selectedCards.size > 1 ? 's' : ''} selected
-              </span>
-            </div>
-          </div>
-          
-          {/* Action Buttons */}
-          <div className="flex flex-col items-center gap-3">
-            {/* Main Action Buttons Row */}
-            <div className="flex max-w-[95vw] items-center gap-2 overflow-x-auto rounded-2xl border border-gray-200 bg-white p-2 shadow-xl backdrop-blur-sm dark:border-gray-700 dark:bg-[#1B2131] sm:gap-3 sm:p-3">
-              {/* Sell Button */}
-              <button
-                onClick={() => {
-                  // Check subscription access first
-                  if (!hasFeature('SOLD_ITEMS')) {
-                    toast.error('Sold items tracking is available with Premium. Upgrade to track your sales!');
-                    return;
-                  }
-                  setSelectedCardsForSale(cards.filter(card => selectedCards.has(card.slabSerial)));
-                  setShowSaleModal(true);
-                }}
-                className={`group flex size-12 shrink-0 flex-col items-center justify-center rounded-xl shadow-md transition-all duration-200 sm:size-16 ${
-                  hasFeature('SOLD_ITEMS') 
-                    ? 'bg-green-500 text-white hover:scale-105 hover:bg-green-600 hover:shadow-lg active:scale-95' 
-                    : 'cursor-not-allowed bg-gray-400 text-gray-200 opacity-75'
-                }`}
-                title={hasFeature('SOLD_ITEMS') ? "Sell selected cards" : "Sell selected cards (Premium feature)"}
-              >
-                <span className={`material-icons mb-0 text-sm transition-transform duration-200 sm:mb-0.5 sm:text-lg ${
-                  hasFeature('SOLD_ITEMS') ? 'group-hover:scale-110' : ''
-                }`}>
-                  {hasFeature('SOLD_ITEMS') ? 'sell' : 'lock'}
-                </span>
-                <span className="hidden text-xs font-medium sm:block">Sell</span>
-              </button>
-              
-              {/* Purchase Invoice Button */}
-              <button
-                onClick={() => {
-                  // Check subscription access first
-                  if (!hasFeature('INVOICING')) {
-                    toast.error('Purchase invoices are available with Premium. Upgrade to create and manage invoices!');
-                    return;
-                  }
-                  setSelectedCardsForPurchase(cards.filter(card => selectedCards.has(card.slabSerial)));
-                  setShowPurchaseInvoiceModal(true);
-                }}
-                className={`group flex size-12 shrink-0 flex-col items-center justify-center rounded-xl shadow-md transition-all duration-200 sm:size-16 ${
-                  hasFeature('INVOICING') 
-                    ? 'bg-blue-500 text-white hover:scale-105 hover:bg-blue-600 hover:shadow-lg active:scale-95' 
-                    : 'cursor-not-allowed bg-gray-400 text-gray-200 opacity-75'
-                }`}
-                title={hasFeature('INVOICING') ? "Create purchase invoice" : "Create purchase invoice (Premium feature)"}
-              >
-                <span className={`material-icons mb-0 text-sm transition-transform duration-200 sm:mb-0.5 sm:text-lg ${
-                  hasFeature('INVOICING') ? 'group-hover:scale-110' : ''
-                }`}>
-                  {hasFeature('INVOICING') ? 'receipt' : 'lock'}
-                </span>
-                <span className="hidden text-xs font-medium sm:block">Invoice</span>
-              </button>
-              
-              {/* List on Marketplace Button */}
-              <button
-                onClick={() => {
-                  // Check subscription access first
-                  if (!hasFeature('MARKETPLACE_SELLING')) {
-                    toast.error('Marketplace selling is available with Premium. Upgrade to list your cards for sale!');
-                    return;
-                  }
 
-                  // Use the existing bulk listing logic
-                  (async () => {
-                    try {
-                      // console.log("Starting bulk listing flow");
-                      
-                      if (!user || !user.uid) {
-                        toast.error('You must be logged in to list cards');
-                        return;
-                      }
-                      
-                      const selectedCardObjects = cards.filter(card => selectedCards.has(card.slabSerial));
-                      
-                      if (selectedCardObjects.length === 0) {
-                        toast.error('No cards selected for listing');
-                        return;
-                      }
-                      
-                      const loadingToast = toast.loading('Checking marketplace status...');
-                      
+          <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2">
+            {/* Selection Count Badge */}
+            <div className="mb-3 flex justify-center">
+              <div className="rounded-full border border-gray-200 bg-white px-4 py-2 shadow-lg backdrop-blur-sm dark:border-gray-700 dark:bg-[#1B2131]">
+                <span className="text-sm font-medium text-gray-900 dark:text-white">
+                  {selectedCards.size} card{selectedCards.size > 1 ? 's' : ''}{' '}
+                  selected
+                </span>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-col items-center gap-3">
+              {/* Main Action Buttons Row */}
+              <div className="flex max-w-[95vw] items-center gap-2 overflow-x-auto rounded-2xl border border-gray-200 bg-white p-2 shadow-xl backdrop-blur-sm dark:border-gray-700 dark:bg-[#1B2131] sm:gap-3 sm:p-3">
+                {/* Sell Button */}
+                <button
+                  onClick={() => {
+                    // Check subscription access first
+                    if (!hasFeature('SOLD_ITEMS')) {
+                      toast.error(
+                        'Sold items tracking is available with Premium. Upgrade to track your sales!'
+                      );
+                      return;
+                    }
+                    setSelectedCardsForSale(
+                      cards.filter(card => selectedCards.has(card.slabSerial))
+                    );
+                    setShowSaleModal(true);
+                  }}
+                  className={`group flex size-12 shrink-0 flex-col items-center justify-center rounded-xl shadow-md transition-all duration-200 sm:size-16 ${
+                    hasFeature('SOLD_ITEMS')
+                      ? 'bg-green-500 text-white hover:scale-105 hover:bg-green-600 hover:shadow-lg active:scale-95'
+                      : 'cursor-not-allowed bg-gray-400 text-gray-200 opacity-75'
+                  }`}
+                  title={
+                    hasFeature('SOLD_ITEMS')
+                      ? 'Sell selected cards'
+                      : 'Sell selected cards (Premium feature)'
+                  }
+                >
+                  <span
+                    className={`material-icons mb-0 text-sm transition-transform duration-200 sm:mb-0.5 sm:text-lg ${
+                      hasFeature('SOLD_ITEMS') ? 'group-hover:scale-110' : ''
+                    }`}
+                  >
+                    {hasFeature('SOLD_ITEMS') ? 'sell' : 'lock'}
+                  </span>
+                  <span className="hidden text-xs font-medium sm:block">
+                    Sell
+                  </span>
+                </button>
+
+                {/* Purchase Invoice Button */}
+                <button
+                  onClick={() => {
+                    // Check subscription access first
+                    if (!hasFeature('INVOICING')) {
+                      toast.error(
+                        'Purchase invoices are available with Premium. Upgrade to create and manage invoices!'
+                      );
+                      return;
+                    }
+                    setSelectedCardsForPurchase(
+                      cards.filter(card => selectedCards.has(card.slabSerial))
+                    );
+                    setShowPurchaseInvoiceModal(true);
+                  }}
+                  className={`group flex size-12 shrink-0 flex-col items-center justify-center rounded-xl shadow-md transition-all duration-200 sm:size-16 ${
+                    hasFeature('INVOICING')
+                      ? 'bg-blue-500 text-white hover:scale-105 hover:bg-blue-600 hover:shadow-lg active:scale-95'
+                      : 'cursor-not-allowed bg-gray-400 text-gray-200 opacity-75'
+                  }`}
+                  title={
+                    hasFeature('INVOICING')
+                      ? 'Create purchase invoice'
+                      : 'Create purchase invoice (Premium feature)'
+                  }
+                >
+                  <span
+                    className={`material-icons mb-0 text-sm transition-transform duration-200 sm:mb-0.5 sm:text-lg ${
+                      hasFeature('INVOICING') ? 'group-hover:scale-110' : ''
+                    }`}
+                  >
+                    {hasFeature('INVOICING') ? 'receipt' : 'lock'}
+                  </span>
+                  <span className="hidden text-xs font-medium sm:block">
+                    Invoice
+                  </span>
+                </button>
+
+                {/* List on Marketplace Button */}
+                <button
+                  onClick={() => {
+                    // Check subscription access first
+                    if (!hasFeature('MARKETPLACE_SELLING')) {
+                      toast.error(
+                        'Marketplace selling is available with Premium. Upgrade to list your cards for sale!'
+                      );
+                      return;
+                    }
+
+                    // Use the existing bulk listing logic
+                    (async () => {
                       try {
-                        const marketplaceRef = collection(firestoreDb, 'marketplaceItems');
-                        const checkPromises = selectedCardObjects.map(async (card) => {
-                          if (!card.slabSerial) return { ...card, isActuallyListed: false };
-                          
-                          const existingQuery = query(
-                            marketplaceRef,
-                            where('cardId', '==', card.slabSerial),
-                            where('status', '==', 'available')
-                          );
-                          
-                          try {
-                            const snapshot = await getDocs(existingQuery);
-                            const isActuallyListed = !snapshot.empty;
-                            return { ...card, isActuallyListed };
-                          } catch (error) {
-                            console.error(`Error checking listing status for ${card.slabSerial}:`, error);
-                            return { ...card, isActuallyListed: false };
-                          }
-                        });
-                        
-                        const checkedCards = await Promise.all(checkPromises);
-                        toast.dismiss(loadingToast);
-                        
-                        const cardsToList = checkedCards.filter(card => !card.isActuallyListed);
-                        
-                        const cardsNeedingUpdate = checkedCards.filter(card => 
-                          Boolean(card.isListed) !== Boolean(card.isActuallyListed)
-                        );
-                        
-                        if (cardsNeedingUpdate.length > 0) {
-                          // console.log(`Found ${cardsNeedingUpdate.length} cards with out-of-sync isListed flags`);
-                          
-                          const updatePromises = cardsNeedingUpdate.map(card => {
-                            if (!card.slabSerial) return Promise.resolve();
-                                                    
-                            const cardRef = doc(firestoreDb, `users/${user.uid}/cards/${card.slabSerial}`);
-                            return updateDoc(cardRef, { isListed: card.isActuallyListed })
-                              .then(() => {
-                                // console.log(`Updated isListed flag for ${card.card || card.slabSerial} to ${card.isActuallyListed}`);
-                              })
-                              .catch(error => {
-                                console.error(`Error updating isListed flag for ${card.slabSerial}:`, error);
-                              });
-                          });
-                          
-                          await Promise.all(updatePromises);
-                        }
-                        
-                        if (cardsToList.length === 0) {
-                          toast.error('All selected cards are already listed on the marketplace');
+                        // console.log("Starting bulk listing flow");
+
+                        if (!user || !user.uid) {
+                          toast.error('You must be logged in to list cards');
                           return;
                         }
-                        
-                        setSelectedCardsForListing(cardsToList);
-                        setShowListCardModal(true);
+
+                        const selectedCardObjects = cards.filter(card =>
+                          selectedCards.has(card.slabSerial)
+                        );
+
+                        if (selectedCardObjects.length === 0) {
+                          toast.error('No cards selected for listing');
+                          return;
+                        }
+
+                        const loadingToast = toast.loading(
+                          'Checking marketplace status...'
+                        );
+
+                        try {
+                          const marketplaceRef = collection(
+                            firestoreDb,
+                            'marketplaceItems'
+                          );
+                          const checkPromises = selectedCardObjects.map(
+                            async card => {
+                              if (!card.slabSerial)
+                                return { ...card, isActuallyListed: false };
+
+                              const existingQuery = query(
+                                marketplaceRef,
+                                where('cardId', '==', card.slabSerial),
+                                where('status', '==', 'available')
+                              );
+
+                              try {
+                                const snapshot = await getDocs(existingQuery);
+                                const isActuallyListed = !snapshot.empty;
+                                return { ...card, isActuallyListed };
+                              } catch (error) {
+                                console.error(
+                                  `Error checking listing status for ${card.slabSerial}:`,
+                                  error
+                                );
+                                return { ...card, isActuallyListed: false };
+                              }
+                            }
+                          );
+
+                          const checkedCards = await Promise.all(checkPromises);
+                          toast.dismiss(loadingToast);
+
+                          const cardsToList = checkedCards.filter(
+                            card => !card.isActuallyListed
+                          );
+
+                          const cardsNeedingUpdate = checkedCards.filter(
+                            card =>
+                              Boolean(card.isListed) !==
+                              Boolean(card.isActuallyListed)
+                          );
+
+                          if (cardsNeedingUpdate.length > 0) {
+                            // console.log(`Found ${cardsNeedingUpdate.length} cards with out-of-sync isListed flags`);
+
+                            const updatePromises = cardsNeedingUpdate.map(
+                              card => {
+                                if (!card.slabSerial) return Promise.resolve();
+
+                                const cardRef = doc(
+                                  firestoreDb,
+                                  `users/${user.uid}/cards/${card.slabSerial}`
+                                );
+                                return updateDoc(cardRef, {
+                                  isListed: card.isActuallyListed,
+                                })
+                                  .then(() => {
+                                    // console.log(`Updated isListed flag for ${card.card || card.slabSerial} to ${card.isActuallyListed}`);
+                                  })
+                                  .catch(error => {
+                                    console.error(
+                                      `Error updating isListed flag for ${card.slabSerial}:`,
+                                      error
+                                    );
+                                  });
+                              }
+                            );
+
+                            await Promise.all(updatePromises);
+                          }
+
+                          if (cardsToList.length === 0) {
+                            toast.error(
+                              'All selected cards are already listed on the marketplace'
+                            );
+                            return;
+                          }
+
+                          setSelectedCardsForListing(cardsToList);
+                          setShowListCardModal(true);
+                        } catch (error) {
+                          toast.dismiss(loadingToast);
+                          toast.error('Error checking marketplace status');
+                          console.error('Error in bulk listing flow:', error);
+                        }
                       } catch (error) {
-                        toast.dismiss(loadingToast);
-                        toast.error('Error checking marketplace status');
+                        toast.error('Error starting bulk listing process');
                         console.error('Error in bulk listing flow:', error);
                       }
-                    } catch (error) {
-                      toast.error('Error starting bulk listing process');
-                      console.error('Error in bulk listing flow:', error);
-                    }
-                  })();
-                }}
-                className={`group flex size-12 shrink-0 flex-col items-center justify-center rounded-xl shadow-md transition-all duration-200 sm:size-16 ${
-                  hasFeature('MARKETPLACE_SELLING') 
-                    ? 'bg-purple-500 text-white hover:scale-105 hover:bg-purple-600 hover:shadow-lg active:scale-95' 
-                    : 'cursor-not-allowed bg-gray-400 text-gray-200 opacity-75'
-                }`}
-                title={hasFeature('MARKETPLACE_SELLING') ? "List on marketplace" : "List on marketplace (Premium feature)"}
-              >
-                <span className={`material-icons mb-0 text-sm transition-transform duration-200 sm:mb-0.5 sm:text-lg ${
-                  hasFeature('MARKETPLACE_SELLING') ? 'group-hover:scale-110' : ''
-                }`}>
-                  {hasFeature('MARKETPLACE_SELLING') ? 'storefront' : 'lock'}
-                </span>
-                <span className="hidden text-xs font-medium sm:block">
-                  {hasFeature('MARKETPLACE_SELLING') ? 'List' : 'List'}
-                </span>
-              </button>
-              
-              {/* Move Button */}
+                    })();
+                  }}
+                  className={`group flex size-12 shrink-0 flex-col items-center justify-center rounded-xl shadow-md transition-all duration-200 sm:size-16 ${
+                    hasFeature('MARKETPLACE_SELLING')
+                      ? 'bg-purple-500 text-white hover:scale-105 hover:bg-purple-600 hover:shadow-lg active:scale-95'
+                      : 'cursor-not-allowed bg-gray-400 text-gray-200 opacity-75'
+                  }`}
+                  title={
+                    hasFeature('MARKETPLACE_SELLING')
+                      ? 'List on marketplace'
+                      : 'List on marketplace (Premium feature)'
+                  }
+                >
+                  <span
+                    className={`material-icons mb-0 text-sm transition-transform duration-200 sm:mb-0.5 sm:text-lg ${
+                      hasFeature('MARKETPLACE_SELLING')
+                        ? 'group-hover:scale-110'
+                        : ''
+                    }`}
+                  >
+                    {hasFeature('MARKETPLACE_SELLING') ? 'storefront' : 'lock'}
+                  </span>
+                  <span className="hidden text-xs font-medium sm:block">
+                    {hasFeature('MARKETPLACE_SELLING') ? 'List' : 'List'}
+                  </span>
+                </button>
+
+                {/* Move Button */}
+                <button
+                  onClick={handleMoveCards}
+                  className="group flex size-12 shrink-0 flex-col items-center justify-center rounded-xl bg-orange-500 text-white shadow-md transition-all duration-200 hover:scale-105 hover:bg-orange-600 hover:shadow-lg active:scale-95 sm:size-16"
+                  title="Move to collection"
+                >
+                  <span className="material-icons mb-0 text-sm transition-transform duration-200 group-hover:scale-110 sm:mb-0.5 sm:text-lg">
+                    drive_file_move
+                  </span>
+                  <span className="hidden text-xs font-medium sm:block">
+                    Move
+                  </span>
+                </button>
+
+                {/* Delete Button */}
+                <button
+                  onClick={handleDeleteClick}
+                  className="group flex size-12 shrink-0 flex-col items-center justify-center rounded-xl bg-red-500 text-white shadow-md transition-all duration-200 hover:scale-105 hover:bg-red-600 hover:shadow-lg active:scale-95 sm:size-16"
+                  title="Delete selected cards"
+                >
+                  <span className="material-icons mb-0 text-sm transition-transform duration-200 group-hover:scale-110 sm:mb-0.5 sm:text-lg">
+                    delete
+                  </span>
+                  <span className="hidden text-xs font-medium sm:block">
+                    Delete
+                  </span>
+                </button>
+
+                {/* Divider */}
+                <div className="mx-1 h-12 w-px bg-gray-200 dark:bg-gray-700"></div>
+
+                {/* Select All Button */}
+                <button
+                  onClick={handleSelectAll}
+                  className="group flex size-12 shrink-0 flex-col items-center justify-center rounded-xl bg-gray-500 text-white shadow-md transition-all duration-200 hover:scale-105 hover:bg-gray-600 hover:shadow-lg active:scale-95 sm:size-16"
+                  title={
+                    selectedCards.size === cards.length
+                      ? 'Deselect all'
+                      : 'Select all'
+                  }
+                >
+                  <span className="material-icons mb-0 text-sm transition-transform duration-200 group-hover:scale-110 sm:mb-0.5 sm:text-lg">
+                    {selectedCards.size === cards.length
+                      ? 'deselect'
+                      : 'select_all'}
+                  </span>
+                  <span className="hidden text-xs font-medium sm:block">
+                    {selectedCards.size === cards.length ? 'Deselect' : 'All'}
+                  </span>
+                </button>
+              </div>
+
+              {/* Full-width Clear Selection Button */}
               <button
-                onClick={handleMoveCards}
-                className="group flex size-12 shrink-0 flex-col items-center justify-center rounded-xl bg-orange-500 text-white shadow-md transition-all duration-200 hover:scale-105 hover:bg-orange-600 hover:shadow-lg active:scale-95 sm:size-16"
-                title="Move to collection"
+                onClick={clearSelection}
+                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 font-medium text-gray-900 shadow-md transition-all duration-200 hover:bg-gray-50 hover:shadow-lg dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
+                title="Clear selection"
               >
-                <span className="material-icons mb-0 text-sm transition-transform duration-200 group-hover:scale-110 sm:mb-0.5 sm:text-lg">drive_file_move</span>
-                <span className="hidden text-xs font-medium sm:block">Move</span>
-              </button>
-              
-              {/* Delete Button */}
-              <button
-                onClick={handleDeleteClick}
-                className="group flex size-12 shrink-0 flex-col items-center justify-center rounded-xl bg-red-500 text-white shadow-md transition-all duration-200 hover:scale-105 hover:bg-red-600 hover:shadow-lg active:scale-95 sm:size-16"
-                title="Delete selected cards"
-              >
-                <span className="material-icons mb-0 text-sm transition-transform duration-200 group-hover:scale-110 sm:mb-0.5 sm:text-lg">delete</span>
-                <span className="hidden text-xs font-medium sm:block">Delete</span>
-              </button>
-              
-              {/* Divider */}
-              <div className="mx-1 h-12 w-px bg-gray-200 dark:bg-gray-700"></div>
-              
-              {/* Select All Button */}
-              <button
-                onClick={handleSelectAll}
-                className="group flex size-12 shrink-0 flex-col items-center justify-center rounded-xl bg-gray-500 text-white shadow-md transition-all duration-200 hover:scale-105 hover:bg-gray-600 hover:shadow-lg active:scale-95 sm:size-16"
-                title={selectedCards.size === cards.length ? "Deselect all" : "Select all"}
-              >
-                <span className="material-icons mb-0 text-sm transition-transform duration-200 group-hover:scale-110 sm:mb-0.5 sm:text-lg">
-                  {selectedCards.size === cards.length ? 'deselect' : 'select_all'}
+                <span className="material-icons mr-2 align-middle text-lg">
+                  clear
                 </span>
-                <span className="hidden text-xs font-medium sm:block">
-                  {selectedCards.size === cards.length ? 'Deselect' : 'All'}
-                </span>
+                Clear Selection
               </button>
             </div>
-            
-            {/* Full-width Clear Selection Button */}
-            <button
-              onClick={clearSelection}
-              className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 font-medium text-gray-900 shadow-md transition-all duration-200 hover:bg-gray-50 hover:shadow-lg dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
-              title="Clear selection"
-            >
-              <span className="material-icons mr-2 align-middle text-lg">clear</span>
-              Clear Selection
-            </button>
           </div>
-        </div>
         </>
       )}
 
@@ -1380,7 +1651,7 @@ const CardList = ({
             setShowCardDetails(false); // Then clear local state
           }}
           onUpdate={handleCardUpdate} // Uses the local update handler
-          onDelete={handleCardDelete}  // CHANGED: Use local handleCardDelete instead of onDeleteCard
+          onDelete={handleCardDelete} // CHANGED: Use local handleCardDelete instead of onDeleteCard
           exchangeRate={exchangeRate}
         />
       )}
@@ -1420,14 +1691,16 @@ const CardList = ({
         selectedCards={selectedCardsToMove}
         collections={Object.keys(collections).filter(collection => {
           const lowerCase = collection.toLowerCase();
-          return collection !== 'All Cards' && 
-                 collection !== selectedCollection &&
-                 lowerCase !== 'sold' &&
-                 !lowerCase.includes('sold');
+          return (
+            collection !== 'All Cards' &&
+            collection !== selectedCollection &&
+            lowerCase !== 'sold' &&
+            !lowerCase.includes('sold')
+          );
         })}
         currentCollection={selectedCollection}
       />
-      
+
       {/* Purchase Invoice Modal */}
       <CreateInvoiceModal
         isOpen={showPurchaseInvoiceModal}
@@ -1436,12 +1709,12 @@ const CardList = ({
           setSelectedCardsForPurchase([]);
           clearSelection();
         }}
-        onSave={(newInvoice) => {
+        onSave={newInvoice => {
           // Toast is already shown in the CreateInvoiceModal component
           setShowPurchaseInvoiceModal(false);
           setSelectedCardsForPurchase([]);
           clearSelection();
-          
+
           // Navigate to Purchase Invoices page after successful save using React Router
           setTimeout(() => {
             // Use React Router's navigate function for a smooth transition

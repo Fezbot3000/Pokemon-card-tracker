@@ -24,13 +24,13 @@ export const useCardSelection = (cards = []) => {
       });
       return;
     }
-    
+
     // Otherwise, handle as normal event
     // If e exists, stop propagation to prevent triggering the card click
     if (e && typeof e.stopPropagation === 'function') {
       e.stopPropagation();
     }
-    
+
     setSelectedCards(prev => {
       const newSet = new Set(prev);
       if (newSet.has(cardId)) {
@@ -65,9 +65,12 @@ export const useCardSelection = (cards = []) => {
   }, [cards, selectedCards]);
 
   // Check if a card is selected
-  const isCardSelected = useCallback((cardId) => {
-    return selectedCards.has(cardId);
-  }, [selectedCards]);
+  const isCardSelected = useCallback(
+    cardId => {
+      return selectedCards.has(cardId);
+    },
+    [selectedCards]
+  );
 
   return {
     selectedCards,

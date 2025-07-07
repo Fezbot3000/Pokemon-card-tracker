@@ -2,12 +2,18 @@ import React, { useRef, useState, useEffect } from 'react';
 import { useTheme } from '../design-system';
 import { preventBodyScroll, restoreBodyScroll } from '../utils/modalUtils';
 
-const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading }) => {
+const ImportModal = ({
+  isOpen,
+  onClose,
+  onImport,
+  mode = 'priceUpdate',
+  loading,
+}) => {
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef(null);
   const { isDarkMode } = useTheme();
   const [selectedFiles, setSelectedFiles] = useState([]);
-  
+
   // Add state for import options
   const [importCurrency, setImportCurrency] = useState('USD');
   const [fillMissingFields, setFillMissingFields] = useState(true);
@@ -23,31 +29,31 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading 
       setModalVisible(false);
       restoreBodyScroll();
     }
-    
+
     return () => {
       restoreBodyScroll();
     };
   }, [isOpen]);
 
-  const handleDrag = (e) => {
+  const handleDrag = e => {
     e.preventDefault();
     e.stopPropagation();
-    if (e.type === "dragenter" || e.type === "dragover") {
+    if (e.type === 'dragenter' || e.type === 'dragover') {
       setDragActive(true);
-    } else if (e.type === "dragleave") {
+    } else if (e.type === 'dragleave') {
       setDragActive(false);
     }
   };
 
-  const handleDrop = (e) => {
+  const handleDrop = e => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-    
+
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       if (mode === 'priceUpdate') {
         // For price update, allow multiple files
-        const files = Array.from(e.dataTransfer.files).filter(file => 
+        const files = Array.from(e.dataTransfer.files).filter(file =>
           file.name.toLowerCase().endsWith('.csv')
         );
         if (files.length > 0) {
@@ -62,24 +68,23 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading 
     }
   };
 
-  const handleChange = (e) => {
+  const handleChange = e => {
     e.preventDefault();
-    
+
     if (e.target.files && e.target.files.length > 0) {
-      
       if (mode === 'priceUpdate') {
         // For price update, allow multiple files
-        const files = Array.from(e.target.files).filter(file => 
+        const files = Array.from(e.target.files).filter(file =>
           file.name.toLowerCase().endsWith('.csv')
         );
-        
+
         if (files.length > 0) {
           setSelectedFiles(prevFiles => [...prevFiles, ...files]);
         }
       } else {
         // For base data import, only one file at a time
         const file = e.target.files[0];
-        
+
         if (file && file.name.toLowerCase().endsWith('.csv')) {
           onImport(file);
         }
@@ -87,7 +92,7 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading 
     }
   };
 
-  const triggerFileInput = (e) => {
+  const triggerFileInput = e => {
     // Only trigger if it's from a user action
     if (e && e.isTrusted) {
       if (fileInputRef.current) {
@@ -96,7 +101,7 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading 
     }
   };
 
-  const handleRemoveFile = (index) => {
+  const handleRemoveFile = index => {
     setSelectedFiles(prevFiles => prevFiles.filter((_, i) => i !== index));
   };
 
@@ -106,7 +111,7 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading 
       onImport(selectedFiles, {
         currency: importCurrency,
         fillMissingFields,
-        updateExistingValues
+        updateExistingValues,
       });
     }
   };
@@ -116,8 +121,10 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading 
   return (
     <div className="modal-content fixed inset-0 z-50 flex flex-col bg-white dark:bg-[#0B0F19]">
       <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-200 p-4 dark:border-gray-700">
-        <h1 className="text-xl font-semibold text-gray-800 dark:text-white">Update Card Data</h1>
-        <button 
+        <h1 className="text-xl font-semibold text-gray-800 dark:text-white">
+          Update Card Data
+        </h1>
+        <button
           onClick={onClose}
           className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
         >
@@ -125,7 +132,10 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading 
         </button>
       </div>
 
-      <div className="mx-auto max-w-4xl flex-1 overflow-y-auto p-6" onScroll={(e) => e.stopPropagation()}>
+      <div
+        className="mx-auto max-w-4xl flex-1 overflow-y-auto p-6"
+        onScroll={e => e.stopPropagation()}
+      >
         <div
           className={`mb-6 rounded-lg border-2 border-dashed p-8 text-center ${
             dragActive
@@ -145,15 +155,17 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading 
             onChange={handleChange}
             className="hidden"
           />
-          
+
           <div className="mb-4">
-            <span className="material-icons text-4xl text-gray-400 dark:text-gray-600">upload_file</span>
+            <span className="material-icons text-4xl text-gray-400 dark:text-gray-600">
+              upload_file
+            </span>
           </div>
-          
+
           <p className="mb-4 text-gray-600 dark:text-gray-400">
             Drop your CSV file(s) here or
           </p>
-          
+
           <button
             onClick={triggerFileInput}
             className="rounded-md bg-blue-600 px-4 py-2 font-medium text-white shadow-sm transition-colors hover:bg-blue-700"
@@ -172,24 +184,30 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading 
                 onClick={handleSubmitFiles}
                 disabled={loading || selectedFiles.length === 0}
                 className={`rounded-md bg-blue-600 px-4 py-2 font-medium text-white shadow-sm transition-colors hover:bg-blue-700 ${
-                  (loading || selectedFiles.length === 0) ? 'cursor-not-allowed opacity-50' : ''
+                  loading || selectedFiles.length === 0
+                    ? 'cursor-not-allowed opacity-50'
+                    : ''
                 }`}
               >
                 {loading ? 'Processing...' : 'Update Cards'}
               </button>
             </div>
-            
+
             <ul className="space-y-2">
               {selectedFiles.map((file, index) => (
-                <li 
+                <li
                   key={`${file.name}-${index}`}
                   className="flex items-center justify-between rounded-lg bg-gray-50 p-3 dark:bg-[#1B2131]"
                 >
                   <div className="flex items-center">
-                    <span className="material-icons mr-2 text-primary">description</span>
-                    <span className="text-gray-900 dark:text-white">{file.name}</span>
+                    <span className="material-icons mr-2 text-primary">
+                      description
+                    </span>
+                    <span className="text-gray-900 dark:text-white">
+                      {file.name}
+                    </span>
                   </div>
-                  <button 
+                  <button
                     onClick={() => handleRemoveFile(index)}
                     className="text-gray-500 hover:text-red-500"
                   >
@@ -204,7 +222,7 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading 
         <div className="space-y-4">
           <select
             value={importCurrency}
-            onChange={(e) => setImportCurrency(e.target.value)}
+            onChange={e => setImportCurrency(e.target.value)}
             className="block w-full rounded-md border border-gray-300 bg-white p-2 dark:border-gray-700 dark:bg-gray-800"
           >
             <option value="USD">USD (US Dollar)</option>
@@ -218,10 +236,13 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading 
               type="checkbox"
               id="fillMissing"
               checked={fillMissingFields}
-              onChange={(e) => setFillMissingFields(e.target.checked)}
+              onChange={e => setFillMissingFields(e.target.checked)}
               className="form-checkbox"
             />
-            <label htmlFor="fillMissing" className="text-sm text-gray-600 dark:text-gray-400">
+            <label
+              htmlFor="fillMissing"
+              className="text-sm text-gray-600 dark:text-gray-400"
+            >
               Fill in missing data fields
             </label>
           </div>
@@ -231,10 +252,13 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading 
               type="checkbox"
               id="updateExisting"
               checked={updateExistingValues}
-              onChange={(e) => setUpdateExistingValues(e.target.checked)}
+              onChange={e => setUpdateExistingValues(e.target.checked)}
               className="form-checkbox"
             />
-            <label htmlFor="updateExisting" className="text-sm text-gray-600 dark:text-gray-400">
+            <label
+              htmlFor="updateExisting"
+              className="text-sm text-gray-600 dark:text-gray-400"
+            >
               Update existing values
             </label>
           </div>
@@ -245,7 +269,10 @@ const ImportModal = ({ isOpen, onClose, onImport, mode = 'priceUpdate', loading 
           <ul className="list-inside list-disc space-y-1">
             <li>Slab Serial # (required)</li>
             <li>Current Value</li>
-            <li>Card, Player, Year, Set, Category, Condition, Population (optional)</li>
+            <li>
+              Card, Player, Year, Set, Category, Condition, Population
+              (optional)
+            </li>
           </ul>
         </div>
       </div>

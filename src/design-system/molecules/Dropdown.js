@@ -3,10 +3,9 @@ import PropTypes from 'prop-types';
 import Icon from '../atoms/Icon';
 import BottomSheet from './BottomSheet';
 
-
 /**
  * Dropdown component
- * 
+ *
  * A reusable dropdown menu component with customizable trigger and content
  */
 const Dropdown = ({
@@ -25,23 +24,23 @@ const Dropdown = ({
   const [internalIsOpen, setInternalIsOpen] = useState(false);
   const [isMobileView, setIsMobileView] = useState(false);
   const dropdownRef = useRef(null);
-  
+
   // Detect mobile view
   useEffect(() => {
     const checkMobileView = () => {
       setIsMobileView(window.innerWidth < 640); // Tailwind 'sm' breakpoint
     };
-    
+
     checkMobileView();
     window.addEventListener('resize', checkMobileView);
     return () => window.removeEventListener('resize', checkMobileView);
   }, []);
-  
+
   // Determine if we're using controlled or uncontrolled mode
   const controlled = isOpen !== undefined;
   const dropdownIsOpen = controlled ? isOpen : internalIsOpen;
-  
-  const handleOpenChange = (newIsOpen) => {
+
+  const handleOpenChange = newIsOpen => {
     if (!controlled) {
       setInternalIsOpen(newIsOpen);
     }
@@ -49,29 +48,29 @@ const Dropdown = ({
       onOpenChange(newIsOpen);
     }
   };
-  
-  const toggleDropdown = (e) => {
+
+  const toggleDropdown = e => {
     e.stopPropagation();
     handleOpenChange(!dropdownIsOpen);
   };
-  
+
   // Handle clicks outside the dropdown to close it
   useEffect(() => {
-    const handleClickOutside = (event) => {
+    const handleClickOutside = event => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         handleOpenChange(false);
       }
     };
-    
+
     if (dropdownIsOpen) {
       document.addEventListener('mousedown', handleClickOutside);
     }
-    
+
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [dropdownIsOpen, handleOpenChange]);
-  
+
   // Width classes for the dropdown menu
   const widthClasses = {
     auto: 'min-w-[180px]',
@@ -81,14 +80,14 @@ const Dropdown = ({
     xl: 'w-72',
     full: 'w-full',
   };
-  
+
   // Alignment classes for dropdown positioning
   const alignClasses = {
     left: 'left-0',
     right: 'right-0',
     center: 'left-1/2 -translate-x-1/2',
   };
-  
+
   // Render different UI for mobile and desktop
   return (
     <div className={`relative ${className}`} ref={dropdownRef} {...props}>
@@ -96,52 +95,55 @@ const Dropdown = ({
       <div onClick={toggleDropdown} className="cursor-pointer">
         {trigger}
       </div>
-      
+
       {/* Desktop Dropdown Menu */}
       {dropdownIsOpen && !isMobileView && (
-        <div 
-          className={`absolute z-50 mt-1 ${widthClasses[width]} ${alignClasses[align]} 
-                     bg-white dark:bg-[#000] shadow-lg rounded-md 
-                     border border-gray-200 dark:border-gray-700/50 py-1 scrollbar-hide`}
-          style={{ 
+        <div
+          className={`absolute z-50 mt-1 ${widthClasses[width]} ${alignClasses[align]} dark:border-gray-700/50 scrollbar-hide rounded-md border border-gray-200 bg-white py-1 shadow-lg dark:bg-[#000]`}
+          style={{
             maxHeight: 'none', // Allow dropdown to grow as tall as needed
             overflowY: 'visible', // No vertical scroll
             overflowX: 'hidden',
-            display: 'block'
+            display: 'block',
           }}
           {...props}
         >
           {children}
         </div>
       )}
-      
+
       {/* Mobile Bottom Sheet */}
       {useMobileSheet && isMobileView && (
-        <BottomSheet 
-          isOpen={dropdownIsOpen} 
-          onClose={() => handleOpenChange(false)} 
+        <BottomSheet
+          isOpen={dropdownIsOpen}
+          onClose={() => handleOpenChange(false)}
           title={title || 'Select Option'}
         >
           <div className="space-y-2 px-2 py-1">
             {React.Children.map(children, child => {
               // Skip dividers in bottom sheet
               if (child.type === DropdownDivider) return null;
-              
+
               // Clone DropdownItem elements with mobile styling
               if (child.type === DropdownItem) {
                 // Check if this item is selected (has bg-gray-100 or dark:bg-black in its className)
-                const isSelected = child.props.className && 
-                  (child.props.className.includes('bg-gray-100') || 
-                   child.props.className.includes('dark:bg-black'));
-                
+                const isSelected =
+                  child.props.className &&
+                  (child.props.className.includes('bg-gray-100') ||
+                    child.props.className.includes('dark:bg-black'));
+
                 // Preserve the original children to keep any icons or additional content
                 const originalChildren = child.props.children;
-                
+
                 return React.cloneElement(child, {
-                  className: `text-center rounded-lg py-3 ${isSelected 
-                    ? 'bg-gradient-to-r from-[#ef4444] to-[#db2777] text-white font-semibold' 
-                    : 'bg-white dark:bg-[#000] text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700'} 
-                    hover:opacity-90 ${child.props.className || ''}`.replace('bg-gray-100', '').replace('dark:bg-black', ''),
+                  className: `text-center rounded-lg py-3 ${
+                    isSelected
+                      ? 'bg-gradient-to-r from-[#ef4444] to-[#db2777] text-white font-semibold'
+                      : 'bg-white dark:bg-[#000] text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700'
+                  } 
+                    hover:opacity-90 ${child.props.className || ''}`
+                    .replace('bg-gray-100', '')
+                    .replace('dark:bg-black', ''),
                   onClick: () => {
                     if (child.props.onClick) {
                       child.props.onClick();
@@ -149,13 +151,13 @@ const Dropdown = ({
                     handleOpenChange(false);
                   },
                   // Keep the original children to preserve any icons
-                  children: originalChildren
+                  children: originalChildren,
                 });
               }
-              
+
               return child;
             })}
-            
+
             {/* Cancel Button */}
             <button
               onClick={() => handleOpenChange(false)}
@@ -172,22 +174,23 @@ const Dropdown = ({
 
 /**
  * Dropdown Item component
- * 
+ *
  * Used within Dropdown for individual menu items
  */
-export const DropdownItem = ({ 
-  children, 
-  icon, 
-  onClick, 
-  disabled = false, 
-  className = '', 
-  ...props 
+export const DropdownItem = ({
+  children,
+  icon,
+  onClick,
+  disabled = false,
+  className = '',
+  ...props
 }) => {
-  const baseClasses = 'flex items-center w-full px-4 py-2 text-sm text-left transition-colors truncate';
-  const stateClasses = disabled 
-    ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed' 
+  const baseClasses =
+    'flex items-center w-full px-4 py-2 text-sm text-left transition-colors truncate';
+  const stateClasses = disabled
+    ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed'
     : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-[#000] cursor-pointer';
-  
+
   return (
     <button
       className={`${baseClasses} ${stateClasses} ${className}`}
@@ -203,13 +206,13 @@ export const DropdownItem = ({
 
 /**
  * Dropdown Divider component
- * 
+ *
  * Used to separate groups of items within a dropdown
  */
 export const DropdownDivider = ({ className = '', ...props }) => (
-  <div 
-    className={`dark:border-gray-700/50 my-1 border-t border-gray-200 ${className}`} 
-    {...props} 
+  <div
+    className={`dark:border-gray-700/50 my-1 border-t border-gray-200 ${className}`}
+    {...props}
   />
 );
 

@@ -30,7 +30,7 @@ export const ThemeProvider = ({ children }) => {
   // Listen for system theme changes
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handleChange = (e) => {
+    const handleChange = e => {
       setIsDarkMode(e.matches);
     };
 
@@ -44,12 +44,10 @@ export const ThemeProvider = ({ children }) => {
 
   const value = {
     isDarkMode,
-    toggleTheme
+    toggleTheme,
   };
 
   return (
-    <ThemeContext.Provider value={value}>
-      {children}
-    </ThemeContext.Provider>
+    <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
   );
-}; 
+};

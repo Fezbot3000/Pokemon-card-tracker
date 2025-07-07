@@ -5,7 +5,7 @@ import SettingsComponentsLibrary from './SettingsComponentsLibrary';
 
 /**
  * Component Library
- * 
+ *
  * This is the main entry point for the component library.
  * It imports the self-contained CSS and all components.
  */
@@ -26,7 +26,7 @@ export const {
   borders,
   shadows,
   transitions,
-  
+
   // Atoms
   Button,
   Icon,
@@ -38,7 +38,7 @@ export const {
   GradientSwatch,
   Toggle,
   SettingsNavItem,
-  
+
   // Molecules
   Dropdown,
   DropdownItem,
@@ -49,7 +49,7 @@ export const {
   ColorCustomizer,
   ComponentSection,
   SettingsPanel,
-  
+
   // Components
   Header,
   StatisticsSummary,
@@ -57,7 +57,7 @@ export const {
   Card,
   CardDetailsForm,
   CardDetailsModal,
-  SettingsModal
+  SettingsModal,
 } = Components;
 
 export default ComponentLibrary;

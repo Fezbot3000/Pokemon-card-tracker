@@ -7,9 +7,12 @@ const selectVariants = cva(
   {
     variants: {
       variant: {
-        default: 'border-gray-300 bg-white text-gray-900 dark:border-gray-600 dark:bg-black dark:text-white',
-        error: 'border-red-500 bg-white text-gray-900 focus-visible:ring-red-500 dark:border-red-500 dark:bg-black dark:text-white',
-        success: 'border-green-500 bg-white text-gray-900 focus-visible:ring-green-500 dark:border-green-500 dark:bg-black dark:text-white',
+        default:
+          'border-gray-300 bg-white text-gray-900 dark:border-gray-600 dark:bg-black dark:text-white',
+        error:
+          'border-red-500 bg-white text-gray-900 focus-visible:ring-red-500 dark:border-red-500 dark:bg-black dark:text-white',
+        success:
+          'border-green-500 bg-white text-gray-900 focus-visible:ring-green-500 dark:border-green-500 dark:bg-black dark:text-white',
       },
       size: {
         sm: 'h-8 px-2 text-xs',
@@ -39,7 +42,9 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
 
     return (
       <select
-        className={cn(selectVariants({ variant: computedVariant, size, className }))}
+        className={cn(
+          selectVariants({ variant: computedVariant, size, className })
+        )}
         ref={ref}
         {...props}
       >
@@ -52,7 +57,8 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
 Select.displayName = 'Select';
 
 // Option component for better composition
-export interface OptionProps extends React.OptionHTMLAttributes<HTMLOptionElement> {
+export interface OptionProps
+  extends React.OptionHTMLAttributes<HTMLOptionElement> {
   children: React.ReactNode;
 }
 
@@ -60,7 +66,10 @@ const Option = React.forwardRef<HTMLOptionElement, OptionProps>(
   ({ className, children, ...props }, ref) => {
     return (
       <option
-        className={cn('text-gray-900 dark:text-white bg-white dark:bg-black', className)}
+        className={cn(
+          'bg-white text-gray-900 dark:bg-black dark:text-white',
+          className
+        )}
         ref={ref}
         {...props}
       >
@@ -72,4 +81,4 @@ const Option = React.forwardRef<HTMLOptionElement, OptionProps>(
 
 Option.displayName = 'Option';
 
-export { Select, Option, selectVariants }; 
+export { Select, Option, selectVariants };

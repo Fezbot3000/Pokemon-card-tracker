@@ -3,10 +3,10 @@ import PropTypes from 'prop-types';
 
 /**
  * TextField Component
- * 
+ *
  * A consistent text input field with appropriate styling.
  */
-const TextField = ({ 
+const TextField = ({
   id,
   name,
   value,
@@ -83,7 +83,7 @@ TextField.propTypes = {
   error: PropTypes.string,
   className: PropTypes.string,
   multiline: PropTypes.bool,
-  rows: PropTypes.number
+  rows: PropTypes.number,
 };
 
 export default TextField;

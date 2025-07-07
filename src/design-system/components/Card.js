@@ -7,23 +7,23 @@ import { useTheme } from '../contexts/ThemeContext';
 
 /**
  * Card Component
- * 
+ *
  * A card displaying a Pokemon card with its image and financial details.
  * Used for displaying items in both grid and list views throughout the application.
  */
-const Card = ({ 
-  card = {}, 
-  cardImage, 
-  onClick, 
+const Card = ({
+  card = {},
+  cardImage,
+  onClick,
   isSelected = false,
   onSelect,
   className = '',
   children,
   // investmentAUD and currentValueAUD are now primarily for profit calculation,
   // assuming they are reliably passed as AUD-converted values.
-  investmentAUD = 0, 
-  currentValueAUD = 0, 
-  formatUserCurrency, 
+  investmentAUD = 0,
+  currentValueAUD = 0,
+  formatUserCurrency,
   // Destructure these props to prevent them from being spread to the div
   preferredCurrency,
   originalInvestmentCurrency,
@@ -34,14 +34,20 @@ const Card = ({
   const { isDarkMode } = useTheme();
 
   // Use original amounts and currencies from the card object for display
-  const displayInvestmentAmount = card.originalInvestmentAmount !== undefined ? card.originalInvestmentAmount : 0;
+  const displayInvestmentAmount =
+    card.originalInvestmentAmount !== undefined
+      ? card.originalInvestmentAmount
+      : 0;
   // Ensure we have a valid currency code - default to 'AUD' if missing
   const displayInvestmentCurrency = card.originalInvestmentCurrency || 'AUD';
 
-  const displayValueAmount = card.originalCurrentValueAmount !== undefined ? card.originalCurrentValueAmount : 0;
+  const displayValueAmount =
+    card.originalCurrentValueAmount !== undefined
+      ? card.originalCurrentValueAmount
+      : 0;
   // Ensure we have a valid currency code - default to 'AUD' if missing
   const displayValueCurrency = card.originalCurrentValueCurrency || 'AUD';
-  
+
   // Calculate profit using passed props (assumed to be in AUD)
   const profit = currentValueAUD - investmentAUD;
   const isProfitable = profit >= 0;
@@ -49,11 +55,8 @@ const Card = ({
   // If children are provided, render them instead of the default card content
   if (children) {
     return (
-      <div 
-        className={`group relative rounded-2xl bg-white dark:bg-[#0F0F0F] ${isDarkMode ? 'shadow-sm hover:shadow-md' : ''} 
-                    cursor-pointer overflow-hidden transition-shadow duration-300
-                    ${isSelected ? 'border-2 border-purple-500' : 'border border-[#ffffff33] dark:border-[#ffffff1a]'}
-                    ${className}`}
+      <div
+        className={`group relative rounded-2xl bg-white dark:bg-[#0F0F0F] ${isDarkMode ? 'shadow-sm hover:shadow-md' : ''} cursor-pointer overflow-hidden transition-shadow duration-300 ${isSelected ? 'border-2 border-purple-500' : 'border border-[#ffffff33] dark:border-[#ffffff1a]'} ${className}`}
         onClick={onClick}
       >
         {/* Listed badge */}
@@ -70,22 +73,15 @@ const Card = ({
               type="button"
               aria-label={isSelected ? 'Deselect card' : 'Select card'}
               tabIndex={0}
-                          className={`flex size-4 items-center justify-center rounded-full border-2 bg-white transition-all
-              focus:outline-none
-              dark:bg-[#18181b]
-              ${isSelected ? 'border-purple-500' : 'border-gray-300 dark:border-gray-600'}
-              ${isSelected ? 'ring-2 ring-purple-300' : 'hover:border-purple-400 dark:hover:border-purple-400'}
-              shadow
-            `}
+              className={`flex size-4 items-center justify-center rounded-full border-2 bg-white transition-all focus:outline-none dark:bg-[#18181b] ${isSelected ? 'border-purple-500' : 'border-gray-300 dark:border-gray-600'} ${isSelected ? 'ring-2 ring-purple-300' : 'hover:border-purple-400 dark:hover:border-purple-400'} shadow`}
               onClick={e => {
                 e.stopPropagation();
                 onSelect(!isSelected);
               }}
             >
-                        <span
-            className={`block flex size-3 items-center justify-center rounded-full transition-all
-              ${isSelected ? 'bg-white dark:bg-[#23272F]' : 'bg-transparent'}`}
-          >
+              <span
+                className={`flex size-3 items-center justify-center rounded-full transition-all ${isSelected ? 'bg-white dark:bg-[#23272F]' : 'bg-transparent'}`}
+              >
                 {isSelected && (
                   <Icon name="check" className="text-base text-purple-600" />
                 )}
@@ -93,7 +89,7 @@ const Card = ({
             </button>
           </div>
         )}
-        
+
         {children}
       </div>
     );
@@ -102,7 +98,7 @@ const Card = ({
   // MODIFIED CONSOLE LOG: (removed for cleanup)
 
   return (
-    <div 
+    <div
       className={`group relative h-full cursor-pointer overflow-hidden bg-white text-white transition-all dark:bg-black ${
         isSelected
           ? 'border-2 border-purple-500'
@@ -117,21 +113,14 @@ const Card = ({
             type="button"
             aria-label={isSelected ? 'Deselect card' : 'Select card'}
             tabIndex={0}
-            className={`flex size-4 items-center justify-center rounded-full border-2 bg-white transition-all
-              focus:outline-none
-              dark:bg-[#18181b]
-              ${isSelected ? 'border-purple-500' : 'border-gray-300 dark:border-gray-600'}
-              ${isSelected ? 'ring-2 ring-purple-300' : 'hover:border-purple-400 dark:hover:border-purple-400'}
-              shadow
-            `}
+            className={`flex size-4 items-center justify-center rounded-full border-2 bg-white transition-all focus:outline-none dark:bg-[#18181b] ${isSelected ? 'border-purple-500' : 'border-gray-300 dark:border-gray-600'} ${isSelected ? 'ring-2 ring-purple-300' : 'hover:border-purple-400 dark:hover:border-purple-400'} shadow`}
             onClick={e => {
               e.stopPropagation();
               onSelect(!isSelected);
             }}
           >
             <span
-              className={`block flex size-3 items-center justify-center rounded-full transition-all
-                ${isSelected ? 'bg-white dark:bg-[#23272F]' : 'bg-transparent'}`}
+              className={`flex size-3 items-center justify-center rounded-full transition-all ${isSelected ? 'bg-white dark:bg-[#23272F]' : 'bg-transparent'}`}
             >
               {isSelected && (
                 <Icon name="check" className="text-base text-purple-600" />
@@ -140,31 +129,40 @@ const Card = ({
           </button>
         </div>
       )}
-      
+
       {/* Card Image */}
-              <div className="relative aspect-[2/3] overflow-hidden bg-white p-2 dark:bg-black">
+      <div className="relative aspect-[2/3] overflow-hidden bg-white p-2 dark:bg-black">
         {cardImage ? (
-          <ImageWithAnimation 
-            src={cardImage} 
-            alt={card.name || 'Pokemon Card'} 
+          <ImageWithAnimation
+            src={cardImage}
+            alt={card.name || 'Pokemon Card'}
           />
         ) : (
           <div className="flex h-full items-center justify-center">
-            <Icon name="image" className="text-4xl text-gray-400 dark:text-gray-600" />
+            <Icon
+              name="image"
+              className="text-4xl text-gray-400 dark:text-gray-600"
+            />
           </div>
         )}
       </div>
-      
+
       {/* Card Details */}
-              <div className="bg-white p-3 text-center dark:bg-black">
+      <div className="bg-white p-3 text-center dark:bg-black">
         <h3 className="mb-1 truncate text-lg font-medium text-gray-900 dark:text-white">
-          {(card.cardName || card.card || card.name || card.player || 'Unnamed Card').toUpperCase()}
+          {(
+            card.cardName ||
+            card.card ||
+            card.name ||
+            card.player ||
+            'Unnamed Card'
+          ).toUpperCase()}
         </h3>
         <p className="mb-1 truncate text-sm text-gray-500 dark:text-gray-400">
-          {card.set || 'Pokemon Game'}{card.number ? ` · ${card.number}` : ''}
+          {card.set || 'Pokemon Game'}
+          {card.number ? ` · ${card.number}` : ''}
         </p>
 
-        
         {/* Financial Details - Consolidated Box */}
         <div className="flex flex-col">
           {/* Consolidated Financial Details */}
@@ -172,42 +170,57 @@ const Card = ({
             <div className="flex flex-col">
               {/* Paid */}
               <div className="py-1 text-center">
-                <div className="financial-detail-label text-xs text-gray-500 dark:text-gray-400">Paid</div>
+                <div className="financial-detail-label text-xs text-gray-500 dark:text-gray-400">
+                  Paid
+                </div>
                 <div className="financial-detail-value text-sm font-medium">
-                  {formatUserCurrency ? 
-                    (() => {
-                      // Always use formatUserCurrency with a valid currency code
-                      const formatted = formatUserCurrency(displayInvestmentAmount, displayInvestmentCurrency);
+                  {
+                    formatUserCurrency
+                      ? (() => {
+                          // Always use formatUserCurrency with a valid currency code
+                          const formatted = formatUserCurrency(
+                            displayInvestmentAmount,
+                            displayInvestmentCurrency
+                          );
 
-                      return formatted;
-                    })() :
-                    `$${(displayInvestmentAmount || 0).toFixed(2)}` // Only use fallback if formatUserCurrency is undefined
+                          return formatted;
+                        })()
+                      : `$${(displayInvestmentAmount || 0).toFixed(2)}` // Only use fallback if formatUserCurrency is undefined
                   }
                 </div>
               </div>
               {/* Value */}
               <div className="py-1 text-center">
-                <div className="financial-detail-label text-xs text-gray-500 dark:text-gray-400">Value</div>
+                <div className="financial-detail-label text-xs text-gray-500 dark:text-gray-400">
+                  Value
+                </div>
                 <div className="financial-detail-value text-sm font-medium">
-                  {formatUserCurrency ? 
-                    (() => {
-                      // Always use formatUserCurrency with a valid currency code
-                      const formatted = formatUserCurrency(displayValueAmount, displayValueCurrency);
+                  {
+                    formatUserCurrency
+                      ? (() => {
+                          // Always use formatUserCurrency with a valid currency code
+                          const formatted = formatUserCurrency(
+                            displayValueAmount,
+                            displayValueCurrency
+                          );
 
-                      return formatted;
-                    })() :
-                    `$${(displayValueAmount || 0).toFixed(2)}` // Only use fallback if formatUserCurrency is undefined
+                          return formatted;
+                        })()
+                      : `$${(displayValueAmount || 0).toFixed(2)}` // Only use fallback if formatUserCurrency is undefined
                   }
                 </div>
               </div>
               {/* Profit */}
               <div className="py-1 text-center">
-                <div className="financial-detail-label text-xs text-gray-500 dark:text-gray-400">Profit</div>
-                <div className={`text-sm font-medium ${isProfitable ? 'text-green-500' : 'text-red-500'}`}>
-                  {formatUserCurrency ? 
-                    formatUserCurrency(profit, 'AUD') : // Profit is assumed to be in AUD, so specify 'AUD' as source currency
-                    `${isProfitable ? '+' : '-'}$${Math.abs(profit).toFixed(2)}`
-                  }
+                <div className="financial-detail-label text-xs text-gray-500 dark:text-gray-400">
+                  Profit
+                </div>
+                <div
+                  className={`text-sm font-medium ${isProfitable ? 'text-green-500' : 'text-red-500'}`}
+                >
+                  {formatUserCurrency
+                    ? formatUserCurrency(profit, 'AUD') // Profit is assumed to be in AUD, so specify 'AUD' as source currency
+                    : `${isProfitable ? '+' : '-'}$${Math.abs(profit).toFixed(2)}`}
                 </div>
               </div>
             </div>
@@ -220,19 +233,28 @@ const Card = ({
 
 // Sub-components for when Card is used as a container
 Card.Header = ({ children, className = '', ...props }) => (
-  <div className={`border-b border-gray-100 p-4 font-medium text-gray-900 dark:border-gray-800 dark:text-white ${className}`} {...props}>
+  <div
+    className={`border-b border-gray-100 p-4 font-medium text-gray-900 dark:border-gray-800 dark:text-white ${className}`}
+    {...props}
+  >
     {children}
   </div>
 );
 
 Card.Body = ({ children, className = '', ...props }) => (
-  <div className={`p-4 text-gray-700 dark:text-gray-300 ${className}`} {...props}>
+  <div
+    className={`p-4 text-gray-700 dark:text-gray-300 ${className}`}
+    {...props}
+  >
     {children}
   </div>
 );
 
 Card.Footer = ({ children, className = '', ...props }) => (
-  <div className={`border-t border-gray-100 p-4 text-sm text-gray-500 dark:border-gray-800 dark:text-gray-400 ${className}`} {...props}>
+  <div
+    className={`border-t border-gray-100 p-4 text-sm text-gray-500 dark:border-gray-800 dark:text-gray-400 ${className}`}
+    {...props}
+  >
     {children}
   </div>
 );
@@ -254,17 +276,17 @@ Card.propTypes = {
 
 Card.Header.propTypes = {
   children: PropTypes.node,
-  className: PropTypes.string
+  className: PropTypes.string,
 };
 
 Card.Body.propTypes = {
   children: PropTypes.node,
-  className: PropTypes.string
+  className: PropTypes.string,
 };
 
 Card.Footer.propTypes = {
   children: PropTypes.node,
-  className: PropTypes.string
+  className: PropTypes.string,
 };
 
 // Image component with slide-in animation
@@ -272,9 +294,9 @@ const ImageWithAnimation = ({ src, alt }) => {
   const [imageLoaded, setImageLoaded] = useState(false);
 
   return (
-    <img 
-      src={src} 
-      alt={alt} 
+    <img
+      src={src}
+      alt={alt}
       className={`size-full rounded object-contain transition-all duration-500 ${imageLoaded ? 'scale-100 opacity-100' : 'translate-y-4 scale-95 opacity-0'}`}
       onLoad={() => setImageLoaded(true)}
     />
@@ -283,7 +305,7 @@ const ImageWithAnimation = ({ src, alt }) => {
 
 ImageWithAnimation.propTypes = {
   src: PropTypes.string.isRequired,
-  alt: PropTypes.string.isRequired
+  alt: PropTypes.string.isRequired,
 };
 
 export default Card;

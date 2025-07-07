@@ -14,10 +14,7 @@ export function cn(...inputs: ClassValue[]) {
  * Removes extra whitespace and sorts classes for consistency
  */
 export function formatClassName(className: string): string {
-  return className
-    .split(' ')
-    .filter(Boolean)
-    .join(' ');
+  return className.split(' ').filter(Boolean).join(' ');
 }
 
 /**
@@ -40,24 +37,21 @@ export function responsiveClass(
   desktop?: string
 ): string {
   const classes = [mobile];
-  
+
   if (tablet) {
     classes.push(`sm:${tablet}`);
   }
-  
+
   if (desktop) {
     classes.push(`lg:${desktop}`);
   }
-  
+
   return classes.join(' ');
 }
 
 /**
  * Theme-aware class helper
  */
-export function themeClass(
-  lightClass: string,
-  darkClass: string
-): string {
+export function themeClass(lightClass: string, darkClass: string): string {
   return `${lightClass} dark:${darkClass}`;
-} 
+}

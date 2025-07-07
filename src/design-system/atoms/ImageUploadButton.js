@@ -4,61 +4,60 @@ import Icon from './Icon';
 
 /**
  * ImageUploadButton Component
- * 
+ *
  * A dedicated button for uploading images with drag-and-drop support.
  * This is separated from the image display to give users a clear upload action.
  */
-const ImageUploadButton = ({ 
-  onImageChange,
-  className = '' 
-}) => {
+const ImageUploadButton = ({ onImageChange, className = '' }) => {
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef(null);
-  
+
   // Handle click to upload image
-  const handleUploadClick = (e) => {
+  const handleUploadClick = e => {
     e.stopPropagation();
     fileInputRef.current?.click();
   };
-  
+
   // Handle drag events
-  const handleDragEnter = (e) => {
+  const handleDragEnter = e => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(true);
   };
-  
-  const handleDragLeave = (e) => {
+
+  const handleDragLeave = e => {
     e.preventDefault();
     e.stopPropagation();
     if (e.currentTarget.contains(e.relatedTarget)) return;
     setIsDragging(false);
   };
-  
-  const handleDragOver = (e) => {
+
+  const handleDragOver = e => {
     e.preventDefault();
     e.stopPropagation();
   };
-  
-  const handleDrop = (e) => {
+
+  const handleDrop = e => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(false);
-    
+
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       const file = e.dataTransfer.files[0];
       if (file.type.match('image.*')) {
         if (typeof onImageChange === 'function') {
           onImageChange(file);
         } else {
-          console.warn('ImageUploadButton: onImageChange prop is not a function');
+          console.warn(
+            'ImageUploadButton: onImageChange prop is not a function'
+          );
         }
       }
     }
   };
-  
+
   // Handle file input change
-  const handleFileChange = (e) => {
+  const handleFileChange = e => {
     if (e.target.files && e.target.files[0]) {
       if (typeof onImageChange === 'function') {
         onImageChange(e.target.files[0]);
@@ -67,7 +66,7 @@ const ImageUploadButton = ({
       }
     }
   };
-  
+
   return (
     <div
       className={`relative w-full max-w-[240px] ${className}`}
@@ -79,11 +78,11 @@ const ImageUploadButton = ({
       <button
         type="button"
         onClick={handleUploadClick}
-        className={`w-full flex items-center justify-center gap-2 px-4 py-2 
-          ${isDragging 
-            ? 'border-[#E6185C] bg-[#E6185C]/10 text-[#E6185C]' 
-            : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-[#0F0F0F] dark:text-white dark:hover:bg-[#1B2131]'} 
-          rounded-lg text-sm font-medium transition-colors border border-transparent`}
+        className={`flex w-full items-center justify-center gap-2 px-4 py-2 ${
+          isDragging
+            ? 'border-[#E6185C] bg-[#E6185C]/10 text-[#E6185C]'
+            : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-[#0F0F0F] dark:text-white dark:hover:bg-[#1B2131]'
+        } rounded-lg border border-transparent text-sm font-medium transition-colors`}
       >
         <Icon name="upload" />
         <span>{isDragging ? 'Drop image here' : 'Replace Image'}</span>
@@ -101,7 +100,7 @@ const ImageUploadButton = ({
 
 ImageUploadButton.propTypes = {
   onImageChange: PropTypes.func,
-  className: PropTypes.string
+  className: PropTypes.string,
 };
 
 export default ImageUploadButton;

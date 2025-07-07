@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Button, Icon, toast } from '../../design-system';
-import { 
-  collection, 
-  doc, 
-  getDoc, 
-  getDocs, 
-  query, 
-  where, 
-  orderBy, 
-  limit 
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  query,
+  where,
+  orderBy,
+  limit,
 } from 'firebase/firestore';
 import { db as firestoreDb } from '../../services/firebase';
 import logger from '../../utils/logger';
@@ -30,7 +30,7 @@ function SellerProfile({ sellerId, onClose, onViewListing }) {
         // Load marketplace profile
         const profileRef = doc(firestoreDb, 'marketplaceProfiles', sellerId);
         const profileSnap = await getDoc(profileRef);
-        
+
         if (profileSnap.exists()) {
           setSellerProfile(profileSnap.data());
         }
@@ -43,13 +43,13 @@ function SellerProfile({ sellerId, onClose, onViewListing }) {
           orderBy('createdAt', 'desc'),
           limit(20)
         );
-        
+
         const listingsSnap = await getDocs(listingsQuery);
         const listingsData = listingsSnap.docs.map(doc => ({
           id: doc.id,
-          ...doc.data()
+          ...doc.data(),
         }));
-        
+
         setSellerListings(listingsData);
       } catch (error) {
         logger.error('Error loading seller data:', error);
@@ -65,19 +65,19 @@ function SellerProfile({ sellerId, onClose, onViewListing }) {
     if (!sellerProfile) return null;
 
     const badges = [];
-    
+
     // Response time badge
     if (sellerProfile.responseTime === 'within-1h') {
       badges.push({
         icon: 'flash_on',
         label: 'Fast Responder',
-        color: 'text-yellow-600 bg-yellow-100 dark:bg-yellow-900/20'
+        color: 'text-yellow-600 bg-yellow-100 dark:bg-yellow-900/20',
       });
     }
 
     // Add more badges based on seller stats
     // This would be expanded with actual seller performance data
-    
+
     return badges.length > 0 ? (
       <div className="mt-3 flex flex-wrap gap-2">
         {badges.map((badge, index) => (
@@ -93,22 +93,26 @@ function SellerProfile({ sellerId, onClose, onViewListing }) {
     ) : null;
   };
 
-  const renderStars = (rating) => {
+  const renderStars = rating => {
     return (
       <div className="flex gap-0.5">
-        {[1, 2, 3, 4, 5].map((star) => (
+        {[1, 2, 3, 4, 5].map(star => (
           <Icon
             key={star}
             name="star"
             size="sm"
-            className={star <= rating ? 'text-yellow-500' : 'text-gray-300 dark:text-gray-600'}
+            className={
+              star <= rating
+                ? 'text-yellow-500'
+                : 'text-gray-300 dark:text-gray-600'
+            }
           />
         ))}
       </div>
     );
   };
 
-  const formatDate = (timestamp) => {
+  const formatDate = timestamp => {
     if (!timestamp) return '';
     const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
     return date.toLocaleDateString();
@@ -132,7 +136,11 @@ function SellerProfile({ sellerId, onClose, onViewListing }) {
           <div className="rounded-lg bg-gray-50 p-6 dark:bg-gray-800">
             <div className="flex items-start gap-4">
               <div className="flex size-20 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900">
-                <Icon name="person" size="xl" className="text-purple-600 dark:text-purple-400" />
+                <Icon
+                  name="person"
+                  size="xl"
+                  className="text-purple-600 dark:text-purple-400"
+                />
               </div>
               <div className="flex-1">
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -140,7 +148,11 @@ function SellerProfile({ sellerId, onClose, onViewListing }) {
                 </h2>
                 {sellerProfile?.location && (
                   <p className="mt-1 text-gray-600 dark:text-gray-400">
-                    <Icon name="location_on" size="sm" className="mr-1 inline" />
+                    <Icon
+                      name="location_on"
+                      size="sm"
+                      className="mr-1 inline"
+                    />
                     {sellerProfile.location}
                   </p>
                 )}
@@ -182,7 +194,7 @@ function SellerProfile({ sellerId, onClose, onViewListing }) {
           <div className="flex-1 overflow-y-auto p-6">
             {activeTab === 'listings' && (
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {sellerListings.map((listing) => (
+                {sellerListings.map(listing => (
                   <div
                     key={listing.id}
                     onClick={() => onViewListing(listing)}
@@ -200,7 +212,7 @@ function SellerProfile({ sellerId, onClose, onViewListing }) {
                         </span>
                       )}
                     </div>
-                    
+
                     <div className="p-4">
                       <h3 className="line-clamp-2 font-semibold text-gray-900 dark:text-white">
                         {listing.cardName}
@@ -216,7 +228,7 @@ function SellerProfile({ sellerId, onClose, onViewListing }) {
                     </div>
                   </div>
                 ))}
-                
+
                 {sellerListings.length === 0 && (
                   <div className="col-span-full py-12 text-center text-gray-500 dark:text-gray-400">
                     No active listings
@@ -225,9 +237,7 @@ function SellerProfile({ sellerId, onClose, onViewListing }) {
               </div>
             )}
 
-            {activeTab === 'reviews' && (
-              <ReviewSystem sellerId={sellerId} />
-            )}
+            {activeTab === 'reviews' && <ReviewSystem sellerId={sellerId} />}
           </div>
         </div>
       )}

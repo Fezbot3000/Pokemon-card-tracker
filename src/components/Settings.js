@@ -17,9 +17,13 @@ import ErrorBoundary from './ErrorBoundary';
 const Settings = () => {
   const navigate = useNavigate();
   const { user, logout, userData } = useAuth() || {};
-  const { theme, toggleTheme } = useTheme() || { theme: 'light', toggleTheme: () => {} };
-  const { preferredCurrency, updatePreferredCurrency } = useUserPreferences() || {};
-  
+  const { theme, toggleTheme } = useTheme() || {
+    theme: 'light',
+    toggleTheme: () => {},
+  };
+  const { preferredCurrency, updatePreferredCurrency } =
+    useUserPreferences() || {};
+
   const [activeTab, setActiveTab] = useState('general');
   const [collections, setCollections] = useState({});
   const [collectionToRename, setCollectionToRename] = useState('');
@@ -29,7 +33,7 @@ const Settings = () => {
     lastName: userData?.lastName || '',
     company: userData?.company || '',
     mobile: userData?.mobile || '',
-    address: userData?.address || ''
+    address: userData?.address || '',
   });
   const [isLoading, setIsLoading] = useState(false);
 
@@ -51,7 +55,7 @@ const Settings = () => {
         setIsLoading(false);
       }
     };
-    
+
     loadCollections();
   }, []);
 
@@ -62,7 +66,7 @@ const Settings = () => {
     };
 
     window.addEventListener('openSharingTab', handleOpenSharingTab);
-    
+
     return () => {
       window.removeEventListener('openSharingTab', handleOpenSharingTab);
     };
@@ -72,14 +76,14 @@ const Settings = () => {
     { id: 'general', label: 'General', icon: 'settings' },
     { id: 'account', label: 'Account', icon: 'person' },
     { id: 'sharing', label: 'Collection Sharing', icon: 'share' },
-    { id: 'marketplace', label: 'Marketplace', icon: 'storefront' }
+    { id: 'marketplace', label: 'Marketplace', icon: 'storefront' },
   ];
 
-  const handleProfileChange = (e) => {
+  const handleProfileChange = e => {
     const { name, value } = e.target;
     setProfile(prev => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
@@ -88,7 +92,7 @@ const Settings = () => {
     toastService.success('Profile saved successfully');
   };
 
-  const handlePreferredCurrencyChange = (e) => {
+  const handlePreferredCurrencyChange = e => {
     const newCurrency = e.target.value;
     if (updatePreferredCurrency) {
       updatePreferredCurrency({ code: newCurrency });
@@ -125,17 +129,23 @@ const Settings = () => {
     try {
       // Use the collectionManager for consistent behavior
       const { collectionManager } = await import('../utils/collectionManager');
-      const success = await collectionManager.renameCollection(oldName, newName, {
-        collections,
-        setCollections,
-        selectedCollection: null, // Settings doesn't track selected collection
-        setSelectedCollection: () => {}, // No-op for settings
-        user: null // Settings doesn't have user context
-      });
-      
+      const success = await collectionManager.renameCollection(
+        oldName,
+        newName,
+        {
+          collections,
+          setCollections,
+          selectedCollection: null, // Settings doesn't track selected collection
+          setSelectedCollection: () => {}, // No-op for settings
+          user: null, // Settings doesn't have user context
+        }
+      );
+
       if (success) {
         setCollectionToRename('');
-        toastService.success(`Collection renamed from "${oldName}" to "${newName}"`);
+        toastService.success(
+          `Collection renamed from "${oldName}" to "${newName}"`
+        );
       } else {
         toastService.error('Failed to rename collection');
       }
@@ -145,16 +155,18 @@ const Settings = () => {
     }
   };
 
-  const handleDeleteCollection = async (collectionName) => {
+  const handleDeleteCollection = async collectionName => {
     try {
       const updatedCollections = { ...collections };
       delete updatedCollections[collectionName];
-      
+
       // Save to database
       await db.saveCollections(updatedCollections);
       setCollections(updatedCollections);
       setCollectionToDelete('');
-      toastService.success(`Collection "${collectionName}" deleted successfully`);
+      toastService.success(
+        `Collection "${collectionName}" deleted successfully`
+      );
     } catch (error) {
       console.error('Error deleting collection:', error);
       toastService.error('Failed to delete collection');
@@ -162,7 +174,7 @@ const Settings = () => {
   };
 
   // Safe tab change handler
-  const handleTabChange = (tabId) => {
+  const handleTabChange = tabId => {
     try {
       setActiveTab(tabId);
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -201,9 +213,13 @@ const Settings = () => {
                     : 'hover:bg-gray-200/50 dark:hover:bg-gray-700/50 text-gray-700 dark:text-gray-300'
                 }`}
               >
-                <span className={`material-icons mr-1 hidden text-sm xs:inline ${
-                  activeTab === tab.id ? 'text-white' : 'text-gray-600 dark:text-gray-300'
-                }`}>
+                <span
+                  className={`material-icons mr-1 hidden text-sm xs:inline ${
+                    activeTab === tab.id
+                      ? 'text-white'
+                      : 'text-gray-600 dark:text-gray-300'
+                  }`}
+                >
                   {tab.icon}
                 </span>
                 <span>{tab.label}</span>
@@ -218,19 +234,22 @@ const Settings = () => {
             <div className="space-y-6">
               {/* Appearance */}
               <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-black">
-                <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-white">Appearance</h3>
-                <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">Choose your preferred light or dark theme.</p>
-                
+                <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-white">
+                  Appearance
+                </h3>
+                <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">
+                  Choose your preferred light or dark theme.
+                </p>
+
                 <div className="flex gap-4">
-                  <div 
-                    className={`
-                      flex-1 cursor-pointer rounded-lg border-2 p-4 transition-all duration-200
-                      ${!isDarkMode ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-200 dark:border-gray-700'}
-                    `}
+                  <div
+                    className={`flex-1 cursor-pointer rounded-lg border-2 p-4 transition-all duration-200 ${!isDarkMode ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-200 dark:border-gray-700'} `}
                     onClick={() => toggleTheme('light')}
                   >
                     <div className="mb-2 flex items-center justify-between">
-                      <h4 className="font-medium text-gray-900 dark:text-white">Light Mode</h4>
+                      <h4 className="font-medium text-gray-900 dark:text-white">
+                        Light Mode
+                      </h4>
                       {!isDarkMode && <span className="text-blue-500">✓</span>}
                     </div>
                     <div className="rounded-md border border-gray-200 bg-white p-2">
@@ -239,16 +258,15 @@ const Settings = () => {
                       <div className="h-2 w-10 rounded bg-gray-300"></div>
                     </div>
                   </div>
-                  
-                  <div 
-                    className={`
-                      flex-1 cursor-pointer rounded-lg border-2 p-4 transition-all duration-200
-                      ${isDarkMode ? 'border-blue-500 bg-gray-800' : 'border-gray-200 dark:border-gray-700'}
-                    `}
+
+                  <div
+                    className={`flex-1 cursor-pointer rounded-lg border-2 p-4 transition-all duration-200 ${isDarkMode ? 'border-blue-500 bg-gray-800' : 'border-gray-200 dark:border-gray-700'} `}
                     onClick={() => toggleTheme('dark')}
                   >
                     <div className="mb-2 flex items-center justify-between">
-                      <h4 className="font-medium text-gray-900 dark:text-white">Dark Mode</h4>
+                      <h4 className="font-medium text-gray-900 dark:text-white">
+                        Dark Mode
+                      </h4>
                       {isDarkMode && <span className="text-blue-500">✓</span>}
                     </div>
                     <div className="rounded-md border border-gray-700 bg-gray-900 p-2">
@@ -262,9 +280,13 @@ const Settings = () => {
 
               {/* Application Settings */}
               <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-black">
-                <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-white">Application Settings</h3>
-                <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">Configure general application settings.</p>
-                
+                <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-white">
+                  Application Settings
+                </h3>
+                <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">
+                  Configure general application settings.
+                </p>
+
                 <div className="space-y-4">
                   <button
                     onClick={startTutorial}
@@ -292,7 +314,8 @@ const Settings = () => {
                       <option value="JPY">Japanese Yen (JPY)</option>
                     </select>
                     <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                      Select the currency for displaying all monetary values in the app.
+                      Select the currency for displaying all monetary values in
+                      the app.
                     </p>
                   </div>
                 </div>
@@ -300,9 +323,13 @@ const Settings = () => {
 
               {/* Manage Collections */}
               <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-black">
-                <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-white">Manage Collections</h3>
-                <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">Rename or delete your card collections.</p>
-                <CollectionManagement 
+                <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-white">
+                  Manage Collections
+                </h3>
+                <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">
+                  Rename or delete your card collections.
+                </p>
+                <CollectionManagement
                   collections={collections}
                   collectionToRename={collectionToRename}
                   setCollectionToRename={setCollectionToRename}
@@ -320,9 +347,13 @@ const Settings = () => {
             <div className="space-y-6">
               {/* Subscription Status */}
               <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-black">
-                <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-white">Subscription</h3>
-                <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">Manage your subscription and billing information.</p>
-                
+                <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-white">
+                  Subscription
+                </h3>
+                <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">
+                  Manage your subscription and billing information.
+                </p>
+
                 <ErrorBoundary>
                   <SubscriptionStatus />
                 </ErrorBoundary>
@@ -330,21 +361,29 @@ const Settings = () => {
 
               {/* Sign Out */}
               <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-black">
-                <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-white">Sign Out</h3>
-                <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">Sign out of your account and return to the login screen.</p>
-                
+                <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-white">
+                  Sign Out
+                </h3>
+                <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">
+                  Sign out of your account and return to the login screen.
+                </p>
+
                 {userData && (
                   <div className="mb-6 flex items-center space-x-4 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900">
                     <div className="flex size-12 items-center justify-center rounded-full bg-indigo-600 font-medium text-white">
                       {userData.firstName ? userData.firstName.charAt(0) : '?'}
                     </div>
                     <div>
-                      <div className="font-medium text-gray-900 dark:text-white">{userData.firstName} {userData.lastName}</div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400">{user ? user.email : 'Not signed in'}</div>
+                      <div className="font-medium text-gray-900 dark:text-white">
+                        {userData.firstName} {userData.lastName}
+                      </div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400">
+                        {user ? user.email : 'Not signed in'}
+                      </div>
                     </div>
                   </div>
                 )}
-                
+
                 <button
                   onClick={logout}
                   className="flex w-full items-center justify-center rounded-lg border border-gray-300 bg-gray-100 px-4 py-3 text-gray-900 transition-colors hover:bg-gray-200 dark:border-gray-600 dark:bg-[#2A3441] dark:text-white dark:hover:bg-[#3A4551]"
@@ -356,13 +395,19 @@ const Settings = () => {
 
               {/* Personal Information */}
               <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-black">
-                <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-white">Personal Information</h3>
-                <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">Update your personal information and profile settings.</p>
-                
+                <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-white">
+                  Personal Information
+                </h3>
+                <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">
+                  Update your personal information and profile settings.
+                </p>
+
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div>
-                      <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">First Name</label>
+                      <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        First Name
+                      </label>
                       <input
                         type="text"
                         name="firstName"
@@ -372,7 +417,9 @@ const Settings = () => {
                       />
                     </div>
                     <div>
-                      <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Last Name</label>
+                      <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Last Name
+                      </label>
                       <input
                         type="text"
                         name="lastName"
@@ -382,7 +429,9 @@ const Settings = () => {
                       />
                     </div>
                     <div>
-                      <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Company Name (Optional)</label>
+                      <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Company Name (Optional)
+                      </label>
                       <input
                         type="text"
                         name="company"
@@ -392,7 +441,9 @@ const Settings = () => {
                       />
                     </div>
                     <div>
-                      <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Mobile Number (Optional)</label>
+                      <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Mobile Number (Optional)
+                      </label>
                       <input
                         type="tel"
                         name="mobile"
@@ -402,7 +453,9 @@ const Settings = () => {
                       />
                     </div>
                     <div className="md:col-span-2">
-                      <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Address (Optional)</label>
+                      <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Address (Optional)
+                      </label>
                       <input
                         type="text"
                         name="address"
@@ -413,7 +466,7 @@ const Settings = () => {
                     </div>
                   </div>
                   <div className="flex justify-end">
-                    <button 
+                    <button
                       onClick={handleProfileSave}
                       className="rounded-lg bg-[#ef4444] px-6 py-2 text-white transition-colors hover:bg-[#dc2626]"
                     >
@@ -425,15 +478,22 @@ const Settings = () => {
 
               {/* Reset All Data */}
               <div className="rounded-lg border border-red-200 bg-white p-6 dark:border-red-800 dark:bg-black">
-                <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-white">Reset All Data</h3>
-                <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">Permanently delete all your data from both local storage and the cloud.</p>
-                
+                <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-white">
+                  Reset All Data
+                </h3>
+                <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">
+                  Permanently delete all your data from both local storage and
+                  the cloud.
+                </p>
+
                 <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20">
                   <p className="text-sm text-red-800 dark:text-red-200">
-                    <strong>Warning:</strong> This action will permanently delete all your cards, collections, sales history, and images. This cannot be undone.
+                    <strong>Warning:</strong> This action will permanently
+                    delete all your cards, collections, sales history, and
+                    images. This cannot be undone.
                   </p>
                 </div>
-                
+
                 <button
                   onClick={handleDataReset}
                   className="flex w-full items-center justify-center rounded-lg bg-red-600 px-4 py-3 text-white transition-colors hover:bg-red-700"
@@ -457,17 +517,25 @@ const Settings = () => {
             <div className="space-y-6">
               {/* Marketplace Profile */}
               <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-black">
-                <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-white">Marketplace Profile</h3>
-                <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">Manage your marketplace profile and seller information.</p>
+                <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-white">
+                  Marketplace Profile
+                </h3>
+                <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">
+                  Manage your marketplace profile and seller information.
+                </p>
                 <ErrorBoundary>
                   <MarketplaceProfile />
                 </ErrorBoundary>
               </div>
-              
+
               {/* My Reviews */}
               <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-black">
-                <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-white">My Reviews</h3>
-                <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">View and manage your marketplace reviews and ratings.</p>
+                <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-white">
+                  My Reviews
+                </h3>
+                <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">
+                  View and manage your marketplace reviews and ratings.
+                </p>
                 <ErrorBoundary>
                   <MarketplaceReviews />
                 </ErrorBoundary>

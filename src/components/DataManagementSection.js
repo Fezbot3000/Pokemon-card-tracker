@@ -21,18 +21,18 @@ const DataManagementSection = () => {
         toast.error('You must be logged in to verify security');
         return;
       }
-      
+
       const userId = currentUser.uid;
-      
+
       // Open IndexedDB to check data
       const request = indexedDB.open('pokemonCardTracker', 1);
-      
-      request.onerror = (event) => {
+
+      request.onerror = event => {
         logger.error('Error opening database:', event.target.error);
         toast.error('Could not access database for verification');
       };
-      
-      request.onsuccess = async (event) => {
+
+      request.onsuccess = async event => {
         const db = event.target.result;
         let securityStatus = {
           userId: userId,
@@ -43,38 +43,38 @@ const DataManagementSection = () => {
           anonymousDataFound: false,
           collectionsCount: 0,
           cardsCount: 0,
-          summary: 'Security verification in progress...'
+          summary: 'Security verification in progress...',
         };
-        
+
         try {
           // Check collections store
           if (db.objectStoreNames.contains('collections')) {
             const transaction = db.transaction(['collections'], 'readonly');
             const store = transaction.objectStore('collections');
-            
+
             // Get all collections for current user
             const userRange = IDBKeyRange.bound(
-              [userId, ''], 
+              [userId, ''],
               [userId, '\uffff']
             );
-            
+
             const anonymousRange = IDBKeyRange.bound(
-              ['anonymous', ''], 
+              ['anonymous', ''],
               ['anonymous', '\uffff']
             );
-            
+
             // Check authenticated user collections
-            const userCollections = await new Promise((resolve) => {
+            const userCollections = await new Promise(resolve => {
               const request = store.getAll(userRange);
               request.onsuccess = () => resolve(request.result);
             });
-            
+
             // Check anonymous collections
-            const anonymousCollections = await new Promise((resolve) => {
+            const anonymousCollections = await new Promise(resolve => {
               const request = store.getAll(anonymousRange);
               request.onsuccess = () => resolve(request.result);
             });
-            
+
             // Calculate cards count
             let totalCards = 0;
             userCollections.forEach(collection => {
@@ -82,36 +82,42 @@ const DataManagementSection = () => {
                 totalCards += collection.data.length;
               }
             });
-            
+
             securityStatus.collectionsVerified = true;
             securityStatus.collectionsCount = userCollections.length;
             securityStatus.cardsCount = totalCards;
             securityStatus.anonymousDataFound = anonymousCollections.length > 0;
-            
+
             // Security summary
             if (securityStatus.collectionsVerified) {
-              securityStatus.summary = securityStatus.anonymousDataFound 
+              securityStatus.summary = securityStatus.anonymousDataFound
                 ? 'Security partially verified: Your data is linked to your user ID, but some anonymous data remains.'
                 : 'Security fully verified: All data is properly linked to your user ID.';
             } else {
-              securityStatus.summary = 'Security verification failed: Could not verify collections.';
+              securityStatus.summary =
+                'Security verification failed: Could not verify collections.';
             }
-            
+
             // Display success toast with instructions to check console
-            toast.success('Security verification complete. Check the browser console (F12) for details.');
+            toast.success(
+              'Security verification complete. Check the browser console (F12) for details.'
+            );
           }
-          
+
           // Security summary
           if (securityStatus.collectionsVerified) {
-            securityStatus.summary = securityStatus.anonymousDataFound 
+            securityStatus.summary = securityStatus.anonymousDataFound
               ? 'Security partially verified: Your data is linked to your user ID, but some anonymous data remains.'
               : 'Security fully verified: All data is properly linked to your user ID.';
           } else {
-            securityStatus.summary = 'Security verification failed: Could not verify collections.';
+            securityStatus.summary =
+              'Security verification failed: Could not verify collections.';
           }
-          
+
           // Display success toast with instructions to check console
-          toast.success('Security verification complete. Check the browser console (F12) for details.');
+          toast.success(
+            'Security verification complete. Check the browser console (F12) for details.'
+          );
         } catch (error) {
           logger.error('Error verifying security:', error);
           console.error('Security verification error:', error);
@@ -123,7 +129,7 @@ const DataManagementSection = () => {
       toast.error('Security verification failed');
     }
   };
-  
+
   return (
     <div className="space-y-6 py-4">
       <div>
@@ -133,7 +139,7 @@ const DataManagementSection = () => {
         <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">
           Analyze and manage your local card data storage
         </p>
-        
+
         <div className="flex flex-col gap-4">
           <button
             onClick={handleVerifySecurity}

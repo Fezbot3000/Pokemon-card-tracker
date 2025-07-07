@@ -2,58 +2,49 @@ import * as React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '../../lib/utils';
 
-const breadcrumbVariants = cva(
-  'flex items-center space-x-1 text-sm',
-  {
-    variants: {
-      variant: {
-        default: 'text-gray-500 dark:text-gray-400',
-        muted: 'text-gray-400 dark:text-gray-500',
-        accent: 'text-blue-600 dark:text-blue-400',
-      },
-      size: {
-        sm: 'text-xs',
-        md: 'text-sm',
-        lg: 'text-base',
-      },
+const breadcrumbVariants = cva('flex items-center space-x-1 text-sm', {
+  variants: {
+    variant: {
+      default: 'text-gray-500 dark:text-gray-400',
+      muted: 'text-gray-400 dark:text-gray-500',
+      accent: 'text-blue-600 dark:text-blue-400',
     },
-    defaultVariants: {
-      variant: 'default',
-      size: 'md',
+    size: {
+      sm: 'text-xs',
+      md: 'text-sm',
+      lg: 'text-base',
     },
-  }
-);
+  },
+  defaultVariants: {
+    variant: 'default',
+    size: 'md',
+  },
+});
 
-const breadcrumbItemVariants = cva(
-  'flex items-center',
-  {
-    variants: {
-      variant: {
-        default: '',
-        current: 'font-medium text-gray-900 dark:text-white',
-        link: 'cursor-pointer transition-colors hover:text-gray-700 dark:hover:text-gray-300',
-      },
+const breadcrumbItemVariants = cva('flex items-center', {
+  variants: {
+    variant: {
+      default: '',
+      current: 'font-medium text-gray-900 dark:text-white',
+      link: 'cursor-pointer transition-colors hover:text-gray-700 dark:hover:text-gray-300',
     },
-    defaultVariants: {
-      variant: 'default',
-    },
-  }
-);
+  },
+  defaultVariants: {
+    variant: 'default',
+  },
+});
 
-const breadcrumbSeparatorVariants = cva(
-  'select-none',
-  {
-    variants: {
-      variant: {
-        default: 'text-gray-400 dark:text-gray-500',
-        muted: 'text-gray-300 dark:text-gray-600',
-      },
+const breadcrumbSeparatorVariants = cva('select-none', {
+  variants: {
+    variant: {
+      default: 'text-gray-400 dark:text-gray-500',
+      muted: 'text-gray-300 dark:text-gray-600',
     },
-    defaultVariants: {
-      variant: 'default',
-    },
-  }
-);
+  },
+  defaultVariants: {
+    variant: 'default',
+  },
+});
 
 export interface BreadcrumbProps
   extends React.HTMLAttributes<HTMLElement>,
@@ -61,7 +52,8 @@ export interface BreadcrumbProps
   children: React.ReactNode;
 }
 
-export interface BreadcrumbListProps extends React.HTMLAttributes<HTMLOListElement> {
+export interface BreadcrumbListProps
+  extends React.HTMLAttributes<HTMLOListElement> {
   children: React.ReactNode;
 }
 
@@ -71,7 +63,8 @@ export interface BreadcrumbItemProps
   children: React.ReactNode;
 }
 
-export interface BreadcrumbLinkProps extends React.AnchorHTMLAttributes<HTMLAnchorElement> {
+export interface BreadcrumbLinkProps
+  extends React.AnchorHTMLAttributes<HTMLAnchorElement> {
   children: React.ReactNode;
 }
 
@@ -129,7 +122,7 @@ const BreadcrumbLink = React.forwardRef<HTMLAnchorElement, BreadcrumbLinkProps>(
     return (
       <a
         className={cn(
-          'hover:text-gray-700 dark:hover:text-gray-300 transition-colors cursor-pointer',
+          'cursor-pointer transition-colors hover:text-gray-700 dark:hover:text-gray-300',
           className
         )}
         ref={ref}
@@ -141,20 +134,21 @@ const BreadcrumbLink = React.forwardRef<HTMLAnchorElement, BreadcrumbLinkProps>(
   }
 );
 
-const BreadcrumbSeparator = React.forwardRef<HTMLSpanElement, BreadcrumbSeparatorProps>(
-  ({ className, variant, children, ...props }, ref) => {
-    return (
-      <span
-        className={cn(breadcrumbSeparatorVariants({ variant, className }))}
-        aria-hidden="true"
-        ref={ref}
-        {...props}
-      >
-        {children || '/'}
-      </span>
-    );
-  }
-);
+const BreadcrumbSeparator = React.forwardRef<
+  HTMLSpanElement,
+  BreadcrumbSeparatorProps
+>(({ className, variant, children, ...props }, ref) => {
+  return (
+    <span
+      className={cn(breadcrumbSeparatorVariants({ variant, className }))}
+      aria-hidden="true"
+      ref={ref}
+      {...props}
+    >
+      {children || '/'}
+    </span>
+  );
+});
 
 Breadcrumb.displayName = 'Breadcrumb';
 BreadcrumbList.displayName = 'BreadcrumbList';
@@ -162,13 +156,13 @@ BreadcrumbItem.displayName = 'BreadcrumbItem';
 BreadcrumbLink.displayName = 'BreadcrumbLink';
 BreadcrumbSeparator.displayName = 'BreadcrumbSeparator';
 
-export { 
-  Breadcrumb, 
-  BreadcrumbList, 
-  BreadcrumbItem, 
-  BreadcrumbLink, 
+export {
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
   BreadcrumbSeparator,
   breadcrumbVariants,
   breadcrumbItemVariants,
-  breadcrumbSeparatorVariants 
-}; 
+  breadcrumbSeparatorVariants,
+};

@@ -17,13 +17,13 @@ export const InvoiceProvider = ({ children }) => {
     const loadInvoiceCards = async () => {
       try {
         setLoading(true);
-        
+
         // Get all purchase invoices
         const invoices = await db.getPurchaseInvoices();
-        
+
         // Create a set of all card IDs that are in any invoice
         const cardIds = new Set();
-        
+
         invoices.forEach(invoice => {
           if (invoice.cards && Array.isArray(invoice.cards)) {
             invoice.cards.forEach(card => {
@@ -33,7 +33,7 @@ export const InvoiceProvider = ({ children }) => {
             });
           }
         });
-        
+
         setInvoiceCards(cardIds);
       } catch (error) {
         console.error('Error loading invoice cards:', error);
@@ -41,26 +41,26 @@ export const InvoiceProvider = ({ children }) => {
         setLoading(false);
       }
     };
-    
+
     loadInvoiceCards();
   }, []);
-  
+
   // Check if a card is in any invoice
-  const isCardInInvoice = (cardId) => {
+  const isCardInInvoice = cardId => {
     return invoiceCards.has(cardId);
   };
-  
+
   // Refresh the invoice cards data
   const refreshInvoiceCards = async () => {
     try {
       setLoading(true);
-      
+
       // Get all purchase invoices
       const invoices = await db.getPurchaseInvoices();
-      
+
       // Create a set of all card IDs that are in any invoice
       const cardIds = new Set();
-      
+
       invoices.forEach(invoice => {
         if (invoice.cards && Array.isArray(invoice.cards)) {
           invoice.cards.forEach(card => {
@@ -70,7 +70,7 @@ export const InvoiceProvider = ({ children }) => {
           });
         }
       });
-      
+
       setInvoiceCards(cardIds);
     } catch (error) {
       console.error('Error refreshing invoice cards:', error);
@@ -80,11 +80,11 @@ export const InvoiceProvider = ({ children }) => {
   };
 
   return (
-    <InvoiceContext.Provider 
-      value={{ 
+    <InvoiceContext.Provider
+      value={{
         isCardInInvoice,
         refreshInvoiceCards,
-        loading
+        loading,
       }}
     >
       {children}

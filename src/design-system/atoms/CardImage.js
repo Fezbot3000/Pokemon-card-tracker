@@ -4,17 +4,17 @@ import Icon from './Icon';
 
 /**
  * CardImage Component
- * 
+ *
  * A component for displaying Pokemon card images with fallback.
  * Can be configured to hide images on the sold page to save space.
  */
-const CardImage = ({ 
-  src, 
-  alt, 
+const CardImage = ({
+  src,
+  alt,
   className = '',
   width = 'w-16 h-20 sm:w-20 sm:h-24',
   hideSoldImages = false,
-  ...props 
+  ...props
 }) => {
   const [imageError, setImageError] = useState(false);
 

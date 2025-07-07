@@ -8,17 +8,13 @@
  * @returns {Promise<Blob>} - Compressed image as a Blob
  */
 export const compressImage = async (imageFile, options = {}) => {
-  const {
-    maxWidth = 1200,
-    maxHeight = 1200,
-    quality = 0.8
-  } = options;
+  const { maxWidth = 1200, maxHeight = 1200, quality = 0.8 } = options;
 
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(imageFile);
 
-    reader.onload = (event) => {
+    reader.onload = event => {
       const img = new Image();
       img.src = event.target.result;
 
@@ -50,7 +46,7 @@ export const compressImage = async (imageFile, options = {}) => {
 
         // Convert to blob
         canvas.toBlob(
-          (blob) => {
+          blob => {
             if (blob) {
               resolve(blob);
             } else {
@@ -71,4 +67,4 @@ export const compressImage = async (imageFile, options = {}) => {
       reject(new Error('Failed to read file'));
     };
   });
-}; 
+};

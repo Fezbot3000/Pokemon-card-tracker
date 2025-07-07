@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useRef,
+} from 'react';
 
 // Create context for storing cached data across navigation
 const CacheContext = createContext();
@@ -12,17 +18,17 @@ export const CacheProvider = ({ children }) => {
   const [collections, setCollections] = useState(null);
   const [soldItems, setSoldItems] = useState(null);
   const [imageCache, setImageCache] = useState(new Map());
-  
+
   // Track if data is initialized
   const [isInitialized, setIsInitialized] = useState(false);
-  
+
   // Keep track of mounted components to avoid unmounting during navigation
   const viewsRef = useRef({
     cards: null,
     settings: null,
     soldItems: null,
     details: null,
-    newCard: null
+    newCard: null,
   });
 
   // Register a component to be preserved
@@ -31,14 +37,14 @@ export const CacheProvider = ({ children }) => {
   };
 
   // Get a preserved view
-  const getView = (viewName) => {
+  const getView = viewName => {
     return viewsRef.current[viewName];
   };
 
   // Cache card images to prevent reloading
   const cacheImage = (cardId, imageUrl) => {
     if (!imageUrl || imageCache.has(cardId)) return;
-    
+
     setImageCache(prev => {
       const newCache = new Map(prev);
       newCache.set(cardId, imageUrl);
@@ -47,12 +53,12 @@ export const CacheProvider = ({ children }) => {
   };
 
   // Get a cached image
-  const getCachedImage = (cardId) => {
+  const getCachedImage = cardId => {
     return imageCache.get(cardId);
   };
 
   // Clear specific image cache
-  const clearImageCache = (cardId) => {
+  const clearImageCache = cardId => {
     setImageCache(prev => {
       const newCache = new Map(prev);
       newCache.delete(cardId);
@@ -65,7 +71,7 @@ export const CacheProvider = ({ children }) => {
     // Cache data
     cardData,
     setCardData,
-    collections, 
+    collections,
     setCollections,
     soldItems,
     setSoldItems,
@@ -77,13 +83,11 @@ export const CacheProvider = ({ children }) => {
     clearImageCache,
     // View persistence
     registerView,
-    getView
+    getView,
   };
 
   return (
-    <CacheContext.Provider value={value}>
-      {children}
-    </CacheContext.Provider>
+    <CacheContext.Provider value={value}>{children}</CacheContext.Provider>
   );
 };
 

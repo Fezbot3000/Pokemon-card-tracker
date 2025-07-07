@@ -1,19 +1,18 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-
 /**
  * SettingsPanel Component
- * 
+ *
  * A container for settings content that provides consistent styling.
  */
-const SettingsPanel = ({ 
+const SettingsPanel = ({
   title,
   description,
   children,
   className = '',
-  expandable, 
-  ...props 
+  expandable,
+  ...props
 }) => {
   return (
     <div className={`mb-6 ${className}`} {...props}>
@@ -23,11 +22,11 @@ const SettingsPanel = ({
         </h3>
       )}
       {description && (
-        <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">{description}</p>
+        <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">
+          {description}
+        </p>
       )}
-      <div className="space-y-4">
-        {children}
-      </div>
+      <div className="space-y-4">{children}</div>
     </div>
   );
 };

@@ -1,9 +1,9 @@
 /**
  * Feature Flags System
- * 
+ *
  * This module provides a centralized way to manage feature flags throughout the application.
  * Feature flags allow for incremental rollout of features and easy rollback if issues occur.
- * 
+ *
  * Current flags:
  * - enableFirestoreSync: Controls whether data is written to Firestore (shadow writes)
  * - enableFirestoreReads: Controls whether data is read from Firestore when online
@@ -14,12 +14,12 @@
 
 // Default flag values (all disabled by default)
 const defaultFlags = {
-  enableFirestoreSync: true,        // Controls shadow writes to Firestore
-  enableFirestoreReads: true,       // Controls reading from Firestore when online
-  enableRealtimeListeners: false,    // Controls real-time Firestore listeners
-  enableBackgroundMigration: false,  // Controls background migration to Firestore
-  enableCardValueUpdates: false,     // Controls card value updating feature (disabled)
-  isDeveloperMode: false,            // Special mode for developer testing
+  enableFirestoreSync: true, // Controls shadow writes to Firestore
+  enableFirestoreReads: true, // Controls reading from Firestore when online
+  enableRealtimeListeners: false, // Controls real-time Firestore listeners
+  enableBackgroundMigration: false, // Controls background migration to Firestore
+  enableCardValueUpdates: false, // Controls card value updating feature (disabled)
+  isDeveloperMode: false, // Special mode for developer testing
 };
 
 // Try to load saved flags from localStorage
@@ -72,7 +72,7 @@ if (process.env.NODE_ENV === 'development') {
 export function updateFeatureFlag(flagName, value) {
   if (flagName in featureFlags) {
     featureFlags[flagName] = value;
-    
+
     // Save to localStorage
     try {
       localStorage.setItem('appFeatureFlags', JSON.stringify(featureFlags));
@@ -92,7 +92,7 @@ export function resetFeatureFlags() {
   Object.keys(defaultFlags).forEach(key => {
     featureFlags[key] = defaultFlags[key];
   });
-  
+
   // Save to localStorage
   try {
     localStorage.setItem('appFeatureFlags', JSON.stringify(featureFlags));
@@ -106,7 +106,7 @@ export function resetFeatureFlags() {
  * @returns {Object} - All feature flags
  */
 export function getAllFeatureFlags() {
-  return {...featureFlags}; // Return a copy to prevent direct mutation
+  return { ...featureFlags }; // Return a copy to prevent direct mutation
 }
 
 export default featureFlags;

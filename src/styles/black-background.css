@@ -42,13 +42,13 @@ html.dark .bg-gray-900 {
 }
 
 /* Specific overrides for message components */
-html.dark input[placeholder*="Type a message"],
-html.dark form input[placeholder*="Type a message"] {
-  background-color: #0F0F0F !important;
+html.dark input[placeholder*='Type a message'],
+html.dark form input[placeholder*='Type a message'] {
+  background-color: #0f0f0f !important;
 }
 
 html.dark form.border-t {
-  background-color: #0F0F0F !important;
+  background-color: #0f0f0f !important;
 }
 
 /* App header in dark mode */

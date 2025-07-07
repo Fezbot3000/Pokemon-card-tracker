@@ -6,24 +6,19 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useUserPreferences } from '../../contexts/UserPreferencesContext';
 import logger from '../../utils/logger';
 
-
 /**
  * StatisticsSummary Component
- * 
+ *
  * A unified statistics summary bar that displays 4 key metrics in a single container
  * with dividers between sections, used on both the main cards page and sold items page.
  */
-const StatisticsSummary = ({ 
-  statistics = [], 
-  className = '',
-  ...props 
-}) => {
+const StatisticsSummary = ({ statistics = [], className = '', ...props }) => {
   const { theme } = useTheme();
   const isDarkMode = theme === 'dark';
   const { formatAmountForDisplay, preferredCurrency } = useUserPreferences();
 
   return (
-    <div 
+    <div
       className={`w-full rounded-md bg-white dark:bg-black ${isDarkMode ? 'shadow-sm' : ''} overflow-hidden border border-[#ffffff33] dark:border-[#ffffff1a] ${className}`}
       {...props}
     >
@@ -31,15 +26,26 @@ const StatisticsSummary = ({
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-0">
           {statistics.map((stat, index) => {
             let displayValue;
-            const isMonetaryStat = stat.isMonetary !== undefined ? stat.isMonetary : ['PAID', 'VALUE', 'PROFIT'].includes(stat.label.toUpperCase());
+            const isMonetaryStat =
+              stat.isMonetary !== undefined
+                ? stat.isMonetary
+                : ['PAID', 'VALUE', 'PROFIT'].includes(
+                    stat.label.toUpperCase()
+                  );
 
             if (isMonetaryStat) {
               const originalCurrency = stat.originalCurrencyCode || 'USD'; // Assume USD if not specified
               if (typeof stat.value === 'number' && !isNaN(stat.value)) {
                 try {
-                  displayValue = formatAmountForDisplay(stat.value, originalCurrency);
+                  displayValue = formatAmountForDisplay(
+                    stat.value,
+                    originalCurrency
+                  );
                 } catch (e) {
-                  logger.error(`Error formatting ${stat.label} in StatisticsSummary:`, e);
+                  logger.error(
+                    `Error formatting ${stat.label} in StatisticsSummary:`,
+                    e
+                  );
                   displayValue = `${preferredCurrency.symbol || '$'} Error`; // Fallback
                 }
               } else {
@@ -47,8 +53,12 @@ const StatisticsSummary = ({
                 // If it's already a string, display as is, assuming it might be intentionally non-numeric.
                 displayValue = String(stat.value);
                 // Attempt to prefix with symbol if it looks like a number but isn't, and doesn't have one.
-                if (typeof stat.value === 'string' && !isNaN(parseFloat(stat.value.replace(/[^0-9.-]+/g, ""))) && !displayValue.startsWith(preferredCurrency.symbol || '$')) {
-                    // displayValue = (preferredCurrency.symbol || '$') + displayValue; // This might be too aggressive
+                if (
+                  typeof stat.value === 'string' &&
+                  !isNaN(parseFloat(stat.value.replace(/[^0-9.-]+/g, ''))) &&
+                  !displayValue.startsWith(preferredCurrency.symbol || '$')
+                ) {
+                  // displayValue = (preferredCurrency.symbol || '$') + displayValue; // This might be too aggressive
                 }
               }
             } else {
@@ -63,10 +73,8 @@ const StatisticsSummary = ({
                 <div className="mb-1 text-xs font-medium uppercase text-gray-500 dark:text-gray-400 sm:mb-2 sm:text-sm">
                   {stat.label}
                 </div>
-                <div className={`font-medium flex items-center gap-1 whitespace-nowrap overflow-hidden
-                  ${stat.isProfit && stat.value > 0 ? 'text-green-500' : ''}
-                  ${stat.isProfit && stat.value < 0 ? 'text-red-500' : ''}
-                  ${!stat.isProfit ? 'text-gray-900 dark:text-white' : ''}`}
+                <div
+                  className={`flex items-center gap-1 overflow-hidden whitespace-nowrap font-medium ${stat.isProfit && stat.value > 0 ? 'text-green-500' : ''} ${stat.isProfit && stat.value < 0 ? 'text-red-500' : ''} ${!stat.isProfit ? 'text-gray-900 dark:text-white' : ''}`}
                   style={{
                     fontSize: 'clamp(0.875rem, calc(0.75rem + 1.2vw), 1.5rem)',
                     maxWidth: '100%',
@@ -96,15 +104,16 @@ StatisticsSummary.propTypes = {
   statistics: PropTypes.arrayOf(
     PropTypes.shape({
       label: PropTypes.string.isRequired,
-      value: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired,
+      value: PropTypes.oneOfType([PropTypes.number, PropTypes.string])
+        .isRequired,
       // formattedValue: PropTypes.string, // No longer primary, but can be kept for non-monetary overrides
       isProfit: PropTypes.bool,
       isMonetary: PropTypes.bool, // Added: explicit flag for monetary values
       originalCurrencyCode: PropTypes.string, // Added: currency of the raw 'value'
-      icon: PropTypes.string
+      icon: PropTypes.string,
     })
   ).isRequired,
-  className: PropTypes.string
+  className: PropTypes.string,
 };
 
 export default StatisticsSummary;

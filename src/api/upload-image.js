@@ -4,7 +4,12 @@
  */
 
 import { initializeApp } from 'firebase/app';
-import { getStorage, ref, uploadString, getDownloadURL } from 'firebase/storage';
+import {
+  getStorage,
+  ref,
+  uploadString,
+  getDownloadURL,
+} from 'firebase/storage';
 import { getFirebaseConfig } from '../config/secrets';
 import logger from '../utils/logger';
 
@@ -46,12 +51,17 @@ export default async function handler(req, res) {
       customMetadata: {
         userId,
         cardId,
-        timestamp: timestamp || new Date().toISOString()
-      }
+        timestamp: timestamp || new Date().toISOString(),
+      },
     };
 
     // Upload the string
-    const snapshot = await uploadString(storageRef, base64Data, 'base64', metadata);
+    const snapshot = await uploadString(
+      storageRef,
+      base64Data,
+      'base64',
+      metadata
+    );
 
     // Get the download URL
     const downloadURL = await getDownloadURL(snapshot.ref);
@@ -60,13 +70,13 @@ export default async function handler(req, res) {
     return res.status(200).json({
       success: true,
       downloadURL,
-      path
+      path,
     });
   } catch (error) {
     logger.error('Error in upload-image API:', error);
     return res.status(500).json({
       error: 'Failed to upload image',
-      message: error.message
+      message: error.message,
     });
   }
 }

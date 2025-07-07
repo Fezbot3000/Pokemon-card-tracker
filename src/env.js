@@ -8,12 +8,12 @@ const requiredEnvVars = [
 
 const validateEnvironment = () => {
   // Environment validation is now simplified since we use hardcoded Firebase config
-  
+
   // Only log in development mode and not in production
   if (process.env.NODE_ENV !== 'production') {
     // No console logs for production readiness
   }
-  
+
   return true;
 };
 

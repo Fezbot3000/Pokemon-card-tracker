@@ -1,9 +1,9 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 // Import CSS files in the correct order to ensure proper cascade
-import './styles/globals.css';         // Modernized global styles with design tokens
-import './styles/utilities.css';       // Custom utility classes
-import './styles/ios-fixes.css';      // iOS Safari specific fixes
+import './styles/globals.css'; // Modernized global styles with design tokens
+import './styles/utilities.css'; // Custom utility classes
+import './styles/ios-fixes.css'; // iOS Safari specific fixes
 import App from './App';
 import { router } from './router';
 import { RouterProvider } from 'react-router-dom';
@@ -17,16 +17,12 @@ import logger from './utils/logger';
 import { initUnifiedErrorHandler } from './utils/unifiedErrorHandler';
 import ErrorBoundary from './components/ErrorBoundary';
 
-
-
 // Initialize unified error handler
 initUnifiedErrorHandler();
 
 // Initialize the application
 initializeApp()
-  .then(() => {
-    
-  })
+  .then(() => {})
   .catch(error => {
     logger.error('Error during app initialization:', error);
   });

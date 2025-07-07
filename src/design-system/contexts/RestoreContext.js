@@ -16,7 +16,7 @@ export const RestoreProvider = ({ children }) => {
    * Add a log message to the restore logs
    * @param {string} message - The log message to add
    */
-  const addRestoreLog = (message) => {
+  const addRestoreLog = message => {
     const timestamp = new Date().toLocaleTimeString();
     const logEntry = `[${timestamp}] ${message}`;
     setRestoreLogs(prevLogs => [...prevLogs, logEntry]);
@@ -62,7 +62,7 @@ export const RestoreProvider = ({ children }) => {
         addRestoreLog,
         startRestore,
         completeRestore,
-        cancelRestore
+        cancelRestore,
       }}
     >
       {children}

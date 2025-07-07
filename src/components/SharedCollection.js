@@ -8,22 +8,28 @@ import sharingService from '../services/sharingService';
 
 // Simple components to replace missing design system components
 const Spinner = ({ size = 'medium' }) => (
-  <div className={`animate-spin rounded-full border-4 border-gray-300 border-t-blue-600 ${
-    size === 'large' ? 'size-12' : 'size-6'
-  }`}></div>
+  <div
+    className={`animate-spin rounded-full border-4 border-gray-300 border-t-blue-600 ${
+      size === 'large' ? 'size-12' : 'size-6'
+    }`}
+  ></div>
 );
 
 const Badge = ({ children, variant = 'primary', className = '' }) => {
   const variants = {
     primary: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-    success: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-    warning: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+    success:
+      'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+    warning:
+      'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
     danger: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
-    secondary: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
+    secondary: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200',
   };
-  
+
   return (
-    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${variants[variant]} ${className}`}>
+    <span
+      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${variants[variant]} ${className}`}
+    >
       {children}
     </span>
   );
@@ -49,11 +55,13 @@ const Avatar = ({ src, alt, size = 'medium', fallback }) => {
   const sizeClasses = {
     small: 'h-8 w-8',
     medium: 'h-10 w-10',
-    large: 'h-12 w-12'
+    large: 'h-12 w-12',
   };
-  
+
   return (
-    <div className={`${sizeClasses[size]} flex items-center justify-center overflow-hidden rounded-full bg-gray-300 dark:bg-gray-600`}>
+    <div
+      className={`${sizeClasses[size]} flex items-center justify-center overflow-hidden rounded-full bg-gray-300 dark:bg-gray-600`}
+    >
       {src ? (
         <img src={src} alt={alt} className="size-full object-cover" />
       ) : (
@@ -77,7 +85,7 @@ const SharedCollection = () => {
     search: '',
     sortBy: 'value',
     category: 'all',
-    grading: 'all'
+    grading: 'all',
   });
   const [stats, setStats] = useState(null);
   const [metaTags, setMetaTags] = useState({});
@@ -90,7 +98,7 @@ const SharedCollection = () => {
     if (cards.length > 0) {
       const filtered = sharingService.filterAndSortCards(cards, filters);
       setFilteredCards(filtered);
-      
+
       const collectionStats = sharingService.formatCollectionStats(cards);
       setStats(collectionStats);
     }
@@ -114,7 +122,12 @@ const SharedCollection = () => {
       setShareData(shareData);
 
       // Load the cards from the user's collection
-      const cardsRef = collection(firestoreDb, 'users', shareData.userId, 'cards');
+      const cardsRef = collection(
+        firestoreDb,
+        'users',
+        shareData.userId,
+        'cards'
+      );
 
       let allCards = [];
 
@@ -124,10 +137,13 @@ const SharedCollection = () => {
         const queries = [
           // Query by collectionId field
           query(cardsRef, where('collectionId', '==', shareData.collectionId)),
-          // Query by collection field  
+          // Query by collection field
           query(cardsRef, where('collection', '==', shareData.collectionId)),
           // Query by collectionName field
-          query(cardsRef, where('collectionName', '==', shareData.collectionId))
+          query(
+            cardsRef,
+            where('collectionName', '==', shareData.collectionId)
+          ),
         ];
 
         // Execute all queries and combine results
@@ -142,7 +158,7 @@ const SharedCollection = () => {
         });
 
         const queryResults = await Promise.all(queryPromises);
-        
+
         // Combine and deduplicate results (same card might be found by multiple queries)
         const cardMap = new Map();
         queryResults.forEach(cards => {
@@ -152,33 +168,44 @@ const SharedCollection = () => {
             }
           });
         });
-        
+
         allCards = Array.from(cardMap.values());
       } else {
         // Load all collections - use simple query without orderBy to avoid updatedAt issues
         const cardsQuery = query(cardsRef);
         const cardsSnapshot = await getDocs(cardsQuery);
-        allCards = cardsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        allCards = cardsSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
       }
 
       // Sort cards by updatedAt if available, otherwise by creation order
       allCards.sort((a, b) => {
-        const aDate = a.updatedAt?.toDate?.() || a.createdAt?.toDate?.() || new Date(0);
-        const bDate = b.updatedAt?.toDate?.() || b.createdAt?.toDate?.() || new Date(0);
+        const aDate =
+          a.updatedAt?.toDate?.() || a.createdAt?.toDate?.() || new Date(0);
+        const bDate =
+          b.updatedAt?.toDate?.() || b.createdAt?.toDate?.() || new Date(0);
         return bDate - aDate; // Descending order (newest first)
       });
-      
+
       // Debug: Show which field names were found in the cards
       if (allCards.length > 0) {
         const fieldAnalysis = {
-          collectionId: allCards.filter(card => card.collectionId === shareData.collectionId).length,
-          collection: allCards.filter(card => card.collection === shareData.collectionId).length,
-          collectionName: allCards.filter(card => card.collectionName === shareData.collectionId).length,
+          collectionId: allCards.filter(
+            card => card.collectionId === shareData.collectionId
+          ).length,
+          collection: allCards.filter(
+            card => card.collection === shareData.collectionId
+          ).length,
+          collectionName: allCards.filter(
+            card => card.collectionName === shareData.collectionId
+          ).length,
           hasUpdatedAt: allCards.filter(card => !!card.updatedAt).length,
-          hasCreatedAt: allCards.filter(card => !!card.createdAt).length
+          hasCreatedAt: allCards.filter(card => !!card.createdAt).length,
         };
       }
-      
+
       setCards(allCards);
     } catch (err) {
       console.error('=== ERROR LOADING SHARED COLLECTION ===');
@@ -194,7 +221,7 @@ const SharedCollection = () => {
   const handleFilterChange = (key, value) => {
     setFilters(prev => ({
       ...prev,
-      [key]: value
+      [key]: value,
     }));
   };
 
@@ -212,7 +239,9 @@ const SharedCollection = () => {
       <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-black">
         <div className="text-center">
           <Spinner size="large" />
-          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading collection...</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">
+            Loading collection...
+          </p>
         </div>
       </div>
     );
@@ -258,8 +287,8 @@ const SharedCollection = () => {
           {/* Mobile Layout */}
           <div className="block sm:hidden">
             <div className="mb-3 flex items-start space-x-3">
-              <Avatar 
-                src={shareData.ownerAvatar} 
+              <Avatar
+                src={shareData.ownerAvatar}
                 alt={shareData.ownerName}
                 size="medium"
                 fallback={shareData.ownerName?.charAt(0) || 'C'}
@@ -278,7 +307,7 @@ const SharedCollection = () => {
                 )}
               </div>
             </div>
-          <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between">
               <div className="text-left">
                 <div className="text-xl font-bold text-gray-900 dark:text-white">
                   {stats && formatCurrency(stats.totalValue, 'AUD')}
@@ -301,8 +330,8 @@ const SharedCollection = () => {
           {/* Desktop Layout */}
           <div className="hidden items-center justify-between sm:flex">
             <div className="flex items-center space-x-4">
-              <Avatar 
-                src={shareData.ownerAvatar} 
+              <Avatar
+                src={shareData.ownerAvatar}
                 alt={shareData.ownerName}
                 size="large"
                 fallback={shareData.ownerName?.charAt(0) || 'C'}
@@ -388,23 +417,25 @@ const SharedCollection = () => {
               <Input
                 placeholder="Search cards..."
                 value={filters.search}
-                onChange={(e) => handleFilterChange('search', e.target.value)}
+                onChange={e => handleFilterChange('search', e.target.value)}
                 className="w-full border-gray-600 bg-gray-800 text-sm text-white dark:border-gray-600 dark:bg-gray-800 dark:text-white"
               />
               <div className="grid grid-cols-2 gap-2">
                 <Select
                   value={filters.category}
-                  onChange={(e) => handleFilterChange('category', e.target.value)}
+                  onChange={e => handleFilterChange('category', e.target.value)}
                   className="w-full border-gray-600 bg-gray-800 text-sm text-white dark:border-gray-600 dark:bg-gray-800 dark:text-white"
                 >
                   <option value="all">All Categories</option>
                   {stats.categoryList.map(category => (
-                    <option key={category} value={category}>{category}</option>
+                    <option key={category} value={category}>
+                      {category}
+                    </option>
                   ))}
                 </Select>
                 <Select
                   value={filters.grading}
-                  onChange={(e) => handleFilterChange('grading', e.target.value)}
+                  onChange={e => handleFilterChange('grading', e.target.value)}
                   className="w-full border-gray-600 bg-gray-800 text-sm text-white dark:border-gray-600 dark:bg-gray-800 dark:text-white"
                 >
                   <option value="all">All Cards</option>
@@ -415,7 +446,7 @@ const SharedCollection = () => {
               <div className="flex items-center justify-between">
                 <Select
                   value={filters.sortBy}
-                  onChange={(e) => handleFilterChange('sortBy', e.target.value)}
+                  onChange={e => handleFilterChange('sortBy', e.target.value)}
                   className="mr-3 flex-1 border-gray-600 bg-gray-800 text-sm text-white dark:border-gray-600 dark:bg-gray-800 dark:text-white"
                 >
                   <option value="value">Value ↓</option>
@@ -436,22 +467,24 @@ const SharedCollection = () => {
               <Input
                 placeholder="Search cards..."
                 value={filters.search}
-                onChange={(e) => handleFilterChange('search', e.target.value)}
+                onChange={e => handleFilterChange('search', e.target.value)}
                 className="w-full border-gray-600 bg-gray-800 text-white dark:border-gray-600 dark:bg-gray-800 dark:text-white"
               />
               <Select
                 value={filters.category}
-                onChange={(e) => handleFilterChange('category', e.target.value)}
+                onChange={e => handleFilterChange('category', e.target.value)}
                 className="w-full border-gray-600 bg-gray-800 text-white dark:border-gray-600 dark:bg-gray-800 dark:text-white"
               >
                 <option value="all">All Categories</option>
                 {stats.categoryList.map(category => (
-                  <option key={category} value={category}>{category}</option>
+                  <option key={category} value={category}>
+                    {category}
+                  </option>
                 ))}
               </Select>
               <Select
                 value={filters.grading}
-                onChange={(e) => handleFilterChange('grading', e.target.value)}
+                onChange={e => handleFilterChange('grading', e.target.value)}
                 className="w-full border-gray-600 bg-gray-800 text-white dark:border-gray-600 dark:bg-gray-800 dark:text-white"
               >
                 <option value="all">All Cards</option>
@@ -460,7 +493,7 @@ const SharedCollection = () => {
               </Select>
               <Select
                 value={filters.sortBy}
-                onChange={(e) => handleFilterChange('sortBy', e.target.value)}
+                onChange={e => handleFilterChange('sortBy', e.target.value)}
                 className="w-full border-gray-600 bg-gray-800 text-white dark:border-gray-600 dark:bg-gray-800 dark:text-white"
               >
                 <option value="value">Sort by Value (High to Low)</option>
@@ -481,7 +514,10 @@ const SharedCollection = () => {
           {/* Cards Grid - Mobile optimized */}
           <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
             {filteredCards.map(card => (
-              <Card key={card.id} className="overflow-hidden transition-shadow hover:shadow-lg">
+              <Card
+                key={card.id}
+                className="overflow-hidden transition-shadow hover:shadow-lg"
+              >
                 <div className="relative aspect-[3/4] bg-gray-100 p-1 dark:bg-gray-800 sm:p-2">
                   {card.imageUrl ? (
                     <img
@@ -495,12 +531,15 @@ const SharedCollection = () => {
                       <span className="text-2xl sm:text-4xl">🎴</span>
                     </div>
                   )}
-                  {(card.gradingCompany || card.gradeCompany || card.certificationNumber) && (
+                  {(card.gradingCompany ||
+                    card.gradeCompany ||
+                    card.certificationNumber) && (
                     <Badge
                       variant="primary"
                       className="absolute right-1 top-1 text-xs sm:right-2 sm:top-2"
                     >
-                      {card.gradingCompany || card.gradeCompany || 'PSA'} {card.grade}
+                      {card.gradingCompany || card.gradeCompany || 'PSA'}{' '}
+                      {card.grade}
                     </Badge>
                   )}
                 </div>
@@ -516,9 +555,16 @@ const SharedCollection = () => {
                       {card.player}
                     </p>
                   )}
-                  {(card.originalCurrentValueAmount > 0 || card.currentValueAUD > 0 || card.currentValue > 0) && (
+                  {(card.originalCurrentValueAmount > 0 ||
+                    card.currentValueAUD > 0 ||
+                    card.currentValue > 0) && (
                     <p className="mt-1 text-sm font-bold text-gray-900 dark:text-white sm:mt-2 sm:text-lg">
-                      {formatCurrency(card.originalCurrentValueAmount || card.currentValueAUD || card.currentValue, 'AUD')}
+                      {formatCurrency(
+                        card.originalCurrentValueAmount ||
+                          card.currentValueAUD ||
+                          card.currentValue,
+                        'AUD'
+                      )}
                     </p>
                   )}
                 </div>
@@ -529,7 +575,8 @@ const SharedCollection = () => {
           {/* Footer */}
           <div className="mt-8 border-t border-gray-200 py-6 text-center dark:border-gray-800 sm:mt-12 sm:py-8">
             <p className="mb-4 px-4 text-sm text-gray-500 dark:text-gray-500 sm:text-base">
-              Powered by <strong>MyCardTracker</strong> - The ultimate trading card tracker
+              Powered by <strong>MyCardTracker</strong> - The ultimate trading
+              card tracker
             </p>
             <Button
               variant="primary"

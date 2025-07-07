@@ -5,16 +5,16 @@ import Icon from './Icon';
 
 /**
  * Toast Component
- * 
+ *
  * A wrapper around react-hot-toast to provide consistent styling and API.
  */
-const Toast = ({ 
+const Toast = ({
   position = 'bottom-right',
   reverseOrder = false,
   gutter = 8,
   containerStyle = {},
   toastOptions = {},
-  ...props 
+  ...props
 }) => {
   // Default toast styling
   const defaultToastOptions = {
@@ -26,14 +26,14 @@ const Toast = ({
       borderRadius: '12px',
       padding: '12px 16px',
       fontWeight: '500',
-      maxWidth: '350px'
+      maxWidth: '350px',
     },
   };
 
   // Merge default options with user options
   const mergedOptions = {
     ...defaultToastOptions,
-    ...toastOptions
+    ...toastOptions,
   };
 
   return (
@@ -45,7 +45,7 @@ const Toast = ({
       toastOptions={mergedOptions}
       {...props}
     >
-      {(t) => (
+      {t => (
         <ToastBar toast={t}>
           {({ icon, message }) => (
             <>
@@ -67,8 +67,12 @@ const Toast = ({
 Toast.propTypes = {
   /** Position of the toast container */
   position: PropTypes.oneOf([
-    'top-left', 'top-center', 'top-right',
-    'bottom-left', 'bottom-center', 'bottom-right'
+    'top-left',
+    'top-center',
+    'top-right',
+    'bottom-left',
+    'bottom-center',
+    'bottom-right',
   ]),
   /** Whether to show toasts in reverse order */
   reverseOrder: PropTypes.bool,

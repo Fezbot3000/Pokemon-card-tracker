@@ -1,6 +1,6 @@
 /**
  * Design System Entry Point
- * 
+ *
  * This file exports all components, atoms, molecules, and tokens from the design system
  * for easy consumption throughout the application.
  */
@@ -19,9 +19,21 @@ export { subscribeToNotifications } from './utils/notifications';
 
 // Contexts
 export { default as ThemeContext } from './contexts/ThemeContext';
-export { default as AuthContext, AuthProvider, useAuth } from './contexts/AuthContext';
-export { default as RestoreContext, RestoreProvider, useRestore } from './contexts/RestoreContext';
-export { default as BackupContext, BackupProvider, useBackup } from './contexts/BackupContext';
+export {
+  default as AuthContext,
+  AuthProvider,
+  useAuth,
+} from './contexts/AuthContext';
+export {
+  default as RestoreContext,
+  RestoreProvider,
+  useRestore,
+} from './contexts/RestoreContext';
+export {
+  default as BackupContext,
+  BackupProvider,
+  useBackup,
+} from './contexts/BackupContext';
 
 // Atoms
 export { default as Button } from './atoms/Button';

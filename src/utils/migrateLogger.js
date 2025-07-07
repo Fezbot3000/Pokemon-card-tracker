@@ -1,6 +1,6 @@
 /**
  * Logger Migration Script
- * 
+ *
  * This script helps identify all files using the old logger
  * so they can be reviewed for potential cleanup.
  */
@@ -18,18 +18,18 @@ const loggerUsagePattern = /logger\.(debug|log|info|warn|error|critical)/g;
 // Recursively find all JS/JSX files
 function findJSFiles(dir, files = []) {
   const items = fs.readdirSync(dir);
-  
+
   for (const item of items) {
     const fullPath = path.join(dir, item);
     const stat = fs.statSync(fullPath);
-    
+
     if (stat.isDirectory() && !item.includes('node_modules')) {
       findJSFiles(fullPath, files);
     } else if (item.endsWith('.js') || item.endsWith('.jsx')) {
       files.push(fullPath);
     }
   }
-  
+
   return files;
 }
 
@@ -45,24 +45,24 @@ function analyzeLoggerUsage() {
       info: 0,
       warn: 0,
       error: 0,
-      critical: 0
-    }
+      critical: 0,
+    },
   };
-  
+
   for (const file of files) {
     const content = fs.readFileSync(file, 'utf8');
-    
+
     if (loggerImportPattern.test(content)) {
       const matches = content.match(loggerUsagePattern) || [];
-      
+
       if (matches.length > 0) {
         results.filesWithLogger.push({
           file: path.relative(srcDir, file),
-          calls: matches.length
+          calls: matches.length,
         });
-        
+
         results.totalLoggerCalls += matches.length;
-        
+
         // Count by type
         matches.forEach(match => {
           const type = match.split('.')[1];
@@ -71,24 +71,24 @@ function analyzeLoggerUsage() {
       }
     }
   }
-  
+
   return results;
 }
 
 // Run analysis
 if (require.main === module) {
   // // console.log('Analyzing logger usage in the codebase...\n');
-  
+
   const results = analyzeLoggerUsage();
-  
+
   // // console.log(`Files using logger: ${results.filesWithLogger.length}`);
   // // console.log(`Total logger calls: ${results.totalLoggerCalls}\n`);
-  
+
   // // console.log('Logger calls by type:');
   // Object.entries(results.loggerCallsByType).forEach(([type, count]) => {
   //   // console.log(`  ${type}: ${count}`);
   // });
-  
+
   // // console.log('\nFiles with logger (sorted by usage):');
   // results.filesWithLogger
   //   .sort((a, b) => b.calls - a.calls)

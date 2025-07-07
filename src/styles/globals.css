@@ -25,7 +25,16 @@
 /* ==================== GLOBAL RESETS ==================== */
 
 html {
-  font-family: 'Noto Sans', -apple-system, BlinkMacSystemFont, system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family:
+    'Noto Sans',
+    -apple-system,
+    BlinkMacSystemFont,
+    system-ui,
+    'Segoe UI',
+    Roboto,
+    'Helvetica Neue',
+    Arial,
+    sans-serif;
   font-size: 16px;
   font-weight: 400;
   overflow-x: hidden;
@@ -42,7 +51,9 @@ body {
   margin: 0;
   padding: 0;
   overflow-x: hidden;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
 }
 
 /* Reset for common elements */
@@ -86,7 +97,12 @@ body {
 
 /* ==================== GLOBAL TYPOGRAPHY ==================== */
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-weight: var(--font-weight-semibold);
   line-height: var(--line-height-tight);
   letter-spacing: -0.01em;
@@ -173,7 +189,7 @@ body.modal-open {
     padding-top: env(safe-area-inset-top);
     padding-bottom: env(safe-area-inset-bottom);
   }
-  
+
   .main-content {
     /* Account for PWA status bar */
     padding-top: var(--space-4);
@@ -220,4 +236,4 @@ body.modal-open {
 .dark ::selection {
   background-color: var(--color-primary-700);
   color: var(--color-primary-100);
-} 
+}

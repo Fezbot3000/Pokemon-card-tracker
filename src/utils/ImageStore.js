@@ -28,21 +28,22 @@ export function hasImage(cardId) {
 // Apply to an image element to prevent reloads
 export function optimizeImageLoading(imgElement, cardId) {
   if (!imgElement || !cardId) return;
-  
+
   // Add to DOM nodes tracking
   loadedNodes.add(imgElement);
-  
+
   // Override the src with cached version if available
   const cachedSrc = imageCache.get(cardId);
   if (cachedSrc && imgElement.src !== cachedSrc) {
     imgElement.src = cachedSrc;
   }
-  
+
   // Intercept future src changes
   const originalSrcSetter = Object.getOwnPropertyDescriptor(
-    HTMLImageElement.prototype, 'src'
+    HTMLImageElement.prototype,
+    'src'
   ).set;
-  
+
   // Use a proxy to intercept src changes
   Object.defineProperty(imgElement, 'src', {
     set(newSrc) {
@@ -54,17 +55,17 @@ export function optimizeImageLoading(imgElement, cardId) {
     },
     get() {
       return this.getAttribute('src');
-    }
+    },
   });
 }
 
 // Apply to the card container level
 export function optimizeCardsContainer(containerElement) {
   if (!containerElement) return;
-  
+
   // Find all card images within the container
   const cardImages = containerElement.querySelectorAll('.card-image');
-  
+
   cardImages.forEach(img => {
     // Extract card ID from parent container
     const cardContainer = img.closest('[data-card-id]');
@@ -86,5 +87,5 @@ export default {
   hasImage,
   optimizeImageLoading,
   optimizeCardsContainer,
-  imageStore
+  imageStore,
 };

@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useRef,
+} from 'react';
 import { useAuth } from '../design-system';
 import { CardRepository } from '../repositories/CardRepository';
 import logger from '../utils/logger';
@@ -11,24 +17,24 @@ export const useDataCache = () => useContext(DataCacheContext);
 
 export const DataCacheProvider = ({ children }) => {
   const { currentUser } = useAuth();
-  
+
   // Cache states
   const [cards, setCards] = useState([]);
   const [collections, setCollections] = useState({});
   const [soldItems, setSoldItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
+
   // Track subscriptions to avoid redundant listeners
   const subscriptionsRef = useRef({
     cards: null,
     collections: null,
-    soldItems: null
+    soldItems: null,
   });
-  
+
   // Image cache for preventing reload of images
   const [imageCache, setImageCache] = useState(new Map());
-  
+
   // Track component visibility to avoid remounting
   const [activeView, setActiveView] = useState('cards');
   const [visibleViews, setVisibleViews] = useState({
@@ -36,40 +42,41 @@ export const DataCacheProvider = ({ children }) => {
     settings: false,
     soldItems: false,
     details: false,
-    newCard: false
+    newCard: false,
   });
-  
+
   // Setup data listeners once on initial mount
   useEffect(() => {
     if (!currentUser) {
       setLoading(false);
       return;
     }
-    
+
     // Initialize repositories
     const repository = new CardRepository(currentUser.uid);
     setLoading(true);
     logger.debug('Setting up persistent data listeners');
-    
+
     // Setup cards listener if not already active
     if (!subscriptionsRef.current.cards) {
       logger.debug('Initializing cards subscription');
       subscriptionsRef.current.cards = repository.subscribeToAllCards(
-        (cardsData) => {
+        cardsData => {
           logger.debug(`Received ${cardsData.length} cards from Firestore`);
           setCards(cardsData);
           setLoading(false);
         },
-        (err) => {
+        err => {
           logger.error('Error in cards subscription:', err);
           setError(err.message);
           setLoading(false);
         }
       );
     }
-    
+
     // Get collections once initially and setup listener
-    repository.getAllCollections()
+    repository
+      .getAllCollections()
       .then(collectionsData => {
         const collectionsMap = {};
         collectionsData.forEach(collection => {
@@ -80,21 +87,23 @@ export const DataCacheProvider = ({ children }) => {
       .catch(err => {
         logger.error('Error fetching collections:', err);
       });
-      
+
     // Sold items subscription
     if (!subscriptionsRef.current.soldItems) {
       logger.debug('Initializing sold items subscription');
       subscriptionsRef.current.soldItems = repository.subscribeToSoldCards(
-        (soldItemsData) => {
-          logger.debug(`Received ${soldItemsData.length} sold items from Firestore`);
+        soldItemsData => {
+          logger.debug(
+            `Received ${soldItemsData.length} sold items from Firestore`
+          );
           setSoldItems(soldItemsData);
         },
-        (err) => {
+        err => {
           logger.error('Error in sold items subscription:', err);
         }
       );
     }
-    
+
     // Cleanup subscriptions on unmount or user change
     return () => {
       if (subscriptionsRef.current.cards) {
@@ -111,7 +120,7 @@ export const DataCacheProvider = ({ children }) => {
   // Cache image URL by card ID
   const cacheImage = (cardId, imageUrl) => {
     if (!imageUrl || imageCache.has(cardId)) return;
-    
+
     setImageCache(prev => {
       const newCache = new Map(prev);
       newCache.set(cardId, imageUrl);
@@ -120,23 +129,23 @@ export const DataCacheProvider = ({ children }) => {
   };
 
   // Get a cached image for a card
-  const getCachedImage = (cardId) => {
+  const getCachedImage = cardId => {
     return imageCache.get(cardId);
   };
 
   // Change which view is active without unmounting others
-  const switchView = (viewName) => {
+  const switchView = viewName => {
     setActiveView(viewName);
-    
+
     // Update visibility - keep previously visited views mounted but hidden
     setVisibleViews(prev => ({
       ...prev,
-      [viewName]: true
+      [viewName]: true,
     }));
   };
 
   // Check if a view should be visible
-  const isViewVisible = (viewName) => {
+  const isViewVisible = viewName => {
     return visibleViews[viewName] && activeView === viewName;
   };
 
@@ -154,7 +163,7 @@ export const DataCacheProvider = ({ children }) => {
     // View management
     activeView,
     switchView,
-    isViewVisible
+    isViewVisible,
   };
 
   return (

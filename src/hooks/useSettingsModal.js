@@ -17,13 +17,13 @@ export const useSettingsModal = () => {
     lastName: '',
     mobileNumber: '',
     address: '',
-    companyName: ''
+    companyName: '',
   });
-  
+
   // File input refs
   const importBaseDataRef = useRef(null);
   const imageUploadRef = useRef(null);
-  
+
   // Progress states
   const [cloudSyncProgress, setCloudSyncProgress] = useState(0);
   const [cloudSyncStatus, setCloudSyncStatus] = useState('');
@@ -53,11 +53,11 @@ export const useSettingsModal = () => {
     isOpen,
     openSettings,
     closeSettings,
-    
+
     // Tab state
     activeTab,
     setActiveTab,
-    
+
     // Rename state
     isRenaming,
     setIsRenaming,
@@ -65,25 +65,25 @@ export const useSettingsModal = () => {
     setNewCollectionName,
     collectionToRename,
     setCollectionToRename,
-    
+
     // Delete state
     collectionToDelete,
     setCollectionToDelete,
-    
+
     // Reset state
     showResetConfirm,
     setShowResetConfirm,
     resetConfirmText,
     setResetConfirmText,
-    
+
     // Profile state
     profile,
     setProfile,
-    
+
     // File refs
     importBaseDataRef,
     imageUploadRef,
-    
+
     // Progress states
     cloudSyncProgress,
     setCloudSyncProgress,
@@ -96,6 +96,6 @@ export const useSettingsModal = () => {
     isCloudMigrating,
     setIsCloudMigrating,
     isUploadingImages,
-    setIsUploadingImages
+    setIsUploadingImages,
   };
 };

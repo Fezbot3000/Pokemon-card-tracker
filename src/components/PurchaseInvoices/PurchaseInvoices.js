@@ -1,5 +1,10 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { useAuth, StatisticsSummary, SimpleSearchBar, ConfirmDialog } from '../../design-system';
+import {
+  useAuth,
+  StatisticsSummary,
+  SimpleSearchBar,
+  ConfirmDialog,
+} from '../../design-system';
 import { formatCurrency } from '../../design-system/utils/formatters';
 import db from '../../services/firestore/dbAdapter';
 import { toast } from 'react-hot-toast';
@@ -8,7 +13,11 @@ import { PDFDownloadLink, pdf } from '@react-pdf/renderer';
 import PurchaseInvoicePDF from '../PurchaseInvoicePDF';
 import { formatDateForDisplay } from '../../utils/dateUtils';
 import { doc, getDoc, collection, query, getDocs } from 'firebase/firestore';
-import { db as firestoreDb, functions, httpsCallable } from '../../services/firebase';
+import {
+  db as firestoreDb,
+  functions,
+  httpsCallable,
+} from '../../services/firebase';
 import featureFlags from '../../utils/featureFlags';
 import logger from '../../utils/logger';
 import { useSubscription } from '../../hooks/useSubscription';
@@ -16,7 +25,7 @@ import FeatureGate from '../FeatureGate';
 
 /**
  * PurchaseInvoices component
- * 
+ *
  * Displays and manages purchase invoices for Pokemon cards
  */
 const PurchaseInvoices = () => {
@@ -31,61 +40,72 @@ const PurchaseInvoices = () => {
   const [sortDirection, setSortDirection] = useState('desc'); // 'asc' or 'desc'
   const [searchQuery, setSearchQuery] = useState('');
   const [isGeneratingBatch, setIsGeneratingBatch] = useState(false);
-  const [deleteConfirmation, setDeleteConfirmation] = useState({ isOpen: false, invoice: null });
+  const [deleteConfirmation, setDeleteConfirmation] = useState({
+    isOpen: false,
+    invoice: null,
+  });
   const { currentUser } = useAuth();
-  
+
   // Move ALL remaining hooks to the top
   const handleModalClose = useCallback(() => {
     setShowCreateModal(false);
     setEditingInvoice(null); // Reset editing state when closing
   }, []);
-  
-  const handleModalSave = useCallback(async (newInvoice) => {
-    if (!newInvoice) return;
-    
-    try {
-      if (editingInvoice) {
-        // Update existing invoice in local state immediately
-        setInvoices(prev => prev.map(inv => 
-          inv.id === newInvoice.id ? newInvoice : inv
-        ));
-      } else {
-        // For new invoices, add to local state immediately
-        setInvoices(prev => [newInvoice, ...prev]);
+
+  const handleModalSave = useCallback(
+    async newInvoice => {
+      if (!newInvoice) return;
+
+      try {
+        if (editingInvoice) {
+          // Update existing invoice in local state immediately
+          setInvoices(prev =>
+            prev.map(inv => (inv.id === newInvoice.id ? newInvoice : inv))
+          );
+        } else {
+          // For new invoices, add to local state immediately
+          setInvoices(prev => [newInvoice, ...prev]);
+        }
+
+        setShowCreateModal(false);
+        setEditingInvoice(null);
+      } catch (error) {
+        console.error('Error handling invoice save:', error);
+        setShowCreateModal(false);
+        setEditingInvoice(null);
       }
-      
-      setShowCreateModal(false);
-      setEditingInvoice(null);
-    } catch (error) {
-      console.error('Error handling invoice save:', error);
-      setShowCreateModal(false);
-      setEditingInvoice(null);
-    }
-  }, [editingInvoice]);
-  
+    },
+    [editingInvoice]
+  );
+
   const loadInvoices = useCallback(async () => {
     try {
       setLoading(true);
-      
+
       // Load directly from Firestore if online
       if (currentUser && navigator.onLine && featureFlags.enableFirestoreSync) {
         try {
           // Create a reference to the user's purchase invoices collection
-          const invoicesRef = collection(firestoreDb, 'users', currentUser.uid, 'purchaseInvoices');
+          const invoicesRef = collection(
+            firestoreDb,
+            'users',
+            currentUser.uid,
+            'purchaseInvoices'
+          );
           const q = query(invoicesRef);
-          
+
           // Get all purchase invoices for the current user
           const querySnapshot = await getDocs(q);
-          
+
           if (!querySnapshot.empty) {
             const firestoreInvoices = querySnapshot.docs.map(doc => {
               const data = doc.data();
               return { ...data, id: doc.id };
             });
-            
+
             // Set invoices from Firestore immediately
             setInvoices(firestoreInvoices);
-            
+
             // Update local database in the background (don't await)
             Promise.resolve().then(async () => {
               for (const invoice of firestoreInvoices) {
@@ -98,16 +118,20 @@ const PurchaseInvoices = () => {
                 await db.savePurchaseInvoice(cleanedInvoice);
               }
             });
-            
+
             return; // Exit early if we loaded from Firestore
           }
         } catch (firestoreError) {
-          console.error('Error loading invoices from Firestore:', firestoreError);
+          console.error(
+            'Error loading invoices from Firestore:',
+            firestoreError
+          );
         }
       }
-      
+
       // Fall back to local database only if Firestore failed
-      const purchaseInvoices = await db.getPurchaseInvoices(currentUser?.uid) || [];
+      const purchaseInvoices =
+        (await db.getPurchaseInvoices(currentUser?.uid)) || [];
       setInvoices(purchaseInvoices);
     } catch (error) {
       console.error('Error loading purchase invoices:', error);
@@ -123,17 +147,17 @@ const PurchaseInvoices = () => {
       if (currentUser && currentUser.uid && navigator.onLine) {
         const profileRef = doc(firestoreDb, 'users', currentUser.uid);
         const profileDoc = await getDoc(profileRef);
-        
+
         if (profileDoc.exists()) {
           const firestoreProfile = profileDoc.data();
           setProfile(firestoreProfile);
-          
+
           // Save to IndexedDB in the background
           db.saveProfile(firestoreProfile).catch(console.error);
           return;
         }
       }
-      
+
       // Fall back to IndexedDB
       const userProfile = await db.getProfile();
       if (userProfile) {
@@ -157,12 +181,13 @@ const PurchaseInvoices = () => {
     if (!searchQuery.trim()) {
       return invoices;
     }
-    
+
     const query = searchQuery.toLowerCase();
     return invoices.filter(invoice => {
       return (
         // Search in invoice number
-        (invoice.invoiceNumber && invoice.invoiceNumber.toLowerCase().includes(query)) ||
+        (invoice.invoiceNumber &&
+          invoice.invoiceNumber.toLowerCase().includes(query)) ||
         // Search in seller
         (invoice.seller && invoice.seller.toLowerCase().includes(query)) ||
         // Search in date
@@ -170,10 +195,13 @@ const PurchaseInvoices = () => {
         // Search in notes
         (invoice.notes && invoice.notes.toLowerCase().includes(query)) ||
         // Search in card names (if available)
-        (invoice.cards && Array.isArray(invoice.cards) && invoice.cards.some(card => 
-          (card.name && card.name.toLowerCase().includes(query)) ||
-          (card.set && card.set.toLowerCase().includes(query))
-        ))
+        (invoice.cards &&
+          Array.isArray(invoice.cards) &&
+          invoice.cards.some(
+            card =>
+              (card.name && card.name.toLowerCase().includes(query)) ||
+              (card.set && card.set.toLowerCase().includes(query))
+          ))
       );
     });
   }, [invoices, searchQuery]);
@@ -182,7 +210,7 @@ const PurchaseInvoices = () => {
   if (!hasFeature('INVOICING')) {
     return (
       <div className="p-4 pb-20 pt-16 sm:p-6 sm:pt-4">
-        <FeatureGate 
+        <FeatureGate
           feature="INVOICING"
           customMessage="Create and manage purchase invoices for your card transactions. Track your investments and generate professional invoices. This feature is available with Premium."
         />
@@ -191,17 +219,17 @@ const PurchaseInvoices = () => {
   }
 
   // Handle editing an invoice
-  const handleEditInvoice = (invoice) => {
+  const handleEditInvoice = invoice => {
     setEditingInvoice(invoice);
     setShowCreateModal(true);
   };
 
   // Handle delete confirmation
-  const showDeleteConfirmation = (invoice) => {
+  const showDeleteConfirmation = invoice => {
     setDeleteConfirmation({ isOpen: true, invoice });
   };
 
-  const handleDeleteInvoice = async (invoice) => {
+  const handleDeleteInvoice = async invoice => {
     try {
       await db.deletePurchaseInvoice(invoice.id);
       setInvoices(prev => prev.filter(i => i.id !== invoice.id));
@@ -218,23 +246,28 @@ const PurchaseInvoices = () => {
       toast.error('No invoices to export');
       return;
     }
-    
+
     try {
       // Show loading toast
-      toast.loading('Generating PDF invoices on the server...', { id: 'server-batch' });
+      toast.loading('Generating PDF invoices on the server...', {
+        id: 'server-batch',
+      });
       setIsGeneratingBatch(true);
-      
+
       // Get all invoice IDs from filtered invoices
       const invoiceIds = filteredInvoices.map(invoice => invoice.id);
-      
+
       // Call the Cloud Function
       const generateBatchFn = httpsCallable(functions, 'generateInvoiceBatch');
       const result = await generateBatchFn({ invoiceIds });
-      
+
       if (result.data && result.data.success) {
         // Success - provide download link for ZIP file
-        toast.success(`Successfully generated ${result.data.invoiceCount} invoice PDFs!`, { id: 'server-batch' });
-        
+        toast.success(
+          `Successfully generated ${result.data.invoiceCount} invoice PDFs!`,
+          { id: 'server-batch' }
+        );
+
         // Create a temporary link to download the ZIP file
         const downloadLink = document.createElement('a');
         downloadLink.href = result.data.url;
@@ -242,24 +275,29 @@ const PurchaseInvoices = () => {
         document.body.appendChild(downloadLink);
         downloadLink.click();
         document.body.removeChild(downloadLink);
-        
+
         // Show success message
         setTimeout(() => {
-          toast.success('Your invoice PDFs have been downloaded as a ZIP file', { duration: 6000 });
+          toast.success(
+            'Your invoice PDFs have been downloaded as a ZIP file',
+            { duration: 6000 }
+          );
         }, 1000);
       } else {
         toast.error('Failed to generate invoice PDFs', { id: 'server-batch' });
       }
     } catch (error) {
       console.error('Error in server batch PDF generation:', error);
-      toast.error(`Error: ${error.message || 'Unknown error'}`, { id: 'server-batch' });
+      toast.error(`Error: ${error.message || 'Unknown error'}`, {
+        id: 'server-batch',
+      });
     } finally {
       setIsGeneratingBatch(false);
     }
   };
-  
+
   // Handle sorting
-  const handleSort = (field) => {
+  const handleSort = field => {
     if (sortField === field) {
       // If already sorting by this field, toggle direction
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
@@ -278,47 +316,62 @@ const PurchaseInvoices = () => {
       }
     }
   };
-  
+
   // Get ordinal suffix for a number (1st, 2nd, 3rd, etc.)
-  const getOrdinalSuffix = (day) => {
+  const getOrdinalSuffix = day => {
     if (day > 3 && day < 21) return 'th';
     switch (day % 10) {
-      case 1: return 'st';
-      case 2: return 'nd';
-      case 3: return 'rd';
-      default: return 'th';
+      case 1:
+        return 'st';
+      case 2:
+        return 'nd';
+      case 3:
+        return 'rd';
+      default:
+        return 'th';
     }
   };
-  
+
   // Format date to "17th Feb 25" format
-  const formatDate = (dateString) => {
+  const formatDate = dateString => {
     if (!dateString) return '';
-    
+
     const date = new Date(dateString);
     if (isNaN(date.getTime())) return dateString; // Return original if invalid
-    
+
     // Get day with ordinal suffix
     const day = date.getDate();
     const ordinalSuffix = getOrdinalSuffix(day);
-    
+
     // Get month abbreviation
-    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const monthNames = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
     const month = monthNames[date.getMonth()];
-    
+
     // Get 2-digit year
     const year = date.getFullYear().toString().slice(-2);
-    
+
     return `${day}${ordinalSuffix} ${month} ${year}`;
   };
-  
-
 
   // Get sorted invoices
   const getSortedInvoices = () => {
     return [...filteredInvoices].sort((a, b) => {
       let aValue = a[sortField];
       let bValue = b[sortField];
-      
+
       // Handle special cases
       if (sortField === 'totalAmount') {
         aValue = parseFloat(a.totalAmount || 0);
@@ -330,7 +383,7 @@ const PurchaseInvoices = () => {
         aValue = a.timestamp || 0;
         bValue = b.timestamp || 0;
       }
-      
+
       // Compare based on direction
       if (sortDirection === 'asc') {
         return aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
@@ -339,7 +392,7 @@ const PurchaseInvoices = () => {
       }
     });
   };
-  
+
   // Calculate statistics for the summary
   const getInvoiceStatistics = () => {
     // Skip calculation if no invoices
@@ -368,26 +421,26 @@ const PurchaseInvoices = () => {
         label: 'Total Spent',
         value: totalSpent, // Pass raw value
         isMonetary: true,
-        originalCurrencyCode: 'AUD'
+        originalCurrencyCode: 'AUD',
       },
       {
         label: 'Cards Purchased',
         value: totalCards,
         formattedValue: totalCards.toString(), // Ensure it's a string with no abbreviations
-        icon: 'style'
+        icon: 'style',
       },
       {
         label: 'Avg Cost/Card',
         value: avgCostPerCard, // Pass raw value
         isMonetary: true,
-        originalCurrencyCode: 'AUD'
+        originalCurrencyCode: 'AUD',
       },
       {
         label: 'Sellers',
         value: uniqueSellers,
         formattedValue: uniqueSellers.toString(), // Ensure it's a string with no abbreviations
-        icon: 'person'
-      }
+        icon: 'person',
+      },
     ];
   };
 
@@ -395,40 +448,42 @@ const PurchaseInvoices = () => {
   const handleDownloadInvoice = async (invoice, options = {}) => {
     // Debug profile data if needed
     logger.debug('Profile when downloading invoice:', profile);
-    
+
     // Create a unique filename for the invoice
     const fileName = `purchase-invoice-${invoice.invoiceNumber || invoice.id}-${invoice.date.replace(/\//g, '-')}.pdf`;
-    
+
     try {
       // Show loading toast if not part of a batch download
       if (!options.silent) {
-        toast.loading('Generating PDF...', { id: options.toastId || 'pdf-download' });
+        toast.loading('Generating PDF...', {
+          id: options.toastId || 'pdf-download',
+        });
       }
-      
+
       // Get detailed card information for the invoice
       const cardDetails = await getCardDetails(invoice);
-      
+
       // Debug: Log the card details to see what data we have
       // console.log('Invoice data for PDF generation:', invoice);
       // console.log('Card details for PDF:', cardDetails);
       // console.log('First card details:', cardDetails[0]);
-      
+
       // Create the PDF document
       const pdfDocument = (
-        <PurchaseInvoicePDF 
-          seller={invoice.seller} 
+        <PurchaseInvoicePDF
+          seller={invoice.seller}
           date={formatDateForDisplay(invoice.date)}
-          cards={cardDetails} 
+          cards={cardDetails}
           invoiceNumber={invoice.invoiceNumber}
           notes={invoice.notes}
           totalAmount={invoice.totalAmount}
           profile={profile}
         />
       );
-      
+
       // Generate the PDF blob using @react-pdf/renderer's pdf function
       const pdfBlob = await pdf(pdfDocument).toBlob();
-      
+
       // Create a download link and trigger it
       const fileURL = URL.createObjectURL(pdfBlob);
       const link = document.createElement('a');
@@ -436,55 +491,64 @@ const PurchaseInvoices = () => {
       link.download = fileName;
       document.body.appendChild(link);
       link.click();
-      
+
       // Clean up
       setTimeout(() => {
         URL.revokeObjectURL(fileURL);
         document.body.removeChild(link);
       }, 100);
-      
+
       if (!options.silent) {
-        toast.success('Invoice downloaded successfully', { id: options.toastId || 'pdf-download' });
+        toast.success('Invoice downloaded successfully', {
+          id: options.toastId || 'pdf-download',
+        });
       }
-      
+
       // Return success for sequential downloads
       return { success: true, fileName };
     } catch (error) {
       logger.error('Error generating PDF:', error);
-      
+
       if (!options.silent) {
-        toast.error('Error generating PDF', { id: options.toastId || 'pdf-download' });
+        toast.error('Error generating PDF', {
+          id: options.toastId || 'pdf-download',
+        });
       }
-      
+
       // Return error for sequential downloads
       return { success: false, error, fileName };
     }
   };
-  
+
   // Get detailed card information for the invoice
-  const getCardDetails = async (invoice) => {
+  const getCardDetails = async invoice => {
     try {
       // If we have card IDs, fetch the full card details
       if (invoice.cards && invoice.cards.length > 0) {
         // Log the card data for debugging
         // console.log('Card data from invoice:', invoice.cards);
-        
+
         // Process cards to ensure they have proper display names
         const processedCards = invoice.cards.map(card => {
           // Create a copy of the card to avoid modifying the original
-          const processedCard = {...card};
-          
+          const processedCard = { ...card };
+
           // If the card doesn't have a name property but has a set property,
           // create a display name using the set
-          if (!processedCard.name && !processedCard.player && processedCard.set) {
+          if (
+            !processedCard.name &&
+            !processedCard.player &&
+            processedCard.set
+          ) {
             processedCard.displayName = `${processedCard.set} Card`;
           } else {
-            processedCard.displayName = processedCard.name || processedCard.player || 'Unnamed Card';
+            processedCard.displayName =
+              processedCard.name || processedCard.player || 'Unnamed Card';
           }
-          
+
           return processedCard;
         });
-        
+
         // console.log('Processed cards for PDF:', processedCards);
         return processedCards;
       }
@@ -500,15 +564,14 @@ const PurchaseInvoices = () => {
       {/* Statistics Summary */}
       {!loading && invoices.length > 0 && (
         <div className="mb-6">
-          <StatisticsSummary 
-            statistics={getInvoiceStatistics()} 
+          <StatisticsSummary
+            statistics={getInvoiceStatistics()}
             className="mb-4"
           />
         </div>
       )}
-      
+
       <div className="rounded-xl bg-white dark:bg-black">
-        
         {loading ? (
           <div className="overflow-x-auto">
             {/* Search Section Skeleton - matches exact real layout */}
@@ -520,12 +583,12 @@ const PurchaseInvoices = () => {
                 </div>
                 <div className="mt-2 h-4 w-32 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
               </div>
-              
+
               <div className="flex w-full flex-col gap-2 sm:flex-row">
                 <div className="h-10 w-full animate-pulse rounded-lg bg-gray-200 dark:bg-gray-700 sm:w-auto"></div>
               </div>
             </div>
-            
+
             {/* Desktop Table Skeleton - matches exact table structure */}
             <div className="hidden md:block">
               <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
@@ -585,7 +648,10 @@ const PurchaseInvoices = () => {
             {/* Mobile Cards Skeleton - matches exact mobile layout */}
             <div className="space-y-4 md:hidden">
               {[...Array(2)].map((_, i) => (
-                <div key={i} className="bg-white/5 dark:bg-white/5 border-gray-200/20 dark:border-gray-700/30 rounded-xl border p-4">
+                <div
+                  key={i}
+                  className="bg-white/5 dark:bg-white/5 border-gray-200/20 dark:border-gray-700/30 rounded-xl border p-4"
+                >
                   <div className="mb-3 flex items-start justify-between">
                     <div>
                       <div className="mb-2 h-4 w-28 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
@@ -616,19 +682,22 @@ const PurchaseInvoices = () => {
           <div className="flex flex-col items-center justify-center px-4 py-16">
             {/* Invoice Icon */}
             <div className="mb-6 flex size-24 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
-              <span className="material-icons text-4xl text-gray-400 dark:text-gray-600">receipt_long</span>
+              <span className="material-icons text-4xl text-gray-400 dark:text-gray-600">
+                receipt_long
+              </span>
             </div>
-            
+
             {/* Main Message */}
             <h3 className="mb-2 text-center text-xl font-semibold text-gray-900 dark:text-white">
               No Purchase Invoices Yet
             </h3>
-            
+
             {/* Description */}
             <p className="mb-8 max-w-md text-center leading-relaxed text-gray-600 dark:text-gray-400">
-              Keep track of your card purchases by creating invoices. This helps you monitor your investments and calculate profits when you sell.
+              Keep track of your card purchases by creating invoices. This helps
+              you monitor your investments and calculate profits when you sell.
             </p>
-            
+
             {/* Instructions */}
             <div className="mx-auto mb-8 max-w-md rounded-lg bg-blue-50 p-6 dark:bg-blue-900/20">
               <h4 className="mb-3 flex items-center gap-2 text-lg font-medium text-blue-900 dark:text-blue-100">
@@ -641,7 +710,7 @@ const PurchaseInvoices = () => {
                 <li>Click "Create Invoice" from the actions menu</li>
               </ol>
             </div>
-            
+
             {/* Additional Info */}
             <div className="mt-8 text-center">
               <p className="mb-2 text-sm text-gray-500 dark:text-gray-500">
@@ -664,18 +733,23 @@ const PurchaseInvoices = () => {
               placeholder="Search by name, set, or serial number..."
               className="mb-4"
             />
-            
+
             {/* Results Count */}
             <div className="mb-4 px-4 text-sm text-gray-500 dark:text-gray-400">
-              {filteredInvoices.length} of {invoices.length} {invoices.length === 1 ? 'invoice' : 'invoices'} found
+              {filteredInvoices.length} of {invoices.length}{' '}
+              {invoices.length === 1 ? 'invoice' : 'invoices'} found
             </div>
-            
+
             <div className="mb-4 flex flex-col gap-4 px-4">
               <div className="flex w-full flex-col gap-2 sm:flex-row">
                 {isGeneratingBatch ? (
                   <div className="flex items-center gap-2 rounded-lg bg-blue-100 px-4 py-2 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
-                    <span className="material-icons animate-spin">autorenew</span>
-                    <span className="hidden sm:inline">Generating PDFs on server...</span>
+                    <span className="material-icons animate-spin">
+                      autorenew
+                    </span>
+                    <span className="hidden sm:inline">
+                      Generating PDFs on server...
+                    </span>
                     <span className="sm:hidden">Generating...</span>
                   </div>
                 ) : (
@@ -685,13 +759,15 @@ const PurchaseInvoices = () => {
                     disabled={invoices.length === 0}
                     title="Generate PDF invoices for all items"
                   >
-                    <span className="material-icons text-base">cloud_download</span>
+                    <span className="material-icons text-base">
+                      cloud_download
+                    </span>
                     <span>Generate All PDFs</span>
                   </button>
                 )}
               </div>
             </div>
-            
+
             {/* Desktop Table View */}
             <div className="hidden md:block">
               <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
@@ -702,8 +778,11 @@ const PurchaseInvoices = () => {
                       className="cursor-pointer px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
                       onClick={() => handleSort('invoiceNumber')}
                     >
-                      Invoice # {sortField === 'invoiceNumber' && (
-                        <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                      Invoice #{' '}
+                      {sortField === 'invoiceNumber' && (
+                        <span className="ml-1">
+                          {sortDirection === 'asc' ? '↑' : '↓'}
+                        </span>
                       )}
                     </th>
                     <th
@@ -711,8 +790,11 @@ const PurchaseInvoices = () => {
                       className="cursor-pointer px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
                       onClick={() => handleSort('date')}
                     >
-                      Date {sortField === 'date' && (
-                        <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                      Date{' '}
+                      {sortField === 'date' && (
+                        <span className="ml-1">
+                          {sortDirection === 'asc' ? '↑' : '↓'}
+                        </span>
                       )}
                     </th>
                     <th
@@ -720,8 +802,11 @@ const PurchaseInvoices = () => {
                       className="cursor-pointer px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
                       onClick={() => handleSort('seller')}
                     >
-                      Seller {sortField === 'seller' && (
-                        <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                      Seller{' '}
+                      {sortField === 'seller' && (
+                        <span className="ml-1">
+                          {sortDirection === 'asc' ? '↑' : '↓'}
+                        </span>
                       )}
                     </th>
                     <th
@@ -729,8 +814,11 @@ const PurchaseInvoices = () => {
                       className="cursor-pointer px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
                       onClick={() => handleSort('totalAmount')}
                     >
-                      Total Amount {sortField === 'totalAmount' && (
-                        <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                      Total Amount{' '}
+                      {sortField === 'totalAmount' && (
+                        <span className="ml-1">
+                          {sortDirection === 'asc' ? '↑' : '↓'}
+                        </span>
                       )}
                     </th>
                     <th
@@ -738,8 +826,11 @@ const PurchaseInvoices = () => {
                       className="cursor-pointer px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
                       onClick={() => handleSort('cardCount')}
                     >
-                      # of Cards {sortField === 'cardCount' && (
-                        <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                      # of Cards{' '}
+                      {sortField === 'cardCount' && (
+                        <span className="ml-1">
+                          {sortDirection === 'asc' ? '↑' : '↓'}
+                        </span>
                       )}
                     </th>
                     <th
@@ -751,7 +842,7 @@ const PurchaseInvoices = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-black">
-                  {getSortedInvoices().map((invoice) => (
+                  {getSortedInvoices().map(invoice => (
                     <tr key={invoice.id}>
                       <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900 dark:text-white">
                         {invoice.invoiceNumber}
@@ -760,7 +851,10 @@ const PurchaseInvoices = () => {
                         {formatDate(invoice.date)}
                       </td>
                       <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900 dark:text-white">
-                        <div className="max-w-[150px] truncate" title={invoice.seller}>
+                        <div
+                          className="max-w-[150px] truncate"
+                          title={invoice.seller}
+                        >
                           {invoice.seller}
                         </div>
                       </td>
@@ -771,21 +865,23 @@ const PurchaseInvoices = () => {
                         {invoice.cardCount}
                       </td>
                       <td className="flex whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
-                        <button 
+                        <button
                           className="mr-3 p-2 text-gray-700 transition-colors hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400"
                           onClick={() => handleDownloadInvoice(invoice)}
                           title="Download PDF"
                         >
-                          <span className="material-icons text-xl">download</span>
+                          <span className="material-icons text-xl">
+                            download
+                          </span>
                         </button>
-                        <button 
+                        <button
                           className="mr-3 p-2 text-gray-700 transition-colors hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400"
                           onClick={() => handleEditInvoice(invoice)}
                           title="Edit Invoice"
                         >
                           <span className="material-icons text-xl">edit</span>
                         </button>
-                        <button 
+                        <button
                           className="p-2 text-gray-700 transition-colors hover:text-red-600 dark:text-gray-300 dark:hover:text-red-400"
                           onClick={() => showDeleteConfirmation(invoice)}
                           title="Delete Invoice"
@@ -801,8 +897,11 @@ const PurchaseInvoices = () => {
 
             {/* Mobile Card View */}
             <div className="space-y-4 md:hidden">
-              {getSortedInvoices().map((invoice) => (
-                <div key={invoice.id} className="bg-white/5 dark:bg-white/5 border-gray-200/20 dark:border-gray-700/30 rounded-xl border p-4">
+              {getSortedInvoices().map(invoice => (
+                <div
+                  key={invoice.id}
+                  className="bg-white/5 dark:bg-white/5 border-gray-200/20 dark:border-gray-700/30 rounded-xl border p-4"
+                >
                   {/* Header with Invoice Number and Date */}
                   <div className="mb-3 flex items-start justify-between">
                     <div>
@@ -821,13 +920,20 @@ const PurchaseInvoices = () => {
                   {/* Main Content: Seller and Amount */}
                   <div className="mb-4 flex items-center justify-between">
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Seller</p>
-                      <p className="truncate text-sm font-medium text-gray-900 dark:text-white" title={invoice.seller}>
+                      <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                        Seller
+                      </p>
+                      <p
+                        className="truncate text-sm font-medium text-gray-900 dark:text-white"
+                        title={invoice.seller}
+                      >
                         {invoice.seller}
                       </p>
                     </div>
                     <div className="ml-4 text-right">
-                      <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Amount</p>
+                      <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                        Amount
+                      </p>
                       <p className="text-lg font-semibold text-gray-900 dark:text-white">
                         {formatCurrency(invoice.totalAmount)}
                       </p>
@@ -836,21 +942,21 @@ const PurchaseInvoices = () => {
 
                   {/* Actions */}
                   <div className="border-gray-200/20 dark:border-gray-700/30 flex justify-end space-x-2 border-t pt-3">
-                    <button 
+                    <button
                       className="flex size-10 items-center justify-center rounded-lg bg-blue-50 text-blue-600 transition-colors hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50"
                       onClick={() => handleDownloadInvoice(invoice)}
                       title="Download PDF"
                     >
                       <span className="material-icons text-lg">download</span>
                     </button>
-                    <button 
+                    <button
                       className="flex size-10 items-center justify-center rounded-lg bg-gray-50 text-gray-600 transition-colors hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
                       onClick={() => handleEditInvoice(invoice)}
                       title="Edit Invoice"
                     >
                       <span className="material-icons text-lg">edit</span>
                     </button>
-                    <button 
+                    <button
                       className="flex size-10 items-center justify-center rounded-lg bg-red-50 text-red-600 transition-colors hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50"
                       onClick={() => showDeleteConfirmation(invoice)}
                       title="Delete Invoice"
@@ -864,7 +970,7 @@ const PurchaseInvoices = () => {
           </div>
         )}
       </div>
-      
+
       {/* Create/Edit Invoice Modal */}
       <CreateInvoiceModal
         isOpen={showCreateModal}

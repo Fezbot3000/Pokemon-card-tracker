@@ -31,7 +31,7 @@ export const UIIntegrationTest: React.FC = () => {
                 id="test-input"
                 placeholder="Enter test value..."
                 value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
+                onChange={e => setInputValue(e.target.value)}
               />
             </div>
 
@@ -124,7 +124,8 @@ export const UIIntegrationTest: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <p className="mb-4">
-                  This modal demonstrates the integration of Modal, Card, and Button components.
+                  This modal demonstrates the integration of Modal, Card, and
+                  Button components.
                 </p>
                 <div className="space-y-4">
                   <div>
@@ -147,9 +148,7 @@ export const UIIntegrationTest: React.FC = () => {
                 <Button variant="outline" onClick={() => setIsModalOpen(false)}>
                   Cancel
                 </Button>
-                <Button onClick={() => setIsModalOpen(false)}>
-                  Confirm
-                </Button>
+                <Button onClick={() => setIsModalOpen(false)}>Confirm</Button>
               </CardFooter>
             </Card>
           </Modal>
@@ -190,4 +189,4 @@ export const UIIntegrationTest: React.FC = () => {
   );
 };
 
-export default UIIntegrationTest; 
+export default UIIntegrationTest;

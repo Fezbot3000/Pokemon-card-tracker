@@ -1,6 +1,6 @@
 /**
  * Pokemon Card Tracker Color Palette
- * 
+ *
  * This file defines only the colors actually used in the application,
  * with no duplications.
  */
@@ -20,14 +20,14 @@ export const baseColors = {
   // Backgrounds - Dark mode
   darkBackgroundPrimary: '#000000', // Black (IMPORTANT: Must be kept as #000000)
   darkBackgroundSecondary: '#000000', // Pure black instead of custom dark gray
-  
+
   // Text colors - Light mode
   lightTextPrimary: '#111827', // Gray-900
   lightTextSecondary: '#374151', // Gray-700
   lightTextTertiary: '#6B7280', // Gray-500
-  
+
   // Text colors - Dark mode
-  darkTextPrimary: '#F9FAFB', // Gray-50 
+  darkTextPrimary: '#F9FAFB', // Gray-50
   darkTextSecondary: '#D1D5DB', // Gray-300
   darkTextTertiary: '#9CA3AF', // Gray-400
 
@@ -36,11 +36,11 @@ export const baseColors = {
   success: '#22c55e', // Green-500
   warning: '#f59e0b', // Amber-500
   info: '#3b82f6', // Blue-500
-  
+
   // Form elements
   placeholder: '#9CA3AF', // Gray-400
   placeholderDark: '#6B7280', // Gray-500
-  
+
   // Border colors
   borderLight: '#E5E7EB', // Gray-200
   borderDark: '#374151', // Gray-700
@@ -49,7 +49,7 @@ export const baseColors = {
 // Gradients definitions
 export const gradients = {
   primary: 'linear-gradient(to right, #ef4444, #db2777)',
-  primaryPosition: '0% 0%'
+  primaryPosition: '0% 0%',
 };
 
 // Light Mode Theme
@@ -77,7 +77,7 @@ export const colorPalette = {
   base: baseColors,
   light: lightTheme,
   dark: darkTheme,
-  gradients: gradients
+  gradients: gradients,
 };
 
 // Direct exports for important colors to make them easier to access

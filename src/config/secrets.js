@@ -1,6 +1,6 @@
 /**
  * Centralized Secret Management
- * 
+ *
  * This module provides a single source of truth for all API keys and secrets.
  * All secrets are sourced exclusively from environment variables.
  * Missing environment variables will cause the application to fail with clear error messages.
@@ -18,12 +18,12 @@ const usageTracker = {
   getReport() {
     return {
       accessed: { ...this.accessed },
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   },
   logReport() {
     logger.info('Secret Usage Report:', this.getReport());
-  }
+  },
 };
 
 // Schedule a usage report after the app has been running
@@ -41,7 +41,9 @@ setTimeout(() => {
 const requireEnvVar = (envVar, description) => {
   const value = process.env[envVar];
   if (!value) {
-    throw new Error(`Missing required environment variable: ${envVar} (${description}). Please check your .env file.`);
+    throw new Error(
+      `Missing required environment variable: ${envVar} (${description}). Please check your .env file.`
+    );
   }
   return value;
 };
@@ -51,7 +53,7 @@ const requireEnvVar = (envVar, description) => {
  * @param {string} envVar - The environment variable name
  * @returns {string|null} - The environment variable value or null if not set
  */
-const getOptionalEnvVar = (envVar) => {
+const getOptionalEnvVar = envVar => {
   return process.env[envVar] || null;
 };
 
@@ -62,11 +64,23 @@ export const getFirebaseConfig = () => {
   usageTracker.track('firebase.config');
   return {
     apiKey: requireEnvVar('REACT_APP_FIREBASE_API_KEY', 'Firebase API Key'),
-    authDomain: requireEnvVar('REACT_APP_FIREBASE_AUTH_DOMAIN', 'Firebase Auth Domain'),
-    projectId: requireEnvVar('REACT_APP_FIREBASE_PROJECT_ID', 'Firebase Project ID'),
-    storageBucket: requireEnvVar('REACT_APP_FIREBASE_STORAGE_BUCKET', 'Firebase Storage Bucket'),
-    messagingSenderId: requireEnvVar('REACT_APP_FIREBASE_MESSAGING_SENDER_ID', 'Firebase Messaging Sender ID'),
-    appId: requireEnvVar('REACT_APP_FIREBASE_APP_ID', 'Firebase App ID')
+    authDomain: requireEnvVar(
+      'REACT_APP_FIREBASE_AUTH_DOMAIN',
+      'Firebase Auth Domain'
+    ),
+    projectId: requireEnvVar(
+      'REACT_APP_FIREBASE_PROJECT_ID',
+      'Firebase Project ID'
+    ),
+    storageBucket: requireEnvVar(
+      'REACT_APP_FIREBASE_STORAGE_BUCKET',
+      'Firebase Storage Bucket'
+    ),
+    messagingSenderId: requireEnvVar(
+      'REACT_APP_FIREBASE_MESSAGING_SENDER_ID',
+      'Firebase Messaging Sender ID'
+    ),
+    appId: requireEnvVar('REACT_APP_FIREBASE_APP_ID', 'Firebase App ID'),
   };
 };
 
@@ -99,7 +113,10 @@ export const getPokemonTcgApiKey = () => {
  */
 export const getStripePublishableKey = () => {
   usageTracker.track('stripePublishableKey');
-  return requireEnvVar('REACT_APP_STRIPE_PUBLISHABLE_KEY', 'Stripe Publishable Key');
+  return requireEnvVar(
+    'REACT_APP_STRIPE_PUBLISHABLE_KEY',
+    'Stripe Publishable Key'
+  );
 };
 
 /**
@@ -107,7 +124,10 @@ export const getStripePublishableKey = () => {
  */
 export const getStripePremiumPlanPriceId = () => {
   usageTracker.track('stripePremiumPlanPriceId');
-  return requireEnvVar('REACT_APP_STRIPE_PREMIUM_PLAN_PRICE_ID', 'Stripe Premium Plan Price ID');
+  return requireEnvVar(
+    'REACT_APP_STRIPE_PREMIUM_PLAN_PRICE_ID',
+    'Stripe Premium Plan Price ID'
+  );
 };
 
 /**
@@ -116,7 +136,7 @@ export const getStripePremiumPlanPriceId = () => {
 export const getConfigSources = () => {
   usageTracker.track('configSources');
   const sources = {};
-  
+
   // All sources are now environment variables
   sources.firebase = {
     apiKey: 'Environment',
@@ -124,15 +144,17 @@ export const getConfigSources = () => {
     projectId: 'Environment',
     storageBucket: 'Environment',
     messagingSenderId: 'Environment',
-    appId: 'Environment'
+    appId: 'Environment',
   };
-  
-  sources.googleClientId = getOptionalEnvVar('REACT_APP_FIREBASE_CLIENT_ID') ? 'Environment' : 'Not Set (Optional)';
+
+  sources.googleClientId = getOptionalEnvVar('REACT_APP_FIREBASE_CLIENT_ID')
+    ? 'Environment'
+    : 'Not Set (Optional)';
   sources.sendgridApiKey = 'Environment';
   sources.pokemonTcgApiKey = 'Environment';
   sources.stripePublishableKey = 'Environment';
   sources.stripePremiumPlanPriceId = 'Environment';
-                               
+
   return sources;
 };
 

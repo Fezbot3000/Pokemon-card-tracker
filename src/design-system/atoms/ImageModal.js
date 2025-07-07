@@ -5,14 +5,13 @@ const ImageModal = ({ isOpen, onClose, imageUrl, alt }) => {
   if (!isOpen) return null;
 
   return (
-    <div 
+    <div
       className="bg-black/75 fixed inset-0 z-50 flex items-center justify-center p-4"
       onClick={onClose}
-
     >
       <div className="relative w-full max-w-2xl">
         <button
-          onClick={(e) => {
+          onClick={e => {
             e.stopPropagation();
             onClose();
           }}
@@ -20,9 +19,7 @@ const ImageModal = ({ isOpen, onClose, imageUrl, alt }) => {
         >
           <span className="material-icons">close</span>
         </button>
-        <div 
-          className="relative w-full" 
-        >
+        <div className="relative w-full">
           <img
             src={imageUrl}
             alt={alt}
@@ -38,7 +35,7 @@ ImageModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
   imageUrl: PropTypes.string.isRequired,
-  alt: PropTypes.string
+  alt: PropTypes.string,
 };
 
 export default ImageModal;

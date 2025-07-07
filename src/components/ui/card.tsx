@@ -2,28 +2,25 @@ import * as React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '../../lib/utils';
 
-const cardVariants = cva(
-  'text-card-foreground rounded-lg border shadow-sm',
-  {
-    variants: {
-      variant: {
-        default: 'border-gray-200 bg-white dark:border-gray-700 dark:bg-black',
-        outline: 'border-2 border-primary',
-        ghost: 'border-transparent shadow-none',
-        elevated: 'shadow-md transition-shadow hover:shadow-lg',
-      },
-      size: {
-        sm: 'p-4',
-        default: 'p-6',
-        lg: 'p-8',
-      },
+const cardVariants = cva('text-card-foreground rounded-lg border shadow-sm', {
+  variants: {
+    variant: {
+      default: 'border-gray-200 bg-white dark:border-gray-700 dark:bg-black',
+      outline: 'border-2 border-primary',
+      ghost: 'border-transparent shadow-none',
+      elevated: 'shadow-md transition-shadow hover:shadow-lg',
     },
-    defaultVariants: {
-      variant: 'default',
-      size: 'default',
+    size: {
+      sm: 'p-4',
+      default: 'p-6',
+      lg: 'p-8',
     },
-  }
-);
+  },
+  defaultVariants: {
+    variant: 'default',
+    size: 'default',
+  },
+});
 
 export interface CardProps
   extends React.HTMLAttributes<HTMLDivElement>,
@@ -62,7 +59,10 @@ const CardTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <h3
     ref={ref}
-    className={cn('text-2xl font-semibold leading-none tracking-tight', className)}
+    className={cn(
+      'text-2xl font-semibold leading-none tracking-tight',
+      className
+    )}
     {...props}
   />
 ));
@@ -76,7 +76,7 @@ const CardDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <p
     ref={ref}
-    className={cn('text-sm text-muted-foreground', className)}
+    className={cn('text-muted-foreground text-sm', className)}
     {...props}
   />
 ));
@@ -107,12 +107,12 @@ const CardFooter = React.forwardRef<
 
 CardFooter.displayName = 'CardFooter';
 
-export { 
-  Card, 
-  CardHeader, 
-  CardFooter, 
-  CardTitle, 
-  CardDescription, 
+export {
+  Card,
+  CardHeader,
+  CardFooter,
+  CardTitle,
+  CardDescription,
   CardContent,
-  cardVariants 
-}; 
+  cardVariants,
+};

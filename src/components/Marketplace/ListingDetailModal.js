@@ -1,29 +1,42 @@
 import React, { useState, useEffect, Fragment } from 'react';
 import { Modal, Button, Icon, toastService } from '../../design-system';
 import { useAuth } from '../../design-system';
-import { doc, getDoc, collection, query, where, orderBy, limit, getDocs, updateDoc, onSnapshot, addDoc, serverTimestamp } from 'firebase/firestore';
+import {
+  doc,
+  getDoc,
+  collection,
+  query,
+  where,
+  orderBy,
+  limit,
+  getDocs,
+  updateDoc,
+  onSnapshot,
+  addDoc,
+  serverTimestamp,
+} from 'firebase/firestore';
 import { db as firestoreDb } from '../../services/firebase';
 import logger from '../../utils/logger';
 import MapView from './MapView';
 import BuyerSelectionModal from './BuyerSelectionModal';
 
-function ListingDetailModal({ 
-  isOpen, 
-  onClose, 
-  listing, 
-  onContactSeller, 
-  onReportListing, 
+function ListingDetailModal({
+  isOpen,
+  onClose,
+  listing,
+  onContactSeller,
+  onReportListing,
   onViewSellerProfile,
   onEditListing,
   onMarkAsPending,
   onMarkAsSold,
-  onViewChange
+  onViewChange,
 }) {
   // Temporary test to verify our changes are loading
   if (typeof window !== 'undefined' && !window.debugTestRan) {
     window.debugTestRan = true;
   }
-  
+
   const { user } = useAuth();
   const [imageIndex, setImageIndex] = useState(0);
   const [sellerProfile, setSellerProfile] = useState(null);
@@ -46,34 +59,39 @@ function ListingDetailModal({
     const shareUrl = `${window.location.origin}/marketplace/listing/${listing.id}`;
     const cardName = listing.card?.name || listing.title || 'Trading Card';
     const price = listing.price ? `$${listing.price}` : 'Price on request';
-    
+
     if (navigator.share) {
-      navigator.share({
-        title: `${cardName} - ${price}`,
-        text: `Check out this ${cardName} for sale on MyCardTracker!`,
-        url: shareUrl
-      }).catch(err => {
-        fallbackToClipboard(shareUrl);
-      });
+      navigator
+        .share({
+          title: `${cardName} - ${price}`,
+          text: `Check out this ${cardName} for sale on MyCardTracker!`,
+          url: shareUrl,
+        })
+        .catch(err => {
+          fallbackToClipboard(shareUrl);
+        });
     } else {
       fallbackToClipboard(shareUrl);
     }
     setShowReportMenu(false);
   };
 
-  const fallbackToClipboard = (url) => {
+  const fallbackToClipboard = url => {
     if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(url).then(() => {
-        toastService.success('Link copied to clipboard!');
-      }).catch(() => {
-        legacyClipboardCopy(url);
-      });
+      navigator.clipboard
+        .writeText(url)
+        .then(() => {
+          toastService.success('Link copied to clipboard!');
+        })
+        .catch(() => {
+          legacyClipboardCopy(url);
+        });
     } else {
       legacyClipboardCopy(url);
     }
   };
 
-  const legacyClipboardCopy = (url) => {
+  const legacyClipboardCopy = url => {
     try {
       const textArea = document.createElement('textarea');
       textArea.value = url;
@@ -96,15 +114,19 @@ function ListingDetailModal({
     const loadSellerData = async () => {
       try {
         setLoadingSellerData(true);
-        
+
         // Load seller profile
-        const profileRef = doc(firestoreDb, 'marketplaceProfiles', listing.userId);
+        const profileRef = doc(
+          firestoreDb,
+          'marketplaceProfiles',
+          listing.userId
+        );
         try {
           const profileSnap = await getDoc(profileRef);
           if (profileSnap.exists()) {
             const profileData = profileSnap.data();
             setSellerProfile(profileData);
-            
+
             // Store the actual marketplace profile userId for viewing seller's other listings
             if (profileData.userId) {
               listing._marketplaceProfileUserId = profileData.userId;
@@ -115,12 +137,14 @@ function ListingDetailModal({
         } catch (error) {
           if (error.code === 'permission-denied') {
             logger.error('Permission denied: cannot access seller profile');
-            toastService.error('Permission denied: cannot access seller profile');
+            toastService.error(
+              'Permission denied: cannot access seller profile'
+            );
           } else {
             logger.error('Error loading seller profile:', error);
           }
         }
-        
+
         // Load seller reviews
         const reviewsRef = collection(firestoreDb, 'marketplaceReviews');
         const q = query(
@@ -129,21 +153,23 @@ function ListingDetailModal({
           orderBy('createdAt', 'desc'),
           limit(10)
         );
-        
+
         try {
           const querySnapshot = await getDocs(q);
           const reviews = [];
           let totalRating = 0;
-          
-          querySnapshot.forEach((doc) => {
+
+          querySnapshot.forEach(doc => {
             const review = { id: doc.id, ...doc.data() };
             reviews.push(review);
             totalRating += review.rating;
           });
-          
+
           setSellerReviews(reviews);
           setTotalReviews(reviews.length);
-          setAverageRating(reviews.length > 0 ? totalRating / reviews.length : 0);
+          setAverageRating(
+            reviews.length > 0 ? totalRating / reviews.length : 0
+          );
         } catch (error) {
           if (error.code === 'permission-denied') {
             logger.error('Permission denied: cannot access seller reviews');
@@ -154,7 +180,7 @@ function ListingDetailModal({
           setTotalReviews(0);
           setAverageRating(0);
         }
-        
+
         // Check for existing chat with this seller about this listing
         await checkForExistingChat();
       } catch (error) {
@@ -170,7 +196,7 @@ function ListingDetailModal({
   // Function to check for existing chats
   const checkForExistingChat = async () => {
     if (!user || !listing || user.uid === listing.userId) return;
-    
+
     try {
       const chatsRef = collection(firestoreDb, 'chats');
       const chatQuery = query(
@@ -178,17 +204,20 @@ function ListingDetailModal({
         where('participants', 'array-contains', user.uid),
         where('cardId', '==', listing.id)
       );
-      
+
       const chatSnapshot = await getDocs(chatQuery);
       if (!chatSnapshot.empty) {
         // Find chat with this specific seller that is NOT hidden by current user
         const existingChat = chatSnapshot.docs.find(doc => {
           const chatData = doc.data();
-          const isMatchingSeller = chatData.sellerId === listing.userId || chatData.buyerId === listing.userId;
-          const isNotHiddenByUser = !chatData.hiddenBy || !chatData.hiddenBy[user.uid];
+          const isMatchingSeller =
+            chatData.sellerId === listing.userId ||
+            chatData.buyerId === listing.userId;
+          const isNotHiddenByUser =
+            !chatData.hiddenBy || !chatData.hiddenBy[user.uid];
           return isMatchingSeller && isNotHiddenByUser;
         });
-        
+
         if (existingChat) {
           setHasExistingChat(true);
           setExistingChatId(existingChat.id);
@@ -208,36 +237,47 @@ function ListingDetailModal({
   }
 
   const card = listing.card;
-  
+
   // Try multiple image sources
-  const cardImage = card.cloudImageUrl || card.imageURL || card.imageUrl || card.img || listing.images?.[0] || null;
-  const images = listing.images?.length > 0 ? listing.images : (cardImage ? [cardImage] : []);
+  const cardImage =
+    card.cloudImageUrl ||
+    card.imageURL ||
+    card.imageUrl ||
+    card.img ||
+    listing.images?.[0] ||
+    null;
+  const images =
+    listing.images?.length > 0 ? listing.images : cardImage ? [cardImage] : [];
   const hasMultipleImages = images.length > 1;
 
   const handlePrevImage = () => {
-    setImageIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
+    setImageIndex(prev => (prev === 0 ? images.length - 1 : prev - 1));
   };
 
   const handleNextImage = () => {
-    setImageIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
+    setImageIndex(prev => (prev === images.length - 1 ? 0 : prev + 1));
   };
 
-  const renderStars = (rating) => {
+  const renderStars = rating => {
     return (
       <div className="flex gap-0.5">
-        {[1, 2, 3, 4, 5].map((star) => (
+        {[1, 2, 3, 4, 5].map(star => (
           <Icon
             key={star}
             name="star"
             size="sm"
-            className={star <= rating ? 'text-yellow-500' : 'text-gray-300 dark:text-gray-600'}
+            className={
+              star <= rating
+                ? 'text-yellow-500'
+                : 'text-gray-300 dark:text-gray-600'
+            }
           />
         ))}
       </div>
     );
   };
 
-  const formatDate = (timestamp) => {
+  const formatDate = timestamp => {
     if (!timestamp) return '';
     const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
     return date.toLocaleDateString();
@@ -254,13 +294,15 @@ function ListingDetailModal({
       // We'll use a URL parameter to pass the chat ID
       onViewChange('marketplace-messages');
       onClose(); // Close the listing modal
-      
+
       // Set a brief timeout to ensure the Messages component has loaded, then trigger chat selection
       setTimeout(() => {
         // Dispatch a custom event that the Messages component can listen for
-        window.dispatchEvent(new CustomEvent('openSpecificChat', { 
-          detail: { chatId: existingChatId } 
-        }));
+        window.dispatchEvent(
+          new CustomEvent('openSpecificChat', {
+            detail: { chatId: existingChatId },
+          })
+        );
       }, 100);
     } else {
       // Fallback: just navigate to messages tab
@@ -285,9 +327,9 @@ function ListingDetailModal({
   const handleMarkAsPending = async () => {
     try {
       const listingRef = doc(firestoreDb, 'marketplaceItems', listing.id);
-      await updateDoc(listingRef, { 
+      await updateDoc(listingRef, {
         status: 'pending',
-        updatedAt: new Date()
+        updatedAt: new Date(),
       });
       toastService.success('Listing marked as pending');
     } catch (error) {
@@ -309,28 +351,25 @@ function ListingDetailModal({
       // Seller's own listing - show management actions
       return (
         <>
-          <Button 
-            variant="secondary" 
-            onClick={onClose}
-          >
+          <Button variant="secondary" onClick={onClose}>
             Close
           </Button>
           <div className="flex gap-2">
-            <Button 
+            <Button
               variant="secondary"
               onClick={handleMarkAsPending}
               leftIcon={<Icon name="schedule" />}
             >
               Mark as Pending
             </Button>
-            <Button 
+            <Button
               variant="success"
               onClick={handleMarkAsSold}
               leftIcon={<Icon name="check_circle" />}
             >
               Mark as Sold
             </Button>
-            <Button 
+            <Button
               variant="primary"
               onClick={handleEditListing}
               leftIcon={<Icon name="edit" />}
@@ -344,20 +383,19 @@ function ListingDetailModal({
       // Other user's listing - show contact action
       return (
         <>
-          <Button 
-            variant="secondary" 
-            onClick={onClose}
-          >
+          <Button variant="secondary" onClick={onClose}>
             Close
           </Button>
-          <Button 
+          <Button
             variant="primary"
             onClick={() => {
               hasExistingChat ? handleNavigateToChat() : handleMessageSeller();
             }}
             leftIcon={<Icon name="message" />}
           >
-            {hasExistingChat ? 'Continue Conversation' : 'Send Seller a Message'}
+            {hasExistingChat
+              ? 'Continue Conversation'
+              : 'Send Seller a Message'}
           </Button>
         </>
       );
@@ -377,7 +415,9 @@ function ListingDetailModal({
         <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-[#0F0F0F]">
           <div className="flex items-center gap-4">
             <div className="text-center">
-              <div className="text-3xl font-bold">{averageRating.toFixed(1)}</div>
+              <div className="text-3xl font-bold">
+                {averageRating.toFixed(1)}
+              </div>
               {renderStars(Math.round(averageRating))}
               <div className="mt-1 text-sm text-gray-600 dark:text-gray-400">
                 {totalReviews} {totalReviews === 1 ? 'review' : 'reviews'}
@@ -393,14 +433,16 @@ function ListingDetailModal({
               No reviews yet
             </p>
           ) : (
-            sellerReviews.map((review) => (
+            sellerReviews.map(review => (
               <div
                 key={review.id}
                 className="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
               >
                 <div className="mb-2 flex items-start justify-between">
                   <div>
-                    <div className="font-medium">{review.buyerName || 'Anonymous'}</div>
+                    <div className="font-medium">
+                      {review.buyerName || 'Anonymous'}
+                    </div>
                     <div className="mt-1 flex items-center gap-2">
                       {renderStars(review.rating)}
                       <span className="text-sm text-gray-500">
@@ -445,12 +487,13 @@ function ListingDetailModal({
                       src={images[imageIndex]}
                       alt={card.name || 'Card image'}
                       className="size-full object-contain"
-                      onError={(e) => {
+                      onError={e => {
                         e.target.onerror = null;
-                        e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400"%3E%3Crect width="400" height="400" fill="%23e5e7eb"/%3E%3Ctext x="200" y="200" font-family="Arial" font-size="20" fill="%236b7280" text-anchor="middle" dominant-baseline="middle"%3ENo Image Available%3C/text%3E%3C/svg%3E';
+                        e.target.src =
+                          'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400"%3E%3Crect width="400" height="400" fill="%23e5e7eb"/%3E%3Ctext x="200" y="200" font-family="Arial" font-size="20" fill="%236b7280" text-anchor="middle" dominant-baseline="middle"%3ENo Image Available%3C/text%3E%3C/svg%3E';
                       }}
                     />
-                    
+
                     {/* Navigation Arrows */}
                     {hasMultipleImages && (
                       <>
@@ -472,7 +515,11 @@ function ListingDetailModal({
                 ) : (
                   <div className="flex size-full items-center justify-center">
                     <div className="text-center">
-                      <Icon name="image" size="xl" className="mb-2 text-gray-400" />
+                      <Icon
+                        name="image"
+                        size="xl"
+                        className="mb-2 text-gray-400"
+                      />
                       <p className="text-gray-500">No image available</p>
                     </div>
                   </div>
@@ -509,14 +556,20 @@ function ListingDetailModal({
                     ${listing.listingPrice}
                   </p>
                   {/* Status Tag */}
-                  <div className={`rounded-full px-3 py-1 text-sm font-medium ${
-                    listing.status === 'sold' 
-                      ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
+                  <div
+                    className={`rounded-full px-3 py-1 text-sm font-medium ${
+                      listing.status === 'sold'
+                        ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
+                        : listing.status === 'pending'
+                          ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
+                          : 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
+                    }`}
+                  >
+                    {listing.status === 'sold'
+                      ? 'SOLD'
                       : listing.status === 'pending'
-                      ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
-                      : 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
-                  }`}>
-                    {listing.status === 'sold' ? 'SOLD' : listing.status === 'pending' ? 'PENDING' : 'FOR SALE'}
+                        ? 'PENDING'
+                        : 'FOR SALE'}
                   </div>
                 </div>
                 <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
@@ -527,8 +580,10 @@ function ListingDetailModal({
               {/* Seller Information (only for other user's listings) */}
               {!isOwnListing && (
                 <div className="border-t border-gray-200 pt-6 dark:border-gray-700">
-                  <h2 className="mb-4 text-lg font-semibold">Seller Information</h2>
-                  
+                  <h2 className="mb-4 text-lg font-semibold">
+                    Seller Information
+                  </h2>
+
                   {loadingSellerData ? (
                     <div className="flex items-center justify-center py-8">
                       <div className="size-8 animate-spin rounded-full border-b-2 border-purple-600"></div>
@@ -550,7 +605,10 @@ function ListingDetailModal({
                             {sellerProfile?.displayName || 'Seller'}
                           </button>
                           <p className="text-sm text-gray-500 dark:text-gray-400">
-                            Joined {sellerProfile?.createdAt ? formatDate(sellerProfile.createdAt) : 'Recently'}
+                            Joined{' '}
+                            {sellerProfile?.createdAt
+                              ? formatDate(sellerProfile.createdAt)
+                              : 'Recently'}
                           </p>
                         </div>
                         <button
@@ -567,9 +625,12 @@ function ListingDetailModal({
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               {renderStars(Math.round(averageRating))}
-                              <span className="font-medium">{averageRating.toFixed(1)}</span>
+                              <span className="font-medium">
+                                {averageRating.toFixed(1)}
+                              </span>
                               <span className="text-sm text-gray-500 dark:text-gray-400">
-                                ({totalReviews} {totalReviews === 1 ? 'review' : 'reviews'})
+                                ({totalReviews}{' '}
+                                {totalReviews === 1 ? 'review' : 'reviews'})
                               </span>
                             </div>
                             <button
@@ -579,7 +640,7 @@ function ListingDetailModal({
                               View all
                             </button>
                           </div>
-                          
+
                           {/* Latest Review */}
                           {sellerReviews[0] && (
                             <div className="mt-3 border-t border-gray-200 pt-3 dark:border-gray-700">
@@ -608,57 +669,81 @@ function ListingDetailModal({
                 <h2 className="mb-4 text-lg font-semibold">Details</h2>
                 <dl className="grid grid-cols-2 gap-4">
                   <div>
-                    <dt className="text-sm text-gray-600 dark:text-gray-400">Condition</dt>
+                    <dt className="text-sm text-gray-600 dark:text-gray-400">
+                      Condition
+                    </dt>
                     <dd className="font-medium">
-                      {card.grade ? `${card.gradingCompany || 'PSA'} ${card.grade}` : 'Ungraded'}
+                      {card.grade
+                        ? `${card.gradingCompany || 'PSA'} ${card.grade}`
+                        : 'Ungraded'}
                     </dd>
                   </div>
                   {card.set && (
                     <div>
-                      <dt className="text-sm text-gray-600 dark:text-gray-400">Set</dt>
+                      <dt className="text-sm text-gray-600 dark:text-gray-400">
+                        Set
+                      </dt>
                       <dd className="font-medium">{card.set}</dd>
                     </div>
                   )}
                   {card.year && (
                     <div>
-                      <dt className="text-sm text-gray-600 dark:text-gray-400">Year</dt>
+                      <dt className="text-sm text-gray-600 dark:text-gray-400">
+                        Year
+                      </dt>
                       <dd className="font-medium">{card.year}</dd>
                     </div>
                   )}
                   {card.category && (
                     <div>
-                      <dt className="text-sm text-gray-600 dark:text-gray-400">Category</dt>
+                      <dt className="text-sm text-gray-600 dark:text-gray-400">
+                        Category
+                      </dt>
                       <dd className="font-medium">{card.category}</dd>
                     </div>
                   )}
                   {card.slabSerial && (
                     <div>
-                      <dt className="text-sm text-gray-600 dark:text-gray-400">Slab Serial</dt>
+                      <dt className="text-sm text-gray-600 dark:text-gray-400">
+                        Slab Serial
+                      </dt>
                       <dd className="font-medium">{card.slabSerial}</dd>
                     </div>
                   )}
                   <div>
-                    <dt className="text-sm text-gray-600 dark:text-gray-400">Location</dt>
-                    <dd className="font-medium">{listing.location || 'Not specified'}</dd>
+                    <dt className="text-sm text-gray-600 dark:text-gray-400">
+                      Location
+                    </dt>
+                    <dd className="font-medium">
+                      {listing.location || 'Not specified'}
+                    </dd>
                   </div>
                   {card.purchasePrice && (
                     <div>
-                      <dt className="text-sm text-gray-600 dark:text-gray-400">Purchase Price</dt>
+                      <dt className="text-sm text-gray-600 dark:text-gray-400">
+                        Purchase Price
+                      </dt>
                       <dd className="font-medium">${card.purchasePrice}</dd>
                     </div>
                   )}
                   {card.currentValue && (
                     <div>
-                      <dt className="text-sm text-gray-600 dark:text-gray-400">Current Value</dt>
+                      <dt className="text-sm text-gray-600 dark:text-gray-400">
+                        Current Value
+                      </dt>
                       <dd className="font-medium">${card.currentValue}</dd>
                     </div>
                   )}
                 </dl>
-                
+
                 {listing.note && (
                   <div className="mt-4">
-                    <dt className="mb-1 text-sm text-gray-600 dark:text-gray-400">Description</dt>
-                    <dd className="text-gray-900 dark:text-white">{listing.note}</dd>
+                    <dt className="mb-1 text-sm text-gray-600 dark:text-gray-400">
+                      Description
+                    </dt>
+                    <dd className="text-gray-900 dark:text-white">
+                      {listing.note}
+                    </dd>
                   </div>
                 )}
               </div>
@@ -667,8 +752,8 @@ function ListingDetailModal({
               {listing.location && (
                 <div className="border-t border-gray-200 pt-6 dark:border-gray-700">
                   <h2 className="mb-4 text-lg font-semibold">Location</h2>
-                  <MapView 
-                    location={listing.location} 
+                  <MapView
+                    location={listing.location}
                     cardName={card.name || card.cardName || 'Pokemon Card'}
                     price={listing.listingPrice}
                   />
@@ -683,9 +768,9 @@ function ListingDetailModal({
       <ReviewsModal />
 
       {/* Buyer Selection Modal */}
-      <BuyerSelectionModal 
-        isOpen={showBuyerSelectionModal} 
-        onClose={() => setShowBuyerSelectionModal(false)} 
+      <BuyerSelectionModal
+        isOpen={showBuyerSelectionModal}
+        onClose={() => setShowBuyerSelectionModal(false)}
         listing={listing}
       />
     </>

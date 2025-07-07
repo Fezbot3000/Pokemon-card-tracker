@@ -57,10 +57,7 @@ const ProfileSettings = ({ profile, onProfileChange, onProfileSave }) => {
         </div>
       </div>
       <div className="mt-4 flex justify-end">
-        <Button 
-          variant="primary"
-          onClick={onProfileSave}
-        >
+        <Button variant="primary" onClick={onProfileSave}>
           Save Profile
         </Button>
       </div>

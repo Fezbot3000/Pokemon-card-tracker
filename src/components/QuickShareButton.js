@@ -15,16 +15,16 @@ const QuickShareButton = ({ className = '' }) => {
     const checkDarkMode = () => {
       setIsDarkMode(document.documentElement.classList.contains('dark'));
     };
-    
+
     checkDarkMode();
-    
+
     // Watch for dark mode changes
     const observer = new MutationObserver(checkDarkMode);
     observer.observe(document.documentElement, {
       attributes: true,
-      attributeFilter: ['class']
+      attributeFilter: ['class'],
     });
-    
+
     return () => observer.disconnect();
   }, []);
 
@@ -59,21 +59,25 @@ const QuickShareButton = ({ className = '' }) => {
 
       {/* Sharing Modal - MADE MORE TRANSPARENT */}
       {showSharingModal && (
-        <div 
+        <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ 
+          style={{
             backgroundColor: 'rgba(0, 0, 0, 0.3)',
             backdropFilter: 'blur(4px)',
-            WebkitBackdropFilter: 'blur(4px)'
+            WebkitBackdropFilter: 'blur(4px)',
           }}
         >
-          <div 
+          <div
             className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-lg border shadow-2xl"
             style={{
-              backgroundColor: isDarkMode ? 'rgb(0, 0, 0)' : 'rgb(255, 255, 255)',
-              borderColor: isDarkMode ? 'rgba(55, 65, 81, 0.5)' : 'rgba(229, 231, 235, 0.5)',
+              backgroundColor: isDarkMode
+                ? 'rgb(0, 0, 0)'
+                : 'rgb(255, 255, 255)',
+              borderColor: isDarkMode
+                ? 'rgba(55, 65, 81, 0.5)'
+                : 'rgba(229, 231, 235, 0.5)',
               backdropFilter: 'blur(8px)',
-              WebkitBackdropFilter: 'blur(8px)'
+              WebkitBackdropFilter: 'blur(8px)',
             }}
           >
             <div className="p-6">
@@ -85,18 +89,30 @@ const QuickShareButton = ({ className = '' }) => {
                   onClick={() => setShowSharingModal(false)}
                   className="rounded-full p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:bg-opacity-50 hover:text-gray-600 dark:hover:bg-gray-800 dark:hover:bg-opacity-50 dark:hover:text-gray-300"
                 >
-                  <svg className="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <svg
+                    className="size-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
                   </svg>
                 </button>
               </div>
-              
+
               <CollectionSharing isInModal={true} />
-              
-              <div 
+
+              <div
                 className="mt-6 border-t pt-4"
                 style={{
-                  borderColor: isDarkMode ? 'rgba(55, 65, 81, 0.5)' : 'rgba(229, 231, 235, 0.5)'
+                  borderColor: isDarkMode
+                    ? 'rgba(55, 65, 81, 0.5)'
+                    : 'rgba(229, 231, 235, 0.5)',
                 }}
               >
                 <p className="text-center text-sm text-gray-500 dark:text-gray-400">

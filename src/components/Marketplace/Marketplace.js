@@ -1,6 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth, Icon, toast } from '../../design-system';
-import { collection, query, where, orderBy, getDocs, onSnapshot, doc, updateDoc } from 'firebase/firestore';
+import {
+  collection,
+  query,
+  where,
+  orderBy,
+  getDocs,
+  onSnapshot,
+  doc,
+  updateDoc,
+} from 'firebase/firestore';
 import { db as firestoreDb } from '../../services/firebase';
 import logger from '../../utils/logger';
 import { useUserPreferences } from '../../contexts/UserPreferencesContext';
@@ -25,12 +34,13 @@ function Marketplace({ currentView, onViewChange }) {
     search: '',
     category: '',
     gradingCompany: '',
-    grade: ''
+    grade: '',
   });
   const [loading, setLoading] = useState(true);
   const [cardImages, setCardImages] = useState({});
   const { user } = useAuth();
-  const { convertCurrency, formatAmountForDisplay: formatUserCurrency } = useUserPreferences();
+  const { convertCurrency, formatAmountForDisplay: formatUserCurrency } =
+    useUserPreferences();
   const navigate = useNavigate();
 
   const [indexBuildingError, setIndexBuildingError] = useState(false);
@@ -40,7 +50,8 @@ function Marketplace({ currentView, onViewChange }) {
   const [existingChats, setExistingChats] = useState({});
   const [prefilledMessage, setPrefilledMessage] = useState('');
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isBuyerSelectionModalOpen, setIsBuyerSelectionModalOpen] = useState(false);
+  const [isBuyerSelectionModalOpen, setIsBuyerSelectionModalOpen] =
+    useState(false);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -60,15 +71,21 @@ function Marketplace({ currentView, onViewChange }) {
 
     // Set up real-time listener for chats to update button states immediately
     const chatsRef = collection(firestoreDb, 'chats');
-    const userChatsQuery = query(chatsRef, where('participants', 'array-contains', user.uid));
-    
-    const unsubscribeChats = onSnapshot(userChatsQuery, (chatsSnapshot) => {
+    const userChatsQuery = query(
+      chatsRef,
+      where('participants', 'array-contains', user.uid)
+    );
+
+    const unsubscribeChats = onSnapshot(userChatsQuery, chatsSnapshot => {
       try {
         const chatsData = {};
         chatsSnapshot.forEach(doc => {
           const chatData = doc.data();
           // Only include chats that haven't been hidden by the current user
-          if (chatData.cardId && (!chatData.hiddenBy || !chatData.hiddenBy[user.uid])) {
+          if (
+            chatData.cardId &&
+            (!chatData.hiddenBy || !chatData.hiddenBy[user.uid])
+          ) {
             chatsData[chatData.cardId] = doc.id;
           }
         });
@@ -103,72 +120,89 @@ function Marketplace({ currentView, onViewChange }) {
       );
 
       // Set up real-time listener for marketplace items
-      unsubscribe = onSnapshot(marketplaceQuery, (snapshot) => {
-        try {
-          // Fetch listings from Firestore
-          const listingsData = [];
-          snapshot.forEach(doc => {
-            listingsData.push({ id: doc.id, ...doc.data() });
-          });
-          
-          setAllListings(listingsData);
-          setFilteredListings(listingsData);
-
-          // Load card images after getting listings
-          loadCardImages(listingsData);
-        } catch (error) {
-          // Ignore AdBlock related errors
-          if (error.message && error.message.includes('net::ERR_BLOCKED_BY_CLIENT')) {
-            // Silently handle AdBlock errors
-          } else {
-            logger.error('Error fetching marketplace items:', error);
-            toast.error('Error loading marketplace items');
-          }
-        } finally {
-          setLoading(false);
-        }
-      }, (error) => {
-        // Check if this is an index building error
-        if (error.message && error.message.includes('requires an index')) {
-          logger.warn('Marketplace index is still building:', error);
-          setIndexBuildingError(true);
-
-          // Fall back to a simpler query without ordering
+      unsubscribe = onSnapshot(
+        marketplaceQuery,
+        snapshot => {
           try {
-            const simpleQuery = query(
-              marketplaceRef,
-              where('status', '==', 'available')
-            );
-
-            unsubscribe = onSnapshot(simpleQuery, (snapshot) => {
-              const listingData = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-              }));
-              // Sort manually on the client side
-              listingData.sort((a, b) => {
-                const timeA = a.timestampListed?.seconds || 0;
-                const timeB = b.timestampListed?.seconds || 0;
-                return timeB - timeA; // Descending order
-              });
-              setAllListings(listingData);
-              setFilteredListings(listingData);
-
-              // Load card images after getting listings
-              loadCardImages(listingData);
-            }, (fallbackError) => {
-              logger.error('Error in fallback marketplace listener:', fallbackError);
-              setLoading(false);
+            // Fetch listings from Firestore
+            const listingsData = [];
+            snapshot.forEach(doc => {
+              listingsData.push({ id: doc.id, ...doc.data() });
             });
-          } catch (fallbackSetupError) {
-            logger.error('Error setting up fallback marketplace listener:', fallbackSetupError);
+
+            setAllListings(listingsData);
+            setFilteredListings(listingsData);
+
+            // Load card images after getting listings
+            loadCardImages(listingsData);
+          } catch (error) {
+            // Ignore AdBlock related errors
+            if (
+              error.message &&
+              error.message.includes('net::ERR_BLOCKED_BY_CLIENT')
+            ) {
+              // Silently handle AdBlock errors
+            } else {
+              logger.error('Error fetching marketplace items:', error);
+              toast.error('Error loading marketplace items');
+            }
+          } finally {
             setLoading(false);
           }
-        } else {
-          logger.error('Error in marketplace listener:', error);
-          setLoading(false);
+        },
+        error => {
+          // Check if this is an index building error
+          if (error.message && error.message.includes('requires an index')) {
+            logger.warn('Marketplace index is still building:', error);
+            setIndexBuildingError(true);
+
+            // Fall back to a simpler query without ordering
+            try {
+              const simpleQuery = query(
+                marketplaceRef,
+                where('status', '==', 'available')
+              );
+
+              unsubscribe = onSnapshot(
+                simpleQuery,
+                snapshot => {
+                  const listingData = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data(),
+                  }));
+                  // Sort manually on the client side
+                  listingData.sort((a, b) => {
+                    const timeA = a.timestampListed?.seconds || 0;
+                    const timeB = b.timestampListed?.seconds || 0;
+                    return timeB - timeA; // Descending order
+                  });
+                  setAllListings(listingData);
+                  setFilteredListings(listingData);
+
+                  // Load card images after getting listings
+                  loadCardImages(listingData);
+                },
+                fallbackError => {
+                  logger.error(
+                    'Error in fallback marketplace listener:',
+                    fallbackError
+                  );
+                  setLoading(false);
+                }
+              );
+            } catch (fallbackSetupError) {
+              logger.error(
+                'Error setting up fallback marketplace listener:',
+                fallbackSetupError
+              );
+              setLoading(false);
+            }
+          } else {
+            logger.error('Error in marketplace listener:', error);
+            setLoading(false);
+          }
         }
-      });
+      );
     } catch (setupError) {
       logger.error('Error setting up marketplace listener:', setupError);
       setLoading(false);
@@ -182,7 +216,7 @@ function Marketplace({ currentView, onViewChange }) {
     };
   }, [user]);
 
-  const loadCardImages = async (listingsData) => {
+  const loadCardImages = async listingsData => {
     if (!listingsData || listingsData.length === 0) return;
 
     // Clean up existing blob URLs before loading new ones
@@ -199,7 +233,7 @@ function Marketplace({ currentView, onViewChange }) {
     const newCardImages = {};
 
     // Helper function to ensure we have a string URL
-    const ensureStringUrl = (imageData) => {
+    const ensureStringUrl = imageData => {
       if (!imageData) return null;
 
       // If it's already a string, return it
@@ -220,7 +254,8 @@ function Marketplace({ currentView, onViewChange }) {
         if (imageData.uri) return imageData.uri;
         if (imageData.href) return imageData.href;
         if (imageData.downloadURL) return imageData.downloadURL;
-        if (imageData.path && typeof imageData.path === 'string') return imageData.path;
+        if (imageData.path && typeof imageData.path === 'string')
+          return imageData.path;
 
         // If it has a toString method, try that
         if (typeof imageData.toString === 'function') {
@@ -232,7 +267,11 @@ function Marketplace({ currentView, onViewChange }) {
       }
 
       // If it's a Blob with a type
-      if (imageData instanceof Blob && imageData.type && imageData.type.startsWith('image/')) {
+      if (
+        imageData instanceof Blob &&
+        imageData.type &&
+        imageData.type.startsWith('image/')
+      ) {
         return window.URL.createObjectURL(imageData);
       }
 
@@ -268,7 +307,12 @@ function Marketplace({ currentView, onViewChange }) {
         }
 
         // Check all other possible image properties
-        const possibleImageProps = ['frontImageUrl', 'backImageUrl', 'imageData', 'cardImageUrl'];
+        const possibleImageProps = [
+          'frontImageUrl',
+          'backImageUrl',
+          'imageData',
+          'cardImageUrl',
+        ];
         let foundImage = false;
 
         for (const prop of possibleImageProps) {
@@ -294,7 +338,10 @@ function Marketplace({ currentView, onViewChange }) {
           }
         } catch (dbError) {
           // Silently handle IndexedDB errors
-          logger.warn(`Error loading image from IndexedDB for card ${cardId}:`, dbError);
+          logger.warn(
+            `Error loading image from IndexedDB for card ${cardId}:`,
+            dbError
+          );
         }
 
         // If we still don't have an image, set to null
@@ -306,24 +353,26 @@ function Marketplace({ currentView, onViewChange }) {
 
     setCardImages(prevImages => ({
       ...prevImages,
-      ...newCardImages
+      ...newCardImages,
     }));
   };
 
   const handleContactSeller = (listing, message = '') => {
     // Check if there's an existing chat for this listing
     const existingChatId = existingChats[listing.id];
-    
+
     if (existingChatId) {
       // Navigate to Messages tab and open the existing chat
       onViewChange('marketplace-messages');
-      
+
       // Set a brief timeout to ensure the Messages component has loaded, then trigger chat selection
       setTimeout(() => {
         // Dispatch a custom event that the Messages component can listen for
-        window.dispatchEvent(new CustomEvent('openSpecificChat', { 
-          detail: { chatId: existingChatId } 
-        }));
+        window.dispatchEvent(
+          new CustomEvent('openSpecificChat', {
+            detail: { chatId: existingChatId },
+          })
+        );
       }, 100);
     } else {
       // No existing chat, open the message modal to start a new conversation
@@ -333,7 +382,7 @@ function Marketplace({ currentView, onViewChange }) {
     }
   };
 
-  const handleCardClick = (listing) => {
+  const handleCardClick = listing => {
     setSelectedListing(listing);
     setIsDetailModalOpen(true);
   };
@@ -344,7 +393,7 @@ function Marketplace({ currentView, onViewChange }) {
   };
 
   // Handle filter changes from the search/filter component
-  const handleFilterChange = (newFilters) => {
+  const handleFilterChange = newFilters => {
     setFilters(newFilters);
 
     // Save filters to localStorage for persistence
@@ -378,9 +427,11 @@ function Marketplace({ currentView, onViewChange }) {
         // Check other properties
         return (
           cardName.toLowerCase().includes(searchTerm) ||
-          (listing.cardName && listing.cardName.toLowerCase().includes(searchTerm)) ||
+          (listing.cardName &&
+            listing.cardName.toLowerCase().includes(searchTerm)) ||
           (listing.brand && listing.brand.toLowerCase().includes(searchTerm)) ||
-          (listing.category && listing.category.toLowerCase().includes(searchTerm)) ||
+          (listing.category &&
+            listing.category.toLowerCase().includes(searchTerm)) ||
           (listing.year && listing.year.toString().includes(searchTerm))
         );
       });
@@ -392,24 +443,28 @@ function Marketplace({ currentView, onViewChange }) {
         const listingCategory = listing.category?.toLowerCase();
         const cardCategory = listing.card?.category?.toLowerCase();
         const filterCategory = filters.category.toLowerCase();
-        
-        return listingCategory === filterCategory || cardCategory === filterCategory;
+
+        return (
+          listingCategory === filterCategory || cardCategory === filterCategory
+        );
       });
     }
 
     // Apply grading company filter
     if (filters.gradingCompany) {
-      results = results.filter(listing =>
-        listing.gradingCompany === filters.gradingCompany ||
-        listing.card?.gradingCompany === filters.gradingCompany
+      results = results.filter(
+        listing =>
+          listing.gradingCompany === filters.gradingCompany ||
+          listing.card?.gradingCompany === filters.gradingCompany
       );
     }
 
     // Apply grade filter
     if (filters.grade) {
-      results = results.filter(listing =>
-        listing.grade === filters.grade ||
-        listing.card?.grade === filters.grade
+      results = results.filter(
+        listing =>
+          listing.grade === filters.grade ||
+          listing.card?.grade === filters.grade
       );
     }
 
@@ -423,7 +478,7 @@ function Marketplace({ currentView, onViewChange }) {
   const paginatedListings = filteredListings.slice(startIndex, endIndex);
 
   // Handle page change
-  const handlePageChange = (page) => {
+  const handlePageChange = page => {
     setCurrentPage(page);
     // Scroll to top of listings
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -434,27 +489,27 @@ function Marketplace({ currentView, onViewChange }) {
     setCurrentPage(1);
   }, [filters]);
 
-  const handleViewSellerProfile = (sellerId) => {
+  const handleViewSellerProfile = sellerId => {
     // console.log('Opening seller profile for sellerId:', sellerId);
     setSelectedSellerId(sellerId);
     setShowSellerProfile(true);
   };
 
-  const handleReportListing = (listing) => {
+  const handleReportListing = listing => {
     setReportingListing(listing);
     setShowReportModal(true);
   };
 
-  const handleEditListing = async (listing) => {
+  const handleEditListing = async listing => {
     setSelectedListing(listing);
     setIsEditModalOpen(true);
   };
 
-  const handleMarkAsPending = async (listing) => {
+  const handleMarkAsPending = async listing => {
     try {
       const listingRef = doc(firestoreDb, 'marketplaceItems', listing.id);
       await updateDoc(listingRef, {
-        status: 'pending'
+        status: 'pending',
       });
       toast.success('Listing marked as pending');
     } catch (error) {
@@ -463,14 +518,17 @@ function Marketplace({ currentView, onViewChange }) {
     }
   };
 
-  const handleMarkAsSold = async (listing) => {
+  const handleMarkAsSold = async listing => {
     setSelectedListing(listing);
     setIsBuyerSelectionModalOpen(true);
   };
 
   return (
     <div className="min-h-screen bg-gray-100 p-4 pb-20 pt-16 dark:bg-black sm:p-6 sm:pt-4">
-      <MarketplaceNavigation currentView={currentView} onViewChange={onViewChange} />
+      <MarketplaceNavigation
+        currentView={currentView}
+        onViewChange={onViewChange}
+      />
 
       {/* Search and Filter Component */}
       <MarketplaceSearchFilters
@@ -488,30 +546,38 @@ function Marketplace({ currentView, onViewChange }) {
           <div className="mb-4 rounded-lg border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-700 dark:bg-yellow-900/20">
             <div className="flex items-center">
               <span className="material-icons mr-2 text-yellow-500">info</span>
-              <p className="text-yellow-700 dark:text-yellow-400">The marketplace index is still being built. Some features may be limited until it's ready.</p>
+              <p className="text-yellow-700 dark:text-yellow-400">
+                The marketplace index is still being built. Some features may be
+                limited until it's ready.
+              </p>
             </div>
           </div>
           {allListings.length === 0 ? (
-            <p className="text-lg text-gray-600 dark:text-gray-400">No cards currently listed in the marketplace.</p>
+            <p className="text-lg text-gray-600 dark:text-gray-400">
+              No cards currently listed in the marketplace.
+            </p>
           ) : null}
         </div>
       ) : allListings.length === 0 ? (
         <div className="flex flex-col items-center justify-center px-4 py-16">
           {/* Marketplace Icon */}
           <div className="mb-6 flex size-24 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
-            <span className="material-icons text-4xl text-gray-400 dark:text-gray-600">storefront</span>
+            <span className="material-icons text-4xl text-gray-400 dark:text-gray-600">
+              storefront
+            </span>
           </div>
-          
+
           {/* Main Message */}
           <h3 className="mb-2 text-center text-xl font-semibold text-gray-900 dark:text-white">
             No Cards in Marketplace
           </h3>
-          
+
           {/* Description */}
           <p className="mb-8 max-w-md text-center leading-relaxed text-gray-600 dark:text-gray-400">
-            The marketplace is currently empty. Be the first to list a card for sale, or check back later to see what other collectors are offering.
+            The marketplace is currently empty. Be the first to list a card for
+            sale, or check back later to see what other collectors are offering.
           </p>
-          
+
           {/* Action Buttons */}
           <div className="flex w-full max-w-sm flex-col gap-3 sm:flex-row">
             <button
@@ -529,7 +595,7 @@ function Marketplace({ currentView, onViewChange }) {
               Refresh
             </button>
           </div>
-          
+
           {/* Additional Info */}
           <div className="mt-8 text-center">
             <p className="text-sm text-gray-500 dark:text-gray-500">
@@ -541,27 +607,32 @@ function Marketplace({ currentView, onViewChange }) {
         <div className="flex flex-col items-center justify-center px-4 py-16">
           {/* Search Icon */}
           <div className="mb-6 flex size-20 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
-            <span className="material-icons text-3xl text-gray-400 dark:text-gray-600">search_off</span>
+            <span className="material-icons text-3xl text-gray-400 dark:text-gray-600">
+              search_off
+            </span>
           </div>
-          
+
           {/* Main Message */}
           <h3 className="mb-2 text-center text-lg font-semibold text-gray-900 dark:text-white">
             No Matching Cards Found
           </h3>
-          
+
           {/* Description */}
           <p className="mb-6 max-w-md text-center leading-relaxed text-gray-600 dark:text-gray-400">
-            We couldn't find any cards matching your current filters. Try adjusting your search criteria or clearing the filters.
+            We couldn't find any cards matching your current filters. Try
+            adjusting your search criteria or clearing the filters.
           </p>
-          
+
           {/* Action Button */}
-          <button 
-            onClick={() => handleFilterChange({
-              search: '',
-              category: '',
-              gradingCompany: '',
-              grade: ''
-            })}
+          <button
+            onClick={() =>
+              handleFilterChange({
+                search: '',
+                category: '',
+                gradingCompany: '',
+                grade: '',
+              })
+            }
             className="flex items-center gap-2 rounded-lg bg-red-500 px-6 py-3 font-medium text-white transition-colors hover:bg-red-600"
           >
             <span className="material-icons text-lg">clear_all</span>
@@ -572,10 +643,19 @@ function Marketplace({ currentView, onViewChange }) {
         <>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
             {paginatedListings.map(listing => (
-              <div key={listing.id} className="flex h-full flex-col overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-[#0F0F0F]">
+              <div
+                key={listing.id}
+                className="flex h-full flex-col overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-[#0F0F0F]"
+              >
                 <div className="relative aspect-square grow">
                   <LazyImage
-                    src={cardImages[listing.card?.slabSerial || listing.card?.id || listing.cardId] || '/placeholder-card.png'}
+                    src={
+                      cardImages[
+                        listing.card?.slabSerial ||
+                          listing.card?.id ||
+                          listing.cardId
+                      ] || '/placeholder-card.png'
+                    }
                     alt={listing.card?.name || 'Pokemon Card'}
                     className="size-full cursor-pointer object-cover"
                     onClick={() => handleCardClick(listing)}
@@ -590,7 +670,10 @@ function Marketplace({ currentView, onViewChange }) {
                   <div className="flex flex-col items-center space-y-2">
                     <div className="w-full text-center">
                       <p className="truncate font-semibold text-gray-900 dark:text-white">
-                        {listing.cardName || listing.card?.name || listing.card?.cardName || 'Unknown Card'}
+                        {listing.cardName ||
+                          listing.card?.name ||
+                          listing.card?.cardName ||
+                          'Unknown Card'}
                       </p>
                       <p className="font-semibold text-gray-900 dark:text-white">
                         {listing.listingPrice} {listing.currency}
@@ -602,12 +685,14 @@ function Marketplace({ currentView, onViewChange }) {
                     <button
                       onClick={() => handleContactSeller(listing)}
                       className={`w-full rounded-md px-3 py-1.5 text-sm text-white transition-colors ${
-                        existingChats[listing.id] 
-                          ? 'bg-green-500 hover:bg-green-600' 
+                        existingChats[listing.id]
+                          ? 'bg-green-500 hover:bg-green-600'
                           : 'bg-red-500 hover:bg-red-600'
                       }`}
                     >
-                      {existingChats[listing.id] ? 'See Chat' : 'Contact Seller'}
+                      {existingChats[listing.id]
+                        ? 'See Chat'
+                        : 'Contact Seller'}
                     </button>
                   </div>
                 </div>
@@ -645,7 +730,15 @@ function Marketplace({ currentView, onViewChange }) {
         isOpen={isDetailModalOpen}
         onClose={handleCloseDetailModal}
         listing={selectedListing}
-        cardImage={selectedListing ? cardImages[selectedListing.card?.slabSerial || selectedListing.card?.id || selectedListing.cardId] : null}
+        cardImage={
+          selectedListing
+            ? cardImages[
+                selectedListing.card?.slabSerial ||
+                  selectedListing.card?.id ||
+                  selectedListing.cardId
+              ]
+            : null
+        }
         onContactSeller={handleContactSeller}
         onViewSellerProfile={handleViewSellerProfile}
         onReportListing={() => handleReportListing(selectedListing)}
@@ -665,7 +758,7 @@ function Marketplace({ currentView, onViewChange }) {
             setShowSellerProfile(false);
             setSelectedSellerId(null);
           }}
-          onOpenListing={(listing) => {
+          onOpenListing={listing => {
             // Close seller profile and open listing detail
             setShowSellerProfile(false);
             setSelectedSellerId(null);

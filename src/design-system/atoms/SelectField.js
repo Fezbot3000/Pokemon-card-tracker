@@ -53,7 +53,7 @@ const SelectField = ({
     }
   };
 
-  const handleChange = (event) => {
+  const handleChange = event => {
     if (event.target.value === '__add_new__') {
       handleAddCustomOption();
     } else {
@@ -80,25 +80,40 @@ const SelectField = ({
           data-testid={testId} // Convert testId to data-testid
           {...props}
         >
-          {placeholder && <option value="" disabled>{placeholder}</option>}
-          {/* Render options from props if provided */}
-          {options && options.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
+          {placeholder && (
+            <option value="" disabled>
+              {placeholder}
             </option>
-          ))}
+          )}
+          {/* Render options from props if provided */}
+          {options &&
+            options.map(option => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
           {/* Or render children directly */}
           {children}
           {/* Add a special option for adding a new item */}
-          {allowCustomOptions && <option value="__add_new__">+ Add new...</option>}
+          {allowCustomOptions && (
+            <option value="__add_new__">+ Add new...</option>
+          )}
         </select>
         {/* Custom dropdown arrow */}
         <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
           <svg width="20" height="20" fill="none" viewBox="0 0 20 20">
-            <path d="M6 8l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            <path
+              d="M6 8l4 4 4-4"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
           </svg>
         </span>
-        {error && <p className="mt-1 text-xs text-red-600 dark:text-red-400">{error}</p>}
+        {error && (
+          <p className="mt-1 text-xs text-red-600 dark:text-red-400">{error}</p>
+        )}
       </div>
     </div>
   );
@@ -112,7 +127,8 @@ SelectField.propTypes = {
   onChange: PropTypes.func.isRequired,
   options: PropTypes.arrayOf(
     PropTypes.shape({
-      value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+      value: PropTypes.oneOfType([PropTypes.string, PropTypes.number])
+        .isRequired,
       label: PropTypes.string.isRequired,
     })
   ),

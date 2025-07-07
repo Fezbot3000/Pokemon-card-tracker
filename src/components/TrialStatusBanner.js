@@ -9,39 +9,48 @@ import UpgradeModal from './UpgradeModal';
 
 /**
  * TrialStatusBanner Component
- * 
+ *
  * Displays trial status and upgrade prompts to users
  */
 const TrialStatusBanner = () => {
   // Move all hooks to the top before any conditional logic
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   // const navigate = useNavigate(); // No longer needed for modal
-  
+
   // Get subscription data - moved to top to avoid conditional hook calls
   const subscriptionData = useSubscription();
-  
+
   // Handle subscription data loading/error states
   if (!subscriptionData) {
     // Fallback - show a basic banner
     return (
-      <div style={{backgroundColor: 'orange', color: 'white', padding: '15px', textAlign: 'center'}}>
+      <div
+        style={{
+          backgroundColor: 'orange',
+          color: 'white',
+          padding: '15px',
+          textAlign: 'center',
+        }}
+      >
         ⚠️ Subscription system loading... Please refresh if this persists.
       </div>
     );
   }
-  
-  const { isOnTrial, getTrialDaysRemaining, isFree, subscription } = subscriptionData;
-  
+
+  const { isOnTrial, getTrialDaysRemaining, isFree, subscription } =
+    subscriptionData;
+
   // For debugging - let's force show the banner if we're on trial
-  const shouldShow = isOnTrial || isFree || subscription?.status === 'free_trial';
-  
+  const shouldShow =
+    isOnTrial || isFree || subscription?.status === 'free_trial';
+
   // Don't show banner for premium users or when loading
   if (!shouldShow) {
     return null;
   }
-  
+
   const daysRemaining = getTrialDaysRemaining();
-  
+
   // Show the actual trial banner
   return (
     <>
@@ -53,10 +62,9 @@ const TrialStatusBanner = () => {
           <div className="flex items-center gap-2">
             <span className="material-icons text-sm">schedule</span>
             <span className="font-medium">
-              {isFree 
+              {isFree
                 ? 'Upgrade to Premium to unlock all features'
-                : `Free Trial: ${daysRemaining} day${daysRemaining !== 1 ? 's' : ''} remaining`
-              }
+                : `Free Trial: ${daysRemaining} day${daysRemaining !== 1 ? 's' : ''} remaining`}
             </span>
           </div>
           <Button
@@ -76,10 +84,14 @@ const TrialStatusBanner = () => {
           )}
         </div>
       </div>
-      <UpgradeModal isOpen={showUpgradeModal} onClose={() => setShowUpgradeModal(false)} daysRemaining={daysRemaining} />
+      <UpgradeModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        daysRemaining={daysRemaining}
+      />
       {/* <UpgradeModal isOpen={showUpgradeModal} onClose={() => setShowUpgradeModal(false)} /> */}
     </>
   );
 };
 
-export default TrialStatusBanner; 
+export default TrialStatusBanner;

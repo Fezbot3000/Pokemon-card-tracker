@@ -1,6 +1,6 @@
 /**
  * Database Adapter
- * 
+ *
  * This adapter provides a compatibility layer between the old db.js API
  * and the new Firestore service. It allows gradual migration by maintaining
  * the same API surface while using Firestore directly.
@@ -9,7 +9,12 @@
 import firestoreService from './firestoreService';
 import logger from '../../utils/logger';
 import { storage } from '../firebase';
-import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import {
+  ref,
+  uploadBytes,
+  getDownloadURL,
+  deleteObject,
+} from 'firebase/storage';
 
 class DatabaseAdapter {
   constructor() {
@@ -51,11 +56,13 @@ class DatabaseAdapter {
       // Save each collection
       for (const [name, collection] of Object.entries(collections)) {
         if (name === 'sold' && !preserveSold) continue;
-        
-        const data = Array.isArray(collection) ? collection : (collection.data || []);
+
+        const data = Array.isArray(collection)
+          ? collection
+          : collection.data || [];
         await firestoreService.saveCollection(name, data);
       }
-      
+
       return { success: true };
     } catch (error) {
       logger.error('Error in saveCollections adapter:', error);
@@ -132,18 +139,23 @@ class DatabaseAdapter {
           }
 
           // Create a reference to the storage location using slabSerial
-          const storageRef = ref(storage, `users/${userId}/cards/${cardData.slabSerial}`);
-          
+          const storageRef = ref(
+            storage,
+            `users/${userId}/cards/${cardData.slabSerial}`
+          );
+
           // Upload the image
           const snapshot = await uploadBytes(storageRef, imageFile);
-          
+
           // Get the download URL
           const imageUrl = await getDownloadURL(snapshot.ref);
-          
+
           // Add the image URL to the card data
           cardData.imageUrl = imageUrl;
-          
-          logger.debug(`Image uploaded successfully for card ${cardData.slabSerial}`);
+
+          logger.debug(
+            `Image uploaded successfully for card ${cardData.slabSerial}`
+          );
         } catch (imageError) {
           logger.error('Error uploading image:', imageError);
           // Don't fail the entire operation if image upload fails
@@ -187,13 +199,15 @@ class DatabaseAdapter {
   async saveSoldCards(soldCards) {
     try {
       // Handle both array and object formats
-      const cardsArray = Array.isArray(soldCards) ? soldCards : (soldCards.data || []);
-      
+      const cardsArray = Array.isArray(soldCards)
+        ? soldCards
+        : soldCards.data || [];
+
       // Save each sold card
       for (const card of cardsArray) {
         await firestoreService.saveSoldItem(card);
       }
-      
+
       return { success: true };
     } catch (error) {
       logger.error('Error in saveSoldCards adapter:', error);
@@ -274,15 +288,15 @@ class DatabaseAdapter {
 
       // Create a reference to the storage location
       const storageRef = ref(storage, `users/${userId}/cards/${cardId}`);
-      
+
       // Upload the image
       const snapshot = await uploadBytes(storageRef, imageFile);
-      
+
       // Get the download URL
       const imageUrl = await getDownloadURL(snapshot.ref);
-      
+
       logger.debug(`Image uploaded successfully for card ${cardId}`);
-      
+
       // Return the URL string directly (not an object)
       return imageUrl;
     } catch (error) {
@@ -301,10 +315,10 @@ class DatabaseAdapter {
 
       // Create a reference to the storage location
       const storageRef = ref(storage, `users/${userId}/cards/${cardId}`);
-      
+
       // Get the download URL
       const imageUrl = await getDownloadURL(storageRef);
-      
+
       return imageUrl;
     } catch (error) {
       // If image doesn't exist, return null instead of throwing
@@ -326,10 +340,10 @@ class DatabaseAdapter {
 
       // Create a reference to the storage location
       const storageRef = ref(storage, `users/${userId}/cards/${cardId}`);
-      
+
       // Delete the image
       await deleteObject(storageRef);
-      
+
       logger.debug(`Image deleted successfully for card ${cardId}`);
       return { success: true };
     } catch (error) {
@@ -345,7 +359,9 @@ class DatabaseAdapter {
   // ===== UTILITY METHODS =====
 
   async resetAllData() {
-    logger.warn('resetAllData called - this should be implemented with Firestore batch operations');
+    logger.warn(
+      'resetAllData called - this should be implemented with Firestore batch operations'
+    );
     // TODO: Implement full data reset
     return { success: true };
   }

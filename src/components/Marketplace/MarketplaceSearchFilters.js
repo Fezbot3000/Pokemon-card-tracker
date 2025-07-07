@@ -103,14 +103,20 @@ const rawConditions = [
   { value: 'Poor', label: 'Poor' },
 ];
 
-function MarketplaceSearchFilters({ onFilterChange, listings, initialFilters }) {
+function MarketplaceSearchFilters({
+  onFilterChange,
+  listings,
+  initialFilters,
+}) {
   // Filter state
-  const [filters, setFilters] = useState(initialFilters || {
-    search: '',
-    category: '',
-    gradingCompany: '',
-    grade: ''
-  });
+  const [filters, setFilters] = useState(
+    initialFilters || {
+      search: '',
+      category: '',
+      gradingCompany: '',
+      grade: '',
+    }
+  );
 
   // Predefined categories
   const predefinedCategories = [
@@ -130,12 +136,12 @@ function MarketplaceSearchFilters({ onFilterChange, listings, initialFilters }) 
     'Marvel',
     'WWE',
     'Other Sports',
-    'Other'
+    'Other',
   ];
-  
+
   // Grades based on selected grading company
   const [gradeOptions, setGradeOptions] = useState([]);
-  
+
   // Update filters when initialFilters changes
   useEffect(() => {
     if (initialFilters) {
@@ -152,9 +158,9 @@ function MarketplaceSearchFilters({ onFilterChange, listings, initialFilters }) 
       setGradeOptions([{ value: '', label: 'All Grades' }]);
       return;
     }
-    
+
     // Select the appropriate grade options based on the grading company
-    switch(filters.gradingCompany) {
+    switch (filters.gradingCompany) {
       case 'PSA':
         setGradeOptions(psaGrades);
         break;
@@ -176,16 +182,16 @@ function MarketplaceSearchFilters({ onFilterChange, listings, initialFilters }) 
   }, [filters.gradingCompany]);
 
   // Handle input changes
-  const handleChange = (e) => {
+  const handleChange = e => {
     const { name, value } = e.target;
-    
+
     // If changing grading company, reset grade
-    const updatedFilters = { 
-      ...filters, 
+    const updatedFilters = {
+      ...filters,
       [name]: value,
-      ...(name === 'gradingCompany' ? { grade: '' } : {})
+      ...(name === 'gradingCompany' ? { grade: '' } : {}),
     };
-    
+
     setFilters(updatedFilters);
     onFilterChange(updatedFilters);
   };
@@ -196,14 +202,14 @@ function MarketplaceSearchFilters({ onFilterChange, listings, initialFilters }) 
       search: '',
       category: '',
       gradingCompany: '',
-      grade: ''
+      grade: '',
     };
     setFilters(resetFilters);
     onFilterChange(resetFilters);
   };
 
   // Handle search change separately to maintain compatibility
-  const handleSearchChange = (value) => {
+  const handleSearchChange = value => {
     const updatedFilters = { ...filters, search: value };
     setFilters(updatedFilters);
     onFilterChange(updatedFilters);
@@ -217,7 +223,7 @@ function MarketplaceSearchFilters({ onFilterChange, listings, initialFilters }) 
         onSearchChange={handleSearchChange}
         placeholder="Search by card name, brand, category..."
       />
-      
+
       {/* Filter dropdowns */}
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
         {/* Category filter */}
@@ -226,33 +232,33 @@ function MarketplaceSearchFilters({ onFilterChange, listings, initialFilters }) 
             name="category"
             value={filters.category}
             onChange={handleChange}
-            className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 
-                       text-gray-900 focus:outline-none focus:ring-1 focus:ring-blue-500 
-                       dark:border-gray-700 dark:bg-[#0F0F0F] dark:text-white"
+            className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-[#0F0F0F] dark:text-white"
           >
             <option value="">All Categories</option>
             {predefinedCategories.map(category => (
-              <option key={category} value={category}>{category}</option>
+              <option key={category} value={category}>
+                {category}
+              </option>
             ))}
           </select>
         </div>
-        
+
         {/* Grading Company filter */}
         <div>
           <select
             name="gradingCompany"
             value={filters.gradingCompany}
             onChange={handleChange}
-            className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 
-                       text-gray-900 focus:outline-none focus:ring-1 focus:ring-blue-500 
-                       dark:border-gray-700 dark:bg-[#0F0F0F] dark:text-white"
+            className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-[#0F0F0F] dark:text-white"
           >
             {gradingCompaniesOptions.map(company => (
-              <option key={company.value} value={company.value}>{company.label}</option>
+              <option key={company.value} value={company.value}>
+                {company.label}
+              </option>
             ))}
           </select>
         </div>
-        
+
         {/* Grade filter - only enabled if grading company is selected */}
         <div>
           <select
@@ -260,20 +266,22 @@ function MarketplaceSearchFilters({ onFilterChange, listings, initialFilters }) 
             value={filters.grade}
             onChange={handleChange}
             disabled={!filters.gradingCompany}
-            className={`block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md 
-                      bg-white dark:bg-[#0F0F0F] text-gray-900 dark:text-white 
-                      focus:outline-none focus:ring-1 focus:ring-blue-500
-                      ${!filters.gradingCompany ? 'cursor-not-allowed opacity-50' : ''}`}
+            className={`block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-[#0F0F0F] dark:text-white ${!filters.gradingCompany ? 'cursor-not-allowed opacity-50' : ''}`}
           >
             {gradeOptions.map(grade => (
-              <option key={grade.value} value={grade.value}>{grade.label}</option>
+              <option key={grade.value} value={grade.value}>
+                {grade.label}
+              </option>
             ))}
           </select>
         </div>
       </div>
-      
+
       {/* Clear filters button - only show if any filter is applied */}
-      {(filters.search || filters.category || filters.gradingCompany || filters.grade) && (
+      {(filters.search ||
+        filters.category ||
+        filters.gradingCompany ||
+        filters.grade) && (
         <div className="flex justify-end">
           <button
             onClick={clearFilters}

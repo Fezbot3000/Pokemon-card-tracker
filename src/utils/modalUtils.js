@@ -24,7 +24,7 @@ export const preventBodyScroll = () => {
       position: document.body.style.position,
       top: document.body.style.top,
       width: document.body.style.width,
-      left: document.body.style.left
+      left: document.body.style.left,
     };
 
     // Set body to fixed position

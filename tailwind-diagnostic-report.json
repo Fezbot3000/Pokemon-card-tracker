@@ -1,0 +1,245 @@
+{
+  "timestamp": "2025-07-07T05:37:52.710Z",
+  "summary": {
+    "totalIssues": 0,
+    "totalWarnings": 4,
+    "totalClasses": 1123,
+    "invalidClasses": 0,
+    "configIssues": 1,
+    "dependencyIssues": 0
+  },
+  "dependencies": [],
+  "configuration": [
+    "Content path missing .js/.jsx extensions"
+  ],
+  "issues": [],
+  "warnings": [
+    "Content path missing .ts/.tsx extensions (may be intentional)",
+    "src\\components\\AddCardModal.js: ESLint Tailwind rule disabled",
+    "src\\components\\HelpCenter.js: ESLint Tailwind rule disabled",
+    "src\\design-system\\components\\CardDetailsModal.js: ESLint Tailwind rule disabled"
+  ],
+  "invalidClasses": [],
+  "topClasses": [
+    {
+      "className": "text-sm",
+      "usage": 904,
+      "files": [
+        "src\\components\\Marketplace\\BuyerSelectionModal.js",
+        "src\\components\\Marketplace\\BuyerSelectionModal.js",
+        "src\\components\\Marketplace\\BuyerSelectionModal.js",
+        "src\\components\\Marketplace\\ChatThread.js",
+        "src\\components\\Marketplace\\DesktopMarketplaceMessages.js"
+      ]
+    },
+    {
+      "className": "flex",
+      "usage": 675,
+      "files": [
+        "src\\components\\Marketplace\\BuyerSelectionModal.js",
+        "src\\components\\Marketplace\\BuyerSelectionModal.js",
+        "src\\components\\Marketplace\\BuyerSelectionModal.js",
+        "src\\components\\Marketplace\\BuyerSelectionModal.js",
+        "src\\components\\Marketplace\\ChatThread.js"
+      ]
+    },
+    {
+      "className": "dark:text-gray-400",
+      "usage": 671,
+      "files": [
+        "src\\components\\Marketplace\\BuyerSelectionModal.js",
+        "src\\components\\Marketplace\\BuyerSelectionModal.js",
+        "src\\components\\Marketplace\\BuyerSelectionModal.js",
+        "src\\components\\Marketplace\\BuyerSelectionModal.js",
+        "src\\components\\Marketplace\\ChatThread.js"
+      ]
+    },
+    {
+      "className": "px-4",
+      "usage": 636,
+      "files": [
+        "src\\components\\Marketplace\\ChatThread.js",
+        "src\\components\\Marketplace\\DesktopMarketplaceMessages.js",
+        "src\\components\\Marketplace\\DesktopMarketplaceMessages.js",
+        "src\\components\\Marketplace\\DesktopMarketplaceMessages.js",
+        "src\\components\\Marketplace\\EditListingModal.js"
+      ]
+    },
+    {
+      "className": "py-2",
+      "usage": 558,
+      "files": [
+        "src\\components\\Marketplace\\BuyerSelectionModal.js",
+        "src\\components\\Marketplace\\ChatThread.js",
+        "src\\components\\Marketplace\\DesktopMarketplaceMessages.js",
+        "src\\components\\Marketplace\\DesktopMarketplaceMessages.js",
+        "src\\components\\Marketplace\\EditListingModal.js"
+      ]
+    },
+    {
+      "className": "text-gray-500",
+      "usage": 536,
+      "files": [
+        "src\\components\\Marketplace\\BuyerSelectionModal.js",
+        "src\\components\\Marketplace\\BuyerSelectionModal.js",
+        "src\\components\\Marketplace\\BuyerSelectionModal.js",
+        "src\\components\\Marketplace\\ChatThread.js",
+        "src\\components\\Marketplace\\ChatThread.js"
+      ]
+    },
+    {
+      "className": "items-center",
+      "usage": 506,
+      "files": [
+        "src\\components\\Marketplace\\BuyerSelectionModal.js",
+        "src\\components\\Marketplace\\BuyerSelectionModal.js",
+        "src\\components\\Marketplace\\ChatThread.js",
+        "src\\components\\Marketplace\\ChatThread.js",
+        "src\\components\\Marketplace\\ChatThread.js"
+      ]
+    },
+    {
+      "className": "font-medium",
+      "usage": 497,
+      "files": [
+        "src\\components\\Marketplace\\BuyerSelectionModal.js",
+        "src\\components\\Marketplace\\BuyerSelectionModal.js",
+        "src\\components\\Marketplace\\BuyerSelectionModal.js",
+        "src\\components\\Marketplace\\ChatThread.js",
+        "src\\components\\Marketplace\\DesktopMarketplaceMessages.js"
+      ]
+    },
+    {
+      "className": "dark:text-white",
+      "usage": 444,
+      "files": [
+        "src\\components\\Marketplace\\BuyerSelectionModal.js",
+        "src\\components\\Marketplace\\BuyerSelectionModal.js",
+        "src\\components\\Marketplace\\BuyerSelectionModal.js",
+        "src\\components\\Marketplace\\ChatThread.js",
+        "src\\components\\Marketplace\\ChatThread.js"
+      ]
+    },
+    {
+      "className": "text-gray-900",
+      "usage": 422,
+      "files": [
+        "src\\components\\Marketplace\\BuyerSelectionModal.js",
+        "src\\components\\Marketplace\\BuyerSelectionModal.js",
+        "src\\components\\Marketplace\\BuyerSelectionModal.js",
+        "src\\components\\Marketplace\\ChatThread.js",
+        "src\\components\\Marketplace\\ChatThread.js"
+      ]
+    },
+    {
+      "className": "rounded-lg",
+      "usage": 345,
+      "files": [
+        "src\\components\\Marketplace\\BuyerSelectionModal.js",
+        "src\\components\\Marketplace\\BuyerSelectionModal.js",
+        "src\\components\\Marketplace\\DesktopMarketplaceMessages.js",
+        "src\\components\\Marketplace\\DesktopMarketplaceMessages.js",
+        "src\\components\\Marketplace\\EditListingModal.js"
+      ]
+    },
+    {
+      "className": "border",
+      "usage": 342,
+      "files": [
+        "src\\components\\Marketplace\\BuyerSelectionModal.js",
+        "src\\components\\Marketplace\\BuyerSelectionModal.js",
+        "src\\components\\Marketplace\\BuyerSelectionModal.js",
+        "src\\components\\Marketplace\\DesktopMarketplaceMessages.js",
+        "src\\components\\Marketplace\\DesktopMarketplaceMessages.js"
+      ]
+    },
+    {
+      "className": "mb-4",
+      "usage": 279,
+      "files": [
+        "src\\components\\Marketplace\\BuyerSelectionModal.js",
+        "src\\components\\Marketplace\\BuyerSelectionModal.js",
+        "src\\components\\Marketplace\\BuyerSelectionModal.js",
+        "src\\components\\Marketplace\\DesktopMarketplaceMessages.js",
+        "src\\components\\Marketplace\\EditListingModal.js"
+      ]
+    },
+    {
+      "className": "mb-2",
+      "usage": 256,
+      "files": [
+        "src\\components\\Marketplace\\ChatThread.js",
+        "src\\components\\Marketplace\\DesktopMarketplaceMessages.js",
+        "src\\components\\Marketplace\\EditListingModal.js",
+        "src\\components\\Marketplace\\EditListingModal.js",
+        "src\\components\\Marketplace\\EditListingModal.js"
+      ]
+    },
+    {
+      "className": "font-bold",
+      "usage": 235,
+      "files": [
+        "src\\components\\Marketplace\\ListingDetailModal.js",
+        "src\\components\\Marketplace\\ListingDetailModal.js",
+        "src\\components\\Marketplace\\ListingDetailModal.js",
+        "src\\components\\Marketplace\\MapView.js",
+        "src\\components\\Marketplace\\MarketplaceListing.js"
+      ]
+    },
+    {
+      "className": "bg-white",
+      "usage": 228,
+      "files": [
+        "src\\components\\Marketplace\\BuyerSelectionModal.js",
+        "src\\components\\Marketplace\\DesktopMarketplaceMessages.js",
+        "src\\components\\Marketplace\\EditListingModal.js",
+        "src\\components\\Marketplace\\EditListingModal.js",
+        "src\\components\\Marketplace\\EditListingModal.js"
+      ]
+    },
+    {
+      "className": "text-xs",
+      "usage": 226,
+      "files": [
+        "src\\components\\Marketplace\\BuyerSelectionModal.js",
+        "src\\components\\Marketplace\\ChatThread.js",
+        "src\\components\\Marketplace\\ChatThread.js",
+        "src\\components\\Marketplace\\ChatThread.js",
+        "src\\components\\Marketplace\\ChatThread.js"
+      ]
+    },
+    {
+      "className": "border-gray-200",
+      "usage": 217,
+      "files": [
+        "src\\components\\Marketplace\\BuyerSelectionModal.js",
+        "src\\components\\Marketplace\\BuyerSelectionModal.js",
+        "src\\components\\Marketplace\\ChatThread.js",
+        "src\\components\\Marketplace\\ChatThread.js",
+        "src\\components\\Marketplace\\DesktopMarketplaceMessages.js"
+      ]
+    },
+    {
+      "className": "w-full",
+      "usage": 209,
+      "files": [
+        "src\\components\\Marketplace\\BuyerSelectionModal.js",
+        "src\\components\\Marketplace\\EditListingModal.js",
+        "src\\components\\Marketplace\\EditListingModal.js",
+        "src\\components\\Marketplace\\EditListingModal.js",
+        "src\\components\\Marketplace\\EditListingModal.js"
+      ]
+    },
+    {
+      "className": "text-center",
+      "usage": 204,
+      "files": [
+        "src\\components\\Marketplace\\BuyerSelectionModal.js",
+        "src\\components\\Marketplace\\ChatThread.js",
+        "src\\components\\Marketplace\\ChatThread.js",
+        "src\\components\\Marketplace\\ChatThread.js",
+        "src\\components\\Marketplace\\DesktopMarketplaceMessages.js"
+      ]
+    }
+  ]
+}

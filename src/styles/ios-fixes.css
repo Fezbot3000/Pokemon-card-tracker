@@ -1,7 +1,13 @@
-/* Modal height fix for all desktop modals */
-.modal-container {
+/* Modal height fix for full-screen modals only */
+.modal-container:not(.modal-contextual) {
   height: 100vh;
   height: 100dvh; /* Dynamic viewport height for better compatibility */
+}
+
+/* Contextual modals should have auto height */
+.modal-container.modal-contextual {
+  height: auto;
+  max-height: 90vh;
 }
 
 /* iOS Safari specific fixes */
@@ -10,12 +16,12 @@
   div.ios-safe-nav.fixed.top-0 {
     padding-top: calc(1rem + env(safe-area-inset-top, 0px));
   }
-  
+
   /* Fix logged-in header positioning on iOS to account for notch/dynamic island */
   header.fixed.top-0 {
     top: env(safe-area-inset-top, 0px);
   }
-  
+
   /* iOS Safari modal fixes */
   .modal-footer-ios-fix {
     position: absolute;
@@ -24,32 +30,32 @@
     right: 0;
     z-index: 1000;
   }
-  
+
   .modal-content-with-absolute-footer {
     padding-bottom: 100px; /* Account for absolute footer */
   }
-  
+
   /* Fix horizontal scrolling in modals on iPad PWA */
   @media (display-mode: standalone) {
     .modal-container {
       max-width: 100vw;
       overflow-x: hidden;
     }
-    
+
     .modal-container * {
       max-width: 100%;
       box-sizing: border-box;
     }
-    
+
     /* PWA-specific checkbox size reduction for all mobile devices */
-    input[type="checkbox"],
-    button[aria-label*="Select"],
-    button[aria-label*="Deselect"],
+    input[type='checkbox'],
+    button[aria-label*='Select'],
+    button[aria-label*='Deselect'],
     .w-4.h-4 {
       width: 0.5rem !important;
       height: 0.5rem !important;
     }
-    
+
     /* Additional targeting for card selection buttons */
     .absolute.top-2.right-2 button,
     .absolute.top-2.right-2 input {
@@ -57,20 +63,20 @@
       height: 0.5rem !important;
     }
   }
-  
+
   /* iOS PWA modal header safe area */
   @media (display-mode: standalone) {
     .modal-header-ios-safe {
       padding-top: calc(0.75rem + env(safe-area-inset-top, 0px));
     }
   }
-  
+
   /* Improved scroll behavior on iOS */
   .modal-body {
     -webkit-overflow-scrolling: touch;
     overflow-y: auto;
   }
-  
+
   /* iOS PWA specific fixes */
   @media (display-mode: standalone) {
     /* PWA safe area handling */
@@ -79,51 +85,60 @@
       padding-bottom: env(safe-area-inset-bottom, 0px);
     }
   }
-  
+
   /* iOS form input zoom prevention */
-  input[type="text"],
-  input[type="email"],
-  input[type="password"],
-  input[type="number"],
+  input[type='text'],
+  input[type='email'],
+  input[type='password'],
+  input[type='number'],
   textarea,
   select {
     font-size: 16px; /* Prevent zoom on iOS */
   }
-  
+
   /* iOS button tap targets */
-  .btn, button, .button {
+  .btn,
+  button,
+  .button {
     min-height: 44px; /* iOS recommended tap target size */
     min-width: 44px;
   }
-  
+
   /* Mobile specific navigation fixes */
   @media (max-width: 640px) {
     div.ios-safe-nav.fixed.top-0 {
       padding-top: calc(0.5rem + env(safe-area-inset-top, 0px));
     }
-    
-    .modal-container {
+
+    .modal-container:not(.modal-contextual) {
       height: 100vh;
       height: 100dvh;
       margin: 0;
       padding: 0;
     }
+
+    /* Contextual modals stay contextual even on mobile */
+    .modal-container.modal-contextual {
+      height: auto;
+      max-height: 80vh;
+      margin: 2rem;
+    }
   }
-  
+
   /* Tablet navigation fixes */
   @media (min-width: 641px) and (max-width: 768px) {
     div.ios-safe-nav.fixed.top-0 {
       padding-top: calc(0.75rem + env(safe-area-inset-top, 0px));
     }
   }
-  
+
   /* iPad PWA specific fixes */
   @media (min-width: 768px) and (max-width: 1024px) and (display-mode: standalone) {
     /* Fix search toolbar alignment on iPad PWA */
     .search-toolbar {
       align-items: center !important;
     }
-    
+
     /* Fix filter button positioning */
     .search-toolbar button,
     .search-toolbar .dropdown-trigger {
@@ -131,24 +146,24 @@
       align-items: center !important;
       justify-content: center !important;
     }
-    
+
     /* Fix view selector alignment */
     .search-toolbar .view-selector {
       align-items: center !important;
     }
-    
+
     /* Ensure proper button heights */
     .search-toolbar button {
       min-height: 40px !important;
     }
   }
-  
+
   /* PWA mode navigation fixes */
   @media (display-mode: standalone) {
     div.ios-safe-nav.fixed.top-0 {
       padding-top: calc(1rem + env(safe-area-inset-top, 0px));
     }
-    
+
     /* Desktop PWA header background fill */
     body::before {
       content: '';
@@ -160,7 +175,7 @@
       background-color: white;
       z-index: 9999;
     }
-    
+
     html.dark body::before {
       background-color: black;
     }

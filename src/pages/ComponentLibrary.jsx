@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { 
+import {
   // Atoms
-  Button, 
+  Button,
   Icon,
   Text,
   CardImage,
@@ -15,53 +15,64 @@ import {
   ColorSwatch,
   GradientSwatch,
   Toggle,
-  
+
   // Molecules
-  Dropdown, 
-  DropdownItem, 
+  Dropdown,
+  DropdownItem,
   DropdownDivider,
   Modal,
   FormField,
   ColorCategory,
   ColorCustomizer,
   ComponentSection,
-  LoginModal, 
-  SoldItemsView, 
+  LoginModal,
+  SoldItemsView,
   SettingsModal,
-  
+
   // Components
   Header,
   StatisticsSummary,
   SearchToolbar,
   Card,
   CardDetailsModal,
-  
+
   // Hooks
-  useTheme
+  useTheme,
 } from '../design-system';
 
-import { baseColors, lightTheme, darkTheme, semanticColors, gradients } from '../design-system/styles/colors';
+import {
+  baseColors,
+  lightTheme,
+  darkTheme,
+  semanticColors,
+  gradients,
+} from '../design-system/styles/colors';
 
 // Modern UI Components - Import directly from files with explicit extensions
 import { Select, Option } from '../components/ui/select.tsx';
 import { Checkbox } from '../components/ui/checkbox.tsx';
 import { Radio, RadioGroup } from '../components/ui/radio.tsx';
 import { Switch } from '../components/ui/switch.tsx';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '../components/ui/tabs.tsx';
-import { 
-  Breadcrumb, 
-  BreadcrumbList, 
-  BreadcrumbItem, 
-  BreadcrumbLink, 
-  BreadcrumbSeparator 
+import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+} from '../components/ui/tabs.tsx';
+import {
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbSeparator,
 } from '../components/ui/breadcrumb.tsx';
-import { 
-  FormField as ModernFormField, 
-  FormItem, 
-  FormLabel as ModernFormLabel, 
-  FormControl, 
-  FormDescription, 
-  FormMessage 
+import {
+  FormField as ModernFormField,
+  FormItem,
+  FormLabel as ModernFormLabel,
+  FormControl,
+  FormDescription,
+  FormMessage,
 } from '../components/ui/form-field.tsx';
 import { Input as ModernInput } from '../components/ui/input.tsx';
 import { Label as ModernLabel } from '../components/ui/label.tsx';
@@ -70,24 +81,24 @@ import { Grid } from '../components/ui/grid.tsx';
 import { Stack, HStack, VStack } from '../components/ui/stack.tsx';
 
 // Helper function to convert RGB to Hex
-const rgbToHex = (rgb) => {
+const rgbToHex = rgb => {
   // Handle non-string inputs
   if (!rgb || typeof rgb !== 'string') return '#000000';
-  
+
   // If it's already a hex color, return it
   if (rgb.startsWith('#')) return rgb;
-  
+
   // Extract the RGB values
   const rgbMatch = rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
   if (rgbMatch) {
     const r = parseInt(rgbMatch[1]);
     const g = parseInt(rgbMatch[2]);
     const b = parseInt(rgbMatch[3]);
-    
+
     // Convert to hex
     return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase()}`;
   }
-  
+
   // If the format is not recognized, return a default color
   return '#000000';
 };
@@ -95,17 +106,17 @@ const rgbToHex = (rgb) => {
 // Create a flattened color map for the color customizer
 const colorMap = {
   // Primary colors
-  'Primary': rgbToHex(baseColors.primaryDefault || ''),
+  Primary: rgbToHex(baseColors.primaryDefault || ''),
   'Primary Hover': rgbToHex(baseColors.primaryHover || ''),
   'Primary Light': rgbToHex(baseColors.primaryLight || ''),
   'Primary Dark': rgbToHex(baseColors.primaryDark || ''),
-  
+
   // Light mode colors
   'Light Background Primary': rgbToHex(lightTheme.backgroundPrimary || ''),
   'Light Text Secondary': rgbToHex(lightTheme.textSecondary || ''),
   'Light Background Tertiary': rgbToHex(lightTheme.backgroundTertiary || ''),
   'Light Text Tertiary': rgbToHex(lightTheme.textTertiary || ''),
-  
+
   // Dark mode colors
   'Dark Background Primary': rgbToHex(darkTheme.backgroundPrimary || ''),
   'Dark Background Secondary': rgbToHex(darkTheme.backgroundSecondary || ''),
@@ -123,19 +134,19 @@ const ComponentLibrary = () => {
     small: false,
     medium: true,
     large: false,
-    disabled: true
+    disabled: true,
   });
   const { theme, toggleTheme } = useTheme();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCardDetailsModalOpen, setIsCardDetailsModalOpen] = useState(false);
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false); 
-  
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+
   // State for form elements section
   const [textValue, setTextValue] = useState('');
   const [numberValue, setNumberValue] = useState(0);
   const [errorText, setErrorText] = useState('');
   const [errorNumber, setErrorNumber] = useState('');
-  
+
   // State for dropdown section
   const [dropdownIsOpen, setDropdownIsOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState('Select an option');
@@ -145,7 +156,7 @@ const ComponentLibrary = () => {
 
   // State for SettingsModal example
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
-  
+
   // State for modern form components
   const [selectValue, setSelectValue] = useState('');
   const [checkboxes, setCheckboxes] = useState({
@@ -177,19 +188,41 @@ const ComponentLibrary = () => {
       if (hash) {
         if (['atomic', 'composite'].includes(hash)) {
           setActiveTab(hash);
-        } else if (['colors', 'buttons', 'cards', 'form-elements', 'icons', 'toggle', 'dropdown', 'toast'].includes(hash)) {
+        } else if (
+          [
+            'colors',
+            'buttons',
+            'cards',
+            'form-elements',
+            'icons',
+            'toggle',
+            'dropdown',
+            'toast',
+          ].includes(hash)
+        ) {
           setActiveTab('atomic');
           setActiveSection(hash);
-        } else if (['header', 'modal', 'card-details-modal', 'statistics-summary', 'search-toolbar', 'login-modal', 'sold-items-view', 'settings-modal'].includes(hash)) {
+        } else if (
+          [
+            'header',
+            'modal',
+            'card-details-modal',
+            'statistics-summary',
+            'search-toolbar',
+            'login-modal',
+            'sold-items-view',
+            'settings-modal',
+          ].includes(hash)
+        ) {
           setActiveTab('composite');
           setActiveSection(hash);
         }
       }
     };
-    
+
     window.addEventListener('hashchange', handleHashChange);
     handleHashChange(); // Handle initial hash
-    
+
     return () => {
       window.removeEventListener('hashchange', handleHashChange);
     };
@@ -234,23 +267,23 @@ const ComponentLibrary = () => {
   const handleSaveColor = (variable, value) => {
     setCustomColors(prev => ({
       ...prev,
-      [variable]: value
+      [variable]: value,
     }));
   };
 
-  const handleToggleChange = (key) => {
+  const handleToggleChange = key => {
     setToggleStates(prev => ({
       ...prev,
-      [key]: !prev[key]
+      [key]: !prev[key],
     }));
   };
 
   // Mock handlers for demos
-  const handleCardSave = (card) => {
+  const handleCardSave = card => {
     // // console.log('Card saved:', card);
   };
 
-  const handleCardDelete = (card) => {
+  const handleCardDelete = card => {
     // // console.log('Card deleted:', card);
   };
 
@@ -264,24 +297,26 @@ const ComponentLibrary = () => {
 
     // Simulate API call
     setTimeout(() => {
-      if (password === 'password') { // Simulate success
+      if (password === 'password') {
+        // Simulate success
         setIsLoginModalOpen(false);
-      } else { // Simulate failure
+      } else {
+        // Simulate failure
         setLoginError('Invalid email or password. Try "password".');
       }
       setIsLoginLoading(false);
     }, 1500); // Simulate network delay
   };
-  
+
   // Mock handlers for other login-related actions
   const handleMockSignUpClick = () => {
     // // console.log('Sign up clicked');
   };
-  
+
   const handleMockForgotPasswordClick = () => {
     // // console.log('Forgot password clicked');
   };
-  
+
   const handleMockGoogleLogin = () => {
     setIsLoginLoading(true);
     setTimeout(() => {
@@ -289,7 +324,7 @@ const ComponentLibrary = () => {
       setIsLoginLoading(false);
     }, 1500);
   };
-  
+
   const handleMockAppleLogin = () => {
     setIsLoginLoading(true);
     setTimeout(() => {
@@ -316,11 +351,11 @@ const ComponentLibrary = () => {
   const compositeNavItems = [
     { id: 'header', label: 'Header' },
     { id: 'modal', label: 'Modal' },
-    { id: 'login-modal', label: 'Login Modal' }, 
+    { id: 'login-modal', label: 'Login Modal' },
     { id: 'card-details-modal', label: 'Card Details Modal' },
     { id: 'statistics-summary', label: 'Statistics Summary' },
     { id: 'search-toolbar', label: 'Search Toolbar' },
-    { id: 'sold-items-view', label: 'Sold Items View' }, 
+    { id: 'sold-items-view', label: 'Sold Items View' },
     { id: 'settings-modal', label: 'Settings Modal' },
   ];
 
@@ -329,53 +364,106 @@ const ComponentLibrary = () => {
     return (
       <div className="space-y-8">
         <div className="max-w-4xl">
-          <h2 className="mb-4 text-2xl font-semibold text-gray-900 dark:text-white">Color System</h2>
+          <h2 className="mb-4 text-2xl font-semibold text-gray-900 dark:text-white">
+            Color System
+          </h2>
           <p className="mb-8 text-gray-700 dark:text-gray-300">
-            The Pokemon Card Tracker uses a carefully crafted color palette to create a cohesive visual
-            language. Colors are organized into functional groups: primary brand colors, backgrounds, and
-            text colors.
+            The Pokemon Card Tracker uses a carefully crafted color palette to
+            create a cohesive visual language. Colors are organized into
+            functional groups: primary brand colors, backgrounds, and text
+            colors.
           </p>
         </div>
-        
+
         {/* Light Mode Theme */}
         <ColorCategory title="Light Mode">
-          <ColorSwatch key="light-bg-primary" colorValue={baseColors.lightBackgroundPrimary} name="Light Background Primary" />
-          <ColorSwatch key="light-bg-tertiary" colorValue={baseColors.lightBackgroundTertiary} name="Light Background Tertiary" />
-          <ColorSwatch key="light-text-secondary" colorValue={baseColors.lightTextSecondary} name="Light Text Secondary" />
-          <ColorSwatch key="light-text-tertiary" colorValue={baseColors.lightTextTertiary} name="Light Text Tertiary" />
+          <ColorSwatch
+            key="light-bg-primary"
+            colorValue={baseColors.lightBackgroundPrimary}
+            name="Light Background Primary"
+          />
+          <ColorSwatch
+            key="light-bg-tertiary"
+            colorValue={baseColors.lightBackgroundTertiary}
+            name="Light Background Tertiary"
+          />
+          <ColorSwatch
+            key="light-text-secondary"
+            colorValue={baseColors.lightTextSecondary}
+            name="Light Text Secondary"
+          />
+          <ColorSwatch
+            key="light-text-tertiary"
+            colorValue={baseColors.lightTextTertiary}
+            name="Light Text Tertiary"
+          />
         </ColorCategory>
-        
+
         {/* Dark Mode Theme */}
         <ColorCategory title="Dark Mode">
-          <ColorSwatch key="dark-bg-primary" colorValue={baseColors.darkBackgroundPrimary} name="Dark Background Primary" />
-          <ColorSwatch key="dark-bg-secondary" colorValue={baseColors.darkBackgroundSecondary} name="Dark Background Secondary" />
-          <ColorSwatch key="dark-text-secondary" colorValue={baseColors.darkTextSecondary} name="Dark Text Secondary" />
-          <ColorSwatch key="dark-text-tertiary" colorValue={baseColors.darkTextTertiary} name="Dark Text Tertiary" />
+          <ColorSwatch
+            key="dark-bg-primary"
+            colorValue={baseColors.darkBackgroundPrimary}
+            name="Dark Background Primary"
+          />
+          <ColorSwatch
+            key="dark-bg-secondary"
+            colorValue={baseColors.darkBackgroundSecondary}
+            name="Dark Background Secondary"
+          />
+          <ColorSwatch
+            key="dark-text-secondary"
+            colorValue={baseColors.darkTextSecondary}
+            name="Dark Text Secondary"
+          />
+          <ColorSwatch
+            key="dark-text-tertiary"
+            colorValue={baseColors.darkTextTertiary}
+            name="Dark Text Tertiary"
+          />
         </ColorCategory>
-        
+
         {/* Primary Colors */}
         <ColorCategory title="Primary Palette">
           <div className="flex flex-col overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
-            <div 
+            <div
               className="flex h-24 items-center justify-center text-white"
               style={{ background: gradients.primary }}
             >
-              <span className="px-2 text-center font-mono text-sm">Gradient</span>
+              <span className="px-2 text-center font-mono text-sm">
+                Gradient
+              </span>
             </div>
             <div className="bg-white p-2 dark:bg-gray-800">
-              <p className="text-sm font-medium text-gray-900 dark:text-white">Primary Default</p>
-              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Red to Pink gradient</p>
+              <p className="text-sm font-medium text-gray-900 dark:text-white">
+                Primary Default
+              </p>
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                Red to Pink gradient
+              </p>
             </div>
           </div>
-          <ColorSwatch key="primary-hover" colorValue={baseColors.primaryHover} name="Primary Hover" />
-          <ColorSwatch key="primary-light" colorValue={baseColors.primaryLight} name="Primary Light" />
-          <ColorSwatch key="primary-dark" colorValue={baseColors.primaryDark} name="Primary Dark" />
+          <ColorSwatch
+            key="primary-hover"
+            colorValue={baseColors.primaryHover}
+            name="Primary Hover"
+          />
+          <ColorSwatch
+            key="primary-light"
+            colorValue={baseColors.primaryLight}
+            name="Primary Light"
+          />
+          <ColorSwatch
+            key="primary-dark"
+            colorValue={baseColors.primaryDark}
+            name="Primary Dark"
+          />
         </ColorCategory>
-        
+
         {/* Color Customizer */}
         <div className="mt-12">
-          <ColorCustomizer 
-            colorMap={colorMap} 
+          <ColorCustomizer
+            colorMap={colorMap}
             onSave={handleSaveColor}
             customColors={customColors}
           />
@@ -389,82 +477,116 @@ const ComponentLibrary = () => {
       <p className="mb-6 text-gray-600 dark:text-gray-400">
         Standard button variants for different actions and emphasis levels.
       </p>
-      
+
       {/* Standard Variants */}
       <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
         <div>
-          <h4 className="mb-2 font-medium text-gray-800 dark:text-gray-200">Primary</h4>
+          <h4 className="mb-2 font-medium text-gray-800 dark:text-gray-200">
+            Primary
+          </h4>
           <Button variant="primary">Primary Action</Button>
         </div>
         <div>
-          <h4 className="mb-2 font-medium text-gray-800 dark:text-gray-200">Secondary</h4>
+          <h4 className="mb-2 font-medium text-gray-800 dark:text-gray-200">
+            Secondary
+          </h4>
           <Button variant="secondary">Secondary Action</Button>
         </div>
         <div>
-          <h4 className="mb-2 font-medium text-gray-800 dark:text-gray-200">Outline</h4>
+          <h4 className="mb-2 font-medium text-gray-800 dark:text-gray-200">
+            Outline
+          </h4>
           <Button variant="outline">Outline Action</Button>
         </div>
         <div>
-          <h4 className="mb-2 font-medium text-gray-800 dark:text-gray-200">Text</h4>
+          <h4 className="mb-2 font-medium text-gray-800 dark:text-gray-200">
+            Text
+          </h4>
           <Button variant="text">Text Action</Button>
         </div>
         <div>
-          <h4 className="mb-2 font-medium text-gray-800 dark:text-gray-200">Danger</h4>
+          <h4 className="mb-2 font-medium text-gray-800 dark:text-gray-200">
+            Danger
+          </h4>
           <Button variant="danger">Danger Action</Button>
         </div>
         <div>
-          <h4 className="mb-2 font-medium text-gray-800 dark:text-gray-200">Success</h4>
+          <h4 className="mb-2 font-medium text-gray-800 dark:text-gray-200">
+            Success
+          </h4>
           <Button variant="success">Success Action</Button>
         </div>
         <div>
-          <h4 className="mb-2 font-medium text-gray-800 dark:text-gray-200">Icon</h4>
+          <h4 className="mb-2 font-medium text-gray-800 dark:text-gray-200">
+            Icon
+          </h4>
           <Button variant="icon" aria-label="Add Item">
             <Icon name="add" />
           </Button>
         </div>
         <div>
-          <h4 className="mb-2 font-medium text-gray-800 dark:text-gray-200">Disabled</h4>
-          <Button variant="primary" disabled>Disabled</Button>
+          <h4 className="mb-2 font-medium text-gray-800 dark:text-gray-200">
+            Disabled
+          </h4>
+          <Button variant="primary" disabled>
+            Disabled
+          </Button>
         </div>
       </div>
 
       {/* Sizes */}
-      <h3 className="mb-4 mt-8 text-xl font-semibold text-gray-900 dark:text-white">Sizes</h3>
+      <h3 className="mb-4 mt-8 text-xl font-semibold text-gray-900 dark:text-white">
+        Sizes
+      </h3>
       <div className="mb-8 flex items-center space-x-4">
         <Button size="sm">Small</Button>
         <Button size="md">Medium (Default)</Button>
         <Button size="lg">Large</Button>
       </div>
-      
+
       {/* With Icons */}
-      <h3 className="mb-4 mt-8 text-xl font-semibold text-gray-900 dark:text-white">With Icons</h3>
+      <h3 className="mb-4 mt-8 text-xl font-semibold text-gray-900 dark:text-white">
+        With Icons
+      </h3>
       <div className="mb-8 flex items-center space-x-4">
         <Button iconLeft={<Icon name="favorite" />}>Icon Left</Button>
         <Button iconRight={<Icon name="arrow_forward" />}>Icon Right</Button>
-        <Button variant="primary" iconLeft={<Icon name="cloud_upload" color="white" />} size="lg">Upload</Button>
+        <Button
+          variant="primary"
+          iconLeft={<Icon name="cloud_upload" color="white" />}
+          size="lg"
+        >
+          Upload
+        </Button>
       </div>
 
       {/* Full Width */}
-      <h3 className="mb-4 mt-8 text-xl font-semibold text-gray-900 dark:text-white">Full Width</h3>
+      <h3 className="mb-4 mt-8 text-xl font-semibold text-gray-900 dark:text-white">
+        Full Width
+      </h3>
       <div className="mb-8">
         <Button fullWidth>Full Width Button</Button>
       </div>
-      
+
       {/* Tab Navigation Style Example */}
-      <h3 className="mb-4 mt-8 text-xl font-semibold text-gray-900 dark:text-white">Tab Navigation Style Example</h3>
+      <h3 className="mb-4 mt-8 text-xl font-semibold text-gray-900 dark:text-white">
+        Tab Navigation Style Example
+      </h3>
       <p className="mb-4 text-gray-600 dark:text-gray-400">
-        Demonstrates the styling used for active/inactive tabs, often achieved by applying conditional classes to standard buttons based on state (e.g., like the 'Cards'/'Sold Items' toggle in the Header).
+        Demonstrates the styling used for active/inactive tabs, often achieved
+        by applying conditional classes to standard buttons based on state
+        (e.g., like the 'Cards'/'Sold Items' toggle in the Header).
       </p>
       <div className="mb-8 flex w-max overflow-hidden rounded-full bg-gray-100 p-1 dark:bg-gray-800">
-         {/* Example of Active Tab Style */}
-        <Button 
+        {/* Example of Active Tab Style */}
+        <Button
           className="flex items-center rounded-full bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] px-4 py-1 text-white" // Active styles applied directly
         >
           <Icon name="style" className="mr-1" color="white" />
           <span>Active Tab</span>
         </Button>
         {/* Example of Inactive Tab Style */}
-        <Button 
+        <Button
           variant="text" // Use text variant for base styling
           className="flex items-center rounded-full px-4 py-1 text-gray-700 dark:text-gray-300" // Standard inactive styles
         >
@@ -477,76 +599,93 @@ const ComponentLibrary = () => {
 
   const renderCardSection = () => (
     <div id="cards" className="mb-12">
-      <h2 className="mb-6 text-2xl font-semibold text-gray-800 dark:text-gray-100">Cards</h2>
-      
+      <h2 className="mb-6 text-2xl font-semibold text-gray-800 dark:text-gray-100">
+        Cards
+      </h2>
+
       <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2">
         {/* Container-style Card */}
         <div>
-          <h3 className="mb-4 text-lg font-medium text-gray-700 dark:text-gray-300">Container Card</h3>
-          <Card 
+          <h3 className="mb-4 text-lg font-medium text-gray-700 dark:text-gray-300">
+            Container Card
+          </h3>
+          <Card
             style={{
               backgroundColor: customColors['--card-background-color'],
-              borderColor: customColors['--card-border-color']
+              borderColor: customColors['--card-border-color'],
             }}
           >
-            <Card.Header style={{ color: customColors['--card-header-text-color'] }}>
+            <Card.Header
+              style={{ color: customColors['--card-header-text-color'] }}
+            >
               Card Header
             </Card.Header>
-            <Card.Body style={{ color: customColors['--card-body-text-color'] }}>
-              This is an example card component. It can be used to display information in a clean, contained way.
+            <Card.Body
+              style={{ color: customColors['--card-body-text-color'] }}
+            >
+              This is an example card component. It can be used to display
+              information in a clean, contained way.
             </Card.Body>
-            <Card.Footer style={{ color: customColors['--card-footer-text-color'] }}>
+            <Card.Footer
+              style={{ color: customColors['--card-footer-text-color'] }}
+            >
               Card Footer
             </Card.Footer>
           </Card>
         </div>
-        
+
         {/* Pokemon Card Style */}
         <div>
-          <h3 className="mb-4 text-lg font-medium text-gray-700 dark:text-gray-300">Pokemon Card</h3>
-          <Card 
+          <h3 className="mb-4 text-lg font-medium text-gray-700 dark:text-gray-300">
+            Pokemon Card
+          </h3>
+          <Card
             card={{
               name: 'Charizard',
               set: 'Base Set',
               number: '4/102',
               currentValueAUD: 500,
-              investmentAUD: 350
+              investmentAUD: 350,
             }}
             cardImage="https://assets.pokemon.com/assets/cms2/img/cards/web/SM10/SM10_EN_1.png"
           />
         </div>
       </div>
-      
+
       <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2">
         {/* Card with Profit */}
         <div>
-          <h3 className="mb-4 text-lg font-medium text-gray-700 dark:text-gray-300">Card with Profit</h3>
-          <Card 
+          <h3 className="mb-4 text-lg font-medium text-gray-700 dark:text-gray-300">
+            Card with Profit
+          </h3>
+          <Card
             card={{
               name: 'Pikachu',
               set: 'Vivid Voltage',
               number: '25/185',
               currentValueAUD: 120,
-              investmentAUD: 80
+              investmentAUD: 80,
             }}
           />
         </div>
-        
+
         {/* Card with Loss */}
         <div>
-          <h3 className="mb-4 text-lg font-medium text-gray-700 dark:text-gray-300">Card with Loss</h3>
-          <Card 
+          <h3 className="mb-4 text-lg font-medium text-gray-700 dark:text-gray-300">
+            Card with Loss
+          </h3>
+          <Card
             card={{
               name: 'Mewtwo',
               set: 'Shining Legends',
               number: '39/73',
               currentValueAUD: 75,
-              investmentAUD: 100
+              investmentAUD: 100,
             }}
           />
         </div>
       </div>
-      
+
       <ColorCustomizer
         componentName="Card"
         colorVariables={{
@@ -554,7 +693,7 @@ const ComponentLibrary = () => {
           'Border Color': 'var(--card-border-color, #E5E7EB)',
           'Header Text Color': 'var(--card-header-text-color, #1F2937)',
           'Body Text Color': 'var(--card-body-text-color, #374151)',
-          'Footer Text Color': 'var(--card-footer-text-color, #6B7280)'
+          'Footer Text Color': 'var(--card-footer-text-color, #6B7280)',
         }}
         availableColors={colorMap}
         onSave={(variable, value) => handleSaveColor('card', variable, value)}
@@ -568,7 +707,9 @@ const ComponentLibrary = () => {
         <div className="space-y-8">
           {/* Text Fields */}
           <div className="overflow-hidden rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-[#0F0F0F]">
-            <h3 className="mb-4 text-lg font-medium text-gray-900 dark:text-white">Text Fields</h3>
+            <h3 className="mb-4 text-lg font-medium text-gray-900 dark:text-white">
+              Text Fields
+            </h3>
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div>
                 <FormLabel htmlFor="default-text">Default</FormLabel>
@@ -576,10 +717,10 @@ const ComponentLibrary = () => {
                   id="default-text"
                   placeholder="Enter text"
                   value={textValue}
-                  onChange={(e) => setTextValue(e.target.value)}
+                  onChange={e => setTextValue(e.target.value)}
                 />
               </div>
-              
+
               <div>
                 <FormLabel htmlFor="disabled-text">Disabled</FormLabel>
                 <TextField
@@ -588,24 +729,26 @@ const ComponentLibrary = () => {
                   disabled
                 />
               </div>
-              
+
               <div>
                 <FormLabel htmlFor="error-text">With Error</FormLabel>
                 <TextField
                   id="error-text"
                   placeholder="Enter text"
                   value={textValue}
-                  onChange={(e) => setTextValue(e.target.value)}
+                  onChange={e => setTextValue(e.target.value)}
                   error={errorText}
                 />
-                <button 
+                <button
                   className="mt-2 text-sm text-[#E6185C]"
-                  onClick={() => setErrorText(errorText ? '' : 'This field has an error')}
+                  onClick={() =>
+                    setErrorText(errorText ? '' : 'This field has an error')
+                  }
                 >
                   Toggle Error
                 </button>
               </div>
-              
+
               <div>
                 <FormLabel htmlFor="with-icon">With Icon</FormLabel>
                 <TextField
@@ -616,10 +759,12 @@ const ComponentLibrary = () => {
               </div>
             </div>
           </div>
-          
+
           {/* Number Fields */}
           <div className="overflow-hidden rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-[#0F0F0F]">
-            <h3 className="mb-4 text-lg font-medium text-gray-900 dark:text-white">Number Fields</h3>
+            <h3 className="mb-4 text-lg font-medium text-gray-900 dark:text-white">
+              Number Fields
+            </h3>
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div>
                 <FormLabel htmlFor="default-number">Default</FormLabel>
@@ -627,10 +772,10 @@ const ComponentLibrary = () => {
                   id="default-number"
                   placeholder="Enter number"
                   value={numberValue}
-                  onChange={(e) => setNumberValue(e.target.value)}
+                  onChange={e => setNumberValue(e.target.value)}
                 />
               </div>
-              
+
               <div>
                 <FormLabel htmlFor="disabled-number">Disabled</FormLabel>
                 <NumberField
@@ -639,24 +784,26 @@ const ComponentLibrary = () => {
                   disabled
                 />
               </div>
-              
+
               <div>
                 <FormLabel htmlFor="error-number">With Error</FormLabel>
                 <NumberField
                   id="error-number"
                   placeholder="Enter number"
                   value={numberValue}
-                  onChange={(e) => setNumberValue(e.target.value)}
+                  onChange={e => setNumberValue(e.target.value)}
                   error={errorNumber}
                 />
-                <button 
+                <button
                   className="mt-2 text-sm text-[#E6185C]"
-                  onClick={() => setErrorNumber(errorNumber ? '' : 'This field has an error')}
+                  onClick={() =>
+                    setErrorNumber(errorNumber ? '' : 'This field has an error')
+                  }
                 >
                   Toggle Error
                 </button>
               </div>
-              
+
               <div>
                 <FormLabel htmlFor="currency-number">Currency</FormLabel>
                 <NumberField
@@ -669,120 +816,250 @@ const ComponentLibrary = () => {
               </div>
             </div>
           </div>
-          
+
           {/* Form Labels */}
           <div className="overflow-hidden rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-[#0F0F0F]">
-            <h3 className="mb-4 text-lg font-medium text-gray-900 dark:text-white">Form Labels</h3>
+            <h3 className="mb-4 text-lg font-medium text-gray-900 dark:text-white">
+              Form Labels
+            </h3>
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div>
                 <FormLabel htmlFor="default-label">Default Label</FormLabel>
                 <TextField id="default-label" placeholder="Field with label" />
               </div>
-              
+
               <div>
-                <FormLabel htmlFor="required-label" required>Required Label</FormLabel>
+                <FormLabel htmlFor="required-label" required>
+                  Required Label
+                </FormLabel>
                 <TextField id="required-label" placeholder="Required field" />
               </div>
-              
+
               <div>
-                <FormLabel htmlFor="with-help" helpText="This is some helpful text">Label with Help Text</FormLabel>
+                <FormLabel
+                  htmlFor="with-help"
+                  helpText="This is some helpful text"
+                >
+                  Label with Help Text
+                </FormLabel>
                 <TextField id="with-help" placeholder="Field with help text" />
               </div>
-              
+
               <div>
-                <FormLabel htmlFor="disabled-label" disabled>Disabled Label</FormLabel>
-                <TextField id="disabled-label" placeholder="Field with disabled label" disabled />
+                <FormLabel htmlFor="disabled-label" disabled>
+                  Disabled Label
+                </FormLabel>
+                <TextField
+                  id="disabled-label"
+                  placeholder="Field with disabled label"
+                  disabled
+                />
               </div>
             </div>
           </div>
-          
+
           {/* Props Tables */}
           <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-[#0F0F0F]">
-            <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-white">Form Element Props</h3>
+            <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-white">
+              Form Element Props
+            </h3>
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
                 <thead className="bg-gray-50 dark:bg-[#0F0F0F]">
                   <tr>
-                    <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Component</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Prop</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Type</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Description</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                      Component
+                    </th>
+                    <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                      Prop
+                    </th>
+                    <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                      Type
+                    </th>
+                    <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                      Description
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-800 dark:bg-[#0F0F0F]">
                   <tr>
-                    <td className="px-4 py-2 text-sm text-gray-900 dark:text-white" rowSpan="4">TextField</td>
-                    <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">value</td>
-                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">string</td>
-                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">Current value of the input</td>
+                    <td
+                      className="px-4 py-2 text-sm text-gray-900 dark:text-white"
+                      rowSpan="4"
+                    >
+                      TextField
+                    </td>
+                    <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">
+                      value
+                    </td>
+                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                      string
+                    </td>
+                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                      Current value of the input
+                    </td>
                   </tr>
                   <tr>
-                    <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">onChange</td>
-                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">function</td>
-                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">required</td>
-                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">Called when input value changes</td>
+                    <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">
+                      onChange
+                    </td>
+                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                      function
+                    </td>
+                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                      required
+                    </td>
+                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                      Called when input value changes
+                    </td>
                   </tr>
                   <tr>
-                    <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">error</td>
-                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">string</td>
-                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">-</td>
-                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">Error message to display</td>
+                    <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">
+                      error
+                    </td>
+                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                      string
+                    </td>
+                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                      -
+                    </td>
+                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                      Error message to display
+                    </td>
                   </tr>
                   <tr>
-                    <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">disabled</td>
-                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">boolean</td>
-                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">false</td>
-                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">Whether the input is disabled</td>
+                    <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">
+                      disabled
+                    </td>
+                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                      boolean
+                    </td>
+                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                      false
+                    </td>
+                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                      Whether the input is disabled
+                    </td>
                   </tr>
-                  
+
                   <tr>
-                    <td className="px-4 py-2 text-sm text-gray-900 dark:text-white" rowSpan="5">NumberField</td>
-                    <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">value</td>
-                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">number|string</td>
-                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">Current value of the input</td>
-                  </tr>
-                  <tr>
-                    <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">onChange</td>
-                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">function</td>
-                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">required</td>
-                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">Called when input value changes</td>
-                  </tr>
-                  <tr>
-                    <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">prefix</td>
-                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">string</td>
-                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">-</td>
-                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">Prefix to display before the number (e.g. $)</td>
-                  </tr>
-                  <tr>
-                    <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">decimalScale</td>
-                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">number</td>
-                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">-</td>
-                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">Number of decimal places to display</td>
-                  </tr>
-                  <tr>
-                    <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">error</td>
-                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">string</td>
-                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">-</td>
-                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">Error message to display</td>
-                  </tr>
-                  
-                  <tr>
-                    <td className="px-4 py-2 text-sm text-gray-900 dark:text-white" rowSpan="3">FormLabel</td>
-                    <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">required</td>
-                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">boolean</td>
-                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">Whether to show a required indicator</td>
+                    <td
+                      className="px-4 py-2 text-sm text-gray-900 dark:text-white"
+                      rowSpan="5"
+                    >
+                      NumberField
+                    </td>
+                    <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">
+                      value
+                    </td>
+                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                      number|string
+                    </td>
+                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                      Current value of the input
+                    </td>
                   </tr>
                   <tr>
-                    <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">helpText</td>
-                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">string</td>
-                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">-</td>
-                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">Help text to display below the label</td>
+                    <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">
+                      onChange
+                    </td>
+                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                      function
+                    </td>
+                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                      required
+                    </td>
+                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                      Called when input value changes
+                    </td>
                   </tr>
                   <tr>
-                    <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">disabled</td>
-                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">boolean</td>
-                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">false</td>
-                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">Whether the label is disabled</td>
+                    <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">
+                      prefix
+                    </td>
+                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                      string
+                    </td>
+                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                      -
+                    </td>
+                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                      Prefix to display before the number (e.g. $)
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">
+                      decimalScale
+                    </td>
+                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                      number
+                    </td>
+                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                      -
+                    </td>
+                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                      Number of decimal places to display
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">
+                      error
+                    </td>
+                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                      string
+                    </td>
+                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                      -
+                    </td>
+                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                      Error message to display
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td
+                      className="px-4 py-2 text-sm text-gray-900 dark:text-white"
+                      rowSpan="3"
+                    >
+                      FormLabel
+                    </td>
+                    <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">
+                      required
+                    </td>
+                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                      boolean
+                    </td>
+                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                      Whether to show a required indicator
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">
+                      helpText
+                    </td>
+                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                      string
+                    </td>
+                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                      -
+                    </td>
+                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                      Help text to display below the label
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">
+                      disabled
+                    </td>
+                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                      boolean
+                    </td>
+                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                      false
+                    </td>
+                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                      Whether the label is disabled
+                    </td>
                   </tr>
                 </tbody>
               </table>
@@ -796,90 +1073,198 @@ const ComponentLibrary = () => {
   const renderIconSection = () => {
     // Common Material Icons used in the application
     const iconNames = [
-      'add', 'remove', 'edit', 'delete', 'check', 'close',
-      'search', 'filter', 'sort', 'menu', 'settings', 'info',
-      'warning', 'error', 'help', 'home', 'person', 'people',
-      'style', 'sell', 'upload', 'download', 'refresh', 'expand_more',
-      'expand_less', 'arrow_back', 'arrow_forward', 'dark_mode', 'light_mode',
-      'visibility', 'visibility_off', 'favorite', 'favorite_border',
-      'star', 'star_border', 'attach_money', 'trending_up', 'trending_down'
+      'add',
+      'remove',
+      'edit',
+      'delete',
+      'check',
+      'close',
+      'search',
+      'filter',
+      'sort',
+      'menu',
+      'settings',
+      'info',
+      'warning',
+      'error',
+      'help',
+      'home',
+      'person',
+      'people',
+      'style',
+      'sell',
+      'upload',
+      'download',
+      'refresh',
+      'expand_more',
+      'expand_less',
+      'arrow_back',
+      'arrow_forward',
+      'dark_mode',
+      'light_mode',
+      'visibility',
+      'visibility_off',
+      'favorite',
+      'favorite_border',
+      'star',
+      'star_border',
+      'attach_money',
+      'trending_up',
+      'trending_down',
     ];
 
     return (
       <ComponentSection title="Icons" id="icons">
         <div className="space-y-6">
           <div className="overflow-hidden rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-[#0F0F0F]">
-            <h3 className="mb-4 text-lg font-medium text-gray-900 dark:text-white">Available Icons</h3>
+            <h3 className="mb-4 text-lg font-medium text-gray-900 dark:text-white">
+              Available Icons
+            </h3>
             <p className="mb-6 text-gray-500 dark:text-gray-400">
-              The application uses Material Icons. Here are the most commonly used icons:
+              The application uses Material Icons. Here are the most commonly
+              used icons:
             </p>
-            
+
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
               {iconNames.map(name => (
-                <div key={name} className="flex flex-col items-center rounded-lg bg-gray-50 p-3 transition-colors hover:bg-gray-100 dark:bg-[#0F0F0F] dark:hover:bg-gray-700">
-                  <Icon name={name} className="mb-2 text-2xl text-gray-900 dark:text-white" />
-                  <span className="text-center text-xs text-gray-500 dark:text-gray-400">{name}</span>
+                <div
+                  key={name}
+                  className="flex flex-col items-center rounded-lg bg-gray-50 p-3 transition-colors hover:bg-gray-100 dark:bg-[#0F0F0F] dark:hover:bg-gray-700"
+                >
+                  <Icon
+                    name={name}
+                    className="mb-2 text-2xl text-gray-900 dark:text-white"
+                  />
+                  <span className="text-center text-xs text-gray-500 dark:text-gray-400">
+                    {name}
+                  </span>
                 </div>
               ))}
             </div>
           </div>
-          
+
           <div className="overflow-hidden rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-[#0F0F0F]">
-            <h3 className="mb-4 text-lg font-medium text-gray-900 dark:text-white">Icon Sizes</h3>
+            <h3 className="mb-4 text-lg font-medium text-gray-900 dark:text-white">
+              Icon Sizes
+            </h3>
             <div className="flex flex-wrap items-end gap-6">
               <div className="flex flex-col items-center">
-                <Icon name="style" size="xs" className="mb-2 text-gray-900 dark:text-white" />
-                <span className="text-xs text-gray-500 dark:text-gray-400">xs</span>
+                <Icon
+                  name="style"
+                  size="xs"
+                  className="mb-2 text-gray-900 dark:text-white"
+                />
+                <span className="text-xs text-gray-500 dark:text-gray-400">
+                  xs
+                </span>
               </div>
               <div className="flex flex-col items-center">
-                <Icon name="style" size="sm" className="mb-2 text-gray-900 dark:text-white" />
-                <span className="text-xs text-gray-500 dark:text-gray-400">sm</span>
+                <Icon
+                  name="style"
+                  size="sm"
+                  className="mb-2 text-gray-900 dark:text-white"
+                />
+                <span className="text-xs text-gray-500 dark:text-gray-400">
+                  sm
+                </span>
               </div>
               <div className="flex flex-col items-center">
-                <Icon name="style" size="md" className="mb-2 text-gray-900 dark:text-white" />
-                <span className="text-xs text-gray-500 dark:text-gray-400">md (default)</span>
+                <Icon
+                  name="style"
+                  size="md"
+                  className="mb-2 text-gray-900 dark:text-white"
+                />
+                <span className="text-xs text-gray-500 dark:text-gray-400">
+                  md (default)
+                </span>
               </div>
               <div className="flex flex-col items-center">
-                <Icon name="style" size="lg" className="mb-2 text-gray-900 dark:text-white" />
-                <span className="text-xs text-gray-500 dark:text-gray-400">lg</span>
+                <Icon
+                  name="style"
+                  size="lg"
+                  className="mb-2 text-gray-900 dark:text-white"
+                />
+                <span className="text-xs text-gray-500 dark:text-gray-400">
+                  lg
+                </span>
               </div>
               <div className="flex flex-col items-center">
-                <Icon name="style" size="xl" className="mb-2 text-gray-900 dark:text-white" />
-                <span className="text-xs text-gray-500 dark:text-gray-400">xl</span>
+                <Icon
+                  name="style"
+                  size="xl"
+                  className="mb-2 text-gray-900 dark:text-white"
+                />
+                <span className="text-xs text-gray-500 dark:text-gray-400">
+                  xl
+                </span>
               </div>
             </div>
           </div>
-          
+
           <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-[#0F0F0F]">
-            <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-white">Icon Props</h3>
+            <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-white">
+              Icon Props
+            </h3>
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
                 <thead className="bg-gray-50 dark:bg-[#0F0F0F]">
                   <tr>
-                    <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Prop</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Type</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Default</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Description</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                      Prop
+                    </th>
+                    <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                      Type
+                    </th>
+                    <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                      Default
+                    </th>
+                    <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                      Description
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-800 dark:bg-[#0F0F0F]">
                   <tr>
-                    <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">name</td>
-                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">string</td>
-                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">required</td>
-                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">Name of the Material Icon</td>
+                    <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">
+                      name
+                    </td>
+                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                      string
+                    </td>
+                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                      required
+                    </td>
+                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                      Name of the Material Icon
+                    </td>
                   </tr>
                   <tr>
-                    <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">size</td>
-                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">string</td>
-                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">'md'</td>
-                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">Size of the icon: 'xs', 'sm', 'md', 'lg', 'xl'</td>
+                    <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">
+                      size
+                    </td>
+                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                      string
+                    </td>
+                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                      'md'
+                    </td>
+                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                      Size of the icon: 'xs', 'sm', 'md', 'lg', 'xl'
+                    </td>
                   </tr>
                   <tr>
-                    <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">className</td>
-                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">string</td>
-                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">''</td>
-                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">Additional CSS classes</td>
+                    <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">
+                      className
+                    </td>
+                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                      string
+                    </td>
+                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                      ''
+                    </td>
+                    <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                      Additional CSS classes
+                    </td>
                   </tr>
                 </tbody>
               </table>
@@ -894,112 +1279,186 @@ const ComponentLibrary = () => {
     <ComponentSection title="Toggle" id="toggle">
       <div className="space-y-8">
         <div className="overflow-hidden rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-[#0F0F0F]">
-          <h3 className="mb-4 text-lg font-medium text-gray-900 dark:text-white">Toggle Sizes</h3>
+          <h3 className="mb-4 text-lg font-medium text-gray-900 dark:text-white">
+            Toggle Sizes
+          </h3>
           <div className="flex flex-col space-y-6">
             <div className="flex items-center justify-between">
-              <span className="w-24 text-sm text-gray-500 dark:text-gray-400">Small</span>
-              <Toggle 
+              <span className="w-24 text-sm text-gray-500 dark:text-gray-400">
+                Small
+              </span>
+              <Toggle
                 size="sm"
-                checked={toggleStates.small} 
-                onChange={() => handleToggleChange('small')} 
+                checked={toggleStates.small}
+                onChange={() => handleToggleChange('small')}
               />
             </div>
             <div className="flex items-center justify-between">
-              <span className="w-24 text-sm text-gray-500 dark:text-gray-400">Medium (default)</span>
-              <Toggle 
+              <span className="w-24 text-sm text-gray-500 dark:text-gray-400">
+                Medium (default)
+              </span>
+              <Toggle
                 size="md"
-                checked={toggleStates.medium} 
-                onChange={() => handleToggleChange('medium')} 
+                checked={toggleStates.medium}
+                onChange={() => handleToggleChange('medium')}
               />
             </div>
             <div className="flex items-center justify-between">
-              <span className="w-24 text-sm text-gray-500 dark:text-gray-400">Large</span>
-              <Toggle 
+              <span className="w-24 text-sm text-gray-500 dark:text-gray-400">
+                Large
+              </span>
+              <Toggle
                 size="lg"
-                checked={toggleStates.large} 
-                onChange={() => handleToggleChange('large')} 
+                checked={toggleStates.large}
+                onChange={() => handleToggleChange('large')}
               />
             </div>
           </div>
         </div>
 
         <div className="overflow-hidden rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-[#0F0F0F]">
-          <h3 className="mb-4 text-lg font-medium text-gray-900 dark:text-white">Toggle States</h3>
+          <h3 className="mb-4 text-lg font-medium text-gray-900 dark:text-white">
+            Toggle States
+          </h3>
           <div className="flex flex-col space-y-6">
             <div className="flex items-center justify-between">
-              <span className="w-24 text-sm text-gray-500 dark:text-gray-400">Default</span>
-              <Toggle 
-                checked={toggleStates.default} 
-                onChange={() => handleToggleChange('default')} 
+              <span className="w-24 text-sm text-gray-500 dark:text-gray-400">
+                Default
+              </span>
+              <Toggle
+                checked={toggleStates.default}
+                onChange={() => handleToggleChange('default')}
               />
             </div>
             <div className="flex items-center justify-between">
-              <span className="w-24 text-sm text-gray-500 dark:text-gray-400">With Label</span>
-              <Toggle 
+              <span className="w-24 text-sm text-gray-500 dark:text-gray-400">
+                With Label
+              </span>
+              <Toggle
                 label="Toggle me"
-                checked={toggleStates.withLabel} 
-                onChange={() => handleToggleChange('withLabel')} 
+                checked={toggleStates.withLabel}
+                onChange={() => handleToggleChange('withLabel')}
               />
             </div>
             <div className="flex items-center justify-between">
-              <span className="w-24 text-sm text-gray-500 dark:text-gray-400">Disabled</span>
-              <Toggle 
+              <span className="w-24 text-sm text-gray-500 dark:text-gray-400">
+                Disabled
+              </span>
+              <Toggle
                 disabled
-                checked={toggleStates.disabled} 
-                onChange={() => handleToggleChange('disabled')} 
+                checked={toggleStates.disabled}
+                onChange={() => handleToggleChange('disabled')}
               />
             </div>
           </div>
         </div>
 
         <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-[#0F0F0F]">
-          <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-white">Toggle Props</h3>
+          <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-white">
+            Toggle Props
+          </h3>
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
               <thead className="bg-gray-50 dark:bg-[#0F0F0F]">
                 <tr>
-                  <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Prop</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Type</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Default</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Description</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                    Prop
+                  </th>
+                  <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                    Type
+                  </th>
+                  <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                    Default
+                  </th>
+                  <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                    Description
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-800 dark:bg-[#0F0F0F]">
                 <tr>
-                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">checked</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">boolean</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">false</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">Whether the toggle is checked</td>
+                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">
+                    checked
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    boolean
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    false
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    Whether the toggle is checked
+                  </td>
                 </tr>
                 <tr>
-                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">onChange</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">function</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">required</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">Function called when toggle state changes</td>
+                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">
+                    onChange
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    function
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    required
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    Function called when toggle state changes
+                  </td>
                 </tr>
                 <tr>
-                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">disabled</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">boolean</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">false</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">Whether the toggle is disabled</td>
+                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">
+                    disabled
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    boolean
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    false
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    Whether the toggle is disabled
+                  </td>
                 </tr>
                 <tr>
-                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">label</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">node</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">-</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">Label text to display next to the toggle</td>
+                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">
+                    label
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    node
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    -
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    Label text to display next to the toggle
+                  </td>
                 </tr>
                 <tr>
-                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">size</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">string</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">'md'</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">Size of the toggle: 'sm', 'md', or 'lg'</td>
+                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">
+                    size
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    string
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    'md'
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    Size of the toggle: 'sm', 'md', or 'lg'
+                  </td>
                 </tr>
                 <tr>
-                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">className</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">string</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">''</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">Additional CSS classes</td>
+                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">
+                    className
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    string
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    ''
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    Additional CSS classes
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -1014,7 +1473,9 @@ const ComponentLibrary = () => {
       <div className="space-y-8">
         {/* Basic Dropdown */}
         <div className="overflow-hidden rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-[#0F0F0F]">
-          <h3 className="mb-4 text-lg font-medium text-gray-900 dark:text-white">Basic Dropdown</h3>
+          <h3 className="mb-4 text-lg font-medium text-gray-900 dark:text-white">
+            Basic Dropdown
+          </h3>
           <div className="flex flex-wrap gap-6">
             <div>
               <Dropdown
@@ -1039,7 +1500,7 @@ const ComponentLibrary = () => {
                 </DropdownItem>
               </Dropdown>
             </div>
-            
+
             <div>
               <Dropdown
                 trigger={
@@ -1051,20 +1512,20 @@ const ComponentLibrary = () => {
                 width="auto"
                 align="left"
               >
-                <DropdownItem 
+                <DropdownItem
                   icon={<Icon name="edit" size="sm" />}
                   onClick={() => {}}
                 >
                   Edit
                 </DropdownItem>
-                <DropdownItem 
+                <DropdownItem
                   icon={<Icon name="delete" size="sm" />}
                   onClick={() => {}}
                 >
                   Delete
                 </DropdownItem>
                 <DropdownDivider />
-                <DropdownItem 
+                <DropdownItem
                   icon={<Icon name="download" size="sm" />}
                   onClick={() => {}}
                 >
@@ -1074,10 +1535,12 @@ const ComponentLibrary = () => {
             </div>
           </div>
         </div>
-        
+
         {/* Controlled Dropdown */}
         <div className="overflow-hidden rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-[#0F0F0F]">
-          <h3 className="mb-4 text-lg font-medium text-gray-900 dark:text-white">Controlled Dropdown</h3>
+          <h3 className="mb-4 text-lg font-medium text-gray-900 dark:text-white">
+            Controlled Dropdown
+          </h3>
           <div className="flex flex-col gap-4">
             <div className="flex items-center gap-4">
               <Dropdown
@@ -1092,15 +1555,11 @@ const ComponentLibrary = () => {
                 width="auto"
                 align="left"
               >
-                <DropdownItem onClick={() => {}}>
-                  Item 1
-                </DropdownItem>
-                <DropdownItem onClick={() => {}}>
-                  Item 2
-                </DropdownItem>
+                <DropdownItem onClick={() => {}}>Item 1</DropdownItem>
+                <DropdownItem onClick={() => {}}>Item 2</DropdownItem>
               </Dropdown>
-              
-              <button 
+
+              <button
                 className="rounded-lg bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] px-4 py-2 text-sm font-medium text-white hover:opacity-90"
                 onClick={() => setDropdownIsOpen(!dropdownIsOpen)}
               >
@@ -1112,13 +1571,17 @@ const ComponentLibrary = () => {
             </div>
           </div>
         </div>
-        
+
         {/* Dropdown Alignment */}
         <div className="overflow-hidden rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-[#0F0F0F]">
-          <h3 className="mb-4 text-lg font-medium text-gray-900 dark:text-white">Dropdown Alignment</h3>
+          <h3 className="mb-4 text-lg font-medium text-gray-900 dark:text-white">
+            Dropdown Alignment
+          </h3>
           <div className="flex flex-wrap gap-6">
             <div>
-              <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">Left Aligned (Default)</p>
+              <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
+                Left Aligned (Default)
+              </p>
               <Dropdown
                 trigger={
                   <button className="flex w-40 items-center justify-between rounded-lg bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] px-4 py-2 text-sm font-medium text-white hover:opacity-90">
@@ -1132,9 +1595,11 @@ const ComponentLibrary = () => {
                 <DropdownItem onClick={() => {}}>Item 2</DropdownItem>
               </Dropdown>
             </div>
-            
+
             <div>
-              <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">Center Aligned</p>
+              <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
+                Center Aligned
+              </p>
               <Dropdown
                 trigger={
                   <button className="flex w-40 items-center justify-between rounded-lg bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] px-4 py-2 text-sm font-medium text-white hover:opacity-90">
@@ -1148,9 +1613,11 @@ const ComponentLibrary = () => {
                 <DropdownItem onClick={() => {}}>Item 2</DropdownItem>
               </Dropdown>
             </div>
-            
+
             <div>
-              <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">Right Aligned</p>
+              <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
+                Right Aligned
+              </p>
               <Dropdown
                 trigger={
                   <button className="flex w-40 items-center justify-between rounded-lg bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] px-4 py-2 text-sm font-medium text-white hover:opacity-90">
@@ -1166,71 +1633,155 @@ const ComponentLibrary = () => {
             </div>
           </div>
         </div>
-        
+
         {/* Props Table */}
         <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-[#0F0F0F]">
-          <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-white">Dropdown Props</h3>
+          <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-white">
+            Dropdown Props
+          </h3>
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
               <thead className="bg-gray-50 dark:bg-[#0F0F0F]">
                 <tr>
-                  <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Component</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Prop</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Type</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Description</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                    Component
+                  </th>
+                  <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                    Prop
+                  </th>
+                  <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                    Type
+                  </th>
+                  <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                    Description
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-800 dark:bg-[#0F0F0F]">
                 <tr>
-                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-white" rowSpan="5">Dropdown</td>
-                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">trigger</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">node</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">required</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">Element that triggers the dropdown</td>
+                  <td
+                    className="px-4 py-2 text-sm text-gray-900 dark:text-white"
+                    rowSpan="5"
+                  >
+                    Dropdown
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">
+                    trigger
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    node
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    required
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    Element that triggers the dropdown
+                  </td>
                 </tr>
                 <tr>
-                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">isOpen</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">boolean</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">-</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">Controls the open state (controlled mode)</td>
+                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">
+                    isOpen
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    boolean
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    -
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    Controls the open state (controlled mode)
+                  </td>
                 </tr>
                 <tr>
-                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">onOpenChange</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">function</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">-</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">Called when open state changes</td>
+                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">
+                    onOpenChange
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    function
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    -
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    Called when open state changes
+                  </td>
                 </tr>
                 <tr>
-                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">width</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">string</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">'auto'</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">Width of dropdown: 'auto', 'sm', 'md', 'lg', 'xl', 'full'</td>
+                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">
+                    width
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    string
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    'auto'
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    Width of dropdown: 'auto', 'sm', 'md', 'lg', 'xl', 'full'
+                  </td>
                 </tr>
                 <tr>
-                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">align</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">string</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">'left'</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">Alignment: 'left', 'center', 'right'</td>
+                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">
+                    align
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    string
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    'left'
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    Alignment: 'left', 'center', 'right'
+                  </td>
                 </tr>
-                
+
                 <tr>
-                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-white" rowSpan="3">DropdownItem</td>
-                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">icon</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">node</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">-</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">Icon to display before text</td>
+                  <td
+                    className="px-4 py-2 text-sm text-gray-900 dark:text-white"
+                    rowSpan="3"
+                  >
+                    DropdownItem
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">
+                    icon
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    node
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    -
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    Icon to display before text
+                  </td>
                 </tr>
                 <tr>
-                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">onClick</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">function</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">-</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">Click handler for the item</td>
+                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">
+                    onClick
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    function
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    -
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    Click handler for the item
+                  </td>
                 </tr>
                 <tr>
-                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">disabled</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">boolean</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">false</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">Whether the item is disabled</td>
+                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">
+                    disabled
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    boolean
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    false
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    Whether the item is disabled
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -1264,53 +1815,80 @@ const ComponentLibrary = () => {
         toastService.update(loadingId, 'Data loaded successfully!', {
           type: 'success',
           icon: <Icon name="check_circle" color="white" />,
-          duration: 3000
+          duration: 3000,
         });
       }, 2000);
     };
 
     const showPersistentToast = () => {
-      const toastId = toastService.info('This toast will stay until dismissed.', { 
-        duration: Infinity,
-        icon: <Icon name="notifications" color="white" />
-      });
+      const toastId = toastService.info(
+        'This toast will stay until dismissed.',
+        {
+          duration: Infinity,
+          icon: <Icon name="notifications" color="white" />,
+        }
+      );
     };
 
     return (
       <ComponentSection title="Toast Notifications" id="toast">
         <p className="mb-6 text-gray-600 dark:text-gray-400">
-          Toast notifications provide brief messages about app processes. They should be non-intrusive 
-          and automatically disappear after a short time unless they require user action.
+          Toast notifications provide brief messages about app processes. They
+          should be non-intrusive and automatically disappear after a short time
+          unless they require user action.
         </p>
-        
+
         <div className="space-y-6">
           {/* Toast Examples */}
           <div className="space-y-4">
-            <h3 className="text-base font-medium text-gray-900 dark:text-white">Toast Types</h3>
+            <h3 className="text-base font-medium text-gray-900 dark:text-white">
+              Toast Types
+            </h3>
             <div className="flex flex-wrap gap-4">
-              <Button onClick={showSuccessToast} variant="primary">Success Toast</Button>
-              <Button onClick={showErrorToast} variant="error">Error Toast</Button>
-              <Button onClick={showInfoToast} variant="secondary">Info Toast</Button>
-              <Button onClick={showWarningToast} variant="warning">Warning Toast</Button>
+              <Button onClick={showSuccessToast} variant="primary">
+                Success Toast
+              </Button>
+              <Button onClick={showErrorToast} variant="error">
+                Error Toast
+              </Button>
+              <Button onClick={showInfoToast} variant="secondary">
+                Info Toast
+              </Button>
+              <Button onClick={showWarningToast} variant="warning">
+                Warning Toast
+              </Button>
             </div>
           </div>
 
           {/* Interactive Toasts */}
           <div className="space-y-4">
-            <h3 className="text-base font-medium text-gray-900 dark:text-white">Interactive Toasts</h3>
+            <h3 className="text-base font-medium text-gray-900 dark:text-white">
+              Interactive Toasts
+            </h3>
             <div className="flex flex-wrap gap-4">
-              <Button onClick={showLoadingToast} variant="primary">Loading → Success Toast</Button>
-              <Button onClick={showPersistentToast} variant="secondary">Persistent Toast</Button>
-              <Button onClick={() => toastService.dismissAll()} variant="outline">Dismiss All Toasts</Button>
+              <Button onClick={showLoadingToast} variant="primary">
+                Loading → Success Toast
+              </Button>
+              <Button onClick={showPersistentToast} variant="secondary">
+                Persistent Toast
+              </Button>
+              <Button
+                onClick={() => toastService.dismissAll()}
+                variant="outline"
+              >
+                Dismiss All Toasts
+              </Button>
             </div>
           </div>
 
           {/* Code Example */}
           <div className="space-y-4">
-            <h3 className="text-base font-medium text-gray-900 dark:text-white">Usage Examples</h3>
+            <h3 className="text-base font-medium text-gray-900 dark:text-white">
+              Usage Examples
+            </h3>
             <div className="rounded-lg bg-gray-100 p-4 dark:bg-gray-800">
               <pre className="overflow-auto text-sm text-gray-800 dark:text-gray-200">
-{`// Import the toast service
+                {`// Import the toast service
 import { toastService } from '../../design-system';
 
 // Display different types of toasts
@@ -1347,81 +1925,158 @@ toastService.dismissAll(); // Dismiss all toasts`}
       <div className="space-y-6">
         {/* Full Header with Collection and View Toggle */}
         <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-[#0F0F0F]">
-          <Header 
+          <Header
             selectedCollection="Default Collection"
-            collections={[
-              "Default Collection",
-              "Rare Cards",
-              "PSA Graded"
-            ]}
-            onCollectionChange={(collection) => {/* Collection changed */}}
+            collections={['Default Collection', 'Rare Cards', 'PSA Graded']}
+            onCollectionChange={collection => {
+              /* Collection changed */
+            }}
             currentView="cards"
-            onViewChange={(view) => {/* View changed */}}
-            onSettingsClick={() => {/* Settings clicked */}}
+            onViewChange={view => {
+              /* View changed */
+            }}
+            onSettingsClick={() => {
+              /* Settings clicked */
+            }}
           />
         </div>
-        
+
         {/* Header Props Table */}
         <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-[#0F0F0F]">
-          <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-white">Header Props</h3>
+          <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-white">
+            Header Props
+          </h3>
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
               <thead className="bg-gray-50 dark:bg-[#0F0F0F]">
                 <tr>
-                  <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Prop</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Type</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Default</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Description</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                    Prop
+                  </th>
+                  <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                    Type
+                  </th>
+                  <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                    Default
+                  </th>
+                  <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                    Description
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-800 dark:bg-[#0F0F0F]">
                 <tr>
-                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">selectedCollection</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">string</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">'Default Collection'</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">The currently selected collection name</td>
+                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">
+                    selectedCollection
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    string
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    'Default Collection'
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    The currently selected collection name
+                  </td>
                 </tr>
                 <tr>
-                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">collections</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">array</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">[]</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">Array of collection names or objects</td>
+                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">
+                    collections
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    array
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    []
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    Array of collection names or objects
+                  </td>
                 </tr>
                 <tr>
-                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">onCollectionChange</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">function</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">-</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">Called when collection is changed</td>
+                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">
+                    onCollectionChange
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    function
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    -
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    Called when collection is changed
+                  </td>
                 </tr>
                 <tr>
-                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">currentView</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">string</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">-</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">Current view ('cards' or 'sold-items')</td>
+                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">
+                    currentView
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    string
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    -
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    Current view ('cards' or 'sold-items')
+                  </td>
                 </tr>
                 <tr>
-                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">onViewChange</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">function</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">-</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">Called when view is changed</td>
+                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">
+                    onViewChange
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    function
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    -
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    Called when view is changed
+                  </td>
                 </tr>
                 <tr>
-                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">onSettingsClick</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">function</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">-</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">Called when settings button is clicked</td>
+                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">
+                    onSettingsClick
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    function
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    -
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    Called when settings button is clicked
+                  </td>
                 </tr>
                 <tr>
-                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">hideCollectionSelector</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">boolean</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">false</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">Whether to hide the collection selector</td>
+                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">
+                    hideCollectionSelector
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    boolean
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    false
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    Whether to hide the collection selector
+                  </td>
                 </tr>
                 <tr>
-                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">isComponentLibrary</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">boolean</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">false</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">Whether the header is being rendered in the component library</td>
+                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">
+                    isComponentLibrary
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    boolean
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    false
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    Whether the header is being rendered in the component
+                    library
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -1437,34 +2092,43 @@ toastService.dismissAll(); // Dismiss all toasts`}
         <p className="mb-6 text-gray-600 dark:text-gray-400">
           A reusable modal dialog component with customizable content.
         </p>
-        
+
         {/* Display the Modal directly without a button click */}
         <div className="mt-8 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900">
-          <h3 className="mb-4 text-lg font-medium text-gray-800 dark:text-gray-200">Modal Example</h3>
-          
+          <h3 className="mb-4 text-lg font-medium text-gray-800 dark:text-gray-200">
+            Modal Example
+          </h3>
+
           {/* Using the Modal component with showModal={false} to display it inline */}
           <div className="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
-            <Modal 
-              isOpen={true} 
-              onClose={() => {/* Close clicked */}} 
+            <Modal
+              isOpen={true}
+              onClose={() => {
+                /* Close clicked */
+              }}
               title="Example Modal"
               showOverlay={false} // Don't show the overlay
-              showAsStatic={true}  // Show as a static component, not a true modal
+              showAsStatic={true} // Show as a static component, not a true modal
             >
               <div className="p-6">
                 <p className="mb-4 text-gray-700 dark:text-gray-300">
-                  This is an example of modal content. In a real implementation, this would appear as a popup.
+                  This is an example of modal content. In a real implementation,
+                  this would appear as a popup.
                 </p>
                 <div className="flex justify-end space-x-3">
-                  <Button 
+                  <Button
                     variant="secondary"
-                    onClick={() => {/* Cancel clicked */}}
+                    onClick={() => {
+                      /* Cancel clicked */
+                    }}
                   >
                     Cancel
                   </Button>
-                  <Button 
+                  <Button
                     variant="primary"
-                    onClick={() => {/* Confirm clicked */}}
+                    onClick={() => {
+                      /* Confirm clicked */
+                    }}
                   >
                     Confirm
                   </Button>
@@ -1480,20 +2144,26 @@ toastService.dismissAll(); // Dismiss all toasts`}
   const renderCardDetailsModalSection = () => {
     return (
       <div id="card-details-modal" className="mb-12">
-        <h2 className="mb-6 text-2xl font-semibold text-gray-800 dark:text-gray-100">Card Details Modal</h2>
+        <h2 className="mb-6 text-2xl font-semibold text-gray-800 dark:text-gray-100">
+          Card Details Modal
+        </h2>
         <p className="mb-6 text-gray-600 dark:text-gray-400">
           A specialized modal for displaying and editing card details.
         </p>
-        
+
         {/* Display CardDetailsModal directly without requiring a button click */}
         <div className="mt-8 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900">
-          <h3 className="mb-4 text-lg font-medium text-gray-800 dark:text-gray-200">Card Details Modal Example</h3>
-          
+          <h3 className="mb-4 text-lg font-medium text-gray-800 dark:text-gray-200">
+            Card Details Modal Example
+          </h3>
+
           {/* Using the CardDetailsModal component displayed inline */}
           <div className="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
             <CardDetailsModal
               isOpen={true}
-              onClose={() => {/* Close clicked */}}
+              onClose={() => {
+                /* Close clicked */
+              }}
               card={{
                 id: '123',
                 name: 'Charizard',
@@ -1503,12 +2173,13 @@ toastService.dismissAll(); // Dismiss all toasts`}
                 purchasePrice: 350,
                 currentValue: 500,
                 quantity: 1,
-                imageUrl: 'https://assets.pokemon.com/assets/cms2/img/cards/web/SWSH45/SWSH45_EN_TG01.png'
+                imageUrl:
+                  'https://assets.pokemon.com/assets/cms2/img/cards/web/SWSH45/SWSH45_EN_TG01.png',
               }}
-              onSave={(card) => {
+              onSave={card => {
                 // // console.log('Card saved:', card);
               }}
-              onDelete={(card) => {
+              onDelete={card => {
                 // // console.log('Card deleted:', card);
               }}
               showAsStatic={true} // Add a prop to show it as a static display rather than modal
@@ -1523,19 +2194,24 @@ toastService.dismissAll(); // Dismiss all toasts`}
     return (
       <ComponentSection id="login-modal" title="Login Modal">
         <p className="mb-6 text-gray-600 dark:text-gray-400">
-          A comprehensive login form matching the live design, with support for email/password login, 
-          social login options, and links for signup and password recovery.
+          A comprehensive login form matching the live design, with support for
+          email/password login, social login options, and links for signup and
+          password recovery.
         </p>
-        
+
         {/* Display LoginModal directly without requiring a button click */}
         <div className="mt-8 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900">
-          <h3 className="mb-4 text-lg font-medium text-gray-800 dark:text-gray-200">Login Modal Example</h3>
-          
+          <h3 className="mb-4 text-lg font-medium text-gray-800 dark:text-gray-200">
+            Login Modal Example
+          </h3>
+
           {/* Using the LoginModal component with showModal={false} to display it inline */}
           <div className="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
-            <LoginModal 
-              isOpen={true} 
-              onClose={() => {/* Close clicked */}} 
+            <LoginModal
+              isOpen={true}
+              onClose={() => {
+                /* Close clicked */
+              }}
               onLoginSubmit={handleMockLogin}
               onSignUpClick={handleMockSignUpClick}
               onForgotPasswordClick={handleMockForgotPasswordClick}
@@ -1552,7 +2228,15 @@ toastService.dismissAll(); // Dismiss all toasts`}
 
   const renderSettingsModalSection = () => {
     // Mock collections for the SettingsModal demo
-    const mockCollections = ['All Cards', 'Base Set', 'Base Set 2', 'Team Rocket', 'Gym Heroes', 'Gym Challenge', 'Neo Genesis'];
+    const mockCollections = [
+      'All Cards',
+      'Base Set',
+      'Base Set 2',
+      'Team Rocket',
+      'Gym Heroes',
+      'Gym Challenge',
+      'Neo Genesis',
+    ];
     const mockUserData = {
       displayName: 'Demo User',
       email: 'demo@example.com',
@@ -1560,21 +2244,22 @@ toastService.dismissAll(); // Dismiss all toasts`}
       lastName: 'User',
       mobileNumber: '555-123-4567',
       address: '123 Pokemon St\nPallet Town, Kanto 12345',
-      companyName: 'Pokemon Traders Inc.'
+      companyName: 'Pokemon Traders Inc.',
     };
 
     return (
       <ComponentSection id="settings-modal" title="Settings Modal">
         <p className="mb-6 text-gray-600 dark:text-gray-400">
-          A modal component for managing user settings, collections, and profile information.
+          A modal component for managing user settings, collections, and profile
+          information.
         </p>
-        
+
         <div className="space-y-4">
           <div className="rounded-lg bg-gray-50 p-4 dark:bg-black">
             <h3 className="mb-4 text-base font-medium">Example</h3>
-            
+
             <div className="flex items-center justify-center">
-              <Button 
+              <Button
                 variant="primary"
                 onClick={() => setIsSettingsModalOpen(true)}
               >
@@ -1590,19 +2275,35 @@ toastService.dismissAll(); // Dismiss all toasts`}
                   // // console.log(`Rename collection from ${oldName} to ${newName}`);
                   toastService.success(`Collection renamed to "${newName}"`);
                 }}
-                onDeleteCollection={(name) => {
+                onDeleteCollection={name => {
                   // // console.log(`Delete collection ${name}`);
                   toastService.success(`Collection "${name}" deleted`);
                 }}
-                onImportCollection={() => {/* Import collection */}}
-                onImportBaseData={() => {/* Import base data */}}
+                onImportCollection={() => {
+                  /* Import collection */
+                }}
+                onImportBaseData={() => {
+                  /* Import base data */
+                }}
                 userData={mockUserData}
-                onSignOut={() => {/* Sign out */}}
-                onResetData={() => {/* Reset data */}}
-                onStartTutorial={() => {/* Start tutorial */}}
-                onImportAndCloudMigrate={() => {/* Import and cloud migrate */}}
-                onUploadImagesFromZip={() => {/* Upload images from zip */}}
-                onImportSoldItemsFromZip={() => {/* Import sold items from zip */}}
+                onSignOut={() => {
+                  /* Sign out */
+                }}
+                onResetData={() => {
+                  /* Reset data */
+                }}
+                onStartTutorial={() => {
+                  /* Start tutorial */
+                }}
+                onImportAndCloudMigrate={() => {
+                  /* Import and cloud migrate */
+                }}
+                onUploadImagesFromZip={() => {
+                  /* Upload images from zip */
+                }}
+                onImportSoldItemsFromZip={() => {
+                  /* Import sold items from zip */
+                }}
               />
             </div>
           </div>
@@ -1637,42 +2338,70 @@ const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
               <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead>
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Prop</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Type</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Default</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Description</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                      Prop
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                      Type
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                      Default
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                      Description
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                   <tr>
-                    <td className="px-4 py-2 text-sm font-medium text-primary">isOpen</td>
+                    <td className="px-4 py-2 text-sm font-medium text-primary">
+                      isOpen
+                    </td>
                     <td className="px-4 py-2 text-sm">boolean</td>
                     <td className="px-4 py-2 text-sm">-</td>
-                    <td className="px-4 py-2 text-sm">Whether the modal is open</td>
+                    <td className="px-4 py-2 text-sm">
+                      Whether the modal is open
+                    </td>
                   </tr>
                   <tr>
-                    <td className="px-4 py-2 text-sm font-medium text-primary">onClose</td>
+                    <td className="px-4 py-2 text-sm font-medium text-primary">
+                      onClose
+                    </td>
                     <td className="px-4 py-2 text-sm">function</td>
                     <td className="px-4 py-2 text-sm">-</td>
-                    <td className="px-4 py-2 text-sm">Function to close the modal</td>
+                    <td className="px-4 py-2 text-sm">
+                      Function to close the modal
+                    </td>
                   </tr>
                   <tr>
-                    <td className="px-4 py-2 text-sm font-medium text-primary">collections</td>
+                    <td className="px-4 py-2 text-sm font-medium text-primary">
+                      collections
+                    </td>
                     <td className="px-4 py-2 text-sm">string[]</td>
                     <td className="px-4 py-2 text-sm">[]</td>
-                    <td className="px-4 py-2 text-sm">Array of available collection names</td>
+                    <td className="px-4 py-2 text-sm">
+                      Array of available collection names
+                    </td>
                   </tr>
                   <tr>
-                    <td className="px-4 py-2 text-sm font-medium text-primary">selectedCollection</td>
+                    <td className="px-4 py-2 text-sm font-medium text-primary">
+                      selectedCollection
+                    </td>
                     <td className="px-4 py-2 text-sm">string</td>
                     <td className="px-4 py-2 text-sm">-</td>
-                    <td className="px-4 py-2 text-sm">Currently selected collection</td>
+                    <td className="px-4 py-2 text-sm">
+                      Currently selected collection
+                    </td>
                   </tr>
                   <tr>
-                    <td className="px-4 py-2 text-sm font-medium text-primary">userData</td>
+                    <td className="px-4 py-2 text-sm font-medium text-primary">
+                      userData
+                    </td>
                     <td className="px-4 py-2 text-sm">object</td>
                     <td className="px-4 py-2 text-sm">null</td>
-                    <td className="px-4 py-2 text-sm">User data object containing profile information</td>
+                    <td className="px-4 py-2 text-sm">
+                      User data object containing profile information
+                    </td>
                   </tr>
                 </tbody>
               </table>
@@ -1698,7 +2427,7 @@ const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
             slabSerial: 'abc123',
             investmentAUD: 150,
             finalValueAUD: 350,
-            finalProfitAUD: 200
+            finalProfitAUD: 200,
           },
           {
             id: 'card2',
@@ -1707,12 +2436,12 @@ const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
             slabSerial: 'def456',
             investmentAUD: 100,
             finalValueAUD: 220,
-            finalProfitAUD: 120
-          }
+            finalProfitAUD: 120,
+          },
         ],
         totalInvestment: 250,
         totalSale: 570,
-        totalProfit: 320
+        totalProfit: 320,
       },
       {
         id: 'invoice2',
@@ -1726,12 +2455,12 @@ const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
             slabSerial: 'ghi789',
             investmentAUD: 50,
             finalValueAUD: 45,
-            finalProfitAUD: -5
-          }
+            finalProfitAUD: -5,
+          },
         ],
         totalInvestment: 50,
         totalSale: 45,
-        totalProfit: -5
+        totalProfit: -5,
       },
       {
         id: 'invoice3',
@@ -1745,7 +2474,7 @@ const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
             slabSerial: 'jkl012',
             investmentAUD: 200,
             finalValueAUD: 350,
-            finalProfitAUD: 150
+            finalProfitAUD: 150,
           },
           {
             id: 'card5',
@@ -1754,24 +2483,26 @@ const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
             slabSerial: 'mno345',
             investmentAUD: 120,
             finalValueAUD: 180,
-            finalProfitAUD: 60
-          }
+            finalProfitAUD: 60,
+          },
         ],
         totalInvestment: 320,
         totalSale: 530,
-        totalProfit: 210
-      }
+        totalProfit: 210,
+      },
     ];
 
     // Mock function to get card image URLs (would come from database in real app)
-    const getCardImageUrl = (card) => {
+    const getCardImageUrl = card => {
       // For demo purposes, return a placeholder image based on the card name
-      const cardName = card.card ? card.card.toLowerCase().replace(/[^a-z0-9]/g, '') : '';
+      const cardName = card.card
+        ? card.card.toLowerCase().replace(/[^a-z0-9]/g, '')
+        : '';
       return `https://placehold.co/200x280/1B2131/FFFFFF?text=${cardName}`;
     };
 
     // Mock function for printing an invoice
-    const handlePrintInvoice = (invoice) => {
+    const handlePrintInvoice = invoice => {
       // // console.log('Print invoice:', invoice);
       toastService.info(`Printing invoice for ${invoice.buyer}`);
     };
@@ -1779,30 +2510,33 @@ const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
     return (
       <ComponentSection id="sold-items-view" title="Sold Items View">
         <p className="mb-6 text-gray-600 dark:text-gray-400">
-          A component for displaying sold Pokemon cards organized by financial year and invoice.
-          Features collapsible sections, profit calculations, and invoice printing capabilities.
+          A component for displaying sold Pokemon cards organized by financial
+          year and invoice. Features collapsible sections, profit calculations,
+          and invoice printing capabilities.
         </p>
-        
+
         <div className="mt-8 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900">
           <h3 className="mb-4 text-lg font-medium text-gray-800 dark:text-gray-200">
             Sold Items View Example
           </h3>
-          
+
           <div className="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
-            <SoldItemsView 
+            <SoldItemsView
               items={exampleSoldItems}
               getCardImageUrl={getCardImageUrl}
               onPrintInvoice={handlePrintInvoice}
-              formatDate={(dateStr) => new Date(dateStr).toLocaleDateString()}
+              formatDate={dateStr => new Date(dateStr).toLocaleDateString()}
             />
           </div>
         </div>
-        
+
         <div className="mt-8">
-          <h3 className="mb-4 text-lg font-medium text-gray-800 dark:text-gray-200">Usage</h3>
+          <h3 className="mb-4 text-lg font-medium text-gray-800 dark:text-gray-200">
+            Usage
+          </h3>
           <div className="overflow-auto rounded-lg bg-gray-100 p-4 dark:bg-gray-800">
             <pre className="text-sm text-gray-900 dark:text-gray-300">
-{`// Import component
+              {`// Import component
 import { SoldItemsView } from '../design-system';
 
 // In your component
@@ -1817,42 +2551,82 @@ return (
             </pre>
           </div>
         </div>
-        
+
         <div className="mt-8">
-          <h3 className="mb-4 text-lg font-medium text-gray-800 dark:text-gray-200">Props</h3>
+          <h3 className="mb-4 text-lg font-medium text-gray-800 dark:text-gray-200">
+            Props
+          </h3>
           <table className="w-full border-collapse">
             <thead>
               <tr className="bg-gray-100 dark:bg-gray-800">
-                <th className="border border-gray-200 p-2 text-left dark:border-gray-800">Prop</th>
-                <th className="border border-gray-200 p-2 text-left dark:border-gray-800">Type</th>
-                <th className="border border-gray-200 p-2 text-left dark:border-gray-800">Description</th>
+                <th className="border border-gray-200 p-2 text-left dark:border-gray-800">
+                  Prop
+                </th>
+                <th className="border border-gray-200 p-2 text-left dark:border-gray-800">
+                  Type
+                </th>
+                <th className="border border-gray-200 p-2 text-left dark:border-gray-800">
+                  Description
+                </th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td className="border border-gray-200 p-2 dark:border-gray-800">items</td>
-                <td className="border border-gray-200 p-2 dark:border-gray-800">Array</td>
-                <td className="border border-gray-200 p-2 dark:border-gray-800">Array of sold items grouped by invoice. Each invoice should have an ID, buyer, date sold, and cards array.</td>
+                <td className="border border-gray-200 p-2 dark:border-gray-800">
+                  items
+                </td>
+                <td className="border border-gray-200 p-2 dark:border-gray-800">
+                  Array
+                </td>
+                <td className="border border-gray-200 p-2 dark:border-gray-800">
+                  Array of sold items grouped by invoice. Each invoice should
+                  have an ID, buyer, date sold, and cards array.
+                </td>
               </tr>
               <tr>
-                <td className="border border-gray-200 p-2 dark:border-gray-800">getCardImageUrl</td>
-                <td className="border border-gray-200 p-2 dark:border-gray-800">Function</td>
-                <td className="border border-gray-200 p-2 dark:border-gray-800">Function that takes a card object and returns its image URL.</td>
+                <td className="border border-gray-200 p-2 dark:border-gray-800">
+                  getCardImageUrl
+                </td>
+                <td className="border border-gray-200 p-2 dark:border-gray-800">
+                  Function
+                </td>
+                <td className="border border-gray-200 p-2 dark:border-gray-800">
+                  Function that takes a card object and returns its image URL.
+                </td>
               </tr>
               <tr>
-                <td className="border border-gray-200 p-2 dark:border-gray-800">onPrintInvoice</td>
-                <td className="border border-gray-200 p-2 dark:border-gray-800">Function</td>
-                <td className="border border-gray-200 p-2 dark:border-gray-800">Function called when the print button is clicked. Receives the invoice object.</td>
+                <td className="border border-gray-200 p-2 dark:border-gray-800">
+                  onPrintInvoice
+                </td>
+                <td className="border border-gray-200 p-2 dark:border-gray-800">
+                  Function
+                </td>
+                <td className="border border-gray-200 p-2 dark:border-gray-800">
+                  Function called when the print button is clicked. Receives the
+                  invoice object.
+                </td>
               </tr>
               <tr>
-                <td className="border border-gray-200 p-2 dark:border-gray-800">formatDate</td>
-                <td className="border border-gray-200 p-2 dark:border-gray-800">Function</td>
-                <td className="border border-gray-200 p-2 dark:border-gray-800">Function to format date strings for display.</td>
+                <td className="border border-gray-200 p-2 dark:border-gray-800">
+                  formatDate
+                </td>
+                <td className="border border-gray-200 p-2 dark:border-gray-800">
+                  Function
+                </td>
+                <td className="border border-gray-200 p-2 dark:border-gray-800">
+                  Function to format date strings for display.
+                </td>
               </tr>
               <tr>
-                <td className="border border-gray-200 p-2 dark:border-gray-800">className</td>
-                <td className="border border-gray-200 p-2 dark:border-gray-800">String</td>
-                <td className="border border-gray-200 p-2 dark:border-gray-800">Additional CSS classes to apply to the component.</td>
+                <td className="border border-gray-200 p-2 dark:border-gray-800">
+                  className
+                </td>
+                <td className="border border-gray-200 p-2 dark:border-gray-800">
+                  String
+                </td>
+                <td className="border border-gray-200 p-2 dark:border-gray-800">
+                  Additional CSS classes to apply to the component.
+                </td>
               </tr>
             </tbody>
           </table>
@@ -1866,100 +2640,186 @@ return (
       <div className="space-y-6">
         {/* Light Mode Statistics Summary */}
         <div className="overflow-hidden rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-[#0F0F0F]">
-          <h3 className="mb-4 text-lg font-medium text-gray-900 dark:text-white">Light Mode</h3>
-          <StatisticsSummary 
+          <h3 className="mb-4 text-lg font-medium text-gray-900 dark:text-white">
+            Light Mode
+          </h3>
+          <StatisticsSummary
             statistics={[
               { label: 'PAID', value: 1000, formattedValue: '$1.00K' },
               { label: 'VALUE', value: 2000, formattedValue: '$2.00K' },
-              { label: 'PROFIT', value: 1000, formattedValue: '$1.00K', isProfit: true },
-              { label: 'CARDS', value: 1, icon: 'style' }
+              {
+                label: 'PROFIT',
+                value: 1000,
+                formattedValue: '$1.00K',
+                isProfit: true,
+              },
+              { label: 'CARDS', value: 1, icon: 'style' },
             ]}
           />
         </div>
-        
+
         {/* Dark Mode Statistics Summary */}
         <div className="overflow-hidden rounded-lg border border-gray-800 bg-black p-6 shadow-sm">
           <h3 className="mb-4 text-lg font-medium text-white">Dark Mode</h3>
           <div className="rounded-lg bg-[#0F0F0F]">
-            <StatisticsSummary 
+            <StatisticsSummary
               statistics={[
                 { label: 'PAID', value: 1000, formattedValue: '$1.00K' },
                 { label: 'VALUE', value: 2000, formattedValue: '$2.00K' },
-                { label: 'PROFIT', value: 1000, formattedValue: '$1.00K', isProfit: true },
-                { label: 'CARDS', value: 1, icon: 'style' }
+                {
+                  label: 'PROFIT',
+                  value: 1000,
+                  formattedValue: '$1.00K',
+                  isProfit: true,
+                },
+                { label: 'CARDS', value: 1, icon: 'style' },
               ]}
             />
           </div>
         </div>
-        
+
         {/* Negative Profit Example */}
         <div className="overflow-hidden rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-[#0F0F0F]">
-          <h3 className="mb-4 text-lg font-medium text-gray-900 dark:text-white">With Negative Profit</h3>
-          <StatisticsSummary 
+          <h3 className="mb-4 text-lg font-medium text-gray-900 dark:text-white">
+            With Negative Profit
+          </h3>
+          <StatisticsSummary
             statistics={[
               { label: 'PAID', value: 3000, formattedValue: '$3.00K' },
               { label: 'VALUE', value: 2000, formattedValue: '$2.00K' },
-              { label: 'PROFIT', value: -1000, formattedValue: '-$1.00K', isProfit: true },
-              { label: 'CARDS', value: 1, icon: 'style' }
+              {
+                label: 'PROFIT',
+                value: -1000,
+                formattedValue: '-$1.00K',
+                isProfit: true,
+              },
+              { label: 'CARDS', value: 1, icon: 'style' },
             ]}
           />
         </div>
-        
+
         {/* Props Table */}
         <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-[#0F0F0F]">
-          <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-white">Statistics Summary Props</h3>
+          <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-white">
+            Statistics Summary Props
+          </h3>
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
               <thead className="bg-gray-50 dark:bg-[#0F0F0F]">
                 <tr>
-                  <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Prop</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Type</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Default</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Description</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                    Prop
+                  </th>
+                  <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                    Type
+                  </th>
+                  <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                    Default
+                  </th>
+                  <th className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                    Description
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-800 dark:bg-[#0F0F0F]">
                 <tr>
-                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">statistics</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">array</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">[]</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">Array of statistic objects to display</td>
+                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">
+                    statistics
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    array
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    []
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    Array of statistic objects to display
+                  </td>
                 </tr>
                 <tr>
-                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">statistics[].label</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">string</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">required</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">Label for the statistic</td>
+                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">
+                    statistics[].label
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    string
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    required
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    Label for the statistic
+                  </td>
                 </tr>
                 <tr>
-                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">statistics[].value</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">number|string</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">required</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">Value of the statistic</td>
+                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">
+                    statistics[].value
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    number|string
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    required
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    Value of the statistic
+                  </td>
                 </tr>
                 <tr>
-                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">statistics[].formattedValue</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">string</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">-</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">Pre-formatted value to display</td>
+                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">
+                    statistics[].formattedValue
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    string
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    -
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    Pre-formatted value to display
+                  </td>
                 </tr>
                 <tr>
-                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">statistics[].isProfit</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">boolean</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">false</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">Whether this statistic represents profit (green/red coloring)</td>
+                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">
+                    statistics[].isProfit
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    boolean
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    false
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    Whether this statistic represents profit (green/red
+                    coloring)
+                  </td>
                 </tr>
                 <tr>
-                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">statistics[].icon</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">string</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">-</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">Optional icon name to display</td>
+                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">
+                    statistics[].icon
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    string
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    -
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    Optional icon name to display
+                  </td>
                 </tr>
                 <tr>
-                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">className</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">string</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">''</td>
-                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">Additional CSS classes</td>
+                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">
+                    className
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    string
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    ''
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                    Additional CSS classes
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -1971,10 +2831,12 @@ return (
 
   const renderSearchToolbarSection = () => (
     <div id="search-toolbar" className="mb-12">
-      <h2 className="mb-6 text-2xl font-semibold text-gray-800 dark:text-gray-100">Search Toolbar</h2>
-      
+      <h2 className="mb-6 text-2xl font-semibold text-gray-800 dark:text-gray-100">
+        Search Toolbar
+      </h2>
+
       <div className="rounded-lg bg-white p-6 shadow-sm dark:bg-[#0F0F0F]">
-        <SearchToolbar 
+        <SearchToolbar
           onSearch={() => {}}
           onFilterChange={() => {}}
           onSortChange={() => {}}
@@ -1989,7 +2851,9 @@ return (
       <div className="space-y-8">
         {/* Select Component */}
         <div className="space-y-4">
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white">Select</h3>
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+            Select
+          </h3>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <div className="space-y-2">
               <ModernLabel>Basic Select</ModernLabel>
@@ -2002,7 +2866,11 @@ return (
             </div>
             <div className="space-y-2">
               <ModernLabel>Small Select</ModernLabel>
-              <Select size="sm" value={selectValue} onValueChange={setSelectValue}>
+              <Select
+                size="sm"
+                value={selectValue}
+                onValueChange={setSelectValue}
+              >
                 <Option value="">Choose an option</Option>
                 <Option value="small1">Small 1</Option>
                 <Option value="small2">Small 2</Option>
@@ -2010,7 +2878,11 @@ return (
             </div>
             <div className="space-y-2">
               <ModernLabel>Large Select</ModernLabel>
-              <Select size="lg" value={selectValue} onValueChange={setSelectValue}>
+              <Select
+                size="lg"
+                value={selectValue}
+                onValueChange={setSelectValue}
+              >
                 <Option value="">Choose an option</Option>
                 <Option value="large1">Large 1</Option>
                 <Option value="large2">Large 2</Option>
@@ -2021,28 +2893,38 @@ return (
 
         {/* Checkbox Component */}
         <div className="space-y-4">
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white">Checkbox</h3>
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+            Checkbox
+          </h3>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <Checkbox 
+            <Checkbox
               checked={checkboxes.basic}
-              onCheckedChange={(checked) => setCheckboxes(prev => ({...prev, basic: checked}))}
+              onCheckedChange={checked =>
+                setCheckboxes(prev => ({ ...prev, basic: checked }))
+              }
               label="Basic checkbox"
             />
-            <Checkbox 
+            <Checkbox
               checked={checkboxes.withLabel}
-              onCheckedChange={(checked) => setCheckboxes(prev => ({...prev, withLabel: checked}))}
+              onCheckedChange={checked =>
+                setCheckboxes(prev => ({ ...prev, withLabel: checked }))
+              }
               label="With description"
               description="This checkbox has a description"
             />
-            <Checkbox 
+            <Checkbox
               checked={checkboxes.error}
-              onCheckedChange={(checked) => setCheckboxes(prev => ({...prev, error: checked}))}
+              onCheckedChange={checked =>
+                setCheckboxes(prev => ({ ...prev, error: checked }))
+              }
               label="Error state"
               error
             />
-            <Checkbox 
+            <Checkbox
               checked={checkboxes.success}
-              onCheckedChange={(checked) => setCheckboxes(prev => ({...prev, success: checked}))}
+              onCheckedChange={checked =>
+                setCheckboxes(prev => ({ ...prev, success: checked }))
+              }
               label="Success state"
               success
             />
@@ -2051,16 +2933,18 @@ return (
 
         {/* Radio Component */}
         <div className="space-y-4">
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white">Radio Groups</h3>
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+            Radio Groups
+          </h3>
           <RadioGroup>
-            <Radio 
+            <Radio
               name="example"
               value="option1"
               checked={radioValue === 'option1'}
               onChange={() => setRadioValue('option1')}
               label="Option 1"
             />
-            <Radio 
+            <Radio
               name="example"
               value="option2"
               checked={radioValue === 'option2'}
@@ -2068,7 +2952,7 @@ return (
               label="Option 2"
               description="This option has a description"
             />
-            <Radio 
+            <Radio
               name="example"
               value="option3"
               checked={radioValue === 'option3'}
@@ -2080,28 +2964,38 @@ return (
 
         {/* Switch Component */}
         <div className="space-y-4">
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white">Switch</h3>
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+            Switch
+          </h3>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <Switch 
+            <Switch
               checked={switchStates.basic}
-              onCheckedChange={(checked) => setSwitchStates(prev => ({...prev, basic: checked}))}
+              onCheckedChange={checked =>
+                setSwitchStates(prev => ({ ...prev, basic: checked }))
+              }
               label="Basic switch"
             />
-            <Switch 
+            <Switch
               checked={switchStates.withLabel}
-              onCheckedChange={(checked) => setSwitchStates(prev => ({...prev, withLabel: checked}))}
+              onCheckedChange={checked =>
+                setSwitchStates(prev => ({ ...prev, withLabel: checked }))
+              }
               label="With description"
               description="This switch has a description"
             />
-            <Switch 
+            <Switch
               checked={switchStates.success}
-              onCheckedChange={(checked) => setSwitchStates(prev => ({...prev, success: checked}))}
+              onCheckedChange={checked =>
+                setSwitchStates(prev => ({ ...prev, success: checked }))
+              }
               label="Success variant"
               variant="success"
             />
-            <Switch 
+            <Switch
               checked={switchStates.danger}
-              onCheckedChange={(checked) => setSwitchStates(prev => ({...prev, danger: checked}))}
+              onCheckedChange={checked =>
+                setSwitchStates(prev => ({ ...prev, danger: checked }))
+              }
               label="Danger variant"
               variant="danger"
             />
@@ -2110,34 +3004,40 @@ return (
 
         {/* Form Field Composition */}
         <div className="space-y-4">
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white">Form Field Composition</h3>
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+            Form Field Composition
+          </h3>
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <ModernFormField>
               <FormItem>
                 <ModernFormLabel required>Email address</ModernFormLabel>
                 <FormControl>
-                  <ModernInput 
-                    type="email" 
+                  <ModernInput
+                    type="email"
                     placeholder="Enter your email"
                     value={modernInputValue}
-                    onChange={(e) => setModernInputValue(e.target.value)}
+                    onChange={e => setModernInputValue(e.target.value)}
                   />
                 </FormControl>
-                <FormDescription>We'll never share your email with anyone else.</FormDescription>
+                <FormDescription>
+                  We'll never share your email with anyone else.
+                </FormDescription>
               </FormItem>
             </ModernFormField>
-            
+
             <ModernFormField>
               <FormItem>
                 <ModernFormLabel required>Password</ModernFormLabel>
                 <FormControl>
-                  <ModernInput 
-                    type="password" 
+                  <ModernInput
+                    type="password"
                     placeholder="Enter your password"
                     error={!!modernInputError}
-                    onChange={(e) => {
+                    onChange={e => {
                       if (e.target.value.length < 8) {
-                        setModernInputError('Password must be at least 8 characters');
+                        setModernInputError(
+                          'Password must be at least 8 characters'
+                        );
                       } else {
                         setModernInputError('');
                       }
@@ -2158,7 +3058,9 @@ return (
       <div className="space-y-8">
         {/* Tabs Component */}
         <div className="space-y-4">
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white">Tabs</h3>
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+            Tabs
+          </h3>
           <div className="space-y-6">
             <Tabs value={activeModernTab} onValueChange={setActiveModernTab}>
               <TabsList>
@@ -2167,21 +3069,27 @@ return (
                 <TabsTrigger value="tab3">Tab 3</TabsTrigger>
               </TabsList>
               <TabsContent value="tab1">
-                <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-                  <h4 className="font-medium mb-2">Tab 1 Content</h4>
-                  <p className="text-gray-600 dark:text-gray-400">This is the content for tab 1.</p>
+                <div className="rounded-lg border border-gray-200 p-6 dark:border-gray-700">
+                  <h4 className="mb-2 font-medium">Tab 1 Content</h4>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    This is the content for tab 1.
+                  </p>
                 </div>
               </TabsContent>
               <TabsContent value="tab2">
-                <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-                  <h4 className="font-medium mb-2">Tab 2 Content</h4>
-                  <p className="text-gray-600 dark:text-gray-400">This is the content for tab 2.</p>
+                <div className="rounded-lg border border-gray-200 p-6 dark:border-gray-700">
+                  <h4 className="mb-2 font-medium">Tab 2 Content</h4>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    This is the content for tab 2.
+                  </p>
                 </div>
               </TabsContent>
               <TabsContent value="tab3">
-                <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-                  <h4 className="font-medium mb-2">Tab 3 Content</h4>
-                  <p className="text-gray-600 dark:text-gray-400">This is the content for tab 3.</p>
+                <div className="rounded-lg border border-gray-200 p-6 dark:border-gray-700">
+                  <h4 className="mb-2 font-medium">Tab 3 Content</h4>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    This is the content for tab 3.
+                  </p>
                 </div>
               </TabsContent>
             </Tabs>
@@ -2190,7 +3098,9 @@ return (
 
         {/* Breadcrumb Component */}
         <div className="space-y-4">
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white">Breadcrumb</h3>
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+            Breadcrumb
+          </h3>
           <div className="space-y-4">
             <Breadcrumb>
               <BreadcrumbList>
@@ -2202,9 +3112,7 @@ return (
                   <BreadcrumbLink href="#">Collection</BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator />
-                <BreadcrumbItem variant="current">
-                  Card Details
-                </BreadcrumbItem>
+                <BreadcrumbItem variant="current">Card Details</BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>
           </div>
@@ -2212,29 +3120,44 @@ return (
 
         {/* Layout Components */}
         <div className="space-y-4">
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white">Layout Components</h3>
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+            Layout Components
+          </h3>
           <div className="space-y-6">
             <div>
-              <h4 className="font-medium mb-3">Container</h4>
-              <Container size="md" className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+              <h4 className="mb-3 font-medium">Container</h4>
+              <Container
+                size="md"
+                className="rounded-lg bg-gray-50 p-4 dark:bg-gray-800"
+              >
                 <p className="text-center">This is a medium container</p>
               </Container>
             </div>
-            
+
             <div>
-              <h4 className="font-medium mb-3">Grid</h4>
+              <h4 className="mb-3 font-medium">Grid</h4>
               <Grid cols={3} gap="md">
-                <div className="bg-blue-100 dark:bg-blue-900 rounded-lg p-4 text-center">Item 1</div>
-                <div className="bg-green-100 dark:bg-green-900 rounded-lg p-4 text-center">Item 2</div>
-                <div className="bg-purple-100 dark:bg-purple-900 rounded-lg p-4 text-center">Item 3</div>
+                <div className="rounded-lg bg-blue-100 p-4 text-center dark:bg-blue-900">
+                  Item 1
+                </div>
+                <div className="rounded-lg bg-green-100 p-4 text-center dark:bg-green-900">
+                  Item 2
+                </div>
+                <div className="rounded-lg bg-purple-100 p-4 text-center dark:bg-purple-900">
+                  Item 3
+                </div>
               </Grid>
             </div>
-            
+
             <div>
-              <h4 className="font-medium mb-3">Stack</h4>
+              <h4 className="mb-3 font-medium">Stack</h4>
               <VStack gap="md">
-                <div className="bg-red-100 dark:bg-red-900 rounded-lg p-4 text-center">Vertical Item 1</div>
-                <div className="bg-yellow-100 dark:bg-yellow-900 rounded-lg p-4 text-center">Vertical Item 2</div>
+                <div className="rounded-lg bg-red-100 p-4 text-center dark:bg-red-900">
+                  Vertical Item 1
+                </div>
+                <div className="rounded-lg bg-yellow-100 p-4 text-center dark:bg-yellow-900">
+                  Vertical Item 2
+                </div>
               </VStack>
             </div>
           </div>
@@ -2246,17 +3169,18 @@ return (
   const renderIntegrationTestsSection = () => (
     <ComponentSection title="Integration Tests" id="integration-tests">
       <div className="space-y-8">
-        <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-6">
-          <h3 className="text-lg font-medium text-blue-900 dark:text-blue-100 mb-4">
+        <div className="rounded-lg bg-blue-50 p-6 dark:bg-blue-900/20">
+          <h3 className="mb-4 text-lg font-medium text-blue-900 dark:text-blue-100">
             Component Integration Demo
           </h3>
-          <p className="text-blue-700 dark:text-blue-300 mb-6">
-            This section demonstrates how our modern UI components work together in real-world scenarios.
+          <p className="mb-6 text-blue-700 dark:text-blue-300">
+            This section demonstrates how our modern UI components work together
+            in real-world scenarios.
           </p>
-          
+
           {/* Complex Form Integration */}
-          <div className="bg-white dark:bg-black rounded-lg p-6 shadow-sm">
-            <h4 className="font-medium mb-4">User Profile Form</h4>
+          <div className="rounded-lg bg-white p-6 shadow-sm dark:bg-black">
+            <h4 className="mb-4 font-medium">User Profile Form</h4>
             <Container size="lg">
               <Grid cols={2} gap="lg">
                 <ModernFormField>
@@ -2267,7 +3191,7 @@ return (
                     </FormControl>
                   </FormItem>
                 </ModernFormField>
-                
+
                 <ModernFormField>
                   <FormItem>
                     <ModernFormLabel required>Role</ModernFormLabel>
@@ -2282,13 +3206,13 @@ return (
                   </FormItem>
                 </ModernFormField>
               </Grid>
-              
+
               <VStack gap="md" className="mt-6">
                 <Checkbox label="Enable email notifications" />
                 <Checkbox label="Make profile public" />
                 <Switch label="Dark mode preference" />
               </VStack>
-              
+
               <Tabs defaultValue="personal" className="mt-6">
                 <TabsList>
                   <TabsTrigger value="personal">Personal</TabsTrigger>
@@ -2296,19 +3220,22 @@ return (
                   <TabsTrigger value="preferences">Preferences</TabsTrigger>
                 </TabsList>
                 <TabsContent value="personal">
-                  <div className="space-y-4 mt-4">
+                  <div className="mt-4 space-y-4">
                     <ModernInput placeholder="Bio" />
                     <ModernInput placeholder="Location" />
                   </div>
                 </TabsContent>
                 <TabsContent value="security">
-                  <div className="space-y-4 mt-4">
-                    <ModernInput type="password" placeholder="Current password" />
+                  <div className="mt-4 space-y-4">
+                    <ModernInput
+                      type="password"
+                      placeholder="Current password"
+                    />
                     <ModernInput type="password" placeholder="New password" />
                   </div>
                 </TabsContent>
                 <TabsContent value="preferences">
-                  <div className="space-y-4 mt-4">
+                  <div className="mt-4 space-y-4">
                     <RadioGroup>
                       <Radio name="theme" value="light" label="Light theme" />
                       <Radio name="theme" value="dark" label="Dark theme" />
@@ -2317,7 +3244,7 @@ return (
                   </div>
                 </TabsContent>
               </Tabs>
-              
+
               <HStack justify="end" className="mt-6">
                 <Button variant="outline">Cancel</Button>
                 <Button>Save Changes</Button>
@@ -2325,24 +3252,30 @@ return (
             </Container>
           </div>
         </div>
-        
+
         {/* Performance Metrics */}
-        <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-6">
-          <h3 className="text-lg font-medium text-green-900 dark:text-green-100 mb-4">
+        <div className="rounded-lg bg-green-50 p-6 dark:bg-green-900/20">
+          <h3 className="mb-4 text-lg font-medium text-green-900 dark:text-green-100">
             Performance Metrics
           </h3>
           <Grid cols={3} gap="md">
-            <div className="bg-white dark:bg-black rounded-lg p-4 text-center">
+            <div className="rounded-lg bg-white p-4 text-center dark:bg-black">
               <div className="text-2xl font-bold text-green-600">13</div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">Modern Components</div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">
+                Modern Components
+              </div>
             </div>
-            <div className="bg-white dark:bg-black rounded-lg p-4 text-center">
+            <div className="rounded-lg bg-white p-4 text-center dark:bg-black">
               <div className="text-2xl font-bold text-blue-600">99%</div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">TypeScript Coverage</div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">
+                TypeScript Coverage
+              </div>
             </div>
-            <div className="bg-white dark:bg-black rounded-lg p-4 text-center">
+            <div className="rounded-lg bg-white p-4 text-center dark:bg-black">
               <div className="text-2xl font-bold text-purple-600">A11y</div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">Accessibility Ready</div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">
+                Accessibility Ready
+              </div>
             </div>
           </Grid>
         </div>
@@ -2355,11 +3288,11 @@ return (
     <a
       href={`#${id}`}
       className={`block rounded-md px-4 py-2 transition-colors ${
-        isActive 
-          ? 'bg-purple-100 font-medium text-purple-700 dark:bg-purple-900/30 dark:text-purple-300' 
+        isActive
+          ? 'bg-purple-100 font-medium text-purple-700 dark:bg-purple-900/30 dark:text-purple-300'
           : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800'
       }`}
-      onClick={(e) => {
+      onClick={e => {
         e.preventDefault();
         onClick(id);
         window.history.pushState(null, '', `#${id}`);
@@ -2375,7 +3308,9 @@ return (
       <header className="sticky top-0 z-10 bg-white shadow-sm dark:bg-[#0F0F0F]">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
-            <h1 className="text-xl font-bold">Pokemon Card Tracker - Component Library</h1>
+            <h1 className="text-xl font-bold">
+              Pokemon Card Tracker - Component Library
+            </h1>
             <div className="flex items-center space-x-4">
               <button
                 onClick={toggleTheme}
@@ -2396,8 +3331,8 @@ return (
           <div className="inline-flex rounded-md bg-white p-1 shadow-sm dark:bg-[#0F0F0F]">
             <button
               className={`rounded-md px-4 py-2 text-sm font-medium focus:outline-none ${
-                activeTab === 'atomic' 
-                  ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300' 
+                activeTab === 'atomic'
+                  ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300'
                   : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'
               }`}
               onClick={() => {
@@ -2409,8 +3344,8 @@ return (
             </button>
             <button
               className={`rounded-md px-4 py-2 text-sm font-medium focus:outline-none ${
-                activeTab === 'composite' 
-                  ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300' 
+                activeTab === 'composite'
+                  ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300'
                   : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'
               }`}
               onClick={() => {
@@ -2429,30 +3364,30 @@ return (
           <div className="lg:col-span-1">
             <div className="sticky top-24 rounded-lg bg-white p-4 shadow-sm dark:bg-[#0F0F0F]">
               <h2 className="mb-4 text-lg font-medium text-gray-800 dark:text-gray-200">
-                {activeTab === 'atomic' ? 'Atomic Components' : 'Composite Components'}
+                {activeTab === 'atomic'
+                  ? 'Atomic Components'
+                  : 'Composite Components'}
               </h2>
               <nav className="space-y-1">
-                {activeTab === 'atomic' ? (
-                  atomicNavItems.map(item => (
-                    <NavItem
-                      key={item.id}
-                      id={item.id}
-                      label={item.label}
-                      isActive={activeSection === item.id}
-                      onClick={setActiveSection}
-                    />
-                  ))
-                ) : (
-                  compositeNavItems.map(item => (
-                    <NavItem
-                      key={item.id}
-                      id={item.id}
-                      label={item.label}
-                      isActive={activeSection === item.id}
-                      onClick={setActiveSection}
-                    />
-                  ))
-                )}
+                {activeTab === 'atomic'
+                  ? atomicNavItems.map(item => (
+                      <NavItem
+                        key={item.id}
+                        id={item.id}
+                        label={item.label}
+                        isActive={activeSection === item.id}
+                        onClick={setActiveSection}
+                      />
+                    ))
+                  : compositeNavItems.map(item => (
+                      <NavItem
+                        key={item.id}
+                        id={item.id}
+                        label={item.label}
+                        isActive={activeSection === item.id}
+                        onClick={setActiveSection}
+                      />
+                    ))}
               </nav>
             </div>
           </div>
@@ -2464,14 +3399,16 @@ return (
                 {activeSection === 'colors' && renderColorSystemSection()}
                 {activeSection === 'buttons' && renderButtonSection()}
                 {activeSection === 'cards' && renderCardSection()}
-                {activeSection === 'form-elements' && renderFormElementsSection()}
+                {activeSection === 'form-elements' &&
+                  renderFormElementsSection()}
                 {activeSection === 'modern-forms' && renderModernFormsSection()}
                 {activeSection === 'navigation' && renderNavigationSection()}
                 {activeSection === 'icons' && renderIconSection()}
                 {activeSection === 'toggle' && renderToggleSection()}
                 {activeSection === 'dropdown' && renderDropdownSection()}
                 {activeSection === 'toast' && renderToastSection()}
-                {activeSection === 'integration-tests' && renderIntegrationTestsSection()}
+                {activeSection === 'integration-tests' &&
+                  renderIntegrationTestsSection()}
               </>
             )}
 
@@ -2479,12 +3416,17 @@ return (
               <>
                 {activeSection === 'header' && renderHeaderSection()}
                 {activeSection === 'modal' && renderModalSection()}
-                {activeSection === 'card-details-modal' && renderCardDetailsModalSection()}
-                {activeSection === 'statistics-summary' && renderStatisticsSummarySection()}
-                {activeSection === 'search-toolbar' && renderSearchToolbarSection()}
+                {activeSection === 'card-details-modal' &&
+                  renderCardDetailsModalSection()}
+                {activeSection === 'statistics-summary' &&
+                  renderStatisticsSummarySection()}
+                {activeSection === 'search-toolbar' &&
+                  renderSearchToolbarSection()}
                 {activeSection === 'login-modal' && renderLoginModalSection()}
-                {activeSection === 'settings-modal' && renderSettingsModalSection()}
-                {activeSection === 'sold-items-view' && renderSoldItemsViewSection()}
+                {activeSection === 'settings-modal' &&
+                  renderSettingsModalSection()}
+                {activeSection === 'sold-items-view' &&
+                  renderSoldItemsViewSection()}
               </>
             )}
           </div>

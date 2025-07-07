@@ -1,8 +1,11 @@
 import React from 'react';
 
-function MarketplaceNavigation({ currentView = 'marketplace', onViewChange = () => {} }) {
+function MarketplaceNavigation({
+  currentView = 'marketplace',
+  onViewChange = () => {},
+}) {
   // Determine which tab is active
-  const isActive = (view) => {
+  const isActive = view => {
     return currentView === view;
   };
 
@@ -21,7 +24,7 @@ function MarketplaceNavigation({ currentView = 'marketplace', onViewChange = () 
           Browse
         </span>
       </button>
-      
+
       <button
         onClick={() => onViewChange('marketplace-selling')}
         className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
@@ -35,7 +38,7 @@ function MarketplaceNavigation({ currentView = 'marketplace', onViewChange = () 
           My Listings
         </span>
       </button>
-      
+
       <button
         onClick={() => onViewChange('marketplace-messages')}
         className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${

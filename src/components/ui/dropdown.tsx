@@ -8,7 +8,8 @@ export interface DropdownProps extends React.HTMLAttributes<HTMLDivElement> {
   onOpenChange?: (open: boolean) => void;
 }
 
-export interface DropdownItemProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface DropdownItemProps
+  extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
 }
 
@@ -37,13 +38,19 @@ const Dropdown = React.forwardRef<HTMLDivElement, DropdownProps>(
       if (isOpen) {
         const handleClickOutside = (event: MouseEvent) => {
           const target = event.target as HTMLElement;
-          if (ref && 'current' in ref && ref.current && !ref.current.contains(target)) {
+          if (
+            ref &&
+            'current' in ref &&
+            ref.current &&
+            !ref.current.contains(target)
+          ) {
             handleClose();
           }
         };
 
         document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
+        return () =>
+          document.removeEventListener('mousedown', handleClickOutside);
       }
     }, [isOpen, ref]);
 
@@ -80,4 +87,4 @@ const DropdownItem = React.forwardRef<HTMLDivElement, DropdownItemProps>(
 Dropdown.displayName = 'Dropdown';
 DropdownItem.displayName = 'DropdownItem';
 
-export { Dropdown, DropdownItem }; 
+export { Dropdown, DropdownItem };

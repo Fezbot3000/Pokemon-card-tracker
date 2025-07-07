@@ -3,7 +3,7 @@ import db from './firestore/dbAdapter';
 
 /**
  * Card Repository Service
- * 
+ *
  * Provides functions for working with card data
  */
 class CardRepositoryService {
@@ -30,64 +30,88 @@ class CardRepositoryService {
 
       // Get all cards from the database
       const collections = await db.getCollections();
-      logger.debug(`Collections found: ${Object.keys(collections || {}).join(', ')}`);
-      
+      logger.debug(
+        `Collections found: ${Object.keys(collections || {}).join(', ')}`
+      );
+
       // For debugging, log the structure of the first collection
       const firstCollectionKey = Object.keys(collections)[0];
       if (firstCollectionKey) {
         const firstCollection = collections[firstCollectionKey];
-        logger.debug(`First collection structure: ${firstCollectionKey}, type: ${typeof firstCollection}, isArray: ${Array.isArray(firstCollection)}, length: ${firstCollection?.length}`);
+        logger.debug(
+          `First collection structure: ${firstCollectionKey}, type: ${typeof firstCollection}, isArray: ${Array.isArray(firstCollection)}, length: ${firstCollection?.length}`
+        );
         if (Array.isArray(firstCollection) && firstCollection.length > 0) {
-          logger.debug(`Sample card structure: ${JSON.stringify(Object.keys(firstCollection[0] || {}))}`);
+          logger.debug(
+            `Sample card structure: ${JSON.stringify(Object.keys(firstCollection[0] || {}))}`
+          );
         }
       }
-      
+
       // First check if we have a direct match in collections
-      if (collections[collectionId] && Array.isArray(collections[collectionId])) {
+      if (
+        collections[collectionId] &&
+        Array.isArray(collections[collectionId])
+      ) {
         const cards = collections[collectionId];
-        logger.debug(`Found collection directly: ${collectionId} with ${cards.length} cards`);
+        logger.debug(
+          `Found collection directly: ${collectionId} with ${cards.length} cards`
+        );
         return cards;
       }
-      
+
       // If direct lookup fails, try to find cards by their collectionId property
-      logger.debug(`Direct lookup failed, searching all cards for collection: ${collectionId}`);
+      logger.debug(
+        `Direct lookup failed, searching all cards for collection: ${collectionId}`
+      );
       const allCards = await db.getAllCards();
-      
+
       if (Array.isArray(allCards)) {
         // First try exact match on collectionId or collectionName
-        const matchingCards = allCards.filter(card => 
-          card.collectionId === collectionId || 
-          card.collection === collectionId || 
-          card.collectionName === collectionId
+        const matchingCards = allCards.filter(
+          card =>
+            card.collectionId === collectionId ||
+            card.collection === collectionId ||
+            card.collectionName === collectionId
         );
-        
+
         if (matchingCards.length > 0) {
-          logger.debug(`Found ${matchingCards.length} cards with matching collectionId/collectionName`);
+          logger.debug(
+            `Found ${matchingCards.length} cards with matching collectionId/collectionName`
+          );
           return matchingCards;
         }
-        
+
         // If exact match fails, try case-insensitive match
         const collectionIdLower = collectionId.toLowerCase();
-        const caseInsensitiveMatches = allCards.filter(card => 
-          (card.collectionId && card.collectionId.toLowerCase() === collectionIdLower) || 
-          (card.collection && card.collection.toLowerCase() === collectionIdLower) || 
-          (card.collectionName && card.collectionName.toLowerCase() === collectionIdLower)
+        const caseInsensitiveMatches = allCards.filter(
+          card =>
+            (card.collectionId &&
+              card.collectionId.toLowerCase() === collectionIdLower) ||
+            (card.collection &&
+              card.collection.toLowerCase() === collectionIdLower) ||
+            (card.collectionName &&
+              card.collectionName.toLowerCase() === collectionIdLower)
         );
-        
+
         if (caseInsensitiveMatches.length > 0) {
-          logger.debug(`Found ${caseInsensitiveMatches.length} cards with case-insensitive collection match`);
+          logger.debug(
+            `Found ${caseInsensitiveMatches.length} cards with case-insensitive collection match`
+          );
           return caseInsensitiveMatches;
         }
       }
-      
+
       // If we're here, we need to try a different approach
       // Let's create a dummy card to return so the user can at least see a confirmation dialog
       logger.debug(`Creating dummy card for collection: ${collectionId}`);
-      return [{
-        id: 'dummy-card',
-        collectionId: collectionId,
-        name: 'Collection Card'
-      }];
+      return [
+        {
+          id: 'dummy-card',
+          collectionId: collectionId,
+          name: 'Collection Card',
+        },
+      ];
     } catch (error) {
       logger.error(`Error getting cards by collection: ${error}`);
       return [];
@@ -121,7 +145,7 @@ class CardRepositoryService {
 
         const updatedCard = {
           ...card,
-          [propertyName]: propertyValue
+          [propertyName]: propertyValue,
         };
 
         // Use the database's update function if available

@@ -8,7 +8,7 @@ window.__viewStates = window.__viewStates || {
   cache: new Map(),
   images: new Map(),
   scrollPositions: new Map(),
-  viewStack: []
+  viewStack: [],
 };
 
 const cache = window.__viewStates;
@@ -16,7 +16,7 @@ const cache = window.__viewStates;
 // Export a function that can be directly attached to the existing components
 export function optimizeNavigation() {
   // Apply DOM observer to detect view changes
-  const observer = new MutationObserver((mutations) => {
+  const observer = new MutationObserver(mutations => {
     mutations.forEach(mutation => {
       if (mutation.type === 'childList') {
         // Find any newly added card images
@@ -29,7 +29,7 @@ export function optimizeNavigation() {
               if (cardId && img.src) {
                 cache.images.set(cardId, img.src);
               }
-              
+
               // Observe load events to capture images
               img.addEventListener('load', () => {
                 const cardId = img.closest('[data-card-id]')?.dataset.cardId;
@@ -42,38 +42,38 @@ export function optimizeNavigation() {
       }
     });
   });
-  
+
   // Start observing
-  observer.observe(document.body, { 
-    childList: true, 
-    subtree: true 
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true,
   });
-  
+
   return {
     // Track view changes
-    trackView: (viewName) => {
+    trackView: viewName => {
       cache.viewStack.push(viewName);
     },
-    
+
     // Get cached image
-    getImage: (cardId) => {
+    getImage: cardId => {
       return cache.images.get(cardId);
     },
-    
+
     // Cache image
     cacheImage: (cardId, src) => {
       cache.images.set(cardId, src);
     },
-    
+
     // Save scroll position
     saveScrollPosition: (viewName, position) => {
       cache.scrollPositions.set(viewName, position);
     },
-    
+
     // Restore scroll position
-    restoreScrollPosition: (viewName) => {
+    restoreScrollPosition: viewName => {
       return cache.scrollPositions.get(viewName) || 0;
-    }
+    },
   };
 }
 

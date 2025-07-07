@@ -33,16 +33,16 @@ export const useCardModals = () => {
     showNewCardForm,
     selectedCard,
     initialCardCollection,
-    
+
     // Handlers
     openNewCardForm,
     closeNewCardForm,
     openCardDetails,
     closeCardDetails,
-    
+
     // Direct setters (for compatibility)
     setShowNewCardForm,
     setSelectedCard,
-    setInitialCardCollection
+    setInitialCardCollection,
   };
 };

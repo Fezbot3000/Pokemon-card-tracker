@@ -1,6 +1,6 @@
 /**
  * Formatter utilities for the design system
- * 
+ *
  * These utilities help format values consistently across the component library
  */
 
@@ -13,7 +13,7 @@
  */
 export const formatCurrency = (value, currency = 'AUD', locale = 'en-AU') => {
   if (value === null || value === undefined) return '';
-  
+
   return new Intl.NumberFormat(locale, {
     style: 'currency',
     currency,
@@ -31,21 +31,31 @@ export const formatCurrency = (value, currency = 'AUD', locale = 'en-AU') => {
  */
 export const formatCurrencyK = (value, currency = 'AUD', locale = 'en-AU') => {
   if (value === null || value === undefined) return '';
-  
+
   const absValue = Math.abs(value);
-  
+
   if (absValue >= 1000000000) {
-    return formatCurrency(value / 1000000000, currency, locale).replace(/\.00$/, '') + 'B';
+    return (
+      formatCurrency(value / 1000000000, currency, locale).replace(
+        /\.00$/,
+        ''
+      ) + 'B'
+    );
   }
-  
+
   if (absValue >= 1000000) {
-    return formatCurrency(value / 1000000, currency, locale).replace(/\.00$/, '') + 'M';
+    return (
+      formatCurrency(value / 1000000, currency, locale).replace(/\.00$/, '') +
+      'M'
+    );
   }
-  
+
   if (absValue >= 1000) {
-    return formatCurrency(value / 1000, currency, locale).replace(/\.00$/, '') + 'K';
+    return (
+      formatCurrency(value / 1000, currency, locale).replace(/\.00$/, '') + 'K'
+    );
   }
-  
+
   return formatCurrency(value, currency, locale);
 };
 
@@ -58,16 +68,19 @@ export const formatCurrencyK = (value, currency = 'AUD', locale = 'en-AU') => {
  */
 export const formatDate = (date, locale = 'en-US', options = {}) => {
   if (!date) return '';
-  
+
   const defaultOptions = {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
   };
-  
+
   const dateObj = typeof date === 'string' ? new Date(date) : date;
-  
-  return new Intl.DateTimeFormat(locale, { ...defaultOptions, ...options }).format(dateObj);
+
+  return new Intl.DateTimeFormat(locale, {
+    ...defaultOptions,
+    ...options,
+  }).format(dateObj);
 };
 
 /**
@@ -79,7 +92,7 @@ export const formatDate = (date, locale = 'en-US', options = {}) => {
  */
 export const formatNumber = (value, decimals = 0, locale = 'en-US') => {
   if (value === null || value === undefined) return '';
-  
+
   return new Intl.NumberFormat(locale, {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,

@@ -1,10 +1,9 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-
 /**
  * Card Component
- * 
+ *
  * A reusable card component with consistent styling that can be used across the application.
  */
 const Card = ({
@@ -19,26 +18,32 @@ const Card = ({
 }) => {
   // Base styles for all card variants
   const baseClasses = 'rounded-xl overflow-hidden';
-  
+
   // Different variant styles
   const variantClasses = {
-    default: 'bg-white dark:bg-black border border-gray-200 dark:border-gray-700/50 shadow-sm',
+    default:
+      'bg-white dark:bg-black border border-gray-200 dark:border-gray-700/50 shadow-sm',
     flat: 'bg-white dark:bg-black border border-gray-100 dark:border-gray-800/50',
     outlined: 'bg-transparent border border-gray-200 dark:border-gray-700/50',
-    elevated: 'bg-white dark:bg-black border border-gray-200 dark:border-gray-700/50 shadow-md',
+    elevated:
+      'bg-white dark:bg-black border border-gray-200 dark:border-gray-700/50 shadow-md',
   };
-  
+
   // Optional hover effect
-  const hoverClasses = hoverable ? 'hover:shadow-md transition-shadow duration-200' : '';
-  
-  // Optional selectable state
-  const selectableClasses = selectable 
-    ? 'cursor-pointer transition-colors duration-200' +
-      (selected ? ' ring-2 ring-primary ring-offset-2 dark:ring-offset-[#0D1117]' : '')
+  const hoverClasses = hoverable
+    ? 'hover:shadow-md transition-shadow duration-200'
     : '';
-  
+
+  // Optional selectable state
+  const selectableClasses = selectable
+    ? 'cursor-pointer transition-colors duration-200' +
+      (selected
+        ? ' ring-2 ring-primary ring-offset-2 dark:ring-offset-[#0D1117]'
+        : '')
+    : '';
+
   return (
-    <div 
+    <div
       className={`${baseClasses} ${variantClasses[variant]} ${hoverClasses} ${selectableClasses} ${className}`}
       onClick={onClick}
       {...props}

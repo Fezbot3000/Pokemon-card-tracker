@@ -5,23 +5,26 @@
 // Lazy load images using Intersection Observer
 export const setupImageLazyLoading = () => {
   if ('IntersectionObserver' in window) {
-    const imageObserver = new IntersectionObserver((entries, observer) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          const img = entry.target;
-          const src = img.getAttribute('data-src');
-          if (src) {
-            img.src = src;
-            img.removeAttribute('data-src');
-            img.classList.add('loaded');
-            observer.unobserve(img);
+    const imageObserver = new IntersectionObserver(
+      (entries, observer) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const img = entry.target;
+            const src = img.getAttribute('data-src');
+            if (src) {
+              img.src = src;
+              img.removeAttribute('data-src');
+              img.classList.add('loaded');
+              observer.unobserve(img);
+            }
           }
-        }
-      });
-    }, {
-      rootMargin: '50px 0px', // Start loading 50px before entering viewport
-      threshold: 0.01
-    });
+        });
+      },
+      {
+        rootMargin: '50px 0px', // Start loading 50px before entering viewport
+        threshold: 0.01,
+      }
+    );
 
     // Observe all images with data-src attribute
     const lazyImages = document.querySelectorAll('img[data-src]');
@@ -29,23 +32,26 @@ export const setupImageLazyLoading = () => {
 
     return imageObserver;
   }
-  
+
   // Fallback for browsers without IntersectionObserver
   const lazyImages = document.querySelectorAll('img[data-src]');
   lazyImages.forEach(img => {
     img.src = img.getAttribute('data-src');
     img.removeAttribute('data-src');
   });
-  
+
   return null;
 };
 
 // Convert image URLs to use lazy loading
-export const prepareLazyImage = (imageUrl, placeholder = '/placeholder.png') => {
+export const prepareLazyImage = (
+  imageUrl,
+  placeholder = '/placeholder.png'
+) => {
   return {
     src: placeholder,
     'data-src': imageUrl,
-    loading: 'lazy' // Native lazy loading as fallback
+    loading: 'lazy', // Native lazy loading as fallback
   };
 };
 
@@ -55,14 +61,14 @@ export const getOptimizedImageUrl = (originalUrl, width = 300) => {
   if (originalUrl?.startsWith('blob:') || originalUrl?.startsWith('file:')) {
     return originalUrl;
   }
-  
+
   // For Firebase Storage URLs, we could add image transformation parameters
   // For now, just return the original URL
   return originalUrl;
 };
 
 // Preload critical images
-export const preloadImage = (url) => {
+export const preloadImage = url => {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => resolve(url);
@@ -72,7 +78,7 @@ export const preloadImage = (url) => {
 };
 
 // Clean up blob URLs when component unmounts
-export const cleanupBlobUrls = (urls) => {
+export const cleanupBlobUrls = urls => {
   if (Array.isArray(urls)) {
     urls.forEach(url => {
       if (url?.startsWith('blob:')) {
@@ -89,5 +95,5 @@ export default {
   prepareLazyImage,
   getOptimizedImageUrl,
   preloadImage,
-  cleanupBlobUrls
+  cleanupBlobUrls,
 };

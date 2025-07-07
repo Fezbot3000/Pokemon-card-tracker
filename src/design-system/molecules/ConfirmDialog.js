@@ -5,7 +5,7 @@ import Button from '../atoms/Button';
 
 /**
  * ConfirmDialog Component
- * 
+ *
  * A reusable confirmation dialog component that presents a message to the user
  * and waits for their confirmation or cancellation.
  */
@@ -17,7 +17,7 @@ const ConfirmDialog = ({
   message = 'Are you sure you want to proceed?',
   confirmText = 'Confirm',
   cancelText = 'Cancel',
-  variant = 'danger'
+  variant = 'danger',
 }) => {
   // Effect to ensure UI is reset if the dialog is closed unexpectedly
   useEffect(() => {
@@ -25,13 +25,15 @@ const ConfirmDialog = ({
     return () => {
       // Remove any lingering focus traps or body classes
       document.body.classList.remove('modal-open');
-      
+
       // Ensure any "blocked" UI elements are re-enabled
-      const blockers = document.querySelectorAll('.modal-backdrop, .modal-overlay');
+      const blockers = document.querySelectorAll(
+        '.modal-backdrop, .modal-overlay'
+      );
       blockers.forEach(el => el.parentNode?.removeChild(el));
     };
   }, []);
-  
+
   // Handle confirm action
   const handleConfirm = async () => {
     try {
@@ -45,14 +47,16 @@ const ConfirmDialog = ({
       handleClose();
     }
   };
-  
+
   // Centralized close handler to ensure proper cleanup
   const handleClose = () => {
     // Explicitly remove any overlay classes or elements that might be blocking UI
     document.body.classList.remove('modal-open');
-    const overlays = document.querySelectorAll('.modal-backdrop, .modal-overlay');
+    const overlays = document.querySelectorAll(
+      '.modal-backdrop, .modal-overlay'
+    );
     overlays.forEach(el => el.parentNode?.removeChild(el));
-    
+
     // Finally, call the provided onClose callback
     onClose();
   };
@@ -83,11 +87,7 @@ const ConfirmDialog = ({
         </>
       }
     >
-      <div className="p-6">
-        <div className="mb-6 text-gray-700 dark:text-gray-300">
-          {message}
-        </div>
-      </div>
+      <div className="text-gray-700 dark:text-gray-300">{message}</div>
     </Modal>
   );
 };
@@ -100,7 +100,7 @@ ConfirmDialog.propTypes = {
   message: PropTypes.node,
   confirmText: PropTypes.string,
   cancelText: PropTypes.string,
-  variant: PropTypes.string
+  variant: PropTypes.string,
 };
 
 export default ConfirmDialog;

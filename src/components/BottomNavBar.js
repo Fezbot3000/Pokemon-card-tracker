@@ -1,21 +1,21 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-const BottomNavBar = ({ 
-  currentView, 
-  onViewChange, 
-  onSettingsClick
-}) => {
+const BottomNavBar = ({ currentView, onViewChange, onSettingsClick }) => {
   // Helper function to check if current view is in the sold section
   const isSoldSection = () => {
     return ['sold', 'sold-items', 'purchase-invoices'].includes(currentView);
   };
-  
+
   // Helper function to check if current view is in the marketplace section
   const isMarketplaceSection = () => {
-    return ['marketplace', 'marketplace-selling', 'marketplace-messages'].includes(currentView);
+    return [
+      'marketplace',
+      'marketplace-selling',
+      'marketplace-messages',
+    ].includes(currentView);
   };
-  
+
   // Check if we're in an active chat in the marketplace messages section
   const isInActiveChat = () => {
     // Check if we're in marketplace messages and if there's an active chat
@@ -27,7 +27,7 @@ const BottomNavBar = ({
   };
 
   // Safe navigation handler
-  const handleNavigation = (targetView) => {
+  const handleNavigation = targetView => {
     try {
       // Add a small delay to ensure any ongoing state updates complete
       setTimeout(() => {
@@ -65,52 +65,84 @@ const BottomNavBar = ({
       <div className="flex items-center justify-around py-2">
         <button
           className={`flex flex-col items-center justify-center px-4 py-1 ${
-            currentView === 'cards' 
-              ? 'text-[#ef4444]' 
+            currentView === 'cards'
+              ? 'text-[#ef4444]'
               : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
           }`}
           onClick={() => handleNavigation('cards')}
         >
-          <span className={`material-icons text-2xl ${currentView === 'cards' ? 'text-[#ef4444]' : ''}`}>dashboard</span>
-          <span className={`mt-1 text-xs ${currentView === 'cards' ? 'text-[#ef4444]' : ''}`}>Cards</span>
+          <span
+            className={`material-icons text-2xl ${currentView === 'cards' ? 'text-[#ef4444]' : ''}`}
+          >
+            dashboard
+          </span>
+          <span
+            className={`mt-1 text-xs ${currentView === 'cards' ? 'text-[#ef4444]' : ''}`}
+          >
+            Cards
+          </span>
         </button>
-        
+
         <button
           className={`flex flex-col items-center justify-center px-4 py-1 ${
-            isSoldSection() 
-              ? 'text-[#ef4444]' 
+            isSoldSection()
+              ? 'text-[#ef4444]'
               : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
           }`}
           onClick={() => handleNavigation('purchase-invoices')}
         >
-          <span className={`material-icons text-2xl ${isSoldSection() ? 'text-[#ef4444]' : ''}`}>sell</span>
-          <span className={`mt-1 text-xs ${isSoldSection() ? 'text-[#ef4444]' : ''}`}>Invoices</span>
+          <span
+            className={`material-icons text-2xl ${isSoldSection() ? 'text-[#ef4444]' : ''}`}
+          >
+            sell
+          </span>
+          <span
+            className={`mt-1 text-xs ${isSoldSection() ? 'text-[#ef4444]' : ''}`}
+          >
+            Invoices
+          </span>
         </button>
-        
+
         <button
           className={`flex flex-col items-center justify-center px-4 py-1 ${
-            isMarketplaceSection() 
-              ? 'text-[#ef4444]' 
+            isMarketplaceSection()
+              ? 'text-[#ef4444]'
               : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
           }`}
           onClick={() => handleNavigation('marketplace')}
         >
-          <span className={`material-icons text-2xl ${isMarketplaceSection() ? 'text-[#ef4444]' : ''}`}>storefront</span>
-          <span className={`mt-1 text-xs ${isMarketplaceSection() ? 'text-[#ef4444]' : ''}`}>Marketplace</span>
+          <span
+            className={`material-icons text-2xl ${isMarketplaceSection() ? 'text-[#ef4444]' : ''}`}
+          >
+            storefront
+          </span>
+          <span
+            className={`mt-1 text-xs ${isMarketplaceSection() ? 'text-[#ef4444]' : ''}`}
+          >
+            Marketplace
+          </span>
         </button>
-        
+
         {/* Add button removed from bottom nav */}
-        
+
         <button
           className={`flex flex-col items-center justify-center px-4 py-1 ${
-            currentView === 'settings' 
-              ? 'text-[#ef4444]' 
+            currentView === 'settings'
+              ? 'text-[#ef4444]'
               : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
           }`}
           onClick={handleSettingsClick}
         >
-          <span className={`material-icons text-2xl ${currentView === 'settings' ? 'text-[#ef4444]' : ''}`}>settings</span>
-          <span className={`mt-1 text-xs ${currentView === 'settings' ? 'text-[#ef4444]' : ''}`}>Settings</span>
+          <span
+            className={`material-icons text-2xl ${currentView === 'settings' ? 'text-[#ef4444]' : ''}`}
+          >
+            settings
+          </span>
+          <span
+            className={`mt-1 text-xs ${currentView === 'settings' ? 'text-[#ef4444]' : ''}`}
+          >
+            Settings
+          </span>
         </button>
       </div>
     </div>
@@ -120,7 +152,7 @@ const BottomNavBar = ({
 BottomNavBar.propTypes = {
   currentView: PropTypes.string.isRequired,
   onViewChange: PropTypes.func.isRequired,
-  onSettingsClick: PropTypes.func.isRequired
+  onSettingsClick: PropTypes.func.isRequired,
 };
 
 export default BottomNavBar;
