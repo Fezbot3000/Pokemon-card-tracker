@@ -32,7 +32,7 @@ const MarketplaceCard = ({
   if (children) {
     return (
       <div
-        className={`group relative cursor-pointer overflow-hidden rounded-2xl bg-white transition-shadow duration-300 dark:bg-[#0F0F0F] ${isSelected ? 'border-2 border-purple-500' : 'border border-[#ffffff33] dark:border-[#ffffff1a]'} ${className}`}
+        className={`group relative cursor-pointer overflow-hidden rounded-2xl bg-white transition-shadow duration-300 dark:bg-[#0F0F0F] ${isSelected ? 'border-2 border-purple-500' : 'border border-gray-200 dark:border-gray-700'} ${className}`}
         onClick={onClick}
         {...props}
       >
@@ -78,7 +78,7 @@ const MarketplaceCard = ({
       className={`group relative h-full cursor-pointer overflow-hidden bg-white text-white transition-all dark:bg-black ${
         isSelected
           ? 'border-2 border-purple-500'
-          : 'border border-[#ffffff33] dark:border-[#ffffff1a]'
+          : 'border border-gray-200 dark:border-gray-700'
       } rounded-md ${className}`}
       onClick={onClick}
       {...props}

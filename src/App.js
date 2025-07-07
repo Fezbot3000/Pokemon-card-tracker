@@ -31,6 +31,7 @@ import {
 } from './design-system';
 import DesignSystemProvider from './design-system/providers/DesignSystemProvider';
 import MobileSettingsModal from './components/MobileSettingsModal';
+import Settings from './components/Settings';
 import CardList from './components/CardList';
 import CardDetails from './components/CardDetails';
 import AddCardModal from './components/AddCardModal';
@@ -146,7 +147,7 @@ function Dashboard() {
           <div className="p-4 pb-20 sm:p-6">
             <div className="w-full px-1 pb-20 sm:px-2">
               {/* Statistics Summary Skeleton */}
-              <div className="mb-3 w-full rounded-md border border-[#ffffff33] bg-white dark:border-[#ffffff1a] dark:bg-black sm:mb-4">
+              <div className="mb-3 w-full rounded-md border border-gray-200 bg-white dark:border-gray-700 dark:bg-black sm:mb-4">
                 <div className="rounded-md p-2 sm:p-4 md:p-6">
                   <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-0">
                     {[
@@ -888,7 +889,7 @@ function AppContent({ currentView, setCurrentView }) {
           <div className="p-4 pb-20 sm:p-6">
             <div className="w-full px-1 pb-20 sm:px-2">
               {/* Statistics Summary Skeleton */}
-              <div className="mb-3 w-full rounded-md border border-[#ffffff33] bg-white dark:border-[#ffffff1a] dark:bg-[#111] sm:mb-4">
+              <div className="mb-3 w-full rounded-md border border-gray-200 bg-white dark:border-gray-700 dark:bg-[#111] sm:mb-4">
                 <div className="rounded-md p-2 sm:p-4 md:p-6">
                   <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-0">
                     {[
@@ -949,6 +950,43 @@ function AppContent({ currentView, setCurrentView }) {
     );
   }
 
+  // Determine layout classes based on current view and header visibility
+  const getMainLayoutClasses = () => {
+    const baseClasses = 'main-content mobile-dashboard mx-auto max-w-[1920px]';
+    
+    if (!isMobile) {
+      // Desktop keeps existing behavior
+      return `${baseClasses} mt-4`;
+    }
+    
+    // Mobile layout logic
+    const hasHeader = !(currentView === 'settings' || currentView === 'cards');
+    const isPWA = window.matchMedia('(display-mode: standalone)').matches;
+    
+    let layoutClasses = baseClasses;
+    
+    if (hasHeader) {
+      layoutClasses += ' with-header';
+    } else {
+      layoutClasses += ' no-header';
+    }
+    
+    if (isPWA) {
+      layoutClasses += ' pwa-mode';
+    }
+    
+    // Debug logging
+    console.log('🎯 Layout Debug:', {
+      currentView,
+      isMobile,
+      hasHeader,
+      isPWA,
+      layoutClasses
+    });
+    
+    return layoutClasses;
+  };
+
   return (
     <div className="dashboard-page min-h-screen bg-gray-100 dark:bg-black">
       {/* Hide Header on mobile when in settings or cards view */}
@@ -1005,7 +1043,7 @@ function AppContent({ currentView, setCurrentView }) {
         />
       )}
 
-      <main className="main-content mobile-dashboard mx-auto mt-4 max-w-[1920px]">
+      <main className={getMainLayoutClasses()}>
         {/* Settings Modal - Available for all views */}
         {showSettings && !isMobile && (
           <SettingsModal
@@ -1039,7 +1077,7 @@ function AppContent({ currentView, setCurrentView }) {
         {currentView === 'cards' ? (
           <div className="flex-1 overflow-y-auto">
             {/* Main content */}
-            <div className="p-4 pb-20 sm:p-6">
+            <div className={`pb-20 sm:p-6 ${isMobile ? 'px-4 pt-2' : 'p-4'}`}>
               {/* Trial Status Banner - now in correct place */}
               <TrialStatusBanner />
 
@@ -1047,7 +1085,7 @@ function AppContent({ currentView, setCurrentView }) {
               {loading ? (
                 <div className="w-full px-1 pb-20 sm:px-2">
                   {/* Skeleton Statistics Summary */}
-                  <div className="mb-3 w-full rounded-md border border-[#ffffff33] bg-white dark:border-[#ffffff1a] dark:bg-black sm:mb-4">
+                  <div className="mb-3 w-full rounded-md border border-gray-200 bg-white dark:border-gray-700 dark:bg-black sm:mb-4">
                     <div className="rounded-md p-2 sm:p-4 md:p-6">
                       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-0">
                         {[
@@ -1271,34 +1309,10 @@ function AppContent({ currentView, setCurrentView }) {
           />
         ) : currentView === 'sold-items' ? (
           <SoldItems />
-        ) : currentView === 'settings' && isMobile ? (
-          <MobileSettingsModal
-            isOpen={showSettings}
-            onClose={handleCloseSettings}
-            selectedCollection={selectedCollection}
-            collections={collections}
-            onStartTutorial={startTutorial}
-            onRenameCollection={(oldName, newName) => {
-              collectionManager.renameCollection(oldName, newName, {
-                collections,
-                setCollections,
-                selectedCollection,
-                setSelectedCollection,
-                user,
-              });
-            }}
-            onDeleteCollection={async name => {
-              await collectionManager.deleteCollection(name, {
-                collections,
-                user,
-                selectedCollection,
-                setCollections,
-                setSelectedCollection,
-              });
-            }}
-            userData={user}
-            onSignOut={logout}
-          />
+        ) : currentView === 'settings' ? (
+          <div className={`min-h-screen bg-white dark:bg-black ${isMobile ? 'settings-mobile' : ''}`}>
+            <Settings />
+          </div>
         ) : null}
       </main>
 

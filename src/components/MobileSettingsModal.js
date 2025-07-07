@@ -57,7 +57,7 @@ const MobileSettingsModal = ({ isOpen, onClose, onResetData }) => {
 
   return (
     <div className="bg-black/75 fixed inset-0 z-50 flex items-end justify-center">
-      <div className="max-h-[90vh] w-full overflow-y-auto rounded-t-2xl bg-white p-6 dark:bg-[#1B2131]">
+      <div className="max-h-[85vh] w-full overflow-y-auto rounded-t-2xl bg-white p-6 dark:bg-black" style={{ paddingTop: 'max(1.5rem, env(safe-area-inset-top))' }}>
         <div className="mb-6 flex items-center justify-between">
           <h2 className="text-xl font-bold text-gray-900 dark:text-white">
             Settings

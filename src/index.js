@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 // Import CSS files in the correct order to ensure proper cascade
 import './styles/globals.css'; // Modernized global styles with design tokens
+import './styles/main.css'; // Primary layout and component styles
 import './styles/utilities.css'; // Custom utility classes
 import './styles/ios-fixes.css'; // iOS Safari specific fixes
 import App from './App';

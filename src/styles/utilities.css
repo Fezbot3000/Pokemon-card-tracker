@@ -42,7 +42,7 @@
 
 .main-content {
   padding-top: var(--header-height-mobile);
-  padding-bottom: var(--space-20);
+  padding-bottom: 4rem; /* Reduced from 5rem to 4rem for smaller bottom nav */
 }
 
 @media (min-width: 640px) {
@@ -58,7 +58,7 @@
 }
 
 .mobile-dashboard {
-  padding-bottom: var(--space-20);
+  padding-bottom: 4rem; /* Reduced from 5rem to 4rem for smaller bottom nav */
 }
 
 @media (min-width: 640px) {
@@ -84,7 +84,7 @@
 
 /* Bottom navigation utilities */
 .bottom-nav {
-  height: var(--space-16);
+  height: 3.5rem; /* Reduced from 4rem (64px) to 3.5rem (56px) */
   background-color: var(--color-surface-primary);
   border-top: 1px solid var(--color-border);
   z-index: var(--z-bottom-nav);
@@ -95,7 +95,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: var(--space-2);
+  padding: 0.25rem; /* Reduced from 0.5rem to 0.25rem */
   color: var(--color-text-tertiary);
   transition: color 0.2s ease;
 }
@@ -482,3 +482,5 @@ header .max-h-60.overflow-y-auto::-webkit-scrollbar {
     color: black !important;
   }
 }
+
+

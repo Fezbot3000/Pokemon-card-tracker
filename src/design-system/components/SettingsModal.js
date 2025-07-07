@@ -968,7 +968,7 @@ const SettingsModal = ({
                     </div>
 
                     {/* Preferred Currency Setting */}
-                    <div className="max-w-md rounded-lg border border-gray-200 bg-white p-4 dark:border-indigo-900/20 dark:bg-[#1B2131]">
+                    <div className="max-w-md rounded-lg border border-gray-200 bg-white p-4 dark:border-indigo-900/20 dark:bg-black">
                       <h4 className="mb-2 flex items-center font-medium text-gray-900 dark:text-white">
                         <Icon name="language" className="mr-2" />{' '}
                         {/* Using 'language' icon as a placeholder for currency */}
@@ -1001,7 +1001,7 @@ const SettingsModal = ({
                 >
                   <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
                     {/* Rename Collection Section */}
-                    <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-indigo-900/20 dark:bg-[#1B2131]">
+                    <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-indigo-900/20 dark:bg-black">
                       <h4 className="mb-3 flex items-center font-medium text-gray-900 dark:text-white">
                         <Icon name="edit" className="mr-2 text-indigo-400" />
                         Rename Collection
@@ -1062,7 +1062,7 @@ const SettingsModal = ({
                     </div>
 
                     {/* Delete Collection Section */}
-                    <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-indigo-900/20 dark:bg-[#1B2131]">
+                    <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-indigo-900/20 dark:bg-black">
                       <h4 className="mb-3 flex items-center font-medium text-gray-900 dark:text-white">
                         <Icon name="delete" className="mr-2 text-red-500" />
                         Delete Collection

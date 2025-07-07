@@ -56,7 +56,7 @@ const Card = ({
   if (children) {
     return (
       <div
-        className={`group relative rounded-2xl bg-white dark:bg-[#0F0F0F] ${isDarkMode ? 'shadow-sm hover:shadow-md' : ''} cursor-pointer overflow-hidden transition-shadow duration-300 ${isSelected ? 'border-2 border-purple-500' : 'border border-[#ffffff33] dark:border-[#ffffff1a]'} ${className}`}
+        className={`group relative rounded-2xl bg-white dark:bg-[#0F0F0F] ${isDarkMode ? 'shadow-sm hover:shadow-md' : ''} cursor-pointer overflow-hidden transition-shadow duration-300 ${isSelected ? 'border-2 border-purple-500' : 'border border-gray-200 dark:border-gray-700'} ${className}`}
         onClick={onClick}
       >
         {/* Listed badge */}
@@ -102,7 +102,7 @@ const Card = ({
       className={`group relative h-full cursor-pointer overflow-hidden bg-white text-white transition-all dark:bg-black ${
         isSelected
           ? 'border-2 border-purple-500'
-          : 'border border-[#ffffff33] dark:border-[#ffffff1a]'
+          : 'border border-gray-200 dark:border-gray-700'
       } rounded-md ${className}`}
       onClick={onClick}
     >
@@ -166,7 +166,7 @@ const Card = ({
         {/* Financial Details - Consolidated Box */}
         <div className="flex flex-col">
           {/* Consolidated Financial Details */}
-          <div className="financial-detail-box rounded-md border border-[#ffffff33] bg-white p-3 dark:border-[#ffffff1a] dark:bg-black">
+                        <div className="financial-detail-box rounded-md border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-black">
             <div className="flex flex-col">
               {/* Paid */}
               <div className="py-1 text-center">

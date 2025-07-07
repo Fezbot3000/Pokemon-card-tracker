@@ -1194,7 +1194,7 @@ const CardList = ({
             {paginatedCards.map(card => (
               <div
                 key={card._uniqueKey}
-                className={`overflow-hidden rounded-lg bg-white transition-all duration-200 hover:shadow-md dark:bg-[#0F0F0F] ${selectedCards.has(card.slabSerial) ? 'ring-2 ring-[#E6185C]' : 'border border-[#ffffff33] dark:border-[#ffffff1a]'}`}
+                className={`overflow-hidden rounded-lg bg-white transition-all duration-200 hover:shadow-md dark:bg-[#0F0F0F] ${selectedCards.has(card.slabSerial) ? 'ring-2 ring-[#E6185C]' : 'border border-gray-200 dark:border-gray-700'}`}
               >
                 <div className="flex items-start p-3">
                   {/* Card selection checkbox */}

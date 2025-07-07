@@ -55,7 +55,7 @@ const CardOptimized = memo(
     if (children) {
       return (
         <div
-          className={`group relative rounded-2xl bg-white dark:bg-[#0F0F0F] ${isDarkMode ? 'shadow-sm hover:shadow-md' : ''} cursor-pointer overflow-hidden transition-shadow duration-300 ${isSelected ? 'border-2 border-purple-500' : 'border border-[#ffffff33] dark:border-[#ffffff1a]'} ${className}`}
+          className={`group relative rounded-2xl bg-white dark:bg-[#0F0F0F] ${isDarkMode ? 'shadow-sm hover:shadow-md' : ''} cursor-pointer overflow-hidden transition-shadow duration-300 ${isSelected ? 'border-2 border-purple-500' : 'border border-gray-200 dark:border-gray-700'} ${className}`}
           onClick={onClick}
           {...props}
         >
@@ -98,7 +98,7 @@ const CardOptimized = memo(
     // Default card content
     return (
       <div
-        className={`group relative rounded-2xl bg-white dark:bg-[#0F0F0F] ${isDarkMode ? 'shadow-sm hover:shadow-md' : ''} cursor-pointer overflow-hidden transition-shadow duration-300 ${isSelected ? 'border-2 border-purple-500' : 'border border-[#ffffff33] dark:border-[#ffffff1a]'} ${className}`}
+        className={`group relative rounded-2xl bg-white dark:bg-[#0F0F0F] ${isDarkMode ? 'shadow-sm hover:shadow-md' : ''} cursor-pointer overflow-hidden transition-shadow duration-300 ${isSelected ? 'border-2 border-purple-500' : 'border border-gray-200 dark:border-gray-700'} ${className}`}
         onClick={onClick}
         {...props}
       >

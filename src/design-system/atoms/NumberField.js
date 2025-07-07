@@ -62,7 +62,7 @@ const NumberField = ({
         min={min}
         max={max}
         step={step}
-        className={`w-full px-3 py-2 ${prefix ? 'pl-7' : ''} ${suffix ? 'pr-10' : ''} border ${error ? 'border-red-500 dark:border-red-400' : 'border-[#ffffff33] dark:border-[#ffffff1a]'} rounded-lg bg-white text-sm text-gray-900 transition-colors placeholder:text-gray-500 focus:border-[#E6185C] focus:outline-none focus:ring-2 focus:ring-[#E6185C]/20 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-[#0F0F0F] dark:text-white dark:placeholder:text-gray-400 ${className} `}
+        className={`w-full px-3 py-2 ${prefix ? 'pl-7' : ''} ${suffix ? 'pr-10' : ''} border ${error ? 'border-red-500 dark:border-red-400' : 'border-gray-200 dark:border-gray-700'} rounded-lg bg-white text-sm text-gray-900 transition-colors placeholder:text-gray-500 focus:border-[#E6185C] focus:outline-none focus:ring-2 focus:ring-[#E6185C]/20 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-[#0F0F0F] dark:text-white dark:placeholder:text-gray-400 ${className} `}
         {...props}
       />
       {suffix && (

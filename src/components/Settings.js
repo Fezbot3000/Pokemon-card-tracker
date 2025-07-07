@@ -229,7 +229,7 @@ const Settings = () => {
         </div>
 
         {/* Tab Content */}
-        <div className="mt-4 px-4 pb-16 pt-[var(--header-total-height-mobile)] lg:pb-4 lg:pt-[var(--header-total-height-desktop)]">
+        <div className="mt-8 px-4 pb-16 pt-[var(--header-total-height-mobile)] lg:pb-4 lg:pt-[var(--header-total-height-desktop)]">
           {activeTab === 'general' && (
             <div className="space-y-6">
               {/* Appearance */}
@@ -305,7 +305,7 @@ const Settings = () => {
                     <select
                       value={preferredCurrency?.code || 'AUD'}
                       onChange={handlePreferredCurrencyChange}
-                      className="w-full rounded-lg border border-gray-300 bg-white p-3 text-gray-900 focus:border-transparent focus:ring-2 focus:ring-[#ef4444] dark:border-gray-600 dark:bg-[#1B2131] dark:text-white"
+                      className="w-full rounded-lg border border-gray-300 bg-white p-3 text-gray-900 focus:border-transparent focus:ring-2 focus:ring-[#ef4444] dark:border-gray-600 dark:bg-black dark:text-white"
                     >
                       <option value="AUD">Australian Dollar (AUD)</option>
                       <option value="USD">US Dollar (USD)</option>

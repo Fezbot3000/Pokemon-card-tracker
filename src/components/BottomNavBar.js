@@ -61,10 +61,10 @@ const BottomNavBar = ({ currentView, onViewChange, onSettingsClick }) => {
   }
 
   return (
-    <div className="fixed bottom-0 left-0 z-40 w-full border-t border-gray-200 bg-white pb-4 dark:border-gray-800 dark:bg-[#1B2131] sm:hidden">
-      <div className="flex items-center justify-around py-2">
+    <div className="fixed bottom-0 left-0 z-40 w-full border-t border-gray-200 bg-white pb-2 dark:border-gray-800 dark:bg-black sm:hidden">
+      <div className="flex items-center justify-around py-1">
         <button
-          className={`flex flex-col items-center justify-center px-4 py-1 ${
+          className={`flex flex-col items-center justify-center px-3 py-0.5 ${
             currentView === 'cards'
               ? 'text-[#ef4444]'
               : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
@@ -72,19 +72,19 @@ const BottomNavBar = ({ currentView, onViewChange, onSettingsClick }) => {
           onClick={() => handleNavigation('cards')}
         >
           <span
-            className={`material-icons text-2xl ${currentView === 'cards' ? 'text-[#ef4444]' : ''}`}
+            className={`material-icons text-xl ${currentView === 'cards' ? 'text-[#ef4444]' : ''}`}
           >
             dashboard
           </span>
           <span
-            className={`mt-1 text-xs ${currentView === 'cards' ? 'text-[#ef4444]' : ''}`}
+            className={`mt-0.5 text-xs ${currentView === 'cards' ? 'text-[#ef4444]' : ''}`}
           >
             Cards
           </span>
         </button>
 
         <button
-          className={`flex flex-col items-center justify-center px-4 py-1 ${
+          className={`flex flex-col items-center justify-center px-3 py-0.5 ${
             isSoldSection()
               ? 'text-[#ef4444]'
               : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
@@ -92,19 +92,19 @@ const BottomNavBar = ({ currentView, onViewChange, onSettingsClick }) => {
           onClick={() => handleNavigation('purchase-invoices')}
         >
           <span
-            className={`material-icons text-2xl ${isSoldSection() ? 'text-[#ef4444]' : ''}`}
+            className={`material-icons text-xl ${isSoldSection() ? 'text-[#ef4444]' : ''}`}
           >
             sell
           </span>
           <span
-            className={`mt-1 text-xs ${isSoldSection() ? 'text-[#ef4444]' : ''}`}
+            className={`mt-0.5 text-xs ${isSoldSection() ? 'text-[#ef4444]' : ''}`}
           >
             Invoices
           </span>
         </button>
 
         <button
-          className={`flex flex-col items-center justify-center px-4 py-1 ${
+          className={`flex flex-col items-center justify-center px-3 py-0.5 ${
             isMarketplaceSection()
               ? 'text-[#ef4444]'
               : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
@@ -112,12 +112,12 @@ const BottomNavBar = ({ currentView, onViewChange, onSettingsClick }) => {
           onClick={() => handleNavigation('marketplace')}
         >
           <span
-            className={`material-icons text-2xl ${isMarketplaceSection() ? 'text-[#ef4444]' : ''}`}
+            className={`material-icons text-xl ${isMarketplaceSection() ? 'text-[#ef4444]' : ''}`}
           >
             storefront
           </span>
           <span
-            className={`mt-1 text-xs ${isMarketplaceSection() ? 'text-[#ef4444]' : ''}`}
+            className={`mt-0.5 text-xs ${isMarketplaceSection() ? 'text-[#ef4444]' : ''}`}
           >
             Marketplace
           </span>
@@ -126,7 +126,7 @@ const BottomNavBar = ({ currentView, onViewChange, onSettingsClick }) => {
         {/* Add button removed from bottom nav */}
 
         <button
-          className={`flex flex-col items-center justify-center px-4 py-1 ${
+          className={`flex flex-col items-center justify-center px-3 py-0.5 ${
             currentView === 'settings'
               ? 'text-[#ef4444]'
               : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
@@ -134,12 +134,12 @@ const BottomNavBar = ({ currentView, onViewChange, onSettingsClick }) => {
           onClick={handleSettingsClick}
         >
           <span
-            className={`material-icons text-2xl ${currentView === 'settings' ? 'text-[#ef4444]' : ''}`}
+            className={`material-icons text-xl ${currentView === 'settings' ? 'text-[#ef4444]' : ''}`}
           >
             settings
           </span>
           <span
-            className={`mt-1 text-xs ${currentView === 'settings' ? 'text-[#ef4444]' : ''}`}
+            className={`mt-0.5 text-xs ${currentView === 'settings' ? 'text-[#ef4444]' : ''}`}
           >
             Settings
           </span>

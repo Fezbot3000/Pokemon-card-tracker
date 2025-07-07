@@ -455,7 +455,7 @@ html.dark body {
     grid-template-columns: repeat(4, 1fr);
     background-color: white;
     border-top: 1px solid #e5e7eb;
-    padding: 0.5rem 0;
+    padding: 0.25rem 0; /* Reduced from 0.5rem to 0.25rem */
   }
 
   .dark .bottom-nav {
@@ -468,7 +468,7 @@ html.dark body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 0.5rem;
+    padding: 0.25rem; /* Reduced from 0.5rem to 0.25rem */
     color: #6b7280;
     transition: color 0.2s ease-in-out;
   }
@@ -602,7 +602,7 @@ html.dark body {
 /* Main layout classes for consistent spacing */
 .main-content {
   padding-top: var(--header-total-height-mobile);
-  padding-bottom: 5rem; /* Bottom nav */
+  padding-bottom: 4rem; /* Bottom nav - reduced from 5rem to 4rem */
 }
 
 @media (min-width: 640px) {
@@ -643,19 +643,6 @@ html.dark body {
   }
 }
 
-/* Mobile dashboard without header - reduced top margin */
-.main-content.mobile-dashboard {
-  padding-top: 1rem;
-  padding-bottom: 5rem; /* Bottom nav */
-}
-
-@media (min-width: 640px) {
-  .main-content.mobile-dashboard {
-    padding-top: var(--header-total-height-desktop);
-    padding-bottom: 1rem; /* No bottom nav on desktop */
-  }
-}
-
 /* Page layout classes */
 .dashboard-page {
   min-height: calc(100vh - var(--header-height));
@@ -682,7 +669,7 @@ html.dark body {
     padding-top: calc(
       var(--header-total-height-mobile) + env(safe-area-inset-top, 0px)
     );
-    padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(4rem + env(safe-area-inset-bottom, 0px));
   }
 
   @media (min-width: 640px) {
@@ -713,3 +700,54 @@ html.dark body {
     margin-bottom: env(safe-area-inset-bottom) !important;
   }
 }
+
+/* Mobile dashboard without header - reduced top margin */
+.main-content.mobile-dashboard {
+  padding-top: 1rem;
+  padding-bottom: 4rem; /* Bottom nav - reduced from 5rem to 4rem */
+}
+
+@media (min-width: 640px) {
+  .main-content.mobile-dashboard {
+    padding-top: var(--header-total-height-desktop);
+    padding-bottom: 1rem; /* No bottom nav on desktop */
+  }
+}
+
+/* Mobile layout fixes for different views - MOVED TO END FOR PRIORITY */
+@media (max-width: 640px) {
+  /* Homepage (cards view) - no header on mobile, remove top spacing */
+  .main-content.mobile-dashboard.no-header {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+  }
+  
+  /* Views with header - minimal spacing to connect with header */
+  .main-content.mobile-dashboard.with-header {
+    padding-top: 0.5rem !important;
+    margin-top: 0 !important;
+  }
+  
+  /* PWA mode adjustments for no-header views */
+  .main-content.mobile-dashboard.no-header.pwa-mode {
+    padding-top: calc(0.5rem + env(safe-area-inset-top, 0px)) !important;
+  }
+  
+  /* PWA mode adjustments for views with header */
+  .main-content.mobile-dashboard.with-header.pwa-mode {
+    padding-top: 0.5rem !important; /* Header already accounts for safe area */
+  }
+  
+  /* Settings component specific fixes on mobile */
+  .settings-mobile .header-responsive {
+    /* Settings has its own header, position it properly */
+    top: 0;
+  }
+  
+  .settings-mobile .header-responsive + div {
+    /* Settings content should not have extra padding since it has its own header */
+    padding-top: calc(var(--header-total-height-mobile) + 0.5rem);
+  }
+}
+
+
