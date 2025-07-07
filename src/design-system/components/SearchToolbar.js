@@ -107,7 +107,7 @@ const SearchToolbar = ({
     </div>
   );
 
-  const toolbarClass = `search-toolbar w-full bg-white dark:bg-black py-3 px-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 ${isDarkMode ? 'shadow-sm' : ''} rounded-md border border-[#ffffff33] dark:border-[#ffffff1a] ${className}`;
+  const toolbarClass = `search-toolbar w-full bg-white dark:bg-black py-3 px-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 ${isDarkMode ? 'shadow-sm' : ''} rounded-md border border-gray-200 dark:border-gray-700 ${className}`;
 
   return (
     <div className={toolbarClass} {...props}>
@@ -121,7 +121,7 @@ const SearchToolbar = ({
           value={searchValue}
           onChange={e => onSearchChange?.(e.target.value)}
           placeholder="Search by name, set, or serial number..."
-          className="focus:ring-[var(--primary-light)]/20 w-full rounded-lg border border-gray-300 bg-white py-2 pl-10 pr-4 text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 dark:border-gray-700 dark:bg-[#000] dark:text-white dark:placeholder:text-gray-400 dark:focus:bg-[#000]"
+          className="focus:ring-[var(--primary-light)]/20 w-full rounded-lg border border-gray-300 bg-white py-2 pl-10 pr-4 text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 dark:border-gray-600 dark:bg-[#000] dark:text-white dark:placeholder:text-gray-400 dark:focus:bg-[#000]"
         />
       </div>
 

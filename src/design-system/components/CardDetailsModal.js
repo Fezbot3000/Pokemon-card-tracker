@@ -472,14 +472,12 @@ const CardDetailsModal = ({
   // Create custom title with profit/loss display
   const titleWithProfit = (
     <div className="flex w-full items-center justify-between">
-      <span>Card Details</span>
+      <span className="text-xl font-medium">Card Details</span>
       <span
-        className={`ml-auto font-medium ${getProfit() >= 0 ? 'text-green-600 dark:text-green-500' : 'text-red-600 dark:text-red-500'}`}
+        className={`text-lg font-medium ${getProfit() >= 0 ? 'text-green-600 dark:text-green-500' : 'text-red-600 dark:text-red-500'}`}
         data-component-name="CardDetailsModal"
-        style={{ textAlign: 'right' }}
       >
-        {formatPreferredCurrency(Math.abs(getProfit()))}{' '}
-        {getProfit() >= 0 ? 'profit' : 'loss'}
+        {getProfit() >= 0 ? '+' : '-'}{formatPreferredCurrency(Math.abs(getProfit()))}
       </span>
     </div>
   );
@@ -493,7 +491,7 @@ const CardDetailsModal = ({
         position="right"
         closeOnClickOutside={true}
         size="2xl"
-        className={`${className} ${animClass}`}
+        className={`${className} ${animClass} card-details-modal`}
         footer={modalFooter}
       >
         <div className="space-y-6">

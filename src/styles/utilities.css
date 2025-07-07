@@ -483,4 +483,14 @@ header .max-h-60.overflow-y-auto::-webkit-scrollbar {
   }
 }
 
+/* ==================== CARD DETAILS MODAL FIXES ==================== */
+
+/* Ensure the Modal's H2 element doesn't interfere with our flex layout */
+.card-details-modal #modal-title {
+  display: flex !important;
+  width: 100% !important;
+  font-size: inherit !important;
+  font-weight: inherit !important;
+}
+
 

@@ -597,7 +597,7 @@ const CardDetailsForm = ({
       noValidate
     >
       {!hideCollectionField && (
-        <div className="mb-6 mt-12">
+        <div className="mb-6 mt-3">
           <SelectField
             label="Collection"
             name="collectionId"
@@ -944,7 +944,7 @@ const CardDetailsForm = ({
                     id="gradingCompany"
                     value={selectedCompany}
                     onChange={handleCompanyChange}
-                    className="w-full appearance-none rounded-md border border-[#ffffff33] bg-white px-4 py-2 pr-10 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-[#ffffff1a] dark:bg-[#0F0F0F] dark:text-white"
+                    className="w-full appearance-none rounded-md border border-gray-300 bg-white px-4 py-2 pr-10 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-[#0F0F0F] dark:text-white"
                     data-component-name="CardDetailsForm"
                   >
                     {gradingCompanies.map(company => (
@@ -973,7 +973,7 @@ const CardDetailsForm = ({
                     id="grade"
                     value={selectedGrade}
                     onChange={handleGradeChange}
-                    className="w-full appearance-none rounded-md border border-[#ffffff33] bg-white px-4 py-2 pr-10 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-[#ffffff1a] dark:bg-[#0F0F0F] dark:text-white"
+                    className="w-full appearance-none rounded-md border border-gray-300 bg-white px-4 py-2 pr-10 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-[#0F0F0F] dark:text-white"
                     data-component-name="CardDetailsForm"
                   >
                     {selectedCompany === 'RAW' ? (
