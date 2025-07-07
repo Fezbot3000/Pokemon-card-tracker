@@ -17,22 +17,8 @@ import { useSubscription } from '../../hooks/useSubscription';
 import FeatureGate from '../FeatureGate';
 
 const SoldItems = () => {
-  // Check subscription access FIRST, before any hooks
+  // Move all hooks to the top before any conditional logic
   const { hasFeature } = useSubscription();
-  
-  // If user doesn't have sold items access, show feature gate
-  if (!hasFeature('SOLD_ITEMS')) {
-    return (
-      <div className="p-4 pb-20 pt-16 sm:p-6 sm:pt-4">
-        <FeatureGate 
-          feature="SOLD_ITEMS"
-          customMessage="Track your sold items, generate invoices, and analyze your profit trends. This feature is available with Premium."
-        />
-      </div>
-    );
-  }
-
-  // All other hooks AFTER the conditional return
   const { isDarkMode } = useTheme();
   const { user } = useAuth();
   const { preferredCurrency, convertToUserCurrency } = useUserPreferences();
@@ -52,7 +38,8 @@ const SoldItems = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [deleteConfirmation, setDeleteConfirmation] = useState({ isOpen: false, invoiceId: null, buyer: null });
-
+  
+  // Move ALL remaining hooks to the top
   // Initialize all invoices as expanded by default when soldCards change
   useEffect(() => {
     if (soldCards && Array.isArray(soldCards) && soldCards.length > 0) {
@@ -1087,6 +1074,18 @@ const SoldItems = () => {
     
     return invoices;
   }, [invoiceTotals, searchQuery, preferredCurrency.code]);
+
+  // If user doesn't have sold items access, show feature gate
+  if (!hasFeature('SOLD_ITEMS')) {
+    return (
+      <div className="p-4 pb-20 pt-16 sm:p-6 sm:pt-4">
+        <FeatureGate 
+          feature="SOLD_ITEMS"
+          customMessage="Track your sold items, generate invoices, and analyze your profit trends. This feature is available with Premium."
+        />
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (

@@ -570,7 +570,7 @@ function AppContent({ currentView, setCurrentView }) {
       }
     } catch (error) {
       logger.error('Error deleting cards:', error);
-      toast.error('Failed to delete cards');
+      toastService.error('Failed to delete cards');
     }
   }, [deleteCard]);
 
@@ -585,13 +585,13 @@ function AppContent({ currentView, setCurrentView }) {
       slabSerialToDelete = cardInput; // Input is just the ID string
     } else {
       logger.error('[App] handleCardDelete received invalid input:', cardInput);
-      toast.error('Failed to delete card: Invalid input.');
+      toastService.error('Failed to delete card: Invalid input.');
       return;
     }
 
     if (!slabSerialToDelete) {
       logger.error('[App] Could not determine valid card ID to delete from input:', cardInput);
-      toast.error('Failed to delete card: Missing card ID.');
+      toastService.error('Failed to delete card: Missing card ID.');
       return;
     }
 
@@ -703,11 +703,11 @@ function AppContent({ currentView, setCurrentView }) {
 
       // Step 7: Close modal and show success
       handleCloseDetailsModal();
-      toast.success('Card updated successfully!');
+      toastService.success('Card updated successfully!');
 
     } catch (error) {
       logger.error('[App] Error updating card:', error);
-      toast.error(`Error updating card: ${error.message}`);
+      toastService.error(`Error updating card: ${error.message}`);
     }
   }, [initialCardCollection, updateCard, handleCloseDetailsModal, setCollections, user]);
 
@@ -730,10 +730,10 @@ function AppContent({ currentView, setCurrentView }) {
       setCollections(newCollections);
       
       // Show success toast
-      toast.success('Card added successfully!');
+      toastService.success('Card added successfully!');
     } catch (error) {
       logger.error('Error adding card:', error);
-      toast.error(`Error adding card: ${error.message}`);
+      toastService.error(`Error adding card: ${error.message}`);
     }
   }, [addCard, collections]);
 
@@ -848,7 +848,7 @@ function AppContent({ currentView, setCurrentView }) {
           onViewChange={setCurrentView}
           onAddCollection={(name) => {
             if (name === 'All Cards') {
-              toast.error('Cannot create a collection named "All Cards" - this is a reserved name');
+              toastService.error('Cannot create a collection named "All Cards" - this is a reserved name');
               return;
             }
             
@@ -1203,7 +1203,7 @@ function AppContent({ currentView, setCurrentView }) {
                 localStorage.setItem('selectedCollection', newCollection);
                 logger.log(`App: Selected new collection after restore: ${newCollection}`);
               }
-              toast.success('Data restored successfully! Your collections are now available.');
+              toastService.success('Data restored successfully! Your collections are now available.');
             }
           }).catch(error => {
             logger.error('Error refreshing collections after restore:', error);

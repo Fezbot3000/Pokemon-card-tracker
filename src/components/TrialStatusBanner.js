@@ -13,15 +13,15 @@ import UpgradeModal from './UpgradeModal';
  * Displays trial status and upgrade prompts to users
  */
 const TrialStatusBanner = () => {
-  // Modal state
+  // Move all hooks to the top before any conditional logic
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   // const navigate = useNavigate(); // No longer needed for modal
   
-  // Try to get subscription data with error handling
-  let subscriptionData;
-  try {
-    subscriptionData = useSubscription();
-  } catch (error) {
+  // Get subscription data - moved to top to avoid conditional hook calls
+  const subscriptionData = useSubscription();
+  
+  // Handle subscription data loading/error states
+  if (!subscriptionData) {
     // Fallback - show a basic banner
     return (
       <div style={{backgroundColor: 'orange', color: 'white', padding: '15px', textAlign: 'center'}}>

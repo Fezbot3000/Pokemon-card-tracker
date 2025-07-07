@@ -1,3 +1,4 @@
+/* eslint-disable tailwindcss/classnames-order */
 import React from 'react';
 import { useBackup } from '../contexts/BackupContext';
 
@@ -26,9 +27,9 @@ const BackupProgressBar = () => {
             </span>
             <span className="text-sm font-bold">{backupProgress}%</span>
           </div>
-          <div className="h-3 w-full rounded-full bg-white bg-opacity-30">
+          <div className="h-3 w-full rounded-full bg-white/30">
             <div 
-              className="h-3 rounded-full bg-white transition-all duration-300 ease-in-out" 
+              className="h-3 bg-white rounded-full transition-all duration-300 ease-in-out" 
               style={{ width: `${backupProgress}%` }}
             ></div>
           </div>

@@ -324,14 +324,14 @@ const CreateInvoiceModal = ({ isOpen, onClose, onSave, editingInvoice = null, pr
       {/* Enlarged Image Modal */}
       {enlargedImage && (
         <div 
-          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black bg-opacity-50 p-8 backdrop-blur-sm"
+          className="bg-black/50 fixed inset-0 z-[9999] flex items-center justify-center p-8 backdrop-blur-sm"
           onClick={handleEnlargedImageClose}
         >
           <div className="relative max-h-[70vh] w-full max-w-md overflow-hidden rounded-xl bg-white shadow-2xl dark:bg-gray-900">
             {/* Close Button */}
             <button
               onClick={handleEnlargedImageClose}
-              className="absolute right-3 top-3 z-10 rounded-full bg-black bg-opacity-50 p-1.5 text-white transition-all hover:bg-opacity-70"
+              className="bg-black/50 hover:bg-black/70 absolute right-3 top-3 z-10 rounded-full p-1.5 text-white transition-all"
             >
               <span className="material-icons text-lg">close</span>
             </button>

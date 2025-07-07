@@ -3,13 +3,13 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '../../lib/utils';
 
 const selectVariants = cva(
-  'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
+  'border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 w-full rounded-md border px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
   {
     variants: {
       variant: {
-        default: 'border-gray-300 dark:border-gray-600 bg-white dark:bg-black text-gray-900 dark:text-white',
-        error: 'border-red-500 dark:border-red-500 bg-white dark:bg-black text-gray-900 dark:text-white focus-visible:ring-red-500',
-        success: 'border-green-500 dark:border-green-500 bg-white dark:bg-black text-gray-900 dark:text-white focus-visible:ring-green-500',
+        default: 'border-gray-300 bg-white text-gray-900 dark:border-gray-600 dark:bg-black dark:text-white',
+        error: 'border-red-500 bg-white text-gray-900 focus-visible:ring-red-500 dark:border-red-500 dark:bg-black dark:text-white',
+        success: 'border-green-500 bg-white text-gray-900 focus-visible:ring-green-500 dark:border-green-500 dark:bg-black dark:text-white',
       },
       size: {
         sm: 'h-8 px-2 text-xs',

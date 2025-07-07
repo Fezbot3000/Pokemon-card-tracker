@@ -3,18 +3,18 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '../../lib/utils';
 
 const radioVariants = cva(
-  'peer h-4 w-4 shrink-0 rounded-full border border-primary ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground',
+  'ring-offset-background focus-visible:ring-ring data-[state=checked]:text-primary-foreground peer size-4 shrink-0 rounded-full border border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary',
   {
     variants: {
       variant: {
-        default: 'border-gray-300 dark:border-gray-600 bg-white dark:bg-black text-gray-900 dark:text-white checked:bg-blue-600 checked:border-blue-600',
-        error: 'border-red-500 dark:border-red-500 bg-white dark:bg-black text-gray-900 dark:text-white checked:bg-red-600 checked:border-red-600',
-        success: 'border-green-500 dark:border-green-500 bg-white dark:bg-black text-gray-900 dark:text-white checked:bg-green-600 checked:border-green-600',
+        default: 'border-gray-300 bg-white text-gray-900 checked:border-blue-600 checked:bg-blue-600 dark:border-gray-600 dark:bg-black dark:text-white',
+        error: 'border-red-500 bg-white text-gray-900 checked:border-red-600 checked:bg-red-600 dark:border-red-500 dark:bg-black dark:text-white',
+        success: 'border-green-500 bg-white text-gray-900 checked:border-green-600 checked:bg-green-600 dark:border-green-500 dark:bg-black dark:text-white',
       },
       size: {
-        sm: 'h-3 w-3',
-        md: 'h-4 w-4',
-        lg: 'h-5 w-5',
+        sm: 'size-3',
+        md: 'size-4',
+        lg: 'size-5',
       },
     },
     defaultVariants: {
@@ -55,7 +55,7 @@ const Radio = React.forwardRef<HTMLInputElement, RadioProps>(
             {label && (
               <label
                 htmlFor={radioId}
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-gray-900 dark:text-white cursor-pointer"
+                className="cursor-pointer text-sm font-medium leading-none text-gray-900 peer-disabled:cursor-not-allowed peer-disabled:opacity-70 dark:text-white"
               >
                 {label}
               </label>

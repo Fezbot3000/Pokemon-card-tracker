@@ -62,7 +62,7 @@ function ReportListing({ listingId, sellerId, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+    <div className="bg-black/50 fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md rounded-lg bg-white dark:bg-gray-900">
         <div className="p-6">
           <div className="mb-4 flex items-center justify-between">

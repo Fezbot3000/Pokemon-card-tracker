@@ -53,7 +53,7 @@ const Dropdown = React.forwardRef<HTMLDivElement, DropdownProps>(
           {trigger}
         </div>
         {isOpen && (
-          <div className="absolute top-full left-0 mt-1 min-w-full bg-white dark:bg-black border border-gray-200 dark:border-gray-700 rounded-md shadow-lg z-50">
+          <div className="absolute left-0 top-full z-50 mt-1 min-w-full rounded-md border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-black">
             {children}
           </div>
         )}
@@ -66,7 +66,7 @@ const DropdownItem = React.forwardRef<HTMLDivElement, DropdownItemProps>(
   ({ children, className, onClick, ...props }, ref) => {
     return (
       <div
-        className={`px-4 py-2 text-sm cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-900 dark:text-white ${className || ''}`}
+        className={`cursor-pointer px-4 py-2 text-sm text-gray-900 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-800 ${className || ''}`}
         onClick={onClick}
         ref={ref}
         {...props}

@@ -63,7 +63,7 @@ const MarketplaceCard = ({
               }}
             >
                       <span
-          className={`block flex size-3 items-center justify-center rounded-full transition-all
+          className={`flex size-3 items-center justify-center rounded-full transition-all
             ${isSelected ? 'bg-white dark:bg-[#23272F]' : 'bg-transparent'}`}
         >
                 {isSelected && (
@@ -109,7 +109,7 @@ const MarketplaceCard = ({
             }}
           >
             <span
-              className={`block flex size-3 items-center justify-center rounded-full transition-all
+              className={`flex size-3 items-center justify-center rounded-full transition-all
                 ${isSelected ? 'bg-white dark:bg-[#23272F]' : 'bg-transparent'}`}
             >
               {isSelected && (

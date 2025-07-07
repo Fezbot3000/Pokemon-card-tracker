@@ -475,7 +475,7 @@ const CollectionSharing = ({ isInModal = false }) => {
 
         {/* Shared Collections List */}
         {sharedCollections.length === 0 ? (
-          <Card className={`py-8 text-center sm:py-12 ${isInModal ? 'border-gray-200 border-opacity-30 bg-white bg-opacity-50 dark:border-gray-700 dark:border-opacity-30 dark:bg-gray-800 dark:bg-opacity-50' : ''}`}>
+          <Card className={`py-8 text-center sm:py-12 ${isInModal ? 'border-gray-200/30 bg-white/50 dark:border-gray-700/30 dark:bg-gray-800/50' : ''}`}>
             <div className="mb-4 text-4xl sm:text-6xl">🔗</div>
             <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white sm:text-xl">
               No Shared Collections
@@ -487,7 +487,7 @@ const CollectionSharing = ({ isInModal = false }) => {
         ) : (
           <div className="grid gap-4">
             {sharedCollections.map((shared) => (
-              <Card key={shared.id} className={`p-4 sm:p-6 ${isInModal ? 'border-gray-200 border-opacity-30 bg-white bg-opacity-50 dark:border-gray-700 dark:border-opacity-30 dark:bg-gray-800 dark:bg-opacity-50' : ''}`}>
+              <Card key={shared.id} className={`p-4 sm:p-6 ${isInModal ? 'border-gray-200/30 bg-white/50 dark:border-gray-700/30 dark:bg-gray-800/50' : ''}`}>
                 <div className="space-y-4 sm:flex sm:items-start sm:justify-between sm:space-y-0">
                   <div className="min-w-0 flex-1">
                     <div className="mb-2 flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-x-3 sm:space-y-0">

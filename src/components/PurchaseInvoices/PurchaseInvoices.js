@@ -20,22 +20,8 @@ import FeatureGate from '../FeatureGate';
  * Displays and manages purchase invoices for Pokemon cards
  */
 const PurchaseInvoices = () => {
-  // Check subscription access FIRST, before any hooks
+  // Move ALL hooks to the top before any conditional logic
   const { hasFeature } = useSubscription();
-  
-  // If user doesn't have invoicing access, show feature gate
-  if (!hasFeature('INVOICING')) {
-    return (
-      <div className="p-4 pb-20 pt-16 sm:p-6 sm:pt-4">
-        <FeatureGate 
-          feature="INVOICING"
-          customMessage="Create and manage purchase invoices for your card transactions. Track your investments and generate professional invoices. This feature is available with Premium."
-        />
-      </div>
-    );
-  }
-
-  // All other hooks AFTER the conditional return
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -47,8 +33,36 @@ const PurchaseInvoices = () => {
   const [isGeneratingBatch, setIsGeneratingBatch] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState({ isOpen: false, invoice: null });
   const { currentUser } = useAuth();
-
-  // Define functions that will be used in useEffect
+  
+  // Move ALL remaining hooks to the top
+  const handleModalClose = useCallback(() => {
+    setShowCreateModal(false);
+    setEditingInvoice(null); // Reset editing state when closing
+  }, []);
+  
+  const handleModalSave = useCallback(async (newInvoice) => {
+    if (!newInvoice) return;
+    
+    try {
+      if (editingInvoice) {
+        // Update existing invoice in local state immediately
+        setInvoices(prev => prev.map(inv => 
+          inv.id === newInvoice.id ? newInvoice : inv
+        ));
+      } else {
+        // For new invoices, add to local state immediately
+        setInvoices(prev => [newInvoice, ...prev]);
+      }
+      
+      setShowCreateModal(false);
+      setEditingInvoice(null);
+    } catch (error) {
+      console.error('Error handling invoice save:', error);
+      setShowCreateModal(false);
+      setEditingInvoice(null);
+    }
+  }, [editingInvoice]);
+  
   const loadInvoices = useCallback(async () => {
     try {
       setLoading(true);
@@ -163,6 +177,18 @@ const PurchaseInvoices = () => {
       );
     });
   }, [invoices, searchQuery]);
+
+  // If user doesn't have invoicing access, show feature gate
+  if (!hasFeature('INVOICING')) {
+    return (
+      <div className="p-4 pb-20 pt-16 sm:p-6 sm:pt-4">
+        <FeatureGate 
+          feature="INVOICING"
+          customMessage="Create and manage purchase invoices for your card transactions. Track your investments and generate professional invoices. This feature is available with Premium."
+        />
+      </div>
+    );
+  }
 
   // Handle editing an invoice
   const handleEditInvoice = (invoice) => {
@@ -496,7 +522,7 @@ const PurchaseInvoices = () => {
               </div>
               
               <div className="flex w-full flex-col gap-2 sm:flex-row">
-                <div className="h-10 w-full animate-pulse rounded-lg bg-gray-200 dark:bg-gray-700 sm:w-48 sm:w-auto"></div>
+                <div className="h-10 w-full animate-pulse rounded-lg bg-gray-200 dark:bg-gray-700 sm:w-auto"></div>
               </div>
             </div>
             
@@ -842,37 +868,8 @@ const PurchaseInvoices = () => {
       {/* Create/Edit Invoice Modal */}
       <CreateInvoiceModal
         isOpen={showCreateModal}
-        onClose={useCallback(() => {
-          setShowCreateModal(false);
-          setEditingInvoice(null); // Reset editing state when closing
-        }, [])}
-        onSave={useCallback(async (newInvoice) => {
-          if (!newInvoice) return;
-          
-          try {
-            if (editingInvoice) {
-              // console.log('Updating invoice in local state:', newInvoice);
-              
-              // Update existing invoice in local state immediately
-              // This ensures the UI reflects the changes without needing to refresh from Firestore
-              setInvoices(prev => prev.map(inv => 
-                inv.id === newInvoice.id ? newInvoice : inv
-              ));
-            } else {
-              // console.log('Adding new invoice to local state:', newInvoice);
-              
-              // For new invoices, add to local state immediately
-              setInvoices(prev => [newInvoice, ...prev]);
-            }
-            
-            setShowCreateModal(false);
-            setEditingInvoice(null);
-          } catch (error) {
-            console.error('Error handling invoice save:', error);
-            setShowCreateModal(false);
-            setEditingInvoice(null);
-          }
-        }, [editingInvoice])}
+        onClose={handleModalClose}
+        onSave={handleModalSave}
         editingInvoice={editingInvoice}
       />
 

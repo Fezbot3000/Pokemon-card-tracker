@@ -31,7 +31,7 @@ const breadcrumbItemVariants = cva(
       variant: {
         default: '',
         current: 'font-medium text-gray-900 dark:text-white',
-        link: 'hover:text-gray-700 dark:hover:text-gray-300 transition-colors cursor-pointer',
+        link: 'cursor-pointer transition-colors hover:text-gray-700 dark:hover:text-gray-300',
       },
     },
     defaultVariants: {

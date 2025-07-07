@@ -410,7 +410,7 @@ const CardDetailsModal = ({
       >
         <div className="space-y-6">
           {/* Profit/Loss Display */}
-          <div className="flex items-center justify-between rounded-lg bg-gray-50 dark:bg-black p-4">
+          <div className="flex items-center justify-between rounded-lg bg-gray-50 p-4 dark:bg-black">
             <span className="text-sm text-gray-600 dark:text-gray-400">Current Status:</span>
             <span
               className={`font-medium ${getProfit() >= 0 ? 'text-green-600 dark:text-green-500' : 'text-red-600 dark:text-red-500'}`}
@@ -425,7 +425,7 @@ const CardDetailsModal = ({
             <div className={`${animClass} relative`}>
               {/* PSA Search Loading Overlay */}
               {(isPsaSearching || isPsaLoading) && (
-                <div className="bg-white dark:bg-black absolute inset-0 z-10 flex items-center justify-center rounded-lg backdrop-blur-sm">
+                <div className="absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-white backdrop-blur-sm dark:bg-black">
                   <div className="text-center">
                     <div className="mb-2 inline-block size-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
                     <p className="text-gray-600 dark:text-gray-400">Looking up PSA information...</p>

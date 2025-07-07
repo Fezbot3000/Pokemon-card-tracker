@@ -20,21 +20,21 @@ const modalVariants = cva(
 );
 
 const modalContentVariants = cva(
-  'relative bg-white dark:bg-black rounded-lg shadow-xl max-h-[90vh] overflow-y-auto',
+  'relative max-h-[90vh] overflow-y-auto rounded-lg bg-white shadow-xl dark:bg-black',
   {
     variants: {
       size: {
-        sm: 'max-w-sm w-full',
-        md: 'max-w-md w-full',
-        lg: 'max-w-lg w-full',
-        xl: 'max-w-xl w-full',
-        '2xl': 'max-w-2xl w-full',
-        '3xl': 'max-w-3xl w-full',
-        '4xl': 'max-w-4xl w-full',
-        '5xl': 'max-w-5xl w-full',
-        '6xl': 'max-w-6xl w-full',
-        '7xl': 'max-w-7xl w-full',
-        full: 'max-w-full w-full h-full',
+        sm: 'w-full max-w-sm',
+        md: 'w-full max-w-md',
+        lg: 'w-full max-w-lg',
+        xl: 'w-full max-w-xl',
+        '2xl': 'w-full max-w-2xl',
+        '3xl': 'w-full max-w-3xl',
+        '4xl': 'w-full max-w-4xl',
+        '5xl': 'w-full max-w-5xl',
+        '6xl': 'w-full max-w-6xl',
+        '7xl': 'w-full max-w-7xl',
+        full: 'size-full max-w-full',
       },
     },
     defaultVariants: {
@@ -109,15 +109,15 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
           onClick={(e) => e.stopPropagation()}
         >
           {title && (
-            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+            <div className="flex items-center justify-between border-b border-gray-200 p-6 dark:border-gray-700">
               <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
                 {title}
               </h2>
               <button
                 onClick={onClose}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                className="text-gray-400 transition-colors hover:text-gray-600 dark:hover:text-gray-300"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>

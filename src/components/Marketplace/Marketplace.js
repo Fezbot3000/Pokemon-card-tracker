@@ -581,7 +581,7 @@ function Marketplace({ currentView, onViewChange }) {
                     onClick={() => handleCardClick(listing)}
                   />
                   {listing.card?.grade && (
-                    <span className="absolute right-2 top-2 rounded bg-black bg-opacity-70 px-2 py-1 text-xs text-white">
+                    <span className="bg-black/70 absolute right-2 top-2 rounded px-2 py-1 text-xs text-white">
                       {listing.card.gradingCompany} {listing.card.grade}
                     </span>
                   )}

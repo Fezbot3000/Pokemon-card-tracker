@@ -13,9 +13,9 @@ export const UIIntegrationTest: React.FC = () => {
   const [selectedOption, setSelectedOption] = React.useState('Option 1');
 
   return (
-    <div className="p-6 space-y-6 bg-gray-50 dark:bg-black min-h-screen">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">
+    <div className="min-h-screen space-y-6 bg-gray-50 p-6 dark:bg-black">
+      <div className="mx-auto max-w-4xl">
+        <h1 className="mb-8 text-3xl font-bold text-gray-900 dark:text-white">
           UI Component Integration Test
         </h1>
 
@@ -86,7 +86,7 @@ export const UIIntegrationTest: React.FC = () => {
             <CardTitle>Layout Components</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
               <Card>
                 <CardContent className="p-4">
                   <h3 className="font-semibold">Card 1</h3>

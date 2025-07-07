@@ -195,7 +195,7 @@ function SellerProfile({ sellerId, onClose, onViewListing }) {
                         className="size-full object-cover"
                       />
                       {listing.condition && (
-                        <span className="absolute right-2 top-2 rounded bg-black bg-opacity-70 px-2 py-1 text-xs text-white">
+                        <span className="bg-black/70 absolute right-2 top-2 rounded px-2 py-1 text-xs text-white">
                           {listing.condition}
                         </span>
                       )}

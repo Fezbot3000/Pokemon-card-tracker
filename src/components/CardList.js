@@ -2,11 +2,11 @@ import React, { useState, useRef, useEffect, useCallback, memo, useMemo } from '
 import { useInView } from 'react-intersection-observer';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../design-system';
-import { collection, query, where, doc, updateDoc } from 'firebase/firestore';
+import { collection, query, where, doc, updateDoc, getDocs } from 'firebase/firestore';
 import db from '../services/firestore/dbAdapter';
 import { db as firestoreDb } from '../services/firebase';
 import { toast } from 'react-hot-toast';
-import { StatisticsSummary, SearchToolbar, Card, ConfirmDialog } from '../design-system';
+import { StatisticsSummary, SearchToolbar, Card, ConfirmDialog, CardDetailsModal } from '../design-system';
 import CollectionSelector from '../design-system/components/CollectionSelector';
 import SaleModal from './SaleModal';
 import MoveCardsModal from './MoveCardsModal';
@@ -1373,7 +1373,7 @@ const CardList = ({
 
       {/* Card Details Modal */}
       {showCardDetails && selectedCard && (
-        <CardDetails
+        <CardDetailsModal
           card={selectedCard}
           onClose={() => {
             setSelectedCard(null); // Clear hook state first

@@ -3,14 +3,14 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '../../lib/utils';
 
 const switchVariants = cva(
-  'peer inline-flex shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary data-[state=unchecked]:bg-input',
+  'focus-visible:ring-ring focus-visible:ring-offset-background data-[state=unchecked]:bg-input peer inline-flex shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary',
   {
     variants: {
       variant: {
-        default: 'bg-gray-200 dark:bg-gray-700 checked:bg-blue-600 data-[state=checked]:bg-blue-600',
-        success: 'bg-gray-200 dark:bg-gray-700 checked:bg-green-600 data-[state=checked]:bg-green-600',
-        warning: 'bg-gray-200 dark:bg-gray-700 checked:bg-yellow-600 data-[state=checked]:bg-yellow-600',
-        danger: 'bg-gray-200 dark:bg-gray-700 checked:bg-red-600 data-[state=checked]:bg-red-600',
+        default: 'bg-gray-200 checked:bg-blue-600 data-[state=checked]:bg-blue-600 dark:bg-gray-700',
+        success: 'bg-gray-200 checked:bg-green-600 data-[state=checked]:bg-green-600 dark:bg-gray-700',
+        warning: 'bg-gray-200 checked:bg-yellow-600 data-[state=checked]:bg-yellow-600 dark:bg-gray-700',
+        danger: 'bg-gray-200 checked:bg-red-600 data-[state=checked]:bg-red-600 dark:bg-gray-700',
       },
       size: {
         sm: 'h-4 w-7',
@@ -26,13 +26,13 @@ const switchVariants = cva(
 );
 
 const switchThumbVariants = cva(
-  'pointer-events-none block rounded-full bg-background shadow-lg ring-0 transition-transform data-[state=checked]:translate-x-4 data-[state=unchecked]:translate-x-0',
+  'bg-background pointer-events-none block rounded-full shadow-lg ring-0 transition-transform data-[state=checked]:translate-x-4 data-[state=unchecked]:translate-x-0',
   {
     variants: {
       size: {
-        sm: 'h-3 w-3 data-[state=checked]:translate-x-3',
-        md: 'h-4 w-4 data-[state=checked]:translate-x-4',
-        lg: 'h-5 w-5 data-[state=checked]:translate-x-5',
+        sm: 'size-3 data-[state=checked]:translate-x-3',
+        md: 'size-4 data-[state=checked]:translate-x-4',
+        lg: 'size-5 data-[state=checked]:translate-x-5',
       },
     },
     defaultVariants: {
@@ -82,7 +82,7 @@ const Switch = React.forwardRef<HTMLInputElement, SwitchProps>(
             {label && (
               <label
                 htmlFor={switchId}
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-gray-900 dark:text-white cursor-pointer"
+                className="cursor-pointer text-sm font-medium leading-none text-gray-900 peer-disabled:cursor-not-allowed peer-disabled:opacity-70 dark:text-white"
               >
                 {label}
               </label>

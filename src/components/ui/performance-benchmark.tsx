@@ -31,9 +31,9 @@ export const PerformanceBenchmark: React.FC = () => {
   };
 
   return (
-    <div className="p-6 space-y-6 bg-gray-50 dark:bg-black min-h-screen">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">
+    <div className="min-h-screen space-y-6 bg-gray-50 p-6 dark:bg-black">
+      <div className="mx-auto max-w-4xl">
+        <h1 className="mb-8 text-3xl font-bold text-gray-900 dark:text-white">
           UI Component Performance Benchmark
         </h1>
 
@@ -53,7 +53,7 @@ export const PerformanceBenchmark: React.FC = () => {
                 max="1000"
                 value={componentCount}
                 onChange={(e) => setComponentCount(parseInt(e.target.value) || 10)}
-                className="w-24 px-3 py-1 text-sm border rounded-md bg-white dark:bg-black border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
+                className="w-24 rounded-md border border-gray-300 bg-white px-3 py-1 text-sm text-gray-900 dark:border-gray-600 dark:bg-black dark:text-white"
                 disabled={isRunning}
               />
             </div>
@@ -83,7 +83,7 @@ export const PerformanceBenchmark: React.FC = () => {
             <CardTitle>Performance Results</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
               <div className="text-center">
                 <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                   {renderCount}
@@ -121,35 +121,35 @@ export const PerformanceBenchmark: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex justify-between items-center">
+              <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">Component Bundle Size</span>
                 <span className="text-sm text-green-600 dark:text-green-400">
                   ✓ Optimized
                 </span>
               </div>
               
-              <div className="flex justify-between items-center">
+              <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">Tree Shaking Support</span>
                 <span className="text-sm text-green-600 dark:text-green-400">
                   ✓ Enabled
                 </span>
               </div>
               
-              <div className="flex justify-between items-center">
+              <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">TypeScript Performance</span>
                 <span className="text-sm text-green-600 dark:text-green-400">
                   ✓ Optimized
                 </span>
               </div>
               
-              <div className="flex justify-between items-center">
+              <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">Re-render Optimization</span>
                 <span className="text-sm text-green-600 dark:text-green-400">
                   ✓ React.memo & forwardRef
                 </span>
               </div>
               
-              <div className="flex justify-between items-center">
+              <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">CSS-in-JS Performance</span>
                 <span className="text-sm text-green-600 dark:text-green-400">
                   ✓ CVA + Tailwind
@@ -165,11 +165,11 @@ export const PerformanceBenchmark: React.FC = () => {
             <CardTitle>Stress Test Visualization</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8">
               {Array.from({ length: Math.min(renderCount, 64) }, (_, i) => (
                 <div
                   key={i}
-                  className="aspect-square bg-gradient-to-br from-blue-500 to-purple-600 rounded-md flex items-center justify-center text-white text-xs font-medium"
+                  className="flex aspect-square items-center justify-center rounded-md bg-gradient-to-br from-blue-500 to-purple-600 text-xs font-medium text-white"
                   style={{
                     animationDelay: `${i * 50}ms`,
                     animation: isRunning ? 'pulse 1s infinite' : 'none'

@@ -26,30 +26,8 @@ const scrollbarHideStyles = `
 const functions = getFunctions();
 
 function MarketplaceMessages({ currentView, onViewChange }) {
-  // State to track window width for responsive layout
+  // Move ALL hooks to the top before any conditional logic
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
-  
-  // Update window width when resized
-  useEffect(() => {
-    const handleResize = () => {
-      setWindowWidth(window.innerWidth);
-    };
-    
-    window.addEventListener('resize', handleResize);
-    return () => {
-      window.removeEventListener('resize', handleResize);
-    };
-  }, []);
-  
-  // Determine if we should show desktop or mobile layout
-  const isDesktop = windowWidth >= 1024; // lg breakpoint in Tailwind
-  
-  // Return desktop version for larger screens
-  if (isDesktop) {
-    return <DesktopMarketplaceMessages currentView={currentView} onViewChange={onViewChange} />;
-  }
-  
-  // Mobile version continues below
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeChat, setActiveChat] = useState(null);
@@ -64,53 +42,27 @@ function MarketplaceMessages({ currentView, onViewChange }) {
   const [sellerProfileId, setSellerProfileId] = useState(null);
   const [sellerReviewOpen, setSellerReviewOpen] = useState(false);
   const [sellerReviewId, setSellerReviewId] = useState(null);
+  
   const { user } = useAuth();
-  const messagesEndRef = useRef(null);
   const location = useLocation();
   const activeChatId = location.state?.activeChatId;
-
-  // Helper function to fetch complete listing data
-  const fetchCompleteListingData = async (chat) => {
-    if (!chat.cardId) return null;
+  const messagesEndRef = useRef(null);
+  
+  // Determine if we should show desktop or mobile layout
+  const isDesktop = windowWidth >= 1024;
+  
+  // ALL useEffect hooks moved to top
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+    };
     
-    try {
-      // Fetch the complete listing from Firestore
-      const listingRef = doc(firestoreDb, 'marketplaceItems', chat.cardId);
-      const listingSnap = await getDoc(listingRef);
-      
-      if (listingSnap.exists()) {
-        return {
-          id: listingSnap.id,
-          ...listingSnap.data()
-        };
-      } else {
-        // Fallback to chat data if listing no longer exists
-        const cardData = chat.card || {
-          name: chat.cardTitle || 'Card Listing',
-          set: chat.cardSet,
-          year: chat.cardYear,
-          grade: chat.cardGrade,
-          gradeCompany: chat.cardGradeCompany,
-          slabSerial: chat.cardId
-        };
-        
-        return {
-          id: chat.cardId,
-          card: cardData,
-          userId: chat.sellerId || chat.buyerId,
-          listingPrice: chat.price || 0,
-          currency: chat.currency || 'USD',
-          timestampListed: chat.timestamp,
-          note: chat.note || '',
-          location: chat.location || ''
-        };
-      }
-    } catch (error) {
-      logger.error('Error fetching listing details:', error);
-      return null;
-    }
-  };
-
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+  
   // Handle navigation with active chat ID
   useEffect(() => {
     if (activeChatId && conversations.length > 0) {
@@ -272,16 +224,145 @@ function MarketplaceMessages({ currentView, onViewChange }) {
       }
     };
 
-    // Add event listener
+    // Listen for the custom event
     window.addEventListener('openSpecificChat', handleOpenSpecificChat);
 
-    // Cleanup
     return () => {
       window.removeEventListener('openSpecificChat', handleOpenSpecificChat);
     };
-  }, [conversations]); // Re-run when conversations change
+  }, [conversations]);
 
-  // Handle sending a new message
+  // Set up messages listener when activeChat changes
+  useEffect(() => {
+    if (!activeChat || !user) return;
+
+    const messagesRef = collection(firestoreDb, 'chats', activeChat.id, 'messages');
+    const messagesQuery = query(messagesRef, orderBy('timestamp', 'asc'));
+
+    const unsubscribe = onSnapshot(messagesQuery, (snapshot) => {
+      const messagesData = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        timestamp: doc.data().timestamp?.toDate() || new Date()
+      }));
+      setMessages(messagesData);
+    }, (error) => {
+      logger.error('Error listening to messages:', error);
+    });
+
+    return () => unsubscribe();
+  }, [activeChat, user]);
+
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages]);
+
+  // Hide header, footer and bottom nav when in active chat
+  useEffect(() => {
+    const body = document.body;
+    const bottomNav = document.querySelector('.fixed.sm\\:hidden.bottom-0');
+    
+    if (activeChat) {
+      // Hide header and footer
+      body.classList.add('hide-header-footer');
+      
+      // Directly hide bottom nav
+      if (bottomNav) {
+        bottomNav.style.display = 'none';
+      }
+    } else {
+      // Show header and footer
+      body.classList.remove('hide-header-footer');
+      
+      // Show bottom nav
+      if (bottomNav) {
+        bottomNav.style.display = '';
+      }
+    }
+    
+    // Cleanup function
+    return () => {
+      body.classList.remove('hide-header-footer');
+      if (bottomNav) {
+        bottomNav.style.display = '';
+      }
+    };
+  }, [activeChat]);
+  
+  // Additional effect to ensure bottom nav stays hidden
+  useEffect(() => {
+    if (!activeChat) return;
+    
+    // Function to hide bottom nav
+    const hideBottomNav = () => {
+      const bottomNav = document.querySelector('.fixed.sm\\:hidden.bottom-0');
+      if (bottomNav) {
+        bottomNav.style.display = 'none';
+      }
+    };
+    
+    // Hide immediately
+    hideBottomNav();
+    
+    // Set up an interval to keep checking and hiding
+    const interval = setInterval(hideBottomNav, 100);
+    
+    return () => clearInterval(interval);
+  }, [activeChat]);
+  
+  // Return desktop version for larger screens
+  if (isDesktop) {
+    return <DesktopMarketplaceMessages currentView={currentView} onViewChange={onViewChange} />;
+  }
+  
+  // Mobile version continues below
+  
+  // Helper function to fetch complete listing data
+  const fetchCompleteListingData = async (chat) => {
+    if (!chat.cardId) return null;
+    
+    try {
+      // Fetch the complete listing from Firestore
+      const listingRef = doc(firestoreDb, 'marketplaceItems', chat.cardId);
+      const listingSnap = await getDoc(listingRef);
+      
+      if (listingSnap.exists()) {
+        return {
+          id: listingSnap.id,
+          ...listingSnap.data()
+        };
+      } else {
+        // Fallback to chat data if listing no longer exists
+        const cardData = chat.card || {
+          name: chat.cardTitle || 'Card Listing',
+          set: chat.cardSet,
+          year: chat.cardYear,
+          grade: chat.cardGrade,
+          gradeCompany: chat.cardGradeCompany,
+          slabSerial: chat.cardId
+        };
+        
+        return {
+          id: chat.cardId,
+          card: cardData,
+          userId: chat.sellerId || chat.buyerId,
+          listingPrice: chat.price || 0,
+          currency: chat.currency || 'USD',
+          timestampListed: chat.timestamp,
+          note: chat.note || '',
+          location: chat.location || ''
+        };
+      }
+    } catch (error) {
+      logger.error('Error fetching listing details:', error);
+      return null;
+    }
+  };
+
+// Handle sending a new message
   const handleSendMessage = async (e) => {
     e.preventDefault();
     
@@ -327,55 +408,7 @@ function MarketplaceMessages({ currentView, onViewChange }) {
       setSendingMessage(false);
     }
   };
-  
-  // Load messages for the active chat
-  useEffect(() => {
-    if (!activeChat) {
-      setMessages([]);
-      return;
-    }
-    
-    // Validate chat ID to prevent invalid queries
-    if (!activeChat.id || typeof activeChat.id !== 'string') {
-      logger.error('Invalid chat ID for Firestore query:', activeChat.id);
-      return;
-    }
-    
-    let unsubscribe;
-    
-    try {
-      const messagesRef = collection(firestoreDb, 'chats', activeChat.id, 'messages');
-      const messagesQuery = query(messagesRef, orderBy('timestamp', 'asc'));
-      
-      unsubscribe = onSnapshot(messagesQuery, (snapshot) => {
-        const messagesData = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-          timestamp: doc.data().timestamp?.toDate() || new Date()
-        }));
-        
-        setMessages(messagesData);
-        
-        // Scroll to bottom when messages change
-        setTimeout(() => {
-          messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-        }, 100);
-      }, (error) => {
-        // Handle specific error types
-        logger.error('Error in messages listener:', error);
-        // Don't set messages to empty array to preserve any existing messages
-      });
-    } catch (error) {
-      logger.error('Error setting up messages listener:', error);
-    }
-    
-    return () => {
-      if (unsubscribe) {
-        unsubscribe();
-      }
-    };
-  }, [activeChat]);
-  
+
   // Format timestamp for display
   const formatTimestamp = (timestamp) => {
     if (!timestamp) return '';
@@ -524,58 +557,22 @@ function MarketplaceMessages({ currentView, onViewChange }) {
     ? 'The seller has left the chat.' 
     : 'The buyer has left the chat.';
 
-  // Hide header, footer and bottom nav when in active chat
-  useEffect(() => {
-    const body = document.body;
-    const bottomNav = document.querySelector('.fixed.sm\\:hidden.bottom-0');
+
+
+  // Handle contact seller function
+  const handleContactSeller = (sellerId) => {
+    // Find existing chat with this seller
+    const existingChat = conversations.find(chat => 
+      chat.sellerId === sellerId || chat.buyerId === sellerId
+    );
     
-    if (activeChat) {
-      // Hide header and footer
-      body.classList.add('hide-header-footer');
-      
-      // Directly hide bottom nav
-      if (bottomNav) {
-        bottomNav.style.display = 'none';
-      }
+    if (existingChat) {
+      setActiveChat(existingChat);
     } else {
-      // Show header and footer
-      body.classList.remove('hide-header-footer');
-      
-      // Show bottom nav
-      if (bottomNav) {
-        bottomNav.style.display = '';
-      }
+      // Create new chat logic would go here
+      toast.error('Unable to start chat. Please try again.');
     }
-    
-    // Cleanup function
-    return () => {
-      body.classList.remove('hide-header-footer');
-      if (bottomNav) {
-        bottomNav.style.display = '';
-      }
-    };
-  }, [activeChat]);
-  
-  // Additional effect to ensure bottom nav stays hidden
-  useEffect(() => {
-    if (!activeChat) return;
-    
-    // Function to hide bottom nav
-    const hideBottomNav = () => {
-      const bottomNav = document.querySelector('.fixed.sm\\:hidden.bottom-0');
-      if (bottomNav) {
-        bottomNav.style.display = 'none';
-      }
-    };
-    
-    // Hide immediately
-    hideBottomNav();
-    
-    // Set up an interval to keep checking and hiding
-    const interval = setInterval(hideBottomNav, 100);
-    
-    return () => clearInterval(interval);
-  }, [activeChat]);
+  };
 
   // Handle viewing seller profile
   const handleViewSellerProfile = (sellerId) => {

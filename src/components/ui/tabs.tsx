@@ -3,12 +3,12 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '../../lib/utils';
 
 const tabsVariants = cva(
-  'inline-flex h-10 items-center justify-center rounded-md bg-muted p-1 text-muted-foreground',
+  'bg-muted text-muted-foreground inline-flex h-10 items-center justify-center rounded-md p-1',
   {
     variants: {
       variant: {
         default: 'bg-gray-100 dark:bg-gray-800',
-        pills: 'bg-transparent border-b border-gray-200 dark:border-gray-700',
+        pills: 'border-b border-gray-200 bg-transparent dark:border-gray-700',
         underline: 'bg-transparent',
       },
       size: {
@@ -25,13 +25,13 @@ const tabsVariants = cva(
 );
 
 const tabsTriggerVariants = cva(
-  'inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm',
+  'ring-offset-background focus-visible:ring-ring data-[state=active]:bg-background data-[state=active]:text-foreground inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-sm',
   {
     variants: {
       variant: {
-        default: 'data-[state=active]:bg-white data-[state=active]:text-gray-900 dark:data-[state=active]:bg-black dark:data-[state=active]:text-white text-gray-600 dark:text-gray-400',
-        pills: 'data-[state=active]:bg-white data-[state=active]:text-gray-900 dark:data-[state=active]:bg-gray-800 dark:data-[state=active]:text-white text-gray-600 dark:text-gray-400 rounded-md',
-        underline: 'bg-transparent border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 dark:data-[state=active]:text-blue-400 text-gray-600 dark:text-gray-400 rounded-none',
+        default: 'text-gray-600 data-[state=active]:bg-white data-[state=active]:text-gray-900 dark:text-gray-400 dark:data-[state=active]:bg-black dark:data-[state=active]:text-white',
+        pills: 'rounded-md text-gray-600 data-[state=active]:bg-white data-[state=active]:text-gray-900 dark:text-gray-400 dark:data-[state=active]:bg-gray-800 dark:data-[state=active]:text-white',
+        underline: 'rounded-none border-b-2 border-transparent bg-transparent text-gray-600 data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 dark:text-gray-400 dark:data-[state=active]:text-blue-400',
       },
       size: {
         sm: 'px-2 py-1 text-xs',
@@ -47,7 +47,7 @@ const tabsTriggerVariants = cva(
 );
 
 const tabsContentVariants = cva(
-  'mt-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+  'ring-offset-background focus-visible:ring-ring mt-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
   {
     variants: {
       variant: {
@@ -116,7 +116,7 @@ const Tabs = React.forwardRef<HTMLDivElement, TabsProps>(
     };
 
     return (
-      <TabsContext.Provider value={{ value: currentValue, onValueChange: handleValueChange, variant, size }}>
+      <TabsContext.Provider value={{ value: currentValue, onValueChange: handleValueChange, variant: variant || undefined, size: size || undefined }}>
         <div className={cn('', className)} ref={ref} {...props}>
           {children}
         </div>
