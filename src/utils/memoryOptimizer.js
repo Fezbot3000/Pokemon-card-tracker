@@ -2,6 +2,8 @@
  * Memory optimization utilities for handling large card collections
  */
 
+import logger from './logger';
+
 // Virtual scrolling helper - only render visible items
 export class VirtualList {
   constructor(items, itemHeight, containerHeight) {
@@ -85,7 +87,7 @@ export const loadImageWithFallback = async (
     };
 
     img.onerror = () => {
-      console.warn(`Failed to load image: ${url}`);
+      logger.warn(`Failed to load image: ${url}`, { context: { file: 'memoryOptimizer', purpose: 'image-loading' } });
       resolve(fallbackUrl);
     };
 
