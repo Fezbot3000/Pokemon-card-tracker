@@ -14,6 +14,7 @@ import PSADetailModal from './PSADetailModal';
 import NewCollectionModal from './NewCollectionModal';
 import { searchByCertNumber, parsePSACardData } from '../services/psaSearch';
 import { useSubscription } from '../hooks/useSubscription';
+import logger from '../services/LoggingService';
 // import Spinner from './Spinner'; // Import Spinner for loading state
 
 /**
@@ -132,7 +133,7 @@ const AddCardModal = ({
 
       return file;
     } catch (error) {
-      console.error('Error changing card image:', error);
+      logger.error('Error changing card image:', error);
       setImageLoadingState('error');
       setErrors(prev => ({ ...prev, image: 'Failed to load image' }));
       return null;
@@ -243,7 +244,7 @@ const AddCardModal = ({
       // Close modal immediately after successful save
       onClose();
     } catch (error) {
-      console.error('Error adding card:', error);
+      logger.error('Error adding card:', error);
 
       // Handle specific error cases
       if (error.message.includes('serial number already exists')) {
@@ -291,9 +292,9 @@ const AddCardModal = ({
       const psaData = await searchByCertNumber(psaSerial);
 
       // Check for error response
-      if (psaData.error) {
-        console.error('PSA search error:', psaData.error);
-        toast.error(psaData.message || 'Failed to find PSA data');
+      if (psaData && psaData.error) {
+        logger.error('PSA search error:', psaData.error);
+        toast.error(`PSA search failed: ${psaData.error}`);
         setSaveMessage(
           'Failed to find PSA data. Please check the number and try again.'
         );
@@ -334,8 +335,8 @@ const AddCardModal = ({
       toast.success('PSA data successfully loaded');
       setSaveMessage('PSA data applied successfully');
     } catch (error) {
-      console.error('Error searching PSA:', error);
-      toast.error('Error searching PSA database');
+      logger.error('Error searching PSA:', error);
+      toast.error(`PSA search failed: ${error.message || 'Unknown error'}`);
       setSaveMessage(
         'Failed to search PSA database. Please check the number and try again.'
       );

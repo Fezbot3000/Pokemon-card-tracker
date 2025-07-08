@@ -19,6 +19,7 @@ import SelectField from '../design-system/atoms/SelectField';
 import { toast } from 'react-hot-toast';
 import SharingQuickStart from './SharingQuickStart';
 import sharingService from '../services/sharingService';
+import logger from '../services/LoggingService';
 
 // Simple components to replace missing design system components
 const Spinner = ({ size = 'medium' }) => (
@@ -137,7 +138,7 @@ const CollectionSharing = ({ isInModal = false }) => {
 
       setSharedCollections(shared);
     } catch (error) {
-      console.error('Error loading shared collections:', error);
+      logger.error('Error loading shared collections:', error);
       toast.error(`Failed to load shared collections: ${error.message}`);
     } finally {
       setLoading(false);
@@ -222,7 +223,7 @@ const CollectionSharing = ({ isInModal = false }) => {
       // Reload shared collections
       await loadSharedCollections();
     } catch (error) {
-      console.error('Error creating shared collection:', error);
+      logger.error('Error creating shared collection:', error);
       toast.error(`Failed to create shared collection: ${error.message}`);
     }
   };
@@ -254,8 +255,8 @@ const CollectionSharing = ({ isInModal = false }) => {
       );
       await loadSharedCollections();
     } catch (error) {
-      console.error('Error toggling active status:', error);
-      toast.error('Failed to update collection status');
+      logger.error('Error toggling active status:', error);
+      toast.error(`Failed to update sharing status: ${error.message}`);
     }
   };
 
@@ -273,8 +274,8 @@ const CollectionSharing = ({ isInModal = false }) => {
       toast.success('Shared collection deleted');
       await loadSharedCollections();
     } catch (error) {
-      console.error('Error deleting shared collection:', error);
-      toast.error('Failed to delete shared collection');
+      logger.error('Error deleting shared collection:', error);
+      toast.error(`Failed to delete shared collection: ${error.message}`);
     }
   };
 
@@ -310,7 +311,7 @@ const CollectionSharing = ({ isInModal = false }) => {
             try {
               await repository.updateCollectionCardCount(collection.id);
             } catch (error) {
-              console.warn(
+              logger.warn(
                 `Failed to update card count for collection ${collection.name}:`,
                 error
               );
@@ -347,8 +348,8 @@ const CollectionSharing = ({ isInModal = false }) => {
 
       toast.success('Collections refreshed successfully!');
     } catch (error) {
-      console.error('Error refreshing collections:', error);
-      toast.error('Failed to refresh collections');
+      logger.error('Error refreshing collections:', error);
+      toast.error(`Failed to refresh collections: ${error.message}`);
     } finally {
       setIsRefreshing(false);
     }

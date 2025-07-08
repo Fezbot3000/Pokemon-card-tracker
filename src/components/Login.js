@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../design-system';
 import { Helmet } from 'react-helmet-async';
 import NavigationBar from './NavigationBar';
+import logger from '../utils/logger';
 
 function Login() {
   const [isLogin, setIsLogin] = useState(true);
@@ -118,7 +119,7 @@ function Login() {
         setIsLoading(false);
       }
     } catch (error) {
-      console.error('Authentication error:', error);
+      logger.error('Authentication error:', error, { context: { file: 'Login', purpose: 'authentication' } });
       setIsLoading(false);
       // Error handling is done in AuthContext
     }
@@ -136,7 +137,7 @@ function Login() {
     } catch (error) {
       // Only log errors that aren't popup closed by user
       if (error.code !== 'auth/popup-closed-by-user') {
-        console.error('Google sign in error:', error);
+        logger.error('Google sign in error:', error, { context: { file: 'Login', purpose: 'google-signin' } });
       }
       // Error handling is done in AuthContext
     } finally {
@@ -156,7 +157,7 @@ function Login() {
     } catch (error) {
       // Only log errors that aren't popup closed by user
       if (error.code !== 'auth/popup-closed-by-user') {
-        console.error('Apple sign in error:', error);
+        logger.error('Apple sign in error:', error, { context: { file: 'Login', purpose: 'apple-signin' } });
       }
       // Error handling is done in AuthContext
     } finally {

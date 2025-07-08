@@ -1,5 +1,6 @@
 import React from 'react';
 import { toast } from 'react-hot-toast';
+import logger from '../utils/logger';
 
 // Track the current active toast ID
 let activeToastId = null;
@@ -17,7 +18,7 @@ const PSANotifications = {
   showLookupNotification: (errorType, options = {}) => {
     // Log the full error details for debugging
     if (errorType !== 'success' && options.details) {
-      console.error(`PSA error (${errorType}):`, options.details);
+      logger.error(`PSA error (${errorType}):`, options.details, { context: { file: 'PSANotifications', purpose: 'lookup-notification' } });
     }
 
     // Dismiss any existing toast
@@ -99,7 +100,7 @@ const PSANotifications = {
         id: 'psa-notification', // Use a consistent ID to prevent multiple toasts
       });
     } else {
-      console.error('Error applying PSA data:', error);
+      logger.error('Error applying PSA data:', error, { context: { file: 'PSANotifications', purpose: 'apply-notification' } });
 
       activeToastId = toast('Unable to apply PSA information', {
         duration: 3000,

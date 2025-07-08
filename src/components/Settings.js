@@ -13,6 +13,7 @@ import SubscriptionStatus from './settings/SubscriptionStatus';
 import CollectionSharing from './CollectionSharing';
 import db from '../services/firestore/dbAdapter';
 import ErrorBoundary from './ErrorBoundary';
+import logger from '../services/LoggingService';
 
 const Settings = () => {
   const navigate = useNavigate();
@@ -49,7 +50,7 @@ const Settings = () => {
           setCollections(savedCollections);
         }
       } catch (error) {
-        console.error('Error loading collections:', error);
+        logger.error('Error loading collections:', error);
         toastService.error('Failed to load collections');
       } finally {
         setIsLoading(false);
@@ -106,7 +107,7 @@ const Settings = () => {
       toastService.success('All data has been reset successfully');
       navigate('/dashboard');
     } catch (error) {
-      console.error('Error resetting data:', error);
+      logger.error('Error resetting data:', error);
       toastService.error('Failed to reset data. Please try again.');
     }
   };
@@ -150,7 +151,7 @@ const Settings = () => {
         toastService.error('Failed to rename collection');
       }
     } catch (error) {
-      console.error('Error renaming collection:', error);
+      logger.error('Error renaming collection:', error);
       toastService.error('Failed to rename collection');
     }
   };
@@ -168,7 +169,7 @@ const Settings = () => {
         `Collection "${collectionName}" deleted successfully`
       );
     } catch (error) {
-      console.error('Error deleting collection:', error);
+      logger.error('Error deleting collection:', error);
       toastService.error('Failed to delete collection');
     }
   };
@@ -179,7 +180,7 @@ const Settings = () => {
       setActiveTab(tabId);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (error) {
-      console.error('Error changing tab:', error);
+      logger.error('Error changing tab:', error);
       toastService.error('Failed to change tab');
     }
   };

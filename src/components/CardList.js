@@ -44,6 +44,7 @@ import {
   validateCollectionsStructure,
 } from '../utils/moveCardsHandler';
 import { useSubscription } from '../hooks/useSubscription';
+import logger from '../services/LoggingService';
 
 // Replace FinancialSummary component with individual stat cards
 const StatCard = memo(({ label, value, isProfit = false }) => {
@@ -95,7 +96,7 @@ const formatDate = dateValue => {
 
     // Check if valid date
     if (isNaN(date.getTime())) {
-      console.warn('Invalid date in CardList:', dateValue);
+      logger.warn('Invalid date in CardList:', dateValue);
       return 'Invalid date';
     }
 
@@ -106,7 +107,7 @@ const formatDate = dateValue => {
       year: 'numeric',
     });
   } catch (error) {
-    console.error('Error formatting date:', error);
+    logger.error('Error formatting date:', error);
     // Return a fallback string if parsing fails
     return 'Date error';
   }
@@ -396,7 +397,7 @@ const CardList = ({
           try {
             URL.revokeObjectURL(url);
           } catch (error) {
-            console.warn('Failed to revoke potential blob URL:', url, error);
+            logger.warn('Failed to revoke potential blob URL:', url, error);
           }
         }
       });
@@ -418,7 +419,7 @@ const CardList = ({
               images[card.slabSerial] = null;
             }
           } catch (error) {
-            console.error(
+            logger.error(
               `Error loading image for card ${card.slabSerial} from IndexedDB:`,
               error
             );
@@ -438,7 +439,7 @@ const CardList = ({
           try {
             URL.revokeObjectURL(url);
           } catch (error) {
-            console.warn(
+            logger.warn(
               'Failed to revoke potential blob URL during cleanup:',
               url,
               error
@@ -477,7 +478,7 @@ const CardList = ({
         [cardId]: newImageUrl, // Store the new URL (Firestore or Blob)
       }));
     } catch (error) {
-      console.error(`Error refreshing image for card ${cardId}:`, error);
+      logger.error(`Error refreshing image for card ${cardId}:`, error);
       // Optionally set to null or keep the old image on error
       setCardImages(prev => ({
         ...prev,
@@ -672,7 +673,7 @@ const CardList = ({
       // Format with leading zeros (e.g., INV-0001)
       return `INV-${String(nextNumber).padStart(4, '0')}`;
     } catch (error) {
-      console.error('Error generating invoice ID:', error);
+      logger.error('Error generating invoice ID:', error);
       // Fallback to timestamp-based ID if there's an error
       return `INV-${Date.now()}`;
     }
@@ -740,7 +741,7 @@ const CardList = ({
         window.location.reload();
       }, 500);
     } catch (error) {
-      console.error('Error marking cards as sold:', error);
+      logger.error('Error marking cards as sold:', error);
       toast.error(
         `Failed to mark cards as sold: ${error.message || 'Please try again.'}`
       );
@@ -787,7 +788,7 @@ const CardList = ({
     try {
       const cardId = cardToDelete?.id || cardToDelete;
       if (!cardId) {
-        console.error('Invalid card ID for deletion:', cardToDelete);
+        logger.error('Invalid card ID for deletion:', cardToDelete);
         toast.error('Failed to delete card: Invalid ID');
         return;
       }
@@ -800,7 +801,7 @@ const CardList = ({
         handleSelectCard(false, cardId);
       }
     } catch (error) {
-      console.error('Error deleting card:', error);
+      logger.error('Error deleting card:', error);
       toast.error('Failed to delete card');
     }
   };
@@ -840,7 +841,7 @@ const CardList = ({
             //   collection: cardInCollection.collection
             // });
           } else {
-            console.warn('Card not found in any collection:', cardId);
+            logger.warn('Card not found in any collection:', cardId);
           }
         });
       }
@@ -878,7 +879,7 @@ const CardList = ({
         }
       } catch (dbError) {
         // Always log errors, even in production
-        console.error('Database save failed:', dbError);
+        logger.error('Database save failed:', dbError);
         throw dbError; // Re-throw to be caught by outer try/catch
       }
 
@@ -911,14 +912,14 @@ const CardList = ({
             // console.log('All individual deletions completed');
           }
         } else {
-          console.warn(
+          logger.warn(
             'No deletion handler provided (onDeleteCards or onDeleteCard)'
           );
         }
       } catch (innerError) {
         // Always log errors, even in production
-        console.error('Error updating app state after deletion:', innerError);
-        console.warn(
+        logger.error('Error updating app state after deletion:', innerError);
+        logger.warn(
           'Warning: Error updating app state after deletion, but database was updated successfully.'
         );
       }
@@ -942,7 +943,7 @@ const CardList = ({
       // Return true to indicate success
       return true;
     } catch (error) {
-      console.error('Deletion failed with error:', error);
+      logger.error('Deletion failed with error:', error);
       toast.error('Failed to delete cards');
       // Don't throw error here, just handle it locally
       setShowDeleteModal(false);
@@ -1027,11 +1028,11 @@ const CardList = ({
 
         // console.log('[CardList] Move operation completed successfully');
       } else {
-        console.warn('[CardList] Move operation failed or partially failed');
+        logger.warn('[CardList] Move operation failed or partially failed');
         // Don't clear the modal on failure so user can retry
       }
     } catch (error) {
-      console.error('[CardList] Error in handleMoveConfirm:', error);
+      logger.error('[CardList] Error in handleMoveConfirm:', error);
       toast.error('Failed to move cards. Please try again.');
       // Don't clear the modal on error so user can retry
     }
@@ -1478,7 +1479,7 @@ const CardList = ({
                                 const isActuallyListed = !snapshot.empty;
                                 return { ...card, isActuallyListed };
                               } catch (error) {
-                                console.error(
+                                logger.error(
                                   `Error checking listing status for ${card.slabSerial}:`,
                                   error
                                 );
@@ -1518,7 +1519,7 @@ const CardList = ({
                                     // console.log(`Updated isListed flag for ${card.card || card.slabSerial} to ${card.isActuallyListed}`);
                                   })
                                   .catch(error => {
-                                    console.error(
+                                    logger.error(
                                       `Error updating isListed flag for ${card.slabSerial}:`,
                                       error
                                     );
@@ -1541,11 +1542,11 @@ const CardList = ({
                         } catch (error) {
                           toast.dismiss(loadingToast);
                           toast.error('Error checking marketplace status');
-                          console.error('Error in bulk listing flow:', error);
+                          logger.error('Error in bulk listing flow:', error);
                         }
                       } catch (error) {
                         toast.error('Error starting bulk listing process');
-                        console.error('Error in bulk listing flow:', error);
+                        logger.error('Error in bulk listing flow:', error);
                       }
                     })();
                   }}

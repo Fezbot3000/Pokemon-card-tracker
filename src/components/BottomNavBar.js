@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import logger from '../utils/logger';
 
 const BottomNavBar = ({ currentView, onViewChange, onSettingsClick }) => {
   // Helper function to check if current view is in the sold section
@@ -36,7 +37,7 @@ const BottomNavBar = ({ currentView, onViewChange, onSettingsClick }) => {
         }
       }, 0);
     } catch (error) {
-      console.error('Error navigating to view:', targetView, error);
+      logger.error('Error navigating to view:', targetView, error, { context: { file: 'BottomNavBar', purpose: 'navigation' } });
       // Fallback: try direct navigation
       if (onViewChange && typeof onViewChange === 'function') {
         onViewChange(targetView);
@@ -51,7 +52,7 @@ const BottomNavBar = ({ currentView, onViewChange, onSettingsClick }) => {
         onSettingsClick();
       }
     } catch (error) {
-      console.error('Error opening settings:', error);
+      logger.error('Error opening settings:', error, { context: { file: 'BottomNavBar', purpose: 'settings-click' } });
     }
   };
 

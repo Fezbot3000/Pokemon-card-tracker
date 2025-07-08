@@ -7,6 +7,7 @@ import { toast } from 'react-hot-toast';
 import { formatDate } from '../utils/dateUtils';
 import CardDetailsModal from '../design-system/components/CardDetailsModal';
 import PSALookupButton from './PSALookupButton';
+import logger from '../services/LoggingService';
 
 const CardDetails = memo(
   ({
@@ -130,7 +131,7 @@ const CardDetails = memo(
             // Set cardImage to null to prevent future references
             setCardImage(null);
           } catch (e) {
-            console.warn('Failed to revoke cardImage blob URL on unmount:', e);
+            logger.warn('Failed to revoke cardImage blob URL on unmount:', e);
           }
         }
       };
@@ -148,7 +149,7 @@ const CardDetails = memo(
             try {
               URL.revokeObjectURL(cardImage);
             } catch (error) {
-              console.error(
+              logger.error(
                 `Error revoking blob URL for card ${card.id || card.slabSerial}:`,
                 error
               );
@@ -218,7 +219,7 @@ const CardDetails = memo(
           }
         }
       } catch (error) {
-        console.error('Error loading card image:', error);
+        logger.error('Error loading card image:', error);
         // Ensure any previous image (blob or Firestore URL) is cleared on error
         if (cardImage && cardImage.startsWith('blob:')) {
           URL.revokeObjectURL(cardImage);
@@ -243,7 +244,7 @@ const CardDetails = memo(
             try {
               URL.revokeObjectURL(editedCard._blobUrl);
             } catch (e) {
-              console.warn('Failed to revoke previous blob URL', e);
+              logger.warn('Failed to revoke previous blob URL', e);
             }
           }
 
@@ -274,7 +275,7 @@ const CardDetails = memo(
 
           return file;
         } catch (error) {
-          console.error('Error processing image:', error);
+          logger.error('Error processing image:', error);
           setImageLoadingState('error');
 
           // Try toast, but don't let it break the app
@@ -283,13 +284,13 @@ const CardDetails = memo(
               `Failed to process image: ${error.message || 'Unknown error'}`
             );
           } catch (toastError) {
-            console.error('Toast notification error:', toastError);
+            logger.error('Toast notification error:', toastError);
           }
 
           return null;
         }
       } else {
-        console.warn(
+        logger.warn(
           `Invalid image file provided: ${file ? 'not a valid Blob/File' : 'null or undefined'}`
         );
         setImageLoadingState('error');
@@ -297,7 +298,7 @@ const CardDetails = memo(
         try {
           toast.error('Invalid image file. Please try another image.');
         } catch (toastError) {
-          console.error('Toast notification error:', toastError);
+          logger.error('Toast notification error:', toastError);
         }
 
         return null;
@@ -327,7 +328,7 @@ const CardDetails = memo(
         try {
           URL.revokeObjectURL(editedCard._blobUrl);
         } catch (e) {
-          console.warn('Failed to revoke blob URL on close:', e);
+          logger.warn('Failed to revoke blob URL on close:', e);
         }
       }
 
@@ -338,7 +339,7 @@ const CardDetails = memo(
           // Set to null before closing to prevent invalid references
           setCardImage(null);
         } catch (e) {
-          console.warn('Failed to revoke cardImage blob URL on close:', e);
+          logger.warn('Failed to revoke cardImage blob URL on close:', e);
         }
       }
 
@@ -417,13 +418,13 @@ const CardDetails = memo(
               try {
                 URL.revokeObjectURL(oldBlobUrl);
               } catch (e) {
-                console.warn('Failed to revoke blob URL during save:', e);
+                logger.warn('Failed to revoke blob URL during save:', e);
               }
             }
 
             toast.success('Image uploaded successfully');
           } catch (imageError) {
-            console.error('[CardDetails] Error uploading image:', imageError);
+            logger.error('[CardDetails] Error uploading image:', imageError);
             toast.error(`Error uploading image: ${imageError.message}`);
             // Don't proceed with saving if image upload fails
             return;
@@ -503,10 +504,10 @@ const CardDetails = memo(
         // Close the modal with success flag
         handleClose(true);
       } catch (error) {
-        console.error('=========== CARD SAVE ERROR ===========');
-        console.error('Error saving card:', error);
+        logger.error('=========== CARD SAVE ERROR ===========');
+        logger.error('Error saving card:', error);
         toast.error('Error saving card: ' + error.message);
-        console.error('=========== CARD SAVE ERROR END ===========');
+        logger.error('=========== CARD SAVE ERROR END ===========');
       }
     };
 
@@ -528,7 +529,7 @@ const CardDetails = memo(
           try {
             URL.revokeObjectURL(editedCard._blobUrl);
           } catch (e) {
-            console.warn('Failed to revoke blob URL on unmount:', e);
+            logger.warn('Failed to revoke blob URL on unmount:', e);
           }
         }
       };
@@ -550,7 +551,7 @@ const CardDetails = memo(
               URL.revokeObjectURL(currentBlobUrl);
             }
           } catch (e) {
-            console.warn('Failed to revoke stale blob URL:', e);
+            logger.warn('Failed to revoke stale blob URL:', e);
           }
         };
       }
@@ -607,7 +608,7 @@ const CardDetails = memo(
             toast.success('Card marked as sold and moved to Sold Items');
             handleClose(true);
           } catch (error) {
-            console.error('Error marking card as sold:', error);
+            logger.error('Error marking card as sold:', error);
             toast.error('Error marking card as sold: ' + error.message);
           }
         }}

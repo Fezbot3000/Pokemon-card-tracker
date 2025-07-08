@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getPSADatabaseStats } from '../services/psaDatabase';
 import { useAuth } from '../design-system';
+import logger from '../utils/logger';
 
 /**
  * PSA Database Statistics Component
@@ -22,7 +23,7 @@ const PSADatabaseStats = () => {
         const dbStats = await getPSADatabaseStats();
         setStats(dbStats);
       } catch (error) {
-        console.error('Error fetching PSA database stats:', error);
+        logger.error('Error fetching PSA database stats:', error, { context: { file: 'PSADatabaseStats', purpose: 'fetch-stats' } });
       } finally {
         setLoading(false);
       }

@@ -9,6 +9,7 @@ import {
   parsePSACardData,
   mergeWithExistingCard,
 } from '../services/psaSearch';
+import logger from '../utils/logger';
 
 /**
  * PSA Detail Modal Component
@@ -61,13 +62,13 @@ const PSADetailModal = ({
               applyPSADetails(parsed);
             }
           } catch (parseError) {
-            console.error('Error parsing PSA data:', parseError);
+            logger.error('Error parsing PSA data:', parseError, { context: { file: 'PSADetailModal', purpose: 'parse-psa-data' } });
             setError(`Error parsing PSA data: ${parseError.message}`);
             toast.error('Error parsing PSA data');
           }
         }
       } catch (err) {
-        console.error('Error fetching PSA data:', err);
+        logger.error('Error fetching PSA data:', err, { context: { file: 'PSADetailModal', purpose: 'fetch-psa-data' } });
         setError(err.message || 'Failed to fetch PSA data');
         toast.error(`PSA search failed: ${err.message}`);
       } finally {
@@ -193,7 +194,7 @@ const PSADetailModal = ({
       toast.success('PSA data applied successfully!');
       onClose();
     } catch (err) {
-      console.error('Error applying PSA data:', err);
+      logger.error('Error applying PSA data:', err, { context: { file: 'PSADetailModal', purpose: 'apply-psa-data' } });
       toast.error('Failed to apply PSA data: ' + err.message);
     }
   };

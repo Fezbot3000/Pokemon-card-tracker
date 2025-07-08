@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import NavigationBar from './NavigationBar';
 import Footer from './Footer';
+import logger from '../utils/logger';
 
 const PokemonSets = () => {
   const [selectedSet, setSelectedSet] = useState('base-set');
@@ -39,7 +40,7 @@ const PokemonSets = () => {
         highPrice: maxPrice.toFixed(2),
       };
     } catch (error) {
-      console.warn('Error parsing price string:', priceString, error);
+      logger.warn('Error parsing price string:', priceString, error, { context: { file: 'PokemonSets', purpose: 'price-string-parsing' } });
       return { lowPrice: '0.00', highPrice: '0.00' };
     }
   };

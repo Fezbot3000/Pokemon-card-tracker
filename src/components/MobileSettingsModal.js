@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth, useTheme } from '../design-system';
 import { useTutorial } from '../contexts/TutorialContext';
 import { Link } from 'react-router-dom';
+import logger from '../utils/logger';
 
 const MobileSettingsModal = ({ isOpen, onClose, onResetData }) => {
   const { user, signOut } = useAuth();
@@ -37,7 +38,7 @@ const MobileSettingsModal = ({ isOpen, onClose, onResetData }) => {
       await signOut();
       // Redirect will happen automatically via auth state change
     } catch (error) {
-      console.error('Error signing out:', error);
+      logger.error('Error signing out:', error, { context: { file: 'MobileSettingsModal', purpose: 'sign-out' } });
     }
   };
 

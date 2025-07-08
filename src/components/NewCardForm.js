@@ -5,6 +5,7 @@ import { toast } from 'react-hot-toast';
 import { parseCSVFile, validateCSVStructure } from '../utils/dataProcessor';
 import db from '../services/firestore/dbAdapter';
 import PSALookupButton from './PSALookupButton';
+import logger from '../services/LoggingService';
 
 const NewCardForm = ({
   onSubmit,
@@ -443,11 +444,11 @@ const NewCardForm = ({
           handleClose();
         }, 2000);
       } catch (error) {
-        console.error('Error saving to database:', error);
+        logger.error('Error saving to database:', error);
         setImportErrors(['Failed to save cards to database']);
       }
     } catch (error) {
-      console.error('Batch import error:', error);
+      logger.error('Batch import error:', error);
       setImportErrors([`Error processing file: ${error.message}`]);
     } finally {
       setImportLoading(false);

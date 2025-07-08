@@ -14,6 +14,7 @@ import NavigationBar from './NavigationBar';
 import Footer from './Footer';
 import LoginModal from '../design-system/components/LoginModal';
 import ImageModal from '../design-system/atoms/ImageModal'; // Import ImageModal component
+import logger from '../services/LoggingService';
 
 const PublicMarketplace = () => {
   const [listings, setListings] = useState([]);
@@ -144,7 +145,7 @@ const PublicMarketplace = () => {
           newCardImages[cardId] = null;
         }
       } catch (error) {
-        console.warn('Error processing image for listing:', listing.id, error);
+        logger.warn('Error processing image for listing:', listing.id, error);
       }
     }
 
@@ -170,7 +171,7 @@ const PublicMarketplace = () => {
           );
         } catch (indexError) {
           // Fallback to simpler query if index is building
-          console.warn(
+          logger.warn(
             'Using fallback query due to index building:',
             indexError
           );
@@ -204,7 +205,7 @@ const PublicMarketplace = () => {
         // Load card images after getting listings
         await loadCardImages(listingsData);
       } catch (err) {
-        console.error('Error fetching marketplace listings:', err);
+        logger.error('Error fetching marketplace listings:', err);
         setError(
           'Unable to load marketplace listings. Please try again later.'
         );

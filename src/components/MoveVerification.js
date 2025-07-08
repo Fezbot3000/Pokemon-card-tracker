@@ -3,6 +3,7 @@ import { useAuth } from '../design-system';
 import db from '../services/firestore/dbAdapter';
 import { CardRepository } from '../repositories/CardRepository';
 import featureFlags from '../utils/featureFlags';
+import logger from '../services/LoggingService';
 
 /**
  * MoveVerification Component
@@ -30,7 +31,7 @@ const MoveVerification = () => {
         setLastChangeData(JSON.parse(lastChange));
       }
     } catch (error) {
-      console.error('Error loading verification data:', error);
+      logger.error('Error loading verification data:', error);
     }
   }, []);
 
@@ -157,7 +158,7 @@ const MoveVerification = () => {
                 allFoundInCloud = false;
               }
             } catch (error) {
-              console.error(
+              logger.error(
                 `Error verifying card ${movedCard.id} in cloud:`,
                 error
               );
@@ -196,7 +197,7 @@ const MoveVerification = () => {
               results.cloudVerification.success = false;
             }
           } catch (error) {
-            console.error(
+            logger.error(
               `Error verifying card ${lastChangeData.cardId} in cloud:`,
               error
             );
@@ -219,7 +220,7 @@ const MoveVerification = () => {
 
       setVerificationResults(results);
     } catch (error) {
-      console.error('Error verifying card movements:', error);
+      logger.error('Error verifying card movements:', error);
       setVerificationResults({
         error: error.message,
       });
