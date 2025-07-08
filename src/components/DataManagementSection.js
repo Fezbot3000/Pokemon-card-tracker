@@ -119,8 +119,7 @@ const DataManagementSection = () => {
             'Security verification complete. Check the browser console (F12) for details.'
           );
         } catch (error) {
-          logger.error('Error verifying security:', error);
-          console.error('Security verification error:', error);
+          logger.error('Security verification error:', error, { context: { file: 'DataManagementSection', purpose: 'security-verification' } });
           toast.error('Failed to complete security verification');
         }
       };

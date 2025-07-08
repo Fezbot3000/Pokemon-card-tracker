@@ -7,6 +7,7 @@ import {
   serverTimestamp,
 } from 'firebase/firestore';
 import { db as firestoreDb } from '../firebase';
+import logger from '../utils/logger';
 
 /**
  * Service for handling collection sharing functionality
@@ -46,7 +47,7 @@ class SharingService {
         ...shareData,
       };
     } catch (error) {
-      console.error('Error getting shared collection:', error);
+      logger.error('Error getting shared collection:', error, { context: { file: 'sharingService', purpose: 'get-shared-collection' } });
       throw error;
     }
   }
@@ -63,7 +64,7 @@ class SharingService {
         lastViewedAt: serverTimestamp(),
       });
     } catch (error) {
-      console.warn('Failed to increment view count:', error);
+      logger.warn('Failed to increment view count:', error, { context: { file: 'sharingService', purpose: 'increment-view-count' } });
       // Don't throw error as this is not critical
     }
   }
@@ -167,7 +168,7 @@ class SharingService {
       await navigator.clipboard.writeText(shareUrl);
       return true;
     } catch (error) {
-      console.error('Failed to copy to clipboard:', error);
+      logger.error('Failed to copy to clipboard:', error, { context: { file: 'sharingService', purpose: 'copy-share-url' } });
       return false;
     }
   }
@@ -200,7 +201,7 @@ class SharingService {
         return await this.copyShareUrl(shareData.id);
       }
     } catch (error) {
-      console.error('Failed to share:', error);
+      logger.error('Failed to share:', error, { context: { file: 'sharingService', purpose: 'share-collection' } });
       // Fallback to clipboard
       return await this.copyShareUrl(shareData.id);
     }

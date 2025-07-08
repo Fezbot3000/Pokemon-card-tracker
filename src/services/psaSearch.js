@@ -52,7 +52,7 @@ const psaCache = {
         this.results = parsed.results || {};
       }
     } catch (e) {
-      console.warn('Failed to load PSA search cache from localStorage:', e);
+      logger.warn('Failed to load PSA search cache from localStorage:', e, { context: { file: 'psaSearch', purpose: 'cache-load' } });
     }
   },
 
@@ -66,7 +66,7 @@ const psaCache = {
         })
       );
     } catch (e) {
-      console.warn('Failed to save PSA search cache to localStorage:', e);
+      logger.warn('Failed to save PSA search cache to localStorage:', e, { context: { file: 'psaSearch', purpose: 'cache-save' } });
     }
   },
 };
@@ -109,7 +109,7 @@ const cachePSAResult = (certNumber, data) => {
   try {
     psaDataService.saveCardToCache(certNumber, data);
   } catch (error) {
-    console.warn('Failed to save PSA result to Firestore:', error);
+    logger.warn('Failed to save PSA result to Firestore:', error, { context: { file: 'psaSearch', purpose: 'firestore-save' } });
   }
 };
 
@@ -221,10 +221,10 @@ const searchByCertNumber = async (certNumber, forceRefresh = false) => {
       return psaData;
     } else {
       // Keep error logging for PSA search since these are important for troubleshooting
-      console.error('PSA lookup failed:', result.data);
+      logger.error('PSA lookup failed:', result.data, { context: { file: 'psaSearch', purpose: 'psa-lookup' } });
       // Add more detailed logging for debugging
       if (result.data && result.data.error) {
-        console.error('Error details:', result.data.error);
+        logger.error('Error details:', result.data.error, { context: { file: 'psaSearch', purpose: 'psa-lookup-details' } });
       }
 
       // Show appropriate error notification based on error type
@@ -252,7 +252,7 @@ const searchByCertNumber = async (certNumber, forceRefresh = false) => {
       };
     }
   } catch (error) {
-    console.error('Error searching PSA card by cert number:', error);
+    logger.error('Error searching PSA card by cert number:', error, { context: { file: 'psaSearch', purpose: 'search-by-cert' } });
 
     // Show error notification
     PSANotifications.showLookupNotification('FETCH_ERROR');

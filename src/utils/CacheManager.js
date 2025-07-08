@@ -1,5 +1,7 @@
 // CacheManager.js - Singleton utility for managing application data caching
 
+import logger from './logger';
+
 /**
  * CacheManager - A centralized cache manager to prevent unnecessary reloads
  * while preserving real-time data updates. Uses a combination of:
@@ -148,7 +150,7 @@ class CacheManager {
             }
           })
           .catch(error => {
-            console.error(`Error preloading image for card ${card.id}:`, error);
+            logger.error(`Error preloading image for card ${card.id}:`, error, { context: { file: 'CacheManager', purpose: 'image-preloading' } });
             // Remove from loading set
             this.loadingImages.delete(card.id);
           });

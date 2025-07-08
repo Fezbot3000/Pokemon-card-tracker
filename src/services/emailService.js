@@ -1,5 +1,6 @@
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { getApp } from 'firebase/app';
+import logger from '../utils/logger';
 
 const functions = getFunctions(getApp(), 'us-central1');
 
@@ -40,7 +41,7 @@ class EmailServiceHelper {
       });
       return result.data;
     } catch (error) {
-      console.error('Error sending marketplace message email:', error);
+      logger.error('Error sending marketplace message email:', error, { context: { file: 'emailService', purpose: 'marketplace-notification' } });
       throw error;
     }
   }
@@ -61,7 +62,7 @@ class EmailServiceHelper {
       });
       return result.data;
     } catch (error) {
-      console.error('Error sending listing sold email:', error);
+      logger.error('Error sending listing sold email:', error, { context: { file: 'emailService', purpose: 'listing-sold-notification' } });
       throw error;
     }
   }
@@ -75,7 +76,7 @@ class EmailServiceHelper {
       });
       return result.data;
     } catch (error) {
-      console.error('Error sending email verification:', error);
+      logger.error('Error sending email verification:', error, { context: { file: 'emailService', purpose: 'email-verification' } });
       throw error;
     }
   }
@@ -86,7 +87,7 @@ class EmailServiceHelper {
       const result = await this.sendCustomEmail({ to, subject, htmlContent });
       return result.data;
     } catch (error) {
-      console.error('Error sending custom email:', error);
+      logger.error('Error sending custom email:', error, { context: { file: 'emailService', purpose: 'custom-email' } });
       throw error;
     }
   }
@@ -97,7 +98,7 @@ class EmailServiceHelper {
       const result = await this.sendFeedbackEmail({ to, subject, htmlContent });
       return result.data;
     } catch (error) {
-      console.error('Error sending feedback email:', error);
+      logger.error('Error sending feedback email:', error, { context: { file: 'emailService', purpose: 'feedback-email' } });
       throw error;
     }
   }

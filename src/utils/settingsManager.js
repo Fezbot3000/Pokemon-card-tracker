@@ -3,6 +3,8 @@
  * Handles the settings modal state and related UI updates
  */
 
+import logger from './logger';
+
 export const settingsManager = {
   /**
    * Opens the settings modal and updates body class
@@ -34,7 +36,7 @@ export const settingsManager = {
       // Always show settings regardless of device
       setShowSettings(true);
     } catch (error) {
-      console.error('Error opening settings:', error);
+      logger.error('Error opening settings:', error, { context: { file: 'settingsManager', purpose: 'open-settings' } });
       // Fallback: just show settings modal
       setShowSettings(true);
     }
@@ -71,7 +73,7 @@ export const settingsManager = {
         }, 0);
       }
     } catch (error) {
-      console.error('Error closing settings:', error);
+      logger.error('Error closing settings:', error, { context: { file: 'settingsManager', purpose: 'close-settings' } });
       // Fallback: just hide settings modal
       setShowSettings(false);
     }
@@ -106,7 +108,7 @@ export const settingsManager = {
         setCurrentView(targetView);
       }
     } catch (error) {
-      console.error('Error navigating from settings:', error);
+      logger.error('Error navigating from settings:', error, { context: { file: 'settingsManager', purpose: 'navigate-from-settings' } });
       // Fallback: just set the target view
       setCurrentView(targetView);
     }

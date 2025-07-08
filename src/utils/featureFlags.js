@@ -12,6 +12,8 @@
  * - enableCardValueUpdates: Controls whether card value updates feature is enabled
  */
 
+import logger from './logger';
+
 // Default flag values (all disabled by default)
 const defaultFlags = {
   enableFirestoreSync: true, // Controls shadow writes to Firestore
@@ -30,7 +32,7 @@ try {
     savedFlags = JSON.parse(savedFlagsString);
   }
 } catch (error) {
-  console.error('Error loading feature flags from localStorage:', error);
+  logger.error('Error loading feature flags from localStorage:', error, { context: { file: 'featureFlags', purpose: 'localStorage' } });
 }
 
 // Merge default flags with any saved flags
@@ -78,7 +80,7 @@ export function updateFeatureFlag(flagName, value) {
       localStorage.setItem('appFeatureFlags', JSON.stringify(featureFlags));
       return true;
     } catch (error) {
-      console.error('Error saving feature flags to localStorage:', error);
+      logger.error('Error saving feature flags to localStorage:', error, { context: { file: 'featureFlags', purpose: 'localStorage' } });
       return false;
     }
   }
@@ -97,7 +99,7 @@ export function resetFeatureFlags() {
   try {
     localStorage.setItem('appFeatureFlags', JSON.stringify(featureFlags));
   } catch (error) {
-    console.error('Error saving feature flags to localStorage:', error);
+    logger.error('Error saving feature flags to localStorage:', error, { context: { file: 'featureFlags', purpose: 'localStorage' } });
   }
 }
 
