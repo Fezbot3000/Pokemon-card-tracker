@@ -33,13 +33,6 @@ const CollectionManagement = ({
   const renameableCollections = filterProtectedCollections(collectionNames);
   const deletableCollections = filterProtectedCollections(collectionNames);
 
-  const handleDeleteConfirm = () => {
-    if (onDeleteCollection && collectionToDelete) {
-      onDeleteCollection(collectionToDelete);
-      setCollectionToDelete('');
-    }
-  };
-
   const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false);
   const [selectedCollectionToDelete, setSelectedCollectionToDelete] =
     React.useState('');

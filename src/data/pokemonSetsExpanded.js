@@ -4,7 +4,6 @@
  * Includes additional Japanese sets, special sets, and promotional sets
  */
 
-import db from '../services/firestore/dbAdapter';
 import logger from '../utils/logger';
 
 // Pokemon TCG Sets

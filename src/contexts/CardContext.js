@@ -4,8 +4,6 @@ import React, {
   useState,
   useEffect,
   useCallback,
-  useMemo,
-  useRef,
 } from 'react';
 import { useAuth } from '../design-system';
 import { CardRepository } from '../repositories/CardRepository';

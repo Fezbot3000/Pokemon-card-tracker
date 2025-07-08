@@ -84,7 +84,10 @@ const Button = ({
   const iconColor = getIconColor(variant);
 
   // Remove props that shouldn't be passed to the DOM element
-  const { leftIcon: _leftIcon, rightIcon: _rightIcon, ...domProps } = props;
+  const {
+    // Remove unused icon parameters
+    ...domProps
+  } = props || {};
 
   return (
     <button

@@ -1,4 +1,4 @@
-import React, { useState, memo } from 'react';
+import React, { memo } from 'react';
 import PropTypes from 'prop-types';
 import Icon from '../atoms/Icon';
 import { baseColors } from '../styles/colors';

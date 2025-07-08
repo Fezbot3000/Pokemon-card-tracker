@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Fragment } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../design-system';
 import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
 import { db as firestoreDb } from '../../services/firebase';

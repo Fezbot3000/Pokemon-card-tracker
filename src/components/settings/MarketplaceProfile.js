@@ -1,6 +1,6 @@
-import React, { useState, useEffect, Fragment } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../design-system';
-import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db as firestoreDb } from '../../services/firebase';
 import { toast as toastService } from '../../design-system';
 import logger from '../../utils/logger';

@@ -7,15 +7,7 @@ import PropTypes from 'prop-types';
  * This component makes it easier to use consistent icon styling
  * throughout the application, with support for different sizes and colors.
  */
-const Icon = ({
-  name,
-  size = 'md',
-  color = 'default',
-  className = '',
-  // Destructure 'data-component-name' to prevent it from being spread
-  'data-component-name': dataComponentName,
-  ...rest // Collect remaining props
-}) => {
+const Icon = ({ name, className = '', color = 'currentColor', size = 16 }) => {
   // Size variations
   const sizeClasses = {
     xs: 'text-xs',
@@ -43,7 +35,7 @@ const Icon = ({
 
   return (
     // Spread only the 'rest' of the props, excluding data-component-name
-    <span className={iconClasses} {...rest}>
+    <span className={iconClasses}>
       {name}
     </span>
   );

@@ -200,7 +200,7 @@ const PriceChartingModal = ({
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
+                        <div className="mb-1 flex items-center gap-2">
                           <h5 className="font-medium text-gray-900 dark:text-white">
                             {product['product-name'] || product.name || 'Unknown Product'}
                           </h5>
@@ -212,8 +212,8 @@ const PriceChartingModal = ({
                         </div>
                         
                                                  {/* Match confidence indicator */}
-                         <div className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium mb-2 ${confidence.bgColor}`}>
-                           <div className={`size-2 rounded-full mr-1 bg-${confidence.color}-500`}></div>
+                         <div className={`mb-2 inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${confidence.bgColor}`}>
+                           <div className={`bg- mr-1 size-2 rounded-full${confidence.color}-500`}></div>
                            {confidence.level} Match ({Math.round(matchScore)}%)
                          </div>
                         

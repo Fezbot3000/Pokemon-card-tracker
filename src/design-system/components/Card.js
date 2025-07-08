@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import Icon from '../atoms/Icon';
-import { baseColors } from '../styles/colors';
-import { colors, shadows, borders } from '../tokens';
 import { useTheme } from '../contexts/ThemeContext';
 
 /**
@@ -25,9 +23,8 @@ const Card = ({
   currentValueAUD = 0,
   formatUserCurrency,
   // Destructure these props to prevent them from being spread to the div
-  preferredCurrency,
-  originalInvestmentCurrency,
-  originalCurrentValueCurrency,
+  // preferredCurrency,
+  // originalCurrencyCode,
   // Don't spread remaining props to avoid passing invalid DOM attributes
 }) => {
   // Get theme information

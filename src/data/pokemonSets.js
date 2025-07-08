@@ -3,7 +3,6 @@
  * Organized by year and era for dynamic filtering in the card forms
  */
 
-import db from '../services/firestore/dbAdapter';
 import logger from '../utils/logger'; // Import logger for consistent error handling
 
 // Pokemon TCG Sets

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth, useTheme } from '../design-system';
 import { useTutorial } from '../contexts/TutorialContext';
-import { Link } from 'react-router-dom';
 import logger from '../utils/logger';
 
 const MobileSettingsModal = ({ isOpen, onClose, onResetData }) => {

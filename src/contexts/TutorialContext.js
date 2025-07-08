@@ -3,7 +3,6 @@ import React, {
   useContext,
   useState,
   useCallback,
-  useEffect,
 } from 'react';
 
 const TutorialContext = createContext();

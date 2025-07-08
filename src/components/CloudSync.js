@@ -3,7 +3,6 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '../services/firebase';
 import { useAuth } from '../design-system';
 import { toast } from 'react-hot-toast';
-import { Link } from 'react-router-dom';
 import logger from '../utils/logger';
 
 const CloudSync = ({ onExportData, onImportCollection }) => {

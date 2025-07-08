@@ -23,7 +23,7 @@ export const AutoSyncProvider = ({ children }) => {
   const [lastSyncTime, setLastSyncTime] = useState(
     localStorage.getItem('lastCloudSync') || null
   );
-  const [isRestoring, setIsRestoring] = useState(false);
+  const [isRestoring] = useState(false);
 
   // When settings change, update localStorage
   useEffect(() => {
