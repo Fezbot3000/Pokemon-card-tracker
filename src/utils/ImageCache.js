@@ -1,5 +1,7 @@
 // ImageCache.js - Utility to cache card images and prevent unnecessary reloading
 
+import logger from './logger';
+
 class ImageCache {
   constructor() {
     this.cache = new Map();
@@ -27,7 +29,7 @@ class ImageCache {
           this.cache.set(cardId, base64Url);
         })
         .catch(err => {
-          console.error('Error converting blob to base64:', err);
+          logger.error('Error converting blob to base64:', err, { context: { file: 'ImageCache', purpose: 'blob-conversion' } });
           // Store the blob URL as a fallback
           this.cache.set(cardId, imageUrl);
         });
