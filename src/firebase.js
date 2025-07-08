@@ -14,6 +14,7 @@ import {
 } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { getFunctions } from 'firebase/functions';
+import logger from './utils/logger';
 
 // Import the env validation
 import './env';
@@ -88,10 +89,10 @@ if (googleClientId) {
 // Set persistence for authentication
 setPersistence(auth, browserLocalPersistence)
   .then(() => {
-    console.log('Auth persistence set to local');
+    logger.debug('Auth persistence set to local', { context: { file: 'firebase', purpose: 'auth-setup' } });
   })
   .catch(error => {
-    console.error('Error setting auth persistence:', error);
+    logger.error('Error setting auth persistence:', error, { context: { file: 'firebase', purpose: 'auth-setup' } });
   });
 
 // Export Firebase services
