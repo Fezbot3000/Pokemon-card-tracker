@@ -183,6 +183,9 @@ const CardDetailsForm = ({
   onPsaSearch,
   isPsaSearching = false,
   hidePsaSearchButton = false,
+  onPriceChartingSearch,
+  isPriceChartingSearching = false,
+  hidePriceChartingButton = false,
   requiredFields = {},
 }) => {
   const {
@@ -798,6 +801,52 @@ const CardDetailsForm = ({
                       )}
                     </div>
                   )}
+                </div>
+              </div>
+            )}
+
+            {/* Price Charting Search Section */}
+            {!hidePriceChartingButton && (
+              <div className="mt-3 space-y-2">
+                <div className="flex w-full flex-col space-y-2">
+                  <button
+                    onClick={() => onPriceChartingSearch && onPriceChartingSearch(card)}
+                    disabled={isPriceChartingSearching}
+                    className="inline-flex w-full items-center justify-center rounded-lg border border-orange-300 bg-orange-50 px-4 py-2 text-base font-medium text-orange-700 shadow-sm transition-colors hover:bg-orange-100 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:border-orange-600 dark:bg-orange-900/20 dark:text-orange-300 dark:hover:bg-orange-900/30"
+                    data-component-name="CardDetailsForm"
+                    title="Search Price Charting for current market value"
+                  >
+                    {isPriceChartingSearching ? (
+                      <>
+                        <svg
+                          className="-ml-1 mr-3 size-5 animate-spin text-orange-600"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                        Searching Price Charting...
+                      </>
+                    ) : (
+                      <>
+                        <Icon name="attach_money" className="mr-2" />
+                        Search Price Charting
+                      </>
+                    )}
+                  </button>
                 </div>
               </div>
             )}

@@ -131,6 +131,17 @@ export const getStripePremiumPlanPriceId = () => {
 };
 
 /**
+ * Get Price Charting API Key
+ */
+export const getPriceChartingApiKey = () => {
+  usageTracker.track('priceChartingApiKey');
+  return requireEnvVar(
+    'REACT_APP_PRICECHARTING_API_KEY',
+    'Price Charting API Key'
+  );
+};
+
+/**
  * Generate a map of config sources for debugging
  */
 export const getConfigSources = () => {
@@ -154,6 +165,7 @@ export const getConfigSources = () => {
   sources.pokemonTcgApiKey = 'Environment';
   sources.stripePublishableKey = 'Environment';
   sources.stripePremiumPlanPriceId = 'Environment';
+  sources.priceChartingApiKey = 'Environment';
 
   return sources;
 };

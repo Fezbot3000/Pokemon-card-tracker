@@ -5,6 +5,7 @@ import Button from '../atoms/Button';
 import Icon from '../atoms/Icon';
 import CardDetailsForm from './CardDetailsForm';
 import SaleModal from '../../components/SaleModal';
+import PriceChartingModal from '../../components/PriceChartingModal';
 import { searchByCertNumber, parsePSACardData } from '../../services/psaSearch';
 import { toast } from 'react-hot-toast';
 
@@ -55,6 +56,8 @@ const CardDetailsModal = ({
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [isPsaSearching, setIsPsaSearching] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isPriceChartingSearching, setIsPriceChartingSearching] = useState(false);
+  const [priceChartingModalOpen, setPriceChartingModalOpen] = useState(false);
 
   // Get currency formatting functions
   const { formatPreferredCurrency, formatAmountForDisplay } =
@@ -191,6 +194,52 @@ const CardDetailsModal = ({
     } finally {
       setIsPsaSearching(false);
     }
+  };
+
+  // Handle Price Charting search
+  const handlePriceChartingSearch = async (cardData) => {
+    if (!cardData) {
+      toast.error('No card data available for price search');
+      return;
+    }
+
+    setIsPriceChartingSearching(true);
+    setSaveMessage('Searching Price Charting...');
+
+    try {
+      // Open the Price Charting modal
+      setPriceChartingModalOpen(true);
+      toast.success('Opening Price Charting search...');
+      setSaveMessage('Opening Price Charting search...');
+    } catch (error) {
+      console.error('Error opening Price Charting search:', error);
+      toast.error('Error opening Price Charting search');
+      setSaveMessage('Error opening Price Charting search');
+    } finally {
+      setIsPriceChartingSearching(false);
+    }
+  };
+
+  // Handle applying price from Price Charting
+  const handleApplyPriceChartingPrice = (priceData) => {
+    if (!priceData || !priceData.price) {
+      toast.error('No price data to apply');
+      return;
+    }
+
+    // Update the card with the new price data
+    const updatedCard = {
+      ...card,
+      originalCurrentValueAmount: priceData.priceInUSD,
+      originalCurrentValueCurrency: 'USD',
+      priceChartingData: priceData,
+      priceChartingLastUpdated: new Date().toISOString(),
+    };
+
+    // Call onChange with the updated card data
+    onChange(updatedCard);
+    toast.success('Price Charting data applied successfully!');
+    setSaveMessage('Price Charting data applied successfully!');
   };
 
   // Update local state when props change or modal opens
@@ -533,6 +582,8 @@ const CardDetailsModal = ({
                 initialCollectionName={initialCollectionName}
                 onPsaSearch={handlePsaSearch}
                 isPsaSearching={isPsaSearching}
+                onPriceChartingSearch={handlePriceChartingSearch}
+                isPriceChartingSearching={isPriceChartingSearching}
               />
             </div>
           )}
@@ -618,6 +669,14 @@ const CardDetailsModal = ({
           onConfirm={handleSaleConfirm}
         />
       )}
+
+      {/* Price Charting Modal */}
+      <PriceChartingModal
+        isOpen={priceChartingModalOpen}
+        onClose={() => setPriceChartingModalOpen(false)}
+        currentCardData={card}
+        onApplyPrice={handleApplyPriceChartingPrice}
+      />
     </>
   );
 };
