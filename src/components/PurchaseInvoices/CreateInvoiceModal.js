@@ -7,6 +7,7 @@ import FormField from '../../design-system/molecules/FormField';
 import Modal from '../../design-system/molecules/Modal';
 import Button from '../../design-system/atoms/Button';
 import Icon from '../../design-system/atoms/Icon';
+import LoggingService from '../../services/LoggingService';
 
 /**
  * Modal component for creating or editing a purchase invoice
@@ -54,7 +55,7 @@ const CreateInvoiceModal = ({
 
     if (memoizedEditingInvoice) {
       // We're in edit mode - populate form with invoice data
-      // console.log('Initializing form with editing invoice data:', memoizedEditingInvoice);
+      // LoggingService.info('Initializing form with editing invoice data:', memoizedEditingInvoice);
       setSelectedCards(memoizedEditingInvoice.cards || []);
       setSeller(memoizedEditingInvoice.seller || '');
       setDate(
@@ -67,7 +68,7 @@ const CreateInvoiceModal = ({
       memoizedPreSelectedCards.length > 0
     ) {
       // Using pre-selected cards for a new invoice
-      // console.log('Initializing form with pre-selected cards');
+      // LoggingService.info('Initializing form with pre-selected cards');
       setSelectedCards(memoizedPreSelectedCards);
 
       // Pre-populate the purchase date from the first card's datePurchased field
@@ -181,7 +182,7 @@ const CreateInvoiceModal = ({
         // Close modal
         handleClose();
       } catch (error) {
-        console.error('Error saving invoice:', error);
+        LoggingService.error('Error saving invoice:', error);
         toast.error('Failed to save invoice. Please try again.');
       }
     },

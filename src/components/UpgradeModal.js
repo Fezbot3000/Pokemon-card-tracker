@@ -5,6 +5,7 @@ import Icon from '../design-system/atoms/Icon';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../design-system/contexts/AuthContext';
 import { getStripePublishableKey } from '../config/secrets';
+import LoggingService from '../services/LoggingService';
 
 const features = [
   { label: 'Unlimited collections', free: false, premium: true },
@@ -21,17 +22,17 @@ const UpgradeModal = ({ isOpen, onClose, daysRemaining }) => {
   const [loading, setLoading] = useState(false);
 
   const handleUpgrade = async () => {
-    console.log('🚀 PRODUCTION DEBUG: Starting upgrade process');
+    LoggingService.info('🚀 PRODUCTION DEBUG: Starting upgrade process');
     setLoading(true);
 
     try {
-      console.log('📡 PRODUCTION DEBUG: About to call createCheckoutSession');
-      console.log('📡 PRODUCTION DEBUG: User ID:', user?.uid);
+      LoggingService.info('📡 PRODUCTION DEBUG: About to call createCheckoutSession');
+      LoggingService.info('📡 PRODUCTION DEBUG: User ID:', user?.uid);
 
       const { httpsCallable } = await import('firebase/functions');
       const { functions } = await import('../firebase');
 
-      console.log('📡 PRODUCTION DEBUG: Functions instance:', functions);
+      LoggingService.info('📡 PRODUCTION DEBUG: Functions instance:', functions);
 
       const createCheckoutSession = httpsCallable(
         functions,
@@ -43,7 +44,7 @@ const UpgradeModal = ({ isOpen, onClose, daysRemaining }) => {
         process.env.REACT_APP_STRIPE_PREMIUM_PLAN_PRICE_ID ||
         'price_1RfTouGIULGXhjjBvCFuEoQH';
 
-      console.log('📡 PRODUCTION DEBUG: Calling function with data:', {
+      LoggingService.info('📡 PRODUCTION DEBUG: Calling function with data:', {
         priceId: STRIPE_PREMIUM_PLAN_PRICE_ID,
         userId: user?.uid,
       });
@@ -53,14 +54,14 @@ const UpgradeModal = ({ isOpen, onClose, daysRemaining }) => {
         userId: user?.uid,
       });
 
-      console.log('✅ PRODUCTION DEBUG: Function call successful:', result);
-      console.log('✅ PRODUCTION DEBUG: Session URL:', result.data?.url);
-      console.log('✅ PRODUCTION DEBUG: Session ID:', result.data?.sessionId);
+      LoggingService.info('✅ PRODUCTION DEBUG: Function call successful:', result);
+      LoggingService.info('✅ PRODUCTION DEBUG: Session URL:', result.data?.url);
+      LoggingService.info('✅ PRODUCTION DEBUG: Session ID:', result.data?.sessionId);
 
       // Step 3: Load Stripe and redirect to checkout with session ID
-      console.log('📦 PRODUCTION DEBUG: Loading Stripe...');
+      LoggingService.info('📦 PRODUCTION DEBUG: Loading Stripe...');
       const stripePublishableKey = getStripePublishableKey();
-      console.log(
+      LoggingService.info(
         '📦 PRODUCTION DEBUG: Stripe key available:',
         !!stripePublishableKey
       );
@@ -69,31 +70,31 @@ const UpgradeModal = ({ isOpen, onClose, daysRemaining }) => {
       const stripe = await loadStripe(stripePublishableKey);
 
       if (!stripe) {
-        console.error('❌ PRODUCTION DEBUG: Stripe failed to load');
+        LoggingService.error('❌ PRODUCTION DEBUG: Stripe failed to load');
         throw new Error('Stripe failed to load');
       }
 
-      console.log('✅ PRODUCTION DEBUG: Stripe loaded successfully');
+      LoggingService.info('✅ PRODUCTION DEBUG: Stripe loaded successfully');
 
       // Step 4: Redirect to Stripe Checkout with session ID
-      console.log('💳 PRODUCTION DEBUG: Redirecting to Stripe Checkout...');
+      LoggingService.info('💳 PRODUCTION DEBUG: Redirecting to Stripe Checkout...');
       const { error } = await stripe.redirectToCheckout({
         sessionId: result.data.sessionId,
       });
 
       if (error) {
-        console.error('❌ PRODUCTION DEBUG: Stripe redirect error:', error);
+        LoggingService.error('❌ PRODUCTION DEBUG: Stripe redirect error:', error);
         throw error;
       }
 
-      console.log(
+      LoggingService.info(
         '✅ PRODUCTION DEBUG: Successfully redirected to Stripe Checkout'
       );
     } catch (error) {
-      console.error('❌ PRODUCTION DEBUG: Error caught:', error);
-      console.error('❌ PRODUCTION DEBUG: Error message:', error.message);
-      console.error('❌ PRODUCTION DEBUG: Error code:', error.code);
-      console.error(
+      LoggingService.error('❌ PRODUCTION DEBUG: Error caught:', error);
+      LoggingService.error('❌ PRODUCTION DEBUG: Error message:', error.message);
+      LoggingService.error('❌ PRODUCTION DEBUG: Error code:', error.code);
+      LoggingService.error(
         '❌ PRODUCTION DEBUG: Full error object:',
         JSON.stringify(error, null, 2)
       );

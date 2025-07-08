@@ -26,6 +26,7 @@ import LazyImage from './LazyImage'; // Import lazy image component
 import SellerProfileModal from './SellerProfileModal'; // Import seller profile modal component
 import ReportListing from './ReportListing'; // Import report listing component
 import { useNavigate } from 'react-router-dom'; // Import for navigation
+import LoggingService from '../../services/LoggingService';
 
 function Marketplace({ currentView, onViewChange }) {
   const [allListings, setAllListings] = useState([]);
@@ -407,7 +408,7 @@ function Marketplace({ currentView, onViewChange }) {
       try {
         setFilters(JSON.parse(savedFilters));
       } catch (error) {
-        console.error('Error parsing saved filters:', error);
+        LoggingService.error('Error parsing saved filters:', error);
       }
     }
   }, []);
@@ -490,7 +491,7 @@ function Marketplace({ currentView, onViewChange }) {
   }, [filters]);
 
   const handleViewSellerProfile = sellerId => {
-    // console.log('Opening seller profile for sellerId:', sellerId);
+    // LoggingService.info('Opening seller profile for sellerId:', sellerId);
     setSelectedSellerId(sellerId);
     setShowSellerProfile(true);
   };

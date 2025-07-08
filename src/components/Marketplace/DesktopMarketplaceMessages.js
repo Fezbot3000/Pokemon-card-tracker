@@ -20,6 +20,7 @@ import ListingDetailModal from './ListingDetailModal';
 import MarketplaceNavigation from './MarketplaceNavigation';
 import SellerProfileModal from './SellerProfileModal';
 import db from '../../services/firestore/dbAdapter'; // Import IndexedDB service for image loading
+import LoggingService from '../../services/LoggingService';
 
 // Add CSS for hiding scrollbars
 const scrollbarHideStyles = `
@@ -485,7 +486,7 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
       }, 100);
     } catch (error) {
-      console.error('Error sending message:', error);
+      LoggingService.error('Error sending message:', error);
       setSendingMessage(false);
     }
   };
@@ -747,7 +748,7 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
 
                             handleViewSellerProfile(otherUserId);
                           } catch (error) {
-                            console.error(
+                            LoggingService.error(
                               'Error opening seller profile:',
                               error
                             );

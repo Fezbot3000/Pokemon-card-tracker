@@ -11,6 +11,7 @@ import { toast } from 'react-hot-toast';
 
 import { useUserPreferences } from '../../contexts/UserPreferencesContext';
 import { useSubscription } from '../../hooks/useSubscription';
+import LoggingService from '../../services/LoggingService';
 
 // Helper function to format date
 const formatDate = dateString => {
@@ -145,7 +146,7 @@ const CardDetailsModal = ({
 
       // Handle error response
       if (psaData?.error) {
-        console.error('PSA search error:', psaData.error);
+        LoggingService.error('PSA search error:', psaData.error);
         toast.error(psaData.message || 'Failed to find PSA data');
         setSaveMessage(
           'Failed to find PSA data. Please check the number and try again.'
@@ -188,7 +189,7 @@ const CardDetailsModal = ({
       toast.success('PSA data successfully loaded');
       setSaveMessage('PSA data successfully loaded');
     } catch (error) {
-      console.error('Error searching PSA:', error);
+      LoggingService.error('Error searching PSA:', error);
       toast.error('Error searching PSA database');
       setSaveMessage('Error searching PSA database');
     } finally {
@@ -212,7 +213,7 @@ const CardDetailsModal = ({
       toast.success('Opening Price Charting search...');
       setSaveMessage('Opening Price Charting search...');
     } catch (error) {
-      console.error('Error opening Price Charting search:', error);
+      LoggingService.error('Error opening Price Charting search:', error);
       toast.error('Error opening Price Charting search');
       setSaveMessage('Error opening Price Charting search');
     } finally {
@@ -437,7 +438,7 @@ const CardDetailsModal = ({
           // Close the modal with success flag
           onClose(true);
         } catch (saveError) {
-          console.error('Error in onSave:', saveError);
+          LoggingService.error('Error in onSave:', saveError);
           // Check if it's a connection error
           if (
             saveError.code === 'failed-precondition' ||
@@ -454,7 +455,7 @@ const CardDetailsModal = ({
           return;
         }
       } catch (error) {
-        console.error('Error saving card:', error);
+        LoggingService.error('Error saving card:', error);
         toast.error(`Failed to save card: ${error.message}`);
       } finally {
         // Reset saving state

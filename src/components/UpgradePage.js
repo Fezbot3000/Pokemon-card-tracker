@@ -6,6 +6,7 @@ import Button from '../design-system/atoms/Button';
 import Icon from '../design-system/atoms/Icon';
 import { toast } from 'react-hot-toast';
 import { getStripePublishableKey } from '../config/secrets';
+import LoggingService from '../services/LoggingService';
 
 /**
  * UpgradePage Component
@@ -50,25 +51,25 @@ const UpgradePage = () => {
   }
 
   const handleUpgrade = async () => {
-    console.log('🚀 Starting upgrade process from UpgradePage...');
+    LoggingService.info('🚀 Starting upgrade process from UpgradePage...');
 
     if (!user) {
-      console.error('❌ No user found - user must be logged in');
+      LoggingService.error('❌ No user found - user must be logged in');
       toast.error('Please log in to upgrade');
       navigate('/login');
       return;
     }
 
-    console.log('✅ User authenticated:', { uid: user.uid, email: user.email });
+    LoggingService.info('✅ User authenticated:', { uid: user.uid, email: user.email });
     setLoading(true);
 
     try {
       // Step 1: Check environment variables
-      console.log('🔍 Checking environment variables...');
+      LoggingService.info('🔍 Checking environment variables...');
       const stripePublishableKey = getStripePublishableKey();
 
       // Step 2: Create checkout session on server (OFFICIAL STRIPE APPROACH)
-      console.log('🔥 Creating checkout session via Firebase Functions...');
+      LoggingService.info('🔥 Creating checkout session via Firebase Functions...');
       const { httpsCallable } = await import('firebase/functions');
       const { functions } = await import('../firebase');
 
@@ -78,34 +79,34 @@ const UpgradePage = () => {
       );
       const result = await createCheckoutSession({});
 
-      console.log('✅ Server-side session created:', result.data);
+      LoggingService.info('✅ Server-side session created:', result.data);
 
       // Step 3: Load Stripe and redirect to checkout with session ID
-      console.log('📦 Loading Stripe...');
+      LoggingService.info('📦 Loading Stripe...');
       const { loadStripe } = await import('@stripe/stripe-js');
       const stripe = await loadStripe(stripePublishableKey);
 
       if (!stripe) {
-        console.error('❌ Stripe failed to load');
+        LoggingService.error('❌ Stripe failed to load');
         throw new Error('Stripe failed to load');
       }
 
-      console.log('✅ Stripe loaded successfully');
+      LoggingService.info('✅ Stripe loaded successfully');
 
       // Step 4: Redirect to Stripe Checkout with session ID (OFFICIAL APPROACH)
-      console.log('💳 Redirecting to Stripe Checkout...');
+      LoggingService.info('💳 Redirecting to Stripe Checkout...');
       const { error } = await stripe.redirectToCheckout({
         sessionId: result.data.sessionId,
       });
 
       if (error) {
-        console.error('❌ Stripe redirect error:', error);
+        LoggingService.error('❌ Stripe redirect error:', error);
         throw error;
       }
 
-      console.log('✅ Successfully redirected to Stripe Checkout');
+      LoggingService.info('✅ Successfully redirected to Stripe Checkout');
     } catch (error) {
-      console.error('💥 Upgrade error details:', {
+      LoggingService.error('💥 Upgrade error details:', {
         message: error.message,
         code: error.code,
         details: error.details,

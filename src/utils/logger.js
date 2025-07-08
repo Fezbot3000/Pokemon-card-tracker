@@ -4,6 +4,8 @@
  * In development, all logs will be shown
  */
 
+import LoggingService from '../services/LoggingService';
+
 // Determine if we're in production environment
 const isProduction = process.env.NODE_ENV === 'production';
 
@@ -25,6 +27,7 @@ const config = {
 // We're also applying this in development when forceSilence is true
 if (isProduction || forceSilence) {
   // Store original console methods
+  /* eslint-disable no-console */
   const originalConsole = {
     log: console.log,
     info: console.info,
@@ -32,25 +35,31 @@ if (isProduction || forceSilence) {
     error: console.error,
     debug: console.debug,
   };
+  /* eslint-enable no-console */
 
   // Override console methods in production
-  console.log = function (...args) {
+  // eslint-disable-next-line no-console, @typescript-eslint/no-unused-vars
+  console.log = function (..._args) {
     // Do nothing in production (silence logs)
   };
 
-  console.info = function (...args) {
+  // eslint-disable-next-line no-console, @typescript-eslint/no-unused-vars
+  console.info = function (..._args) {
     // Do nothing in production (silence info)
   };
 
-  console.debug = function (...args) {
+  // eslint-disable-next-line no-console, @typescript-eslint/no-unused-vars
+  console.debug = function (..._args) {
     // Do nothing in production (silence debug)
   };
 
   // Keep warnings and errors functional
+  // eslint-disable-next-line no-console
   console.warn = function (...args) {
     originalConsole.warn.apply(console, args);
   };
 
+  // eslint-disable-next-line no-console
   console.error = function (...args) {
     originalConsole.error.apply(console, args);
   };
@@ -58,44 +67,47 @@ if (isProduction || forceSilence) {
 
 const logger = {
   // Only logs in development mode
-  debug: (...args) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  debug: (..._args) => {
     if (config.showDebugLogs) {
-      // console.log(...args);
+      // LoggingService.info(..._args);
     }
   },
 
   // Shows in both dev and production, use sparingly
   info: (...args) => {
     if (config.showInfoLogs) {
-      console.info(...args);
+      LoggingService.info(...args);
     }
   },
 
   // Important warnings, shown in both environments
   warn: (...args) => {
     if (config.showWarnLogs) {
-      console.warn(...args);
+      LoggingService.warn(...args);
     }
   },
 
   // Errors are always shown
   error: (...args) => {
     if (config.showErrorLogs) {
-      console.error(...args);
+      LoggingService.error(...args);
     }
   },
 
   // Critical information that should be shown even in production
-  critical: (...args) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  critical: (..._args) => {
     if (config.showCriticalLogs) {
-      // console.log('[CRITICAL]', ...args);
+      // LoggingService.info('[CRITICAL]', ..._args);
     }
   },
 
   // Alias for log to make migration easier
-  log: (...args) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  log: (..._args) => {
     if (config.showDebugLogs) {
-      // console.log(...args);
+      // LoggingService.info(..._args);
     }
   },
 };

@@ -3,6 +3,7 @@ import { Icon } from '../design-system';
 import featureFlags from '../utils/featureFlags';
 import { auth } from '../services/firebase';
 import shadowSync from '../services/shadowSync';
+import LoggingService from '../services/LoggingService';
 
 /**
  * SyncStatusIndicator Component
@@ -27,7 +28,7 @@ const SyncStatusIndicator = () => {
         const flags = JSON.parse(localStorage.getItem('appFeatureFlags')) || {};
         setSyncEnabled(flags.enableFirestoreSync);
       } catch (error) {
-        console.error('Error parsing feature flags:', error);
+        LoggingService.error('Error parsing feature flags:', error);
       }
     };
 

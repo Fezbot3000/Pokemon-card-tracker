@@ -3,17 +3,12 @@ import {
   // Atoms
   Button,
   Icon,
-  Text,
-  CardImage,
-  AmountLabel,
   Toast,
   toastService,
   FormLabel,
   TextField,
   NumberField,
-  ImageUpload,
   ColorSwatch,
-  GradientSwatch,
   Toggle,
 
   // Molecules
@@ -21,7 +16,6 @@ import {
   DropdownItem,
   DropdownDivider,
   Modal,
-  FormField,
   ColorCategory,
   ColorCustomizer,
   ComponentSection,
@@ -44,7 +38,6 @@ import {
   baseColors,
   lightTheme,
   darkTheme,
-  semanticColors,
   gradients,
 } from '../design-system/styles/colors';
 
@@ -105,9 +98,6 @@ const ComponentLibrary = () => {
     disabled: true,
   });
   const { theme, toggleTheme } = useTheme();
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isCardDetailsModalOpen, setIsCardDetailsModalOpen] = useState(false);
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
   // State for form elements section
   const [textValue, setTextValue] = useState('');
@@ -118,9 +108,6 @@ const ComponentLibrary = () => {
   // State for dropdown section
   const [dropdownIsOpen, setDropdownIsOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState('Select an option');
-
-  // State for SoldItemsView example
-  const [soldItems, setSoldItems] = useState([]);
 
   // State for SettingsModal example
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
@@ -227,49 +214,31 @@ const ComponentLibrary = () => {
     }));
   };
 
-  // Mock handlers for demos
-  const handleCardSave = card => {
-    // // console.log('Card saved:', card);
-  };
-
-  const handleCardDelete = card => {
-    // // console.log('Card deleted:', card);
-  };
-
   // State for LoginModal example
-  const [loginError, setLoginError] = useState(null);
   const [isLoginLoading, setIsLoginLoading] = useState(false);
 
   // Mock login handler for demo
-  const handleMockLogin = ({ email, password, rememberMe }) => {
+  const handleMockLogin = () => {
     setIsLoginLoading(true);
 
     // Simulate API call
     setTimeout(() => {
-      if (password === 'password') {
-        // Simulate success
-        setIsLoginModalOpen(false);
-      } else {
-        // Simulate failure
-        setLoginError('Invalid email or password. Try "password".');
-      }
       setIsLoginLoading(false);
     }, 1500); // Simulate network delay
   };
 
   // Mock handlers for other login-related actions
   const handleMockSignUpClick = () => {
-    // // console.log('Sign up clicked');
+    // // LoggingService.info('Sign up clicked');
   };
 
   const handleMockForgotPasswordClick = () => {
-    // // console.log('Forgot password clicked');
+    // // LoggingService.info('Forgot password clicked');
   };
 
   const handleMockGoogleLogin = () => {
     setIsLoginLoading(true);
     setTimeout(() => {
-      setIsLoginModalOpen(false);
       setIsLoginLoading(false);
     }, 1500);
   };
@@ -277,7 +246,6 @@ const ComponentLibrary = () => {
   const handleMockAppleLogin = () => {
     setIsLoginLoading(true);
     setTimeout(() => {
-      setIsLoginModalOpen(false);
       setIsLoginLoading(false);
     }, 1500);
   };
@@ -1767,7 +1735,7 @@ const ComponentLibrary = () => {
     };
 
     const showPersistentToast = () => {
-      const toastId = toastService.info(
+      toastService.info(
         'This toast will stay until dismissed.',
         {
           duration: Infinity,
@@ -1874,11 +1842,11 @@ toastService.dismissAll(); // Dismiss all toasts`}
           <Header
             selectedCollection="Default Collection"
             collections={['Default Collection', 'Rare Cards', 'PSA Graded']}
-            onCollectionChange={collection => {
+            onCollectionChange={() => {
               /* Collection changed */
             }}
             currentView="cards"
-            onViewChange={view => {
+            onViewChange={() => {
               /* View changed */
             }}
             onSettingsClick={() => {
@@ -2122,11 +2090,11 @@ toastService.dismissAll(); // Dismiss all toasts`}
                 imageUrl:
                   'https://assets.pokemon.com/assets/cms2/img/cards/web/SWSH45/SWSH45_EN_TG01.png',
               }}
-              onSave={card => {
-                // // console.log('Card saved:', card);
+              onSave={() => {
+                // // LoggingService.info('Card saved');
               }}
-              onDelete={card => {
-                // // console.log('Card deleted:', card);
+              onDelete={() => {
+                // // LoggingService.info('Card deleted');
               }}
               showAsStatic={true} // Add a prop to show it as a static display rather than modal
             />
@@ -2218,11 +2186,11 @@ toastService.dismissAll(); // Dismiss all toasts`}
                 collections={mockCollections}
                 selectedCollection={mockCollections[0]}
                 onRenameCollection={(oldName, newName) => {
-                  // // console.log(`Rename collection from ${oldName} to ${newName}`);
+                  // // LoggingService.info(`Rename collection from ${oldName} to ${newName}`);
                   toastService.success(`Collection renamed to "${newName}"`);
                 }}
                 onDeleteCollection={name => {
-                  // // console.log(`Delete collection ${name}`);
+                  // // LoggingService.info(`Delete collection ${name}`);
                   toastService.success(`Collection "${name}" deleted`);
                 }}
                 onImportCollection={() => {
@@ -2449,7 +2417,7 @@ const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 
     // Mock function for printing an invoice
     const handlePrintInvoice = invoice => {
-      // // console.log('Print invoice:', invoice);
+      // // LoggingService.info('Print invoice:', invoice);
       toastService.info(`Printing invoice for ${invoice.buyer}`);
     };
 
@@ -2484,6 +2452,7 @@ const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
             <pre className="text-sm text-gray-900 dark:text-gray-300">
               {`// Import component
 import { SoldItemsView } from '../design-system';
+import LoggingService from '../services/LoggingService';
 
 // In your component
 return (

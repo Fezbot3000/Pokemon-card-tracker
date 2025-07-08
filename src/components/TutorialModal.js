@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { useTutorial, tutorialSteps } from '../contexts/TutorialContext';
+import LoggingService from '../services/LoggingService';
 
 // Use public asset paths instead of imports
 const dashboardImg = '/screenshots/dashboard.png';
@@ -142,7 +143,7 @@ const TutorialModal = () => {
                     alt={content.imageAlt}
                     className="h-auto max-h-[400px] w-full object-contain"
                     onError={e => {
-                      console.error(
+                      LoggingService.error(
                         `Failed to load image: ${content.imageSrc}`
                       );
                       e.target.style.display = 'none';

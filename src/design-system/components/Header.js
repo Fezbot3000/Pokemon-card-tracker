@@ -15,6 +15,7 @@ import {
   availableCurrencies,
 } from '../../contexts/UserPreferencesContext';
 import { baseColors } from '../styles/colors';
+import LoggingService from '../../services/LoggingService';
 
 /**
  * Header component
@@ -107,7 +108,7 @@ const Header = ({
         }, 300); // Match this with the CSS transition duration
       }
     } catch (error) {
-      console.error('Error changing view in Header:', error);
+      LoggingService.error('Error changing view in Header:', error);
       // Fallback: try direct view change
       if (onViewChange && typeof onViewChange === 'function') {
         onViewChange(newView);

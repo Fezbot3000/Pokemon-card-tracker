@@ -4,6 +4,7 @@ import { useSubscription } from '../../hooks/useSubscription';
 import Button from '../../design-system/atoms/Button';
 import Icon from '../../design-system/atoms/Icon';
 import { toast } from 'react-hot-toast';
+import LoggingService from '../../services/LoggingService';
 
 /**
  * SubscriptionStatus Component
@@ -30,13 +31,13 @@ const SubscriptionStatus = () => {
     setLoading(true);
 
     try {
-      console.log('🔗 Starting billing portal process');
-      console.log('🔗 User ID:', user?.uid);
+      LoggingService.info('🔗 Starting billing portal process');
+      LoggingService.info('🔗 User ID:', user?.uid);
 
       const { httpsCallable } = await import('firebase/functions');
       const { functions } = await import('../../firebase');
 
-      console.log('🔗 Functions instance:', functions);
+      LoggingService.info('🔗 Functions instance:', functions);
 
       // Create a customer portal session using the same pattern as checkout
       const createPortalSession = httpsCallable(
@@ -44,14 +45,14 @@ const SubscriptionStatus = () => {
         'createPortalSession'
       );
 
-      console.log('🔗 Calling createPortalSession function');
+      LoggingService.info('🔗 Calling createPortalSession function');
 
       const result = await createPortalSession({
         userId: user?.uid,
       });
 
-      console.log('✅ Portal session created:', result);
-      console.log('✅ Portal URL:', result.data?.url);
+      LoggingService.info('✅ Portal session created:', result);
+      LoggingService.info('✅ Portal URL:', result.data?.url);
 
       // Redirect directly to the portal URL (no need for Stripe SDK here)
       if (result.data?.url) {
@@ -60,9 +61,9 @@ const SubscriptionStatus = () => {
         throw new Error('No portal URL returned');
       }
     } catch (error) {
-      console.error('❌ Error creating portal session:', error);
-      console.error('❌ Error message:', error.message);
-      console.error('❌ Error code:', error.code);
+      LoggingService.error('❌ Error creating portal session:', error);
+      LoggingService.error('❌ Error message:', error.message);
+      LoggingService.error('❌ Error code:', error.code);
 
       // Show user-friendly error message
       toast.error(

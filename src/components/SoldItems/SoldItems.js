@@ -1,23 +1,19 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import ReactDOM from 'react-dom';
 import {
-  useTheme,
-  SoldItemsView,
-  Icon,
   StatisticsSummary,
   SimpleSearchBar,
   ConfirmDialog,
 } from '../../design-system';
-import { formatCondensed } from '../../utils/formatters';
 import db from '../../services/firestore/dbAdapter';
 import { PDFDownloadLink, pdf } from '@react-pdf/renderer';
 import InvoicePDF from '../InvoicePDF';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../../design-system';
-import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
-import { db as firestoreDb, storage } from '../../services/firebase';
-import { ref, getDownloadURL } from 'firebase/storage';
+import { doc, getDoc } from 'firebase/firestore';
+import { db as firestoreDb } from '../../services/firebase';
 import logger from '../../utils/logger';
+import LoggingService from '../../services/LoggingService';
 import {
   useUserPreferences,
   availableCurrencies,
@@ -29,22 +25,14 @@ import FeatureGate from '../FeatureGate';
 const SoldItems = () => {
   // Move all hooks to the top before any conditional logic
   const { hasFeature } = useSubscription();
-  const { isDarkMode } = useTheme();
   const { user } = useAuth();
   const { preferredCurrency, convertToUserCurrency } = useUserPreferences();
 
   const [soldCards, setSoldCards] = useState([]);
-  const [sortField, setSortField] = useState('dateSold');
-  const [sortDirection, setSortDirection] = useState('desc');
-  const [filter, setFilter] = useState('');
-  const [showSortDropdown, setShowSortDropdown] = useState(false);
-  const [cardImages, setCardImages] = useState({});
-  const [searchTerm, setSearchTerm] = useState('');
-  const [invoicesMap, setInvoicesMap] = useState({});
+  const [cardImages] = useState({});
   const [profile, setProfile] = useState(null);
-  const [expandedYears, setExpandedYears] = useState(new Set());
-  const [expandedInvoices, setExpandedInvoices] = useState(new Set());
   const [expandedBuyers, setExpandedBuyers] = useState(new Set());
+  const [expandedInvoices, setExpandedInvoices] = useState(new Set());
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [deleteConfirmation, setDeleteConfirmation] = useState({
@@ -57,15 +45,6 @@ const SoldItems = () => {
   // Initialize all invoices as expanded by default when soldCards change
   useEffect(() => {
     if (soldCards && Array.isArray(soldCards) && soldCards.length > 0) {
-      // Group cards by buyer to get all buyer IDs
-      const buyerIds = Object.keys(
-        soldCards.reduce((groups, card) => {
-          const key = card.buyer || 'Unknown';
-          groups[key] = true;
-          return groups;
-        }, {})
-      );
-
       // Set all buyers as collapsed by default (empty set)
       setExpandedBuyers(new Set());
     }
@@ -75,16 +54,6 @@ const SoldItems = () => {
   useEffect(() => {
     // Disable image loading completely to prevent CORS errors
     return;
-
-    // Cleanup function
-    return () => {
-      // Revoke all blob URLs when component unmounts
-      Object.values(cardImages).forEach(url => {
-        if (url && url.startsWith('blob:')) {
-          URL.revokeObjectURL(url);
-        }
-      });
-    };
   }, [soldCards, user, cardImages]);
 
   // Load profile when user changes
@@ -101,7 +70,9 @@ const SoldItems = () => {
             setProfile(firestoreProfile);
 
             // Save to IndexedDB in the background
-            db.saveProfile(firestoreProfile).catch(console.error);
+            db.saveProfile(firestoreProfile).catch(error => 
+              LoggingService.error('Error saving profile to IndexedDB:', error)
+            );
             return;
           }
         }
@@ -112,7 +83,7 @@ const SoldItems = () => {
           setProfile(userProfile);
         }
       } catch (error) {
-        console.error('Error loading profile:', error);
+        LoggingService.error('Error loading profile:', error);
       }
     };
 
@@ -147,7 +118,7 @@ const SoldItems = () => {
             ? soldCollectionCards
             : [];
         } catch (error) {
-          console.log('No sold collection found:', error.message);
+          LoggingService.info('No sold collection found:', error.message);
         }
 
         // Use sold items if available, otherwise fall back to sold collection
@@ -156,7 +127,7 @@ const SoldItems = () => {
         setSoldCards(finalSoldCards);
         setIsLoading(false);
       } catch (error) {
-        console.error('Error loading sold cards:', error);
+        LoggingService.error('Error loading sold cards:', error);
         toast.error('Failed to load sold items');
         setIsLoading(false);
       }
@@ -286,7 +257,7 @@ const SoldItems = () => {
 
       toast.success('Invoice downloaded successfully', { id: 'pdf-download' });
     } catch (error) {
-      console.error('Error generating PDF:', error);
+      LoggingService.error('Error generating PDF:', error);
       toast.error('Error generating PDF', { id: 'pdf-download' });
     }
   };
@@ -384,109 +355,11 @@ const SoldItems = () => {
     return Object.values(invoices);
   }, [soldCards, preferredCurrency]);
 
-  const filteredCards = useMemo(() => {
-    if (!soldCards || !Array.isArray(soldCards)) {
-      return [];
-    }
-    return soldCards.filter(
-      card =>
-        card.card?.toLowerCase().includes(filter.toLowerCase()) ||
-        card.set?.toLowerCase().includes(filter.toLowerCase()) ||
-        card.buyer?.toLowerCase().includes(filter.toLowerCase())
-    );
-  }, [soldCards, filter]);
+  // Note: filteredCards removed as it was unused
 
-  const sortedInvoices = useMemo(() => {
-    const invoicesArray = Array.isArray(groupedInvoices)
-      ? [...groupedInvoices]
-      : Object.values(groupedInvoices);
-    return invoicesArray.sort((a, b) => {
-      const aValue = a[sortField];
-      const bValue = b[sortField];
+  // Note: sortedInvoices removed as it was unused
 
-      // Special case for dates
-      if (sortField === 'dateSold') {
-        const dateA = new Date(aValue || 0);
-        const dateB = new Date(bValue || 0);
-        return sortDirection === 'asc' ? dateA - dateB : dateB - dateA;
-      }
-
-      // Default comparison for strings and numbers
-      if (sortDirection === 'asc') {
-        return aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
-      } else {
-        return aValue < bValue ? 1 : aValue > bValue ? -1 : 0;
-      }
-    });
-  }, [groupedInvoices, sortField, sortDirection]);
-
-  // Prepare data for display, organized by financial year
-  const displayData = useMemo(() => {
-    // Safety check for soldCards
-    if (!soldCards || !Array.isArray(soldCards)) {
-      return [];
-    }
-
-    // If we have no invoices but have cards, create a simple display structure
-    if (
-      (!sortedInvoices || sortedInvoices.length === 0) &&
-      soldCards.length > 0
-    ) {
-      // Create a simple structure with all cards in one group
-      const currentYear = new Date().getFullYear();
-      const financialYear = `${currentYear - 1}/${currentYear}`;
-
-      // Create a simple invoice structure
-      const simpleInvoice = {
-        id: 'all-cards',
-        buyer: 'Various',
-        dateSold: new Date().toISOString(),
-        cards: soldCards,
-        totalInvestment: soldCards.reduce(
-          (sum, card) => sum + (parseFloat(card.investmentAUD) || 0),
-          0
-        ),
-        totalSale: soldCards.reduce(
-          (sum, card) => sum + (parseFloat(card.soldPrice) || 0),
-          0
-        ),
-      };
-
-      // Calculate profit
-      simpleInvoice.totalProfit =
-        simpleInvoice.totalSale - simpleInvoice.totalInvestment;
-
-      return [
-        {
-          year: financialYear,
-          invoices: [simpleInvoice],
-        },
-      ];
-    }
-
-    // Normal case - we have sorted invoices
-    if (!sortedInvoices || sortedInvoices.length === 0) {
-      return [];
-    }
-
-    // Group invoices by financial year
-    const invoicesByYear = {};
-
-    sortedInvoices.forEach(invoice => {
-      const year = getFinancialYear(invoice.dateSold);
-
-      if (!invoicesByYear[year]) {
-        invoicesByYear[year] = [];
-      }
-      invoicesByYear[year].push(invoice);
-    });
-
-    // Convert to array format expected by SoldItemsView
-    return Object.entries(invoicesByYear).map(([year, invoices]) => ({
-      year,
-      invoices,
-    }));
-  }, [sortedInvoices, soldCards]);
+  // Note: displayData removed as it was unused
 
   // Calculate invoice totals for display
   const invoiceTotals = useMemo(() => {
@@ -601,191 +474,13 @@ const SoldItems = () => {
     ];
   }, [statistics, preferredCurrency.code]);
 
-  const handleSortChange = field => {
-    if (field === sortField) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortField(field);
-      setSortDirection('desc');
-    }
-  };
+  // Note: handleSortChange removed as it was unused
 
-  // Group and sort invoices by financial year
-  const groupedInvoicesByYear = useMemo(() => {
-    // Safety check for soldCards
-    if (!soldCards || !Array.isArray(soldCards)) {
-      return [];
-    }
+  // Note: groupedInvoicesByYear removed as it was unused
 
-    const groups = {};
-    const invoicesObj = groupCardsByInvoice(
-      soldCards.filter(
-        card =>
-          card.card?.toLowerCase().includes(filter.toLowerCase()) ||
-          card.set?.toLowerCase().includes(filter.toLowerCase()) ||
-          card.buyer?.toLowerCase().includes(filter.toLowerCase())
-      )
-    );
+  // Note: toggleYear, toggleInvoice, and totalsGrouped removed as they were unused
 
-    // Ensure we have an array of invoices
-    const invoices = Array.isArray(invoicesObj)
-      ? invoicesObj
-      : Object.values(invoicesObj);
-
-    // Sort by date before grouping
-    invoices.sort((a, b) => new Date(b.dateSold) - new Date(a.dateSold));
-
-    invoices.forEach(invoice => {
-      const financialYear = getFinancialYear(invoice.dateSold);
-
-      if (!groups[financialYear]) {
-        groups[financialYear] = {
-          year: financialYear,
-          invoices: [],
-          totalInvestment: 0,
-          totalSale: 0,
-          totalProfit: 0,
-        };
-      }
-
-      groups[financialYear].invoices.push(invoice);
-      groups[financialYear].totalInvestment += invoice.totalInvestment;
-      groups[financialYear].totalSale += invoice.totalSale;
-      groups[financialYear].totalProfit += invoice.totalProfit;
-    });
-
-    // Convert the groups object to an array and sort by year (newest first)
-    return Object.values(groups).sort((a, b) => b.year.localeCompare(a.year));
-  }, [soldCards, filter]);
-
-  const toggleYear = year => {
-    const newExpanded = new Set(expandedYears);
-    if (newExpanded.has(year)) {
-      newExpanded.delete(year);
-    } else {
-      newExpanded.add(year);
-    }
-    setExpandedYears(newExpanded);
-  };
-
-  const toggleInvoice = invoiceId => {
-    const newExpanded = new Set(expandedInvoices);
-    if (newExpanded.has(invoiceId)) {
-      newExpanded.delete(invoiceId);
-    } else {
-      newExpanded.add(invoiceId);
-    }
-    setExpandedInvoices(newExpanded);
-  };
-
-  // Calculate overall totals
-  const totalsGrouped = useMemo(() => {
-    return Object.values(groupedInvoicesByYear).reduce(
-      (acc, yearGroup) => ({
-        totalInvestment: acc.totalInvestment + yearGroup.totalInvestment,
-        totalValue: acc.totalValue + yearGroup.totalSale,
-        totalProfit: acc.totalProfit + yearGroup.totalProfit,
-      }),
-      { totalInvestment: 0, totalValue: 0, totalProfit: 0 }
-    );
-  }, [groupedInvoicesByYear]);
-
-  const fixDatabaseStructure = () => {
-    if (
-      window.confirm(
-        'This will delete and recreate the database to fix structure issues. Continue?'
-      )
-    ) {
-      try {
-        // Close any open connections
-        if (db.db) {
-          db.db.close();
-          db.db = null;
-        }
-
-        // Delete the database
-        const deleteRequest = indexedDB.deleteDatabase('pokemonCardTracker');
-
-        deleteRequest.onsuccess = () => {
-          // Create new database with correct structure
-          const request = indexedDB.open('pokemonCardTracker', 1);
-
-          request.onupgradeneeded = event => {
-            const db = event.target.result;
-
-            // Create collections store
-            db.createObjectStore('collections', {
-              keyPath: ['userId', 'name'],
-            });
-
-            // Create other stores
-            db.createObjectStore('images', { keyPath: ['userId', 'id'] });
-
-            db.createObjectStore('profile', { keyPath: ['userId', 'id'] });
-          };
-
-          request.onsuccess = () => {
-            // Now create and insert a test sold item
-            const dbInstance = request.result;
-            const transaction = dbInstance.transaction(
-              ['collections'],
-              'readwrite'
-            );
-            const store = transaction.objectStore('collections');
-
-            // Test sold items array
-            const testSoldItems = [
-              {
-                id: 'test-card-1',
-                slabSerial: 'test-card-1',
-                card: 'Test Card 1',
-                buyer: 'Test Buyer',
-                dateSold: new Date().toISOString(),
-                finalValueAUD: 100,
-                finalProfitAUD: 50,
-                investmentAUD: 50,
-              },
-            ];
-
-            // Insert test sold items
-            const request = store.put({
-              userId: 'anonymous',
-              name: 'sold',
-              data: testSoldItems,
-            });
-
-            request.onsuccess = () => {
-              alert(
-                'Database has been reset with a test sold item. Refreshing page...'
-              );
-              window.location.reload();
-            };
-
-            request.onerror = event => {
-              console.error(
-                'Error creating test sold item:',
-                event.target.error
-              );
-              alert('Error creating test sold item: ' + event.target.error);
-            };
-          };
-
-          request.onerror = event => {
-            console.error('Error creating database:', event.target.error);
-            alert('Error creating database: ' + event.target.error);
-          };
-        };
-
-        deleteRequest.onerror = event => {
-          console.error('Error deleting database:', event.target.error);
-          alert('Error deleting database: ' + event.target.error);
-        };
-      } catch (error) {
-        console.error('Error resetting database:', error);
-        alert('Error resetting database: ' + error.message);
-      }
-    }
-  };
+  // Note: fixDatabaseStructure removed as it was unused
 
   const importSoldItemsFromBackup = () => {
     // Create an input element to select the backup file
@@ -874,7 +569,7 @@ const SoldItems = () => {
           alert('No sold items found in backup file');
         }
       } catch (error) {
-        console.error('Error importing sold items:', error);
+        LoggingService.error('Error importing sold items:', error);
         alert('Error importing sold items: ' + error.message);
       }
     };
@@ -889,7 +584,7 @@ const SoldItems = () => {
         setSoldCards(soldCardsData || []);
       })
       .catch(e => {
-        console.error('Error force refreshing sold items:', e);
+        LoggingService.error('Error force refreshing sold items:', e);
       });
   };
 
@@ -899,7 +594,7 @@ const SoldItems = () => {
       const dbRequest = window.indexedDB.open('pokemonCardTracker', 1);
 
       dbRequest.onerror = event => {
-        console.error('Database error:', event.target.error);
+        LoggingService.error('Database error:', event.target.error);
         alert('Error accessing database: ' + event.target.error);
       };
 
@@ -928,7 +623,7 @@ const SoldItems = () => {
           };
 
           request.onerror = function (event) {
-            console.error('Error getting sold items:', event.target.error);
+            LoggingService.error('Error getting sold items:', event.target.error);
             alert(
               'Error accessing sold items in database: ' + event.target.error
             );
@@ -940,7 +635,7 @@ const SoldItems = () => {
         }
       };
     } catch (error) {
-      console.error('Error in direct DB access:', error);
+      LoggingService.error('Error in direct DB access:', error);
       alert('Error in direct DB access: ' + error.message);
     }
   };
@@ -966,7 +661,7 @@ const SoldItems = () => {
 
     // Check if date is valid before formatting
     if (isNaN(date.getTime())) {
-      console.warn('Invalid date:', dateStr);
+      LoggingService.warn('Invalid date:', dateStr);
       return 'Invalid date';
     }
 
@@ -981,7 +676,7 @@ const SoldItems = () => {
     try {
       return formatDate(dateStr);
     } catch (error) {
-      console.error('Error formatting date:', error);
+      LoggingService.error('Error formatting date:', error);
       return 'Invalid date';
     }
   };
@@ -992,7 +687,7 @@ const SoldItems = () => {
       // Always return null to prevent images from loading on the sold page
       return null;
     } catch (error) {
-      console.error('Error getting card image:', error);
+      LoggingService.error('Error getting card image:', error);
       return null;
     }
   };
@@ -1034,7 +729,7 @@ const SoldItems = () => {
           }
 
           if (error) {
-            console.error('Error generating PDF:', error);
+            LoggingService.error('Error generating PDF:', error);
             toast.error('Error generating PDF');
             return 'Error';
           }
@@ -1078,7 +773,7 @@ const SoldItems = () => {
       const soldCardsData = await db.getSoldCards();
       setSoldCards(soldCardsData || []);
     } catch (error) {
-      console.error('Error resetting sold items:', error);
+      LoggingService.error('Error resetting sold items:', error);
       toast.error('Error resetting sold items database');
     }
   };
@@ -1177,7 +872,7 @@ const SoldItems = () => {
       const soldCardsData = await db.getSoldCards();
       setSoldCards(soldCardsData || []);
     } catch (error) {
-      console.error('Error adding test sold item:', error);
+      LoggingService.error('Error adding test sold item:', error);
       toast.error('Error adding test sold item');
     }
   };
@@ -1214,7 +909,7 @@ const SoldItems = () => {
     });
 
     return invoices;
-  }, [invoiceTotals, searchQuery, preferredCurrency.code]);
+  }, [invoiceTotals, searchQuery, preferredCurrency.code, formatDateSafely, formatUserCurrency]);
 
   // If user doesn't have sold items access, show feature gate
   if (!hasFeature('SOLD_ITEMS')) {

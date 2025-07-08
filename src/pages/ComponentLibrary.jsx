@@ -280,11 +280,11 @@ const ComponentLibrary = () => {
 
   // Mock handlers for demos
   const handleCardSave = card => {
-    // // console.log('Card saved:', card);
+    // // LoggingService.info('Card saved:', card);
   };
 
   const handleCardDelete = card => {
-    // // console.log('Card deleted:', card);
+    // // LoggingService.info('Card deleted:', card);
   };
 
   // State for LoginModal example
@@ -310,11 +310,11 @@ const ComponentLibrary = () => {
 
   // Mock handlers for other login-related actions
   const handleMockSignUpClick = () => {
-    // // console.log('Sign up clicked');
+    // // LoggingService.info('Sign up clicked');
   };
 
   const handleMockForgotPasswordClick = () => {
-    // // console.log('Forgot password clicked');
+    // // LoggingService.info('Forgot password clicked');
   };
 
   const handleMockGoogleLogin = () => {
@@ -2177,10 +2177,10 @@ toastService.dismissAll(); // Dismiss all toasts`}
                   'https://assets.pokemon.com/assets/cms2/img/cards/web/SWSH45/SWSH45_EN_TG01.png',
               }}
               onSave={card => {
-                // // console.log('Card saved:', card);
+                // // LoggingService.info('Card saved:', card);
               }}
               onDelete={card => {
-                // // console.log('Card deleted:', card);
+                // // LoggingService.info('Card deleted:', card);
               }}
               showAsStatic={true} // Add a prop to show it as a static display rather than modal
             />
@@ -2272,11 +2272,11 @@ toastService.dismissAll(); // Dismiss all toasts`}
                 collections={mockCollections}
                 selectedCollection={mockCollections[0]}
                 onRenameCollection={(oldName, newName) => {
-                  // // console.log(`Rename collection from ${oldName} to ${newName}`);
+                  // // LoggingService.info(`Rename collection from ${oldName} to ${newName}`);
                   toastService.success(`Collection renamed to "${newName}"`);
                 }}
                 onDeleteCollection={name => {
-                  // // console.log(`Delete collection ${name}`);
+                  // // LoggingService.info(`Delete collection ${name}`);
                   toastService.success(`Collection "${name}" deleted`);
                 }}
                 onImportCollection={() => {
@@ -2503,7 +2503,7 @@ const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 
     // Mock function for printing an invoice
     const handlePrintInvoice = invoice => {
-      // // console.log('Print invoice:', invoice);
+      // // LoggingService.info('Print invoice:', invoice);
       toastService.info(`Printing invoice for ${invoice.buyer}`);
     };
 
@@ -2538,6 +2538,7 @@ const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
             <pre className="text-sm text-gray-900 dark:text-gray-300">
               {`// Import component
 import { SoldItemsView } from '../design-system';
+import LoggingService from '../services/LoggingService';
 
 // In your component
 return (

@@ -3,7 +3,6 @@ import React, {
   useContext,
   useState,
   useEffect,
-  Fragment,
 } from 'react';
 import {
   createUserWithEmailAndPassword,
@@ -12,9 +11,7 @@ import {
   sendPasswordResetEmail,
   onAuthStateChanged,
   updateProfile,
-  GoogleAuthProvider,
   signInWithPopup,
-  getRedirectResult,
   OAuthProvider,
   setPersistence,
   browserLocalPersistence,
@@ -29,6 +26,7 @@ import {
 } from 'firebase/firestore';
 import { auth, db, googleProvider } from '../../firebase'; // Import from the main app's firebase config
 import { toast } from 'react-hot-toast';
+import LoggingService from '../../services/LoggingService';
 
 /**
  * Auth Context for the design system with subscription management
@@ -40,7 +38,7 @@ const AuthContext = createContext();
 
 // Helper function to handle Firebase errors
 const handleFirebaseError = error => {
-  console.error('Firebase authentication error:', error);
+  LoggingService.error('Firebase authentication error:', error);
 
   // Standard error messages
   const errorMessages = {
@@ -236,11 +234,10 @@ export const AuthProvider = ({ children }) => {
               if (doc.exists()) {
                 const userData = doc.data();
                 if (userData.subscriptionStatus || userData.planType) {
-                  console.log(
-                    '🔄 Subscription updated in real-time:',
-                    userData.subscriptionStatus,
-                    userData.planType
-                  );
+                  LoggingService.info('🔄 Subscription updated in real-time', {
+                    status: userData.subscriptionStatus,
+                    planType: userData.planType
+                  });
 
                   // Calculate days remaining for real-time updates
                   const daysRemaining = calculateDaysRemaining(
@@ -282,7 +279,7 @@ export const AuthProvider = ({ children }) => {
               }
             },
             error => {
-              console.error('Subscription listener error:', error);
+              LoggingService.error('Subscription listener error:', error);
             }
           );
         } catch (err) {
@@ -342,10 +339,10 @@ export const AuthProvider = ({ children }) => {
           createdAt,
         });
 
-        // console.log("User document created successfully");
+        // LoggingService.info("User document created successfully");
       }
     } catch (error) {
-      console.error('Error creating user document:', error);
+      LoggingService.error('Error creating user document:', error);
     }
   };
 
@@ -383,7 +380,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   // Sign in function with remember me functionality
-  const signIn = async ({ email, password, remember = false }) => {
+  const signIn = async ({ email, password }) => {
     try {
       setError(null);
       // Explicitly set persistence to local
@@ -411,11 +408,11 @@ export const AuthProvider = ({ children }) => {
   const signInWithGoogle = async () => {
     try {
       setError(null);
-      // console.log("Starting Google sign-in process...");
+      // LoggingService.info("Starting Google sign-in process...");
 
       // Use popup for Google sign-in
       const result = await signInWithPopup(auth, googleProvider);
-      // console.log("Google sign-in successful:", result.user?.email);
+      // LoggingService.info("Google sign-in successful:", result.user?.email);
 
       // Check if this is a new user
       const isFirstSignIn = result?.additionalUserInfo?.isNewUser;
@@ -423,9 +420,9 @@ export const AuthProvider = ({ children }) => {
       // Try to create user document
       try {
         await createUserDocument(result.user);
-        // console.log("User document created after Google sign-in");
+        // LoggingService.info("User document created after Google sign-in");
       } catch (docError) {
-        console.error(
+        LoggingService.error(
           'Failed to create user document after Google sign-in:',
           docError
         );
@@ -444,18 +441,18 @@ export const AuthProvider = ({ children }) => {
 
       // Only set the isNewUser flag for brand new accounts
       if (isNewAccount) {
-        // console.log("Brand new Google account detected, setting isNewUser flag");
+        // LoggingService.info("Brand new Google account detected, setting isNewUser flag");
         localStorage.setItem('isNewUser', 'true');
         toast.success('Welcome! Your 7-day free trial has started.');
       } else {
-        // console.log("Existing Google account detected, not setting isNewUser flag");
+        // LoggingService.info("Existing Google account detected, not setting isNewUser flag");
         // Ensure we clear any existing flag for sign-ins
         localStorage.removeItem('isNewUser');
       }
 
       return result.user;
     } catch (err) {
-      console.error('Google sign-in error:', err);
+      LoggingService.error('Google sign-in error:', err);
       if (err.code !== 'auth/popup-closed-by-user') {
         const errorMessage = handleFirebaseError(err);
         setError(errorMessage);
@@ -471,12 +468,12 @@ export const AuthProvider = ({ children }) => {
       setError(null);
       // Explicitly set persistence to local
       await setPersistence(auth, browserLocalPersistence);
-      // console.log("Starting Apple sign-in process...");
+      // LoggingService.info("Starting Apple sign-in process...");
       const provider = new OAuthProvider('apple.com');
 
       // Use popup for Apple sign-in
       const result = await signInWithPopup(auth, provider);
-      // console.log("Apple sign-in successful:", result.user?.email);
+      // LoggingService.info("Apple sign-in successful:", result.user?.email);
 
       // Check if this is a new user
       const isFirstSignIn = result?.additionalUserInfo?.isNewUser;
@@ -484,9 +481,9 @@ export const AuthProvider = ({ children }) => {
       // Try to create user document
       try {
         await createUserDocument(result.user);
-        // console.log("User document created after Apple sign-in");
+        // LoggingService.info("User document created after Apple sign-in");
       } catch (docError) {
-        console.error(
+        LoggingService.error(
           'Failed to create user document after Apple sign-in:',
           docError
         );
@@ -505,18 +502,18 @@ export const AuthProvider = ({ children }) => {
 
       // Only set the isNewUser flag for brand new accounts
       if (isNewAccount) {
-        // console.log("Brand new Apple account detected, setting isNewUser flag");
+        // LoggingService.info("Brand new Apple account detected, setting isNewUser flag");
         localStorage.setItem('isNewUser', 'true');
         toast.success('Welcome! Your 7-day free trial has started.');
       } else {
-        // console.log("Existing Apple account detected, not setting isNewUser flag");
+        // LoggingService.info("Existing Apple account detected, not setting isNewUser flag");
         // Ensure we clear any existing flag for sign-ins
         localStorage.removeItem('isNewUser');
       }
 
       return result.user;
     } catch (err) {
-      console.error('Apple sign-in error:', err);
+      LoggingService.error('Apple sign-in error:', err);
       if (
         err.code !== 'auth/popup-closed-by-user' &&
         err.code !== 'auth/cancelled-popup-request'
@@ -569,7 +566,7 @@ export const AuthProvider = ({ children }) => {
       // Get the token directly from the current user
       return user.getIdToken();
     } catch (error) {
-      console.error('Error getting auth token:', error);
+      LoggingService.error('Error getting auth token:', error);
       return null;
     }
   };
@@ -609,7 +606,7 @@ export const AuthProvider = ({ children }) => {
 
       return true;
     } catch (error) {
-      console.error('Error updating subscription status:', error);
+      LoggingService.error('Error updating subscription status:', error);
       throw error;
     }
   };

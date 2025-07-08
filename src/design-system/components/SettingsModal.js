@@ -1,9 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import {
-  storage,
-  functions,
-  httpsCallable,
   db as firestoreDb,
 } from '../../services/firebase';
 
@@ -15,27 +12,14 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useRestore } from '../contexts/RestoreContext';
 import { useBackup } from '../contexts/BackupContext';
-import {
-  ref,
-  uploadBytes,
-  getDownloadURL,
-  listAll,
-  deleteObject,
-} from 'firebase/storage';
-import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
-import JSZip from 'jszip';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import db from '../../services/firestore/dbAdapter';
-import cloudSync from '../../services/cloudSync';
 import featureFlags, {
   updateFeatureFlag,
-  resetFeatureFlags,
-  getAllFeatureFlags,
 } from '../../utils/featureFlags';
 import logger from '../../utils/logger';
 import shadowSync from '../../services/shadowSync'; // Import the shadowSync service directly
 import { CardRepository } from '../../repositories/CardRepository'; // Import CardRepository
-import { searchByCertNumber, parsePSACardData } from '../../services/psaSearch';
-import CollectionManagement from '../../components/settings/CollectionManagement'; // Import CollectionManagement
 import {
   useUserPreferences,
   availableCurrencies,
@@ -45,6 +29,7 @@ import MarketplaceProfile from '../../components/settings/MarketplaceProfile'; /
 import MarketplaceReviews from '../../components/settings/MarketplaceReviews'; // Import MarketplaceReviews
 import SubscriptionStatus from '../../components/settings/SubscriptionStatus'; // Import SubscriptionStatus
 import CollectionSharing from '../../components/CollectionSharing'; // Import CollectionSharing
+import LoggingService from '../../services/LoggingService';
 
 /**
  * SettingsModal Component
@@ -55,11 +40,9 @@ import CollectionSharing from '../../components/CollectionSharing'; // Import Co
 const SettingsModal = ({
   isOpen,
   onClose,
-  selectedCollection,
   collections = [],
   onRenameCollection,
   onDeleteCollection,
-  onImportCollection,
   onImportBaseData,
   userData = null,
   onSignOut,
@@ -67,8 +50,6 @@ const SettingsModal = ({
   onStartTutorial,
   onImportAndCloudMigrate,
   onUploadImagesFromZip,
-  onExportData, // Add missing prop that's being passed from App.js
-  onImportSoldItemsFromZip, // Add missing prop that's being passed from App.js
   className = '',
   ...props
 }) => {
@@ -76,36 +57,14 @@ const SettingsModal = ({
   const isDarkMode = theme === 'dark';
   const { user } = useAuth();
   const { preferredCurrency, updatePreferredCurrency } = useUserPreferences(); // Added hook usage
-  const {
-    isRestoring,
-    restoreProgress,
-    restoreStatus,
-    addRestoreLog,
-    startRestore,
-    completeRestore,
-    cancelRestore,
-    setRestoreProgress,
-    setRestoreStatus,
-  } = useRestore();
-  const {
-    isBackingUp,
-    backupProgress,
-    backupStatus,
-    startBackup,
-    completeBackup,
-    cancelBackup,
-    setBackupProgress,
-    setBackupStatus,
-    addBackupLog,
-  } = useBackup();
+  // Restore and backup hooks (keeping only the ones needed)
+  const { addBackupLog } = useBackup();
   const [isRenaming, setIsRenaming] = useState(false);
   const [newCollectionName, setNewCollectionName] = useState('');
-  const [cloudSyncProgress, setCloudSyncProgress] = useState(0);
   const [cloudSyncStatus, setCloudSyncStatus] = useState('');
-  const [isImportingBaseData, setIsImportingBaseData] = useState(false);
-  const [isForceSyncing, setIsForceSyncing] = useState(false); // Add state for force syncing
-  const [isCloudMigrating, setIsCloudMigrating] = useState(false); // Add state for cloud migration
-  const [isUploadingImages, setIsUploadingImages] = useState(false); // Add state for image upload
+  const [isForceSyncing, setIsForceSyncing] = useState(false);
+  const [isCloudMigrating, setIsCloudMigrating] = useState(false);
+  const [isUploadingImages, setIsUploadingImages] = useState(false);
   const [activeTab, setActiveTab] = useState('general');
   const [collectionToDelete, setCollectionToDelete] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -119,11 +78,10 @@ const SettingsModal = ({
   const [collectionToRename, setCollectionToRename] = useState('');
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [resetConfirmText, setResetConfirmText] = useState('');
-  const [isVerifyingBackup, setIsVerifyingBackup] = useState(false); // Add state for cloud backup verification
-  const [verificationStatus, setVerificationStatus] = useState('Idle'); // Add state for verification status
+  const [isVerifyingBackup, setIsVerifyingBackup] = useState(false);
+  const [verificationStatus, setVerificationStatus] = useState('Idle');
   const importBaseDataRef = useRef(null);
-  const imageUploadRef = useRef(null); // Add ref for image upload
-  const soldItemsRef = useRef(null);
+  const imageUploadRef = useRef(null);
 
   // Create a CardRepository instance at component level
   const cardRepositoryRef = useRef(null);
@@ -184,7 +142,7 @@ const SettingsModal = ({
         toastService.success('Profile saved successfully');
       }
     } catch (error) {
-      console.error('Error saving profile:', error);
+      LoggingService.error('Error saving profile:', error);
       toastService.error('Failed to save profile');
     }
   };
@@ -216,7 +174,7 @@ const SettingsModal = ({
           });
         }
       } catch (error) {
-        console.error('Error renaming collection:', error);
+        LoggingService.error('Error renaming collection:', error);
         toastService.error(`Failed to rename collection: ${error.message}`, {
           id: 'rename-confirm',
         });
@@ -706,16 +664,12 @@ const SettingsModal = ({
     // Get the cardRepository from ref
     const cardRepository = cardRepositoryRef.current;
 
-    // Check if user and repo exist AND we are not already verifying
-    if (!user || !cardRepository || isVerifyingBackup) {
-      console.error(
-        'Verification prerequisites not met. User:',
-        user,
-        'Repo:',
-        cardRepository,
-        'Verifying:',
-        isVerifyingBackup
-      );
+    // Check if user and repo exist
+    if (!user || !cardRepository) {
+      LoggingService.error('Verification prerequisites not met', {
+        hasUser: !!user,
+        hasRepo: !!cardRepository
+      });
       return;
     }
 
@@ -764,11 +718,8 @@ const SettingsModal = ({
         toastService.success('Cloud backup verified successfully.');
       }
     } catch (error) {
-      console.error('Error during verification process:', error);
+      LoggingService.error('Error during verification process:', error);
       toastService.error(`Verification failed: ${error.message}`);
-      setVerificationStatus(`Error: ${error.message}`);
-    } finally {
-      setIsVerifyingBackup(false);
     }
   };
 

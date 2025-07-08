@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
+import LoggingService from '../../services/LoggingService';
 import 'leaflet/dist/leaflet.css';
 
 // Fix for default marker icons in React-Leaflet
@@ -65,7 +66,7 @@ function MapView({ location, cardName, price }) {
           setError('Location not found');
         }
       } catch (err) {
-        console.error('Geocoding error:', err);
+        LoggingService.error('Geocoding error:', err);
         setError('Failed to load map');
       } finally {
         setLoading(false);

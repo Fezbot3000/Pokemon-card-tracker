@@ -1,7 +1,6 @@
 import React, {
   useEffect,
   useState,
-  useMemo,
   useCallback,
   useRef,
 } from 'react';
@@ -40,51 +39,12 @@ import TrialStatusBanner from './components/TrialStatusBanner';
 import logger from './utils/logger'; // Import the logger utility
 import RestoreListener from './components/RestoreListener';
 import SyncStatusIndicator from './components/SyncStatusIndicator'; // Import the SyncStatusIndicator
-import featureFlags from './utils/featureFlags'; // Import feature flags
 
 import TutorialModal from './components/TutorialModal'; // Add back this import
 import { settingsManager } from './utils/settingsManager'; // Import settings manager
 import { useCardModals } from './hooks/useCardModals'; // Import card modals hook
 import { collectionManager } from './utils/collectionManager'; // Import collection manager
-
-// Helper function to generate a unique ID for cards without one
-const generateUniqueId = () => {
-  const timestamp = new Date().getTime();
-  const randomPart = Math.floor(Math.random() * 10000);
-  return `card_${timestamp}_${randomPart}`;
-};
-
-// NewUserRoute to redirect new users to dashboard
-function NewUserRoute() {
-  const { user } = useAuth();
-  const navigate = useNavigate();
-  const hasRedirected = useRef(false);
-
-  useEffect(() => {
-    // Avoid multiple redirects
-    if (hasRedirected.current) return;
-
-    // Only proceed if we have a user
-    if (!user) return;
-
-    // Clear any new user flags and redirect to dashboard
-    localStorage.removeItem('isNewUser');
-    hasRedirected.current = true;
-    navigate('/dashboard', { replace: true });
-  }, [user, navigate]);
-
-  // Show loading while redirecting
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-black">
-      <div className="text-center">
-        <div className="mx-auto mb-4 size-12 animate-spin rounded-full border-b-2 border-blue-600"></div>
-        <p className="text-gray-600 dark:text-gray-400">
-          Setting up your account...
-        </p>
-      </div>
-    </div>
-  );
-}
+import ESLintDebugger from './components/ESLintDebugger'; // Import ESLint debugger
 
 // Main Dashboard Component
 function Dashboard() {
@@ -121,9 +81,9 @@ function Dashboard() {
                       { label: 'PAID', width: 'w-16' },
                       { label: 'VALUE', width: 'w-16' },
                       { label: 'PROFIT', width: 'w-12' },
-                    ].map((stat, index) => (
+                    ].map((stat) => (
                       <div
-                        key={index}
+                        key={stat.label}
                         className="flex flex-col items-center justify-center border-none p-2 py-3 sm:p-3 sm:py-4 md:p-4 md:py-6"
                       >
                         <div className="mb-1 text-xs font-medium uppercase text-gray-500 dark:text-gray-400 sm:mb-2 sm:text-sm">
@@ -155,7 +115,7 @@ function Dashboard() {
               <div className="grid grid-cols-2 gap-1 sm:grid-cols-3 sm:gap-2 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7">
                 {Array.from({ length: 14 }, (_, index) => (
                   <div
-                    key={index}
+                    key={`loading-skeleton-${index}`}
                     className="animate-pulse overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-[#333] dark:bg-black"
                   >
                     <div className="aspect-[2.5/3.5] bg-gradient-to-br from-gray-200 to-gray-300 dark:from-[#333] dark:to-[#444]"></div>
@@ -243,7 +203,7 @@ function DashboardIndex() {
         window.history.replaceState({}, '', location.pathname);
       }
     }
-  }, [location.state, setCurrentView]);
+  }, [location.state, location.pathname, setCurrentView]);
 
   return (
     <>
@@ -268,14 +228,12 @@ function AppContent({ currentView, setCurrentView }) {
     openCardDetails,
     closeCardDetails,
     setShowNewCardForm,
-    setSelectedCard,
-    setInitialCardCollection,
   } = useCardModals();
 
   const [showSettings, setShowSettings] = useState(false);
   const [showProfitModal, setShowProfitModal] = useState(false);
   const [selectedCards, setSelectedCards] = useState(new Set());
-  const [profitChangeData, setProfitChangeData] = useState({
+  const [profitChangeData] = useState({
     oldProfit: 0,
     newProfit: 0,
   });
@@ -291,10 +249,7 @@ function AppContent({ currentView, setCurrentView }) {
   const {
     cards,
     loading,
-    error,
     exchangeRate,
-    selectCard,
-    clearSelectedCard,
     updateCard,
     deleteCard,
     addCard,
@@ -306,8 +261,7 @@ function AppContent({ currentView, setCurrentView }) {
 
   const handleCardUpdate = async (
     cardId,
-    updatedData,
-    originalCollectionName
+    updatedData
   ) => {
     try {
       // The updateCard function from useCardData should handle Firestore updates.
@@ -367,23 +321,6 @@ function AppContent({ currentView, setCurrentView }) {
     }
   }, [cards]); // Dependency: Run whenever the cards array from useCardData changes
 
-  // Memoized collection data for CardList
-  const collectionData = useMemo(() => {
-    if (selectedCollection === 'All Cards') {
-      // Combine cards from all collections, EXCLUDING 'sold'
-      return Object.entries(collections)
-        .filter(
-          ([name, cards]) =>
-            name.toLowerCase() !== 'sold' && Array.isArray(cards)
-        )
-        .map(([name, cards]) => cards) // Get just the card arrays
-        .flat() // Combine all card arrays into one
-        .filter(Boolean); // Remove any potential null/undefined entries
-    }
-    // Otherwise, return the cards for the selected collection or an empty array
-    return collections[selectedCollection] || [];
-  }, [collections, selectedCollection]);
-
   // Register the add card callback when component mounts
   // Using a ref to ensure we only register the callback once
   const callbackRegistered = useRef(false);
@@ -393,7 +330,7 @@ function AppContent({ currentView, setCurrentView }) {
       registerAddCardCallback(() => setShowNewCardForm(true));
       callbackRegistered.current = true;
     }
-  }, [registerAddCardCallback]);
+  }, [registerAddCardCallback, setShowNewCardForm]);
 
   // Check if this is a new user and start the tutorial
   useEffect(() => {
@@ -454,7 +391,7 @@ function AppContent({ currentView, setCurrentView }) {
         setCurrentView('cards');
       }
     }
-  }, [location.pathname, location.state?.targetView, setCurrentView]);
+  }, [location.pathname, location.state?.targetView, setCurrentView, currentView]);
 
   // Add keyboard shortcut for settings (press 's' key)
   useEffect(() => {
@@ -490,24 +427,6 @@ function AppContent({ currentView, setCurrentView }) {
     };
   }, [showNewCardForm, selectedCard, showSettings, showProfitModal]);
 
-  // Calculate total profit for a collection
-  const calculateTotalProfit = useCallback(cards => {
-    return cards.reduce((total, card) => {
-      const currentValue = parseFloat(card.currentValueAUD) || 0;
-      const purchasePrice = parseFloat(card.investmentAUD) || 0;
-      return total + (currentValue - purchasePrice);
-    }, 0);
-  }, []);
-
-  const handleCollectionChange = useCallback(
-    collection => {
-      setSelectedCollection(collection);
-      clearSelectedCard();
-      localStorage.setItem('selectedCollection', collection);
-    },
-    [clearSelectedCard]
-  );
-
   // Load collections from IndexedDB on mount
   useEffect(() => {
     const initializeDatabaseAndLoadCollections = async () => {
@@ -529,14 +448,10 @@ function AppContent({ currentView, setCurrentView }) {
         }
 
         // Attempt to load collections from IndexedDB
-        const savedCollections = await db.getCollections().catch(error => {
+        const savedCollections = await db.getCollections().catch(() => {
           logger.warn('Failed to load collections, using default collection');
           return { 'Default Collection': [] };
         });
-
-        // Get saved collection from localStorage
-        const savedSelectedCollection =
-          localStorage.getItem('selectedCollection');
 
         if (Object.keys(savedCollections).length > 0) {
           setCollections(savedCollections);
@@ -568,241 +483,6 @@ function AppContent({ currentView, setCurrentView }) {
 
     initializeDatabaseAndLoadCollections();
   }, []);
-
-  const onDeleteCards = useCallback(
-    async cardIds => {
-      try {
-        // Delete images from IndexedDB
-        for (const cardId of cardIds) {
-          // Make sure we're working with string IDs, not objects
-          const id = typeof cardId === 'object' ? cardId.slabSerial : cardId;
-          await db.deleteImage(id);
-
-          // Delete card from the useCardData hook's state
-          deleteCard({ slabSerial: id });
-        }
-      } catch (error) {
-        logger.error('Error deleting cards:', error);
-        toastService.error('Failed to delete cards');
-      }
-    },
-    [deleteCard]
-  );
-
-  const handleCardDelete = useCallback(
-    async cardInput => {
-      let cardToDelete;
-      let slabSerialToDelete;
-
-      if (
-        typeof cardInput === 'object' &&
-        cardInput !== null &&
-        cardInput.slabSerial
-      ) {
-        cardToDelete = cardInput; // Input is the card object
-        slabSerialToDelete = cardInput.slabSerial;
-      } else if (typeof cardInput === 'string') {
-        slabSerialToDelete = cardInput; // Input is just the ID string
-      } else {
-        logger.error(
-          '[App] handleCardDelete received invalid input:',
-          cardInput
-        );
-        toastService.error('Failed to delete card: Invalid input.');
-        return;
-      }
-
-      if (!slabSerialToDelete) {
-        logger.error(
-          '[App] Could not determine valid card ID to delete from input:',
-          cardInput
-        );
-        toastService.error('Failed to delete card: Missing card ID.');
-        return;
-      }
-
-      try {
-        // Step 1: Load current collections from DB
-        const currentCollections = await db.getCollections();
-        if (!currentCollections || typeof currentCollections !== 'object') {
-          throw new Error('Failed to load collections from database.');
-        }
-
-        const updatedCollections = { ...currentCollections };
-
-        // Step 2: Find and remove the card from its original collection
-        let foundCard = null;
-
-        // Try to find the card in its original collection if we know it
-        if (
-          initialCardCollection &&
-          updatedCollections[initialCardCollection]
-        ) {
-          const cardIndex = updatedCollections[initialCardCollection].findIndex(
-            card => card.slabSerial === slabSerialToDelete
-          );
-
-          if (cardIndex !== -1) {
-            // Save the card before removing it
-            foundCard = updatedCollections[initialCardCollection][cardIndex];
-            // Remove from original collection
-            updatedCollections[initialCardCollection].splice(cardIndex, 1);
-            logger.log(
-              `[App] Removed card ${slabSerialToDelete} from its original collection '${initialCardCollection}'`
-            );
-          } else {
-            logger.warn(
-              `[App] Card ${slabSerialToDelete} not found in its expected original collection '${initialCardCollection}'`
-            );
-          }
-        }
-
-        // If we didn't find it in the original collection or don't know the original,
-        // search through all collections
-        if (!foundCard) {
-          for (const [collName, cards] of Object.entries(updatedCollections)) {
-            if (collName !== 'sold' && Array.isArray(cards)) {
-              const cardIndex = cards.findIndex(
-                card => card.slabSerial === slabSerialToDelete
-              );
-              if (cardIndex !== -1) {
-                // Found the card in this collection
-                foundCard = cards[cardIndex];
-                // Remove it from this collection
-                cards.splice(cardIndex, 1);
-                logger.log(
-                  `[App] Found and removed card ${slabSerialToDelete} from collection '${collName}'`
-                );
-                break;
-              }
-            }
-          }
-        }
-
-        // Step 3: Now add the card to its new collection
-        // Create the new collection if it doesn't exist
-        if (!updatedCollections[selectedCollection]) {
-          updatedCollections[selectedCollection] = [];
-          logger.log(`[App] Created new collection '${selectedCollection}'`);
-        }
-
-        // Preserve all original card data that wasn't explicitly changed
-        const cardToAdd = {
-          ...(foundCard || {}), // Base it on the found card if available
-          // Explicitly preserve the image URL to prevent it from being lost during moves
-          imageUrl: foundCard ? foundCard.imageUrl : null,
-        };
-
-        // Add to the new collection
-        // Check if it already exists in the target collection (could happen if moving to same collection)
-        const existingIndex = updatedCollections[selectedCollection].findIndex(
-          card => card.slabSerial === slabSerialToDelete
-        );
-
-        if (existingIndex !== -1) {
-          // Update in place if already exists
-          updatedCollections[selectedCollection][existingIndex] = cardToAdd;
-          logger.log(
-            `[App] Updated existing card ${slabSerialToDelete} in collection '${selectedCollection}'`
-          );
-        } else {
-          // Add as new if doesn't exist
-          updatedCollections[selectedCollection].push(cardToAdd);
-          logger.log(
-            `[App] Added card ${slabSerialToDelete} to collection '${selectedCollection}'`
-          );
-        }
-
-        // Step 4: Save the updated collections to DB
-        await db.saveCollections(updatedCollections, true);
-        logger.log(
-          `[App] Saved updated collections to DB for card ${slabSerialToDelete}.`
-        );
-
-        // Step 5: Update local state
-        setCollections(updatedCollections);
-
-        // Step 6: Update card in Firestore via the useCardData hook and shadowSync
-        const cardForFirestore = {
-          ...cardToAdd,
-          collection: selectedCollection,
-          collectionId: selectedCollection,
-        };
-
-        // Update in useCardData hook (which triggers UI updates)
-        updateCard(cardForFirestore);
-
-        // Explicitly sync to Firestore if feature flag is enabled
-        if (featureFlags.enableFirestoreSync && user) {
-          try {
-            const shadowSyncService = await import(
-              './services/shadowSync'
-            ).then(module => module.default);
-            await shadowSyncService.shadowWriteCard(
-              slabSerialToDelete,
-              cardForFirestore,
-              selectedCollection
-            );
-            logger.log(
-              `[App] Successfully shadow synced card ${slabSerialToDelete} to Firestore`
-            );
-          } catch (syncError) {
-            // Log but don't fail the operation
-            logger.error(
-              `[App] Error syncing card ${slabSerialToDelete} to Firestore:`,
-              syncError
-            );
-          }
-        }
-
-        // Step 7: Close modal and show success
-        handleCloseDetailsModal();
-        toastService.success('Card updated successfully!');
-      } catch (error) {
-        logger.error('[App] Error updating card:', error);
-        toastService.error(`Error updating card: ${error.message}`);
-      }
-    },
-    [
-      initialCardCollection,
-      updateCard,
-      handleCloseDetailsModal,
-      setCollections,
-      user,
-    ]
-  );
-
-  const handleAddCard = useCallback(
-    async (cardData, imageFile, targetCollection) => {
-      try {
-        // Save card data to IndexedDB with parameters in correct order
-        const newCard = await db.addCard(cardData, imageFile, targetCollection);
-
-        // Add card to the useCardData hook's state with allowOverwrite option
-        addCard(newCard, {
-          overwrite: true,
-          fromFirebase: featureFlags.enableFirestoreSync,
-        });
-
-        // Update local state
-        const newCollections = {
-          ...collections,
-          [targetCollection]: [
-            ...(collections[targetCollection] || []),
-            newCard,
-          ],
-        };
-        setCollections(newCollections);
-
-        // Show success toast
-        toastService.success('Card added successfully!');
-      } catch (error) {
-        logger.error('Error adding card:', error);
-        toastService.error(`Error adding card: ${error.message}`);
-      }
-    },
-    [addCard, collections]
-  );
 
   const handleSettingsClick = () => {
     settingsManager.openSettings(
@@ -863,9 +543,9 @@ function AppContent({ currentView, setCurrentView }) {
                       { label: 'PAID', width: 'w-16' },
                       { label: 'VALUE', width: 'w-16' },
                       { label: 'PROFIT', width: 'w-12' },
-                    ].map((stat, index) => (
+                    ].map((stat) => (
                       <div
-                        key={index}
+                        key={stat.label}
                         className="flex flex-col items-center justify-center border-none p-2 py-3 sm:p-3 sm:py-4 md:p-4 md:py-6"
                       >
                         <div className="mb-1 text-xs font-medium uppercase text-gray-500 dark:text-gray-400 sm:mb-2 sm:text-sm">
@@ -897,7 +577,7 @@ function AppContent({ currentView, setCurrentView }) {
               <div className="grid grid-cols-2 gap-1 sm:grid-cols-3 sm:gap-2 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7">
                 {Array.from({ length: 14 }, (_, index) => (
                   <div
-                    key={index}
+                    key={`skeleton-${index}`}
                     className="animate-pulse overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-[#333] dark:bg-[#111]"
                   >
                     <div className="aspect-[2.5/3.5] bg-gradient-to-br from-gray-200 to-gray-300 dark:from-[#333] dark:to-[#444]"></div>
@@ -940,15 +620,6 @@ function AppContent({ currentView, setCurrentView }) {
     if (isPWA) {
       layoutClasses += ' pwa-mode';
     }
-    
-    // Debug logging
-    console.log('🎯 Layout Debug:', {
-      currentView,
-      isMobile,
-      hasHeader,
-      isPWA,
-      layoutClasses
-    });
     
     return layoutClasses;
   };
@@ -1059,9 +730,9 @@ function AppContent({ currentView, setCurrentView }) {
                           { label: 'PAID', width: 'w-16' },
                           { label: 'VALUE', width: 'w-16' },
                           { label: 'PROFIT', width: 'w-12' },
-                        ].map((stat, index) => (
+                        ].map((stat) => (
                           <div
-                            key={index}
+                            key={stat.label}
                             className="flex flex-col items-center justify-center border-none p-2 py-3 sm:p-3 sm:py-4 md:p-4 md:py-6"
                           >
                             <div className="mb-1 text-xs font-medium uppercase text-gray-500 dark:text-gray-400 sm:mb-2 sm:text-sm">
@@ -1152,7 +823,7 @@ function AppContent({ currentView, setCurrentView }) {
                       >
                         {/* Card Image Skeleton */}
                         <div className="relative aspect-[2.5/3.5] bg-gradient-to-br from-gray-200 to-gray-300 dark:from-[#333] dark:to-[#444]">
-                          <div className="via-white/20 absolute inset-0 -skew-x-12 animate-pulse bg-gradient-to-r from-transparent to-transparent"></div>
+                          <div className="absolute inset-0 -skew-x-12 animate-pulse bg-gradient-to-r from-transparent to-transparent"></div>
                         </div>
 
                         {/* Card Content Skeleton */}
@@ -1286,7 +957,7 @@ function AppContent({ currentView, setCurrentView }) {
         <AddCardModal
           isOpen={showNewCardForm}
           onClose={() => closeNewCardForm()}
-          onSave={(cardData, imageFile, targetCollection) =>
+          onSave={(cardData, imageFile) =>
             addCard(cardData, imageFile)
           }
           collections={Object.keys(collections)}
@@ -1375,6 +1046,9 @@ function AppContent({ currentView, setCurrentView }) {
 
       <TutorialModal />
       <SyncStatusIndicator />
+      
+      {/* ESLint Debug Panel - Remove this once warnings are fixed */}
+      {process.env.NODE_ENV === 'development' && <ESLintDebugger />}
     </div>
   );
 }

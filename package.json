@@ -47,6 +47,12 @@
     "analyze:css": "npm run build && node scripts/analyze-css.js",
     "baseline": "npm run build && node scripts/baseline-metrics.js",
     "lint": "eslint src/**/*.{js,jsx,ts,tsx} --fix",
+    "lint:count": "node update-eslint-count.js",
+    "lint:watch": "node eslint-watcher.js",
+    "lint:watch:start": "node eslint-watcher.js",
+    "lint:watch:stop": "pkill -f eslint-watcher.js",
+    "lint:watch:status": "node eslint-watcher.js --status",
+    "lint:watch:once": "node eslint-watcher.js --once",
     "format": "prettier --write src/**/*.{js,jsx,ts,tsx,css,json}",
     "type-check": "tsc --noEmit"
   },

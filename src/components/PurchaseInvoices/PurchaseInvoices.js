@@ -22,6 +22,7 @@ import featureFlags from '../../utils/featureFlags';
 import logger from '../../utils/logger';
 import { useSubscription } from '../../hooks/useSubscription';
 import FeatureGate from '../FeatureGate';
+import LoggingService from '../../services/LoggingService';
 
 /**
  * PurchaseInvoices component
@@ -70,7 +71,7 @@ const PurchaseInvoices = () => {
         setShowCreateModal(false);
         setEditingInvoice(null);
       } catch (error) {
-        console.error('Error handling invoice save:', error);
+        LoggingService.error('Error handling invoice save:', error);
         setShowCreateModal(false);
         setEditingInvoice(null);
       }
@@ -122,7 +123,7 @@ const PurchaseInvoices = () => {
             return; // Exit early if we loaded from Firestore
           }
         } catch (firestoreError) {
-          console.error(
+          LoggingService.error(
             'Error loading invoices from Firestore:',
             firestoreError
           );
@@ -134,7 +135,7 @@ const PurchaseInvoices = () => {
         (await db.getPurchaseInvoices(currentUser?.uid)) || [];
       setInvoices(purchaseInvoices);
     } catch (error) {
-      console.error('Error loading purchase invoices:', error);
+      LoggingService.error('Error loading purchase invoices:', error);
       toast.error('Failed to load purchase invoices');
     } finally {
       setLoading(false);
@@ -153,7 +154,7 @@ const PurchaseInvoices = () => {
           setProfile(firestoreProfile);
 
           // Save to IndexedDB in the background
-          db.saveProfile(firestoreProfile).catch(console.error);
+          db.saveProfile(firestoreProfile).catch(LoggingService.error);
           return;
         }
       }
@@ -164,7 +165,7 @@ const PurchaseInvoices = () => {
         setProfile(userProfile);
       }
     } catch (error) {
-      console.error('Error loading profile:', error);
+      LoggingService.error('Error loading profile:', error);
     }
   }, [currentUser]);
 
@@ -235,7 +236,7 @@ const PurchaseInvoices = () => {
       setInvoices(prev => prev.filter(i => i.id !== invoice.id));
       toast.success('Invoice deleted successfully');
     } catch (error) {
-      console.error('Error deleting invoice:', error);
+      LoggingService.error('Error deleting invoice:', error);
       toast.error('Failed to delete invoice');
     }
   };
@@ -287,7 +288,7 @@ const PurchaseInvoices = () => {
         toast.error('Failed to generate invoice PDFs', { id: 'server-batch' });
       }
     } catch (error) {
-      console.error('Error in server batch PDF generation:', error);
+      LoggingService.error('Error in server batch PDF generation:', error);
       toast.error(`Error: ${error.message || 'Unknown error'}`, {
         id: 'server-batch',
       });
@@ -464,9 +465,9 @@ const PurchaseInvoices = () => {
       const cardDetails = await getCardDetails(invoice);
 
       // Debug: Log the card details to see what data we have
-      // console.log('Invoice data for PDF generation:', invoice);
-      // console.log('Card details for PDF:', cardDetails);
-      // console.log('First card details:', cardDetails[0]);
+      // LoggingService.info('Invoice data for PDF generation:', invoice);
+      // LoggingService.info('Card details for PDF:', cardDetails);
+      // LoggingService.info('First card details:', cardDetails[0]);
 
       // Create the PDF document
       const pdfDocument = (
@@ -526,7 +527,7 @@ const PurchaseInvoices = () => {
       // If we have card IDs, fetch the full card details
       if (invoice.cards && invoice.cards.length > 0) {
         // Log the card data for debugging
-        // console.log('Card data from invoice:', invoice.cards);
+        // LoggingService.info('Card data from invoice:', invoice.cards);
 
         // Process cards to ensure they have proper display names
         const processedCards = invoice.cards.map(card => {
@@ -549,12 +550,12 @@ const PurchaseInvoices = () => {
           return processedCard;
         });
 
-        // console.log('Processed cards for PDF:', processedCards);
+        // LoggingService.info('Processed cards for PDF:', processedCards);
         return processedCards;
       }
       return [];
     } catch (error) {
-      console.error('Error fetching card details:', error);
+      LoggingService.error('Error fetching card details:', error);
       return [];
     }
   };

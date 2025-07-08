@@ -18,6 +18,7 @@ import logger from '../../utils/logger';
 import Modal from '../../design-system/molecules/Modal';
 import Button from '../../design-system/atoms/Button';
 import Icon from '../../design-system/atoms/Icon';
+import LoggingService from '../../services/LoggingService';
 
 // Add CSS for hiding scrollbars
 const scrollbarHideStyles = `
@@ -296,7 +297,7 @@ function ListCardModal({ isOpen, onClose, selectedCards }) {
           return listingRef;
         } catch (cardError) {
           // Log specific card error but continue with others
-          console.error(
+          LoggingService.error(
             `Error listing card ${card.card || cardId}:`,
             cardError
           );
@@ -321,7 +322,7 @@ function ListCardModal({ isOpen, onClose, selectedCards }) {
         setIsSubmitting(false);
       }
     } catch (error) {
-      console.error('Error listing cards:', error);
+      LoggingService.error('Error listing cards:', error);
       // Ignore AdBlock related errors in console
       if (
         error.message &&

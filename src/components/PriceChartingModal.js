@@ -12,6 +12,7 @@ import Modal from '../design-system/molecules/Modal';
 import Button from '../design-system/atoms/Button';
 import { searchCardPrice, extractBestPrice, convertPenniesToDollars } from '../services/priceChartingService';
 import { useUserPreferences } from '../contexts/UserPreferencesContext';
+import LoggingService from '../services/LoggingService';
 
 const PriceChartingModal = ({
   isOpen,
@@ -58,7 +59,7 @@ const PriceChartingModal = ({
           toast.error('No matching products found in Price Charting database');
         }
       } catch (err) {
-        console.error('Price Charting search error:', err);
+        LoggingService.error('Price Charting search error:', err);
         setError(err.message || 'Failed to search Price Charting');
         toast.error(`Price Charting search failed: ${err.message}`);
       } finally {

@@ -83,7 +83,7 @@ class ImagePersistenceManager {
             }
           })
           .catch(error => {
-            console.error(`Error preloading image for card ${card.id}:`, error);
+            LoggingService.error(`Error preloading image for card ${card.id}:`, error);
             // Remove from loading set
             this.loadingImages.delete(card.id);
           });

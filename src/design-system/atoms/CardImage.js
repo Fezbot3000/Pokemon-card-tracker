@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import Icon from './Icon';
+import LoggingService from '../../services/LoggingService';
 
 /**
  * CardImage Component
@@ -30,7 +31,7 @@ const CardImage = ({
           className="size-full rounded-lg object-contain"
           loading="lazy"
           onError={() => {
-            console.error(`Failed to load image: ${src}`);
+            LoggingService.error(`Failed to load image: ${src}`);
             setImageError(true);
           }}
           {...props}

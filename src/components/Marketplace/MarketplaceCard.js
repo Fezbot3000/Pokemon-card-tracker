@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import Icon from '../../design-system/atoms/Icon';
+import LoggingService from '../../services/LoggingService';
 
 /**
  * MarketplaceCard Component
@@ -182,7 +183,7 @@ const ImageWithAnimation = ({ src, alt }) => {
     }
 
     // If we can't extract a URL, return null
-    console.warn('Unable to extract valid image URL from:', imageData);
+    LoggingService.warn('Unable to extract valid image URL from:', imageData);
     return null;
   };
 
@@ -206,7 +207,7 @@ const ImageWithAnimation = ({ src, alt }) => {
       className={`size-full rounded object-contain transition-all duration-500 ${imageLoaded ? 'scale-100 opacity-100' : 'translate-y-4 scale-95 opacity-0'}`}
       onLoad={() => setImageLoaded(true)}
       onError={e => {
-        console.warn('Image failed to load:', alt);
+        LoggingService.warn('Image failed to load:', alt);
         e.target.onerror = null; // Prevent infinite error loops
         e.target.src = ''; // Clear the src
       }}

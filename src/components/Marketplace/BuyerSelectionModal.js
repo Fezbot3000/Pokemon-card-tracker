@@ -15,6 +15,7 @@ import { db as firestoreDb } from '../../services/firebase';
 import logger from '../../utils/logger';
 import toast from 'react-hot-toast';
 import db from '../../services/firestore/dbAdapter';
+import LoggingService from '../../services/LoggingService';
 
 const BuyerSelectionModal = ({ isOpen, onClose, listing }) => {
   const [potentialBuyers, setPotentialBuyers] = useState([]);
@@ -69,13 +70,13 @@ const BuyerSelectionModal = ({ isOpen, onClose, listing }) => {
             });
           }
         } catch (error) {
-          console.error('Error fetching buyer details:', error);
+          LoggingService.error('Error fetching buyer details:', error);
         }
       }
 
       setPotentialBuyers(buyers);
     } catch (error) {
-      console.error('Error fetching potential buyers:', error);
+      LoggingService.error('Error fetching potential buyers:', error);
       toast.error('Failed to load potential buyers');
     } finally {
       setLoading(false);
@@ -144,7 +145,7 @@ const BuyerSelectionModal = ({ isOpen, onClose, listing }) => {
           await db.savePurchaseInvoice(invoiceData);
           toast.success('Sold invoice created successfully!');
         } catch (invoiceError) {
-          console.error('Error creating sold invoice:', invoiceError);
+          LoggingService.error('Error creating sold invoice:', invoiceError);
           toast.error('Item marked as sold but failed to create invoice');
         }
       }
@@ -186,7 +187,7 @@ const BuyerSelectionModal = ({ isOpen, onClose, listing }) => {
       );
       onClose();
     } catch (error) {
-      console.error('Error marking as sold:', error);
+      LoggingService.error('Error marking as sold:', error);
       toast.error('Failed to mark item as sold');
     } finally {
       setSubmitting(false);

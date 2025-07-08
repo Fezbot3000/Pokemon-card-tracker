@@ -7,6 +7,7 @@ import {
 import { useAuth } from '../design-system/contexts/AuthContext';
 import { CardRepository } from '../repositories/CardRepository';
 import logger from '../utils/logger';
+import LoggingService from '../services/LoggingService';
 
 const useCardData = () => {
   // State for cards and UI
@@ -212,7 +213,7 @@ const useCardData = () => {
             : prevSelected
         );
       } catch (err) {
-        console.error(`[useCardData] Error updating card ${cardId}:`, err);
+        LoggingService.error(`[useCardData] Error updating card ${cardId}:`, err);
         logger.error('Error updating card:', err);
         setError('Failed to save card update.');
         // Optionally revert optimistic update here if needed

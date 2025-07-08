@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import Icon from './Icon';
+import LoggingService from '../../services/LoggingService';
 
 /**
  * ImageUpload Component
@@ -54,7 +55,7 @@ const ImageUpload = ({
         if (typeof onImageChange === 'function') {
           onImageChange(file);
         } else {
-          console.warn('ImageUpload: onImageChange prop is not a function');
+          LoggingService.warn('ImageUpload: onImageChange prop is not a function');
         }
       }
     }
@@ -66,7 +67,7 @@ const ImageUpload = ({
       if (typeof onImageChange === 'function') {
         onImageChange(e.target.files[0]);
       } else {
-        console.warn('ImageUpload: onImageChange prop is not a function');
+        LoggingService.warn('ImageUpload: onImageChange prop is not a function');
       }
     }
   };

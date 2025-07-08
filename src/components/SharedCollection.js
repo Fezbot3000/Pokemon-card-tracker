@@ -5,6 +5,7 @@ import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db as firestoreDb } from '../firebase';
 import { Card, Button, formatCurrency } from '../design-system';
 import sharingService from '../services/sharingService';
+import LoggingService from '../services/LoggingService';
 
 // Simple components to replace missing design system components
 const Spinner = ({ size = 'medium' }) => (
@@ -152,7 +153,7 @@ const SharedCollection = () => {
             const snapshot = await getDocs(q);
             return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
           } catch (error) {
-            console.warn(`Query ${index + 1} failed:`, error);
+            LoggingService.warn(`Query ${index + 1} failed:`, error);
             return [];
           }
         });
@@ -208,10 +209,10 @@ const SharedCollection = () => {
 
       setCards(allCards);
     } catch (err) {
-      console.error('=== ERROR LOADING SHARED COLLECTION ===');
-      console.error('Error details:', err);
-      console.error('Error message:', err.message);
-      console.error('Error stack:', err.stack);
+      LoggingService.error('=== ERROR LOADING SHARED COLLECTION ===');
+      LoggingService.error('Error details:', err);
+      LoggingService.error('Error message:', err.message);
+      LoggingService.error('Error stack:', err.stack);
       setError(err.message || 'Failed to load collection. Please try again.');
     } finally {
       setLoading(false);

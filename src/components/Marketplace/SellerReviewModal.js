@@ -13,6 +13,7 @@ import {
 import { db as firestoreDb } from '../../services/firebase';
 import logger from '../../utils/logger';
 import toast from 'react-hot-toast';
+import LoggingService from '../../services/LoggingService';
 
 const SellerReviewModal = ({
   isOpen,
@@ -117,7 +118,7 @@ const SellerReviewModal = ({
       toast.success('Review submitted successfully!');
       onClose();
     } catch (error) {
-      console.error('Error submitting review:', error);
+      LoggingService.error('Error submitting review:', error);
       toast.error('Failed to submit review');
     } finally {
       setSubmitting(false);

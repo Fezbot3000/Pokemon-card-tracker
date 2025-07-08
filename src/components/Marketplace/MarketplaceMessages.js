@@ -24,6 +24,7 @@ import DesktopMarketplaceMessages from './DesktopMarketplaceMessages';
 import SellerProfile from './SellerProfile';
 import SellerProfileModal from './SellerProfileModal';
 import SellerReviewModal from './SellerReviewModal';
+import LoggingService from '../../services/LoggingService';
 
 // Add CSS for hiding scrollbars
 const scrollbarHideStyles = `
@@ -467,7 +468,7 @@ function MarketplaceMessages({ currentView, onViewChange }) {
         message: newMessage.trim(),
       });
     } catch (error) {
-      console.error('Error sending message:', error);
+      LoggingService.error('Error sending message:', error);
       setSendingMessage(false);
     }
   };
@@ -561,14 +562,14 @@ function MarketplaceMessages({ currentView, onViewChange }) {
         });
       } catch (messageError) {
         // If adding the message fails, just log it - we still want to leave the chat
-        // console.log('Could not add system message, but chat was left');
+        // LoggingService.info('Could not add system message, but chat was left');
       }
 
       // Close the chat
       setActiveChat(null);
       toast.success('You have left the chat');
     } catch (error) {
-      console.error('Error leaving chat:', error);
+      LoggingService.error('Error leaving chat:', error);
       toast.error('Failed to leave chat');
     }
   };
@@ -620,7 +621,7 @@ function MarketplaceMessages({ currentView, onViewChange }) {
       setActiveChat(null);
       toast.success('Chat has been deleted');
     } catch (error) {
-      console.error('Error deleting chat:', error);
+      LoggingService.error('Error deleting chat:', error);
       toast.error('Failed to delete chat');
     }
   };
@@ -849,7 +850,7 @@ function MarketplaceMessages({ currentView, onViewChange }) {
                       className="mr-3 size-10 cursor-pointer rounded-md object-cover transition-opacity hover:opacity-80"
                       onClick={async () => {
                         // Log the activeChat to debug
-                        // console.log('Active chat data:', activeChat);
+                        // LoggingService.info('Active chat data:', activeChat);
 
                         const listingData =
                           await fetchCompleteListingData(activeChat);
@@ -862,7 +863,7 @@ function MarketplaceMessages({ currentView, onViewChange }) {
                       className="mr-3 flex size-10 cursor-pointer items-center justify-center rounded-md bg-gray-200 text-gray-500 transition-colors hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-400 dark:hover:bg-gray-500"
                       onClick={async () => {
                         // Log the activeChat to debug
-                        // console.log('Active chat data:', activeChat);
+                        // LoggingService.info('Active chat data:', activeChat);
 
                         const listingData =
                           await fetchCompleteListingData(activeChat);

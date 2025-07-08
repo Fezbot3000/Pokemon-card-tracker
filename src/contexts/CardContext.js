@@ -8,6 +8,7 @@ import React, {
 import { useAuth } from '../design-system';
 import { CardRepository } from '../repositories/CardRepository';
 import db from '../services/firestore/dbAdapter';
+import LoggingService from '../services/LoggingService';
 
 const CardContext = createContext();
 
@@ -35,7 +36,7 @@ export function CardProvider({ children }) {
           setSoldCardIds(soldCardIds);
         }
       } catch (error) {
-        console.warn('Failed to load sold card IDs from IndexedDB:', error);
+        LoggingService.warn('Failed to load sold card IDs from IndexedDB:', error);
       }
     };
 
@@ -86,7 +87,7 @@ export function CardProvider({ children }) {
   const loadInitialData = useCallback(
     async repo => {
       if (!repo) {
-        console.error('No repository provided to loadInitialData');
+        LoggingService.error('No repository provided to loadInitialData');
         return { success: false, message: 'No repository available' };
       }
 
@@ -100,7 +101,7 @@ export function CardProvider({ children }) {
         try {
           collectionsFromRepo = await repo.getAllCollections();
         } catch (collectionsError) {
-          console.error('Failed to load collections:', collectionsError);
+          LoggingService.error('Failed to load collections:', collectionsError);
           collectionsFromRepo = [];
         }
 
@@ -109,7 +110,7 @@ export function CardProvider({ children }) {
         try {
           cardsFromRepo = await repo.getAllCards();
         } catch (cardsError) {
-          console.error('Failed to load cards:', cardsError);
+          LoggingService.error('Failed to load cards:', cardsError);
           cardsFromRepo = [];
         }
 
@@ -120,13 +121,12 @@ export function CardProvider({ children }) {
             const soldCardIds = new Set(
               soldCards.map(card => card.originalCardId || card.id)
             );
-            const originalCount = cardsFromRepo.length;
             cardsFromRepo = cardsFromRepo.filter(
               card => !soldCardIds.has(card.id)
             );
           }
         } catch (e) {
-          console.warn('Failed to filter sold cards during initial load:', e);
+          LoggingService.warn('Failed to filter sold cards during initial load:', e);
         }
 
         // Load sold cards
@@ -134,7 +134,7 @@ export function CardProvider({ children }) {
         try {
           soldCardsFromRepo = await db.getSoldCards();
         } catch (soldCardsError) {
-          console.error('Failed to load sold cards:', soldCardsError);
+          LoggingService.error('Failed to load sold cards:', soldCardsError);
           soldCardsFromRepo = [];
         }
 
@@ -153,20 +153,19 @@ export function CardProvider({ children }) {
 
         return { success: true, message: 'Data loaded successfully' };
       } catch (error) {
-        console.error('Error in loadInitialData:', error);
+        LoggingService.error('Error in loadInitialData:', error);
         setError(error.message);
         setLoading(false);
         setSyncStatus('error');
         return { success: false, message: error.message };
       }
-    },
-    [currentUser]
-  );
+          },
+      [selectedCollection]
+    );
 
   // Subscribe to collection changes
   useEffect(() => {
     let unsubscribe = null;
-    let isFirstLoad = true; // Track if this is the first load
 
     const setupSubscription = async () => {
       if (!repository) return;
@@ -206,7 +205,7 @@ export function CardProvider({ children }) {
                   ];
                 }
               } catch (e) {
-                console.warn(
+                LoggingService.warn(
                   'Failed to get pending sold cards from storage',
                   e
                 );
@@ -214,7 +213,6 @@ export function CardProvider({ children }) {
 
               // Final filter step if needed
               if (pendingSoldCardIds.length > 0) {
-                const initialCount = filteredCards.length;
                 filteredCards = filteredCards.filter(
                   card => !pendingSoldCardIds.includes(card.id)
                 );
@@ -248,12 +246,11 @@ export function CardProvider({ children }) {
                 ];
               }
             } catch (e) {
-              console.warn('Failed to get pending sold cards from storage', e);
+              LoggingService.warn('Failed to get pending sold cards from storage', e);
             }
 
             // Final filter step if needed
             if (pendingSoldCardIds.length > 0) {
-              const initialCount = filteredCards.length;
               filteredCards = filteredCards.filter(
                 card => !pendingSoldCardIds.includes(card.id)
               );
@@ -265,7 +262,7 @@ export function CardProvider({ children }) {
           });
         }
       } catch (error) {
-        console.error('Error setting up subscription:', error);
+        LoggingService.error('Error setting up subscription:', error);
       }
     };
 
@@ -300,7 +297,7 @@ export function CardProvider({ children }) {
           setSyncStatus('synced');
         });
       } catch (error) {
-        console.error('Error setting up sold cards subscription:', error);
+        LoggingService.error('Error setting up sold cards subscription:', error);
       }
     };
 
@@ -340,7 +337,7 @@ export function CardProvider({ children }) {
         setSyncStatus('synced');
         return formattedCollection;
       } catch (err) {
-        console.error('Error creating collection:', err);
+        LoggingService.error('Error creating collection:', err);
         setError(err.message);
         setSyncStatus('error');
         throw err;
@@ -421,7 +418,7 @@ export function CardProvider({ children }) {
         setSyncStatus('synced');
         return newCard;
       } catch (err) {
-        console.error('Error creating card:', err);
+        LoggingService.error('Error creating card:', err);
         setError(err.message);
         setSyncStatus('error');
         throw err;
@@ -483,7 +480,7 @@ export function CardProvider({ children }) {
         setSyncStatus('synced');
         return result;
       } catch (err) {
-        console.error('Error deleting multiple cards:', err);
+        LoggingService.error('Error deleting multiple cards:', err);
         setError(err.message);
         setSyncStatus('error');
         throw err;
@@ -499,7 +496,7 @@ export function CardProvider({ children }) {
 
         // Ensure we have valid data before proceeding
         if (!cardId) {
-          console.error('No card ID provided to markCardAsSold');
+          LoggingService.error('No card ID provided to markCardAsSold');
           throw new Error('Card ID is required');
         }
 
@@ -526,7 +523,7 @@ export function CardProvider({ children }) {
         // Find the card to be marked as sold for local state update
         const cardToMark = cards.find(card => card.id === cardId);
         if (!cardToMark) {
-          console.warn(
+          LoggingService.warn(
             `Card with ID ${cardId} not found in local state, will try to proceed anyway`
           );
         }
@@ -592,7 +589,7 @@ export function CardProvider({ children }) {
           setSyncStatus('synced');
           return savedSoldCard;
         } catch (directError) {
-          console.error(
+          LoggingService.error(
             'Direct method failed, falling back to standard method:',
             directError
           );
@@ -633,7 +630,7 @@ export function CardProvider({ children }) {
             setSyncStatus('synced');
             return soldCard;
           } catch (standardError) {
-            console.error('Both methods failed to sell card:', standardError);
+            LoggingService.error('Both methods failed to sell card:', standardError);
 
             // If both methods fail, restore the card to the local state
             if (cardToMark) {
@@ -652,7 +649,7 @@ export function CardProvider({ children }) {
           }
         }
       } catch (err) {
-        console.error('Error in markCardAsSold:', err);
+        LoggingService.error('Error in markCardAsSold:', err);
         setError(err.message);
         setSyncStatus('error');
         throw err;
@@ -670,7 +667,7 @@ export function CardProvider({ children }) {
     async (file, collectionId, importMode) => {
       try {
         setSyncStatus('syncing');
-        const result = await repository.importCards(
+        await repository.importCards(
           file,
           collectionId,
           importMode
@@ -679,7 +676,7 @@ export function CardProvider({ children }) {
         // Cards will be updated via the subscription
         return { success: true };
       } catch (err) {
-        console.error('Error in CardContext.importCards:', err);
+        LoggingService.error('Error in CardContext.importCards:', err);
         setError(err.message);
         setSyncStatus('error');
         throw err;

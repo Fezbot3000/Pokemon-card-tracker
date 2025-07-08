@@ -3,6 +3,8 @@
  * Helps identify performance bottlenecks in production
  */
 
+import LoggingService from '../services/LoggingService';
+
 class PerformanceMonitor {
   constructor() {
     this.metrics = {};
@@ -24,7 +26,7 @@ class PerformanceMonitor {
 
     if (duration > 16) {
       // More than one frame (60fps)
-      console.warn(
+      LoggingService.warn(
         `Slow render detected in ${componentName}: ${duration.toFixed(2)}ms`
       );
     }
@@ -48,7 +50,7 @@ class PerformanceMonitor {
 
       if (duration > 1000) {
         // More than 1 second
-        console.warn(
+        LoggingService.warn(
           `Slow async operation ${operationName}: ${duration.toFixed(2)}ms`
         );
       }
@@ -111,14 +113,14 @@ class PerformanceMonitor {
   logReport() {
     if (!this.enabled) return;
 
-    console.group('Performance Report');
+    LoggingService.info('=== Performance Report ===');
     const report = this.getReport();
 
     for (const [name, stats] of Object.entries(report)) {
-      // // console.log(`${name}:`, stats);
+      LoggingService.info(`${name}:`, stats);
     }
 
-    console.groupEnd();
+    LoggingService.info('=== End Performance Report ===');
   }
 
   // Reset metrics
@@ -137,9 +139,9 @@ class PerformanceMonitor {
     const usagePercent = (used / limit) * 100;
 
     if (usagePercent > 90) {
-      console.error(`Critical memory usage: ${usagePercent.toFixed(1)}%`);
+      LoggingService.error(`Critical memory usage: ${usagePercent.toFixed(1)}%`);
     } else if (usagePercent > 70) {
-      console.warn(`High memory usage: ${usagePercent.toFixed(1)}%`);
+      LoggingService.warn(`High memory usage: ${usagePercent.toFixed(1)}%`);
     }
   }
 }

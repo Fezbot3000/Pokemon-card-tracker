@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import PropTypes from 'prop-types';
 import Modal from './Modal';
 import Button from '../atoms/Button';
+import LoggingService from '../../services/LoggingService';
 
 /**
  * ConfirmDialog Component
@@ -42,7 +43,7 @@ const ConfirmDialog = ({
       // Only close if onConfirm succeeds
       handleClose();
     } catch (error) {
-      console.error('Error in confirmation action:', error);
+      LoggingService.error('Error in confirmation action:', error);
       // Still close the dialog on error to prevent UI from getting stuck
       handleClose();
     }

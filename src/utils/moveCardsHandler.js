@@ -7,6 +7,7 @@
 
 import db from '../services/firestore/dbAdapter';
 import { toast } from 'react-hot-toast';
+import LoggingService from '../services/LoggingService';
 
 /**
  * Moves cards from one collection to another with proper validation and sync
@@ -82,14 +83,14 @@ export async function moveCards({
         const cardId = card.slabSerial || card.id;
 
         if (!cardId) {
-          console.warn('[MoveCardsHandler] Card missing ID:', card);
+          LoggingService.warn('[MoveCardsHandler] Card missing ID:', card);
           failedMoves.push({ card, reason: 'Missing card ID' });
           continue;
         }
 
         // Skip if already processed (prevent duplicates)
         if (processedCardIds.has(cardId)) {
-          console.warn(`[MoveCardsHandler] Skipping duplicate card: ${cardId}`);
+          LoggingService.warn(`[MoveCardsHandler] Skipping duplicate card: ${cardId}`);
           continue;
         }
         processedCardIds.add(cardId);
@@ -126,7 +127,7 @@ export async function moveCards({
               if (removed) {
               }
             } else {
-              console.warn(
+              LoggingService.warn(
                 `[MoveCardsHandler] Source collection ${actualSourceCollection} is not an array, cannot remove card`
               );
             }
@@ -145,7 +146,7 @@ export async function moveCards({
               if (removed) {
               }
             } else {
-              console.warn(
+              LoggingService.warn(
                 `[MoveCardsHandler] Source collection ${sourceCollection} is not an array, cannot remove card`
               );
             }
@@ -170,7 +171,7 @@ export async function moveCards({
             to: targetCollection,
           });
         } catch (syncError) {
-          console.error(
+          LoggingService.error(
             `[MoveCardsHandler] Error syncing card ${cardId}:`,
             syncError
           );
@@ -181,7 +182,7 @@ export async function moveCards({
           });
         }
       } catch (cardError) {
-        console.error('[MoveCardsHandler] Error processing card:', cardError);
+        LoggingService.error('[MoveCardsHandler] Error processing card:', cardError);
         failedMoves.push({
           card,
           reason: 'Processing error',
@@ -203,7 +204,7 @@ export async function moveCards({
         saveOptions
       );
     } catch (saveError) {
-      console.error('[MoveCardsHandler] Error saving collections:', saveError);
+      LoggingService.error('[MoveCardsHandler] Error saving collections:', saveError);
       toast.error('Failed to save collections. Changes may not persist.');
     }
 
@@ -224,7 +225,7 @@ export async function moveCards({
     }
 
     if (failedMoves.length > 0) {
-      console.warn(
+      LoggingService.warn(
         '[MoveCardsHandler] Some cards failed to move:',
         failedMoves
       );
@@ -247,7 +248,7 @@ export async function moveCards({
 
     return successfulMoves.length > 0;
   } catch (error) {
-    console.error(
+    LoggingService.error(
       '[MoveCardsHandler] Critical error during move operation:',
       error
     );
@@ -263,7 +264,7 @@ export async function moveCards({
  */
 export function validateCollectionsStructure(collections) {
   if (!collections || typeof collections !== 'object') {
-    console.warn(
+    LoggingService.warn(
       '[MoveCardsHandler] Invalid collections structure, creating empty object'
     );
     return {};
@@ -294,14 +295,14 @@ export function validateCollectionsStructure(collections) {
           validatedCollections[collectionName] = values;
         } else {
           validatedCollections[collectionName] = [];
-          console.warn(
+          LoggingService.warn(
             `[MoveCardsHandler] Collection ${collectionName} has invalid structure, reset to empty array`
           );
         }
       }
     } else {
       validatedCollections[collectionName] = [];
-      console.warn(
+      LoggingService.warn(
         `[MoveCardsHandler] Collection ${collectionName} is not an array or object, reset to empty array`
       );
     }

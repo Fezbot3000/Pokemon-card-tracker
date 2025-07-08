@@ -794,7 +794,7 @@ const NewCardForm = ({
                             onDataFetched={data => {
                               // Update form data with fetched PSA data
                               // Be careful not to overwrite user input unless intended
-                              // // console.log("PSA Data Fetched:", data);
+                              // // LoggingService.info("PSA Data Fetched:", data);
                               // Example: setFormData(prev => ({ ...prev, population: data.population || prev.population }));
                               // toast.success('PSA data fetched!');
                             }}

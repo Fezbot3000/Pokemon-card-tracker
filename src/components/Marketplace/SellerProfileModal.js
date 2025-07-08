@@ -13,6 +13,7 @@ import {
 import { db as firestoreDb } from '../../services/firebase';
 import logger from '../../utils/logger';
 import db from '../../services/firestore/dbAdapter'; // Import IndexedDB service for image loading
+import LoggingService from '../../services/LoggingService';
 
 function SellerProfileModal({
   isOpen,
@@ -42,20 +43,20 @@ function SellerProfileModal({
 
   useEffect(() => {
     if (!isOpen || !sellerId) {
-      // console.log('SellerProfileModal: Not opening because:', { isOpen, sellerId });
+      // LoggingService.info('SellerProfileModal: Not opening because:', { isOpen, sellerId });
       return;
     }
 
-    // console.log('=== SellerProfileModal Opening ===');
-    // console.log('sellerId parameter:', sellerId);
-    // console.log('sellerId type:', typeof sellerId);
-    // console.log('sellerId length:', sellerId?.length);
+    // LoggingService.info('=== SellerProfileModal Opening ===');
+    // LoggingService.info('sellerId parameter:', sellerId);
+    // LoggingService.info('sellerId type:', typeof sellerId);
+    // LoggingService.info('sellerId length:', sellerId?.length);
 
     const loadSellerData = async () => {
       try {
         setLoading(true);
 
-        // console.log('Loading seller data for ID:', sellerId);
+        // LoggingService.info('Loading seller data for ID:', sellerId);
 
         // Load seller profile
         const profileRef = doc(firestoreDb, 'marketplaceProfiles', sellerId);
@@ -65,14 +66,14 @@ function SellerProfileModal({
           setSellerProfile({ id: profileSnap.id, ...profileSnap.data() });
         } else {
           // If no marketplace profile exists, try to get basic user info
-          // console.log('No marketplace profile found, trying users collection...');
+          // LoggingService.info('No marketplace profile found, trying users collection...');
           try {
             const userRef = doc(firestoreDb, 'users', sellerId);
             const userSnap = await getDoc(userRef);
 
             if (userSnap.exists()) {
               const userData = userSnap.data();
-              // console.log('Found user data:', userData);
+              // LoggingService.info('Found user data:', userData);
               setSellerProfile({
                 id: userSnap.id,
                 displayName:
@@ -82,7 +83,7 @@ function SellerProfileModal({
                 createdAt: userData.createdAt || new Date(),
               });
             } else {
-              // console.log('No user data found, using fallback profile');
+              // LoggingService.info('No user data found, using fallback profile');
               // Fallback profile
               setSellerProfile({
                 id: sellerId,
@@ -91,7 +92,7 @@ function SellerProfileModal({
               });
             }
           } catch (userError) {
-            console.error('Error loading user data:', userError);
+            LoggingService.error('Error loading user data:', userError);
             // Still set a fallback profile
             setSellerProfile({
               id: sellerId,
@@ -137,8 +138,8 @@ function SellerProfileModal({
           const listingsRef = collection(firestoreDb, 'marketplaceItems');
 
           // Debug: First check what fields are available in a sample listing
-          // console.log('=== DEBUGGING SELLER LISTINGS ===');
-          // console.log('Looking for listings with sellerId:', sellerId);
+          // LoggingService.info('=== DEBUGGING SELLER LISTINGS ===');
+          // LoggingService.info('Looking for listings with sellerId:', sellerId);
 
           // Try to get all available listings first to see the data structure
           const allListingsQuery = query(
@@ -147,7 +148,7 @@ function SellerProfileModal({
           );
           const allListingsSnapshot = await getDocs(allListingsQuery);
 
-          // console.log('Total available listings:', allListingsSnapshot.size);
+          // LoggingService.info('Total available listings:', allListingsSnapshot.size);
 
           // Check first few listings to see field structure
           let foundSellerListings = [];
@@ -160,8 +161,8 @@ function SellerProfileModal({
             }
           });
 
-          // console.log('Found seller listings:', foundSellerListings.length);
-          // console.log('=== END DEBUGGING ===');
+          // LoggingService.info('Found seller listings:', foundSellerListings.length);
+          // LoggingService.info('=== END DEBUGGING ===');
 
           // Sort listings by timestamp
           foundSellerListings.sort((a, b) => {
@@ -176,17 +177,17 @@ function SellerProfileModal({
           loadSellerCardImages(foundSellerListings);
         } catch (listingsError) {
           logger.error('Error loading seller listings:', listingsError);
-          console.error('Listings query error:', listingsError);
+          LoggingService.error('Listings query error:', listingsError);
           setActiveListings([]);
         }
       } catch (error) {
         logger.error('Error loading seller data:', error);
-        console.error('=== SELLER PROFILE ERROR ===');
-        console.error('Error details:', error);
-        console.error('Error message:', error.message);
-        console.error('Error code:', error.code);
-        console.error('SellerId that failed:', sellerId);
-        console.error('=== END ERROR ===');
+        LoggingService.error('=== SELLER PROFILE ERROR ===');
+        LoggingService.error('Error details:', error);
+        LoggingService.error('Error message:', error.message);
+        LoggingService.error('Error code:', error.code);
+        LoggingService.error('SellerId that failed:', sellerId);
+        LoggingService.error('=== END ERROR ===');
         toast.error(
           `Failed to load seller profile: ${error.message || 'Unknown error'}`
         );
@@ -264,7 +265,7 @@ function SellerProfileModal({
         if (card.imageUrl) {
           const url = ensureStringUrl(card.imageUrl);
           if (url) {
-            // console.log(`Using imageUrl for seller card ${cardId}:`, url);
+            // LoggingService.info(`Using imageUrl for seller card ${cardId}:`, url);
             newCardImages[cardId] = url;
             continue;
           }
@@ -274,7 +275,7 @@ function SellerProfileModal({
         if (card.image) {
           const imageUrl = ensureStringUrl(card.image);
           if (imageUrl) {
-            // console.log(`Using image property for seller card ${cardId}:`, imageUrl);
+            // LoggingService.info(`Using image property for seller card ${cardId}:`, imageUrl);
             newCardImages[cardId] = imageUrl;
             continue;
           }
@@ -293,7 +294,7 @@ function SellerProfileModal({
           if (card[prop]) {
             const url = ensureStringUrl(card[prop]);
             if (url) {
-              // console.log(`Using ${prop} for seller card ${cardId}:`, url);
+              // LoggingService.info(`Using ${prop} for seller card ${cardId}:`, url);
               newCardImages[cardId] = url;
               foundImage = true;
               break;
@@ -308,7 +309,7 @@ function SellerProfileModal({
           const imageBlob = await db.getImage(cardId);
           if (imageBlob) {
             const blobUrl = URL.createObjectURL(imageBlob);
-            // console.log(`Using IndexedDB image for seller card ${cardId}:`, blobUrl);
+            // LoggingService.info(`Using IndexedDB image for seller card ${cardId}:`, blobUrl);
             newCardImages[cardId] = blobUrl;
             continue;
           }
@@ -321,7 +322,7 @@ function SellerProfileModal({
         }
 
         // If we still don't have an image, set to null
-        // console.log(`No image found for seller card ${cardId}`);
+        // LoggingService.info(`No image found for seller card ${cardId}`);
         newCardImages[cardId] = null;
       } catch (error) {
         logger.warn('Error processing seller card image:', error);

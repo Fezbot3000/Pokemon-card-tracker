@@ -22,6 +22,7 @@ import MarketplaceSearchFilters from './MarketplaceSearchFilters'; // Import the
 import { Icon } from '../../design-system'; // Import Icon component
 import toast from 'react-hot-toast';
 import BuyerSelectionModal from './BuyerSelectionModal'; // Import BuyerSelectionModal
+import LoggingService from '../../services/LoggingService';
 
 function MarketplaceSelling({ currentView, onViewChange }) {
   const [allListings, setAllListings] = useState([]);
@@ -180,7 +181,7 @@ function MarketplaceSelling({ currentView, onViewChange }) {
       try {
         setFilters(JSON.parse(savedFilters));
       } catch (error) {
-        console.error('Error parsing saved filters:', error);
+        LoggingService.error('Error parsing saved filters:', error);
       }
     }
   }, []);
@@ -420,7 +421,7 @@ function MarketplaceSelling({ currentView, onViewChange }) {
 
   const handleMarkAsPending = async listing => {
     try {
-      // console.log('Marking listing as pending:', { id: listing.id, currentStatus: listing.status });
+      // LoggingService.info('Marking listing as pending:', { id: listing.id, currentStatus: listing.status });
       const listingRef = doc(firestoreDb, 'marketplaceItems', listing.id);
       await updateDoc(listingRef, {
         status: 'pending',

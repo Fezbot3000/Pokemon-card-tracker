@@ -24,10 +24,10 @@ const noOpLogger = {
 const devLogger = {
   debug: (...args) => {},
   log: (...args) => {},
-  info: (...args) => console.info('[INFO]', ...args),
-  warn: (...args) => console.warn('[WARN]', ...args),
-  error: (...args) => console.error('[ERROR]', ...args),
-  critical: (...args) => console.error('[CRITICAL]', ...args),
+  info: (...args) => LoggingService.info('[INFO]', ...args),
+  warn: (...args) => LoggingService.warn('[WARN]', ...args),
+  error: (...args) => LoggingService.error('[ERROR]', ...args),
+  critical: (...args) => LoggingService.error('[CRITICAL]', ...args),
 };
 
 // Export the appropriate logger based on environment

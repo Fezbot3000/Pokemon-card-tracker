@@ -4,6 +4,7 @@ import React, {
   useState,
   useCallback,
 } from 'react';
+import LoggingService from '../services/LoggingService';
 
 const TutorialContext = createContext();
 
@@ -48,7 +49,7 @@ export function TutorialProvider({ children }) {
       localStorage.setItem(ONBOARDING_KEY, 'true');
       setOnboardingComplete(true);
     } catch (error) {
-      console.error('Failed to save onboarding state', error);
+      LoggingService.error('Failed to save onboarding state', error);
     }
   }, []);
 

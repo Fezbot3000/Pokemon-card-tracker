@@ -19,6 +19,7 @@ import { db as firestoreDb } from '../../services/firebase';
 import logger from '../../utils/logger';
 import MapView from './MapView';
 import BuyerSelectionModal from './BuyerSelectionModal';
+import LoggingService from '../../services/LoggingService';
 
 function ListingDetailModal({
   isOpen,
@@ -103,7 +104,7 @@ function ListingDetailModal({
       document.body.removeChild(textArea);
       toastService.success('Link copied to clipboard!');
     } catch (err) {
-      console.error('Failed to copy to clipboard:', err);
+      LoggingService.error('Failed to copy to clipboard:', err);
       toastService.error('Failed to copy link');
     }
   };

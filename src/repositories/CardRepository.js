@@ -25,6 +25,7 @@ import {
 } from 'firebase/storage';
 import { db as firestoreDb, storage } from '../services/firebase';
 import db from '../services/firestore/dbAdapter';
+import LoggingService from '../services/LoggingService';
 
 class CardRepository {
   constructor(userId) {
@@ -63,7 +64,7 @@ class CardRepository {
         updatedAt: new Date(),
       };
     } catch (error) {
-      console.error('Error creating collection:', error);
+      LoggingService.error('Error creating collection:', error);
       throw error;
     }
   }
@@ -102,7 +103,7 @@ class CardRepository {
         updatedAt: new Date(),
       };
     } catch (error) {
-      console.error(
+      LoggingService.error(
         `Error creating collection with ID ${collectionId}:`,
         error
       );
@@ -126,7 +127,7 @@ class CardRepository {
         };
       });
     } catch (error) {
-      console.error('Error getting collections:', error);
+      LoggingService.error('Error getting collections:', error);
       throw error;
     }
   }
@@ -146,7 +147,7 @@ class CardRepository {
         updatedAt: data.updatedAt?.toDate() || new Date(),
       };
     } catch (error) {
-      console.error('Error getting collection:', error);
+      LoggingService.error('Error getting collection:', error);
       throw error;
     }
   }
@@ -167,7 +168,7 @@ class CardRepository {
         updatedAt: new Date(),
       };
     } catch (error) {
-      console.error('Error updating collection:', error);
+      LoggingService.error('Error updating collection:', error);
       throw error;
     }
   }
@@ -184,7 +185,7 @@ class CardRepository {
 
       // Delete all images for these cards from IndexedDB
       try {
-        const { deleted, failed } = await db.deleteImagesForCards(cardIds);
+        await db.deleteImagesForCards(cardIds);
 
         // Dispatch event to notify components to clean up blob URLs
         if (cardIds.length > 0) {
@@ -195,7 +196,7 @@ class CardRepository {
           );
         }
       } catch (imageError) {
-        console.error(
+        LoggingService.error(
           'Error cleaning up images during collection deletion:',
           imageError
         );
@@ -226,7 +227,7 @@ class CardRepository {
         await batch.commit();
       }
     } catch (error) {
-      console.error(`Error deleting collection ${collectionId}:`, error);
+      LoggingService.error(`Error deleting collection ${collectionId}:`, error);
       throw error;
     }
   }
@@ -291,11 +292,11 @@ class CardRepository {
             storage,
             `users/${this.userId}/cards/${finalCardId}.jpg`
           );
-          const uploadResult = await uploadBytes(storageRef, imageFile);
+          await uploadBytes(storageRef, imageFile);
 
           imageUrl = await getDownloadURL(storageRef);
         } catch (error) {
-          console.error(
+          LoggingService.error(
             `Error uploading image for card ${finalCardId}:`,
             error
           );
@@ -333,7 +334,7 @@ class CardRepository {
         updatedAt: new Date(),
       };
     } catch (error) {
-      console.error('Error creating card:', error);
+      LoggingService.error('Error creating card:', error);
       throw error;
     }
   }
@@ -385,12 +386,12 @@ class CardRepository {
 
       return null;
     } catch (error) {
-      console.error(`Error getting card ${cardId}:`, error);
+      LoggingService.error(`Error getting card ${cardId}:`, error);
       throw error;
     }
   }
 
-  async getCardsByCollection(collectionId, pageSize = 500, lastDoc = null) {
+  async getCardsByCollection(collectionId, pageSize = 500) {
     try {
       let q;
 
@@ -416,14 +417,14 @@ class CardRepository {
 
       return cards;
     } catch (error) {
-      console.error('Error getting cards:', error);
+      LoggingService.error('Error getting cards:', error);
       return [];
     }
   }
 
   async getAllCards() {
     if (!this.userId) {
-      console.error('CardRepository: Cannot get all cards without a user ID');
+      LoggingService.error('CardRepository: Cannot get all cards without a user ID');
       return [];
     }
 
@@ -463,7 +464,7 @@ class CardRepository {
       // Return the array of cards
       return cards;
     } catch (error) {
-      console.error('CardRepository: Error getting all cards:', error);
+      LoggingService.error('CardRepository: Error getting all cards:', error);
       throw error;
     }
   }
@@ -489,17 +490,13 @@ class CardRepository {
 
       // Skip if no cardId
       if (!cardId) {
-        console.error('Cannot update card: No card ID provided', dataCopy);
+        LoggingService.error('Cannot update card: No card ID provided', dataCopy);
         return false;
       }
 
       // Ensure ID is consistently set in the data object
       dataCopy.id = cardId;
 
-      const startTime = performance.now();
-
-      // Check for silent flag to reduce logging
-      const isSilentUpdate = dataCopy._silentUpdate === true;
       const isDebugMode = dataCopy._saveDebug === true;
 
       // Only log in debug mode
@@ -510,7 +507,7 @@ class CardRepository {
       // Check for _lastUpdateTime to track this as a managed update rather than recursive
       const isTrackedUpdate = dataCopy._lastUpdateTime ? true : false;
       if (isTrackedUpdate && isDebugMode) {
-        // // // // console.log(`[CardRepository] Processing tracked card update for ${cardId} (${dataCopy._lastUpdateTime})`);
+        // // // // LoggingService.info(`[CardRepository] Processing tracked card update for ${cardId} (${dataCopy._lastUpdateTime})`);
       }
 
       // Clean up collection fields in the incoming data
@@ -522,13 +519,13 @@ class CardRepository {
       const targetCollection = data.collection || data.collectionId;
 
       if (!targetCollection && isDebugMode) {
-        console.warn(
+        LoggingService.warn(
           '[CardRepository] No collection specified for card update'
         );
       }
 
       if (isDebugMode) {
-        // // // // console.log(`[CardRepository] Checking if card ${cardId} exists in Firestore`);
+        // // // // LoggingService.info(`[CardRepository] Checking if card ${cardId} exists in Firestore`);
       }
 
       // Reference to the card in Firestore
@@ -539,7 +536,7 @@ class CardRepository {
 
       if (docSnap.exists()) {
         if (isDebugMode) {
-          // // // // console.log(`[CardRepository] Card ${cardId} found in Firestore, updating...`);
+          // // // // LoggingService.info(`[CardRepository] Card ${cardId} found in Firestore, updating...`);
         }
 
         const existingData = docSnap.data();
@@ -579,7 +576,7 @@ class CardRepository {
           updateData.collectionId = oldCollection;
         } else {
           // If no collection at all, this is an error
-          console.error(
+          LoggingService.error(
             `[CardRepository] No collection found for card ${cardId}`
           );
           return false;
@@ -592,33 +589,29 @@ class CardRepository {
           targetCollection !== oldCollection
         ) {
           if (isDebugMode) {
-            // // // // console.log(`[CardRepository] Card ${cardId} is moving from collection '${oldCollection}' to '${targetCollection}'`);
+            // // // // LoggingService.info(`[CardRepository] Card ${cardId} is moving from collection '${oldCollection}' to '${targetCollection}'`);
           }
 
           // Track the previous collection
           updateData.previousCollection = oldCollection;
 
-          const updateStart = performance.now();
           await updateDoc(cardRef, updateData);
-          const updateEnd = performance.now();
 
           if (isDebugMode) {
-            // // // // console.log(`[CardRepository] Card ${cardId} moved to collection '${targetCollection}' in ${(updateEnd - updateStart).toFixed(2)}ms`);
+            // // // // LoggingService.info(`[CardRepository] Card ${cardId} moved to collection '${targetCollection}'`);
           }
         } else {
           // Standard update (no collection change)
-          const updateStart = performance.now();
           await updateDoc(cardRef, updateData);
-          const updateEnd = performance.now();
 
           if (isDebugMode) {
-            // // // // console.log(`[CardRepository] Card ${cardId} updated (no collection change) in ${(updateEnd - updateStart).toFixed(2)}ms`);
+            // // // // LoggingService.info(`[CardRepository] Card ${cardId} updated (no collection change)`);
           }
         }
       } else {
         // Document doesn't exist, create it instead
         if (isDebugMode) {
-          // // // // console.log(`[CardRepository] Card ${cardId} doesn't exist, creating it...`);
+          // // // // LoggingService.info(`[CardRepository] Card ${cardId} doesn't exist, creating it...`);
         }
 
         // Prepare create data
@@ -666,14 +659,9 @@ class CardRepository {
         };
       }
 
-      const endTime = performance.now();
-      if (isDebugMode) {
-        // Debug logging removed
-      }
-
       return true;
     } catch (error) {
-      console.error(`[CardRepository] Error updating card:`, error);
+      LoggingService.error(`[CardRepository] Error updating card:`, error);
       return false;
     }
   }
@@ -708,7 +696,7 @@ class CardRepository {
 
       return imageUrl;
     } catch (error) {
-      console.error(`Error updating image for card ${cardId}:`, error);
+      LoggingService.error(`Error updating image for card ${cardId}:`, error);
       throw error;
     }
   }
@@ -717,7 +705,7 @@ class CardRepository {
     try {
       // Validate input
       if (!cardId) {
-        console.error('Invalid card ID provided to deleteCard:', cardId);
+        LoggingService.error('Invalid card ID provided to deleteCard:', cardId);
         throw new Error('Invalid input: Card ID is required');
       }
 
@@ -726,7 +714,7 @@ class CardRepository {
         typeof cardId === 'object' ? cardId.slabSerial : String(cardId);
 
       if (!id || id === 'undefined' || id === 'null') {
-        console.error('Invalid card ID after conversion:', id);
+        LoggingService.error('Invalid card ID after conversion:', id);
         throw new Error('Invalid input: Card ID is invalid');
       }
 
@@ -770,7 +758,7 @@ class CardRepository {
 
       return true;
     } catch (error) {
-      console.error(`Error deleting card ${cardId}:`, error);
+      LoggingService.error(`Error deleting card ${cardId}:`, error);
       // Provide a more user-friendly error message
       if (error.message.includes('Invalid input')) {
         throw error; // Already formatted nicely
@@ -823,7 +811,7 @@ class CardRepository {
 
       return true;
     } catch (error) {
-      console.error(`Error updating fields for card ${cardId}:`, error);
+      LoggingService.error(`Error updating fields for card ${cardId}:`, error);
       throw error;
     }
   }
@@ -831,7 +819,7 @@ class CardRepository {
   async getCardsForCollection(collectionId) {
     try {
       if (!collectionId) {
-        console.error('Collection ID is required to get cards');
+        LoggingService.error('Collection ID is required to get cards');
         return [];
       }
 
@@ -858,7 +846,7 @@ class CardRepository {
 
       return cards;
     } catch (error) {
-      console.error(
+      LoggingService.error(
         `Error getting cards for collection ${collectionId}:`,
         error
       );
@@ -879,7 +867,7 @@ class CardRepository {
         // Card not found in 'cards' collection. Check if it's already in 'sold-items'.
         const existingSoldDoc = await getDoc(soldItemRef);
         if (existingSoldDoc.exists()) {
-          console.warn(
+          LoggingService.warn(
             `Card ${cardId} not found in 'cards' collection, but already exists in 'sold-items'. Assuming already processed.`
           );
           // Optionally, return the existing sold item data or a success indicator
@@ -902,7 +890,7 @@ class CardRepository {
       // Check if this card has already been marked as sold by checking if a doc with its ID exists in sold-items
       const existingSoldDoc = await getDoc(soldItemRef);
       if (existingSoldDoc.exists()) {
-        console.warn(
+        LoggingService.warn(
           `Card ${card.id} (${card.name || card.card}) is already marked as sold. To update, a different flow might be needed.`
         );
         // Return existing sold data to indicate it's already processed
@@ -922,7 +910,7 @@ class CardRepository {
         try {
           finalSoldDate = Timestamp.fromDate(new Date(soldData.dateSold));
         } catch (e) {
-          console.warn(
+          LoggingService.warn(
             'Invalid dateSold string, using current date for soldDate:',
             soldData.dateSold,
             e
@@ -975,7 +963,7 @@ class CardRepository {
       try {
         await this.deleteCard(cardId, { preserveImages: false }); // Set preserveImages based on desired behavior
       } catch (deleteError) {
-        console.error(
+        LoggingService.error(
           `Failed to delete original card ${cardId} after marking as sold:`,
           deleteError
         );
@@ -990,7 +978,7 @@ class CardRepository {
         updatedAt: new Date(),
       }; // Simulate client-side timestamps
     } catch (error) {
-      console.error('Error marking card as sold:', error);
+      LoggingService.error('Error marking card as sold:', error);
       throw error;
     }
   }
@@ -1017,7 +1005,7 @@ class CardRepository {
         soldDate: doc.data().soldDate?.toDate() || new Date(),
       }));
     } catch (error) {
-      console.error('Error getting sold cards:', error);
+      LoggingService.error('Error getting sold cards:', error);
       throw error;
     }
   }
@@ -1123,7 +1111,7 @@ class CardRepository {
             });
           }
         } catch (collectionError) {
-          console.error(
+          LoggingService.error(
             'Error updating collection card count:',
             collectionError
           );
@@ -1140,7 +1128,7 @@ class CardRepository {
         updatedAt: new Date(),
       };
     } catch (error) {
-      console.error('Error creating sold card directly:', error);
+      LoggingService.error('Error creating sold card directly:', error);
       throw error;
     }
   }
@@ -1164,7 +1152,7 @@ class CardRepository {
       try {
         existingSoldCards = await db.getSoldCards();
       } catch (error) {
-        console.error('Error getting existing sold cards:', error);
+        LoggingService.error('Error getting existing sold cards:', error);
       }
 
       // Merge with existing sold cards, avoiding duplicates
@@ -1183,7 +1171,7 @@ class CardRepository {
       try {
         await db.saveSoldCards(mergedCards);
       } catch (dbError) {
-        console.error('Error saving sold cards to IndexedDB:', dbError);
+        LoggingService.error('Error saving sold cards to IndexedDB:', dbError);
         return {
           success: false,
           count: 0,
@@ -1198,7 +1186,7 @@ class CardRepository {
         errorCount: 0,
       };
     } catch (error) {
-      console.error('Error importing sold cards from backup:', error);
+      LoggingService.error('Error importing sold cards from backup:', error);
       return {
         success: false,
         count: 0,
@@ -1259,7 +1247,7 @@ class CardRepository {
         return null;
       }
     } catch (error) {
-      console.error('Error getting user profile:', error);
+      LoggingService.error('Error getting user profile:', error);
       return null;
     }
   }
@@ -1274,10 +1262,6 @@ class CardRepository {
         'userData'
       );
 
-      // Check if profile document exists
-      const profileDoc = await getDoc(profileRef);
-      const exists = profileDoc.exists();
-
       const dataToSave = {
         ...profileData,
         updatedAt: serverTimestamp(),
@@ -1291,7 +1275,7 @@ class CardRepository {
         profile: profileData,
       };
     } catch (error) {
-      console.error('Error updating user profile:', error);
+      LoggingService.error('Error updating user profile:', error);
       throw error;
     }
   }
@@ -1344,7 +1328,6 @@ class CardRepository {
       // Create batch for Firestore operations
       const batch = writeBatch(firestoreDb);
       let batchCount = 0;
-      let totalBatches = 0;
 
       // Process cards in batches (Firestore has a limit of 500 operations per batch)
       for (const card of processedData) {
@@ -1382,7 +1365,6 @@ class CardRepository {
         // Commit batch if we reach 500 operations
         if (batchCount === 500) {
           await batch.commit();
-          totalBatches++;
           batchCount = 0;
         }
       }
@@ -1390,12 +1372,11 @@ class CardRepository {
       // Commit any remaining operations
       if (batchCount > 0) {
         await batch.commit();
-        totalBatches++;
       }
 
       return { success: true, count: processedData.length };
     } catch (error) {
-      console.error('Error importing cards:', error);
+      LoggingService.error('Error importing cards:', error);
       throw error;
     }
   }
@@ -1436,12 +1417,11 @@ class CardRepository {
       }
 
       // Get current card count for verification
-      const beforeCount = await this.getCardCount(collectionId);
+      await this.getCardCount(collectionId);
 
       // Create batch for Firestore operations
       let batch = writeBatch(firestoreDb);
       let batchCount = 0;
-      let totalBatches = 0;
       let importedCount = 0;
       let errorCount = 0;
       let processedCardIds = [];
@@ -1472,11 +1452,10 @@ class CardRepository {
           // Commit batch if we reach 500 operations
           if (batchCount === 500) {
             await batch.commit();
-            totalBatches++;
             batchCount = 0;
           }
         } catch (cardError) {
-          console.error(`Error processing card:`, cardError);
+          LoggingService.error(`Error processing card:`, cardError);
           errorCount++;
         }
       }
@@ -1485,9 +1464,8 @@ class CardRepository {
       if (batchCount > 0) {
         try {
           await batch.commit();
-          totalBatches++;
         } catch (batchError) {
-          console.error(`Error committing final batch:`, batchError);
+          LoggingService.error(`Error committing final batch:`, batchError);
           errorCount += batchCount;
           importedCount -= batchCount;
         }
@@ -1498,13 +1476,12 @@ class CardRepository {
 
       // Update collection card count
       try {
-        const collectionData = collectionDoc.data();
         await updateDoc(collectionRef, {
           cardCount: afterCount,
           updatedAt: serverTimestamp(),
         });
       } catch (collectionError) {
-        console.error(
+        LoggingService.error(
           `Error updating collection ${collectionId} card count:`,
           collectionError
         );
@@ -1518,7 +1495,7 @@ class CardRepository {
         processedCardIds: processedCardIds,
       };
     } catch (error) {
-      console.error('Error importing cards from backup:', error);
+      LoggingService.error('Error importing cards from backup:', error);
       throw error;
     }
   }
@@ -1532,7 +1509,7 @@ class CardRepository {
       const snapshot = await getDocs(q);
       return snapshot.size;
     } catch (error) {
-      console.error(
+      LoggingService.error(
         `Error getting card count for collection ${collectionId}:`,
         error
       );
@@ -1560,7 +1537,7 @@ class CardRepository {
       // Create a new collection if it doesn't exist
       return await this.createCollection(name);
     } catch (error) {
-      console.error(`Error getting or creating collection "${name}":`, error);
+      LoggingService.error(`Error getting or creating collection "${name}":`, error);
       throw error;
     }
   }
@@ -1586,7 +1563,7 @@ class CardRepository {
 
       return true;
     } catch (error) {
-      console.error(
+      LoggingService.error(
         `Error updating collection ${collectionId} card count:`,
         error
       );
@@ -1604,7 +1581,6 @@ class CardRepository {
       // Create batch for Firestore operations
       let batch = writeBatch(firestoreDb);
       let batchCount = 0;
-      let totalBatches = 0;
       let deletedCount = 0;
       let errorCount = 0;
 
@@ -1632,7 +1608,7 @@ class CardRepository {
             try {
               await db.deleteImage(cardId);
             } catch (indexedDbError) {
-              console.warn(
+              LoggingService.warn(
                 `Error deleting image from IndexedDB for card ${cardId}:`,
                 indexedDbError
               );
@@ -1653,14 +1629,13 @@ class CardRepository {
             // Commit batch if we reach 500 operations
             if (batchCount === 500) {
               await batch.commit();
-              totalBatches++;
               batchCount = 0;
             }
           } else {
             errorCount++;
           }
         } catch (cardError) {
-          console.error(
+          LoggingService.error(
             `Error processing card ${cardId} for deletion:`,
             cardError
           );
@@ -1672,9 +1647,8 @@ class CardRepository {
       if (batchCount > 0) {
         try {
           await batch.commit();
-          totalBatches++;
         } catch (batchError) {
-          console.error(`Error committing final deletion batch:`, batchError);
+          LoggingService.error(`Error committing final deletion batch:`, batchError);
           errorCount += batchCount;
           deletedCount -= batchCount;
         }
@@ -1687,66 +1661,7 @@ class CardRepository {
 
       return { success: true, count: deletedCount, errorCount: errorCount };
     } catch (error) {
-      console.error('Error deleting cards:', error);
-      throw error;
-    }
-  }
-
-  async deleteCollection(collectionId) {
-    try {
-      // Get all cards in the collection first
-      const cards = await this.getCardsForCollection(collectionId);
-
-      // Extract card IDs for image cleanup
-      const cardIds = cards
-        .map(card => card.id || card.slabSerial)
-        .filter(Boolean);
-
-      // Delete all images for these cards from IndexedDB
-      try {
-        const { deleted, failed } = await db.deleteImagesForCards(cardIds);
-
-        // Dispatch event to notify components to clean up blob URLs
-        if (cardIds.length > 0) {
-          window.dispatchEvent(
-            new CustomEvent('card-images-cleanup', {
-              detail: { cardIds },
-            })
-          );
-        }
-      } catch (imageError) {
-        console.error(
-          'Error cleaning up images during collection deletion:',
-          imageError
-        );
-        // Continue with deletion even if image cleanup fails
-      }
-
-      // Delete the collection document from Firestore
-      const collectionRef = doc(
-        firestoreDb,
-        'users',
-        this.userId,
-        'collections',
-        collectionId
-      );
-      await deleteDoc(collectionRef);
-
-      // Delete all cards in the collection from Firestore
-      const batch = writeBatch(firestoreDb);
-      for (const card of cards) {
-        if (card.id) {
-          const cardRef = doc(this.cardsRef, card.id);
-          batch.delete(cardRef);
-        }
-      }
-
-      // Commit the batch delete operation
-      if (cards.length > 0) {
-        await batch.commit();
-      }
-    } catch (error) {
-      console.error(`Error deleting collection ${collectionId}:`, error);
+      LoggingService.error('Error deleting cards:', error);
       throw error;
     }
   }
@@ -1799,7 +1714,7 @@ class CardRepository {
 
           return totalDeleted;
         } catch (error) {
-          console.error(`Error deleting ${logName} collection:`, error);
+          LoggingService.error(`Error deleting ${logName} collection:`, error);
           throw error;
         }
       };
@@ -1821,7 +1736,7 @@ class CardRepository {
           await Promise.all(deletePromises);
         }
       } catch (directDeleteError) {
-        console.error('Error during direct card deletion:', directDeleteError);
+        LoggingService.error('Error during direct card deletion:', directDeleteError);
         // Fall back to collection-based deletion
       }
 
@@ -1875,7 +1790,7 @@ class CardRepository {
           }
         }
       } catch (otherCollError) {
-        console.warn('Error checking for other collections:', otherCollError);
+        LoggingService.warn('Error checking for other collections:', otherCollError);
         // Continue with the reset process
       }
 
@@ -1913,14 +1828,14 @@ class CardRepository {
                   deleteImagePromises.push(deleteObject(itemRef));
                 });
               } catch (nestedError) {
-                console.warn(
+                LoggingService.warn(
                   `Error listing nested directory ${nestedPrefix.fullPath}:`,
                   nestedError
                 );
               }
             }
           } catch (subDirError) {
-            console.warn(
+            LoggingService.warn(
               `Error listing subdirectory ${prefix.fullPath}:`,
               subDirError
             );
@@ -1931,7 +1846,7 @@ class CardRepository {
           await Promise.allSettled(deleteImagePromises); // Use allSettled to continue even if some deletions fail
         }
       } catch (storageError) {
-        console.warn(
+        LoggingService.warn(
           'Error during storage cleanup, continuing with reset:',
           storageError
         );
@@ -1939,7 +1854,7 @@ class CardRepository {
 
       return { success: true };
     } catch (error) {
-      console.error('Error deleting all user data:', error);
+      LoggingService.error('Error deleting all user data:', error);
       throw error;
     }
   }
@@ -1949,7 +1864,7 @@ class CardRepository {
       // Ensure cardId is a string
       const cardIdStr = String(cardId?.id || cardId || '').trim();
       if (!cardIdStr) {
-        console.warn('Invalid card ID provided for cleanup:', cardId);
+        LoggingService.warn('Invalid card ID provided for cleanup:', cardId);
         return { success: false, error: 'Invalid card ID' };
       }
 
@@ -1972,7 +1887,7 @@ class CardRepository {
           break; // Exit loop after successful deletion
         } catch (storageError) {
           // Continue trying other paths
-          console.debug(`No image at path ${path}:`, storageError);
+          LoggingService.debug(`No image at path ${path}:`, storageError);
         }
       }
 
@@ -1985,22 +1900,22 @@ class CardRepository {
           })
         );
       } catch (imageError) {
-        console.warn('Error cleaning up local image cache:', imageError);
+        LoggingService.warn('Error cleaning up local image cache:', imageError);
       }
 
       return { success: true, imageDeleted };
     } catch (error) {
-      console.error('Error cleaning up ghost card:', error);
+      LoggingService.error('Error cleaning up ghost card:', error);
       throw error;
     }
   }
 
-  async deleteCard(cardId, options = {}) {
+  async forceDeleteCard(cardId) {
     try {
       // Ensure cardId is a string
       const cardIdStr = String(cardId?.id || cardId || '').trim();
       if (!cardIdStr) {
-        console.warn('Invalid card ID provided for deletion:', cardId);
+        LoggingService.warn('Invalid card ID provided for deletion:', cardId);
         return { success: false, error: 'Invalid card ID' };
       }
 
@@ -2010,7 +1925,7 @@ class CardRepository {
       } catch (firestoreError) {
         // If the document doesn't exist in Firestore, that's okay
         // We still want to clean up any ghost images
-        console.warn(
+        LoggingService.warn(
           'Card not found in Firestore, attempting cleanup:',
           firestoreError
         );
@@ -2021,7 +1936,7 @@ class CardRepository {
 
       return { success: true, ...cleanupResult };
     } catch (error) {
-      console.error('Error deleting card:', error);
+      LoggingService.error('Error deleting card:', error);
       throw error;
     }
   }

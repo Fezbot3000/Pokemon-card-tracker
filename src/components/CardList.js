@@ -303,7 +303,7 @@ const CardList = ({
     );
 
     if (hasStaleSelections && selectedCards.size > 0) {
-      // console.log('[CardList] Clearing stale selection state after cards changed');
+      // LoggingService.info('[CardList] Clearing stale selection state after cards changed');
       clearSelection();
     }
   }, [filteredCards, selectedCards, clearSelection]);
@@ -812,8 +812,8 @@ const CardList = ({
       const isDevMode = process.env.NODE_ENV === 'development';
 
       if (isDevMode) {
-        // console.log('%c DELETION DEBUG - STARTING DELETION PROCESS', 'background: #ff0000; color: white; font-size: 14px;');
-        // console.log('Cards to delete:', cardsToDelete);
+        // LoggingService.info('%c DELETION DEBUG - STARTING DELETION PROCESS', 'background: #ff0000; color: white; font-size: 14px;');
+        // LoggingService.info('Cards to delete:', cardsToDelete);
       }
 
       // Create a copy of the collections
@@ -823,8 +823,8 @@ const CardList = ({
         : [cardsToDelete];
 
       if (isDevMode) {
-        // console.log('Card IDs for deletion:', cardIds);
-        // console.log('Current collections before deletion:', JSON.parse(JSON.stringify(collections)));
+        // LoggingService.info('Card IDs for deletion:', cardIds);
+        // LoggingService.info('Current collections before deletion:', JSON.parse(JSON.stringify(collections)));
 
         // Log each card's properties to check ID consistency
         cardIds.forEach(cardId => {
@@ -833,7 +833,7 @@ const CardList = ({
             .find(card => card.slabSerial === cardId || card.id === cardId);
 
           if (cardInCollection) {
-            // console.log('Found card to delete:', {
+            // LoggingService.info('Found card to delete:', {
             //   cardId,
             //   slabSerial: cardInCollection.slabSerial,
             //   id: cardInCollection.id,
@@ -861,21 +861,21 @@ const CardList = ({
           const afterCount = updatedCollections[collectionName].length;
 
           if (isDevMode) {
-            // console.log(`Collection "${collectionName}": removed ${beforeCount - afterCount} cards`);
+            // LoggingService.info(`Collection "${collectionName}": removed ${beforeCount - afterCount} cards`);
           }
         }
       });
 
       // Save to database
       if (isDevMode) {
-        // console.log('Saving updated collections to database...');
+        // LoggingService.info('Saving updated collections to database...');
       }
 
       try {
         await db.saveCollections(updatedCollections);
 
         if (isDevMode) {
-          // console.log('Database save successful');
+          // LoggingService.info('Database save successful');
         }
       } catch (dbError) {
         // Always log errors, even in production
@@ -887,29 +887,29 @@ const CardList = ({
       try {
         if (onDeleteCards) {
           if (isDevMode) {
-            // console.log('Calling onDeleteCards with:', cardIds);
+            // LoggingService.info('Calling onDeleteCards with:', cardIds);
           }
 
           await onDeleteCards(cardIds);
 
           if (isDevMode) {
-            // console.log('onDeleteCards completed successfully');
+            // LoggingService.info('onDeleteCards completed successfully');
           }
         } else if (onDeleteCard) {
           if (isDevMode) {
-            // console.log('Using onDeleteCard for each card');
+            // LoggingService.info('Using onDeleteCard for each card');
           }
 
           for (const cardId of cardIds) {
             if (isDevMode) {
-              // console.log('Deleting individual card:', cardId);
+              // LoggingService.info('Deleting individual card:', cardId);
             }
 
             await onDeleteCard(cardId);
           }
 
           if (isDevMode) {
-            // console.log('All individual deletions completed');
+            // LoggingService.info('All individual deletions completed');
           }
         } else {
           logger.warn(
@@ -1026,7 +1026,7 @@ const CardList = ({
         setShowMoveModal(false);
         setSelectedCardsToMove([]);
 
-        // console.log('[CardList] Move operation completed successfully');
+        // LoggingService.info('[CardList] Move operation completed successfully');
       } else {
         logger.warn('[CardList] Move operation failed or partially failed');
         // Don't clear the modal on failure so user can retry
@@ -1438,7 +1438,7 @@ const CardList = ({
                     // Use the existing bulk listing logic
                     (async () => {
                       try {
-                        // console.log("Starting bulk listing flow");
+                        // LoggingService.info("Starting bulk listing flow");
 
                         if (!user || !user.uid) {
                           toast.error('You must be logged in to list cards');
@@ -1502,7 +1502,7 @@ const CardList = ({
                           );
 
                           if (cardsNeedingUpdate.length > 0) {
-                            // console.log(`Found ${cardsNeedingUpdate.length} cards with out-of-sync isListed flags`);
+                            // LoggingService.info(`Found ${cardsNeedingUpdate.length} cards with out-of-sync isListed flags`);
 
                             const updatePromises = cardsNeedingUpdate.map(
                               card => {
@@ -1516,7 +1516,7 @@ const CardList = ({
                                   isListed: card.isActuallyListed,
                                 })
                                   .then(() => {
-                                    // console.log(`Updated isListed flag for ${card.card || card.slabSerial} to ${card.isActuallyListed}`);
+                                    // LoggingService.info(`Updated isListed flag for ${card.card || card.slabSerial} to ${card.isActuallyListed}`);
                                   })
                                   .catch(error => {
                                     logger.error(

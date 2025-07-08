@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import db from '../services/firestore/dbAdapter';
+import LoggingService from '../services/LoggingService';
 
 // Create a context for invoice data
 const InvoiceContext = createContext();
@@ -36,7 +37,7 @@ export const InvoiceProvider = ({ children }) => {
 
         setInvoiceCards(cardIds);
       } catch (error) {
-        console.error('Error loading invoice cards:', error);
+        LoggingService.error('Error loading invoice cards:', error);
       } finally {
         setLoading(false);
       }
@@ -73,7 +74,7 @@ export const InvoiceProvider = ({ children }) => {
 
       setInvoiceCards(cardIds);
     } catch (error) {
-      console.error('Error refreshing invoice cards:', error);
+      LoggingService.error('Error refreshing invoice cards:', error);
     } finally {
       setLoading(false);
     }

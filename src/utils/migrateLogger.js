@@ -5,6 +5,7 @@
  * so they can be reviewed for potential cleanup.
  */
 
+import LoggingService from '../services/LoggingService';
 const fs = require('fs');
 const path = require('path');
 
@@ -77,23 +78,23 @@ function analyzeLoggerUsage() {
 
 // Run analysis
 if (require.main === module) {
-  // // console.log('Analyzing logger usage in the codebase...\n');
+  // // LoggingService.info('Analyzing logger usage in the codebase...\n');
 
   const results = analyzeLoggerUsage();
 
-  // // console.log(`Files using logger: ${results.filesWithLogger.length}`);
-  // // console.log(`Total logger calls: ${results.totalLoggerCalls}\n`);
+  // // LoggingService.info(`Files using logger: ${results.filesWithLogger.length}`);
+  // // LoggingService.info(`Total logger calls: ${results.totalLoggerCalls}\n`);
 
-  // // console.log('Logger calls by type:');
+  // // LoggingService.info('Logger calls by type:');
   // Object.entries(results.loggerCallsByType).forEach(([type, count]) => {
-  //   // console.log(`  ${type}: ${count}`);
+  //   // LoggingService.info(`  ${type}: ${count}`);
   // });
 
-  // // console.log('\nFiles with logger (sorted by usage):');
+  // // LoggingService.info('\nFiles with logger (sorted by usage):');
   // results.filesWithLogger
   //   .sort((a, b) => b.calls - a.calls)
   //   .forEach(({ file, calls }) => {
-  //     // console.log(`  ${file}: ${calls} calls`);
+  //     // LoggingService.info(`  ${file}: ${calls} calls`);
   //   });
 }
 
