@@ -6,45 +6,26 @@ import React, {
   useRef,
 } from 'react';
 import {
-  createBrowserRouter,
-  RouterProvider,
   Navigate,
   useLocation,
-  Link,
   useNavigate,
   Outlet,
   useOutletContext,
 } from 'react-router-dom';
-import { HelmetProvider } from 'react-helmet-async';
 import {
   Header,
-  useTheme,
   useAuth,
   SettingsModal,
-  Icon,
-  RestoreProvider,
-  useRestore,
-  BackupProvider,
-  useBackup,
-  BackupProgressBar,
   toastService, // Import toastService
 } from './design-system';
-import DesignSystemProvider from './design-system/providers/DesignSystemProvider';
-import MobileSettingsModal from './components/MobileSettingsModal';
 import Settings from './components/Settings';
 import CardList from './components/CardList';
 import CardDetails from './components/CardDetails';
 import AddCardModal from './components/AddCardModal';
 import ProfitChangeModal from './components/ProfitChangeModal';
-import Home from './components/Home';
-import Login from './components/Login';
-import ForgotPassword from './components/ForgotPassword';
 import useCardData from './hooks/useCardData';
 import db from './services/firestore/dbAdapter';
-import { TutorialProvider, useTutorial } from './contexts/TutorialContext';
-import { UserPreferencesProvider } from './contexts/UserPreferencesContext'; // Added import
-import InvoiceProvider from './contexts/InvoiceContext';
-import ErrorBoundary from './components/ErrorBoundary';
+import { useTutorial } from './contexts/TutorialContext';
 import './styles/globals.css';
 import './styles/utilities.css';
 
@@ -54,31 +35,16 @@ import Marketplace from './components/Marketplace/Marketplace';
 import MarketplaceSelling from './components/Marketplace/MarketplaceSelling';
 import MarketplaceMessages from './components/Marketplace/MarketplaceMessages';
 import BottomNavBar from './components/BottomNavBar';
-import CloudSync from './components/CloudSync';
-import ComponentLibrary from './pages/ComponentLibrary';
 import TrialStatusBanner from './components/TrialStatusBanner';
 
 import logger from './utils/logger'; // Import the logger utility
 import RestoreListener from './components/RestoreListener';
 import SyncStatusIndicator from './components/SyncStatusIndicator'; // Import the SyncStatusIndicator
 import featureFlags from './utils/featureFlags'; // Import feature flags
-import {
-  doc,
-  getDoc,
-  setDoc,
-  serverTimestamp,
-  collection,
-  getDocs,
-  writeBatch,
-  deleteDoc,
-} from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL, listAll } from 'firebase/storage';
-import { db as firestoreDb, storage } from './services/firebase';
+
 import TutorialModal from './components/TutorialModal'; // Add back this import
 import { settingsManager } from './utils/settingsManager'; // Import settings manager
-import { dataResetManager } from './utils/dataResetManager'; // Import data reset manager
 import { useCardModals } from './hooks/useCardModals'; // Import card modals hook
-import { CardRepository } from './repositories/CardRepository';
 import { collectionManager } from './utils/collectionManager'; // Import collection manager
 
 // Helper function to generate a unique ID for cards without one
