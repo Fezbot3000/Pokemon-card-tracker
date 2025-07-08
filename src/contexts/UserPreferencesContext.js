@@ -339,7 +339,7 @@ export function UserPreferencesProvider({ children }) {
 
     // Clean up listener when component unmounts or user changes
     return () => unsubscribe();
-  }, [user]); // Removed preferredCurrency from dependency array to avoid loop on initial save
+  }, [user]); // Intentionally exclude preferredCurrency and saveUserPreferencesToFirestore to avoid circular dependency
 
   // Save preferences to Firestore (takes currencyToSave to handle initial save correctly)
   const saveUserPreferencesToFirestore = async currencyToSave => {

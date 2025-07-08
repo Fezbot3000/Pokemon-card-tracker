@@ -86,7 +86,7 @@ const useCardData = () => {
       // const savedCards = localStorage.getItem('pokemonCards');
       // if (savedCards) setCards(JSON.parse(savedCards));
     }
-  }, [currentUser?.uid]); // Rerun effect only when user ID changes
+  }, [currentUser]); // Fix: Include full currentUser object as dependency
 
   // Save cards to localStorage whenever they change (Conditional - only if no user)
   useEffect(() => {

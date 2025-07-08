@@ -62,8 +62,10 @@ export const useLazyImage = (src, placeholder = '/placeholder.png') => {
 
     return () => {
       didCancel = true;
-      if (observer && observer.unobserve && imageRef.current) {
-        observer.unobserve(imageRef.current);
+      // Store current ref value to avoid stale closure
+      const currentImageRef = imageRef.current;
+      if (observer && observer.unobserve && currentImageRef) {
+        observer.unobserve(currentImageRef);
       }
     };
   }, [src, placeholder]);

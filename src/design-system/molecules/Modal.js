@@ -166,7 +166,7 @@ const Modal = ({
     return () => {
       document.removeEventListener('keydown', handleEscapeKey);
     };
-  }, [isOpen]);
+  }, [isOpen, handleClose]); // Fix: Include handleClose dependency
 
   // Return null if modal is not open
   if (!isOpen) return null;

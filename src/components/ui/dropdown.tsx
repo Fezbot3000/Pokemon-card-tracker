@@ -52,7 +52,7 @@ const Dropdown = React.forwardRef<HTMLDivElement, DropdownProps>(
         return () =>
           document.removeEventListener('mousedown', handleClickOutside);
       }
-    }, [isOpen, ref]);
+    }, [isOpen, ref, handleClose]); // Fix: Include handleClose dependency
 
     return (
       <div className={`relative ${className || ''}`} ref={ref} {...props}>

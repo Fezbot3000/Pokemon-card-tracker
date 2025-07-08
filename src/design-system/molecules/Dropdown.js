@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import Icon from '../atoms/Icon';
 import BottomSheet from './BottomSheet';
@@ -40,14 +40,14 @@ const Dropdown = ({
   const controlled = isOpen !== undefined;
   const dropdownIsOpen = controlled ? isOpen : internalIsOpen;
 
-  const handleOpenChange = newIsOpen => {
+  const handleOpenChange = useCallback(newIsOpen => {
     if (!controlled) {
       setInternalIsOpen(newIsOpen);
     }
     if (onOpenChange) {
       onOpenChange(newIsOpen);
     }
-  };
+  }, [controlled, onOpenChange]); // Fix: Wrap in useCallback to prevent effect re-runs
 
   const toggleDropdown = e => {
     e.stopPropagation();

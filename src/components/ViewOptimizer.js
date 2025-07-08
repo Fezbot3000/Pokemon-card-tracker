@@ -28,10 +28,13 @@ const ViewOptimizer = ({ activeView, views, onViewChange }) => {
 
     // Save scroll position when leaving view
     return () => {
-      if (viewRefs.current[activeView]) {
+      // Store current values to avoid stale closure
+      const currentViewRefs = viewRefs.current;
+      const currentActiveView = activeView;
+      if (currentViewRefs[currentActiveView]) {
         CacheManager.saveScrollPosition(
-          activeView,
-          viewRefs.current[activeView].scrollTop
+          currentActiveView,
+          currentViewRefs[currentActiveView].scrollTop
         );
       }
     };

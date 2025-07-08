@@ -206,4 +206,45 @@ module.exports = {
   corePlugins: {
     backdropFilter: true,
   },
+  // Safelist custom classes that are used but not detected by Tailwind
+  safelist: [
+    // Custom component classes
+    'component-library',
+    'card-title',
+    'card-details-form', 
+    'view-optimizer-container',
+    'view-container',
+    '-view',
+    'error',
+    'form-field',
+    'required',
+    // Focus ring classes for custom UI components
+    'focus:ring-ring',
+    'focus:ring-offset-background',
+    'focus-visible:ring-ring',
+    'focus-visible:ring-offset-background',
+    // Background classes for custom themes
+    'bg-background',
+    'bg-card',
+    'bg-muted',
+    'bg-secondary',
+    'bg-input',
+    // Text classes for custom themes  
+    'text-card-foreground',
+    'text-secondary-foreground',
+    'text-muted-foreground',
+    'text-foreground',
+    'placeholder:text-muted-foreground',
+    // Border classes
+    'border-input',
+    // State-based classes
+    'data-[state=checked]:text-primary-foreground',
+    'data-[state=unchecked]:bg-input',
+    'data-[state=active]:bg-background',
+    'data-[state=active]:text-foreground',
+    'hover:bg-secondary/80',
+    // Dynamic focus ring classes
+    'focus:ring-[var(--primary-default)]/20',
+    'focus:ring-[var(--primary-light)]/20',
+  ],
 } 
