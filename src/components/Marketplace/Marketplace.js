@@ -488,10 +488,8 @@ function Marketplace({ currentView, onViewChange }) {
   };
 
   const handleEditListing = async listing => {
-    console.log('handleEditListing called with listing:', listing);
     setSelectedListing(listing);
     setIsEditModalOpen(true);
-    console.log('Edit modal should be opening...');
   };
 
   const handleMarkAsPending = async listing => {

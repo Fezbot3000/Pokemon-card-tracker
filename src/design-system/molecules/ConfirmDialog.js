@@ -19,6 +19,7 @@ const ConfirmDialog = ({
   confirmText = 'Confirm',
   cancelText = 'Cancel',
   variant = 'danger',
+  zIndex = 50,
 }) => {
   // Effect to ensure UI is reset if the dialog is closed unexpectedly
   useEffect(() => {
@@ -69,6 +70,7 @@ const ConfirmDialog = ({
       title={title}
       size="contextual"
       closeOnClickOutside={true}
+      zIndex={zIndex}
       footer={
         <>
           <Button
@@ -102,6 +104,7 @@ ConfirmDialog.propTypes = {
   confirmText: PropTypes.string,
   cancelText: PropTypes.string,
   variant: PropTypes.string,
+  zIndex: PropTypes.number,
 };
 
 export default ConfirmDialog;

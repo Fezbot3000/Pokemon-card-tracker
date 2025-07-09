@@ -881,6 +881,9 @@ class ShadowSyncService {
                 })
               );
               break;
+            default:
+              logger.warn(`[ShadowSync] Unknown change type: ${change.type}`);
+              break;
           }
         }
       },

@@ -292,7 +292,6 @@ function ListingDetailModal({
   };
 
   const handleEditListing = async () => {
-    console.log('Edit button clicked, listing:', listing);
     if (onEditListing) {
       // Close this modal first to prevent stacking issues
       onClose();
@@ -301,7 +300,7 @@ function ListingDetailModal({
         onEditListing(listing);
       }, 100);
     } else {
-      console.error('onEditListing prop is not provided');
+      logger.error('onEditListing prop is not provided');
     }
   };
 

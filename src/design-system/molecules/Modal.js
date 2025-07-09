@@ -1,6 +1,5 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import PropTypes from 'prop-types';
-import Button from '../atoms/Button';
 import Icon from '../atoms/Icon';
 
 /**
@@ -19,7 +18,6 @@ const Modal = ({
   position = 'center',
   className = '',
   forceDarkMode = false,
-  showOverlay = true,
   showAsStatic = false,
   maxWidth = 'max-w-2xl',
   ariaLabel,
@@ -29,14 +27,12 @@ const Modal = ({
 }) => {
   const modalRef = useRef(null);
   const scrollPosRef = useRef(null);
-  const [isMounted, setIsMounted] = useState(false);
   const [isAnimatingOut, setIsAnimatingOut] = useState(false);
   const [animationClass, setAnimationClass] = useState('');
 
   // Preserve scroll position and prevent background scrolling
   useEffect(() => {
     if (isOpen && !showAsStatic) {
-      setIsMounted(true);
       setIsAnimatingOut(false);
 
       // Apply the appropriate animation class based on position
@@ -343,7 +339,6 @@ Modal.propTypes = {
   position: PropTypes.oneOf(['center', 'right']),
   className: PropTypes.string,
   forceDarkMode: PropTypes.bool,
-  showOverlay: PropTypes.bool,
   showAsStatic: PropTypes.bool,
   maxWidth: PropTypes.string,
   ariaLabel: PropTypes.string,

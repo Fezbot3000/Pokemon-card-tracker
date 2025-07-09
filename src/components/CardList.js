@@ -475,7 +475,7 @@ const CardList = ({
         [cardId]: prev[cardId], // Keep existing on error, or set to null
       }));
     }
-  }, [cards, cardImages]);
+  }, [cards]); // Remove cardImages dependency to prevent infinite loops
 
   // Wrap the onUpdateCard function to handle image refreshing
   const handleCardUpdate = useCallback(

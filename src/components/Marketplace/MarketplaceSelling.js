@@ -6,8 +6,6 @@ import {
   where,
   orderBy,
   onSnapshot,
-  doc,
-  updateDoc,
 } from 'firebase/firestore';
 import { db as firestoreDb } from '../../services/firebase';
 import logger from '../../utils/logger';
@@ -18,7 +16,7 @@ import ListingDetailModal from './ListingDetailModal';
 import MarketplaceCard from './MarketplaceCard'; // Import the custom MarketplaceCard component
 import MarketplaceNavigation from './MarketplaceNavigation'; // Import the navigation component
 import MarketplaceSearchFilters from './MarketplaceSearchFilters'; // Import the search and filter component
-import toast from 'react-hot-toast';
+
 
 import LoggingService from '../../services/LoggingService';
 

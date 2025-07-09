@@ -251,6 +251,7 @@ function EditListingModal({ isOpen, onClose, listing, onListingDeleted, onListin
         confirmText={isDeleting ? 'Deleting...' : 'Delete'}
         cancelText="Cancel"
         variant="danger"
+        zIndex={60}
       />
       <Modal
         isOpen={isOpen}
