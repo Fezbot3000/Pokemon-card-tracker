@@ -184,34 +184,24 @@ function Marketplace({ currentView, onViewChange }) {
                     'Error in fallback marketplace listener:',
                     fallbackError
                   );
-                  setLoading(false);
                 }
               );
-            } catch (fallbackSetupError) {
-              logger.error(
-                'Error setting up fallback marketplace listener:',
-                fallbackSetupError
-              );
+            } catch (innerError) {
+              logger.error('Error setting up fallback marketplace listener:', innerError);
               setLoading(false);
             }
-          } else {
-            logger.error('Error in marketplace listener:', error);
-            setLoading(false);
           }
         }
       );
-    } catch (setupError) {
-      logger.error('Error setting up marketplace listener:', setupError);
+    } catch (error) {
+      logger.error('Error setting up marketplace listener:', error);
       setLoading(false);
     }
 
-    // Cleanup listener on unmount
     return () => {
-      if (unsubscribe) {
-        unsubscribe();
-      }
+      if (unsubscribe) unsubscribe();
     };
-  }, [user, loadCardImages]);
+  }, [user]);
 
   const loadCardImages = useCallback(async listingsData => {
     if (!listingsData || listingsData.length === 0) return;
@@ -498,8 +488,10 @@ function Marketplace({ currentView, onViewChange }) {
   };
 
   const handleEditListing = async listing => {
+    console.log('handleEditListing called with listing:', listing);
     setSelectedListing(listing);
     setIsEditModalOpen(true);
+    console.log('Edit modal should be opening...');
   };
 
   const handleMarkAsPending = async listing => {
@@ -507,6 +499,7 @@ function Marketplace({ currentView, onViewChange }) {
       const listingRef = doc(firestoreDb, 'marketplaceItems', listing.id);
       await updateDoc(listingRef, {
         status: 'pending',
+        updatedAt: new Date(),
       });
       toast.success('Listing marked as pending');
     } catch (error) {
@@ -786,9 +779,25 @@ function Marketplace({ currentView, onViewChange }) {
           listing={selectedListing}
           onClose={() => {
             setIsEditModalOpen(false);
-            // Don't clear selectedListing here - keep the detail modal open
+            setSelectedListing(null);
           }}
-          onEditListing={handleEditListing}
+          onListingDeleted={(deletedListingId) => {
+            // Remove deleted listing from state
+            setAllListings(prev => prev.filter(listing => listing.id !== deletedListingId));
+            setFilteredListings(prev => prev.filter(listing => listing.id !== deletedListingId));
+          }}
+          onListingUpdated={(listingId, updatedData) => {
+            // Update listing in state
+            const updateListing = (listings) => 
+              listings.map(listing => 
+                listing.id === listingId 
+                  ? { ...listing, ...updatedData }
+                  : listing
+              );
+            
+            setAllListings(updateListing);
+            setFilteredListings(updateListing);
+          }}
         />
       )}
 

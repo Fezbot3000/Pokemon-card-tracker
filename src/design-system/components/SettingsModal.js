@@ -48,6 +48,7 @@ const SettingsModal = ({
   onStartTutorial,
   onUploadImagesFromZip,
   className = '',
+  selectedCollection, // Extract selectedCollection so it doesn't get passed to DOM
   ...props
 }) => {
   const { theme, toggleTheme } = useTheme();

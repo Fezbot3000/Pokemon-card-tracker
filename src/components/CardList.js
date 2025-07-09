@@ -438,7 +438,7 @@ const CardList = ({
         }
       });
     };
-  }, [cards, cardImages]); // Dependency remains on 'cards'
+  }, [cards]); // Only depend on cards, not cardImages to prevent infinite loop
 
   // Function to refresh a single card's image
   const refreshCardImage = useCallback(async cardId => {
@@ -1321,7 +1321,7 @@ const CardList = ({
       {selectedCards.size > 0 && (
         <>
           {/* Bottom shadow overlay for better contrast */}
-          <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 h-1/3 bg-gradient-to-t from-black via-black to-transparent"></div>
+          <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 h-1/3 bg-gradient-to-t from-white via-white to-transparent dark:from-black dark:via-black dark:to-transparent"></div>
 
           <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2">
             {/* Selection Count Badge */}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '../../design-system';
+import { useAuth, Button, Icon } from '../../design-system';
 import {
   collection,
   query,
@@ -19,7 +19,7 @@ import MarketplaceCard from './MarketplaceCard'; // Import the custom Marketplac
 import MarketplaceNavigation from './MarketplaceNavigation'; // Import the navigation component
 import MarketplaceSearchFilters from './MarketplaceSearchFilters'; // Import the search and filter component
 import toast from 'react-hot-toast';
-import BuyerSelectionModal from './BuyerSelectionModal'; // Import BuyerSelectionModal
+
 import LoggingService from '../../services/LoggingService';
 
 function MarketplaceSelling({ currentView, onViewChange }) {
@@ -36,11 +36,11 @@ function MarketplaceSelling({ currentView, onViewChange }) {
   const [selectedListing, setSelectedListing] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-  const [isBuyerSelectionModalOpen, setIsBuyerSelectionModalOpen] =
-    useState(false); // New state for buyer selection modal
+
   const { user } = useAuth();
   const { formatAmountForDisplay: formatUserCurrency } =
     useUserPreferences();
+
 
   useEffect(() => {
     if (!user) return;
@@ -159,7 +159,7 @@ function MarketplaceSelling({ currentView, onViewChange }) {
         unsubscribe();
       }
     };
-  }, [user, loadCardImages]);
+  }, [user]);
 
   // Handle filter changes from the search/filter component
   const handleFilterChange = newFilters => {
@@ -380,7 +380,7 @@ function MarketplaceSelling({ currentView, onViewChange }) {
 
     // Make sure to update loading state
     setLoading(false);
-  }, [cardImages]);
+  }, []);
 
   const handleEditClick = listing => {
     setSelectedListing(listing);
@@ -389,7 +389,7 @@ function MarketplaceSelling({ currentView, onViewChange }) {
 
   const handleCloseEditModal = () => {
     setIsEditModalOpen(false);
-    // Don't clear selectedListing here - keep the detail modal open
+    setSelectedListing(null);
   };
 
   const handleListingDeleted = deletedListingId => {
@@ -402,6 +402,19 @@ function MarketplaceSelling({ currentView, onViewChange }) {
     );
   };
 
+  const handleListingUpdated = (listingId, updatedData) => {
+    // Update the listing in both state arrays
+    const updateListing = (listings) => 
+      listings.map(listing => 
+        listing.id === listingId 
+          ? { ...listing, ...updatedData }
+          : listing
+      );
+    
+    setAllListings(updateListing);
+    setFilteredListings(updateListing);
+  };
+
   const handleCardClick = listing => {
     setSelectedListing(listing);
     setIsDetailModalOpen(true);
@@ -412,30 +425,9 @@ function MarketplaceSelling({ currentView, onViewChange }) {
     setSelectedListing(null);
   };
 
-  const handleMarkAsSold = listing => {
-    setSelectedListing(listing);
-    setIsBuyerSelectionModalOpen(true);
-  };
 
-  const handleMarkAsPending = async listing => {
-    try {
-      // LoggingService.info('Marking listing as pending:', { id: listing.id, currentStatus: listing.status });
-      const listingRef = doc(firestoreDb, 'marketplaceItems', listing.id);
-      await updateDoc(listingRef, {
-        status: 'pending',
-        updatedAt: new Date(),
-      });
-      toast.success('Listing marked as pending');
-    } catch (error) {
-      logger.error('Error marking listing as pending:', error);
-      toast.error('Failed to mark listing as pending');
-    }
-  };
 
-  const handleCloseBuyerSelectionModal = () => {
-    setIsBuyerSelectionModalOpen(false);
-    setSelectedListing(null);
-  };
+
 
   return (
     <div className="p-4 pb-20 pt-16 sm:p-6 sm:pt-4">
@@ -576,58 +568,16 @@ function MarketplaceSelling({ currentView, onViewChange }) {
                       </p>
                     )}
                   </div>
-                  <div className="w-full space-y-1">
-                    <button
+                  <div className="w-full">
+                    <Button
+                      variant="primary"
                       onClick={() => handleEditClick(listing)}
-                      className="w-full rounded-md bg-blue-500 px-3 py-1.5 text-sm text-white transition-colors hover:bg-blue-600"
+                      leftIcon={<Icon name="edit" />}
+                      size="sm"
+                      className="w-full"
                     >
                       Edit
-                    </button>
-                    {listing.status !== 'sold' &&
-                      listing.status !== 'pending' && (
-                        <>
-                          <button
-                            onClick={() => handleMarkAsPending(listing)}
-                            className="w-full rounded-md bg-yellow-500 px-3 py-1.5 text-sm text-white transition-colors hover:bg-yellow-600"
-                          >
-                            Mark as Pending
-                          </button>
-                          <button
-                            onClick={() => handleMarkAsSold(listing)}
-                            className="w-full rounded-md bg-red-500 px-3 py-1.5 text-sm text-white transition-colors hover:bg-red-600"
-                          >
-                            Mark as Sold
-                          </button>
-                        </>
-                      )}
-                    {(listing.status === 'sold' ||
-                      listing.status === 'pending') && (
-                      <button
-                        onClick={async () => {
-                          try {
-                            const listingRef = doc(
-                              firestoreDb,
-                              'marketplaceItems',
-                              listing.id
-                            );
-                            await updateDoc(listingRef, {
-                              status: 'available',
-                              updatedAt: new Date(),
-                            });
-                            toast.success('Listing marked as available');
-                          } catch (error) {
-                            logger.error(
-                              'Error marking listing as available:',
-                              error
-                            );
-                            toast.error('Failed to mark listing as available');
-                          }
-                        }}
-                        className="w-full rounded-md bg-green-500 px-3 py-1.5 text-sm text-white transition-colors hover:bg-green-600"
-                      >
-                        Mark as Available
-                      </button>
-                    )}
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -642,6 +592,7 @@ function MarketplaceSelling({ currentView, onViewChange }) {
         onClose={handleCloseEditModal}
         listing={selectedListing}
         onListingDeleted={handleListingDeleted}
+        onListingUpdated={handleListingUpdated}
       />
 
       {/* Listing Detail Modal */}
@@ -659,17 +610,10 @@ function MarketplaceSelling({ currentView, onViewChange }) {
             : null
         }
         onEditListing={handleEditClick}
-        onMarkAsPending={handleMarkAsPending}
-        onMarkAsSold={handleMarkAsSold}
         onViewChange={onViewChange}
       />
 
-      {/* Buyer Selection Modal */}
-      <BuyerSelectionModal
-        isOpen={isBuyerSelectionModalOpen}
-        onClose={handleCloseBuyerSelectionModal}
-        listing={selectedListing}
-      />
+
     </div>
   );
 }

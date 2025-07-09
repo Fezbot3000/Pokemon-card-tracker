@@ -17,6 +17,9 @@ const MarketplaceCard = ({
   onSelect,
   className = '',
   children,
+  // Extract non-DOM props to prevent them from being spread to DOM elements
+  investmentAUD,
+  formatUserCurrency,
   ...props
 }) => {
   // If children are provided, render them instead of the default card content

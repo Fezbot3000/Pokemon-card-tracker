@@ -44,7 +44,7 @@ import TutorialModal from './components/TutorialModal'; // Add back this import
 import { settingsManager } from './utils/settingsManager'; // Import settings manager
 import { useCardModals } from './hooks/useCardModals'; // Import card modals hook
 import { collectionManager } from './utils/collectionManager'; // Import collection manager
-import ESLintDebugger from './components/ESLintDebugger'; // Import ESLint debugger
+
 
 // Main Dashboard Component
 function Dashboard() {
@@ -1046,9 +1046,6 @@ function AppContent({ currentView, setCurrentView }) {
 
       <TutorialModal />
       <SyncStatusIndicator />
-      
-      {/* ESLint Debug Panel - Remove this once warnings are fixed */}
-      {process.env.NODE_ENV === 'development' && <ESLintDebugger />}
     </div>
   );
 }

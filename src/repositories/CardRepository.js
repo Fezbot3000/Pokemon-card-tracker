@@ -429,18 +429,34 @@ class CardRepository {
     }
 
     try {
-      // Create a query that gets all cards for the current user
-      // Order by updatedAt descending to get the most recently updated cards first
-      // Limit to 1000 cards as a safeguard against excessive data transfer
-      const q = query(
-        this.cardsRef,
-        where('userId', '==', this.userId),
-        orderBy('updatedAt', 'desc'),
-        limit(1000)
-      );
-
-      // Execute the query
-      const querySnapshot = await getDocs(q);
+      // First, try the optimized query with ordering
+      let querySnapshot;
+      try {
+        const q = query(
+          this.cardsRef,
+          where('userId', '==', this.userId),
+          orderBy('updatedAt', 'desc'),
+          limit(1000)
+        );
+        querySnapshot = await getDocs(q);
+      } catch (indexError) {
+        // If the composite index doesn't exist, fall back to a simple query
+        if (indexError.message && indexError.message.includes('requires an index')) {
+          // Only show this message once per session to avoid console spam
+          if (!CardRepository.indexWarningShown) {
+            LoggingService.info('CardRepository: Using fallback query (composite index not yet available)');
+            CardRepository.indexWarningShown = true;
+          }
+          const fallbackQuery = query(
+            this.cardsRef,
+            where('userId', '==', this.userId),
+            limit(1000)
+          );
+          querySnapshot = await getDocs(fallbackQuery);
+        } else {
+          throw indexError;
+        }
+      }
 
       // Convert query snapshot to an array of card objects
       const cards = [];
@@ -460,6 +476,15 @@ class CardRepository {
 
         cards.push(cardData);
       });
+
+      // If we used the fallback query, sort the cards manually by updatedAt
+      if (cards.length > 0 && cards[0].updatedAt) {
+        cards.sort((a, b) => {
+          const aDate = a.updatedAt instanceof Date ? a.updatedAt : new Date(a.updatedAt);
+          const bDate = b.updatedAt instanceof Date ? b.updatedAt : new Date(b.updatedAt);
+          return bDate.getTime() - aDate.getTime(); // Descending order
+        });
+      }
 
       // Return the array of cards
       return cards;
@@ -1198,24 +1223,69 @@ class CardRepository {
 
   // Real-time Listeners
   subscribeToCollection(collectionId, callback) {
+    if (!this.userId) {
+      LoggingService.error('Cannot subscribe to collection without a user ID');
+      return () => {}; // Return empty unsubscribe function
+    }
+
+    // Helper function to process and sort cards
+    const processCards = (snapshot) => {
+      const cards = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      
+      // Sort manually by updatedAt (descending)
+      cards.sort((a, b) => {
+        const aDate = a.updatedAt instanceof Date ? a.updatedAt : 
+                     (a.updatedAt?.toDate ? a.updatedAt.toDate() : new Date(a.updatedAt || 0));
+        const bDate = b.updatedAt instanceof Date ? b.updatedAt : 
+                     (b.updatedAt?.toDate ? b.updatedAt.toDate() : new Date(b.updatedAt || 0));
+        return bDate.getTime() - aDate.getTime(); // Descending order
+      });
+      
+      callback(cards);
+    };
+
+    // Use simple query to avoid index issues
     const q = query(
       this.cardsRef,
-      where('collectionId', '==', collectionId),
-      orderBy('updatedAt', 'desc')
+      where('userId', '==', this.userId),
+      where('collectionId', '==', collectionId)
     );
 
-    return onSnapshot(q, snapshot => {
-      const cards = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      callback(cards);
+    return onSnapshot(q, processCards, (error) => {
+      LoggingService.error('Collection subscription error:', error);
     });
   }
 
   subscribeToAllCards(callback) {
-    const q = query(this.cardsRef, orderBy('updatedAt', 'desc'));
+    if (!this.userId) {
+      LoggingService.error('Cannot subscribe to all cards without a user ID');
+      return () => {}; // Return empty unsubscribe function
+    }
 
-    return onSnapshot(q, snapshot => {
+    // Helper function to process and sort cards
+    const processCards = (snapshot) => {
       const cards = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      
+      // Sort manually by updatedAt (descending)
+      cards.sort((a, b) => {
+        const aDate = a.updatedAt instanceof Date ? a.updatedAt : 
+                     (a.updatedAt?.toDate ? a.updatedAt.toDate() : new Date(a.updatedAt || 0));
+        const bDate = b.updatedAt instanceof Date ? b.updatedAt : 
+                     (b.updatedAt?.toDate ? b.updatedAt.toDate() : new Date(b.updatedAt || 0));
+        return bDate.getTime() - aDate.getTime(); // Descending order
+      });
+      
       callback(cards);
+    };
+
+    // Use simple query to avoid index issues
+    const q = query(
+      this.cardsRef,
+      where('userId', '==', this.userId)
+    );
+
+    return onSnapshot(q, processCards, (error) => {
+      LoggingService.error('All cards subscription error:', error);
     });
   }
 

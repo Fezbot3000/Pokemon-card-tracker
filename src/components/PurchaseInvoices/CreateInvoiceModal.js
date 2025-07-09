@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { toast } from 'react-hot-toast';
 import FormField from '../../design-system/molecules/FormField';
 import Modal from '../../design-system/molecules/Modal';
@@ -22,18 +22,11 @@ const CreateInvoiceModal = ({
   const [invoiceNumber, setInvoiceNumber] = useState('');
   const [notes, setNotes] = useState('');
   const [enlargedImage, setEnlargedImage] = useState(null);
-
-  // Memoize preSelectedCards to prevent unnecessary re-renders
-  const memoizedPreSelectedCards = useMemo(
-    () => preSelectedCards,
-    [preSelectedCards]
-  );
-
-  // Memoize editingInvoice to prevent unnecessary re-renders
-  const memoizedEditingInvoice = useMemo(
-    () => editingInvoice,
-    [editingInvoice]
-  );
+  
+  // Use refs to track initialization state and prevent infinite loops
+  const hasInitialized = useRef(false);
+  const lastEditingInvoiceId = useRef(null);
+  const lastPreSelectedCardsLength = useRef(0);
 
   // Initialize form with editing invoice data or pre-selected cards
   useEffect(() => {
@@ -45,30 +38,41 @@ const CreateInvoiceModal = ({
       setInvoiceNumber('');
       setNotes('');
       setEnlargedImage(null);
+      hasInitialized.current = false;
+      lastEditingInvoiceId.current = null;
+      lastPreSelectedCardsLength.current = 0;
       return;
     }
 
-    if (memoizedEditingInvoice) {
+    // Prevent re-initialization if we've already initialized with the same data
+    const currentEditingInvoiceId = editingInvoice?.id || null;
+    const currentPreSelectedCardsLength = preSelectedCards?.length || 0;
+    
+    if (hasInitialized.current && 
+        lastEditingInvoiceId.current === currentEditingInvoiceId &&
+        lastPreSelectedCardsLength.current === currentPreSelectedCardsLength) {
+      return;
+    }
+
+    if (editingInvoice) {
       // We're in edit mode - populate form with invoice data
-      // LoggingService.info('Initializing form with editing invoice data:', memoizedEditingInvoice);
-      setSelectedCards(memoizedEditingInvoice.cards || []);
-      setSeller(memoizedEditingInvoice.seller || '');
+      setSelectedCards(editingInvoice.cards || []);
+      setSeller(editingInvoice.seller || '');
       setDate(
-        memoizedEditingInvoice.date || new Date().toISOString().split('T')[0]
+        editingInvoice.date || new Date().toISOString().split('T')[0]
       );
-      setInvoiceNumber(memoizedEditingInvoice.invoiceNumber || '');
-      setNotes(memoizedEditingInvoice.notes || '');
-    } else if (
-      memoizedPreSelectedCards &&
-      memoizedPreSelectedCards.length > 0
-    ) {
+      setInvoiceNumber(editingInvoice.invoiceNumber || '');
+      setNotes(editingInvoice.notes || '');
+      
+      lastEditingInvoiceId.current = currentEditingInvoiceId;
+      hasInitialized.current = true;
+    } else if (preSelectedCards && preSelectedCards.length > 0) {
       // Using pre-selected cards for a new invoice
-      // LoggingService.info('Initializing form with pre-selected cards');
-      setSelectedCards(memoizedPreSelectedCards);
+      setSelectedCards(preSelectedCards);
 
       // Pre-populate the purchase date from the first card's datePurchased field
-      if (memoizedPreSelectedCards[0].datePurchased) {
-        setDate(memoizedPreSelectedCards[0].datePurchased);
+      if (preSelectedCards[0].datePurchased) {
+        setDate(preSelectedCards[0].datePurchased);
       }
 
       // Generate a default invoice number based on date
@@ -84,8 +88,11 @@ const CreateInvoiceModal = ({
       // Reset other fields for new invoice
       setSeller('');
       setNotes('');
+      
+      lastPreSelectedCardsLength.current = currentPreSelectedCardsLength;
+      hasInitialized.current = true;
     }
-  }, [isOpen, memoizedEditingInvoice, memoizedPreSelectedCards]);
+  }, [isOpen, editingInvoice?.id, preSelectedCards?.length]);
 
   // Calculate total investment amount
   const totalInvestment = selectedCards.reduce((sum, card) => {
@@ -116,7 +123,7 @@ const CreateInvoiceModal = ({
 
         // Show loading toast
         const loadingToast = toast.loading(
-          memoizedEditingInvoice ? 'Updating invoice...' : 'Creating invoice...'
+          editingInvoice ? 'Updating invoice...' : 'Creating invoice...'
         );
 
         // Prepare the card data - ensure all values are defined
@@ -149,7 +156,7 @@ const CreateInvoiceModal = ({
 
         const invoiceData = {
           id:
-            memoizedEditingInvoice?.id ||
+            editingInvoice?.id ||
             `invoice_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
           invoiceNumber: invoiceNumber.trim(),
           seller: seller.trim(),
@@ -159,7 +166,7 @@ const CreateInvoiceModal = ({
           totalAmount: totalInvestment,
           cardCount: cardData.length,
           createdAt:
-            memoizedEditingInvoice?.createdAt || new Date().toISOString(),
+            editingInvoice?.createdAt || new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         };
 
@@ -169,7 +176,7 @@ const CreateInvoiceModal = ({
         // Success feedback
         toast.dismiss(loadingToast);
         toast.success(
-          memoizedEditingInvoice
+          editingInvoice
             ? 'Invoice updated successfully!'
             : 'Invoice created successfully!'
         );
@@ -189,7 +196,7 @@ const CreateInvoiceModal = ({
       date,
       notes,
       totalInvestment,
-      memoizedEditingInvoice,
+      editingInvoice,
       onSave,
       onClose,
     ]

@@ -26,13 +26,34 @@ function MarketplaceReviews() {
     const loadReviews = async () => {
       try {
         const reviewsRef = collection(firestoreDb, 'marketplaceReviews');
-        const q = query(
-          reviewsRef,
-          where('sellerId', '==', user.uid),
-          orderBy('createdAt', 'desc')
-        );
+        
+        // Try with composite index first (sellerId + createdAt ordering)
+        let querySnapshot;
+        try {
+          const q = query(
+            reviewsRef,
+            where('sellerId', '==', user.uid),
+            orderBy('createdAt', 'desc')
+          );
+          querySnapshot = await getDocs(q);
+        } catch (indexError) {
+          // Fallback to simple query if composite index doesn't exist
+          if (indexError.message && indexError.message.includes('requires an index')) {
+            // Only show this message once per session to avoid console spam
+            if (!MarketplaceReviews.indexWarningShown) {
+              logger.info('MarketplaceReviews: Using fallback query (composite index not yet available)');
+              MarketplaceReviews.indexWarningShown = true;
+            }
+            const simpleQuery = query(
+              reviewsRef,
+              where('sellerId', '==', user.uid)
+            );
+            querySnapshot = await getDocs(simpleQuery);
+          } else {
+            throw indexError;
+          }
+        }
 
-        const querySnapshot = await getDocs(q);
         const reviewsData = [];
         let totalRating = 0;
         const breakdown = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
@@ -42,6 +63,13 @@ function MarketplaceReviews() {
           reviewsData.push(review);
           totalRating += review.rating;
           breakdown[review.rating] = (breakdown[review.rating] || 0) + 1;
+        });
+
+        // Sort manually if we used the fallback query
+        reviewsData.sort((a, b) => {
+          const timeA = a.createdAt?.toDate?.() || a.createdAt || new Date(0);
+          const timeB = b.createdAt?.toDate?.() || b.createdAt || new Date(0);
+          return timeB - timeA; // Descending order (newest first)
         });
 
         setReviews(reviewsData);
@@ -204,5 +232,8 @@ function MarketplaceReviews() {
     </div>
   );
 }
+
+// Initialize static property for warning suppression
+MarketplaceReviews.indexWarningShown = false;
 
 export default MarketplaceReviews;

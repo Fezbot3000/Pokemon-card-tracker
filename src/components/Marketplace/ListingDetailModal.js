@@ -47,93 +47,6 @@ function ListingDetailModal({
   const [existingChatId, setExistingChatId] = useState(null);
   const [showBuyerSelectionModal, setShowBuyerSelectionModal] = useState(false);
 
-
-
-  useEffect(() => {
-    if (!listing || !isOpen) return;
-
-    const loadSellerData = async () => {
-      try {
-        setLoadingSellerData(true);
-
-        // Load seller profile
-        const profileRef = doc(
-          firestoreDb,
-          'marketplaceProfiles',
-          listing.userId
-        );
-        try {
-          const profileSnap = await getDoc(profileRef);
-          if (profileSnap.exists()) {
-            const profileData = profileSnap.data();
-            setSellerProfile(profileData);
-
-            // Store the actual marketplace profile userId for viewing seller's other listings
-            if (profileData.userId) {
-              listing._marketplaceProfileUserId = profileData.userId;
-            }
-          } else {
-            logger.error('Seller profile not found');
-          }
-        } catch (error) {
-          if (error.code === 'permission-denied') {
-            logger.error('Permission denied: cannot access seller profile');
-            toastService.error(
-              'Permission denied: cannot access seller profile'
-            );
-          } else {
-            logger.error('Error loading seller profile:', error);
-          }
-        }
-
-        // Load seller reviews
-        const reviewsRef = collection(firestoreDb, 'marketplaceReviews');
-        const q = query(
-          reviewsRef,
-          where('sellerId', '==', listing.userId),
-          orderBy('createdAt', 'desc'),
-          limit(10)
-        );
-
-        try {
-          const querySnapshot = await getDocs(q);
-          const reviews = [];
-          let totalRating = 0;
-
-          querySnapshot.forEach(doc => {
-            const review = { id: doc.id, ...doc.data() };
-            reviews.push(review);
-            totalRating += review.rating;
-          });
-
-          setSellerReviews(reviews);
-          setTotalReviews(reviews.length);
-          setAverageRating(
-            reviews.length > 0 ? totalRating / reviews.length : 0
-          );
-        } catch (error) {
-          if (error.code === 'permission-denied') {
-            logger.error('Permission denied: cannot access seller reviews');
-          } else {
-            logger.error('Error loading seller reviews:', error);
-          }
-          setSellerReviews([]);
-          setTotalReviews(0);
-          setAverageRating(0);
-        }
-
-        // Check for existing chat with this seller about this listing
-        await checkForExistingChat();
-      } catch (error) {
-        logger.error('Error loading seller data:', error);
-      } finally {
-        setLoadingSellerData(false);
-      }
-    };
-
-    loadSellerData();
-  }, [listing, isOpen, checkForExistingChat]);
-
   // Function to check for existing chats
   const checkForExistingChat = useCallback(async () => {
     if (!user || !listing || user.uid === listing.userId) return;
@@ -172,6 +85,123 @@ function ListingDetailModal({
       }
     }
   }, [user, listing]);
+
+  useEffect(() => {
+    if (!listing || !isOpen) return;
+
+    const loadSellerData = async () => {
+      try {
+        setLoadingSellerData(true);
+
+        // Load seller profile
+        const profileRef = doc(
+          firestoreDb,
+          'marketplaceProfiles',
+          listing.userId
+        );
+        try {
+          const profileSnap = await getDoc(profileRef);
+          if (profileSnap.exists()) {
+            const profileData = profileSnap.data();
+            setSellerProfile(profileData);
+
+            // Store the actual marketplace profile userId for viewing seller's other listings
+            if (profileData.userId) {
+              listing._marketplaceProfileUserId = profileData.userId;
+            }
+          } else {
+            logger.error('Seller profile not found');
+          }
+        } catch (error) {
+          if (error.code === 'permission-denied') {
+            logger.error('Permission denied: cannot access seller profile');
+            toastService.error(
+              'Permission denied: cannot access seller profile'
+            );
+          } else {
+            logger.error('Error loading seller profile:', error);
+          }
+        }
+
+        // Load seller reviews with fallback for missing composite index
+        const reviewsRef = collection(firestoreDb, 'marketplaceReviews');
+        
+        let querySnapshot;
+        try {
+          // Try with composite index first (sellerId + createdAt ordering)
+          const q = query(
+            reviewsRef,
+            where('sellerId', '==', listing.userId),
+            orderBy('createdAt', 'desc'),
+            limit(10)
+          );
+          querySnapshot = await getDocs(q);
+        } catch (indexError) {
+          // Fallback to simple query if composite index doesn't exist
+          if (indexError.message && indexError.message.includes('requires an index')) {
+            // Only show this message once per session to avoid console spam
+            if (!ListingDetailModal.indexWarningShown) {
+              logger.info('ListingDetailModal: Using fallback query (composite index not yet available)');
+              ListingDetailModal.indexWarningShown = true;
+            }
+            const simpleQuery = query(
+              reviewsRef,
+              where('sellerId', '==', listing.userId)
+            );
+            querySnapshot = await getDocs(simpleQuery);
+          } else {
+            throw indexError;
+          }
+        }
+
+        try {
+          const reviews = [];
+          let totalRating = 0;
+
+          querySnapshot.forEach(doc => {
+            const review = { id: doc.id, ...doc.data() };
+            reviews.push(review);
+            totalRating += review.rating;
+          });
+
+          // Sort manually by createdAt (newest first) and limit to 10
+          reviews.sort((a, b) => {
+            const timeA = a.createdAt?.toDate?.() || a.createdAt || new Date(0);
+            const timeB = b.createdAt?.toDate?.() || b.createdAt || new Date(0);
+            return timeB - timeA; // Descending order (newest first)
+          });
+
+          // Limit to 10 reviews manually if we used the fallback query
+          const limitedReviews = reviews.slice(0, 10);
+
+          setSellerReviews(limitedReviews);
+          setTotalReviews(limitedReviews.length);
+          setAverageRating(
+            limitedReviews.length > 0 ? totalRating / limitedReviews.length : 0
+          );
+        } catch (error) {
+          if (error.code === 'permission-denied') {
+            logger.error('Permission denied: cannot access seller reviews');
+          } else {
+            logger.error('Error loading seller reviews:', error);
+          }
+          setSellerReviews([]);
+          setTotalReviews(0);
+          setAverageRating(0);
+        }
+
+        // Check for existing chat with this seller about this listing
+        await checkForExistingChat();
+      } catch (error) {
+        logger.error('Error loading seller data:', error);
+      } finally {
+        setLoadingSellerData(false);
+      }
+    };
+
+    loadSellerData();
+  }, [listing, isOpen, checkForExistingChat]);
+
 
   if (!listing || !listing.card) {
     return null;
@@ -262,7 +292,17 @@ function ListingDetailModal({
   };
 
   const handleEditListing = async () => {
-    onEditListing(listing);
+    console.log('Edit button clicked, listing:', listing);
+    if (onEditListing) {
+      // Close this modal first to prevent stacking issues
+      onClose();
+      // Small delay to ensure modal closes before opening edit modal
+      setTimeout(() => {
+        onEditListing(listing);
+      }, 100);
+    } else {
+      console.error('onEditListing prop is not provided');
+    }
   };
 
   const handleMarkAsPending = async () => {
@@ -272,10 +312,38 @@ function ListingDetailModal({
         status: 'pending',
         updatedAt: new Date(),
       });
+      
+      // Update local listing object immediately
+      listing.status = 'pending';
+      
       toastService.success('Listing marked as pending');
+      
+      // Close modal to let parent refresh with updated data
+      onClose();
     } catch (error) {
       logger.error('Error marking listing as pending:', error);
       toastService.error('Failed to mark listing as pending');
+    }
+  };
+
+  const handleMarkAsAvailable = async () => {
+    try {
+      const listingRef = doc(firestoreDb, 'marketplaceItems', listing.id);
+      await updateDoc(listingRef, {
+        status: 'available',
+        updatedAt: new Date(),
+      });
+      
+      // Update local listing object immediately
+      listing.status = 'available';
+      
+      toastService.success('Listing marked as available');
+      
+      // Close modal to let parent refresh with updated data
+      onClose();
+    } catch (error) {
+      logger.error('Error marking listing as available:', error);
+      toastService.error('Failed to mark listing as available');
     }
   };
 
@@ -290,6 +358,8 @@ function ListingDetailModal({
   const renderFooter = () => {
     if (isOwnListing) {
       // Seller's own listing - show management actions
+      const isPending = listing?.status === 'pending';
+      
       return (
         <>
           <Button variant="secondary" onClick={onClose}>
@@ -298,10 +368,10 @@ function ListingDetailModal({
           <div className="flex gap-2">
             <Button
               variant="secondary"
-              onClick={handleMarkAsPending}
-              leftIcon={<Icon name="schedule" />}
+              onClick={isPending ? handleMarkAsAvailable : handleMarkAsPending}
+              leftIcon={<Icon name={isPending ? "check" : "schedule"} />}
             >
-              Mark as Pending
+              {isPending ? 'Mark as Available' : 'Mark as Pending'}
             </Button>
             <Button
               variant="success"
@@ -717,5 +787,8 @@ function ListingDetailModal({
     </>
   );
 }
+
+// Initialize static property for warning suppression
+ListingDetailModal.indexWarningShown = false;
 
 export default ListingDetailModal;

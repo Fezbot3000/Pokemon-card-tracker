@@ -175,7 +175,7 @@ const PurchaseInvoices = () => {
       loadInvoices();
       loadProfile();
     }
-  }, [currentUser, loadInvoices, loadProfile]);
+  }, [currentUser]);
 
   // Filter invoices based on search query
   const filteredInvoices = useMemo(() => {

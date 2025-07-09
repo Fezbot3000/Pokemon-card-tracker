@@ -73,19 +73,21 @@ function ListCardModal({ isOpen, onClose, selectedCards }) {
     setListingData(initialData);
   }, [selectedCards, isOpen, user, userLocation]);
 
-  // Update location when userLocation is loaded
+  // Update location when userLocation is loaded (only when userLocation changes)
   useEffect(() => {
-    if (userLocation && listingData) {
-      const updatedData = {};
-      Object.keys(listingData).forEach(cardId => {
-        updatedData[cardId] = {
-          ...listingData[cardId],
-          location: listingData[cardId].location || userLocation,
-        };
+    if (userLocation && Object.keys(listingData).length > 0) {
+      setListingData(prevData => {
+        const updatedData = {};
+        Object.keys(prevData).forEach(cardId => {
+          updatedData[cardId] = {
+            ...prevData[cardId],
+            location: prevData[cardId].location || userLocation,
+          };
+        });
+        return updatedData;
       });
-      setListingData(updatedData);
     }
-  }, [userLocation, listingData]);
+  }, [userLocation]); // Only depend on userLocation, not listingData
 
   // Prevent body scrolling when modal is open
   useEffect(() => {
