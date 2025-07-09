@@ -199,7 +199,7 @@ const About = () => {
             </div>
 
             <div className="relative">
-              <div className="from-white/10 to-white/5 border-white/10 rounded-3xl border bg-gradient-to-br p-8 backdrop-blur-sm">
+              <div className="border-white/10 rounded-3xl border bg-gradient-to-br from-white/10 to-white/5 p-8 backdrop-blur-sm">
                 <div className="grid grid-cols-2 gap-6">
                   {stats.map((stat, index) => (
                     <div key={index} className="text-center">
@@ -233,7 +233,7 @@ const About = () => {
             {values.map((value, index) => (
               <div
                 key={index}
-                className="from-white/10 to-white/5 border-white/10 hover:border-white/20 group rounded-2xl border bg-gradient-to-br p-6 text-center backdrop-blur-sm transition-all duration-300"
+                className="border-white/10 hover:border-white/20 group rounded-2xl border bg-gradient-to-br from-white/10 to-white/5 p-6 text-center backdrop-blur-sm transition-all duration-300"
               >
                 <div className="mb-4 text-4xl transition-transform duration-300 group-hover:scale-110">
                   {value.icon}
@@ -273,7 +273,7 @@ const About = () => {
                   <div
                     className={`w-1/2 ${index % 2 === 0 ? 'pr-8 text-right' : 'pl-8 text-left'}`}
                   >
-                    <div className="from-white/10 to-white/5 border-white/10 rounded-2xl border bg-gradient-to-br p-6 backdrop-blur-sm">
+                    <div className="border-white/10 rounded-2xl border bg-gradient-to-br from-white/10 to-white/5 p-6 backdrop-blur-sm">
                       <div className="mb-3 text-3xl">{milestone.icon}</div>
                       <div className="mb-2 text-lg font-bold text-blue-400">
                         {milestone.year}
@@ -313,7 +313,7 @@ const About = () => {
             {teamMembers.map((member, index) => (
               <div
                 key={index}
-                className="from-white/10 to-white/5 border-white/10 hover:border-white/20 group rounded-2xl border bg-gradient-to-br p-6 text-center backdrop-blur-sm transition-all duration-300"
+                className="border-white/10 hover:border-white/20 group rounded-2xl border bg-gradient-to-br from-white/10 to-white/5 p-6 text-center backdrop-blur-sm transition-all duration-300"
               >
                 <div className="mx-auto mb-4 flex size-20 items-center justify-center rounded-full bg-gradient-to-br from-blue-500/20 to-purple-500/20">
                   <span className="text-2xl">👤</span>
@@ -402,7 +402,7 @@ const About = () => {
             </div>
 
             <div className="space-y-6">
-              <div className="from-white/10 to-white/5 border-white/10 rounded-2xl border bg-gradient-to-br p-6 backdrop-blur-sm">
+              <div className="border-white/10 rounded-2xl border bg-gradient-to-br from-white/10 to-white/5 p-6 backdrop-blur-sm">
                 <h3 className="mb-4 text-xl font-bold">
                   🏆 Awards & Recognition
                 </h3>
@@ -428,7 +428,7 @@ const About = () => {
                 </div>
               </div>
 
-              <div className="from-white/10 to-white/5 border-white/10 rounded-2xl border bg-gradient-to-br p-6 backdrop-blur-sm">
+              <div className="border-white/10 rounded-2xl border bg-gradient-to-br from-white/10 to-white/5 p-6 backdrop-blur-sm">
                 <h3 className="mb-4 text-xl font-bold">🤝 Partnerships</h3>
                 <div className="space-y-3">
                   <div className="flex items-center">

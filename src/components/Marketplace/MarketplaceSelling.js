@@ -5,7 +5,6 @@ import {
   query,
   where,
   orderBy,
-  getDocs,
   onSnapshot,
   doc,
   updateDoc,
@@ -19,7 +18,6 @@ import ListingDetailModal from './ListingDetailModal';
 import MarketplaceCard from './MarketplaceCard'; // Import the custom MarketplaceCard component
 import MarketplaceNavigation from './MarketplaceNavigation'; // Import the navigation component
 import MarketplaceSearchFilters from './MarketplaceSearchFilters'; // Import the search and filter component
-import { Icon } from '../../design-system'; // Import Icon component
 import toast from 'react-hot-toast';
 import BuyerSelectionModal from './BuyerSelectionModal'; // Import BuyerSelectionModal
 import LoggingService from '../../services/LoggingService';
@@ -41,7 +39,7 @@ function MarketplaceSelling({ currentView, onViewChange }) {
   const [isBuyerSelectionModalOpen, setIsBuyerSelectionModalOpen] =
     useState(false); // New state for buyer selection modal
   const { user } = useAuth();
-  const { convertCurrency, formatAmountForDisplay: formatUserCurrency } =
+  const { formatAmountForDisplay: formatUserCurrency } =
     useUserPreferences();
 
   useEffect(() => {

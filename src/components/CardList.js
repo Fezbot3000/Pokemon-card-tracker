@@ -1,10 +1,9 @@
 import React, {
   useState,
-  useRef,
   useEffect,
-  useCallback,
-  memo,
   useMemo,
+  useRef,
+  useCallback,
 } from 'react';
 import { useInView } from 'react-intersection-observer';
 import { useNavigate } from 'react-router-dom';
@@ -41,77 +40,76 @@ import {
 import { useCardSelection } from '../hooks';
 import {
   moveCards,
-  validateCollectionsStructure,
 } from '../utils/moveCardsHandler';
 import { useSubscription } from '../hooks/useSubscription';
 import logger from '../services/LoggingService';
 
 // Replace FinancialSummary component with individual stat cards
-const StatCard = memo(({ label, value, isProfit = false }) => {
-  // Determine color class based on profit status
-  const colorClass = isProfit
-    ? value >= 0
-      ? 'text-green-500 dark:text-green-400'
-      : 'text-red-500 dark:text-red-400'
-    : 'text-gray-900 dark:text-white';
+// const StatCard = memo(({ label, value, isProfit = false }) => {
+//   // Determine color class based on profit status
+//   const colorClass = isProfit
+//     ? value >= 0
+//       ? 'text-green-500 dark:text-green-400'
+//       : 'text-red-500 dark:text-red-400'
+//     : 'text-gray-900 dark:text-white';
 
-  // Helper function to format value
-  const formatValue = value => {
-    if (typeof value === 'number') {
-      return value.toLocaleString();
-    }
-    return value;
-  };
+//   // Helper function to format value
+//   const formatValue = value => {
+//     if (typeof value === 'number') {
+//       return value.toLocaleString();
+//     }
+//     return value;
+//   };
 
-  return (
-    <div className="stat-card">
-      <div className="stat-label">{label}</div>
-      <div className={`text-2xl font-medium ${colorClass}`}>
-        {formatValue(value)}
-      </div>
-    </div>
-  );
-});
+//   return (
+//     <div className="stat-card">
+//       <div className="stat-label">{label}</div>
+//       <div className={`text-2xl font-medium ${colorClass}`}>
+//         {formatValue(value)}
+//       </div>
+//     </div>
+//   );
+// });
 
 // Helper function to format date
-const formatDate = dateValue => {
-  if (!dateValue) return 'N/A';
+// const formatDate = dateValue => {
+//   if (!dateValue) return 'N/A';
 
-  try {
-    let date;
+//   try {
+//     let date;
 
-    // Check if this is a Firestore Timestamp object
-    if (
-      dateValue &&
-      typeof dateValue === 'object' &&
-      'seconds' in dateValue &&
-      'nanoseconds' in dateValue
-    ) {
-      // Convert Firestore Timestamp to JavaScript Date
-      date = new Date(dateValue.seconds * 1000);
-    } else {
-      // Regular date string or Date object
-      date = new Date(dateValue);
-    }
+//     // Check if this is a Firestore Timestamp object
+//     if (
+//       dateValue &&
+//       typeof dateValue === 'object' &&
+//       'seconds' in dateValue &&
+//       'nanoseconds' in dateValue
+//     ) {
+//       // Convert Firestore Timestamp to JavaScript Date
+//       date = new Date(dateValue.seconds * 1000);
+//     } else {
+//       // Regular date string or Date object
+//       date = new Date(dateValue);
+//     }
 
-    // Check if valid date
-    if (isNaN(date.getTime())) {
-      logger.warn('Invalid date in CardList:', dateValue);
-      return 'Invalid date';
-    }
+//     // Check if valid date
+//     if (isNaN(date.getTime())) {
+//       logger.warn('Invalid date in CardList:', dateValue);
+//       return 'Invalid date';
+//     }
 
-    // Format as DD/MM/YYYY
-    return date.toLocaleDateString('en-AU', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    });
-  } catch (error) {
-    logger.error('Error formatting date:', error);
-    // Return a fallback string if parsing fails
-    return 'Date error';
-  }
-};
+//     // Format as DD/MM/YYYY
+//     return date.toLocaleDateString('en-AU', {
+//       day: '2-digit',
+//       month: '2-digit',
+//       year: 'numeric',
+//     });
+//   } catch (error) {
+//     logger.error('Error formatting date:', error);
+//     // Return a fallback string if parsing fails
+//     return 'Date error';
+//   }
+// };
 
 const CardList = ({
   cards,
@@ -144,8 +142,7 @@ const CardList = ({
   const [viewMode, setViewMode] = useState(
     localStorage.getItem('cardListViewMode') || 'grid'
   );
-  const [showSortDropdown, setShowSortDropdown] = useState(false);
-  const [displayMetric, setDisplayMetric] = useState(() => {
+  const [displayMetric] = useState(() => {
     const saved = localStorage.getItem('cardListDisplayMetric');
     return saved || 'currentValueAUD';
   });
@@ -279,12 +276,9 @@ const CardList = ({
   // Use card selection hook with filtered cards
   const {
     selectedCards,
-    selectedCount,
     handleSelectCard,
     handleSelectAll,
     clearSelection,
-    getSelectedCards,
-    isCardSelected,
   } = useCardSelection(filteredCards);
 
   useEffect(() => {
@@ -308,15 +302,12 @@ const CardList = ({
     }
   }, [filteredCards, selectedCards, clearSelection]);
 
+  const [cardImages, setCardImages] = useState({});
+  const [showSortDropdown, setShowSortDropdown] = useState(false);
   const [isValueDropdownOpen, setIsValueDropdownOpen] = useState(false);
   const [isMetricDropdownOpen, setIsMetricDropdownOpen] = useState(false);
-  const [cardImages, setCardImages] = useState({});
-  const [editingInvestment, setEditingInvestment] = useState(null);
-  const [editValue, setEditValue] = useState('');
-  const { isDarkMode } = useTheme();
   const [showSaleModal, setShowSaleModal] = useState(false);
   const [selectedCardsForSale, setSelectedCardsForSale] = useState([]);
-  const [buyer, setBuyer] = useState('');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [cardsToDelete, setCardsToDelete] = useState([]);
   const [showMoveModal, setShowMoveModal] = useState(false);
@@ -498,7 +489,7 @@ const CardList = ({
       // Call the original onUpdateCard function
       onUpdateCard(updatedCard);
     },
-    [onUpdateCard, refreshCardImage]
+    [onUpdateCard, cards, cardImages]
   );
 
   // Sort options
@@ -542,37 +533,37 @@ const CardList = ({
     }
   };
 
-  const handleInvestmentEdit = (e, card) => {
-    e.stopPropagation(); // Prevent card click
-    setEditingInvestment(card.slabSerial);
-    setEditValue(card.investmentAUD.toString());
-  };
+  // const handleInvestmentEdit = (e, card) => {
+  //   e.stopPropagation(); // Prevent card click
+  //   setEditingInvestment(card.slabSerial);
+  //   setEditValue(card.investmentAUD.toString());
+  // };
 
-  const handleInvestmentChange = e => {
-    setEditValue(e.target.value);
-  };
+  // const handleInvestmentChange = e => {
+  //   setEditValue(e.target.value);
+  // };
 
-  const handleInvestmentSave = (e, card) => {
-    e.stopPropagation(); // Prevent card click
-    const newValue = parseFloat(editValue);
-    if (!isNaN(newValue) && newValue >= 0) {
-      const updatedCard = {
-        ...card,
-        investmentAUD: newValue,
-        potentialProfit: card.currentValueAUD - newValue,
-      };
-      handleCardUpdate(updatedCard);
-    }
-    setEditingInvestment(null);
-  };
+  // const handleInvestmentSave = (e, card) => {
+  //   e.stopPropagation(); // Prevent card click
+  //   const newValue = parseFloat(editValue);
+  //   if (!isNaN(newValue) && newValue >= 0) {
+  //     const updatedCard = {
+  //       ...card,
+  //       investmentAUD: newValue,
+  //       potentialProfit: card.currentValueAUD - newValue,
+  //     };
+  //     handleCardUpdate(updatedCard);
+  //   }
+  //   // setEditingInvestment(null); // Commented out - variable not defined
+  // };
 
-  const handleInvestmentKeyDown = (e, card) => {
-    if (e.key === 'Enter') {
-      handleInvestmentSave(e, card);
-    } else if (e.key === 'Escape') {
-      setEditingInvestment(null);
-    }
-  };
+  // const handleInvestmentKeyDown = (e, card) => {
+  //   if (e.key === 'Enter') {
+  //     handleInvestmentSave(e, card);
+  //   } else if (e.key === 'Escape') {
+  //     // setEditingInvestment(null); // Variable not defined
+  //   }
+  // };
 
   // Paginated cards - only show the number of cards specified by visibleCardCount
   const paginatedCards = useMemo(() => {
@@ -590,7 +581,7 @@ const CardList = ({
     clearSelection();
     setSelectedCardsForSale([]);
     setShowSaleModal(false);
-    setBuyer('');
+    // setBuyer(''); // Commented out - variable not defined
     setFilter('');
     setVisibleCardCount(24); // Reset pagination when collection changes
   }, [selectedCollection]);
@@ -631,18 +622,18 @@ const CardList = ({
     setVisibleCardCount(24);
   }, [filter]);
 
-  const handleMarkAsSold = () => {
-    if (selectedCards.size === 0) {
-      toast.error('Please select at least one card to mark as sold');
-      return;
-    }
-    // Get the full card data for selected cards
-    const selectedCardData = cards.filter(card =>
-      selectedCards.has(card.slabSerial)
-    );
-    setSelectedCardsForSale(selectedCardData);
-    setShowSaleModal(true);
-  };
+  // const handleMarkAsSold = () => {
+  //   if (selectedCards.size === 0) {
+  //     toast.error('Please select at least one card to mark as sold');
+  //     return;
+  //   }
+  //   // Get the full card data for selected cards
+  //   const selectedCardData = cards.filter(card =>
+  //     selectedCards.has(card.slabSerial)
+  //   );
+  //   setSelectedCardsForSale(selectedCardData);
+  //   setShowSaleModal(true);
+  // };
 
   // Function to generate a unique invoice ID
   const generateInvoiceId = async () => {
@@ -683,8 +674,8 @@ const CardList = ({
     buyer,
     dateSold,
     soldPrices,
-    totalSalePrice,
-    totalProfit,
+    // totalSalePrice,
+    // totalProfit,
   }) => {
     try {
       // Generate a new invoice ID for this transaction
@@ -758,31 +749,31 @@ const CardList = ({
   };
 
   // Sort dropdown toggle
-  const toggleSortDropdown = () => {
-    // Close other dropdowns
-    setIsMetricDropdownOpen(false);
-    setIsValueDropdownOpen(false);
-    // Toggle sort dropdown
-    setShowSortDropdown(!showSortDropdown);
-  };
+  // const toggleSortDropdown = () => {
+  //   // Close other dropdowns
+  //   setIsMetricDropdownOpen(false);
+  //   setIsValueDropdownOpen(false);
+  //   // Toggle sort dropdown
+  //   setShowSortDropdown(!showSortDropdown);
+  // };
 
   // Metric dropdown toggle
-  const toggleMetricDropdown = () => {
-    // Close other dropdowns
-    setShowSortDropdown(false);
-    setIsValueDropdownOpen(false);
-    // Toggle metric dropdown
-    setIsMetricDropdownOpen(!isMetricDropdownOpen);
-  };
+  // const toggleMetricDropdown = () => {
+  //   // Close other dropdowns
+  //   setShowSortDropdown(false);
+  //   setIsValueDropdownOpen(false);
+  //   // Toggle metric dropdown
+  //   setIsMetricDropdownOpen(!isMetricDropdownOpen);
+  // };
 
   // Value dropdown toggle
-  const toggleValueDropdown = () => {
-    // Close other dropdowns
-    setShowSortDropdown(false);
-    setIsMetricDropdownOpen(false);
-    // Toggle value dropdown
-    setIsValueDropdownOpen(!isValueDropdownOpen);
-  };
+  // const toggleValueDropdown = () => {
+  //   // Close other dropdowns
+  //   setShowSortDropdown(false);
+  //   setIsMetricDropdownOpen(false);
+  //   // Toggle value dropdown
+  //   setIsValueDropdownOpen(!isValueDropdownOpen);
+  // };
 
   const handleCardDelete = async cardToDelete => {
     try {
@@ -849,7 +840,7 @@ const CardList = ({
       // Remove the cards from all collections
       Object.keys(updatedCollections).forEach(collectionName => {
         if (Array.isArray(updatedCollections[collectionName])) {
-          const beforeCount = updatedCollections[collectionName].length;
+          // const beforeCount = updatedCollections[collectionName].length;
           updatedCollections[collectionName] = updatedCollections[
             collectionName
           ].filter(card => {
@@ -858,7 +849,7 @@ const CardList = ({
               cardIds.includes(card.id) || cardIds.includes(card.slabSerial)
             );
           });
-          const afterCount = updatedCollections[collectionName].length;
+          // const afterCount = updatedCollections[collectionName].length;
 
           if (isDevMode) {
             // LoggingService.info(`Collection "${collectionName}": removed ${beforeCount - afterCount} cards`);
@@ -1710,7 +1701,7 @@ const CardList = ({
           setSelectedCardsForPurchase([]);
           clearSelection();
         }}
-        onSave={newInvoice => {
+        onSave={() => {
           // Toast is already shown in the CreateInvoiceModal component
           setShowPurchaseInvoiceModal(false);
           setSelectedCardsForPurchase([]);

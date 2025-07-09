@@ -1,7 +1,7 @@
 import React from 'react';
 import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
-import { Toast, useAuth } from './design-system';
+import { Toast } from './design-system';
 import DesignSystemProvider from './design-system/providers/DesignSystemProvider';
 import { UserPreferencesProvider } from './contexts/UserPreferencesContext';
 import { TutorialProvider } from './contexts/TutorialContext';
@@ -27,7 +27,6 @@ import Settings from './components/Settings';
 import ComponentLibrary from './pages/ComponentLibrary';
 import MarketplaceListing from './components/Marketplace/MarketplaceListing';
 import PublicMarketplace from './components/PublicMarketplace';
-import ProtectedRoute from './components/ProtectedRoute';
 import SharedCollection from './components/SharedCollection';
 import UpgradePage from './components/UpgradePage';
 import Pricing from './components/Pricing';

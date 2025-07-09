@@ -267,5 +267,23 @@ module.exports = {
     'hover:border-white/20',
     // Custom utility classes
     'hide-scrollbar',
+    'upgrade-modal',
+    'page-no-padding',
+    'resize-vertical',
+    'stat-card',
+    'stat-label',
+    // Modal and component specific classes
+    'modal-content',
+    'modal-header',
+    'modal-body',
+    'modal-footer',
+    // Custom gradient classes
+    'from-black/50',
+    'via-black/20',
+    'hover:glass-bg-hover',
+    'hover:glass-border-hover',
+    // Dynamic color classes
+    'bg-',
+    '-500',
   ],
 } 

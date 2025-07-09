@@ -11,9 +11,6 @@ import {
   limit,
   getDocs,
   updateDoc,
-  onSnapshot,
-  addDoc,
-  serverTimestamp,
 } from 'firebase/firestore';
 import { db as firestoreDb } from '../../services/firebase';
 import logger from '../../utils/logger';
@@ -26,11 +23,11 @@ function ListingDetailModal({
   onClose,
   listing,
   onContactSeller,
-  onReportListing,
+  // onReportListing, // Removed - not used
   onViewSellerProfile,
   onEditListing,
-  onMarkAsPending,
-  onMarkAsSold,
+  // onMarkAsPending, // Removed - not used
+  // onMarkAsSold, // Removed - not used
   onViewChange,
 }) {
   // Temporary test to verify our changes are loading
@@ -46,7 +43,7 @@ function ListingDetailModal({
   const [totalReviews, setTotalReviews] = useState(0);
   const [loadingSellerData, setLoadingSellerData] = useState(true);
   const [showAllReviews, setShowAllReviews] = useState(false);
-  const [showReportMenu, setShowReportMenu] = useState(false);
+  // const [showReportMenu, setShowReportMenu] = useState(false); // Removed - not used
   const [hasExistingChat, setHasExistingChat] = useState(false);
   const [existingChatId, setExistingChatId] = useState(null);
   const [showBuyerSelectionModal, setShowBuyerSelectionModal] = useState(false);
@@ -74,7 +71,7 @@ function ListingDetailModal({
     } else {
       fallbackToClipboard(shareUrl);
     }
-    setShowReportMenu(false);
+    // setShowReportMenu(false); // Removed - variable not used
   };
 
   const fallbackToClipboard = url => {

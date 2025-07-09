@@ -11,7 +11,8 @@ import {
   addDoc,
   serverTimestamp,
   updateDoc,
-  deleteDoc,
+  getDocs,
+  limit,
 } from 'firebase/firestore';
 import { db as firestoreDb } from '../../services/firebase';
 import logger from '../../utils/logger';

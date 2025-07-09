@@ -155,9 +155,9 @@ function Home() {
       {/* Modern Hero Section */}
       <section className="logged-out-page relative flex items-center justify-center overflow-hidden px-4 sm:px-6 lg:px-8">
         {/* Background Elements */}
-        <div className="absolute inset-0 hero-blur-background"></div>
-        <div className="absolute left-1/4 top-1/4 size-96 rounded-full hero-orb-blue blur-3xl"></div>
-        <div className="absolute bottom-1/4 right-1/4 size-96 rounded-full hero-orb-purple blur-3xl"></div>
+        <div className="hero-blur-background absolute inset-0"></div>
+        <div className="hero-orb-blue absolute left-1/4 top-1/4 size-96 rounded-full blur-3xl"></div>
+        <div className="hero-orb-purple absolute bottom-1/4 right-1/4 size-96 rounded-full blur-3xl"></div>
 
         <div className="relative z-10 mx-auto max-w-4xl px-4 text-center">
           {/* Badge */}
@@ -394,7 +394,7 @@ function Home() {
             ].map((feature) => (
               <div key={feature.title} className="group relative">
                 <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-blue-500/10 to-purple-500/10 blur transition-all duration-300 group-hover:blur-lg"></div>
-                <div className="relative rounded-2xl border glass-border glass-bg p-4 backdrop-blur-sm transition-all duration-300 hover:glass-border-light">
+                <div className="glass-border glass-bg hover:glass-border-light relative rounded-2xl border p-4 backdrop-blur-sm transition-all duration-300">
                   <button
                     onClick={() =>
                       openModal(feature.src, feature.title, feature.description)
@@ -435,7 +435,7 @@ function Home() {
           </div>
 
           <div className="grid gap-8 md:grid-cols-3">
-            <div className="rounded-2xl border glass-border glass-gradient p-8 backdrop-blur-sm">
+            <div className="glass-border glass-gradient rounded-2xl border p-8 backdrop-blur-sm">
               <div className="mb-4 flex text-yellow-400">
                 {[...Array(5)].map((_, i) => (
                   <span key={`testimonial-1-star-${i}`} className="material-icons">
@@ -451,7 +451,7 @@ function Home() {
               <div className="font-semibold">Marcus, Sydney</div>
             </div>
 
-            <div className="rounded-2xl border glass-border glass-gradient p-8 backdrop-blur-sm">
+            <div className="glass-border glass-gradient rounded-2xl border p-8 backdrop-blur-sm">
               <div className="mb-4 flex text-yellow-400">
                 {[...Array(5)].map((_, i) => (
                   <span key={`testimonial-2-star-${i}`} className="material-icons">
@@ -467,7 +467,7 @@ function Home() {
               <div className="font-semibold">Sarah, Melbourne</div>
             </div>
 
-            <div className="rounded-2xl border glass-border glass-gradient p-8 backdrop-blur-sm">
+            <div className="glass-border glass-gradient rounded-2xl border p-8 backdrop-blur-sm">
               <div className="mb-4 flex text-yellow-400">
                 {[...Array(5)].map((_, i) => (
                   <span key={`testimonial-3-star-${i}`} className="material-icons">
@@ -496,7 +496,7 @@ function Home() {
             Get access to all features and tools for a low monthly fee
           </p>
 
-          <div className="mx-auto max-w-md rounded-3xl border glass-border glass-gradient p-12 backdrop-blur-sm">
+          <div className="glass-border glass-gradient mx-auto max-w-md rounded-3xl border p-12 backdrop-blur-sm">
             <div className="mb-4 text-6xl font-bold">
               <span className="text-4xl text-gray-400">$</span>
               <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">

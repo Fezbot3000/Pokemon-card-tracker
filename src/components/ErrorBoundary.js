@@ -1,6 +1,5 @@
 import React from 'react';
 import logger from '../utils/logger';
-import LoggingService from '../services/LoggingService';
 
 const ErrorFallback = ({ error, resetErrorBoundary }) => {
   // Instead of using useTheme, we'll check the document class directly

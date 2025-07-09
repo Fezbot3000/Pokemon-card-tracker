@@ -247,6 +247,11 @@ class LoggingService {
    * Output to console with formatting
    */
   _outputToConsole(logEntry) {
+    // Only output to console in development mode
+    if (process.env.NODE_ENV !== 'development') {
+      return;
+    }
+
     const { levelName, message, args, context, timestamp } = logEntry;
     
     // Format the output
@@ -289,18 +294,24 @@ class LoggingService {
    * Get appropriate console method for log level
    */
   _getConsoleMethod(levelName) {
+    // eslint-disable-next-line no-console
     switch (levelName) {
       case 'TRACE':
       case 'DEBUG':
+        // eslint-disable-next-line no-console
         return console.debug;
       case 'INFO':
+        // eslint-disable-next-line no-console
         return console.info;
       case 'WARN':
+        // eslint-disable-next-line no-console
         return console.warn;
       case 'ERROR':
       case 'FATAL':
+        // eslint-disable-next-line no-console
         return console.error;
       default:
+        // eslint-disable-next-line no-console
         return console.log;
     }
   }
@@ -329,14 +340,26 @@ class LoggingService {
 
   /**
    * Override console methods in production
+   * Note: This method is deprecated and should not be used.
+   * Use ESLint rules instead to prevent console statements.
    */
   overrideConsole() {
-    const noop = () => {};
-    console.log = noop;
-    console.debug = noop;
-    console.info = noop;
-    console.warn = noop;
-    console.error = noop;
+    // Method disabled to prevent console override anti-pattern
+    // Use ESLint no-console rule instead
+    if (process.env.NODE_ENV === 'production') {
+      // Only suppress in production, let ESLint handle prevention
+      const noop = () => {};
+      // eslint-disable-next-line no-console
+      console.log = noop;
+      // eslint-disable-next-line no-console
+      console.debug = noop;
+      // eslint-disable-next-line no-console
+      console.info = noop;
+      // eslint-disable-next-line no-console
+      console.warn = noop;
+      // eslint-disable-next-line no-console
+      console.error = noop;
+    }
   }
 
   /**

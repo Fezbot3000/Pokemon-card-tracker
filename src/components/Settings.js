@@ -4,7 +4,6 @@ import { useAuth } from '../design-system';
 import { useTheme } from '../design-system/contexts/ThemeContext';
 import { useUserPreferences } from '../contexts/UserPreferencesContext';
 import { toast as toastService } from '../design-system';
-import { functions } from '../firebase';
 import CollectionManagement from './settings/CollectionManagement';
 import MarketplaceProfile from './settings/MarketplaceProfile';
 import MarketplaceReviews from './settings/MarketplaceReviews';

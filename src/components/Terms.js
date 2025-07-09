@@ -77,7 +77,7 @@ const Terms = () => {
 
             {/* Main Content */}
             <div className="lg:col-span-3">
-              <div className="from-white/10 to-white/5 border-white/10 rounded-3xl border bg-gradient-to-br p-8 backdrop-blur-sm">
+              <div className="border-white/10 rounded-3xl border bg-gradient-to-br from-white/10 to-white/5 p-8 backdrop-blur-sm">
                 <div className="prose prose-invert max-w-none space-y-8">
                   {/* Overview */}
                   <section id="overview">

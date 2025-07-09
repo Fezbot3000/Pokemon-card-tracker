@@ -5,7 +5,6 @@ import './styles/globals.css'; // Modernized global styles with design tokens
 import './styles/main.css'; // Primary layout and component styles
 import './styles/utilities.css'; // Custom utility classes
 import './styles/ios-fixes.css'; // iOS Safari specific fixes
-import App from './App';
 import { router } from './router';
 import { RouterProvider } from 'react-router-dom';
 import reportWebVitals from './reportWebVitals';
@@ -14,12 +13,7 @@ import './env';
 // Import app initialization
 import { initializeApp } from './services/appInitialization';
 import logger from './utils/logger';
-// Import unified error handler
-import { initUnifiedErrorHandler } from './utils/unifiedErrorHandler';
 import ErrorBoundary from './components/ErrorBoundary';
-
-// Initialize unified error handler
-initUnifiedErrorHandler();
 
 // Initialize the application
 initializeApp()

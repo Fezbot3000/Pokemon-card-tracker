@@ -12,7 +12,6 @@ import {
   serverTimestamp,
 } from 'firebase/firestore';
 import { db as firestoreDb } from '../../services/firebase';
-import logger from '../../utils/logger';
 import toast from 'react-hot-toast';
 import db from '../../services/firestore/dbAdapter';
 import LoggingService from '../../services/LoggingService';

@@ -6,13 +6,11 @@ import {
   query,
   where,
   orderBy,
-  getDocs,
   onSnapshot,
   doc,
   getDoc,
   addDoc,
   serverTimestamp,
-  setDoc,
   updateDoc,
 } from 'firebase/firestore';
 import { db as firestoreDb } from '../../services/firebase';
@@ -21,7 +19,6 @@ import logger from '../../utils/logger';
 import toast from 'react-hot-toast';
 import ListingDetailModal from './ListingDetailModal';
 import DesktopMarketplaceMessages from './DesktopMarketplaceMessages';
-import SellerProfile from './SellerProfile';
 import SellerProfileModal from './SellerProfileModal';
 import SellerReviewModal from './SellerReviewModal';
 import LoggingService from '../../services/LoggingService';

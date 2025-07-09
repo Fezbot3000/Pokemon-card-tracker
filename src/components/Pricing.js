@@ -131,7 +131,7 @@ const Pricing = () => {
             {plans.map((plan, index) => (
               <div
                 key={index}
-                className={`from-white/10 to-white/5 relative rounded-3xl border bg-gradient-to-br p-6 backdrop-blur-sm transition-all duration-300 hover:scale-105 lg:p-8 ${
+                className={`relative rounded-3xl border bg-gradient-to-br from-white/10 to-white/5 p-6 backdrop-blur-sm transition-all duration-300 hover:scale-105 lg:p-8 ${
                   plan.popular
                     ? 'border-green-500/50 shadow-2xl shadow-green-500/10'
                     : 'border-white/10 hover:border-white/20'
@@ -205,7 +205,7 @@ const Pricing = () => {
             {faqs.map((faq, index) => (
               <div
                 key={index}
-                className="from-white/10 to-white/5 border-white/10 rounded-2xl border bg-gradient-to-br p-6 backdrop-blur-sm lg:p-8"
+                className="border-white/10 rounded-2xl border bg-gradient-to-br from-white/10 to-white/5 p-6 backdrop-blur-sm lg:p-8"
               >
                 <h3 className="mb-3 text-lg font-semibold text-white lg:mb-4 lg:text-xl">
                   {faq.question}

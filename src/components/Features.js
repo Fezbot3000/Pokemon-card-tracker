@@ -327,7 +327,7 @@ const Features = () => {
           </div>
 
           {/* Active Feature Display */}
-          <div className="from-white/10 to-white/5 border-white/10 rounded-3xl border bg-gradient-to-br p-8 backdrop-blur-sm">
+          <div className="border-white/10 rounded-3xl border bg-gradient-to-br from-white/10 to-white/5 p-8 backdrop-blur-sm">
             <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-2">
               <div>
                 <div className="mb-4 text-4xl">
@@ -393,7 +393,7 @@ const Features = () => {
 
               <div className="relative">
                 <div
-                  className={`${features[activeFeature].id === 'mobile-app' ? 'aspect-[9/16]' : 'aspect-square'} from-gray-800/50 to-gray-900/50 overflow-hidden rounded-2xl bg-gradient-to-br`}
+                  className={`${features[activeFeature].id === 'mobile-app' ? 'aspect-[9/16]' : 'aspect-square'} overflow-hidden rounded-2xl bg-gradient-to-br from-gray-800/50 to-gray-900/50`}
                 >
                   <img
                     src={features[activeFeature].image}
@@ -423,7 +423,7 @@ const Features = () => {
             {additionalFeatures.map((feature, index) => (
               <div
                 key={index}
-                className="from-white/10 to-white/5 border-white/10 hover:border-white/20 group rounded-2xl border bg-gradient-to-br p-6 text-center backdrop-blur-sm transition-all duration-300"
+                className="border-white/10 hover:border-white/20 group rounded-2xl border bg-gradient-to-br from-white/10 to-white/5 p-6 text-center backdrop-blur-sm transition-all duration-300"
               >
                 <div className="mb-4 text-4xl transition-transform duration-300 group-hover:scale-110">
                   {feature.icon}

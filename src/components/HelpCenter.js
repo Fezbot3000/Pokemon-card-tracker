@@ -534,7 +534,7 @@ const HelpCenter = () => {
               {filteredArticles.map(article => (
                 <div
                   key={article.id}
-                  className="from-white/10 to-white/5 border-white/10 hover:border-white/20 rounded-2xl border bg-gradient-to-br backdrop-blur-sm transition-all duration-300"
+                  className="border-white/10 hover:border-white/20 rounded-2xl border bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm transition-all duration-300"
                 >
                   <button
                     onClick={() => toggleArticle(article.id)}
@@ -626,7 +626,7 @@ const HelpCenter = () => {
           </p>
 
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            <div className="from-white/10 to-white/5 border-white/10 hover:border-white/20 rounded-2xl border bg-gradient-to-br p-6 backdrop-blur-sm transition-all duration-300">
+            <div className="border-white/10 hover:border-white/20 rounded-2xl border bg-gradient-to-br from-white/10 to-white/5 p-6 backdrop-blur-sm transition-all duration-300">
               <div className="mb-4 text-4xl">💬</div>
               <h3 className="mb-2 text-xl font-bold">Live Chat</h3>
               <p className="mb-4 text-gray-400">
@@ -637,7 +637,7 @@ const HelpCenter = () => {
               </button>
             </div>
 
-            <div className="from-white/10 to-white/5 border-white/10 hover:border-white/20 rounded-2xl border bg-gradient-to-br p-6 backdrop-blur-sm transition-all duration-300">
+            <div className="border-white/10 hover:border-white/20 rounded-2xl border bg-gradient-to-br from-white/10 to-white/5 p-6 backdrop-blur-sm transition-all duration-300">
               <div className="mb-4 text-4xl">📧</div>
               <h3 className="mb-2 text-xl font-bold">Email Support</h3>
               <p className="mb-4 text-gray-400">Send us a detailed message</p>
@@ -649,7 +649,7 @@ const HelpCenter = () => {
               </a>
             </div>
 
-            <div className="from-white/10 to-white/5 border-white/10 hover:border-white/20 rounded-2xl border bg-gradient-to-br p-6 backdrop-blur-sm transition-all duration-300">
+            <div className="border-white/10 hover:border-white/20 rounded-2xl border bg-gradient-to-br from-white/10 to-white/5 p-6 backdrop-blur-sm transition-all duration-300">
               <div className="mb-4 text-4xl">🎥</div>
               <h3 className="mb-2 text-xl font-bold">Video Tutorials</h3>
               <p className="mb-4 text-gray-400">Watch step-by-step guides</p>

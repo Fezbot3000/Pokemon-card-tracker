@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth, Icon, toast } from '../../design-system';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useAuth, toast } from '../../design-system';
 import {
   collection,
   query,
   where,
   orderBy,
-  getDocs,
   onSnapshot,
   doc,
   updateDoc,
@@ -40,8 +39,7 @@ function Marketplace({ currentView, onViewChange }) {
   const [loading, setLoading] = useState(true);
   const [cardImages, setCardImages] = useState({});
   const { user } = useAuth();
-  const { convertCurrency, formatAmountForDisplay: formatUserCurrency } =
-    useUserPreferences();
+  const { formatAmountForDisplay } = useUserPreferences();
   const navigate = useNavigate();
 
   const [indexBuildingError, setIndexBuildingError] = useState(false);

@@ -232,88 +232,7 @@ const SoldItems = () => {
     }
   };
 
-  // Group cards by invoice ID with proper currency handling
-  const groupCardsByInvoice = cards => {
-    // Use the already destructured convertToUserCurrency from the component scope
-    const invoicesMap = {};
 
-    cards.forEach(card => {
-      // Use invoiceId if available, otherwise fall back to legacy grouping
-      const key =
-        card.invoiceId ||
-        `${card.buyer}_${card.dateSold}_${card.id || card.slabSerial}`;
-
-      if (!invoicesMap[key]) {
-        invoicesMap[key] = {
-          id: card.invoiceId || key,
-          buyer: card.buyer,
-          dateSold: card.dateSold,
-          cards: [],
-          totalInvestment: 0,
-          totalSale: 0,
-          totalProfit: 0, // Initialize profit
-        };
-      }
-
-      const cardId = card.id || card.slabSerial;
-
-      // Get sale price with proper fallbacks
-      const individualSalePrice =
-        card.soldPrices && card.soldPrices[cardId]
-          ? parseFloat(card.soldPrices[cardId])
-          : 0;
-      let effectiveSalePrice =
-        individualSalePrice > 0
-          ? individualSalePrice
-          : parseFloat(card.soldPrice) || 0;
-
-      // Handle sold price currency if different from preferred currency
-      const soldPriceCurrency = card.soldPriceCurrency || 'AUD';
-      if (soldPriceCurrency !== preferredCurrency.code) {
-        effectiveSalePrice = convertToUserCurrency(
-          effectiveSalePrice,
-          soldPriceCurrency
-        );
-      }
-
-      // Get investment amount with proper currency handling
-      const originalInvestment =
-        parseFloat(card.originalInvestmentAmount || card.investmentAUD) || 0;
-      const originalInvestmentCurrency =
-        card.originalInvestmentCurrency || 'AUD';
-
-      // Convert to preferred currency if needed
-      let investmentInPreferredCurrency = originalInvestment;
-      if (originalInvestmentCurrency !== preferredCurrency.code) {
-        investmentInPreferredCurrency = convertToUserCurrency(
-          originalInvestment,
-          originalInvestmentCurrency
-        );
-      }
-
-      // Store the complete card data
-      invoicesMap[key].cards.push({
-        ...card,
-        effectiveSalePrice,
-        originalInvestment,
-        originalInvestmentCurrency,
-        investmentInPreferredCurrency,
-      });
-
-      // Update totals with converted values
-      invoicesMap[key].totalInvestment += investmentInPreferredCurrency;
-      invoicesMap[key].totalSale += effectiveSalePrice;
-    });
-
-    // Calculate profit after all cards are processed
-    Object.keys(invoicesMap).forEach(invoiceKey => {
-      invoicesMap[invoiceKey].totalProfit =
-        invoicesMap[invoiceKey].totalSale -
-        invoicesMap[invoiceKey].totalInvestment;
-    });
-
-    return invoicesMap;
-  };
 
 
 
@@ -641,7 +560,7 @@ const SoldItems = () => {
                 { label: 'SOLD FOR', width: 'w-16' },
                 { label: 'PROFIT', width: 'w-12' },
                 { label: 'SOLD INVOICES', width: 'w-4' },
-              ].map((stat, index) => (
+              ].map((stat) => (
                 <div key={`stat-${stat.label}`} className="text-center">
                   <div className="mb-1 text-xs font-medium uppercase text-gray-500 dark:text-gray-400 sm:mb-2 sm:text-sm">
                     {stat.label}
@@ -708,8 +627,8 @@ const SoldItems = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-black">
-                  {[...Array(7)].map((_, i) => (
-                    <tr key={`skeleton-row-${i}`}>
+                  {Array.from({ length: 7 }, (_, i) => (
+                    <tr key={`skeleton-${Date.now()}-${i}`}>
                       <td className="whitespace-nowrap px-6 py-4">
                         <div className="h-4 max-w-[150px] animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
                       </td>
