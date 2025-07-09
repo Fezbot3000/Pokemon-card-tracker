@@ -27,12 +27,12 @@ const FormField = ({
 
   return (
     <div
-      className={`form-field w-full ${className} ${hasError ? 'error' : ''}`}
+      className={`w-full ${className} ${hasError ? 'border-red-500' : ''}`}
     >
       {label && (
         <FormLabel htmlFor={fieldId} required={required}>
           {label}
-          {required && <span className="required">*</span>}
+          {required && <span className="text-red-500 ml-1">*</span>}
         </FormLabel>
       )}
 

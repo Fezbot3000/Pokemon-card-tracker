@@ -234,9 +234,7 @@ const Modal = ({
     ? 'text-xl font-medium text-gray-200'
     : 'text-xl font-medium text-gray-800 dark:text-gray-200';
 
-  const closeButtonClasses = forceDarkMode
-    ? 'text-2xl text-gray-500 hover:text-gray-300 transition-colors'
-    : 'text-2xl text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors';
+  // Close button classes removed as they were unused
 
   const footerClasses = forceDarkMode
     ? 'sticky bottom-0 z-10 flex items-center justify-between gap-2 px-6 pt-4 pb-6 border-t border-gray-700/50 bg-black backdrop-blur-sm'
