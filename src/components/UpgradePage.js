@@ -16,7 +16,7 @@ import LoggingService from '../services/LoggingService';
 const UpgradePage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { subscription, isOnTrial, getTrialDaysRemaining, isPremium } =
+  const { isOnTrial, getTrialDaysRemaining, isPremium } =
     useSubscription();
   const [loading, setLoading] = useState(false);
 
@@ -238,9 +238,9 @@ const UpgradePage = () => {
 
         {/* Features Grid */}
         <div className="grid gap-6 md:grid-cols-2">
-          {features.map((feature, index) => (
+          {features.map((feature) => (
             <div
-              key={index}
+              key={feature.title}
               className="rounded-lg bg-white p-6 shadow-md dark:bg-gray-900"
             >
               <div className="flex items-start">

@@ -71,7 +71,7 @@ function ListCardModal({ isOpen, onClose, selectedCards }) {
     });
 
     setListingData(initialData);
-  }, [selectedCards, isOpen, user]);
+  }, [selectedCards, isOpen, user, userLocation]);
 
   // Update location when userLocation is loaded
   useEffect(() => {

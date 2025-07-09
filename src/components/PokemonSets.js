@@ -321,9 +321,9 @@ const PokemonSets = () => {
                 Key Cards to Track
               </h3>
               <div className="space-y-4">
-                {currentSet.keyCards.map((card, index) => (
+                {currentSet.keyCards.map((card) => (
                   <div
-                    key={index}
+                    key={card.name || card.title}
                     className="bg-white/5 border-white/10 rounded-lg border p-4"
                   >
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

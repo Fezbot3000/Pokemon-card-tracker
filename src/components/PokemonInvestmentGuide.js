@@ -292,7 +292,7 @@ const PokemonInvestmentGuide = () => {
               </h2>
 
               <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-                {investmentStrategies.map((strategy, index) => (
+                {investmentStrategies.map((strategy) => (
                   <div
                     key={strategy.id}
                     className="bg-white/5 rounded-xl border border-gray-600 p-6"
@@ -327,8 +327,8 @@ const PokemonInvestmentGuide = () => {
                         Key Examples:
                       </h4>
                       <ul className="space-y-1 text-sm">
-                        {strategy.examples.map((example, idx) => (
-                          <li key={idx} className="text-gray-400">
+                        {strategy.examples.map((example) => (
+                          <li key={example} className="text-gray-400">
                             • {example}
                           </li>
                         ))}
@@ -348,8 +348,8 @@ const PokemonInvestmentGuide = () => {
               </h2>
 
               <div className="space-y-6">
-                {marketTrends.map((trend, index) => (
-                  <div key={index} className="bg-white/5 rounded-xl p-6">
+                {marketTrends.map(trend => (
+                  <div key={trend.period} className="bg-white/5 rounded-xl p-6">
                     <div className="mb-4 flex flex-col lg:flex-row lg:items-center lg:justify-between">
                       <h3 className="text-xl font-bold text-blue-400">
                         {trend.period}

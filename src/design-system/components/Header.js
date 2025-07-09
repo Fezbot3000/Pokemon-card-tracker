@@ -3,18 +3,13 @@ import PropTypes from 'prop-types';
 import { Link, useLocation } from 'react-router-dom';
 
 // Import design system components
-import Button from '../atoms/Button';
 import Icon from '../atoms/Icon';
-import Dropdown, { DropdownItem, DropdownDivider } from '../molecules/Dropdown';
 
 // Import needed contexts and services
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
-import {
-  useUserPreferences,
-  availableCurrencies,
-} from '../../contexts/UserPreferencesContext';
-import { baseColors } from '../styles/colors';
+import { useUserPreferences, availableCurrencies } from '../../contexts/UserPreferencesContext';
+
 import LoggingService from '../../services/LoggingService';
 
 /**
@@ -24,20 +19,19 @@ import LoggingService from '../../services/LoggingService';
  * Uses the design system components for consistent styling.
  */
 const Header = ({
-  onImportClick,
   onSettingsClick,
   currentView,
   onViewChange,
   isComponentLibrary = false,
 }) => {
-  const [previousView, setPreviousView] = useState(currentView);
-  const [isAnimating, setIsAnimating] = useState(false);
+  const [, setPreviousView] = useState(null);
+  const [, setIsAnimating] = useState(false);
   const { theme, toggleTheme } = useTheme();
-  const { user, logout } = useAuth() || { user: null, logout: () => {} };
+  const { } = useAuth() || { user: null, logout: () => {} };
   const { preferredCurrency, updatePreferredCurrency } = useUserPreferences();
   const [currencyDropdownOpen, setCurrencyDropdownOpen] = useState(false);
   const currencyDropdownRef = useRef(null);
-  const location = useLocation();
+  useLocation();
 
   // Helper function to check if current view is in the sold section
   const isSoldSection = () => {

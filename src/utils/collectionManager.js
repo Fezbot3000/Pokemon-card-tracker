@@ -70,7 +70,7 @@ export const collectionManager = {
         throw new Error('Cannot delete the last collection');
       }
 
-      const collectionId = currentCollections[name].id;
+
 
       toast.loading(`Deleting collection "${name}" and all its cards...`, {
         id: 'delete-collection',

@@ -262,7 +262,7 @@ const SharingQuickStart = ({ onClose }) => {
         <div className="flex justify-center space-x-2">
           {steps.map((_, index) => (
             <div
-              key={index}
+              key={`step-indicator-${index}`}
               className={`size-3 rounded-full ${
                 index === currentStep
                   ? 'bg-blue-500'

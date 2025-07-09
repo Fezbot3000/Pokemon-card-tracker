@@ -424,7 +424,7 @@ const CardList = ({
 
     // Cleanup logic remains complex due to potential blob URLs
     return () => {
-      Object.entries(cardImages).forEach(([key, url]) => {
+      Object.entries(cardImages).forEach(([, url]) => {
         if (url && url.startsWith('blob:')) {
           try {
             URL.revokeObjectURL(url);
@@ -438,7 +438,7 @@ const CardList = ({
         }
       });
     };
-  }, [cards]); // Dependency remains on 'cards'
+  }, [cards, cardImages]); // Dependency remains on 'cards'
 
   // Function to refresh a single card's image
   const refreshCardImage = async cardId => {
@@ -488,7 +488,7 @@ const CardList = ({
       // Call the original onUpdateCard function
       onUpdateCard(updatedCard);
     },
-    [onUpdateCard, cards, cardImages]
+    [onUpdateCard, refreshCardImage]
   );
 
   // Sort options
@@ -583,7 +583,7 @@ const CardList = ({
     // setBuyer(''); // Commented out - variable not defined
     setFilter('');
     setVisibleCardCount(24); // Reset pagination when collection changes
-  }, [selectedCollection]);
+  }, [selectedCollection, clearSelection]);
 
   // Load more cards when user scrolls to the bottom
   useEffect(() => {
@@ -1321,7 +1321,7 @@ const CardList = ({
       {selectedCards.size > 0 && (
         <>
           {/* Bottom shadow overlay for better contrast */}
-          <div className="from-black/50 via-black/20 pointer-events-none fixed inset-x-0 bottom-0 z-40 h-1/3 bg-gradient-to-t to-transparent"></div>
+          <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 h-1/3 bg-gradient-to-t from-black via-black to-transparent"></div>
 
           <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2">
             {/* Selection Count Badge */}

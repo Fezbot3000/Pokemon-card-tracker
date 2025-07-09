@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../../design-system';
 import {
   collection,
@@ -202,10 +202,10 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
       logger.error('Error in chat setup:', error);
       setLoading(false);
     }
-  }, [user]);
+  }, [user, activeChat]);
 
   // Load card images for listings referenced in conversations
-  const loadCardImages = async conversationsData => {
+  const loadCardImages = useCallback(async conversationsData => {
     if (!conversationsData || conversationsData.length === 0) return;
 
     // Clean up existing blob URLs before loading new ones
@@ -344,14 +344,14 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
       ...prevImages,
       ...newCardImages,
     }));
-  };
+  }, [cardImages]);
 
   // Load card images when conversations change
   useEffect(() => {
     if (conversations.length > 0) {
       loadCardImages(conversations);
     }
-  }, [conversations]);
+  }, [conversations, loadCardImages]);
 
   // Listen for custom events to open specific chats (cross-device compatible)
   useEffect(() => {

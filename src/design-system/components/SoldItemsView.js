@@ -22,7 +22,7 @@ const SoldItemsView = ({
   formatUserCurrency,
   originalCurrencyCode,
 }) => {
-  const { isDarkMode } = useTheme();
+  const { } = useTheme();
   const [expandedYears, setExpandedYears] = useState(new Set());
   const [expandedInvoices, setExpandedInvoices] = useState(new Set());
   const [loadedInvoiceImages, setLoadedInvoiceImages] = useState(new Set()); // Track which invoice images have been loaded

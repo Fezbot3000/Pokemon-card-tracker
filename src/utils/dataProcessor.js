@@ -69,7 +69,7 @@ export const processImportedData = (
   const {
     fillMissingFields = true,
     updateExistingValues = true,
-    importMode = 'priceUpdate',
+
   } = options;
 
   // Convert a deep copy to avoid mutations
@@ -315,22 +315,12 @@ export const processMultipleCollectionsUpdate = (
 };
 
 /**
- * Calculate profit based on current value and investment
- * @param {number} currentValue - Current value in AUD
- * @param {number} investment - Investment amount in AUD
- * @returns {number} Calculated profit
- */
-const calculateProfit = (currentValue, investment) => {
-  return Number((currentValue - investment).toFixed(2));
-};
-
-/**
  * Validate the CSV data structure
  * @param {Array} data - The parsed CSV data
  * @param {string} importMode - Mode of import: 'priceUpdate' or 'baseData'
  * @returns {Object} Validation result with success flag and error message
  */
-export const validateCSVStructure = (data, importMode = 'priceUpdate') => {
+export const validateCSVStructure = (data) => {
   if (!data || data.length === 0) {
     return {
       success: false,

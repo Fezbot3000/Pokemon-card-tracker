@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth, toast } from '../../design-system';
 import {
   collection,
@@ -11,7 +11,7 @@ import {
 } from 'firebase/firestore';
 import { db as firestoreDb } from '../../services/firebase';
 import logger from '../../utils/logger';
-import { useUserPreferences } from '../../contexts/UserPreferencesContext';
+
 import db from '../../services/firestore/dbAdapter'; // Import IndexedDB service for image loading
 import MessageModal from './MessageModal'; // Import the MessageModal component
 import ListingDetailModal from './ListingDetailModal'; // Import the ListingDetailModal component
@@ -23,7 +23,7 @@ import MarketplacePagination from './MarketplacePagination'; // Import paginatio
 import LazyImage from './LazyImage'; // Import lazy image component
 import SellerProfileModal from './SellerProfileModal'; // Import seller profile modal component
 import ReportListing from './ReportListing'; // Import report listing component
-import { useNavigate } from 'react-router-dom'; // Import for navigation
+
 import LoggingService from '../../services/LoggingService';
 
 function Marketplace({ currentView, onViewChange }) {
@@ -38,8 +38,7 @@ function Marketplace({ currentView, onViewChange }) {
   const [loading, setLoading] = useState(true);
   const [cardImages, setCardImages] = useState({});
   const { user } = useAuth();
-  const { formatAmountForDisplay } = useUserPreferences();
-  const navigate = useNavigate();
+
 
   const [indexBuildingError, setIndexBuildingError] = useState(false);
   const [selectedListing, setSelectedListing] = useState(null);
@@ -214,7 +213,7 @@ function Marketplace({ currentView, onViewChange }) {
     };
   }, [user]);
 
-  const loadCardImages = async listingsData => {
+  const loadCardImages = useCallback(async listingsData => {
     if (!listingsData || listingsData.length === 0) return;
 
     // Clean up existing blob URLs before loading new ones
@@ -353,7 +352,7 @@ function Marketplace({ currentView, onViewChange }) {
       ...prevImages,
       ...newCardImages,
     }));
-  };
+  }, [cardImages]);
 
   const handleContactSeller = (listing, message = '') => {
     // Check if there's an existing chat for this listing

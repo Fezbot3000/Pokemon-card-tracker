@@ -16,8 +16,7 @@ import db from '../../services/firestore/dbAdapter';
 import featureFlags, {
   updateFeatureFlag,
 } from '../../utils/featureFlags';
-import logger from '../../utils/logger';
-import shadowSync from '../../services/shadowSync'; // Import the shadowSync service directly
+
 import { CardRepository } from '../../repositories/CardRepository'; // Import CardRepository
 import {
   useUserPreferences,
@@ -47,7 +46,6 @@ const SettingsModal = ({
   onSignOut,
   onResetData,
   onStartTutorial,
-  onImportAndCloudMigrate,
   onUploadImagesFromZip,
   className = '',
   ...props
@@ -60,7 +58,6 @@ const SettingsModal = ({
   const { addBackupLog } = useBackup();
   const [isRenaming, setIsRenaming] = useState(false);
   const [newCollectionName, setNewCollectionName] = useState('');
-  const [isUploadingImages, setIsUploadingImages] = useState(false);
   const [activeTab, setActiveTab] = useState('general');
   const [collectionToDelete, setCollectionToDelete] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -74,8 +71,6 @@ const SettingsModal = ({
   const [collectionToRename, setCollectionToRename] = useState('');
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [resetConfirmText, setResetConfirmText] = useState('');
-  const [isVerifyingBackup, setIsVerifyingBackup] = useState(false);
-  const [verificationStatus, setVerificationStatus] = useState('');
   const importBaseDataRef = useRef(null);
   const imageUploadRef = useRef(null);
 
@@ -200,16 +195,6 @@ const SettingsModal = ({
     }
   };
 
-  // Handle image upload from zip
-  const handleImageUpload = () => {
-    if (isUploadingImages) return;
-
-    // Create a file input element
-    if (imageUploadRef.current) {
-      imageUploadRef.current.click();
-    }
-  };
-
   // Handle image upload file change
   const handleImageUploadChange = e => {
     const file = e.target.files[0];
@@ -221,7 +206,6 @@ const SettingsModal = ({
       return;
     }
 
-    setIsUploadingImages(true);
     addBackupLog(`Starting image upload from file: ${file.name}`);
 
     // Call the onUploadImagesFromZip function
@@ -230,74 +214,11 @@ const SettingsModal = ({
         addBackupLog(message);
       },
     }).finally(() => {
-      setIsUploadingImages(false);
       e.target.value = null; // Reset the file input
     });
   };
 
-  // Handle cloud backup verification
-  const handleVerifyCloudBackup = async () => {
-    // Get the cardRepository from ref
-    const cardRepository = cardRepositoryRef.current;
 
-    // Check if user and repo exist
-    if (!user || !cardRepository) {
-      LoggingService.error('Verification prerequisites not met', {
-        hasUser: !!user,
-        hasRepo: !!cardRepository
-      });
-      return;
-    }
-
-    setIsVerifyingBackup(true);
-    setVerificationStatus('Fetching local data...');
-
-    try {
-      // Fetch local data
-      const localCollections = await db.getCollections();
-      const localCards = await db.getAllCards();
-      const localCollectionCount = Object.keys(localCollections).length;
-      const localCardCount = Array.isArray(localCards) ? localCards.length : 0;
-      setVerificationStatus(
-        `Local: ${localCollectionCount} collections, ${localCardCount} cards. Fetching cloud data...`
-      );
-
-      // Fetch cloud data
-      const cloudCollections = await cardRepository.getAllCollections();
-      const cloudCards = await cardRepository.getAllCards();
-
-      // Compare counts
-      const cloudCollectionCount = Array.isArray(cloudCollections)
-        ? cloudCollections.length
-        : 0;
-      const cloudCardCount = Array.isArray(cloudCards) ? cloudCards.length : 0;
-      let statusMessage = 'Verification Complete: ';
-      let issuesFound = false;
-
-      if (localCollectionCount !== cloudCollectionCount) {
-        statusMessage += `Collections Mismatch (Local: ${localCollectionCount}, Cloud: ${cloudCollectionCount}). `;
-        issuesFound = true;
-      }
-      if (localCardCount !== cloudCardCount) {
-        statusMessage += `Cards Mismatch (Local: ${localCardCount}, Cloud: ${cloudCardCount}).`;
-        issuesFound = true;
-      }
-
-      if (!issuesFound) {
-        statusMessage += `OK (Local: ${localCollectionCount} coll, ${localCardCount} cards | Cloud: ${cloudCollectionCount} coll, ${cloudCardCount} cards).`;
-      }
-
-      setVerificationStatus(statusMessage);
-      if (issuesFound) {
-        toastService.warning('Cloud backup verification found discrepancies.');
-      } else {
-        toastService.success('Cloud backup verified successfully.');
-      }
-    } catch (error) {
-      LoggingService.error('Error during verification process:', error);
-      toastService.error(`Verification failed: ${error.message}`);
-    }
-  };
 
   // Handle reset data
   const handleResetData = () => {

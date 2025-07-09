@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   collection,
   doc,
@@ -66,13 +66,7 @@ const CollectionSharing = ({ isInModal = false }) => {
     isActive: true,
   });
 
-  useEffect(() => {
-    if (currentUser) {
-      loadSharedCollections();
-    }
-  }, [currentUser]);
-
-  const loadSharedCollections = async () => {
+  const loadSharedCollections = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -96,7 +90,15 @@ const CollectionSharing = ({ isInModal = false }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentUser]);
+
+  useEffect(() => {
+    if (currentUser) {
+      loadSharedCollections();
+    }
+  }, [currentUser, loadSharedCollections]);
+
+
 
   const generateShareId = () => {
     // Use crypto.getRandomValues for cryptographically secure random generation

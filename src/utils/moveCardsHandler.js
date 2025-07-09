@@ -311,4 +311,5 @@ export function validateCollectionsStructure(collections) {
   return validatedCollections;
 }
 
-export default { moveCards, validateCollectionsStructure };
+const moveCardsHandler = { moveCards, validateCollectionsStructure };
+export default moveCardsHandler;

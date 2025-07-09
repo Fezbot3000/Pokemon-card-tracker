@@ -6,7 +6,7 @@ const HelpCenter = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
 
-  const helpArticles = [
+  const helpArticles = useMemo(() => [
     // Getting Started
     {
       id: 1,
@@ -414,7 +414,7 @@ const HelpCenter = () => {
       `,
       tags: ['mobile', 'app', 'barcode', 'offline', 'notifications'],
     },
-  ];
+  ], []);
 
   const categories = [
     { id: 'all', name: 'All Topics', icon: '📚' },
@@ -441,7 +441,7 @@ const HelpCenter = () => {
 
       return matchesSearch && matchesCategory;
     });
-  }, [searchTerm, selectedCategory]);
+  }, [searchTerm, selectedCategory, helpArticles]);
 
   const [expandedArticle, setExpandedArticle] = useState(null);
 
@@ -568,14 +568,14 @@ const HelpCenter = () => {
                         <div className="prose prose-invert max-w-none">
                           {article.fullContent
                             .split('\n')
-                            .map((line, index) => {
+                            .map((line) => {
                               if (
                                 line.trim().startsWith('**') &&
                                 line.trim().endsWith('**')
                               ) {
                                 return (
                                   <h4
-                                    key={index}
+                                    key={`header-${line.replace(/\*\*/g, '').trim()}`}
                                     className="mb-3 mt-6 text-lg font-bold text-blue-400"
                                   >
                                     {line.replace(/\*\*/g, '')}
@@ -584,7 +584,7 @@ const HelpCenter = () => {
                               } else if (line.trim().startsWith('- ')) {
                                 return (
                                   <li
-                                    key={index}
+                                    key={`list-${line.substring(2).trim()}`}
                                     className="ml-4 text-gray-300"
                                   >
                                     {line.substring(2)}
@@ -593,7 +593,7 @@ const HelpCenter = () => {
                               } else if (line.trim()) {
                                 return (
                                   <p
-                                    key={index}
+                                    key={`para-${line.trim()}`}
                                     className="mb-4 leading-relaxed text-gray-300"
                                   >
                                     {line}

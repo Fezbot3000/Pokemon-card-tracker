@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Modal, Button } from '../../design-system';
 import { useAuth } from '../../design-system';
 import {
@@ -25,15 +25,7 @@ const BuyerSelectionModal = ({ isOpen, onClose, listing }) => {
   const [soldPrice, setSoldPrice] = useState('');
   const { user } = useAuth();
 
-  useEffect(() => {
-    if (isOpen && listing) {
-      fetchPotentialBuyers();
-      // Initialize sold price with listing price
-      setSoldPrice(listing.listingPrice || listing.priceAUD || '');
-    }
-  }, [isOpen, listing]);
-
-  const fetchPotentialBuyers = async () => {
+  const fetchPotentialBuyers = useCallback(async () => {
     setLoading(true);
     try {
       // Get all chats for this listing
@@ -80,7 +72,15 @@ const BuyerSelectionModal = ({ isOpen, onClose, listing }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [listing, user]);
+
+  useEffect(() => {
+    if (isOpen && listing) {
+      fetchPotentialBuyers();
+      // Initialize sold price with listing price
+      setSoldPrice(listing.listingPrice || listing.priceAUD || '');
+    }
+  }, [isOpen, listing, fetchPotentialBuyers]);
 
   const handleSubmit = async () => {
     if (!selectedBuyerId) {

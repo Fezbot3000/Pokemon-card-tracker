@@ -3,6 +3,7 @@ import { useAuth } from '../../design-system/contexts/AuthContext';
 import {
   collection,
   doc,
+  getDoc,
   serverTimestamp,
   setDoc,
 } from 'firebase/firestore';
@@ -45,7 +46,8 @@ const SellerReviewModal = ({
 
       // Update the seller's rating statistics
       const sellerRef = doc(db, 'users', sellerId);
-      const sellerDoc = await setDoc(sellerRef, {
+      await getDoc(sellerRef);
+      await setDoc(sellerRef, {
         sellerRating: rating,
         reviewCount: 1,
         lastReviewAt: serverTimestamp(),

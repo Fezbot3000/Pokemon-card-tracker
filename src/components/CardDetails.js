@@ -95,7 +95,58 @@ const CardDetails = memo(
 
 
 
-    // Effect to load card image on mount
+    // Load the card image
+    const loadCardImage = useCallback(async () => {
+      setImageLoadingState('loading');
+      try {
+        // Prioritize Firestore image URL if available in the current card data
+        if (editedCard.imageUrl) {
+          // Revoke existing blob URL if necessary before setting the new URL
+          if (cardImage && cardImage.startsWith('blob:')) {
+            try {
+              URL.revokeObjectURL(cardImage);
+            } catch (e) {
+              logger.warn('Failed to revoke existing cardImage blob URL:', e);
+            }
+          }
+          setCardImage(editedCard.imageUrl);
+          setImageLoadingState('loaded');
+          return;
+        }
+
+        // If no Firestore URL, try to load from IndexedDB
+        const imageBlob = await db.getImage(card.id || card.slabSerial);
+        if (imageBlob) {
+          // Revoke existing blob URL if necessary before creating a new one
+          if (cardImage && cardImage.startsWith('blob:')) {
+            try {
+              URL.revokeObjectURL(cardImage);
+            } catch (e) {
+              logger.warn('Failed to revoke existing cardImage blob URL:', e);
+            }
+          }
+          const blobUrl = URL.createObjectURL(imageBlob);
+          setCardImage(blobUrl);
+          setImageLoadingState('loaded');
+        } else {
+          setCardImage(null);
+          setImageLoadingState('error');
+        }
+      } catch (error) {
+        logger.error('Error loading card image:', error);
+        if (cardImage && cardImage.startsWith('blob:')) {
+          try {
+            URL.revokeObjectURL(cardImage);
+          } catch (e) {
+            logger.warn('Failed to revoke cardImage blob URL on error:', e);
+          }
+        }
+        setCardImage(null);
+        setImageLoadingState('error');
+      }
+    }, [editedCard.imageUrl, editedCard.id, editedCard.slabSerial, cardImage, card.id, card.slabSerial]);
+
+    // Effect to handle body scroll locking and image loading
     useEffect(() => {
       loadCardImage();
 
@@ -129,7 +180,7 @@ const CardDetails = memo(
           }
         }
       };
-    }, []);
+    }, [cardImage, loadCardImage]);
 
     // Listen for card-images-cleanup event to revoke blob URLs when collections are deleted
     useEffect(() => {
@@ -169,59 +220,6 @@ const CardDetails = memo(
         );
       };
     }, [card.id, card.slabSerial, cardImage]);
-
-    // Load the card image
-    const loadCardImage = useCallback(async () => {
-      setImageLoadingState('loading');
-      try {
-        // Prioritize Firestore image URL if available in the current card data
-        if (editedCard.imageUrl) {
-          // Revoke existing blob URL if necessary before setting the new URL
-          if (cardImage && cardImage.startsWith('blob:')) {
-            URL.revokeObjectURL(cardImage);
-          }
-          setCardImage(editedCard.imageUrl);
-          setImageLoadingState('idle');
-        } else {
-          // Fallback: Try loading from IndexedDB if no Firestore URL
-          const id =
-            editedCard.id ||
-            editedCard.slabSerial ||
-            card.id ||
-            card.slabSerial;
-          const imageBlob = await db.getImage(id);
-
-          if (imageBlob) {
-            // Revoke any existing object URL (could be blob or previous Firestore URL)
-            if (cardImage) {
-              // Only revoke if it's a blob URL
-              if (cardImage.startsWith('blob:')) {
-                URL.revokeObjectURL(cardImage);
-              }
-            }
-
-            const blobUrl = URL.createObjectURL(imageBlob);
-            setCardImage(blobUrl);
-            setImageLoadingState('idle');
-          } else {
-            // Ensure any previous image (blob or Firestore URL) is cleared
-            if (cardImage && cardImage.startsWith('blob:')) {
-              URL.revokeObjectURL(cardImage);
-            }
-            setCardImage(null);
-            setImageLoadingState('idle');
-          }
-        }
-      } catch (error) {
-        logger.error('Error loading card image:', error);
-        // Ensure any previous image (blob or Firestore URL) is cleared on error
-        if (cardImage && cardImage.startsWith('blob:')) {
-          URL.revokeObjectURL(cardImage);
-        }
-        setCardImage(null);
-        setImageLoadingState('error');
-      }
-    }, [editedCard.imageUrl, cardImage, card.id, card.slabSerial]);
 
     // Handle image update
     const handleImageChange = async file => {

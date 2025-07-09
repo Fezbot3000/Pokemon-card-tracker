@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useSubscription } from '../hooks/useSubscription';
 import Button from '../design-system/atoms/Button';
-import Icon from '../design-system/atoms/Icon';
 import UpgradeModal from './UpgradeModal';
 // Import the modal (to be created)
 // import UpgradeModal from './UpgradeModal';

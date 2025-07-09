@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
-import { Modal } from './Modal';
-import { useTheme } from '../../contexts/ThemeContext';
+
+
 
 const BottomSheet = ({ isOpen, onClose, title, children }) => {
   const sheetRef = useRef(null);

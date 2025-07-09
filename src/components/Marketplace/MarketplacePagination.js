@@ -67,7 +67,7 @@ function MarketplacePagination({
 
         {getPageNumbers().map((page, index) => (
           <button
-            key={index}
+            key={`page-${page}-${index}`}
             onClick={() => typeof page === 'number' && onPageChange(page)}
             disabled={page === '...'}
             className={`rounded-md px-3 py-2 ${

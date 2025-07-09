@@ -31,15 +31,12 @@ const CardDetailsModal = ({
   onClose,
   card = null,
   onSave,
-  onDelete,
   onMarkAsSold,
   onChange,
   image,
-  imageLoadingState = 'idle',
   onImageChange,
   onImageRetry,
   className = '',
-  additionalHeaderContent,
   additionalValueContent,
   additionalSerialContent,
   collections = [], // Default to empty array
@@ -47,7 +44,7 @@ const CardDetailsModal = ({
   isPsaLoading = false,
 }) => {
   const [cardImage, setCardImage] = useState(null); // Start with null to implement lazy loading
-  const [localImageLoadingState, setLocalImageLoadingState] = useState('idle');
+  const [localImageLoadingState] = useState('idle');
   const [showEnlargedImage, setShowEnlargedImage] = useState(false);
   const [isConfirmingSold, setIsConfirmingSold] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');

@@ -8,10 +8,7 @@
 import {
   getFunctions,
   httpsCallable,
-  connectFunctionsEmulator,
 } from 'firebase/functions';
-import { getAuth } from 'firebase/auth';
-import db from './firestore/dbAdapter';
 import logger from '../utils/logger';
 import PSANotifications from '../components/PSANotifications';
 import { getPokemonSetsByYear, getAllPokemonSets } from '../data/pokemonSets';
@@ -21,22 +18,6 @@ import psaDataService from './psaDataService';
 const functions = getFunctions();
 
 const psaLookupFunction = httpsCallable(functions, 'psaLookup');
-
-// Firebase project region and ID for direct HTTP calls
-const region = 'us-central1';
-const projectId = 'mycardtracker-c8479';
-
-// Subscription cache - no rate limiting
-const subscriptionCache = {
-  lastCall: 0,
-  cooldown: 0, // No cooldown between calls
-  isReady: function () {
-    return true; // Always ready
-  },
-  updateLastCall: function () {
-    this.lastCall = Date.now();
-  },
-};
 
 // PSA search result cache
 const psaCache = {
@@ -125,40 +106,7 @@ const clearPSACache = (certNumber = null) => {
   }
 };
 
-// No API rate limiting - completely disabled
-const apiRateLimit = {
-  isLimited: false,
-  limitResetTime: null,
-  dailyLimit: Number.MAX_SAFE_INTEGER,
-  remainingCalls: Number.MAX_SAFE_INTEGER,
 
-  setLimited: function () {
-    // Do nothing - no rate limiting
-  },
-
-  resetLimit: function () {
-    // Do nothing - no rate limiting
-  },
-
-  checkStatus: function () {
-    // Always return unlimited status
-    return {
-      isLimited: false,
-      limitResetTime: null,
-      remainingCalls: Number.MAX_SAFE_INTEGER,
-      timeUntilReset: 0,
-    };
-  },
-
-  decrementCalls: function () {
-    // Do nothing - no rate limiting
-  },
-
-  checkLimit: function () {
-    // Always return true - no rate limiting
-    return true;
-  },
-};
 
 // No rate limit initialization needed
 
@@ -335,20 +283,6 @@ const parsePSACardData = psaData => {
 
   // Handle different PSA API response structures
   const cert = psaData.PSACert || psaData.data?.PSACert || psaData;
-
-  // Construct a more descriptive card name
-  const cardName = [
-    cert.Year,
-    cert.Brand,
-    cert.SetName, // If available, otherwise Brand/Title
-    cert.CardNumber ? `#${cert.CardNumber}` : '',
-    cert.Subject,
-    cert.Variety,
-  ]
-    .filter(Boolean)
-    .join(' ')
-    .replace(/\s+/g, ' ')
-    .trim();
 
   // Clean card name for the app - just extract the actual card name without year/brand prefix
   const cleanCardName = cert.Subject || cert.Title || '';
@@ -672,17 +606,7 @@ const findBestMatchingSet = (setName, year) => {
   return null; // Return null if no match
 };
 
-/**
- * Fetch PSA card image and convert it to a file
- * @param {string} certNumber - PSA certification number
- * @returns {Promise<File|null>} - The image file or null if not found
- */
-// COMPLETELY DISABLED - DO NOT USE
-// This function has been intentionally disabled to prevent any image fetching
-// If you need this functionality, please implement it differently.
-const fetchPSACardImage = async () => {
-  return null;
-};
+
 
 export {
   searchByCertNumber,

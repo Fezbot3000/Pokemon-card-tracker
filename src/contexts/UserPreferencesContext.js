@@ -69,45 +69,11 @@ export function UserPreferencesProvider({ children }) {
 
   // Fetch live exchange rates on mount or when user changes
   useEffect(() => {
-    const fetchWithRetry = async (
-      url,
-      options,
-      maxRetries = 3,
-      baseDelay = 1000
-    ) => {
-      let lastError;
-      for (let i = 0; i < maxRetries; i++) {
-        try {
-          const response = await fetch(url, options);
-          if (response.ok) return response;
-
-          // For 5xx errors, we'll retry
-          if (response.status >= 500) {
-            lastError = new Error(`Server error: ${response.status}`);
-            // Don't retry on last attempt
-            if (i === maxRetries - 1) throw lastError;
-          } else {
-            // For other errors (4xx), throw immediately
-            throw new Error(`API request failed: ${response.status}`);
-          }
-        } catch (error) {
-          lastError = error;
-          // Don't retry on last attempt
-          if (i === maxRetries - 1) throw error;
-        }
-
-        // Exponential backoff
-        const delay = baseDelay * Math.pow(2, i);
-        await new Promise(resolve => setTimeout(resolve, delay));
-      }
-      throw lastError;
-    };
-
     const loadStoredRates = () => {
       try {
         const stored = localStorage.getItem(RATE_STORAGE_KEY);
         if (stored) {
-          const { rates, timestamp } = JSON.parse(stored);
+          const { rates } = JSON.parse(stored);
           // Verify the stored rates have all required currencies
           const hasAllCurrencies = Object.keys(conversionRates).every(
             currency => rates[currency]
@@ -128,7 +94,6 @@ export function UserPreferencesProvider({ children }) {
           RATE_STORAGE_KEY,
           JSON.stringify({
             rates,
-            timestamp: Date.now(),
           })
         );
         localStorage.setItem(RATE_LAST_FETCH_KEY, Date.now().toString());
@@ -268,14 +233,14 @@ export function UserPreferencesProvider({ children }) {
         const userPrefsDoc = await getDoc(userPrefsRef);
 
         if (userPrefsDoc.exists()) {
-          const firestoreData = userPrefsDoc.data();
+          const { ...userPrefs } = userPrefsDoc.data();
           if (
-            firestoreData.currency &&
+            userPrefs.currency &&
             availableCurrencies.find(
-              c => c.code === firestoreData.currency.code
+              c => c.code === userPrefs.currency.code
             )
           ) {
-            const firestoreCurrency = firestoreData.currency;
+            const firestoreCurrency = userPrefs.currency;
             setPreferredCurrency(firestoreCurrency);
             localStorage.setItem(
               CURRENCY_PREFERENCE_KEY,

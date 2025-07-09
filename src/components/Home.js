@@ -470,7 +470,7 @@ function Home() {
             <div className="glass-border glass-gradient rounded-2xl border p-8 backdrop-blur-sm">
               <div className="mb-4 flex text-yellow-400">
                 {[...Array(5)].map((_, i) => (
-                  <span key={`testimonial-3-star-${i}`} className="material-icons">
+                  <span key={`star-${i + 1}`} className="material-icons">
                     star
                   </span>
                 ))}

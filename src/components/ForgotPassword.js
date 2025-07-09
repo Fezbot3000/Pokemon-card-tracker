@@ -52,7 +52,7 @@ function ForgotPassword() {
   };
 
   return (
-    <div className="page-no-padding flex min-h-screen items-center justify-center bg-gradient-to-br from-purple-900 via-red-500 to-green-500 px-4 py-12 sm:px-6 lg:px-8">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-purple-900 via-red-500 to-green-500 px-4 py-12 sm:px-6 lg:px-8">
       <div className="absolute top-0 mx-auto w-full max-w-7xl px-4 pt-12 sm:px-6 lg:px-8">
         {/* Navigation */}
         <div className="mb-8 flex justify-center">

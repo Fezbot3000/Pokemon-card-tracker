@@ -9,7 +9,7 @@ import { formatCurrency } from '../../design-system/utils/formatters';
 import db from '../../services/firestore/dbAdapter';
 import { toast } from 'react-hot-toast';
 import CreateInvoiceModal from './CreateInvoiceModal';
-import { PDFDownloadLink, pdf } from '@react-pdf/renderer';
+import { pdf } from '@react-pdf/renderer';
 import PurchaseInvoicePDF from '../PurchaseInvoicePDF';
 import { formatDateForDisplay } from '../../utils/dateUtils';
 import { doc, getDoc, collection, query, getDocs } from 'firebase/firestore';
@@ -617,7 +617,7 @@ const PurchaseInvoices = () => {
                 </thead>
                 <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-black">
                   {[...Array(2)].map((_, i) => (
-                    <tr key={i}>
+                    <tr key={`loading-row-${i}`}>
                       <td className="whitespace-nowrap px-6 py-4">
                         <div className="h-4 w-32 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
                       </td>
@@ -650,7 +650,7 @@ const PurchaseInvoices = () => {
             <div className="space-y-4 md:hidden">
               {[...Array(2)].map((_, i) => (
                 <div
-                  key={i}
+                  key={`mobile-loading-${i}`}
                   className="bg-white/5 dark:bg-white/5 border-gray-200/20 dark:border-gray-700/30 rounded-xl border p-4"
                 >
                   <div className="mb-3 flex items-start justify-between">

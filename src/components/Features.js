@@ -310,12 +310,12 @@ const Features = () => {
 
           {/* Feature Navigation */}
           <div className="mb-12 flex flex-wrap justify-center gap-2">
-            {features.map((feature, index) => (
+            {features.map((feature) => (
               <button
                 key={feature.id}
-                onClick={() => setActiveFeature(index)}
+                onClick={() => setActiveFeature(features.indexOf(feature))}
                 className={`rounded-full px-4 py-2 text-sm font-medium transition-all duration-300 ${
-                  activeFeature === index
+                  activeFeature === features.indexOf(feature)
                     ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white'
                     : 'bg-white/10 border-white/20 hover:bg-white/20 border text-gray-300 backdrop-blur-sm'
                 }`}
@@ -344,8 +344,8 @@ const Features = () => {
                 </p>
 
                 <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  {features[activeFeature].benefits.map((benefit, index) => (
-                    <div key={index} className="flex items-center">
+                  {features[activeFeature].benefits.map((benefit) => (
+                    <div key={benefit} className="flex items-center">
                       <div className="mr-3 flex size-5 shrink-0 items-center justify-center rounded-full bg-green-400">
                         <span className="text-xs text-black">✓</span>
                       </div>
@@ -357,14 +357,14 @@ const Features = () => {
                 <div className="prose prose-invert max-w-none text-sm">
                   {features[activeFeature].details
                     .split('\n')
-                    .map((line, index) => {
+                    .map((line) => {
                       if (
                         line.trim().startsWith('**') &&
                         line.trim().endsWith('**')
                       ) {
                         return (
                           <h4
-                            key={index}
+                            key={`header-${line.replace(/\*\*/g, '').trim()}`}
                             className="mb-2 mt-4 text-lg font-bold text-blue-400"
                           >
                             {line.replace(/\*\*/g, '')}
@@ -372,14 +372,14 @@ const Features = () => {
                         );
                       } else if (line.trim().startsWith('- ')) {
                         return (
-                          <li key={index} className="mb-1 ml-4 text-gray-300">
+                          <li key={`list-${line.substring(2).trim()}`} className="mb-1 ml-4 text-gray-300">
                             {line.substring(2)}
                           </li>
                         );
                       } else if (line.trim()) {
                         return (
                           <p
-                            key={index}
+                            key={`para-${line.trim()}`}
                             className="mb-3 leading-relaxed text-gray-300"
                           >
                             {line}
@@ -420,9 +420,9 @@ const Features = () => {
           </div>
 
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {additionalFeatures.map((feature, index) => (
+            {additionalFeatures.map((feature) => (
               <div
-                key={index}
+                key={feature.title || feature.name}
                 className="border-white/10 hover:border-white/20 group rounded-2xl border bg-gradient-to-br from-white/10 to-white/5 p-6 text-center backdrop-blur-sm transition-all duration-300"
               >
                 <div className="mb-4 text-4xl transition-transform duration-300 group-hover:scale-110">

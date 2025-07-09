@@ -1,8 +1,7 @@
 import React, { memo } from 'react';
 import PropTypes from 'prop-types';
 import Icon from '../atoms/Icon';
-import { baseColors } from '../styles/colors';
-import { colors, shadows, borders } from '../tokens';
+
 import { useTheme } from '../contexts/ThemeContext';
 import { useLazyImage } from '../../hooks/useLazyImage';
 

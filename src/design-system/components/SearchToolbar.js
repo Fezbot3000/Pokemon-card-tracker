@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
 import Icon from '../atoms/Icon';
 import Button from '../atoms/Button';

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import LoggingService from '../services/LoggingService';
 
 const ESLintDebugger = () => {
@@ -9,7 +9,7 @@ const ESLintDebugger = () => {
   const [lastUpdated, setLastUpdated] = useState(null);
   const [autoUpdate, setAutoUpdate] = useState(true);
 
-  const fetchLintResults = async () => {
+  const fetchLintResults = useCallback(async () => {
     setIsLoading(true);
     try {
       // Try to read the ESLint results from a JSON file
@@ -31,7 +31,7 @@ const ESLintDebugger = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   const triggerESLintUpdate = async () => {
     try {
@@ -71,7 +71,7 @@ const ESLintDebugger = () => {
         clearInterval(intervalId);
       }
     };
-  }, [autoUpdate]);
+  }, [autoUpdate, fetchLintResults]);
 
   const handleManualUpdate = () => {
     fetchLintResults();

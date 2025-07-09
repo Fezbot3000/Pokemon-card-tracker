@@ -1,8 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { useAuth } from '../../design-system';
 import { toast } from 'react-hot-toast';
-import { useNavigate } from 'react-router-dom';
-import db from '../../services/firestore/dbAdapter';
 import FormField from '../../design-system/molecules/FormField';
 import Modal from '../../design-system/molecules/Modal';
 import Button from '../../design-system/atoms/Button';
@@ -25,19 +22,17 @@ const CreateInvoiceModal = ({
   const [invoiceNumber, setInvoiceNumber] = useState('');
   const [notes, setNotes] = useState('');
   const [enlargedImage, setEnlargedImage] = useState(null);
-  const { currentUser } = useAuth();
-  const navigate = useNavigate();
 
   // Memoize preSelectedCards to prevent unnecessary re-renders
   const memoizedPreSelectedCards = useMemo(
     () => preSelectedCards,
-    [preSelectedCards?.length, preSelectedCards?.[0]?.id]
+    [preSelectedCards]
   );
 
   // Memoize editingInvoice to prevent unnecessary re-renders
   const memoizedEditingInvoice = useMemo(
     () => editingInvoice,
-    [editingInvoice?.id, editingInvoice?.invoiceNumber]
+    [editingInvoice]
   );
 
   // Initialize form with editing invoice data or pre-selected cards
@@ -180,7 +175,8 @@ const CreateInvoiceModal = ({
         );
 
         // Close modal
-        handleClose();
+        setEnlargedImage(null);
+        onClose();
       } catch (error) {
         LoggingService.error('Error saving invoice:', error);
         toast.error('Failed to save invoice. Please try again.');
@@ -195,6 +191,7 @@ const CreateInvoiceModal = ({
       totalInvestment,
       memoizedEditingInvoice,
       onSave,
+      onClose,
     ]
   );
 

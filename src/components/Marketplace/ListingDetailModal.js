@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Modal, Button, Icon, toastService } from '../../design-system';
 import { useAuth } from '../../design-system';
 import {
@@ -16,7 +16,7 @@ import { db as firestoreDb } from '../../services/firebase';
 import logger from '../../utils/logger';
 import MapView from './MapView';
 import BuyerSelectionModal from './BuyerSelectionModal';
-import LoggingService from '../../services/LoggingService';
+
 
 function ListingDetailModal({
   isOpen,
@@ -43,68 +43,11 @@ function ListingDetailModal({
   const [totalReviews, setTotalReviews] = useState(0);
   const [loadingSellerData, setLoadingSellerData] = useState(true);
   const [showAllReviews, setShowAllReviews] = useState(false);
-  // const [showReportMenu, setShowReportMenu] = useState(false); // Removed - not used
   const [hasExistingChat, setHasExistingChat] = useState(false);
   const [existingChatId, setExistingChatId] = useState(null);
   const [showBuyerSelectionModal, setShowBuyerSelectionModal] = useState(false);
 
-  const handleShareListing = () => {
-    if (!listing?.id) {
-      toastService.error('Unable to share listing');
-      return;
-    }
 
-    const shareUrl = `${window.location.origin}/marketplace/listing/${listing.id}`;
-    const cardName = listing.card?.name || listing.title || 'Trading Card';
-    const price = listing.price ? `$${listing.price}` : 'Price on request';
-
-    if (navigator.share) {
-      navigator
-        .share({
-          title: `${cardName} - ${price}`,
-          text: `Check out this ${cardName} for sale on MyCardTracker!`,
-          url: shareUrl,
-        })
-        .catch(err => {
-          fallbackToClipboard(shareUrl);
-        });
-    } else {
-      fallbackToClipboard(shareUrl);
-    }
-    // setShowReportMenu(false); // Removed - variable not used
-  };
-
-  const fallbackToClipboard = url => {
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard
-        .writeText(url)
-        .then(() => {
-          toastService.success('Link copied to clipboard!');
-        })
-        .catch(() => {
-          legacyClipboardCopy(url);
-        });
-    } else {
-      legacyClipboardCopy(url);
-    }
-  };
-
-  const legacyClipboardCopy = url => {
-    try {
-      const textArea = document.createElement('textarea');
-      textArea.value = url;
-      textArea.style.position = 'fixed';
-      textArea.style.opacity = '0';
-      document.body.appendChild(textArea);
-      textArea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textArea);
-      toastService.success('Link copied to clipboard!');
-    } catch (err) {
-      LoggingService.error('Failed to copy to clipboard:', err);
-      toastService.error('Failed to copy link');
-    }
-  };
 
   useEffect(() => {
     if (!listing || !isOpen) return;
@@ -192,7 +135,7 @@ function ListingDetailModal({
   }, [listing, isOpen]);
 
   // Function to check for existing chats
-  const checkForExistingChat = async () => {
+  const checkForExistingChat = useCallback(async () => {
     if (!user || !listing || user.uid === listing.userId) return;
 
     try {
@@ -228,7 +171,7 @@ function ListingDetailModal({
         logger.error('Error checking for existing chat:', error);
       }
     }
-  };
+  }, [user, listing]);
 
   if (!listing || !listing.card) {
     return null;
@@ -527,9 +470,9 @@ function ListingDetailModal({
               {/* Image Indicators */}
               {hasMultipleImages && (
                 <div className="flex justify-center gap-2">
-                  {images.map((_, index) => (
+                  {images.map((image, index) => (
                     <button
-                      key={index}
+                      key={`image-nav-${image || `placeholder-${index}`}`}
                       onClick={() => setImageIndex(index)}
                       className={`size-2 rounded-full transition-colors ${
                         index === imageIndex

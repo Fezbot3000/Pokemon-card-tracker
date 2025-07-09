@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import Icon from '../atoms/Icon';
-import { colors } from '../tokens';
+
 import { useTheme } from '../contexts/ThemeContext';
 import { useUserPreferences } from '../../contexts/UserPreferencesContext';
 import logger from '../../utils/logger';
@@ -24,7 +24,7 @@ const StatisticsSummary = ({ statistics = [], className = '', ...props }) => {
     >
       <div className="rounded-md p-2 sm:p-4 md:p-6">
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-0">
-          {statistics.map((stat, index) => {
+          {statistics.map((stat) => {
             let displayValue;
             const isMonetaryStat =
               stat.isMonetary !== undefined
@@ -67,7 +67,7 @@ const StatisticsSummary = ({ statistics = [], className = '', ...props }) => {
 
             return (
               <div
-                key={index}
+                key={stat.label}
                 className="flex flex-col items-center justify-center border-none p-2 py-3 sm:p-3 sm:py-4 md:p-4 md:py-6"
               >
                 <div className="mb-1 text-xs font-medium uppercase text-gray-500 dark:text-gray-400 sm:mb-2 sm:text-sm">

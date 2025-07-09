@@ -10,7 +10,7 @@ import PropTypes from 'prop-types';
 import { toast } from 'react-hot-toast';
 import Modal from '../design-system/molecules/Modal';
 import Button from '../design-system/atoms/Button';
-import { searchCardPrice, extractBestPrice, convertPenniesToDollars } from '../services/priceChartingService';
+import { searchCardPrice, extractBestPrice } from '../services/priceChartingService';
 import { useUserPreferences } from '../contexts/UserPreferencesContext';
 import LoggingService from '../services/LoggingService';
 
@@ -103,13 +103,6 @@ const PriceChartingModal = ({
 
     toast.success('Price Charting data applied successfully!');
     onClose();
-  };
-
-  // Format price for display
-  const formatPrice = (priceInPennies) => {
-    if (!priceInPennies || priceInPennies === 0) return 'N/A';
-    const dollars = convertPenniesToDollars(priceInPennies);
-    return formatAmountForDisplay(dollars, 'USD');
   };
 
   // Get the best price for a product
@@ -214,7 +207,7 @@ const PriceChartingModal = ({
                         
                                                  {/* Match confidence indicator */}
                          <div className={`mb-2 inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${confidence.bgColor}`}>
-                           <div className={`bg- mr-1 size-2 rounded-full${confidence.color}-500`}></div>
+                           <div className={`mr-1 size-2 rounded-full bg-${confidence.color}-500`}></div>
                            {confidence.level} Match ({Math.round(matchScore)}%)
                          </div>
                         

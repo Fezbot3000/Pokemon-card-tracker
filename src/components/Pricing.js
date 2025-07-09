@@ -128,9 +128,9 @@ const Pricing = () => {
       <section className="bg-black px-4 py-12 sm:px-6 sm:py-16 md:py-24 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <div className="grid grid-cols-1 gap-6 md:grid-cols-3 lg:gap-8">
-            {plans.map((plan, index) => (
+            {plans.map((plan) => (
               <div
-                key={index}
+                key={plan.name}
                 className={`relative rounded-3xl border bg-gradient-to-br from-white/10 to-white/5 p-6 backdrop-blur-sm transition-all duration-300 hover:scale-105 lg:p-8 ${
                   plan.popular
                     ? 'border-green-500/50 shadow-2xl shadow-green-500/10'
@@ -163,8 +163,8 @@ const Pricing = () => {
                 </div>
 
                 <ul className="mb-6 space-y-3 lg:mb-8 lg:space-y-4">
-                  {plan.features.map((feature, featureIndex) => (
-                    <li key={featureIndex} className="flex items-start">
+                  {plan.features.map((feature) => (
+                    <li key={feature} className="flex items-start">
                       <span className="mr-3 mt-1 text-green-400">✓</span>
                       <span className="text-sm text-gray-300 lg:text-base">
                         {feature}
@@ -202,9 +202,9 @@ const Pricing = () => {
           </div>
 
           <div className="space-y-6">
-            {faqs.map((faq, index) => (
+            {faqs.map((faq) => (
               <div
-                key={index}
+                key={faq.question}
                 className="border-white/10 rounded-2xl border bg-gradient-to-br from-white/10 to-white/5 p-6 backdrop-blur-sm lg:p-8"
               >
                 <h3 className="mb-3 text-lg font-semibold text-white lg:mb-4 lg:text-xl">

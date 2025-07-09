@@ -1,21 +1,14 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { toast } from 'react-hot-toast';
-import db from '../../services/firestore/dbAdapter';
-import cardRepo from '../../services/cardRepo';
 import FormField from '../molecules/FormField';
 import FormLabel from '../atoms/FormLabel';
 import SelectField from '../atoms/SelectField';
-import ImageUpload from '../atoms/ImageUpload';
 import ImageUploadButton from '../atoms/ImageUploadButton';
 import Icon from '../atoms/Icon';
-import { gradients } from '../styles/colors';
-import PSALookupButton from '../../components/PSALookupButton';
 import {
-  getAllPokemonSets,
   getPokemonSetsByYear,
   getSetsByCategory,
-  addCustomSet,
   getAvailableYears,
 } from '../../data/pokemonSets';
 import { useUserPreferences } from '../../contexts/UserPreferencesContext';
@@ -186,14 +179,11 @@ const CardDetailsForm = ({
   onPriceChartingSearch,
   isPriceChartingSearching = false,
   hidePriceChartingButton = false,
-  requiredFields = {},
 }) => {
   const {
     preferredCurrency,
     convertToUserCurrency,
     convertFromUserCurrency,
-    formatAmountForDisplay,
-    formatPreferredCurrency,
   } = useUserPreferences();
 
   const { hasFeature } = useSubscription();
@@ -425,23 +415,9 @@ const CardDetailsForm = ({
     onChange(newCardData); // Propagate changes up to the parent
   };
 
-  const handleNumberChange = e => {
-    const { name, value } = e.target;
-    if (onChange) {
-      onChange({
-        ...card,
-        [name]: value === '' ? '' : value,
-      });
-    }
-  };
 
-  const getProfit = () => {
-    const investment = parseFloat(displayInvestment) || 0;
-    const value = parseFloat(displayCurrentValue) || 0;
-    return (value - investment).toFixed(
-      preferredCurrency.code === 'JPY' ? 0 : 2
-    );
-  };
+
+
 
   const handleInvestmentInputChange = e => {
     const inputValue = e.target.value;
@@ -563,31 +539,9 @@ const CardDetailsForm = ({
     }
   };
 
-  const selectStyles = {
-    option: {
-      display: 'block',
-      whiteSpace: 'nowrap',
-      overflow: 'hidden',
-      textOverflow: 'ellipsis',
-      padding: '8px 12px',
-    },
-  };
 
-  const handleAddCustomSet = async (newSet, year) => {
-    if (!newSet || newSet.trim() === '') return '';
 
-    const addedSet = await addCustomSet(newSet, year);
 
-    if (card.year) {
-      const updatedSets = getPokemonSetsByYear(card.year);
-      setAvailableSets(updatedSets);
-    } else {
-      const allSets = getAllPokemonSets();
-      setAvailableSets(allSets);
-    }
-
-    return addedSet;
-  };
 
   const handleSubmit = e => {
     e.preventDefault();
@@ -596,7 +550,7 @@ const CardDetailsForm = ({
   return (
     <form
       onSubmit={handleSubmit}
-      className={`card-details-form ${className}`}
+      className={`${className}`}
       noValidate
     >
       {!hideCollectionField && (
@@ -662,7 +616,7 @@ const CardDetailsForm = ({
                     alt="Card preview"
                     className="h-auto max-h-[380px] max-w-full cursor-pointer object-contain"
                     onClick={onImageClick}
-                    onError={e => {
+                    onError={() => {
                       if (onImageRetry) onImageRetry();
                     }}
                   />
@@ -915,7 +869,7 @@ const CardDetailsForm = ({
                 value={card.cardName || ''}
                 onChange={handleInputChange}
                 error={errors.cardName}
-                className={errors.cardName ? 'error' : ''}
+                className={errors.cardName ? 'border-red-500' : ''}
                 required
               />
             </div>

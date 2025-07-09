@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { collection, query, where, getDocs } from 'firebase/firestore';
@@ -93,7 +93,7 @@ const SharedCollection = () => {
 
   useEffect(() => {
     loadSharedCollection();
-  }, [shareId]);
+  }, [shareId, loadSharedCollection]);
 
   useEffect(() => {
     if (cards.length > 0) {
@@ -113,7 +113,7 @@ const SharedCollection = () => {
     }
   }, [shareData, cards]);
 
-  const loadSharedCollection = async () => {
+  const loadSharedCollection = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -190,22 +190,7 @@ const SharedCollection = () => {
         return bDate - aDate; // Descending order (newest first)
       });
 
-      // Debug: Show which field names were found in the cards
-      if (allCards.length > 0) {
-        const fieldAnalysis = {
-          collectionId: allCards.filter(
-            card => card.collectionId === shareData.collectionId
-          ).length,
-          collection: allCards.filter(
-            card => card.collection === shareData.collectionId
-          ).length,
-          collectionName: allCards.filter(
-            card => card.collectionName === shareData.collectionId
-          ).length,
-          hasUpdatedAt: allCards.filter(card => !!card.updatedAt).length,
-          hasCreatedAt: allCards.filter(card => !!card.createdAt).length,
-        };
-      }
+
 
       setCards(allCards);
     } catch (err) {
@@ -217,7 +202,7 @@ const SharedCollection = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [shareId]);
 
   const handleFilterChange = (key, value) => {
     setFilters(prev => ({

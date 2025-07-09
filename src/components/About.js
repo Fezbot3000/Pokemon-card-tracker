@@ -201,8 +201,8 @@ const About = () => {
             <div className="relative">
               <div className="border-white/10 rounded-3xl border bg-gradient-to-br from-white/10 to-white/5 p-8 backdrop-blur-sm">
                 <div className="grid grid-cols-2 gap-6">
-                  {stats.map((stat, index) => (
-                    <div key={index} className="text-center">
+                  {stats.map((stat) => (
+                    <div key={stat.label} className="text-center">
                       <div className="mb-2 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-2xl font-bold text-transparent sm:text-3xl">
                         {stat.number}
                       </div>
@@ -230,9 +230,9 @@ const About = () => {
           </div>
 
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-8 lg:grid-cols-3">
-            {values.map((value, index) => (
+            {values.map((value) => (
               <div
-                key={index}
+                key={value.title}
                 className="border-white/10 hover:border-white/20 group rounded-2xl border bg-gradient-to-br from-white/10 to-white/5 p-6 text-center backdrop-blur-sm transition-all duration-300"
               >
                 <div className="mb-4 text-4xl transition-transform duration-300 group-hover:scale-110">
@@ -267,7 +267,7 @@ const About = () => {
             <div className="space-y-12">
               {milestones.map((milestone, index) => (
                 <div
-                  key={index}
+                  key={milestone.year}
                   className={`flex items-center ${index % 2 === 0 ? 'flex-row' : 'flex-row-reverse'}`}
                 >
                   <div
@@ -310,9 +310,9 @@ const About = () => {
           </div>
 
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-8 lg:grid-cols-4">
-            {teamMembers.map((member, index) => (
+            {teamMembers.map((member) => (
               <div
-                key={index}
+                key={member.name}
                 className="border-white/10 hover:border-white/20 group rounded-2xl border bg-gradient-to-br from-white/10 to-white/5 p-6 text-center backdrop-blur-sm transition-all duration-300"
               >
                 <div className="mx-auto mb-4 flex size-20 items-center justify-center rounded-full bg-gradient-to-br from-blue-500/20 to-purple-500/20">
@@ -324,9 +324,9 @@ const About = () => {
                   {member.bio}
                 </p>
                 <div className="flex flex-wrap justify-center gap-1">
-                  {member.expertise.map((skill, skillIndex) => (
+                  {member.expertise.map((skill) => (
                     <span
-                      key={skillIndex}
+                      key={skill}
                       className="rounded-full bg-blue-500/20 px-2 py-1 text-xs text-blue-300"
                     >
                       {skill}

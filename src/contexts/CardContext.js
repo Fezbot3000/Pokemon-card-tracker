@@ -43,46 +43,6 @@ export function CardProvider({ children }) {
     loadSoldCardIds();
   }, []);
 
-  // Initialize repository when user changes
-  useEffect(() => {
-    let mounted = true;
-
-    const initializeRepository = async () => {
-      if (currentUser) {
-        const repo = new CardRepository(currentUser.uid);
-        setRepository(repo);
-
-        if (mounted) {
-          await loadInitialData(repo);
-        }
-      }
-    };
-
-    initializeRepository();
-
-    return () => {
-      mounted = false;
-    };
-  }, [currentUser]);
-
-  // Helper function to verify cards against the sold card list
-  const verifyCardsAgainstSoldList = useCallback(
-    cardsToVerify => {
-      const currentSoldCardIds = Array.from(soldCardIds);
-
-      if (currentSoldCardIds.length === 0) {
-        return cardsToVerify; // No sold cards to filter
-      }
-
-      const filteredCards = cardsToVerify.filter(
-        card => !currentSoldCardIds.includes(card.id)
-      );
-
-      return filteredCards;
-    },
-    [soldCardIds]
-  );
-
   // Load initial data (collections, cards, etc)
   const loadInitialData = useCallback(
     async repo => {
@@ -159,9 +119,51 @@ export function CardProvider({ children }) {
         setSyncStatus('error');
         return { success: false, message: error.message };
       }
-          },
-      [selectedCollection]
-    );
+    },
+    [selectedCollection]
+  );
+
+  // Initialize repository when user changes
+  useEffect(() => {
+    let mounted = true;
+
+    const initializeRepository = async () => {
+      if (currentUser) {
+        const repo = new CardRepository(currentUser.uid);
+        setRepository(repo);
+
+        if (mounted) {
+          await loadInitialData(repo);
+        }
+      }
+    };
+
+    initializeRepository();
+
+    return () => {
+      mounted = false;
+    };
+  }, [currentUser, loadInitialData]);
+
+  // Helper function to verify cards against the sold card list
+  const verifyCardsAgainstSoldList = useCallback(
+    cardsToVerify => {
+      const currentSoldCardIds = Array.from(soldCardIds);
+
+      if (currentSoldCardIds.length === 0) {
+        return cardsToVerify; // No sold cards to filter
+      }
+
+      const filteredCards = cardsToVerify.filter(
+        card => !currentSoldCardIds.includes(card.id)
+      );
+
+      return filteredCards;
+    },
+    [soldCardIds]
+  );
+
+
 
   // Subscribe to collection changes
   useEffect(() => {
