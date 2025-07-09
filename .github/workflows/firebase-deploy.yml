@@ -28,9 +28,11 @@ jobs:
           
       - name: Install Dependencies
         run: |
-          npm ci --prefer-offline --no-audit
+          # Install main project dependencies with fallback
+          npm ci --prefer-offline --no-audit || (npm cache clean --force && rm -rf node_modules package-lock.json && npm install)
           cd functions
-          npm ci --prefer-offline --no-audit
+          # Clear npm cache and reinstall if npm ci fails
+          npm ci --prefer-offline --no-audit || (npm cache clean --force && rm -rf node_modules package-lock.json && npm install)
       
       - name: Set Firebase Functions Config
         run: |
