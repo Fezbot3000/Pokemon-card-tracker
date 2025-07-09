@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import PropTypes from 'prop-types';
-import { useTheme } from '../contexts/ThemeContext';
 import toastService from '../utils/toast';
 import InvoiceHeader from '../molecules/invoice/InvoiceHeader';
 import InvoiceCard from '../molecules/invoice/InvoiceCard';
@@ -22,7 +21,6 @@ const SoldItemsView = ({
   formatUserCurrency,
   originalCurrencyCode,
 }) => {
-  const { } = useTheme();
   const [expandedYears, setExpandedYears] = useState(new Set());
   const [expandedInvoices, setExpandedInvoices] = useState(new Set());
   const [loadedInvoiceImages, setLoadedInvoiceImages] = useState(new Set()); // Track which invoice images have been loaded

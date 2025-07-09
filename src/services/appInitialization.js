@@ -6,9 +6,6 @@
  * and ensuring the app is properly set up.
  */
 
-import { initializeApp } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
-import { getAnalytics } from 'firebase/analytics';
 import logger from '../utils/logger';
 import { getFirebaseConfig } from '../config/secrets';
 

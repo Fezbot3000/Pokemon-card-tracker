@@ -99,110 +99,6 @@ function Marketplace({ currentView, onViewChange }) {
     };
   }, [user]);
 
-  useEffect(() => {
-    if (!user) return;
-
-    setLoading(true);
-    setIndexBuildingError(false);
-
-    let unsubscribe;
-
-    try {
-      // First try with the composite index (which might still be building)
-      const marketplaceRef = collection(firestoreDb, 'marketplaceItems');
-      const marketplaceQuery = query(
-        marketplaceRef,
-        where('status', '==', 'available'),
-        orderBy('timestampListed', 'desc')
-      );
-
-      // Set up real-time listener for marketplace items
-      unsubscribe = onSnapshot(
-        marketplaceQuery,
-        snapshot => {
-          try {
-            // Fetch listings from Firestore
-            const listingsData = [];
-            snapshot.forEach(doc => {
-              listingsData.push({ id: doc.id, ...doc.data() });
-            });
-
-            setAllListings(listingsData);
-            setFilteredListings(listingsData);
-
-            // Load card images after getting listings
-            loadCardImages(listingsData);
-          } catch (error) {
-            // Ignore AdBlock related errors
-            if (
-              error.message &&
-              error.message.includes('net::ERR_BLOCKED_BY_CLIENT')
-            ) {
-              // Silently handle AdBlock errors
-            } else {
-              logger.error('Error fetching marketplace items:', error);
-              toast.error('Error loading marketplace items');
-            }
-          } finally {
-            setLoading(false);
-          }
-        },
-        error => {
-          // Check if this is an index building error
-          if (error.message && error.message.includes('requires an index')) {
-            logger.warn('Marketplace index is still building:', error);
-            setIndexBuildingError(true);
-
-            // Fall back to a simpler query without ordering
-            try {
-              const simpleQuery = query(
-                marketplaceRef,
-                where('status', '==', 'available')
-              );
-
-              unsubscribe = onSnapshot(
-                simpleQuery,
-                snapshot => {
-                  const listingData = snapshot.docs.map(doc => ({
-                    id: doc.id,
-                    ...doc.data(),
-                  }));
-                  // Sort manually on the client side
-                  listingData.sort((a, b) => {
-                    const timeA = a.timestampListed?.seconds || 0;
-                    const timeB = b.timestampListed?.seconds || 0;
-                    return timeB - timeA; // Descending order
-                  });
-                  setAllListings(listingData);
-                  setFilteredListings(listingData);
-
-                  // Load card images after getting listings
-                  loadCardImages(listingData);
-                },
-                fallbackError => {
-                  logger.error(
-                    'Error in fallback marketplace listener:',
-                    fallbackError
-                  );
-                }
-              );
-            } catch (innerError) {
-              logger.error('Error setting up fallback marketplace listener:', innerError);
-              setLoading(false);
-            }
-          }
-        }
-      );
-    } catch (error) {
-      logger.error('Error setting up marketplace listener:', error);
-      setLoading(false);
-    }
-
-    return () => {
-      if (unsubscribe) unsubscribe();
-    };
-  }, [user]);
-
   const loadCardImages = useCallback(async listingsData => {
     if (!listingsData || listingsData.length === 0) return;
 
@@ -343,6 +239,111 @@ function Marketplace({ currentView, onViewChange }) {
       ...newCardImages,
     }));
   }, [cardImages]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    setLoading(true);
+    setIndexBuildingError(false);
+
+    let unsubscribe;
+
+    try {
+      // First try with the composite index (which might still be building)
+      const marketplaceRef = collection(firestoreDb, 'marketplaceItems');
+      const marketplaceQuery = query(
+        marketplaceRef,
+        where('status', '==', 'available'),
+        orderBy('timestampListed', 'desc')
+      );
+
+      // Set up real-time listener for marketplace items
+      unsubscribe = onSnapshot(
+        marketplaceQuery,
+        snapshot => {
+          try {
+            // Fetch listings from Firestore
+            const listingsData = [];
+            snapshot.forEach(doc => {
+              listingsData.push({ id: doc.id, ...doc.data() });
+            });
+
+            setAllListings(listingsData);
+            setFilteredListings(listingsData);
+
+            // Load card images after getting listings
+            loadCardImages(listingsData);
+          } catch (error) {
+            // Ignore AdBlock related errors
+            if (
+              error.message &&
+              error.message.includes('net::ERR_BLOCKED_BY_CLIENT')
+            ) {
+              // Silently handle AdBlock errors
+            } else {
+              logger.error('Error fetching marketplace items:', error);
+              toast.error('Error loading marketplace items');
+            }
+          } finally {
+            setLoading(false);
+          }
+        },
+        error => {
+          // Check if this is an index building error
+          if (error.message && error.message.includes('requires an index')) {
+            logger.warn('Marketplace index is still building:', error);
+            setIndexBuildingError(true);
+
+            // Fall back to a simpler query without ordering
+            try {
+              const simpleQuery = query(
+                marketplaceRef,
+                where('status', '==', 'available')
+              );
+
+              unsubscribe = onSnapshot(
+                simpleQuery,
+                snapshot => {
+                  const listingData = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data(),
+                  }));
+                  // Sort manually on the client side
+                  listingData.sort((a, b) => {
+                    const timeA = a.timestampListed?.seconds || 0;
+                    const timeB = b.timestampListed?.seconds || 0;
+                    return timeB - timeA; // Descending order
+                  });
+                  setAllListings(listingData);
+                  setFilteredListings(listingData);
+
+                  // Load card images after getting listings
+                  loadCardImages(listingData);
+                },
+                fallbackError => {
+                  logger.error(
+                    'Error in fallback marketplace listener:',
+                    fallbackError
+                  );
+                }
+              );
+            } catch (innerError) {
+              logger.error('Error setting up fallback marketplace listener:', innerError);
+              setLoading(false);
+            }
+          }
+        }
+      );
+    } catch (error) {
+      logger.error('Error setting up marketplace listener:', error);
+      setLoading(false);
+    }
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   const handleContactSeller = (listing, message = '') => {
     // Check if there's an existing chat for this listing

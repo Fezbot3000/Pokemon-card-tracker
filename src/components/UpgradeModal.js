@@ -128,7 +128,7 @@ const UpgradeModal = ({ isOpen, onClose, daysRemaining }) => {
       position="right"
       size="lg"
       closeOnClickOutside={true}
-      className="max-w-2xl mx-auto"
+      className="mx-auto max-w-2xl"
     >
       <div className="space-y-6">
         <div className="text-center">
@@ -196,7 +196,7 @@ const UpgradeModal = ({ isOpen, onClose, daysRemaining }) => {
               variant="primary"
               onClick={handleUpgrade}
               loading={loading}
-              className="bg-white/20 border-white/30 hover:bg-white/30 mt-auto w-full rounded border px-4 py-2 text-sm font-medium text-white"
+              className="mt-auto w-full rounded border border-white/30 bg-white/20 px-4 py-2 text-sm font-medium hover:bg-white/30 text-white"
             >
               {loading ? 'Processing...' : 'Upgrade Now'}
             </Button>

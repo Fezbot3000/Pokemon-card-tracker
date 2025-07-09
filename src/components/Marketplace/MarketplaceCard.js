@@ -17,6 +17,8 @@ const MarketplaceCard = ({
   onSelect,
   className = '',
   children,
+  investmentAUD, // Extract this prop to prevent it from being passed to DOM
+  formatUserCurrency, // Extract this prop to prevent it from being passed to DOM
   ...props
 }) => {
   // If children are provided, render them instead of the default card content
@@ -208,6 +210,18 @@ const ImageWithAnimation = ({ src, alt }) => {
 ImageWithAnimation.propTypes = {
   src: PropTypes.string,
   alt: PropTypes.string.isRequired,
+};
+
+MarketplaceCard.propTypes = {
+  card: PropTypes.object,
+  cardImage: PropTypes.string,
+  onClick: PropTypes.func,
+  isSelected: PropTypes.bool,
+  onSelect: PropTypes.func,
+  className: PropTypes.string,
+  children: PropTypes.node,
+  investmentAUD: PropTypes.number, // Extracted to prevent DOM prop warning
+  formatUserCurrency: PropTypes.func, // Extracted to prevent DOM prop warning
 };
 
 export default MarketplaceCard;

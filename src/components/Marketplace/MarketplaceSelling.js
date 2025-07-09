@@ -157,83 +157,8 @@ function MarketplaceSelling({ currentView, onViewChange }) {
         unsubscribe();
       }
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
-
-  // Handle filter changes from the search/filter component
-  const handleFilterChange = newFilters => {
-    setFilters(newFilters);
-
-    // Save filters to localStorage for persistence
-    localStorage.setItem(
-      'marketplaceSellingFilters',
-      JSON.stringify(newFilters)
-    );
-  };
-
-  // Load saved filters on component mount
-  useEffect(() => {
-    const savedFilters = localStorage.getItem('marketplaceSellingFilters');
-    if (savedFilters) {
-      try {
-        setFilters(JSON.parse(savedFilters));
-      } catch (error) {
-        LoggingService.error('Error parsing saved filters:', error);
-      }
-    }
-  }, []);
-
-  // Apply filters when listings or filters change
-  useEffect(() => {
-    if (!allListings.length) return;
-
-    let results = [...allListings];
-
-    // Apply search filter
-    if (filters.search) {
-      const searchTerm = filters.search.toLowerCase();
-      results = results.filter(listing => {
-        // Check card name in the card object
-        const cardName = listing.card?.cardName || listing.card?.name || '';
-        // Check other properties
-        return (
-          cardName.toLowerCase().includes(searchTerm) ||
-          (listing.cardName &&
-            listing.cardName.toLowerCase().includes(searchTerm)) ||
-          (listing.brand && listing.brand.toLowerCase().includes(searchTerm)) ||
-          (listing.category &&
-            listing.category.toLowerCase().includes(searchTerm)) ||
-          (listing.year && listing.year.toString().includes(searchTerm))
-        );
-      });
-    }
-
-    // Apply category filter
-    if (filters.category) {
-      results = results.filter(listing => {
-        const listingCategory = listing.category?.toLowerCase();
-        const cardCategory = listing.card?.category?.toLowerCase();
-        const filterCategory = filters.category.toLowerCase();
-
-        return (
-          listingCategory === filterCategory || cardCategory === filterCategory
-        );
-      });
-    }
-
-    // Apply grading company filter
-    if (filters.gradingCompany) {
-      results = results.filter(
-        listing => listing.gradingCompany === filters.gradingCompany
-      );
-    }
-
-    // Apply grade filter
-    if (filters.grade) {
-      results = results.filter(listing => listing.grade === filters.grade);
-    }
-
-    setFilteredListings(results);
-  }, [allListings, filters]);
 
   // Function to load card images from Firebase or IndexedDB
   const loadCardImages = useCallback(async listingsData => {
@@ -375,10 +300,83 @@ function MarketplaceSelling({ currentView, onViewChange }) {
       ...prevImages,
       ...newCardImages,
     }));
+  }, [cardImages]);
 
-    // Make sure to update loading state
-    setLoading(false);
+  // Handle filter changes from the search/filter component
+  const handleFilterChange = newFilters => {
+    setFilters(newFilters);
+
+    // Save filters to localStorage for persistence
+    localStorage.setItem(
+      'marketplaceSellingFilters',
+      JSON.stringify(newFilters)
+    );
+  };
+
+  // Load saved filters on component mount
+  useEffect(() => {
+    const savedFilters = localStorage.getItem('marketplaceSellingFilters');
+    if (savedFilters) {
+      try {
+        setFilters(JSON.parse(savedFilters));
+      } catch (error) {
+        LoggingService.error('Error parsing saved filters:', error);
+      }
+    }
   }, []);
+
+  // Apply filters when listings or filters change
+  useEffect(() => {
+    if (!allListings.length) return;
+
+    let results = [...allListings];
+
+    // Apply search filter
+    if (filters.search) {
+      const searchTerm = filters.search.toLowerCase();
+      results = results.filter(listing => {
+        // Check card name in the card object
+        const cardName = listing.card?.cardName || listing.card?.name || '';
+        // Check other properties
+        return (
+          cardName.toLowerCase().includes(searchTerm) ||
+          (listing.cardName &&
+            listing.cardName.toLowerCase().includes(searchTerm)) ||
+          (listing.brand && listing.brand.toLowerCase().includes(searchTerm)) ||
+          (listing.category &&
+            listing.category.toLowerCase().includes(searchTerm)) ||
+          (listing.year && listing.year.toString().includes(searchTerm))
+        );
+      });
+    }
+
+    // Apply category filter
+    if (filters.category) {
+      results = results.filter(listing => {
+        const listingCategory = listing.category?.toLowerCase();
+        const cardCategory = listing.card?.category?.toLowerCase();
+        const filterCategory = filters.category.toLowerCase();
+
+        return (
+          listingCategory === filterCategory || cardCategory === filterCategory
+        );
+      });
+    }
+
+    // Apply grading company filter
+    if (filters.gradingCompany) {
+      results = results.filter(
+        listing => listing.gradingCompany === filters.gradingCompany
+      );
+    }
+
+    // Apply grade filter
+    if (filters.grade) {
+      results = results.filter(listing => listing.grade === filters.grade);
+    }
+
+    setFilteredListings(results);
+  }, [allListings, filters]);
 
   const handleEditClick = listing => {
     setSelectedListing(listing);

@@ -48,7 +48,6 @@ const SettingsModal = ({
   onStartTutorial,
   onUploadImagesFromZip,
   className = '',
-  selectedCollection, // Extract selectedCollection so it doesn't get passed to DOM
   ...props
 }) => {
   const { theme, toggleTheme } = useTheme();
@@ -277,7 +276,7 @@ const SettingsModal = ({
         closeOnClickOutside={true}
         {...props}
       >
-        <div className="flex h-full flex-col lg:flex-row" {...props}>
+        <div className="flex h-full flex-col lg:flex-row">
           {/* Navigation sidebar */}
           <nav className="mb-4 w-full shrink-0 border-b border-gray-200 dark:border-indigo-900/20 lg:mb-0 lg:w-48 lg:border-b-0 lg:border-r lg:pr-4">
             <div className="flex flex-row space-x-4 p-4 lg:flex-col lg:space-x-0 lg:space-y-2">

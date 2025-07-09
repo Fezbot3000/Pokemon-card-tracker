@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   parseCSVFile,
-  processImportedData,
   validateCSVStructure,
 } from '../utils/dataProcessor';
 import { useAuth } from '../design-system/contexts/AuthContext';
@@ -174,11 +173,6 @@ const useCardData = () => {
           `Starting card update for ${cardId} at ${updateStartTime}`
         );
 
-        // Find the existing card to compare for real changes
-        const existingCard = cards.find(
-          card => card.id === cardId || card.slabSerial === cardId
-        );
-
         if (currentUser) {
           const repository = new CardRepository(currentUser.uid);
 
@@ -221,7 +215,7 @@ const useCardData = () => {
         setLoading(false);
       }
     },
-    [currentUser, cards, setCards, setSelectedCard, setLoading, setError]
+    [currentUser, setCards, setSelectedCard, setLoading, setError]
   ); // Add dependencies
 
   // Delete a card - Wrapped in useCallback

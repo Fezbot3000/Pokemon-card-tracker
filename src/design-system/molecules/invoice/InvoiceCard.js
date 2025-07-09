@@ -9,10 +9,8 @@ import PropTypes from 'prop-types';
  */
 const InvoiceCard = ({
   card,
-  getImageUrl,
   lazyLoad = false,
   className = '',
-  hideSoldImages = true,
   ...props
 }) => {
   const [isVisible, setIsVisible] = useState(!lazyLoad);
@@ -140,12 +138,8 @@ InvoiceCard.propTypes = {
     /** Slab serial number */
     slabSerial: PropTypes.string,
   }).isRequired,
-  /** Function to get the card image URL */
-  getImageUrl: PropTypes.func,
   /** Whether to lazy load the image */
   lazyLoad: PropTypes.bool,
-  /** Whether to hide images on the sold page */
-  hideSoldImages: PropTypes.bool,
   /** Additional classes */
   className: PropTypes.string,
 };

@@ -24,7 +24,6 @@ import {
   collection,
   onSnapshot,
   writeBatch,
-  deleteDoc,
 } from 'firebase/firestore';
 // Note: We don't import db directly to avoid circular dependencies
 // Instead, we'll use dynamic imports when needed

@@ -279,7 +279,7 @@ class DatabaseAdapter {
 
   // ===== IMAGE METHODS =====
 
-  async saveImage(cardId, imageFile, options = {}) {
+  async saveImage(cardId, imageFile) {
     try {
       const userId = this.getCurrentUserId();
       if (!userId) {

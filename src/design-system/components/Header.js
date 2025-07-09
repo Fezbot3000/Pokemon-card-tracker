@@ -7,7 +7,6 @@ import Icon from '../atoms/Icon';
 
 // Import needed contexts and services
 import { useTheme } from '../contexts/ThemeContext';
-import { useAuth } from '../contexts/AuthContext';
 import { useUserPreferences, availableCurrencies } from '../../contexts/UserPreferencesContext';
 
 import LoggingService from '../../services/LoggingService';
@@ -27,7 +26,6 @@ const Header = ({
   const [, setPreviousView] = useState(null);
   const [, setIsAnimating] = useState(false);
   const { theme, toggleTheme } = useTheme();
-  const { } = useAuth() || { user: null, logout: () => {} };
   const { preferredCurrency, updatePreferredCurrency } = useUserPreferences();
   const [currencyDropdownOpen, setCurrencyDropdownOpen] = useState(false);
   const currencyDropdownRef = useRef(null);
@@ -454,7 +452,6 @@ const Header = ({
 };
 
 Header.propTypes = {
-  onImportClick: PropTypes.func,
   onSettingsClick: PropTypes.func,
   currentView: PropTypes.oneOf([
     'cards',

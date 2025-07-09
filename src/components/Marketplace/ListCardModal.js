@@ -87,6 +87,7 @@ function ListCardModal({ isOpen, onClose, selectedCards }) {
         return updatedData;
       });
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userLocation]); // Only depend on userLocation, not listingData
 
   // Prevent body scrolling when modal is open
@@ -493,7 +494,7 @@ function ListCardModal({ isOpen, onClose, selectedCards }) {
                               e.target.value
                             )
                           }
-                          className="w-full rounded-lg border border-gray-200/20 bg-white py-2 pl-8 pr-4 text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700/10 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-400"
+                          className="w-full rounded-lg border border-gray-200/20 bg-white py-2 pl-8 pr-4 text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none dark:border-gray-700/10 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-400"
                           placeholder="0.00"
                           step="0.01"
                           min="0.01"
@@ -526,7 +527,7 @@ function ListCardModal({ isOpen, onClose, selectedCards }) {
                               e.target.value
                             )
                           }
-                          className="focus:ring-blue-500/20 w-full rounded-lg border border-gray-200/20 bg-white px-4 py-2 text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:outline-none focus:ring-2 dark:border-gray-700/10 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-400"
+                          className="w-full rounded-lg border border-gray-200/20 bg-white px-4 py-2 text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none dark:border-gray-700/10 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-400"
                           placeholder="Add a note about this card..."
                           rows="3"
                         />
@@ -556,7 +557,7 @@ function ListCardModal({ isOpen, onClose, selectedCards }) {
                               e.target.value
                             )
                           }
-                          className="focus:ring-blue-500/20 w-full rounded-lg border border-gray-200/20 bg-white px-4 py-2 text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:outline-none focus:ring-2 dark:border-gray-700/10 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-400"
+                          className="w-full rounded-lg border border-gray-200/20 bg-white px-4 py-2 text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none dark:border-gray-700/10 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-400"
                           placeholder="Enter your location (e.g., Sydney)"
                         />
                       </div>

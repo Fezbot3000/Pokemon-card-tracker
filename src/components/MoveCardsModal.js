@@ -99,7 +99,7 @@ const MoveCardsModal = ({
             <select
               value={targetCollection}
               onChange={e => setTargetCollection(e.target.value)}
-              className="focus:ring-blue-500/20 w-full rounded-lg border border-gray-200/20 bg-white px-3 py-2 text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:outline-none focus:ring-2 dark:border-gray-700/10 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-400"
+              className="w-full rounded-lg border border-gray-200/20 bg-white px-3 py-2 text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none dark:border-gray-700/10 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-400"
             >
               <option value="">Select a collection...</option>
               {availableCollections.map(collection => (

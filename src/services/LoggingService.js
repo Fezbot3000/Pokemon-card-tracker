@@ -16,7 +16,6 @@
 // Environment configuration
 const isDevelopment = process.env.NODE_ENV === 'development';
 const isProduction = process.env.NODE_ENV === 'production';
-const isTest = process.env.NODE_ENV === 'test';
 
 // Logging levels with numeric values for filtering
 const LOG_LEVELS = {
@@ -252,7 +251,7 @@ class LoggingService {
       return;
     }
 
-    const { levelName, message, args, context, timestamp } = logEntry;
+    const { levelName, message, args, context } = logEntry;
     
     // Format the output
     const formattedMessage = this.config.formatOutput 
@@ -319,7 +318,7 @@ class LoggingService {
   /**
    * Send log to remote logging service (placeholder for future implementation)
    */
-  _sendToRemote(logEntry) {
+  _sendToRemote() {
     // Future implementation for remote logging
     // Could integrate with services like LogRocket, Sentry, or custom logging endpoints
   }

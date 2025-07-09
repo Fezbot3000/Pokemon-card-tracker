@@ -1,5 +1,4 @@
 import {
-  collection,
   doc,
   getDoc,
   updateDoc,
@@ -116,11 +115,6 @@ class SharingService {
     });
 
     const bestCard = sortedByValue[0];
-    const bestValue =
-      bestCard.originalCurrentValueAmount ||
-      bestCard.currentValueAUD ||
-      bestCard.currentValue ||
-      0;
 
     return bestCard.imageUrl;
   }
@@ -221,7 +215,7 @@ class SharingService {
       ...new Set(cards.map(card => card.category).filter(Boolean)),
     ];
 
-    const totalValue = cards.reduce((total, card, index) => {
+    const totalValue = cards.reduce((total, card) => {
       const value =
         card.originalCurrentValueAmount ||
         card.currentValueAUD ||

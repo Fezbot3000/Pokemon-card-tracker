@@ -7,12 +7,10 @@
  */
 
 import {
-  getFirestore,
   doc,
   setDoc,
   getDoc,
   serverTimestamp,
-  updateDoc,
 } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import logger from '../utils/logger';

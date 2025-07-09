@@ -438,6 +438,7 @@ const CardList = ({
         }
       });
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cards]); // Only depend on cards, not cardImages to prevent infinite loop
 
   // Function to refresh a single card's image
@@ -475,6 +476,7 @@ const CardList = ({
         [cardId]: prev[cardId], // Keep existing on error, or set to null
       }));
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cards]); // Remove cardImages dependency to prevent infinite loops
 
   // Wrap the onUpdateCard function to handle image refreshing
