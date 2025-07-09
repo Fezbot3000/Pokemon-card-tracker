@@ -1,5 +1,7 @@
 # Stripe Integration - Final Step Implementation
 
+> **⚠️ REQUIRES UPDATES**: This document needs to be updated with current Stripe implementation status. The actual implementation may differ from this plan.
+
 ## Current Status: 95% COMPLETE ✅
 
 **Everything is already set up except one thing: the "Upgrade Now" button doesn't actually work.**

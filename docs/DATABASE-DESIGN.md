@@ -561,4 +561,4 @@ const nextQuery = query(
 );
 ```
 
-This database design provides a scalable, secure, and performant foundation for the Pokemon Card Tracker application while maintaining data consistency and supporting real-time features.
+This database design provides a scalable, secure, and performant foundation for the Pokemon Card Tracker application while maintaining data consistency and supporting real-time features. 

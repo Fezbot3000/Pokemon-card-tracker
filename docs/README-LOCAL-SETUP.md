@@ -63,4 +63,4 @@ If you encounter Firebase authentication errors, verify that:
 1. Your `.env` file exists and contains the correct values
 2. You have installed all dependencies with `npm install`
 3. Your Firebase project is properly configured in the Firebase Console
-4. All required environment variables are set (check the console for specific error messages)
+4. All required environment variables are set (check the console for specific error messages) 
