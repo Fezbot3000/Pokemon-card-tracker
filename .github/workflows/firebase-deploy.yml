@@ -99,6 +99,7 @@ jobs:
           npx firebase-tools functions:delete testPsaToken --region us-central1 --project mycardtracker-c8479 --token "${{ secrets.FIREBASE_TOKEN }}" --force
           npx firebase-tools functions:delete uploadBackup --region us-central1 --project mycardtracker-c8479 --token "${{ secrets.FIREBASE_TOKEN }}" --force
           npx firebase-tools functions:delete proxyPriceCharting --region us-central1 --project mycardtracker-c8479 --token "${{ secrets.FIREBASE_TOKEN }}" --force
+          npx firebase-tools functions:delete pokemonTcgLookup --region us-central1 --project mycardtracker-c8479 --token "${{ secrets.FIREBASE_TOKEN }}" --force
         continue-on-error: true
       
       - name: Build React App
