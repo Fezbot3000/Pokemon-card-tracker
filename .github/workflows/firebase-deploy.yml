@@ -83,25 +83,32 @@ jobs:
       - name: Delete existing functions (if needed)
         run: |
           # Delete old functions that no longer exist in source code
-          # npx firebase-tools functions:delete createCheckoutSession --region us-central1 --project mycardtracker-c8479 --token "${{ secrets.FIREBASE_TOKEN }}" --force
-          npx firebase-tools functions:delete generateInvoiceBatch --region us-central1 --project mycardtracker-c8479 --token "${{ secrets.FIREBASE_TOKEN }}" --force
-          npx firebase-tools functions:delete getBackupDownloadUrl --region us-central1 --project mycardtracker-c8479 --token "${{ secrets.FIREBASE_TOKEN }}" --force
-          npx firebase-tools functions:delete getBackupFileContent --region us-central1 --project mycardtracker-c8479 --token "${{ secrets.FIREBASE_TOKEN }}" --force
-          npx firebase-tools functions:delete getCarPrice --region us-central1 --project mycardtracker-c8479 --token "${{ secrets.FIREBASE_TOKEN }}" --force
-          npx firebase-tools functions:delete getCarValueFromAdmin --region us-central1 --project mycardtracker-c8479 --token "${{ secrets.FIREBASE_TOKEN }}" --force
-          npx firebase-tools functions:delete getUserCards --region us-central1 --project mycardtracker-c8479 --token "${{ secrets.FIREBASE_TOKEN }}" --force
-          npx firebase-tools functions:delete listBackupFiles --region us-central1 --project mycardtracker-c8479 --token "${{ secrets.FIREBASE_TOKEN }}" --force
-          npx firebase-tools functions:delete onUserCreate --region us-central1 --project mycardtracker-c8479 --token "${{ secrets.FIREBASE_TOKEN }}" --force
-          npx firebase-tools functions:delete onUserDelete --region us-central1 --project mycardtracker-c8479 --token "${{ secrets.FIREBASE_TOKEN }}" --force
-          npx firebase-tools functions:delete sendEmailNotification --region us-central1 --project mycardtracker-c8479 --token "${{ secrets.FIREBASE_TOKEN }}" --force
-          npx firebase-tools functions:delete sendFeedbackEmail --region us-central1 --project mycardtracker-c8479 --token "${{ secrets.FIREBASE_TOKEN }}" --force
-          npx firebase-tools functions:delete sendListingSoldNotification --region us-central1 --project mycardtracker-c8479 --token "${{ secrets.FIREBASE_TOKEN }}" --force
-          npx firebase-tools functions:delete stripeWebhook --region us-central1 --project mycardtracker-c8479 --token "${{ secrets.FIREBASE_TOKEN }}" --force
-          npx firebase-tools functions:delete testAllEmails --region us-central1 --project mycardtracker-c8479 --token "${{ secrets.FIREBASE_TOKEN }}" --force
-          npx firebase-tools functions:delete testPsaToken --region us-central1 --project mycardtracker-c8479 --token "${{ secrets.FIREBASE_TOKEN }}" --force
-          npx firebase-tools functions:delete uploadBackup --region us-central1 --project mycardtracker-c8479 --token "${{ secrets.FIREBASE_TOKEN }}" --force
-          npx firebase-tools functions:delete proxyPriceCharting --region us-central1 --project mycardtracker-c8479 --token "${{ secrets.FIREBASE_TOKEN }}" --force
-          npx firebase-tools functions:delete pokemonTcgLookup --region us-central1 --project mycardtracker-c8479 --token "${{ secrets.FIREBASE_TOKEN }}" --force
+          echo "Deleting orphaned functions..."
+          functions_to_delete=(
+            "generateInvoiceBatch"
+            "getBackupDownloadUrl"
+            "getBackupFileContent"
+            "getCarPrice"
+            "getCarValueFromAdmin"
+            "getUserCards"
+            "listBackupFiles"
+            "onUserCreate"
+            "onUserDelete"
+            "sendEmailNotification"
+            "sendFeedbackEmail"
+            "sendListingSoldNotification"
+            "stripeWebhook"
+            "testAllEmails"
+            "testPsaToken"
+            "uploadBackup"
+            "proxyPriceCharting"
+            "pokemonTcgLookup"
+          )
+          
+          for func in "${functions_to_delete[@]}"; do
+            echo "Attempting to delete function: $func"
+            npx firebase-tools functions:delete $func --region us-central1 --project mycardtracker-c8479 --token "${{ secrets.FIREBASE_TOKEN }}" --force || echo "Function $func not found or already deleted"
+          done
         continue-on-error: true
       
       - name: Build React App
@@ -111,6 +118,12 @@ jobs:
           CI: false
           NODE_OPTIONS: "--max-old-space-size=4096"
       
+      - name: Delete specific orphaned function
+        run: |
+          echo "Deleting pokemonTcgLookup function specifically..."
+          npx firebase-tools functions:delete pokemonTcgLookup --region us-central1 --project mycardtracker-c8479 --token "${{ secrets.FIREBASE_TOKEN }}" --force || echo "Function pokemonTcgLookup not found or already deleted"
+        continue-on-error: true
+
       - name: Deploy to Firebase
         run: |
           npx firebase-tools deploy --project mycardtracker-c8479 --token "${{ secrets.FIREBASE_TOKEN }}" --non-interactive
