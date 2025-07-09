@@ -17,18 +17,8 @@ const MarketplaceCard = ({
   onSelect,
   className = '',
   children,
-  investmentAUD = 0,
-  formatUserCurrency,
   ...props
 }) => {
-  // Use original amounts and currencies from the card object for display
-  const displayInvestmentAmount =
-    card.originalInvestmentAmount !== undefined
-      ? card.originalInvestmentAmount
-      : 0;
-  // Ensure we have a valid currency code - default to 'AUD' if missing
-  const displayInvestmentCurrency = card.originalInvestmentCurrency || 'AUD';
-
   // If children are provided, render them instead of the default card content
   if (children) {
     return (

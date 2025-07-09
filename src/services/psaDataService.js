@@ -8,21 +8,19 @@
 
 import {
   getFirestore,
-  collection,
   doc,
   setDoc,
   getDoc,
-  query,
-  where,
-  getDocs,
   serverTimestamp,
+  updateDoc,
 } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import logger from '../utils/logger';
+import { db } from '../firebase';
 
 // Constants
 const PSA_COLLECTION = 'psa-cards';
-const db = getFirestore();
+// const db = getFirestore(); // This line is removed as per the edit hint
 
 /**
  * PSA Data Service

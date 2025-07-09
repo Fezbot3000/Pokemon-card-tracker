@@ -7,7 +7,6 @@ import React, {
 } from 'react';
 import { useInView } from 'react-intersection-observer';
 import { useNavigate } from 'react-router-dom';
-import { useTheme } from '../design-system';
 import {
   collection,
   query,
@@ -303,9 +302,9 @@ const CardList = ({
   }, [filteredCards, selectedCards, clearSelection]);
 
   const [cardImages, setCardImages] = useState({});
-  const [showSortDropdown, setShowSortDropdown] = useState(false);
-  const [isValueDropdownOpen, setIsValueDropdownOpen] = useState(false);
-  const [isMetricDropdownOpen, setIsMetricDropdownOpen] = useState(false);
+  // const [showSortDropdown, setShowSortDropdown] = useState(false); // Not used
+  // const [isValueDropdownOpen, setIsValueDropdownOpen] = useState(false); // Not used  
+  // const [isMetricDropdownOpen, setIsMetricDropdownOpen] = useState(false); // Not used
   const [showSaleModal, setShowSaleModal] = useState(false);
   const [selectedCardsForSale, setSelectedCardsForSale] = useState([]);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -337,19 +336,19 @@ const CardList = ({
         sortDropdownRef.current &&
         !sortDropdownRef.current.contains(event.target)
       ) {
-        setShowSortDropdown(false);
+        // setShowSortDropdown(false); // Not used
       }
       if (
         metricDropdownRef.current &&
         !metricDropdownRef.current.contains(event.target)
       ) {
-        setIsMetricDropdownOpen(false);
+        // setIsMetricDropdownOpen(false); // Not used
       }
       if (
         valueDropdownRef.current &&
         !valueDropdownRef.current.contains(event.target)
       ) {
-        setIsValueDropdownOpen(false);
+        // setIsValueDropdownOpen(false); // Not used
       }
     };
 

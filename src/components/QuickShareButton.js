@@ -87,7 +87,7 @@ const QuickShareButton = ({ className = '' }) => {
                 </h2>
                 <button
                   onClick={() => setShowSharingModal(false)}
-                  className="rounded-full p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:bg-opacity-50 hover:text-gray-600 dark:hover:bg-gray-800 dark:hover:bg-opacity-50 dark:hover:text-gray-300"
+                  className="hover:bg-gray-100/50 dark:hover:bg-gray-800/50 rounded-full p-1 text-gray-400 transition-colors hover:text-gray-600 dark:hover:text-gray-300"
                 >
                   <svg
                     className="size-6"

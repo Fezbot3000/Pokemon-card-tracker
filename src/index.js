@@ -11,12 +11,12 @@ import reportWebVitals from './reportWebVitals';
 // Import environment validation before Firebase initialization
 import './env';
 // Import app initialization
-import { initializeApp } from './services/appInitialization';
+import { initializeAppService } from './services/appInitialization';
 import logger from './utils/logger';
 import ErrorBoundary from './components/ErrorBoundary';
 
 // Initialize the application
-initializeApp()
+initializeAppService()
   .then(() => {})
   .catch(error => {
     logger.error('Error during app initialization:', error);

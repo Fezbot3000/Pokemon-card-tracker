@@ -1,5 +1,5 @@
 import { initializeApp, getApps } from 'firebase/app';
-import { getFirestore, enableIndexedDbPersistence } from 'firebase/firestore';
+import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 import { getFunctions, httpsCallable } from 'firebase/functions';
@@ -10,7 +10,6 @@ import logger from '../utils/logger';
 import {
   getFirebaseConfig,
   getGoogleClientId,
-  getConfigSources,
 } from '../config/secrets';
 
 /**

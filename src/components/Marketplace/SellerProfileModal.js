@@ -2,13 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Modal, Button, Icon, toast } from '../../design-system';
 import { useAuth } from '../../design-system';
 import {
-  doc,
-  getDoc,
   collection,
   query,
   where,
-  orderBy,
   getDocs,
+  doc,
+  getDoc,
 } from 'firebase/firestore';
 import { db as firestoreDb } from '../../services/firebase';
 import logger from '../../utils/logger';
@@ -20,9 +19,7 @@ function SellerProfileModal({
   onClose,
   sellerId,
   onOpenListing,
-  cardImages,
   onContactSeller,
-  onViewChange,
 }) {
   const { user } = useAuth();
   const [sellerProfile, setSellerProfile] = useState(null);

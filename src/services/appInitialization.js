@@ -6,8 +6,9 @@
  * and ensuring the app is properly set up.
  */
 
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import psaDataService from './psaDataService';
+import { initializeApp } from 'firebase/app';
+import { getFirestore } from 'firebase/firestore';
+import { getAnalytics } from 'firebase/analytics';
 import logger from '../utils/logger';
 import { getFirebaseConfig } from '../config/secrets';
 
@@ -44,7 +45,7 @@ window.fetch = function (...args) {
  * Initialize the application
  * This should be called when the app first loads
  */
-export async function initializeApp() {
+export async function initializeAppService() {
   try {
     logger.debug('Starting app initialization...');
 
@@ -111,4 +112,4 @@ function checkStorageConfiguration() {
   }
 }
 
-export default initializeApp;
+export default initializeAppService;

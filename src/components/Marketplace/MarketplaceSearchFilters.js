@@ -105,7 +105,6 @@ const rawConditions = [
 
 function MarketplaceSearchFilters({
   onFilterChange,
-  listings,
   initialFilters,
 }) {
   // Filter state

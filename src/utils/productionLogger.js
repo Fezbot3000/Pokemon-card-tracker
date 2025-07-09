@@ -8,6 +8,8 @@
  * In production: All logger calls become no-ops and can be tree-shaken
  */
 
+import LoggingService from '../services/LoggingService';
+
 const isDevelopment = process.env.NODE_ENV === 'development';
 
 // Create a no-op logger for production

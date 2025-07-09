@@ -4,7 +4,6 @@ import { Link } from 'react-router-dom';
 
 // Import necessary atoms and molecules from the design system
 import Button from '../atoms/Button';
-import Icon from '../atoms/Icon';
 import Toggle from '../atoms/Toggle';
 import FormField from '../molecules/FormField';
 
@@ -21,7 +20,6 @@ const LoginModal = ({
   onSignUpClick,
   onForgotPasswordClick,
   onGoogleLogin,
-  onAppleLogin,
   initialEmail = '',
   isLoading = false,
   showModal = true, // Controls if we show a modal or full page
@@ -281,8 +279,6 @@ LoginModal.propTypes = {
   onForgotPasswordClick: PropTypes.func,
   /** Function to call when the Google sign-in button is clicked */
   onGoogleLogin: PropTypes.func,
-  /** Function to call when the Apple sign-in button is clicked */
-  onAppleLogin: PropTypes.func,
   /** Optional initial value for the email field */
   initialEmail: PropTypes.string,
   /** Optional flag to show loading state (disables inputs/buttons) */

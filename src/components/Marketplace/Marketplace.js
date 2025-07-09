@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth, toast } from '../../design-system';
 import {
   collection,
@@ -17,7 +17,6 @@ import MessageModal from './MessageModal'; // Import the MessageModal component
 import ListingDetailModal from './ListingDetailModal'; // Import the ListingDetailModal component
 import EditListingModal from './EditListingModal'; // Import the EditListingModal component
 import BuyerSelectionModal from './BuyerSelectionModal'; // Import the BuyerSelectionModal component
-import MarketplaceCard from './MarketplaceCard'; // Import the custom MarketplaceCard component
 import MarketplaceNavigation from './MarketplaceNavigation'; // Import the navigation component
 import MarketplaceSearchFilters from './MarketplaceSearchFilters'; // Import the search and filter component
 import MarketplacePagination from './MarketplacePagination'; // Import pagination component

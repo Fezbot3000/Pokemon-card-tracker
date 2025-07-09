@@ -1,18 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { Modal, Button } from '../../design-system';
-import { useAuth } from '../../design-system';
+import React, { useState } from 'react';
+import { useAuth } from '../../design-system/contexts/AuthContext';
 import {
   collection,
-  addDoc,
   doc,
-  getDoc,
-  updateDoc,
-  runTransaction,
   serverTimestamp,
+  setDoc,
 } from 'firebase/firestore';
-import { db as firestoreDb } from '../../services/firebase';
-import logger from '../../utils/logger';
-import toast from 'react-hot-toast';
+import { db } from '../../firebase';
+import { toast } from 'react-hot-toast';
 import LoggingService from '../../services/LoggingService';
 
 const SellerReviewModal = ({
@@ -36,87 +31,51 @@ const SellerReviewModal = ({
     setSubmitting(true);
     try {
       // Use a transaction to ensure data consistency
-      await runTransaction(firestoreDb, async transaction => {
-        // Add the review to the reviews collection
-        const reviewsRef = collection(firestoreDb, 'sellerReviews');
-        const reviewData = {
-          sellerId,
-          buyerId: user.uid,
-          buyerName: user.displayName || 'Anonymous',
-          listingId,
-          chatId,
-          rating,
-          comment: comment.trim(),
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-        };
-
-        // Add the review
-        const reviewDocRef = doc(reviewsRef);
-        transaction.set(reviewDocRef, reviewData);
-
-        // Update the seller's rating statistics
-        const sellerRef = doc(firestoreDb, 'users', sellerId);
-        const sellerDoc = await transaction.get(sellerRef);
-
-        if (sellerDoc.exists()) {
-          const sellerData = sellerDoc.data();
-          const currentRating = sellerData.sellerRating || 0;
-          const currentReviewCount = sellerData.reviewCount || 0;
-
-          // Calculate new average rating
-          const newReviewCount = currentReviewCount + 1;
-          const newRating =
-            (currentRating * currentReviewCount + rating) / newReviewCount;
-
-          transaction.update(sellerRef, {
-            sellerRating: newRating,
-            reviewCount: newReviewCount,
-            lastReviewAt: serverTimestamp(),
-          });
-        } else {
-          // If seller document doesn't exist, create it with initial rating
-          transaction.set(
-            sellerRef,
-            {
-              sellerRating: rating,
-              reviewCount: 1,
-              lastReviewAt: serverTimestamp(),
-            },
-            { merge: true }
-          );
-        }
-
-        // Remove the pending review from the chat
-        if (chatId) {
-          const chatRef = doc(firestoreDb, 'chats', chatId);
-          transaction.update(chatRef, {
-            pendingReview: null,
-            reviewCompleted: {
-              completedAt: serverTimestamp(),
-              reviewId: reviewDocRef.id,
-            },
-          });
-
-          // Add a system message to the chat
-          const messagesRef = collection(
-            firestoreDb,
-            'chats',
-            chatId,
-            'messages'
-          );
-          const messageDocRef = doc(messagesRef);
-          transaction.set(messageDocRef, {
-            text: `✅ Thank you for your review! You rated this seller ${rating} out of 5 stars.`,
-            senderId: 'system',
-            timestamp: serverTimestamp(),
-            type: 'review_completed',
-          });
-        }
+      await setDoc(doc(collection(db, 'sellerReviews')), {
+        sellerId,
+        buyerId: user.uid,
+        buyerName: user.displayName || 'Anonymous',
+        listingId,
+        chatId,
+        rating,
+        comment: comment.trim(),
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
       });
 
-      toast.success('Review submitted successfully!');
-      onClose();
+      // Update the seller's rating statistics
+      const sellerRef = doc(db, 'users', sellerId);
+      const sellerDoc = await setDoc(sellerRef, {
+        sellerRating: rating,
+        reviewCount: 1,
+        lastReviewAt: serverTimestamp(),
+      });
+
+      // Remove the pending review from the chat
+      if (chatId) {
+        const chatRef = doc(db, 'chats', chatId);
+        await setDoc(chatRef, {
+          pendingReview: null,
+          reviewCompleted: {
+            completedAt: serverTimestamp(),
+            reviewId: doc(collection(db, 'sellerReviews')).id,
+          },
+        });
+
+        // Add a system message to the chat
+        const messagesRef = collection(
+          db,
+          'chats',
+          chatId,
+          'messages'
+        );
+        await setDoc(doc(messagesRef), {
+          text: `✅ Thank you for your review! You rated this seller ${rating} out of 5 stars.`,
+          senderId: 'system',
+          timestamp: serverTimestamp(),
+          type: 'review_completed',
+        });
+      }
     } catch (error) {
       LoggingService.error('Error submitting review:', error);
       toast.error('Failed to submit review');

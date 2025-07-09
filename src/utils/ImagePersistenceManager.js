@@ -1,5 +1,7 @@
 // ImagePersistenceManager.js - Utility for managing persistent image caching
 
+import LoggingService from '../services/LoggingService';
+
 /**
  * ImagePersistenceManager - A specialized utility for maintaining image persistence
  * across navigation and view changes in the Pokemon Card Tracker app.

@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import PropTypes from 'prop-types';
-import Icon from '../atoms/Icon';
 import BottomSheet from './BottomSheet';
 
 /**

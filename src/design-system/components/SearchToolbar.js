@@ -1,9 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import Icon from '../atoms/Icon';
 import Button from '../atoms/Button';
 import Dropdown, { DropdownItem } from '../molecules/Dropdown';
-import { baseColors } from '../styles/colors';
 import { useTheme } from '../contexts/ThemeContext';
 
 /**
@@ -29,8 +28,6 @@ const SearchToolbar = ({
   const { theme } = useTheme();
   const isDarkMode = theme === 'dark';
   const [isSortDropdownOpen, setIsSortDropdownOpen] = React.useState(false);
-  const [previousViewMode, setPreviousViewMode] = React.useState(viewMode);
-  const [isAnimating, setIsAnimating] = React.useState(false);
   const [currentSortDirection, setCurrentSortDirection] =
     React.useState(sortDirection);
 
@@ -38,22 +35,6 @@ const SearchToolbar = ({
   React.useEffect(() => {
     setCurrentSortDirection(sortDirection);
   }, [sortDirection]);
-
-  // Handle view mode change with animation
-  const handleViewModeChange = newMode => {
-    if (newMode !== viewMode) {
-      setPreviousViewMode(viewMode);
-      setIsAnimating(true);
-
-      // Call the provided handler
-      onViewModeChange?.(newMode);
-
-      // Reset animation flag after transition completes
-      setTimeout(() => {
-        setIsAnimating(false);
-      }, 300); // Match this with the CSS transition duration
-    }
-  };
 
   // Toggle sort direction function
   const toggleSortDirection = e => {

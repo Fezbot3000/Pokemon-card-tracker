@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { formatValue } from '../utils/formatters';
 import { useTheme } from '../design-system';
 import { toast } from 'react-hot-toast';
@@ -56,6 +56,13 @@ const NewCardForm = ({
   const [importErrors, setImportErrors] = useState([]);
   const [importSuccess, setImportSuccess] = useState(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  // Calculate profit from form data
+  const profit = useMemo(() => {
+    const investment = parseFloat(formData.investmentAUD) || 0;
+    const currentValue = parseFloat(formData.currentValueAUD) || 0;
+    return currentValue - investment;
+  }, [formData.investmentAUD, formData.currentValueAUD]);
 
   // Check if the device is mobile
   useEffect(() => {
