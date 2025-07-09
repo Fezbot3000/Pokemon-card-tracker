@@ -43,7 +43,11 @@ export const useLazyImage = (src, placeholder = '/placeholder.png') => {
                 };
 
                 img.src = src;
-                observer.unobserve(imageRef.current);
+                // Store ref value to avoid stale closure
+                const currentImageRef = imageRef.current;
+                if (currentImageRef) {
+                  observer.unobserve(currentImageRef);
+                }
               }
             });
           },

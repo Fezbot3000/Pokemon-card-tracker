@@ -17,8 +17,8 @@ const MarketplaceCard = ({
   onSelect,
   className = '',
   children,
-  investmentAUD, // Extract this prop to prevent it from being passed to DOM
-  formatUserCurrency, // Extract this prop to prevent it from being passed to DOM
+  investmentAUD, // eslint-disable-line @typescript-eslint/no-unused-vars -- Extract this prop to prevent it from being passed to DOM
+  formatUserCurrency, // eslint-disable-line @typescript-eslint/no-unused-vars -- Extract this prop to prevent it from being passed to DOM
   ...props
 }) => {
   // If children are provided, render them instead of the default card content
