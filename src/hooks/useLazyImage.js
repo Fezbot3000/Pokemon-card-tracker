@@ -13,10 +13,11 @@ export const useLazyImage = (src, placeholder = '/placeholder.png') => {
   const imageRef = useRef(null);
 
   useEffect(() => {
+    const currentRef = imageRef.current; // Capture current value at the start
     let observer;
     let didCancel = false;
 
-    if (imageRef.current && src) {
+    if (currentRef && src) {
       if (IntersectionObserver) {
         observer = new IntersectionObserver(
           entries => {
@@ -43,11 +44,8 @@ export const useLazyImage = (src, placeholder = '/placeholder.png') => {
                 };
 
                 img.src = src;
-                // Store ref value to avoid stale closure
-                const currentImageRef = imageRef.current;
-                if (currentImageRef) {
-                  observer.unobserve(currentImageRef);
-                }
+                // Use captured ref value instead of accessing imageRef.current
+                observer.unobserve(currentRef);
               }
             });
           },
@@ -56,7 +54,7 @@ export const useLazyImage = (src, placeholder = '/placeholder.png') => {
             rootMargin: '50px',
           }
         );
-        observer.observe(imageRef.current);
+        observer.observe(currentRef);
       } else {
         // Fallback for browsers without IntersectionObserver
         setImageSrc(src);
@@ -66,10 +64,9 @@ export const useLazyImage = (src, placeholder = '/placeholder.png') => {
 
     return () => {
       didCancel = true;
-      // Store current ref value to avoid stale closure
-      const currentImageRef = imageRef.current;
-      if (observer && observer.unobserve && currentImageRef) {
-        observer.unobserve(currentImageRef);
+      // Use captured ref value instead of accessing imageRef.current
+      if (observer && observer.unobserve && currentRef) {
+        observer.unobserve(currentRef);
       }
     };
   }, [src, placeholder]);

@@ -26,13 +26,18 @@ const UpgradeModal = ({ isOpen, onClose, daysRemaining }) => {
     setLoading(true);
 
     try {
-      LoggingService.info('📡 PRODUCTION DEBUG: About to call createCheckoutSession');
+      LoggingService.info(
+        '📡 PRODUCTION DEBUG: About to call createCheckoutSession'
+      );
       LoggingService.info('📡 PRODUCTION DEBUG: User ID:', user?.uid);
 
       const { httpsCallable } = await import('firebase/functions');
       const { functions } = await import('../firebase');
 
-      LoggingService.info('📡 PRODUCTION DEBUG: Functions instance:', functions);
+      LoggingService.info(
+        '📡 PRODUCTION DEBUG: Functions instance:',
+        functions
+      );
 
       const createCheckoutSession = httpsCallable(
         functions,
@@ -54,9 +59,18 @@ const UpgradeModal = ({ isOpen, onClose, daysRemaining }) => {
         userId: user?.uid,
       });
 
-      LoggingService.info('✅ PRODUCTION DEBUG: Function call successful:', result);
-      LoggingService.info('✅ PRODUCTION DEBUG: Session URL:', result.data?.url);
-      LoggingService.info('✅ PRODUCTION DEBUG: Session ID:', result.data?.sessionId);
+      LoggingService.info(
+        '✅ PRODUCTION DEBUG: Function call successful:',
+        result
+      );
+      LoggingService.info(
+        '✅ PRODUCTION DEBUG: Session URL:',
+        result.data?.url
+      );
+      LoggingService.info(
+        '✅ PRODUCTION DEBUG: Session ID:',
+        result.data?.sessionId
+      );
 
       // Step 3: Load Stripe and redirect to checkout with session ID
       LoggingService.info('📦 PRODUCTION DEBUG: Loading Stripe...');
@@ -77,13 +91,18 @@ const UpgradeModal = ({ isOpen, onClose, daysRemaining }) => {
       LoggingService.info('✅ PRODUCTION DEBUG: Stripe loaded successfully');
 
       // Step 4: Redirect to Stripe Checkout with session ID
-      LoggingService.info('💳 PRODUCTION DEBUG: Redirecting to Stripe Checkout...');
+      LoggingService.info(
+        '💳 PRODUCTION DEBUG: Redirecting to Stripe Checkout...'
+      );
       const { error } = await stripe.redirectToCheckout({
         sessionId: result.data.sessionId,
       });
 
       if (error) {
-        LoggingService.error('❌ PRODUCTION DEBUG: Stripe redirect error:', error);
+        LoggingService.error(
+          '❌ PRODUCTION DEBUG: Stripe redirect error:',
+          error
+        );
         throw error;
       }
 
@@ -92,7 +111,10 @@ const UpgradeModal = ({ isOpen, onClose, daysRemaining }) => {
       );
     } catch (error) {
       LoggingService.error('❌ PRODUCTION DEBUG: Error caught:', error);
-      LoggingService.error('❌ PRODUCTION DEBUG: Error message:', error.message);
+      LoggingService.error(
+        '❌ PRODUCTION DEBUG: Error message:',
+        error.message
+      );
       LoggingService.error('❌ PRODUCTION DEBUG: Error code:', error.code);
       LoggingService.error(
         '❌ PRODUCTION DEBUG: Full error object:',
@@ -196,7 +218,7 @@ const UpgradeModal = ({ isOpen, onClose, daysRemaining }) => {
               variant="primary"
               onClick={handleUpgrade}
               loading={loading}
-              className="mt-auto w-full rounded border border-white/30 bg-white/20 px-4 py-2 text-sm font-medium hover:bg-white/30 text-white"
+              className="border-white/30 bg-white/20 hover:bg-white/30 mt-auto w-full rounded border px-4 py-2 text-sm font-medium text-white"
             >
               {loading ? 'Processing...' : 'Upgrade Now'}
             </Button>

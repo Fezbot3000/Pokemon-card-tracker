@@ -48,7 +48,7 @@ const SettingsModal = ({
   onStartTutorial,
   onUploadImagesFromZip,
   className = '',
-  selectedCollection, // Extract this prop to prevent it from being passed to DOM
+  selectedCollection, // eslint-disable-line @typescript-eslint/no-unused-vars -- Extract this prop to prevent it from being passed to DOM
   ...props
 }) => {
   const { theme, toggleTheme } = useTheme();

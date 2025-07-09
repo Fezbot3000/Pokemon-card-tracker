@@ -385,6 +385,7 @@ function SellerProfileModal({
       onClose={onClose}
       size="xl"
       title="Seller Profile"
+      position="right"
       className="overflow-hidden rounded-2xl"
     >
       {loading ? (
