@@ -128,7 +128,7 @@ const UpgradeModal = ({ isOpen, onClose, daysRemaining }) => {
       position="right"
       size="lg"
       closeOnClickOutside={true}
-      className="upgrade-modal"
+      className="max-w-2xl mx-auto"
     >
       <div className="space-y-6">
         <div className="text-center">

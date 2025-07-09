@@ -146,42 +146,6 @@ const CardDetails = memo(
       }
     }, [editedCard.imageUrl, cardImage, card.id, card.slabSerial]);
 
-    // Effect to handle body scroll locking and image loading
-    useEffect(() => {
-      loadCardImage();
-
-      // Effect to handle body scroll locking
-      const scrollbarWidth =
-        window.innerWidth - document.documentElement.clientWidth;
-      document.body.style.overflow = 'hidden';
-      document.body.style.paddingRight = `${scrollbarWidth}px`;
-      document.body.classList.add('modal-open');
-
-      return () => {
-        // Restore scrolling on unmount
-        document.body.style.overflow = '';
-        document.body.style.paddingRight = '';
-        document.body.classList.remove('modal-open');
-
-        // Clean up timeouts - store current value to avoid stale ref warning
-        const currentTimeout = messageTimeoutRef.current;
-        if (currentTimeout) {
-          clearTimeout(currentTimeout);
-        }
-
-        // Properly clean up any blob URLs when unmounting
-        if (cardImage && cardImage.startsWith('blob:')) {
-          try {
-            URL.revokeObjectURL(cardImage);
-            // Set cardImage to null to prevent future references
-            setCardImage(null);
-          } catch (e) {
-            logger.warn('Failed to revoke cardImage blob URL on unmount:', e);
-          }
-        }
-      };
-    }, [cardImage, loadCardImage]);
-
     // Handle close action with confirmation for unsaved changes
     const handleClose = useCallback((saveSuccess = false, skipConfirmation = false) => {
       // If save was successful, we can close without confirmation
@@ -233,6 +197,46 @@ const CardDetails = memo(
         onClose();
       }, 100);
     }, [hasUnsavedChanges, editedCard, cardImage, onClose]);
+
+    // Effect to handle body scroll locking and image loading
+    useEffect(() => {
+      loadCardImage();
+
+      // Effect to handle body scroll locking
+      const scrollbarWidth =
+        window.innerWidth - document.documentElement.clientWidth;
+      document.body.style.overflow = 'hidden';
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
+      document.body.classList.add('modal-open');
+      
+      // Store the current timeout ref value to avoid the stale closure issue
+      // This fixes the react-hooks/exhaustive-deps warning
+      const timeoutRef = messageTimeoutRef;
+
+      return () => {
+        // Restore scrolling on unmount
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+        document.body.classList.remove('modal-open');
+
+        // Clean up timeouts using the stored ref (not the .current property)
+        const currentTimeout = timeoutRef.current;
+        if (currentTimeout) {
+          clearTimeout(currentTimeout);
+        }
+
+        // Properly clean up any blob URLs when unmounting
+        if (cardImage && cardImage.startsWith('blob:')) {
+          try {
+            URL.revokeObjectURL(cardImage);
+            // Set cardImage to null to prevent future references
+            setCardImage(null);
+          } catch (e) {
+            logger.warn('Failed to revoke cardImage blob URL on unmount:', e);
+          }
+        }
+      };
+    }, [cardImage, loadCardImage, handleClose]);
 
     // Listen for card-images-cleanup event to revoke blob URLs when collections are deleted
     useEffect(() => {

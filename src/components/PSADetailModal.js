@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import { toast } from 'react-hot-toast';
 import Modal from '../design-system/molecules/Modal';
@@ -28,8 +28,8 @@ const PSADetailModal = ({
   const [error, setError] = useState(null);
   const [parsedData, setParsedData] = useState(null);
 
-  // Function to apply PSA details to card
-  const applyPSADetails = data => {
+  // Function to apply PSA details to card - wrapped in useCallback to prevent recreation on every render
+  const applyPSADetails = useCallback(data => {
     if (!data) return;
 
     try {
@@ -143,8 +143,8 @@ const PSADetailModal = ({
     } catch (err) {
       logger.error('Error applying PSA data:', err, { context: { file: 'PSADetailModal', purpose: 'apply-psa-data' } });
       toast.error('Failed to apply PSA data: ' + err.message);
-    }
-  };
+    };
+  }, [currentCardData, onApplyDetails, onClose]);
 
   // Fetch PSA data when cert number changes
   useEffect(() => {
@@ -197,7 +197,7 @@ const PSADetailModal = ({
     if (isOpen && certNumber) {
       fetchPSAData();
     }
-  }, [isOpen, certNumber, autoApply]);
+  }, [isOpen, certNumber, autoApply, applyPSADetails]);
 
   // Handler for applying PSA details to card (for manual button click)
   const handleApplyDetails = () => {

@@ -95,7 +95,7 @@ const NewCollectionModal = ({
           </label>
           <input
             type="text"
-            className="focus:ring-[var(--primary-default)]/20 w-full rounded-lg border border-[#ffffff33] bg-white px-3 py-2 text-gray-900 placeholder:text-gray-500 focus:border-[var(--primary-default)] focus:outline-none focus:ring-2 dark:border-[#ffffff1a] dark:bg-[#0F0F0F] dark:text-white dark:placeholder:text-gray-400"
+            className="focus:ring-blue-500/20 w-full rounded-lg border border-gray-200/20 bg-white px-3 py-2 text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:outline-none focus:ring-2 dark:border-gray-700/10 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-400"
             placeholder="Enter collection name"
             value={collectionName}
             onChange={e => setCollectionName(e.target.value)}

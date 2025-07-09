@@ -90,7 +90,8 @@ const SharedCollection = () => {
   });
   const [stats, setStats] = useState(null);
   const [metaTags, setMetaTags] = useState({});
-
+  
+  // Define loadSharedCollection at the top of the component
   const loadSharedCollection = useCallback(async () => {
     try {
       setLoading(true);

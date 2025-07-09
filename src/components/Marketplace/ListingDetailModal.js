@@ -132,7 +132,7 @@ function ListingDetailModal({
     };
 
     loadSellerData();
-  }, [listing, isOpen]);
+  }, [listing, isOpen, checkForExistingChat]);
 
   // Function to check for existing chats
   const checkForExistingChat = useCallback(async () => {

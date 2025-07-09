@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { useAuth } from '../design-system/contexts/AuthContext';
@@ -222,43 +222,57 @@ export function UserPreferencesProvider({ children }) {
     return () => clearInterval(intervalId);
   }, []); // Empty dependency array means this runs once on mount
 
+  // Save preferences to Firestore (takes currencyToSave to handle initial save correctly)
+  const saveUserPreferencesToFirestore = useCallback(async currencyToSave => {
+    if (!user) return;
+
+    try {
+      const userPrefsRef = doc(db, 'userPreferences', user.uid);
+      // Store the currency object under the field name 'currency' in Firestore
+      await setDoc(userPrefsRef, { currency: currencyToSave }, { merge: true });
+      logger.debug('User preferences saved to Firestore:', currencyToSave);
+    } catch (error) {
+      logger.error('Failed to save user preferences to Firestore', error);
+    }
+  }, [user]);
+
+  // Initial load from Firestore
+  const loadUserPreferencesFromFirestore = useCallback(async () => {
+    try {
+      const userPrefsRef = doc(db, 'userPreferences', user.uid);
+      const userPrefsDoc = await getDoc(userPrefsRef);
+
+      if (userPrefsDoc.exists()) {
+        const { ...userPrefs } = userPrefsDoc.data();
+        if (
+          userPrefs.currency &&
+          availableCurrencies.find(
+            c => c.code === userPrefs.currency.code
+          )
+        ) {
+          const firestoreCurrency = userPrefs.currency;
+          setPreferredCurrency(firestoreCurrency);
+          localStorage.setItem(
+            CURRENCY_PREFERENCE_KEY,
+            JSON.stringify(firestoreCurrency)
+          );
+        } else {
+          // Firestore doc exists but currency is invalid or missing, save current local/default
+          await saveUserPreferencesToFirestore(preferredCurrency); // Save current preferredCurrency
+        }
+      } else if (preferredCurrency) {
+        // No Firestore doc, but we have a local/default: save it to Firestore
+        await saveUserPreferencesToFirestore(preferredCurrency);
+      }
+    } catch (error) {
+      logger.error('Failed to load user preferences from Firestore', error);
+    }
+  }, [user, preferredCurrency, saveUserPreferencesToFirestore]);
+
   // Load preferences from Firestore when user context changes and set up real-time listener
   useEffect(() => {
     if (!user) return;
-
-    // Initial load from Firestore
-    async function loadUserPreferencesFromFirestore() {
-      try {
-        const userPrefsRef = doc(db, 'userPreferences', user.uid);
-        const userPrefsDoc = await getDoc(userPrefsRef);
-
-        if (userPrefsDoc.exists()) {
-          const { ...userPrefs } = userPrefsDoc.data();
-          if (
-            userPrefs.currency &&
-            availableCurrencies.find(
-              c => c.code === userPrefs.currency.code
-            )
-          ) {
-            const firestoreCurrency = userPrefs.currency;
-            setPreferredCurrency(firestoreCurrency);
-            localStorage.setItem(
-              CURRENCY_PREFERENCE_KEY,
-              JSON.stringify(firestoreCurrency)
-            );
-          } else {
-            // Firestore doc exists but currency is invalid or missing, save current local/default
-            await saveUserPreferencesToFirestore(preferredCurrency); // Save current preferredCurrency
-          }
-        } else if (preferredCurrency) {
-          // No Firestore doc, but we have a local/default: save it to Firestore
-          await saveUserPreferencesToFirestore(preferredCurrency);
-        }
-      } catch (error) {
-        logger.error('Failed to load user preferences from Firestore', error);
-      }
-    }
-
+    
     // Set up real-time listener for changes
     const userPrefsRef = doc(db, 'userPreferences', user.uid);
     const unsubscribe = onSnapshot(
@@ -304,21 +318,9 @@ export function UserPreferencesProvider({ children }) {
 
     // Clean up listener when component unmounts or user changes
     return () => unsubscribe();
-  }, [user]); // Intentionally exclude preferredCurrency and saveUserPreferencesToFirestore to avoid circular dependency
+  }, [user, loadUserPreferencesFromFirestore, saveUserPreferencesToFirestore, preferredCurrency]);
 
-  // Save preferences to Firestore (takes currencyToSave to handle initial save correctly)
-  const saveUserPreferencesToFirestore = async currencyToSave => {
-    if (!user) return;
 
-    try {
-      const userPrefsRef = doc(db, 'userPreferences', user.uid);
-      // Store the currency object under the field name 'currency' in Firestore
-      await setDoc(userPrefsRef, { currency: currencyToSave }, { merge: true });
-      logger.debug('User preferences saved to Firestore:', currencyToSave);
-    } catch (error) {
-      logger.error('Failed to save user preferences to Firestore', error);
-    }
-  };
 
   // Update user's preferred currency
   const updatePreferredCurrency = async newCurrencyObject => {

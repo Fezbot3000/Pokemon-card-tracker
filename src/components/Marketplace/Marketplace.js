@@ -211,7 +211,7 @@ function Marketplace({ currentView, onViewChange }) {
         unsubscribe();
       }
     };
-  }, [user]);
+  }, [user, loadCardImages]);
 
   const loadCardImages = useCallback(async listingsData => {
     if (!listingsData || listingsData.length === 0) return;

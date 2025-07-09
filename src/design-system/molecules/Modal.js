@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import Button from '../atoms/Button';
 import Icon from '../atoms/Icon';
@@ -83,7 +83,7 @@ const Modal = ({
   }, [isOpen, position, showAsStatic]);
 
   // Custom close handler with animation
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     if (!onClose) return;
 
     // Start exit animation
@@ -100,7 +100,7 @@ const Modal = ({
     setTimeout(() => {
       onClose();
     }, 200); // Match this with the animation duration
-  };
+  }, [onClose, position, setIsAnimatingOut, setAnimationClass]);
 
   // Handle outside clicks to close modal if enabled
   const handleBackdropClick = e => {

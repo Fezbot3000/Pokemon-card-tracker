@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../design-system';
 import {
   collection,
@@ -159,7 +159,7 @@ function MarketplaceSelling({ currentView, onViewChange }) {
         unsubscribe();
       }
     };
-  }, [user]);
+  }, [user, loadCardImages]);
 
   // Handle filter changes from the search/filter component
   const handleFilterChange = newFilters => {
@@ -238,7 +238,7 @@ function MarketplaceSelling({ currentView, onViewChange }) {
   }, [allListings, filters]);
 
   // Function to load card images from Firebase or IndexedDB
-  const loadCardImages = async listingsData => {
+  const loadCardImages = useCallback(async listingsData => {
     if (!listingsData || listingsData.length === 0) return;
 
     // Clean up existing blob URLs before loading new ones
@@ -380,7 +380,7 @@ function MarketplaceSelling({ currentView, onViewChange }) {
 
     // Make sure to update loading state
     setLoading(false);
-  };
+  }, [cardImages]);
 
   const handleEditClick = listing => {
     setSelectedListing(listing);

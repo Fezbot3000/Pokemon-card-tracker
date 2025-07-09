@@ -155,7 +155,7 @@ const CardOptimized = memo(
 
           {/* Card details */}
           <div className="flex flex-1 flex-col p-3">
-            <h3 className="card-title mb-2 line-clamp-2 text-sm font-medium text-gray-900 dark:text-white">
+            <h3 className="mb-2 line-clamp-2 text-sm font-medium text-gray-900 dark:text-white">
               {card.card || card.name || 'Unknown Card'}
             </h3>
 

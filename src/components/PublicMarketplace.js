@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import {
@@ -73,7 +73,7 @@ const PublicMarketplace = () => {
   };
 
   // Load card images (same logic as authenticated marketplace)
-  const loadCardImages = async listingsData => {
+  const loadCardImages = useCallback(async listingsData => {
     if (!listingsData || listingsData.length === 0) return;
 
     const newCardImages = {};
@@ -150,7 +150,7 @@ const PublicMarketplace = () => {
     }
 
     setCardImages(newCardImages);
-  };
+  }, []);
 
   useEffect(() => {
     const fetchListings = async () => {
@@ -215,7 +215,7 @@ const PublicMarketplace = () => {
     };
 
     fetchListings();
-  }, []);
+  }, [loadCardImages]);
 
   const handleSignUpPrompt = () => {
     navigate('/login');

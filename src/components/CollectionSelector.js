@@ -20,7 +20,7 @@ const CollectionSelector = ({
 
   // Dropdown trigger component
   const trigger = (
-    <div className="collection-name flex w-full items-center justify-between rounded-md p-2 hover:bg-gray-100 dark:hover:bg-gray-800">
+    <div className="flex w-full items-center justify-between rounded-md p-2 hover:bg-gray-100 dark:hover:bg-gray-800">
       <div className="flex items-center">
         <Icon name="folder" className="mr-2" />
         <span className="flex-1 truncate">{selectedCollection}</span>
@@ -39,7 +39,7 @@ const CollectionSelector = ({
         isOpen={isOpen}
         onOpenChange={setIsOpen}
         width="full"
-        className="collection-selector"
+        className="w-full"
       >
         {/* All Cards option */}
         <DropdownItem
