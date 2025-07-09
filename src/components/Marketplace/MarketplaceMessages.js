@@ -26,17 +26,6 @@ import SellerProfileModal from './SellerProfileModal';
 import SellerReviewModal from './SellerReviewModal';
 import LoggingService from '../../services/LoggingService';
 
-// Add CSS for hiding scrollbars
-const scrollbarHideStyles = `
-  .hide-scrollbar {
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
-  }
-  .hide-scrollbar::-webkit-scrollbar {
-    display: none;  /* Chrome, Safari and Opera */
-  }
-`;
-
 const functions = getFunctions();
 
 function MarketplaceMessages({ currentView, onViewChange }) {
@@ -728,7 +717,7 @@ function MarketplaceMessages({ currentView, onViewChange }) {
         />
       )}
       <style>
-        {`${scrollbarHideStyles}
+        {`
         .hide-header-footer header, .hide-header-footer footer {
           display: none !important;
         }

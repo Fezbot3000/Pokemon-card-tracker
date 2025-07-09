@@ -1,12 +1,11 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import ReactDOM from 'react-dom';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   StatisticsSummary,
   SimpleSearchBar,
   ConfirmDialog,
 } from '../../design-system';
 import db from '../../services/firestore/dbAdapter';
-import { PDFDownloadLink, pdf } from '@react-pdf/renderer';
+import { pdf } from '@react-pdf/renderer';
 import InvoicePDF from '../InvoicePDF';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../../design-system';
@@ -137,39 +136,10 @@ const SoldItems = () => {
   }, [user]);
 
   // Helper function to determine financial year from date
-  // Defined inside component to avoid temporal dead zone issues
-  const getFinancialYear = dateStr => {
-    if (!dateStr) return 'Unknown';
 
-    let date;
-    // Handle Firestore Timestamp objects
-    if (dateStr && typeof dateStr === 'object' && 'seconds' in dateStr) {
-      date = new Date(dateStr.seconds * 1000);
-    } else {
-      date = new Date(dateStr);
-    }
-
-    // Check if date is valid
-    if (isNaN(date.getTime())) {
-      return 'Unknown';
-    }
-
-    // In Australia, financial year runs from July 1 to June 30
-    // So for dates from Jan-Jun, use previous year
-    const year = date.getFullYear();
-    const month = date.getMonth(); // 0-based, so 0 = January, 6 = July
-
-    if (month < 6) {
-      // Jan-Jun
-      return `${year - 1}/${year}`;
-    } else {
-      // Jul-Dec
-      return `${year}/${year + 1}`;
-    }
-  };
 
   // Local formatCurrency function as a fallback
-  const formatUserCurrency = (amount, currencyCode) => {
+  const formatUserCurrency = useCallback((amount, currencyCode) => {
     if (amount === undefined || amount === null) return '0.00';
 
     // Get the currency symbol
@@ -191,7 +161,7 @@ const SoldItems = () => {
     return isNegative
       ? `-${currency.symbol}${formattedAmount}`
       : `${currency.symbol}${formattedAmount}`;
-  };
+  }, []);
 
   // Handle downloading a sold invoice as PDF
   const handleDownloadInvoice = async (buyer, invoice) => {
@@ -345,15 +315,7 @@ const SoldItems = () => {
     return invoicesMap;
   };
 
-  // Process grouped invoices
-  const groupedInvoices = useMemo(() => {
-    if (!soldCards || !Array.isArray(soldCards) || soldCards.length === 0) {
-      return [];
-    }
 
-    const invoices = groupCardsByInvoice(soldCards);
-    return Object.values(invoices);
-  }, [soldCards, preferredCurrency]);
 
   // Note: filteredCards removed as it was unused
 
@@ -482,163 +444,9 @@ const SoldItems = () => {
 
   // Note: fixDatabaseStructure removed as it was unused
 
-  const importSoldItemsFromBackup = () => {
-    // Create an input element to select the backup file
-    const fileInput = document.createElement('input');
-    fileInput.type = 'file';
-    fileInput.accept = '.json,.zip';
 
-    fileInput.onchange = async e => {
-      const file = e.target.files[0];
-      if (!file) return;
 
-      try {
-        // Read the file
-        const reader = new FileReader();
-        const fileContent = await new Promise((resolve, reject) => {
-          reader.onload = e => resolve(e.target.result);
-          reader.onerror = e => reject(new Error('Failed to read file'));
-          reader.readAsText(file);
-        });
 
-        // Parse JSON
-        const jsonData = JSON.parse(fileContent);
-
-        // Look for sold cards in different possible locations
-        let soldItems = [];
-
-        // Check for soldCards array at top level
-        if (jsonData.soldCards && Array.isArray(jsonData.soldCards)) {
-          soldItems.push(...jsonData.soldCards);
-        }
-
-        // Check for sold items in collections
-        if (jsonData.collections && typeof jsonData.collections === 'object') {
-          Object.entries(jsonData.collections).forEach(
-            ([collectionName, cards]) => {
-              if (
-                collectionName.toLowerCase() === 'sold' &&
-                Array.isArray(cards)
-              ) {
-                soldItems.push(...cards);
-              }
-            }
-          );
-        }
-
-        if (soldItems.length > 0) {
-          // Process the sold items
-          const processedSoldItems = soldItems.map(item => ({
-            ...item,
-            soldDate:
-              item.soldDate || item.dateSold || new Date().toISOString(),
-            buyer: item.buyer || 'Import',
-            finalValueAUD:
-              parseFloat(item.finalValueAUD) ||
-              parseFloat(item.currentValueAUD) ||
-              0,
-            finalProfitAUD:
-              parseFloat(item.finalProfitAUD) ||
-              parseFloat(item.finalValueAUD || item.currentValueAUD || 0) -
-                parseFloat(item.investmentAUD || 0),
-          }));
-
-          // Get existing sold cards
-          const existingSoldCards = await db.getSoldCards();
-
-          // Create a Set of existing IDs to avoid duplicates
-          const existingIds = new Set(
-            existingSoldCards.map(card => card.slabSerial || card.id)
-          );
-
-          // Filter out duplicates
-          const newSoldItems = processedSoldItems.filter(
-            item => !existingIds.has(item.slabSerial || item.id)
-          );
-
-          // Merge with existing sold cards
-          const mergedSoldCards = [...existingSoldCards, ...newSoldItems];
-
-          // Save to database
-          await db.saveSoldCards(mergedSoldCards);
-          alert(
-            `Successfully imported ${newSoldItems.length} sold items. Refreshing page...`
-          );
-          window.location.reload();
-        } else {
-          alert('No sold items found in backup file');
-        }
-      } catch (error) {
-        LoggingService.error('Error importing sold items:', error);
-        alert('Error importing sold items: ' + error.message);
-      }
-    };
-
-    // Trigger file selection
-    fileInput.click();
-  };
-
-  const forceRefreshSoldItems = () => {
-    db.getSoldCards()
-      .then(soldCardsData => {
-        setSoldCards(soldCardsData || []);
-      })
-      .catch(e => {
-        LoggingService.error('Error force refreshing sold items:', e);
-      });
-  };
-
-  const forceRefreshFromRawDB = async () => {
-    try {
-      // Direct database access to get the sold items
-      const dbRequest = window.indexedDB.open('pokemonCardTracker', 1);
-
-      dbRequest.onerror = event => {
-        LoggingService.error('Database error:', event.target.error);
-        alert('Error accessing database: ' + event.target.error);
-      };
-
-      dbRequest.onsuccess = event => {
-        const db = event.target.result;
-
-        // Check if the collections store exists
-        if (db.objectStoreNames.contains('collections')) {
-          const transaction = db.transaction(['collections'], 'readonly');
-          const store = transaction.objectStore('collections');
-          const request = store.get(['anonymous', 'sold']);
-
-          request.onsuccess = function () {
-            const soldCollection = request.result;
-
-            if (soldCollection && Array.isArray(soldCollection.data)) {
-              setSoldCards(soldCollection.data);
-              alert(
-                `Found ${soldCollection.data.length} sold items using direct DB access. Check browser console for details.`
-              );
-            } else {
-              alert(
-                'No sold items found using direct DB access. Check browser console for details.'
-              );
-            }
-          };
-
-          request.onerror = function (event) {
-            LoggingService.error('Error getting sold items:', event.target.error);
-            alert(
-              'Error accessing sold items in database: ' + event.target.error
-            );
-          };
-        } else {
-          alert(
-            "The 'collections' object store does not exist. Database may be corrupted."
-          );
-        }
-      };
-    } catch (error) {
-      LoggingService.error('Error in direct DB access:', error);
-      alert('Error in direct DB access: ' + error.message);
-    }
-  };
 
   // Format date for display
   const formatDate = dateStr => {
@@ -672,111 +480,22 @@ const SoldItems = () => {
     });
   };
 
-  const formatDateSafely = dateStr => {
+  const formatDateSafely = useCallback(dateStr => {
     try {
       return formatDate(dateStr);
     } catch (error) {
       LoggingService.error('Error formatting date:', error);
       return 'Invalid date';
     }
-  };
+  }, []);
 
-  // Get card image URL function for SoldItemsView
-  const getCardImageUrl = card => {
-    try {
-      // Always return null to prevent images from loading on the sold page
-      return null;
-    } catch (error) {
-      LoggingService.error('Error getting card image:', error);
-      return null;
-    }
-  };
 
-  // Handle printing an invoice
-  const handlePrintInvoice = invoice => {
-    // Create a unique filename for the invoice
-    const fileName = `invoice-${invoice.id || invoice.buyer.replace(/\s+/g, '_')}-${new Date(invoice.dateSold).toISOString().split('T')[0]}.pdf`;
 
-    // Create a fake anchor element to trigger the download
-    const link = document.createElement('a');
-    link.href = `#/invoice/${invoice.id}`; // This doesn't actually matter for our purpose
-    link.download = fileName;
-    link.className = 'pdf-download-link';
 
-    // Add the PDFDownloadLink to a hidden div
-    const container = document.createElement('div');
-    container.style.display = 'none';
-    container.className = 'pdf-container';
-    document.body.appendChild(container);
-
-    // Render the PDF link element which will automatically trigger download
-    const pdfLinkElement = (
-      <PDFDownloadLink
-        document={
-          <InvoicePDF
-            buyer={invoice.buyer}
-            date={formatDateSafely(invoice.dateSold)}
-            cards={invoice.cards}
-            invoiceId={invoice.id}
-            profile={profile}
-          />
-        }
-        fileName={fileName}
-      >
-        {({ blob, url, loading, error }) => {
-          if (loading) {
-            return 'Loading document...';
-          }
-
-          if (error) {
-            LoggingService.error('Error generating PDF:', error);
-            toast.error('Error generating PDF');
-            return 'Error';
-          }
-
-          // When PDF is ready, trigger download programmatically
-          if (blob) {
-            const fileURL = URL.createObjectURL(blob);
-            link.href = fileURL;
-            link.click();
-
-            // Clean up
-            setTimeout(() => {
-              URL.revokeObjectURL(fileURL);
-              if (container.parentNode) {
-                document.body.removeChild(container);
-              }
-            }, 100);
-
-            toast.success('Invoice downloaded successfully');
-          }
-
-          return null;
-        }}
-      </PDFDownloadLink>
-    );
-
-    // Render and cleanup
-    ReactDOM.render(pdfLinkElement, container);
-  };
 
   // displayData is now defined above with financial year grouping
 
-  // Reset sold items database (remove test data)
-  const resetSoldItems = async () => {
-    try {
-      await db.saveSoldCards([]); // Save empty array to clear all sold items
-      setSoldCards([]); // Clear the local state
-      toast.success('Sold items database reset successfully');
 
-      // Reload any imported data
-      const soldCardsData = await db.getSoldCards();
-      setSoldCards(soldCardsData || []);
-    } catch (error) {
-      LoggingService.error('Error resetting sold items:', error);
-      toast.error('Error resetting sold items database');
-    }
-  };
 
   // Delete a specific invoice/receipt
   const showDeleteConfirmation = (invoiceId, buyer = null) => {
@@ -862,20 +581,7 @@ const SoldItems = () => {
     }
   };
 
-  // Add a test sold item for debugging
-  const addTestSoldItem = async () => {
-    try {
-      const newTestItem = await db.addTestSoldItem();
-      toast.success('Test sold item added successfully');
 
-      // Refresh sold items
-      const soldCardsData = await db.getSoldCards();
-      setSoldCards(soldCardsData || []);
-    } catch (error) {
-      LoggingService.error('Error adding test sold item:', error);
-      toast.error('Error adding test sold item');
-    }
-  };
 
   const filteredInvoices = useMemo(() => {
     let invoices = Object.entries(invoiceTotals);
@@ -936,7 +642,7 @@ const SoldItems = () => {
                 { label: 'PROFIT', width: 'w-12' },
                 { label: 'SOLD INVOICES', width: 'w-4' },
               ].map((stat, index) => (
-                <div key={index} className="text-center">
+                <div key={`stat-${stat.label}`} className="text-center">
                   <div className="mb-1 text-xs font-medium uppercase text-gray-500 dark:text-gray-400 sm:mb-2 sm:text-sm">
                     {stat.label}
                   </div>
@@ -1003,7 +709,7 @@ const SoldItems = () => {
                 </thead>
                 <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-black">
                   {[...Array(7)].map((_, i) => (
-                    <tr key={i}>
+                    <tr key={`skeleton-row-${i}`}>
                       <td className="whitespace-nowrap px-6 py-4">
                         <div className="h-4 max-w-[150px] animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
                       </td>
@@ -1206,7 +912,7 @@ const SoldItems = () => {
                                 <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                                   {invoice.cards.map((card, index) => (
                                     <div
-                                      key={card.id || card.slabSerial || index}
+                                      key={card.id || card.slabSerial || `card-${index}`}
                                       className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-black"
                                     >
                                       <div className="flex items-start justify-between">
@@ -1406,7 +1112,7 @@ const SoldItems = () => {
                       <div className="space-y-3">
                         {invoice.cards.map((card, index) => (
                           <div
-                            key={card.id || card.slabSerial || index}
+                            key={card.id || card.slabSerial || `mobile-card-${index}`}
                             className="rounded-lg border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-black"
                           >
                             <div className="flex items-start justify-between">

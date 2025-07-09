@@ -40,6 +40,11 @@
   background-color: var(--color-surface-primary);
 }
 
+.page-no-padding {
+  padding: 0;
+  margin: 0;
+}
+
 .main-content {
   padding-top: var(--header-height-mobile);
   padding-bottom: 4rem; /* Reduced from 5rem to 4rem for smaller bottom nav */
@@ -277,6 +282,16 @@ header .max-h-60.overflow-y-auto::-webkit-scrollbar {
   display: none;
 }
 
+/* Hide scrollbar utility */
+.hide-scrollbar {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none; /* WebKit */
+}
+
 /* ==================== MODAL UTILITIES ==================== */
 
 /* Modal state utilities */
@@ -444,6 +459,51 @@ header .max-h-60.overflow-y-auto::-webkit-scrollbar {
 
 .hover\:bg-primary-gradient-hover:hover {
   background: var(--gradient-primary-hover);
+}
+
+/* Glass effect utilities */
+.glass-border {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.glass-border-light {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.hover\:glass-border-hover:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.glass-bg {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.glass-bg-secondary {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.hover\:glass-bg-hover:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.glass-gradient {
+  background: linear-gradient(to bottom right, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+}
+
+.dark-glass-gradient {
+  background: linear-gradient(to bottom right, rgba(31, 41, 55, 0.5), rgba(17, 24, 39, 0.5));
+}
+
+.hero-blur-background {
+  background: linear-gradient(to bottom right, rgba(59, 130, 246, 0.1), rgba(168, 85, 247, 0.1), rgba(236, 72, 153, 0.1));
+}
+
+.hero-orb-blue {
+  background-color: rgba(59, 130, 246, 0.05);
+}
+
+.hero-orb-purple {
+  background-color: rgba(168, 85, 247, 0.05);
 }
 
 /* ==================== ACCESSIBILITY UTILITIES ==================== */

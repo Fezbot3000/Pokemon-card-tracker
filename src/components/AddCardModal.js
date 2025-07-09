@@ -1,9 +1,6 @@
 import React, {
   useState,
-  useRef,
   useEffect,
-  useCallback,
-  useMemo,
 } from 'react';
 import PropTypes from 'prop-types';
 import Modal from '../design-system/molecules/Modal';
@@ -22,6 +19,23 @@ import logger from '../services/LoggingService';
  *
  * A specialized modal for adding new Pokemon cards with PSA certificate lookup.
  */
+// Initial card data template
+const getEmptyCard = () => ({
+  id: null,
+  player: '',
+  cardName: '',
+  set: '',
+  year: '',
+  category: '',
+  condition: '',
+
+  certificationNumber: '',
+  datePurchased: new Date().toISOString().split('T')[0],
+  investmentAUD: '',
+  currentValueAUD: '',
+  quantity: 1,
+});
+
 const AddCardModal = ({
   isOpen,
   onClose,
@@ -31,25 +45,9 @@ const AddCardModal = ({
   onNewCollectionCreated,
   defaultCollection = '',
 }) => {
-  // Initial card data
-  const emptyCard = {
-    id: null,
-    player: '',
-    cardName: '',
-    set: '',
-    year: '',
-    category: '',
-    condition: '',
-
-    certificationNumber: '',
-    datePurchased: new Date().toISOString().split('T')[0],
-    investmentAUD: '',
-    currentValueAUD: '',
-    quantity: 1,
-  };
 
   // State for card data
-  const [newCard, setNewCard] = useState({ ...emptyCard });
+  const [newCard, setNewCard] = useState(() => ({ ...getEmptyCard() }));
 
   // State for collection selection
   const [selectedCollection, setSelectedCollection] = useState(() => {
@@ -78,7 +76,6 @@ const AddCardModal = ({
   const [psaSerial, setPsaSerial] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [psaDetailModalOpen, setPsaDetailModalOpen] = useState(false);
-  const [psaData, setPsaData] = useState(null);
 
   // State for form validation and UI feedback
   const [errors, setErrors] = useState({});
@@ -89,9 +86,6 @@ const AddCardModal = ({
   // State for new collection modal
   const [showNewCollectionModal, setShowNewCollectionModal] = useState(false);
 
-  // Refs
-  const messageTimeoutRef = useRef(null);
-
   // Subscription check
   const { hasFeature } = useSubscription();
 
@@ -100,7 +94,7 @@ const AddCardModal = ({
     if (isOpen) {
       setAnimClass('slide-in-right');
       // Reset form when opening
-      setNewCard({ ...emptyCard });
+      setNewCard({ ...getEmptyCard() });
       setCardImage(null);
       setImageFile(null);
       setErrors({});
@@ -235,7 +229,7 @@ const AddCardModal = ({
       await onSave(cardToSave, imageFile, selectedCollection);
 
       // Clear form on success
-      setNewCard({ ...emptyCard });
+      setNewCard({ ...getEmptyCard() });
       setCardImage(null);
       setImageFile(null);
       setErrors({});

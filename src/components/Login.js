@@ -17,7 +17,7 @@ function Login() {
     google: false,
     apple: false,
   });
-  const [signupSuccess, setSignupSuccess] = useState(false);
+
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -28,7 +28,6 @@ function Login() {
     signUp,
     error: authError,
     signInWithGoogle,
-    signInWithApple,
   } = useAuth();
 
   // Get the redirect path from location state or default to dashboard
@@ -113,7 +112,6 @@ function Login() {
       } else {
         // Sign up
         await signUp({ email, password, displayName: email.split('@')[0] });
-        setSignupSuccess(true);
         // Navigate to dashboard on successful login
         navigate('/dashboard', { replace: true });
         setIsLoading(false);
@@ -129,7 +127,7 @@ function Login() {
   const handleGoogleSignIn = async () => {
     try {
       setSocialLoading({ ...socialLoading, google: true });
-      const user = await signInWithGoogle();
+      await signInWithGoogle();
 
       // IMPORTANT: Always navigate to dashboard and let NewUserRoute handle the redirects
       // This ensures all flows go through the same redirect logic
@@ -145,25 +143,7 @@ function Login() {
     }
   };
 
-  // Handle Apple sign in
-  const handleAppleSignIn = async () => {
-    try {
-      setSocialLoading({ ...socialLoading, apple: true });
-      const user = await signInWithApple();
 
-      // IMPORTANT: Always navigate to dashboard and let NewUserRoute handle the redirects
-      // This ensures all flows go through the same redirect logic
-      navigate('/dashboard', { replace: true });
-    } catch (error) {
-      // Only log errors that aren't popup closed by user
-      if (error.code !== 'auth/popup-closed-by-user') {
-        logger.error('Apple sign in error:', error, { context: { file: 'Login', purpose: 'apple-signin' } });
-      }
-      // Error handling is done in AuthContext
-    } finally {
-      setSocialLoading({ ...socialLoading, apple: false });
-    }
-  };
 
   // Toggle between login and signup modes
   const toggleMode = () => {
@@ -443,19 +423,19 @@ function Login() {
           {/* Privacy Policy */}
           <div className="mt-6 text-center text-xs text-gray-600 dark:text-gray-400">
             By signing in, you agree to our{' '}
-            <a
-              href="#"
+            <Link
+              to="/terms"
               className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
             >
               Terms of Service
-            </a>{' '}
+            </Link>{' '}
             and{' '}
-            <a
-              href="#"
+            <Link
+              to="/privacy"
               className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
             >
               Privacy Policy
-            </a>
+            </Link>
             .
           </div>
         </div>

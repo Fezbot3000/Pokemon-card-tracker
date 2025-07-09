@@ -4,7 +4,6 @@ import { useAuth } from '../design-system';
 import { Helmet } from 'react-helmet-async';
 import NavigationBar from './NavigationBar';
 import Footer from './Footer';
-import { Link } from 'react-router-dom';
 
 function Home() {
   const { currentUser, loading } = useAuth();
@@ -156,13 +155,13 @@ function Home() {
       {/* Modern Hero Section */}
       <section className="logged-out-page relative flex items-center justify-center overflow-hidden px-4 sm:px-6 lg:px-8">
         {/* Background Elements */}
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 via-purple-600/10 to-pink-600/10"></div>
-        <div className="absolute left-1/4 top-1/4 size-96 rounded-full bg-blue-500/5 blur-3xl"></div>
-        <div className="absolute bottom-1/4 right-1/4 size-96 rounded-full bg-purple-500/5 blur-3xl"></div>
+        <div className="absolute inset-0 hero-blur-background"></div>
+        <div className="absolute left-1/4 top-1/4 size-96 rounded-full hero-orb-blue blur-3xl"></div>
+        <div className="absolute bottom-1/4 right-1/4 size-96 rounded-full hero-orb-purple blur-3xl"></div>
 
         <div className="relative z-10 mx-auto max-w-4xl px-4 text-center">
           {/* Badge */}
-          <div className="bg-white/10 border-white/20 mb-6 inline-flex items-center rounded-full border px-3 py-1.5 text-xs font-medium backdrop-blur-sm sm:mb-8 sm:px-4 sm:py-2 sm:text-sm">
+          <div className="glass-bg-secondary glass-border-light mb-6 inline-flex items-center rounded-full border px-3 py-1.5 text-xs font-medium backdrop-blur-sm sm:mb-8 sm:px-4 sm:py-2 sm:text-sm">
             <span className="mr-2 size-1.5 rounded-full bg-green-400 sm:size-2"></span>
             Australia's #1 Collectibles Platform
           </div>
@@ -191,7 +190,7 @@ function Home() {
             </button>
             <button
               onClick={() => navigate('/pricing')}
-              className="bg-white/10 hover:bg-white/20 border-white/20 hover:border-white/30 w-full max-w-xs rounded-2xl border px-6 py-3 text-base font-semibold text-white backdrop-blur-sm transition-all duration-300 sm:max-w-sm sm:px-8 sm:py-4 sm:text-lg"
+              className="glass-bg-secondary hover:glass-bg-hover glass-border-light hover:glass-border-hover w-full max-w-xs rounded-2xl border px-6 py-3 text-base font-semibold text-white backdrop-blur-sm transition-all duration-300 sm:max-w-sm sm:px-8 sm:py-4 sm:text-lg"
             >
               View Pricing
             </button>
@@ -348,10 +347,10 @@ function Home() {
                 title: 'Investment Analytics',
                 desc: 'Track performance and trends',
               },
-            ].map((feature, index) => (
+            ].map((feature) => (
               <div
-                key={index}
-                className="from-white/10 to-white/5 border-white/10 hover:border-white/20 group rounded-2xl border bg-gradient-to-br p-4 backdrop-blur-sm transition-all duration-300 sm:p-6"
+                key={feature.title}
+                className="group rounded-2xl border border-[rgba(255,255,255,0.1)] bg-gradient-to-br from-[rgba(255,255,255,0.1)] to-[rgba(255,255,255,0.05)] p-4 backdrop-blur-sm transition-all duration-300 hover:border-[rgba(255,255,255,0.2)] sm:p-6"
               >
                 <div className="mb-3 text-3xl transition-transform duration-300 group-hover:scale-110 sm:mb-4 sm:text-4xl">
                   {feature.icon}
@@ -392,17 +391,17 @@ function Home() {
                 title: 'Messages',
                 description: 'Secure communication with buyers and sellers',
               },
-            ].map((feature, index) => (
-              <div key={index} className="group relative">
+            ].map((feature) => (
+              <div key={feature.title} className="group relative">
                 <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-blue-500/10 to-purple-500/10 blur transition-all duration-300 group-hover:blur-lg"></div>
-                <div className="bg-white/5 border-white/10 hover:border-white/20 relative rounded-2xl border p-4 backdrop-blur-sm transition-all duration-300">
+                <div className="relative rounded-2xl border glass-border glass-bg p-4 backdrop-blur-sm transition-all duration-300 hover:glass-border-light">
                   <button
                     onClick={() =>
                       openModal(feature.src, feature.title, feature.description)
                     }
                     className="w-full cursor-pointer"
                   >
-                    <div className="from-gray-800/50 to-gray-900/50 mb-4 aspect-square overflow-hidden rounded-xl bg-gradient-to-br">
+                    <div className="mb-4 aspect-square overflow-hidden rounded-xl bg-gradient-to-br from-[rgba(31,41,55,0.5)] to-[rgba(17,24,39,0.5)]">
                       <img
                         src={feature.src}
                         alt={feature.title}
@@ -436,10 +435,10 @@ function Home() {
           </div>
 
           <div className="grid gap-8 md:grid-cols-3">
-            <div className="from-white/10 to-white/5 border-white/10 rounded-2xl border bg-gradient-to-br p-8 backdrop-blur-sm">
+            <div className="rounded-2xl border glass-border glass-gradient p-8 backdrop-blur-sm">
               <div className="mb-4 flex text-yellow-400">
                 {[...Array(5)].map((_, i) => (
-                  <span key={i} className="material-icons">
+                  <span key={`testimonial-1-star-${i}`} className="material-icons">
                     star
                   </span>
                 ))}
@@ -452,10 +451,10 @@ function Home() {
               <div className="font-semibold">Marcus, Sydney</div>
             </div>
 
-            <div className="from-white/10 to-white/5 border-white/10 rounded-2xl border bg-gradient-to-br p-8 backdrop-blur-sm">
+            <div className="rounded-2xl border glass-border glass-gradient p-8 backdrop-blur-sm">
               <div className="mb-4 flex text-yellow-400">
                 {[...Array(5)].map((_, i) => (
-                  <span key={i} className="material-icons">
+                  <span key={`testimonial-2-star-${i}`} className="material-icons">
                     star
                   </span>
                 ))}
@@ -468,10 +467,10 @@ function Home() {
               <div className="font-semibold">Sarah, Melbourne</div>
             </div>
 
-            <div className="from-white/10 to-white/5 border-white/10 rounded-2xl border bg-gradient-to-br p-8 backdrop-blur-sm">
+            <div className="rounded-2xl border glass-border glass-gradient p-8 backdrop-blur-sm">
               <div className="mb-4 flex text-yellow-400">
                 {[...Array(5)].map((_, i) => (
-                  <span key={i} className="material-icons">
+                  <span key={`testimonial-3-star-${i}`} className="material-icons">
                     star
                   </span>
                 ))}
@@ -497,7 +496,7 @@ function Home() {
             Get access to all features and tools for a low monthly fee
           </p>
 
-          <div className="from-white/10 to-white/5 border-white/10 mx-auto max-w-md rounded-3xl border bg-gradient-to-br p-12 backdrop-blur-sm">
+          <div className="mx-auto max-w-md rounded-3xl border glass-border glass-gradient p-12 backdrop-blur-sm">
             <div className="mb-4 text-6xl font-bold">
               <span className="text-4xl text-gray-400">$</span>
               <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">

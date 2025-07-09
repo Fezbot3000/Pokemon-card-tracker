@@ -22,17 +22,6 @@ import SellerProfileModal from './SellerProfileModal';
 import db from '../../services/firestore/dbAdapter'; // Import IndexedDB service for image loading
 import LoggingService from '../../services/LoggingService';
 
-// Add CSS for hiding scrollbars
-const scrollbarHideStyles = `
-  .hide-scrollbar {
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
-  }
-  .hide-scrollbar::-webkit-scrollbar {
-    display: none;  /* Chrome, Safari and Opera */
-  }
-`;
-
 function DesktopMarketplaceMessages({ currentView, onViewChange }) {
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -47,17 +36,6 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
   const [cardImages, setCardImages] = useState({});
   const { user } = useAuth();
   const messagesEndRef = useRef(null);
-
-  // Add the scrollbar hiding styles to the document
-  useEffect(() => {
-    const styleElement = document.createElement('style');
-    styleElement.textContent = scrollbarHideStyles;
-    document.head.appendChild(styleElement);
-
-    return () => {
-      document.head.removeChild(styleElement);
-    };
-  }, []);
 
   useEffect(() => {
     if (!user) return;

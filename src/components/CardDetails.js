@@ -1,12 +1,9 @@
-import React, { useState, useEffect, useRef, memo } from 'react';
+import React, { useState, useEffect, useRef, memo, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import db from '../services/firestore/dbAdapter';
-import cardRepo from '../services/cardRepo';
-import { useTheme } from '../design-system';
 import { toast } from 'react-hot-toast';
 import { formatDate } from '../utils/dateUtils';
 import CardDetailsModal from '../design-system/components/CardDetailsModal';
-import PSALookupButton from './PSALookupButton';
 import logger from '../services/LoggingService';
 
 const CardDetails = memo(
@@ -15,7 +12,6 @@ const CardDetails = memo(
     onClose,
     onUpdateCard,
     onDelete,
-    exchangeRate,
     collections = [],
     initialCollectionName = null,
   }) => {
@@ -47,8 +43,6 @@ const CardDetails = memo(
     const [cardImage, setCardImage] = useState(null);
     const [imageLoadingState, setImageLoadingState] = useState('loading');
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-    const [isPsaLoading, setIsPsaLoading] = useState(false);
-    const { isDarkMode } = useTheme();
     const messageTimeoutRef = useRef(null);
 
     // Effect to update editedCard when card or initialCollectionName changes
@@ -99,8 +93,7 @@ const CardDetails = memo(
       }
     }, [card, initialCollectionName]); // Rerun when card or initialCollectionName changes
 
-    // Use onUpdateCard if available, otherwise fall back to onUpdate for backward compatibility
-    const updateCard = onUpdateCard;
+
 
     // Effect to load card image on mount
     useEffect(() => {
@@ -119,9 +112,10 @@ const CardDetails = memo(
         document.body.style.paddingRight = '';
         document.body.classList.remove('modal-open');
 
-        // Clean up timeouts
-        if (messageTimeoutRef.current) {
-          clearTimeout(messageTimeoutRef.current);
+        // Clean up timeouts - store current value to avoid stale ref warning
+        const currentTimeout = messageTimeoutRef.current;
+        if (currentTimeout) {
+          clearTimeout(currentTimeout);
         }
 
         // Properly clean up any blob URLs when unmounting
@@ -177,7 +171,7 @@ const CardDetails = memo(
     }, [card.id, card.slabSerial, cardImage]);
 
     // Load the card image
-    const loadCardImage = async () => {
+    const loadCardImage = useCallback(async () => {
       setImageLoadingState('loading');
       try {
         // Prioritize Firestore image URL if available in the current card data
@@ -227,7 +221,7 @@ const CardDetails = memo(
         setCardImage(null);
         setImageLoadingState('error');
       }
-    };
+    }, [editedCard.imageUrl, cardImage, card.id, card.slabSerial]);
 
     // Handle image update
     const handleImageChange = async file => {
@@ -235,9 +229,6 @@ const CardDetails = memo(
         try {
           // Show loading state
           setImageLoadingState('loading');
-
-          // Use the appropriate ID for the image
-          const id = card.id || card.slabSerial;
 
           // Check if there's already a blob URL to revoke
           if (editedCard._blobUrl) {
@@ -306,7 +297,7 @@ const CardDetails = memo(
     };
 
     // Handle close action with confirmation for unsaved changes
-    const handleClose = (saveSuccess = false, skipConfirmation = false) => {
+    const handleClose = useCallback((saveSuccess = false, skipConfirmation = false) => {
       // If save was successful, we can close without confirmation
       if (!saveSuccess && hasUnsavedChanges && !skipConfirmation) {
         // TODO: Implement a dialog for confirmation
@@ -355,7 +346,7 @@ const CardDetails = memo(
       setTimeout(() => {
         onClose();
       }, 100);
-    };
+    }, [hasUnsavedChanges, editedCard, cardImage, onClose]);
 
     // Handle save action
     const handleSave = async () => {
@@ -478,8 +469,6 @@ const CardDetails = memo(
         delete processedCard._blobUrl; // Remove the blob URL reference
 
         // Update the card in the database
-        const saveStart = performance.now();
-
         // Make sure we're using the function from props
         if (typeof onUpdateCard !== 'function') {
           throw new Error(
@@ -489,8 +478,6 @@ const CardDetails = memo(
 
         // Pass the processed card to the parent component's update function
         await onUpdateCard(processedCard);
-
-        const saveEnd = performance.now();
 
         // Now update the editedCard state to match what we saved
         setEditedCard(finalCardData);
@@ -557,26 +544,7 @@ const CardDetails = memo(
       }
     }, [editedCard.imageUrl]);
 
-    // Check if the card has been edited
-    const hasCardBeenEdited = () => {
-      return Object.keys(editedCard).some(key => {
-        // Skip comparing functions, undefined values, and image-related fields
-        if (
-          typeof editedCard[key] === 'function' ||
-          editedCard[key] === undefined ||
-          key === 'imageUrl' ||
-          key === 'hasImage' ||
-          key === 'imageUpdatedAt'
-        ) {
-          return false;
-        }
-        // For numbers, compare with a small epsilon to handle floating point precision
-        if (typeof editedCard[key] === 'number') {
-          return Math.abs(editedCard[key] - (card[key] || 0)) > 0.001;
-        }
-        return editedCard[key] !== (card[key] || '');
-      });
-    };
+
 
     return (
       <CardDetailsModal
@@ -618,7 +586,7 @@ const CardDetails = memo(
         onImageChange={handleImageChange}
         onImageRetry={loadCardImage}
         className="fade-in"
-        isPsaLoading={isPsaLoading}
+        isPsaLoading={false}
         additionalSerialContent={null}
         collections={collections}
         initialCollectionName={initialCollectionName}
@@ -632,7 +600,6 @@ CardDetails.propTypes = {
   onClose: PropTypes.func.isRequired,
   onUpdateCard: PropTypes.func.isRequired,
   onDelete: PropTypes.func.isRequired,
-  exchangeRate: PropTypes.number.isRequired,
   collections: PropTypes.arrayOf(PropTypes.string),
   initialCollectionName: PropTypes.string,
 };

@@ -20,17 +20,6 @@ import Button from '../../design-system/atoms/Button';
 import Icon from '../../design-system/atoms/Icon';
 import LoggingService from '../../services/LoggingService';
 
-// Add CSS for hiding scrollbars
-const scrollbarHideStyles = `
-  .hide-scrollbar {
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
-  }
-  .hide-scrollbar::-webkit-scrollbar {
-    display: none;  /* Chrome, Safari and Opera */
-  }
-`;
-
 function ListCardModal({ isOpen, onClose, selectedCards }) {
   const { user } = useAuth();
   const { preferredCurrency } = useUserPreferences();
@@ -98,14 +87,9 @@ function ListCardModal({ isOpen, onClose, selectedCards }) {
     }
   }, [userLocation]);
 
-  // Add the style to the document for hiding scrollbars and prevent body scrolling
+  // Prevent body scrolling when modal is open
   useEffect(() => {
     if (!isOpen) return;
-
-    // Create style element
-    const styleEl = document.createElement('style');
-    styleEl.innerHTML = scrollbarHideStyles;
-    document.head.appendChild(styleEl);
 
     // Prevent body scrolling when modal is open
     const originalStyle = window.getComputedStyle(document.body).overflow;
@@ -113,7 +97,6 @@ function ListCardModal({ isOpen, onClose, selectedCards }) {
 
     // Cleanup on unmount
     return () => {
-      document.head.removeChild(styleEl);
       document.body.style.overflow = originalStyle;
     };
   }, [isOpen]);

@@ -127,6 +127,9 @@ module.exports = {
         border: {
           DEFAULT: 'var(--color-border)',
           hover: 'var(--color-border-hover)',
+          // Custom border colors with opacity
+          'white/10': 'rgba(255, 255, 255, 0.1)',
+          'white/20': 'rgba(255, 255, 255, 0.2)',
         },
         // Base colors
         white: 'var(--color-white)',
@@ -200,6 +203,13 @@ module.exports = {
       backgroundImage: {
         'primary-gradient': 'var(--gradient-primary)',
       },
+      // Custom gradient utilities with opacity
+      gradientColorStops: {
+        'white/10': 'rgba(255, 255, 255, 0.1)',
+        'white/5': 'rgba(255, 255, 255, 0.05)',
+        'gray-800/50': 'rgba(31, 41, 55, 0.5)',
+        'gray-900/50': 'rgba(17, 24, 39, 0.5)',
+      },
     },
   },
   plugins: [],
@@ -246,5 +256,16 @@ module.exports = {
     // Dynamic focus ring classes
     'focus:ring-[var(--primary-default)]/20',
     'focus:ring-[var(--primary-light)]/20',
+    // Custom gradient classes with opacity
+    'from-white/10',
+    'to-white/5',
+    'from-gray-800/50',
+    'to-gray-900/50',
+    // Custom border classes with opacity
+    'border-white/10',
+    'border-white/20',
+    'hover:border-white/20',
+    // Custom utility classes
+    'hide-scrollbar',
   ],
 } 
