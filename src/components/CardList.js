@@ -441,7 +441,7 @@ const CardList = ({
   }, [cards, cardImages]); // Dependency remains on 'cards'
 
   // Function to refresh a single card's image
-  const refreshCardImage = async cardId => {
+  const refreshCardImage = useCallback(async cardId => {
     const card = cards.find(c => c.slabSerial === cardId);
     if (!card) return; // Card not found
 
@@ -475,7 +475,7 @@ const CardList = ({
         [cardId]: prev[cardId], // Keep existing on error, or set to null
       }));
     }
-  };
+  }, [cards, cardImages]);
 
   // Wrap the onUpdateCard function to handle image refreshing
   const handleCardUpdate = useCallback(

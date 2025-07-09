@@ -144,7 +144,7 @@ const CardDetails = memo(
         setCardImage(null);
         setImageLoadingState('error');
       }
-    }, [editedCard.imageUrl, editedCard.id, editedCard.slabSerial, cardImage, card.id, card.slabSerial]);
+    }, [editedCard.imageUrl, cardImage, card.id, card.slabSerial]);
 
     // Effect to handle body scroll locking and image loading
     useEffect(() => {
@@ -181,6 +181,58 @@ const CardDetails = memo(
         }
       };
     }, [cardImage, loadCardImage]);
+
+    // Handle close action with confirmation for unsaved changes
+    const handleClose = useCallback((saveSuccess = false, skipConfirmation = false) => {
+      // If save was successful, we can close without confirmation
+      if (!saveSuccess && hasUnsavedChanges && !skipConfirmation) {
+        // TODO: Implement a dialog for confirmation
+        if (
+          !window.confirm(
+            'You have unsaved changes. Are you sure you want to close?'
+          )
+        ) {
+          return;
+        }
+      }
+
+      // Clean up any blob URLs before closing
+      if (
+        editedCard &&
+        editedCard._blobUrl &&
+        editedCard._blobUrl.startsWith('blob:')
+      ) {
+        try {
+          URL.revokeObjectURL(editedCard._blobUrl);
+        } catch (e) {
+          logger.warn('Failed to revoke blob URL on close:', e);
+        }
+      }
+
+      // Also clean up cardImage if it's a blob URL
+      if (cardImage && cardImage.startsWith('blob:')) {
+        try {
+          URL.revokeObjectURL(cardImage);
+          // Set to null before closing to prevent invalid references
+          setCardImage(null);
+        } catch (e) {
+          logger.warn('Failed to revoke cardImage blob URL on close:', e);
+        }
+      }
+
+      // Reset unsaved changes state if save was successful
+      if (saveSuccess) {
+        setHasUnsavedChanges(false);
+      }
+
+      // Close the modal
+      setIsOpen(false);
+
+      // Execute onClose callback after a short delay to allow animations
+      setTimeout(() => {
+        onClose();
+      }, 100);
+    }, [hasUnsavedChanges, editedCard, cardImage, onClose]);
 
     // Listen for card-images-cleanup event to revoke blob URLs when collections are deleted
     useEffect(() => {
@@ -219,7 +271,7 @@ const CardDetails = memo(
           handleCardImagesCleanup
         );
       };
-    }, [card.id, card.slabSerial, cardImage]);
+    }, [card.id, card.slabSerial, cardImage, handleClose]);
 
     // Handle image update
     const handleImageChange = async file => {
@@ -293,58 +345,6 @@ const CardDetails = memo(
         return null;
       }
     };
-
-    // Handle close action with confirmation for unsaved changes
-    const handleClose = useCallback((saveSuccess = false, skipConfirmation = false) => {
-      // If save was successful, we can close without confirmation
-      if (!saveSuccess && hasUnsavedChanges && !skipConfirmation) {
-        // TODO: Implement a dialog for confirmation
-        if (
-          !window.confirm(
-            'You have unsaved changes. Are you sure you want to close?'
-          )
-        ) {
-          return;
-        }
-      }
-
-      // Clean up any blob URLs before closing
-      if (
-        editedCard &&
-        editedCard._blobUrl &&
-        editedCard._blobUrl.startsWith('blob:')
-      ) {
-        try {
-          URL.revokeObjectURL(editedCard._blobUrl);
-        } catch (e) {
-          logger.warn('Failed to revoke blob URL on close:', e);
-        }
-      }
-
-      // Also clean up cardImage if it's a blob URL
-      if (cardImage && cardImage.startsWith('blob:')) {
-        try {
-          URL.revokeObjectURL(cardImage);
-          // Set to null before closing to prevent invalid references
-          setCardImage(null);
-        } catch (e) {
-          logger.warn('Failed to revoke cardImage blob URL on close:', e);
-        }
-      }
-
-      // Reset unsaved changes state if save was successful
-      if (saveSuccess) {
-        setHasUnsavedChanges(false);
-      }
-
-      // Close the modal
-      setIsOpen(false);
-
-      // Execute onClose callback after a short delay to allow animations
-      setTimeout(() => {
-        onClose();
-      }, 100);
-    }, [hasUnsavedChanges, editedCard, cardImage, onClose]);
 
     // Handle save action
     const handleSave = async () => {

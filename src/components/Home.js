@@ -190,7 +190,7 @@ function Home() {
             </button>
             <button
               onClick={() => navigate('/pricing')}
-              className="glass-bg-secondary hover:glass-bg-hover glass-border-light hover:glass-border-hover w-full max-w-xs rounded-2xl border px-6 py-3 text-base font-semibold text-white backdrop-blur-sm transition-all duration-300 sm:max-w-sm sm:px-8 sm:py-4 sm:text-lg"
+              className="glass-bg-secondary glass-border-light w-full max-w-xs rounded-2xl border px-6 py-3 text-base font-semibold text-white backdrop-blur-sm transition-all duration-300 hover:opacity-90 sm:max-w-sm sm:px-8 sm:py-4 sm:text-lg"
             >
               View Pricing
             </button>
@@ -438,7 +438,7 @@ function Home() {
             <div className="glass-border glass-gradient rounded-2xl border p-8 backdrop-blur-sm">
               <div className="mb-4 flex text-yellow-400">
                 {[...Array(5)].map((_, i) => (
-                  <span key={`testimonial-1-star-${i}`} className="material-icons">
+                  <span key={`star-${i + 1}`} className="material-icons">
                     star
                   </span>
                 ))}
@@ -454,7 +454,7 @@ function Home() {
             <div className="glass-border glass-gradient rounded-2xl border p-8 backdrop-blur-sm">
               <div className="mb-4 flex text-yellow-400">
                 {[...Array(5)].map((_, i) => (
-                  <span key={`testimonial-2-star-${i}`} className="material-icons">
+                  <span key={`star-${i + 1}`} className="material-icons">
                     star
                   </span>
                 ))}

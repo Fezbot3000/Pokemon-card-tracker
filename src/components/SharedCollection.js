@@ -91,28 +91,6 @@ const SharedCollection = () => {
   const [stats, setStats] = useState(null);
   const [metaTags, setMetaTags] = useState({});
 
-  useEffect(() => {
-    loadSharedCollection();
-  }, [shareId, loadSharedCollection]);
-
-  useEffect(() => {
-    if (cards.length > 0) {
-      const filtered = sharingService.filterAndSortCards(cards, filters);
-      setFilteredCards(filtered);
-
-      const collectionStats = sharingService.formatCollectionStats(cards);
-      setStats(collectionStats);
-    }
-  }, [cards, filters]);
-
-  // Update meta tags whenever shareData or cards change
-  useEffect(() => {
-    if (shareData) {
-      const newMetaTags = sharingService.generateMetaTags(shareData, cards);
-      setMetaTags(newMetaTags);
-    }
-  }, [shareData, cards]);
-
   const loadSharedCollection = useCallback(async () => {
     try {
       setLoading(true);
@@ -203,6 +181,28 @@ const SharedCollection = () => {
       setLoading(false);
     }
   }, [shareId]);
+
+  useEffect(() => {
+    loadSharedCollection();
+  }, [shareId, loadSharedCollection]);
+
+  useEffect(() => {
+    if (cards.length > 0) {
+      const filtered = sharingService.filterAndSortCards(cards, filters);
+      setFilteredCards(filtered);
+
+      const collectionStats = sharingService.formatCollectionStats(cards);
+      setStats(collectionStats);
+    }
+  }, [cards, filters]);
+
+  // Update meta tags whenever shareData or cards change
+  useEffect(() => {
+    if (shareData) {
+      const newMetaTags = sharingService.generateMetaTags(shareData, cards);
+      setMetaTags(newMetaTags);
+    }
+  }, [shareData, cards]);
 
   const handleFilterChange = (key, value) => {
     setFilters(prev => ({

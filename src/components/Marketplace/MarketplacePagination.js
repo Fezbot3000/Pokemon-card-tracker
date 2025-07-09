@@ -65,9 +65,9 @@ function MarketplacePagination({
           <span className="material-icons text-sm">chevron_left</span>
         </button>
 
-        {getPageNumbers().map((page, index) => (
+        {getPageNumbers().map((page) => (
           <button
-            key={`page-${page}-${index}`}
+            key={`page-${page}`}
             onClick={() => typeof page === 'number' && onPageChange(page)}
             disabled={page === '...'}
             className={`rounded-md px-3 py-2 ${

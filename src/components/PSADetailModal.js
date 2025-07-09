@@ -28,59 +28,6 @@ const PSADetailModal = ({
   const [error, setError] = useState(null);
   const [parsedData, setParsedData] = useState(null);
 
-  // Fetch PSA data when cert number changes
-  useEffect(() => {
-    const fetchPSAData = async () => {
-      if (!certNumber) return;
-
-      setIsLoading(true);
-      setError(null);
-
-      try {
-        const data = await searchByCertNumber(certNumber);
-
-        setPsaData(data);
-
-        if (data.error) {
-          setError(data.error);
-          toast.error(`PSA search error: ${data.error}`);
-        } else {
-          try {
-            // Parse the PSA data into our app's format
-            const parsed = parsePSACardData(data);
-            setParsedData(parsed);
-
-            // Check if we have meaningful data
-            const hasData = parsed.cardName || parsed.setName || parsed.grade;
-            if (!hasData) {
-              setError(
-                'No meaningful data found for this certification number'
-              );
-              toast.error('PSA returned empty card data');
-            } else if (autoApply) {
-              // Auto-apply the data if we have it and autoApply is true
-              applyPSADetails(parsed);
-            }
-          } catch (parseError) {
-            logger.error('Error parsing PSA data:', parseError, { context: { file: 'PSADetailModal', purpose: 'parse-psa-data' } });
-            setError(`Error parsing PSA data: ${parseError.message}`);
-            toast.error('Error parsing PSA data');
-          }
-        }
-      } catch (err) {
-        logger.error('Error fetching PSA data:', err, { context: { file: 'PSADetailModal', purpose: 'fetch-psa-data' } });
-        setError(err.message || 'Failed to fetch PSA data');
-        toast.error(`PSA search failed: ${err.message}`);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    if (isOpen && certNumber) {
-      fetchPSAData();
-    }
-  }, [isOpen, certNumber, autoApply]);
-
   // Function to apply PSA details to card
   const applyPSADetails = data => {
     if (!data) return;
@@ -198,6 +145,59 @@ const PSADetailModal = ({
       toast.error('Failed to apply PSA data: ' + err.message);
     }
   };
+
+  // Fetch PSA data when cert number changes
+  useEffect(() => {
+    const fetchPSAData = async () => {
+      if (!certNumber) return;
+
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const data = await searchByCertNumber(certNumber);
+
+        setPsaData(data);
+
+        if (data.error) {
+          setError(data.error);
+          toast.error(`PSA search error: ${data.error}`);
+        } else {
+          try {
+            // Parse the PSA data into our app's format
+            const parsed = parsePSACardData(data);
+            setParsedData(parsed);
+
+            // Check if we have meaningful data
+            const hasData = parsed.cardName || parsed.setName || parsed.grade;
+            if (!hasData) {
+              setError(
+                'No meaningful data found for this certification number'
+              );
+              toast.error('PSA returned empty card data');
+            } else if (autoApply) {
+              // Auto-apply the data if we have it and autoApply is true
+              applyPSADetails(parsed);
+            }
+          } catch (parseError) {
+            logger.error('Error parsing PSA data:', parseError, { context: { file: 'PSADetailModal', purpose: 'parse-psa-data' } });
+            setError(`Error parsing PSA data: ${parseError.message}`);
+            toast.error('Error parsing PSA data');
+          }
+        }
+      } catch (err) {
+        logger.error('Error fetching PSA data:', err, { context: { file: 'PSADetailModal', purpose: 'fetch-psa-data' } });
+        setError(err.message || 'Failed to fetch PSA data');
+        toast.error(`PSA search failed: ${err.message}`);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (isOpen && certNumber) {
+      fetchPSAData();
+    }
+  }, [isOpen, certNumber, autoApply]);
 
   // Handler for applying PSA details to card (for manual button click)
   const handleApplyDetails = () => {

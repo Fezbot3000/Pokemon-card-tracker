@@ -85,7 +85,7 @@ function ListCardModal({ isOpen, onClose, selectedCards }) {
       });
       setListingData(updatedData);
     }
-  }, [userLocation]);
+  }, [userLocation, listingData]);
 
   // Prevent body scrolling when modal is open
   useEffect(() => {
@@ -351,7 +351,7 @@ function ListCardModal({ isOpen, onClose, selectedCards }) {
       }
     >
       <form id="listing-form" onSubmit={handleSubmit} className="space-y-6">
-        {selectedCards.map((card, index) => {
+        {selectedCards.map((card) => {
           return (
             <div
               key={
@@ -491,7 +491,7 @@ function ListCardModal({ isOpen, onClose, selectedCards }) {
                               e.target.value
                             )
                           }
-                          className="focus:ring-[var(--primary-default)]/20 w-full rounded-lg border border-[#ffffff33] bg-white py-2 pl-8 pr-4 text-gray-900 placeholder:text-gray-500 focus:border-[var(--primary-default)] focus:outline-none focus:ring-2 dark:border-[#ffffff1a] dark:bg-[#0F0F0F] dark:text-white dark:placeholder:text-gray-400"
+                          className="w-full rounded-lg border border-[#ffffff33] bg-white py-2 pl-8 pr-4 text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-[#ffffff1a] dark:bg-[#0F0F0F] dark:text-white dark:placeholder:text-gray-400"
                           placeholder="0.00"
                           step="0.01"
                           min="0.01"

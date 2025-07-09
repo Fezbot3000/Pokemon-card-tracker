@@ -113,10 +113,10 @@ const PriceChartingModal = ({
 
   // Get match confidence level
   const getMatchConfidence = (score) => {
-    if (score >= 80) return { level: 'Excellent', color: 'green', bgColor: 'bg-green-100 dark:bg-green-900/20' };
-    if (score >= 60) return { level: 'Good', color: 'blue', bgColor: 'bg-blue-100 dark:bg-blue-900/20' };
-    if (score >= 40) return { level: 'Fair', color: 'yellow', bgColor: 'bg-yellow-100 dark:bg-yellow-900/20' };
-    return { level: 'Poor', color: 'red', bgColor: 'bg-red-100 dark:bg-red-900/20' };
+    if (score >= 80) return { level: 'Excellent', color: 'green', bgColor: 'bg-green-100 dark:bg-green-900/20', dotColor: 'bg-green-500' };
+    if (score >= 60) return { level: 'Good', color: 'blue', bgColor: 'bg-blue-100 dark:bg-blue-900/20', dotColor: 'bg-blue-500' };
+    if (score >= 40) return { level: 'Fair', color: 'yellow', bgColor: 'bg-yellow-100 dark:bg-yellow-900/20', dotColor: 'bg-yellow-500' };
+    return { level: 'Poor', color: 'red', bgColor: 'bg-red-100 dark:bg-red-900/20', dotColor: 'bg-red-500' };
   };
 
   return (
@@ -207,7 +207,7 @@ const PriceChartingModal = ({
                         
                                                  {/* Match confidence indicator */}
                          <div className={`mb-2 inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${confidence.bgColor}`}>
-                           <div className={`mr-1 size-2 rounded-full bg-${confidence.color}-500`}></div>
+                           <div className={`mr-1 size-2 rounded-full ${confidence.dotColor}`}></div>
                            {confidence.level} Match ({Math.round(matchScore)}%)
                          </div>
                         
