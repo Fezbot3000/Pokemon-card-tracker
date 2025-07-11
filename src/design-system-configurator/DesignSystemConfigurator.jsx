@@ -11,6 +11,7 @@ import SearchBarComponent from './components/SearchBarComponent';
 import CollectionSelectorComponent from './components/CollectionSelectorComponent';
 import CardListComponent from './components/CardListComponent';
 import ToastMessagesComponent from './components/ToastMessagesComponent';
+import EmptyCollectionEntryComponent from './components/EmptyCollectionEntryComponent';
 import { useCards } from '../contexts/CardContext';
 import ConfiguratorDropdown from './components/ConfiguratorDropdown';
 
@@ -23,6 +24,16 @@ const DesignSystemConfigurator = () => {
     config.components?.buttons?.primaryStyle || 'gradient'
   ); // 'solid' or 'gradient'
   const [showHiddenSettings, setShowHiddenSettings] = useState(false);
+  const [showConfigPanel, setShowConfigPanel] = useState(false);
+  
+  // Add shared search and filter state
+  const [searchValue, setSearchValue] = useState('');
+  const [selectedFilters, setSelectedFilters] = useState({
+    category: '',
+    gradingCompany: '',
+    grade: '',
+    sortBy: 'value'
+  });
   
   // Use real data from CardContext
   const { 
@@ -31,7 +42,9 @@ const DesignSystemConfigurator = () => {
     selectedCollection, 
     setSelectedCollection, 
     loading: cardsLoading,
-    error: cardsError 
+    error: cardsError,
+    createCollection,
+    deleteCollection
   } = useCards();
 
   // Apply CSS variables when config changes
@@ -266,18 +279,28 @@ const DesignSystemConfigurator = () => {
   const getComponentData = (type) => {
     // Calculate real statistics from cards
     const realCards = cards || [];
+    // Use filtered cards for statistics calculations
+    const filteredCardsForStats = filterCards(realCards);
     
-    const totalCards = realCards.length;
+    const totalCards = filteredCardsForStats.length;
     // Use original amounts for calculations like production code
-    const totalInvestment = realCards.reduce((sum, card) => {
+    const totalInvestment = filteredCardsForStats.reduce((sum, card) => {
       const investment = card.originalInvestmentAmount !== undefined ? card.originalInvestmentAmount : 0;
       return sum + investment;
     }, 0);
-    const totalValue = realCards.reduce((sum, card) => {
+    const totalValue = filteredCardsForStats.reduce((sum, card) => {
       const value = card.originalCurrentValueAmount !== undefined ? card.originalCurrentValueAmount : 0;
       return sum + value;
     }, 0);
     const totalProfit = totalValue - totalInvestment;
+    
+    console.log('Statistics calculated from filtered cards:', {
+      totalCards,
+      totalInvestment,
+      totalValue,
+      totalProfit,
+      selectedCollection: selectedCollection?.name || selectedCollection || 'All Cards'
+    });
     
 
 
@@ -337,6 +360,103 @@ const DesignSystemConfigurator = () => {
     return baseData;
   };
 
+  // Filter cards based on search and filters
+  const filterCards = (cardsToFilter) => {
+    if (!cardsToFilter || cardsToFilter.length === 0) return [];
+    
+    let filtered = [...cardsToFilter];
+    
+    // Apply collection filter FIRST
+    if (selectedCollection && selectedCollection !== 'All Cards') {
+      const collectionName = selectedCollection.name || selectedCollection.id || selectedCollection;
+      console.log('Filtering cards for collection:', collectionName);
+      console.log('All cards before collection filter:', filtered.length);
+      
+      filtered = filtered.filter(card => {
+        const cardCollection = card.collection || card.collectionId;
+        const cardCollectionName = typeof cardCollection === 'object' ? 
+          (cardCollection.name || cardCollection.id) : cardCollection;
+        
+        const matches = cardCollectionName === collectionName;
+        if (matches) {
+          console.log('Card matches collection:', card.cardName || card.name, '-> Collection:', cardCollectionName);
+        }
+        return matches;
+      });
+      
+      console.log('Cards after collection filter:', filtered.length);
+    }
+    
+    // Apply search filter
+    if (searchValue.trim()) {
+      const searchTerm = searchValue.toLowerCase().trim();
+      filtered = filtered.filter(card => {
+        const cardName = (card.name || card.cardName || '').toLowerCase();
+        const playerName = (card.player || '').toLowerCase();
+        const setName = (card.setName || card.set || '').toLowerCase();
+        const gradingCompany = (card.gradingCompany || '').toLowerCase();
+        const certNumber = (card.certificationNumber || card.slabSerial || '').toLowerCase();
+        
+        return cardName.includes(searchTerm) ||
+               playerName.includes(searchTerm) ||
+               setName.includes(searchTerm) ||
+               gradingCompany.includes(searchTerm) ||
+               certNumber.includes(searchTerm);
+      });
+    }
+    
+    // Apply category filter
+    if (selectedFilters.category) {
+      filtered = filtered.filter(card => 
+        (card.category || '').toLowerCase() === selectedFilters.category.toLowerCase()
+      );
+    }
+    
+    // Apply grading company filter
+    if (selectedFilters.gradingCompany) {
+      filtered = filtered.filter(card => 
+        (card.gradingCompany || '').toLowerCase() === selectedFilters.gradingCompany.toLowerCase()
+      );
+    }
+    
+    // Apply grade filter
+    if (selectedFilters.grade) {
+      filtered = filtered.filter(card => 
+        (card.grade || '').toString() === selectedFilters.grade.toString()
+      );
+    }
+    
+    // Apply sorting
+    if (selectedFilters.sortBy) {
+      filtered.sort((a, b) => {
+        switch (selectedFilters.sortBy) {
+          case 'value-high':
+            return (b.currentValueAUD || b.originalCurrentValueAmount || 0) - (a.currentValueAUD || a.originalCurrentValueAmount || 0);
+          case 'value-low':
+            return (a.currentValueAUD || a.originalCurrentValueAmount || 0) - (b.currentValueAUD || b.originalCurrentValueAmount || 0);
+          case 'profit-high':
+            const bProfit = (b.currentValueAUD || b.originalCurrentValueAmount || 0) - (b.investmentAUD || b.originalInvestmentAmount || 0);
+            const aProfit = (a.currentValueAUD || a.originalCurrentValueAmount || 0) - (a.investmentAUD || a.originalInvestmentAmount || 0);
+            return bProfit - aProfit;
+          case 'profit-low':
+            const aProfitLow = (a.currentValueAUD || a.originalCurrentValueAmount || 0) - (a.investmentAUD || a.originalInvestmentAmount || 0);
+            const bProfitLow = (b.currentValueAUD || b.originalCurrentValueAmount || 0) - (b.investmentAUD || b.originalInvestmentAmount || 0);
+            return aProfitLow - bProfitLow;
+          case 'name':
+            return (a.name || a.cardName || '').localeCompare(b.name || b.cardName || '');
+          case 'date-new':
+            return new Date(b.dateAdded || b.createdAt || 0) - new Date(a.dateAdded || a.createdAt || 0);
+          case 'date-old':
+            return new Date(a.dateAdded || a.createdAt || 0) - new Date(b.dateAdded || b.createdAt || 0);
+          default:
+            return 0;
+        }
+      });
+    }
+    
+    return filtered;
+  };
+
   const renderComponent = (component) => {
     const latestData = getComponentData(component.type);
     const commonProps = {
@@ -344,12 +464,17 @@ const DesignSystemConfigurator = () => {
       isDarkMode,
       cards,
       realCards: cards,
+      filteredCards: filterCards(cards),
       collections,
       selectedCollection,
       setSelectedCollection,
       cardsLoading,
       cardsError,
       removeComponent,
+      searchValue,
+      setSearchValue,
+      selectedFilters,
+      setSelectedFilters,
       getTypographyStyle: boundGetTypographyStyle,
       getTextColorStyle: boundGetTextColorStyle,
       getBackgroundColorStyle: boundGetBackgroundColorStyle,
@@ -359,7 +484,9 @@ const DesignSystemConfigurator = () => {
       getBorderColorStyle: boundGetBorderColorStyle,
       getPrimaryButtonStyle,
       primaryStyle,
-      colors
+      colors,
+      onNewCollectionCreated: createCollection,
+      onDeleteCollection: deleteCollection
     };
 
     switch (component.type) {
@@ -373,6 +500,8 @@ const DesignSystemConfigurator = () => {
         return <CardListComponent key={component.id} data={{ ...latestData, id: component.id }} {...commonProps} />;
       case 'toast-messages':
         return <ToastMessagesComponent key={component.id} data={{ ...latestData, id: component.id }} {...commonProps} />;
+      case 'empty-collection':
+        return <EmptyCollectionEntryComponent key={component.id} data={{ ...latestData, id: component.id }} {...commonProps} onAddCard={() => console.log('Add card to collection')} />;
       case 'multi-select-panel':
         return (
           <div key={component.id} className="mb-8">
@@ -432,6 +561,7 @@ const DesignSystemConfigurator = () => {
         { type: 'search-bar', name: 'Search Bar', icon: '🔍', description: 'Search input with advanced filtering and add button' },
         { type: 'collection-selector', name: 'Collection Selector', icon: '📁', description: 'Dropdown selector for managing and switching between collections' },
         { type: 'card-list', name: 'Card List', icon: '🃏', description: 'Interactive card grid/list with selection, view modes, and financial data' },
+        { type: 'empty-collection', name: 'Empty Collection Entry', icon: '📦', description: 'Entry point displayed when collection is empty - encourages users to add their first card' },
         { type: 'toast-messages', name: 'Toast Messages Library', icon: '💬', description: 'Complete collection of all toast messages used across the application with live testing' },
         { type: 'multi-select-panel', name: 'Multi-Select Actions', icon: '☑️', description: 'Bottom panel with bulk actions for selected cards (auto-shows when cards selected)' }
       ]
@@ -2606,64 +2736,15 @@ const DesignSystemConfigurator = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 min-h-[calc(100vh-12rem)]">
-          {/* Left Third - Configuration Panel */}
-          <div className="flex flex-col min-h-0 lg:col-span-1">
-            <div className="rounded-lg p-4 border mb-6" style={{
-              backgroundColor: colors?.surface || defaultConfig.colors.surface,
-              borderColor: colors?.border || defaultConfig.colors.border
-            }}>
-              <h2 
-                className={`text-lg font-semibold mb-4`}
-                style={{
-                  ...boundGetTypographyStyle('heading'),
-                  ...boundGetTextColorStyle('primary')
-                }}
-              >
-                Configuration
-              </h2>
-              <div className="relative">
-                <select
-                  value={activeSection}
-                  onChange={(e) => setActiveSection(e.target.value)}
-                  className={`w-full pl-4 pr-10 py-3 rounded-lg border text-sm font-medium transition-all duration-200 appearance-none cursor-pointer focus:outline-none focus:ring-2`}
-                  style={{
-                    '--tw-ring-color': `${colors?.secondary || defaultConfig.colors.secondary}33`,
-                    ...boundGetBackgroundColorStyle('surface'),
-                    ...boundGetTextColorStyle('primary'),
-                    ...boundGetBorderColorStyle('primary')
-                  }}
-                >
-                  {sections.map(section => (
-                    <option key={section.id} value={section.id}>
-                      {section.icon} {section.label}
-                    </option>
-                  ))}
-                </select>
-                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                  <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
-              </div>
-            </div>
-
-            {/* Configuration Content */}
-            <div className={`rounded-lg p-6 border flex-1 overflow-y-auto`} style={{
-              backgroundColor: colors?.surface || defaultConfig.colors.surface,
-              borderColor: colors?.border || defaultConfig.colors.border
-            }}>
-              {renderConfigurationSection()}
-            </div>
-          </div>
-
-          {/* Right Two-Thirds - Component Preview */}
-          <div className="lg:col-span-2 flex flex-col min-h-0">
-            <div className="rounded-lg p-6 border mb-6" style={{
-              backgroundColor: colors?.surface || defaultConfig.colors.surface,
-              borderColor: colors?.border || defaultConfig.colors.border
-            }}>
-              <div className="flex items-center justify-between mb-4">
+        {/* Full Width Layout */}
+        <div className="flex flex-col min-h-[calc(100vh-12rem)]">
+          {/* Component Library with integrated Configuration */}
+          <div className="rounded-lg p-6 border mb-6" style={{
+            backgroundColor: colors?.surface || defaultConfig.colors.surface,
+            borderColor: colors?.border || defaultConfig.colors.border
+          }}>
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center space-x-6">
                 <h2 className={`text-lg font-semibold`} style={boundGetTextColorStyle('primary')}>
                   Component Library
                 </h2>
@@ -2675,51 +2756,108 @@ const DesignSystemConfigurator = () => {
                 </div>
               </div>
               
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {componentCategories[0].components.map(component => (
-                  <button
-                    key={component.type}
-                    onClick={() => addComponent(component.type)}
-                    className={`p-4 rounded-lg border text-left transition-colors`}
-                    style={{
-                      borderColor: colors?.border || defaultConfig.colors.border,
-                      backgroundColor: colors?.surfaceSecondary || defaultConfig.colors.surfaceSecondary
-                    }}
-                  >
-                    <div className="text-2xl mb-2">{component.icon}</div>
-                    <h4 className={`font-medium mb-1`} style={boundGetTextColorStyle('primary')}>
-                      {component.name}
-                    </h4>
-                    <p className={`text-sm`} style={boundGetTextColorStyle('secondary')}>
-                      {component.description}
-                    </p>
-                  </button>
-                ))}
+              {/* Configuration Controls */}
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm font-medium" style={boundGetTextColorStyle('secondary')}>
+                    🎨 Configuration:
+                  </span>
+                  <div className="relative">
+                    <select
+                      value={activeSection}
+                      onChange={(e) => setActiveSection(e.target.value)}
+                      className={`pl-4 pr-10 py-2 rounded-lg border text-sm font-medium transition-all duration-200 appearance-none cursor-pointer focus:outline-none focus:ring-2 min-w-[200px]`}
+                      style={{
+                        '--tw-ring-color': `${colors?.secondary || defaultConfig.colors.secondary}33`,
+                        ...boundGetBackgroundColorStyle('surface'),
+                        ...boundGetTextColorStyle('primary'),
+                        ...boundGetBorderColorStyle('primary')
+                      }}
+                    >
+                      {sections.map(section => (
+                        <option key={section.id} value={section.id}>
+                          {section.icon} {section.label}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                      <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+                
+                <button
+                  onClick={() => setShowConfigPanel(!showConfigPanel)}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors border`}
+                  style={{
+                    ...boundGetBackgroundColorStyle('surface'),
+                    ...boundGetTextColorStyle('primary'),
+                    ...boundGetBorderColorStyle('primary')
+                  }}
+                >
+                  {showConfigPanel ? '🔧 Hide Settings' : '🔧 Show Settings'}
+                </button>
               </div>
             </div>
-
-            {/* Component Preview */}
-            <div className="flex-1 overflow-y-auto">
-              <h3 className={`text-xl font-semibold mb-6`} style={boundGetTextColorStyle('primary')}>
-                Component Preview
-              </h3>
-              
-              {components.length === 0 ? (
-                <div className="text-center py-12">
-                  <div className="text-6xl mb-4">🎨</div>
-                  <h4 className={`text-lg font-medium mb-2`} style={boundGetTextColorStyle('primary')}>
-                    No Components Added
+            
+            {/* Configuration Panel (collapsible) */}
+            {showConfigPanel && (
+              <div className="mb-6 p-4 rounded-lg border" style={{
+                backgroundColor: colors?.surfaceSecondary || defaultConfig.colors.surfaceSecondary,
+                borderColor: colors?.border || defaultConfig.colors.border
+              }}>
+                <div className="max-h-96 overflow-y-auto">
+                  {renderConfigurationSection()}
+                </div>
+              </div>
+            )}
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+              {componentCategories[0].components.map(component => (
+                <button
+                  key={component.type}
+                  onClick={() => addComponent(component.type)}
+                  className={`p-4 rounded-lg border text-left transition-colors hover:scale-105`}
+                  style={{
+                    borderColor: colors?.border || defaultConfig.colors.border,
+                    backgroundColor: colors?.surfaceSecondary || defaultConfig.colors.surfaceSecondary
+                  }}
+                >
+                  <div className="text-2xl mb-2">{component.icon}</div>
+                  <h4 className={`font-medium mb-1`} style={boundGetTextColorStyle('primary')}>
+                    {component.name}
                   </h4>
                   <p className={`text-sm`} style={boundGetTextColorStyle('secondary')}>
-                    Add components from the library above to see them in action
+                    {component.description}
                   </p>
-                </div>
-              ) : (
-                <div className="space-y-6">
-                  {components.map(component => renderComponent(component))}
-                </div>
-              )}
+                </button>
+              ))}
             </div>
+          </div>
+
+          {/* Full Width Component Preview */}
+          <div className="flex-1 overflow-y-auto">
+            <h3 className={`text-xl font-semibold mb-6`} style={boundGetTextColorStyle('primary')}>
+              Component Preview - Full Width
+            </h3>
+            
+            {components.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="text-6xl mb-4">🎨</div>
+                <h4 className={`text-lg font-medium mb-2`} style={boundGetTextColorStyle('primary')}>
+                  No Components Added
+                </h4>
+                <p className={`text-sm`} style={boundGetTextColorStyle('secondary')}>
+                  Add components from the library above to see them in action at full width
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {components.map(component => renderComponent(component))}
+              </div>
+            )}
           </div>
         </div>
       </div>

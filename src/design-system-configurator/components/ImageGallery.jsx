@@ -47,7 +47,7 @@ const ImageGallery = ({
         const previewUrl = URL.createObjectURL(compressedFile);
         
         newImages.push({
-          id: Date.now() + Math.random(),
+          id: `img_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
           file: compressedFile,
           preview: previewUrl,
           name: file.name,
@@ -118,7 +118,16 @@ const ImageGallery = ({
   };
 
   const handleDragEnd = (result) => {
-    if (!result.destination) return;
+    if (!result.destination || !result.source) return;
+    
+    // Check if the source and destination are the same
+    if (result.destination.index === result.source.index) return;
+
+    // Ensure we have valid images array
+    if (!images || images.length === 0) return;
+
+    // Validate indices
+    if (result.source.index >= images.length || result.destination.index >= images.length) return;
 
     const reorderedImages = Array.from(images);
     const [removed] = reorderedImages.splice(result.source.index, 1);
@@ -138,12 +147,11 @@ const ImageGallery = ({
     <div className={`space-y-4 ${className}`}>
       {/* Upload Area */}
       <div 
-        className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-all duration-200 ${
-          draggedOver ? 'border-blue-400 bg-blue-50' : ''
-        }`}
+        className="border-2 border-dashed rounded-lg p-6 text-center transition-colors cursor-pointer"
         style={{
           borderColor: draggedOver ? colors.primary : colors.border,
-          backgroundColor: draggedOver ? `${colors.primary}10` : colors.backgroundSecondary
+          backgroundColor: draggedOver ? `${colors.surfaceSecondary}40` : 'transparent',
+          ...getSurfaceStyle('secondary')
         }}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -195,17 +203,20 @@ const ImageGallery = ({
             Drag to reorder • First image is the primary image
           </div>
           
-          <DragDropContext onDragEnd={handleDragEnd}>
-            <Droppable droppableId="images" direction="horizontal">
+          {images.length > 1 ? (
+            <DragDropContext onDragEnd={handleDragEnd}>
+            <Droppable droppableId="images-gallery" direction="horizontal">
               {(provided) => (
                 <div
                   {...provided.droppableProps}
                   ref={provided.innerRef}
                   className="flex flex-wrap gap-3"
                 >
-                  {images.map((image, index) => (
-                    <Draggable key={image.id} draggableId={image.id.toString()} index={index}>
-                      {(provided, snapshot) => (
+                  {images.map((image, index) => {
+                    const draggableId = `draggable-${image.id}`;
+                    return (
+                      <Draggable key={draggableId} draggableId={draggableId} index={index}>
+                        {(provided, snapshot) => (
                         <div
                           ref={provided.innerRef}
                           {...provided.draggableProps}
@@ -214,7 +225,7 @@ const ImageGallery = ({
                         >
                           <div 
                             className={`relative w-24 h-32 rounded-lg overflow-hidden border-2 ${
-                              image.isPrimary ? 'border-blue-500' : 'border-gray-200'
+                              image.isPrimary ? 'border-primary' : 'border-border'
                             }`}
                             style={{
                               borderColor: image.isPrimary ? colors.primary : colors.border
@@ -232,7 +243,7 @@ const ImageGallery = ({
                                 className="absolute top-1 left-1 px-1 py-0.5 rounded text-xs font-medium"
                                 style={{
                                   backgroundColor: colors.primary,
-                                  color: 'white',
+                                  color: colors.textOnPrimary || colors.textPrimary,
                                   ...getTypographyStyle('caption')
                                 }}
                               >
@@ -251,7 +262,7 @@ const ImageGallery = ({
                                   className="p-1 rounded-full text-xs"
                                   style={{
                                     backgroundColor: colors.primary,
-                                    color: 'white'
+                                    color: colors.textOnPrimary || colors.textPrimary
                                   }}
                                   title="Set as primary"
                                 >
@@ -266,7 +277,7 @@ const ImageGallery = ({
                                 className="p-1 rounded-full text-xs"
                                 style={{
                                   backgroundColor: colors.error,
-                                  color: 'white'
+                                  color: colors.textOnError || colors.textPrimary
                                 }}
                                 title="Remove image"
                               >
@@ -296,15 +307,92 @@ const ImageGallery = ({
                               {(image.size / 1024 / 1024).toFixed(1)}MB
                             </div>
                           </div>
-                        </div>
-                      )}
-                    </Draggable>
-                  ))}
+                          </div>
+                        )}
+                      </Draggable>
+                    );
+                  })}
                   {provided.placeholder}
                 </div>
               )}
             </Droppable>
-          </DragDropContext>
+            </DragDropContext>
+          ) : (
+            <div className="flex flex-wrap gap-3">
+              {images.map((image, index) => (
+                <div key={`static-${image.id}`} className="relative group">
+                  <div 
+                    className={`relative w-24 h-32 rounded-lg overflow-hidden border-2 ${
+                      image.isPrimary ? 'border-primary' : 'border-border'
+                    }`}
+                    style={{
+                      borderColor: image.isPrimary ? colors.primary : colors.border
+                    }}
+                  >
+                    <img
+                      src={image.preview}
+                      alt={image.name}
+                      className="size-full object-cover"
+                    />
+                    
+                    {/* Primary badge */}
+                    {image.isPrimary && (
+                      <div 
+                        className="absolute top-1 left-1 px-1 py-0.5 rounded text-xs font-medium"
+                        style={{
+                          backgroundColor: colors.primary,
+                          color: colors.textOnPrimary || colors.textPrimary,
+                          ...getTypographyStyle('caption')
+                        }}
+                      >
+                        Primary
+                      </div>
+                    )}
+                    
+                    {/* Action buttons */}
+                    <div className="absolute top-1 right-1 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeImage(image.id);
+                        }}
+                        className="p-1 rounded-full text-xs"
+                        style={{
+                          backgroundColor: colors.error,
+                          color: colors.textOnError || colors.textPrimary
+                        }}
+                        title="Remove image"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {/* Image info */}
+                  <div className="mt-1 text-center">
+                    <div 
+                      className="text-xs truncate"
+                      style={{
+                        ...getTypographyStyle('caption'),
+                        ...getTextColorStyle('secondary')
+                      }}
+                    >
+                      {image.name}
+                    </div>
+                    <div 
+                      className="text-xs"
+                      style={{
+                        ...getTypographyStyle('caption'),
+                        ...getTextColorStyle('secondary')
+                      }}
+                    >
+                      {(image.size / 1024 / 1024).toFixed(1)}MB
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>

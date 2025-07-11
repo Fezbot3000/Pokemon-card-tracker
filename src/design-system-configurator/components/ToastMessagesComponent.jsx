@@ -308,8 +308,11 @@ const ToastMessagesComponent = ({
           >
             <div className="flex items-start gap-3">
                              <div 
-                 className="shrink-0 size-6 rounded-full flex items-center justify-center text-white text-sm font-bold"
-                 style={{ backgroundColor: getToastTypeColor(item.type) }}
+                 className="shrink-0 size-6 rounded-full flex items-center justify-center text-sm font-bold"
+                 style={{ 
+                   backgroundColor: getToastTypeColor(item.type),
+                   color: colors.textOnPrimary || colors.textPrimary
+                 }}
                >
                 {getToastIcon(item.type)}
               </div>

@@ -16,13 +16,49 @@ export function CardProvider({ children }) {
   const { currentUser } = useAuth();
   const [repository, setRepository] = useState(null);
   const [collections, setCollections] = useState([]);
-  const [selectedCollection, setSelectedCollection] = useState(null);
+  const [selectedCollection, setSelectedCollection] = useState(() => {
+    // Load from localStorage or default to null
+    try {
+      const savedCollection = localStorage.getItem('selectedCollection');
+      const parsed = savedCollection ? JSON.parse(savedCollection) : null;
+      console.log('Loaded selected collection from localStorage:', parsed);
+      return parsed;
+    } catch (error) {
+      console.warn('Failed to load selected collection from localStorage:', error);
+      return null;
+    }
+  });
   const [cards, setCards] = useState([]);
   const [soldCards, setSoldCards] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [syncStatus, setSyncStatus] = useState('synced'); // 'synced', 'syncing', 'error'
   const [soldCardIds, setSoldCardIds] = useState(new Set()); // Track sold card IDs in state
+
+  // Save selected collection to localStorage whenever it changes
+  useEffect(() => {
+    if (selectedCollection !== null) {
+      try {
+        localStorage.setItem('selectedCollection', JSON.stringify(selectedCollection));
+      } catch (error) {
+        console.warn('Failed to save selected collection to localStorage:', error);
+      }
+    } else {
+      // If selectedCollection is null, remove from localStorage
+      try {
+        localStorage.removeItem('selectedCollection');
+      } catch (error) {
+        console.warn('Failed to remove selected collection from localStorage:', error);
+      }
+    }
+  }, [selectedCollection]);
+
+  // Create a wrapper function for setSelectedCollection that handles localStorage
+  const setSelectedCollectionWithPersistence = useCallback((collection) => {
+    console.log('Setting selected collection with persistence:', collection);
+    setSelectedCollection(collection);
+    // The useEffect above will handle the localStorage save
+  }, []);
 
   // Load sold card IDs on mount
   useEffect(() => {
@@ -103,9 +139,29 @@ export function CardProvider({ children }) {
         setCards(cardsFromRepo);
         setSoldCards(soldCardsFromRepo);
 
-        // Set initial selected collection if we have collections
-        if (collectionsFromRepo.length > 0 && !selectedCollection) {
-          setSelectedCollection(collectionsFromRepo[0]);
+        // Handle selected collection initialization
+        console.log('Initializing selected collection. Current:', selectedCollection);
+        console.log('Available collections:', collectionsFromRepo);
+        
+        if (!selectedCollection) {
+          // No collection saved, default to "All Cards"
+          console.log('No collection saved, defaulting to All Cards');
+          setSelectedCollection('All Cards');
+        } else if (selectedCollection !== 'All Cards') {
+          // Check if the saved collection still exists
+          const savedCollectionExists = collectionsFromRepo.some(
+            collection => collection.id === selectedCollection.id || collection.name === selectedCollection.name
+          );
+          
+          if (!savedCollectionExists) {
+            // Saved collection no longer exists, default to "All Cards"
+            console.log('Saved collection no longer exists, defaulting to All Cards');
+            setSelectedCollection('All Cards');
+          } else {
+            console.log('Saved collection still exists, keeping it:', selectedCollection);
+          }
+        } else {
+          console.log('Already set to All Cards, keeping it');
         }
 
         setLoading(false);
@@ -707,7 +763,7 @@ export function CardProvider({ children }) {
     repository,
     collections,
     selectedCollection,
-    setSelectedCollection,
+    setSelectedCollection: setSelectedCollectionWithPersistence,
     cards,
     soldCards,
     loading,

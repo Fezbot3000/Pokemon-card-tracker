@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import AddCardModalComponent from './AddCardModalComponent';
+import { useCards } from '../../contexts/CardContext';
 
 const SearchBarComponent = ({ 
   data, 
@@ -10,6 +11,10 @@ const SearchBarComponent = ({
   selectedCollection,
   setSelectedCollection,
   collections,
+  searchValue,
+  setSearchValue,
+  selectedFilters,
+  setSelectedFilters,
   getTypographyStyle,
   getTextColorStyle,
   getBackgroundColorStyle,
@@ -18,26 +23,56 @@ const SearchBarComponent = ({
   getInteractiveStyle,
   getPrimaryButtonStyle,
   primaryStyle,
-  colors
+  colors,
+  onNewCollectionCreated
   }) => {
   const [showFilterOptions, setShowFilterOptions] = useState(false);
-  const [searchValue, setSearchValue] = useState('');
   const [showAddCardModal, setShowAddCardModal] = useState(false);
+  
+  // Get real card creation function from CardContext
+  const { createCard, loading: cardContextLoading, error: cardContextError } = useCards();
   
   // Filter dropdowns state
   const [activeDropdown, setActiveDropdown] = useState(null);
-  const [selectedFilters, setSelectedFilters] = useState({
-    category: '',
-    gradingCompany: '',
-    grade: '',
-    sortBy: 'value'
-  });
 
   const filterOptions = data.filterOptions || {
-    category: [{ value: '', label: 'All Categories' }],
-    gradingCompany: [{ value: '', label: 'All Grading Companies' }],
-    grade: [{ value: '', label: 'All Grades' }],
-    sortBy: [{ value: 'value', label: 'Sort by Value (High to Low)' }]
+    category: [
+      { value: '', label: 'All Categories' },
+      { value: 'pokemon', label: 'Pokemon' },
+      { value: 'magicTheGathering', label: 'Magic: The Gathering' },
+      { value: 'yugioh', label: 'Yu-Gi-Oh' },
+      { value: 'digimon', label: 'Digimon' },
+      { value: 'sports', label: 'Sports Cards' },
+      { value: 'other', label: 'Other' }
+    ],
+    gradingCompany: [
+      { value: '', label: 'All Grading Companies' },
+      { value: 'PSA', label: 'PSA' },
+      { value: 'BGS', label: 'BGS' },
+      { value: 'BECKETT', label: 'Beckett' },
+      { value: 'SGC', label: 'SGC' },
+      { value: 'CGC', label: 'CGC' },
+      { value: 'CSG', label: 'CSG' },
+      { value: 'RAW', label: 'Ungraded' }
+    ],
+    grade: [
+      { value: '', label: 'All Grades' },
+      { value: '10', label: 'PSA 10' },
+      { value: '9', label: 'PSA 9' },
+      { value: '8', label: 'PSA 8' },
+      { value: '7', label: 'PSA 7' },
+      { value: '6', label: 'PSA 6' },
+      { value: '5', label: 'PSA 5' }
+    ],
+    sortBy: [
+      { value: 'value-high', label: 'Value (High to Low)' },
+      { value: 'value-low', label: 'Value (Low to High)' },
+      { value: 'profit-high', label: 'Profit (High to Low)' },
+      { value: 'profit-low', label: 'Profit (Low to High)' },
+      { value: 'name', label: 'Name (A-Z)' },
+      { value: 'date-new', label: 'Date Added (Newest)' },
+      { value: 'date-old', label: 'Date Added (Oldest)' }
+    ]
   };
 
   const handleFilterChange = (filterType, value) => {
@@ -53,8 +88,9 @@ const SearchBarComponent = ({
       category: '',
       gradingCompany: '',
       grade: '',
-      sortBy: 'value'
+      sortBy: 'value-high'
     });
+    setSearchValue('');
   };
 
   // Close dropdown when clicking outside
@@ -93,8 +129,7 @@ const SearchBarComponent = ({
               ...getInteractiveStyle('default'),
               ...getTypographyStyle('button'),
               ...getTextColorStyle('primary'),
-              border: `${config.components?.buttons?.borderWidth || '0.5px'} solid`,
-              borderColor: colors.border,
+              border: `${config.components?.buttons?.borderWidth || '0.5px'} solid ${colors.border}`,
               '--tw-ring-color': `${colors.primary}33`
             }}
           >
@@ -168,8 +203,7 @@ const SearchBarComponent = ({
                 ...getTypographyStyle('body'),
                 ...getSurfaceStyle('secondary'),
                 ...getTextColorStyle('primary'),
-                border: `${config.components?.buttons?.borderWidth || '0.5px'} solid`,
-                borderColor: colors.border,
+                border: `${config.components?.buttons?.borderWidth || '0.5px'} solid ${colors.border}`,
                 '--tw-ring-color': `${colors.primary}33`
               }}
             />
@@ -183,8 +217,8 @@ const SearchBarComponent = ({
                 onClick={() => setShowFilterOptions(!showFilterOptions)}
                 className={`h-12 px-3 rounded-lg transition-all duration-200 flex items-center justify-center`}
                 style={showFilterOptions ? 
-                  { backgroundColor: colors.secondary, borderColor: colors.secondary, color: colors.background, border: `${config.components?.buttons?.borderWidth || '0.5px'} solid` } : 
-                  { ...getSurfaceStyle('secondary'), ...getTextColorStyle('secondary'), border: `${config.components?.buttons?.borderWidth || '0.5px'} solid`, borderColor: colors.border }
+                  { backgroundColor: colors.secondary, border: `${config.components?.buttons?.borderWidth || '0.5px'} solid ${colors.secondary}`, color: colors.background } : 
+                  { ...getSurfaceStyle('secondary'), ...getTextColorStyle('secondary'), border: `${config.components?.buttons?.borderWidth || '0.5px'} solid ${colors.border}` }
                 }
               >
                 <svg className="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -217,7 +251,7 @@ const SearchBarComponent = ({
         {/* Filter Options */}
         {showFilterOptions && (
           <div className={`mt-4 p-6 rounded-lg`}
-               style={{...getSurfaceStyle('primary'), borderColor: colors.border, border: `${config.components?.buttons?.borderWidth || '0.5px'} solid`}}>
+               style={{...getSurfaceStyle('primary'), border: `${config.components?.buttons?.borderWidth || '0.5px'} solid ${colors.border}`}}>
             <div className="flex items-center justify-between mb-4">
               <h3 className={`text-lg font-medium`}
                   style={getTextColorStyle('primary')}>
@@ -321,15 +355,47 @@ const SearchBarComponent = ({
           colors={colors}
           isOpen={showAddCardModal}
           onClose={() => setShowAddCardModal(false)}
-          onSave={(cardData, imageFiles, collection) => {
-            // For configurator, we'll just simulate the save
-            console.log('Adding card:', cardData);
-            console.log('Image files:', imageFiles);
-            return new Promise((resolve) => {
-              setTimeout(() => {
-                resolve(true);
-              }, 1000);
-            });
+          onNewCollectionCreated={onNewCollectionCreated}
+          onSave={async (cardData, imageFiles, collection) => {
+            try {
+              // Check if CardContext is available
+              if (!createCard) {
+                throw new Error('Card creation service not available. Please refresh the page and try again.');
+              }
+              
+              // Prepare the card data for saving
+              const cardToSave = {
+                ...cardData,
+                collection: collection,
+                collectionId: collection,
+                // Ensure we have all required fields
+                name: cardData.cardName || cardData.name,
+                hasImage: imageFiles && imageFiles.length > 0,
+                hasMultipleImages: imageFiles && imageFiles.length > 1,
+                imageCount: imageFiles ? imageFiles.length : 0,
+                dateAdded: new Date().toISOString(),
+                createdAt: new Date().toISOString()
+              };
+
+              // Use the CardContext createCard function with image files
+              const savedCard = await createCard(cardToSave, imageFiles);
+              
+              console.log('Card saved successfully in configurator:', savedCard);
+              return savedCard;
+            } catch (error) {
+              console.error('Error saving card in configurator:', error);
+              
+              // Provide more specific error messages
+              if (error.message.includes('not available')) {
+                throw new Error('Card creation service not available. Please refresh the page and try again.');
+              } else if (error.message.includes('serial number') || error.message.includes('already exists')) {
+                throw new Error('A card with this serial number already exists in your collection.');
+              } else if (error.message.includes('collection')) {
+                throw new Error('Please select a valid collection for this card.');
+              } else {
+                throw new Error(`Failed to save card: ${error.message}`);
+              }
+            }
           }}
         />
     </>

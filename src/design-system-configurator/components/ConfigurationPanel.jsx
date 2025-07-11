@@ -66,10 +66,10 @@ const ConfigurationPanel = ({
         <h4 className="font-medium mb-3" style={getTextColorStyle('primary')}>Color Presets</h4>
         <div className="grid grid-cols-2 gap-3">
           {[
-            { key: 'pokemon-red', name: 'Pokemon Red', colors: ['#e53e3e', '#ff6b6b'] },
-            { key: 'ocean-blue', name: 'Ocean Blue', colors: ['#0ea5e9', '#06b6d4'] },
-            { key: 'forest-green', name: 'Forest Green', colors: ['#059669', '#10b981'] },
-            { key: 'royal-purple', name: 'Royal Purple', colors: ['#7c3aed', '#a855f7'] }
+            { key: 'pokemon-red', name: 'Pokemon Red', colors: [colors?.error || '#e53e3e', colors?.secondary || '#ff6b6b'] },
+            { key: 'ocean-blue', name: 'Ocean Blue', colors: [colors?.info || '#0ea5e9', colors?.primary || '#06b6d4'] },
+            { key: 'forest-green', name: 'Forest Green', colors: [colors?.success || '#059669', colors?.accent || '#10b981'] },
+            { key: 'royal-purple', name: 'Royal Purple', colors: [colors?.primary || '#7c3aed', colors?.secondary || '#a855f7'] }
           ].map(preset => (
             <button
               key={preset.key}

@@ -1,15 +1,16 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { formatCurrency } from '../utils/formatters';
 import { getGradingCompanyColor } from '../utils/colorUtils';
 import { toast } from 'react-hot-toast';
 import { searchByCertNumber, parsePSACardData } from '../../services/psaSearch';
 import { useSubscription } from '../../hooks/useSubscription';
 import logger from '../../services/LoggingService';
+import { cleanupPreviews } from '../../utils/imageUtils';
 import ImageGallery from './ImageGallery';
 
 const AddCardModalComponent = ({ 
   data, 
-  config, 
+  config = {}, 
   isDarkMode, 
   realCards, 
   cardsLoading,
@@ -23,10 +24,11 @@ const AddCardModalComponent = ({
   getInteractiveStyle,
   getPrimaryButtonStyle,
   primaryStyle,
-  colors,
+  colors = {},
   isOpen,
   onClose,
-  onSave
+  onSave,
+  onNewCollectionCreated
 }) => {
   // State management
   const [newCard, setNewCard] = useState({
@@ -63,6 +65,7 @@ const AddCardModalComponent = ({
   const [psaSerial, setPsaSerial] = useState('');
   const [showNewCollectionModal, setShowNewCollectionModal] = useState(false);
   const [selectedCollectionLocal, setSelectedCollectionLocal] = useState(selectedCollection?.name || selectedCollection || '');
+  const [newCollectionName, setNewCollectionName] = useState('');
 
   const [isMobileView, setIsMobileView] = useState(false);
   
@@ -81,7 +84,17 @@ const AddCardModalComponent = ({
     return () => window.removeEventListener('resize', checkMobileView);
   }, []);
   
-  // Handle modal open/close
+  // Handle modal close with cleanup - defined first to avoid hoisting issues
+  const handleClose = useCallback(() => {
+    // Clean up preview URLs when closing
+    cleanupPreviews(cardImages);
+    setCardImages([]);
+    setErrors({});
+    setSaveMessage(null);
+    onClose();
+  }, [cardImages, onClose]);
+
+  // Handle modal open/close with proper cleanup
   useEffect(() => {
     if (isOpen) {
       // Reset form when opening
@@ -109,6 +122,8 @@ const AddCardModalComponent = ({
         quantity: 1,
         collection: selectedCollection?.name || selectedCollection || 'Default Collection'
       });
+      // Clean up any existing preview URLs
+      cleanupPreviews(cardImages);
       setCardImages([]);
       setErrors({});
       setSaveMessage(null);
@@ -122,8 +137,13 @@ const AddCardModalComponent = ({
   // Close modal when clicking outside and prevent background scroll
   useEffect(() => {
     const handleClickOutside = (event) => {
+      // Don't close if a child modal (new collection) is open
+      if (showNewCollectionModal) {
+        return;
+      }
+      
       if (modalRef.current && !modalRef.current.contains(event.target)) {
-        onClose();
+        handleClose();
       }
     };
     
@@ -136,7 +156,7 @@ const AddCardModalComponent = ({
       document.removeEventListener('mousedown', handleClickOutside);
       document.body.style.overflow = 'unset';
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, handleClose, showNewCollectionModal]);
   
   // Handle form changes
   const handleCardChange = (field, value) => {
@@ -171,83 +191,223 @@ const AddCardModalComponent = ({
     setCardImages(newImages);
     setErrors(prev => ({ ...prev, images: undefined }));
   };
+
+  // Handle image removal with proper cleanup
+  const handleImageRemove = (imageToRemove, index) => {
+    // Clean up the preview URL - exactly match production
+    if (imageToRemove.previewUrl && imageToRemove.previewUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(imageToRemove.previewUrl);
+    }
+
+    // Remove from state
+    setCardImages(prev => prev.filter((_, i) => i !== index));
+    
+    // Clear field error when user removes/adds images
+    if (errors.images || errors.image) {
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors.images;
+        delete newErrors.image;
+        return newErrors;
+      });
+    }
+  };
+
+  // Handle new collection creation - exactly match production
+  const handleCreateNewCollection = async () => {
+    const name = newCollectionName.trim();
+    if (name) {
+      try {
+        console.log('AddCardModal: Creating collection:', name);
+        console.log('AddCardModal: Current collections before create:', collections);
+        
+        // Close modal first
+        setShowNewCollectionModal(false);
+        
+        // Check if collection already exists
+        const existingCollection = collections.find(c => 
+          (typeof c === 'string' ? c : c.name) === name
+        );
+        
+        if (!existingCollection) {
+          // Call the parent component's callback to update collections list
+          if (onNewCollectionCreated) {
+            const result = await onNewCollectionCreated(name);
+            console.log('AddCardModal: Collection created successfully:', result);
+          }
+          
+          // Update the selected collection
+          setSelectedCollectionLocal(name);
+          
+          // Save to database - exactly match production
+          if (typeof window !== 'undefined') {
+            if (window.db && window.db.createEmptyCollection) {
+              window.db.createEmptyCollection(name);
+            }
+          }
+        } else {
+          console.log('AddCardModal: Collection already exists, selecting it:', existingCollection);
+          // If collection exists, just select it
+          setSelectedCollectionLocal(name);
+        }
+        
+        // Clear the form
+        setNewCollectionName('');
+        
+        // Show success message
+        toast.success(`Collection "${name}" created successfully!`);
+      } catch (error) {
+        console.error('AddCardModal: Error creating collection:', error);
+        toast.error('Failed to create collection. Please try again.');
+      }
+    }
+  };
+
+  // Handle collection dropdown change
+  const handleCollectionChange = (e) => {
+    if (e.target.value === 'create-new') {
+      setShowNewCollectionModal(true);
+    } else {
+      setSelectedCollectionLocal(e.target.value);
+    }
+  };
   
-  // Validate form
+  // Validate form - exactly match production AddCardModal
   const validateForm = () => {
     const newErrors = {};
-    
+
+    // Only validate required fields
     if (!newCard.cardName?.trim()) {
       newErrors.cardName = 'Card name is required';
     }
-    
+
+    // Investment amount is required
     const investmentAmount = parseFloat(newCard.originalInvestmentAmount);
     if (isNaN(investmentAmount) || investmentAmount <= 0) {
       newErrors.originalInvestmentAmount = 'Investment amount is required';
     }
-    
+
+    // Date purchased is required
     if (!newCard.datePurchased) {
       newErrors.datePurchased = 'Date purchased is required';
     }
-    
+
+    // Quantity is required and must be at least 1
     const quantity = parseInt(newCard.quantity);
     if (isNaN(quantity) || quantity < 1) {
       newErrors.quantity = 'Quantity must be at least 1';
     }
-    
+
+    // Collection validation - exactly match production
     if (!selectedCollectionLocal) {
       newErrors.collection = 'Please select a collection';
+    } else if (selectedCollectionLocal.toLowerCase() === 'sold') {
+      newErrors.collection =
+        'Cards cannot be added directly to the Sold collection';
     }
-    
-    if (!cardImages || cardImages.length === 0) {
-      newErrors.images = 'At least one card image is required';
-    }
-    
+
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return newErrors;
   };
   
-  // Handle save
+  // Handle save with exact production validation logic
   const handleSave = async () => {
+    // Clear any previous error messages
     setSaveMessage(null);
+    setErrors({});
     setIsSaving(true);
-    
-    if (!validateForm()) {
+
+    // Validate form - exactly match production
+    const validationErrors = validateForm();
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
       setSaveMessage('Please fix the errors before saving');
       setIsSaving(false);
       return;
     }
-    
+
+    // Check if we have at least one image file - exactly match production
+    if (cardImages.length === 0) {
+      setSaveMessage('Please add at least one image for the card');
+      setErrors({ image: 'Card image is required' });
+      setIsSaving(false);
+      return;
+    }
+
     try {
+      // Prepare card data - exactly match production
       const cardToSave = {
         ...newCard,
         collection: selectedCollectionLocal,
-        currentValueAUD: parseFloat(newCard.originalCurrentValueAmount) || parseFloat(newCard.originalInvestmentAmount),
-        investmentAUD: parseFloat(newCard.originalInvestmentAmount),
-        name: newCard.cardName,
-        hasImage: cardImages.length > 0,
-        hasMultipleImages: cardImages.length > 1,
-        imageCount: cardImages.length,
-        dateAdded: new Date().toISOString(),
-        createdAt: new Date().toISOString()
       };
+
+      // Prepare image files for upload
+      const imageFiles = cardImages.map(img => img.file);
       
-      // For configurator, we'll simulate the save
-      if (onSave) {
-        const imageFiles = cardImages.map(img => img.file);
-        await onSave(cardToSave, imageFiles, selectedCollectionLocal);
-      }
+      // Try to save the card
+      await onSave(cardToSave, imageFiles, selectedCollectionLocal);
+
+      // Clear form on success - exactly match production
+      setNewCard({
+        id: null,
+        cardName: '',
+        player: '',
+        set: '',
+        setName: '',
+        year: '',
+        category: 'pokemon',
+        condition: '',
+        grade: '',
+        gradingCompany: '',
+        certificationNumber: '',
+        slabSerial: '',
+        population: '',
+        datePurchased: new Date().toISOString().split('T')[0],
+        originalInvestmentAmount: '',
+        originalInvestmentCurrency: 'AUD',
+        originalCurrentValueAmount: '',
+        originalCurrentValueCurrency: 'AUD',
+        investmentAUD: '',
+        currentValueAUD: '',
+        quantity: 1,
+        collection: selectedCollection?.name || selectedCollection || 'Default Collection'
+      });
       
+      // Clean up preview URLs - exactly match production
+      cleanupPreviews(cardImages);
+      setCardImages([]);
+      setErrors({});
       setSaveMessage('Card saved successfully');
-      setTimeout(() => {
-        onClose();
-      }, 1000);
+
+      // Close modal immediately after successful save
+      onClose();
     } catch (error) {
-      setSaveMessage(`Error: ${error.message}`);
+      logger.error('Error adding card:', error);
+
+      // Handle specific error cases - exactly match production
+      if (error.message.includes('serial number already exists')) {
+        setErrors({
+          certificationNumber:
+            'This serial number already exists in your active collections',
+        });
+        setSaveMessage('Card already exists');
+
+        // Scroll the serial number field into view
+        const serialField = document.querySelector(
+          '[name="certificationNumber"]'
+        );
+        if (serialField) {
+          serialField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      } else {
+        // Generic error handling
+        setSaveMessage(`Error: ${error.message}`);
+      }
     } finally {
       setIsSaving(false);
     }
   };
-  
+
   // Handle PSA lookup (using real production logic)
   const handlePsaLookup = async () => {
     // Check subscription access first
@@ -328,8 +488,9 @@ const AddCardModalComponent = ({
   
   // Get collections for dropdown
   const availableCollections = React.useMemo(() => {
+    console.log('AddCardModal: Raw collections prop:', collections);
     const collectionList = Array.isArray(collections) ? collections : [];
-    return collectionList
+    const filtered = collectionList
       .filter(collection => {
         if (typeof collection === 'string') {
           return collection.toLowerCase() !== 'sold';
@@ -342,13 +503,17 @@ const AddCardModalComponent = ({
         }
         return collection;
       });
+    console.log('AddCardModal: Available collections for dropdown:', filtered);
+    return filtered;
   }, [collections]);
   
   // Don't render if not open
   if (!isOpen) return null;
   
   return (
-    <div className={`fixed inset-0 z-50 flex items-center ${isMobileView ? 'justify-center p-4' : 'justify-end pr-8'}`} style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+    <div className={`fixed inset-0 z-50 flex items-center ${isMobileView ? 'justify-center p-4' : 'justify-end pr-8'}`} style={{ 
+      backgroundColor: `${colors.overlay || colors.background}80` 
+    }}>
       <div 
         ref={modalRef}
         className={`relative w-full max-h-[90vh] overflow-y-auto rounded-lg ${isMobileView ? 'max-w-none' : 'max-w-2xl'}`}
@@ -358,21 +523,8 @@ const AddCardModalComponent = ({
           marginBottom: isMobileView ? '0px' : '32px',
           marginLeft: '0px',
           marginRight: '0px',
-          border: `${config.components?.cards?.borderWidth || '0.5px'} solid ${colors.border}`
-        }}
-        onWheel={(e) => {
-          const element = e.currentTarget;
-          const { scrollTop, scrollHeight, clientHeight } = element;
-          const isScrollingUp = e.deltaY < 0;
-          const isScrollingDown = e.deltaY > 0;
-          
-          // Prevent background scroll when:
-          // 1. Scrolling up and already at the top
-          // 2. Scrolling down and already at the bottom
-          if ((isScrollingUp && scrollTop === 0) || 
-              (isScrollingDown && scrollTop + clientHeight >= scrollHeight)) {
-            e.preventDefault();
-          }
+          border: `${config.components?.cards?.borderWidth || '0.5px'} solid ${colors.border}`,
+          overscrollBehavior: 'contain'
         }}
       >
         {/* Header */}
@@ -404,210 +556,21 @@ const AddCardModalComponent = ({
         
         {/* Content */}
         <div className="p-6 space-y-6">
-          {/* PSA Certificate Lookup Section */}
+          {/* Card Images Section - MOVED TO TOP */}
           <div className="space-y-4">
-            <div>
-              <div style={{
-                ...getTypographyStyle('subheading'),
-                fontSize: '18px',
-                fontWeight: '600',
-                ...getTextColorStyle('primary')
-              }}>
-                PSA Certificate Lookup
-              </div>
-              <div style={{
-                ...getTypographyStyle('caption'),
-                ...getTextColorStyle('secondary')
-              }}>
-                Search your PSA serial number to pre-populate the page.
-              </div>
-            </div>
-            
-            <div className="flex flex-col sm:flex-row gap-3">
-              <input
-                type="text"
-                value={psaSerial}
-                onChange={(e) => setPsaSerial(e.target.value)}
-                placeholder="Enter PSA serial number"
-                className="flex-1 px-4 py-3 rounded-lg transition-all duration-200 focus:outline-none focus:ring-4"
-                style={{
-                  ...getSurfaceStyle('secondary'),
-                  ...getTypographyStyle('body'),
-                  ...getTextColorStyle('primary'),
-                  border: `${config.components?.forms?.inputBorderWidth || '0.5px'} solid ${colors.border}`,
-                  '--tw-ring-color': `${colors.primary}33`
-                }}
-                disabled={isSearching}
-              />
-              <button
-                onClick={handlePsaLookup}
-                disabled={isSearching || !psaSerial.trim() || !hasFeature('PSA_SEARCH')}
-                className="px-4 py-3 rounded-lg transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed sm:w-auto w-full flex items-center justify-center space-x-2"
-                style={{
-                  ...getPrimaryButtonStyle(),
-                  ...getTypographyStyle('button')
-                }}
-                title={
-                  !hasFeature('PSA_SEARCH')
-                    ? 'PSA search requires Premium subscription'
-                    : 'Search PSA database'
-                }
-              >
-                {!hasFeature('PSA_SEARCH') ? (
-                  <>
-                    <svg className="size-4" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM12 17c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
-                    </svg>
-                    <span>Premium Feature</span>
-                  </>
-                ) : (
-                  <>
-                    <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                    <span>{isSearching ? 'Searching...' : 'Search PSA'}</span>
-                  </>
-                )}
-              </button>
-            </div>
-            
-            {/* PSA Status Messages - Moved to top for visibility */}
-            {saveMessage && saveMessage === 'PSA data applied successfully' && (
-              <div 
-                className="mt-4 p-4 rounded-lg"
-                style={{
-                  backgroundColor: isDarkMode ? `${colors.success}40` : `${colors.success}1A`,
-                  color: colors.success,
-                  ...getTypographyStyle('body')
-                }}
-              >
-                PSA data applied successfully
-              </div>
-            )}
-            {saveMessage && saveMessage.startsWith('Searching PSA') && (
-              <div 
-                className="mt-4 p-4 rounded-lg"
-                style={{
-                  backgroundColor: isDarkMode ? `${colors.info}40` : `${colors.info}1A`,
-                  color: colors.info,
-                  ...getTypographyStyle('body')
-                }}
-              >
-                {saveMessage}
-              </div>
-            )}
-            {saveMessage &&
-              (saveMessage.startsWith('Failed to find PSA') ||
-                saveMessage.startsWith('Failed to search PSA') ||
-                saveMessage.startsWith('Failed to parse PSA')) && (
-              <div 
-                className="mt-4 p-4 rounded-lg"
-                style={{
-                  backgroundColor: isDarkMode ? `${colors.error}40` : `${colors.error}1A`,
-                  color: colors.error,
-                  ...getTypographyStyle('body')
-                }}
-              >
-                {saveMessage}
-                             </div>
-             )}
-             
-             {/* PSA Website Link - Show if PSA URL exists */}
-             {newCard.psaUrl && (
-               <div className="mt-4">
-                 <a
-                   href={newCard.psaUrl}
-                   target="_blank"
-                   rel="noopener noreferrer"
-                   className="inline-flex w-full items-center justify-center rounded-lg px-4 py-2 text-base font-medium shadow-sm transition-colors hover:opacity-90 focus:outline-none"
-                   style={{
-                     ...getPrimaryButtonStyle(),
-                     ...getTypographyStyle('button')
-                   }}
-                 >
-                   <svg className="size-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                   </svg>
-                   View on PSA Website
-                 </a>
-               </div>
-             )}
-          </div>
-          
-          {/* Collection Selection */}
-          <div className="space-y-4">
-            <div style={{
-              ...getTypographyStyle('subheading'),
+            <h3 style={{
+              ...getTypographyStyle('heading'),
               fontSize: '18px',
               fontWeight: '600',
               ...getTextColorStyle('primary')
             }}>
-              Select Collection
-            </div>
-            
-            <div className="flex flex-col sm:flex-row gap-3">
-              <select
-                value={selectedCollectionLocal}
-                onChange={(e) => {
-                  if (e.target.value === 'new') {
-                    setShowNewCollectionModal(true);
-                  } else {
-                    setSelectedCollectionLocal(e.target.value);
-                  }
-                }}
-                className="flex-1 px-4 py-3 rounded-lg transition-all duration-200 focus:outline-none focus:ring-4"
-                style={{
-                  ...getSurfaceStyle('secondary'),
-                  ...getTypographyStyle('body'),
-                  ...getTextColorStyle('primary'),
-                  border: `${config.components?.forms?.inputBorderWidth || '0.5px'} solid ${colors.border}`,
-                  '--tw-ring-color': `${colors.primary}33`
-                }}
-              >
-                <option value="">Select Collection...</option>
-                {availableCollections.map((collection) => (
-                  <option key={collection.id} value={collection.name}>
-                    {collection.name}
-                  </option>
-                ))}
-                <option value="new">+ Create New Collection</option>
-              </select>
-              <button
-                onClick={() => setShowNewCollectionModal(true)}
-                className="px-4 py-3 rounded-lg transition-all duration-200 hover:scale-105 sm:w-auto w-full"
-                style={{
-                  ...getPrimaryButtonStyle(),
-                  ...getTypographyStyle('button')
-                }}
-              >
-                + Create New
-              </button>
-            </div>
-            
-            {errors.collection && (
-              <div style={{
-                ...getTypographyStyle('caption'),
-                color: colors.error
-              }}>
-                {errors.collection}
-              </div>
-            )}
-          </div>
-          
-          {/* Card Images */}
-          <div className="space-y-4">
-            <div style={{
-              ...getTypographyStyle('subheading'),
-              fontSize: '18px',
-              fontWeight: '600',
-              ...getTextColorStyle('primary')
-            }}>
-              Card Images
-            </div>
+              Card Images *
+            </h3>
             
             <ImageGallery
               images={cardImages}
               onImagesChange={handleImagesChange}
+              onImageRemove={handleImageRemove}
               maxImages={5}
               config={config}
               colors={colors}
@@ -625,63 +588,31 @@ const AddCardModalComponent = ({
               </div>
             )}
           </div>
-          
-          {/* Financial Details */}
+
+          {/* PSA Certificate Lookup Section */}
           <div className="space-y-4">
-            <div style={{
-              ...getTypographyStyle('subheading'),
+            <h3 style={{
+              ...getTypographyStyle('heading'),
               fontSize: '18px',
               fontWeight: '600',
               ...getTextColorStyle('primary')
             }}>
-              Financial Details
-            </div>
+              PSA Certificate Lookup
+            </h3>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Investment Amount */}
-              <div className="space-y-2">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+              <div className="md:col-span-2 space-y-2">
                 <label style={{
                   ...getTypographyStyle('label'),
                   ...getTextColorStyle('secondary')
                 }}>
-                  Investment Amount (AUD) *
+                  PSA Serial Number
                 </label>
                 <input
-                  type="number"
-                  value={newCard.originalInvestmentAmount}
-                  onChange={(e) => handleCardChange('originalInvestmentAmount', e.target.value)}
-                  className="w-full px-4 py-3 rounded-lg transition-all duration-200 focus:outline-none focus:ring-4"
-                  style={{
-                    ...getSurfaceStyle('secondary'),
-                    ...getTypographyStyle('body'),
-                    ...getTextColorStyle('primary'),
-                    border: `${config.components?.forms?.inputBorderWidth || '0.5px'} solid ${errors.originalInvestmentAmount ? colors.error : colors.border}`,
-                    '--tw-ring-color': `${colors.primary}33`
-                  }}
-                  placeholder="0"
-                />
-                {errors.originalInvestmentAmount && (
-                  <div style={{
-                    ...getTypographyStyle('caption'),
-                    color: colors.error
-                  }}>
-                    {errors.originalInvestmentAmount}
-                  </div>
-                )}
-              </div>
-              
-              {/* Current Value */}
-              <div className="space-y-2">
-                <label style={{
-                  ...getTypographyStyle('label'),
-                  ...getTextColorStyle('secondary')
-                }}>
-                  Current Value (AUD)
-                </label>
-                <input
-                  type="number"
-                  value={newCard.originalCurrentValueAmount}
-                  onChange={(e) => handleCardChange('originalCurrentValueAmount', e.target.value)}
+                  type="text"
+                  value={psaSerial}
+                  onChange={(e) => setPsaSerial(e.target.value)}
+                  placeholder="Enter PSA serial number..."
                   className="w-full px-4 py-3 rounded-lg transition-all duration-200 focus:outline-none focus:ring-4"
                   style={{
                     ...getSurfaceStyle('secondary'),
@@ -690,47 +621,114 @@ const AddCardModalComponent = ({
                     border: `${config.components?.forms?.inputBorderWidth || '0.5px'} solid ${colors.border}`,
                     '--tw-ring-color': `${colors.primary}33`
                   }}
-                  placeholder="0"
                 />
               </div>
+              
+              <div className="md:col-span-2">
+                <button
+                  onClick={handlePsaLookup}
+                  disabled={isSearching || !psaSerial}
+                  className="w-full px-6 py-3 rounded-lg transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{
+                    ...getPrimaryButtonStyle(),
+                    ...getTypographyStyle('button')
+                  }}
+                >
+                  {isSearching ? 'Searching...' : 'Search PSA Database'}
+                </button>
+              </div>
             </div>
+            
+            {/* PSA Status Message */}
+            {saveMessage && (
+              saveMessage.startsWith('Searching PSA') || 
+              saveMessage.startsWith('Failed to find PSA') || 
+              saveMessage.startsWith('Failed to search PSA') || 
+              saveMessage.startsWith('Failed to parse PSA') || 
+              saveMessage === 'PSA data applied successfully'
+            ) && (
+              <div 
+                className="p-4 rounded-lg"
+                style={{
+                  backgroundColor: saveMessage.startsWith('Failed') ? 
+                    (isDarkMode ? `${colors.error}40` : `${colors.error}1A`) : 
+                    saveMessage.includes('successfully') ? 
+                      (isDarkMode ? `${colors.success}40` : `${colors.success}1A`) : 
+                      (isDarkMode ? `${colors.info}40` : `${colors.info}1A`),
+                  color: saveMessage.startsWith('Failed') ? 
+                    colors.error : 
+                    saveMessage.includes('successfully') ? 
+                      colors.success : 
+                      colors.info,
+                  ...getTypographyStyle('body')
+                }}
+              >
+                {saveMessage}
+              </div>
+            )}
           </div>
 
-          {/* Card Details */}
+          {/* Collection Selection Section */}
           <div className="space-y-4">
-            <div style={{
-              ...getTypographyStyle('subheading'),
+            <h3 style={{
+              ...getTypographyStyle('heading'),
+              fontSize: '18px',
+              fontWeight: '600',
+              ...getTextColorStyle('primary')
+            }}>
+              Select Collection
+            </h3>
+            
+            <div className="space-y-2">
+              <label style={{
+                ...getTypographyStyle('label'),
+                ...getTextColorStyle('secondary')
+              }}>
+                Collection *
+              </label>
+              <select
+                value={selectedCollectionLocal}
+                onChange={handleCollectionChange}
+                className="w-full px-4 py-3 rounded-lg transition-all duration-200 focus:outline-none focus:ring-4"
+                style={{
+                  ...getSurfaceStyle('secondary'),
+                  ...getTypographyStyle('body'),
+                  ...getTextColorStyle('primary'),
+                  border: `${config.components?.forms?.inputBorderWidth || '0.5px'} solid ${errors.collection ? colors.error : colors.border}`,
+                  '--tw-ring-color': `${colors.primary}33`
+                }}
+              >
+                <option value="">Select Collection...</option>
+                {availableCollections.map((collection) => (
+                  <option key={collection.id} value={collection.name}>
+                    {collection.name}
+                  </option>
+                ))}
+                <option value="create-new">+ Create New Collection</option>
+              </select>
+              {errors.collection && (
+                <div style={{
+                  ...getTypographyStyle('caption'),
+                  color: colors.error
+                }}>
+                  {errors.collection}
+                </div>
+              )}
+            </div>
+          </div>
+          
+          {/* Card Details Section */}
+          <div className="space-y-4">
+            <h3 style={{
+              ...getTypographyStyle('heading'),
               fontSize: '18px',
               fontWeight: '600',
               ...getTextColorStyle('primary')
             }}>
               Card Details
-            </div>
+            </h3>
             
             <div className="space-y-4">
-              {/* Player */}
-              <div className="space-y-2">
-                <label style={{
-                  ...getTypographyStyle('label'),
-                  ...getTextColorStyle('secondary')
-                }}>
-                  Player
-                </label>
-                <input
-                  type="text"
-                  value={newCard.player || ''}
-                  onChange={(e) => handleCardChange('player', e.target.value)}
-                  className="w-full px-4 py-3 rounded-lg transition-all duration-200 focus:outline-none focus:ring-4"
-                  style={{
-                    ...getSurfaceStyle('secondary'),
-                    ...getTypographyStyle('body'),
-                    ...getTextColorStyle('primary'),
-                    border: `${config.components?.forms?.inputBorderWidth || '0.5px'} solid ${colors.border}`,
-                    '--tw-ring-color': `${colors.primary}33`
-                  }}
-                />
-              </div>
-
               {/* Card Name */}
               <div className="space-y-2">
                 <label style={{
@@ -803,54 +801,55 @@ const AddCardModalComponent = ({
                 </select>
               </div>
 
-              {/* Year */}
-              <div className="space-y-2">
-                <label style={{
-                  ...getTypographyStyle('label'),
-                  ...getTextColorStyle('secondary')
-                }}>
-                  Year
-                </label>
-                <select
-                  value={newCard.year || ''}
-                  onChange={(e) => handleCardChange('year', e.target.value)}
-                  className="w-full px-4 py-3 rounded-lg transition-all duration-200 focus:outline-none focus:ring-4"
-                  style={{
-                    ...getSurfaceStyle('secondary'),
-                    ...getTypographyStyle('body'),
-                    ...getTextColorStyle('primary'),
-                    border: `${config.components?.forms?.inputBorderWidth || '0.5px'} solid ${colors.border}`,
-                    '--tw-ring-color': `${colors.primary}33`
-                  }}
-                >
-                  <option value="">Select Year...</option>
-                  {Array.from({length: 50}, (_, i) => new Date().getFullYear() - i).map(year => (
-                    <option key={year} value={year}>{year}</option>
-                  ))}
-                </select>
-              </div>
+              {/* Year & Set */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label style={{
+                    ...getTypographyStyle('label'),
+                    ...getTextColorStyle('secondary')
+                  }}>
+                    Year
+                  </label>
+                  <select
+                    value={newCard.year || ''}
+                    onChange={(e) => handleCardChange('year', e.target.value)}
+                    className="w-full px-4 py-3 rounded-lg transition-all duration-200 focus:outline-none focus:ring-4"
+                    style={{
+                      ...getSurfaceStyle('secondary'),
+                      ...getTypographyStyle('body'),
+                      ...getTextColorStyle('primary'),
+                      border: `${config.components?.forms?.inputBorderWidth || '0.5px'} solid ${colors.border}`,
+                      '--tw-ring-color': `${colors.primary}33`
+                    }}
+                  >
+                    <option value="">Select Year...</option>
+                    {Array.from({length: 50}, (_, i) => new Date().getFullYear() - i).map(year => (
+                      <option key={year} value={year}>{year}</option>
+                    ))}
+                  </select>
+                </div>
 
-              {/* Set */}
-              <div className="space-y-2">
-                <label style={{
-                  ...getTypographyStyle('label'),
-                  ...getTextColorStyle('secondary')
-                }}>
-                  Set
-                </label>
-                <input
-                  type="text"
-                  value={newCard.set || newCard.setName || ''}
-                  onChange={(e) => handleCardChange('set', e.target.value)}
-                  className="w-full px-4 py-3 rounded-lg transition-all duration-200 focus:outline-none focus:ring-4"
-                  style={{
-                    ...getSurfaceStyle('secondary'),
-                    ...getTypographyStyle('body'),
-                    ...getTextColorStyle('primary'),
-                    border: `${config.components?.forms?.inputBorderWidth || '0.5px'} solid ${colors.border}`,
-                    '--tw-ring-color': `${colors.primary}33`
-                  }}
-                />
+                <div className="space-y-2">
+                  <label style={{
+                    ...getTypographyStyle('label'),
+                    ...getTextColorStyle('secondary')
+                  }}>
+                    Set
+                  </label>
+                  <input
+                    type="text"
+                    value={newCard.set || newCard.setName || ''}
+                    onChange={(e) => handleCardChange('set', e.target.value)}
+                    className="w-full px-4 py-3 rounded-lg transition-all duration-200 focus:outline-none focus:ring-4"
+                    style={{
+                      ...getSurfaceStyle('secondary'),
+                      ...getTypographyStyle('body'),
+                      ...getTextColorStyle('primary'),
+                      border: `${config.components?.forms?.inputBorderWidth || '0.5px'} solid ${colors.border}`,
+                      '--tw-ring-color': `${colors.primary}33`
+                    }}
+                  />
+                </div>
               </div>
 
               {/* Grading Company & Grade */}
@@ -890,167 +889,60 @@ const AddCardModalComponent = ({
                   }}>
                     Grade
                   </label>
-                  {newCard.gradingCompany === 'PSA' ? (
-                    <select
-                      value={newCard.grade || ''}
-                      onChange={(e) => handleCardChange('grade', e.target.value)}
-                      className="w-full px-4 py-3 rounded-lg transition-all duration-200 focus:outline-none focus:ring-4"
-                      style={{
-                        ...getSurfaceStyle('secondary'),
-                        ...getTypographyStyle('body'),
-                        ...getTextColorStyle('primary'),
-                        border: `${config.components?.forms?.inputBorderWidth || '0.5px'} solid ${colors.border}`,
-                        '--tw-ring-color': `${colors.primary}33`
-                      }}
-                    >
-                      <option value="">Select PSA Grade...</option>
-                      <option value="10">PSA 10 Gem Mint</option>
-                      <option value="9">PSA 9 Mint</option>
-                      <option value="8">PSA 8 NM-Mint</option>
-                      <option value="7">PSA 7 Near Mint</option>
-                      <option value="6">PSA 6 EX-Mint</option>
-                      <option value="5">PSA 5 Excellent</option>
-                      <option value="4">PSA 4 VG-EX</option>
-                      <option value="3">PSA 3 Very Good</option>
-                      <option value="2">PSA 2 Good</option>
-                      <option value="1">PSA 1 Poor</option>
-                      <option value="A">PSA Authentic</option>
-                    </select>
-                  ) : newCard.gradingCompany === 'BGS' ? (
-                    <select
-                      value={newCard.grade || ''}
-                      onChange={(e) => handleCardChange('grade', e.target.value)}
-                      className="w-full px-4 py-3 rounded-lg transition-all duration-200 focus:outline-none focus:ring-4"
-                      style={{
-                        ...getSurfaceStyle('secondary'),
-                        ...getTypographyStyle('body'),
-                        ...getTextColorStyle('primary'),
-                        border: `${config.components?.forms?.inputBorderWidth || '0.5px'} solid ${colors.border}`,
-                        '--tw-ring-color': `${colors.primary}33`
-                      }}
-                    >
-                      <option value="">Select BGS Grade...</option>
-                      <option value="10">BGS 10 Pristine (Black Label)</option>
-                      <option value="9.5">BGS 9.5 Gem Mint</option>
-                      <option value="9">BGS 9 Mint</option>
-                      <option value="8.5">BGS 8.5 NM-Mint+</option>
-                      <option value="8">BGS 8 NM-Mint</option>
-                      <option value="7.5">BGS 7.5 Near Mint+</option>
-                      <option value="7">BGS 7 Near Mint</option>
-                    </select>
-                  ) : newCard.gradingCompany === 'CGC' ? (
-                    <select
-                      value={newCard.grade || ''}
-                      onChange={(e) => handleCardChange('grade', e.target.value)}
-                      className="w-full px-4 py-3 rounded-lg transition-all duration-200 focus:outline-none focus:ring-4"
-                      style={{
-                        ...getSurfaceStyle('secondary'),
-                        ...getTypographyStyle('body'),
-                        ...getTextColorStyle('primary'),
-                        border: `${config.components?.forms?.inputBorderWidth || '0.5px'} solid ${colors.border}`,
-                        '--tw-ring-color': `${colors.primary}33`
-                      }}
-                    >
-                      <option value="">Select CGC Grade...</option>
-                      <option value="10P">CGC 10 Perfect</option>
-                      <option value="10">CGC 10 Pristine</option>
-                      <option value="9.5">CGC 9.5 Gem Mint</option>
-                      <option value="9">CGC 9 Mint</option>
-                      <option value="8.5">CGC 8.5 NM/Mint+</option>
-                      <option value="8">CGC 8 NM/Mint</option>
-                    </select>
-                  ) : newCard.gradingCompany === 'SGC' ? (
-                    <select
-                      value={newCard.grade || ''}
-                      onChange={(e) => handleCardChange('grade', e.target.value)}
-                      className="w-full px-4 py-3 rounded-lg transition-all duration-200 focus:outline-none focus:ring-4"
-                      style={{
-                        ...getSurfaceStyle('secondary'),
-                        ...getTypographyStyle('body'),
-                        ...getTextColorStyle('primary'),
-                        border: `${config.components?.forms?.inputBorderWidth || '0.5px'} solid ${colors.border}`,
-                        '--tw-ring-color': `${colors.primary}33`
-                      }}
-                    >
-                      <option value="">Select SGC Grade...</option>
-                      <option value="10P">SGC 10 Pristine Gold Label</option>
-                      <option value="10">SGC 10 Gem Mint</option>
-                      <option value="9.5">SGC 9.5 Mint+</option>
-                      <option value="9">SGC 9 Mint</option>
-                      <option value="8.5">SGC 8.5 NM-Mint+</option>
-                      <option value="8">SGC 8 NM-Mint</option>
-                    </select>
-                  ) : newCard.gradingCompany === 'RAW' ? (
-                    <select
-                      value={newCard.grade || ''}
-                      onChange={(e) => handleCardChange('grade', e.target.value)}
-                      className="w-full px-4 py-3 rounded-lg transition-all duration-200 focus:outline-none focus:ring-4"
-                      style={{
-                        ...getSurfaceStyle('secondary'),
-                        ...getTypographyStyle('body'),
-                        ...getTextColorStyle('primary'),
-                        border: `${config.components?.forms?.inputBorderWidth || '0.5px'} solid ${colors.border}`,
-                        '--tw-ring-color': `${colors.primary}33`
-                      }}
-                    >
-                      <option value="">Select Condition...</option>
-                      <option value="Mint">Mint</option>
-                      <option value="Near Mint">Near Mint</option>
-                      <option value="Excellent">Excellent</option>
-                      <option value="Good">Good</option>
-                      <option value="Played">Played</option>
-                      <option value="Poor">Poor</option>
-                    </select>
-                  ) : (
-                    <input
-                      type="text"
-                      value={newCard.grade || ''}
-                      onChange={(e) => handleCardChange('grade', e.target.value)}
-                      placeholder="Select Grade..."
-                      className="w-full px-4 py-3 rounded-lg transition-all duration-200 focus:outline-none focus:ring-4"
-                      style={{
-                        ...getSurfaceStyle('secondary'),
-                        ...getTypographyStyle('body'),
-                        ...getTextColorStyle('primary'),
-                        border: `${config.components?.forms?.inputBorderWidth || '0.5px'} solid ${colors.border}`,
-                        '--tw-ring-color': `${colors.primary}33`
-                      }}
-                      disabled
-                    />
-                  )}
+                  <input
+                    type="text"
+                    value={newCard.grade || ''}
+                    onChange={(e) => handleCardChange('grade', e.target.value)}
+                    placeholder="Enter grade..."
+                    className="w-full px-4 py-3 rounded-lg transition-all duration-200 focus:outline-none focus:ring-4"
+                    style={{
+                      ...getSurfaceStyle('secondary'),
+                      ...getTypographyStyle('body'),
+                      ...getTextColorStyle('primary'),
+                      border: `${config.components?.forms?.inputBorderWidth || '0.5px'} solid ${colors.border}`,
+                      '--tw-ring-color': `${colors.primary}33`
+                    }}
+                  />
                 </div>
               </div>
 
               {/* Serial Number & Population */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {newCard.gradingCompany !== 'RAW' && (
-                  <div className="space-y-2">
-                    <label style={{
-                      ...getTypographyStyle('label'),
-                      ...getTextColorStyle('secondary')
+                <div className="space-y-2">
+                  <label style={{
+                    ...getTypographyStyle('label'),
+                    ...getTextColorStyle('secondary')
+                  }}>
+                    Serial Number
+                  </label>
+                  <input
+                    type="text"
+                    name="certificationNumber"
+                    value={newCard.slabSerial || newCard.certificationNumber || ''}
+                    onChange={(e) => {
+                      handleCardChange('slabSerial', e.target.value);
+                      handleCardChange('certificationNumber', e.target.value);
+                    }}
+                    className="w-full px-4 py-3 rounded-lg transition-all duration-200 focus:outline-none focus:ring-4"
+                    style={{
+                      ...getSurfaceStyle('secondary'),
+                      ...getTypographyStyle('body'),
+                      ...getTextColorStyle('primary'),
+                      border: `${config.components?.forms?.inputBorderWidth || '0.5px'} solid ${errors.certificationNumber ? colors.error : colors.border}`,
+                      '--tw-ring-color': `${colors.primary}33`
+                    }}
+                  />
+                  {errors.certificationNumber && (
+                    <div style={{
+                      ...getTypographyStyle('caption'),
+                      color: colors.error
                     }}>
-                      Serial Number
-                    </label>
-                    <input
-                      type="text"
-                      value={newCard.slabSerial || newCard.certificationNumber || ''}
-                      onChange={(e) => {
-                        handleCardChange('slabSerial', e.target.value);
-                        handleCardChange('certificationNumber', e.target.value);
-                      }}
-                      className="w-full px-4 py-3 rounded-lg transition-all duration-200 focus:outline-none focus:ring-4"
-                      style={{
-                        ...getSurfaceStyle('secondary'),
-                        ...getTypographyStyle('body'),
-                        ...getTextColorStyle('primary'),
-                        border: `${config.components?.forms?.inputBorderWidth || '0.5px'} solid ${colors.border}`,
-                        '--tw-ring-color': `${colors.primary}33`
-                      }}
-                    />
-                  </div>
-                )}
+                      {errors.certificationNumber}
+                    </div>
+                  )}
+                </div>
                 
-                <div className={`space-y-2 ${newCard.gradingCompany === 'RAW' ? 'md:col-span-2' : ''}`}>
+                <div className="space-y-2">
                   <label style={{
                     ...getTypographyStyle('label'),
                     ...getTextColorStyle('secondary')
@@ -1061,6 +953,65 @@ const AddCardModalComponent = ({
                     type="text"
                     value={newCard.population || ''}
                     onChange={(e) => handleCardChange('population', e.target.value)}
+                    className="w-full px-4 py-3 rounded-lg transition-all duration-200 focus:outline-none focus:ring-4"
+                    style={{
+                      ...getSurfaceStyle('secondary'),
+                      ...getTypographyStyle('body'),
+                      ...getTextColorStyle('primary'),
+                      border: `${config.components?.forms?.inputBorderWidth || '0.5px'} solid ${colors.border}`,
+                      '--tw-ring-color': `${colors.primary}33`
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Investment Amount & Current Value */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label style={{
+                    ...getTypographyStyle('label'),
+                    ...getTextColorStyle('secondary')
+                  }}>
+                    Investment Amount (AUD) *
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={newCard.originalInvestmentAmount}
+                    onChange={(e) => handleCardChange('originalInvestmentAmount', e.target.value)}
+                    className="w-full px-4 py-3 rounded-lg transition-all duration-200 focus:outline-none focus:ring-4"
+                    style={{
+                      ...getSurfaceStyle('secondary'),
+                      ...getTypographyStyle('body'),
+                      ...getTextColorStyle('primary'),
+                      border: `${config.components?.forms?.inputBorderWidth || '0.5px'} solid ${errors.originalInvestmentAmount ? colors.error : colors.border}`,
+                      '--tw-ring-color': `${colors.primary}33`
+                    }}
+                  />
+                  {errors.originalInvestmentAmount && (
+                    <div style={{
+                      ...getTypographyStyle('caption'),
+                      color: colors.error
+                    }}>
+                      {errors.originalInvestmentAmount}
+                    </div>
+                  )}
+                </div>
+                
+                <div className="space-y-2">
+                  <label style={{
+                    ...getTypographyStyle('label'),
+                    ...getTextColorStyle('secondary')
+                  }}>
+                    Current Value (AUD)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={newCard.originalCurrentValueAmount}
+                    onChange={(e) => handleCardChange('originalCurrentValueAmount', e.target.value)}
                     className="w-full px-4 py-3 rounded-lg transition-all duration-200 focus:outline-none focus:ring-4"
                     style={{
                       ...getSurfaceStyle('secondary'),
@@ -1136,10 +1087,14 @@ const AddCardModalComponent = ({
                   )}
                 </div>
               </div>
+
+
             </div>
           </div>
+
+
           
-          {/* Status Message - Only for non-PSA messages */}
+          {/* Status Message */}
           {saveMessage && 
            !saveMessage.startsWith('Searching PSA') && 
            !saveMessage.startsWith('Failed to find PSA') && 
@@ -1149,12 +1104,12 @@ const AddCardModalComponent = ({
             <div 
               className="p-4 rounded-lg"
               style={{
-                backgroundColor: saveMessage.startsWith('Error') || saveMessage.startsWith('Please fix') ? 
+                backgroundColor: saveMessage.startsWith('Error') || saveMessage.startsWith('Please fix') || saveMessage.startsWith('Database connection') ? 
                   (isDarkMode ? `${colors.error}40` : `${colors.error}1A`) : 
                   saveMessage.includes('successfully') ? 
                     (isDarkMode ? `${colors.success}40` : `${colors.success}1A`) : 
                     (isDarkMode ? `${colors.info}40` : `${colors.info}1A`),
-                color: saveMessage.startsWith('Error') || saveMessage.startsWith('Please fix') ? 
+                color: saveMessage.startsWith('Error') || saveMessage.startsWith('Please fix') || saveMessage.startsWith('Database connection') ? 
                   colors.error : 
                   saveMessage.includes('successfully') ? 
                     colors.success : 
@@ -1173,7 +1128,7 @@ const AddCardModalComponent = ({
           borderColor: colors.border 
         }}>
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className={`px-6 py-3 rounded-lg transition-all duration-200 hover:scale-105 ${isMobileView ? 'w-full order-2' : ''}`}
             style={{
               ...getSurfaceStyle('secondary'),
@@ -1198,10 +1153,89 @@ const AddCardModalComponent = ({
           </button>
         </div>
       </div>
-      
 
+      {/* New Collection Modal */}
+      {showNewCollectionModal && (
+        <div 
+          className="fixed inset-0 flex items-center justify-center z-50" 
+          style={{ 
+            backgroundColor: `${colors.overlay || colors.background}80` 
+          }}
+          onClick={(e) => {
+            // Close modal when clicking on overlay
+            if (e.target === e.currentTarget) {
+              setShowNewCollectionModal(false);
+              setNewCollectionName('');
+            }
+          }}
+        >
+          <div 
+            className={`p-6 rounded-lg w-96 max-w-md mx-4`}
+            style={getSurfaceStyle('primary')}
+            onClick={(e) => {
+              // Prevent clicks on modal content from bubbling to overlay
+              e.stopPropagation();
+            }}
+          >
+            <h3 className={`text-lg font-semibold mb-4`}
+                style={{
+                  ...getTypographyStyle('heading'),
+                  ...getTextColorStyle('primary')
+                }}>
+              Create New Collection
+            </h3>
+            <input
+              type="text"
+              value={newCollectionName}
+              onChange={(e) => setNewCollectionName(e.target.value)}
+              placeholder="Collection name"
+              className={`w-full px-3 py-2 rounded-lg focus:outline-none focus:ring-2 mb-4`}
+              style={{
+                ...getTypographyStyle('body'),
+                ...getSurfaceStyle('secondary'),
+                ...getTextColorStyle('primary'),
+                borderColor: colors.border,
+                border: `${config.components?.buttons?.borderWidth || '0.5px'} solid`,
+                '--tw-ring-color': `${colors.primary}33`
+              }}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  handleCreateNewCollection();
+                }
+              }}
+            />
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => {
+                  setShowNewCollectionModal(false);
+                  setNewCollectionName('');
+                }}
+                className={`px-4 py-2 rounded-lg border transition-colors`}
+                style={{
+                  ...getTypographyStyle('button'),
+                  ...getTextColorStyle('secondary'),
+                  borderColor: colors.border
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleCreateNewCollection}
+                disabled={!newCollectionName.trim()}
+                className={`px-4 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+                style={{
+                  ...getTypographyStyle('button'),
+                  ...getPrimaryButtonStyle()
+                }}
+              >
+                Create
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
-export default AddCardModalComponent; 
+export default AddCardModalComponent;

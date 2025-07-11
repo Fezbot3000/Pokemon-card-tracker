@@ -7,6 +7,7 @@ const CardListComponent = ({
   config, 
   isDarkMode, 
   realCards, 
+  filteredCards, 
   cardsLoading, 
   getTypographyStyle,
   getTextColorStyle,
@@ -23,9 +24,29 @@ const CardListComponent = ({
   const [hoveredCard, setHoveredCard] = useState(null);
   const [showBulkActions, setShowBulkActions] = useState(false);
   
-  // Use real cards when available, otherwise fallback to data.cards
-  const useRealCards = realCards && realCards.length > 0 && !cardsLoading;
-  const cardsToDisplay = useRealCards ? realCards.map(card => ({
+  // Use filteredCards when available, otherwise fallback to realCards or data.cards
+  const useFilteredCards = filteredCards && filteredCards.length >= 0; // Allow empty arrays (filtered to 0 results)
+  const cardsToDisplay = useFilteredCards ? filteredCards.map(card => ({
+    id: card.id || card.slabSerial || `card-${Math.random()}`,
+    name: card.name || card.cardName || 'Unknown Card',
+    setName: card.setName || card.set || 'Unknown Set',
+    year: card.year || new Date().getFullYear(),
+    grade: card.grade || 'Ungraded',
+    gradingCompany: card.gradingCompany || 'RAW',
+    category: card.category || 'other',
+    originalCurrentValueAmount: card.originalCurrentValueAmount || card.currentValueAUD || 0,
+    originalCurrentValueCurrency: card.originalCurrentValueCurrency || 'AUD',
+    originalInvestmentAmount: card.originalInvestmentAmount || card.investmentAUD || 0,
+    originalInvestmentCurrency: card.originalInvestmentCurrency || 'AUD',
+    currentValue: card.currentValueAUD || card.originalCurrentValueAmount || 0,
+    profit: (card.currentValueAUD || card.originalCurrentValueAmount || 0) - (card.investmentAUD || card.originalInvestmentAmount || 0),
+    imageUrl: card.imageUrl || card.image || '/card-images/DefaultCard.png',
+    certificationNumber: card.certificationNumber || card.slabSerial || '',
+    slabSerial: card.slabSerial || card.id || '',
+    hasImage: card.hasImage || !!card.imageUrl,
+    dateAdded: card.dateAdded || card.createdAt || new Date(),
+    collection: card.collection || 'Default Collection'
+  })) : (realCards && realCards.length > 0 && !cardsLoading) ? realCards.map(card => ({
     id: card.id || card.slabSerial || `card-${Math.random()}`,
     name: card.name || card.cardName || 'Unknown Card',
     setName: card.setName || card.set || 'Unknown Set',
@@ -103,14 +124,14 @@ const CardListComponent = ({
       baseStyle.border = `${cardConfig.borderWidth || '0.5px'} solid ${colors.border}`;
     } else {
       // Apply shadow based on configuration for elevated and flat styles
-      if (cardConfig.shadow === 'large') {
-        baseStyle.boxShadow = '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)';
-      } else if (cardConfig.shadow === 'medium') {
-        baseStyle.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)';
-      } else if (cardConfig.shadow === 'small') {
-        baseStyle.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)';
-      } else if (cardConfig.shadow === 'none') {
-        baseStyle.boxShadow = 'none';
+      if (cardConfig.shadow !== 'none') {
+        if (cardConfig.shadow === 'large') {
+          baseStyle.boxShadow = `0 20px 25px -5px ${colors.shadow || colors.border}40, 0 10px 10px -5px ${colors.shadow || colors.border}20`;
+        } else if (cardConfig.shadow === 'medium') {
+          baseStyle.boxShadow = `0 10px 15px -3px ${colors.shadow || colors.border}40, 0 4px 6px -2px ${colors.shadow || colors.border}30`;
+        } else { // small
+          baseStyle.boxShadow = `0 4px 6px -1px ${colors.shadow || colors.border}40, 0 2px 4px -1px ${colors.shadow || colors.border}20`;
+        }
       }
     }
 
@@ -551,7 +572,7 @@ const CardListComponent = ({
                    lineHeight: '1.25rem',
                    ...getTextColorStyle('secondary')
                  }}>
-              {cardsToDisplay.length} cards {useRealCards ? '(Live Data)' : '(Demo)'}
+              {cardsToDisplay.length} cards {useFilteredCards ? '(Filtered)' : (realCards && realCards.length > 0 && !cardsLoading ? '(Live Data)' : '(Demo)')}
             </div>
           </div>
           
@@ -755,14 +776,14 @@ const MultiSelectActionPanel = ({
     <div className="fixed bottom-0 inset-x-0 z-50 flex justify-center">
       {/* Backdrop with soft fade */}
       <div className="absolute inset-0" onClick={onClose} style={{
-        background: 'linear-gradient(to top, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.1) 40%, transparent 70%)'
+        background: `linear-gradient(to top, ${colors.overlay || colors.background}60 0%, ${colors.overlay || colors.background}30 40%, transparent 70%)`
       }}></div>
       
       {/* Panel */}
       <div className={`relative mb-4 rounded-xl border backdrop-blur-md w-full max-w-3xl mx-6`}
            style={{
              ...getSurfaceStyle('primary'),
-             boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+             boxShadow: `0 4px 6px -1px ${colors.shadow || colors.border}40, 0 2px 4px -1px ${colors.shadow || colors.border}20`
            }}>
         
         {/* Compact Header */}
