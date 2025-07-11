@@ -109,24 +109,39 @@ const SearchToolbar = ({
       {/* Controls Group (View Mode, Sort, Add Card) */}
       <div className="flex w-full items-center justify-between gap-3 sm:w-auto sm:justify-start">
         {/* View Mode Selector */}
-        <div className="view-selector relative flex rounded-lg bg-gray-100 p-1 dark:bg-black">
+        <div className="view-selector relative flex w-20 rounded-lg bg-gray-100 p-1 dark:bg-black">
           {/* Animated Background Indicator */}
           <div
-            className="absolute inset-y-1 z-0 rounded-md bg-gradient-to-r from-[#ef4444] to-[#db2777] transition-transform duration-300 ease-in-out"
+            className="absolute top-1 z-0 rounded-md bg-gradient-to-r from-[#ef4444] to-[#db2777] transition-transform duration-300 ease-in-out"
             style={{
               left: '4px',
-              width: '36px',
-              height: '36px',
-              transform: `translateX(${viewMode === 'grid' ? '0px' : '36px'})`,
+              width: '32px',
+              height: '32px',
+              transform: `translateX(${viewMode === 'grid' ? '0px' : '32px'})`,
             }}
           />
           {/* Grid View Button */}
           <button
-            className={`relative z-10 flex size-9 items-center justify-center rounded-md transition-colors duration-300 ${
+            className={`relative z-10 flex size-8 items-center justify-center rounded-md transition-colors duration-300 ${
               viewMode === 'grid'
                 ? 'text-white'
-                : 'hover:bg-gray-200/50 dark:hover:bg-gray-700/50 text-gray-500 dark:text-gray-400'
+                : 'text-gray-500 dark:text-gray-400'
             }`}
+            style={viewMode !== 'grid' ? {
+              ':hover': {
+                backgroundColor: `${isDarkMode ? 'var(--color-primary-default)' : 'var(--color-primary-default)'}20`
+              }
+            } : {}}
+            onMouseEnter={(e) => {
+              if (viewMode !== 'grid') {
+                e.target.style.backgroundColor = `${isDarkMode ? 'var(--color-primary-default)' : 'var(--color-primary-default)'}20`;
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (viewMode !== 'grid') {
+                e.target.style.backgroundColor = 'transparent';
+              }
+            }}
             onClick={() => onViewModeChange?.('grid')}
             aria-label="Grid view"
           >
@@ -138,11 +153,26 @@ const SearchToolbar = ({
           </button>
           {/* List View Button */}
           <button
-            className={`relative z-10 flex size-9 items-center justify-center rounded-md transition-colors duration-300 ${
+            className={`relative z-10 flex size-8 items-center justify-center rounded-md transition-colors duration-300 ${
               viewMode === 'list'
                 ? 'text-white'
-                : 'hover:bg-gray-200/50 dark:hover:bg-gray-700/50 text-gray-500 dark:text-gray-400'
+                : 'text-gray-500 dark:text-gray-400'
             }`}
+            style={viewMode !== 'list' ? {
+              ':hover': {
+                backgroundColor: `${isDarkMode ? 'var(--color-primary-default)' : 'var(--color-primary-default)'}20`
+              }
+            } : {}}
+            onMouseEnter={(e) => {
+              if (viewMode !== 'list') {
+                e.target.style.backgroundColor = `${isDarkMode ? 'var(--color-primary-default)' : 'var(--color-primary-default)'}20`;
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (viewMode !== 'list') {
+                e.target.style.backgroundColor = 'transparent';
+              }
+            }}
             onClick={() => onViewModeChange?.('list')}
             aria-label="List view"
           >

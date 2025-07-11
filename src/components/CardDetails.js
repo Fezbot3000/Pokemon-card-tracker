@@ -4,7 +4,11 @@ import db from '../services/firestore/dbAdapter';
 import { toast } from 'react-hot-toast';
 import { formatDate } from '../utils/dateUtils';
 import CardDetailsModal from '../design-system/components/CardDetailsModal';
+import ImageGallery from './ImageGallery';
 import logger from '../services/LoggingService';
+import { createImagePreviews, cleanupPreviews } from '../utils/imageUtils';
+import { migrateLegacyImageToMultiple, addImagesToCard, updateImageInCard } from '../utils/cardDataStructure';
+import { uploadMultipleImages, deleteMultipleImages } from '../services/multipleImageUpload';
 
 const CardDetails = memo(
   ({
@@ -41,8 +45,10 @@ const CardDetails = memo(
       psaSearched: card.psaSearched || false,
     });
     const [cardImage, setCardImage] = useState(null);
+    const [cardImages, setCardImages] = useState([]);
     const [imageLoadingState, setImageLoadingState] = useState('loading');
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+    const [pendingImageFiles, setPendingImageFiles] = useState([]);
     const messageTimeoutRef = useRef(null);
 
     // Effect to update editedCard when card or initialCollectionName changes
@@ -84,7 +90,17 @@ const CardDetails = memo(
           psaSearched: card.psaSearched || false,
         };
 
-        setEditedCard(completeCard);
+        // Migrate legacy single image to multiple image format
+        const migratedCard = migrateLegacyImageToMultiple(completeCard);
+        setEditedCard(migratedCard);
+        
+        // Set up card images for the gallery
+        if (migratedCard.images && migratedCard.images.length > 0) {
+          setCardImages(migratedCard.images);
+        } else {
+          setCardImages([]);
+        }
+        
         // Also reset unsaved changes flag when the card prop changes
         setHasUnsavedChanges(false);
       } else {
@@ -145,6 +161,86 @@ const CardDetails = memo(
         setImageLoadingState('error');
       }
     }, [editedCard.imageUrl, cardImage, card.id, card.slabSerial]);
+
+    // Handle adding new images
+    const handleImageAdd = async (files, previews) => {
+      if (!files || files.length === 0) return;
+
+      try {
+        // Add new preview images to the state
+        const newImages = [...cardImages, ...previews];
+        setCardImages(newImages);
+        
+        // Store the files for later upload
+        setPendingImageFiles(prev => [...prev, ...files]);
+        
+        // Update the card with new image data
+        const updatedCard = addImagesToCard(editedCard, previews);
+        setEditedCard(updatedCard);
+        
+        // Mark as having unsaved changes
+        setHasUnsavedChanges(true);
+        
+        toast.success(`Added ${files.length} image(s) - Click Save to upload`);
+      } catch (error) {
+        logger.error('Error adding images:', error);
+        toast.error('Failed to add images');
+      }
+    };
+
+    // Handle removing images
+    const handleImageRemove = async (imageToRemove, index) => {
+      try {
+        // Clean up preview URL if it exists
+        if (imageToRemove.previewUrl && imageToRemove.previewUrl.startsWith('blob:')) {
+          URL.revokeObjectURL(imageToRemove.previewUrl);
+        }
+        
+        // Remove from state
+        const updatedImages = cardImages.filter((_, i) => i !== index);
+        setCardImages(updatedImages);
+        
+        // Update the card data
+        const updatedCard = {
+          ...editedCard,
+          images: updatedImages,
+          imageCount: updatedImages.length,
+          primaryImageId: updatedImages.length > 0 ? updatedImages[0].id : null,
+          primaryImageUrl: updatedImages.length > 0 ? updatedImages[0].url : null,
+          hasImage: updatedImages.length > 0,
+          imageUrl: updatedImages.length > 0 ? updatedImages[0].url : null
+        };
+        setEditedCard(updatedCard);
+        
+        // Mark as having unsaved changes
+        setHasUnsavedChanges(true);
+        
+        toast.success('Image removed - Click Save to update');
+      } catch (error) {
+        logger.error('Error removing image:', error);
+        toast.error('Failed to remove image');
+      }
+    };
+
+    // Handle reordering images
+    const handleImageReorder = (reorderedImages) => {
+      setCardImages(reorderedImages);
+      
+      // Update the card data
+      const updatedCard = {
+        ...editedCard,
+        images: reorderedImages,
+        primaryImageId: reorderedImages.length > 0 ? reorderedImages[0].id : null,
+        primaryImageUrl: reorderedImages.length > 0 ? reorderedImages[0].url : null,
+        imageUrl: reorderedImages.length > 0 ? reorderedImages[0].url : null
+      };
+      setEditedCard(updatedCard);
+      
+      // Mark as having unsaved changes
+      setHasUnsavedChanges(true);
+      
+      toast.success('Images reordered - Click Save to update');
+    };
 
     // Handle close action with confirmation for unsaved changes
     const handleClose = useCallback((saveSuccess = false, skipConfirmation = false) => {
@@ -356,69 +452,48 @@ const CardDetails = memo(
         // Prepare the final card data
         let finalCardData = { ...editedCard };
 
-        // Check if this card has a pending image to upload
-        if (editedCard._pendingImageFile) {
+        // Handle pending image files if any
+        if (pendingImageFiles.length > 0) {
           try {
-            // Store the old blob URL for cleanup
-            const oldBlobUrl = editedCard._blobUrl;
-
             // Show a loading toast
-            const loadingToast = toast.loading('Uploading image...');
+            const loadingToast = toast.loading(`Uploading ${pendingImageFiles.length} image(s)...`);
 
-            // Now actually upload the image to Firebase
-            // Always force replacement to ensure old image is deleted
-            const imageUrl = await db.saveImage(
-              card.id || card.slabSerial,
-              editedCard._pendingImageFile,
-              {
-                isReplacement: true, // Always force replacement
-                silent: false, // Show toast for image upload
-              }
+            // Upload new images using the multiple image service
+            const uploadedImages = await uploadMultipleImages(
+              pendingImageFiles,
+              card.userId || 'anonymous', // Use card's userId
+              card.id || card.slabSerial
             );
 
             // Dismiss the loading toast
             toast.dismiss(loadingToast);
 
-            // Check if we got a data URL (fallback for development)
-            const isDataUrl = imageUrl && imageUrl.startsWith('data:');
+            // Update card images with the uploaded URLs
+            const existingImages = cardImages.filter(img => !img.previewUrl); // Keep existing images
+            const allImages = [...existingImages, ...uploadedImages];
 
-            // Force a unique timestamp to prevent caching issues
-            const timestamp = new Date().toISOString();
-
-            // Update the finalCardData directly
+            // Update the final card data with new image information
             finalCardData = {
               ...finalCardData,
-              imageUrl: imageUrl,
-              hasImage: true,
-              _isDataUrl: isDataUrl, // Flag to indicate this is a data URL
-              imageUpdatedAt: timestamp, // Add timestamp to force refresh
-              _pendingImageFile: null,
-              _blobUrl: null,
-              _forceImageRefresh: Date.now(), // Add a unique timestamp to force refresh
+              images: allImages,
+              imageCount: allImages.length,
+              primaryImageId: allImages.length > 0 ? allImages[0].id : null,
+              primaryImageUrl: allImages.length > 0 ? allImages[0].url : null,
+              hasImage: allImages.length > 0,
+              imageUrl: allImages.length > 0 ? allImages[0].url : null, // For backward compatibility
             };
 
-            // Update the card image state with the new URL
-            setCardImage(imageUrl);
+            // Update state
+            setCardImages(allImages);
+            setPendingImageFiles([]);
 
-            // Force a refresh of the image by creating an image element
-            const img = new Image();
-            img.src = imageUrl;
-            img.onload = () => {};
+            // Clean up preview URLs
+            cleanupPreviews(cardImages.filter(img => img.previewUrl));
 
-            // We don't use the blob URL anymore since we have the Firebase URL
-            // Revoke the blob URL after we've updated all references
-            if (oldBlobUrl && oldBlobUrl.startsWith('blob:')) {
-              try {
-                URL.revokeObjectURL(oldBlobUrl);
-              } catch (e) {
-                logger.warn('Failed to revoke blob URL during save:', e);
-              }
-            }
-
-            toast.success('Image uploaded successfully');
+            toast.success(`${uploadedImages.length} image(s) uploaded successfully`);
           } catch (imageError) {
-            logger.error('[CardDetails] Error uploading image:', imageError);
-            toast.error(`Error uploading image: ${imageError.message}`);
+            logger.error('[CardDetails] Error uploading images:', imageError);
+            toast.error(`Error uploading images: ${imageError.message}`);
             // Don't proceed with saving if image upload fails
             return;
           }
@@ -549,50 +624,58 @@ const CardDetails = memo(
 
 
     return (
-      <CardDetailsModal
-        isOpen={isOpen}
-        onClose={handleClose}
-        card={editedCard}
-        onSave={handleSave}
-        // onDelete={onDelete} - Removed delete functionality from modal
-        onMarkAsSold={async soldCardData => {
-          try {
-            // First get the existing sold cards
-            let soldCards = (await db.getSoldCards()) || [];
+      <>
+        <CardDetailsModal
+          isOpen={isOpen}
+          onClose={handleClose}
+          card={editedCard}
+          onSave={handleSave}
+          // onDelete={onDelete} - Removed delete functionality from modal
+          onMarkAsSold={async soldCardData => {
+            try {
+              // First get the existing sold cards
+              let soldCards = (await db.getSoldCards()) || [];
 
-            // Add the current card to the sold cards list
-            soldCards.push({
-              ...soldCardData,
-              id: soldCardData.id || soldCardData.slabSerial,
-              imageUrl: cardImage, // Include the card image URL
-            });
+              // Add the current card to the sold cards list
+              soldCards.push({
+                ...soldCardData,
+                id: soldCardData.id || soldCardData.slabSerial,
+                imageUrl: cardImage, // Include the card image URL
+              });
 
-            // Save the updated sold cards list
-            await db.saveSoldCards(soldCards);
+              // Save the updated sold cards list
+              await db.saveSoldCards(soldCards);
 
-            // Remove the card from the main collection if onDelete is provided
-            if (onDelete) {
-              await onDelete(card);
+              // Remove the card from the main collection if onDelete is provided
+              if (onDelete) {
+                await onDelete(card);
+              }
+
+              toast.success('Card marked as sold and moved to Sold Items');
+              handleClose(true);
+            } catch (error) {
+              logger.error('Error marking card as sold:', error);
+              toast.error('Error marking card as sold: ' + error.message);
             }
-
-            toast.success('Card marked as sold and moved to Sold Items');
-            handleClose(true);
-          } catch (error) {
-            logger.error('Error marking card as sold:', error);
-            toast.error('Error marking card as sold: ' + error.message);
-          }
-        }}
-        onChange={handleCardChange}
-        image={cardImage}
-        imageLoadingState={imageLoadingState}
-        onImageChange={handleImageChange}
-        onImageRetry={loadCardImage}
-        className="fade-in"
-        isPsaLoading={false}
-        additionalSerialContent={null}
-        collections={collections}
-        initialCollectionName={initialCollectionName}
-      />
+          }}
+          onChange={handleCardChange}
+          image={cardImage}
+          imageLoadingState={imageLoadingState}
+          onImageChange={null} // Disable legacy image handling
+          onImageRetry={loadCardImage}
+          className="fade-in"
+          isPsaLoading={false}
+          additionalSerialContent={null}
+          collections={collections}
+          initialCollectionName={initialCollectionName}
+          // Multiple image props
+          images={cardImages}
+          onImageAdd={handleImageAdd}
+          onImageRemove={handleImageRemove}
+          onImageReorder={handleImageReorder}
+          hasUnsavedChanges={hasUnsavedChanges}
+        />
+      </>
     );
   }
 );

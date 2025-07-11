@@ -6,12 +6,15 @@ import PropTypes from 'prop-types';
 import Modal from '../design-system/molecules/Modal';
 import Button from '../design-system/atoms/Button';
 import CardDetailsForm from '../design-system/components/CardDetailsForm';
+import ImageGallery from './ImageGallery';
 import { toast } from 'react-hot-toast';
 import PSADetailModal from './PSADetailModal';
 import NewCollectionModal from './NewCollectionModal';
 import { searchByCertNumber, parsePSACardData } from '../services/psaSearch';
 import { useSubscription } from '../hooks/useSubscription';
 import logger from '../services/LoggingService';
+import { createImagePreviews, cleanupPreviews } from '../utils/imageUtils';
+import { createEmptyCard } from '../utils/cardDataStructure';
 // import Spinner from './Spinner'; // Import Spinner for loading state
 
 /**
@@ -19,22 +22,8 @@ import logger from '../services/LoggingService';
  *
  * A specialized modal for adding new Pokemon cards with PSA certificate lookup.
  */
-// Initial card data template
-const getEmptyCard = () => ({
-  id: null,
-  player: '',
-  cardName: '',
-  set: '',
-  year: '',
-  category: '',
-  condition: '',
-
-  certificationNumber: '',
-  datePurchased: new Date().toISOString().split('T')[0],
-  investmentAUD: '',
-  currentValueAUD: '',
-  quantity: 1,
-});
+// Initial card data template - now using the utility function
+const getEmptyCard = () => createEmptyCard();
 
 const AddCardModal = ({
   isOpen,
@@ -66,9 +55,9 @@ const AddCardModal = ({
     return availableCollections[0] || '';
   });
 
-  // State for image handling
-  const [cardImage, setCardImage] = useState(null);
-  const [imageFile, setImageFile] = useState(null);
+  // State for multiple image handling
+  const [cardImages, setCardImages] = useState([]);
+  const [imageFiles, setImageFiles] = useState([]);
   const [imageLoadingState, setImageLoadingState] = useState('idle');
   const [showEnlargedImage, setShowEnlargedImage] = useState(false);
 
@@ -95,43 +84,79 @@ const AddCardModal = ({
       setAnimClass('slide-in-right');
       // Reset form when opening
       setNewCard({ ...getEmptyCard() });
-      setCardImage(null);
-      setImageFile(null);
+      // Clean up any existing preview URLs
+      cleanupPreviews(cardImages);
+      setCardImages([]);
+      setImageFiles([]);
       setErrors({});
       setSaveMessage(null);
       setPsaSerial('');
     } else {
       setAnimClass('slide-out-right');
     }
-  }, [isOpen]);
+  }, [isOpen, cardImages]);
 
-  // Handle card image change
-  const handleImageChange = async file => {
-    if (!file) return;
+  // Handle multiple image additions
+  const handleImageAdd = async (files, previews) => {
+    if (!files || files.length === 0) return;
 
     setImageLoadingState('loading');
 
     try {
-      // Create a preview URL
-      const imageUrl = URL.createObjectURL(file);
-
-      // Cleanup previous URL if it exists
-      if (cardImage && cardImage.startsWith('blob:')) {
-        URL.revokeObjectURL(cardImage);
-      }
-
-      setCardImage(imageUrl);
-      setImageFile(file);
+      // Add new files to the state
+      setImageFiles(prev => [...prev, ...files]);
+      setCardImages(prev => [...prev, ...previews]);
       setErrors(prev => ({ ...prev, image: undefined }));
       setImageLoadingState('idle');
 
-      return file;
+      // Update the card state with image information
+      const updatedCard = {
+        ...newCard,
+        hasImage: true,
+        imageCount: cardImages.length + previews.length
+      };
+      setNewCard(updatedCard);
+
+      return files;
     } catch (error) {
-      logger.error('Error changing card image:', error);
+      logger.error('Error adding card images:', error);
       setImageLoadingState('error');
-      setErrors(prev => ({ ...prev, image: 'Failed to load image' }));
+      setErrors(prev => ({ ...prev, image: 'Failed to load images' }));
       return null;
     }
+  };
+
+  // Handle image removal
+  const handleImageRemove = (imageToRemove, index) => {
+    // Clean up the preview URL
+    if (imageToRemove.previewUrl && imageToRemove.previewUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(imageToRemove.previewUrl);
+    }
+
+    // Remove from state
+    setCardImages(prev => prev.filter((_, i) => i !== index));
+    setImageFiles(prev => prev.filter((_, i) => i !== index));
+
+    // Update card state
+    const updatedCard = {
+      ...newCard,
+      hasImage: cardImages.length > 1,
+      imageCount: cardImages.length - 1
+    };
+    setNewCard(updatedCard);
+  };
+
+  // Handle image reordering
+  const handleImageReorder = (reorderedImages) => {
+    setCardImages(reorderedImages);
+    
+    // Update card state
+    const updatedCard = {
+      ...newCard,
+      hasImage: reorderedImages.length > 0,
+      imageCount: reorderedImages.length
+    };
+    setNewCard(updatedCard);
   };
 
   // Handle form changes
@@ -210,9 +235,9 @@ const AddCardModal = ({
       return;
     }
 
-    // Check if we have an image file
-    if (!imageFile && !cardImage) {
-      setSaveMessage('Please add an image for the card');
+    // Check if we have at least one image file
+    if (imageFiles.length === 0 && cardImages.length === 0) {
+      setSaveMessage('Please add at least one image for the card');
       setErrors({ image: 'Card image is required' });
       setIsSaving(false);
       return;
@@ -226,12 +251,14 @@ const AddCardModal = ({
       };
 
       // Try to save the card
-      await onSave(cardToSave, imageFile, selectedCollection);
+      await onSave(cardToSave, imageFiles, selectedCollection);
 
       // Clear form on success
       setNewCard({ ...getEmptyCard() });
-      setCardImage(null);
-      setImageFile(null);
+      // Clean up preview URLs
+      cleanupPreviews(cardImages);
+      setCardImages([]);
+      setImageFiles([]);
       setErrors({});
       setSaveMessage('Card saved successfully');
 
@@ -522,18 +549,40 @@ const AddCardModal = ({
             </div>
           )}
 
+          {/* Card Images Section */}
+          <div className="mb-6">
+            <h3 className="mb-3 text-lg font-medium text-gray-900 dark:text-white">
+              Card Images
+            </h3>
+            <ImageGallery
+              images={cardImages}
+              onImageAdd={handleImageAdd}
+              onImageRemove={handleImageRemove}
+              onImageReorder={handleImageReorder}
+              allowUploads={true}
+              allowReordering={true}
+              allowDeletion={true}
+              maxImages={5}
+              className="mb-4"
+            />
+            {errors.image && (
+              <p className="mt-1 text-sm text-red-600">{errors.image}</p>
+            )}
+          </div>
+
           {/* Card Details Form */}
           <CardDetailsForm
             card={newCard}
-            cardImage={cardImage}
+            cardImage={null} // No longer needed as we handle images separately
             imageLoadingState={imageLoadingState}
             onChange={handleCardChange}
-            onImageChange={handleImageChange}
-            onImageRetry={() => handleImageChange(imageFile)}
-            onImageClick={() => setShowEnlargedImage(true)}
+            onImageChange={null} // Disable image handling in form
+            onImageRetry={null}
+            onImageClick={null}
             errors={errors}
             hideCollectionField={true}
             hidePsaSearchButton={true}
+            hideImageField={true} // Hide the image field from the form
             requiredFields={{
               cardName: true,
               originalInvestmentAmount: true,
@@ -566,44 +615,7 @@ const AddCardModal = ({
         </div>
       </Modal>
 
-      {/* Enlarged Image Modal */}
-      {showEnlargedImage && cardImage && (
-        <div
-          className="bg-black/90 fixed inset-0 z-[60] flex cursor-zoom-out items-center justify-center"
-          onClick={e => {
-            e.stopPropagation();
-            setShowEnlargedImage(false);
-          }}
-          onMouseDown={e => e.stopPropagation()}
-          style={{
-            backdropFilter: 'blur(8px)',
-          }}
-        >
-          <div
-            className="relative flex max-w-[90vw] items-center justify-center"
-            onClick={e => e.stopPropagation()}
-            style={{
-              maxHeight: '90vh',
-            }}
-          >
-            <img
-              src={cardImage}
-              alt="Card preview (enlarged)"
-              className="size-auto rounded-lg object-contain"
-              style={{
-                maxHeight: '90vh',
-                maxWidth: '90vw',
-              }}
-            />
-            <button
-              className="bg-black/70 absolute right-4 top-4 rounded-full p-2 text-white"
-              onClick={() => setShowEnlargedImage(false)}
-            >
-              <span className="material-icons">close</span>
-            </button>
-          </div>
-        </div>
-      )}
+      {/* Enlarged Image Modal - Note: Image viewing is now handled by ImageGallery */}
 
       {/* PSA Detail Modal */}
       <PSADetailModal

@@ -164,6 +164,15 @@ module.exports = {
         '2xl': 'var(--radius-2xl)',
         full: 'var(--radius-full)',
       },
+      borderWidth: {
+        DEFAULT: '0.5px',
+        0: '0px',
+        0.5: '0.5px',
+        1: '1px',
+        2: '2px',
+        4: '4px',
+        8: '8px',
+      },
       spacing: {
         1: 'var(--space-1)',
         2: 'var(--space-2)',

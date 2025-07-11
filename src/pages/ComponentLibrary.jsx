@@ -231,8 +231,8 @@ const ComponentLibrary = () => {
   useEffect(() => {
     // Set custom CSS variables for the component library
     const customColors = {
-      '--primary-color': '#E6185C',
-      '--secondary-color': '#4318FF',
+      '--primary-color': '#0ea5e9',
+      '--secondary-color': '#06b6d4',
       '--accent-color': '#05CD99',
       '--background-light': '#FFFFFF',
       '--background-dark': '#000000',

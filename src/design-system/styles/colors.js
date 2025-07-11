@@ -8,68 +8,127 @@
 // Base colors definition
 export const baseColors = {
   // Primary palette
-  primaryDefault: '#ef4444', // Red-500
-  primaryHover: '#dc2626', // Red-600
-  primaryLight: '#fca5a5', // Red-300
-  primaryDark: '#b91c1c', // Red-700
+  primaryDefault: '#0ea5e9', // Sky-500 (Ocean Blue)
+  primaryHover: '#0284c7', // Sky-600
+  primaryLight: '#7dd3fc', // Sky-300
+  primaryDark: '#0369a1', // Sky-700
+
+  // Secondary palette
+  secondary: '#000000', // Black
+  secondaryHover: '#000000', // Black
 
   // Backgrounds - Light mode
   lightBackgroundPrimary: '#ffffff', // White
-  lightBackgroundTertiary: '#F3F4F6', // Gray-100
+  lightBackgroundSecondary: '#fafcff', // Very light blue/gray
+  lightBackgroundTertiary: '#f3f4f6', // Gray-100
 
   // Backgrounds - Dark mode
-  darkBackgroundPrimary: '#000000', // Black (IMPORTANT: Must be kept as #000000)
-  darkBackgroundSecondary: '#000000', // Pure black instead of custom dark gray
+  darkBackgroundPrimary: '#000000', // Black
+  darkBackgroundSecondary: '#000000', // Black
+  darkBackgroundTertiary: '#0f0f0f', // Dark gray
 
   // Text colors - Light mode
-  lightTextPrimary: '#111827', // Gray-900
-  lightTextSecondary: '#374151', // Gray-700
-  lightTextTertiary: '#6B7280', // Gray-500
+  lightTextPrimary: '#111827', // Dark gray/black
+  lightTextSecondary: '#6b7280', // Gray
+  lightTextTertiary: '#6b7280', // Gray
 
   // Text colors - Dark mode
-  darkTextPrimary: '#F9FAFB', // Gray-50
-  darkTextSecondary: '#D1D5DB', // Gray-300
-  darkTextTertiary: '#9CA3AF', // Gray-400
+  darkTextPrimary: '#f9fafb', // Light gray
+  darkTextSecondary: '#6b7280', // Gray-500
+  darkTextTertiary: '#6b7280', // Gray-500
+
+  // Dark mode specific colors
+  darkSecondary: '#ffffff', // White
+  darkSecondaryHover: '#f3f4f6', // Light gray
+  darkSurface: '#000000', // Black
+  darkSurfaceSecondary: '#000000', // Black
+  darkSurfaceTertiary: '#0f0f0f', // Dark gray
+  darkPrimaryCtaText: '#000000', // Black
+  darkBorder: '#374151', // Gray-700
 
   // Status colors
   error: '#ef4444', // Red-500
-  success: '#22c55e', // Green-500
+  success: '#10b981', // Emerald-500
   warning: '#f59e0b', // Amber-500
-  info: '#3b82f6', // Blue-500
+  info: '#0ea5e9', // Sky-500 (Ocean Blue)
+
+  // Pill colors
+  pillPrimary: '#ef4444', // Red-500
+  pillSecondary: '#f59e0b', // Amber-500
+  pillSuccess: '#10b981', // Emerald-500
+  pillInfo: '#0ea5e9', // Sky-500
+
+  // CTA colors
+  primaryCtaText: '#ffffff', // White
+
+  // Surface colors - Light mode
+  surface: '#ffffff', // White
+  surfaceSecondary: '#ffffff', // White
+  surfaceTertiary: '#2052b6', // Blue
 
   // Form elements
   placeholder: '#9CA3AF', // Gray-400
   placeholderDark: '#6B7280', // Gray-500
 
   // Border colors
-  borderLight: '#E5E7EB', // Gray-200
+  borderLight: '#e5e7eb', // Light gray
   borderDark: '#374151', // Gray-700
 };
 
 // Gradients definitions
 export const gradients = {
-  primary: 'linear-gradient(to right, #ef4444, #db2777)',
+  primary: 'linear-gradient(to right, #0ea5e9, #06b6d4)',
   primaryPosition: '0% 0%',
 };
 
-// Light Mode Theme
+// Light Mode Theme - Updated with new default colors
 export const lightTheme = {
   backgroundPrimary: baseColors.lightBackgroundPrimary,
+  backgroundSecondary: baseColors.lightBackgroundSecondary,
   backgroundTertiary: baseColors.lightBackgroundTertiary,
   textPrimary: baseColors.lightTextPrimary,
   textSecondary: baseColors.lightTextSecondary,
   textTertiary: baseColors.lightTextTertiary,
   border: baseColors.borderLight,
+  secondary: baseColors.secondary,
+  secondaryHover: baseColors.secondaryHover,
+  success: baseColors.success,
+  warning: baseColors.warning,
+  error: baseColors.error,
+  info: baseColors.info,
+  pillPrimary: baseColors.pillPrimary,
+  pillSecondary: baseColors.pillSecondary,
+  pillSuccess: baseColors.pillSuccess,
+  pillInfo: baseColors.pillInfo,
+  primaryCtaText: baseColors.primaryCtaText,
+  surface: baseColors.surface,
+  surfaceSecondary: baseColors.surfaceSecondary,
+  surfaceTertiary: baseColors.surfaceTertiary,
 };
 
-// Dark Mode Theme
+// Dark Mode Theme - Updated with new default colors
 export const darkTheme = {
-  backgroundPrimary: baseColors.darkBackgroundPrimary, // Black (#000000)
+  backgroundPrimary: baseColors.darkBackgroundPrimary,
   backgroundSecondary: baseColors.darkBackgroundSecondary,
+  backgroundTertiary: baseColors.darkBackgroundTertiary,
   textPrimary: baseColors.darkTextPrimary,
   textSecondary: baseColors.darkTextSecondary,
   textTertiary: baseColors.darkTextTertiary,
-  border: baseColors.borderDark,
+  border: baseColors.darkBorder,
+  secondary: baseColors.darkSecondary,
+  secondaryHover: baseColors.darkSecondaryHover,
+  success: baseColors.success,
+  warning: baseColors.warning,
+  error: baseColors.error,
+  info: baseColors.info,
+  pillPrimary: baseColors.pillPrimary,
+  pillSecondary: baseColors.pillSecondary,
+  pillSuccess: baseColors.pillSuccess,
+  pillInfo: baseColors.pillInfo,
+  primaryCtaText: baseColors.darkPrimaryCtaText,
+  surface: baseColors.darkSurface,
+  surfaceSecondary: baseColors.darkSurfaceSecondary,
+  surfaceTertiary: baseColors.darkSurfaceTertiary,
 };
 
 // Export the complete color palette

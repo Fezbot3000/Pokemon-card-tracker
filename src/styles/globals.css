@@ -228,12 +228,4 @@ body.modal-open {
 
 /* ==================== SELECTION STYLES ==================== */
 
-::selection {
-  background-color: var(--color-primary-200);
-  color: var(--color-primary-900);
-}
-
-.dark ::selection {
-  background-color: var(--color-primary-700);
-  color: var(--color-primary-100);
-}
+/* Using default browser selection colors for better user experience */

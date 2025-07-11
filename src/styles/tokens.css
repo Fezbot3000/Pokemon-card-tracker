@@ -12,31 +12,31 @@
   --color-white: #ffffff;
   --color-black: #000000;
 
-  /* Primary Color Scale */
-  --color-primary-50: #fef2f2;
-  --color-primary-100: #fee2e2;
-  --color-primary-200: #fecaca;
-  --color-primary-300: #fca5a5;
-  --color-primary-400: #f87171;
-  --color-primary-500: #ef4444;
-  --color-primary-600: #dc2626;
-  --color-primary-700: #b91c1c;
-  --color-primary-800: #991b1b;
-  --color-primary-900: #7f1d1d;
-  --color-primary-950: #450a0a;
+  /* Primary Color Scale - Ocean Blue */
+  --color-primary-50: #f0f9ff;
+  --color-primary-100: #e0f2fe;
+  --color-primary-200: #bae6fd;
+  --color-primary-300: #7dd3fc;
+  --color-primary-400: #38bdf8;
+  --color-primary-500: #0ea5e9;
+  --color-primary-600: #0284c7;
+  --color-primary-700: #0369a1;
+  --color-primary-800: #075985;
+  --color-primary-900: #0c4a6e;
+  --color-primary-950: #082f49;
 
-  /* Accent Color Scale (Pink for gradients) */
-  --color-accent-50: #fdf2f8;
-  --color-accent-100: #fce7f3;
-  --color-accent-200: #fbcfe8;
-  --color-accent-300: #f9a8d4;
-  --color-accent-400: #f472b6;
-  --color-accent-500: #ec4899;
-  --color-accent-600: #db2777;
-  --color-accent-700: #be185d;
-  --color-accent-800: #9d174d;
-  --color-accent-900: #831843;
-  --color-accent-950: #500724;
+  /* Accent Color Scale (Cyan variations for gradients) */
+  --color-accent-50: #ecfeff;
+  --color-accent-100: #cffafe;
+  --color-accent-200: #a5f3fc;
+  --color-accent-300: #67e8f9;
+  --color-accent-400: #22d3ee;
+  --color-accent-500: #06b6d4;
+  --color-accent-600: #0891b2;
+  --color-accent-700: #0e7490;
+  --color-accent-800: #155e75;
+  --color-accent-900: #164e63;
+  --color-accent-950: #083344;
 
   /* Gray Scale */
   --color-gray-50: #f9fafb;
@@ -113,6 +113,22 @@
   --surface-dark-secondary: var(--color-black);
   --surface-dark-tertiary: var(--color-black);
   --surface-dark-quaternary: var(--color-gray-900);
+
+  /* ==================== BACKGROUND TOKENS ==================== */
+
+  /* Light Mode Backgrounds */
+  --color-background: var(--color-white);
+  --color-background-secondary: var(--color-gray-50);
+  --color-surface: var(--color-white);
+  --color-surface-secondary: var(--color-gray-50);
+  --color-surface-tertiary: var(--color-gray-100);
+  
+  /* Dark Mode Backgrounds */
+  --color-background-dark: var(--color-gray-900);
+  --color-background-secondary-dark: var(--color-black);
+  --color-surface-dark: var(--color-gray-800);
+  --color-surface-secondary-dark: var(--color-gray-900);
+  --color-surface-tertiary-dark: var(--color-gray-950);
 
   /* ==================== TEXT TOKENS ==================== */
 
@@ -275,4 +291,11 @@
 
   --color-border: var(--border-dark);
   --color-border-hover: var(--border-dark-hover);
+
+  /* Override background tokens for dark mode */
+  --color-background: var(--color-background-dark);
+  --color-background-secondary: var(--color-background-secondary-dark);
+  --color-surface: var(--color-surface-dark);
+  --color-surface-secondary: var(--color-surface-secondary-dark);
+  --color-surface-tertiary: var(--color-surface-tertiary-dark);
 }

@@ -14,12 +14,12 @@ const buttonVariants = cva(
         outline:
           'border border-gray-200 bg-transparent text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white',
         secondary:
-          'border border-gray-700 bg-[#000] text-gray-300 hover:opacity-90',
+          'border-0.5 border-gray-700 dark:border-gray-300 bg-transparent text-gray-700 dark:text-gray-300 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-800 dark:hover:text-white',
+        tertiary:
+          'bg-transparent text-gray-700 dark:text-gray-300 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-800 dark:hover:text-white',
         ghost:
           'bg-transparent text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white',
         link: 'text-primary underline-offset-4 hover:underline',
-        success:
-          'bg-gradient-to-r from-[#10b981] to-[#059669] text-white shadow-sm hover:opacity-90',
       },
       size: {
         default: 'h-10 px-4 py-2',

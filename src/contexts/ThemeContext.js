@@ -14,11 +14,18 @@ export const ThemeProvider = ({ children }) => {
   const [isDarkMode, setIsDarkMode] = useState(() => {
     // Check local storage first
     const saved = localStorage.getItem('darkMode');
+    let initialDarkMode;
     if (saved !== null) {
-      return JSON.parse(saved);
+      initialDarkMode = JSON.parse(saved);
+    } else {
+      // Default to dark mode, regardless of system preference
+      initialDarkMode = true;
     }
-    // Default to dark mode, regardless of system preference
-    return true;
+    
+    // Apply the class synchronously during initialization
+    document.documentElement.classList.toggle('dark', initialDarkMode);
+    
+    return initialDarkMode;
   });
 
   useEffect(() => {

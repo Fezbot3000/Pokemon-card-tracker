@@ -44,7 +44,35 @@ import TutorialModal from './components/TutorialModal'; // Add back this import
 import { settingsManager } from './utils/settingsManager'; // Import settings manager
 import { useCardModals } from './hooks/useCardModals'; // Import card modals hook
 import { collectionManager } from './utils/collectionManager'; // Import collection manager
+import { ComponentProvider, useDashboardComponents } from './design-system/ComponentProvider';
+import { Widget } from './design-system/DashboardWidget';
 
+// Dashboard Components using the new widget system
+const DashboardComponents = () => {
+  const { components, loading } = useDashboardComponents();
+  
+  if (loading) {
+    return (
+      <>
+        <Widget type="statistics" showLoading={true} className="mb-3 sm:mb-4" />
+      </>
+    );
+  }
+  
+  return (
+    <>
+      {components.map((component) => (
+        <Widget
+          key={component.id}
+          type={component.type}
+          config={component.config}
+          data={component.data}
+          className={component.className}
+        />
+      ))}
+    </>
+  );
+};
 
 // Main Dashboard Component
 function Dashboard() {
@@ -56,7 +84,7 @@ function Dashboard() {
   // Show loading indicator while auth state is being determined
   if (loading) {
     return (
-      <div className="dashboard-page min-h-screen bg-gray-100 dark:bg-black">
+      <div className="dashboard-page min-h-screen" style={{ backgroundColor: 'var(--color-background-secondary, #f9fafb)' }}>
         {/* Keep actual Header during loading */}
         <Header
           className="header"
@@ -72,57 +100,27 @@ function Dashboard() {
         <main className="main-content mobile-dashboard mx-auto max-w-[1920px]">
           <div className="p-4 pb-20 sm:p-6">
             <div className="w-full px-1 pb-20 sm:px-2">
-              {/* Statistics Summary Skeleton */}
-              <div className="mb-3 w-full rounded-md border border-gray-200 bg-white dark:border-gray-700 dark:bg-black sm:mb-4">
-                <div className="rounded-md p-2 sm:p-4 md:p-6">
-                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-0">
-                    {[
-                      { label: 'CARDS', width: 'w-8' },
-                      { label: 'PAID', width: 'w-16' },
-                      { label: 'VALUE', width: 'w-16' },
-                      { label: 'PROFIT', width: 'w-12' },
-                    ].map((stat) => (
-                      <div
-                        key={stat.label}
-                        className="flex flex-col items-center justify-center border-none p-2 py-3 sm:p-3 sm:py-4 md:p-4 md:py-6"
-                      >
-                        <div className="mb-1 text-xs font-medium uppercase text-gray-500 dark:text-gray-400 sm:mb-2 sm:text-sm">
-                          {stat.label}
-                        </div>
-                        <div
-                          className={`h-6 ${stat.width} animate-pulse rounded bg-gray-200 dark:bg-[#333]`}
-                        ></div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Search toolbar skeleton */}
-              <div className="mb-4">
-                <div className="flex flex-col items-stretch justify-between gap-3 rounded-lg border border-gray-200 bg-white p-3 dark:border-[#333] dark:bg-black sm:flex-row sm:items-center sm:gap-4 sm:p-4">
-                  <div className="min-w-0 flex-1">
-                    <div className="h-10 w-full animate-pulse rounded-lg bg-gray-200 dark:bg-[#333]"></div>
-                  </div>
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    <div className="h-10 w-20 animate-pulse rounded-lg bg-gray-200 dark:bg-[#333]"></div>
-                    <div className="h-10 w-24 animate-pulse rounded-lg bg-gray-200 dark:bg-[#333]"></div>
-                  </div>
-                </div>
-              </div>
+              {/* Dynamic Dashboard Components */}
+              <DashboardComponents />
 
               {/* Card grid skeleton */}
               <div className="grid grid-cols-2 gap-1 sm:grid-cols-3 sm:gap-2 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7">
                 {Array.from({ length: 14 }, (_, index) => (
                   <div
                     key={`loading-skeleton-${index}`}
-                    className="animate-pulse overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-[#333] dark:bg-black"
+                    className="animate-pulse overflow-hidden rounded-lg border"
+                    style={{ 
+                      backgroundColor: 'var(--color-surface)',
+                      borderColor: 'var(--color-border)'
+                    }}
                   >
-                    <div className="aspect-[2.5/3.5] bg-gradient-to-br from-gray-200 to-gray-300 dark:from-[#333] dark:to-[#444]"></div>
+                    <div className="aspect-[2.5/3.5] bg-gradient-to-br" style={{ 
+                      background: 'linear-gradient(to bottom right, var(--color-surface-tertiary), var(--color-surface-quaternary))'
+                    }}></div>
                     <div className="space-y-2 p-2">
-                      <div className="h-3 w-3/4 rounded bg-gray-200 dark:bg-[#333]"></div>
-                      <div className="h-2 w-1/2 rounded bg-gray-200 dark:bg-[#333]"></div>
-                      <div className="h-4 w-2/3 rounded bg-gray-200 dark:bg-[#333]"></div>
+                      <div className="h-3 w-3/4 rounded" style={{ backgroundColor: 'var(--color-surface-tertiary)' }}></div>
+                      <div className="h-2 w-1/2 rounded" style={{ backgroundColor: 'var(--color-surface-tertiary)' }}></div>
+                      <div className="h-4 w-2/3 rounded" style={{ backgroundColor: 'var(--color-surface-tertiary)' }}></div>
                     </div>
                   </div>
                 ))}
@@ -518,7 +516,7 @@ function AppContent({ currentView, setCurrentView }) {
 
   if (loading) {
     return (
-      <div className="dashboard-page min-h-screen bg-gray-100 dark:bg-black">
+      <div className="dashboard-page min-h-screen" style={{ backgroundColor: 'var(--color-background-secondary, #f9fafb)' }}>
         {/* Keep actual Header during loading */}
         <Header
           className="header"
@@ -535,7 +533,10 @@ function AppContent({ currentView, setCurrentView }) {
           <div className="p-4 pb-20 sm:p-6">
             <div className="w-full px-1 pb-20 sm:px-2">
               {/* Statistics Summary Skeleton */}
-              <div className="mb-3 w-full rounded-md border border-gray-200 bg-white dark:border-gray-700 dark:bg-[#111] sm:mb-4">
+              <div className="mb-3 w-full rounded-md border sm:mb-4" style={{ 
+                backgroundColor: 'var(--color-surface)',
+                borderColor: 'var(--color-border)'
+              }}>
                 <div className="rounded-md p-2 sm:p-4 md:p-6">
                   <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-0">
                     {[
@@ -548,11 +549,12 @@ function AppContent({ currentView, setCurrentView }) {
                         key={stat.label}
                         className="flex flex-col items-center justify-center border-none p-2 py-3 sm:p-3 sm:py-4 md:p-4 md:py-6"
                       >
-                        <div className="mb-1 text-xs font-medium uppercase text-gray-500 dark:text-gray-400 sm:mb-2 sm:text-sm">
+                        <div className="mb-1 text-xs font-medium uppercase sm:mb-2 sm:text-sm" style={{ color: 'var(--color-text-secondary, #6b7280)' }}>
                           {stat.label}
                         </div>
                         <div
-                          className={`h-6 ${stat.width} animate-pulse rounded bg-gray-200 dark:bg-[#333]`}
+                          className={`h-6 ${stat.width} animate-pulse rounded`}
+                          style={{ backgroundColor: 'var(--color-surface-tertiary)' }}
                         ></div>
                       </div>
                     ))}
@@ -562,13 +564,16 @@ function AppContent({ currentView, setCurrentView }) {
 
               {/* Search toolbar skeleton */}
               <div className="mb-4">
-                <div className="flex flex-col items-stretch justify-between gap-3 rounded-lg border border-gray-200 bg-white p-3 dark:border-[#333] dark:bg-[#111] sm:flex-row sm:items-center sm:gap-4 sm:p-4">
+                <div className="flex flex-col items-stretch justify-between gap-3 rounded-lg border p-3 sm:flex-row sm:items-center sm:gap-4 sm:p-4" style={{ 
+                  backgroundColor: 'var(--color-surface)',
+                  borderColor: 'var(--color-border)'
+                }}>
                   <div className="min-w-0 flex-1">
-                    <div className="h-10 w-full animate-pulse rounded-lg bg-gray-200 dark:bg-[#333]"></div>
+                    <div className="h-10 w-full animate-pulse rounded-lg" style={{ backgroundColor: 'var(--color-surface-tertiary)' }}></div>
                   </div>
                   <div className="flex items-center gap-2 sm:gap-3">
-                    <div className="h-10 w-20 animate-pulse rounded-lg bg-gray-200 dark:bg-[#333]"></div>
-                    <div className="h-10 w-24 animate-pulse rounded-lg bg-gray-200 dark:bg-[#333]"></div>
+                    <div className="h-10 w-20 animate-pulse rounded-lg" style={{ backgroundColor: 'var(--color-surface-tertiary)' }}></div>
+                    <div className="h-10 w-24 animate-pulse rounded-lg" style={{ backgroundColor: 'var(--color-surface-tertiary)' }}></div>
                   </div>
                 </div>
               </div>
@@ -578,13 +583,19 @@ function AppContent({ currentView, setCurrentView }) {
                 {Array.from({ length: 14 }, (_, index) => (
                   <div
                     key={`skeleton-${index}`}
-                    className="animate-pulse overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-[#333] dark:bg-[#111]"
+                    className="animate-pulse overflow-hidden rounded-lg border"
+                    style={{ 
+                      backgroundColor: 'var(--color-surface)',
+                      borderColor: 'var(--color-border)'
+                    }}
                   >
-                    <div className="aspect-[2.5/3.5] bg-gradient-to-br from-gray-200 to-gray-300 dark:from-[#333] dark:to-[#444]"></div>
+                    <div className="aspect-[2.5/3.5] bg-gradient-to-br" style={{ 
+                      background: 'linear-gradient(to bottom right, var(--color-surface-tertiary), var(--color-surface-quaternary))'
+                    }}></div>
                     <div className="space-y-2 p-2">
-                      <div className="h-3 w-3/4 rounded bg-gray-200 dark:bg-[#333]"></div>
-                      <div className="h-2 w-1/2 rounded bg-gray-200 dark:bg-[#333]"></div>
-                      <div className="h-4 w-2/3 rounded bg-gray-200 dark:bg-[#333]"></div>
+                      <div className="h-3 w-3/4 rounded" style={{ backgroundColor: 'var(--color-surface-tertiary)' }}></div>
+                      <div className="h-2 w-1/2 rounded" style={{ backgroundColor: 'var(--color-surface-tertiary)' }}></div>
+                      <div className="h-4 w-2/3 rounded" style={{ backgroundColor: 'var(--color-surface-tertiary)' }}></div>
                     </div>
                   </div>
                 ))}
@@ -625,7 +636,7 @@ function AppContent({ currentView, setCurrentView }) {
   };
 
   return (
-    <div className="dashboard-page min-h-screen bg-gray-100 dark:bg-black">
+    <div className="dashboard-page min-h-screen" style={{ backgroundColor: 'var(--color-background-secondary, #f9fafb)' }}>
       {/* Hide Header on mobile when in settings or cards view */}
       {!(
         isMobile &&
@@ -722,7 +733,10 @@ function AppContent({ currentView, setCurrentView }) {
               {loading ? (
                 <div className="w-full px-1 pb-20 sm:px-2">
                   {/* Skeleton Statistics Summary */}
-                  <div className="mb-3 w-full rounded-md border border-gray-200 bg-white dark:border-gray-700 dark:bg-black sm:mb-4">
+                  <div className="mb-3 w-full rounded-md border sm:mb-4" style={{ 
+                    backgroundColor: 'var(--color-surface)',
+                    borderColor: 'var(--color-border)'
+                  }}>
                     <div className="rounded-md p-2 sm:p-4 md:p-6">
                       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-0">
                         {[
@@ -739,7 +753,8 @@ function AppContent({ currentView, setCurrentView }) {
                               {stat.label}
                             </div>
                             <div
-                              className={`h-6 ${stat.width} animate-pulse rounded bg-gray-200 dark:bg-[#333]`}
+                              className={`h-6 ${stat.width} animate-pulse rounded`}
+                              style={{ backgroundColor: 'var(--color-surface-tertiary)' }}
                             ></div>
                           </div>
                         ))}
@@ -749,7 +764,10 @@ function AppContent({ currentView, setCurrentView }) {
 
                   {/* Search Toolbar - Keep functional */}
                   <div className="mb-4">
-                    <div className="flex flex-col items-stretch justify-between gap-3 rounded-lg border border-gray-200 bg-white p-3 dark:border-[#333] dark:bg-black sm:flex-row sm:items-center sm:gap-4 sm:p-4">
+                    <div className="flex flex-col items-stretch justify-between gap-3 rounded-lg border p-3 sm:flex-row sm:items-center sm:gap-4 sm:p-4" style={{ 
+                      backgroundColor: 'var(--color-surface)',
+                      borderColor: 'var(--color-border)'
+                    }}>
                       {/* Search Input */}
                       <div className="min-w-0 flex-1">
                         <div className="relative">
@@ -759,7 +777,11 @@ function AppContent({ currentView, setCurrentView }) {
                           <input
                             type="text"
                             placeholder="Search cards..."
-                            className="w-full rounded-lg border border-gray-300 bg-white py-2 pl-10 pr-4 text-gray-900 placeholder:text-gray-500 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-400"
+                            className="w-full rounded-lg border py-2 pl-10 pr-4 text-gray-900 placeholder:text-gray-500 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:text-white dark:placeholder:text-gray-400"
+                            style={{ 
+                              backgroundColor: 'var(--color-surface-secondary)',
+                              borderColor: 'var(--color-border)'
+                            }}
                             disabled
                           />
                         </div>
@@ -768,9 +790,10 @@ function AppContent({ currentView, setCurrentView }) {
                       {/* View Mode and Sort Controls */}
                       <div className="flex items-center gap-2 sm:gap-3">
                         {/* View Mode Toggle */}
-                        <div className="flex rounded-lg bg-gray-100 p-1 dark:bg-gray-800">
+                        <div className="flex rounded-lg p-1" style={{ backgroundColor: 'var(--color-surface-secondary)' }}>
                           <button
-                            className="rounded-md bg-blue-600 p-2 text-white"
+                            className="rounded-md p-2 text-white"
+                            style={{ backgroundColor: 'var(--color-primary-default)' }}
                             disabled
                           >
                             <span className="material-icons text-lg">
@@ -803,13 +826,16 @@ function AppContent({ currentView, setCurrentView }) {
 
                   {/* Collection Selector Skeleton */}
                   <div className="mb-2">
-                    <div className="rounded-lg border border-gray-200 bg-white p-3 dark:border-[#333] dark:bg-black">
+                    <div className="rounded-lg border p-3" style={{ 
+                      backgroundColor: 'var(--color-surface)',
+                      borderColor: 'var(--color-border)'
+                    }}>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-3">
-                          <div className="size-6 animate-pulse rounded bg-gray-200 dark:bg-[#333]"></div>
-                          <div className="h-4 w-32 animate-pulse rounded bg-gray-200 dark:bg-[#333]"></div>
+                          <div className="size-6 animate-pulse rounded" style={{ backgroundColor: 'var(--color-surface-tertiary)' }}></div>
+                          <div className="h-4 w-32 animate-pulse rounded" style={{ backgroundColor: 'var(--color-surface-tertiary)' }}></div>
                         </div>
-                        <div className="size-4 animate-pulse rounded bg-gray-200 dark:bg-[#333]"></div>
+                        <div className="size-4 animate-pulse rounded" style={{ backgroundColor: 'var(--color-surface-tertiary)' }}></div>
                       </div>
                     </div>
                   </div>
@@ -819,10 +845,16 @@ function AppContent({ currentView, setCurrentView }) {
                     {Array.from({ length: 14 }, (_, index) => (
                       <div
                         key={index}
-                        className="animate-pulse overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-[#333] dark:bg-black"
+                        className="animate-pulse overflow-hidden rounded-lg border"
+                        style={{ 
+                          backgroundColor: 'var(--color-surface)',
+                          borderColor: 'var(--color-border)'
+                        }}
                       >
                         {/* Card Image Skeleton */}
-                        <div className="relative aspect-[2.5/3.5] bg-gradient-to-br from-gray-200 to-gray-300 dark:from-[#333] dark:to-[#444]">
+                        <div className="relative aspect-[2.5/3.5] bg-gradient-to-br" style={{ 
+                          background: 'linear-gradient(to bottom right, var(--color-surface-tertiary), var(--color-surface-quaternary))'
+                        }}>
                           <div className="absolute inset-0 -skew-x-12 animate-pulse bg-gradient-to-r from-transparent to-transparent"></div>
                         </div>
 
@@ -839,8 +871,8 @@ function AppContent({ currentView, setCurrentView }) {
 
                           {/* Grade */}
                           <div className="flex items-center justify-between">
-                            <div className="h-3 w-1/3 rounded bg-gray-200 dark:bg-[#333]"></div>
-                            <div className="size-6 rounded bg-gray-200 dark:bg-[#333]"></div>
+                                                      <div className="h-3 w-1/3 rounded" style={{ backgroundColor: 'var(--color-surface-tertiary)' }}></div>
+                          <div className="size-6 rounded" style={{ backgroundColor: 'var(--color-surface-tertiary)' }}></div>
                           </div>
                         </div>
                       </div>
@@ -849,13 +881,13 @@ function AppContent({ currentView, setCurrentView }) {
                 </div>
               ) : cards.length === 0 ? (
                 <div className="flex h-full min-h-[400px] flex-col items-center justify-center">
-                  <span className="material-icons mb-4 text-6xl text-gray-400 dark:text-gray-600">
+                  <span className="material-icons mb-4 text-6xl" style={{ color: 'var(--color-text-secondary, #6b7280)' }}>
                     inventory_2
                   </span>
-                  <h2 className="mb-2 text-lg font-bold text-gray-900 dark:text-white">
+                  <h2 className="mb-2 text-lg font-bold" style={{ color: 'var(--color-text, #111827)' }}>
                     No cards in your collection
                   </h2>
-                  <p className="mb-6 max-w-md text-center text-gray-500 dark:text-gray-400">
+                  <p className="mb-6 max-w-md text-center" style={{ color: 'var(--color-text-secondary, #6b7280)' }}>
                     Start building your Pokemon card collection by adding your
                     first card!
                   </p>
@@ -916,9 +948,10 @@ function AppContent({ currentView, setCurrentView }) {
               {!selectedCards.size && (
                 <button
                   onClick={() => openNewCardForm()}
-                  className="fixed right-4 z-50 flex size-14 items-center justify-center rounded-full border-2 border-white bg-[#ef4444] text-white shadow-lg transition-all duration-200 hover:scale-105 hover:bg-[#dc2626] active:scale-95 dark:border-gray-800 sm:hidden"
+                  className="fixed right-4 z-50 flex size-14 items-center justify-center rounded-full border-2 bg-[#ef4444] text-white shadow-lg transition-all duration-200 hover:scale-105 hover:bg-[#dc2626] active:scale-95 sm:hidden"
                   style={{
                     bottom: 'calc(4rem + 8px)',
+                    borderColor: 'var(--color-surface, #ffffff)'
                   }}
                   aria-label="Add new card"
                 >
@@ -947,7 +980,7 @@ function AppContent({ currentView, setCurrentView }) {
         ) : currentView === 'sold-items' ? (
           <SoldItems />
         ) : currentView === 'settings' ? (
-          <div className={`min-h-screen bg-white dark:bg-black ${isMobile ? 'settings-mobile' : ''}`}>
+          <div className={`min-h-screen ${isMobile ? 'settings-mobile' : ''}`} style={{ backgroundColor: 'var(--color-background, #ffffff)' }}>
             <Settings />
           </div>
         ) : null}

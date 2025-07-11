@@ -33,6 +33,8 @@ import {
   // Hooks
   useTheme,
 } from '../design-system';
+import { Widget } from '../design-system/DashboardWidget';
+import { ComponentProvider, useComponentProvider } from '../design-system/ComponentProvider';
 
 import {
   baseColors,
@@ -167,8 +169,8 @@ const ComponentLibrary = () => {
   useEffect(() => {
     // Set custom CSS variables for the component library
     const customColors = {
-      '--primary-color': '#E6185C',
-      '--secondary-color': '#4318FF',
+      '--primary-color': '#0ea5e9',
+      '--secondary-color': '#06b6d4',
       '--accent-color': '#05CD99',
       '--background-light': '#FFFFFF',
       '--background-dark': '#000000',
@@ -271,6 +273,7 @@ const ComponentLibrary = () => {
     { id: 'search-toolbar', label: 'Search Toolbar' },
     { id: 'sold-items-view', label: 'Sold Items View' },
     { id: 'settings-modal', label: 'Settings Modal' },
+    { id: 'dynamic-components', label: 'Dynamic Components' },
   ];
 
   // Render section functions
@@ -2779,8 +2782,106 @@ return (
     </a>
   );
 
+  // Add this new section after the existing sections
+  const renderDynamicComponentsSection = () => (
+    <ComponentSection title="Dynamic Component System" id="dynamic-components">
+      <div className="space-y-6">
+        <div className="overflow-hidden rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-[#0F0F0F]">
+          <h3 className="mb-4 text-lg font-medium text-gray-900 dark:text-white">
+            Portable Components Demo
+          </h3>
+          <p className="mb-6 text-gray-600 dark:text-gray-400">
+            These components are rendered using the new widget system and can be easily moved anywhere in the application:
+          </p>
+          
+          {/* Statistics Widget */}
+          <div className="mb-6">
+            <h4 className="mb-3 text-sm font-medium text-gray-700 dark:text-gray-300">
+              Statistics Component (with Real Data)
+            </h4>
+            <Widget 
+              type="statistics" 
+              config={{ 
+                title: 'Portfolio Summary',
+                useRealData: true 
+              }}
+              className="mb-4"
+            />
+          </div>
+
+          {/* Statistics Widget with Demo Data */}
+          <div className="mb-6">
+            <h4 className="mb-3 text-sm font-medium text-gray-700 dark:text-gray-300">
+              Statistics Component (with Demo Data)
+            </h4>
+            <Widget 
+              type="statistics" 
+              config={{ 
+                title: 'Demo Portfolio',
+                stats: [
+                  { label: 'PAID', value: 5000, isMonetary: true, originalCurrencyCode: 'AUD' },
+                  { label: 'VALUE', value: 7500, isMonetary: true, originalCurrencyCode: 'AUD' },
+                  { label: 'PROFIT', value: 2500, isMonetary: true, isProfit: true, originalCurrencyCode: 'AUD' },
+                  { label: 'CARDS', value: 25, isCount: true }
+                ]
+              }}
+              data={{ useRealData: false }}
+              className="mb-4"
+            />
+          </div>
+
+          {/* Loading State Demo */}
+          <div className="mb-6">
+            <h4 className="mb-3 text-sm font-medium text-gray-700 dark:text-gray-300">
+              Loading State
+            </h4>
+            <Widget 
+              type="statistics" 
+              showLoading={true}
+              className="mb-4"
+            />
+          </div>
+
+          {/* Multiple Components Container */}
+          <div className="mb-6">
+            <h4 className="mb-3 text-sm font-medium text-gray-700 dark:text-gray-300">
+              Multiple Components in Different Layouts
+            </h4>
+            <div className="space-y-4">
+              <div className="flex flex-col gap-4">
+                <Widget 
+                  type="statistics" 
+                  config={{ 
+                    stats: [
+                      { label: 'TODAY', value: 150, isMonetary: true, originalCurrencyCode: 'AUD' },
+                      { label: 'WEEK', value: 850, isMonetary: true, originalCurrencyCode: 'AUD' },
+                      { label: 'MONTH', value: 3200, isMonetary: true, originalCurrencyCode: 'AUD' },
+                      { label: 'YEAR', value: 15000, isMonetary: true, originalCurrencyCode: 'AUD' }
+                    ]
+                  }}
+                  data={{ useRealData: false }}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-lg bg-blue-50 p-4 dark:bg-blue-900/20">
+            <h4 className="mb-2 text-sm font-medium text-blue-900 dark:text-blue-100">
+              📦 Component Portability
+            </h4>
+            <p className="text-sm text-blue-700 dark:text-blue-200">
+              These components can be easily moved between pages, reordered, or configured differently without changing their implementation. 
+              They automatically adapt to the current theme and user preferences.
+            </p>
+          </div>
+        </div>
+      </div>
+    </ComponentSection>
+  );
+
+  // Add this section to the main render
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-gray-100">
+    <div className="ComponentLibrary min-h-screen bg-gray-50 dark:bg-black">
       {/* Header */}
       <header className="sticky top-0 z-10 bg-white shadow-sm dark:bg-[#0F0F0F]">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -2900,6 +3001,8 @@ return (
                   renderSettingsModalSection()}
                 {activeSection === 'sold-items-view' &&
                   renderSoldItemsViewSection()}
+              {activeSection === 'dynamic-components' &&
+                  renderDynamicComponentsSection()}
               </>
             )}
           </div>

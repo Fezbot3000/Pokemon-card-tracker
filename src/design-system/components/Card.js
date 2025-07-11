@@ -53,7 +53,7 @@ const Card = ({
   if (children) {
     return (
       <div
-        className={`group relative rounded-2xl bg-white dark:bg-[#0F0F0F] ${isDarkMode ? 'shadow-sm hover:shadow-md' : ''} cursor-pointer overflow-hidden transition-shadow duration-300 ${isSelected ? 'border-2 border-purple-500' : 'border border-gray-200 dark:border-gray-700'} ${className}`}
+        className={`group relative rounded-2xl bg-white dark:bg-[#0F0F0F] ${isDarkMode ? 'shadow-sm hover:shadow-md' : ''} cursor-pointer overflow-hidden transition-shadow duration-300 ${isSelected ? 'border-0.5 border-purple-500' : 'border-0.5 border-gray-200 dark:border-gray-700'} ${className}`}
         onClick={onClick}
       >
         {/* Listed badge */}
@@ -70,7 +70,7 @@ const Card = ({
               type="button"
               aria-label={isSelected ? 'Deselect card' : 'Select card'}
               tabIndex={0}
-              className={`flex size-4 items-center justify-center rounded-full border-2 bg-white transition-all focus:outline-none dark:bg-[#18181b] ${isSelected ? 'border-purple-500' : 'border-gray-300 dark:border-gray-600'} ${isSelected ? 'ring-2 ring-purple-300' : 'hover:border-purple-400 dark:hover:border-purple-400'} shadow`}
+              className={`flex size-4 items-center justify-center rounded-full border-0.5 bg-white transition-all focus:outline-none dark:bg-[#18181b] ${isSelected ? 'border-purple-500' : 'border-gray-300 dark:border-gray-600'} ${isSelected ? 'ring-2 ring-purple-300' : 'hover:border-purple-400 dark:hover:border-purple-400'} shadow`}
               onClick={e => {
                 e.stopPropagation();
                 onSelect(!isSelected);
@@ -98,8 +98,8 @@ const Card = ({
     <div
       className={`group relative h-full cursor-pointer overflow-hidden bg-white text-white transition-all dark:bg-black ${
         isSelected
-          ? 'border-2 border-purple-500'
-          : 'border border-gray-200 dark:border-gray-700'
+          ? 'border-0.5 border-purple-500'
+          : 'border-0.5 border-gray-200 dark:border-gray-700'
       } rounded-md ${className}`}
       onClick={onClick}
     >
@@ -110,7 +110,7 @@ const Card = ({
             type="button"
             aria-label={isSelected ? 'Deselect card' : 'Select card'}
             tabIndex={0}
-            className={`flex size-4 items-center justify-center rounded-full border-2 bg-white transition-all focus:outline-none dark:bg-[#18181b] ${isSelected ? 'border-purple-500' : 'border-gray-300 dark:border-gray-600'} ${isSelected ? 'ring-2 ring-purple-300' : 'hover:border-purple-400 dark:hover:border-purple-400'} shadow`}
+            className={`flex size-4 items-center justify-center rounded-full border-0.5 bg-white transition-all focus:outline-none dark:bg-[#18181b] ${isSelected ? 'border-purple-500' : 'border-gray-300 dark:border-gray-600'} ${isSelected ? 'ring-2 ring-purple-300' : 'hover:border-purple-400 dark:hover:border-purple-400'} shadow`}
             onClick={e => {
               e.stopPropagation();
               onSelect(!isSelected);
@@ -163,7 +163,7 @@ const Card = ({
         {/* Financial Details - Consolidated Box */}
         <div className="flex flex-col">
           {/* Consolidated Financial Details */}
-                        <div className="financial-detail-box rounded-md border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-black">
+                        <div className="financial-detail-box rounded-md border-0.5 border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-black">
             <div className="flex flex-col">
               {/* Paid */}
               <div className="py-1 text-center">
@@ -231,7 +231,7 @@ const Card = ({
 // Sub-components for when Card is used as a container
 Card.Header = ({ children, className = '', ...props }) => (
   <div
-    className={`border-b border-gray-100 p-4 font-medium text-gray-900 dark:border-gray-800 dark:text-white ${className}`}
+    className={`border-b-0.5 border-gray-100 p-4 font-medium text-gray-900 dark:border-gray-800 dark:text-white ${className}`}
     {...props}
   >
     {children}

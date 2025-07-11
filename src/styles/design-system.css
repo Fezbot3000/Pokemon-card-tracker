@@ -23,16 +23,16 @@
   --color-gray-900: #111827;
 
   /* Primary Colors */
-  --color-primary-300: #fca5a5; /* red-300 */
-  --color-primary-500: #ef4444; /* red-500 */
-  --color-primary-600: #dc2626; /* red-600 */
-  --color-primary-700: #b91c1c; /* red-700 */
+  --color-primary-300: #7dd3fc; /* sky-300 */
+  --color-primary-500: #0ea5e9; /* sky-500 */
+  --color-primary-600: #0284c7; /* sky-600 */
+  --color-primary-700: #0369a1; /* sky-700 */
 
   /* Status Colors */
-  --color-success: #22c55e; /* green-500 */
+  --color-success: #10b981; /* emerald-500 */
   --color-error: #ef4444; /* red-500 */
   --color-warning: #f59e0b; /* amber-500 */
-  --color-info: #3b82f6; /* blue-500 */
+  --color-info: #0ea5e9; /* sky-500 */
 
   /* Theme-specific tokens - Light mode (default) */
   --bg-primary: var(--color-white);

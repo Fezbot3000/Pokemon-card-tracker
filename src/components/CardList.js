@@ -24,6 +24,7 @@ import {
   Card,
   ConfirmDialog,
   CardDetailsModal,
+  Button,
 } from '../design-system';
 import CollectionSelector from '../design-system/components/CollectionSelector';
 import SaleModal from './SaleModal';
@@ -1599,9 +1600,10 @@ const CardList = ({
                 <div className="mx-1 h-12 w-px bg-gray-200 dark:bg-gray-700"></div>
 
                 {/* Select All Button */}
-                <button
+                <Button
+                  variant="secondary"
                   onClick={handleSelectAll}
-                  className="group flex size-12 shrink-0 flex-col items-center justify-center rounded-xl bg-gray-500 text-white shadow-md transition-all duration-200 hover:scale-105 hover:bg-gray-600 hover:shadow-lg active:scale-95 sm:size-16"
+                  className="group flex size-12 shrink-0 flex-col items-center justify-center shadow-md transition-all duration-200 hover:scale-105 hover:shadow-lg active:scale-95 sm:size-16"
                   title={
                     selectedCards.size === cards.length
                       ? 'Deselect all'
@@ -1616,7 +1618,7 @@ const CardList = ({
                   <span className="hidden text-xs font-medium sm:block">
                     {selectedCards.size === cards.length ? 'Deselect' : 'All'}
                   </span>
-                </button>
+                </Button>
               </div>
 
               {/* Full-width Clear Selection Button */}

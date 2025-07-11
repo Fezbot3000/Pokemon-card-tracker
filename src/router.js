@@ -25,12 +25,14 @@ import PokemonInvestmentGuide from './components/PokemonInvestmentGuide';
 import { Dashboard, DashboardIndex } from './App';
 import Settings from './components/Settings';
 import ComponentLibrary from './pages/ComponentLibrary';
+import DesignSystemConfigurator from './design-system-configurator/DesignSystemConfigurator';
 import MarketplaceListing from './components/Marketplace/MarketplaceListing';
 import PublicMarketplace from './components/PublicMarketplace';
 import SharedCollection from './components/SharedCollection';
 import UpgradePage from './components/UpgradePage';
 import Pricing from './components/Pricing';
 import ScrollToTop from './components/ScrollToTop';
+import { ComponentProvider } from './design-system/ComponentProvider';
 
 // Root providers wrapper component
 export const RootProviders = () => (
@@ -45,22 +47,24 @@ export const RootProviders = () => (
                 <RestoreProvider>
                   <RestoreProgressBar />
                   <InvoiceProvider>
-                    <Toast
-                      position="top-left"
-                      toastOptions={{
-                        duration: 3000,
-                        style: {
-                          background: '#1B2131',
-                          color: '#FFFFFF',
-                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                          borderRadius: '12px',
-                          padding: '12px 24px',
-                          fontWeight: '500',
-                        },
-                      }}
-                    />
-                    <ScrollToTop />
-                    <Outlet />
+                    <ComponentProvider>
+                      <Toast
+                        position="top-left"
+                        toastOptions={{
+                          duration: 3000,
+                          style: {
+                            background: '#1B2131',
+                            color: '#FFFFFF',
+                            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                            borderRadius: '12px',
+                            padding: '12px 24px',
+                            fontWeight: '500',
+                          },
+                        }}
+                      />
+                      <ScrollToTop />
+                      <Outlet />
+                    </ComponentProvider>
                   </InvoiceProvider>
                 </RestoreProvider>
               </BackupProvider>
@@ -160,6 +164,10 @@ export const router = createBrowserRouter(
         {
           path: 'component-library',
           element: <ComponentLibrary />,
+        },
+        {
+          path: 'design-configurator',
+          element: <DesignSystemConfigurator />,
         },
         {
           path: 'upgrade',

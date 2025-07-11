@@ -26,6 +26,13 @@ import {
 import { db as firestoreDb, storage } from '../services/firebase';
 import db from '../services/firestore/dbAdapter';
 import LoggingService from '../services/LoggingService';
+import { uploadMultipleImages, uploadSingleImage, deleteMultipleImages } from '../services/multipleImageUpload';
+import { 
+  migrateLegacyImageToMultiple, 
+  addImagesToCard, 
+  cleanCardForFirestore,
+  validateCardStructure
+} from '../utils/cardDataStructure';
 
 class CardRepository {
   constructor(userId) {
@@ -233,7 +240,7 @@ class CardRepository {
   }
 
   // Card Operations
-  async createCard(cardData, imageFile = null) {
+  async createCard(cardData, imageFiles = null) {
     try {
       // Check if this is a raw card by looking at the condition field
       const isRawCard = cardData.condition?.startsWith('RAW');
@@ -283,28 +290,33 @@ class CardRepository {
       // Create a reference to the new card document
       const cardRef = doc(this.cardsRef, finalCardId);
 
-      // Handle the image upload if provided
-      let imageUrl = cardData.imageUrl || null;
-      if (imageFile) {
+      // Handle image uploads if provided
+      let imageMetadata = [];
+      let primaryImageUrl = null;
+      
+      if (imageFiles) {
         try {
-          // Use storage reference to upload the image
-          const storageRef = ref(
-            storage,
-            `users/${this.userId}/cards/${finalCardId}.jpg`
-          );
-          await uploadBytes(storageRef, imageFile);
-
-          imageUrl = await getDownloadURL(storageRef);
+          // Handle both single file and multiple files
+          const filesToUpload = Array.isArray(imageFiles) ? imageFiles : [imageFiles];
+          
+          if (filesToUpload.length > 0) {
+            // Upload images using the new multiple image service
+            imageMetadata = await uploadMultipleImages(filesToUpload, this.userId, finalCardId);
+            
+            // Get primary image URL for backward compatibility
+            const primaryImage = imageMetadata.find(img => img.isPrimary);
+            primaryImageUrl = primaryImage ? primaryImage.url : null;
+          }
         } catch (error) {
           LoggingService.error(
-            `Error uploading image for card ${finalCardId}:`,
+            `Error uploading images for card ${finalCardId}:`,
             error
           );
           // Continue with card creation even if image upload fails
         }
       }
 
-      // Prepare the card data with timestamps
+      // Prepare the card data with timestamps and image data
       const newCardData = {
         ...cardData,
         id: finalCardId,
@@ -313,23 +325,36 @@ class CardRepository {
         slabSerial: isRawCard
           ? cardData.slabSerial || ''
           : cardData.slabSerial || finalCardId,
-        imageUrl,
+        
+        // Legacy single image fields (for backward compatibility)
+        imageUrl: primaryImageUrl,
+        hasImage: imageMetadata.length > 0,
+        
+        // New multiple image fields
+        images: imageMetadata,
+        imageCount: imageMetadata.length,
+        primaryImageId: imageMetadata.length > 0 ? imageMetadata[0].id : null,
+        primaryImageUrl: primaryImageUrl,
+        
         userId: this.userId,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       };
 
+      // Clean the card data for Firestore
+      const cleanedCardData = cleanCardForFirestore(newCardData);
+
       // Remove any undefined values
-      Object.keys(newCardData).forEach(
-        key => newCardData[key] === undefined && delete newCardData[key]
+      Object.keys(cleanedCardData).forEach(
+        key => cleanedCardData[key] === undefined && delete cleanedCardData[key]
       );
 
       // Create the card document
-      await setDoc(cardRef, newCardData);
+      await setDoc(cardRef, cleanedCardData);
 
       // Return the created card data (with local timestamp instead of server timestamp)
       return {
-        ...newCardData,
+        ...cleanedCardData,
         createdAt: new Date(),
         updatedAt: new Date(),
       };

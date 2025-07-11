@@ -40,13 +40,14 @@ const Button = ({
   const variantClasses = {
     primary: `bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] text-white hover:opacity-90 shadow-sm ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`,
     constructive: `bg-gradient-to-r from-[#10b981] to-[#059669] text-white hover:opacity-90 shadow-sm ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`,
-    // Secondary button - styled primarily for dark contexts or consistent look
-    secondary: `bg-[#000] text-gray-300 border border-gray-700 hover:opacity-90 ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`,
+    // Secondary button - no background but with border
+    secondary: `bg-transparent text-gray-700 dark:text-gray-300 border-0.5 border-gray-700 dark:border-gray-300 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-800 dark:hover:text-white ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`,
+    // Tertiary button - no background and no border
+    tertiary: `bg-transparent text-gray-700 dark:text-gray-300 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-800 dark:hover:text-white ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`,
     outline: `border border-gray-200 dark:border-gray-700 bg-transparent text-gray-700 dark:text-gray-300 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-800 dark:hover:text-white ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`,
     text: `bg-transparent text-gray-700 dark:text-gray-300 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-800 dark:hover:text-white ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`,
     danger: `bg-gradient-to-r from-[#ef4444] to-[#db2777] text-white hover:opacity-90 shadow-sm ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`,
     destructive: `bg-gradient-to-r from-[#ef4444] to-[#db2777] text-white hover:opacity-90 shadow-sm ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`,
-    success: `bg-green-500 text-white hover:opacity-90 ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`,
     icon: `w-10 h-10 p-0 flex items-center justify-center text-gray-600 dark:text-gray-300 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-800 dark:hover:text-white ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`,
   };
 
@@ -71,12 +72,11 @@ const Button = ({
     switch (variant) {
       case 'primary':
       case 'constructive':
-      case 'success':
       case 'danger':
       case 'destructive':
         return 'white';
       case 'secondary':
-        return 'white'; // Secondary has white text on dark background
+      case 'tertiary':
       default:
         return 'default';
     }
@@ -171,11 +171,11 @@ Button.propTypes = {
     'primary',
     'constructive',
     'secondary',
+    'tertiary',
     'outline',
     'text',
     'danger',
     'destructive',
-    'success',
     'icon',
   ]),
   size: PropTypes.oneOf(['sm', 'md', 'lg']),
