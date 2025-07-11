@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { defaultConfig, defaultComponents } from './config/defaultConfig';
+
+// TODO: This is the OLD BLOATED VERSION - REPLACE WITH REFACTORED VERSION AFTER TESTING
 import { updateConfig, updateNestedConfig, getTypographyStyle, applyCSSVariables } from './config/configManager';
 import { formatCurrency } from './utils/formatters';
 import { getGradingCompanyColor, getValueColor } from './utils/colorUtils';
@@ -17,7 +19,9 @@ const DesignSystemConfigurator = () => {
   const [components, setComponents] = useState(defaultComponents);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [activeSection, setActiveSection] = useState('colors');
-  const [primaryStyle, setPrimaryStyle] = useState('gradient'); // 'solid' or 'gradient'
+  const [primaryStyle, setPrimaryStyle] = useState(
+    config.components?.buttons?.primaryStyle || 'gradient'
+  ); // 'solid' or 'gradient'
   const [showHiddenSettings, setShowHiddenSettings] = useState(false);
   
   // Use real data from CardContext
@@ -34,6 +38,14 @@ const DesignSystemConfigurator = () => {
   useEffect(() => {
     applyCSSVariables(config, isDarkMode);
   }, [config, isDarkMode]);
+
+  // Keep primaryStyle state in sync with config
+  useEffect(() => {
+    const configPrimaryStyle = config.components?.buttons?.primaryStyle || 'gradient';
+    if (primaryStyle !== configPrimaryStyle) {
+      setPrimaryStyle(configPrimaryStyle);
+    }
+  }, [config.components?.buttons?.primaryStyle, primaryStyle]);
 
   // Bound helper functions for component use
   const boundUpdateConfig = (section, key, value) => setConfig(prev => updateConfig(prev, section, key, value));
@@ -623,7 +635,10 @@ const DesignSystemConfigurator = () => {
               <h4 className="font-medium mb-3" style={boundGetTextColorStyle('primary')}>Primary CTA Style</h4>
                               <div className="flex rounded-lg border p-1" style={{ borderColor: colors?.border || defaultConfig.colors.border, backgroundColor: colors?.surfaceSecondary || defaultConfig.colors.surfaceSecondary }}>
                 <button
-                  onClick={() => setPrimaryStyle('solid')}
+                  onClick={() => {
+                    setPrimaryStyle('solid');
+                    boundUpdateNestedConfig('components', 'buttons', 'primaryStyle', 'solid');
+                  }}
                   className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all duration-200`}
                   style={primaryStyle === 'solid' ? 
                     { ...getPrimaryButtonStyle() } : 
@@ -633,7 +648,10 @@ const DesignSystemConfigurator = () => {
                   Solid Color
                 </button>
                 <button
-                  onClick={() => setPrimaryStyle('gradient')}
+                  onClick={() => {
+                    setPrimaryStyle('gradient');
+                    boundUpdateNestedConfig('components', 'buttons', 'primaryStyle', 'gradient');
+                  }}
                   className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all duration-200`}
                   style={primaryStyle === 'gradient' ? 
                     { ...getPrimaryButtonStyle() } : 

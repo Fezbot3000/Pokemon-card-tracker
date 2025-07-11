@@ -321,9 +321,10 @@ const SearchBarComponent = ({
           colors={colors}
           isOpen={showAddCardModal}
           onClose={() => setShowAddCardModal(false)}
-          onSave={(cardData, imageFile, collection) => {
+          onSave={(cardData, imageFiles, collection) => {
             // For configurator, we'll just simulate the save
             console.log('Adding card:', cardData);
+            console.log('Image files:', imageFiles);
             return new Promise((resolve) => {
               setTimeout(() => {
                 resolve(true);

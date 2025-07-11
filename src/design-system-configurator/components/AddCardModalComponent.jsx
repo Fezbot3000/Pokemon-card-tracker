@@ -5,6 +5,7 @@ import { toast } from 'react-hot-toast';
 import { searchByCertNumber, parsePSACardData } from '../../services/psaSearch';
 import { useSubscription } from '../../hooks/useSubscription';
 import logger from '../../services/LoggingService';
+import ImageGallery from './ImageGallery';
 
 const AddCardModalComponent = ({ 
   data, 
@@ -53,8 +54,7 @@ const AddCardModalComponent = ({
     collection: selectedCollection?.name || selectedCollection || 'Default Collection'
   });
   
-  const [cardImage, setCardImage] = useState(null);
-  const [imageFile, setImageFile] = useState(null);
+  const [cardImages, setCardImages] = useState([]);
   const [imageLoadingState, setImageLoadingState] = useState('idle');
   const [errors, setErrors] = useState({});
   const [saveMessage, setSaveMessage] = useState(null);
@@ -63,7 +63,7 @@ const AddCardModalComponent = ({
   const [psaSerial, setPsaSerial] = useState('');
   const [showNewCollectionModal, setShowNewCollectionModal] = useState(false);
   const [selectedCollectionLocal, setSelectedCollectionLocal] = useState(selectedCollection?.name || selectedCollection || '');
-  const [showEnlargedImage, setShowEnlargedImage] = useState(false);
+
   const [isMobileView, setIsMobileView] = useState(false);
   
   const modalRef = useRef(null);
@@ -109,8 +109,7 @@ const AddCardModalComponent = ({
         quantity: 1,
         collection: selectedCollection?.name || selectedCollection || 'Default Collection'
       });
-      setCardImage(null);
-      setImageFile(null);
+      setCardImages([]);
       setErrors({});
       setSaveMessage(null);
       setPsaSerial('');
@@ -167,28 +166,10 @@ const AddCardModalComponent = ({
     }
   };
   
-  // Handle image change
-  const handleImageChange = async (file) => {
-    if (!file) return;
-    
-    setImageLoadingState('loading');
-    
-    try {
-      const imageUrl = URL.createObjectURL(file);
-      
-      // Cleanup previous URL
-      if (cardImage && cardImage.startsWith('blob:')) {
-        URL.revokeObjectURL(cardImage);
-      }
-      
-      setCardImage(imageUrl);
-      setImageFile(file);
-      setErrors(prev => ({ ...prev, image: undefined }));
-      setImageLoadingState('idle');
-    } catch (error) {
-      setImageLoadingState('error');
-      setErrors(prev => ({ ...prev, image: 'Failed to load image' }));
-    }
+  // Handle multiple images change
+  const handleImagesChange = (newImages) => {
+    setCardImages(newImages);
+    setErrors(prev => ({ ...prev, images: undefined }));
   };
   
   // Validate form
@@ -217,8 +198,8 @@ const AddCardModalComponent = ({
       newErrors.collection = 'Please select a collection';
     }
     
-    if (!cardImage && !imageFile) {
-      newErrors.image = 'Card image is required';
+    if (!cardImages || cardImages.length === 0) {
+      newErrors.images = 'At least one card image is required';
     }
     
     setErrors(newErrors);
@@ -243,14 +224,17 @@ const AddCardModalComponent = ({
         currentValueAUD: parseFloat(newCard.originalCurrentValueAmount) || parseFloat(newCard.originalInvestmentAmount),
         investmentAUD: parseFloat(newCard.originalInvestmentAmount),
         name: newCard.cardName,
-        hasImage: !!imageFile,
+        hasImage: cardImages.length > 0,
+        hasMultipleImages: cardImages.length > 1,
+        imageCount: cardImages.length,
         dateAdded: new Date().toISOString(),
         createdAt: new Date().toISOString()
       };
       
       // For configurator, we'll simulate the save
       if (onSave) {
-        await onSave(cardToSave, imageFile, selectedCollectionLocal);
+        const imageFiles = cardImages.map(img => img.file);
+        await onSave(cardToSave, imageFiles, selectedCollectionLocal);
       }
       
       setSaveMessage('Card saved successfully');
@@ -610,7 +594,7 @@ const AddCardModalComponent = ({
             )}
           </div>
           
-          {/* Card Image */}
+          {/* Card Images */}
           <div className="space-y-4">
             <div style={{
               ...getTypographyStyle('subheading'),
@@ -618,60 +602,28 @@ const AddCardModalComponent = ({
               fontWeight: '600',
               ...getTextColorStyle('primary')
             }}>
-              Card Image
+              Card Images
             </div>
             
-            <div className="flex flex-col items-center space-y-4">
-              <div 
-                className="relative w-48 h-64 border-2 border-dashed rounded-lg flex items-center justify-center cursor-pointer transition-all duration-200 hover:scale-105"
-                style={{
-                  borderColor: colors.border,
-                  backgroundColor: cardImage ? 'transparent' : colors.backgroundSecondary
-                }}
-                onClick={() => document.getElementById('card-image-input').click()}
-              >
-                {cardImage ? (
-                  <img 
-                    src={cardImage} 
-                    alt="Card preview" 
-                    className="size-full object-cover rounded-lg"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setShowEnlargedImage(true);
-                    }}
-                  />
-                ) : (
-                  <div className="text-center">
-                    <svg className="size-12 mx-auto mb-2" style={{ color: colors.textSecondary }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    <div style={{
-                      ...getTypographyStyle('body'),
-                      ...getTextColorStyle('secondary')
-                    }}>
-                      Click to upload image
-                    </div>
-                  </div>
-                )}
+            <ImageGallery
+              images={cardImages}
+              onImagesChange={handleImagesChange}
+              maxImages={5}
+              config={config}
+              colors={colors}
+              getTypographyStyle={getTypographyStyle}
+              getSurfaceStyle={getSurfaceStyle}
+              getTextColorStyle={getTextColorStyle}
+            />
+            
+            {errors.images && (
+              <div style={{
+                ...getTypographyStyle('caption'),
+                color: colors.error
+              }}>
+                {errors.images}
               </div>
-              
-              <input
-                id="card-image-input"
-                type="file"
-                accept="image/*"
-                onChange={(e) => handleImageChange(e.target.files[0])}
-                className="hidden"
-              />
-              
-              {errors.image && (
-                <div style={{
-                  ...getTypographyStyle('caption'),
-                  color: colors.error
-                }}>
-                  {errors.image}
-                </div>
-              )}
-            </div>
+            )}
           </div>
           
           {/* Financial Details */}
@@ -1247,34 +1199,7 @@ const AddCardModalComponent = ({
         </div>
       </div>
       
-      {/* Enlarged Image Modal */}
-      {showEnlargedImage && cardImage && (
-        <div
-          className="fixed inset-0 z-60 flex items-center justify-center cursor-zoom-out"
-          style={{ backgroundColor: 'rgba(0, 0, 0, 0.9)' }}
-          onClick={() => setShowEnlargedImage(false)}
-        >
-          <div className="relative max-w-[90vw] max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
-            <img
-              src={cardImage}
-              alt="Card preview (enlarged)"
-              className="max-w-full max-h-full rounded-lg"
-            />
-            <button
-              className="absolute top-4 right-4 p-2 rounded-full transition-all duration-200 hover:scale-105"
-              style={{
-                backgroundColor: 'rgba(0, 0, 0, 0.7)',
-                color: 'white'
-              }}
-              onClick={() => setShowEnlargedImage(false)}
-            >
-              <svg className="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-        </div>
-      )}
+
     </div>
   );
 };

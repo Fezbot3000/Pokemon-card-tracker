@@ -94,12 +94,8 @@ const CollectionSelectorComponent = ({
             className={`flex items-center justify-between w-full px-4 py-3 rounded-lg transition-all duration-200 focus:outline-none focus:ring-4`}
             style={{
               ...getSurfaceStyle('secondary'),
-              borderColor: colors.border,
-              border: `${config.components?.buttons?.borderWidth || '0.5px'} solid`,
-              '--tw-ring-color': `${colors.primary}33`,
-              ':focus': {
-                borderColor: colors.primary
-              }
+              border: `${config.components?.buttons?.borderWidth || '0.5px'} solid ${colors.border}`,
+              '--tw-ring-color': `${colors.primary}33`
             }}
             onMouseEnter={(e) => {
               e.target.style.backgroundColor = isDarkMode ? 'rgba(75, 85, 99, 0.5)' : 'rgba(255, 255, 255, 0.8)';

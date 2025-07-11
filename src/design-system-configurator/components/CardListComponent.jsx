@@ -93,8 +93,7 @@ const CardListComponent = ({
     const baseStyle = {
       ...getSurfaceStyle('primary'),
       borderRadius: cardConfig.cornerRadius || '12px',
-      border: cardConfig.border === 'none' ? 'none' : `${cardConfig.borderWidth || '0.5px'} solid`,
-      borderColor: colors.border,
+      border: cardConfig.border === 'none' ? 'none' : `${cardConfig.borderWidth || '0.5px'} solid ${colors.border}`,
       transition: cardConfig.transition === 'all' ? 'all 0.2s ease' : 'none'
     };
 
@@ -252,9 +251,8 @@ const CardListComponent = ({
               <div
                 className="size-4 rounded flex items-center justify-center cursor-pointer transition-all duration-200 focus:ring-2"
                 style={{
-                  borderColor: isSelected ? colors.secondary : colors.border,
                   backgroundColor: isSelected ? colors.secondary : 'transparent',
-                  border: `${config.components?.buttons?.borderWidth || '0.5px'} solid`,
+                  border: `${config.components?.buttons?.borderWidth || '0.5px'} solid ${isSelected ? colors.secondary : colors.border}`,
                   '--tw-ring-color': `${colors.secondary}33`
                 }}
                 onClick={(e) => {
@@ -377,9 +375,8 @@ const CardListComponent = ({
           <div
             className="size-4 rounded flex items-center justify-center cursor-pointer transition-all duration-200 focus:ring-2"
             style={{
-              borderColor: isSelected ? colors.secondary : colors.border,
               backgroundColor: isSelected ? colors.secondary : 'transparent',
-              border: `${config.components?.buttons?.borderWidth || '0.5px'} solid`,
+              border: `${config.components?.buttons?.borderWidth || '0.5px'} solid ${isSelected ? colors.secondary : colors.border}`,
               '--tw-ring-color': `${colors.secondary}33`
             }}
             onClick={(e) => {
@@ -521,7 +518,7 @@ const CardListComponent = ({
           <div className="flex items-center space-x-4">
             {/* View Mode Toggle */}
             <div className={`flex items-center h-10 px-1 rounded-lg gap-1`} 
-                 style={{...getInteractiveStyle('default'), border: `${config.components?.buttons?.borderWidth || '0.5px'} solid`, borderColor: colors.border}}>
+                 style={{...getInteractiveStyle('default'), border: `${config.components?.buttons?.borderWidth || '0.5px'} solid ${colors.border}`}}>
               <button
                 onClick={() => setCurrentViewMode('grid')}
                 className={`p-2 rounded-md transition-all duration-200`}
