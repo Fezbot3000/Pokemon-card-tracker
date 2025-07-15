@@ -52,7 +52,7 @@ const SearchToolbar = ({
   // Sort dropdown trigger
   const sortDropdownTrigger = (
     <div
-      className="dropdown-trigger inline-flex cursor-pointer items-center justify-center rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none dark:border-gray-700 dark:bg-[#000] dark:text-gray-300 dark:hover:bg-[#111]"
+      className="dropdown-trigger inline-flex cursor-pointer items-center justify-center rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none dark:border-gray-700 dark:bg-[#0F0F0F] dark:text-gray-300 dark:hover:bg-[#111]"
       onClick={() => setIsSortDropdownOpen(!isSortDropdownOpen)}
       data-component-name="SearchToolbar"
     >
@@ -88,7 +88,10 @@ const SearchToolbar = ({
     </div>
   );
 
-  const toolbarClass = `search-toolbar w-full bg-white dark:bg-black py-3 px-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 ${isDarkMode ? 'shadow-sm' : ''} rounded-md border border-gray-200 dark:border-gray-700 ${className}`;
+  const toolbarClass = `search-toolbar w-full bg-white dark:bg-[#0F0F0F] py-3 px-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shadow-sm rounded-md border border-gray-200 dark:border-gray-700 ${className}`;
+
+  // Helper function to check if we're on mobile
+  const isMobile = window.innerWidth < 640;
 
   return (
     <div className={toolbarClass} {...props}>
@@ -102,14 +105,14 @@ const SearchToolbar = ({
           value={searchValue}
           onChange={e => onSearchChange?.(e.target.value)}
           placeholder="Search by name, set, or serial number..."
-          className="w-full rounded-lg border border-gray-300 bg-white py-2 pl-10 pr-4 text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-black dark:text-white dark:placeholder:text-gray-400 dark:focus:bg-black"
+          className="w-full rounded-lg border border-gray-300 bg-white py-2 pl-10 pr-4 text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-[#0F0F0F] dark:text-white dark:placeholder:text-gray-400 dark:focus:bg-black"
         />
       </div>
 
       {/* Controls Group (View Mode, Sort, Add Card) */}
-      <div className="flex w-full items-center justify-between gap-3 sm:w-auto sm:justify-start">
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 sm:flex-nowrap">
         {/* View Mode Selector */}
-        <div className="view-selector relative flex rounded-lg bg-gray-100 p-1 dark:bg-black">
+        <div className="view-selector relative flex rounded-lg bg-gray-100 p-1 dark:bg-[#0F0F0F]">
           {/* Animated Background Indicator */}
           <div
             className="absolute inset-y-1 z-0 rounded-md bg-gradient-to-r from-[#ef4444] to-[#db2777] transition-transform duration-300 ease-in-out"
@@ -163,6 +166,7 @@ const SearchToolbar = ({
           width="sm"
           title="Sort By"
           useMobileSheet={true}
+          className="z-50"
         >
           {sortOptions.map(option => (
             <DropdownItem

@@ -40,7 +40,7 @@ const BottomSheet = ({ isOpen, onClose, title, children }) => {
   return (
     // Backdrop
     <div
-      className="bg-black/50 fixed inset-0 z-[1000] backdrop-blur-sm"
+      className="fixed inset-0 z-[1000] bg-black/50 backdrop-blur-sm pb-[env(safe-area-inset-bottom,0px)]"
       onClick={onClose}
     >
       {/* Sheet Content */}
@@ -50,7 +50,7 @@ const BottomSheet = ({ isOpen, onClose, title, children }) => {
         style={{
           maxHeight: '90vh',
           transform: isVisible ? 'translateY(0)' : 'translateY(100%)',
-          paddingBottom: '0.75rem',
+          paddingBottom: `calc(0.75rem + env(safe-area-inset-bottom, 0px))`,
         }}
         onTransitionEnd={() => {
           if (!isVisible) setIsAnimating(false);
