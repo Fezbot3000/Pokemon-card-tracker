@@ -398,20 +398,20 @@ const SharedCollection = () => {
           </div>
 
           {/* Filters - Mobile optimized */}
-          <div className="mb-4 rounded-lg border border-gray-700 bg-black p-3 dark:border-gray-700 dark:bg-black sm:mb-6 sm:p-4">
+          <div className="mb-4 rounded-lg border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-[#0F0F0F] sm:mb-6 sm:p-4">
             {/* Mobile Layout */}
             <div className="block space-y-3 sm:hidden">
               <Input
                 placeholder="Search cards..."
                 value={filters.search}
                 onChange={e => handleFilterChange('search', e.target.value)}
-                className="w-full border-gray-600 bg-gray-800 text-sm text-white dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                className="w-full border-gray-300 bg-white text-sm text-gray-900 dark:border-gray-600 dark:bg-[#0F0F0F] dark:text-white"
               />
               <div className="grid grid-cols-2 gap-2">
                 <Select
                   value={filters.category}
                   onChange={e => handleFilterChange('category', e.target.value)}
-                  className="w-full border-gray-600 bg-gray-800 text-sm text-white dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                  className="w-full border-gray-300 bg-white text-sm text-gray-900 dark:border-gray-600 dark:bg-[#0F0F0F] dark:text-white"
                 >
                   <option value="all">All Categories</option>
                   {stats.categoryList.map(category => (
@@ -423,7 +423,7 @@ const SharedCollection = () => {
                 <Select
                   value={filters.grading}
                   onChange={e => handleFilterChange('grading', e.target.value)}
-                  className="w-full border-gray-600 bg-gray-800 text-sm text-white dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                  className="w-full border-gray-300 bg-white text-sm text-gray-900 dark:border-gray-600 dark:bg-[#0F0F0F] dark:text-white"
                 >
                   <option value="all">All Cards</option>
                   <option value="graded">Graded Only</option>
@@ -434,7 +434,7 @@ const SharedCollection = () => {
                 <Select
                   value={filters.sortBy}
                   onChange={e => handleFilterChange('sortBy', e.target.value)}
-                  className="mr-3 flex-1 border-gray-600 bg-gray-800 text-sm text-white dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                  className="mr-3 flex-1 border-gray-300 bg-white text-sm text-gray-900 dark:border-gray-600 dark:bg-[#0F0F0F] dark:text-white"
                 >
                   <option value="value">Value ↓</option>
                   <option value="name">Name</option>
@@ -443,7 +443,7 @@ const SharedCollection = () => {
                   <option value="grade">Grade</option>
                   <option value="dateAdded">Date Added</option>
                 </Select>
-                <span className="whitespace-nowrap text-xs text-gray-300 dark:text-gray-300">
+                <span className="whitespace-nowrap text-xs text-gray-500 dark:text-gray-300">
                   {filteredCards.length}/{cards.length}
                 </span>
               </div>
@@ -455,12 +455,12 @@ const SharedCollection = () => {
                 placeholder="Search cards..."
                 value={filters.search}
                 onChange={e => handleFilterChange('search', e.target.value)}
-                className="w-full border-gray-600 bg-gray-800 text-white dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                className="w-full border-gray-300 bg-white text-gray-900 dark:border-gray-600 dark:bg-[#0F0F0F] dark:text-white"
               />
               <Select
                 value={filters.category}
                 onChange={e => handleFilterChange('category', e.target.value)}
-                className="w-full border-gray-600 bg-gray-800 text-white dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                className="w-full border-gray-300 bg-white text-gray-900 dark:border-gray-600 dark:bg-[#0F0F0F] dark:text-white"
               >
                 <option value="all">All Categories</option>
                 {stats.categoryList.map(category => (
@@ -472,7 +472,7 @@ const SharedCollection = () => {
               <Select
                 value={filters.grading}
                 onChange={e => handleFilterChange('grading', e.target.value)}
-                className="w-full border-gray-600 bg-gray-800 text-white dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                className="w-full border-gray-300 bg-white text-gray-900 dark:border-gray-600 dark:bg-[#0F0F0F] dark:text-white"
               >
                 <option value="all">All Cards</option>
                 <option value="graded">Graded Only</option>
@@ -481,7 +481,7 @@ const SharedCollection = () => {
               <Select
                 value={filters.sortBy}
                 onChange={e => handleFilterChange('sortBy', e.target.value)}
-                className="w-full border-gray-600 bg-gray-800 text-white dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                className="w-full border-gray-300 bg-white text-gray-900 dark:border-gray-600 dark:bg-[#0F0F0F] dark:text-white"
               >
                 <option value="value">Sort by Value (High to Low)</option>
                 <option value="name">Sort by Name</option>
