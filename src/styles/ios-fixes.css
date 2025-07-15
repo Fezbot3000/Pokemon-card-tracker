@@ -51,9 +51,17 @@
     input[type='checkbox'],
     button[aria-label*='Select'],
     button[aria-label*='Deselect'],
-    .w-4.h-4 {
+    .w-4.h-4,
+    .size-4[type='checkbox'],
+    .h-4[type='checkbox'],
+    .w-4[type='checkbox'] {
       width: 0.5rem !important;
       height: 0.5rem !important;
+      min-width: 0.5rem !important;
+      min-height: 0.5rem !important;
+      max-width: 0.5rem !important;
+      max-height: 0.5rem !important;
+      transform: scale(0.8) !important;
     }
 
     /* Additional targeting for card selection buttons */
