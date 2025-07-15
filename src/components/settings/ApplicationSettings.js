@@ -11,6 +11,7 @@ import {
   useUserPreferences,
   availableCurrencies,
 } from '../../contexts/UserPreferencesContext';
+import CustomDropdown from '../ui/CustomDropdown';
 
 /**
  * Application Settings Component
@@ -86,19 +87,16 @@ const ApplicationSettings = ({ onStartTutorial }) => {
             <Icon name="language" className="mr-2" />
             Display Currency
           </h4>
-          <SelectField
+          <CustomDropdown
             label="Preferred Currency"
             name="preferredCurrency"
             value={preferredCurrency.code}
-            onChange={handlePreferredCurrencyChange}
-            className="w-full text-sm"
-          >
-            {availableCurrencies.map(currency => (
-              <option key={currency.code} value={currency.code}>
-                {`${currency.name} (${currency.code})`}
-              </option>
-            ))}
-          </SelectField>
+            onSelect={handlePreferredCurrencyChange}
+            options={availableCurrencies.map(currency => ({
+              value: currency.code,
+              label: `${currency.name} (${currency.code})`
+            }))}
+          />
           <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
             Select the currency for displaying all monetary values in the app.
           </p>

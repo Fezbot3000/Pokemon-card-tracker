@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import PropTypes from 'prop-types';
 import Modal from '../design-system/molecules/Modal';
-import Button from '../design-system/atoms/Button';
 import Icon from '../design-system/atoms/Icon';
+import ModalButton from './ui/ModalButton';
 
 const MoveCardsModal = ({
   isOpen,
@@ -57,19 +57,19 @@ const MoveCardsModal = ({
       size="contextual"
       closeOnClickOutside={true}
       footer={
-        <>
-          <Button variant="secondary" onClick={onClose}>
+        <div className="flex w-full items-center justify-between">
+          <ModalButton variant="secondary" onClick={onClose}>
             Cancel
-          </Button>
-          <Button
+          </ModalButton>
+          <ModalButton
             variant="primary"
             onClick={handleConfirm}
             disabled={!targetCollection || availableCollections.length === 0}
             leftIcon={<Icon name="drive_file_move" />}
           >
             Move
-          </Button>
-        </>
+          </ModalButton>
+        </div>
       }
     >
       <div className="space-y-4">

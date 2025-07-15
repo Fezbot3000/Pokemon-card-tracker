@@ -5,6 +5,7 @@ import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db as firestoreDb } from '../../services/firebase';
 import toast from 'react-hot-toast';
 import logger from '../../utils/logger';
+import CustomDropdown from '../ui/CustomDropdown';
 
 function ReportListing({ listingId, sellerId, onClose }) {
   const { user } = useAuth();
@@ -87,19 +88,13 @@ function ReportListing({ listingId, sellerId, onClose }) {
               <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Reason for reporting
               </label>
-              <select
+              <CustomDropdown
                 value={reason}
-                onChange={e => setReason(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                onSelect={e => setReason(e.target.value)}
+                placeholder="Select a reason"
+                options={reportReasons}
                 required
-              >
-                <option value="">Select a reason</option>
-                {reportReasons.map(option => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
+              />
             </div>
 
             <div>

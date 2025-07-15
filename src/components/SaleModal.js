@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useUserPreferences } from '../contexts/UserPreferencesContext';
 import Modal from '../design-system/molecules/Modal';
-import Button from '../design-system/atoms/Button';
 import Icon from '../design-system/atoms/Icon';
+import ModalButton from './ui/ModalButton';
 
 const SaleModal = ({ isOpen, onClose, selectedCards, onConfirm }) => {
   const { formatAmountForDisplay, preferredCurrency, convertToUserCurrency } =
@@ -123,18 +123,18 @@ const SaleModal = ({ isOpen, onClose, selectedCards, onConfirm }) => {
       size="2xl"
       closeOnClickOutside={true}
       footer={
-        <>
-          <Button variant="secondary" onClick={handleClose}>
+        <div className="flex w-full items-center justify-between">
+          <ModalButton variant="secondary" onClick={handleClose}>
             Cancel
-          </Button>
-          <Button
+          </ModalButton>
+          <ModalButton
             variant="primary"
             onClick={handleSubmit}
             leftIcon={<Icon name="sell" />}
           >
             Confirm Sale
-          </Button>
-        </>
+          </ModalButton>
+        </div>
       }
     >
       <div className="space-y-6">

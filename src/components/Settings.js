@@ -12,6 +12,7 @@ import CollectionSharing from './CollectionSharing';
 import db from '../services/firestore/dbAdapter';
 import ErrorBoundary from './ErrorBoundary';
 import logger from '../services/LoggingService';
+import CustomDropdown from './ui/CustomDropdown';
 
 const Settings = () => {
   const navigate = useNavigate();
@@ -199,31 +200,61 @@ const Settings = () => {
   return (
     <ErrorBoundary>
       <div className="min-h-screen bg-white dark:bg-black">
-        {/* Tab Navigation */}
+        {/* Header with Back Button - Hidden on Mobile */}
         <div className="header-responsive fixed inset-x-0 top-0 z-50 border-b border-gray-200 bg-white dark:border-gray-700 dark:bg-black lg:sticky lg:top-0 lg:z-10">
-          <div className="flex h-full items-center justify-center space-x-1 px-4">
-            {tabs.map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => handleTabChange(tab.id)}
-                className={`rounded-md px-2 py-1 text-xs font-medium transition-colors duration-200 ${
-                  activeTab === tab.id
-                    ? 'bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] text-white'
-                    : 'hover:bg-gray-200/50 dark:hover:bg-gray-700/50 text-gray-700 dark:text-gray-300'
-                }`}
+          <div className="flex h-full items-center justify-between px-4">
+            {/* Back to Dashboard Button - Hidden on Mobile */}
+            <button
+              onClick={() => navigate('/dashboard')}
+              className="hidden lg:flex items-center space-x-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors"
+              aria-label="Back to Dashboard"
+            >
+              <svg
+                className="size-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
               >
-                <span
-                  className={`material-icons mr-1 hidden text-sm xs:inline ${
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 19l-7-7 7-7"
+                />
+              </svg>
+              <span className="text-sm font-medium">Back to Dashboard</span>
+            </button>
+
+            {/* Tab Navigation - Centered */}
+            <div className="flex items-center space-x-1">
+              {tabs.map(tab => (
+                <button
+                  key={tab.id}
+                  onClick={() => handleTabChange(tab.id)}
+                  className={`rounded-md px-2 py-1 text-xs font-medium transition-colors duration-200 ${
                     activeTab === tab.id
-                      ? 'text-white'
-                      : 'text-gray-600 dark:text-gray-300'
+                      ? 'bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] text-white'
+                      : 'hover:bg-gray-200/50 dark:hover:bg-gray-700/50 text-gray-700 dark:text-gray-300'
                   }`}
                 >
-                  {tab.icon}
-                </span>
-                <span>{tab.label}</span>
-              </button>
-            ))}
+                  <span
+                    className={`material-icons mr-1 hidden text-sm xs:inline ${
+                      activeTab === tab.id
+                        ? 'text-white'
+                        : 'text-gray-600 dark:text-gray-300'
+                    }`}
+                  >
+                    {tab.icon}
+                  </span>
+                  <span>{tab.label}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* Settings Title - Hidden on Mobile */}
+            <div className="hidden lg:flex items-center">
+              <h1 className="text-lg font-semibold text-gray-900 dark:text-white">Settings</h1>
+            </div>
           </div>
         </div>
 
@@ -301,17 +332,17 @@ const Settings = () => {
                       <span className="mr-2">🌐</span>
                       Display Currency
                     </h4>
-                    <select
+                    <CustomDropdown
                       value={preferredCurrency?.code || 'AUD'}
-                      onChange={handlePreferredCurrencyChange}
-                      className="w-full rounded-lg border border-gray-300 bg-white p-3 text-gray-900 focus:border-transparent focus:ring-2 focus:ring-[#ef4444] dark:border-gray-600 dark:bg-black dark:text-white"
-                    >
-                      <option value="AUD">Australian Dollar (AUD)</option>
-                      <option value="USD">US Dollar (USD)</option>
-                      <option value="EUR">Euro (EUR)</option>
-                      <option value="GBP">British Pound (GBP)</option>
-                      <option value="JPY">Japanese Yen (JPY)</option>
-                    </select>
+                      onSelect={handlePreferredCurrencyChange}
+                      options={[
+                        { value: 'AUD', label: 'Australian Dollar (AUD)' },
+                        { value: 'USD', label: 'US Dollar (USD)' },
+                        { value: 'EUR', label: 'Euro (EUR)' },
+                        { value: 'GBP', label: 'British Pound (GBP)' },
+                        { value: 'JPY', label: 'Japanese Yen (JPY)' }
+                      ]}
+                    />
                     <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
                       Select the currency for displaying all monetary values in
                       the app.

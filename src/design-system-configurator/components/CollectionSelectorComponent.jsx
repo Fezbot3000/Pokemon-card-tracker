@@ -92,7 +92,12 @@ const CollectionSelectorComponent = ({
     }
 
     // Check if collection already exists - exactly match production
-    if (collections.includes(trimmedName)) {
+    // Extract names from collections to check for duplicates
+    const existingNames = collections.map(collection => 
+      typeof collection === 'string' ? collection : (collection?.name || collection?.id || '')
+    );
+    
+    if (existingNames.includes(trimmedName)) {
       toast.error('A collection with this name already exists');
       return;
     }
@@ -132,18 +137,48 @@ const CollectionSelectorComponent = ({
 
   // Memoize filtered and sorted collections to prevent infinite re-renders
   const processedCollections = useMemo(() => {
-    // Filter any existing "All Cards" from collections to prevent duplication
-    const filtered = collections.filter(
-      collection => collection !== 'All Cards'
-    );
+    // Debug logging to understand collections structure
+    LoggingService.debug('CollectionSelectorComponent - Raw collections:', collections);
+    
+    // Extract collection names from Firebase objects and filter out "All Cards"
+    const collectionNames = collections
+      .map(collection => {
+        // Extract the human-readable name from Firebase collection objects
+        if (typeof collection === 'string') {
+          return collection;
+        }
+        
+        // Firebase collection objects have { id, name, cardCount, ... }
+        // Priority: name > id > fallback
+        let collectionName = '';
+        
+        if (collection?.name && collection.name.trim()) {
+          collectionName = collection.name.trim();
+        } else if (collection?.id) {
+          // If no name, check if ID looks like a Firebase document ID (long random string)
+          // If so, try to create a fallback name
+          const isFirebaseId = /^[A-Za-z0-9]{20,}$/.test(collection.id);
+          if (isFirebaseId) {
+            collectionName = `Collection ${collection.id.substring(0, 8)}...`;
+            LoggingService.warn('Collection missing name, using fallback:', { 
+              id: collection.id, 
+              fallbackName: collectionName,
+              collection: collection 
+            });
+          } else {
+            collectionName = collection.id;
+          }
+        } else {
+          collectionName = String(collection || '');
+        }
+        
+        return collectionName;
+      })
+      .filter(name => name && name !== 'All Cards') // Filter out empty names and "All Cards"
+      .sort((a, b) => a.localeCompare(b)); // Sort alphabetically
 
-    // Sort collections with stable comparison
-    return filtered.sort((a, b) => {
-      // Handle both string and object collections with safe string extraction
-      const nameA = typeof a === 'string' ? a : String(a?.name || a?.id || a || '');
-      const nameB = typeof b === 'string' ? b : String(b?.name || b?.id || b || '');
-      return nameA.localeCompare(nameB);
-    });
+    LoggingService.debug('CollectionSelectorComponent - Processed collection names:', collectionNames);
+    return collectionNames;
   }, [collections]);
 
   return (
@@ -189,20 +224,11 @@ const CollectionSelectorComponent = ({
                 <div className="my-1 border-t border-gray-200 dark:border-gray-700"></div>
 
                 {/* Collections list - iOS optimized with safe string rendering */}
-                {processedCollections.map(collection => {
-                  // Safely extract collection name as string
-                  const collectionName = typeof collection === 'string' 
-                    ? collection 
-                    : String(collection?.name || collection?.id || collection || '');
-                  
-                  // Generate safe key
-                  const collectionKey = typeof collection === 'string' 
-                    ? collection 
-                    : String(collection?.id || collection?.name || Math.random());
-
+                {processedCollections.map(collectionName => {
+                  // processedCollections now contains only string names, not objects
                   return (
                     <button
-                      key={collectionKey}
+                      key={collectionName}
                       onClick={() => handleCollectionSelect(collectionName)}
                       className="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 flex items-center justify-between min-h-[44px]"
                     >

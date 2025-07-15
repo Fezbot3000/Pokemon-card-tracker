@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import Modal from '../molecules/Modal';
-import Button from '../atoms/Button';
 import Icon from '../atoms/Icon';
+import ModalButton from '../../components/ui/ModalButton';
 import CardDetailsForm from './CardDetailsForm';
 import SaleModal from '../../components/SaleModal';
 import PriceChartingModal from '../../components/PriceChartingModal';
@@ -461,58 +461,65 @@ const CardDetailsModal = ({
     }
   };
 
-  // Modal footer buttons (like AddCardModal pattern)
+  // Modal footer buttons (standardized layout)
   const modalFooter = (
-    <div className="flex space-x-2">
-      <Button
-        variant="secondary"
-        onClick={onClose}
-        disabled={isPsaLoading || isSaving}
-      >
-        Cancel
-      </Button>
-      {onMarkAsSold && (
-        <Button
+    <div className="flex w-full items-center justify-between">
+      {/* Left side - Cancel and Mark as Sold */}
+      <div className="flex items-center space-x-3">
+        <ModalButton
           variant="secondary"
-          onClick={handleMarkAsSold}
+          onClick={onClose}
           disabled={isPsaLoading || isSaving}
         >
-          Mark as Sold
-        </Button>
-      )}
-      <Button
-        variant="primary"
-        onClick={handleSave}
-        disabled={isPsaLoading || isSaving}
-      >
-        {isSaving ? (
-          <>
-            <svg
-              className="-ml-1 mr-3 size-5 animate-spin text-white"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <circle
-                className="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="4"
-              ></circle>
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-              ></path>
-            </svg>
-            Saving...
-          </>
-        ) : (
-          'Save'
+          Cancel
+        </ModalButton>
+        {onMarkAsSold && (
+          <ModalButton
+            variant="secondary"
+            onClick={handleMarkAsSold}
+            disabled={isPsaLoading || isSaving}
+          >
+            Mark as Sold
+          </ModalButton>
         )}
-      </Button>
+      </div>
+
+      {/* Right side - Save button */}
+      <div className="flex items-center">
+        <ModalButton
+          variant="primary"
+          onClick={handleSave}
+          disabled={isPsaLoading || isSaving}
+        >
+          {isSaving ? (
+            <>
+              <svg
+                className="-ml-1 mr-3 size-5 animate-spin text-white"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+              Saving...
+            </>
+          ) : (
+            'Save'
+          )}
+        </ModalButton>
+      </div>
     </div>
   );
 

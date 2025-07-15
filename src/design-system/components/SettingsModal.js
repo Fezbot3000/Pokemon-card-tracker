@@ -5,6 +5,7 @@ import {
 } from '../../services/firebase';
 
 import { Modal, Button, ConfirmDialog, Icon, toast as toastService } from '../';
+import ModalButton from '../../components/ui/ModalButton';
 import FormField from '../molecules/FormField';
 import SettingsPanel from '../molecules/SettingsPanel';
 import SettingsNavItem from '../atoms/SettingsNavItem';
@@ -264,10 +265,13 @@ const SettingsModal = ({
         onClose={onClose}
         title="Settings"
         footer={
-          <div className="flex w-full items-center justify-end">
-            <Button variant="secondary" onClick={onClose}>
+          <div className="flex w-full items-center justify-between">
+            <ModalButton variant="secondary" onClick={onClose}>
+              Close
+            </ModalButton>
+            <ModalButton variant="primary" onClick={onClose}>
               Done
-            </Button>
+            </ModalButton>
           </div>
         }
         position="right"

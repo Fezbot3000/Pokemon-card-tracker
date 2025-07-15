@@ -4,6 +4,7 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db as firestoreDb } from '../../services/firebase';
 import { toast as toastService } from '../../design-system';
 import logger from '../../utils/logger';
+import CustomDropdown from '../ui/CustomDropdown';
 
 function MarketplaceProfile() {
   const { user } = useAuth();
@@ -189,19 +190,13 @@ function MarketplaceProfile() {
         <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
           Typical Response Time
         </label>
-        <select
+        <CustomDropdown
           value={profile.responseTime}
-          onChange={e =>
+          onSelect={e =>
             setProfile(prev => ({ ...prev, responseTime: e.target.value }))
           }
-          className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 dark:border-gray-600 dark:bg-[#0F0F0F] dark:text-white"
-        >
-          {responseTimeOptions.map(option => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
+          options={responseTimeOptions}
+        />
       </div>
 
       {/* Auto Reply Message */}

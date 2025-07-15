@@ -2,8 +2,8 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { toast } from 'react-hot-toast';
 import FormField from '../../design-system/molecules/FormField';
 import Modal from '../../design-system/molecules/Modal';
-import Button from '../../design-system/atoms/Button';
 import Icon from '../../design-system/atoms/Icon';
+import ModalButton from '../ui/ModalButton';
 import LoggingService from '../../services/LoggingService';
 
 /**
@@ -230,18 +230,18 @@ const CreateInvoiceModal = ({
         size="2xl"
         closeOnClickOutside={true}
         footer={
-          <>
-            <Button variant="secondary" onClick={handleClose}>
+          <div className="flex w-full items-center justify-between">
+            <ModalButton variant="secondary" onClick={handleClose}>
               Cancel
-            </Button>
-            <Button
+            </ModalButton>
+            <ModalButton
               variant="primary"
               onClick={handleSubmit}
               leftIcon={<Icon name="receipt" />}
             >
               {editingInvoice ? 'Save Changes' : 'Create Invoice'}
-            </Button>
-          </>
+            </ModalButton>
+          </div>
         }
       >
         <div className="space-y-6">

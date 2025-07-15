@@ -5,6 +5,7 @@ import {
   SettingsPanel,
   ConfirmDialog,
 } from '../../design-system';
+import CustomDropdown from '../ui/CustomDropdown';
 
 /**
  * Collection Management Component
@@ -72,24 +73,15 @@ const CollectionManagement = ({
               Rename Collection
             </h4>
             <div className="space-y-3">
-              <select
-                className={`w-full rounded-lg p-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 ${
-                  isDarkMode
-                    ? 'border border-[#ffffff1a] bg-[#0F0F0F] text-white'
-                    : 'border border-gray-300 bg-white text-gray-800'
-                }`}
+              <CustomDropdown
                 value={collectionToRename}
-                onChange={e => setCollectionToRename(e.target.value)}
-              >
-                <option value="" disabled>
-                  Select Collection...
-                </option>
-                {renameableCollections.map(name => (
-                  <option key={name} value={name}>
-                    {name}
-                  </option>
-                ))}
-              </select>
+                onSelect={e => setCollectionToRename(e.target.value)}
+                placeholder="Select Collection..."
+                options={renameableCollections.map(name => ({
+                  value: name,
+                  label: name
+                }))}
+              />
               <Button
                 variant="primary"
                 onClick={onStartRenaming}
@@ -109,24 +101,15 @@ const CollectionManagement = ({
               Delete Collection
             </h4>
             <div className="space-y-3">
-              <select
-                className={`w-full rounded-lg p-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 ${
-                  isDarkMode
-                    ? 'border border-[#ffffff1a] bg-[#0F0F0F] text-white'
-                    : 'border border-gray-300 bg-white text-gray-800'
-                }`}
+              <CustomDropdown
                 value={collectionToDelete}
-                onChange={e => setCollectionToDelete(e.target.value)}
-              >
-                <option value="" disabled>
-                  Select Collection...
-                </option>
-                {deletableCollections.map(name => (
-                  <option key={name} value={name}>
-                    {name}
-                  </option>
-                ))}
-              </select>
+                onSelect={e => setCollectionToDelete(e.target.value)}
+                placeholder="Select Collection..."
+                options={deletableCollections.map(name => ({
+                  value: name,
+                  label: name
+                }))}
+              />
               <Button
                 variant="danger"
                 onClick={handleDeleteClick}

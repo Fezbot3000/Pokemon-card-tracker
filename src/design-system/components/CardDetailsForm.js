@@ -6,6 +6,7 @@ import FormLabel from '../atoms/FormLabel';
 import SelectField from '../atoms/SelectField';
 import ImageUploadButton from '../atoms/ImageUploadButton';
 import Icon from '../atoms/Icon';
+import CustomDropdown from '../../components/ui/CustomDropdown';
 import {
   getPokemonSetsByYear,
   getSetsByCategory,
@@ -555,21 +556,19 @@ const CardDetailsForm = ({
     >
       {!hideCollectionField && (
         <div className="mb-6 mt-3">
-          <SelectField
+          <CustomDropdown
             label="Collection"
             name="collectionId"
             value={card.collectionId || initialCollectionName}
-            onChange={handleCollectionChange}
+            onSelect={handleCollectionChange}
             error={errors.collectionId}
             required
-          >
-            <option value="">Select Collection...</option>
-            {collections.map(collection => (
-              <option key={collection} value={collection}>
-                {collection}
-              </option>
-            ))}
-          </SelectField>
+            placeholder="Select Collection..."
+            options={collections.map(collection => ({
+              value: collection,
+              label: collection
+            }))}
+          />
         </div>
       )}
 
@@ -877,152 +876,84 @@ const CardDetailsForm = ({
 
           <div className="mt-4 grid grid-cols-1 gap-4">
             <div>
-              <SelectField
+              <CustomDropdown
                 label="Category"
                 name="category"
                 value={card?.category || ''}
-                onChange={handleInputChange}
-                options={[
-                  { value: '', label: 'Select Category...' },
-                  ...cardCategories,
-                ]}
+                onSelect={handleInputChange}
+                options={cardCategories}
+                placeholder="Select Category..."
                 error={errors.category}
                 required={false}
-                testId="category-select"
+                id="category-select"
               />
             </div>
           </div>
 
           <div className="mt-4 grid grid-cols-1 gap-4">
             <div>
-              <SelectField
+              <CustomDropdown
                 label="Year"
                 name="year"
                 value={card?.year || ''}
-                onChange={handleInputChange}
+                onSelect={handleInputChange}
                 error={errors.year}
                 disabled={false}
-                testId="year-select"
-              >
-                <option value="">Select Year...</option>
-                {availableYears.map(year => (
-                  <option key={year} value={year}>
-                    {year}
-                  </option>
-                ))}
-              </SelectField>
+                id="year-select"
+                placeholder="Select Year..."
+                options={availableYears.map(year => ({
+                  value: year,
+                  label: year
+                }))}
+              />
             </div>
           </div>
 
           <div className="mt-4 grid grid-cols-1 gap-4">
             <div>
-              <SelectField
+              <CustomDropdown
                 label="Set"
                 name="set"
                 value={card?.setName || ''}
-                onChange={handleInputChange}
-                options={[
-                  { value: '', label: 'Select Set...' },
-                  ...availableSets,
-                ]}
+                onSelect={handleInputChange}
+                options={availableSets}
+                placeholder="Select Set..."
                 disabled={!card?.category}
-                className={errors.setName ? 'border-red-500' : ''}
-                aria-describedby={errors.setName ? 'set-error' : undefined}
-                testId="set-select"
+                error={errors.setName}
+                id="set-select"
               />
-              {errors.setName && (
-                <p className="mt-1 text-xs text-red-500 dark:text-red-400">
-                  {errors.setName}
-                </p>
-              )}
             </div>
           </div>
 
           <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
               <div className="form-label-nowrap">
-                <FormLabel htmlFor="gradingCompany">Grading Company</FormLabel>
-                <div className="relative">
-                  <select
-                    id="gradingCompany"
-                    value={selectedCompany}
-                    onChange={handleCompanyChange}
-                    className="w-full appearance-none rounded-md border border-gray-300 bg-white px-4 py-2 pr-10 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-[#0F0F0F] dark:text-white"
-                    data-component-name="CardDetailsForm"
-                  >
-                    {gradingCompanies.map(company => (
-                      <option key={company.value} value={company.value}>
-                        {company.label}
-                      </option>
-                    ))}
-                  </select>
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 dark:text-gray-300">
-                    <svg
-                      className="size-4 fill-current"
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 20 20"
-                    >
-                      <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-                    </svg>
-                  </div>
-                </div>
+                <CustomDropdown
+                  label="Grading Company"
+                  id="gradingCompany"
+                  value={selectedCompany}
+                  onSelect={handleCompanyChange}
+                  options={gradingCompanies}
+                />
               </div>
             </div>
             <div>
               <div className="form-label-nowrap">
-                <FormLabel htmlFor="grade">Grade</FormLabel>
-                <div className="relative">
-                  <select
-                    id="grade"
-                    value={selectedGrade}
-                    onChange={handleGradeChange}
-                    className="w-full appearance-none rounded-md border border-gray-300 bg-white px-4 py-2 pr-10 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-[#0F0F0F] dark:text-white"
-                    data-component-name="CardDetailsForm"
-                  >
-                    {selectedCompany === 'RAW' ? (
-                      rawConditions.map(condition => (
-                        <option key={condition.value} value={condition.value}>
-                          {condition.label}
-                        </option>
-                      ))
-                    ) : selectedCompany === 'PSA' ? (
-                      psaGrades.map(grade => (
-                        <option key={grade.value} value={grade.value}>
-                          {grade.label}
-                        </option>
-                      ))
-                    ) : selectedCompany === 'BGS' ? (
-                      bgsGrades.map(grade => (
-                        <option key={grade.value} value={grade.value}>
-                          {grade.label}
-                        </option>
-                      ))
-                    ) : selectedCompany === 'CGC' ? (
-                      cgcGrades.map(grade => (
-                        <option key={grade.value} value={grade.value}>
-                          {grade.label}
-                        </option>
-                      ))
-                    ) : selectedCompany === 'SGC' ? (
-                      sgcGrades.map(grade => (
-                        <option key={grade.value} value={grade.value}>
-                          {grade.label}
-                        </option>
-                      ))
-                    ) : (
-                      <option value="">Select Grade...</option>
-                    )}
-                  </select>
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 dark:text-gray-300">
-                    <svg
-                      className="size-4 fill-current"
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 20 20"
-                    >
-                      <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-                    </svg>
-                  </div>
-                </div>
+                <CustomDropdown
+                  label="Grade"
+                  id="grade"
+                  value={selectedGrade}
+                  onSelect={handleGradeChange}
+                  placeholder="Select Grade..."
+                  options={
+                    selectedCompany === 'RAW' ? rawConditions.filter(condition => condition.value !== '') :
+                    selectedCompany === 'PSA' ? psaGrades.filter(grade => grade.value !== '') :
+                    selectedCompany === 'BGS' ? bgsGrades.filter(grade => grade.value !== '') :
+                    selectedCompany === 'CGC' ? cgcGrades.filter(grade => grade.value !== '') :
+                    selectedCompany === 'SGC' ? sgcGrades.filter(grade => grade.value !== '') :
+                    []
+                  }
+                />
               </div>
             </div>
           </div>

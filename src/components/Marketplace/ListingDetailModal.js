@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Modal, Button, Icon, toastService } from '../../design-system';
+import { Modal, Icon, toastService } from '../../design-system';
+import ModalButton from '../ui/ModalButton';
 import { useAuth } from '../../design-system';
 import {
   doc,
@@ -360,43 +361,43 @@ function ListingDetailModal({
       const isPending = listing?.status === 'pending';
       
       return (
-        <>
-          <Button variant="secondary" onClick={onClose}>
+        <div className="flex w-full items-center justify-between">
+          <ModalButton variant="secondary" onClick={onClose}>
             Close
-          </Button>
-          <div className="flex gap-2">
-            <Button
+          </ModalButton>
+          <div className="flex items-center space-x-3">
+            <ModalButton
               variant="secondary"
               onClick={isPending ? handleMarkAsAvailable : handleMarkAsPending}
               leftIcon={<Icon name={isPending ? "check" : "schedule"} />}
             >
               {isPending ? 'Mark as Available' : 'Mark as Pending'}
-            </Button>
-            <Button
+            </ModalButton>
+            <ModalButton
               variant="success"
               onClick={handleMarkAsSold}
               leftIcon={<Icon name="check_circle" />}
             >
               Mark as Sold
-            </Button>
-            <Button
+            </ModalButton>
+            <ModalButton
               variant="primary"
               onClick={handleEditListing}
               leftIcon={<Icon name="edit" />}
             >
               Edit
-            </Button>
+            </ModalButton>
           </div>
-        </>
+        </div>
       );
     } else {
       // Other user's listing - show contact action
       return (
-        <>
-          <Button variant="secondary" onClick={onClose}>
+        <div className="flex w-full items-center justify-between">
+          <ModalButton variant="secondary" onClick={onClose}>
             Close
-          </Button>
-          <Button
+          </ModalButton>
+          <ModalButton
             variant="primary"
             onClick={() => {
               hasExistingChat ? handleNavigateToChat() : handleMessageSeller();
@@ -406,8 +407,8 @@ function ListingDetailModal({
             {hasExistingChat
               ? 'Continue Conversation'
               : 'Send Seller a Message'}
-          </Button>
-        </>
+          </ModalButton>
+        </div>
       );
     }
   };

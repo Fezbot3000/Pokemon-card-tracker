@@ -5,6 +5,7 @@ import React, {
 import PropTypes from 'prop-types';
 import Modal from '../design-system/molecules/Modal';
 import Button from '../design-system/atoms/Button';
+import ModalButton from './ui/ModalButton';
 import CardDetailsForm from '../design-system/components/CardDetailsForm';
 import { toast } from 'react-hot-toast';
 import PSADetailModal from './PSADetailModal';
@@ -12,6 +13,7 @@ import NewCollectionModal from './NewCollectionModal';
 import { searchByCertNumber, parsePSACardData } from '../services/psaSearch';
 import { useSubscription } from '../hooks/useSubscription';
 import logger from '../services/LoggingService';
+import CustomDropdown from './ui/CustomDropdown';
 // import Spinner from './Spinner'; // Import Spinner for loading state
 
 /**
@@ -362,17 +364,17 @@ const AddCardModal = ({
     <div className="flex w-full flex-wrap items-center justify-between gap-2">
       {/* Cancel button - left aligned */}
       <div>
-        <Button variant="secondary" onClick={onClose}>
+        <ModalButton variant="secondary" onClick={onClose}>
           Cancel
-        </Button>
+        </ModalButton>
       </div>
 
       {/* Save button - right aligned */}
       <div className="flex items-center justify-end space-x-3">
         {/* Save button */}
-        <Button variant="primary" onClick={handleSave} disabled={isSaving}>
+        <ModalButton variant="primary" onClick={handleSave} disabled={isSaving}>
           {isSaving ? 'Saving...' : 'Add Card'}
-        </Button>
+        </ModalButton>
       </div>
     </div>
   );
@@ -469,29 +471,28 @@ const AddCardModal = ({
               Select Collection
             </h3>
             <div className="flex items-center gap-2">
-              <select
+              <CustomDropdown
                 value={selectedCollection}
-                onChange={e => {
+                onSelect={(e) => {
                   if (e.target.value === 'new') {
                     setShowNewCollectionModal(true);
                   } else {
                     setSelectedCollection(e.target.value);
                   }
                 }}
-                className="focus:ring-primary/20 w-full rounded-lg border border-[#ffffff33] bg-white px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 dark:border-[#ffffff1a] dark:bg-[#0F0F0F] dark:text-white"
-              >
-                <option value="" disabled>
-                  Select Collection...
-                </option>
-                {collections
-                  .filter(collection => collection.toLowerCase() !== 'sold')
-                  .map(collection => (
-                    <option key={collection} value={collection}>
-                      {collection}
-                    </option>
-                  ))}
-                <option value="new">+ Create New Collection</option>
-              </select>
+                options={[
+                  ...collections
+                    .filter(collection => collection.toLowerCase() !== 'sold')
+                    .map(collection => ({
+                      value: collection,
+                      label: collection
+                    })),
+                  { value: 'new', label: '+ Create New Collection' }
+                ]}
+                placeholder="Select Collection..."
+                className="w-full"
+                size="md"
+              />
               <Button
                 variant="primary"
                 type="button"

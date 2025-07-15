@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Icon, SimpleSearchBar } from '../../design-system';
+import CustomDropdown from '../ui/CustomDropdown';
 
 // Import the same predefined grading companies and grades used in CardDetailsForm
 const gradingCompaniesOptions = [
@@ -227,52 +228,37 @@ function MarketplaceSearchFilters({
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
         {/* Category filter */}
         <div>
-          <select
+          <CustomDropdown
             name="category"
             value={filters.category}
-            onChange={handleChange}
-            className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-[#0F0F0F] dark:text-white"
-          >
-            <option value="">All Categories</option>
-            {predefinedCategories.map(category => (
-              <option key={category} value={category}>
-                {category}
-              </option>
-            ))}
-          </select>
+            onSelect={handleChange}
+            placeholder="All Categories"
+            options={predefinedCategories.map(category => ({
+              value: category,
+              label: category
+            }))}
+          />
         </div>
 
         {/* Grading Company filter */}
         <div>
-          <select
+          <CustomDropdown
             name="gradingCompany"
             value={filters.gradingCompany}
-            onChange={handleChange}
-            className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-[#0F0F0F] dark:text-white"
-          >
-            {gradingCompaniesOptions.map(company => (
-              <option key={company.value} value={company.value}>
-                {company.label}
-              </option>
-            ))}
-          </select>
+            onSelect={handleChange}
+            options={gradingCompaniesOptions}
+          />
         </div>
 
         {/* Grade filter - only enabled if grading company is selected */}
         <div>
-          <select
+          <CustomDropdown
             name="grade"
             value={filters.grade}
-            onChange={handleChange}
+            onSelect={handleChange}
             disabled={!filters.gradingCompany}
-            className={`block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-[#0F0F0F] dark:text-white ${!filters.gradingCompany ? 'cursor-not-allowed opacity-50' : ''}`}
-          >
-            {gradeOptions.map(grade => (
-              <option key={grade.value} value={grade.value}>
-                {grade.label}
-              </option>
-            ))}
-          </select>
+            options={gradeOptions}
+          />
         </div>
       </div>
 

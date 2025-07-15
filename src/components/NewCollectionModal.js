@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Modal from '../design-system/molecules/Modal';
-import Button from '../design-system/atoms/Button';
 import Icon from '../design-system/atoms/Icon';
+import ModalButton from './ui/ModalButton';
 import FeatureGate from './FeatureGate';
 import { useSubscription } from '../hooks/useSubscription';
 
@@ -74,18 +74,18 @@ const NewCollectionModal = ({
       size="contextual"
       closeOnClickOutside={false}
       footer={
-        <>
-          <Button variant="secondary" onClick={handleClose}>
+        <div className="flex w-full items-center justify-between">
+          <ModalButton variant="secondary" onClick={handleClose}>
             Cancel
-          </Button>
-          <Button
+          </ModalButton>
+          <ModalButton
             variant="primary"
             onClick={handleCreate}
             leftIcon={<Icon name="create_new_folder" />}
           >
             Create
-          </Button>
-        </>
+          </ModalButton>
+        </div>
       }
     >
       <div className="space-y-4">

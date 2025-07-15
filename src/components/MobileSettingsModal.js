@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth, useTheme } from '../design-system';
 import { useTutorial } from '../contexts/TutorialContext';
 import logger from '../utils/logger';
+import CustomDropdown from './ui/CustomDropdown';
 
 const MobileSettingsModal = ({ isOpen, onClose, onResetData }) => {
   const { user, signOut } = useAuth();
@@ -119,19 +120,19 @@ const MobileSettingsModal = ({ isOpen, onClose, onResetData }) => {
             >
               Currency
             </label>
-            <select
+            <CustomDropdown
               id="currency"
               value={currency}
-              onChange={handleCurrencyChange}
-              className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 shadow-sm dark:border-gray-700 dark:bg-[#2D3748] dark:text-white"
-            >
-              <option value="USD">USD ($)</option>
-              <option value="EUR">EUR (€)</option>
-              <option value="GBP">GBP (£)</option>
-              <option value="JPY">JPY (¥)</option>
-              <option value="AUD">AUD ($)</option>
-              <option value="CAD">CAD ($)</option>
-            </select>
+              onSelect={handleCurrencyChange}
+              options={[
+                { value: 'USD', label: 'USD ($)' },
+                { value: 'EUR', label: 'EUR (€)' },
+                { value: 'GBP', label: 'GBP (£)' },
+                { value: 'JPY', label: 'JPY (¥)' },
+                { value: 'AUD', label: 'AUD ($)' },
+                { value: 'CAD', label: 'CAD ($)' }
+              ]}
+            />
           </div>
 
           {/* Tutorial */}

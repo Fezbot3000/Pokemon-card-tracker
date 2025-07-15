@@ -10,7 +10,8 @@ import { toast } from '../../design-system';
 import { useUserPreferences } from '../../contexts/UserPreferencesContext';
 import logger from '../../utils/logger';
 import { collection, addDoc } from 'firebase/firestore';
-import { Modal, Button, Icon, ConfirmDialog } from '../../design-system';
+import { Modal, Icon, ConfirmDialog } from '../../design-system';
+import ModalButton from '../ui/ModalButton';
 function EditListingModal({ isOpen, onClose, listing, onListingDeleted, onListingUpdated }) {
   const { preferredCurrency } = useUserPreferences();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -262,24 +263,24 @@ function EditListingModal({ isOpen, onClose, listing, onListingDeleted, onListin
         closeOnClickOutside={true}
         zIndex={50}
         footer={
-          <>
-            <Button
+          <div className="flex w-full items-center justify-between">
+            <ModalButton
               variant="secondary"
               onClick={onClose}
               disabled={isSubmitting}
             >
               Cancel
-            </Button>
-            <div className="flex gap-2">
-              <Button
+            </ModalButton>
+            <div className="flex items-center space-x-3">
+              <ModalButton
                 variant="destructive"
                 onClick={() => setShowDeleteConfirmation(true)}
                 disabled={isSubmitting || isDeleting}
                 leftIcon={<Icon name="delete" />}
               >
                 Delete Listing
-              </Button>
-              <Button
+              </ModalButton>
+              <ModalButton
                 type="submit"
                 form="edit-listing-form"
                 disabled={isSubmitting || !hasChanges()}
@@ -302,9 +303,9 @@ function EditListingModal({ isOpen, onClose, listing, onListingDeleted, onListin
                 ) : (
                   'Update Listing'
                 )}
-              </Button>
+              </ModalButton>
             </div>
-          </>
+          </div>
         }
       >
         <form

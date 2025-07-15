@@ -15,8 +15,8 @@ import {
 import { db as firestoreDb } from '../../services/firebase';
 import { useAuth } from '../../design-system';
 import Modal from '../../design-system/molecules/Modal';
-import Button from '../../design-system/atoms/Button';
 import Icon from '../../design-system/atoms/Icon';
+import ModalButton from '../ui/ModalButton';
 import logger from '../../utils/logger';
 import toast from 'react-hot-toast';
 
@@ -440,11 +440,11 @@ const MessageModal = ({
       closeOnClickOutside={false}
       zIndex={60}
       footer={
-        <>
-          <Button variant="secondary" onClick={onClose}>
+        <div className="flex w-full items-center justify-between">
+          <ModalButton variant="secondary" onClick={onClose}>
             Cancel
-          </Button>
-          <Button
+          </ModalButton>
+          <ModalButton
             variant="primary"
             onClick={handleSendMessage}
             disabled={!newMessage.trim() || loading}
@@ -458,8 +458,8 @@ const MessageModal = ({
             ) : (
               'Send Message'
             )}
-          </Button>
-        </>
+          </ModalButton>
+        </div>
       }
     >
       <div className="space-y-6">

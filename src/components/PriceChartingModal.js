@@ -9,7 +9,7 @@ import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { toast } from 'react-hot-toast';
 import Modal from '../design-system/molecules/Modal';
-import Button from '../design-system/atoms/Button';
+import ModalButton from './ui/ModalButton';
 import { searchCardPrice, extractBestPrice } from '../services/priceChartingService';
 import { useUserPreferences } from '../contexts/UserPreferencesContext';
 import LoggingService from '../services/LoggingService';
@@ -268,15 +268,15 @@ const PriceChartingModal = ({
 
         {/* Action Buttons */}
         {!isLoading && (
-          <div className="flex justify-end space-x-3">
-            <Button variant="secondary" onClick={onClose}>
+          <div className="flex w-full items-center justify-between">
+            <ModalButton variant="secondary" onClick={onClose}>
               Cancel
-            </Button>
+            </ModalButton>
             
             {selectedProduct && getBestPriceForProduct(selectedProduct) > 0 && (
-              <Button variant="primary" onClick={handleApplyPrice}>
+              <ModalButton variant="primary" onClick={handleApplyPrice}>
                 Apply Price ({formatAmountForDisplay(getBestPriceForProduct(selectedProduct), 'USD')})
-              </Button>
+              </ModalButton>
             )}
           </div>
         )}
