@@ -8,6 +8,7 @@ import { useState, useEffect } from 'react';
 export const useComponentNavigation = () => {
   const [activeTab, setActiveTab] = useState('atomic');
   const [activeSection, setActiveSection] = useState('colors');
+  const [activeBreadcrumb, setActiveBreadcrumb] = useState('home');
 
   // Handle URL hash changes for deep linking
   useEffect(() => {
@@ -89,11 +90,22 @@ export const useComponentNavigation = () => {
     setActiveSection(section);
   };
 
+  /**
+   * Handle breadcrumb navigation
+   * 
+   * @param {string} breadcrumb - Breadcrumb value
+   */
+  const handleBreadcrumbChange = (breadcrumb) => {
+    setActiveBreadcrumb(breadcrumb);
+  };
+
   return {
     activeTab,
     activeSection,
+    activeBreadcrumb,
     navigateToTab,
     navigateToSection,
     navigateTo,
+    handleBreadcrumbChange,
   };
 }; 

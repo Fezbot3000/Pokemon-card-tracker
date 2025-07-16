@@ -61,6 +61,11 @@ export const useComponentLibrary = () => {
   const [modernInputValue, setModernInputValue] = useState('');
   const [modernInputError, setModernInputError] = useState('');
 
+  // Icon customization states
+  const [selectedIcon, setSelectedIcon] = useState('home');
+  const [iconSize, setIconSize] = useState('md');
+  const [iconColor, setIconColor] = useState('current');
+
   // Mock handlers for component examples
   const handleMockLogin = ({ email, password, rememberMe }) => {
     console.log('Mock login:', { email, password, rememberMe });
@@ -144,6 +149,29 @@ export const useComponentLibrary = () => {
     setModernInputError(value.length < 3 ? 'Input must be at least 3 characters' : '');
   };
 
+  // Icon customization handlers
+  const handleIconSelect = (iconName) => {
+    setSelectedIcon(iconName);
+  };
+
+  const handleIconSizeChange = (size) => {
+    setIconSize(size);
+  };
+
+  const handleIconColorChange = (color) => {
+    setIconColor(color);
+  };
+
+  // Component action handler
+  const handleComponentAction = (action, data) => {
+    console.log(`Component action: ${action}`, data);
+    
+    // Add toast notification for demo purposes
+    if (typeof window !== 'undefined' && window.toastService) {
+      window.toastService.success(`Action: ${action} completed`);
+    }
+  };
+
   return {
     // Theme
     theme,
@@ -201,6 +229,17 @@ export const useComponentLibrary = () => {
     handleSwitchChange,
     handleModernTabChange,
     handleModernInputChange,
+    
+    // Icon customization states
+    selectedIcon,
+    iconSize,
+    iconColor,
+    handleIconSelect,
+    handleIconSizeChange,
+    handleIconColorChange,
+    
+    // Component actions
+    handleComponentAction,
     
     // Mock handlers
     handleMockLogin,

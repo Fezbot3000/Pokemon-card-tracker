@@ -1,6 +1,13 @@
 import React from 'react';
 import ComponentLibraryNav from './components/ComponentLibraryNav';
 import { useComponentLibrary } from './hooks/useComponentLibrary';
+import ColorSystemSection from './sections/ColorSystemSection';
+import ButtonSection from './sections/ButtonSection';
+import CardSection from './sections/CardSection';
+import FormElementsSection from './sections/FormElementsSection';
+import ModernFormsSection from './sections/ModernFormsSection';
+import NavigationSection from './sections/NavigationSection';
+import IconSection from './sections/IconSection';
 
 /**
  * ComponentLibrary - Main component library page
@@ -75,6 +82,14 @@ const ComponentLibrary = () => {
     handleModernTabChange,
     handleModernInputChange,
     
+    // Icon customization states
+    selectedIcon,
+    iconSize,
+    iconColor,
+    handleIconSelect,
+    handleIconSizeChange,
+    handleIconColorChange,
+    
     // Mock handlers
     handleMockLogin,
     handleMockSignUpClick,
@@ -89,30 +104,30 @@ const ComponentLibrary = () => {
    * @returns {JSX.Element} The rendered section component
    */
   const renderActiveSection = () => {
-    // Import sections dynamically to avoid circular dependencies
+    // Import sections directly for better performance
     const sections = {
       // Atomic sections
-      colors: () => import('./sections/ColorSystemSection').then(m => m.default),
-      buttons: () => import('./sections/ButtonSection').then(m => m.default),
-      cards: () => import('./sections/CardSection').then(m => m.default),
-      'form-elements': () => import('./sections/FormElementsSection').then(m => m.default),
-      'modern-forms': () => import('./sections/ModernFormsSection').then(m => m.default),
-      navigation: () => import('./sections/NavigationSection').then(m => m.default),
-      icons: () => import('./sections/IconSection').then(m => m.default),
-      toggle: () => import('./sections/ToggleSection').then(m => m.default),
-      dropdown: () => import('./sections/DropdownSection').then(m => m.default),
-      toast: () => import('./sections/ToastSection').then(m => m.default),
-      'integration-tests': () => import('./sections/IntegrationTestsSection').then(m => m.default),
+      colors: () => import('./sections/ColorSystemSection'),
+      buttons: () => import('./sections/ButtonSection'),
+      cards: () => import('./sections/CardSection'),
+      'form-elements': () => import('./sections/FormElementsSection'),
+      'modern-forms': () => import('./sections/ModernFormsSection'),
+      navigation: () => import('./sections/NavigationSection'),
+      icons: () => import('./sections/IconSection'),
+      toggle: () => import('./sections/ToggleSection'),
+      dropdown: () => import('./sections/DropdownSection'),
+      toast: () => import('./sections/ToastSection'),
+      'integration-tests': () => import('./sections/IntegrationTestsSection'),
       
       // Composite sections
-      header: () => import('./sections/HeaderSection').then(m => m.default),
-      modal: () => import('./sections/ModalSection').then(m => m.default),
-      'card-details-modal': () => import('./sections/CardDetailsModalSection').then(m => m.default),
-      'statistics-summary': () => import('./sections/StatisticsSummarySection').then(m => m.default),
-      'search-toolbar': () => import('./sections/SearchToolbarSection').then(m => m.default),
-      'login-modal': () => import('./sections/LoginModalSection').then(m => m.default),
-      'settings-modal': () => import('./sections/SettingsModalSection').then(m => m.default),
-      'sold-items-view': () => import('./sections/SoldItemsSection').then(m => m.default),
+      header: () => import('./sections/HeaderSection'),
+      modal: () => import('./sections/ModalSection'),
+      'card-details-modal': () => import('./sections/CardDetailsModalSection'),
+      'statistics-summary': () => import('./sections/StatisticsSummarySection'),
+      'search-toolbar': () => import('./sections/SearchToolbarSection'),
+      'login-modal': () => import('./sections/LoginModalSection'),
+      'settings-modal': () => import('./sections/SettingsModalSection'),
+      'sold-items-view': () => import('./sections/SoldItemsSection'),
     };
 
     const SectionComponent = sections[activeSection];
@@ -127,19 +142,103 @@ const ComponentLibrary = () => {
       );
     }
 
-    // For now, return a placeholder until we create all section components
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-            {activeSection.charAt(0).toUpperCase() + activeSection.slice(1).replace('-', ' ')}
-          </h3>
-          <p className="text-gray-500 dark:text-gray-400">
-            Section component will be implemented here
-          </p>
-        </div>
-      </div>
-    );
+    // Render the appropriate section component with props
+    switch (activeSection) {
+      case 'colors':
+        return (
+          <ColorSystemSection
+            colorMap={colorMap}
+            handleSaveColor={handleSaveColor}
+            getColorValue={getColorValue}
+            isColorCustomized={isColorCustomized}
+          />
+        );
+      
+      case 'buttons':
+        return (
+          <ButtonSection
+            toggleStates={toggleStates}
+            handleToggleChange={handleToggleChange}
+          />
+        );
+      
+      case 'cards':
+        return (
+          <CardSection
+            handleComponentAction={handleComponentAction}
+          />
+        );
+      
+      case 'form-elements':
+        return (
+          <FormElementsSection
+            textValue={textValue}
+            numberValue={numberValue}
+            errorText={errorText}
+            errorNumber={errorNumber}
+            handleTextChange={handleTextChange}
+            handleNumberChange={handleNumberChange}
+            toggleStates={toggleStates}
+            handleToggleChange={handleToggleChange}
+          />
+        );
+      
+      case 'modern-forms':
+        return (
+          <ModernFormsSection
+            selectValue={selectValue}
+            checkboxes={checkboxes}
+            radioValue={radioValue}
+            switchStates={switchStates}
+            activeModernTab={activeModernTab}
+            modernInputValue={modernInputValue}
+            modernInputError={modernInputError}
+            handleSelectChange={handleSelectChange}
+            handleCheckboxChange={handleCheckboxChange}
+            handleRadioChange={handleRadioChange}
+            handleSwitchChange={handleSwitchChange}
+            handleModernTabChange={handleModernTabChange}
+            handleModernInputChange={handleModernInputChange}
+          />
+        );
+      
+      case 'navigation':
+        return (
+          <NavigationSection
+            activeTab={activeTab}
+            activeBreadcrumb={activeBreadcrumb}
+            handleTabChange={handleTabChange}
+            handleBreadcrumbChange={handleBreadcrumbChange}
+          />
+        );
+      
+      case 'icons':
+        return (
+          <IconSection
+            selectedIcon={selectedIcon}
+            iconSize={iconSize}
+            iconColor={iconColor}
+            handleIconSelect={handleIconSelect}
+            handleIconSizeChange={handleIconSizeChange}
+            handleIconColorChange={handleIconColorChange}
+          />
+        );
+      
+      default:
+        // For sections that haven't been implemented yet
+        return (
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                {activeSection.charAt(0).toUpperCase() + activeSection.slice(1).replace(/-/g, ' ')}
+              </h3>
+              <p className="text-gray-500 dark:text-gray-400">
+                Section component will be implemented here
+              </p>
+            </div>
+          </div>
+        );
+    }
   };
 
   return (
