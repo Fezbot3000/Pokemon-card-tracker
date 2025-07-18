@@ -10,7 +10,7 @@
 
 /* ==================== FONT IMPORTS ==================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@300;400;500;600;700&display=swap');
+/* Fonts are now loaded optimally in index.html - no CSS imports needed */
 
 /* ==================== DESIGN TOKENS ==================== */
 
@@ -26,7 +26,7 @@
 
 html {
   font-family:
-    'Noto Sans',
+    'Inter',
     -apple-system,
     BlinkMacSystemFont,
     system-ui,

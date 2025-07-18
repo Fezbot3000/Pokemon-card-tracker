@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@300;400;500;600;700&display=swap');
+/* Fonts are loaded optimally in index.html - no CSS imports needed */
 
 /* Import the design system first to establish variables */
 @import './design-system.css';
@@ -249,7 +249,7 @@ html {
   overflow-x: hidden;
 
   font-family:
-    'Noto Sans',
+    'Inter',
     -apple-system,
     BlinkMacSystemFont,
     system-ui,

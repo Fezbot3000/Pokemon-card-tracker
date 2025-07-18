@@ -259,6 +259,10 @@ function Home() {
                     src="/screenshots/dashboard.png"
                     alt="Desktop Dashboard"
                     className="w-full rounded-xl shadow-2xl transition-transform duration-300 hover:scale-105 sm:rounded-2xl"
+                    loading="lazy"
+                    decoding="async"
+                    width="1013"
+                    height="871"
                   />
                 </button>
                 <div className="mt-4 text-center sm:mt-6">
@@ -290,6 +294,10 @@ function Home() {
                     src="/screenshots/phonemockup.png"
                     alt="Mobile App"
                     className="mx-auto w-full max-w-xs rounded-xl shadow-2xl transition-transform duration-300 hover:scale-105 sm:max-w-sm sm:rounded-2xl"
+                    loading="lazy"
+                    decoding="async"
+                    width="405"
+                    height="870"
                   />
                 </button>
                 <div className="mt-4 text-center sm:mt-6">
@@ -406,6 +414,10 @@ function Home() {
                         src={feature.src}
                         alt={feature.title}
                         className="size-full object-cover transition-transform duration-300 hover:scale-110"
+                        loading="lazy"
+                        decoding="async"
+                        width="300"
+                        height="300"
                       />
                     </div>
                   </button>

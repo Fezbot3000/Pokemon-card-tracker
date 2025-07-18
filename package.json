@@ -44,6 +44,8 @@
     "firebase-init": "firebase init",
     "firebase-deploy": "firebase deploy --non-interactive",
     "analyze": "npm run build && npx webpack-bundle-analyzer build/static/js/*.js",
+    "optimize:images": "echo \"For image optimization, consider using tools like imagemin, squoosh-cli, or online tools like TinyPNG for the files in public/screenshots/\"",
+    "performance": "npm run build:prod && echo \"Build complete! Test performance with Lighthouse or WebPageTest\"",
     "lint": "eslint src/**/*.{js,jsx,ts,tsx} --fix",
     "format": "prettier --write src/**/*.{js,jsx,ts,tsx,css,json}",
     "type-check": "tsc --noEmit"
