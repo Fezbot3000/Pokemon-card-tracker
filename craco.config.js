@@ -67,47 +67,107 @@ module.exports = {
               extractComments: false // Don't extract comments to separate file
             })
           ],
-          splitChunks: {
+                    splitChunks: {
             chunks: 'all',
-            maxInitialRequests: 5, // Reduce network requests for better mobile performance
-            maxAsyncRequests: 10,
-            minSize: 30000, // Larger minimum chunk size
-            maxSize: 500000, // Larger maximum chunk size
+            maxInitialRequests: 8, // Balanced for mobile performance
+            maxAsyncRequests: 15,
+            minSize: 20000, // Smaller chunks for better caching
+            maxSize: 200000, // Prevent overly large chunks
             cacheGroups: {
               default: false,
               vendors: false,
-              
-              // React vendor chunk
+
+              // React vendor chunk (async only to avoid initial bundle bloat)
               react: {
                 name: 'react',
-                chunks: 'all',
-                test: /[\\/]node_modules[\\/](react|react-dom|react-router|react-router-dom)[\\/]/,
+                chunks: 'async',
+                test: /[\\/]node_modules[\\/](react|react-dom)[\\/]/,
                 priority: 40,
                 enforce: true,
                 reuseExistingChunk: true
               },
-              
-              // Firebase chunk
+
+              // React Router (separate from React)
+              router: {
+                name: 'router',
+                chunks: 'async',
+                test: /[\\/]node_modules[\\/](react-router|react-router-dom)[\\/]/,
+                priority: 35,
+                enforce: true,
+                reuseExistingChunk: true
+              },
+
+              // Firebase chunk (async only)
               firebase: {
                 name: 'firebase',
-                chunks: 'all',
+                chunks: 'async',
                 test: /[\\/]node_modules[\\/](firebase|@firebase)[\\/]/,
                 priority: 30,
                 enforce: true,
                 reuseExistingChunk: true
               },
-              
-              // Large utility libraries
+
+              // Charts and visualization libraries
+              charts: {
+                name: 'charts',
+                chunks: 'async',
+                test: /[\\/]node_modules[\\/](chart\.js|react-chartjs-2|recharts|d3)[\\/]/,
+                priority: 28,
+                enforce: true,
+                reuseExistingChunk: true
+              },
+
+              // File processing libraries
+              files: {
+                name: 'files',
+                chunks: 'async', 
+                test: /[\\/]node_modules[\\/](papaparse|file-saver|jszip)[\\/]/,
+                priority: 27,
+                enforce: true,
+                reuseExistingChunk: true
+              },
+
+              // Payment libraries
+              payments: {
+                name: 'payments',
+                chunks: 'async',
+                test: /[\\/]node_modules[\\/](@stripe|stripe)[\\/]/,
+                priority: 26,
+                enforce: true,
+                reuseExistingChunk: true
+              },
+
+              // UI libraries (non-critical)
+              ui: {
+                name: 'ui',
+                chunks: 'async',
+                test: /[\\/]node_modules[\\/](framer-motion|react-spring|@headlessui|@heroicons)[\\/]/,
+                priority: 25,
+                enforce: true,
+                reuseExistingChunk: true
+              },
+
+              // Utility libraries
+              utils: {
+                name: 'utils',
+                chunks: 'async',
+                test: /[\\/]node_modules[\\/](lodash|date-fns|moment|uuid)[\\/]/,
+                priority: 24,
+                enforce: true,
+                reuseExistingChunk: true
+              },
+
+              // General vendor chunk for remaining node_modules
               vendor: {
                 name: 'vendor',
-                chunks: 'all',
+                chunks: 'async',
                 test: /[\\/]node_modules[\\/]/,
                 priority: 20,
                 enforce: true,
                 reuseExistingChunk: true,
-                minSize: 50000 // Only create vendor chunks for large libraries
+                minSize: 30000
               },
-              
+
               // Common app code
               common: {
                 name: 'common',
@@ -116,7 +176,7 @@ module.exports = {
                 priority: 10,
                 reuseExistingChunk: true,
                 enforce: true,
-                minSize: 20000
+                minSize: 15000
               }
             }
           }

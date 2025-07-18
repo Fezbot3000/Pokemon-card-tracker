@@ -12,7 +12,7 @@
  * All operations are feature-flagged to ensure no disruption to the current application.
  */
 
-import { auth } from './firebase';
+import { getFirebaseAuth } from '../firebase-lazy';
 import { CardRepository } from '../repositories/CardRepository';
 import featureFlags from '../utils/featureFlags';
 import logger from '../utils/logger';
@@ -71,8 +71,9 @@ class ShadowSyncService {
    */
   _deferredInit() {
     // Wait 2 seconds after initial load to start shadow sync
-    this._initializationTimeout = setTimeout(() => {
+    this._initializationTimeout = setTimeout(async () => {
       // Initialize when auth state changes
+      const auth = await getFirebaseAuth();
       this._authListener = auth.onAuthStateChanged(user => {
         if (user) {
           this.userId = user.uid;

@@ -12,7 +12,6 @@ import {
   onAuthStateChanged,
   updateProfile,
   signInWithPopup,
-  OAuthProvider,
   setPersistence,
   browserLocalPersistence,
 } from 'firebase/auth';
@@ -24,7 +23,8 @@ import {
   updateDoc,
   onSnapshot,
 } from 'firebase/firestore';
-import { auth, db, googleProvider } from '../../firebase';
+import { db } from '../../firebase-lazy';
+import { getFirebaseAuth, getGoogleProvider } from '../../firebase-lazy';
 import { toast } from 'react-hot-toast';
 import LoggingService from '../../services/LoggingService';
 
@@ -216,7 +216,10 @@ export const AuthProvider = ({ children }) => {
     let isMounted = true;
     let unsubscribeSubscription = null;
 
-    const unsubscribe = onAuthStateChanged(auth, async user => {
+    const initializeAuthListener = async () => {
+      const auth = await getFirebaseAuth(); // Lazy load auth only when needed
+      
+      const unsubscribe = onAuthStateChanged(auth, async user => {
       if (!isMounted) return;
 
       if (user) {
@@ -311,12 +314,20 @@ export const AuthProvider = ({ children }) => {
       }, 100);
     });
 
+      return () => {
+        isMounted = false;
+        unsubscribe();
+        if (unsubscribeSubscription) {
+          unsubscribeSubscription();
+        }
+      };
+    };
+
+    // Initialize auth listener
+    initializeAuthListener();
+
     return () => {
       isMounted = false;
-      unsubscribe();
-      if (unsubscribeSubscription) {
-        unsubscribeSubscription();
-      }
     };
   }, []);
 
@@ -350,6 +361,7 @@ export const AuthProvider = ({ children }) => {
   const signUp = async ({ email, password, displayName }) => {
     try {
       setError(null);
+      const auth = await getFirebaseAuth();
       const result = await createUserWithEmailAndPassword(
         auth,
         email,
@@ -383,6 +395,7 @@ export const AuthProvider = ({ children }) => {
   const signIn = async ({ email, password }) => {
     try {
       setError(null);
+      const auth = await getFirebaseAuth();
       // Explicitly set persistence to local
       await setPersistence(auth, browserLocalPersistence);
       const userCredential = await signInWithEmailAndPassword(
@@ -408,6 +421,8 @@ export const AuthProvider = ({ children }) => {
   const signInWithGoogle = async () => {
     try {
       setError(null);
+      const auth = await getFirebaseAuth();
+      const googleProvider = await getGoogleProvider();
       // LoggingService.info("Starting Google sign-in process...");
 
       // Use popup for Google sign-in
@@ -466,9 +481,11 @@ export const AuthProvider = ({ children }) => {
   const signInWithApple = async () => {
     try {
       setError(null);
+      const auth = await getFirebaseAuth();
       // Explicitly set persistence to local
       await setPersistence(auth, browserLocalPersistence);
       // LoggingService.info("Starting Apple sign-in process...");
+      const { OAuthProvider } = await import('firebase/auth');
       const provider = new OAuthProvider('apple.com');
 
       // Use popup for Apple sign-in
@@ -530,6 +547,7 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     try {
       setError(null);
+      const auth = await getFirebaseAuth();
       await firebaseSignOut(auth);
 
       // Clear premium welcome flag so it can be shown again on next upgrade
@@ -548,6 +566,7 @@ export const AuthProvider = ({ children }) => {
   const resetPassword = async email => {
     try {
       setError(null);
+      const auth = await getFirebaseAuth();
       await sendPasswordResetEmail(auth, email);
       toast.success('Password reset email sent!');
     } catch (err) {

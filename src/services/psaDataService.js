@@ -12,9 +12,9 @@ import {
   getDoc,
   serverTimestamp,
 } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
+import { getFirebaseAuth } from '../firebase-lazy';
 import logger from '../utils/logger';
-import { db } from '../firebase';
+import { db } from '../firebase-lazy';
 
 // Constants
 const PSA_COLLECTION = 'psa-cards';
@@ -114,7 +114,7 @@ class PSADataService {
    * @private
    */
   async _checkWritePermission() {
-    const auth = getAuth();
+    const auth = await getFirebaseAuth();
     return auth.currentUser !== null;
   }
 
