@@ -3,6 +3,7 @@ import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { useAuth } from '../design-system/contexts/AuthContext';
 import logger from '../utils/logger';
+import { shouldDeferFirebase } from '../utils/mobileOptimizations';
 
 // Create context
 const UserPreferencesContext = createContext();
@@ -122,6 +123,18 @@ export function UserPreferencesProvider({ children }) {
         setLiveExchangeRates(conversionRates);
       }
 
+      // Performance optimization: defer API calls on mobile to prevent console errors during critical load
+      if (shouldDeferFirebase()) {
+        setTimeout(() => {
+          performExchangeRateUpdate();
+        }, 5000); // Defer by 5 seconds on mobile
+        return;
+      }
+
+      performExchangeRateUpdate();
+    };
+
+    const performExchangeRateUpdate = async () => {
       // Check if service is marked as unavailable
       const serviceUnavailable = localStorage.getItem(
         'exchangeRateServiceUnavailable'

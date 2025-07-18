@@ -69,10 +69,10 @@ module.exports = {
           ],
           splitChunks: {
             chunks: 'all',
-            maxInitialRequests: 15, // Reduce initial requests
-            maxAsyncRequests: 25,
-            minSize: 20000, // Increase minimum chunk size
-            maxSize: 250000, // Add maximum chunk size
+            maxInitialRequests: 10, // Further reduce initial requests for mobile
+            maxAsyncRequests: 20,
+            minSize: 15000, // Smaller minimum chunk size for better splitting
+            maxSize: 150000, // Smaller maximum chunk size for mobile
             cacheGroups: {
               default: false,
               vendors: false,
