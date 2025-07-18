@@ -4,6 +4,7 @@ import { useAuth } from '../design-system';
 import { Helmet } from 'react-helmet-async';
 import NavigationBar from './NavigationBar';
 import Footer from './Footer';
+import OptimizedImage from './ui/OptimizedImage';
 
 function Home() {
   const { currentUser, loading } = useAuth();
@@ -255,7 +256,7 @@ function Home() {
                   }
                   className="w-full cursor-pointer"
                 >
-                  <img
+                  <OptimizedImage
                     src="/screenshots/dashboard.png"
                     alt="Desktop Dashboard"
                     className="w-full rounded-xl shadow-2xl transition-transform duration-300 hover:scale-105 sm:rounded-2xl"
@@ -263,6 +264,7 @@ function Home() {
                     decoding="async"
                     width="1013"
                     height="871"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                   />
                 </button>
                 <div className="mt-4 text-center sm:mt-6">
@@ -290,7 +292,7 @@ function Home() {
                   }
                   className="w-full cursor-pointer"
                 >
-                  <img
+                  <OptimizedImage
                     src="/screenshots/phonemockup.png"
                     alt="Mobile App"
                     className="mx-auto w-full max-w-xs rounded-xl shadow-2xl transition-transform duration-300 hover:scale-105 sm:max-w-sm sm:rounded-2xl"
@@ -298,6 +300,7 @@ function Home() {
                     decoding="async"
                     width="405"
                     height="870"
+                    sizes="(max-width: 640px) 320px, 405px"
                   />
                 </button>
                 <div className="mt-4 text-center sm:mt-6">
@@ -410,7 +413,7 @@ function Home() {
                     className="w-full cursor-pointer"
                   >
                     <div className="mb-4 aspect-square overflow-hidden rounded-xl bg-gradient-to-br from-[rgba(31,41,55,0.5)] to-[rgba(17,24,39,0.5)]">
-                      <img
+                      <OptimizedImage
                         src={feature.src}
                         alt={feature.title}
                         className="size-full object-cover transition-transform duration-300 hover:scale-110"
@@ -418,6 +421,7 @@ function Home() {
                         decoding="async"
                         width="300"
                         height="300"
+                        sizes="(max-width: 640px) 300px, (max-width: 1024px) 200px, 150px"
                       />
                     </div>
                   </button>

@@ -42,17 +42,53 @@ module.exports = {
           ],
           splitChunks: {
             chunks: 'all',
+            maxInitialRequests: 25,
+            maxAsyncRequests: 30,
             cacheGroups: {
               default: false,
               vendors: false,
-              // Vendor chunk
+              
+              // React vendor chunk
+              react: {
+                name: 'react',
+                chunks: 'all',
+                test: /[\\/]node_modules[\\/](react|react-dom|react-router|react-router-dom)[\\/]/,
+                priority: 40,
+                enforce: true,
+                reuseExistingChunk: true
+              },
+              
+              // UI library chunk
+              ui: {
+                name: 'ui',
+                chunks: 'all',
+                test: /[\\/]node_modules[\\/](react-hot-toast|react-helmet-async)[\\/]/,
+                priority: 35,
+                enforce: true,
+                reuseExistingChunk: true
+              },
+              
+              // Firebase chunk
+              firebase: {
+                name: 'firebase',
+                chunks: 'all',
+                test: /[\\/]node_modules[\\/](firebase|@firebase)[\\/]/,
+                priority: 30,
+                enforce: true,
+                reuseExistingChunk: true
+              },
+              
+              // Vendor chunk for other libraries
               vendor: {
                 name: 'vendor',
                 chunks: 'all',
-                test: /node_modules/,
-                priority: 20
+                test: /[\\/]node_modules[\\/]/,
+                priority: 20,
+                enforce: true,
+                reuseExistingChunk: true
               },
-              // Common chunk
+              
+              // Common chunk for app code
               common: {
                 name: 'common',
                 minChunks: 2,

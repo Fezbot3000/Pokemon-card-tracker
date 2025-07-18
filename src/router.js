@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import { Toast } from './design-system';
@@ -10,27 +10,41 @@ import { BackupProvider, BackupProgressBar } from './design-system';
 import { RestoreProvider, RestoreProgressBar } from './design-system';
 import InvoiceProvider from './contexts/InvoiceContext';
 import ErrorBoundary from './components/ErrorBoundary';
+import ScrollToTop from './components/ScrollToTop';
+
+// Critical components - loaded immediately
 import Home from './components/Home';
 import Login from './components/Login';
 import ForgotPassword from './components/ForgotPassword';
-import Features from './components/Features';
-import About from './components/About';
-import Privacy from './components/Privacy';
-import Terms from './components/Terms';
-import HelpCenter from './components/HelpCenter';
-import CollectingGuide from './components/CollectingGuide';
-import GradingIntegration from './components/GradingIntegration';
-import PokemonSets from './components/PokemonSets';
-import PokemonInvestmentGuide from './components/PokemonInvestmentGuide';
-import { Dashboard, DashboardIndex } from './App';
-import Settings from './components/Settings';
-import ComponentLibrary from './pages/ComponentLibrary';
-import MarketplaceListing from './components/Marketplace/MarketplaceListing';
-import PublicMarketplace from './components/PublicMarketplace';
-import SharedCollection from './components/SharedCollection';
-import UpgradePage from './components/UpgradePage';
-import Pricing from './components/Pricing';
-import ScrollToTop from './components/ScrollToTop';
+
+// Lazy load non-critical components for better performance
+const Features = lazy(() => import('./components/Features'));
+const About = lazy(() => import('./components/About'));
+const Privacy = lazy(() => import('./components/Privacy'));
+const Terms = lazy(() => import('./components/Terms'));
+const HelpCenter = lazy(() => import('./components/HelpCenter'));
+const CollectingGuide = lazy(() => import('./components/CollectingGuide'));
+const GradingIntegration = lazy(() => import('./components/GradingIntegration'));
+const PokemonSets = lazy(() => import('./components/PokemonSets'));
+const PokemonInvestmentGuide = lazy(() => import('./components/PokemonInvestmentGuide'));
+const Settings = lazy(() => import('./components/Settings'));
+const ComponentLibrary = lazy(() => import('./pages/ComponentLibrary'));
+const MarketplaceListing = lazy(() => import('./components/Marketplace/MarketplaceListing'));
+const PublicMarketplace = lazy(() => import('./components/PublicMarketplace'));
+const SharedCollection = lazy(() => import('./components/SharedCollection'));
+const UpgradePage = lazy(() => import('./components/UpgradePage'));
+const Pricing = lazy(() => import('./components/Pricing'));
+
+// Dashboard components - lazy loaded since they're behind authentication
+const DashboardApp = lazy(() => import('./App').then(module => ({ default: module.Dashboard })));
+const DashboardIndex = lazy(() => import('./App').then(module => ({ default: module.DashboardIndex })));
+
+// Loading component for Suspense fallback
+const LoadingFallback = () => (
+  <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-gray-900">
+    <div className="size-8 animate-spin rounded-full border-b-2 border-blue-600"></div>
+  </div>
+);
 
 // Root providers wrapper component
 export const RootProviders = () => (
@@ -93,77 +107,149 @@ export const router = createBrowserRouter(
         },
         {
           path: 'features',
-          element: <Features />,
+          element: (
+            <Suspense fallback={<LoadingFallback />}>
+              <Features />
+            </Suspense>
+          ),
         },
         {
           path: 'about',
-          element: <About />,
+          element: (
+            <Suspense fallback={<LoadingFallback />}>
+              <About />
+            </Suspense>
+          ),
         },
         {
           path: 'privacy',
-          element: <Privacy />,
+          element: (
+            <Suspense fallback={<LoadingFallback />}>
+              <Privacy />
+            </Suspense>
+          ),
         },
         {
           path: 'terms',
-          element: <Terms />,
+          element: (
+            <Suspense fallback={<LoadingFallback />}>
+              <Terms />
+            </Suspense>
+          ),
         },
         {
           path: 'help-center',
-          element: <HelpCenter />,
+          element: (
+            <Suspense fallback={<LoadingFallback />}>
+              <HelpCenter />
+            </Suspense>
+          ),
         },
         {
           path: 'collecting-guide',
-          element: <CollectingGuide />,
+          element: (
+            <Suspense fallback={<LoadingFallback />}>
+              <CollectingGuide />
+            </Suspense>
+          ),
         },
         {
           path: 'grading-integration',
-          element: <GradingIntegration />,
+          element: (
+            <Suspense fallback={<LoadingFallback />}>
+              <GradingIntegration />
+            </Suspense>
+          ),
         },
         {
           path: 'pokemon-sets',
-          element: <PokemonSets />,
+          element: (
+            <Suspense fallback={<LoadingFallback />}>
+              <PokemonSets />
+            </Suspense>
+          ),
         },
         {
           path: 'pokemon-investment-guide',
-          element: <PokemonInvestmentGuide />,
+          element: (
+            <Suspense fallback={<LoadingFallback />}>
+              <PokemonInvestmentGuide />
+            </Suspense>
+          ),
         },
         {
           path: 'pricing',
-          element: <Pricing />,
+          element: (
+            <Suspense fallback={<LoadingFallback />}>
+              <Pricing />
+            </Suspense>
+          ),
         },
         {
           path: 'marketplace',
-          element: <PublicMarketplace />,
+          element: (
+            <Suspense fallback={<LoadingFallback />}>
+              <PublicMarketplace />
+            </Suspense>
+          ),
         },
         {
           path: 'marketplace/listing/:listingId',
-          element: <MarketplaceListing />,
+          element: (
+            <Suspense fallback={<LoadingFallback />}>
+              <MarketplaceListing />
+            </Suspense>
+          ),
         },
         {
           path: 'shared/:shareId',
-          element: <SharedCollection />,
+          element: (
+            <Suspense fallback={<LoadingFallback />}>
+              <SharedCollection />
+            </Suspense>
+          ),
         },
         {
           path: 'dashboard',
-          element: <Dashboard />,
+          element: (
+            <Suspense fallback={<LoadingFallback />}>
+              <DashboardApp />
+            </Suspense>
+          ),
           children: [
             {
               index: true,
-              element: <DashboardIndex />,
+              element: (
+                <Suspense fallback={<LoadingFallback />}>
+                  <DashboardIndex />
+                </Suspense>
+              ),
             },
             {
               path: 'settings',
-              element: <Settings />,
+              element: (
+                <Suspense fallback={<LoadingFallback />}>
+                  <Settings />
+                </Suspense>
+              ),
             },
           ],
         },
         {
           path: 'component-library',
-          element: <ComponentLibrary />,
+          element: (
+            <Suspense fallback={<LoadingFallback />}>
+              <ComponentLibrary />
+            </Suspense>
+          ),
         },
         {
           path: 'upgrade',
-          element: <UpgradePage />,
+          element: (
+            <Suspense fallback={<LoadingFallback />}>
+              <UpgradePage />
+            </Suspense>
+          ),
         },
         {
           path: '*',
