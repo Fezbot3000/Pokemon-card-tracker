@@ -58,31 +58,54 @@ class ShadowSyncService {
     this._skippedCardCount = 0;
     this._lastLogTimestamp = 0;
 
-    // Initialize when auth state changes
-    this._authListener = auth.onAuthStateChanged(user => {
-      if (user) {
-        this.userId = user.uid;
-        this.repository = new CardRepository(user.uid);
-        this.isInitialized = true;
-        logger.debug('[ShadowSync] Initialized with user ID:', user.uid);
-      } else {
-        this.cleanup();
-        logger.debug('[ShadowSync] User signed out, cleaned up resources');
-      }
-    });
+    // Defer initialization to avoid blocking initial render
+    this._authListener = null;
+    this._initializationTimeout = null;
+    
+    // Start deferred initialization
+    this._deferredInit();
+  }
 
-    // Listen for online/offline events
-    window.addEventListener('online', () => this._updateOnlineStatus(true));
-    window.addEventListener('offline', () => this._updateOnlineStatus(false));
+  /**
+   * Deferred initialization to avoid blocking initial render
+   */
+  _deferredInit() {
+    // Wait 2 seconds after initial load to start shadow sync
+    this._initializationTimeout = setTimeout(() => {
+      // Initialize when auth state changes
+      this._authListener = auth.onAuthStateChanged(user => {
+        if (user) {
+          this.userId = user.uid;
+          this.repository = new CardRepository(user.uid);
+          this.isInitialized = true;
+          logger.debug('[ShadowSync] Initialized with user ID:', user.uid);
+        } else {
+          this.cleanup();
+          logger.debug('[ShadowSync] User signed out, cleaned up resources');
+        }
+      });
+
+      // Listen for online/offline events
+      window.addEventListener('online', () => this._updateOnlineStatus(true));
+      window.addEventListener('offline', () => this._updateOnlineStatus(false));
+    }, 2000);
   }
 
   /**
    * Cleanup resources when user signs out
    */
   cleanup() {
+    if (this._initializationTimeout) {
+      clearTimeout(this._initializationTimeout);
+      this._initializationTimeout = null;
+    }
     if (this.listenerUnsubscribe) {
       this.listenerUnsubscribe();
       this.listenerUnsubscribe = null;
+    }
+    if (this._authListener) {
+      this._authListener();
+      this._authListener = null;
     }
     this.repository = null;
     this.userId = null;

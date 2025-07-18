@@ -69,124 +69,54 @@ module.exports = {
           ],
           splitChunks: {
             chunks: 'all',
-            maxInitialRequests: 10, // Further reduce initial requests for mobile
-            maxAsyncRequests: 20,
-            minSize: 15000, // Smaller minimum chunk size for better splitting
-            maxSize: 150000, // Smaller maximum chunk size for mobile
+            maxInitialRequests: 5, // Reduce network requests for better mobile performance
+            maxAsyncRequests: 10,
+            minSize: 30000, // Larger minimum chunk size
+            maxSize: 500000, // Larger maximum chunk size
             cacheGroups: {
               default: false,
               vendors: false,
               
-              // React vendor chunk (critical)
+              // React vendor chunk
               react: {
                 name: 'react',
-                chunks: 'initial', // Only for initial load
-                test: /[\\/]node_modules[\\/](react|react-dom)[\\/]/,
-                priority: 50,
-                enforce: true,
-                reuseExistingChunk: true
-              },
-              
-              // React Router (lazy loaded)
-              router: {
-                name: 'router',
-                chunks: 'async',
-                test: /[\\/]node_modules[\\/](react-router|react-router-dom)[\\/]/,
-                priority: 45,
-                enforce: true,
-                reuseExistingChunk: true
-              },
-              
-              // Firebase chunk (lazy loaded)
-              firebase: {
-                name: 'firebase',
-                chunks: 'async',
-                test: /[\\/]node_modules[\\/](firebase|@firebase)[\\/]/,
+                chunks: 'all',
+                test: /[\\/]node_modules[\\/](react|react-dom|react-router|react-router-dom)[\\/]/,
                 priority: 40,
                 enforce: true,
                 reuseExistingChunk: true
               },
               
-              // Chart.js and heavy visualization libraries
-              charts: {
-                name: 'charts',
-                chunks: 'async',
-                test: /[\\/]node_modules[\\/](chart\.js|react-chartjs-2)[\\/]/,
-                priority: 35,
-                enforce: true,
-                reuseExistingChunk: true
-              },
-              
-              // PDF and file handling libraries
-              files: {
-                name: 'files',
-                chunks: 'async',
-                test: /[\\/]node_modules[\\/](@react-pdf\/renderer|jszip|papaparse|file-saver)[\\/]/,
-                priority: 32,
-                enforce: true,
-                reuseExistingChunk: true
-              },
-              
-              // Stripe and payment libraries
-              payments: {
-                name: 'payments',
-                chunks: 'async',
-                test: /[\\/]node_modules[\\/](@stripe\/stripe-js|stripe)[\\/]/,
+              // Firebase chunk
+              firebase: {
+                name: 'firebase',
+                chunks: 'all',
+                test: /[\\/]node_modules[\\/](firebase|@firebase)[\\/]/,
                 priority: 30,
                 enforce: true,
                 reuseExistingChunk: true
               },
               
-              // Maps and geolocation libraries
-              maps: {
-                name: 'maps',
-                chunks: 'async',
-                test: /[\\/]node_modules[\\/](leaflet|react-leaflet)[\\/]/,
-                priority: 28,
-                enforce: true,
-                reuseExistingChunk: true
-              },
-              
-              // UI utility libraries (async)
-              ui: {
-                name: 'ui',
-                chunks: 'async',
-                test: /[\\/]node_modules[\\/](react-hot-toast|react-helmet-async|react-intersection-observer)[\\/]/,
-                priority: 25,
-                enforce: true,
-                reuseExistingChunk: true
-              },
-              
-              // Utility libraries
-              utils: {
-                name: 'utils',
-                chunks: 'async',
-                test: /[\\/]node_modules[\\/](class-variance-authority|clsx|tailwind-merge)[\\/]/,
-                priority: 22,
-                enforce: true,
-                reuseExistingChunk: true
-              },
-              
-              // Other vendor libraries (async only)
+              // Large utility libraries
               vendor: {
                 name: 'vendor',
-                chunks: 'async',
+                chunks: 'all',
                 test: /[\\/]node_modules[\\/]/,
                 priority: 20,
                 enforce: true,
                 reuseExistingChunk: true,
-                minSize: 30000 // Larger minimum for vendor chunks
+                minSize: 50000 // Only create vendor chunks for large libraries
               },
               
-              // Common app code (only if shared by 3+ chunks)
+              // Common app code
               common: {
                 name: 'common',
-                minChunks: 3, // Increase threshold
+                minChunks: 2,
                 chunks: 'all',
                 priority: 10,
                 reuseExistingChunk: true,
                 enforce: true,
-                minSize: 15000
+                minSize: 20000
               }
             }
           }

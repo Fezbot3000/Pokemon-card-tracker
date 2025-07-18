@@ -27,7 +27,6 @@ import {
 import { auth, db, googleProvider } from '../../firebase';
 import { toast } from 'react-hot-toast';
 import LoggingService from '../../services/LoggingService';
-import { shouldDeferFirebase, isMobileDevice } from '../../utils/mobileOptimizations';
 
 /**
  * Auth Context for the design system with subscription management
@@ -217,9 +216,7 @@ export const AuthProvider = ({ children }) => {
     let isMounted = true;
     let unsubscribeSubscription = null;
 
-    // Performance optimization: defer Firebase on mobile for faster initial load
-    const initializeAuth = () => {
-      const unsubscribe = onAuthStateChanged(auth, async user => {
+    const unsubscribe = onAuthStateChanged(auth, async user => {
       if (!isMounted) return;
 
       if (user) {
@@ -314,26 +311,13 @@ export const AuthProvider = ({ children }) => {
       }, 100);
     });
 
-      return () => {
-        isMounted = false;
-        unsubscribe();
-        if (unsubscribeSubscription) {
-          unsubscribeSubscription();
-        }
-      };
+    return () => {
+      isMounted = false;
+      unsubscribe();
+      if (unsubscribeSubscription) {
+        unsubscribeSubscription();
+      }
     };
-
-    // Initialize auth immediately on desktop, defer on mobile for performance
-    if (shouldDeferFirebase()) {
-      // Defer Firebase initialization on mobile by 2 seconds to allow critical render
-      setTimeout(initializeAuth, 2000);
-      return () => {
-        isMounted = false;
-      };
-    } else {
-      // Initialize immediately on desktop
-      return initializeAuth();
-    }
   }, []);
 
   // Helper function to create a user document in Firestore

@@ -10,38 +10,19 @@ import { RouterProvider } from 'react-router-dom';
 import reportWebVitals from './reportWebVitals';
 // Import environment validation before Firebase initialization
 import './env';
+// Import app initialization
+import { initializeAppService } from './services/appInitialization';
+import logger from './utils/logger';
 import ErrorBoundary from './components/ErrorBoundary';
-import { shouldDeferFirebase } from './utils/mobileOptimizations';
 
-// Performance optimization: defer heavy initialization on mobile
-const initializeApp = async () => {
-  if (shouldDeferFirebase()) {
-    // Defer heavy services on mobile for faster initial render
-    setTimeout(async () => {
-      const { initializeAppService } = await import('./services/appInitialization');
-      const logger = await import('./utils/logger');
-      
-      initializeAppService()
-        .then(() => {})
-        .catch(error => {
-          logger.default.error('Error during app initialization:', error);
-        });
-    }, 1000); // Defer by 1 second on mobile
-  } else {
-    // Initialize immediately on desktop
-    const { initializeAppService } = await import('./services/appInitialization');
-    const logger = await import('./utils/logger');
-    
-    initializeAppService()
-      .then(() => {})
-      .catch(error => {
-        logger.default.error('Error during app initialization:', error);
-      });
-  }
-};
-
-// Initialize the application with performance optimization
-initializeApp();
+// Defer app initialization to avoid blocking initial render
+setTimeout(() => {
+  initializeAppService()
+    .then(() => {})
+    .catch(error => {
+      logger.error('Error during app initialization:', error);
+    });
+}, 100);
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
