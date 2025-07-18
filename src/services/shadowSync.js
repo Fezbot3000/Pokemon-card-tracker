@@ -822,7 +822,7 @@ class ShadowSyncService {
   }
 
   // Method to set up Firestore listener for sold items
-  listenToSoldItemsChanges() {
+  async listenToSoldItemsChanges() {
     if (this.unsubscribeSoldItemsListener) {
       this.unsubscribeSoldItemsListener(); // Unsubscribe from any previous listener
     }
@@ -833,6 +833,7 @@ class ShadowSyncService {
       );
       // Attempt to get user ID directly if repository isn't fully set up with it
       // This might happen if initialize wasn't called with a fully ready repository
+      const auth = await getFirebaseAuth();
       const currentUser = auth.currentUser;
       if (!currentUser) {
         logger.warn('[ShadowSync] Current user not available for listener.');
