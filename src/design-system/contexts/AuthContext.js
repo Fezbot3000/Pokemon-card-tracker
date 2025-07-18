@@ -24,7 +24,7 @@ import {
   updateDoc,
   onSnapshot,
 } from 'firebase/firestore';
-import { auth, db, googleProvider } from '../../firebase'; // Import from the main app's firebase config
+import { auth, db, googleProvider } from '../../firebase';
 import { toast } from 'react-hot-toast';
 import LoggingService from '../../services/LoggingService';
 

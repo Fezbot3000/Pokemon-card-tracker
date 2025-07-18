@@ -1,6 +1,11 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: ['./src/**/*.{js,jsx,ts,tsx}', './public/index.html'],
+  content: [
+    './src/**/*.{js,jsx,ts,tsx}', 
+    './public/index.html',
+    './src/**/*.css',
+    './src/**/*.scss',
+  ],
   darkMode: 'class',
   theme: {
     extend: {
@@ -216,74 +221,37 @@ module.exports = {
   corePlugins: {
     backdropFilter: true,
   },
-  // Safelist custom classes that are used but not detected by Tailwind
+  // Safelist only essential dynamic classes
   safelist: [
-    // Custom component classes
-    'component-library',
-    'card-title',
-    'card-details-form', 
-    'view-optimizer-container',
-    'view-container',
-    '-view',
-    'error',
-    'form-field',
-    'required',
-    // Focus ring classes for custom UI components
-    'focus:ring-ring',
-    'focus:ring-offset-background',
-    'focus-visible:ring-ring',
-    'focus-visible:ring-offset-background',
-    // Background classes for custom themes
-    'bg-background',
-    'bg-card',
-    'bg-muted',
-    'bg-secondary',
-    'bg-input',
-    // Text classes for custom themes  
-    'text-card-foreground',
-    'text-secondary-foreground',
-    'text-muted-foreground',
-    'text-foreground',
-    'placeholder:text-muted-foreground',
-    // Border classes
-    'border-input',
-    // State-based classes
-    'data-[state=checked]:text-primary-foreground',
-    'data-[state=unchecked]:bg-input',
-    'data-[state=active]:bg-background',
-    'data-[state=active]:text-foreground',
-    'hover:bg-secondary/80',
-    // Dynamic focus ring classes
-    'focus:ring-[var(--primary-default)]/20',
-    'focus:ring-[var(--primary-light)]/20',
-    // Custom gradient classes with opacity
+    // Critical loading and animation classes
+    'animate-spin',
+    'transition-transform',
+    'duration-300',
+    'hover:scale-105',
+    'active:scale-95',
+    
+    // Dynamic gradient classes with opacity (actually used)
     'from-white/10',
     'to-white/5',
     'from-gray-800/50',
     'to-gray-900/50',
-    // Custom border classes with opacity
     'border-white/10',
     'border-white/20',
     'hover:border-white/20',
-    // Custom utility classes
-    'hide-scrollbar',
-    'upgrade-modal',
+    
+    // Modal and overlay classes
+    'modal-open',
     'page-no-padding',
-    'resize-vertical',
-    'stat-card',
-    'stat-label',
-    // Modal and component specific classes
-    'modal-content',
-    'modal-header',
-    'modal-body',
-    'modal-footer',
-    // Custom gradient classes
-    'from-black/50',
-    'via-black/20',
-    'hover:glass-bg-hover',
-    'hover:glass-border-hover',
-    // Dynamic color classes
-    'bg-',
-    '-500',
+    
+    // Glass effect classes
+    'glass-bg',
+    'glass-border',
+    'glass-bg-hover',
+    'glass-border-hover',
+    
+    // Dynamic color classes for theming
+    {
+      pattern: /(bg|text|border)-(primary|secondary|accent|gray|success|warning|error|info)-(50|100|200|300|400|500|600|700|800|900|950)/,
+    },
   ],
 } 
