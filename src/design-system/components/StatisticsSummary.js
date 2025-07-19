@@ -19,7 +19,7 @@ const StatisticsSummary = ({ statistics = [], className = '', ...props }) => {
 
   return (
     <div
-      className={`w-full rounded-md bg-white dark:bg-black ${isDarkMode ? 'shadow-sm' : ''} overflow-hidden border border-gray-200 dark:border-gray-700 ${className}`}
+      className={`w-full rounded-md bg-white dark:bg-[#0F0F0F] ${isDarkMode ? 'shadow-sm' : ''} overflow-hidden border border-gray-200 dark:border-gray-700 ${className}`}
       {...props}
     >
       <div className="rounded-md p-2 sm:p-4 md:p-6">

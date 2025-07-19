@@ -393,14 +393,25 @@ const Header = ({
                   {availableCurrencies.map(currency => (
                     <button
                       key={currency.code}
-                      className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-800 ${currency.code === preferredCurrency.code ? 'bg-gray-100 font-medium dark:bg-gray-800' : ''}`}
+                      className={`w-full flex items-center justify-between px-4 py-2 text-left text-sm transition-all duration-200 ${currency.code === preferredCurrency.code ? 'bg-blue-50 text-blue-600 shadow-sm ring-1 ring-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:ring-blue-800 font-medium' : 'hover:bg-gray-100 dark:hover:bg-gray-800 hover:shadow-sm'}`}
                       onClick={() => {
                         updatePreferredCurrency(currency);
                         setCurrencyDropdownOpen(false);
                       }}
                     >
-                      <span className="mr-2">{currency.symbol}</span>
-                      <span>{currency.name}</span>
+                      <div className="flex items-center">
+                        <span className="mr-2">{currency.symbol}</span>
+                        <span>{currency.name}</span>
+                      </div>
+                      {currency.code === preferredCurrency.code && (
+                        <svg className="ml-3 size-4 shrink-0 text-blue-600 dark:text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                          <path
+                            fillRule="evenodd"
+                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      )}
                     </button>
                   ))}
                 </div>

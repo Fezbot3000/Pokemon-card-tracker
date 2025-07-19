@@ -172,7 +172,7 @@ function MarketplaceListing() {
             />
           </Helmet>
         )}
-        <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-[#0F0F0F]">
+        <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-black">
           <div className="text-center">
             <h1 className="mb-4 text-2xl font-bold text-gray-900 dark:text-white">
               {error === 'Listing not found'
@@ -230,7 +230,7 @@ function MarketplaceListing() {
       )}
 
       {/* Show the listing in a modal-like view that covers the full screen */}
-      <div className="min-h-screen bg-gray-50 dark:bg-[#0F0F0F]">
+      <div className="min-h-screen bg-gray-50 dark:bg-black">
         <ListingDetailModal
           isOpen={true}
           onClose={handleClose}

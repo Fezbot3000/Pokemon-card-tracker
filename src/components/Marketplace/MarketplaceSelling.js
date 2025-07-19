@@ -519,7 +519,7 @@ function MarketplaceSelling({ currentView, onViewChange }) {
           {filteredListings.map(listing => (
             <div
               key={listing.id}
-              className="flex h-full flex-col overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-black"
+              className="flex h-full flex-col overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-[#0F0F0F]"
             >
               <div className="grow">
                 <MarketplaceCard

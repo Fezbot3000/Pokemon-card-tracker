@@ -3304,7 +3304,7 @@ return (
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-gray-100">
+    <div className="min-h-screen bg-gray-50 text-gray-900 dark:bg-black dark:text-gray-100">
       {/* Header */}
       <header className="sticky top-0 z-10 bg-white shadow-sm dark:bg-[#0F0F0F]">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">

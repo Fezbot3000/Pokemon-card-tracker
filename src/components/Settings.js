@@ -199,7 +199,7 @@ const Settings = () => {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen bg-white dark:bg-black">
+      <div className="min-h-screen bg-gray-50 dark:bg-black">
         {/* Header with Back Button - Hidden on Mobile */}
         <div className="header-responsive fixed inset-x-0 top-0 z-50 border-b border-gray-200 bg-white dark:border-gray-700 dark:bg-black lg:sticky lg:top-0 lg:z-10">
           <div className="flex h-full items-center justify-between px-4">

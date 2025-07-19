@@ -726,8 +726,8 @@ function MarketplaceMessages({ currentView, onViewChange }) {
           display: none !important;
         }`}
       </style>
-      <div
-        className={`${activeChat ? 'min-h-screen' : 'min-h-[calc(100vh-200px)]'} flex w-full flex-col ${activeChat ? 'pt-0' : 'pt-4'} bg-gray-100 dark:bg-black`}
+              <div
+        className={`${activeChat ? 'min-h-screen' : 'min-h-[calc(100vh-200px)]'} flex w-full flex-col ${activeChat ? 'pt-0' : 'pt-4'} bg-gray-50 dark:bg-black`}
       >
         {!activeChat ? (
           <div className="w-full px-4 pt-20 sm:px-2">

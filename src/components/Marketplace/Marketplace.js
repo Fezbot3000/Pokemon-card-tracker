@@ -513,7 +513,7 @@ function Marketplace({ currentView, onViewChange }) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4 pb-20 pt-16 dark:bg-black sm:p-6 sm:pt-4">
+          <div className="min-h-screen bg-gray-50 p-4 pb-20 pt-16 dark:bg-black sm:p-6 sm:pt-4">
       <MarketplaceNavigation
         currentView={currentView}
         onViewChange={onViewChange}

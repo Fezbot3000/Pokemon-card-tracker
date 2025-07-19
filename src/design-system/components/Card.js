@@ -96,7 +96,7 @@ const Card = ({
 
   return (
     <div
-      className={`group relative h-full cursor-pointer overflow-hidden bg-white text-white transition-all dark:bg-black ${
+      className={`group relative h-full cursor-pointer overflow-hidden bg-white text-white transition-all dark:bg-[#0F0F0F] ${
         isSelected
           ? 'border-2 border-purple-500'
           : 'border border-gray-200 dark:border-gray-700'
@@ -128,7 +128,7 @@ const Card = ({
       )}
 
       {/* Card Image */}
-      <div className="relative aspect-[2/3] overflow-hidden bg-white p-2 dark:bg-black">
+              <div className="relative aspect-[2/3] overflow-hidden bg-white p-2 dark:bg-[#0F0F0F]">
         {cardImage ? (
           <ImageWithAnimation
             src={cardImage}
@@ -145,7 +145,7 @@ const Card = ({
       </div>
 
       {/* Card Details */}
-      <div className="bg-white p-3 text-center dark:bg-black">
+              <div className="bg-white p-3 text-center dark:bg-[#0F0F0F]">
         <h3 className="mb-1 truncate text-lg font-medium text-gray-900 dark:text-white">
           {(
             card.cardName ||
@@ -163,7 +163,7 @@ const Card = ({
         {/* Financial Details - Consolidated Box */}
         <div className="flex flex-col">
           {/* Consolidated Financial Details */}
-                        <div className="financial-detail-box rounded-md border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-black">
+                        <div className="financial-detail-box rounded-md border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-[#0F0F0F]">
             <div className="flex flex-col">
               {/* Paid */}
               <div className="py-1 text-center">

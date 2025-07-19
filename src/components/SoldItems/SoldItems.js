@@ -575,7 +575,7 @@ const SoldItems = () => {
         </div>
 
         {/* Main Content - Keep search functional, skeleton the data */}
-        <div className="rounded-xl bg-white dark:bg-black">
+        <div className="rounded-xl bg-white dark:bg-[#0F0F0F]">
           <div className="overflow-x-auto">
             {/* Keep search section functional */}
             <div className="mb-4 flex flex-col gap-4 p-4 sm:p-6">

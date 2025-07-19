@@ -41,7 +41,7 @@ const DashboardIndex = lazy(() => import('./App').then(module => ({ default: mod
 
 // Loading component for Suspense fallback
 const LoadingFallback = () => (
-  <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-gray-900">
+          <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-black">
     <div className="size-8 animate-spin rounded-full border-b-2 border-blue-600"></div>
   </div>
 );

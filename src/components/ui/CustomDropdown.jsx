@@ -133,7 +133,7 @@ const CustomDropdown = ({
       case 'filled':
         return 'border-gray-300 bg-gray-50 dark:border-gray-600 dark:bg-gray-800';
       default:
-        return 'border-gray-300 bg-white dark:border-gray-600 dark:bg-black';
+        return 'border-gray-300 bg-white dark:border-gray-600 dark:bg-[#0F0F0F]';
     }
   };
 
@@ -237,7 +237,7 @@ const CustomDropdown = ({
               {/* Dropdown Menu - Portal to avoid clipping */}
         {isOpen && createPortal(
           <div 
-            className="fixed z-[1000] rounded-lg border border-gray-300 bg-white shadow-xl dark:border-gray-600 dark:bg-black"
+            className="fixed z-[1000] rounded-lg border border-gray-300 bg-white shadow-xl dark:border-gray-600 dark:bg-[#0F0F0F]"
             style={{
               top: dropdownPosition.top,
               left: dropdownPosition.left,

@@ -219,12 +219,12 @@ const Modal = ({
 
   const modalClasses = forceDarkMode
     ? `bg-black backdrop-blur-sm rounded-lg shadow-xl text-white`
-    : `bg-white dark:bg-black backdrop-blur-sm rounded-lg shadow-xl`;
+    : `bg-white dark:bg-[#0F0F0F] backdrop-blur-sm rounded-lg shadow-xl`;
 
   const iosHeaderSafeClass = isIOSDevice() ? 'modal-header-ios-safe' : '';
   const headerClasses = forceDarkMode
     ? `sticky top-0 z-10 flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-700/50 bg-black backdrop-blur-sm ${iosHeaderSafeClass}`
-    : `sticky top-0 z-10 flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-200 dark:border-gray-700/50 bg-white dark:bg-black backdrop-blur-sm ${iosHeaderSafeClass}`;
+    : `sticky top-0 z-10 flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-200 dark:border-gray-700/50 bg-white dark:bg-[#0F0F0F] backdrop-blur-sm ${iosHeaderSafeClass}`;
 
   const titleClasses = forceDarkMode
     ? 'text-xl font-medium text-gray-200'
@@ -243,7 +243,7 @@ const Modal = ({
   if (showAsStatic) {
     return (
       <div
-        className={`${maxWidth} w-full overflow-hidden rounded-lg bg-white shadow-xl dark:bg-black`}
+        className={`${maxWidth} w-full overflow-hidden rounded-lg bg-white shadow-xl dark:bg-[#0F0F0F]`}
       >
         {/* Header */}
         <div className="flex items-center justify-between border-b border-gray-200 px-6 pb-4 pt-6 dark:border-gray-800">

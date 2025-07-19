@@ -572,7 +572,7 @@ const PurchaseInvoices = () => {
         </div>
       )}
 
-      <div className="rounded-xl bg-white dark:bg-black">
+      <div className="rounded-xl bg-white dark:bg-[#0F0F0F]">
         {loading ? (
           <div className="overflow-x-auto">
             {/* Search Section Skeleton - matches exact real layout */}

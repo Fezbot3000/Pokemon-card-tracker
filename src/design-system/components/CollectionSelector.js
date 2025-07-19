@@ -124,9 +124,9 @@ const CollectionSelector = ({
               ? `rounded-lg text-center ${
                   collection === selectedCollection
                     ? 'bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] font-semibold text-white'
-                    : 'border border-gray-200 bg-white text-gray-700 dark:border-gray-700 dark:bg-[#000] dark:text-gray-300'
+                    : 'border border-gray-200 bg-white text-gray-700 dark:border-gray-700 dark:bg-[#0F0F0F] dark:text-gray-300'
                 } py-3 hover:opacity-90`
-              : `${collection === selectedCollection ? 'bg-gray-100 text-gray-900 dark:bg-gray-700 dark:text-white' : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'}`
+              : `${collection === selectedCollection ? 'bg-blue-50 text-blue-600 shadow-sm ring-1 ring-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:ring-blue-800 font-medium' : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 hover:shadow-sm'}`
           } `}
         >
           {collection}
@@ -142,7 +142,7 @@ const CollectionSelector = ({
         <div className="flex items-center justify-between">
           <button
             onClick={handleTriggerClick} // Use new handler
-            className="flex items-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-[#000000] dark:text-gray-300 dark:hover:bg-gray-700"
+            className="flex items-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-[#0F0F0F] dark:text-gray-300 dark:hover:bg-gray-700"
             data-component-name="CollectionSelector"
           >
             <span className="mr-2 max-w-[200px] truncate font-medium">
@@ -161,7 +161,7 @@ const CollectionSelector = ({
 
         {/* Desktop Dropdown */}
         {!isMobileView && isDropdownOpen && (
-          <div className="ring-black/5 absolute right-0 z-50 mt-2 max-h-[60vh] w-56 overflow-y-auto rounded-md bg-white shadow-lg ring-1 dark:bg-[#000]">
+          <div className="ring-black/5 absolute right-0 z-50 mt-2 max-h-[60vh] w-56 overflow-y-auto rounded-md bg-white shadow-lg ring-1 dark:bg-[#0F0F0F]">
             {renderCollectionItems(false)}
           </div>
         )}

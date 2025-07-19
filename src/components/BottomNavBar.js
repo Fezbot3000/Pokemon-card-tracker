@@ -62,7 +62,7 @@ const BottomNavBar = ({ currentView, onViewChange, onSettingsClick }) => {
   }
 
   return (
-    <div className="fixed bottom-0 left-0 z-40 w-full border-t border-gray-200 bg-white pb-2 dark:border-gray-800 dark:bg-black sm:hidden">
+    <div className="fixed bottom-0 left-0 z-40 w-full border-t border-gray-200 bg-white pb-2 dark:border-gray-800 dark:bg-[#0F0F0F] sm:hidden">
       <div className="flex items-center justify-around py-1">
         <button
           className={`flex flex-col items-center justify-center px-3 py-0.5 ${

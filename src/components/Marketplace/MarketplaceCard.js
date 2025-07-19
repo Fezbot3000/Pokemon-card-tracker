@@ -68,7 +68,7 @@ const MarketplaceCard = ({
 
   return (
     <div
-      className={`group relative h-full cursor-pointer overflow-hidden bg-white text-white transition-all dark:bg-black ${
+      className={`group relative h-full cursor-pointer overflow-hidden bg-white text-white transition-all dark:bg-[#0F0F0F] ${
         isSelected
           ? 'border-2 border-purple-500'
           : 'border border-gray-200 dark:border-gray-700'

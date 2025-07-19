@@ -8,11 +8,11 @@ const selectVariants = cva(
     variants: {
       variant: {
         default:
-          'border-gray-300 bg-white text-gray-900 hover:bg-gray-50 dark:border-gray-600 dark:bg-black dark:text-white dark:hover:bg-gray-900',
+          'border-gray-300 bg-white text-gray-900 hover:bg-gray-50 dark:border-gray-600 dark:bg-[#0F0F0F] dark:text-white dark:hover:bg-gray-900',
         error:
-          'border-red-500 bg-white text-gray-900 focus-visible:ring-red-500 hover:bg-red-50 dark:border-red-500 dark:bg-black dark:text-white dark:hover:bg-red-900/20',
+          'border-red-500 bg-white text-gray-900 focus-visible:ring-red-500 hover:bg-red-50 dark:border-red-500 dark:bg-[#0F0F0F] dark:text-white dark:hover:bg-red-900/20',
         success:
-          'border-green-500 bg-white text-gray-900 focus-visible:ring-green-500 hover:bg-green-50 dark:border-green-500 dark:bg-black dark:text-white dark:hover:bg-green-900/20',
+          'border-green-500 bg-white text-gray-900 focus-visible:ring-green-500 hover:bg-green-50 dark:border-green-500 dark:bg-[#0F0F0F] dark:text-white dark:hover:bg-green-900/20',
       },
       size: {
         sm: 'h-8 px-2 text-xs',
@@ -137,7 +137,7 @@ const Select = React.forwardRef<HTMLDivElement, SelectProps>(
 
         {/* Custom dropdown menu */}
         {isOpen && !disabled && (
-          <div className="absolute left-0 right-0 top-full z-50 mt-1 max-h-60 overflow-y-auto rounded-md border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-black">
+          <div className="absolute left-0 right-0 top-full z-50 mt-1 max-h-60 overflow-y-auto rounded-md border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-[#0F0F0F]">
             <div className="py-1">
               {options.map((option) => (
                 <div

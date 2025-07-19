@@ -1032,17 +1032,15 @@ const CardList = ({
 
   return (
     <div className="w-full px-1 pb-20 sm:px-2">
-      {/* Stats Section - Only show if there are cards */}
-      {filteredCards.length > 0 && (
-        <StatisticsSummary
-          statistics={formatStatisticsForDisplay(
-            totals,
-            filteredCards.length,
-            paginatedCards.length
-          )}
-          className="mb-3 sm:mb-4"
-        />
-      )}
+      {/* Stats Section - Always show, even for empty collections */}
+      <StatisticsSummary
+        statistics={formatStatisticsForDisplay(
+          totals,
+          filteredCards.length,
+          paginatedCards.length
+        )}
+        className="mb-3 sm:mb-4"
+      />
 
       {/* Controls Section - Always show so users can add cards */}
       <div className="mb-4">

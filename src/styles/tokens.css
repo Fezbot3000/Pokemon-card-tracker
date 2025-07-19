@@ -103,16 +103,16 @@
   /* ==================== SURFACE TOKENS ==================== */
 
   /* Light Mode Surfaces */
-  --surface-light-primary: var(--color-white);
+  --surface-light-primary: var(--color-gray-50);
   --surface-light-secondary: var(--color-gray-50);
   --surface-light-tertiary: var(--color-gray-100);
   --surface-light-quaternary: var(--color-gray-200);
 
   /* Dark Mode Surfaces */
   --surface-dark-primary: var(--color-black);
-  --surface-dark-secondary: var(--color-black);
-  --surface-dark-tertiary: var(--color-black);
-  --surface-dark-quaternary: var(--color-gray-900);
+  --surface-dark-secondary: #0F0F0F;
+  --surface-dark-tertiary: #0F0F0F;
+  --surface-dark-quaternary: #0F0F0F;
 
   /* ==================== TEXT TOKENS ==================== */
 

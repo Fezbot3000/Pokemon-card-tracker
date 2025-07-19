@@ -22,11 +22,11 @@ const Card = ({
   // Different variant styles
   const variantClasses = {
     default:
-      'bg-white dark:bg-black border border-gray-200 dark:border-gray-700/50 shadow-sm',
-    flat: 'bg-white dark:bg-black border border-gray-100 dark:border-gray-800/50',
+      'bg-white dark:bg-[#0F0F0F] border border-gray-200 dark:border-gray-700/50 shadow-sm',
+    flat: 'bg-white dark:bg-[#0F0F0F] border border-gray-100 dark:border-gray-800/50',
     outlined: 'bg-transparent border border-gray-200 dark:border-gray-700/50',
     elevated:
-      'bg-white dark:bg-black border border-gray-200 dark:border-gray-700/50 shadow-md',
+      'bg-white dark:bg-[#0F0F0F] border border-gray-200 dark:border-gray-700/50 shadow-md',
   };
 
   // Optional hover effect

@@ -579,7 +579,7 @@ const CardDetailsForm = ({
           </h3>
           <div className="relative">
             <div
-              className="relative flex w-full items-center justify-center overflow-hidden rounded-lg border border-gray-300 bg-white dark:border-gray-700 dark:bg-black"
+                              className="relative flex w-full items-center justify-center overflow-hidden rounded-lg border border-gray-300 bg-white dark:border-gray-700 dark:bg-[#0F0F0F]"
               style={{
                 height: '400px',
                 width: '100%',

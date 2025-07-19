@@ -60,7 +60,7 @@ const Dropdown = React.forwardRef<HTMLDivElement, DropdownProps>(
           {trigger}
         </div>
         {isOpen && (
-          <div className="absolute left-0 top-full z-50 mt-1 min-w-full rounded-md border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-black">
+          <div className="absolute left-0 top-full z-50 mt-1 min-w-full rounded-md border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-[#0F0F0F]">
             {children}
           </div>
         )}

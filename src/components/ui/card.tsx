@@ -5,7 +5,7 @@ import { cn } from '../../lib/utils';
 const cardVariants = cva('text-card-foreground rounded-lg border shadow-sm', {
   variants: {
     variant: {
-      default: 'border-gray-200 bg-white dark:border-gray-700 dark:bg-black',
+      default: 'border-gray-200 bg-white dark:border-gray-700 dark:bg-[#0F0F0F]',
       outline: 'border-2 border-primary',
       ghost: 'border-transparent shadow-none',
       elevated: 'shadow-md transition-shadow hover:shadow-lg',

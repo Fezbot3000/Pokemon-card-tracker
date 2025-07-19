@@ -554,7 +554,7 @@ const CardDetailsModal = ({
             <div className={`${animClass} relative`}>
               {/* PSA Search Loading Overlay */}
               {(isPsaSearching || isPsaLoading) && (
-                <div className="absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-white backdrop-blur-sm dark:bg-black">
+                <div className="absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-white backdrop-blur-sm dark:bg-[#0F0F0F]">
                   <div className="text-center">
                     <div className="mb-2 inline-block size-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
                     <p className="text-gray-600 dark:text-gray-400">

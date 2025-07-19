@@ -518,7 +518,7 @@ function AppContent({ currentView, setCurrentView }) {
 
   if (loading) {
     return (
-      <div className="dashboard-page min-h-screen bg-gray-100 dark:bg-black">
+      <div className="dashboard-page min-h-screen bg-gray-50 dark:bg-black">
         {/* Keep actual Header during loading */}
         <Header
           className="header"
@@ -625,7 +625,7 @@ function AppContent({ currentView, setCurrentView }) {
   };
 
   return (
-    <div className="dashboard-page min-h-screen bg-gray-100 dark:bg-black">
+    <div className="dashboard-page min-h-screen bg-gray-50 dark:bg-black">
       {/* Hide Header on mobile when in settings or cards view */}
       {!(
         isMobile &&
@@ -947,7 +947,7 @@ function AppContent({ currentView, setCurrentView }) {
         ) : currentView === 'sold-items' ? (
           <SoldItems />
         ) : currentView === 'settings' ? (
-          <div className={`min-h-screen bg-white dark:bg-black ${isMobile ? 'settings-mobile' : ''}`}>
+          <div className={`min-h-screen bg-gray-50 dark:bg-black ${isMobile ? 'settings-mobile' : ''}`}>
             <Settings />
           </div>
         ) : null}

@@ -98,7 +98,7 @@ const Dropdown = ({
       {/* Desktop Dropdown Menu */}
       {dropdownIsOpen && !isMobileView && (
         <div
-          className={`absolute z-50 mt-1 ${widthClasses[width]} ${alignClasses[align]} dark:border-gray-700/50 scrollbar-hide rounded-md border border-gray-200 bg-white py-1 shadow-lg dark:bg-[#000]`}
+          className={`absolute z-50 mt-1 ${widthClasses[width]} ${alignClasses[align]} dark:border-gray-700/50 scrollbar-hide rounded-md border border-gray-200 bg-white py-1 shadow-lg dark:bg-[#0F0F0F]`}
           style={{
             maxHeight: 'none', // Allow dropdown to grow as tall as needed
             overflowY: 'visible', // No vertical scroll
@@ -138,7 +138,7 @@ const Dropdown = ({
                   className: `text-center rounded-lg py-3 ${
                     isSelected
                       ? 'bg-gradient-to-r from-[#ef4444] to-[#db2777] text-white font-semibold'
-                      : 'bg-white dark:bg-[#000] text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700'
+                      : 'bg-white dark:bg-[#0F0F0F] text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700'
                   } 
                     hover:opacity-90 ${child.props.className || ''}`
                     .replace('bg-gray-100', '')
@@ -160,7 +160,7 @@ const Dropdown = ({
             {/* Cancel Button */}
             <button
               onClick={() => handleOpenChange(false)}
-              className="mt-3 block w-full rounded-lg border border-gray-700 bg-[#000] px-4 py-3 text-center text-sm font-semibold text-gray-300 hover:opacity-90"
+              className="mt-3 block w-full rounded-lg border border-gray-700 bg-[#0F0F0F] px-4 py-3 text-center text-sm font-semibold text-gray-300 hover:opacity-90"
             >
               Cancel
             </button>
@@ -188,7 +188,7 @@ export const DropdownItem = ({
     'flex items-center w-full px-4 py-2 text-sm text-left transition-colors truncate';
   const stateClasses = disabled
     ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed'
-    : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-[#000] cursor-pointer';
+    : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-[#0F0F0F] cursor-pointer';
 
   return (
     <button
