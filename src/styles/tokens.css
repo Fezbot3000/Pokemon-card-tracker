@@ -111,8 +111,8 @@
   /* Dark Mode Surfaces */
   --surface-dark-primary: var(--color-black);
   --surface-dark-secondary: #0F0F0F;
-  --surface-dark-tertiary: #0F0F0F;
-  --surface-dark-quaternary: #0F0F0F;
+  --surface-dark-tertiary: #1B2131;
+  --surface-dark-quaternary: #252B3B;
 
   /* ==================== TEXT TOKENS ==================== */
 
@@ -238,6 +238,86 @@
     var(--color-primary-600),
     var(--color-accent-700)
   );
+  --gradient-hero: linear-gradient(
+    to bottom right,
+    rgb(59 130 246 / 0.1),
+    rgb(147 51 234 / 0.1),
+    rgb(236 72 153 / 0.1)
+  );
+
+  /* ==================== TRANSITION TOKENS ==================== */
+
+  --transition-fast: 150ms ease;
+  --transition-normal: 200ms ease;
+  --transition-slow: 300ms ease;
+  --transition-all: all 200ms ease;
+  --transition-colors: color 200ms ease, background-color 200ms ease, border-color 200ms ease;
+  --transition-transform: transform 200ms ease;
+  --transition-opacity: opacity 200ms ease;
+
+  /* ==================== LAYOUT TOKENS ==================== */
+
+  /* Container Sizes */
+  --container-sm: 640px;
+  --container-md: 768px;
+  --container-lg: 1024px;
+  --container-xl: 1280px;
+  --container-2xl: 1536px;
+  --container-max: 1200px; /* App-specific max width */
+
+  /* Responsive Breakpoints */
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
+
+  /* Common Layout Values */
+  --min-touch-target: 44px; /* iOS minimum touch target */
+  --safe-area-inset-top: env(safe-area-inset-top, 0);
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0);
+
+  /* ==================== COMPONENT-SPECIFIC TOKENS ==================== */
+
+  /* Card Component */
+  --card-padding: var(--space-6);
+  --card-radius: var(--radius-lg);
+  --card-border: 1px solid var(--color-border);
+  --card-shadow: var(--shadow-sm);
+  --card-shadow-hover: var(--shadow-md);
+  --card-background: var(--color-surface-primary);
+  --card-background-hover: var(--color-surface-secondary);
+
+  /* Modal Component */
+  --modal-backdrop: rgb(0 0 0 / 0.4);
+  --modal-backdrop-dark: rgb(0 0 0 / 0.6);
+  --modal-radius: var(--radius-lg);
+  --modal-shadow: var(--shadow-xl);
+  --modal-max-width: 90vw;
+  --modal-max-height: 90vh;
+
+  /* Input Component */
+  --input-height: var(--min-touch-target);
+  --input-padding-x: var(--space-3);
+  --input-padding-y: var(--space-2);
+  --input-radius: var(--radius-md);
+  --input-border: 1px solid var(--color-border);
+  --input-border-focus: 2px solid var(--color-primary-500);
+  --input-background: var(--color-surface-primary);
+
+  /* Navigation Component */
+  --nav-backdrop: rgb(255 255 255 / 0.1);
+  --nav-backdrop-blur: blur(12px);
+  --nav-padding-x: var(--space-4);
+  --nav-padding-y: var(--space-3);
+  --nav-radius: var(--radius-xl);
+
+  /* Badge/Chip Component */
+  --badge-padding-x: var(--space-2);
+  --badge-padding-y: var(--space-1);
+  --badge-radius: var(--radius-full);
+  --badge-font-size: var(--font-size-xs);
+  --badge-font-weight: var(--font-weight-medium);
 
   /* ==================== SEMANTIC THEME TOKENS ==================== */
 

@@ -16,6 +16,10 @@
 
 @import './tokens.css';
 
+/* ==================== CUSTOM UTILITIES ==================== */
+
+@import './utilities.css';
+
 /* ==================== TAILWIND CSS ==================== */
 
 @tailwind base;

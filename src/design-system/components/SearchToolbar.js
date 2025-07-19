@@ -96,7 +96,7 @@ const SearchToolbar = ({
   return (
     <div className={toolbarClass} {...props}>
       {/* Search Input */}
-      <div className="relative w-full sm:flex-1">
+      <div className="relative flex-1 min-w-0 sm:max-w-md">
         <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
           <Icon name="search" size="sm" className="text-gray-400" />
         </div>
@@ -110,7 +110,7 @@ const SearchToolbar = ({
       </div>
 
       {/* Controls Group (View Mode, Sort, Add Card) */}
-      <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 sm:flex-nowrap">
+      <div className="flex shrink-0 items-center gap-2 sm:gap-3">
         {/* View Mode Selector */}
         <div className="view-selector relative flex rounded-lg bg-gray-100 p-1 dark:bg-[#0F0F0F]">
           {/* Animated Background Indicator */}
@@ -202,7 +202,7 @@ const SearchToolbar = ({
           variant="primary"
           onClick={onAddCard}
           iconLeft={<Icon name="add" size="sm" />}
-          className="hidden bg-[var(--primary)] text-white hover:bg-[var(--primary-dark)] dark:text-white sm:inline-flex"
+          className="hidden bg-[var(--primary)] text-white hover:bg-[var(--primary-dark)] dark:text-white lg:inline-flex"
         >
           Add Card
         </Button>
