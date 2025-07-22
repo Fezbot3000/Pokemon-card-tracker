@@ -21,6 +21,7 @@ import ListingDetailModal from './ListingDetailModal';
 import DesktopMarketplaceMessages from './DesktopMarketplaceMessages';
 import SellerProfileModal from './SellerProfileModal';
 import SellerReviewModal from './SellerReviewModal';
+import MarketplaceNavigation from './MarketplaceNavigation';
 import LoggingService from '../../services/LoggingService';
 
 const functions = getFunctions();
@@ -289,12 +290,12 @@ function MarketplaceMessages({ currentView, onViewChange }) {
     return () => unsubscribe();
   }, [activeChat, user]);
 
-  // Auto-scroll to bottom when new messages arrive
+  // Auto-scroll to bottom when new messages arrive (only when in active chat)
   useEffect(() => {
-    if (messagesEndRef.current) {
+    if (messagesEndRef.current && activeChat && messages.length > 0) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [messages]);
+  }, [messages, activeChat]);
 
   // Hide header, footer and bottom nav when in active chat
   useEffect(() => {
@@ -713,24 +714,15 @@ function MarketplaceMessages({ currentView, onViewChange }) {
           chatId={activeChat?.id}
         />
       )}
-      <style>
-        {`
-        .hide-header-footer header, .hide-header-footer footer {
-          display: none !important;
-        }
-        .hide-header-footer .main-content {
-          padding-top: 0 !important;
-          height: 100vh !important;
-        }
-        .hide-header-footer .fixed.sm\:hidden.bottom-0 {
-          display: none !important;
-        }`}
-      </style>
-              <div
-        className={`${activeChat ? 'min-h-screen' : 'min-h-[calc(100vh-200px)]'} flex w-full flex-col ${activeChat ? 'pt-0' : 'pt-4'} bg-gray-50 dark:bg-black`}
-      >
+
+      <div className="p-4 pb-20 pt-16 sm:p-6 sm:pt-4">
+        <MarketplaceNavigation
+          currentView={currentView}
+          onViewChange={onViewChange}
+        />
+        
         {!activeChat ? (
-          <div className="w-full px-4 pt-20 sm:px-2">
+          <div>
             {loading ? (
               <div className="flex h-64 items-center justify-center">
                 <div className="size-12 animate-spin rounded-full border-y-2 border-gray-900 dark:border-white"></div>
@@ -817,7 +809,7 @@ function MarketplaceMessages({ currentView, onViewChange }) {
             )}
           </div>
         ) : (
-          <div className="mx-0 flex h-screen w-full max-w-none flex-col px-0">
+          <div>
             {/* Chat header */}
             <div className="flex items-center justify-between border-b border-gray-200 bg-white p-2 dark:border-gray-700 dark:bg-[#0F0F0F]">
               <div className="flex items-center">

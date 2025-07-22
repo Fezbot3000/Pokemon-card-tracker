@@ -243,7 +243,7 @@ html {
   -ms-overflow-style: none; /* For Internet Explorer and Edge */
 
   /* Use modern CSS for smooth scrolling */
-  scroll-behavior: smooth;
+/* scroll-behavior: smooth; */
 
   /* Prevent horizontal scrolling */
   overflow-x: hidden;

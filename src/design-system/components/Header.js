@@ -83,8 +83,17 @@ const Header = ({
         setPreviousView(currentView);
         setIsAnimating(true);
 
-        // Scroll to top of the page when switching tabs
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        // Don't scroll to top when switching between marketplace tabs
+        const isMarketplaceView = view => 
+          ['marketplace', 'marketplace-selling', 'marketplace-messages'].includes(view);
+        
+        const isMarketplaceToMarketplace = 
+          isMarketplaceView(currentView) && isMarketplaceView(newView);
+
+        if (!isMarketplaceToMarketplace) {
+          // Scroll to top of the page when switching tabs (but not between marketplace tabs)
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
 
         // Call the provided handler with error handling
         if (onViewChange && typeof onViewChange === 'function') {
@@ -222,7 +231,7 @@ const Header = ({
                 <button
                   onClick={() => handleViewChange('marketplace')}
                   className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors duration-200 ${
-                    currentView === 'marketplace'
+                    isMarketplaceSection()
                       ? 'bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] text-white'
                       : 'hover:bg-gray-200/50 dark:hover:bg-gray-700/50 text-gray-700 dark:text-gray-300'
                   }`}
@@ -230,7 +239,7 @@ const Header = ({
                   <Icon
                     name="storefront"
                     className="mr-1 hidden xs:inline"
-                    color={currentView === 'marketplace' ? 'white' : 'default'}
+                    color={isMarketplaceSection() ? 'white' : 'default'}
                     size="sm"
                   />
                   <span>Marketplace</span>
@@ -297,7 +306,7 @@ const Header = ({
                         <button
                           onClick={() => handleViewChange('marketplace')}
                           className={`rounded-md px-2 py-1 text-xs font-medium transition-colors duration-200 ${
-                            currentView === 'marketplace'
+                            isMarketplaceSection()
                               ? 'bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] text-white'
                               : 'hover:bg-gray-200/50 dark:hover:bg-gray-700/50 text-gray-700 dark:text-gray-300'
                           }`}
@@ -306,7 +315,7 @@ const Header = ({
                             name="storefront"
                             className="mr-1 hidden xs:inline"
                             color={
-                              currentView === 'marketplace'
+                              isMarketplaceSection()
                                 ? 'white'
                                 : 'default'
                             }

@@ -78,79 +78,32 @@ function MarketplaceSelling({ currentView, onViewChange }) {
             setFilteredListings(listingsData);
 
             // Load card images after getting listings
-            loadCardImages(listingsData);
-          } catch (error) {
-            // Ignore AdBlock related errors
-            if (
-              error.message &&
-              error.message.includes('net::ERR_BLOCKED_BY_CLIENT')
-            ) {
-              // Silently handle AdBlock errors
-            } else {
-              logger.error('Error fetching user listings:', error);
+            loadCardImages(listingsData).finally(() => {
+              setLoading(false);
+            });
+                      } catch (error) {
+              // Ignore AdBlock related errors
+              if (
+                error.message &&
+                error.message.includes('net::ERR_BLOCKED_BY_CLIENT')
+              ) {
+                // Silently handle AdBlock errors
+              } else {
+                logger.error('Error fetching user listings:', error);
+              }
             }
-            setLoading(false);
-          }
         },
         error => {
-          // Check if this is an index building error
-          if (error.message && error.message.includes('requires an index')) {
-            logger.warn('Marketplace selling index is still building:', error);
-
-            // Fall back to a simpler query without ordering
-            try {
-              const simpleQuery = query(
-                marketplaceRef,
-                where('userId', '==', user.uid)
-              );
-
-              unsubscribe = onSnapshot(
-                simpleQuery,
-                snapshot => {
-                  const listingData = snapshot.docs.map(doc => ({
-                    id: doc.id,
-                    ...doc.data(),
-                  }));
-                  // Sort manually on the client side
-                  listingData.sort((a, b) => {
-                    const timeA = a.timestampListed?.seconds || 0;
-                    const timeB = b.timestampListed?.seconds || 0;
-                    return timeB - timeA; // Descending order
-                  });
-                  setAllListings(listingData);
-                  setFilteredListings(listingData);
-
-                  // Load card images after getting listings
-                  loadCardImages(listingData);
-                  setLoading(false);
-                },
-                fallbackError => {
-                  logger.error(
-                    'Error in fallback user listings listener:',
-                    fallbackError
-                  );
-                  setLoading(false);
-                }
-              );
-            } catch (fallbackSetupError) {
-              logger.error(
-                'Error setting up fallback user listings listener:',
-                fallbackSetupError
-              );
-              setLoading(false);
-            }
+          // Ignore AdBlock related errors
+          if (
+            error.message &&
+            error.message.includes('net::ERR_BLOCKED_BY_CLIENT')
+          ) {
+            // Silently handle AdBlock errors
           } else {
-            // Ignore AdBlock related errors
-            if (
-              error.message &&
-              error.message.includes('net::ERR_BLOCKED_BY_CLIENT')
-            ) {
-              // Silently handle AdBlock errors
-            } else {
-              logger.error('Error in user listings listener:', error);
-            }
-            setLoading(false);
+            logger.error('Error in user listings listener:', error);
           }
+          setLoading(false);
         }
       );
     } catch (error) {
@@ -525,7 +478,7 @@ function MarketplaceSelling({ currentView, onViewChange }) {
           {filteredListings.map(listing => (
             <div
               key={listing.id}
-              className="flex h-full flex-col overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-[#0F0F0F]"
+              className="flex h-full flex-col overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-black"
             >
               <div className="grow">
                 <MarketplaceCard
@@ -543,7 +496,7 @@ function MarketplaceSelling({ currentView, onViewChange }) {
                   formatUserCurrency={formatUserCurrency}
                 />
               </div>
-              <div className="rounded-b-lg bg-white p-3 dark:bg-gray-800">
+              <div className="rounded-b-lg bg-white p-3 dark:bg-black">
                 <div className="flex flex-col items-center space-y-2">
                   <div className="text-center">
                     <p className="font-semibold text-gray-900 dark:text-white">

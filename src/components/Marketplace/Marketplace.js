@@ -298,7 +298,7 @@ function Marketplace({ currentView, onViewChange }) {
         },
         error => {
           logger.error('Error in marketplace listener:', error);
-          setLoading(false);
+              setLoading(false);
         }
       );
     } catch (error) {
@@ -480,7 +480,7 @@ function Marketplace({ currentView, onViewChange }) {
   };
 
   return (
-          <div className="min-h-screen bg-gray-50 p-4 pb-20 pt-16 dark:bg-black sm:p-6 sm:pt-4">
+          <div className="p-4 pb-20 pt-16 sm:p-6 sm:pt-4">
       <MarketplaceNavigation
         currentView={currentView}
         onViewChange={onViewChange}
@@ -601,7 +601,7 @@ function Marketplace({ currentView, onViewChange }) {
             {paginatedListings.map(listing => (
               <div
                 key={listing.id}
-                className="flex h-full flex-col overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-[#0F0F0F]"
+                className="flex h-full flex-col overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-black"
               >
                 <div className="relative aspect-square grow">
                   <LazyImage
@@ -622,7 +622,7 @@ function Marketplace({ currentView, onViewChange }) {
                     </span>
                   )}
                 </div>
-                <div className="rounded-b-lg bg-white p-3 dark:bg-[#0F0F0F]">
+                <div className="rounded-b-lg bg-white p-3 dark:bg-black">
                   <div className="flex flex-col items-center space-y-2">
                     <div className="w-full text-center">
                       <p className="truncate font-semibold text-gray-900 dark:text-white">

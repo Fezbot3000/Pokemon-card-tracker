@@ -42,7 +42,7 @@ html {
   -moz-osx-font-smoothing: grayscale;
   letter-spacing: 0;
   scrollbar-width: thin;
-  scroll-behavior: smooth;
+  /* scroll-behavior: smooth; */
 }
 
 body {

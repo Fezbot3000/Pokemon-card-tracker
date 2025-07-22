@@ -164,10 +164,10 @@ const PublicMarketplace = () => {
 
         // Use a simple query without composite index to avoid deployment issues
         const marketplaceQuery = query(
-          marketplaceRef,
-          where('status', '==', 'available'),
-          limit(50)
-        );
+            marketplaceRef,
+            where('status', '==', 'available'),
+            limit(50)
+          );
 
         const querySnapshot = await getDocs(marketplaceQuery);
         let listingsData = querySnapshot.docs.map(doc => ({
@@ -176,13 +176,13 @@ const PublicMarketplace = () => {
         }));
 
         // Sort manually on the client side
-        listingsData.sort((a, b) => {
-          const timeA =
-            a.timestampListed?.seconds || a.createdAt?.seconds || 0;
-          const timeB =
-            b.timestampListed?.seconds || b.createdAt?.seconds || 0;
-          return timeB - timeA;
-        });
+          listingsData.sort((a, b) => {
+            const timeA =
+              a.timestampListed?.seconds || a.createdAt?.seconds || 0;
+            const timeB =
+              b.timestampListed?.seconds || b.createdAt?.seconds || 0;
+            return timeB - timeA;
+          });
 
         setListings(listingsData);
 
