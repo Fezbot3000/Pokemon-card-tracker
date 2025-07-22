@@ -40,6 +40,7 @@
     "deploy:fast": "npm run build:prod && firebase deploy --non-interactive",
     "deploy:hosting": "npm run build:prod && firebase deploy --only hosting --non-interactive",
     "deploy:functions": "firebase deploy --only functions --non-interactive",
+
     "clean": "rimraf node_modules/.cache && rimraf build",
     "firebase-init": "firebase init",
     "firebase-deploy": "firebase deploy --non-interactive",

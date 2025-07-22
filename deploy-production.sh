@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # Production deployment script for Pokemon Card Tracker
+set -e
 
 echo "🚀 Starting production deployment..."
 
