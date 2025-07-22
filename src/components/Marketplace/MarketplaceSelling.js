@@ -51,11 +51,10 @@ function MarketplaceSelling({ currentView, onViewChange }) {
       // Query for user's own listings
       const marketplaceRef = collection(firestoreDb, 'marketplaceItems');
 
-      // First try with the composite index (which might still be building)
+      // Use a simple query without composite index to avoid deployment issues
       const marketplaceQuery = query(
         marketplaceRef,
-        where('userId', '==', user.uid),
-        orderBy('timestampListed', 'desc')
+        where('userId', '==', user.uid)
       );
 
       // Set up real-time listener for marketplace items
@@ -67,6 +66,13 @@ function MarketplaceSelling({ currentView, onViewChange }) {
               id: doc.id,
               ...doc.data(),
             }));
+
+            // Sort manually on the client side
+            listingsData.sort((a, b) => {
+              const timeA = a.timestampListed?.seconds || a.createdAt?.seconds || 0;
+              const timeB = b.timestampListed?.seconds || b.createdAt?.seconds || 0;
+              return timeB - timeA; // Descending order
+            });
 
             setAllListings(listingsData);
             setFilteredListings(listingsData);

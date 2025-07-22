@@ -251,12 +251,11 @@ function Marketplace({ currentView, onViewChange }) {
     let unsubscribe;
 
     try {
-      // First try with the composite index (which might still be building)
+      // Use a simple query without composite index to avoid deployment issues
       const marketplaceRef = collection(firestoreDb, 'marketplaceItems');
       const marketplaceQuery = query(
         marketplaceRef,
-        where('status', '==', 'available'),
-        orderBy('timestampListed', 'desc')
+        where('status', '==', 'available')
       );
 
       // Set up real-time listener for marketplace items
@@ -268,6 +267,13 @@ function Marketplace({ currentView, onViewChange }) {
             const listingsData = [];
             snapshot.forEach(doc => {
               listingsData.push({ id: doc.id, ...doc.data() });
+            });
+
+            // Sort manually on the client side
+            listingsData.sort((a, b) => {
+              const timeA = a.timestampListed?.seconds || a.createdAt?.seconds || 0;
+              const timeB = b.timestampListed?.seconds || b.createdAt?.seconds || 0;
+              return timeB - timeA; // Descending order
             });
 
             setAllListings(listingsData);
@@ -291,49 +297,8 @@ function Marketplace({ currentView, onViewChange }) {
           }
         },
         error => {
-          // Check if this is an index building error
-          if (error.message && error.message.includes('requires an index')) {
-            logger.warn('Marketplace index is still building:', error);
-            setIndexBuildingError(true);
-
-            // Fall back to a simpler query without ordering
-            try {
-              const simpleQuery = query(
-                marketplaceRef,
-                where('status', '==', 'available')
-              );
-
-              unsubscribe = onSnapshot(
-                simpleQuery,
-                snapshot => {
-                  const listingData = snapshot.docs.map(doc => ({
-                    id: doc.id,
-                    ...doc.data(),
-                  }));
-                  // Sort manually on the client side
-                  listingData.sort((a, b) => {
-                    const timeA = a.timestampListed?.seconds || 0;
-                    const timeB = b.timestampListed?.seconds || 0;
-                    return timeB - timeA; // Descending order
-                  });
-                  setAllListings(listingData);
-                  setFilteredListings(listingData);
-
-                  // Load card images after getting listings
-                  loadCardImages(listingData);
-                },
-                fallbackError => {
-                  logger.error(
-                    'Error in fallback marketplace listener:',
-                    fallbackError
-                  );
-                }
-              );
-            } catch (innerError) {
-              logger.error('Error setting up fallback marketplace listener:', innerError);
-              setLoading(false);
-            }
-          }
+          logger.error('Error in marketplace listener:', error);
+          setLoading(false);
         }
       );
     } catch (error) {

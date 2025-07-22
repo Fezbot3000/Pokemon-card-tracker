@@ -162,27 +162,12 @@ const PublicMarketplace = () => {
 
         const marketplaceRef = collection(firestoreDb, 'marketplaceItems');
 
-        // First try with the same query structure as authenticated marketplace
-        let marketplaceQuery;
-        try {
-          marketplaceQuery = query(
-            marketplaceRef,
-            where('status', '==', 'available'),
-            orderBy('timestampListed', 'desc'),
-            limit(50)
-          );
-        } catch (indexError) {
-          // Fallback to simpler query if index is building
-          logger.warn(
-            'Using fallback query due to index building:',
-            indexError
-          );
-          marketplaceQuery = query(
-            marketplaceRef,
-            where('status', '==', 'available'),
-            limit(50)
-          );
-        }
+        // Use a simple query without composite index to avoid deployment issues
+        const marketplaceQuery = query(
+          marketplaceRef,
+          where('status', '==', 'available'),
+          limit(50)
+        );
 
         const querySnapshot = await getDocs(marketplaceQuery);
         let listingsData = querySnapshot.docs.map(doc => ({
@@ -190,17 +175,14 @@ const PublicMarketplace = () => {
           ...doc.data(),
         }));
 
-        // Manual sort if we used fallback query
-        if (listingsData.length > 0 && !listingsData[0].timestampListed) {
-          // Try with different timestamp field names
-          listingsData.sort((a, b) => {
-            const timeA =
-              a.timestampListed?.seconds || a.createdAt?.seconds || 0;
-            const timeB =
-              b.timestampListed?.seconds || b.createdAt?.seconds || 0;
-            return timeB - timeA;
-          });
-        }
+        // Sort manually on the client side
+        listingsData.sort((a, b) => {
+          const timeA =
+            a.timestampListed?.seconds || a.createdAt?.seconds || 0;
+          const timeB =
+            b.timestampListed?.seconds || b.createdAt?.seconds || 0;
+          return timeB - timeA;
+        });
 
         setListings(listingsData);
 
