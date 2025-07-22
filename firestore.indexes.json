@@ -1,20 +1,6 @@
 {
   "indexes": [
     {
-      "collectionGroup": "shared-collections",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "userId",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "createdAt",
-          "order": "DESCENDING"
-        }
-      ]
-    },
-    {
       "collectionGroup": "cards",
       "queryScope": "COLLECTION",
       "fields": [
