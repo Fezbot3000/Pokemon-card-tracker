@@ -4,7 +4,7 @@
   "private": true,
   "homepage": "https://www.mycardtracker.com.au",
   "dependencies": {
-    "@react-pdf/renderer": "^4.3.0",
+    "@react-pdf/renderer": "3.3.0",
     "@stripe/stripe-js": "^7.4.0",
     "@testing-library/jest-dom": "^6.6.3",
     "chart.js": "^4.4.8",
