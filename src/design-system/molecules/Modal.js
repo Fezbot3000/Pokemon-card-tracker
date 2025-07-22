@@ -223,8 +223,8 @@ const Modal = ({
 
   const iosHeaderSafeClass = isIOSDevice() ? 'modal-header-ios-safe' : '';
   const headerClasses = forceDarkMode
-    ? `sticky top-0 z-10 flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-700/50 bg-black backdrop-blur-sm ${iosHeaderSafeClass}`
-    : `sticky top-0 z-10 flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-200 dark:border-gray-700/50 bg-white dark:bg-[#0F0F0F] backdrop-blur-sm ${iosHeaderSafeClass}`;
+    ? `sticky top-0 z-10 flex items-center justify-between px-6 pt-6 pb-4 border-b-[0.5px] border-gray-700 bg-black backdrop-blur-sm ${iosHeaderSafeClass}`
+    : `sticky top-0 z-10 flex items-center justify-between px-6 pt-6 pb-4 border-b-[0.5px] border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0F0F0F] backdrop-blur-sm ${iosHeaderSafeClass}`;
 
   const titleClasses = forceDarkMode
     ? 'text-xl font-medium text-gray-200'
@@ -233,8 +233,8 @@ const Modal = ({
   // Close button classes removed as they were unused
 
   const footerClasses = forceDarkMode
-    ? 'sticky bottom-0 z-10 flex items-center justify-between gap-2 px-6 pt-4 pb-6 border-t border-gray-700/50 bg-black backdrop-blur-sm'
-    : 'sticky bottom-0 z-10 flex items-center justify-between gap-2 px-6 pt-4 pb-6 border-t border-gray-200 dark:border-gray-700/50 bg-white dark:bg-black backdrop-blur-sm';
+    ? 'sticky bottom-0 z-10 flex items-center justify-between gap-2 px-6 pt-4 pb-6 border-t-[0.5px] border-gray-700 bg-black backdrop-blur-sm'
+    : 'sticky bottom-0 z-10 flex items-center justify-between gap-2 px-6 pt-4 pb-6 border-t-[0.5px] border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0F0F0F] backdrop-blur-sm';
 
   // Force the dark class if needed
   const darkModeClass = forceDarkMode ? 'dark' : '';
@@ -308,7 +308,15 @@ const Modal = ({
             <h2 id="modal-title" className={titleClasses}>
               {title}
             </h2>
-            {/* Close button removed as requested - using bottom close buttons instead */}
+            {onClose && (
+              <button
+                onClick={handleClose}
+                className="text-gray-400 hover:text-gray-500 focus:outline-none dark:hover:text-gray-300 transition-colors duration-200"
+                aria-label="Close"
+              >
+                <Icon name="close" size="md" />
+              </button>
+            )}
           </div>
         )}
 

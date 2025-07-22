@@ -13,6 +13,7 @@ import { db as firestoreDb } from '../../services/firebase';
 import logger from '../../utils/logger';
 import db from '../../services/firestore/dbAdapter'; // Import IndexedDB service for image loading
 import LoggingService from '../../services/LoggingService';
+import { useUserPreferences } from '../../contexts/UserPreferencesContext';
 
 function SellerProfileModal({
   isOpen,
@@ -22,6 +23,7 @@ function SellerProfileModal({
   onContactSeller,
 }) {
   const { user } = useAuth();
+  const { formatAmountForDisplay } = useUserPreferences();
   const [sellerProfile, setSellerProfile] = useState(null);
   const [sellerReviews, setSellerReviews] = useState([]);
   const [averageRating, setAverageRating] = useState(0);
@@ -379,6 +381,21 @@ function SellerProfileModal({
     }, 100);
   };
 
+  // Footer with close button
+  const modalFooter = (
+    <div className="flex justify-center">
+      <Button
+        onClick={onClose}
+        variant="secondary"
+        size="md"
+        className="min-w-[120px]"
+      >
+        <Icon name="close" size="sm" className="mr-2" />
+        Close
+      </Button>
+    </div>
+  );
+
   return (
     <Modal
       isOpen={isOpen}
@@ -387,6 +404,7 @@ function SellerProfileModal({
       title="Seller Profile"
       position="right"
       className="overflow-hidden rounded-2xl"
+      footer={modalFooter}
     >
       {loading ? (
         <div className="flex items-center justify-center py-12">
@@ -395,7 +413,7 @@ function SellerProfileModal({
       ) : (
         <div className="space-y-8 pb-8">
           {/* Header Section */}
-          <div className="-mx-6 mt-6 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-600 p-8 text-white">
+          <div className="mt-6 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-600 p-8 text-white">
             <div className="flex items-center gap-6 px-4">
               {/* Avatar */}
               <div className="bg-white/20 flex size-20 shrink-0 items-center justify-center rounded-2xl backdrop-blur-sm">
@@ -581,7 +599,7 @@ function SellerProfileModal({
                                   listing.cost ||
                                   0;
                                 const currency = listing.currency || 'AUD';
-                                return `${price} ${currency}`;
+                                return formatAmountForDisplay(price, currency);
                               })()}
                             </p>
 

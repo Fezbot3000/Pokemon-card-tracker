@@ -11,6 +11,7 @@ import {
 } from 'firebase/firestore';
 import { db as firestoreDb } from '../../services/firebase';
 import logger from '../../utils/logger';
+import { useUserPreferences } from '../../contexts/UserPreferencesContext';
 
 import db from '../../services/firestore/dbAdapter'; // Import IndexedDB service for image loading
 import MessageModal from './MessageModal'; // Import the MessageModal component
@@ -38,6 +39,7 @@ function Marketplace({ currentView, onViewChange }) {
   const [loading, setLoading] = useState(true);
   const [cardImages, setCardImages] = useState({});
   const { user } = useAuth();
+  const { formatAmountForDisplay } = useUserPreferences();
 
 
   const [indexBuildingError, setIndexBuildingError] = useState(false);
@@ -665,7 +667,7 @@ function Marketplace({ currentView, onViewChange }) {
                           'Unknown Card'}
                       </p>
                       <p className="font-semibold text-gray-900 dark:text-white">
-                        {listing.listingPrice} {listing.currency}
+                        {formatAmountForDisplay(listing.listingPrice, listing.currency || 'AUD')}
                       </p>
                       <p className="text-xs text-gray-600 dark:text-gray-400">
                         {listing.location || 'No location'}
@@ -673,11 +675,15 @@ function Marketplace({ currentView, onViewChange }) {
                     </div>
                     <button
                       onClick={() => handleContactSeller(listing)}
-                      className={`w-full rounded-md px-3 py-1.5 text-sm text-white transition-colors ${
+                      className={`w-full rounded-md px-3 py-1.5 text-sm font-medium transition-all duration-200 ${
                         existingChats[listing.id]
-                          ? 'bg-green-500 hover:bg-green-600'
-                          : 'bg-red-500 hover:bg-red-600'
-                      }`}
+                          ? 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white'
+                          : 'bg-transparent border-2 border-transparent bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] bg-clip-border text-white hover:shadow-lg hover:shadow-blue-500/25'
+                      } relative`}
+                      style={!existingChats[listing.id] ? {
+                        background: 'linear-gradient(#0F0F0F, #0F0F0F) padding-box, linear-gradient(to right, #3b82f6, #1d4ed8) border-box',
+                        border: '2px solid transparent'
+                      } : {}}
                     >
                       {existingChats[listing.id]
                         ? 'See Chat'

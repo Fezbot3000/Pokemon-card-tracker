@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Modal, Button } from '../../design-system';
 import { useAuth } from '../../design-system';
+import { useUserPreferences } from '../../contexts/UserPreferencesContext';
 import {
   collection,
   query,
@@ -24,6 +25,7 @@ const BuyerSelectionModal = ({ isOpen, onClose, listing }) => {
   const [createSoldInvoice, setCreateSoldInvoice] = useState(false);
   const [soldPrice, setSoldPrice] = useState('');
   const { user } = useAuth();
+  const { preferredCurrency } = useUserPreferences();
 
   const fetchPotentialBuyers = useCallback(async () => {
     setLoading(true);
@@ -284,7 +286,7 @@ const BuyerSelectionModal = ({ isOpen, onClose, listing }) => {
           {createSoldInvoice && (
             <div>
               <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Final Sale Price (AUD)
+                Final Sale Price ({preferredCurrency.code})
               </label>
               <input
                 type="number"

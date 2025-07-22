@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
+import { useUserPreferences } from '../contexts/UserPreferencesContext';
 import {
   collection,
   query,
@@ -24,6 +25,7 @@ const PublicMarketplace = () => {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null); // Add state for selected image
   const navigate = useNavigate();
+  const { formatAmountForDisplay } = useUserPreferences();
 
   // Helper function to ensure we have a string URL (same as authenticated marketplace)
   const ensureStringUrl = imageData => {
@@ -221,11 +223,8 @@ const PublicMarketplace = () => {
     navigate('/login');
   };
 
-  const formatPrice = price => {
-    return new Intl.NumberFormat('en-AU', {
-      style: 'currency',
-      currency: 'AUD',
-    }).format(price);
+  const formatPrice = (price, currency = 'AUD') => {
+    return formatAmountForDisplay(price, currency);
   };
 
   // Get card name using same logic as MarketplaceCard
@@ -415,7 +414,8 @@ const PublicMarketplace = () => {
                         {formatPrice(
                           listing.listingPrice ||
                             listing.priceAUD ||
-                            listing.price
+                            listing.price,
+                          listing.currency || 'AUD'
                         )}
                       </span>
                       {listing.condition && (

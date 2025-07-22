@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Modal, Icon, toastService } from '../../design-system';
 import ModalButton from '../ui/ModalButton';
 import { useAuth } from '../../design-system';
+import { useUserPreferences } from '../../contexts/UserPreferencesContext';
 import {
   doc,
   getDoc,
@@ -37,6 +38,7 @@ function ListingDetailModal({
   }
 
   const { user } = useAuth();
+  const { formatAmountForDisplay } = useUserPreferences();
   const [imageIndex, setImageIndex] = useState(0);
   const [sellerProfile, setSellerProfile] = useState(null);
   const [sellerReviews, setSellerReviews] = useState([]);
@@ -564,7 +566,7 @@ function ListingDetailModal({
                 </h1>
                 <div className="mb-2 flex items-center gap-3">
                   <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                    ${listing.listingPrice}
+                    {formatAmountForDisplay(listing.listingPrice, listing.currency || 'AUD')}
                   </p>
                   {/* Status Tag */}
                   <div

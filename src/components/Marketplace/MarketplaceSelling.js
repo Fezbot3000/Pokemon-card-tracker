@@ -541,7 +541,7 @@ function MarketplaceSelling({ currentView, onViewChange }) {
                 <div className="flex flex-col items-center space-y-2">
                   <div className="text-center">
                     <p className="font-semibold text-gray-900 dark:text-white">
-                      {listing.listingPrice} {listing.currency}
+                      {formatUserCurrency(listing.listingPrice, listing.currency || 'AUD')}
                     </p>
                     <p className="text-xs text-gray-600 dark:text-gray-400">
                       {listing.location || 'No location'}
