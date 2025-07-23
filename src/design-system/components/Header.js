@@ -126,11 +126,11 @@ const Header = ({
         <div className="flex h-full items-center border-b border-gray-200 px-4 dark:border-[#ffffff1a]">
           <div className="mx-auto flex w-full max-w-7xl items-center justify-between">
             <div className="flex items-center">
-              <img
-                src="/favicon-192x192.png"
-                alt="Logo"
-                className="mr-3 size-8 rounded-md"
-              />
+                          <img
+              src="/favicon_L-192x192.png"
+              alt="Logo"
+              className="mr-3 size-8 rounded-md"
+            />
             </div>
             <button className="rounded-lg p-2 hover:bg-gray-100 dark:hover:bg-gray-800">
               <svg
@@ -162,11 +162,11 @@ const Header = ({
           {/* Left side - Logo (hidden on mobile) - Fixed width to balance right side */}
           <div className="hidden w-48 items-center sm:flex">
             <Link to="/dashboard" className="flex items-center">
-              <img
-                src="/favicon-192x192.png"
-                alt="Logo"
-                className="size-8 rounded-md"
-              />
+                          <img
+              src="/favicon_L-192x192.png"
+              alt="Logo"
+              className="size-8 rounded-md"
+            />
             </Link>
           </div>
 

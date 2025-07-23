@@ -116,7 +116,7 @@ const Header = ({
             <div className="flex min-w-0 max-w-[45%] shrink items-center gap-2 sm:max-w-[60%] sm:gap-4 md:max-w-[70%]">
               <Link to="/cards" className="shrink-0">
                 <img
-                  src="/favicon-192x192.png"
+                  src="/favicon_L-192x192.png"
                   alt="MyCardTracker"
                   className="size-8 rounded-xl object-contain sm:size-10"
                 />

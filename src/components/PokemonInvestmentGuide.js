@@ -112,7 +112,7 @@ const PokemonInvestmentGuide = () => {
               name: 'Pokemon Card Tracker Australia',
               logo: {
                 '@type': 'ImageObject',
-                url: 'https://www.mycardtracker.com.au/logo192.png',
+                url: 'https://www.mycardtracker.com.au/favicon_L-192x192.png',
               },
             },
             datePublished: '2024-12-20',

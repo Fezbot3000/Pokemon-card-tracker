@@ -174,7 +174,7 @@ function Login() {
         <div className="px-6 py-8 text-center">
           <Link to="/" className="inline-block">
             <img
-              src="/favicon-192x192.png"
+              src="/favicon_L-192x192.png"
               alt="Pokémon Card Tracker Logo"
               className="mx-auto size-16 rounded-xl"
             />

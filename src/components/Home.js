@@ -73,9 +73,9 @@ function Home() {
                 name: 'MyCardTracker',
                 alternateName: 'My Card Tracker',
                 url: 'https://www.mycardtracker.com.au',
-                logo: {
-                  '@type': 'ImageObject',
-                  url: 'https://www.mycardtracker.com.au/logo192.png',
+                        logo: {
+          '@type': 'ImageObject',
+          url: 'https://www.mycardtracker.com.au/favicon_L-192x192.png',
                 },
                 description: 'Free Pokemon card tracking application',
                 areaServed: 'Australia',

@@ -52,7 +52,7 @@ const LoginModal = ({
         {/* Logo */}
         <div className="mb-6 flex justify-center">
           <img
-            src="/favicon-192x192.png"
+            src="/favicon_L-192x192.png"
             alt="MyCardTracker"
             className="size-16 rounded-xl"
           />

@@ -130,7 +130,7 @@ class SharingService {
     const shareUrl = this.generateShareUrl(shareData.id);
 
     // Try to get a dynamic image from the cards
-    let shareImage = shareData.previewImage || `${baseUrl}/logo192.png`;
+    let shareImage = shareData.previewImage || `${baseUrl}/favicon_L-192x192.png`;
 
     if (cards && cards.length > 0) {
       const cardImage = this.findBestCardImage(cards);
