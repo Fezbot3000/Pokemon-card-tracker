@@ -18,17 +18,21 @@ const SettingsNavItem = ({
   return (
     <button
       onClick={onClick}
-      className={`flex w-full items-center rounded-lg p-2 text-left ${
+      className={`group flex w-full items-center rounded-lg p-2 text-left transition-colors duration-200 ${
         isActive
           ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400'
-          : 'dark:hover:bg-gray-800/50 text-gray-600 hover:bg-gray-100 dark:text-gray-300'
+          : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'
       } ${className}`}
       {...props}
     >
       {icon && (
         <Icon
           name={icon}
-          className={`mr-3 ${isActive ? 'text-purple-700 dark:text-purple-400' : 'text-gray-500 dark:text-gray-400'}`}
+          className={`mr-3 transition-colors duration-200 ${
+            isActive 
+              ? 'text-purple-700 dark:text-purple-400' 
+              : 'text-gray-500 dark:text-gray-400'
+          }`}
         />
       )}
       <span>{label}</span>

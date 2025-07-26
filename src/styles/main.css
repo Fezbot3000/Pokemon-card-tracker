@@ -532,6 +532,25 @@ html.dark body {
   display: none;
 }
 
+/* Ensure main content doesn't bleed through modals */
+.modal-open .main-content,
+.modal-open main,
+.modal-open [role="main"] {
+  z-index: 1;
+  position: relative;
+}
+
+/* Ensure all filter dropdowns and UI elements stay below modals */
+.sort-dropdown,
+.view-dropdown,
+.dropdown,
+.filter-container,
+.card-grid,
+.card-list {
+  z-index: var(--z-dropdown, 1000);
+  position: relative;
+}
+
 /* Ensure dark mode settings icon is styled */
 .dark .settings-button-class svg {
   fill: white; /* Or your desired dark mode icon color */

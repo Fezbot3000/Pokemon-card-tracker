@@ -681,36 +681,6 @@ function AppContent({ currentView, setCurrentView }) {
       )}
 
       <main className={getMainLayoutClasses()}>
-        {/* Settings Modal - Available for all views */}
-        {showSettings && !isMobile && (
-          <SettingsModal
-            isOpen={showSettings}
-            onClose={handleCloseSettings}
-            selectedCollection={selectedCollection}
-            collections={collections}
-            onStartTutorial={startTutorial}
-            onSignOut={logout}
-            onRenameCollection={(oldName, newName) => {
-              collectionManager.renameCollection(oldName, newName, {
-                collections,
-                setCollections,
-                selectedCollection,
-                setSelectedCollection,
-                user,
-              });
-            }}
-            onDeleteCollection={async name => {
-              await collectionManager.deleteCollection(name, {
-                collections,
-                user,
-                selectedCollection,
-                setCollections,
-                setSelectedCollection,
-              });
-            }}
-          />
-        )}
-
         {currentView === 'cards' ? (
           <div className="flex-1 overflow-y-auto">
             {/* Main content */}
@@ -952,6 +922,36 @@ function AppContent({ currentView, setCurrentView }) {
           </div>
         ) : null}
       </main>
+
+      {/* Settings Modal - Available for all views */}
+      {showSettings && !isMobile && (
+        <SettingsModal
+          isOpen={showSettings}
+          onClose={handleCloseSettings}
+          selectedCollection={selectedCollection}
+          collections={collections}
+          onStartTutorial={startTutorial}
+          onSignOut={logout}
+          onRenameCollection={(oldName, newName) => {
+            collectionManager.renameCollection(oldName, newName, {
+              collections,
+              setCollections,
+              selectedCollection,
+              setSelectedCollection,
+              user,
+            });
+          }}
+          onDeleteCollection={async name => {
+            await collectionManager.deleteCollection(name, {
+              collections,
+              user,
+              selectedCollection,
+              setCollections,
+              setSelectedCollection,
+            });
+          }}
+        />
+      )}
 
       {showNewCardForm && (
         <AddCardModal

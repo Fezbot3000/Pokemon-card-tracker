@@ -145,7 +145,7 @@ const Modal = ({
   const handleBackdropWheel = e => {
     // If the wheel event is happening on the backdrop (not inside the modal), prevent it
     if (modalRef.current && !modalRef.current.contains(e.target)) {
-      e.preventDefault();
+      // Don't call preventDefault on passive wheel events - just stop propagation
       e.stopPropagation();
     }
   };

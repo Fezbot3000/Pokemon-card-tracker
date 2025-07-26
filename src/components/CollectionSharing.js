@@ -15,7 +15,7 @@ import { db as firestoreDb } from '../firebase';
 import { useAuth } from '../design-system';
 import { useCards } from '../contexts/CardContext';
 import { Card, Button, TextField, Toggle, Modal } from '../design-system';
-import SelectField from '../design-system/atoms/SelectField';
+import CustomDropdown from './ui/CustomDropdown';
 import { toast } from 'react-hot-toast';
 import SharingQuickStart from './SharingQuickStart';
 import sharingService from '../services/sharingService';
@@ -670,10 +670,10 @@ const CollectionSharing = ({ isInModal = false }) => {
                 {isRefreshing ? 'Refreshing...' : 'Refresh'}
               </Button>
             </div>
-            <SelectField
+            <CustomDropdown
               name="collectionId"
               value={createForm.collectionId}
-              onChange={e =>
+              onSelect={e =>
                 setCreateForm({ ...createForm, collectionId: e.target.value })
               }
               options={[
@@ -683,15 +683,16 @@ const CollectionSharing = ({ isInModal = false }) => {
                   label: collection.name,
                 })),
               ]}
+              placeholder="Select Collection..."
             />
           </div>
 
           <div>
-            <SelectField
+            <CustomDropdown
               label="Expires After"
               name="expiresIn"
               value={createForm.expiresIn}
-              onChange={e =>
+              onSelect={e =>
                 setCreateForm({ ...createForm, expiresIn: e.target.value })
               }
               options={[
@@ -701,6 +702,7 @@ const CollectionSharing = ({ isInModal = false }) => {
                 { value: '90d', label: '90 days' },
                 { value: '1y', label: '1 year' },
               ]}
+              placeholder="Select expiration..."
             />
           </div>
 

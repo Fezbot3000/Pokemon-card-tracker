@@ -279,6 +279,7 @@ const SettingsModal = ({
         ariaLabel="Settings"
         size="full"
         closeOnClickOutside={true}
+
         {...props}
       >
         <div className="flex h-full flex-col lg:flex-row">
