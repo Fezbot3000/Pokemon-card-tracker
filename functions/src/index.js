@@ -35,7 +35,7 @@ exports.createPortalSession = stripePortal.createPortalSession;
 exports.psaLookupHttp = psaLookupHttp;
 
 // Export exchange rates function
-// exports.getExchangeRates = exchangeRates.getExchangeRates;
+exports.getExchangeRates = exchangeRates.getExchangeRates;
 
 // PSA Lookup Function - implements 3-layer cache system
 exports.psaLookup = functions.https.onCall(async (data, context) => {

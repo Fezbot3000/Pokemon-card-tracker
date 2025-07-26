@@ -71,19 +71,52 @@ const CollectionSharing = ({ isInModal = false }) => {
       setLoading(true);
 
       const sharedRef = collection(firestoreDb, 'shared-collections');
-      const q = query(
-        sharedRef,
-        where('userId', '==', currentUser.uid),
-        orderBy('createdAt', 'desc')
-      );
+      
+      // Try with composite index first (userId + createdAt ordering)
+      let querySnapshot;
+      try {
+        const q = query(
+          sharedRef,
+          where('userId', '==', currentUser.uid),
+          orderBy('createdAt', 'desc')
+        );
+        querySnapshot = await getDocs(q);
+      } catch (indexError) {
+        // Fallback to simple query if composite index doesn't exist
+        if (indexError.message && indexError.message.includes('requires an index')) {
+          // Only show this message once per session to avoid console spam
+          if (!loadSharedCollections.indexWarningShown) {
+            logger.info('CollectionSharing: Using fallback query (composite index not yet available)');
+            loadSharedCollections.indexWarningShown = true;
+          }
+          const fallbackQuery = query(
+            sharedRef,
+            where('userId', '==', currentUser.uid)
+          );
+          querySnapshot = await getDocs(fallbackQuery);
+        } else {
+          throw indexError;
+        }
+      }
 
-      const snapshot = await getDocs(q);
-      const shared = snapshot.docs.map(doc => ({
+      const shared = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
       }));
 
-      setSharedCollections(shared);
+      // Sort manually if we used the fallback query
+      if (!querySnapshot.docs.length || !querySnapshot.docs[0].data().createdAt) {
+        // If no createdAt field or no docs, keep as-is
+        setSharedCollections(shared);
+      } else {
+        // Sort by createdAt in descending order
+        const sortedShared = shared.sort((a, b) => {
+          const aDate = a.createdAt?.toDate?.() || new Date(0);
+          const bDate = b.createdAt?.toDate?.() || new Date(0);
+          return bDate - aDate;
+        });
+        setSharedCollections(sortedShared);
+      }
     } catch (error) {
       logger.error('Error loading shared collections:', error);
       toast.error(`Failed to load shared collections: ${error.message}`);

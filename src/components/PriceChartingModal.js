@@ -119,12 +119,29 @@ const PriceChartingModal = ({
     return { level: 'Poor', color: 'red', bgColor: 'bg-red-100 dark:bg-red-900/20', dotColor: 'bg-red-500' };
   };
 
+  // Create footer with buttons
+  const modalFooter = !isLoading && (
+    <div className="flex w-full items-center justify-between">
+      <ModalButton variant="secondary" onClick={onClose}>
+        Cancel
+      </ModalButton>
+      
+      {selectedProduct && getBestPriceForProduct(selectedProduct) > 0 && (
+        <ModalButton variant="primary" onClick={handleApplyPrice}>
+          Apply Price ({formatAmountForDisplay(getBestPriceForProduct(selectedProduct), 'USD')})
+        </ModalButton>
+      )}
+    </div>
+  );
+
   return (
     <Modal 
       isOpen={isOpen} 
       onClose={onClose} 
       title="Price Charting Search Results"
       size="2xl"
+      position="right"
+      footer={modalFooter}
     >
       <div className="space-y-6">
         {/* Search Query Info */}
@@ -266,20 +283,7 @@ const PriceChartingModal = ({
           </div>
         )}
 
-        {/* Action Buttons */}
-        {!isLoading && (
-          <div className="flex w-full items-center justify-between">
-            <ModalButton variant="secondary" onClick={onClose}>
-              Cancel
-            </ModalButton>
-            
-            {selectedProduct && getBestPriceForProduct(selectedProduct) > 0 && (
-              <ModalButton variant="primary" onClick={handleApplyPrice}>
-                Apply Price ({formatAmountForDisplay(getBestPriceForProduct(selectedProduct), 'USD')})
-              </ModalButton>
-            )}
-          </div>
-        )}
+
       </div>
     </Modal>
   );
