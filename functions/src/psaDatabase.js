@@ -1,6 +1,11 @@
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 
+// Initialize Firebase Admin if not already initialized
+if (!admin.apps.length) {
+  admin.initializeApp();
+}
+
 // PSA database collection name
 const PSA_COLLECTION = 'psa_cards';
 
@@ -8,8 +13,7 @@ const PSA_COLLECTION = 'psa_cards';
  * Scheduled function to clean up old PSA data
  * Runs once per week to remove very old entries (older than 1 year)
  */
-exports.cleanupPSADatabase = functions.pubsub
-  .schedule('every monday 03:00')
+exports.cleanupPSADatabase = functions.pubsub.schedule('0 3 * * 1') // Every Monday at 3 AM (cron format)
   .timeZone('America/New_York')
   .onRun(async (context) => {
     const db = admin.firestore();

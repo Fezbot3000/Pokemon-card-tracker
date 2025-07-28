@@ -76,9 +76,8 @@ exports.sendEmailVerificationEmail = functions.https.onCall(async (data, context
 });
 
 // Send marketplace message notification
-exports.sendMarketplaceMessageNotification = functions.firestore
-  .document('chats/{chatId}/messages/{messageId}')
-  .onCreate(async (snap, context) => {
+exports.sendMarketplaceMessageNotification = functions.firestore.document('chats/{chatId}/messages/{messageId}').onCreate(
+  async (snap, context) => {
     try {
       const message = snap.data();
       const chatId = context.params.chatId;
@@ -127,54 +126,50 @@ exports.sendMarketplaceMessageNotification = functions.firestore
         messagePreview
       );
 
-  
     } catch (error) {
       console.error('Error sending marketplace message notification:', error);
     }
-  });
+  }
+);
 
 // Send listing sold notification (Firestore trigger)
-exports.sendListingSoldNotificationTrigger = functions.firestore
-  .document('marketplaceItems/{listingId}')
-  .onUpdate(async (change, context) => {
-    try {
-      const before = change.before.data();
-      const after = change.after.data();
+exports.sendListingSoldNotificationTrigger = functions.firestore.document('marketplaceItems/{listingId}').onUpdate(
+  async (change, context) => {
+    const before = change.before.data();
+    const after = change.after.data();
 
-      // Check if status changed to 'sold'
-      if (before.status !== 'sold' && after.status === 'sold') {
-        const sellerId = after.sellerId;
-        
-        if (!sellerId) {
-          return;
-        }
+    // Check if status changed to 'sold'
+    if (before.status !== 'sold' && after.status === 'sold') {
+      const sellerId = after.sellerId;
+      
+      if (!sellerId) {
+        return;
+      }
 
-        const sellerDoc = await db.collection('users').doc(sellerId).get();
-        if (!sellerDoc.exists) {
-          return;
-        }
+      const sellerDoc = await db.collection('users').doc(sellerId).get();
+      if (!sellerDoc.exists) {
+        return;
+      }
 
-        const seller = sellerDoc.data();
-        if (!seller.email) {
-          return;
-        }
+      const seller = sellerDoc.data();
+      if (!seller.email) {
+        return;
+      }
 
-        const cardName = after.cardName || after.card?.name || 'Your card';
-        const salePrice = after.priceAUD || after.price || 'N/A';
+      const cardName = after.cardName || after.card?.name || 'Your card';
+      const salePrice = after.priceAUD || after.price || 'N/A';
 
-        await emailService.sendListingSold(
-          seller.email,
-          seller.displayName || seller.username,
-          cardName,
-          `$${salePrice} AUD`
-        );
+      await emailService.sendListingSold(
+        seller.email,
+        seller.displayName || seller.username,
+        cardName,
+        `$${salePrice} AUD`
+      );
 
     
-      }
-    } catch (error) {
-      console.error('Error sending listing sold notification:', error);
     }
-  });
+  }
+);
 
 // Manual email sending function (for admin use)
 exports.sendCustomEmail = functions.https.onCall(async (data, context) => {

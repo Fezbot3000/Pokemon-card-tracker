@@ -2,45 +2,40 @@ const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 const emailService = require('./emailService');
 
-// Trigger when a new user is created
+// Initialize Firebase Admin if not already initialized
+if (!admin.apps.length) {
+  admin.initializeApp();
+}
+
+// Initialize Firestore
+const db = admin.firestore();
+
+// Function triggered when a user is created
 exports.onUserCreate = functions.auth.user().onCreate(async (user) => {
   try {
-    
-    // Send welcome email
-    if (user.email) {
-      await emailService.sendWelcomeEmail(
-        user.email, 
-        user.displayName || 'Card Collector'
-      );
+    // Create user profile document
+    await db.collection('users').doc(user.uid).set({
+      uid: user.uid,
+      email: user.email,
+      displayName: user.displayName,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    });
 
-    }
-    
-    // Send email verification if email is not verified
-    if (user.email && !user.emailVerified) {
-      // Note: Firebase automatically sends verification emails, 
-      // but we can send our custom branded one
-      const verificationLink = `https://mycardtracker.com.au/verify-email?uid=${user.uid}`;
-      await emailService.sendEmailVerification(user.email, verificationLink);
-
-    }
-    
+    console.log('User profile created for:', user.email);
   } catch (error) {
-    console.error('Error in onUserCreate trigger:', error);
-    // Don't throw error to avoid blocking user creation
+    console.error('Error creating user profile:', error);
   }
 });
 
-// Trigger when user is deleted
+// Function triggered when a user is deleted
 exports.onUserDelete = functions.auth.user().onDelete(async (user) => {
   try {
-
+    // Delete user profile document
+    await db.collection('users').doc(user.uid).delete();
     
-    // Clean up user data in Firestore
-    const userDoc = admin.firestore().doc(`users/${user.uid}`);
-    await userDoc.delete();
-
-    
+    console.log('User profile deleted for:', user.email);
   } catch (error) {
-    console.error('Error in onUserDelete trigger:', error);
+    console.error('Error deleting user profile:', error);
   }
 });
