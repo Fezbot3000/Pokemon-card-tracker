@@ -18,6 +18,7 @@ import {
   toastService, // Import toastService
 } from './design-system';
 import Settings from './components/Settings';
+import { FloatingDebugTool } from './components/FloatingDebugTool';
 import CardList from './components/CardList';
 import CardDetails from './components/CardDetails';
 import AddCardModal from './components/AddCardModal';
@@ -52,6 +53,8 @@ function Dashboard() {
   const navigate = useNavigate();
   const location = useLocation();
   const [currentView, setCurrentView] = useState('cards');
+
+  // Debug tool will be rendered in AppContent with proper selectedCollection prop
 
   // Show loading indicator while auth state is being determined
   if (loading) {
@@ -130,6 +133,9 @@ function Dashboard() {
             </div>
           </div>
         </main>
+        
+        {/* Debug tool available during loading */}
+        <FloatingDebugTool selectedCollection="Loading..." />
       </div>
     );
   }
@@ -177,8 +183,16 @@ function Dashboard() {
           />
         </div>
       )}
+      
+      {/* FloatingDebugTool moved to AppContent with proper selectedCollection prop */}
     </div>
   );
+}
+
+// Helper to get selectedCollection from AppContent
+function getSelectedCollectionFromContext() {
+  // This will be updated to pass selectedCollection properly
+  return 'All Cards';
 }
 
 // Wrapper for dashboard index route (AppContent)
@@ -1046,6 +1060,9 @@ function AppContent({ currentView, setCurrentView }) {
 
       <TutorialModal />
       <SyncStatusIndicator />
+      
+      {/* Floating Debug Tool with proper selectedCollection */}
+      <FloatingDebugTool selectedCollection={selectedCollection} />
     </div>
   );
 }

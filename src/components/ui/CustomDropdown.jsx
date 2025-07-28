@@ -29,11 +29,16 @@ const CustomDropdown = ({
   const dropdownRef = useRef(null);
   const buttonRef = useRef(null);
   const inputRef = useRef(null);
+  const portalRef = useRef(null);
 
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+      // Check if click is outside both the trigger container AND the portaled dropdown
+      const isOutsideTrigger = dropdownRef.current && !dropdownRef.current.contains(event.target);
+      const isOutsidePortal = portalRef.current && !portalRef.current.contains(event.target);
+      
+      if (isOutsideTrigger && isOutsidePortal) {
         setIsOpen(false);
         setSearchTerm('');
       }
@@ -237,6 +242,7 @@ const CustomDropdown = ({
               {/* Dropdown Menu - Portal to avoid clipping */}
         {isOpen && createPortal(
           <div 
+            ref={portalRef}
             className="fixed z-[1000] rounded-lg border border-gray-300 bg-white shadow-xl dark:border-gray-600 dark:bg-[#0F0F0F]"
             style={{
               top: dropdownPosition.top,
@@ -283,7 +289,10 @@ const CustomDropdown = ({
                       : 'text-gray-900 dark:text-white hover:shadow-sm'
                     }
                   `}
-                  onClick={() => handleSelect(option)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleSelect(option);
+                  }}
                   disabled={option.disabled}
                 >
                   <span className="truncate font-medium">{option.label}</span>

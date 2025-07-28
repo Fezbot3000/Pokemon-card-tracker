@@ -14,6 +14,7 @@ import ErrorBoundary from './ErrorBoundary';
 import logger from '../services/LoggingService';
 import CustomDropdown from './ui/CustomDropdown';
 
+
 const Settings = () => {
   const navigate = useNavigate();
   const { user, logout, userData } = useAuth() || {};
@@ -36,6 +37,7 @@ const Settings = () => {
     address: userData?.address || '',
   });
   const [isLoading, setIsLoading] = useState(false);
+
 
   const isDarkMode = theme === 'dark';
 
@@ -370,6 +372,8 @@ const Settings = () => {
                   isDarkMode={isDarkMode}
                 />
               </div>
+
+
             </div>
           )}
 
@@ -573,6 +577,8 @@ const Settings = () => {
             </div>
           )}
         </div>
+
+
       </div>
     </ErrorBoundary>
   );

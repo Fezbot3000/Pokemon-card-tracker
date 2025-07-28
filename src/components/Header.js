@@ -125,6 +125,7 @@ const Header = ({
                 <button
                   onClick={toggleDropdown}
                   className="flex items-center gap-1 whitespace-nowrap rounded-lg p-2 text-gray-700 transition-colors hover:bg-white dark:text-gray-200 dark:hover:bg-[#252B3B] sm:gap-2 sm:px-3"
+                  data-collection-name={selectedCollection}
                 >
                   <span className="max-w-[120px] truncate text-sm font-medium sm:max-w-[180px] md:max-w-[250px]">
                     {selectedCollection}

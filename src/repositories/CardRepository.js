@@ -743,53 +743,94 @@ class CardRepository {
         throw new Error('Invalid input: Card ID is invalid');
       }
 
+      LoggingService.info(`[CardRepository] Starting deletion process for card: ${id}`);
+
+      // First, verify the card exists in Firestore
       const cardRef = doc(this.cardsRef, id);
-      const storageRef = ref(storage, `users/${this.userId}/cards/${id}.jpg`);
-
-      // Only delete the image if we're not moving the card between collections
-      if (!options.preserveImage) {
-        // Delete image from Firebase storage
+      const cardDoc = await getDoc(cardRef);
+      
+      if (!cardDoc.exists()) {
+        LoggingService.warn(`[CardRepository] Card ${id} not found in Firestore - already deleted or ghost card`);
+        
+        // Even if the card doesn't exist in Firestore, clean up any local artifacts
         try {
-          await deleteObject(storageRef);
-        } catch (error) {
-          // Continue with deletion even if image deletion fails
-        }
-
-        // Delete image from IndexedDB
-        try {
-          await db.deleteImage(id);
-        } catch (error) {
-          // Continue with deletion even if image deletion fails
-        }
-      }
-
-      // Delete the card document from Firestore
-      await deleteDoc(cardRef);
-
-      // Check if card exists in Firestore
-      const docSnap = await getDoc(cardRef);
-
-      if (!docSnap.exists()) {
-        // If card doesn't exist in Firestore but exists locally, clean it up
-        try {
-          await db.deleteImage(id);
-          // Force a cleanup of any local state for this card
-          await db.cleanupGhostCard(id);
+          await this.cleanupGhostCard(id);
+          LoggingService.info(`[CardRepository] Cleaned up ghost artifacts for card: ${id}`);
           return true;
-        } catch (error) {
+        } catch (cleanupError) {
+          LoggingService.error(`[CardRepository] Error cleaning up ghost card: ${id}`, cleanupError);
           return false;
         }
       }
 
+      const storageRef = ref(storage, `users/${this.userId}/cards/${id}.jpg`);
+
+      // Track deletion steps for better error handling
+      const deletionSteps = {
+        firestoreDeleted: false,
+        storageDeleted: false,
+        indexedDBDeleted: false
+      };
+
+      // Delete the card document from Firestore first (most important)
+      try {
+        await deleteDoc(cardRef);
+        deletionSteps.firestoreDeleted = true;
+        LoggingService.info(`[CardRepository] Successfully deleted card from Firestore: ${id}`);
+      } catch (firestoreError) {
+        LoggingService.error(`[CardRepository] Failed to delete card from Firestore: ${id}`, firestoreError);
+        throw new Error(`Failed to delete card from database: ${firestoreError.message}`);
+      }
+
+      // Only delete images if we're not moving the card between collections
+      if (!options.preserveImage) {
+        // Delete image from Firebase storage (non-blocking)
+        try {
+          await deleteObject(storageRef);
+          deletionSteps.storageDeleted = true;
+          LoggingService.info(`[CardRepository] Successfully deleted image from Firebase Storage: ${id}`);
+        } catch (storageError) {
+          // Log but don't fail the deletion for storage errors (image might not exist)
+          LoggingService.warn(`[CardRepository] Could not delete image from Firebase Storage: ${id}`, storageError);
+        }
+
+        // Delete image from IndexedDB (non-blocking)
+        try {
+          await db.deleteImage(id);
+          deletionSteps.indexedDBDeleted = true;
+          LoggingService.info(`[CardRepository] Successfully deleted image from IndexedDB: ${id}`);
+        } catch (indexedDBError) {
+          // Log but don't fail the deletion for IndexedDB errors
+          LoggingService.warn(`[CardRepository] Could not delete image from IndexedDB: ${id}`, indexedDBError);
+        }
+      }
+
+      // Verify the card was actually deleted from Firestore
+      const verificationDoc = await getDoc(cardRef);
+      if (verificationDoc.exists()) {
+        LoggingService.error(`[CardRepository] Card still exists in Firestore after deletion: ${id}`);
+        throw new Error('Card deletion verification failed - card still exists in database');
+      }
+
+      // Force cleanup of any remaining local artifacts
+      try {
+        await db.cleanupGhostCard(id);
+        
+        // Dispatch cleanup event to notify components
+        window.dispatchEvent(new CustomEvent('card-deleted', {
+          detail: { cardId: id, deletionSteps }
+        }));
+        
+        LoggingService.info(`[CardRepository] Successfully completed deletion process for card: ${id}`, deletionSteps);
+      } catch (cleanupError) {
+        LoggingService.warn(`[CardRepository] Error during final cleanup for card: ${id}`, cleanupError);
+        // Don't throw here since the main deletion succeeded
+      }
+
       return true;
     } catch (error) {
-      LoggingService.error(`Error deleting card ${cardId}:`, error);
-      // Provide a more user-friendly error message
-      if (error.message.includes('Invalid input')) {
-        throw error; // Already formatted nicely
-      } else {
-        throw new Error(`Failed to delete card: ${error.message}`);
-      }
+      LoggingService.error(`[CardRepository] Error deleting card ${cardId}:`, error);
+      throw error;
     }
   }
 

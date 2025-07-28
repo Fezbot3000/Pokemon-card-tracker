@@ -28,6 +28,7 @@ import Marketplace from './components/Marketplace/Marketplace';
 import MarketplaceSelling from './components/Marketplace/MarketplaceSelling';
 import MarketplaceMessages from './components/Marketplace/MarketplaceMessages';
 import BottomNavBar from './components/BottomNavBar';
+
 import CloudSync from './components/CloudSync';
 import TutorialModal from './components/TutorialModal';
 import useCardData from './hooks/useCardData';

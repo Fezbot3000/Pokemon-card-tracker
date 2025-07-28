@@ -320,6 +320,7 @@ const CardList = ({
   const [selectedCardsForListing, setSelectedCardsForListing] = useState([]);
   const [visibleCardCount, setVisibleCardCount] = useState(24); // Initial number of cards to show (4 rows of 6 cards)
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [scrollPosition, setScrollPosition] = useState(0); // Track scroll position
   const { ref: loadMoreRef, inView } = useInView({
     threshold: 0.1,
     triggerOnce: false,
@@ -479,18 +480,35 @@ const CardList = ({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cards]); // Remove cardImages dependency to prevent infinite loops
 
-  // Wrap the onUpdateCard function to handle image refreshing
+  // Wrap the onUpdateCard function to handle image refreshing and scroll preservation
   const handleCardUpdate = useCallback(
     async updatedCard => {
+      // Store current scroll position and pagination state before update
+      const currentScrollPosition = window.scrollY;
+      const currentVisibleCardCount = visibleCardCount;
+      const currentPageHeight = document.documentElement.scrollHeight;
+      setScrollPosition(currentScrollPosition);
+
       // If the card has an updated image, refresh it immediately
       if (updatedCard.imageUpdatedAt) {
         await refreshCardImage(updatedCard.slabSerial);
       }
 
       // Call the original onUpdateCard function
-      onUpdateCard(updatedCard);
+      await onUpdateCard(updatedCard);
+
+      // Restore pagination state and scroll position after a brief delay
+      setTimeout(() => {
+        // Restore pagination state if it was reset
+        if (visibleCardCount !== currentVisibleCardCount) {
+          setVisibleCardCount(currentVisibleCardCount);
+        }
+        
+        // Restore scroll position
+        window.scrollTo(0, currentScrollPosition);
+      }, 100);
     },
-    [onUpdateCard, refreshCardImage]
+    [onUpdateCard, refreshCardImage, visibleCardCount]
   );
 
   // Sort options
