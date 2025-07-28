@@ -10,7 +10,7 @@ import { useAuth } from '../design-system';
 import { CardRepository } from '../repositories/CardRepository';
 import db from '../services/firestore/dbAdapter';
 import LoggingService from '../services/LoggingService';
-import { detectAndCleanupGhostCards } from '../utils/ghostCardDetector';
+
 
 const CardContext = createContext();
 
@@ -165,47 +165,9 @@ export function CardProvider({ children }) {
     [soldCardIds]
   );
 
-  // Add ghost card detection and cleanup function
-  const detectAndCleanGhostCards = useCallback(async () => {
-    if (!repository || cards.length === 0) {
-      return null;
-    }
 
-    try {
-      LoggingService.info('[CardContext] Starting ghost card detection...');
-      const results = await detectAndCleanupGhostCards(currentUser.uid, cards);
-      
-      if (results.summary.ghostCardsFound > 0) {
-        LoggingService.warn(`[CardContext] Found and cleaned ${results.summary.ghostCardsRemoved} ghost cards`);
-        
-        // Remove ghost cards from local state
-        if (results.cleanup && results.cleanup.cleanedCards.length > 0) {
-          setCards(prev => prev.filter(card => !results.cleanup.cleanedCards.includes(card.id)));
-        }
-      }
-      
-      return results;
-    } catch (error) {
-      LoggingService.error('[CardContext] Error during ghost card detection:', error);
-      return null;
-    }
-  }, [repository, cards, currentUser]);
 
-  // Listen for ghost card cleanup events
-  useEffect(() => {
-    const handleGhostCardsCleanup = (event) => {
-      const { cleanedCardIds } = event.detail;
-      if (cleanedCardIds && cleanedCardIds.length > 0) {
-        LoggingService.info(`[CardContext] Removing ${cleanedCardIds.length} cleaned ghost cards from state`);
-        setCards(prev => prev.filter(card => !cleanedCardIds.includes(card.id)));
-      }
-    };
 
-    window.addEventListener('ghost-cards-cleaned', handleGhostCardsCleanup);
-    return () => {
-      window.removeEventListener('ghost-cards-cleaned', handleGhostCardsCleanup);
-    };
-  }, []);
 
   // Subscribe to collection changes
   useEffect(() => {
@@ -265,16 +227,7 @@ export function CardProvider({ children }) {
               // Always update cards immediately with what we get from Firestore
               setCards(filteredCards);
               setSyncStatus('synced');
-              
-              // Run ghost card detection periodically to prevent issues
-              // Only run if we have a reasonable number of cards to avoid excessive API calls
-              if (filteredCards.length > 0 && filteredCards.length < 100) {
-                setTimeout(() => {
-                  detectAndCleanGhostCards().catch(error => {
-                    LoggingService.warn('[CardContext] Automatic ghost card detection failed:', error);
-                  });
-                }, 5000); // Run 5 seconds after subscription update
-              }
+
             }
           );
         } else {
@@ -313,16 +266,6 @@ export function CardProvider({ children }) {
             // Always update cards immediately
             setCards(filteredCards);
             setSyncStatus('synced');
-            
-            // Run ghost card detection periodically to prevent issues
-            // Only run if we have a reasonable number of cards to avoid excessive API calls
-            if (filteredCards.length > 0 && filteredCards.length < 100) {
-              setTimeout(() => {
-                detectAndCleanGhostCards().catch(error => {
-                  LoggingService.warn('[CardContext] Automatic ghost card detection failed:', error);
-                });
-              }, 5000); // Run 5 seconds after subscription update
-            }
           });
         }
       } catch (error) {
@@ -337,7 +280,7 @@ export function CardProvider({ children }) {
         unsubscribe();
       }
     };
-  }, [repository, selectedCollection, verifyCardsAgainstSoldList, detectAndCleanGhostCards]);
+  }, [repository, selectedCollection, verifyCardsAgainstSoldList]);
 
   // Subscribe to sold cards changes
   useEffect(() => {
@@ -785,7 +728,6 @@ export function CardProvider({ children }) {
     markCardAsSold,
     importCards,
     exportCards,
-    detectAndCleanGhostCards,
   };
 
   return (

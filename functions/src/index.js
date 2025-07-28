@@ -337,22 +337,10 @@ exports.psaLookupWithCache = functions.https.onCall(async (data, context) => {
 
 // Create Checkout Session for Premium Subscription
 exports.createCheckoutSession = functions.https.onCall(async (data, context) => {
-  console.log('🔥 FUNCTION DEBUG: createCheckoutSession called');
-  console.log('🔥 FUNCTION DEBUG: Input data:', JSON.stringify(data, null, 2));
-  console.log('🔥 FUNCTION DEBUG: Context:', JSON.stringify({
-    auth: context.auth ? 'Present' : 'Missing',
-    origin: context.rawRequest?.headers?.origin
-  }, null, 2));
-  
   try {
     // Check Stripe configuration
     const config = functions?.config?.();
-    console.log('🔥 FUNCTION DEBUG: Functions config available:', !!config);
-    console.log('🔥 FUNCTION DEBUG: Stripe config keys:', Object.keys(config?.stripe || {}));
-    
     const stripeSecretKey = config?.stripe?.secret_key || process.env.STRIPE_SECRET_KEY;
-    console.log('🔥 FUNCTION DEBUG: Stripe secret key available:', !!stripeSecretKey);
-    console.log('🔥 FUNCTION DEBUG: Stripe secret key prefix:', stripeSecretKey?.substring(0, 12));
 
   // Ensure user is authenticated
   if (!context.auth) {

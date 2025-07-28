@@ -15,6 +15,7 @@
     "firebase-admin": "^13.4.0",
     "jszip": "^3.10.1",
     "leaflet": "^1.9.4",
+    "lodash": "^4.17.21",
     "papaparse": "^5.5.2",
     "react": "^18.2.0",
     "react-chartjs-2": "5.2.0",
@@ -25,6 +26,8 @@
     "react-leaflet": "^4.2.1",
     "react-router-dom": "6.20.0",
     "react-scripts": "5.0.1",
+    "react-virtualized-auto-sizer": "^1.0.26",
+    "react-window": "^1.8.11",
     "stripe": "^18.3.0",
     "tailwind-merge": "^3.3.1",
     "web-vitals": "^2.1.4"
@@ -40,7 +43,6 @@
     "deploy:fast": "npm run build:prod && firebase deploy --non-interactive",
     "deploy:hosting": "npm run build:prod && firebase deploy --only hosting --non-interactive",
     "deploy:functions": "firebase deploy --only functions --non-interactive",
-
     "clean": "rimraf node_modules/.cache && rimraf build",
     "firebase-init": "firebase init",
     "firebase-deploy": "firebase deploy --non-interactive",

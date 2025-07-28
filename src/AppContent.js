@@ -494,17 +494,17 @@ function AppContent() {
     // Implementation would go here
   };
 
-  // Placeholder functions for CloudSync functionality
+  // CloudSync functionality placeholders - not yet implemented
   const importAndCloudMigrate = async (file) => {
-    // TODO: Implement cloud migration logic
+    console.warn('Cloud migration feature not yet implemented');
   };
 
   const uploadImagesFromZip = async (file) => {
-    // TODO: Implement image upload from ZIP logic
+    console.warn('ZIP image upload feature not yet implemented');
   };
 
   const importSoldItemsFromZip = async (file) => {
-    // TODO: Implement sold items import from ZIP logic
+    console.warn('ZIP sold items import feature not yet implemented');
   };
 
   const handleSettingsClick = () => {
