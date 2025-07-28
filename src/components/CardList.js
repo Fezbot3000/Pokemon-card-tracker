@@ -43,72 +43,7 @@ import {
 import { useSubscription } from '../hooks/useSubscription';
 import logger from '../services/LoggingService';
 
-// Replace FinancialSummary component with individual stat cards
-// const StatCard = memo(({ label, value, isProfit = false }) => {
-//   // Determine color class based on profit status
-//   const colorClass = isProfit
-//     ? value >= 0
-//       ? 'text-green-500 dark:text-green-400'
-//       : 'text-red-500 dark:text-red-400'
-//     : 'text-gray-900 dark:text-white';
 
-//   // Helper function to format value
-//   const formatValue = value => {
-//     if (typeof value === 'number') {
-//       return value.toLocaleString();
-//     }
-//     return value;
-//   };
-
-//   return (
-//     <div className="stat-card">
-//       <div className="stat-label">{label}</div>
-//       <div className={`text-2xl font-medium ${colorClass}`}>
-//         {formatValue(value)}
-//       </div>
-//     </div>
-//   );
-// });
-
-// Helper function to format date
-// const formatDate = dateValue => {
-//   if (!dateValue) return 'N/A';
-
-//   try {
-//     let date;
-
-//     // Check if this is a Firestore Timestamp object
-//     if (
-//       dateValue &&
-//       typeof dateValue === 'object' &&
-//       'seconds' in dateValue &&
-//       'nanoseconds' in dateValue
-//     ) {
-//       // Convert Firestore Timestamp to JavaScript Date
-//       date = new Date(dateValue.seconds * 1000);
-//     } else {
-//       // Regular date string or Date object
-//       date = new Date(dateValue);
-//     }
-
-//     // Check if valid date
-//     if (isNaN(date.getTime())) {
-//       logger.warn('Invalid date in CardList:', dateValue);
-//       return 'Invalid date';
-//     }
-
-//     // Format as DD/MM/YYYY
-//     return date.toLocaleDateString('en-AU', {
-//       day: '2-digit',
-//       month: '2-digit',
-//       year: 'numeric',
-//     });
-//   } catch (error) {
-//     logger.error('Error formatting date:', error);
-//     // Return a fallback string if parsing fails
-//     return 'Date error';
-//   }
-// };
 
 const CardList = ({
   cards,
@@ -302,9 +237,6 @@ const CardList = ({
   }, [filteredCards, selectedCards, clearSelection]);
 
   const [cardImages, setCardImages] = useState({});
-  // const [showSortDropdown, setShowSortDropdown] = useState(false); // Not used
-  // const [isValueDropdownOpen, setIsValueDropdownOpen] = useState(false); // Not used  
-  // const [isMetricDropdownOpen, setIsMetricDropdownOpen] = useState(false); // Not used
   const [showSaleModal, setShowSaleModal] = useState(false);
   const [selectedCardsForSale, setSelectedCardsForSale] = useState([]);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -534,37 +466,7 @@ const CardList = ({
     }
   };
 
-  // const handleInvestmentEdit = (e, card) => {
-  //   e.stopPropagation(); // Prevent card click
-  //   setEditingInvestment(card.slabSerial);
-  //   setEditValue(card.investmentAUD.toString());
-  // };
 
-  // const handleInvestmentChange = e => {
-  //   setEditValue(e.target.value);
-  // };
-
-  // const handleInvestmentSave = (e, card) => {
-  //   e.stopPropagation(); // Prevent card click
-  //   const newValue = parseFloat(editValue);
-  //   if (!isNaN(newValue) && newValue >= 0) {
-  //     const updatedCard = {
-  //       ...card,
-  //       investmentAUD: newValue,
-  //       potentialProfit: card.currentValueAUD - newValue,
-  //     };
-  //     handleCardUpdate(updatedCard);
-  //   }
-  //   // setEditingInvestment(null); // Commented out - variable not defined
-  // };
-
-  // const handleInvestmentKeyDown = (e, card) => {
-  //   if (e.key === 'Enter') {
-  //     handleInvestmentSave(e, card);
-  //   } else if (e.key === 'Escape') {
-  //     // setEditingInvestment(null); // Variable not defined
-  //   }
-  // };
 
   // Paginated cards - only show the number of cards specified by visibleCardCount
   const paginatedCards = useMemo(() => {
@@ -749,32 +651,7 @@ const CardList = ({
     localStorage.setItem('cardListSortDirection', direction);
   };
 
-  // Sort dropdown toggle
-  // const toggleSortDropdown = () => {
-  //   // Close other dropdowns
-  //   setIsMetricDropdownOpen(false);
-  //   setIsValueDropdownOpen(false);
-  //   // Toggle sort dropdown
-  //   setShowSortDropdown(!showSortDropdown);
-  // };
 
-  // Metric dropdown toggle
-  // const toggleMetricDropdown = () => {
-  //   // Close other dropdowns
-  //   setShowSortDropdown(false);
-  //   setIsValueDropdownOpen(false);
-  //   // Toggle metric dropdown
-  //   setIsMetricDropdownOpen(!isMetricDropdownOpen);
-  // };
-
-  // Value dropdown toggle
-  // const toggleValueDropdown = () => {
-  //   // Close other dropdowns
-  //   setShowSortDropdown(false);
-  //   setIsMetricDropdownOpen(false);
-  //   // Toggle value dropdown
-  //   setIsValueDropdownOpen(!isValueDropdownOpen);
-  // };
 
   const handleCardDelete = async cardToDelete => {
     try {

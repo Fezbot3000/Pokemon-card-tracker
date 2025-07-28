@@ -360,9 +360,10 @@ class DatabaseAdapter {
 
   async resetAllData() {
     logger.warn(
-      'resetAllData called - this should be implemented with Firestore batch operations'
+      'resetAllData called - placeholder implementation (not yet fully implemented)'
     );
-    // TODO: Implement full data reset
+    // Note: Full data reset would require Firestore batch operations to delete user collections
+    // Currently returns success for UI compatibility but performs no actual reset
     return { success: true };
   }
 

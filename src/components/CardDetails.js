@@ -150,7 +150,7 @@ const CardDetails = memo(
     const handleClose = useCallback((saveSuccess = false, skipConfirmation = false) => {
       // If save was successful, we can close without confirmation
       if (!saveSuccess && hasUnsavedChanges && !skipConfirmation) {
-        // TODO: Implement a dialog for confirmation
+        // Show browser confirmation dialog for unsaved changes
         if (
           !window.confirm(
             'You have unsaved changes. Are you sure you want to close?'
