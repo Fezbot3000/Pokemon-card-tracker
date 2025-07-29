@@ -253,7 +253,7 @@ function EditListingModal({ isOpen, onClose, listing, onListingDeleted, onListin
         confirmText={isDeleting ? 'Deleting...' : 'Delete'}
         cancelText="Cancel"
         variant="danger"
-        zIndex={60}
+        zIndex="60"
       />
       <Modal
         isOpen={isOpen}
@@ -262,7 +262,7 @@ function EditListingModal({ isOpen, onClose, listing, onListingDeleted, onListin
         size="modal-width-70"
         position="right"
         closeOnClickOutside={true}
-        zIndex={50}
+        zIndex="50"
         footer={
           <div className="flex w-full items-center justify-between">
             <ModalButton

@@ -284,7 +284,7 @@ const SettingsModal = ({
       >
         <div className="flex h-full flex-col lg:flex-row">
           {/* Navigation sidebar */}
-          <nav className="mb-4 w-full shrink-0 border-b border-gray-200 dark:border-indigo-900/20 lg:mb-0 lg:w-48 lg:border-b-0 lg:border-r lg:pr-4">
+          <nav className="mb-4 w-full shrink-0 border-b border-gray-200 dark:border-gray-700 lg:mb-0 lg:w-48 lg:border-b-0 lg:border-r lg:pr-4">
             <div className="flex flex-row space-x-4 p-4 lg:flex-col lg:space-x-0 lg:space-y-2">
               <SettingsNavItem
                 icon="settings"
@@ -422,7 +422,7 @@ const SettingsModal = ({
                     </div>
 
                     {/* Preferred Currency Setting */}
-                    <div className="max-w-md rounded-lg border border-gray-200 bg-white p-4 dark:border-indigo-900/20 dark:bg-black">
+                    <div className="max-w-md rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-[#0F0F0F]">
                       <h4 className="mb-2 flex items-center font-medium text-gray-900 dark:text-white">
                         <Icon name="language" className="mr-2" />{' '}
                         {/* Using 'language' icon as a placeholder for currency */}
@@ -455,7 +455,7 @@ const SettingsModal = ({
                 >
                   <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
                     {/* Rename Collection Section */}
-                    <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-indigo-900/20 dark:bg-black">
+                    <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-[#0F0F0F]">
                       <h4 className="mb-3 flex items-center font-medium text-gray-900 dark:text-white">
                         <Icon name="edit" className="mr-2 text-indigo-400" />
                         Rename Collection
@@ -516,7 +516,7 @@ const SettingsModal = ({
                     </div>
 
                     {/* Delete Collection Section */}
-                    <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-indigo-900/20 dark:bg-black">
+                    <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-[#0F0F0F]">
                       <h4 className="mb-3 flex items-center font-medium text-gray-900 dark:text-white">
                         <Icon name="delete" className="mr-2 text-red-500" />
                         Delete Collection
@@ -599,7 +599,7 @@ const SettingsModal = ({
                 >
                   {userData && (
                     <div
-                      className="mb-6 flex items-center space-x-4 rounded-lg bg-gray-100 p-4 dark:bg-gray-800"
+                      className="mb-6 flex items-center space-x-4 rounded-lg bg-gray-100 p-4 dark:bg-[#0F0F0F]"
                       data-component-name="SettingsModal"
                     >
                       <div className="flex size-12 items-center justify-center rounded-full bg-indigo-600 font-medium text-white">

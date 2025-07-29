@@ -113,13 +113,13 @@ const TutorialModal = () => {
 
       {/* Modal Container */}
       <div
-        className="relative w-full max-w-4xl overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-900"
+        className="relative w-full max-w-4xl overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl dark:border-gray-700 dark:bg-[#0F0F0F]"
         style={{
           maxHeight: '90vh',
         }}
       >
         {/* Modal Header */}
-        <div className="dark:border-gray-700/50 flex items-center justify-between border-b border-gray-200 px-6 pb-4 pt-6">
+        <div className="dark:border-gray-700 flex items-center justify-between border-b border-gray-200 px-6 pb-4 pt-6">
           <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
             {content.title}
           </h3>
@@ -137,7 +137,7 @@ const TutorialModal = () => {
             {/* Image Section - Much larger */}
             <div className="order-2 md:order-1">
               {content.imageSrc ? (
-                <div className="dark:bg-gray-800/30 overflow-hidden rounded-xl border border-gray-200 bg-gray-50 shadow-lg dark:border-gray-700">
+                <div className="dark:bg-[#0F0F0F] overflow-hidden rounded-xl border border-gray-200 bg-gray-50 shadow-lg dark:border-gray-700">
                   <img
                     src={content.imageSrc}
                     alt={content.imageAlt}
@@ -162,7 +162,7 @@ const TutorialModal = () => {
                   />
                 </div>
               ) : (
-                <div className="dark:bg-gray-800/30 flex h-64 items-center justify-center rounded-xl border border-gray-200 bg-gray-50 dark:border-gray-700">
+                <div className="dark:bg-[#0F0F0F] flex h-64 items-center justify-center rounded-xl border border-gray-200 bg-gray-50 dark:border-gray-700">
                   <div className="text-center text-gray-400 dark:text-gray-600">
                     <div className="mb-4 text-4xl">🚀</div>
                     <p className="text-lg">{content.imageAlt}</p>
@@ -181,7 +181,7 @@ const TutorialModal = () => {
         </div>
 
         {/* Modal Footer with Fixed Buttons */}
-        <div className="dark:border-gray-700/50 dark:bg-gray-800/50 flex justify-between border-t border-gray-200 bg-gray-50 px-6 pb-6 pt-4">
+        <div className="dark:border-gray-700 dark:bg-[#0F0F0F] flex justify-between border-t border-gray-200 bg-gray-50 px-6 pb-6 pt-4">
           <button
             onClick={endTutorial}
             className="px-6 py-3 font-medium text-gray-600 transition-colors hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"

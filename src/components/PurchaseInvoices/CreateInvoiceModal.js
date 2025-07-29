@@ -113,7 +113,7 @@ const CreateInvoiceModal = ({
       lastPreSelectedCardsLength.current = currentPreSelectedCardsKey;
       hasInitialized.current = true;
     }
-  }, [isOpen, editingInvoiceKey, preSelectedCardsKey, editingInvoice, preSelectedCards]);
+  }, [isOpen, editingInvoiceKey, preSelectedCardsKey, editingInvoice]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Calculate total investment amount
   const totalInvestment = selectedCards.reduce((sum, card) => {

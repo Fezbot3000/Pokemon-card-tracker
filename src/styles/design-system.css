@@ -151,6 +151,13 @@
   /* PWA touch targets (iOS recommended) */
   --pwa-touch-target-min: var(--space-11); /* 44px */
 
+  /* Modal styling tokens */
+  --modal-border-radius: var(--border-radius-xl);
+  --modal-shadow: var(--shadow-2xl);
+  --modal-border: 1px solid;
+  --modal-border-color: rgba(229, 231, 235, 0.2); /* border-gray-200/20 */
+  --modal-border-color-dark: rgba(55, 65, 81, 0.2); /* border-gray-700/20 */
+
   /* ==================== Z-INDEX TOKENS ==================== */
   --z-index-base: 1;
   --z-index-dropdown: 100;
@@ -349,6 +356,17 @@ html.dark {
 .touch-target-pwa {
   min-height: var(--pwa-touch-target-min);
   min-width: var(--pwa-touch-target-min);
+}
+
+/* Modal styling utilities */
+.modal-base {
+  border-radius: var(--modal-border-radius);
+  box-shadow: var(--modal-shadow);
+  border: var(--modal-border) var(--modal-border-color);
+}
+
+.modal-base.dark {
+  border-color: var(--modal-border-color-dark);
 }
 
 /* Utility for hiding scrollbars */

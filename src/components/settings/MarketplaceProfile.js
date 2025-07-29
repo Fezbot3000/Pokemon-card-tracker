@@ -228,7 +228,7 @@ function MarketplaceProfile() {
             className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
               profile.showRatings
                 ? 'bg-purple-600'
-                : 'bg-gray-300 dark:bg-gray-600'
+                : 'bg-gray-300 dark:bg-[#0F0F0F]'
             }`}
           >
             <span
@@ -250,7 +250,7 @@ function MarketplaceProfile() {
             className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
               profile.allowOffers
                 ? 'bg-purple-600'
-                : 'bg-gray-300 dark:bg-gray-600'
+                : 'bg-gray-300 dark:bg-[#0F0F0F]'
             }`}
           >
             <span

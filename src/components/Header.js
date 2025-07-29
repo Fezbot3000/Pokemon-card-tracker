@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useTheme } from '../design-system';
 import db from '../services/firestore/dbAdapter'; // Use the correct db service
 import { useAuth } from '../design-system'; // Import auth context
@@ -248,11 +249,11 @@ const Header = ({
       </header>
 
       {/* New Collection Modal */}
-      {isNewCollectionModalOpen && (
-        <div className="bg-black/50 fixed inset-0 z-50 flex items-center justify-center">
+      {isNewCollectionModalOpen && createPortal(
+        <div className="bg-black/50 fixed inset-0 z-[55000] flex items-center justify-center">
           <div
             ref={newCollectionModalRef}
-            className="mx-4 w-full max-w-md rounded-xl bg-white dark:bg-[#0F0F0F]"
+            className="mx-4 w-full max-w-md rounded-xl bg-white dark:bg-[#0F0F0F] shadow-2xl border border-gray-200/20 dark:border-gray-700/20 overflow-hidden"
           >
             <div className="dark:border-gray-700/50 flex items-center justify-between border-b border-gray-200 px-6 pb-4 pt-6">
               <h2 className="text-xl font-medium text-gray-800 dark:text-gray-200">
@@ -297,7 +298,8 @@ const Header = ({
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );

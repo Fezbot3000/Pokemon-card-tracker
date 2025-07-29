@@ -40,7 +40,7 @@ const PurchaseInvoices = () => {
   const [sortField, setSortField] = useState('date');
   const [sortDirection, setSortDirection] = useState('desc'); // 'asc' or 'desc'
   const [searchQuery, setSearchQuery] = useState('');
-  const [isGeneratingBatch, setIsGeneratingBatch] = useState(false);
+  // const [isGeneratingBatch, setIsGeneratingBatch] = useState(false); // Commented out - unused
   const [deleteConfirmation, setDeleteConfirmation] = useState({
     isOpen: false,
     invoice: null,
@@ -244,6 +244,7 @@ const PurchaseInvoices = () => {
   };
 
   // Handle server-side batch PDF generation
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleServerBatchGeneration = async () => {
     if (invoices.length === 0) {
       toast.error('No invoices to export');
@@ -255,7 +256,7 @@ const PurchaseInvoices = () => {
       toast.loading('Generating PDF invoices on the server...', {
         id: 'server-batch',
       });
-      setIsGeneratingBatch(true);
+      // setIsGeneratingBatch(true); // Commented out - variable unused
 
       // Get all invoice IDs from filtered invoices
       const invoiceIds = filteredInvoices.map(invoice => invoice.id);
@@ -295,7 +296,7 @@ const PurchaseInvoices = () => {
         id: 'server-batch',
       });
     } finally {
-      setIsGeneratingBatch(false);
+      // setIsGeneratingBatch(false); // Commented out - variable unused
     }
   };
 
@@ -574,7 +575,7 @@ const PurchaseInvoices = () => {
         </div>
       )}
 
-      <div className="rounded-xl bg-white dark:bg-[#0F0F0F]">
+      <div>
           {loading ? (
             <div className="overflow-x-auto">
               {/* Search Section Skeleton - matches exact real layout */}
@@ -653,7 +654,7 @@ const PurchaseInvoices = () => {
                 {[...Array(2)].map((_, i) => (
                   <div
                     key={`mobile-skeleton-${i + 1}`}
-                    className="bg-white/5 dark:bg-white/5 border-gray-200/20 dark:border-gray-700/30 rounded-xl border p-4"
+                    className="bg-white dark:bg-[#0F0F0F] border-gray-200 dark:border-gray-700 rounded-xl border p-4"
                   >
                     <div className="mb-3 flex items-start justify-between">
                       <div>
@@ -743,33 +744,7 @@ const PurchaseInvoices = () => {
                 {invoices.length === 1 ? 'invoice' : 'invoices'} found
               </div>
 
-              <div className="mb-4 flex flex-col gap-4 px-4">
-                <div className="flex w-full flex-col gap-2 sm:flex-row">
-                  {isGeneratingBatch ? (
-                    <div className="flex items-center gap-2 rounded-lg bg-blue-100 px-4 py-2 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
-                      <span className="material-icons animate-spin">
-                        autorenew
-                      </span>
-                      <span className="hidden sm:inline">
-                        Generating PDFs on server...
-                      </span>
-                      <span className="sm:hidden">Generating...</span>
-                    </div>
-                  ) : (
-                    <button
-                      className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white transition-colors hover:bg-blue-700 sm:w-auto"
-                      onClick={handleServerBatchGeneration}
-                      disabled={invoices.length === 0}
-                      title="Generate PDF invoices for all items"
-                    >
-                      <span className="material-icons text-base">
-                        cloud_download
-                      </span>
-                      <span>Generate All PDFs</span>
-                    </button>
-                  )}
-                </div>
-              </div>
+
 
               {/* Desktop Table View */}
               <div className="hidden md:block">
@@ -903,7 +878,7 @@ const PurchaseInvoices = () => {
                 {getSortedInvoices().map(invoice => (
                   <div
                     key={invoice.id}
-                    className="bg-white/5 dark:bg-white/5 border-gray-200/20 dark:border-gray-700/30 rounded-xl border p-4"
+                    className="bg-white dark:bg-[#0F0F0F] border-gray-200 dark:border-gray-700 rounded-xl border p-4"
                   >
                     {/* Header with Invoice Number and Date */}
                     <div className="mb-3 flex items-start justify-between">
@@ -944,7 +919,7 @@ const PurchaseInvoices = () => {
                     </div>
 
                     {/* Actions */}
-                    <div className="border-gray-200/20 dark:border-gray-700/30 flex justify-end space-x-2 border-t pt-3">
+                    <div className="border-gray-200 dark:border-gray-700 flex justify-end space-x-2 border-t pt-3">
                       <button
                         className="flex size-10 items-center justify-center rounded-lg bg-blue-50 text-blue-600 transition-colors hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50"
                         onClick={() => handleDownloadInvoice(invoice)}

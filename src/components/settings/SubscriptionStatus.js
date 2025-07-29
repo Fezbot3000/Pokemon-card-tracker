@@ -85,7 +85,7 @@ const SubscriptionStatus = () => {
       return 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200';
     if (isOnTrial)
       return 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200';
-    return 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200';
+    return 'bg-gray-100 dark:bg-[#0F0F0F] text-gray-800 dark:text-gray-200';
   };
 
   const getPlanName = () => {
@@ -103,7 +103,7 @@ const SubscriptionStatus = () => {
   return (
     <div className="space-y-4">
       {/* Current Plan */}
-      <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
+      <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-[#0F0F0F]">
         <div className="mb-3 flex items-center justify-between">
           <h4 className="text-sm font-medium text-gray-900 dark:text-white">
             Current Plan
@@ -160,7 +160,7 @@ const SubscriptionStatus = () => {
 
       {/* Billing Management */}
       {(isPremium || subscription?.customerId) && (
-        <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
+        <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-[#0F0F0F]">
           <h4 className="mb-3 text-sm font-medium text-gray-900 dark:text-white">
             Billing Management
           </h4>

@@ -1,4 +1,5 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import PropTypes from 'prop-types';
 import Icon from '../atoms/Icon';
 
@@ -194,8 +195,8 @@ const Modal = ({
 
 
   const modalClasses = forceDarkMode
-    ? `bg-black backdrop-blur-sm rounded-lg shadow-xl text-white`
-    : `bg-white dark:bg-[#0F0F0F] backdrop-blur-sm rounded-lg shadow-xl`;
+    ? `bg-black backdrop-blur-sm rounded-xl shadow-2xl border border-gray-800/20 text-white`
+    : `bg-white dark:bg-[#0F0F0F] backdrop-blur-sm rounded-xl shadow-2xl border border-gray-200/20 dark:border-gray-700/20`;
 
   const iosHeaderSafeClass = isIOSDevice() ? 'modal-header-ios-safe' : '';
   const headerClasses = forceDarkMode
@@ -250,7 +251,7 @@ const Modal = ({
   }
 
   // Regular modal with backdrop and positioning
-  return (
+  return createPortal(
     <div 
       className={`fixed inset-0 flex min-h-screen w-full items-center justify-center bg-black/40 backdrop-blur-sm ${getModalZIndex()}`}
       onClick={handleBackdropClick}
@@ -301,7 +302,8 @@ const Modal = ({
           <div className={`${footerClasses} ${iosClasses}`}>{footer}</div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

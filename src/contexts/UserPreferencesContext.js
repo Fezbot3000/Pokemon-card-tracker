@@ -322,7 +322,7 @@ export function UserPreferencesProvider({ children }) {
 
     // Clean up listener when component unmounts or user changes
     return () => unsubscribe();
-  }, [user, loadUserPreferencesFromFirestore, saveUserPreferencesToFirestore, preferredCurrency]);
+  }, [user, loadUserPreferencesFromFirestore, saveUserPreferencesToFirestore]); // eslint-disable-line react-hooks/exhaustive-deps
 
 
 

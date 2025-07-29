@@ -19,7 +19,7 @@ const SimpleSearchBar = ({
 
   // const isDarkMode = theme === 'dark';
 
-  const containerClass = `w-full bg-white dark:bg-[#0F0F0F] py-3 px-4 shadow-sm rounded-md border border-gray-200 dark:border-gray-700 ${className}`;
+  const containerClass = `w-full py-3 px-4 ${className}`;
 
   return (
     <div className={containerClass} {...props}>

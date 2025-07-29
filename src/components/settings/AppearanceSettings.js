@@ -13,7 +13,7 @@ const AppearanceSettings = ({ isDarkMode, toggleTheme }) => {
     >
       <div className="flex flex-col gap-4 sm:flex-row">
         <div
-          className={`flex-1 cursor-pointer rounded-lg border-2 p-4 transition-all duration-200 ${!isDarkMode ? 'border-blue-500 bg-blue-50' : 'border-gray-200 dark:border-gray-700'} `}
+          className={`flex-1 cursor-pointer rounded-lg border-2 p-4 transition-all duration-200 ${!isDarkMode ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30' : 'border-gray-200 dark:border-gray-700'} `}
           onClick={() => toggleTheme('light')}
         >
           <div className="mb-2 flex items-center justify-between">
@@ -32,7 +32,7 @@ const AppearanceSettings = ({ isDarkMode, toggleTheme }) => {
         </div>
 
         <div
-          className={`flex-1 cursor-pointer rounded-lg border-2 p-4 transition-all duration-200 ${isDarkMode ? 'border-blue-500 bg-gray-800' : 'border-gray-200 dark:border-gray-700'} `}
+          className={`flex-1 cursor-pointer rounded-lg border-2 p-4 transition-all duration-200 ${isDarkMode ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30' : 'border-gray-200 dark:border-gray-700'} `}
           onClick={() => toggleTheme('dark')}
         >
           <div className="mb-2 flex items-center justify-between">
@@ -43,7 +43,7 @@ const AppearanceSettings = ({ isDarkMode, toggleTheme }) => {
               <Icon name="check_circle" className="text-blue-500" />
             )}
           </div>
-          <div className="rounded-md border border-gray-700 bg-gray-900 p-2">
+          <div className="rounded-md border border-gray-700 bg-[#0F0F0F] p-2">
             <div className="mb-2 h-2 w-8 rounded bg-blue-500"></div>
             <div className="mb-2 h-2 w-16 rounded bg-gray-700"></div>
             <div className="h-2 w-10 rounded bg-gray-700"></div>

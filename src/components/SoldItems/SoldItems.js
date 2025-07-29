@@ -674,7 +674,7 @@ const SoldItems = () => {
         </div>
       )}
 
-      <div className="rounded-xl bg-white dark:bg-black">
+      <div>
         {soldCards && Array.isArray(soldCards) && soldCards.length > 0 ? (
           <div className="overflow-x-auto">
             {/* Search Section */}
@@ -936,7 +936,7 @@ const SoldItems = () => {
               {filteredInvoices.map(([buyer, invoice]) => (
                 <div
                   key={buyer}
-                  className="bg-white/5 dark:bg-white/5 border-gray-200/20 dark:border-gray-700/30 overflow-hidden rounded-xl border"
+                                      className="bg-white dark:bg-[#0F0F0F] border-gray-200 dark:border-gray-700 overflow-hidden rounded-xl border"
                 >
                   {/* Header with Buyer and Date */}
                   <div className="p-4">
@@ -983,7 +983,7 @@ const SoldItems = () => {
                     </div>
 
                     {/* Actions */}
-                    <div className="border-gray-200/20 dark:border-gray-700/30 flex justify-end space-x-2 border-t pt-3">
+                                          <div className="border-gray-200 dark:border-gray-700 flex justify-end space-x-2 border-t pt-3">
                       <button
                         className="flex size-10 items-center justify-center rounded-lg bg-green-50 text-green-600 transition-colors hover:bg-green-100 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50"
                         onClick={() => handleDownloadInvoice(buyer, invoice)}
@@ -1024,7 +1024,7 @@ const SoldItems = () => {
 
                   {/* Expandable Card Details (inline with each invoice) */}
                   {expandedBuyers.has(buyer) && (
-                    <div className="border-gray-200/20 dark:border-gray-700/30 border-t bg-gray-50 p-4 dark:bg-gray-800">
+                    <div className="border-gray-200 dark:border-gray-700 border-t bg-gray-50 p-4 dark:bg-gray-800">
                       <h4 className="mb-3 text-sm font-medium text-gray-900 dark:text-white">
                         Card Details
                       </h4>

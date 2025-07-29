@@ -119,7 +119,7 @@ function MarketplaceReviews() {
   return (
     <div className="space-y-6">
       {/* Stats Overview */}
-      <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-900">
+      <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-[#0F0F0F]">
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
           {/* Average Rating */}
           <div className="text-center">
@@ -154,7 +154,7 @@ function MarketplaceReviews() {
                 <span className="material-icons text-sm text-yellow-500">
                   star
                 </span>
-                <div className="h-2 flex-1 rounded-full bg-gray-200 dark:bg-gray-700">
+                <div className="h-2 flex-1 rounded-full bg-gray-200 dark:bg-[#0F0F0F]">
                   <div
                     className="h-2 rounded-full bg-yellow-500"
                     style={{
@@ -196,7 +196,7 @@ function MarketplaceReviews() {
             {reviews.map(review => (
               <div
                 key={review.id}
-                className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"
+                className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-[#0F0F0F]"
               >
                 <div className="mb-2 flex items-start justify-between">
                   <div>

@@ -19,7 +19,7 @@ const ConfirmDialog = ({
   confirmText = 'Confirm',
   cancelText = 'Cancel',
   variant = 'danger',
-  zIndex = 50,
+  zIndex = "55000",
   loading = false,
 }) => {
   // Effect to ensure UI is reset if the dialog is closed unexpectedly
@@ -108,7 +108,7 @@ ConfirmDialog.propTypes = {
   confirmText: PropTypes.string,
   cancelText: PropTypes.string,
   variant: PropTypes.string,
-  zIndex: PropTypes.number,
+  zIndex: PropTypes.string,
   loading: PropTypes.bool,
 };
 
