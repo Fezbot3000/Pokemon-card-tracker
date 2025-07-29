@@ -532,6 +532,13 @@ html.dark body {
   display: none;
 }
 
+/* PWA mode: Remove bottom nav spacing from main content when modal is open */
+@media (display-mode: standalone) {
+  body.modal-open .main-content {
+    padding-bottom: var(--safe-area-bottom);
+  }
+}
+
 /* Ensure main content doesn't bleed through modals */
 .modal-open .main-content,
 .modal-open main,
@@ -721,10 +728,22 @@ html.dark body {
     min-height: calc(100vh - var(--safe-area-top) - var(--safe-area-bottom));
   }
   
+  /* PWA mode: Modal backdrop when modal is open - ensure no bottom gap */
+  body.modal-open .fixed.inset-0.flex.min-h-screen.w-full.items-center.justify-center {
+    bottom: var(--safe-area-bottom);
+    height: calc(100vh - var(--safe-area-top) - var(--safe-area-bottom));
+  }
+  
   /* PWA modal containers - ensure proper spacing within safe area */
   .modal-container {
     margin: var(--space-4);
     max-height: calc(100vh - var(--safe-area-top) - var(--safe-area-bottom) - var(--space-8));
+  }
+  
+  /* PWA modal containers when modal is open - remove bottom nav space */
+  body.modal-open .modal-container {
+    margin: var(--space-2);
+    max-height: calc(100vh - var(--safe-area-top) - var(--safe-area-bottom) - var(--space-4));
   }
 
   /* PWA mode: Status bar background fill */

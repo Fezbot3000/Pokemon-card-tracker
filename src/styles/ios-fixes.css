@@ -23,6 +23,11 @@
   .modal-container.modal-contextual {
     max-height: calc(90vh - var(--safe-area-top) - var(--safe-area-bottom));
   }
+  
+  /* PWA contextual modal when open - better height utilization */
+  body.modal-open .modal-container.modal-contextual {
+    max-height: calc(95vh - var(--safe-area-top) - var(--safe-area-bottom));
+  }
 }
 
   /* iOS Safari specific fixes using design tokens */
@@ -124,6 +129,12 @@
       margin: var(--space-4);
       max-height: calc(100vh - var(--safe-area-top) - var(--safe-area-bottom) - var(--space-8));
     }
+    
+    /* PWA modal containers when modal is open - no bottom nav space needed */
+    body.modal-open .modal-container {
+      margin: var(--space-2);
+      max-height: calc(100vh - var(--safe-area-top) - var(--safe-area-bottom) - var(--space-4));
+    }
   }
 
   /* iOS form input zoom prevention using design tokens */
@@ -165,6 +176,13 @@
         height: calc(100dvh - var(--safe-area-top) - var(--safe-area-bottom));
         margin: var(--space-2);
       }
+      
+      /* PWA mobile modal when open - full height utilization */
+      body.modal-open .modal-container:not(.modal-contextual) {
+        height: calc(100vh - var(--safe-area-top) - var(--safe-area-bottom));
+        height: calc(100dvh - var(--safe-area-top) - var(--safe-area-bottom));
+        margin: 0;
+      }
     }
 
     /* Contextual modals stay contextual even on mobile */
@@ -179,6 +197,12 @@
       .modal-container.modal-contextual {
         max-height: calc(80vh - var(--safe-area-top) - var(--safe-area-bottom));
         margin: var(--space-6);
+      }
+      
+      /* PWA mobile contextual modal when open - better space utilization */
+      body.modal-open .modal-container.modal-contextual {
+        max-height: calc(85vh - var(--safe-area-top) - var(--safe-area-bottom));
+        margin: var(--space-4);
       }
     }
   }
