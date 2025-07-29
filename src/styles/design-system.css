@@ -246,10 +246,22 @@ html.dark {
     }
   }
 
-  /* PWA modal adjustments */
-  .modal-pwa {
-    margin-top: var(--pwa-modal-margin-top);
-    margin-bottom: var(--pwa-modal-margin-bottom);
+  /* PWA modal backdrop adjustments - account for safe areas */
+  .modal-backdrop-pwa {
+    /* Adjust backdrop to not cover safe areas */
+    top: var(--safe-area-top);
+    bottom: var(--safe-area-bottom);
+    left: var(--safe-area-left);
+    right: var(--safe-area-right);
+  }
+  
+  /* PWA modal container adjustments */
+  .modal-pwa,
+  .modal-container-pwa {
+    margin-top: var(--space-4);
+    margin-bottom: var(--space-4);
+    /* Ensure modal doesn't get too close to safe area edges */
+    max-height: calc(100vh - var(--safe-area-top) - var(--safe-area-bottom) - var(--space-8));
   }
 
   /* PWA status bar background fill */

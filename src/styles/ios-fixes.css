@@ -1,13 +1,28 @@
-/* Modal height fix for full-screen modals only */
+/* Modal height fix for full-screen modals - PWA optimized */
 .modal-container:not(.modal-contextual) {
   height: 100vh;
   height: 100dvh; /* Dynamic viewport height for better compatibility */
+}
+
+/* PWA modal height adjustments for safe areas */
+@media (display-mode: standalone) {
+  .modal-container:not(.modal-contextual) {
+    height: calc(100vh - var(--safe-area-top) - var(--safe-area-bottom));
+    height: calc(100dvh - var(--safe-area-top) - var(--safe-area-bottom));
+  }
 }
 
 /* Contextual modals should have auto height */
 .modal-container.modal-contextual {
   height: auto;
   max-height: 90vh;
+}
+
+/* PWA contextual modal adjustments */
+@media (display-mode: standalone) {
+  .modal-container.modal-contextual {
+    max-height: calc(90vh - var(--safe-area-top) - var(--safe-area-bottom));
+  }
 }
 
   /* iOS Safari specific fixes using design tokens */
@@ -94,10 +109,20 @@
 
   /* iOS PWA specific fixes using design tokens */
   @media (display-mode: standalone) {
-    /* PWA safe area handling */
+    /* PWA modal backdrop safe area handling - specific targeting */
+    .fixed.inset-0.flex.min-h-screen.w-full.items-center.justify-center {
+      top: var(--safe-area-top);
+      bottom: var(--safe-area-bottom);
+      left: var(--safe-area-left);
+      right: var(--safe-area-right);
+      min-height: calc(100vh - var(--safe-area-top) - var(--safe-area-bottom));
+    }
+    
+    /* PWA modal container safe area padding - REMOVED to prevent double padding */
     .modal-container {
-      padding-top: var(--safe-area-top);
-      padding-bottom: var(--safe-area-bottom);
+      /* Don't add padding here - backdrop handles positioning */
+      margin: var(--space-4);
+      max-height: calc(100vh - var(--safe-area-top) - var(--safe-area-bottom) - var(--space-8));
     }
   }
 
@@ -132,12 +157,29 @@
       margin: var(--space-0);
       padding: var(--space-0);
     }
+    
+    /* PWA mobile modal adjustments */
+    @media (display-mode: standalone) {
+      .modal-container:not(.modal-contextual) {
+        height: calc(100vh - var(--safe-area-top) - var(--safe-area-bottom));
+        height: calc(100dvh - var(--safe-area-top) - var(--safe-area-bottom));
+        margin: var(--space-2);
+      }
+    }
 
     /* Contextual modals stay contextual even on mobile */
     .modal-container.modal-contextual {
       height: auto;
       max-height: 80vh;
       margin: var(--space-8);
+    }
+    
+    /* PWA mobile contextual modal adjustments */
+    @media (display-mode: standalone) {
+      .modal-container.modal-contextual {
+        max-height: calc(80vh - var(--safe-area-top) - var(--safe-area-bottom));
+        margin: var(--space-6);
+      }
     }
   }
 

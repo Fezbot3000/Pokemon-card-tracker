@@ -711,11 +711,20 @@ html.dark body {
     bottom: var(--safe-area-bottom);
   }
 
-  /* PWA mode: Modal adjustments */
-  body.pwa .modal-backdrop .modal-container,
-  .modal-pwa {
-    margin-top: var(--pwa-modal-margin-top);
-    margin-bottom: var(--pwa-modal-margin-bottom);
+  /* PWA mode: Modal backdrop adjustments - more specific targeting */
+  .fixed.inset-0.flex.min-h-screen.w-full.items-center.justify-center {
+    /* Adjust modal backdrop for safe areas in PWA */
+    top: var(--safe-area-top);
+    bottom: var(--safe-area-bottom);
+    left: var(--safe-area-left);
+    right: var(--safe-area-right);
+    min-height: calc(100vh - var(--safe-area-top) - var(--safe-area-bottom));
+  }
+  
+  /* PWA modal containers - ensure proper spacing within safe area */
+  .modal-container {
+    margin: var(--space-4);
+    max-height: calc(100vh - var(--safe-area-top) - var(--safe-area-bottom) - var(--space-8));
   }
 
   /* PWA mode: Status bar background fill */
