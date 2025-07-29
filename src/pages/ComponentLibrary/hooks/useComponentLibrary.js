@@ -68,24 +68,24 @@ export const useComponentLibrary = () => {
 
   // Mock handlers for component examples
   const handleMockLogin = ({ email, password, rememberMe }) => {
-    console.log('Mock login:', { email, password, rememberMe });
+    // console.log('Mock login:', { email, password, rememberMe });
     setIsLoginModalOpen(false);
   };
 
   const handleMockSignUpClick = () => {
-    console.log('Mock sign up clicked');
+    // console.log('Mock sign up clicked');
   };
 
   const handleMockForgotPasswordClick = () => {
-    console.log('Mock forgot password clicked');
+    // console.log('Mock forgot password clicked');
   };
 
   const handleMockGoogleLogin = () => {
-    console.log('Mock Google login clicked');
+    // console.log('Mock Google login clicked');
   };
 
   const handleMockAppleLogin = () => {
-    console.log('Mock Apple login clicked');
+    // console.log('Mock Apple login clicked');
   };
 
   // Toggle state handlers
@@ -164,7 +164,7 @@ export const useComponentLibrary = () => {
 
   // Component action handler
   const handleComponentAction = (action, data) => {
-    console.log(`Component action: ${action}`, data);
+    // console.log(`Component action: ${action}`, data);
     
     // Add toast notification for demo purposes
     if (typeof window !== 'undefined' && window.toastService) {

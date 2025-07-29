@@ -19,7 +19,7 @@ const CollectionManagement = ({
   setCollectionToDelete,
   onStartRenaming,
   onDeleteCollection,
-  isDarkMode,
+  // isDarkMode,
 }) => {
   const collectionNames = Object.keys(collections);
 

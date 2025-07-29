@@ -387,6 +387,7 @@ const AddCardModal = ({
         title="Add New Card"
         footer={modalFooter}
         position="right"
+        size="modal-width-70"
         className={`${animClass} ${className}`}
         closeOnClickOutside={true}
       >

@@ -208,7 +208,7 @@ const Settings = () => {
             {/* Back to Dashboard Button - Hidden on Mobile */}
             <button
               onClick={() => navigate('/dashboard')}
-              className="hidden lg:flex items-center space-x-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors"
+              className="hidden items-center space-x-2 text-gray-600 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-white lg:flex"
               aria-label="Back to Dashboard"
             >
               <svg
@@ -254,7 +254,7 @@ const Settings = () => {
             </div>
 
             {/* Settings Title - Hidden on Mobile */}
-            <div className="hidden lg:flex items-center">
+            <div className="hidden items-center lg:flex">
               <h1 className="text-lg font-semibold text-gray-900 dark:text-white">Settings</h1>
             </div>
           </div>

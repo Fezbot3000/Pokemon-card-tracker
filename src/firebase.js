@@ -7,8 +7,6 @@ import {
   browserLocalPersistence,
 } from 'firebase/auth';
 import {
-  getFirestore,
-  connectFirestoreEmulator,
   initializeFirestore,
   CACHE_SIZE_UNLIMITED,
 } from 'firebase/firestore';

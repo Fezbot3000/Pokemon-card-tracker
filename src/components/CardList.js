@@ -59,6 +59,8 @@ const CardList = ({
   onCollectionChange,
   onSelectionChange,
 }) => {
+
+
   // Initialize navigate function from React Router
   const navigate = useNavigate();
   const { user } = useAuth() || { user: null };
@@ -241,6 +243,7 @@ const CardList = ({
   const [selectedCardsForSale, setSelectedCardsForSale] = useState([]);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [cardsToDelete, setCardsToDelete] = useState([]);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [showMoveModal, setShowMoveModal] = useState(false);
   const [selectedCardsToMove, setSelectedCardsToMove] = useState([]);
   const [showCardDetails, setShowCardDetails] = useState(false);
@@ -250,7 +253,12 @@ const CardList = ({
   const [selectedCardsForPurchase, setSelectedCardsForPurchase] = useState([]);
   const [showListCardModal, setShowListCardModal] = useState(false);
   const [selectedCardsForListing, setSelectedCardsForListing] = useState([]);
-  const [visibleCardCount, setVisibleCardCount] = useState(24); // Initial number of cards to show (4 rows of 6 cards)
+  const [visibleCardCount, setVisibleCardCount] = useState(() => {
+    // console.log('[CardList INIT] visibleCardCount initialised at', Date.now());
+    return 24;
+  });
+
+
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const { ref: loadMoreRef, inView } = useInView({
     threshold: 0.1,
@@ -486,7 +494,17 @@ const CardList = ({
     setShowSaleModal(false);
     // setBuyer(''); // Commented out - variable not defined
     setFilter('');
-    setVisibleCardCount(24); // Reset pagination when collection changes
+    
+    // VALIDATION TEST: Check if reset prevention is enabled
+    const preventReset = localStorage.getItem('VALIDATION_DISABLE_RESET') === 'true';
+    
+    if (preventReset) {
+      // console.log('🔬 VALIDATION: visibleCardCount reset PREVENTED');
+      // Do not reset visibleCardCount for validation testing
+    } else {
+      // console.log('🔬 VALIDATION: visibleCardCount reset to 24');
+      setVisibleCardCount(24); // Reset pagination when collection changes
+    }
   }, [selectedCollection, clearSelection]);
 
   // Load more cards when user scrolls to the bottom
@@ -824,10 +842,41 @@ const CardList = ({
 
   const handleDeleteConfirm = async () => {
     try {
-      const cardsToDelete = Array.from(selectedCards);
+      setIsDeleting(true);
+      
+      const selectedSlabSerials = Array.from(selectedCards);
+      
+      // Convert slabSerials to actual card objects to get the correct document IDs
+      const cardsToDelete = selectedSlabSerials.map(slabSerial => {
+        // Find the card in the current cards list by slabSerial
+        const card = cards.find(c => c.slabSerial === slabSerial);
+        if (card) {
+          // Return the card's document ID (which should be card.id)
+          return card.id || card.slabSerial;
+        }
+        // Fallback to slabSerial if card not found
+        return slabSerial;
+      }).filter(Boolean);
+      
+      logger.info('Converting selected cards for deletion:', {
+        selectedSlabSerials,
+        cardsToDelete
+      });
+      
       await handleBulkDelete(cardsToDelete);
+      
+      // Clear selection after successful deletion
+      if (onSelectionChange) {
+        onSelectionChange(new Set());
+      }
+      
+      toast.success(`Successfully deleted ${cardsToDelete.length} card${cardsToDelete.length > 1 ? 's' : ''}`);
     } catch (error) {
+      logger.error('Error in handleDeleteConfirm:', error);
       toast.error('Failed to delete cards');
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteModal(false);
     }
   };
 
@@ -906,6 +955,38 @@ const CardList = ({
       // Don't clear the modal on error so user can retry
     }
   };
+
+  // MOUNT DETECTION: Track if component is mounting vs re-rendering
+  // useEffect(() => {
+  //   const mountTime = Date.now();
+  //   console.log(`🔍 CARDLIST MOUNT DETECTED at ${mountTime}`);
+    
+  //   // Track in global detector if available
+  //   if (window.__MOUNT_DETECTOR__) {
+  //     window.__MOUNT_DETECTOR__.cardListMounts++;
+  //     window.__MOUNT_DETECTOR__.lastMountTime = mountTime;
+  //     window.__MOUNT_DETECTOR__.mountHistory.push({
+  //       timestamp: mountTime,
+  //       type: 'component_mount',
+  //       stackTrace: new Error().stack
+  //     });
+  //   }
+    
+  //   // Cleanup function will only run on unmount
+  //   return () => {
+  //     console.log(`🔍 CARDLIST UNMOUNT DETECTED at ${Date.now()}`);
+  //   };
+  // }, []); // Empty dependency array = only on mount/unmount
+
+  // VISIBLE CARD COUNT RESET DETECTION
+  // useEffect(() => {
+  //   console.log(`🔍 CARDLIST visibleCardCount changed to: ${visibleCardCount}`);
+    
+  //   // Track resets specifically
+  //   if (visibleCardCount === 24) {
+  //     console.log(`🚨 CARDLIST visibleCardCount RESET TO 24 at ${Date.now()}`);
+  //   }
+  // }, [visibleCardCount]);
 
   return (
     <div className="w-full px-1 pb-20 sm:px-2">
@@ -1459,14 +1540,27 @@ const CardList = ({
                 {/* Delete Button */}
                 <button
                   onClick={handleDeleteClick}
-                  className="group flex size-12 shrink-0 flex-col items-center justify-center rounded-xl bg-red-500 text-white shadow-md transition-all duration-200 hover:scale-105 hover:bg-red-600 hover:shadow-lg active:scale-95 sm:size-16"
-                  title="Delete selected cards"
+                  disabled={isDeleting}
+                  className={`group flex size-12 shrink-0 flex-col items-center justify-center rounded-xl text-white shadow-md transition-all duration-200 sm:size-16 ${
+                    isDeleting
+                      ? 'cursor-not-allowed bg-red-400'
+                      : 'bg-red-500 hover:scale-105 hover:bg-red-600 hover:shadow-lg active:scale-95'
+                  }`}
+                  title={isDeleting ? "Deleting cards..." : "Delete selected cards"}
                 >
-                  <span className="material-icons mb-0 text-sm transition-transform duration-200 group-hover:scale-110 sm:mb-0.5 sm:text-lg">
-                    delete
-                  </span>
+                  {isDeleting ? (
+                    <div className="animate-spin">
+                      <span className="material-icons mb-0 text-sm sm:mb-0.5 sm:text-lg">
+                        hourglass_empty
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="material-icons mb-0 text-sm transition-transform duration-200 group-hover:scale-110 sm:mb-0.5 sm:text-lg">
+                      delete
+                    </span>
+                  )}
                   <span className="hidden text-xs font-medium sm:block">
-                    Delete
+                    {isDeleting ? 'Deleting...' : 'Delete'}
                   </span>
                 </button>
 
@@ -1538,8 +1632,10 @@ const CardList = ({
       <ConfirmDialog
         isOpen={showDeleteModal}
         onClose={() => {
-          setShowDeleteModal(false);
-          setCardsToDelete([]);
+          if (!isDeleting) {
+            setShowDeleteModal(false);
+            setCardsToDelete([]);
+          }
         }}
         onConfirm={handleDeleteConfirm}
         title="Delete Cards"
@@ -1547,6 +1643,7 @@ const CardList = ({
         confirmText="Delete"
         cancelText="Cancel"
         variant="danger"
+        loading={isDeleting}
       />
 
       <MoveCardsModal

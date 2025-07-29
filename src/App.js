@@ -15,7 +15,7 @@ import {
   Header,
   useAuth,
   SettingsModal,
-  toastService, // Import toastService
+  toastService,
 } from './design-system';
 import Settings from './components/Settings';
 
@@ -23,7 +23,7 @@ import CardList from './components/CardList';
 import CardDetails from './components/CardDetails';
 import AddCardModal from './components/AddCardModal';
 import ProfitChangeModal from './components/ProfitChangeModal';
-import useCardData from './hooks/useCardData';
+import useCardData from './contexts/CardContextCompatibility';
 import db from './services/firestore/dbAdapter';
 import { useTutorial } from './contexts/TutorialContext';
 import './styles/globals.css';
@@ -37,14 +37,16 @@ import MarketplaceMessages from './components/Marketplace/MarketplaceMessages';
 import BottomNavBar from './components/BottomNavBar';
 import TrialStatusBanner from './components/TrialStatusBanner';
 
-import logger from './utils/logger'; // Import the logger utility
+import logger from './utils/logger';
+import LoggingService from './services/LoggingService';
 import RestoreListener from './components/RestoreListener';
-import SyncStatusIndicator from './components/SyncStatusIndicator'; // Import the SyncStatusIndicator
+import SyncStatusIndicator from './components/SyncStatusIndicator';
 
-import TutorialModal from './components/TutorialModal'; // Add back this import
-import { settingsManager } from './utils/settingsManager'; // Import settings manager
-import { useCardModals } from './hooks/useCardModals'; // Import card modals hook
-import { collectionManager } from './utils/collectionManager'; // Import collection manager
+import TutorialModal from './components/TutorialModal';
+import { settingsManager } from './utils/settingsManager';
+import { useCardModals } from './hooks/useCardModals';
+import { collectionManager } from './utils/collectionManager';
+
 
 
 // Main Dashboard Component
@@ -223,6 +225,26 @@ function DashboardIndex() {
 }
 
 function AppContent({ currentView, setCurrentView }) {
+
+
+  // INVESTIGATION: Check if ErrorBoundary caused page reload
+  useEffect(() => {
+    const errorReload = localStorage.getItem('ERROR_BOUNDARY_RELOAD');
+    const errorOther = localStorage.getItem('ERROR_BOUNDARY_OTHER');
+    
+    if (errorReload) {
+      const data = JSON.parse(errorReload);
+      LoggingService.error('🚨 PAGE RELOADED BY ERROR BOUNDARY!', data);
+      localStorage.removeItem('ERROR_BOUNDARY_RELOAD');
+    }
+    
+    if (errorOther) {
+      const data = JSON.parse(errorOther);
+      LoggingService.warn('🔍 ERROR BOUNDARY CAUGHT ERROR:', data);
+      localStorage.removeItem('ERROR_BOUNDARY_OTHER');
+    }
+  }, []);
+
   // Simple test to see if this code runs at all
   if (typeof window !== 'undefined') {
     window.testLog = 'AppContent is running!';
@@ -256,6 +278,7 @@ function AppContent({ currentView, setCurrentView }) {
   const location = useLocation();
   const navigate = useNavigate();
 
+  // PHASE 2C: PRIMARY - Now using compatibility layer (CardContext underneath)
   const {
     cards,
     loading,
@@ -264,6 +287,8 @@ function AppContent({ currentView, setCurrentView }) {
     deleteCard,
     addCard,
   } = useCardData();
+
+
 
   const handleCloseDetailsModal = () => {
     closeCardDetails();
@@ -278,6 +303,7 @@ function AppContent({ currentView, setCurrentView }) {
       // If collection changes, updatedData should reflect the new collectionName.
       // Local state for 'collections' will be updated via useEffect watching 'cards' from useCardData.
       await updateCard(cardId, updatedData);
+      
       // Example: toast.success('Card updated successfully!');
     } catch (error) {
       // Example: logger.error('Failed to update card:', error);
@@ -636,6 +662,8 @@ function AppContent({ currentView, setCurrentView }) {
 
   return (
     <div className="dashboard-page min-h-screen bg-gray-50 dark:bg-black">
+      
+      
       {/* Hide Header on mobile when in settings or cards view */}
       {!(
         isMobile &&

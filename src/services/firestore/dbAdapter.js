@@ -379,6 +379,14 @@ class DatabaseAdapter {
     return firestoreService.listenToCollection(collectionName, callback);
   }
 
+  async deleteImagesForCards(cardIds) {
+    // This method is for cleaning up local image cache
+    // Since we're using Firestore, this is a no-op
+    // The actual image cleanup happens in Firebase Storage
+    logger.info('Image cleanup requested for cards:', cardIds);
+    return Promise.resolve();
+  }
+
   cleanup() {
     firestoreService.cleanup();
   }

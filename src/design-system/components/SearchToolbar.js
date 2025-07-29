@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import Icon from '../atoms/Icon';
 import Button from '../atoms/Button';
 import Dropdown, { DropdownItem } from '../molecules/Dropdown';
-import { useTheme } from '../contexts/ThemeContext';
+
 
 /**
  * SearchToolbar Component
@@ -25,8 +25,8 @@ const SearchToolbar = ({
   className = '',
   ...props
 }) => {
-  const { theme } = useTheme();
-  const isDarkMode = theme === 'dark';
+
+  // const isDarkMode = theme === 'dark';
   const [isSortDropdownOpen, setIsSortDropdownOpen] = React.useState(false);
   const [currentSortDirection, setCurrentSortDirection] =
     React.useState(sortDirection);
@@ -91,7 +91,7 @@ const SearchToolbar = ({
   const toolbarClass = `search-toolbar w-full bg-white dark:bg-[#0F0F0F] py-3 px-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shadow-sm rounded-md border border-gray-200 dark:border-gray-700 ${className}`;
 
   // Helper function to check if we're on mobile
-  const isMobile = window.innerWidth < 640;
+  // const isMobile = window.innerWidth < 640;
 
   return (
     <div className={toolbarClass} {...props}>

@@ -276,7 +276,7 @@ const Header = ({
                 value={newCollectionName}
                 onChange={e => setNewCollectionName(e.target.value)}
                 onKeyDown={handleNewCollectionKeyDown}
-                className="dark:border-gray-700/50 focus:ring-primary/20 w-full rounded-xl border border-gray-200 bg-white px-4 py-2 text-gray-900 placeholder:text-gray-500 focus:border-primary focus:outline-none focus:ring-2 dark:bg-[#0F0F0F] dark:text-white dark:placeholder:text-gray-400"
+                className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2 text-gray-900 placeholder:text-gray-500 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-gray-700/50 dark:bg-[#0F0F0F] dark:text-white dark:placeholder:text-gray-400"
                 placeholder="Enter collection name"
                 autoFocus
               />

@@ -4,7 +4,6 @@ import React, {
   useState,
   useEffect,
   useCallback,
-  useRef,
 } from 'react';
 import { useAuth } from '../design-system';
 import { CardRepository } from '../repositories/CardRepository';
@@ -15,6 +14,24 @@ import LoggingService from '../services/LoggingService';
 const CardContext = createContext();
 
 export function CardProvider({ children }) {
+  // INVESTIGATION: Track CardContext usage
+  useEffect(() => {
+    window.__CARD_CONTEXT_DEBUG__ = {
+      active: true,
+      listenerActive: false,
+      lastUpdate: Date.now()
+    };
+    
+    LoggingService.debug('🔍 CARDCONTEXT: Provider initialized');
+    
+    return () => {
+      LoggingService.debug('🔍 CARDCONTEXT: Provider unmounting');
+      if (window.__CARD_CONTEXT_DEBUG__) {
+        window.__CARD_CONTEXT_DEBUG__.active = false;
+      }
+    };
+  }, []);
+
   const { currentUser } = useAuth();
   const [repository, setRepository] = useState(null);
   const [collections, setCollections] = useState([]);
@@ -225,6 +242,14 @@ export function CardProvider({ children }) {
               }
 
               // Always update cards immediately with what we get from Firestore
+              LoggingService.debug('🔥 CARDCONTEXT LISTENER: setCards called with', filteredCards.length, 'cards');
+              
+              // INVESTIGATION: Track CardContext listener activity
+              if (window.__CARD_CONTEXT_DEBUG__) {
+                window.__CARD_CONTEXT_DEBUG__.listenerActive = true;
+                window.__CARD_CONTEXT_DEBUG__.lastUpdate = Date.now();
+              }
+              
               setCards(filteredCards);
               setSyncStatus('synced');
 

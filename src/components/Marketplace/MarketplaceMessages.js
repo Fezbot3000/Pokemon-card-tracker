@@ -37,8 +37,7 @@ function MarketplaceMessages({ currentView, onViewChange }) {
   const [sendingMessage, setSendingMessage] = useState(false);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [selectedListing, setSelectedListing] = useState(null);
-  const [showSellerProfile, setShowSellerProfile] = useState(false);
-  const [selectedSellerId, setSelectedSellerId] = useState(null);
+
   const [sellerProfileOpen, setSellerProfileOpen] = useState(false);
   const [sellerProfileId, setSellerProfileId] = useState(null);
   const [sellerReviewOpen, setSellerReviewOpen] = useState(false);
@@ -648,11 +647,7 @@ function MarketplaceMessages({ currentView, onViewChange }) {
     setSellerProfileOpen(true);
   };
 
-  // Handle viewing seller review
-  const handleViewSellerReview = sellerId => {
-    setSellerReviewId(sellerId);
-    setSellerReviewOpen(true);
-  };
+
 
   return (
     <>

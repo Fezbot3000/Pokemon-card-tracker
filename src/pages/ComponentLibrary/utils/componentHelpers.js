@@ -129,7 +129,7 @@ export const createComponentExample = (Component, props, title, description) => 
  * @param {Function} callback - Optional callback function
  */
 export const handleComponentAction = (action, data, callback) => {
-  console.log(`Component action: ${action}`, data);
+  // console.log(`Component action: ${action}`, data);
   
   if (callback) {
     callback(action, data);

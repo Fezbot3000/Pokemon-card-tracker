@@ -344,7 +344,7 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
       ...prevImages,
       ...newCardImages,
     }));
-  }, []);
+  }, [cardImages]);
 
   // Load card images when conversations change
   useEffect(() => {

@@ -4,7 +4,6 @@ import {
   collection,
   query,
   where,
-  orderBy,
   onSnapshot,
   doc,
   updateDoc,
@@ -640,11 +639,11 @@ function Marketplace({ currentView, onViewChange }) {
                     </div>
                     <button
                       onClick={() => handleContactSeller(listing)}
-                      className={`w-full rounded-md px-3 py-1.5 text-sm font-medium transition-all duration-200 ${
+                      className={`relative w-full rounded-md px-3 py-1.5 text-sm font-medium transition-all duration-200 ${
                         existingChats[listing.id]
-                          ? 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white'
-                          : 'bg-transparent border-2 border-transparent bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] bg-clip-border text-white hover:shadow-lg hover:shadow-blue-500/25'
-                      } relative`}
+                          ? 'bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700'
+                          : 'border-2 border-transparent bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] bg-clip-border bg-transparent text-white hover:shadow-lg hover:shadow-blue-500/25'
+                      }`}
                       style={!existingChats[listing.id] ? {
                         background: 'linear-gradient(#0F0F0F, #0F0F0F) padding-box, linear-gradient(to right, #3b82f6, #1d4ed8) border-box',
                         border: '2px solid transparent'

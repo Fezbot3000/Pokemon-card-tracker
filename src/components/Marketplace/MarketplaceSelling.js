@@ -4,7 +4,6 @@ import {
   collection,
   query,
   where,
-  orderBy,
   onSnapshot,
 } from 'firebase/firestore';
 import { db as firestoreDb } from '../../services/firebase';

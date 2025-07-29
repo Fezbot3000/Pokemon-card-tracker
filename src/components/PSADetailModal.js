@@ -1,13 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import { toast } from 'react-hot-toast';
-import Modal from '../design-system/molecules/Modal';
 import Button from '../design-system/atoms/Button';
 import CardDetailsForm from '../design-system/components/CardDetailsForm';
 import {
   searchByCertNumber,
   parsePSACardData,
-  mergeWithExistingCard,
 } from '../services/psaSearch';
 import logger from '../utils/logger';
 
@@ -24,7 +22,7 @@ const PSADetailModal = ({
   autoApply = true, // New prop to control auto-applying data
 }) => {
   const [isLoading, setIsLoading] = useState(false);
-  const [psaData, setPsaData] = useState(null);
+  // const [psaData, setPsaData] = useState(null);
   const [error, setError] = useState(null);
   const [parsedData, setParsedData] = useState(null);
 
@@ -157,7 +155,7 @@ const PSADetailModal = ({
       try {
         const data = await searchByCertNumber(certNumber);
 
-        setPsaData(data);
+        // setPsaData(data);
 
         if (data.error) {
           setError(data.error);
@@ -205,9 +203,9 @@ const PSADetailModal = ({
   };
 
   // Stop click propagation to prevent closing parent modal
-  const handleModalContentClick = e => {
-    e.stopPropagation();
-  };
+  // const handleModalContentClick = e => {
+  //   e.stopPropagation();
+  // };
 
   // If autoApply is true, we don't need to show the modal at all
   if (autoApply) {

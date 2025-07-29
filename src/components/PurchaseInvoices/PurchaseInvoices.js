@@ -169,13 +169,19 @@ const PurchaseInvoices = () => {
     }
   }, [currentUser]);
 
+  // Handle editing an invoice - moved to top to follow Rules of Hooks
+  const handleEditInvoice = useCallback(invoice => {
+    setEditingInvoice(invoice);
+    setShowCreateModal(true);
+  }, []);
+
   // Load purchase invoices with improved cloud synchronization
   useEffect(() => {
     if (currentUser) {
       loadInvoices();
       loadProfile();
     }
-  }, [currentUser]);
+  }, [currentUser, loadInvoices, loadProfile]);
 
   // Filter invoices based on search query
   const filteredInvoices = useMemo(() => {
@@ -219,11 +225,7 @@ const PurchaseInvoices = () => {
     );
   }
 
-  // Handle editing an invoice
-  const handleEditInvoice = invoice => {
-    setEditingInvoice(invoice);
-    setShowCreateModal(true);
-  };
+
 
   // Handle delete confirmation
   const showDeleteConfirmation = invoice => {

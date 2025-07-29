@@ -39,10 +39,7 @@ const BottomSheet = ({ isOpen, onClose, title, children }) => {
 
   return (
     // Backdrop
-    <div
-      className="fixed inset-0 z-[1000] bg-black/50 backdrop-blur-sm pb-[env(safe-area-inset-bottom,0px)]"
-      onClick={onClose}
-    >
+    <div className="fixed inset-0 z-50 flex min-h-screen w-full items-end justify-center bg-black/40 backdrop-blur-sm sm:items-center">
       {/* Sheet Content */}
       <div
         ref={sheetRef}

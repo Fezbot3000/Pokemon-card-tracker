@@ -544,7 +544,7 @@ const CardDetailsModal = ({
         title={titleWithProfit}
         position="right"
         closeOnClickOutside={true}
-        size="2xl"
+        size="modal-width-70"
         className={`${className} ${animClass} card-details-modal`}
         footer={modalFooter}
       >

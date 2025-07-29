@@ -20,6 +20,7 @@ const ConfirmDialog = ({
   cancelText = 'Cancel',
   variant = 'danger',
   zIndex = 50,
+  loading = false,
 }) => {
   // Effect to ensure UI is reset if the dialog is closed unexpectedly
   useEffect(() => {
@@ -77,6 +78,7 @@ const ConfirmDialog = ({
             variant="secondary"
             onClick={handleClose}
             className="min-w-[80px]"
+            disabled={loading}
           >
             {cancelText}
           </Button>
@@ -84,8 +86,10 @@ const ConfirmDialog = ({
             variant={variant}
             onClick={handleConfirm}
             className="min-w-[80px]"
+            loading={loading}
+            disabled={loading}
           >
-            {confirmText}
+            {loading ? 'Deleting...' : confirmText}
           </Button>
         </>
       }
@@ -105,6 +109,7 @@ ConfirmDialog.propTypes = {
   cancelText: PropTypes.string,
   variant: PropTypes.string,
   zIndex: PropTypes.number,
+  loading: PropTypes.bool,
 };
 
 export default ConfirmDialog;

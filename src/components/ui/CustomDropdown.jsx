@@ -127,6 +127,8 @@ const CustomDropdown = ({
           setIsOpen(true);
         }
         break;
+      default:
+        break;
     }
   };
 
@@ -274,7 +276,7 @@ const CustomDropdown = ({
             ) : (
               filteredOptions.map((option, index) => (
                 <button
-                  key={`${option.value}-${index}`}
+                  key={option.value || `option-${index}`}
                   type="button"
                   className={`
                     w-full text-left text-sm transition-all duration-200

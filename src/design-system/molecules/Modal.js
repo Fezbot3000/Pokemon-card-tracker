@@ -21,19 +21,17 @@ const Modal = ({
   showAsStatic = false,
   maxWidth = 'max-w-2xl',
   ariaLabel,
-  zIndex = 50,
   noContentPadding = false,
   ...props
 }) => {
   const modalRef = useRef(null);
   const scrollPosRef = useRef(null);
-  const [isAnimatingOut, setIsAnimatingOut] = useState(false);
+
   const [animationClass, setAnimationClass] = useState('');
 
   // Preserve scroll position and prevent background scrolling
   useEffect(() => {
     if (isOpen && !showAsStatic) {
-      setIsAnimatingOut(false);
 
       // Apply the appropriate animation class based on position
       if (position === 'right') {
@@ -83,7 +81,6 @@ const Modal = ({
     if (!onClose) return;
 
     // Start exit animation
-    setIsAnimatingOut(true);
 
     // Apply the appropriate exit animation class based on position
     if (position === 'right') {
@@ -96,59 +93,11 @@ const Modal = ({
     setTimeout(() => {
       onClose();
     }, 200); // Match this with the animation duration
-  }, [onClose, position, setIsAnimatingOut, setAnimationClass]);
+  }, [onClose, position, setAnimationClass]);
 
-  // Handle outside clicks to close modal if enabled
-  const handleBackdropClick = e => {
-    if (
-      closeOnClickOutside &&
-      modalRef.current &&
-      !modalRef.current.contains(e.target)
-    ) {
-      // Check if there are any higher z-index modals or overlays
-      const clickedElement = e.target;
-      const allModals = document.querySelectorAll(
-        '[role="dialog"], .modal-container, [data-modal]'
-      );
-      const currentModalZIndex =
-        parseInt(getComputedStyle(modalRef.current).zIndex) || zIndex;
 
-      // Check if the clicked element is part of a higher z-index modal
-      let isHigherModalClick = false;
-      allModals.forEach(modal => {
-        if (modal !== modalRef.current && modal.contains(clickedElement)) {
-          const modalZIndex = parseInt(getComputedStyle(modal).zIndex) || 0;
-          if (modalZIndex > currentModalZIndex) {
-            isHigherModalClick = true;
-          }
-        }
-      });
 
-      // Only close if not clicking on a higher z-index modal
-      if (!isHigherModalClick) {
-        e.stopPropagation();
-        handleClose();
-      }
-    }
-  };
 
-  // Prevent scroll events on backdrop from propagating to background
-  const handleBackdropScroll = e => {
-    // If the scroll is happening on the backdrop (not inside the modal), prevent it
-    if (modalRef.current && !modalRef.current.contains(e.target)) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-  };
-
-  // Handle wheel events to prevent background scrolling
-  const handleBackdropWheel = e => {
-    // If the wheel event is happening on the backdrop (not inside the modal), prevent it
-    if (modalRef.current && !modalRef.current.contains(e.target)) {
-      // Don't call preventDefault on passive wheel events - just stop propagation
-      e.stopPropagation();
-    }
-  };
 
   // Handle escape key to close modal
   useEffect(() => {
@@ -164,6 +113,13 @@ const Modal = ({
     };
   }, [isOpen, handleClose]); // Fix: Include handleClose dependency
 
+  // Handle backdrop click
+  const handleBackdropClick = useCallback((e) => {
+    if (closeOnClickOutside && onClose && e.target === e.currentTarget) {
+      onClose();
+    }
+  }, [closeOnClickOutside, onClose]);
+
   // Return null if modal is not open
   if (!isOpen) return null;
 
@@ -178,6 +134,7 @@ const Modal = ({
     '4xl': 'max-w-4xl', // ~896px
     '5xl': 'max-w-5xl', // ~1024px
     'modal-width': 'w-[55%]', // exactly 55% width
+    'modal-width-70': 'w-[70%]', // exactly 70% width
     full: 'w-full max-w-full',
     contextual: 'w-full max-w-md', // Contextual modals - consistent width, auto height
   };
@@ -208,14 +165,9 @@ const Modal = ({
       : 'w-screen max-w-none rounded-lg m-0 fixed top-0 left-0 right-0 bottom-0 z-[9999]' // Browser: Full positioning
     : '';
 
-  // Position variations
-  const positionClasses = {
-    center: 'flex items-center justify-center',
-    right: 'flex items-start justify-end',
-  };
 
-  // Build the classes based on theme
-  const backdropClasses = `fixed inset-0 ${positionClasses[position]} bg-white/70 backdrop-blur-sm dark:bg-black/70`;
+
+
 
   const modalClasses = forceDarkMode
     ? `bg-black backdrop-blur-sm rounded-lg shadow-xl text-white`
@@ -236,8 +188,7 @@ const Modal = ({
     ? 'sticky bottom-0 z-10 flex items-center justify-between gap-2 px-6 pt-4 pb-6 border-t-[0.5px] border-gray-700 bg-black backdrop-blur-sm'
     : 'sticky bottom-0 z-10 flex items-center justify-between gap-2 px-6 pt-4 pb-6 border-t-[0.5px] border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0F0F0F] backdrop-blur-sm';
 
-  // Force the dark class if needed
-  const darkModeClass = forceDarkMode ? 'dark' : '';
+
 
   // If modal is static, just render the content without the backdrop and positioning
   if (showAsStatic) {
@@ -276,15 +227,9 @@ const Modal = ({
 
   // Regular modal with backdrop and positioning
   return (
-    <div
-      className={`${backdropClasses} ${darkModeClass} ${isAnimatingOut ? 'animate-backdrop-fade-out' : 'animate-backdrop-fade-in'}`}
-      style={{
-        zIndex,
-      }}
+    <div 
+      className="fixed inset-0 z-50 flex min-h-screen w-full items-center justify-center bg-black/40 backdrop-blur-sm"
       onClick={handleBackdropClick}
-      onWheel={handleBackdropWheel}
-      onScroll={handleBackdropScroll}
-      onTouchMove={handleBackdropScroll}
     >
       <div
         ref={modalRef}
@@ -292,7 +237,7 @@ const Modal = ({
           position === 'right'
             ? window.innerWidth < 640
               ? 'fixed inset-0 z-[9999] m-0 w-screen max-w-none overflow-auto rounded-lg'
-              : 'fixed right-0 top-0 z-[9999] mr-0 w-[55%] rounded-l-lg rounded-r-none'
+              : `fixed right-0 top-0 z-[9999] mr-0 ${size === 'custom' ? maxWidth : sizeClasses[size] || 'w-[55%]'} rounded-l-lg rounded-r-none`
             : mobileFullWidth ||
               (size === 'custom' ? maxWidth : sizeClasses[size] || 'w-[55%]')
         } ${className}`}
@@ -350,7 +295,6 @@ Modal.propTypes = {
   showAsStatic: PropTypes.bool,
   maxWidth: PropTypes.string,
   ariaLabel: PropTypes.string,
-  zIndex: PropTypes.number,
   noContentPadding: PropTypes.bool,
 };
 

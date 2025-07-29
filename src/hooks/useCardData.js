@@ -52,6 +52,21 @@ const useCardData = () => {
         // Set a new timeout to batch updates
         updateTimeout = setTimeout(() => {
           logger.debug(`Received card update: ${firestoreCards.length} cards`);
+          // Update local state with the processed data
+          const updateTime = Date.now();
+          LoggingService.debug('🔥 USECARDDATA LISTENER: setCards called with', firestoreCards.length, 'cards');
+          
+          // INVESTIGATION: Track setCards calls
+          if (window.__INSTRUMENT_SET_CARDS__ && window.__CARD_DATA_TRACKER__) {
+            window.__CARD_DATA_TRACKER__.setCardsCalls.push({
+              timestamp: updateTime,
+              cardCount: firestoreCards.length,
+              stackTrace: new Error().stack,
+              trigger: 'firestore_listener'
+            });
+            window.__CARD_DATA_TRACKER__.lastCall = updateTime;
+          }
+          
           setCards(firestoreCards);
           setLoading(false);
           setError(null); // Clear any previous error on successful fetch

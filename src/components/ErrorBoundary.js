@@ -1,5 +1,6 @@
 import React from 'react';
 import logger from '../utils/logger';
+import LoggingService from '../services/LoggingService';
 
 const ErrorFallback = ({ error, resetErrorBoundary }) => {
   // Instead of using useTheme, we'll check the document class directly
@@ -150,11 +151,25 @@ class ErrorBoundary extends React.Component {
       // }
     }
 
-    // Auto-reload for chunk loading errors
+    // INVESTIGATION: Track what's causing the auto-reload
     if (isChunkError) {
+      LoggingService.error('🚨 ERROR BOUNDARY: Auto-reloading due to chunk error:', error.message);
+      localStorage.setItem('ERROR_BOUNDARY_RELOAD', JSON.stringify({
+        type: 'chunk_error',
+        message: error.message,
+        timestamp: Date.now()
+      }));
       setTimeout(() => {
         window.location.reload();
       }, 1000);
+    } else {
+      // Log any other errors that might cause issues
+      LoggingService.warn('🔍 ERROR BOUNDARY: Caught error (not auto-reloading):', error.message);
+      localStorage.setItem('ERROR_BOUNDARY_OTHER', JSON.stringify({
+        type: 'other_error',
+        message: error.message,
+        timestamp: Date.now()
+      }));
     }
   }
 

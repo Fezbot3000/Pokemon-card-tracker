@@ -28,6 +28,26 @@ const CreateInvoiceModal = ({
   const lastEditingInvoiceId = useRef(null);
   const lastPreSelectedCardsLength = useRef(0);
 
+  // Memoize the key values to prevent infinite loops
+  const editingInvoiceKey = useMemo(() => {
+    if (!editingInvoice) return null;
+    return JSON.stringify({
+      id: editingInvoice.id,
+      cards: editingInvoice.cards,
+      seller: editingInvoice.seller,
+      date: editingInvoice.date,
+      invoiceNumber: editingInvoice.invoiceNumber,
+      notes: editingInvoice.notes
+    });
+  }, [editingInvoice]);
+  const preSelectedCardsKey = useMemo(() => {
+    if (!preSelectedCards || preSelectedCards.length === 0) return null;
+    return JSON.stringify({
+      length: preSelectedCards.length,
+      firstDate: preSelectedCards[0]?.datePurchased
+    });
+  }, [preSelectedCards]);
+
   // Initialize form with editing invoice data or pre-selected cards
   useEffect(() => {
     if (!isOpen) {
@@ -45,12 +65,12 @@ const CreateInvoiceModal = ({
     }
 
     // Prevent re-initialization if we've already initialized with the same data
-    const currentEditingInvoiceId = editingInvoice?.id || null;
-    const currentPreSelectedCardsLength = preSelectedCards?.length || 0;
+    const currentEditingInvoiceKey = editingInvoiceKey;
+    const currentPreSelectedCardsKey = preSelectedCardsKey;
     
     if (hasInitialized.current && 
-        lastEditingInvoiceId.current === currentEditingInvoiceId &&
-        lastPreSelectedCardsLength.current === currentPreSelectedCardsLength) {
+        lastEditingInvoiceId.current === currentEditingInvoiceKey &&
+        lastPreSelectedCardsLength.current === currentPreSelectedCardsKey) {
       return;
     }
 
@@ -64,14 +84,14 @@ const CreateInvoiceModal = ({
       setInvoiceNumber(editingInvoice.invoiceNumber || '');
       setNotes(editingInvoice.notes || '');
       
-      lastEditingInvoiceId.current = currentEditingInvoiceId;
+      lastEditingInvoiceId.current = currentEditingInvoiceKey;
       hasInitialized.current = true;
     } else if (preSelectedCards && preSelectedCards.length > 0) {
       // Using pre-selected cards for a new invoice
       setSelectedCards(preSelectedCards);
 
       // Pre-populate the purchase date from the first card's datePurchased field
-      if (preSelectedCards[0].datePurchased) {
+      if (preSelectedCards[0]?.datePurchased) {
         setDate(preSelectedCards[0].datePurchased);
       }
 
@@ -89,10 +109,10 @@ const CreateInvoiceModal = ({
       setSeller('');
       setNotes('');
       
-      lastPreSelectedCardsLength.current = currentPreSelectedCardsLength;
+      lastPreSelectedCardsLength.current = currentPreSelectedCardsKey;
       hasInitialized.current = true;
     }
-  }, [isOpen, editingInvoice?.id, preSelectedCards?.length]);
+  }, [isOpen, editingInvoiceKey, preSelectedCardsKey, editingInvoice, preSelectedCards]);
 
   // Calculate total investment amount
   const totalInvestment = selectedCards.reduce((sum, card) => {

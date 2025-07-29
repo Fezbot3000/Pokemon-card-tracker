@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useCards } from './CardContext';
+import { parseCSVFile, validateCSVStructure } from '../utils/dataProcessor';
 import logger from '../utils/logger';
 import LoggingService from '../services/LoggingService';
 
@@ -52,7 +53,7 @@ const useCardDataCompatible = () => {
       LoggingService.error(`[CardContextCompatible] Error updating card:`, err);
       throw err;
     }
-  }, [cardContextData.updateCard]);
+  }, [cardContextData]);
 
   // Compatible addCard function (alias for createCard)
   const addCard = useCallback(async (newCard) => {
@@ -62,7 +63,7 @@ const useCardDataCompatible = () => {
       LoggingService.error(`[CardContextCompatible] Error adding card:`, err);
       throw err;
     }
-  }, [cardContextData.createCard]);
+  }, [cardContextData]);
 
   // Compatible deleteCard function
   const deleteCard = useCallback(async (cardId) => {
@@ -72,18 +73,42 @@ const useCardDataCompatible = () => {
       LoggingService.error(`[CardContextCompatible] Error deleting card:`, err);
       throw err;
     }
-  }, [cardContextData.deleteCard]);
+  }, [cardContextData]);
 
   // Placeholder for importCsvData (would need full implementation)
   const importCsvData = useCallback(async (file, importMode = 'priceUpdate') => {
+    // Use CardContext loading/error states if available, fallback to local handling
+    const setLoading = cardContextData.setLoading || (() => {});
+    const setError = cardContextData.setError || (() => {});
+    
+    setLoading(true);
+    setError(null);
+
     try {
-      // This would need to be implemented or imported from useCardData
-      throw new Error('importCsvData not yet implemented in compatibility layer');
-    } catch (err) {
-      LoggingService.error(`[CardContextCompatible] Error importing CSV:`, err);
-      throw err;
+      // Parse the CSV file
+      const parsedData = await parseCSVFile(file);
+
+      // Validate the structure based on import mode
+      const validation = validateCSVStructure(parsedData, importMode);
+      if (!validation.success) {
+        throw new Error(validation.error);
+      }
+
+      return {
+        success: true,
+        message: `Imported ${parsedData.length} cards successfully.`,
+        data: parsedData,
+      };
+    } catch (error) {
+      setError(error.message);
+      return {
+        success: false,
+        message: error.message,
+      };
+    } finally {
+      setLoading(false);
     }
-  }, []);
+  }, [cardContextData]);
 
   // Exchange rate management
   const updateExchangeRate = useCallback((newRate) => {

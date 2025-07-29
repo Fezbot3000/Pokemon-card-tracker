@@ -33,7 +33,7 @@ const ButtonSection = ({ toggleStates, handleToggleChange }) => {
                 variant={button.variant}
                 size={button.size}
                 disabled={button.disabled}
-                onClick={() => console.log(`${button.variant} button clicked`)}
+                onClick={() => {/* console.log(`${button.variant} button clicked`) */}}
                 className={button.className}
               >
                 {button.icon && <Icon name={button.icon} className="w-4 h-4 mr-2" />}
@@ -83,7 +83,7 @@ const ButtonSection = ({ toggleStates, handleToggleChange }) => {
           <Button
             variant="primary"
             disabled={!toggleStates.withLabel}
-            onClick={() => console.log('Interactive button clicked')}
+            onClick={() => {/* console.log('Interactive button clicked') */}}
           >
             Interactive Button
           </Button>
@@ -162,7 +162,7 @@ const ButtonSection = ({ toggleStates, handleToggleChange }) => {
           <Button
             variant="primary"
             disabled={toggleStates.disabled}
-            onClick={() => console.log('Button clicked')}
+            onClick={() => {/* console.log('Button clicked') */}}
           >
             {toggleStates.disabled ? 'Disabled Button' : 'Enabled Button'}
           </Button>

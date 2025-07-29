@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import Icon from '../atoms/Icon';
-import { useTheme } from '../contexts/ThemeContext';
+
 
 /**
  * SimpleSearchBar Component
@@ -16,8 +16,8 @@ const SimpleSearchBar = ({
   className = '',
   ...props
 }) => {
-  const { theme } = useTheme();
-  const isDarkMode = theme === 'dark';
+
+  // const isDarkMode = theme === 'dark';
 
   const containerClass = `w-full bg-white dark:bg-[#0F0F0F] py-3 px-4 shadow-sm rounded-md border border-gray-200 dark:border-gray-700 ${className}`;
 

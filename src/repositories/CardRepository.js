@@ -752,15 +752,10 @@ class CardRepository {
       if (!cardDoc.exists()) {
         LoggingService.warn(`[CardRepository] Card ${id} not found in Firestore - already deleted or ghost card`);
         
-        // Even if the card doesn't exist in Firestore, clean up any local artifacts
-        try {
-          await this.cleanupGhostCard(id);
-          LoggingService.info(`[CardRepository] Cleaned up ghost artifacts for card: ${id}`);
-          return true;
-        } catch (cleanupError) {
-          LoggingService.error(`[CardRepository] Error cleaning up ghost card: ${id}`, cleanupError);
-          return false;
-        }
+        // For ghost cards, just return success without cleanup to avoid storage errors
+        // The card is already gone from Firestore, which is what matters
+        LoggingService.info(`[CardRepository] Ghost card ${id} considered deleted`);
+        return true;
       }
 
       const storageRef = ref(storage, `users/${this.userId}/cards/${id}.jpg`);
@@ -1997,8 +1992,10 @@ class CardRepository {
           imageDeleted = true;
           break; // Exit loop after successful deletion
         } catch (storageError) {
-          // Continue trying other paths
-          LoggingService.debug(`No image at path ${path}:`, storageError);
+          // Suppress 404 errors (file doesn't exist) and continue trying other paths
+          if (storageError.code !== 'storage/object-not-found') {
+            LoggingService.debug(`No image at path ${path}:`, storageError);
+          }
         }
       }
 
