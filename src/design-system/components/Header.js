@@ -306,7 +306,7 @@ const Header = ({
                         <button
                           onClick={() => handleViewChange('marketplace')}
                           className={`rounded-md px-2 py-1 text-xs font-medium transition-colors duration-200 ${
-                            isMarketplaceSection()
+                            currentView === 'marketplace'
                               ? 'bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] text-white'
                               : 'hover:bg-gray-200/50 dark:hover:bg-gray-700/50 text-gray-700 dark:text-gray-300'
                           }`}
@@ -315,7 +315,7 @@ const Header = ({
                             name="storefront"
                             className="mr-1 hidden xs:inline"
                             color={
-                              isMarketplaceSection()
+                              currentView === 'marketplace'
                                 ? 'white'
                                 : 'default'
                             }
