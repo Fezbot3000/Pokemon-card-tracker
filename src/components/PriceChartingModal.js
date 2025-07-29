@@ -6,6 +6,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import PropTypes from 'prop-types';
 import { toast } from 'react-hot-toast';
 import Modal from '../design-system/molecules/Modal';
@@ -134,13 +135,14 @@ const PriceChartingModal = ({
     </div>
   );
 
-  return (
+  return createPortal(
     <Modal 
       isOpen={isOpen} 
       onClose={onClose} 
       title="Price Charting Search Results"
-      size="2xl"
+      size="modal-width-60"
       position="right"
+      closeOnClickOutside={true}
       footer={modalFooter}
     >
       <div className="space-y-6">
@@ -285,7 +287,8 @@ const PriceChartingModal = ({
 
 
       </div>
-    </Modal>
+    </Modal>,
+    document.body
   );
 };
 

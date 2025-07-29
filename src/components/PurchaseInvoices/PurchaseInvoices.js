@@ -575,429 +575,428 @@ const PurchaseInvoices = () => {
       )}
 
       <div className="rounded-xl bg-white dark:bg-[#0F0F0F]">
-        {loading ? (
-          <div className="overflow-x-auto">
-            {/* Search Section Skeleton - matches exact real layout */}
-            <div className="mb-4 flex flex-col gap-4">
-              <div className="w-full">
-                <div className="relative">
-                  <div className="h-10 w-full animate-pulse rounded-lg bg-gray-200 dark:bg-gray-700"></div>
-                  <div className="absolute left-3 top-1/2 size-5 -translate-y-1/2 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
+          {loading ? (
+            <div className="overflow-x-auto">
+              {/* Search Section Skeleton - matches exact real layout */}
+              <div className="mb-4 flex flex-col gap-4">
+                <div className="w-full">
+                  <div className="relative">
+                    <div className="h-10 w-full animate-pulse rounded-lg bg-gray-200 dark:bg-gray-700"></div>
+                    <div className="absolute left-3 top-1/2 size-5 -translate-y-1/2 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
+                  </div>
+                  <div className="mt-2 h-4 w-32 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
                 </div>
-                <div className="mt-2 h-4 w-32 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
+
+                <div className="flex w-full flex-col gap-2 sm:flex-row">
+                  <div className="h-10 w-full animate-pulse rounded-lg bg-gray-200 dark:bg-gray-700 sm:w-auto"></div>
+                </div>
               </div>
 
-              <div className="flex w-full flex-col gap-2 sm:flex-row">
-                <div className="h-10 w-full animate-pulse rounded-lg bg-gray-200 dark:bg-gray-700 sm:w-auto"></div>
-              </div>
-            </div>
-
-            {/* Desktop Table Skeleton - matches exact table structure */}
-            <div className="hidden md:block">
-              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                <thead className="bg-gray-50 dark:bg-black">
-                  <tr>
-                    <th className="px-6 py-3 text-left">
-                      <div className="h-3 w-16 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
-                    </th>
-                    <th className="px-6 py-3 text-left">
-                      <div className="h-3 w-8 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
-                    </th>
-                    <th className="px-6 py-3 text-left">
-                      <div className="h-3 w-10 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
-                    </th>
-                    <th className="px-6 py-3 text-right">
-                      <div className="ml-auto h-3 w-20 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
-                    </th>
-                    <th className="px-6 py-3 text-left">
-                      <div className="h-3 w-14 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
-                    </th>
-                    <th className="px-6 py-3 text-left">
-                      <div className="h-3 w-12 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-black">
-                  {[...Array(2)].map((_, i) => (
-                    <tr key={`loading-skeleton-${i + 1}`}>
-                      <td className="whitespace-nowrap px-6 py-4">
-                        <div className="h-4 w-32 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
-                      </td>
-                      <td className="whitespace-nowrap px-6 py-4">
-                        <div className="h-4 w-20 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
-                      </td>
-                      <td className="whitespace-nowrap px-6 py-4">
-                        <div className="h-4 max-w-[150px] animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
-                      </td>
-                      <td className="whitespace-nowrap px-6 py-4 text-right">
-                        <div className="ml-auto h-4 w-16 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
-                      </td>
-                      <td className="whitespace-nowrap px-6 py-4">
-                        <div className="size-4 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
-                      </td>
-                      <td className="whitespace-nowrap px-6 py-4">
-                        <div className="flex space-x-3">
-                          <div className="size-8 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
-                          <div className="size-8 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
-                          <div className="size-8 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
-                        </div>
-                      </td>
+              {/* Desktop Table Skeleton - matches exact table structure */}
+              <div className="hidden md:block">
+                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                  <thead className="bg-gray-50 dark:bg-black">
+                    <tr>
+                      <th className="px-6 py-3 text-left">
+                        <div className="h-3 w-16 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
+                      </th>
+                      <th className="px-6 py-3 text-left">
+                        <div className="h-3 w-8 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
+                      </th>
+                      <th className="px-6 py-3 text-left">
+                        <div className="h-3 w-10 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
+                      </th>
+                      <th className="px-6 py-3 text-right">
+                        <div className="ml-auto h-3 w-20 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
+                      </th>
+                      <th className="px-6 py-3 text-left">
+                        <div className="h-3 w-14 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
+                      </th>
+                      <th className="px-6 py-3 text-left">
+                        <div className="h-3 w-12 animate-pulse rounded bg-gray-300 dark:bg-gray-600"></div>
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-black">
+                    {[...Array(2)].map((_, i) => (
+                      <tr key={`loading-skeleton-${i + 1}`}>
+                        <td className="whitespace-nowrap px-6 py-4">
+                          <div className="h-4 w-32 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
+                        </td>
+                        <td className="whitespace-nowrap px-6 py-4">
+                          <div className="h-4 w-20 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
+                        </td>
+                        <td className="whitespace-nowrap px-6 py-4">
+                          <div className="h-4 max-w-[150px] animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
+                        </td>
+                        <td className="whitespace-nowrap px-6 py-4 text-right">
+                          <div className="ml-auto h-4 w-16 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
+                        </td>
+                        <td className="whitespace-nowrap px-6 py-4">
+                          <div className="size-4 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
+                        </td>
+                        <td className="whitespace-nowrap px-6 py-4">
+                          <div className="flex space-x-3">
+                            <div className="size-8 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
+                            <div className="size-8 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
+                            <div className="size-8 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
 
-            {/* Mobile Cards Skeleton - matches exact mobile layout */}
-            <div className="space-y-4 md:hidden">
-              {[...Array(2)].map((_, i) => (
-                <div
-                  key={`mobile-skeleton-${i + 1}`}
-                  className="bg-white/5 dark:bg-white/5 border-gray-200/20 dark:border-gray-700/30 rounded-xl border p-4"
-                >
-                  <div className="mb-3 flex items-start justify-between">
-                    <div>
-                      <div className="mb-2 h-4 w-28 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
-                      <div className="h-3 w-20 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
-                    </div>
-                    <div className="h-6 w-16 animate-pulse rounded-full bg-gray-200 dark:bg-gray-700"></div>
-                  </div>
-                  <div className="mb-4 flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="mb-1 h-3 w-10 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
-                      <div className="h-4 w-24 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
-                    </div>
-                    <div className="text-right">
-                      <div className="mb-1 ml-auto h-3 w-16 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
-                      <div className="h-5 w-20 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
-                    </div>
-                  </div>
-                  <div className="flex space-x-2">
-                    <div className="size-10 animate-pulse rounded-lg bg-gray-200 dark:bg-gray-700"></div>
-                    <div className="size-10 animate-pulse rounded-lg bg-gray-200 dark:bg-gray-700"></div>
-                    <div className="size-10 animate-pulse rounded-lg bg-gray-200 dark:bg-gray-700"></div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : invoices.length === 0 ? (
-          <div className="flex flex-col items-center justify-center px-4 py-16">
-            {/* Invoice Icon */}
-            <div className="mb-6 flex size-24 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
-              <span className="material-icons text-4xl text-gray-400 dark:text-gray-600">
-                receipt_long
-              </span>
-            </div>
-
-            {/* Main Message */}
-            <h3 className="mb-2 text-center text-xl font-semibold text-gray-900 dark:text-white">
-              No Purchase Invoices Yet
-            </h3>
-
-            {/* Description */}
-            <p className="mb-8 max-w-md text-center leading-relaxed text-gray-600 dark:text-gray-400">
-              Keep track of your card purchases by creating invoices. This helps
-              you monitor your investments and calculate profits when you sell.
-            </p>
-
-            {/* Instructions */}
-            <div className="mx-auto mb-8 max-w-md rounded-lg bg-blue-50 p-6 dark:bg-blue-900/20">
-              <h4 className="mb-3 flex items-center gap-2 text-lg font-medium text-blue-900 dark:text-blue-100">
-                <span className="material-icons text-xl">info</span>
-                How to Create an Invoice
-              </h4>
-              <ol className="list-inside list-decimal space-y-2 text-sm text-blue-800 dark:text-blue-200">
-                <li>Go to your Cards page</li>
-                <li>Use multi-select to choose cards</li>
-                <li>Click "Create Invoice" from the actions menu</li>
-              </ol>
-            </div>
-
-            {/* Additional Info */}
-            <div className="mt-8 text-center">
-              <p className="mb-2 text-sm text-gray-500 dark:text-gray-500">
-                💡 Benefits of tracking purchases:
-              </p>
-              <ul className="space-y-1 text-sm text-gray-500 dark:text-gray-500">
-                <li>• Track your investment amounts</li>
-                <li>• Calculate profit/loss on sales</li>
-                <li>• Organize purchases by seller</li>
-                <li>• Generate PDF records</li>
-              </ul>
-            </div>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            {/* Search Section */}
-            <SimpleSearchBar
-              searchValue={searchQuery}
-              onSearchChange={setSearchQuery}
-              placeholder="Search by name, set, or serial number..."
-              className="mb-4"
-            />
-
-            {/* Results Count */}
-            <div className="mb-4 px-4 text-sm text-gray-500 dark:text-gray-400">
-              {filteredInvoices.length} of {invoices.length}{' '}
-              {invoices.length === 1 ? 'invoice' : 'invoices'} found
-            </div>
-
-            <div className="mb-4 flex flex-col gap-4 px-4">
-              <div className="flex w-full flex-col gap-2 sm:flex-row">
-                {isGeneratingBatch ? (
-                  <div className="flex items-center gap-2 rounded-lg bg-blue-100 px-4 py-2 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
-                    <span className="material-icons animate-spin">
-                      autorenew
-                    </span>
-                    <span className="hidden sm:inline">
-                      Generating PDFs on server...
-                    </span>
-                    <span className="sm:hidden">Generating...</span>
-                  </div>
-                ) : (
-                  <button
-                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white transition-colors hover:bg-blue-700 sm:w-auto"
-                    onClick={handleServerBatchGeneration}
-                    disabled={invoices.length === 0}
-                    title="Generate PDF invoices for all items"
+              {/* Mobile Cards Skeleton - matches exact mobile layout */}
+              <div className="space-y-4 md:hidden">
+                {[...Array(2)].map((_, i) => (
+                  <div
+                    key={`mobile-skeleton-${i + 1}`}
+                    className="bg-white/5 dark:bg-white/5 border-gray-200/20 dark:border-gray-700/30 rounded-xl border p-4"
                   >
-                    <span className="material-icons text-base">
-                      cloud_download
-                    </span>
-                    <span>Generate All PDFs</span>
-                  </button>
-                )}
+                    <div className="mb-3 flex items-start justify-between">
+                      <div>
+                        <div className="mb-2 h-4 w-28 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
+                        <div className="h-3 w-20 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
+                      </div>
+                      <div className="h-6 w-16 animate-pulse rounded-full bg-gray-200 dark:bg-gray-700"></div>
+                    </div>
+                    <div className="mb-4 flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="mb-1 h-3 w-10 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
+                        <div className="h-4 w-24 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
+                      </div>
+                      <div className="text-right">
+                        <div className="mb-1 ml-auto h-3 w-16 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
+                        <div className="h-5 w-20 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
+                      </div>
+                    </div>
+                    <div className="flex space-x-2">
+                      <div className="size-10 animate-pulse rounded-lg bg-gray-200 dark:bg-gray-700"></div>
+                      <div className="size-10 animate-pulse rounded-lg bg-gray-200 dark:bg-gray-700"></div>
+                      <div className="size-10 animate-pulse rounded-lg bg-gray-200 dark:bg-gray-700"></div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
+          ) : invoices.length === 0 ? (
+            <div className="flex flex-col items-center justify-center px-4 py-16">
+              {/* Invoice Icon */}
+              <div className="mb-6 flex size-24 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
+                <span className="material-icons text-4xl text-gray-400 dark:text-gray-600">
+                  receipt_long
+                </span>
+              </div>
 
-            {/* Desktop Table View */}
-            <div className="hidden md:block">
-              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                <thead className="bg-gray-50 dark:bg-black">
-                  <tr>
-                    <th
-                      scope="col"
-                      className="cursor-pointer px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
-                      onClick={() => handleSort('invoiceNumber')}
+              {/* Main Message */}
+              <h3 className="mb-2 text-center text-xl font-semibold text-gray-900 dark:text-white">
+                No Purchase Invoices Yet
+              </h3>
+
+              {/* Description */}
+              <p className="mb-8 max-w-md text-center leading-relaxed text-gray-600 dark:text-gray-400">
+                Keep track of your card purchases by creating invoices. This helps
+                you monitor your investments and calculate profits when you sell.
+              </p>
+
+              {/* Instructions */}
+              <div className="mx-auto mb-8 max-w-md rounded-lg bg-blue-50 p-6 dark:bg-blue-900/20">
+                <h4 className="mb-3 flex items-center gap-2 text-lg font-medium text-blue-900 dark:text-blue-100">
+                  <span className="material-icons text-xl">info</span>
+                  How to Create an Invoice
+                </h4>
+                <ol className="list-inside list-decimal space-y-2 text-sm text-blue-800 dark:text-blue-200">
+                  <li>Go to your Cards page</li>
+                  <li>Use multi-select to choose cards</li>
+                  <li>Click "Create Invoice" from the actions menu</li>
+                </ol>
+              </div>
+
+              {/* Additional Info */}
+              <div className="mt-8 text-center">
+                <p className="mb-2 text-sm text-gray-500 dark:text-gray-500">
+                  💡 Benefits of tracking purchases:
+                </p>
+                <ul className="space-y-1 text-sm text-gray-500 dark:text-gray-500">
+                  <li>• Track your investment amounts</li>
+                  <li>• Calculate profit/loss on sales</li>
+                  <li>• Organize purchases by seller</li>
+                  <li>• Generate PDF records</li>
+                </ul>
+              </div>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              {/* Search Section */}
+              <SimpleSearchBar
+                searchValue={searchQuery}
+                onSearchChange={setSearchQuery}
+                placeholder="Search by name, set, or serial number..."
+                className="mb-4"
+              />
+
+              {/* Results Count */}
+              <div className="mb-4 px-4 text-sm text-gray-500 dark:text-gray-400">
+                {filteredInvoices.length} of {invoices.length}{' '}
+                {invoices.length === 1 ? 'invoice' : 'invoices'} found
+              </div>
+
+              <div className="mb-4 flex flex-col gap-4 px-4">
+                <div className="flex w-full flex-col gap-2 sm:flex-row">
+                  {isGeneratingBatch ? (
+                    <div className="flex items-center gap-2 rounded-lg bg-blue-100 px-4 py-2 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+                      <span className="material-icons animate-spin">
+                        autorenew
+                      </span>
+                      <span className="hidden sm:inline">
+                        Generating PDFs on server...
+                      </span>
+                      <span className="sm:hidden">Generating...</span>
+                    </div>
+                  ) : (
+                    <button
+                      className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white transition-colors hover:bg-blue-700 sm:w-auto"
+                      onClick={handleServerBatchGeneration}
+                      disabled={invoices.length === 0}
+                      title="Generate PDF invoices for all items"
                     >
-                      Invoice #{' '}
-                      {sortField === 'invoiceNumber' && (
-                        <span className="ml-1">
-                          {sortDirection === 'asc' ? '↑' : '↓'}
-                        </span>
-                      )}
-                    </th>
-                    <th
-                      scope="col"
-                      className="cursor-pointer px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
-                      onClick={() => handleSort('date')}
-                    >
-                      Date{' '}
-                      {sortField === 'date' && (
-                        <span className="ml-1">
-                          {sortDirection === 'asc' ? '↑' : '↓'}
-                        </span>
-                      )}
-                    </th>
-                    <th
-                      scope="col"
-                      className="cursor-pointer px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
-                      onClick={() => handleSort('seller')}
-                    >
-                      Seller{' '}
-                      {sortField === 'seller' && (
-                        <span className="ml-1">
-                          {sortDirection === 'asc' ? '↑' : '↓'}
-                        </span>
-                      )}
-                    </th>
-                    <th
-                      scope="col"
-                      className="cursor-pointer px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
-                      onClick={() => handleSort('totalAmount')}
-                    >
-                      Total Amount{' '}
-                      {sortField === 'totalAmount' && (
-                        <span className="ml-1">
-                          {sortDirection === 'asc' ? '↑' : '↓'}
-                        </span>
-                      )}
-                    </th>
-                    <th
-                      scope="col"
-                      className="cursor-pointer px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
-                      onClick={() => handleSort('cardCount')}
-                    >
-                      # of Cards{' '}
-                      {sortField === 'cardCount' && (
-                        <span className="ml-1">
-                          {sortDirection === 'asc' ? '↑' : '↓'}
-                        </span>
-                      )}
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
-                    >
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-black">
-                  {getSortedInvoices().map(invoice => (
-                    <tr key={invoice.id}>
-                      <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900 dark:text-white">
-                        {invoice.invoiceNumber}
-                      </td>
-                      <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900 dark:text-white">
-                        {formatDate(invoice.date)}
-                      </td>
-                      <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900 dark:text-white">
-                        <div
-                          className="max-w-[150px] truncate"
+                      <span className="material-icons text-base">
+                        cloud_download
+                      </span>
+                      <span>Generate All PDFs</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Desktop Table View */}
+              <div className="hidden md:block">
+                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                  <thead className="bg-gray-50 dark:bg-black">
+                    <tr>
+                      <th
+                        scope="col"
+                        className="cursor-pointer px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
+                        onClick={() => handleSort('invoiceNumber')}
+                      >
+                        Invoice #{' '}
+                        {sortField === 'invoiceNumber' && (
+                          <span className="ml-1">
+                            {sortDirection === 'asc' ? '↑' : '↓'}
+                          </span>
+                        )}
+                      </th>
+                      <th
+                        scope="col"
+                        className="cursor-pointer px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
+                        onClick={() => handleSort('date')}
+                      >
+                        Date{' '}
+                        {sortField === 'date' && (
+                          <span className="ml-1">
+                            {sortDirection === 'asc' ? '↑' : '↓'}
+                          </span>
+                        )}
+                      </th>
+                      <th
+                        scope="col"
+                        className="cursor-pointer px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
+                        onClick={() => handleSort('seller')}
+                      >
+                        Seller{' '}
+                        {sortField === 'seller' && (
+                          <span className="ml-1">
+                            {sortDirection === 'asc' ? '↑' : '↓'}
+                          </span>
+                        )}
+                      </th>
+                      <th
+                        scope="col"
+                        className="cursor-pointer px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
+                        onClick={() => handleSort('totalAmount')}
+                      >
+                        Total Amount{' '}
+                        {sortField === 'totalAmount' && (
+                          <span className="ml-1">
+                            {sortDirection === 'asc' ? '↑' : '↓'}
+                          </span>
+                        )}
+                      </th>
+                      <th
+                        scope="col"
+                        className="cursor-pointer px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
+                        onClick={() => handleSort('cardCount')}
+                      >
+                        # of Cards{' '}
+                        {sortField === 'cardCount' && (
+                          <span className="ml-1">
+                            {sortDirection === 'asc' ? '↑' : '↓'}
+                          </span>
+                        )}
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
+                      >
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-black">
+                    {getSortedInvoices().map(invoice => (
+                      <tr key={invoice.id}>
+                        <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900 dark:text-white">
+                          {invoice.invoiceNumber}
+                        </td>
+                        <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900 dark:text-white">
+                          {formatDate(invoice.date)}
+                        </td>
+                        <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900 dark:text-white">
+                          <div
+                            className="max-w-[150px] truncate"
+                            title={invoice.seller}
+                          >
+                            {invoice.seller}
+                          </div>
+                        </td>
+                        <td className="whitespace-nowrap px-6 py-4 text-right text-sm text-gray-900 dark:text-white">
+                          {formatCurrency(invoice.totalAmount)}
+                        </td>
+                        <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900 dark:text-white">
+                          {invoice.cardCount}
+                        </td>
+                        <td className="flex whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                          <button
+                            className="mr-3 p-2 text-gray-700 transition-colors hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400"
+                            onClick={() => handleDownloadInvoice(invoice)}
+                            title="Download PDF"
+                          >
+                            <span className="material-icons text-xl">
+                              download
+                            </span>
+                          </button>
+                          <button
+                            className="mr-3 p-2 text-gray-700 transition-colors hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400"
+                            onClick={() => handleEditInvoice(invoice)}
+                            title="Edit Invoice"
+                          >
+                            <span className="material-icons text-xl">edit</span>
+                          </button>
+                          <button
+                            className="p-2 text-gray-700 transition-colors hover:text-red-600 dark:text-gray-300 dark:hover:text-red-400"
+                            onClick={() => showDeleteConfirmation(invoice)}
+                            title="Delete Invoice"
+                          >
+                            <span className="material-icons text-xl">delete</span>
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile Card View */}
+              <div className="space-y-4 md:hidden">
+                {getSortedInvoices().map(invoice => (
+                  <div
+                    key={invoice.id}
+                    className="bg-white/5 dark:bg-white/5 border-gray-200/20 dark:border-gray-700/30 rounded-xl border p-4"
+                  >
+                    {/* Header with Invoice Number and Date */}
+                    <div className="mb-3 flex items-start justify-between">
+                      <div>
+                        <h3 className="text-sm font-medium text-gray-900 dark:text-white">
+                          Invoice #{invoice.invoiceNumber}
+                        </h3>
+                        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                          {formatDate(invoice.date)}
+                        </p>
+                      </div>
+                      <span className="rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-600 dark:bg-gray-800 dark:text-gray-300">
+                        {invoice.cardCount} cards
+                      </span>
+                    </div>
+
+                    {/* Main Content: Seller and Amount */}
+                    <div className="mb-4 flex items-center justify-between">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                          Seller
+                        </p>
+                        <p
+                          className="truncate text-sm font-medium text-gray-900 dark:text-white"
                           title={invoice.seller}
                         >
                           {invoice.seller}
-                        </div>
-                      </td>
-                      <td className="whitespace-nowrap px-6 py-4 text-right text-sm text-gray-900 dark:text-white">
-                        {formatCurrency(invoice.totalAmount)}
-                      </td>
-                      <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900 dark:text-white">
-                        {invoice.cardCount}
-                      </td>
-                      <td className="flex whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
-                        <button
-                          className="mr-3 p-2 text-gray-700 transition-colors hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400"
-                          onClick={() => handleDownloadInvoice(invoice)}
-                          title="Download PDF"
-                        >
-                          <span className="material-icons text-xl">
-                            download
-                          </span>
-                        </button>
-                        <button
-                          className="mr-3 p-2 text-gray-700 transition-colors hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400"
-                          onClick={() => handleEditInvoice(invoice)}
-                          title="Edit Invoice"
-                        >
-                          <span className="material-icons text-xl">edit</span>
-                        </button>
-                        <button
-                          className="p-2 text-gray-700 transition-colors hover:text-red-600 dark:text-gray-300 dark:hover:text-red-400"
-                          onClick={() => showDeleteConfirmation(invoice)}
-                          title="Delete Invoice"
-                        >
-                          <span className="material-icons text-xl">delete</span>
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Mobile Card View */}
-            <div className="space-y-4 md:hidden">
-              {getSortedInvoices().map(invoice => (
-                <div
-                  key={invoice.id}
-                  className="bg-white/5 dark:bg-white/5 border-gray-200/20 dark:border-gray-700/30 rounded-xl border p-4"
-                >
-                  {/* Header with Invoice Number and Date */}
-                  <div className="mb-3 flex items-start justify-between">
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-900 dark:text-white">
-                        Invoice #{invoice.invoiceNumber}
-                      </h3>
-                      <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                        {formatDate(invoice.date)}
-                      </p>
+                        </p>
+                      </div>
+                      <div className="ml-4 text-right">
+                        <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                          Amount
+                        </p>
+                        <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                          {formatCurrency(invoice.totalAmount)}
+                        </p>
+                      </div>
                     </div>
-                    <span className="rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-600 dark:bg-gray-800 dark:text-gray-300">
-                      {invoice.cardCount} cards
-                    </span>
-                  </div>
 
-                  {/* Main Content: Seller and Amount */}
-                  <div className="mb-4 flex items-center justify-between">
-                    <div className="min-w-0 flex-1">
-                      <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                        Seller
-                      </p>
-                      <p
-                        className="truncate text-sm font-medium text-gray-900 dark:text-white"
-                        title={invoice.seller}
+                    {/* Actions */}
+                    <div className="border-gray-200/20 dark:border-gray-700/30 flex justify-end space-x-2 border-t pt-3">
+                      <button
+                        className="flex size-10 items-center justify-center rounded-lg bg-blue-50 text-blue-600 transition-colors hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50"
+                        onClick={() => handleDownloadInvoice(invoice)}
+                        title="Download PDF"
                       >
-                        {invoice.seller}
-                      </p>
-                    </div>
-                    <div className="ml-4 text-right">
-                      <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                        Amount
-                      </p>
-                      <p className="text-lg font-semibold text-gray-900 dark:text-white">
-                        {formatCurrency(invoice.totalAmount)}
-                      </p>
+                        <span className="material-icons text-lg">download</span>
+                      </button>
+                      <button
+                        className="flex size-10 items-center justify-center rounded-lg bg-gray-50 text-gray-600 transition-colors hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
+                        onClick={() => handleEditInvoice(invoice)}
+                        title="Edit Invoice"
+                      >
+                        <span className="material-icons text-lg">edit</span>
+                      </button>
+                      <button
+                        className="flex size-10 items-center justify-center rounded-lg bg-red-50 text-red-600 transition-colors hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50"
+                        onClick={() => showDeleteConfirmation(invoice)}
+                        title="Delete Invoice"
+                      >
+                        <span className="material-icons text-lg">delete</span>
+                      </button>
                     </div>
                   </div>
-
-                  {/* Actions */}
-                  <div className="border-gray-200/20 dark:border-gray-700/30 flex justify-end space-x-2 border-t pt-3">
-                    <button
-                      className="flex size-10 items-center justify-center rounded-lg bg-blue-50 text-blue-600 transition-colors hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50"
-                      onClick={() => handleDownloadInvoice(invoice)}
-                      title="Download PDF"
-                    >
-                      <span className="material-icons text-lg">download</span>
-                    </button>
-                    <button
-                      className="flex size-10 items-center justify-center rounded-lg bg-gray-50 text-gray-600 transition-colors hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
-                      onClick={() => handleEditInvoice(invoice)}
-                      title="Edit Invoice"
-                    >
-                      <span className="material-icons text-lg">edit</span>
-                    </button>
-                    <button
-                      className="flex size-10 items-center justify-center rounded-lg bg-red-50 text-red-600 transition-colors hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50"
-                      onClick={() => showDeleteConfirmation(invoice)}
-                      title="Delete Invoice"
-                    >
-                      <span className="material-icons text-lg">delete</span>
-                    </button>
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
+        {/* Create/Edit Invoice Modal */}
+        <CreateInvoiceModal
+          isOpen={showCreateModal}
+          onClose={handleModalClose}
+          onSave={handleModalSave}
+          editingInvoice={editingInvoice}
+        />
+
+        {/* Delete Confirmation Modal */}
+        <ConfirmDialog
+          isOpen={deleteConfirmation.isOpen}
+          onClose={() => setDeleteConfirmation({ isOpen: false, invoice: null })}
+          onConfirm={() => {
+            handleDeleteInvoice(deleteConfirmation.invoice);
+            setDeleteConfirmation({ isOpen: false, invoice: null });
+          }}
+          title="Delete Invoice"
+          message={`Are you sure you want to delete invoice #${deleteConfirmation.invoice?.invoiceNumber}? This action cannot be undone.`}
+          confirmText="Delete"
+          cancelText="Cancel"
+          variant="danger"
+        />
       </div>
-
-      {/* Create/Edit Invoice Modal */}
-      <CreateInvoiceModal
-        isOpen={showCreateModal}
-        onClose={handleModalClose}
-        onSave={handleModalSave}
-        editingInvoice={editingInvoice}
-      />
-
-      {/* Delete Confirmation Modal */}
-      <ConfirmDialog
-        isOpen={deleteConfirmation.isOpen}
-        onClose={() => setDeleteConfirmation({ isOpen: false, invoice: null })}
-        onConfirm={() => {
-          handleDeleteInvoice(deleteConfirmation.invoice);
-          setDeleteConfirmation({ isOpen: false, invoice: null });
-        }}
-        title="Delete Invoice"
-        message={`Are you sure you want to delete invoice #${deleteConfirmation.invoice?.invoiceNumber}? This action cannot be undone.`}
-        confirmText="Delete"
-        cancelText="Cancel"
-        variant="danger"
-      />
-    </div>
-  );
+    );
 };
 
 export default PurchaseInvoices;

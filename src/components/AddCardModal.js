@@ -406,7 +406,7 @@ const AddCardModal = ({
                 value={psaSerial}
                 onChange={e => setPsaSerial(e.target.value)}
                 placeholder="Enter PSA serial number"
-                className="focus:ring-primary/20 w-full rounded-lg border border-[#ffffff33] bg-white px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 dark:border-[#ffffff1a] dark:bg-[#0F0F0F] dark:text-white"
+                className="focus:ring-primary/20 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 dark:border-gray-700 dark:bg-[#0F0F0F] dark:text-white"
                 disabled={isSearching}
               />
               <Button

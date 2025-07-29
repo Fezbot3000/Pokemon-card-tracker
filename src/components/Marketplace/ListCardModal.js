@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useAuth } from '../../design-system';
 import {
   collection,
@@ -322,7 +323,7 @@ function ListCardModal({ isOpen, onClose, selectedCards }) {
     }
   };
 
-  return (
+  return createPortal(
     <Modal
       isOpen={isOpen}
       onClose={onClose}
@@ -569,7 +570,8 @@ function ListCardModal({ isOpen, onClose, selectedCards }) {
           );
         })}
       </form>
-    </Modal>
+    </Modal>,
+    document.body
   );
 }
 

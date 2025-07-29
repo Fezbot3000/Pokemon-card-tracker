@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Modal, Button, Icon, toast } from '../../design-system';
 import { useAuth } from '../../design-system';
 import {
@@ -396,14 +397,15 @@ function SellerProfileModal({
     </div>
   );
 
-  return (
+  return createPortal(
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      size="xl"
+      size="modal-width-60"
       title="Seller Profile"
       position="right"
       className="overflow-hidden rounded-2xl"
+      closeOnClickOutside={true}
       footer={modalFooter}
     >
       {loading ? (
@@ -787,7 +789,8 @@ function SellerProfileModal({
           )}
         </div>
       )}
-    </Modal>
+    </Modal>,
+    document.body
   );
 }
 

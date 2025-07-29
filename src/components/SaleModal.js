@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useUserPreferences } from '../contexts/UserPreferencesContext';
 import Modal from '../design-system/molecules/Modal';
 import Icon from '../design-system/atoms/Icon';
@@ -114,13 +115,13 @@ const SaleModal = ({ isOpen, onClose, selectedCards, onConfirm }) => {
 
   if (!isOpen || !isInitialized) return null;
 
-  return (
+  return createPortal(
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
       title="Mark Cards as Sold"
       position="right"
-      size="2xl"
+      size="modal-width-70"
       closeOnClickOutside={true}
       footer={
         <div className="flex w-full items-center justify-between">
@@ -149,7 +150,7 @@ const SaleModal = ({ isOpen, onClose, selectedCards, onConfirm }) => {
               value={buyer}
               onChange={e => setBuyer(e.target.value)}
               placeholder="Enter buyer name"
-              className="w-full rounded-lg border border-[#ffffff33] bg-white px-3 py-2 text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-[#ffffff1a] dark:bg-[#0F0F0F] dark:text-white dark:placeholder:text-gray-400"
+              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-[#0F0F0F] dark:text-white dark:placeholder:text-gray-400"
             />
             {errors.buyer && (
               <p className="mt-1 text-sm text-red-500">{errors.buyer}</p>
@@ -163,7 +164,7 @@ const SaleModal = ({ isOpen, onClose, selectedCards, onConfirm }) => {
               type="date"
               value={dateSold}
               onChange={e => setDateSold(e.target.value)}
-              className="w-full rounded-lg border border-[#ffffff33] bg-white px-3 py-2 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-[#ffffff1a] dark:bg-[#0F0F0F] dark:text-white"
+              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-[#0F0F0F] dark:text-white"
             />
           </div>
         </div>
@@ -227,7 +228,7 @@ const SaleModal = ({ isOpen, onClose, selectedCards, onConfirm }) => {
                           }
                           step="0.01"
                           min="0"
-                          className="w-full rounded-lg border border-[#ffffff33] bg-white py-2 pl-8 pr-4 text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-[#ffffff1a] dark:bg-[#0F0F0F] dark:text-white dark:placeholder:text-gray-400"
+                          className="w-full rounded-lg border border-gray-200 bg-white py-2 pl-8 pr-4 text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-[#0F0F0F] dark:text-white dark:placeholder:text-gray-400"
                           placeholder="0.00"
                         />
                       </div>
@@ -294,7 +295,8 @@ const SaleModal = ({ isOpen, onClose, selectedCards, onConfirm }) => {
           </div>
         </div>
       </div>
-    </Modal>
+    </Modal>,
+    document.body
   );
 };
 

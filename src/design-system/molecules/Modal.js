@@ -22,6 +22,7 @@ const Modal = ({
   maxWidth = 'max-w-2xl',
   ariaLabel,
   noContentPadding = false,
+  zIndex, // Add zIndex as optional prop
   ...props
 }) => {
   const modalRef = useRef(null);
@@ -99,11 +100,26 @@ const Modal = ({
 
 
 
-  // Handle escape key to close modal
+  // Handle escape key to close modal - only for topmost modal
   useEffect(() => {
     const handleEscapeKey = e => {
       if (isOpen && e.key === 'Escape') {
-        handleClose();
+        // Only respond to escape if this is likely the topmost modal
+        const currentZIndex = size === 'modal-width-60' ? 50001 : 50000;
+        const allModals = document.querySelectorAll('[role="dialog"]');
+        let isTopmost = true;
+        
+        // Check if any modal has a higher z-index
+        allModals.forEach(modal => {
+          const modalZIndex = parseInt(window.getComputedStyle(modal.parentElement).zIndex || '0');
+          if (modalZIndex > currentZIndex) {
+            isTopmost = false;
+          }
+        });
+        
+        if (isTopmost) {
+          handleClose();
+        }
       }
     };
 
@@ -111,7 +127,7 @@ const Modal = ({
     return () => {
       document.removeEventListener('keydown', handleEscapeKey);
     };
-  }, [isOpen, handleClose]); // Fix: Include handleClose dependency
+  }, [isOpen, handleClose, size]); // Include size dependency
 
   // Handle backdrop click
   const handleBackdropClick = useCallback((e) => {
@@ -122,6 +138,13 @@ const Modal = ({
 
   // Return null if modal is not open
   if (!isOpen) return null;
+
+  // Z-index management for modal layering
+  const getModalZIndex = () => {
+    if (size === 'modal-width-60') return 'z-[50001]'; // Second layer - highest z-index
+    if (size === 'modal-width-70') return 'z-[50000]'; // First layer - high z-index
+    return zIndex ? `z-[${zIndex}]` : 'z-[50000]';     // Default to high z-index
+  };
 
   // Size variations
   const sizeClasses = {
@@ -134,7 +157,8 @@ const Modal = ({
     '4xl': 'max-w-4xl', // ~896px
     '5xl': 'max-w-5xl', // ~1024px
     'modal-width': 'w-[55%]', // exactly 55% width
-    'modal-width-70': 'w-[70%]', // exactly 70% width
+    'modal-width-60': 'w-3/5', // exactly 60% width - for second-layer modals
+    'modal-width-70': 'w-[70%]', // exactly 70% width - for first-layer modals
     full: 'w-full max-w-full',
     contextual: 'w-full max-w-md', // Contextual modals - consistent width, auto height
   };
@@ -161,8 +185,8 @@ const Modal = ({
     window.innerWidth < 640 && size !== 'contextual';
   const mobileFullWidth = shouldApplyMobileOverride
     ? isPWA
-      ? 'w-screen max-w-none rounded-lg m-0 fixed z-[9999]' // PWA: Let CSS handle positioning
-      : 'w-screen max-w-none rounded-lg m-0 fixed top-0 left-0 right-0 bottom-0 z-[9999]' // Browser: Full positioning
+      ? 'w-screen max-w-none rounded-lg m-0 fixed z-[50000]' // PWA: Let CSS handle positioning
+      : 'w-screen max-w-none rounded-lg m-0 fixed top-0 left-0 right-0 bottom-0 z-[50000]' // Browser: Full positioning
     : '';
 
 
@@ -228,7 +252,7 @@ const Modal = ({
   // Regular modal with backdrop and positioning
   return (
     <div 
-      className="fixed inset-0 z-50 flex min-h-screen w-full items-center justify-center bg-black/40 backdrop-blur-sm"
+      className={`fixed inset-0 flex min-h-screen w-full items-center justify-center bg-black/40 backdrop-blur-sm ${getModalZIndex()}`}
       onClick={handleBackdropClick}
     >
       <div
@@ -236,10 +260,10 @@ const Modal = ({
         className={`${modalClasses} flex flex-col ${animationClass} modal-container ${size === 'contextual' ? 'modal-contextual' : ''} ${
           position === 'right'
             ? window.innerWidth < 640
-              ? 'fixed inset-0 z-[9999] m-0 w-screen max-w-none overflow-auto rounded-lg'
-              : `fixed right-0 top-0 z-[9999] mr-0 ${size === 'custom' ? maxWidth : sizeClasses[size] || 'w-[55%]'} rounded-l-lg rounded-r-none`
+              ? `fixed inset-0 m-0 w-screen max-w-none overflow-auto rounded-lg ${getModalZIndex()}`
+              : `fixed right-0 top-0 mr-0 ${getModalZIndex()} ${size === 'custom' ? maxWidth : sizeClasses[size] || (size === 'modal-width-70' ? 'w-[70%]' : size === 'modal-width-60' ? 'w-3/5' : 'w-[55%]')} rounded-l-lg rounded-r-none`
             : mobileFullWidth ||
-              (size === 'custom' ? maxWidth : sizeClasses[size] || 'w-[55%]')
+              (size === 'custom' ? maxWidth : sizeClasses[size] || (size === 'modal-width-70' ? 'w-[70%]' : size === 'modal-width-60' ? 'w-3/5' : 'w-[55%]'))
         } ${className}`}
         role="dialog"
         aria-modal="true"
@@ -296,6 +320,7 @@ Modal.propTypes = {
   maxWidth: PropTypes.string,
   ariaLabel: PropTypes.string,
   noContentPadding: PropTypes.bool,
+  zIndex: PropTypes.string, // Add zIndex to propTypes
 };
 
 export default Modal;

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { Modal, Button } from '../../design-system';
 import { useAuth } from '../../design-system';
 import { useUserPreferences } from '../../contexts/UserPreferencesContext';
@@ -195,7 +196,7 @@ const BuyerSelectionModal = ({ isOpen, onClose, listing }) => {
     }
   };
 
-  return (
+  return createPortal(
     <Modal
       isOpen={isOpen}
       onClose={onClose}
@@ -303,7 +304,8 @@ const BuyerSelectionModal = ({ isOpen, onClose, listing }) => {
           )}
         </div>
       </div>
-    </Modal>
+    </Modal>,
+    document.body
   );
 };
 

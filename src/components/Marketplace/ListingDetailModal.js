@@ -484,7 +484,7 @@ function ListingDetailModal({
         onClose={onClose}
         title="Listing Details"
         position="right"
-        size="2xl"
+        size="modal-width-70"
         closeOnClickOutside={true}
         footer={renderFooter()}
       >

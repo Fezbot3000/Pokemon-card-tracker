@@ -1,16 +1,19 @@
 /**
- * Pokemon Card Tracker - Design System CSS
+ * Pokemon Card Tracker - Unified Design System CSS
  * 
- * This file implements a structured approach to CSS that eliminates the need for !important tags
- * by using more specific selectors and a proper CSS cascade strategy.
+ * This file is the single source of truth for all design tokens and eliminates 
+ * duplications across the application. It includes PWA-specific tokens for 
+ * consistent mobile experience.
  */
 
-/* ---------- DESIGN TOKENS ---------- */
+/* ==================== DESIGN TOKENS ==================== */
 
 :root {
-  /* Color Palette - Light Mode */
+  /* ==================== BASE COLORS ==================== */
   --color-white: #ffffff;
   --color-black: #000000;
+
+  /* Gray Scale */
   --color-gray-50: #f9fafb;
   --color-gray-100: #f3f4f6;
   --color-gray-200: #e5e7eb;
@@ -21,12 +24,24 @@
   --color-gray-700: #374151;
   --color-gray-800: #1f2937;
   --color-gray-900: #111827;
+  --color-gray-950: #030712;
 
-  /* Primary Colors */
-  --color-primary-300: #fca5a5; /* red-300 */
-  --color-primary-500: #ef4444; /* red-500 */
-  --color-primary-600: #dc2626; /* red-600 */
-  --color-primary-700: #b91c1c; /* red-700 */
+  /* Primary Colors (Red Scale) */
+  --color-primary-50: #fef2f2;
+  --color-primary-100: #fee2e2;
+  --color-primary-200: #fecaca;
+  --color-primary-300: #fca5a5;
+  --color-primary-400: #f87171;
+  --color-primary-500: #ef4444;
+  --color-primary-600: #dc2626;
+  --color-primary-700: #b91c1c;
+  --color-primary-800: #991b1b;
+  --color-primary-900: #7f1d1d;
+
+  /* Accent Colors (Pink Scale for gradients) */
+  --color-accent-500: #ec4899;
+  --color-accent-600: #db2777;
+  --color-accent-700: #be185d;
 
   /* Status Colors */
   --color-success: #22c55e; /* green-500 */
@@ -34,132 +49,456 @@
   --color-warning: #f59e0b; /* amber-500 */
   --color-info: #3b82f6; /* blue-500 */
 
-  /* Theme-specific tokens - Light mode (default) */
-  --bg-primary: var(--color-white);
-  --bg-secondary: var(--color-gray-50);
-  --bg-tertiary: var(--color-gray-100);
+  /* ==================== SPACING TOKENS ==================== */
+  --space-0: 0;
+  --space-0-5: 0.125rem; /* 2px */
+  --space-1: 0.25rem; /* 4px */
+  --space-1-5: 0.375rem; /* 6px */
+  --space-2: 0.5rem; /* 8px */
+  --space-2-5: 0.625rem; /* 10px */
+  --space-3: 0.75rem; /* 12px */
+  --space-3-5: 0.875rem; /* 14px */
+  --space-4: 1rem; /* 16px */
+  --space-5: 1.25rem; /* 20px */
+  --space-6: 1.5rem; /* 24px */
+  --space-8: 2rem; /* 32px */
+  --space-10: 2.5rem; /* 40px */
+  --space-11: 2.75rem; /* 44px */
+  --space-12: 3rem; /* 48px */
+  --space-16: 4rem; /* 64px */
+  --space-20: 5rem; /* 80px */
 
-  --text-primary: var(--color-gray-900);
-  --text-secondary: var(--color-gray-700);
-  --text-tertiary: var(--color-gray-500);
+  /* ==================== TYPOGRAPHY TOKENS ==================== */
+  --font-size-xs: 0.75rem; /* 12px */
+  --font-size-sm: 0.875rem; /* 14px */
+  --font-size-base: 1rem; /* 16px */
+  --font-size-lg: 1.125rem; /* 18px */
+  --font-size-xl: 1.25rem; /* 20px */
+  --font-size-2xl: 1.5rem; /* 24px */
+  --font-size-3xl: 1.875rem; /* 30px */
 
-  --border-color: var(--color-gray-200);
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
 
-  /* Common spacing and sizing variables */
-  --spacing-1: 0.25rem; /* 4px */
-  --spacing-2: 0.5rem; /* 8px */
-  --spacing-3: 0.75rem; /* 12px */
-  --spacing-4: 1rem; /* 16px */
-  --spacing-5: 1.25rem; /* 20px */
-  --spacing-6: 1.5rem; /* 24px */
+  --line-height-tight: 1.25;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.625;
 
+  /* ==================== BORDER TOKENS ==================== */
   --border-radius-sm: 0.375rem; /* 6px */
   --border-radius-md: 0.5rem; /* 8px */
   --border-radius-lg: 0.75rem; /* 12px */
   --border-radius-xl: 1rem; /* 16px */
+  --border-radius-2xl: 1.5rem; /* 24px */
+  --border-radius-full: 9999px;
+
+  /* ==================== COMPONENT TOKENS ==================== */
+  /* Button tokens */
+  --btn-height: var(--space-11); /* 44px */
+  --btn-padding-x: var(--space-4); /* 16px */
+  --btn-padding-y: var(--space-2-5); /* 10px */
+  --btn-font-size: var(--font-size-sm); /* 14px */
+  --btn-font-weight: var(--font-weight-medium);
+  --btn-border-radius: var(--border-radius-lg);
+  --btn-icon-size: var(--space-5); /* 20px */
+
+  /* Input tokens */
+  --input-height: var(--space-11); /* 44px */
+  --input-padding-x: var(--space-3); /* 12px */
+  --input-padding-y: var(--space-2-5); /* 10px */
+  --input-border-radius: var(--border-radius-md);
+
+  /* ==================== LAYOUT TOKENS ==================== */
+  /* Header dimensions */
+  --header-height-mobile: var(--space-16); /* 64px */
+  --header-height-desktop: var(--space-20); /* 80px */
+  
+  /* Bottom navigation */
+  --bottom-nav-height: var(--space-16); /* 64px */
+  
+  /* Container max widths */
+  --container-sm: 640px;
+  --container-md: 768px;
+  --container-lg: 1024px;
+  --container-xl: 1280px;
+
+  /* ==================== PWA-SPECIFIC TOKENS ==================== */
+  /* Safe area handling */
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-left: env(safe-area-inset-left, 0px);
+  --safe-area-right: env(safe-area-inset-right, 0px);
+
+  /* PWA header calculations */
+  --pwa-header-total-mobile: calc(var(--header-height-mobile) + var(--safe-area-top));
+  --pwa-header-total-desktop: calc(var(--header-height-desktop) + var(--safe-area-top));
+
+  /* PWA content padding */
+  --pwa-content-padding-top-mobile: calc(var(--space-4) + var(--safe-area-top));
+  --pwa-content-padding-bottom-mobile: calc(var(--bottom-nav-height) + var(--safe-area-bottom));
+  --pwa-content-padding-desktop: calc(var(--space-4) + var(--safe-area-top));
+
+  /* PWA modal adjustments */
+  --pwa-modal-margin-top: var(--safe-area-top);
+  --pwa-modal-margin-bottom: var(--safe-area-bottom);
+
+  /* PWA checkbox sizes (iOS optimization) */
+  --pwa-checkbox-size: var(--space-2); /* 8px */
+  --pwa-checkbox-min-size: var(--space-2); /* 8px */
+
+  /* PWA touch targets (iOS recommended) */
+  --pwa-touch-target-min: var(--space-11); /* 44px */
+
+  /* ==================== Z-INDEX TOKENS ==================== */
+  --z-index-base: 1;
+  --z-index-dropdown: 100;
+  --z-index-sticky: 200;
+  --z-index-fixed: 300;
+  --z-index-modal-backdrop: 400;
+  --z-index-modal: 500;
+  --z-index-popover: 600;
+  --z-index-tooltip: 700;
+  --z-index-toast: 800;
+  --z-index-header: 2500;
+  --z-index-settings: 2000;
+  --z-index-bottom-nav: 3000;
+
+  /* ==================== GRADIENTS ==================== */
+  --gradient-primary: linear-gradient(to right, var(--color-primary-500), var(--color-accent-600));
+  --gradient-primary-hover: linear-gradient(to right, var(--color-primary-600), var(--color-accent-700));
+
+  /* ==================== THEME TOKENS - LIGHT MODE (DEFAULT) ==================== */
+  /* Backgrounds */
+  --bg-primary: var(--color-white);
+  --bg-secondary: var(--color-gray-50);
+  --bg-tertiary: var(--color-gray-100);
+
+  /* Text colors */
+  --text-primary: var(--color-gray-900);
+  --text-secondary: var(--color-gray-700);
+  --text-tertiary: var(--color-gray-500);
+
+  /* Border colors */
+  --border-primary: var(--color-gray-200);
+  --border-secondary: var(--color-gray-300);
+
+  /* Form colors */
+  --placeholder-color: var(--color-gray-400);
 }
 
-/* Dark Mode Theme Variables */
-.dark {
-  /* Theme-specific tokens - Dark mode */
+/* ==================== DARK MODE THEME TOKENS ==================== */
+.dark,
+html.dark {
+  /* Backgrounds - Pure black design */
   --bg-primary: var(--color-black);
-  --bg-secondary: var(--color-black); /* Changed from #0F0F0F to pure black */
+  --bg-secondary: var(--color-black);
   --bg-tertiary: var(--color-black);
 
+  /* Text colors */
   --text-primary: var(--color-white);
   --text-secondary: var(--color-gray-300);
   --text-tertiary: var(--color-gray-400);
 
-  --border-color: var(--color-gray-700);
+  /* Border colors */
+  --border-primary: var(--color-gray-700);
+  --border-secondary: var(--color-gray-600);
+
+  /* Form colors */
+  --placeholder-color: var(--color-gray-500);
 }
 
-/* ---------- COMPONENT-SPECIFIC STYLING ---------- */
+/* ==================== PWA-SPECIFIC STYLES ==================== */
 
-/* Card Component - Financial Detail Boxes */
-.dark .card-financial-box {
-  background-color: var(--color-black);
-  color: var(--text-primary);
+/* PWA display mode detection and base adjustments */
+@media (display-mode: standalone) {
+  body {
+    /* Apply safe area padding to body */
+    padding-top: var(--safe-area-top);
+    padding-bottom: var(--safe-area-bottom);
+    padding-left: var(--safe-area-left);
+    padding-right: var(--safe-area-right);
+  }
+
+  /* PWA header positioning */
+  .header-pwa,
+  header.fixed {
+    top: var(--safe-area-top);
+  }
+
+  /* PWA bottom navigation positioning */
+  .bottom-nav-pwa,
+  .bottom-navigation.fixed {
+    bottom: var(--safe-area-bottom);
+  }
+
+  /* PWA main content adjustments */
+  .main-content-pwa {
+    padding-top: var(--pwa-content-padding-top-mobile);
+    padding-bottom: var(--pwa-content-padding-bottom-mobile);
+  }
+
+  @media (min-width: 640px) {
+    .main-content-pwa {
+      padding-top: var(--pwa-content-padding-desktop);
+      padding-bottom: var(--space-4);
+    }
+  }
+
+  /* PWA modal adjustments */
+  .modal-pwa {
+    margin-top: var(--pwa-modal-margin-top);
+    margin-bottom: var(--pwa-modal-margin-bottom);
+  }
+
+  /* PWA status bar background fill */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--safe-area-top);
+    background-color: var(--bg-primary);
+    z-index: 9999;
+  }
 }
 
-/* Card component base styling */
-.card {
+/* ==================== COMPONENT BASE STYLES ==================== */
+
+/* Card component base */
+.card-base {
   background-color: var(--bg-primary);
   border-radius: var(--border-radius-lg);
+  border: 1px solid var(--border-primary);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  transition: box-shadow 0.3s ease;
+  transition: box-shadow 150ms ease;
 }
 
-.dark .card {
-  background-color: var(--bg-secondary);
+/* Button base */
+.btn-base {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--btn-height);
+  padding: var(--btn-padding-y) var(--btn-padding-x);
+  font-size: var(--btn-font-size);
+  font-weight: var(--btn-font-weight);
+  border-radius: var(--btn-border-radius);
+  transition: all 150ms ease;
+  cursor: pointer;
+  border: none;
+  text-decoration: none;
+  white-space: nowrap;
 }
 
-/* Make sure these have higher specificity than any conflicting rules */
-.dark .bg-black,
-.dark [data-theme-bg='black'] {
-  background-color: var(--color-black);
+.btn-base:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-primary-300);
 }
 
-.dark .bg-dark-primary,
-.dark [data-theme-bg='dark-primary'] {
+/* Form input base */
+.input-base {
+  width: 100%;
+  height: var(--input-height);
+  padding: var(--input-padding-y) var(--input-padding-x);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--input-border-radius);
   background-color: var(--bg-primary);
-}
-
-.dark .bg-dark-secondary,
-.dark [data-theme-bg='dark-secondary'] {
-  background-color: var(--bg-secondary);
-}
-
-/* ---------- TAILWIND OVERRIDES ---------- */
-
-/* Ensure Tailwind dark mode classes have proper specificity */
-html.dark .dark\:bg-black {
-  background-color: var(--color-black);
-}
-
-html.dark .dark\:text-white {
   color: var(--text-primary);
+  font-size: var(--font-size-base);
+  transition: border-color 150ms ease;
 }
 
-/* Financial detail boxes - Ensure they always use black in dark mode */
-html.dark .financial-detail-box,
-html.dark body .financial-detail-box,
-html.dark [class*='dark:bg-'] .financial-detail-box,
-html.dark div.financial-detail-box,
-.dark html body div.financial-detail-box,
-body.dark .financial-detail-box,
-.dark div[class*='bg-gray-100'],
-.dark div[class$='p-2'][class*='text-center'][class*='rounded-lg'],
-html.dark body .card div.financial-detail-box {
-  background-color: #000000;
+.input-base:focus {
+  outline: none;
+  border-color: var(--color-primary-500);
+  box-shadow: 0 0 0 1px var(--color-primary-500);
 }
 
-/* ---------- DOCUMENTATION ---------- */
+.input-base::placeholder {
+  color: var(--placeholder-color);
+}
 
-/*
-  HOW TO USE THIS DESIGN SYSTEM:
-  
-  1. For dark backgrounds in dark mode, use these classes:
-     - financial-detail-box: For card financial details (always black in dark mode)
-     - Use CSS variables in your components: var(--bg-primary), var(--bg-secondary)
-  
-  2. For text colors:
-     - Use CSS variables: var(--text-primary), var(--text-secondary), var(--text-tertiary)
-  
-  3. For maintaining the design system:
-     - Update colors in :root and .dark variables
-     - Avoid using !important tags
-     - Use specific selectors when you need to override styles
-*/
+/* ==================== PWA OPTIMIZATION UTILITIES ==================== */
 
-/* ---------- UTILITIES ---------- */
+/* PWA checkbox optimization for iOS */
+.checkbox-pwa {
+  width: var(--pwa-checkbox-size);
+  height: var(--pwa-checkbox-size);
+  min-width: var(--pwa-checkbox-min-size);
+  min-height: var(--pwa-checkbox-min-size);
+  max-width: var(--pwa-checkbox-size);
+  max-height: var(--pwa-checkbox-size);
+}
 
-/* Hide scrollbars while maintaining scroll functionality */
+/* PWA touch target optimization */
+.touch-target-pwa {
+  min-height: var(--pwa-touch-target-min);
+  min-width: var(--pwa-touch-target-min);
+}
+
+/* Utility for hiding scrollbars */
 .scrollbar-hide {
   -ms-overflow-style: none; /* IE and Edge */
   scrollbar-width: none; /* Firefox */
 }
 
-/* For Chrome, Safari and Opera */
 .scrollbar-hide::-webkit-scrollbar {
-  display: none;
+  display: none; /* Chrome, Safari, Opera */
 }
+
+/* ==================== RESPONSIVE UTILITIES ==================== */
+
+/* Content with header spacing */
+.content-with-header {
+  padding-top: var(--header-height-mobile);
+}
+
+@media (min-width: 640px) {
+  .content-with-header {
+    padding-top: var(--header-height-desktop);
+  }
+}
+
+/* Modal utilities */
+body.modal-open {
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+  touch-action: none;
+  overscroll-behavior: none;
+}
+
+.modal-content {
+  touch-action: auto;
+  overscroll-behavior: contain;
+}
+
+/* Line clamp utilities */
+.line-clamp-1 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+}
+
+.line-clamp-2 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.line-clamp-3 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+/* ==================== DOCUMENTATION ==================== */
+
+/*
+  HOW TO USE THIS UNIFIED DESIGN SYSTEM:
+  
+  1. DESIGN TOKENS - ALWAYS use design tokens instead of hardcoded values
+     ✅ padding: var(--space-4);
+     ❌ padding: 1rem;
+  
+  2. PWA-SPECIFIC STYLING GUIDELINES:
+     
+     a) PWA Detection and Targeting:
+        - Use @media (display-mode: standalone) for PWA-only styles
+        - Add body.pwa class for component-level PWA targeting
+        - Example: body.pwa .header { top: var(--safe-area-top); }
+     
+     b) PWA Design Tokens:
+        - Safe areas: var(--safe-area-top), var(--safe-area-bottom)
+        - PWA content padding: var(--pwa-content-padding-top-mobile)
+        - PWA header calculations: var(--pwa-header-total-mobile)
+        - PWA touch targets: var(--pwa-touch-target-min)
+        - PWA checkbox optimization: var(--pwa-checkbox-size)
+     
+     c) PWA Layout Classes:
+        - .header-pwa: PWA-optimized header positioning
+        - .bottom-nav-pwa: PWA-optimized bottom navigation
+        - .modal-pwa: PWA-optimized modal spacing
+        - .main-content-pwa: PWA-optimized main content
+        - .checkbox-pwa: PWA-optimized checkbox sizing
+        - .touch-target-pwa: PWA-optimized touch targets
+     
+     d) PWA Safe Area Handling:
+        - Headers: top: var(--safe-area-top)
+        - Bottom nav: bottom: var(--safe-area-bottom)
+        - Content: padding-top: calc(var(--header-height) + var(--safe-area-top))
+        - Modals: margin-top: var(--pwa-modal-margin-top)
+     
+     e) PWA Performance Optimization:
+        - Use transform instead of position changes when possible
+        - Leverage hardware acceleration for PWA animations
+        - Optimize touch targets for mobile (min 44px)
+  
+  3. RESPONSIVE DESIGN:
+     - Mobile-first approach (design for 320px first)
+     - Standard breakpoints: 640px, 768px, 1024px, 1280px
+     - PWA optimizations: Design for touch-first interactions
+  
+  4. THEME SUPPORT:
+     - Use semantic tokens: var(--bg-primary), var(--text-primary)
+     - Avoid direct color references in components
+     - PWA status bar adapts automatically to theme
+  
+  5. COMPONENT DEVELOPMENT:
+     - Extend base classes: .btn-base, .card-base, .input-base
+     - Use consistent spacing: var(--space-*) tokens
+     - PWA considerations: Add touch optimization classes when needed
+  
+  6. PWA LAYOUT PATTERNS:
+     
+     a) PWA Header Pattern:
+        <header class="header-pwa fixed top-0">
+          <!-- Header content -->
+        </header>
+     
+     b) PWA Main Content Pattern:
+        <main class="main-content-pwa">
+          <!-- Page content -->
+        </main>
+     
+     c) PWA Modal Pattern:
+        <div class="modal-pwa">
+          <div class="modal-container">
+            <!-- Modal content -->
+          </div>
+        </div>
+     
+     d) PWA Touch Targets:
+        <button class="btn-base touch-target-pwa">
+          <!-- Button content -->
+        </button>
+  
+  7. PWA DEVELOPMENT WORKFLOW:
+     - Test in standalone mode: Add to homescreen and test
+     - Verify safe area handling on devices with notches
+     - Test touch targets on actual mobile devices
+     - Validate performance with PWA optimization tools
+  
+  AVOID:
+  - ❌ Hardcoded values (use design tokens)
+  - ❌ !important declarations (use proper CSS specificity)
+  - ❌ Duplicate token definitions across files
+  - ❌ PWA styles scattered across multiple files
+  - ❌ Touch targets smaller than 44px on mobile
+  - ❌ Forgetting safe area handling for PWA layouts
+  - ❌ Inconsistent PWA class naming conventions
+  
+  BEST PRACTICES:
+  - ✅ Use design tokens consistently
+  - ✅ Test PWA functionality on real devices
+  - ✅ Optimize for touch interactions
+  - ✅ Handle safe areas properly
+  - ✅ Use semantic naming for PWA classes
+  - ✅ Document PWA-specific component variations
+*/

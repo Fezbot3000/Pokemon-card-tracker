@@ -10,16 +10,16 @@
   max-height: 90vh;
 }
 
-/* iOS Safari specific fixes */
+  /* iOS Safari specific fixes using design tokens */
 @supports (-webkit-touch-callout: none) {
-  /* Fix logged-out navigation bar positioning on iOS to account for notch/dynamic island */
+  /* Fix logged-out navigation bar positioning on iOS */
   div.ios-safe-nav.fixed.top-0 {
-    padding-top: calc(1rem + env(safe-area-inset-top, 0px));
+    padding-top: calc(var(--space-4) + var(--safe-area-top));
   }
 
-  /* Fix logged-in header positioning on iOS to account for notch/dynamic island */
+  /* Fix logged-in header positioning on iOS */
   header.fixed.top-0 {
-    top: env(safe-area-inset-top, 0px);
+    top: var(--safe-area-top);
   }
 
   /* iOS Safari modal fixes */
@@ -28,11 +28,11 @@
     bottom: 0;
     left: 0;
     right: 0;
-    z-index: 1000;
+    z-index: var(--z-index-modal);
   }
 
   .modal-content-with-absolute-footer {
-    padding-bottom: 100px; /* Account for absolute footer */
+    padding-bottom: var(--space-20); /* Account for absolute footer */
   }
 
   /* Fix horizontal scrolling in modals on iPad PWA */
@@ -46,35 +46,32 @@
       box-sizing: border-box;
     }
 
-    /* PWA-specific checkbox size reduction for all mobile devices */
-    input[type='checkbox'],
-    button[aria-label*='Select'],
-    button[aria-label*='Deselect'],
-    .w-4.h-4,
-    .size-4[type='checkbox'],
-    .h-4[type='checkbox'],
-    .w-4[type='checkbox'] {
-      width: 0.5rem !important;
-      height: 0.5rem !important;
-      min-width: 0.5rem !important;
-      min-height: 0.5rem !important;
-      max-width: 0.5rem !important;
-      max-height: 0.5rem !important;
-      transform: scale(0.8) !important;
+    /* PWA-specific checkbox optimization using design tokens */
+    body.pwa input[type='checkbox'],
+    body.pwa button[aria-label*='Select'],
+    body.pwa button[aria-label*='Deselect'],
+    .checkbox-pwa {
+      width: var(--pwa-checkbox-size);
+      height: var(--pwa-checkbox-size);
+      min-width: var(--pwa-checkbox-min-size);
+      min-height: var(--pwa-checkbox-min-size);
+      max-width: var(--pwa-checkbox-size);
+      max-height: var(--pwa-checkbox-size);
+      transform: scale(0.8);
     }
 
-    /* Additional targeting for card selection buttons */
-    .absolute.top-2.right-2 button,
-    .absolute.top-2.right-2 input {
-      width: 0.5rem !important;
-      height: 0.5rem !important;
+    /* Card selection buttons optimization */
+    body.pwa .absolute.top-2.right-2 button,
+    body.pwa .absolute.top-2.right-2 input {
+      width: var(--pwa-checkbox-size);
+      height: var(--pwa-checkbox-size);
     }
   }
 
-  /* iOS PWA modal header safe area */
+  /* iOS PWA modal header safe area using design tokens */
   @media (display-mode: standalone) {
     .modal-header-ios-safe {
-      padding-top: calc(0.75rem + env(safe-area-inset-top, 0px));
+      padding-top: calc(var(--space-3) + var(--safe-area-top));
     }
   }
 
@@ -84,107 +81,104 @@
     overflow-y: auto;
   }
 
-  /* iOS PWA specific fixes */
+  /* iOS PWA specific fixes using design tokens */
   @media (display-mode: standalone) {
     /* PWA safe area handling */
     .modal-container {
-      padding-top: env(safe-area-inset-top, 0px);
-      padding-bottom: env(safe-area-inset-bottom, 0px);
+      padding-top: var(--safe-area-top);
+      padding-bottom: var(--safe-area-bottom);
     }
   }
 
-  /* iOS form input zoom prevention */
+  /* iOS form input zoom prevention using design tokens */
   input[type='text'],
   input[type='email'],
   input[type='password'],
   input[type='number'],
   textarea,
   select {
-    font-size: 16px; /* Prevent zoom on iOS */
+    font-size: var(--font-size-base); /* Prevent zoom on iOS */
   }
 
-  /* iOS button tap targets */
+  /* iOS button tap targets using design tokens */
   .btn,
   button,
-  .button {
-    min-height: 44px; /* iOS recommended tap target size */
-    min-width: 44px;
+  .button,
+  .touch-target-pwa {
+    min-height: var(--pwa-touch-target-min);
+    min-width: var(--pwa-touch-target-min);
   }
 
-  /* Mobile specific navigation fixes */
+  /* Mobile specific navigation fixes using design tokens */
   @media (max-width: 640px) {
     div.ios-safe-nav.fixed.top-0 {
-      padding-top: calc(0.5rem + env(safe-area-inset-top, 0px));
+      padding-top: calc(var(--space-2) + var(--safe-area-top));
     }
 
     .modal-container:not(.modal-contextual) {
       height: 100vh;
       height: 100dvh;
-      margin: 0;
-      padding: 0;
+      margin: var(--space-0);
+      padding: var(--space-0);
     }
 
     /* Contextual modals stay contextual even on mobile */
     .modal-container.modal-contextual {
       height: auto;
       max-height: 80vh;
-      margin: 2rem;
+      margin: var(--space-8);
     }
   }
 
-  /* Tablet navigation fixes */
+  /* Tablet navigation fixes using design tokens */
   @media (min-width: 641px) and (max-width: 768px) {
     div.ios-safe-nav.fixed.top-0 {
-      padding-top: calc(0.75rem + env(safe-area-inset-top, 0px));
+      padding-top: calc(var(--space-3) + var(--safe-area-top));
     }
   }
 
-  /* iPad PWA specific fixes */
+  /* iPad PWA specific fixes using design tokens and proper specificity */
   @media (min-width: 768px) and (max-width: 1024px) and (display-mode: standalone) {
     /* Fix search toolbar alignment on iPad PWA */
-    .search-toolbar {
-      align-items: center !important;
+    body.pwa .search-toolbar {
+      align-items: center;
     }
 
     /* Fix filter button positioning */
-    .search-toolbar button,
-    .search-toolbar .dropdown-trigger {
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
+    body.pwa .search-toolbar button,
+    body.pwa .search-toolbar .dropdown-trigger {
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     /* Fix view selector alignment */
-    .search-toolbar .view-selector {
-      align-items: center !important;
+    body.pwa .search-toolbar .view-selector {
+      align-items: center;
     }
 
-    /* Ensure proper button heights */
-    .search-toolbar button {
-      min-height: 40px !important;
+    /* Ensure proper button heights using design tokens */
+    body.pwa .search-toolbar button {
+      min-height: var(--space-10);
     }
   }
 
-  /* PWA mode navigation fixes */
+  /* PWA mode navigation fixes using design tokens */
   @media (display-mode: standalone) {
     div.ios-safe-nav.fixed.top-0 {
-      padding-top: calc(1rem + env(safe-area-inset-top, 0px));
+      padding-top: calc(var(--space-4) + var(--safe-area-top));
     }
 
-    /* Desktop PWA header background fill */
+    /* Desktop PWA header background fill - handled by unified design system */
     body::before {
       content: '';
       position: fixed;
       top: 0;
       left: 0;
       right: 0;
-      height: env(safe-area-inset-top, 0px);
-      background-color: white;
-      z-index: 9999;
-    }
-
-    html.dark body::before {
-      background-color: black;
+      height: var(--safe-area-top);
+      background-color: var(--bg-primary);
+      z-index: var(--z-index-header);
     }
   }
 }

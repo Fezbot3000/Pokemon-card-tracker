@@ -675,97 +675,106 @@ html.dark body {
   padding-bottom: 0;
 }
 
-/* PWA-specific safe area handling (only when running as home screen app) */
+/* PWA-specific safe area handling - consolidated with design tokens */
 @media (display-mode: standalone) {
-  /* PWA mode: Add safe area padding to body */
+  /* PWA mode: Apply safe area padding using design tokens */
   body {
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
+    padding-top: var(--safe-area-top);
+    padding-bottom: var(--safe-area-bottom);
+    padding-left: var(--safe-area-left);
+    padding-right: var(--safe-area-right);
   }
 
-  /* PWA mode: Adjust main content to account for safe areas */
+  /* PWA mode: Main content with proper safe area handling */
   .main-content {
-    padding-top: calc(
-      var(--header-total-height-mobile) + env(safe-area-inset-top, 0px)
-    );
-    padding-bottom: calc(4rem + env(safe-area-inset-bottom, 0px));
+    padding-top: calc(var(--header-total-height-mobile) + var(--safe-area-top));
+    padding-bottom: calc(var(--bottom-nav-height) + var(--safe-area-bottom));
   }
 
   @media (min-width: 640px) {
     .main-content {
-      padding-top: calc(
-        var(--header-total-height-desktop) + env(safe-area-inset-top, 0px)
-      );
-      padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+      padding-top: calc(var(--header-total-height-desktop) + var(--safe-area-top));
+      padding-bottom: calc(var(--space-4) + var(--safe-area-bottom));
     }
   }
 
-  /* PWA mode: Adjust header positioning - FORCE override Tailwind */
-  header.bg-white.dark\:bg-black.fixed.top-0,
-  header.header-responsive.fixed,
-  .fixed.top-0.header-responsive,
-  header[class*='top-0'] {
-    top: env(safe-area-inset-top) !important;
+  /* PWA mode: Header positioning with proper specificity */
+  body.pwa header.fixed,
+  body.pwa .header-responsive.fixed,
+  header.header-pwa {
+    top: var(--safe-area-top);
   }
 
-  /* PWA mode: Adjust bottom nav positioning */
-  .lg\:hidden.fixed.bottom-0.z-40 {
-    bottom: env(safe-area-inset-bottom) !important;
+  /* PWA mode: Bottom navigation positioning */
+  body.pwa .bottom-navigation.fixed,
+  .bottom-nav-pwa {
+    bottom: var(--safe-area-bottom);
   }
 
-  /* PWA mode: Only add top margin to modals to avoid notch cutoff */
-  .modal-backdrop .flex.flex-col {
-    margin-top: env(safe-area-inset-top) !important;
-    margin-bottom: env(safe-area-inset-bottom) !important;
+  /* PWA mode: Modal adjustments */
+  body.pwa .modal-backdrop .modal-container,
+  .modal-pwa {
+    margin-top: var(--pwa-modal-margin-top);
+    margin-bottom: var(--pwa-modal-margin-bottom);
+  }
+
+  /* PWA mode: Status bar background fill */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--safe-area-top);
+    background-color: var(--bg-primary);
+    z-index: var(--z-index-header);
   }
 }
 
-/* Mobile dashboard without header - reduced top margin */
+/* Mobile dashboard layouts using design tokens */
 .main-content.mobile-dashboard {
-  padding-top: 1rem;
-  padding-bottom: 4rem; /* Bottom nav - reduced from 5rem to 4rem */
+  padding-top: var(--space-4);
+  padding-bottom: var(--bottom-nav-height);
 }
 
 @media (min-width: 640px) {
   .main-content.mobile-dashboard {
     padding-top: var(--header-total-height-desktop);
-    padding-bottom: 1rem; /* No bottom nav on desktop */
+    padding-bottom: var(--space-4);
   }
 }
 
-/* Mobile layout fixes for different views - MOVED TO END FOR PRIORITY */
+/* Mobile layout variations with proper specificity */
 @media (max-width: 640px) {
-  /* Homepage (cards view) - no header on mobile, remove top spacing */
-  .main-content.mobile-dashboard.no-header {
-    padding-top: 0 !important;
-    margin-top: 0 !important;
+  /* Homepage (cards view) - no header on mobile */
+  body:not(.pwa) .main-content.mobile-dashboard.no-header {
+    padding-top: var(--space-0);
+    margin-top: var(--space-0);
   }
   
-  /* Views with header - minimal spacing to connect with header */
-  .main-content.mobile-dashboard.with-header {
-    padding-top: 0.5rem !important;
-    margin-top: 0 !important;
+  /* Views with header - minimal spacing */
+  body:not(.pwa) .main-content.mobile-dashboard.with-header {
+    padding-top: var(--space-2);
+    margin-top: var(--space-0);
   }
   
   /* PWA mode adjustments for no-header views */
-  .main-content.mobile-dashboard.no-header.pwa-mode {
-    padding-top: calc(0.5rem + env(safe-area-inset-top, 0px)) !important;
+  body.pwa .main-content.mobile-dashboard.no-header {
+    padding-top: calc(var(--space-2) + var(--safe-area-top));
   }
   
   /* PWA mode adjustments for views with header */
-  .main-content.mobile-dashboard.with-header.pwa-mode {
-    padding-top: 0.5rem !important; /* Header already accounts for safe area */
+  body.pwa .main-content.mobile-dashboard.with-header {
+    padding-top: var(--space-2);
   }
   
-  /* Settings component specific fixes on mobile */
+  /* Settings component mobile layout */
   .settings-mobile .header-responsive {
-    /* Settings has its own header, position it properly */
-    top: 0;
+    top: var(--space-0);
   }
   
   .settings-mobile .header-responsive + div {
-    /* Settings content should not have extra padding since it has its own header */
-    padding-top: calc(var(--header-total-height-mobile) + 0.5rem);
+    padding-top: calc(var(--header-total-height-mobile) + var(--space-2));
   }
 }
 

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import {
   doc,
   updateDoc,
@@ -241,7 +242,7 @@ function EditListingModal({ isOpen, onClose, listing, onListingDeleted, onListin
 
 
 
-  return (
+  return createPortal(
     <>
       <ConfirmDialog
         isOpen={showDeleteConfirmation}
@@ -258,7 +259,7 @@ function EditListingModal({ isOpen, onClose, listing, onListingDeleted, onListin
         isOpen={isOpen}
         onClose={onClose}
         title="Edit Listing"
-        size="2xl"
+        size="modal-width-70"
         position="right"
         closeOnClickOutside={true}
         zIndex={50}
@@ -475,7 +476,8 @@ function EditListingModal({ isOpen, onClose, listing, onListingDeleted, onListin
           )}
         </form>
       </Modal>
-    </>
+    </>,
+    document.body
   );
 }
 

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import PropTypes from 'prop-types';
 import {
   collection,
@@ -430,13 +431,13 @@ const MessageModal = ({
   const price = listing?.listingPrice || listing?.price;
   const currency = listing?.currency || 'AUD';
 
-  return (
+  return createPortal(
     <Modal
       isOpen={isOpen}
       onClose={onClose}
       title="Send Message"
       position="right"
-      size="lg"
+      size="modal-width-60"
       closeOnClickOutside={false}
       zIndex={60}
       footer={
@@ -523,12 +524,13 @@ const MessageModal = ({
                 ? "Hi! I'd like to discuss your Pokemon cards."
                 : "Hi! I'm interested in this card. Is it still available?"
             }
-            className="min-h-[120px] w-full resize-none rounded-lg border border-[#ffffff33] bg-white px-3 py-2 text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-[#ffffff1a] dark:bg-[#0F0F0F] dark:text-white dark:placeholder:text-gray-400"
+            className="min-h-[120px] w-full resize-none rounded-lg border border-gray-200 bg-white px-3 py-2 text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-[#0F0F0F] dark:text-white dark:placeholder:text-gray-400"
             disabled={loading}
           />
         </div>
       </div>
-    </Modal>
+    </Modal>,
+    document.body
   );
 };
 

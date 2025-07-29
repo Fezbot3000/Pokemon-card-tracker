@@ -181,18 +181,33 @@ body.modal-open {
 }
 
 /* ==================== PWA SPECIFIC STYLES ==================== */
+/* 
+  PWA Styles Organization (Consolidated):
+  
+  1. PRIMARY PWA STYLES (src/styles/design-system.css):
+     - PWA design tokens (--safe-area-*, --pwa-*, etc.)
+     - Base PWA styles with @media (display-mode: standalone)
+     - PWA-specific classes (.header-pwa, .modal-pwa, etc.)
+     - Cross-platform PWA optimizations
+  
+  2. iOS-SPECIFIC PWA FIXES (src/styles/ios-fixes.css):
+     - iOS Safari specific adjustments
+     - iOS PWA touch optimizations
+     - iOS-specific modal and navigation fixes
+     - Device-specific breakpoint adjustments
+  
+  3. PWA INTEGRATION (this file):
+     - Any additional PWA-specific overrides
+     - App-specific PWA customizations
+  
+  All PWA styles now use design tokens instead of hardcoded values
+  and proper CSS specificity instead of !important declarations.
+*/
 
-/* PWA display mode styles */
 @media (display-mode: standalone) {
+  /* PWA detection - add body class for easier targeting */
   body {
-    /* Adjust for PWA environment */
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
-  }
-
-  .main-content {
-    /* Account for PWA status bar */
-    padding-top: var(--space-4);
+    /* PWA-specific body modifications can be added here if needed */
   }
 }
 

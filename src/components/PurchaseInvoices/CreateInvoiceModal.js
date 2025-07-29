@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { toast } from 'react-hot-toast';
 import FormField from '../../design-system/molecules/FormField';
 import Modal from '../../design-system/molecules/Modal';
@@ -240,14 +241,14 @@ const CreateInvoiceModal = ({
 
   if (!isOpen) return null;
 
-  return (
+  return createPortal(
     <>
       <Modal
         isOpen={isOpen}
         onClose={handleClose}
         title={editingInvoice ? 'Edit Invoice Details' : 'Invoice Details'}
         position="right"
-        size="2xl"
+        size="modal-width-70"
         closeOnClickOutside={true}
         footer={
           <div className="flex w-full items-center justify-between">
@@ -428,7 +429,7 @@ const CreateInvoiceModal = ({
       {/* Enlarged Image Modal */}
       {enlargedImage && (
         <div
-          className="bg-black/50 fixed inset-0 z-[9999] flex items-center justify-center p-8 backdrop-blur-sm"
+          className="bg-black/50 fixed inset-0 z-[50002] flex items-center justify-center p-8 backdrop-blur-sm"
           onClick={handleEnlargedImageClose}
         >
           <div className="relative max-h-[70vh] w-full max-w-md overflow-hidden rounded-xl bg-white shadow-2xl dark:bg-gray-900">
@@ -463,7 +464,8 @@ const CreateInvoiceModal = ({
           </div>
         </div>
       )}
-    </>
+    </>,
+    document.body
   );
 };
 
