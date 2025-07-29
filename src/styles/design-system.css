@@ -145,8 +145,8 @@
   --pwa-modal-margin-bottom: var(--safe-area-bottom);
 
   /* PWA checkbox sizes (iOS optimization) */
-  --pwa-checkbox-size: var(--space-2); /* 8px */
-  --pwa-checkbox-min-size: var(--space-2); /* 8px */
+  --pwa-checkbox-size: var(--space-3); /* 12px - optimized for mobile touch */
+  --pwa-checkbox-min-size: var(--space-3); /* 12px */
 
   /* PWA touch targets (iOS recommended) */
   --pwa-touch-target-min: var(--space-11); /* 44px */

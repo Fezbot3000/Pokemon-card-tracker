@@ -47,24 +47,35 @@
     }
 
     /* PWA-specific checkbox optimization using design tokens */
-    body.pwa input[type='checkbox'],
-    body.pwa button[aria-label*='Select'],
-    body.pwa button[aria-label*='Deselect'],
-    .checkbox-pwa {
-      width: var(--pwa-checkbox-size);
-      height: var(--pwa-checkbox-size);
-      min-width: var(--pwa-checkbox-min-size);
-      min-height: var(--pwa-checkbox-min-size);
-      max-width: var(--pwa-checkbox-size);
-      max-height: var(--pwa-checkbox-size);
-      transform: scale(0.8);
-    }
+    @media (display-mode: standalone) {
+      /* Target all checkbox elements in PWA mode */
+      input[type='checkbox'],
+      input[type='checkbox'].size-4,
+      .size-4[type='checkbox'],
+      button[aria-label*='Select'],
+      button[aria-label*='Deselect'],
+      .checkbox-pwa {
+        width: var(--pwa-checkbox-size) !important;
+        height: var(--pwa-checkbox-size) !important;
+        min-width: var(--pwa-checkbox-size) !important;
+        min-height: var(--pwa-checkbox-size) !important;
+        max-width: var(--pwa-checkbox-size) !important;
+        max-height: var(--pwa-checkbox-size) !important;
+        transform: scale(1) !important; /* Remove scaling, use direct size */
+      }
 
-    /* Card selection buttons optimization */
-    body.pwa .absolute.top-2.right-2 button,
-    body.pwa .absolute.top-2.right-2 input {
-      width: var(--pwa-checkbox-size);
-      height: var(--pwa-checkbox-size);
+      /* Card selection buttons optimization */
+      .absolute.top-2.right-2 button,
+      .absolute.top-2.right-2 input {
+        width: var(--pwa-checkbox-size) !important;
+        height: var(--pwa-checkbox-size) !important;
+      }
+      
+      /* Ensure consistent sizing for dashboard card checkboxes */
+      .mr-3.mt-1 input[type='checkbox'] {
+        width: var(--pwa-checkbox-size) !important;
+        height: var(--pwa-checkbox-size) !important;
+      }
     }
   }
 
