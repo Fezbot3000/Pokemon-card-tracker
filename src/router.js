@@ -27,7 +27,7 @@ const CollectingGuide = lazy(() => import('./components/CollectingGuide'));
 const GradingIntegration = lazy(() => import('./components/GradingIntegration'));
 const PokemonSets = lazy(() => import('./components/PokemonSets'));
 const PokemonInvestmentGuide = lazy(() => import('./components/PokemonInvestmentGuide'));
-const Settings = lazy(() => import('./components/Settings'));
+
 const ComponentLibrary = lazy(() => import('./pages/ComponentLibrary'));
 const MarketplaceListing = lazy(() => import('./components/Marketplace/MarketplaceListing'));
 const PublicMarketplace = lazy(() => import('./components/PublicMarketplace'));

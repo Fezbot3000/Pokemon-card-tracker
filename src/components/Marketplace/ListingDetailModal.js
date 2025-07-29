@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Modal, Icon, toastService } from '../../design-system';
-import ModalButton from '../ui/ModalButton';
+import ModalButton from '../../design-system/atoms/ModalButton';
 import { useAuth } from '../../design-system';
 import { useUserPreferences } from '../../contexts/UserPreferencesContext';
 import {

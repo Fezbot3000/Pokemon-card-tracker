@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Icon, SimpleSearchBar } from '../../design-system';
-import CustomDropdown from '../ui/CustomDropdown';
+import CustomDropdown from '../../design-system/molecules/CustomDropdown';
 
 // Import the same predefined grading companies and grades used in CardDetailsForm
 const gradingCompaniesOptions = [

@@ -10,7 +10,7 @@ import { createPortal } from 'react-dom';
 import PropTypes from 'prop-types';
 import { toast } from 'react-hot-toast';
 import Modal from '../design-system/molecules/Modal';
-import ModalButton from './ui/ModalButton';
+import ModalButton from '../design-system/atoms/ModalButton';
 import { searchCardPrice, extractBestPrice } from '../services/priceChartingService';
 import { useUserPreferences } from '../contexts/UserPreferencesContext';
 import LoggingService from '../services/LoggingService';

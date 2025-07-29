@@ -6,7 +6,7 @@ import FormField from '../molecules/FormField';
 // import SelectField from '../atoms/SelectField';
 import ImageUploadButton from '../atoms/ImageUploadButton';
 import Icon from '../atoms/Icon';
-import CustomDropdown from '../../components/ui/CustomDropdown';
+import CustomDropdown from '../molecules/CustomDropdown';
 import {
   getPokemonSetsByYear,
   getSetsByCategory,

@@ -15,7 +15,7 @@ import { db as firestoreDb } from '../firebase';
 import { useAuth } from '../design-system';
 import { useCards } from '../contexts/CardContext';
 import { Card, Button, TextField, Toggle, Modal } from '../design-system';
-import CustomDropdown from './ui/CustomDropdown';
+import CustomDropdown from '../design-system/molecules/CustomDropdown';
 import { toast } from 'react-hot-toast';
 import SharingQuickStart from './SharingQuickStart';
 import sharingService from '../services/sharingService';

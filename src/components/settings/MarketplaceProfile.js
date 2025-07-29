@@ -4,7 +4,7 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db as firestoreDb } from '../../services/firebase';
 import { toast as toastService } from '../../design-system';
 import logger from '../../utils/logger';
-import CustomDropdown from '../ui/CustomDropdown';
+import CustomDropdown from '../../design-system/molecules/CustomDropdown';
 
 function MarketplaceProfile() {
   const { user } = useAuth();
@@ -192,8 +192,8 @@ function MarketplaceProfile() {
         </label>
         <CustomDropdown
           value={profile.responseTime}
-          onSelect={e =>
-            setProfile(prev => ({ ...prev, responseTime: e.target.value }))
+          onSelect={selectedValue =>
+            setProfile(prev => ({ ...prev, responseTime: selectedValue }))
           }
           options={responseTimeOptions}
         />

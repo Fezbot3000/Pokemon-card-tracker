@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import Modal from '../molecules/Modal';
 import Icon from '../atoms/Icon';
-import ModalButton from '../../components/ui/ModalButton';
+import ModalButton from '../atoms/ModalButton';
 import CardDetailsForm from './CardDetailsForm';
 import SaleModal from '../../components/SaleModal';
 import PriceChartingModal from '../../components/PriceChartingModal';

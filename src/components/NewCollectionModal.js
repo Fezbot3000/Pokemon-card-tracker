@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Modal from '../design-system/molecules/Modal';
 import Icon from '../design-system/atoms/Icon';
-import ModalButton from './ui/ModalButton';
+import ModalButton from '../design-system/atoms/ModalButton';
 import FeatureGate from './FeatureGate';
 import { useSubscription } from '../hooks/useSubscription';
 

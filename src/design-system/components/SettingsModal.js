@@ -4,8 +4,8 @@ import {
   db as firestoreDb,
 } from '../../services/firebase';
 
-import { Modal, Button, ConfirmDialog, Icon, toast as toastService } from '../';
-import ModalButton from '../../components/ui/ModalButton';
+import { Modal, Button, ConfirmDialog, Icon, toast as toastService, CustomDropdown } from '../';
+import ModalButton from '../atoms/ModalButton';
 import FormField from '../molecules/FormField';
 import SettingsPanel from '../molecules/SettingsPanel';
 import SettingsNavItem from '../atoms/SettingsNavItem';
@@ -23,7 +23,7 @@ import {
   useUserPreferences,
   availableCurrencies,
 } from '../../contexts/UserPreferencesContext'; // Added import
-import SelectField from '../atoms/SelectField'; // Added import
+
 import MarketplaceProfile from '../../components/settings/MarketplaceProfile'; // Import MarketplaceProfile
 import MarketplaceReviews from '../../components/settings/MarketplaceReviews'; // Import MarketplaceReviews
 import SubscriptionStatus from '../../components/settings/SubscriptionStatus'; // Import SubscriptionStatus
@@ -39,6 +39,7 @@ import LoggingService from '../../services/LoggingService';
 const SettingsModal = ({
   isOpen,
   onClose,
+  isModal = true,
   collections = [],
   onRenameCollection,
   onDeleteCollection,
@@ -243,8 +244,8 @@ const SettingsModal = ({
     setResetConfirmText('');
   };
 
-  const handlePreferredCurrencyChange = event => {
-    const newCurrencyCode = event.target.value;
+  const handlePreferredCurrencyChange = selectedValue => {
+    const newCurrencyCode = selectedValue;
     // Find the full currency object from availableCurrencies
     const currencyObject = availableCurrencies.find(
       currency => currency.code === newCurrencyCode
@@ -258,31 +259,9 @@ const SettingsModal = ({
     }
   };
 
-  return (
-    <>
-      <Modal
-        isOpen={isOpen}
-        onClose={onClose}
-        title="Settings"
-        footer={
-          <div className="flex w-full items-center justify-between">
-            <ModalButton variant="secondary" onClick={onClose}>
-              Close
-            </ModalButton>
-            <ModalButton variant="primary" onClick={onClose}>
-              Done
-            </ModalButton>
-          </div>
-        }
-        position="right"
-        className={`mx-auto w-full max-w-screen-xl sm:w-4/5 md:w-[70%] ${className}`}
-        ariaLabel="Settings"
-        size="full"
-        closeOnClickOutside={true}
-
-        {...props}
-      >
-        <div className="flex h-full flex-col lg:flex-row">
+  // Settings content component (shared between modal and page mode)
+  const settingsContent = (
+    <div className="flex h-full flex-col lg:flex-row">
           {/* Navigation sidebar */}
           <nav className="mb-4 w-full shrink-0 border-b border-gray-200 dark:border-gray-700 lg:mb-0 lg:w-48 lg:border-b-0 lg:border-r lg:pr-4">
             <div className="flex flex-row space-x-4 p-4 lg:flex-col lg:space-x-0 lg:space-y-2">
@@ -428,19 +407,16 @@ const SettingsModal = ({
                         {/* Using 'language' icon as a placeholder for currency */}
                         Display Currency
                       </h4>
-                      <SelectField
+                      <CustomDropdown
                         label="Preferred Currency"
-                        name="preferredCurrency"
                         value={preferredCurrency.code}
-                        onChange={handlePreferredCurrencyChange}
+                        onSelect={handlePreferredCurrencyChange}
+                        options={availableCurrencies.map(currency => ({
+                          value: currency.code,
+                          label: `${currency.name} (${currency.code})`
+                        }))}
                         className="w-full text-sm"
-                      >
-                        {availableCurrencies.map(currency => (
-                          <option key={currency.code} value={currency.code}>
-                            {`${currency.name} (${currency.code})`}
-                          </option>
-                        ))}
-                      </SelectField>
+                      />
                       <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
                         Select the currency for displaying all monetary values
                         in the app.
@@ -461,48 +437,41 @@ const SettingsModal = ({
                         Rename Collection
                       </h4>
                       <div className="space-y-3">
-                        <select
-                          className={`w-full rounded-lg p-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 ${
-                            isDarkMode
-                              ? 'border border-[#ffffff1a] bg-[#0F0F0F] text-white'
-                              : 'border border-gray-300 bg-white text-gray-800'
-                          }`}
+                        <CustomDropdown
                           value={collectionToRename}
-                          onChange={e => setCollectionToRename(e.target.value)}
-                        >
-                          <option value="" disabled>
-                            Select Collection...
-                          </option>
-                          {Array.isArray(collections)
-                            ? collections
-                                .filter(name => {
-                                  const lowerName = name.toLowerCase();
-                                  return (
-                                    lowerName !== 'all cards' &&
-                                    lowerName !== 'sold' &&
-                                    lowerName !== 'default collection'
-                                  );
-                                })
-                                .map(collection => (
-                                  <option key={collection} value={collection}>
-                                    {collection}
-                                  </option>
-                                ))
-                            : Object.keys(collections)
-                                .filter(name => {
-                                  const lowerName = name.toLowerCase();
-                                  return (
-                                    lowerName !== 'all cards' &&
-                                    lowerName !== 'sold' &&
-                                    lowerName !== 'default collection'
-                                  );
-                                })
-                                .map(collection => (
-                                  <option key={collection} value={collection}>
-                                    {collection}
-                                  </option>
-                                ))}
-                        </select>
+                          onSelect={selectedValue => setCollectionToRename(selectedValue)}
+                          options={[
+                            { value: '', label: 'Select Collection...', disabled: true },
+                            ...(Array.isArray(collections)
+                              ? collections
+                                  .filter(name => {
+                                    const lowerName = name.toLowerCase();
+                                    return (
+                                      lowerName !== 'all cards' &&
+                                      lowerName !== 'sold' &&
+                                      lowerName !== 'default collection'
+                                    );
+                                  })
+                                  .map(collection => ({
+                                    value: collection,
+                                    label: collection
+                                  }))
+                              : Object.keys(collections)
+                                  .filter(name => {
+                                    const lowerName = name.toLowerCase();
+                                    return (
+                                      lowerName !== 'all cards' &&
+                                      lowerName !== 'sold' &&
+                                      lowerName !== 'default collection'
+                                    );
+                                  })
+                                  .map(collection => ({
+                                    value: collection,
+                                    label: collection
+                                  })))
+                          ]}
+                          className="w-full"
+                        />
                         <Button
                           variant="primary"
                           onClick={handleStartRenaming}
@@ -522,48 +491,41 @@ const SettingsModal = ({
                         Delete Collection
                       </h4>
                       <div className="space-y-3">
-                        <select
-                          className={`w-full rounded-lg p-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 ${
-                            isDarkMode
-                              ? 'border border-[#ffffff1a] bg-[#0F0F0F] text-white'
-                              : 'border border-gray-300 bg-white text-gray-800'
-                          }`}
+                        <CustomDropdown
                           value={collectionToDelete}
-                          onChange={e => setCollectionToDelete(e.target.value)}
-                        >
-                          <option value="" disabled>
-                            Select Collection...
-                          </option>
-                          {Array.isArray(collections)
-                            ? collections
-                                .filter(name => {
-                                  const lowerName = name.toLowerCase();
-                                  return (
-                                    lowerName !== 'all cards' &&
-                                    lowerName !== 'sold' &&
-                                    lowerName !== 'default collection'
-                                  );
-                                })
-                                .map(collection => (
-                                  <option key={collection} value={collection}>
-                                    {collection}
-                                  </option>
-                                ))
-                            : Object.keys(collections)
-                                .filter(name => {
-                                  const lowerName = name.toLowerCase();
-                                  return (
-                                    lowerName !== 'all cards' &&
-                                    lowerName !== 'sold' &&
-                                    lowerName !== 'default collection'
-                                  );
-                                })
-                                .map(collection => (
-                                  <option key={collection} value={collection}>
-                                    {collection}
-                                  </option>
-                                ))}
-                        </select>
+                          onSelect={selectedValue => setCollectionToDelete(selectedValue)}
+                          options={[
+                            { value: '', label: 'Select Collection...', disabled: true },
+                            ...(Array.isArray(collections)
+                              ? collections
+                                  .filter(name => {
+                                    const lowerName = name.toLowerCase();
+                                    return (
+                                      lowerName !== 'all cards' &&
+                                      lowerName !== 'sold' &&
+                                      lowerName !== 'default collection'
+                                    );
+                                  })
+                                  .map(collection => ({
+                                    value: collection,
+                                    label: collection
+                                  }))
+                              : Object.keys(collections)
+                                  .filter(name => {
+                                    const lowerName = name.toLowerCase();
+                                    return (
+                                      lowerName !== 'all cards' &&
+                                      lowerName !== 'sold' &&
+                                      lowerName !== 'default collection'
+                                    );
+                                  })
+                                  .map(collection => ({
+                                    value: collection,
+                                    label: collection
+                                  })))
+                          ]}
+                          className="w-full"
+                        />
                         <Button
                           variant="danger"
                           onClick={() => {
@@ -737,7 +699,43 @@ const SettingsModal = ({
             )}
           </div>
         </div>
-      </Modal>
+  );
+
+  // Return either modal or page mode
+  return (
+    <>
+      {isModal ? (
+        <Modal
+          isOpen={isOpen}
+          onClose={onClose}
+          title="Settings"
+          footer={
+            <div className="flex w-full items-center justify-between">
+              <ModalButton variant="secondary" onClick={onClose}>
+                Close
+              </ModalButton>
+              <ModalButton variant="primary" onClick={onClose}>
+                Done
+              </ModalButton>
+            </div>
+          }
+          position="right"
+          className={`mx-auto w-full max-w-screen-xl sm:w-4/5 md:w-[70%] ${className}`}
+          ariaLabel="Settings"
+          size="full"
+          closeOnClickOutside={true}
+          {...props}
+        >
+          {settingsContent}
+        </Modal>
+      ) : (
+        <div className={`w-full ${className}`}>
+          <div className="mb-4 border-b border-gray-200 pb-4 dark:border-gray-700">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Settings</h1>
+          </div>
+          {settingsContent}
+        </div>
+      )}
 
       {/* Delete Collection Confirmation Dialog */}
       <ConfirmDialog
@@ -865,6 +863,7 @@ const SettingsModal = ({
 SettingsModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
+  isModal: PropTypes.bool,
   selectedCollection: PropTypes.string,
   collections: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
   onRenameCollection: PropTypes.func,

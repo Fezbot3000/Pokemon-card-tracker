@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { useUserPreferences } from '../contexts/UserPreferencesContext';
 import Modal from '../design-system/molecules/Modal';
 import Icon from '../design-system/atoms/Icon';
-import ModalButton from './ui/ModalButton';
+import ModalButton from '../design-system/atoms/ModalButton';
 
 const SaleModal = ({ isOpen, onClose, selectedCards, onConfirm }) => {
   const { formatAmountForDisplay, preferredCurrency, convertToUserCurrency } =

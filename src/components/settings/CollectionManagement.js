@@ -4,8 +4,8 @@ import {
   Icon,
   SettingsPanel,
   ConfirmDialog,
+  CustomDropdown,
 } from '../../design-system';
-import CustomDropdown from '../ui/CustomDropdown';
 
 /**
  * Collection Management Component
@@ -75,7 +75,7 @@ const CollectionManagement = ({
             <div className="space-y-3">
               <CustomDropdown
                 value={collectionToRename}
-                onSelect={e => setCollectionToRename(e.target.value)}
+                onSelect={selectedValue => setCollectionToRename(selectedValue)}
                 placeholder="Select Collection..."
                 options={renameableCollections.map(name => ({
                   value: name,
@@ -103,7 +103,7 @@ const CollectionManagement = ({
             <div className="space-y-3">
               <CustomDropdown
                 value={collectionToDelete}
-                onSelect={e => setCollectionToDelete(e.target.value)}
+                onSelect={selectedValue => setCollectionToDelete(selectedValue)}
                 placeholder="Select Collection..."
                 options={deletableCollections.map(name => ({
                   value: name,

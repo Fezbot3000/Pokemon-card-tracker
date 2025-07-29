@@ -5,7 +5,7 @@ import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db as firestoreDb } from '../../services/firebase';
 import toast from 'react-hot-toast';
 import logger from '../../utils/logger';
-import CustomDropdown from '../ui/CustomDropdown';
+import CustomDropdown from '../../design-system/molecules/CustomDropdown';
 
 function ReportListing({ listingId, sellerId, onClose }) {
   const { user } = useAuth();

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import PropTypes from 'prop-types';
 import Modal from '../design-system/molecules/Modal';
 import Icon from '../design-system/atoms/Icon';
-import ModalButton from './ui/ModalButton';
+import ModalButton from '../design-system/atoms/ModalButton';
 
 const MoveCardsModal = ({
   isOpen,

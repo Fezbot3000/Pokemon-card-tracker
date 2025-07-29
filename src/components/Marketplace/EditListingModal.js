@@ -12,7 +12,7 @@ import { useUserPreferences } from '../../contexts/UserPreferencesContext';
 import logger from '../../utils/logger';
 import { collection, addDoc } from 'firebase/firestore';
 import { Modal, Icon, ConfirmDialog } from '../../design-system';
-import ModalButton from '../ui/ModalButton';
+import ModalButton from '../../design-system/atoms/ModalButton';
 function EditListingModal({ isOpen, onClose, listing, onListingDeleted, onListingUpdated }) {
   const { preferredCurrency } = useUserPreferences();
   const [isSubmitting, setIsSubmitting] = useState(false);

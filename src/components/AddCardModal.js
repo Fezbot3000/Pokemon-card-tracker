@@ -5,7 +5,7 @@ import React, {
 import PropTypes from 'prop-types';
 import Modal from '../design-system/molecules/Modal';
 import Button from '../design-system/atoms/Button';
-import ModalButton from './ui/ModalButton';
+import ModalButton from '../design-system/atoms/ModalButton';
 import CardDetailsForm from '../design-system/components/CardDetailsForm';
 import { toast } from 'react-hot-toast';
 import PSADetailModal from './PSADetailModal';
@@ -13,7 +13,7 @@ import NewCollectionModal from './NewCollectionModal';
 import { searchByCertNumber, parsePSACardData } from '../services/psaSearch';
 import { useSubscription } from '../hooks/useSubscription';
 import logger from '../services/LoggingService';
-import CustomDropdown from './ui/CustomDropdown';
+import CustomDropdown from '../design-system/molecules/CustomDropdown';
 // import Spinner from './Spinner'; // Import Spinner for loading state
 
 /**

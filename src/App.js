@@ -17,7 +17,6 @@ import {
   SettingsModal,
   toastService,
 } from './design-system';
-import Settings from './components/Settings';
 
 import CardList from './components/CardList';
 import CardDetails from './components/CardDetails';
@@ -956,7 +955,37 @@ function AppContent({ currentView, setCurrentView }) {
           <SoldItems />
         ) : currentView === 'settings' ? (
           <div className={`min-h-screen bg-gray-50 dark:bg-black ${isMobile ? 'settings-mobile' : ''}`}>
-            <Settings />
+            <SettingsModal
+              isOpen={true}
+              isModal={false}
+              onClose={() => setCurrentView('cards')}
+              selectedCollection={selectedCollection}
+              collections={collections}
+              onStartTutorial={startTutorial}
+              onSignOut={logout}
+              onRenameCollection={(oldName, newName) => {
+                collectionManager.renameCollection(oldName, newName, {
+                  collections,
+                  setCollections,
+                  selectedCollection,
+                  setSelectedCollection,
+                  user,
+                });
+              }}
+              onDeleteCollection={(collectionName) => {
+                collectionManager.deleteCollection(collectionName, {
+                  collections,
+                  setCollections,
+                  selectedCollection,
+                  setSelectedCollection,
+                  user,
+                });
+              }}
+              onResetData={() => {
+                // Reset data functionality
+                console.log('Reset data');
+              }}
+            />
           </div>
         ) : null}
       </main>
