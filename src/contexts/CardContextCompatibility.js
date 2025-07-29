@@ -56,9 +56,9 @@ const useCardDataCompatible = () => {
   }, [cardContextData]);
 
   // Compatible addCard function (alias for createCard)
-  const addCard = useCallback(async (newCard) => {
+  const addCard = useCallback(async (newCard, imageFile) => {
     try {
-      await cardContextData.createCard(newCard);
+      await cardContextData.createCard(newCard, imageFile);
     } catch (err) {
       LoggingService.error(`[CardContextCompatible] Error adding card:`, err);
       throw err;

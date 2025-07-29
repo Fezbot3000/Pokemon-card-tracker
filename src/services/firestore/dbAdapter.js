@@ -313,8 +313,8 @@ class DatabaseAdapter {
         return null;
       }
 
-      // Create a reference to the storage location
-      const storageRef = ref(storage, `users/${userId}/cards/${cardId}`);
+      // Create a reference to the storage location - FIX: Add .jpg extension to match storage
+      const storageRef = ref(storage, `users/${userId}/cards/${cardId}.jpg`);
 
       // Get the download URL
       const imageUrl = await getDownloadURL(storageRef);
