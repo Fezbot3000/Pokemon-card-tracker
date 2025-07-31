@@ -194,7 +194,7 @@ const PSADatabaseManager = () => {
 
     setIsNormalizing(true);
     setProgress({ current: 0, total: eligibleCards.length, stage: 'Starting...' });
-    setResults(null);
+    setResults(null); // Clear any previous results
 
     const results = {
       total: eligibleCards.length,
@@ -420,26 +420,32 @@ const PSADatabaseManager = () => {
                         <div className="font-medium text-green-800 dark:text-green-200 mb-2">
                           {success.cardName} (#{success.serial})
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                          <div>
-                            <div className="font-medium text-gray-700 dark:text-gray-300 mb-1">Before:</div>
-                            <div className="space-y-1 text-gray-600 dark:text-gray-400">
-                              <div>• Grade: {success.changes.before.grade}</div>
-                              <div>• Condition: {success.changes.before.condition}</div>
-                              <div>• Population: {success.changes.before.population}</div>
-                              <div>• Year: {success.changes.before.year}</div>
+                        {success.changes ? (
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                            <div>
+                              <div className="font-medium text-gray-700 dark:text-gray-300 mb-1">Before:</div>
+                              <div className="space-y-1 text-gray-600 dark:text-gray-400">
+                                <div>• Grade: {success.changes.before.grade}</div>
+                                <div>• Condition: {success.changes.before.condition}</div>
+                                <div>• Population: {success.changes.before.population}</div>
+                                <div>• Year: {success.changes.before.year}</div>
+                              </div>
+                            </div>
+                            <div>
+                              <div className="font-medium text-green-700 dark:text-green-300 mb-1">After:</div>
+                              <div className="space-y-1 text-green-600 dark:text-green-400">
+                                <div>• Grade: {success.changes.after.grade}</div>
+                                <div>• Condition: {success.changes.after.condition}</div>
+                                <div>• Population: {success.changes.after.population}</div>
+                                <div>• Year: {success.changes.after.year}</div>
+                              </div>
                             </div>
                           </div>
-                          <div>
-                            <div className="font-medium text-green-700 dark:text-green-300 mb-1">After:</div>
-                            <div className="space-y-1 text-green-600 dark:text-green-400">
-                              <div>• Grade: {success.changes.after.grade}</div>
-                              <div>• Condition: {success.changes.after.condition}</div>
-                              <div>• Population: {success.changes.after.population}</div>
-                              <div>• Year: {success.changes.after.year}</div>
-                            </div>
+                        ) : (
+                          <div className="text-sm text-green-600 dark:text-green-400">
+                            Successfully updated {success.updatedFields?.length || 0} fields
                           </div>
-                        </div>
+                        )}
                       </div>
                     ))}
                     {results.successful.length > 5 && (
