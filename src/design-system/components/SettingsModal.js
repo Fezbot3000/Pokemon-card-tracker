@@ -709,8 +709,8 @@ const SettingsModal = ({
             {activeTab === 'psa-database' && (
               <div className="space-y-6">
                 <SettingsPanel
-                  title="PSA Database Management"
-                  description="View and manage PSA card data from both collections. Identify duplicates and resolve conflicts."
+                  title="Bulk PSA Data Normalisation"
+                  description="Automatically refresh and normalise PSA data for all your PSA graded cards at once."
                 >
                   <PSADatabaseManager />
                 </SettingsPanel>
