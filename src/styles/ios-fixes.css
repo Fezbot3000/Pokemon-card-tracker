@@ -12,46 +12,9 @@
   }
 }
 
-/* PWA modal height adjustments for safe areas */
+/* PWA modal height adjustments REMOVED - Testing pure behavior without accommodations */
 @media (display-mode: standalone) {
-  .modal-container:not(.modal-contextual) {
-    height: calc(100vh - var(--safe-area-top) - var(--safe-area-bottom));
-    height: calc(100dvh - var(--safe-area-top) - var(--safe-area-bottom));
-  }
-
-  /* CONSOLIDATED PWA MODAL RULES - Single source of truth for modal positioning */
-  
-  /* Modal backdrop - full screen coverage without safe area gaps */
-  .fixed.inset-0.flex.min-h-screen.w-full.items-center.justify-center {
-    /* Use true full screen - no safe area adjustments on backdrop */
-    top: 0;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    min-height: 100vh;
-    min-height: 100dvh;
-  }
-  
-  /* Modal backdrop when modal is open - account for fixed body */
-  body.modal-open .fixed.inset-0.flex.min-h-screen.w-full.items-center.justify-center {
-    /* Fixed body changes viewport context - use dvh for proper calculation */
-    height: 100dvh;
-    min-height: 100dvh;
-  }
-  
-  /* Main content adjustments when modal is open */
-  body.modal-open .main-content {
-    /* No additional padding needed - safe area handled at modal level */
-    padding-bottom: 0;
-  }
-  
-  /* Body adjustments when modal is open */
-  body.modal-open {
-    /* Remove body padding to prevent bottom gap */
-    padding-bottom: 0;
-    /* Ensure body doesn't interfere with modal positioning */
-    overflow: hidden;
-  }
+  /* No modal accommodations - let's see what happens naturally */
 }
 
 /* Contextual modals should have auto height */
@@ -60,16 +23,9 @@
   max-height: 90vh;
 }
 
-/* PWA contextual modal adjustments */
+/* PWA contextual modal adjustments REMOVED - Testing pure behavior */
 @media (display-mode: standalone) {
-  .modal-container.modal-contextual {
-    max-height: calc(90vh - var(--safe-area-top) - var(--safe-area-bottom));
-  }
-  
-  /* PWA contextual modal when open - optimized for fixed body */
-  body.modal-open .modal-container.modal-contextual {
-    max-height: calc(95dvh - var(--safe-area-top) - var(--safe-area-bottom));
-  }
+  /* No contextual modal accommodations */
 }
 
   /* iOS Safari specific fixes using design tokens */
@@ -207,24 +163,9 @@
       padding: var(--space-0);
     }
     
-    /* PWA mobile modal adjustments */
+    /* PWA mobile modal adjustments REMOVED - Testing pure behavior */
     @media (display-mode: standalone) {
-      .modal-container:not(.modal-contextual) {
-        /* Apply safe area offsets ONLY to modal container, not backdrop */
-        height: calc(100dvh - var(--safe-area-top) - var(--safe-area-bottom));
-        margin: var(--space-2);
-        /* Ensure container is properly positioned within safe area */
-        max-height: calc(100dvh - var(--safe-area-top) - var(--safe-area-bottom));
-      }
-      
-      /* PWA mobile modal when open - optimized for fixed body */
-      body.modal-open .modal-container:not(.modal-contextual) {
-        /* Use dvh for accurate height with fixed body */
-        height: calc(100dvh - var(--safe-area-top) - var(--safe-area-bottom));
-        margin: 0;
-        /* Single safe area calculation - no multiple deductions */
-        max-height: calc(100dvh - var(--safe-area-top) - var(--safe-area-bottom));
-      }
+      /* No PWA modal accommodations - let modal behave naturally */
     }
 
     /* Contextual modals stay contextual even on mobile */
@@ -234,18 +175,9 @@
       margin: var(--space-8);
     }
     
-    /* PWA mobile contextual modal adjustments */
+    /* PWA contextual modal adjustments REMOVED - Testing pure behavior */
     @media (display-mode: standalone) {
-      .modal-container.modal-contextual {
-        max-height: calc(80dvh - var(--safe-area-top) - var(--safe-area-bottom));
-        margin: var(--space-6);
-      }
-      
-      /* PWA mobile contextual modal when open - optimized for fixed body */
-      body.modal-open .modal-container.modal-contextual {
-        max-height: calc(85dvh - var(--safe-area-top) - var(--safe-area-bottom));
-        margin: var(--space-4);
-      }
+      /* No contextual modal accommodations */
     }
   }
 
