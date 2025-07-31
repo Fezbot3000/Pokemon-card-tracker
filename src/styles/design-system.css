@@ -228,10 +228,7 @@ html.dark {
     padding-right: var(--safe-area-right);
   }
   
-  /* PWA mode: Remove bottom safe area padding when modal is open to prevent blue bar */
-  body.modal-open {
-    padding-bottom: 0 !important;
-  }
+  /* PWA mode: Modal rules consolidated to ios-fixes.css to prevent conflicts */
 
   /* PWA header positioning */
   .header-pwa,
@@ -397,14 +394,7 @@ html.dark {
   }
 }
 
-/* Modal utilities */
-body.modal-open {
-  overflow: hidden;
-  position: fixed;
-  width: 100%;
-  touch-action: none;
-  overscroll-behavior: none;
-}
+/* Modal utilities - consolidated to globals.css to prevent conflicts */
 
 .modal-content {
   touch-action: auto;

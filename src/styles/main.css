@@ -532,17 +532,7 @@ html.dark body {
   display: none;
 }
 
-/* PWA mode: Remove bottom nav spacing from main content when modal is open */
-@media (display-mode: standalone) {
-  body.modal-open .main-content {
-    padding-bottom: var(--safe-area-bottom);
-  }
-  
-  /* PWA mode: Remove bottom safe area padding from body when modal is open to prevent blue bar */
-  body.modal-open {
-    padding-bottom: 0 !important;
-  }
-}
+/* PWA mode: Modal main content adjustments - consolidated to ios-fixes.css to prevent conflicts */
 
 /* Ensure main content doesn't bleed through modals */
 .modal-open .main-content,
@@ -723,33 +713,9 @@ html.dark body {
     bottom: var(--safe-area-bottom);
   }
 
-  /* PWA mode: Modal backdrop adjustments - more specific targeting */
-  .fixed.inset-0.flex.min-h-screen.w-full.items-center.justify-center {
-    /* Adjust modal backdrop for safe areas in PWA */
-    top: var(--safe-area-top);
-    bottom: var(--safe-area-bottom);
-    left: var(--safe-area-left);
-    right: var(--safe-area-right);
-    min-height: calc(100vh - var(--safe-area-top) - var(--safe-area-bottom));
-  }
+  /* PWA mode: Modal backdrop adjustments - consolidated to ios-fixes.css to prevent conflicts */
   
-  /* PWA mode: Modal backdrop when modal is open - ensure no bottom gap */
-  body.modal-open .fixed.inset-0.flex.min-h-screen.w-full.items-center.justify-center {
-    bottom: var(--safe-area-bottom);
-    height: calc(100vh - var(--safe-area-top) - var(--safe-area-bottom));
-  }
-  
-  /* PWA modal containers - ensure proper spacing within safe area */
-  .modal-container {
-    margin: var(--space-4);
-    max-height: calc(100vh - var(--safe-area-top) - var(--safe-area-bottom) - var(--space-8));
-  }
-  
-  /* PWA modal containers when modal is open - remove bottom nav space */
-  body.modal-open .modal-container {
-    margin: var(--space-2);
-    max-height: calc(100vh - var(--safe-area-top) - var(--safe-area-bottom) - var(--space-4));
-  }
+  /* PWA modal containers - consolidated to ios-fixes.css to prevent conflicts */
 
   /* PWA mode: Status bar background fill */
   body::before {
