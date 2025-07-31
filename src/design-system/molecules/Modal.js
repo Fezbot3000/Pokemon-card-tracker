@@ -178,16 +178,11 @@ const Modal = ({
     ? 'modal-content-with-absolute-footer'
     : '';
 
-  // Detect PWA mode
-  const isPWA = window.matchMedia('(display-mode: standalone)').matches;
-
   // Mobile full width override - only for non-contextual modals
   const shouldApplyMobileOverride =
     window.innerWidth < 640 && size !== 'contextual';
   const mobileFullWidth = shouldApplyMobileOverride
-    ? isPWA
-      ? 'w-screen max-w-none rounded-lg m-0 fixed z-[50000]' // PWA: Let CSS handle positioning
-      : 'w-screen max-w-none rounded-lg m-0 fixed top-0 left-0 right-0 bottom-0 z-[50000]' // Browser: Full positioning
+    ? 'w-screen max-w-none rounded-lg m-0 fixed top-0 left-0 right-0 bottom-0 z-[50000]' // Fixed: PWA and Browser get same positioning
     : '';
 
 
