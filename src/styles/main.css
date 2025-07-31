@@ -537,6 +537,11 @@ html.dark body {
   body.modal-open .main-content {
     padding-bottom: var(--safe-area-bottom);
   }
+  
+  /* PWA mode: Remove bottom safe area padding from body when modal is open to prevent blue bar */
+  body.modal-open {
+    padding-bottom: 0 !important;
+  }
 }
 
 /* Ensure main content doesn't bleed through modals */

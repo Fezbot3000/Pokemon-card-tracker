@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Icon, Button } from '../../design-system';
 import { toast } from 'react-hot-toast';
 import { useCards } from '../../contexts/CardContext';
@@ -22,6 +22,14 @@ const PSADatabaseManager = () => {
   const [progress, setProgress] = useState({ current: 0, total: 0, stage: '' });
   const [results, setResults] = useState(null);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+
+  // Clear any invalid results on component mount
+  useEffect(() => {
+    if (results && results.successful && results.successful.some(item => !item.changes && !item.updatedFields)) {
+      logger.debug('Clearing invalid results data');
+      setResults(null);
+    }
+  }, [results]);
 
     /**
    * Check if a card is eligible for PSA normalisation
@@ -347,9 +355,19 @@ const PSADatabaseManager = () => {
                       {/* Results */}
           {results && (
             <div className="space-y-4">
-              <h4 className="text-lg font-medium text-gray-900 dark:text-white">
-                Normalisation Results
-              </h4>
+              <div className="flex items-center justify-between">
+                <h4 className="text-lg font-medium text-gray-900 dark:text-white">
+                  Normalisation Results
+                </h4>
+                <Button
+                  variant="secondary"
+                  iconLeft={<Icon name="clear" />}
+                  onClick={() => setResults(null)}
+                  className="text-sm"
+                >
+                  Clear Results
+                </Button>
+              </div>
               
               {/* Summary */}
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -415,7 +433,7 @@ const PSADatabaseManager = () => {
                     Successfully Normalised ({results.successful.length})
                   </h5>
                   <div className="space-y-4">
-                    {results.successful.slice(0, 5).map((success, index) => (
+                    {results.successful.filter(success => success && success.cardName).slice(0, 5).map((success, index) => (
                       <div key={index} className="border border-green-300 rounded-lg p-3 bg-white dark:bg-green-900/10">
                         <div className="font-medium text-green-800 dark:text-green-200 mb-2">
                           {success.cardName} (#{success.serial})
