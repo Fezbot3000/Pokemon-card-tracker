@@ -4,6 +4,14 @@
   height: 100dvh; /* Dynamic viewport height for better compatibility */
 }
 
+/* Desktop modals with gutters - allow flexible height */
+@media (min-width: 640px) {
+  .modal-container:not(.modal-contextual) {
+    height: auto;
+    max-height: 100%;
+  }
+}
+
 /* PWA modal height adjustments for safe areas */
 @media (display-mode: standalone) {
   .modal-container:not(.modal-contextual) {

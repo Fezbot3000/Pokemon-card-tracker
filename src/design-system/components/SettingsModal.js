@@ -28,6 +28,7 @@ import MarketplaceProfile from '../../components/settings/MarketplaceProfile'; /
 import MarketplaceReviews from '../../components/settings/MarketplaceReviews'; // Import MarketplaceReviews
 import SubscriptionStatus from '../../components/settings/SubscriptionStatus'; // Import SubscriptionStatus
 import CollectionSharing from '../../components/CollectionSharing'; // Import CollectionSharing
+import PSADatabaseManager from '../../components/settings/PSADatabaseManager'; // Import PSADatabaseManager
 import LoggingService from '../../services/LoggingService';
 
 /**
@@ -288,6 +289,13 @@ const SettingsModal = ({
                 label="Collection Sharing"
                 isActive={activeTab === 'sharing'}
                 onClick={() => setActiveTab('sharing')}
+              />
+              <SettingsNavItem
+                icon="analytics"
+                label="PSA Database"
+                isActive={activeTab === 'psa-database'}
+                onClick={() => setActiveTab('psa-database')}
+                className="hidden lg:flex"
               />
             </div>
           </nav>
@@ -697,6 +705,17 @@ const SettingsModal = ({
                 </SettingsPanel>
               </div>
             )}
+
+            {activeTab === 'psa-database' && (
+              <div className="space-y-6">
+                <SettingsPanel
+                  title="PSA Database Management"
+                  description="View and manage PSA card data from both collections. Identify duplicates and resolve conflicts."
+                >
+                  <PSADatabaseManager />
+                </SettingsPanel>
+              </div>
+            )}
           </div>
         </div>
   );
@@ -720,9 +739,9 @@ const SettingsModal = ({
             </div>
           }
           position="right"
-          className={`mx-auto w-full max-w-screen-xl sm:w-4/5 md:w-[70%] ${className}`}
+          className={`w-full max-w-screen-xl sm:w-4/5 md:w-[70%] ${className}`}
           ariaLabel="Settings"
-          size="full"
+          size="modal-width-70"
           closeOnClickOutside={true}
           {...props}
         >

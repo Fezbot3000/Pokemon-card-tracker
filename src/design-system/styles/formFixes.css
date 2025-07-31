@@ -1,6 +1,14 @@
 /* Form layout fixes */
 .form-label-nowrap {
   white-space: nowrap;
+  /* Remove overflow: hidden to prevent clipping focus outlines */
+  /* overflow: hidden; */
+  text-overflow: ellipsis;
+}
+
+/* More specific class for just the labels to prevent wrapping */
+.form-label-nowrap label {
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }

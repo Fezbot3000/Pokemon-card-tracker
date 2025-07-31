@@ -83,6 +83,17 @@ service cloud.firestore {
       allow write: if request.auth != null;
     }
     
+    // --- PSA Cards Collection (Underscore Version) ---
+    // This is the collection used by backend Cloud Functions
+    // Same permissions as the hyphen version for consistency
+    match /psa_cards/{certNumber} {
+      // Anyone can read PSA card data
+      allow read: if true;
+      
+      // Only authenticated users can write PSA card data
+      allow write: if request.auth != null;
+    }
+    
     // --- Purchase Invoices ---
     // Only the owner can read/write their purchase invoice data
     match /users/{userId}/purchaseInvoices/{document=**} { 

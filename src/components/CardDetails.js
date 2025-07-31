@@ -4,6 +4,7 @@ import db from '../services/firestore/dbAdapter';
 import { toast } from 'react-hot-toast';
 import { formatDate } from '../utils/dateUtils';
 import CardDetailsModal from '../design-system/components/CardDetailsModal';
+import ConfirmDialog from '../design-system/molecules/ConfirmDialog';
 import logger from '../services/LoggingService';
 
 const CardDetails = memo(
@@ -43,6 +44,7 @@ const CardDetails = memo(
     const [cardImage, setCardImage] = useState(null);
     const [imageLoadingState, setImageLoadingState] = useState('loading');
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+    const [showUnsavedChangesModal, setShowUnsavedChangesModal] = useState(false);
     const messageTimeoutRef = useRef(null);
 
     // Effect to update editedCard when card or initialCollectionName changes
@@ -146,20 +148,8 @@ const CardDetails = memo(
       }
     }, [editedCard.imageUrl, cardImage, card.id, card.slabSerial]);
 
-    // Handle close action with confirmation for unsaved changes
-    const handleClose = useCallback((saveSuccess = false, skipConfirmation = false) => {
-      // If save was successful, we can close without confirmation
-      if (!saveSuccess && hasUnsavedChanges && !skipConfirmation) {
-        // Show browser confirmation dialog for unsaved changes
-        if (
-          !window.confirm(
-            'You have unsaved changes. Are you sure you want to close?'
-          )
-        ) {
-          return;
-        }
-      }
-
+    // Function to actually close the modal (extracted for reuse)
+    const performActualClose = useCallback(() => {
       // Clean up any blob URLs before closing
       if (
         editedCard &&
@@ -184,11 +174,6 @@ const CardDetails = memo(
         }
       }
 
-      // Reset unsaved changes state if save was successful
-      if (saveSuccess) {
-        setHasUnsavedChanges(false);
-      }
-
       // Close the modal
       setIsOpen(false);
 
@@ -196,7 +181,31 @@ const CardDetails = memo(
       setTimeout(() => {
         onClose();
       }, 100);
-    }, [hasUnsavedChanges, editedCard, cardImage, onClose]);
+    }, [editedCard, cardImage, onClose]);
+
+    // Handle close action with confirmation for unsaved changes
+    const handleClose = useCallback((saveSuccess = false, skipConfirmation = false) => {
+      // If save was successful or no unsaved changes, close immediately
+      if (saveSuccess || !hasUnsavedChanges || skipConfirmation) {
+        performActualClose();
+        return;
+      }
+
+      // Show custom confirmation modal instead of window.confirm
+      setShowUnsavedChangesModal(true);
+    }, [hasUnsavedChanges, performActualClose]);
+
+    // Handle confirmation modal responses
+    const handleDiscardChanges = useCallback(() => {
+      setShowUnsavedChangesModal(false);
+      setHasUnsavedChanges(false); // Reset unsaved changes
+      performActualClose(); // Close the main modal
+    }, [performActualClose]);
+
+    const handleKeepEditing = useCallback(() => {
+      setShowUnsavedChangesModal(false);
+      // Main modal stays open, no other action needed
+    }, []);
 
     // Effect to handle body scroll locking and image loading
     useEffect(() => {
@@ -549,50 +558,66 @@ const CardDetails = memo(
 
 
     return (
-      <CardDetailsModal
-        isOpen={isOpen}
-        onClose={handleClose}
-        card={editedCard}
-        onSave={handleSave}
-        // onDelete={onDelete} - Removed delete functionality from modal
-        onMarkAsSold={async soldCardData => {
-          try {
-            // First get the existing sold cards
-            let soldCards = (await db.getSoldCards()) || [];
+      <>
+        <CardDetailsModal
+          isOpen={isOpen}
+          onClose={handleClose}
+          card={editedCard}
+          onSave={handleSave}
+          hasUnsavedChanges={hasUnsavedChanges}
+          // onDelete={onDelete} - Removed delete functionality from modal
+          onMarkAsSold={async soldCardData => {
+            try {
+              // First get the existing sold cards
+              let soldCards = (await db.getSoldCards()) || [];
 
-            // Add the current card to the sold cards list
-            soldCards.push({
-              ...soldCardData,
-              id: soldCardData.id || soldCardData.slabSerial,
-              imageUrl: cardImage, // Include the card image URL
-            });
+              // Add the current card to the sold cards list
+              soldCards.push({
+                ...soldCardData,
+                id: soldCardData.id || soldCardData.slabSerial,
+                imageUrl: cardImage, // Include the card image URL
+              });
 
-            // Save the updated sold cards list
-            await db.saveSoldCards(soldCards);
+              // Save the updated sold cards list
+              await db.saveSoldCards(soldCards);
 
-            // Remove the card from the main collection if onDelete is provided
-            if (onDelete) {
-              await onDelete(card);
+              // Remove the card from the main collection if onDelete is provided
+              if (onDelete) {
+                await onDelete(card);
+              }
+
+              toast.success('Card marked as sold and moved to Sold Items');
+              handleClose(true);
+            } catch (error) {
+              logger.error('Error marking card as sold:', error);
+              toast.error('Error marking card as sold: ' + error.message);
             }
+          }}
+          onChange={handleCardChange}
+          image={cardImage}
+          imageLoadingState={imageLoadingState}
+          onImageChange={handleImageChange}
+          onImageRetry={loadCardImage}
+          className="fade-in"
+          isPsaLoading={false}
+          additionalSerialContent={null}
+          collections={collections}
+          initialCollectionName={initialCollectionName}
+        />
 
-            toast.success('Card marked as sold and moved to Sold Items');
-            handleClose(true);
-          } catch (error) {
-            logger.error('Error marking card as sold:', error);
-            toast.error('Error marking card as sold: ' + error.message);
-          }
-        }}
-        onChange={handleCardChange}
-        image={cardImage}
-        imageLoadingState={imageLoadingState}
-        onImageChange={handleImageChange}
-        onImageRetry={loadCardImage}
-        className="fade-in"
-        isPsaLoading={false}
-        additionalSerialContent={null}
-        collections={collections}
-        initialCollectionName={initialCollectionName}
-      />
+        {/* Unsaved Changes Confirmation Modal */}
+        <ConfirmDialog
+          isOpen={showUnsavedChangesModal}
+          onClose={handleKeepEditing}
+          onConfirm={handleDiscardChanges}
+          title="Unsaved Changes"
+          message="You have unsaved changes that will be lost. Are you sure you want to continue?"
+          confirmText="Yes, continue"
+          cancelText="No, go back"
+          variant="danger"
+          zIndex="60000"
+        />
+      </>
     );
   }
 );

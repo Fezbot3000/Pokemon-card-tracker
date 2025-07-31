@@ -36,12 +36,18 @@ const Toast = ({
     ...toastOptions,
   };
 
+  // Ensure toasts appear above modals (modals use z-[50000])
+  const defaultContainerStyle = {
+    zIndex: 60000, // Higher than modal z-index (50000)
+    ...containerStyle,
+  };
+
   return (
     <Toaster
       position={position}
       reverseOrder={reverseOrder}
       gutter={gutter}
-      containerStyle={containerStyle}
+      containerStyle={defaultContainerStyle}
       toastOptions={mergedOptions}
       {...props}
     >

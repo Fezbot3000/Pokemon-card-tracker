@@ -7,6 +7,7 @@ import FormField from '../molecules/FormField';
 import ImageUploadButton from '../atoms/ImageUploadButton';
 import Icon from '../atoms/Icon';
 import CustomDropdown from '../molecules/CustomDropdown';
+import PSACardAutocomplete from '../molecules/PSACardAutocomplete';
 import {
   getPokemonSetsByYear,
   getSetsByCategory,
@@ -346,6 +347,17 @@ const CardDetailsForm = ({
     }
   }, [card, preferredCurrency, convertToUserCurrency]);
 
+  // Handle dropdown selections (CustomDropdown passes value directly, not event object)
+  const handleDropdownSelect = (fieldName) => (selectedValue) => {
+    const syntheticEvent = {
+      target: {
+        name: fieldName,
+        value: selectedValue
+      }
+    };
+    handleInputChange(syntheticEvent);
+  };
+
   const handleInputChange = e => {
     const { name, value } = e.target;
 
@@ -471,8 +483,7 @@ const CardDetailsForm = ({
     });
   };
 
-  const handleCompanyChange = e => {
-    const company = e.target.value;
+  const handleCompanyChange = (company) => {
     setSelectedCompany(company);
 
     if (company === 'RAW') {
@@ -484,8 +495,7 @@ const CardDetailsForm = ({
     updateCondition(company, '');
   };
 
-  const handleGradeChange = e => {
-    const grade = e.target.value;
+  const handleGradeChange = (grade) => {
     setSelectedGrade(grade);
     updateCondition(selectedCompany, grade);
   };
@@ -530,8 +540,7 @@ const CardDetailsForm = ({
     }
   };
 
-  const handleCollectionChange = e => {
-    const collectionId = e.target.value;
+  const handleCollectionChange = (collectionId) => {
     if (onChange) {
       onChange({
         ...card,
@@ -546,6 +555,81 @@ const CardDetailsForm = ({
 
   const handleSubmit = e => {
     e.preventDefault();
+  };
+
+  // Helper function to map PSA brands to categories
+  const mapBrandToCategory = (brand) => {
+    if (!brand) return '';
+    
+    const brandLower = brand.toLowerCase();
+    
+    // Pokemon variations
+    if (brandLower.includes('pokemon')) return 'pokemon';
+    
+    // Trading card game categories
+    if (brandLower.includes('magic') || brandLower.includes('mtg')) return 'magicTheGathering';
+    if (brandLower.includes('yugioh') || brandLower.includes('yu-gi-oh')) return 'yugioh';
+    if (brandLower.includes('digimon')) return 'digimon';
+    if (brandLower.includes('one piece')) return 'onePiece';
+    if (brandLower.includes('dragon ball')) return 'dragonBallZ';
+    
+    // Sports categories
+    if (brandLower.includes('nba') || brandLower.includes('basketball')) return 'nba';
+    if (brandLower.includes('nfl') || brandLower.includes('football')) return 'nfl';
+    if (brandLower.includes('mlb') || brandLower.includes('baseball')) return 'mlb';
+    if (brandLower.includes('nrl')) return 'nrl';
+    if (brandLower.includes('soccer') || brandLower.includes('football')) return 'soccer';
+    if (brandLower.includes('ufc')) return 'ufc';
+    if (brandLower.includes('f1') || brandLower.includes('formula')) return 'f1';
+    
+    // Other categories
+    if (brandLower.includes('marvel')) return 'marvel';
+    if (brandLower.includes('wwe')) return 'wwe';
+    
+    // Default to 'other' for unknown brands
+    return 'other';
+  };
+
+  // Handle PSA card selection from autocomplete
+  const handlePSACardSelect = (psaCard) => {
+    console.log('🔍 PSA Card Selected:', psaCard);
+    
+    // Extract data from PSA card using the same structure as PSA search
+    const psaData = psaCard.originalData;
+    const psaCert = psaData.cardData?.PSACert || {};
+    
+    // Map PSA brand to category
+    const detectedCategory = mapBrandToCategory(psaCard.brand);
+    
+    const updatedCard = {
+      ...card,
+      // Basic card info
+      cardName: psaCard.cardName || psaCert.Subject || '',
+      player: psaCert.Player || '',
+      
+      // PSA specific data
+      condition: `PSA ${psaCard.grade}`,
+      gradingCompany: 'PSA',
+      grade: psaCard.grade,
+      population: psaCard.totalPopulation || psaCert.TotalPopulation || '',
+      
+      // Category (mapped from PSA brand)
+      category: detectedCategory,
+      
+      // Set/Brand (PSA Brand becomes our "setName")  
+      setName: psaCard.brand || psaCert.Brand || '',
+      set: psaCard.brand || psaCert.Brand || '',
+      
+      // Year if available in PSA data
+      year: psaCert.Year || card.year || '',
+      
+      // Note: We deliberately exclude certificationNumber/slabSerial so user can enter their own
+    };
+
+    console.log('🔍 Updated Card Data:', updatedCard);
+    
+    // Trigger the onChange callback to update parent component
+    onChange(updatedCard);
   };
 
   return (
@@ -862,13 +946,14 @@ const CardDetailsForm = ({
 
           <div className="mt-4 grid grid-cols-1 gap-4">
             <div>
-              <FormField
+              <PSACardAutocomplete
                 label="Card Name"
                 name="cardName"
                 value={card.cardName || ''}
-                onChange={handleInputChange}
+                onSelect={handlePSACardSelect}
+                onInputChange={handleInputChange}
+                placeholder="Type card name to search PSA database or enter manually..."
                 error={errors.cardName}
-                className={errors.cardName ? 'border-red-500' : ''}
                 required
               />
             </div>
@@ -880,7 +965,7 @@ const CardDetailsForm = ({
                 label="Category"
                 name="category"
                 value={card?.category || ''}
-                onSelect={handleInputChange}
+                onSelect={handleDropdownSelect('category')}
                 options={cardCategories}
                 placeholder="Select Category..."
                 error={errors.category}
@@ -896,7 +981,7 @@ const CardDetailsForm = ({
                 label="Year"
                 name="year"
                 value={card?.year || ''}
-                onSelect={handleInputChange}
+                onSelect={handleDropdownSelect('year')}
                 error={errors.year}
                 disabled={false}
                 id="year-select"
@@ -915,7 +1000,7 @@ const CardDetailsForm = ({
                 label="Set"
                 name="set"
                 value={card?.setName || ''}
-                onSelect={handleInputChange}
+                onSelect={handleDropdownSelect('set')}
                 options={availableSets}
                 placeholder="Select Set..."
                 disabled={!card?.category}

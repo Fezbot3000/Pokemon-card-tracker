@@ -255,7 +255,7 @@ const Header = ({
             ref={newCollectionModalRef}
             className="mx-4 w-full max-w-md rounded-xl bg-white dark:bg-[#0F0F0F] shadow-2xl border border-gray-200/20 dark:border-gray-700/20 overflow-hidden"
           >
-            <div className="dark:border-gray-700/50 flex items-center justify-between border-b border-gray-200 px-6 pb-4 pt-6">
+            <div className="dark:border-gray-700/50 flex items-center justify-between border-b border-gray-200 px-6 pb-4 pt-6 rounded-t-xl">
               <h2 className="text-xl font-medium text-gray-800 dark:text-gray-200">
                 New Collection
               </h2>
@@ -283,7 +283,7 @@ const Header = ({
               />
             </div>
 
-            <div className="dark:border-gray-700/50 flex justify-between gap-2 border-t border-gray-200 px-6 pb-6 pt-4">
+            <div className="dark:border-gray-700/50 flex justify-between gap-2 border-t border-gray-200 px-6 pb-6 pt-4 rounded-b-xl">
               <button
                 className="rounded-lg bg-gray-100 px-4 py-2 text-gray-700 transition-colors hover:bg-gray-200 dark:bg-[#0F0F0F] dark:text-gray-300 dark:hover:bg-[#323B4B]"
                 onClick={() => setIsNewCollectionModalOpen(false)}

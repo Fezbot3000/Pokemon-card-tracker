@@ -28,7 +28,7 @@ const GradingIntegration = lazy(() => import('./components/GradingIntegration'))
 const PokemonSets = lazy(() => import('./components/PokemonSets'));
 const PokemonInvestmentGuide = lazy(() => import('./components/PokemonInvestmentGuide'));
 
-const ComponentLibrary = lazy(() => import('./pages/ComponentLibrary'));
+
 const MarketplaceListing = lazy(() => import('./components/Marketplace/MarketplaceListing'));
 const PublicMarketplace = lazy(() => import('./components/PublicMarketplace'));
 const SharedCollection = lazy(() => import('./components/SharedCollection'));
@@ -225,24 +225,10 @@ export const router = createBrowserRouter(
                 </Suspense>
               ),
             },
-            {
-              path: 'settings',
-              element: (
-                <Suspense fallback={<LoadingFallback />}>
-                  <Settings />
-                </Suspense>
-              ),
-            },
+
           ],
         },
-        {
-          path: 'component-library',
-          element: (
-            <Suspense fallback={<LoadingFallback />}>
-              <ComponentLibrary />
-            </Suspense>
-          ),
-        },
+
         {
           path: 'upgrade',
           element: (

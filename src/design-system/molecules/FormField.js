@@ -32,7 +32,6 @@ const FormField = ({
       {label && (
         <FormLabel htmlFor={fieldId} required={required}>
           {label}
-          {required && <span className="text-red-500 ml-1">*</span>}
         </FormLabel>
       )}
 

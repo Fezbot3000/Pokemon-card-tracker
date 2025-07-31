@@ -23,47 +23,8 @@ const config = {
   showCriticalLogs: true, // Always show critical logs
 };
 
-// Silence ALL console logs except errors in production by overriding console methods
-// We're also applying this in development when forceSilence is true
-if (isProduction || forceSilence) {
-  // Store original console methods
-  /* eslint-disable no-console */
-  const originalConsole = {
-    log: console.log,
-    info: console.info,
-    warn: console.warn,
-    error: console.error,
-    debug: console.debug,
-  };
-  /* eslint-enable no-console */
-
-  // Override console methods in production
-  // eslint-disable-next-line no-console, @typescript-eslint/no-unused-vars
-  console.log = function (..._args) {
-    // Do nothing in production (silence logs)
-  };
-
-  // eslint-disable-next-line no-console, @typescript-eslint/no-unused-vars
-  console.info = function (..._args) {
-    // Do nothing in production (silence info)
-  };
-
-  // eslint-disable-next-line no-console, @typescript-eslint/no-unused-vars
-  console.debug = function (..._args) {
-    // Do nothing in production (silence debug)
-  };
-
-  // Keep warnings and errors functional
-  // eslint-disable-next-line no-console
-  console.warn = function (...args) {
-    originalConsole.warn.apply(console, args);
-  };
-
-  // eslint-disable-next-line no-console
-  console.error = function (...args) {
-    originalConsole.error.apply(console, args);
-  };
-}
+// Note: Console overrides are handled by LoggingService.js
+// This wrapper just provides a convenience layer with environment-based filtering
 
 const logger = {
   // Only logs in development mode

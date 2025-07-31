@@ -149,7 +149,7 @@ const CustomDropdown = ({
 
   // Variant styles
   const variantStyles = {
-    default: 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100',
+    default: 'border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0F0F0F] text-gray-900 dark:text-white',
     primary: 'border-blue-300 dark:border-blue-600 bg-blue-50 dark:bg-blue-900/20 text-blue-900 dark:text-blue-100',
     danger: 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20 text-red-900 dark:text-red-100'
   };
@@ -157,7 +157,7 @@ const CustomDropdown = ({
   const baseStyles = `
     relative flex items-center justify-between border rounded-lg cursor-pointer transition-colors
     focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-    ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:border-gray-400 dark:hover:border-gray-500'}
+    ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:border-gray-400 dark:hover:border-gray-600'}
     ${error ? 'border-red-500 dark:border-red-400' : ''}
     ${fullWidth ? 'w-full' : 'w-auto'}
     ${sizeStyles[size]}
@@ -168,7 +168,7 @@ const CustomDropdown = ({
   const dropdownContent = (
     <div
       ref={portalRef}
-      className="fixed z-[60000] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg max-h-48 overflow-hidden"
+      className="fixed z-[60000] bg-white dark:bg-[#0F0F0F] border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-48 overflow-hidden"
       style={{
         top: dropdownPosition.top,
         left: dropdownPosition.left,
@@ -178,11 +178,11 @@ const CustomDropdown = ({
     >
       {/* Search input for large option lists */}
       {options.length > 5 && (
-        <div className="p-2 border-b border-gray-200 dark:border-gray-600">
+        <div className="p-2 border-b border-gray-200 dark:border-gray-700">
           <input
             ref={inputRef}
             type="text"
-            className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-full px-2 py-1 text-sm border border-gray-200 dark:border-gray-700 rounded bg-white dark:bg-[#0F0F0F] text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
             placeholder="Search..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -208,8 +208,8 @@ const CustomDropdown = ({
                 key={optionValue || index}
                 type="button"
                 className={`
-                  w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors
-                  ${isSelected ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-900 dark:text-blue-100' : 'text-gray-900 dark:text-gray-100'}
+                  w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors truncate
+                  ${isSelected ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-900 dark:text-blue-100' : 'text-gray-900 dark:text-white'}
                 `}
                 onClick={() => handleSelect(option)}
               >
@@ -228,7 +228,7 @@ const CustomDropdown = ({
       {label && (
         <label
           htmlFor={id || name}
-          className={`block text-sm font-medium mb-1 ${error ? 'text-red-600 dark:text-red-400' : 'text-gray-700 dark:text-gray-300'}`}
+          className={`block text-sm font-medium mb-1 ${error ? 'text-red-600 dark:text-red-400' : 'text-gray-700 dark:text-white'}`}
         >
           {label}
           {required && <span className="text-red-500 ml-1">*</span>}
@@ -254,13 +254,13 @@ const CustomDropdown = ({
           name={name}
           {...props}
         >
-          <span className={!value ? 'text-gray-500 dark:text-gray-400' : ''}>
+          <span className={`truncate flex-1 text-left ${!value ? 'text-gray-500 dark:text-gray-400' : ''}`}>
             {getDisplayText()}
           </span>
           
           {/* Dropdown arrow */}
           <svg 
-            className={`ml-2 size-4 text-gray-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} 
+            className={`ml-2 size-4 shrink-0 text-gray-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} 
             fill="none" 
             stroke="currentColor" 
             viewBox="0 0 24 24"

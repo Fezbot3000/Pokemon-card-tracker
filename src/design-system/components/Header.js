@@ -21,7 +21,7 @@ const Header = ({
   onSettingsClick,
   currentView,
   onViewChange,
-  isComponentLibrary = false,
+
 }) => {
   const [, setPreviousView] = useState(null);
   const [, setIsAnimating] = useState(false);
@@ -118,40 +118,7 @@ const Header = ({
     }
   };
 
-  // If this is being used in the component library, render a simplified version
-  if (isComponentLibrary) {
-    return (
-      <header className="header-responsive fixed inset-x-0 top-0 z-50 bg-white dark:bg-black">
-        {/* Top bar */}
-        <div className="flex h-full items-center border-b border-gray-200 px-4 dark:border-[#ffffff1a]">
-          <div className="mx-auto flex w-full max-w-7xl items-center justify-between">
-            <div className="flex items-center">
-                          <img
-              src="/favicon_L-192x192.png"
-              alt="Logo"
-              className="mr-3 size-8 rounded-md"
-            />
-            </div>
-            <button className="rounded-lg p-2 hover:bg-gray-100 dark:hover:bg-gray-800">
-              <svg
-                className="size-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 6h16M4 12h16M4 18h16"
-                />
-              </svg>
-            </button>
-          </div>
-        </div>
-      </header>
-    );
-  }
+
 
   // Main header implementation for the actual application
   return (
@@ -485,7 +452,7 @@ Header.propTypes = {
     'list',
   ]),
   onViewChange: PropTypes.func,
-  isComponentLibrary: PropTypes.bool,
+
 };
 
 export default Header;

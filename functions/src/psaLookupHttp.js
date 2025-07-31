@@ -21,7 +21,7 @@ exports.psaLookupHttp = functions.https.onRequest((req, res) => {
       }
 
       const db = admin.firestore();
-      const PSA_COLLECTION = 'psa_cards';
+      const PSA_COLLECTION = 'psa-cards'; // Updated to match frontend
       
       // Check if we have this card in our database already
       const docRef = db.collection(PSA_COLLECTION).doc(certNumber);

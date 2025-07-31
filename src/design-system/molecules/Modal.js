@@ -200,8 +200,8 @@ const Modal = ({
 
   const iosHeaderSafeClass = isIOSDevice() ? 'modal-header-ios-safe' : '';
   const headerClasses = forceDarkMode
-    ? `sticky top-0 z-10 flex items-center justify-between px-6 pt-6 pb-4 border-b-[0.5px] border-gray-700 bg-black backdrop-blur-sm ${iosHeaderSafeClass}`
-    : `sticky top-0 z-10 flex items-center justify-between px-6 pt-6 pb-4 border-b-[0.5px] border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0F0F0F] backdrop-blur-sm ${iosHeaderSafeClass}`;
+    ? `sticky top-0 z-10 flex items-center justify-between px-6 pt-6 pb-4 border-b-[0.5px] border-gray-700 bg-black backdrop-blur-sm rounded-t-xl ${iosHeaderSafeClass}`
+    : `sticky top-0 z-10 flex items-center justify-between px-6 pt-6 pb-4 border-b-[0.5px] border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0F0F0F] backdrop-blur-sm rounded-t-xl ${iosHeaderSafeClass}`;
 
   const titleClasses = forceDarkMode
     ? 'text-xl font-medium text-gray-200'
@@ -210,8 +210,8 @@ const Modal = ({
   // Close button classes removed as they were unused
 
   const footerClasses = forceDarkMode
-    ? 'sticky bottom-0 z-10 flex items-center justify-between gap-2 px-6 pt-4 pb-6 border-t-[0.5px] border-gray-700 bg-black backdrop-blur-sm'
-    : 'sticky bottom-0 z-10 flex items-center justify-between gap-2 px-6 pt-4 pb-6 border-t-[0.5px] border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0F0F0F] backdrop-blur-sm';
+    ? 'sticky bottom-0 z-10 flex items-center justify-between gap-2 px-6 pt-4 pb-6 border-t-[0.5px] border-gray-700 bg-black backdrop-blur-sm rounded-b-xl'
+    : 'sticky bottom-0 z-10 flex items-center justify-between gap-2 px-6 pt-4 pb-6 border-t-[0.5px] border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0F0F0F] backdrop-blur-sm rounded-b-xl';
 
 
 
@@ -253,16 +253,16 @@ const Modal = ({
   // Regular modal with backdrop and positioning
   return createPortal(
     <div 
-      className={`fixed inset-0 flex min-h-screen w-full items-center justify-center bg-black/40 backdrop-blur-sm ${getModalZIndex()}`}
+      className={`fixed inset-0 flex min-h-screen w-full items-center ${position === 'right' ? 'justify-end' : 'justify-center'} bg-black/40 backdrop-blur-sm ${getModalZIndex()}`}
       onClick={handleBackdropClick}
     >
+      {/* Desktop margin container */}
+      <div className={`size-full sm:p-4 md:p-6 flex ${position === 'right' ? 'justify-end items-stretch' : 'items-center justify-center'}`}>
       <div
         ref={modalRef}
         className={`${modalClasses} flex flex-col ${animationClass} modal-container ${size === 'contextual' ? 'modal-contextual' : ''} ${
           position === 'right'
-            ? window.innerWidth < 640
-              ? `fixed inset-0 m-0 w-screen max-w-none overflow-auto rounded-lg ${getModalZIndex()}`
-              : `fixed right-0 top-0 mr-0 ${getModalZIndex()} ${size === 'custom' ? maxWidth : sizeClasses[size] || (size === 'modal-width-70' ? 'w-[70%]' : size === 'modal-width-60' ? 'w-3/5' : 'w-[55%]')} rounded-l-lg rounded-r-none`
+            ? `w-screen h-screen sm:w-[70%] sm:h-full sm:rounded-lg max-w-none overflow-hidden rounded-lg ${getModalZIndex()}`
             : mobileFullWidth ||
               (size === 'custom' ? maxWidth : sizeClasses[size] || (size === 'modal-width-70' ? 'w-[70%]' : size === 'modal-width-60' ? 'w-3/5' : 'w-[55%]'))
         } ${className}`}
@@ -301,6 +301,7 @@ const Modal = ({
         {footer && (
           <div className={`${footerClasses} ${iosClasses}`}>{footer}</div>
         )}
+      </div>
       </div>
     </div>,
     document.body

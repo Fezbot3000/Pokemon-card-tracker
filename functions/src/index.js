@@ -58,7 +58,7 @@ exports.psaLookup = functions.https.onCall(async (data, context) => {
   
   try {
     const db = admin.firestore();
-    const PSA_COLLECTION = 'psa_cards';
+    const PSA_COLLECTION = 'psa-cards'; // Updated to match frontend
     
     // Layer 2: Check Firebase cache (if not forcing refresh)
     if (!forceRefresh) {

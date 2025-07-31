@@ -52,10 +52,8 @@ class LoggingService {
       this.initializePerformanceMonitoring();
     }
     
-    // Override console methods in production to prevent accidental logging
-    if (isProduction) {
-      this.overrideConsole();
-    }
+    // Override console methods to filter external noise and prevent accidental logging
+    this.overrideConsole();
   }
 
   /**
@@ -343,10 +341,34 @@ class LoggingService {
    * Use ESLint rules instead to prevent console statements.
    */
   overrideConsole() {
-    // Method disabled to prevent console override anti-pattern
-    // Use ESLint no-console rule instead
+    // Store original console methods for filtered logging
+    /* eslint-disable no-console */
+    const originalConsole = {
+      log: console.log,
+      info: console.info,
+      warn: console.warn,
+      error: console.error,
+      debug: console.debug,
+    };
+    /* eslint-enable no-console */
+
+    // External noise patterns to filter
+    const externalNoisePatterns = [
+      'background.js',
+      'webchannel_blob',
+      'NmLockState', 
+      '@firebase/firestore: Firestore',
+      'WebChannelConnection RPC',
+      'Missing or insufficient permissions'
+    ];
+
+    const shouldFilterMessage = (message) => {
+      if (!message) return false;
+      return externalNoisePatterns.some(pattern => message.includes(pattern));
+    };
+
     if (process.env.NODE_ENV === 'production') {
-      // Only suppress in production, let ESLint handle prevention
+      // In production, suppress all console logs
       const noop = () => {};
       // eslint-disable-next-line no-console
       console.log = noop;
@@ -358,6 +380,25 @@ class LoggingService {
       console.warn = noop;
       // eslint-disable-next-line no-console
       console.error = noop;
+    } else {
+      // In development, filter external noise but keep app logs
+      // eslint-disable-next-line no-console
+      console.warn = function (...args) {
+        const message = args.join(' ');
+        if (shouldFilterMessage(message)) {
+          return; // Don't log external noise
+        }
+        originalConsole.warn.apply(console, args);
+      };
+
+      // eslint-disable-next-line no-console
+      console.error = function (...args) {
+        const message = args.join(' ');
+        if (shouldFilterMessage(message)) {
+          return; // Don't log external noise
+        }
+        originalConsole.error.apply(console, args);
+      };
     }
   }
 

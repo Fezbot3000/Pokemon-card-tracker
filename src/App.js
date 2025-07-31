@@ -983,7 +983,7 @@ function AppContent({ currentView, setCurrentView }) {
               }}
               onResetData={() => {
                 // Reset data functionality
-                console.log('Reset data');
+                // TODO: Implement reset data functionality
               }}
             />
           </div>

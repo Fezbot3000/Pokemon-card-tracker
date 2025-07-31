@@ -1,13 +1,57 @@
-# Development Rules v2.4 - Flow-Based System
+# Development Rules v2.5 - Flow-Based System with Investigation Enforcement
 
 ## 🎯 **Core Principles**
 
 ### 🔐 **Permission & Control**
 - Never restart the server without explicit permission
-- Always request approval before terminal commands
+- **FORBIDDEN**: NO terminal commands during investigation phases (Phases 1-3)
+- **FORBIDDEN**: NO terminal commands without explicit user approval
 - Follow all instructions without deviation
 - Explain proposed deviation of instructions before commencing
 - Never make git commits or pushes without explicit user verification and approval; always pause after changes for user review
+
+### 🔍 **SIMPLE 3-STEP WORKFLOW** 
+**Clear, straightforward process with minimal approvals:**
+
+## **Step 1: Investigation & Understanding**
+**Understand the problem and current codebase**
+
+- Use `codebase_search` and `read_file` to understand current implementation
+- Identify the root cause of issues or where new features should integrate
+- Document findings in `investigations/INVESTIGATION_[FEATURE/BUG]_[YYYYMMDD].md`
+- **OUTPUT**: Clear problem understanding
+- **USER APPROVAL REQUIRED**: Ask "Shall I proceed to Step 2?" and wait for approval
+
+## **Step 2: Solution Design & Planning**
+**Figure out how to fix/implement based on existing code**
+
+- Design technical solution that fits existing architecture
+- Plan specific implementation steps and file changes needed
+- Consider impacts, dependencies, and testing approach
+- Update investigation file with technical approach
+- **OUTPUT**: Clear implementation plan
+- **USER APPROVAL REQUIRED**: Ask "Shall I proceed to Step 3?" and wait for approval
+
+## **Step 3: Implementation**
+**Execute the planned changes**
+
+- Implement the solution following the planned approach
+- Make all necessary code changes
+- Test the implementation
+- **OUTPUT**: Working solution
+- **USER VERIFICATION**: Present completed work for final verification
+
+### ⚠️ **SIMPLE ENFORCEMENT**
+- **Follow the 3 steps in order**
+- **Wait for approval between steps** 
+- **Create investigation file to document work**
+- **No code changes until Step 3**
+
+### 🚫 **TERMINAL COMMAND RESTRICTIONS**
+- **Steps 1-2: NO terminal commands** - Use codebase_search, read_file, grep_search, file_search only
+- **Step 3: Terminal commands allowed** after user approval to proceed with implementation
+
+
 
 ### 🤖 **Professional Standards**
 - Direct, technical communication without emotional language
@@ -46,17 +90,108 @@
 - Track key metrics per flow: time spent, rework cycles, and adherence rate (e.g., % of quality gates passed on first attempt)
 - Aim for efficiency gains: e.g., reduce development time by 20% compared to non-flow-based approaches through iterative tracking
 - Document metrics in a new `METRICS.md` file for ongoing analysis and refinement
+- **AI Adherence Tracking**: Must be 100% investigation compliance (any violation = protocol failure)
+- **Assumption Violations**: Track and document in `docs/maintenance/AI_VIOLATIONS.md`
+- **User Intervention Required**: Log every time user must redirect AI behavior
+- **Success Metric**: Zero assumption-based debugging incidents per task
+
+## 📋 **Universal Standards & Templates**
+
+### **Quality Standards** (Apply to all flows unless noted)
+- **Performance**: 90+ score on Google PageSpeed Insights for all pages
+- **SEO**: 100% SEO score on Google PageSpeed Insights for all pages  
+- **Core Web Vitals**: LCP <2.5s, FID <100ms, CLS <0.1 across all interactions
+- **Testing**: Minimum 80% coverage for critical paths, 60% overall
+- **Accessibility**: WCAG 2.1 AA compliance for all user-facing changes
+- **Security**: Input validation, XSS prevention, data sanitization
+
+### **Standard Validation Commands**
+- **Build Check**: `npm run build` to verify compilation
+- **Test Execution**: `npm test` for test suite validation
+- **Development Server**: `npm start` for local testing
+
+### **Universal User Verification Template**
+1. **TODO Status**: "✅ Completed todos: [list completed tasks]"
+2. **Summarize**: "This is what I did" with specific changes and rationale
+3. **Confidence Level**: "Confidence: [X]% - [brief reasoning for confidence level]"
+4. **Test Flow**: "Run server, follow these steps: [specific UI actions]"
+5. **Build Verification**: "Run npm run build to check for issues"
+6. **Approval Request**: "Test locally as described. If working, approve for commit?"
+
+### **Documentation Update Requirements**
+- Update relevant feature documentation in `docs/features/`
+- **MANDATORY**: Add entry to `CHANGELOG.md` with investigation file reference
+- Log metrics in `docs/maintenance/METRICS.md`
+- Update architecture documentation if system design changed
+
+### **Changelog Entry Template**
+```
+## [YYYY-MM-DD] - [Feature/Bug/Enhancement]
+**What**: [Brief description of change]
+**Why**: [Reason for change] 
+**Investigation**: `investigations/INVESTIGATION_[NAME]_[YYYYMMDD].md`
+**Files Changed**: [List of modified files]
+**Confidence**: [X]% - [reasoning]
+```
+
+### **Investigation File Management**
+- **New Tasks**: Create `investigations/INVESTIGATION_[FEATURE/BUG]_[YYYYMMDD].md`
+- **Follow-ups**: Update existing investigation file for same task
+- **Failed Solutions**: Document failed approaches and lessons learned in same investigation file
+- **Folder Structure**: All investigations go in `investigations/` folder to prevent project root clutter
+- **Archival**: After task completion, move investigation files to `investigations/archive/`
+- **Active Work**: Keep active investigation files in `investigations/` folder
+
+## 🚨 **UNIVERSAL FAILURE PROTOCOL**
+**Applies to ALL flows - NO EXCEPTIONS**
+
+### **Failure Triggers** (ANY of these = MANDATORY re-investigation):
+- User reports solution didn't work ("still not working", "didn't fix it", "not resolved")
+- Solution fails during validation or testing
+- User requests different approach after implementation
+- Unintended side effects or regressions discovered
+- User provides additional context that changes the problem
+
+### **Mandatory Actions** (MUST be completed in order):
+1. **IMMEDIATE STOP**: Halt all implementation activities, no code changes, NO TERMINAL COMMANDS
+2. **MANDATORY**: Restart Universal Investigation Protocol (Phases 1-3)
+3. **Update Investigation File**: Document in existing investigation file:
+   - Failed approach and why it didn't work
+   - New information or context from user
+   - Lessons learned from failure
+   - Revised understanding of the problem
+4. **Re-investigate**: Complete fresh codebase analysis with new insights
+5. **Get Approval**: Explicit user approval required before ANY new implementation
+
+### **Enforcement**:
+- **VIOLATION PENALTY**: Any code change or terminal command without completing failure protocol → IMMEDIATE STOP, restart from Phase 1
+- **NO EXCEPTIONS**: Applies to all flows including Emergency/Hotfix  
+- **NO PATCHES**: Cannot add "quick fixes" - must complete full re-investigation
+- **NO TERMINAL COMMANDS**: Forbidden during investigation phases - use codebase_search and read_file only
+
+### **Investigation File Failure Documentation**:
+Add to existing investigation file:
+```
+## Failed Attempt #[N] - [Date]
+**Approach Tried:** [what was implemented]
+**Failure Reason:** [why it didn't work]
+**User Feedback:** [exact user feedback received]
+**Lessons Learned:** [what this teaches us]
+**New Information:** [any new context discovered]
+```
 
 ## 🧭 **Flow Selection Guide**
 
 ### **Decision Tree**
 ```
+STEP 0: Universal Investigation Protocol (REQUIRED for all flows except Emergency)
+↓
 Is this a critical production issue? → YES → Emergency Flow (#8)
                                    ↓ NO
 Is this a simple change (< 30 min)? → YES → Quick Task Flow (#0)
                                     ↓ NO
 Is this a new project setup? → YES → Project Initialization Flow (#1)
-                             ↓ NO
+↓ NO
 Is this a bug or issue? → YES → Bug Resolution Flow (#3)
                         ↓ NO
 Is this adding/changing functionality? → YES → Feature Development Flow (#2)
@@ -149,13 +284,20 @@ Is this updating this document? → YES → Framework Maintenance Flow (#7)
    - Create initial feature documentation files for planned core features
    - Set up documentation maintenance processes for AI context preservation
 
-4. **Design System Foundation**
+4. **Project Changelog & Investigation Setup**
+   - Create `CHANGELOG.md` in project root for comprehensive change tracking
+   - Create `investigations/` directory for all investigation files
+   - Create `investigations/archive/` directory for completed investigations
+   - Set up changelog template with investigation file references
+   - Document initial project setup as first changelog entry
+
+5. **Design System Foundation**
    - Create detailed `docs/design/DESIGN_SYSTEM.md` with complete design tokens (colors, spacing, typography, shadows)
    - Define responsive breakpoints with specific pixel values and device targeting (e.g., mobile: 0-767px, tablet: 768-1023px, desktop: 1024+px)
    - Establish component hierarchy using atomic design principles (atoms, molecules, organisms, templates, pages)
    - Document usage guidelines with code examples and implementation patterns (e.g., Button component: `<Button variant="primary">Click me</Button>`)
 
-5. **Development Environment Setup**
+6. **Development Environment Setup**
    - Configure build tools with specific linting rules, formatting standards, and type checking (e.g., ESLint, Prettier)
    - Set up testing framework with coverage targets, test structure, and CI/CD integration (e.g., Jest/Vitest with GitHub Actions)
    - Establish development workflows including git branching strategy (e.g., feature branches, main for production) and code review process
@@ -163,7 +305,7 @@ Is this updating this document? → YES → Framework Maintenance Flow (#7)
    - Set up deployment pipelines: Configure GitHub workflows (e.g., Actions) for automated builds and deployments to platforms like Firebase or Netlify upon push to main
    - Create documentation templates for consistent project documentation
 
-6. **Quality Assurance Framework**
+7. **Quality Assurance Framework**
    - Create `docs/maintenance/TECHNICAL_DEBT_AND_BUGS.md` with tracking templates and resolution processes
    - Define testing strategy with specific coverage targets (minimum 80% for critical paths)
    - Establish security validation checklist including input sanitization, XSS prevention, and data validation
@@ -172,7 +314,7 @@ Is this updating this document? → YES → Framework Maintenance Flow (#7)
    - Configure Core Web Vitals monitoring with automated alerts for regression
    - Create `docs/maintenance/METRICS.md` for tracking flow adherence and efficiency (e.g., log time per step)
 
-7. **User Verification Phase**
+8. **User Verification Phase**
    - Summarize all setup changes: "This is what I did" with a list of key configurations and files created
    - Provide a testing flow: "Run the server locally (e.g., npm start for React) and follow these UI steps to verify: [e.g., Navigate to localhost:3000, click login button, expect redirect]"
    - Suggest building the app: "Run npm run build to check for any compilation issues"
@@ -185,6 +327,10 @@ Is this updating this document? → YES → Framework Maintenance Flow (#7)
 ### 🎨 **Flow #2: Feature Development**
 
 **Entry Point:** New feature request or enhancement
+
+**Prerequisites:**
+- **MANDATORY**: Complete Universal Investigation Protocol (Phases 1-3) before starting this flow
+- **MANDATORY**: Investigation documentation (.md file) created and approved
 
 **Steps:**
 1. **Planning & Clarification Phase**
@@ -226,27 +372,21 @@ Is this updating this document? → YES → Framework Maintenance Flow (#7)
    - Ensure atomic design principles with reusable component structure
 
 6. **Testing & Validation**
-   - Write unit tests for all new functionality with minimum 80% coverage
+   - Apply Universal Quality Standards (see Universal Standards section)
    - Test responsive behavior across all supported devices and browsers
-   - Validate accessibility requirements including WCAG 2.1 AA compliance
-   - Perform security validation for all user inputs and data handling
-   - Measure performance using Google PageSpeed Insights (minimum 90+ performance score)
-   - Validate SEO optimization achieving 100% SEO score on Google PageSpeed Insights
-   - Verify Core Web Vitals compliance (LCP <2.5s, FID <100ms, CLS <0.1)
+   - Write unit tests for all new functionality per Universal Testing Standards
 
 7. **User Verification Phase**
-   - Summarize changes: "This is what I did" with a list of modified files, added code snippets, and rationale
-   - Provide a testing flow: "Run the server for hot reloading (e.g., npm start), then in UI: [e.g., 1. Go to /dashboard, 2. Click 'Add Item', 3. Expect modal to open and save successfully]"
-   - Suggest building the app: "Run npm run build to identify any build-time issues"
-   - Request approval: "Verify locally and test the feature as described. If it works as expected, approve to commit and push via GitHub Desktop?"
+   - Follow Universal User Verification Template (see Universal Standards section)
+   - Provide feature-specific testing flow: "Run server, then: [specific feature actions]"
 
 8. **Feature Documentation Completion** (After Approval)
    - Complete `docs/features/[FEATURE_NAME].md` with final implementation details
    - Update Architecture section with actual implementation decisions
    - Document any deviations from original plan and rationale
-   - Add changelog entry with implementation date and key decisions
-   - Update related feature documentation if integration points changed
-   - Log metrics in `docs/maintenance/METRICS.md` (e.g., time saved via AI assistance)
+   - **MANDATORY**: Add entry to `CHANGELOG.md` using Changelog Entry Template
+   - Apply Universal Documentation Update Requirements (see Universal Standards section)
+   - Archive investigation file to `investigations/archive/`
    - Trigger GitHub workflows for CI/CD after approved push
 
 **Quality Gate:** Feature complete with tests, user-verified, feature documentation complete, no debt introduced.
@@ -257,57 +397,47 @@ Is this updating this document? → YES → Framework Maintenance Flow (#7)
 
 **Entry Point:** Bug report or issue identification
 
-**Steps:**
-1. **Investigation Phase**
-   - Investigate existing code first - never start with assumptions or external factors
-   - Look for root cause by tracing through code execution and data flow
-   - Check `docs/maintenance/TECHNICAL_DEBT_AND_BUGS.md` for similar historical issues and their resolutions
-   - Review relevant feature documentation in `docs/features/` for context
-   - Continue investigation systematically until root cause is definitively identified
-   - If more context needed, ask specific questions about reproduction steps, environment, and expected behavior
+**Prerequisites:**
+- **MANDATORY**: Complete Universal Investigation Protocol (Phases 1-3) before starting this flow
+- **MANDATORY**: Investigation documentation (.md file) created and approved
 
-2. **Analysis & Solution Design**
+**Steps:**
+1. **Analysis & Solution Design**
    - Document findings clearly: "This is the problem" with specific technical details
    - Explain discovery process: "This is how I found it" including investigation steps and evidence
    - Propose comprehensive technical solution: "This is what I recommend" with implementation details
    - Provide clear explanation: "This is what I'm trying to achieve" in non-technical terms
    - Request explicit approval: "Can I proceed?" and wait for confirmation
 
-3. **Implementation Phase**
-   - Implement only after receiving explicit approval
+2. **Implementation Phase**
+   - Implement only after receiving explicit approval from Analysis & Solution Design phase
    - Follow approved solution exactly without deviations or "improvements"
    - Document all changes made with clear commit messages and code comments
    - Avoid patches, workarounds, or quick fixes that introduce technical debt
 
-4. **Solution Validation**
+3. **Solution Validation**
    - Test fix thoroughly across multiple scenarios and edge cases
    - Validate no regression introduced by running existing test suite
    - Update or add tests to prevent similar issues in the future
-   - Verify performance impact using Google PageSpeed Insights (maintain 90+ performance score)
-   - Ensure SEO score remains at 100% with no regression
-   - Validate Core Web Vitals compliance maintained after fix
+   - Apply Universal Quality Standards to ensure no performance/SEO regression
 
-5. **User Verification Phase**
-   - Summarize changes: "This is what I did" with details on the fix and affected code
-   - Provide a testing flow: "Run the server, replicate the bug scenario: [e.g., 1. Load page, 2. Trigger action, 3. Expect no error]"
-   - Suggest building the app: "Run npm run build to confirm no issues"
-   - Request approval: "Test locally with hot reloading. If resolved, approve commit and push?"
+4. **User Verification Phase**
+   - Follow Universal User Verification Template (see Universal Standards section)
+   - Provide bug-specific testing flow: "Replicate bug scenario: [specific steps to reproduce and verify fix]"
 
-6. **Solution Failure Protocol** (if initial solution fails)
-   - Review original changes and reasoning to understand why solution failed
-   - Do not add patches or additional code - remove failed solution completely
-   - Self-reflect on approach, rule compliance, and methodology used
-   - Reconsider fundamental approach - may require complete redesign
-   - Return to Investigation Phase with new insights and broader scope
-   - Document lessons learned and update prevention strategies
+5. **Solution Failure Protocol** (if initial solution fails)
+   - **MANDATORY**: Follow Universal Failure Protocol (see Universal Failure Protocol section)
+   - Remove failed solution completely - no patches or quick fixes
+   - Document failure in investigation file per Universal Failure Protocol requirements
+   - Complete full re-investigation with broader scope and new insights
 
-7. **Documentation Update** (After Approval)
+6. **Documentation Update** (After Approval)
    - Update `docs/maintenance/TECHNICAL_DEBT_AND_BUGS.md` with complete resolution details
-   - Update relevant feature documentation in `docs/features/` with bug fix details
-   - Add changelog entry to affected feature documentation
    - Document root cause, solution applied, and validation performed
-   - Record prevention strategies to avoid similar issues
-   - Log metrics in `docs/maintenance/METRICS.md` (e.g., cycles of rework)
+   - Record prevention strategies to avoid similar issues  
+   - **MANDATORY**: Add entry to `CHANGELOG.md` using Changelog Entry Template
+   - Apply Universal Documentation Update Requirements (see Universal Standards section)
+   - Archive investigation file to `investigations/archive/`
    - Trigger deployment workflows if applicable (e.g., to Firebase) after push
 
 **Quality Gate:** Bug resolved, user-verified, testing complete, feature documentation updated, prevention documented.
@@ -323,7 +453,7 @@ Is this updating this document? → YES → Framework Maintenance Flow (#7)
    - Identify critical paths requiring test coverage with specific business impact assessment (e.g., auth flow: high impact)
    - Define unit test scope focusing on services, utilities, and complex business logic
    - Establish integration test requirements for API endpoints and data flows
-   - Set specific coverage targets (minimum 80% for critical paths, 60% overall; scale targets for small vs. large projects)
+   - Apply Universal Testing Standards for coverage targets
 
 2. **Testing Framework Setup**
    - Configure testing tools appropriate for project tech stack (Vitest for Vite, Jest for Create React App, etc.)
@@ -344,19 +474,15 @@ Is this updating this document? → YES → Framework Maintenance Flow (#7)
    - Verify tests catch actual bugs through mutation testing or deliberate bug introduction
 
 5. **User Verification Phase**
-   - Summarize: "This is what I did" with added tests and coverage report
-   - Provide testing flow: "Run tests locally (e.g., npm test), expect all to pass"
-   - Suggest building: "Run npm run build to ensure no conflicts"
-   - Request approval: "Review test results. Approve for commit?"
+   - Follow Universal User Verification Template (see Universal Standards section)
+   - Provide testing-specific flow: "Run tests using Standard Validation Commands, expect all to pass"
 
 6. **Testing Documentation** (After Approval)
-   - Update relevant feature documentation in `docs/features/` with testing details
-   - Document testing approach and coverage in feature Testing sections
    - Create `docs/testing/TESTING_STRATEGY.md` if establishing comprehensive testing framework
    - Integrate tests into build pipeline with fail-fast configuration
    - Set up automated test execution on pull requests and deployments (e.g., deploy to Netlify only if tests pass)
    - Configure coverage reporting with trend analysis and quality gates
-   - Establish failure notification process
+   - Apply Universal Documentation Update Requirements (see Universal Standards section)
 
 **Quality Gate:** Testing suite complete, user-verified, feature documentation updated, automated execution ready.
 
@@ -558,26 +684,38 @@ Is this updating this document? → YES → Framework Maintenance Flow (#7)
 
 ### **Post-Implementation Gates**
 - [ ] Functionality verified through comprehensive testing
-- [ ] Feature documentation updated in `docs/features/` directory
+- [ ] Universal Quality Standards applied and verified (see Universal Standards section)
 - [ ] Zero technical debt introduced or existing debt documented
-- [ ] Performance verified using Google PageSpeed Insights (90+ performance score)
-- [ ] SEO optimization validated achieving 100% SEO score
-- [ ] Core Web Vitals compliance verified (LCP <2.5s, FID <100ms, CLS <0.1)
-- [ ] Security validation completed for all user-facing changes
-- [ ] Accessibility requirements verified
-- [ ] User verification completed with summary, test flow, build check, and approval for commit
+- [ ] Universal User Verification Template completed with approval for commit
 
 ### **Release Gates**
-- [ ] All tests passing with required coverage thresholds met
-- [ ] Security validation complete with no vulnerabilities introduced
-- [ ] Accessibility requirements met with WCAG 2.1 AA compliance
+- [ ] All Universal Quality Standards met with no regressions
 - [ ] Cross-platform compatibility verified across all supported browsers/devices
-- [ ] Performance benchmarks verified: 90+ Google PageSpeed Insights performance score
-- [ ] SEO optimization verified: 100% Google PageSpeed Insights SEO score
-- [ ] Core Web Vitals compliance: LCP <2.5s, FID <100ms, CLS <0.1
 - [ ] Meta tags, structured data, and semantic HTML validated for all pages
 - [ ] All feature documentation updated and accurate
 - [ ] Deployment via GitHub workflows successful post-push (after user commit approval)
+
+---
+
+## 🖥️ **Development Environment Setup**
+
+### **Console Log Filtering** 
+For clean development experience, the application includes automatic console filtering via LoggingService:
+
+**App-Level Filtering** (`src/services/LoggingService.js`):
+- Automatically filters external noise: `background.js`, `webchannel_blob`, `NmLockState`, Firebase warnings  
+- Preserves app-specific logs and errors for debugging
+- Uses structured logging with `LoggingService.info()`, `LoggingService.warn()`, `LoggingService.error()`
+
+**Browser Console Filtering** (Additional Manual Option):
+1. Open DevTools Console
+2. Click filter icon (funnel symbol)  
+3. Add filter: `-/background\.js|webchannel_blob|NmLockState|Missing or insufficient permissions/`
+
+**Logging Architecture**:
+- Production: All console logs suppressed, only LoggingService output
+- Development: External noise filtered, app logs visible through LoggingService
+- Use `LoggingService` directly instead of `console.log` for all app logging
 
 ---
 
@@ -594,6 +732,6 @@ Is this updating this document? → YES → Framework Maintenance Flow (#7)
 - **Core Web Vitals Compliance**: LCP <2.5s, FID <100ms, CLS <0.1 across all user interactions
 - **Adherence Tracking**: 90%+ flow compliance rate, measurable time savings (e.g., 20% reduction in debug cycles)
 
-*Version: 2.4*
-*Status: Ready for Implementation*
-*Last Updated: Added Quick Task Flow (#0), Emergency/Hotfix Flow (#8), decision tree for flow selection, and restructured documentation approach to be feature-focused for AI comprehension with dedicated docs/features/ structure.*
+*Version: 5.0*
+*Status: Ready for Implementation*  
+*Last Updated: MAJOR SIMPLIFICATION - Removed all bureaucratic gates and complex enforcement. Simple 3-step workflow: 1) Investigation, 2) Solution Design, 3) Implementation. Only 2 approval points between steps. No more file-by-file approvals or complex templates. Focus on getting work done efficiently.*

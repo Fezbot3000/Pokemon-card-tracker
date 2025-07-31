@@ -7,7 +7,7 @@ if (!admin.apps.length) {
 }
 
 // PSA database collection name
-const PSA_COLLECTION = 'psa_cards';
+const PSA_COLLECTION = 'psa-cards'; // Updated to match frontend
 
 /**
  * Scheduled function to clean up old PSA data

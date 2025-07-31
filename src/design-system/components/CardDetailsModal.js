@@ -42,6 +42,7 @@ const CardDetailsModal = ({
   collections = [], // Default to empty array
   initialCollectionName = null, // Default to null
   isPsaLoading = false,
+  hasUnsavedChanges = false, // New prop to track unsaved changes
 }) => {
   const [cardImage, setCardImage] = useState(null); // Start with null to implement lazy loading
   const [localImageLoadingState] = useState('idle');
@@ -63,6 +64,13 @@ const CardDetailsModal = ({
 
   // Get subscription status
   const { hasFeature } = useSubscription();
+
+  // Intercept close attempts to handle unsaved changes
+  const handleCloseAttempt = () => {
+    // Always call onClose - let CardDetails handle the unsaved changes logic
+    // Note: hasUnsavedChanges prop is available but handled by parent CardDetails component
+    onClose();
+  };
 
   // PriceCharting functionality removed
 
@@ -468,7 +476,7 @@ const CardDetailsModal = ({
       <div className="flex items-center space-x-3">
         <ModalButton
           variant="secondary"
-          onClick={onClose}
+          onClick={handleCloseAttempt}
           disabled={isPsaLoading || isSaving}
         >
           Cancel
@@ -540,7 +548,7 @@ const CardDetailsModal = ({
     <>
       <Modal
         isOpen={isOpen}
-        onClose={onClose}
+        onClose={handleCloseAttempt}
         title={titleWithProfit}
         position="right"
         closeOnClickOutside={true}
@@ -702,6 +710,7 @@ CardDetailsModal.propTypes = {
   collections: PropTypes.arrayOf(PropTypes.string), // Expect an array of strings now
   initialCollectionName: PropTypes.string, // Add prop type
   isPsaLoading: PropTypes.bool,
+  hasUnsavedChanges: PropTypes.bool, // Add prop type for unsaved changes
 };
 
 export default CardDetailsModal;
