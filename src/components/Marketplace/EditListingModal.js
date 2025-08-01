@@ -13,11 +13,14 @@ import logger from '../../utils/logger';
 import { collection, addDoc } from 'firebase/firestore';
 import { Modal, Icon, ConfirmDialog } from '../../design-system';
 import ModalButton from '../../design-system/atoms/ModalButton';
+
 function EditListingModal({ isOpen, onClose, listing, onListingDeleted, onListingUpdated }) {
   const { preferredCurrency } = useUserPreferences();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  
+
   
 
   const [formData, setFormData] = useState({
@@ -253,13 +256,14 @@ function EditListingModal({ isOpen, onClose, listing, onListingDeleted, onListin
         confirmText={isDeleting ? 'Deleting...' : 'Delete'}
         cancelText="Cancel"
         variant="danger"
-        zIndex="60"
+        loading={isDeleting}
+        zIndex="70000"
       />
       <Modal
         isOpen={isOpen}
         onClose={onClose}
         title="Edit Listing"
-        size="contextual"
+        size="modal-width-70"
         position="right"
         closeOnClickOutside={true}
         zIndex="50"
