@@ -61,8 +61,21 @@ function Dashboard() {
 
   // Debug tool will be rendered in AppContent with proper selectedCollection prop
 
-  // Show loading indicator while auth OR data is loading (combined loading state)
+  // Show loading indicator while auth OR data is loading (separated loading states)
   if (authLoading || dataLoading) {
+    // For auth loading, show minimal neutral loading screen to prevent dashboard content flash
+    if (authLoading) {
+      return (
+        <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-black">
+          <div className="text-center">
+            <div className="mb-4 size-12 animate-spin rounded-full border-b-2 border-blue-600 mx-auto"></div>
+            <div className="text-gray-600 dark:text-gray-400">Loading...</div>
+          </div>
+        </div>
+      );
+    }
+
+    // For data loading (when user is authenticated), show dashboard skeleton
     return (
       <div className="dashboard-page min-h-screen bg-gray-50 dark:bg-black">
         {/* Keep actual Header during loading */}

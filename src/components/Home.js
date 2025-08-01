@@ -5,31 +5,17 @@ import { Helmet } from 'react-helmet-async';
 import NavigationBar from './NavigationBar';
 import Footer from './Footer';
 import OptimizedImage from './ui/OptimizedImage';
-import { getPWATimingConfig } from '../utils/pwaDetection';
 
 function Home() {
   const { currentUser, loading } = useAuth();
   const navigate = useNavigate();
   const [modalImage, setModalImage] = useState(null);
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
-
-  // Get PWA-specific timing configuration
-  const { isPWA, authInitDelay } = getPWATimingConfig();
 
   useEffect(() => {
     if (currentUser) {
       navigate('/dashboard');
     }
   }, [currentUser, navigate]);
-
-  // Handle initial load timing for PWA vs browser
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      setIsInitialLoad(false);
-    }, authInitDelay); // PWA: 300ms, Browser: 150ms
-
-    return () => clearTimeout(timeout);
-  }, [authInitDelay]);
 
   const openModal = (imageSrc, title, description) => {
     setModalImage({ src: imageSrc, title, description });
@@ -39,8 +25,8 @@ function Home() {
     setModalImage(null);
   };
 
-  // Show loading screen while checking authentication OR during initial load
-  if (loading || isInitialLoad) {
+  // Show loading screen while checking authentication
+  if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#1B2131]">
         <div className="size-12 animate-spin rounded-full border-y-2 border-blue-500"></div>
