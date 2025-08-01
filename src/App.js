@@ -51,17 +51,20 @@ import { collectionManager } from './utils/collectionManager';
 
 // Main Dashboard Component
 function Dashboard() {
-  const { currentUser, loading } = useAuth();
+  const { currentUser, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [currentView, setCurrentView] = useState('cards');
+  
+  // Get data loading state to combine with auth loading
+  const { loading: dataLoading } = useCardData();
 
   // Debug tool will be rendered in AppContent with proper selectedCollection prop
 
-  // Show loading indicator while auth state is being determined
-  if (loading) {
+  // Show loading indicator while auth OR data is loading (combined loading state)
+  if (authLoading || dataLoading) {
     return (
-      <div className="dashboard-page min-h-screen bg-gray-100 dark:bg-black">
+      <div className="dashboard-page min-h-screen bg-gray-50 dark:bg-black">
         {/* Keep actual Header during loading */}
         <Header
           className="header"
@@ -74,11 +77,12 @@ function Dashboard() {
           onAddCollection={() => {}}
         />
 
-        <main className="main-content mobile-dashboard mx-auto max-w-[1920px]">
-          <div className="p-4 pb-20 sm:p-6">
-            <div className="w-full px-1 pb-20 sm:px-2">
+        <main className={`main-content mobile-dashboard mx-auto max-w-[1920px] ${window.innerWidth <= 768 ? 'no-header' : 'mt-4'}`}>
+          <div className="flex-1 overflow-y-auto">
+            <div className={`pb-20 sm:p-6 ${window.innerWidth <= 768 ? 'px-2 pt-2' : 'p-4'}`}>
+              <div className="w-full px-1 pb-20 sm:px-2">
               {/* Statistics Summary Skeleton */}
-              <div className="mb-3 w-full rounded-md border border-gray-200 bg-white dark:border-gray-700 dark:bg-black sm:mb-4">
+              <div className="mb-3 w-full rounded-md border border-gray-200 bg-white dark:border-gray-700 dark:bg-[#0F0F0F] sm:mb-4">
                 <div className="rounded-md p-2 sm:p-4 md:p-6">
                   <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-0">
                     {[
@@ -105,7 +109,7 @@ function Dashboard() {
 
               {/* Search toolbar skeleton */}
               <div className="mb-4">
-                <div className="flex flex-col items-stretch justify-between gap-3 rounded-lg border border-gray-200 bg-white p-3 dark:border-[#333] dark:bg-black sm:flex-row sm:items-center sm:gap-4 sm:p-4">
+                <div className="flex flex-col items-stretch justify-between gap-3 rounded-lg border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-[#0F0F0F] sm:flex-row sm:items-center sm:gap-4 sm:p-4">
                   <div className="min-w-0 flex-1">
                     <div className="h-10 w-full animate-pulse rounded-lg bg-gray-200 dark:bg-[#333]"></div>
                   </div>
@@ -116,12 +120,25 @@ function Dashboard() {
                 </div>
               </div>
 
+              {/* Collection Selector Skeleton */}
+              <div className="mb-2 flex justify-end">
+                <div className="w-48 rounded-lg border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-[#0F0F0F]">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="size-6 animate-pulse rounded bg-gray-200 dark:bg-[#333]"></div>
+                      <div className="h-4 w-20 animate-pulse rounded bg-gray-200 dark:bg-[#333]"></div>
+                    </div>
+                    <div className="size-4 animate-pulse rounded bg-gray-200 dark:bg-[#333]"></div>
+                  </div>
+                </div>
+              </div>
+
               {/* Card grid skeleton */}
               <div className="grid grid-cols-2 gap-1 sm:grid-cols-3 sm:gap-2 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7">
                 {Array.from({ length: 14 }, (_, index) => (
                   <div
                     key={`loading-skeleton-${index}`}
-                    className="animate-pulse overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-[#333] dark:bg-black"
+                    className="animate-pulse overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-[#0F0F0F]"
                   >
                     <div className="aspect-[2.5/3.5] bg-gradient-to-br from-gray-200 to-gray-300 dark:from-[#333] dark:to-[#444]"></div>
                     <div className="space-y-2 p-2">
@@ -132,11 +149,12 @@ function Dashboard() {
                   </div>
                 ))}
               </div>
+              </div>
             </div>
           </div>
         </main>
         
-        {/* Add BottomNavBar to Dashboard loading state */}
+        {/* Add BottomNavBar to combined loading state */}
         <BottomNavBar 
           currentView="cards"
           onViewChange={setCurrentView}
@@ -551,92 +569,7 @@ function AppContent({ currentView, setCurrentView }) {
   // Removed export functionality
   // Removed import functionality
 
-  if (loading) {
-    return (
-      <div className="dashboard-page min-h-screen bg-gray-50 dark:bg-black">
-        {/* Keep actual Header during loading */}
-        <Header
-          className="header"
-          selectedCollection="All Cards"
-          collections={{}}
-          onCollectionChange={() => {}}
-          onSettingsClick={() => {}}
-          currentView="cards"
-          onViewChange={() => {}}
-          onAddCollection={() => {}}
-        />
-
-        <main className="main-content mobile-dashboard mx-auto max-w-[1920px]">
-          <div className="p-4 pb-20 sm:p-6">
-            <div className="w-full px-1 pb-20 sm:px-2">
-              {/* Statistics Summary Skeleton */}
-              <div className="mb-3 w-full rounded-md border border-gray-200 bg-white dark:border-gray-700 dark:bg-[#111] sm:mb-4">
-                <div className="rounded-md p-2 sm:p-4 md:p-6">
-                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-0">
-                    {[
-                      { label: 'CARDS', width: 'w-8' },
-                      { label: 'PAID', width: 'w-16' },
-                      { label: 'VALUE', width: 'w-16' },
-                      { label: 'PROFIT', width: 'w-12' },
-                    ].map((stat) => (
-                      <div
-                        key={stat.label}
-                        className="flex flex-col items-center justify-center border-none p-2 py-3 sm:p-3 sm:py-4 md:p-4 md:py-6"
-                      >
-                        <div className="mb-1 text-xs font-medium uppercase text-gray-500 dark:text-gray-400 sm:mb-2 sm:text-sm">
-                          {stat.label}
-                        </div>
-                        <div
-                          className={`h-6 ${stat.width} animate-pulse rounded bg-gray-200 dark:bg-[#333]`}
-                        ></div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Search toolbar skeleton */}
-              <div className="mb-4">
-                <div className="flex flex-col items-stretch justify-between gap-3 rounded-lg border border-gray-200 bg-white p-3 dark:border-[#333] dark:bg-[#111] sm:flex-row sm:items-center sm:gap-4 sm:p-4">
-                  <div className="min-w-0 flex-1">
-                    <div className="h-10 w-full animate-pulse rounded-lg bg-gray-200 dark:bg-[#333]"></div>
-                  </div>
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    <div className="h-10 w-20 animate-pulse rounded-lg bg-gray-200 dark:bg-[#333]"></div>
-                    <div className="h-10 w-24 animate-pulse rounded-lg bg-gray-200 dark:bg-[#333]"></div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Card grid skeleton */}
-              <div className="grid grid-cols-2 gap-1 sm:grid-cols-3 sm:gap-2 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7">
-                {Array.from({ length: 14 }, (_, index) => (
-                  <div
-                    key={`skeleton-${index}`}
-                    className="animate-pulse overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-[#333] dark:bg-[#111]"
-                  >
-                    <div className="aspect-[2.5/3.5] bg-gradient-to-br from-gray-200 to-gray-300 dark:from-[#333] dark:to-[#444]"></div>
-                    <div className="space-y-2 p-2">
-                      <div className="h-3 w-3/4 rounded bg-gray-200 dark:bg-[#333]"></div>
-                      <div className="h-2 w-1/2 rounded bg-gray-200 dark:bg-[#333]"></div>
-                      <div className="h-4 w-2/3 rounded bg-gray-200 dark:bg-[#333]"></div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </main>
-        
-        {/* Add BottomNavBar to AppContent loading state */}
-        <BottomNavBar 
-          currentView={currentView}
-          onViewChange={setCurrentView}
-          onSettingsClick={() => setCurrentView('settings')}
-        />
-      </div>
-    );
-  }
+  // Removed AppContent loading state - now handled by Dashboard combined loading
 
   // Determine layout classes based on current view and header visibility
   const getMainLayoutClasses = () => {
@@ -728,135 +661,8 @@ function AppContent({ currentView, setCurrentView }) {
               <TrialStatusBanner />
 
               {/* Card List */}
-              {loading ? (
-                <div className="w-full px-1 pb-20 sm:px-2">
-                  {/* Skeleton Statistics Summary */}
-                  <div className="mb-3 w-full rounded-md border border-gray-200 bg-white dark:border-gray-700 dark:bg-black sm:mb-4">
-                    <div className="rounded-md p-2 sm:p-4 md:p-6">
-                      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-0">
-                        {[
-                          { label: 'CARDS', width: 'w-8' },
-                          { label: 'PAID', width: 'w-16' },
-                          { label: 'VALUE', width: 'w-16' },
-                          { label: 'PROFIT', width: 'w-12' },
-                        ].map((stat) => (
-                          <div
-                            key={stat.label}
-                            className="flex flex-col items-center justify-center border-none p-2 py-3 sm:p-3 sm:py-4 md:p-4 md:py-6"
-                          >
-                            <div className="mb-1 text-xs font-medium uppercase text-gray-500 dark:text-gray-400 sm:mb-2 sm:text-sm">
-                              {stat.label}
-                            </div>
-                            <div
-                              className={`h-6 ${stat.width} animate-pulse rounded bg-gray-200 dark:bg-[#333]`}
-                            ></div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Search Toolbar - Keep functional */}
-                  <div className="mb-4">
-                    <div className="flex flex-col items-stretch justify-between gap-3 rounded-lg border border-gray-200 bg-white p-3 dark:border-[#333] dark:bg-black sm:flex-row sm:items-center sm:gap-4 sm:p-4">
-                      {/* Search Input */}
-                      <div className="min-w-0 flex-1">
-                        <div className="relative">
-                          <span className="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-lg text-gray-400">
-                            search
-                          </span>
-                          <input
-                            type="text"
-                            placeholder="Search cards..."
-                            className="w-full rounded-lg border border-gray-300 bg-white py-2 pl-10 pr-4 text-gray-900 placeholder:text-gray-500 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-400"
-                            disabled
-                          />
-                        </div>
-                      </div>
-
-                      {/* View Mode and Sort Controls */}
-                      <div className="flex items-center gap-2 sm:gap-3">
-                        {/* View Mode Toggle */}
-                        <div className="flex rounded-lg bg-gray-100 p-1 dark:bg-gray-800">
-                          <button
-                            className="rounded-md bg-blue-600 p-2 text-white"
-                            disabled
-                          >
-                            <span className="material-icons text-lg">
-                              grid_view
-                            </span>
-                          </button>
-                          <button
-                            className="rounded-md p-2 text-gray-600 dark:text-gray-400"
-                            disabled
-                          >
-                            <span className="material-icons text-lg">
-                              view_list
-                            </span>
-                          </button>
-                        </div>
-
-                        {/* Add Card Button */}
-                        <button
-                          onClick={() => openNewCardForm()}
-                          className="inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 font-medium text-white transition-colors hover:bg-blue-700"
-                        >
-                          <span className="material-icons mr-2 text-lg">
-                            add
-                          </span>
-                          <span className="hidden sm:inline">Add Card</span>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Collection Selector Skeleton */}
-                  <div className="mb-2">
-                    <div className="rounded-lg border border-gray-200 bg-white p-3 dark:border-[#333] dark:bg-black">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <div className="size-6 animate-pulse rounded bg-gray-200 dark:bg-[#333]"></div>
-                          <div className="h-4 w-32 animate-pulse rounded bg-gray-200 dark:bg-[#333]"></div>
-                        </div>
-                        <div className="size-4 animate-pulse rounded bg-gray-200 dark:bg-[#333]"></div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Skeleton Card Grid */}
-                  <div className="grid grid-cols-2 gap-1 sm:grid-cols-3 sm:gap-2 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7">
-                    {Array.from({ length: 14 }, (_, index) => (
-                      <div
-                        key={index}
-                        className="animate-pulse overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-[#333] dark:bg-black"
-                      >
-                        {/* Card Image Skeleton */}
-                        <div className="relative aspect-[2.5/3.5] bg-gradient-to-br from-gray-200 to-gray-300 dark:from-[#333] dark:to-[#444]">
-                          <div className="absolute inset-0 -skew-x-12 animate-pulse bg-gradient-to-r from-transparent to-transparent"></div>
-                        </div>
-
-                        {/* Card Content Skeleton */}
-                        <div className="space-y-2 p-2">
-                          {/* Title */}
-                          <div className="h-3 w-3/4 rounded bg-gray-200 dark:bg-[#333]"></div>
-
-                          {/* Subtitle */}
-                          <div className="h-2 w-1/2 rounded bg-gray-200 dark:bg-[#333]"></div>
-
-                          {/* Price */}
-                          <div className="h-4 w-2/3 rounded bg-gray-200 dark:bg-[#333]"></div>
-
-                          {/* Grade */}
-                          <div className="flex items-center justify-between">
-                            <div className="h-3 w-1/3 rounded bg-gray-200 dark:bg-[#333]"></div>
-                            <div className="size-6 rounded bg-gray-200 dark:bg-[#333]"></div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ) : cards.length === 0 ? (
+              {/* Removed duplicate loading state to prevent flicker - handled by AppContent loading */}
+              {cards.length === 0 ? (
                 <div className="flex h-full min-h-[400px] flex-col items-center justify-center">
                   <span className="material-icons mb-4 text-6xl text-gray-400 dark:text-gray-600">
                     inventory_2
