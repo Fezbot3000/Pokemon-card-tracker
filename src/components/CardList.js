@@ -1278,13 +1278,13 @@ const CardList = ({
       {/* Selected Cards Actions - Modern FAB Style */}
       {selectedCards.size > 0 && (
         <>
-          {/* Bottom shadow overlay for better contrast */}
-          <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 h-1/3 bg-gradient-to-t from-white via-white to-transparent dark:from-black dark:via-black dark:to-transparent"></div>
+          {/* Bottom shadow overlay for better contrast - subtle transparency */}
+          <div className="pointer-events-none fixed inset-x-0 bottom-0 z-30 h-1/3 bg-gradient-to-t from-white/80 via-white/50 to-transparent dark:from-black/80 dark:via-black/50 dark:to-transparent"></div>
 
           <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2">
             {/* Selection Count Badge */}
             <div className="mb-3 flex justify-center">
-              <div className="rounded-full border border-gray-200 bg-white px-4 py-2 shadow-lg backdrop-blur-sm dark:border-gray-700 dark:bg-[#1B2131]">
+              <div className="rounded-full border border-[#E5E7EB] bg-[#ffffff] px-4 py-2 shadow-lg backdrop-blur-sm dark:border-[#374151] dark:bg-[#000000]">
                 <span className="text-sm font-medium text-gray-900 dark:text-white">
                   {selectedCards.size} card{selectedCards.size > 1 ? 's' : ''}{' '}
                   selected
@@ -1295,7 +1295,7 @@ const CardList = ({
             {/* Action Buttons */}
             <div className="flex flex-col items-center gap-3">
               {/* Main Action Buttons Row */}
-              <div className="flex max-w-[95vw] items-center gap-2 overflow-x-auto rounded-2xl border border-gray-200 bg-white p-2 shadow-xl backdrop-blur-sm dark:border-gray-700 dark:bg-[#1B2131] sm:gap-3 sm:p-3">
+              <div className="flex max-w-[95vw] items-center gap-2 overflow-x-auto rounded-2xl border border-[#E5E7EB] bg-[#ffffff] p-2 shadow-xl backdrop-blur-sm dark:border-[#374151] dark:bg-[#000000] sm:gap-3 sm:p-3">
                 {/* Sell Button */}
                 <button
                   onClick={() => {
@@ -1313,7 +1313,7 @@ const CardList = ({
                   }}
                   className={`group flex size-12 shrink-0 flex-col items-center justify-center rounded-xl shadow-md transition-all duration-200 sm:size-16 ${
                     hasFeature('SOLD_ITEMS')
-                      ? 'bg-green-500 text-white hover:scale-105 hover:bg-green-600 hover:shadow-lg active:scale-95'
+                      ? 'bg-[#22c55e] text-white hover:scale-105 hover:bg-[#16a34a] hover:shadow-lg active:scale-95'
                       : 'cursor-not-allowed bg-gray-400 text-gray-200 opacity-75'
                   }`}
                   title={
@@ -1351,7 +1351,7 @@ const CardList = ({
                   }}
                   className={`group flex size-12 shrink-0 flex-col items-center justify-center rounded-xl shadow-md transition-all duration-200 sm:size-16 ${
                     hasFeature('INVOICING')
-                      ? 'bg-blue-500 text-white hover:scale-105 hover:bg-blue-600 hover:shadow-lg active:scale-95'
+                      ? 'bg-[#3b82f6] text-white hover:scale-105 hover:bg-[#2563eb] hover:shadow-lg active:scale-95'
                       : 'cursor-not-allowed bg-gray-400 text-gray-200 opacity-75'
                   }`}
                   title={
@@ -1500,7 +1500,7 @@ const CardList = ({
                   }}
                   className={`group flex size-12 shrink-0 flex-col items-center justify-center rounded-xl shadow-md transition-all duration-200 sm:size-16 ${
                     hasFeature('MARKETPLACE_SELLING')
-                      ? 'bg-purple-500 text-white hover:scale-105 hover:bg-purple-600 hover:shadow-lg active:scale-95'
+                      ? 'bg-[#a855f7] text-white hover:scale-105 hover:bg-[#9333ea] hover:shadow-lg active:scale-95'
                       : 'cursor-not-allowed bg-gray-400 text-gray-200 opacity-75'
                   }`}
                   title={
@@ -1526,7 +1526,7 @@ const CardList = ({
                 {/* Move Button */}
                 <button
                   onClick={handleMoveCards}
-                  className="group flex size-12 shrink-0 flex-col items-center justify-center rounded-xl bg-orange-500 text-white shadow-md transition-all duration-200 hover:scale-105 hover:bg-orange-600 hover:shadow-lg active:scale-95 sm:size-16"
+                  className="group flex size-12 shrink-0 flex-col items-center justify-center rounded-xl bg-[#f97316] text-white shadow-md transition-all duration-200 hover:scale-105 hover:bg-[#ea580c] hover:shadow-lg active:scale-95 sm:size-16"
                   title="Move to collection"
                 >
                   <span className="material-icons mb-0 text-sm transition-transform duration-200 group-hover:scale-110 sm:mb-0.5 sm:text-lg">
@@ -1544,7 +1544,7 @@ const CardList = ({
                   className={`group flex size-12 shrink-0 flex-col items-center justify-center rounded-xl text-white shadow-md transition-all duration-200 sm:size-16 ${
                     isDeleting
                       ? 'cursor-not-allowed bg-red-400'
-                      : 'bg-red-500 hover:scale-105 hover:bg-red-600 hover:shadow-lg active:scale-95'
+                      : 'bg-[#ef4444] hover:scale-105 hover:bg-[#dc2626] hover:shadow-lg active:scale-95'
                   }`}
                   title={isDeleting ? "Deleting cards..." : "Delete selected cards"}
                 >
@@ -1570,7 +1570,7 @@ const CardList = ({
                 {/* Select All Button */}
                 <button
                   onClick={handleSelectAll}
-                  className="group flex size-12 shrink-0 flex-col items-center justify-center rounded-xl bg-gray-500 text-white shadow-md transition-all duration-200 hover:scale-105 hover:bg-gray-600 hover:shadow-lg active:scale-95 sm:size-16"
+                  className="group flex size-12 shrink-0 flex-col items-center justify-center rounded-xl bg-[#6B7280] text-white shadow-md transition-all duration-200 hover:scale-105 hover:bg-[#4B5563] hover:shadow-lg active:scale-95 dark:bg-[#4B5563] dark:hover:bg-[#374151] sm:size-16"
                   title={
                     selectedCards.size === cards.length
                       ? 'Deselect all'
@@ -1586,19 +1586,18 @@ const CardList = ({
                     {selectedCards.size === cards.length ? 'Deselect' : 'All'}
                   </span>
                 </button>
-              </div>
 
-              {/* Full-width Clear Selection Button */}
-              <button
-                onClick={clearSelection}
-                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 font-medium text-gray-900 shadow-md transition-all duration-200 hover:bg-gray-50 hover:shadow-lg dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
-                title="Clear selection"
-              >
-                <span className="material-icons mr-2 align-middle text-lg">
-                  clear
-                </span>
-                Clear Selection
-              </button>
+                {/* Clear Selection Button - smaller, next to All button */}
+                <button
+                  onClick={clearSelection}
+                  className="flex size-12 shrink-0 items-center justify-center rounded-xl border border-[#E5E7EB] bg-[#ffffff] text-[#111827] shadow-md transition-all duration-200 hover:scale-105 hover:bg-[#F3F4F6] hover:shadow-lg active:scale-95 dark:border-[#374151] dark:bg-[#000000] dark:text-[#F9FAFB] dark:hover:bg-[#111827] sm:size-16"
+                  title="Clear selection"
+                >
+                  <span className="material-icons text-lg">
+                    clear
+                  </span>
+                </button>
+              </div>
             </div>
           </div>
         </>
