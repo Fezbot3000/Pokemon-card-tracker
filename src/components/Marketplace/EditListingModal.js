@@ -259,7 +259,7 @@ function EditListingModal({ isOpen, onClose, listing, onListingDeleted, onListin
         isOpen={isOpen}
         onClose={onClose}
         title="Edit Listing"
-        size="modal-width-70"
+        size="contextual"
         position="right"
         closeOnClickOutside={true}
         zIndex="50"
@@ -326,7 +326,7 @@ function EditListingModal({ isOpen, onClose, listing, onListingDeleted, onListin
                       handleInputChange('markAsPending', false);
                     }
                   }}
-                  className="size-5 rounded border-gray-300 bg-white text-purple-600 focus:ring-2 focus:ring-purple-500 dark:border-gray-600 dark:bg-[#1B2131] dark:focus:ring-purple-400"
+                  className="size-5 rounded border-gray-300 bg-white text-primary focus:ring-2 focus:ring-primary dark:border-gray-600 dark:bg-[#0F0F0F] dark:focus:ring-primary"
                 />
                 <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
                   Mark as sold
@@ -346,7 +346,7 @@ function EditListingModal({ isOpen, onClose, listing, onListingDeleted, onListin
                         handleInputChange('markAsSold', false);
                       }
                     }}
-                    className="size-5 rounded border-gray-300 bg-white text-purple-600 focus:ring-2 focus:ring-purple-500 dark:border-gray-600 dark:bg-[#1B2131] dark:focus:ring-purple-400"
+                    className="size-5 rounded border-gray-300 bg-white text-primary focus:ring-2 focus:ring-primary dark:border-gray-600 dark:bg-[#0F0F0F] dark:focus:ring-primary"
                   />
                   <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
                     Mark as pending
@@ -381,7 +381,7 @@ function EditListingModal({ isOpen, onClose, listing, onListingDeleted, onListin
                     type="number"
                     value={formData.price}
                     onChange={e => handleInputChange('price', e.target.value)}
-                    className="w-full rounded-lg border border-gray-300 bg-white py-3 pl-8 pr-4 text-gray-900 placeholder:text-gray-500 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500 dark:border-gray-600 dark:bg-[#1B2131] dark:text-white dark:placeholder:text-gray-400"
+                    className="w-full rounded-lg border border-gray-300 bg-white py-3 pl-8 pr-4 text-gray-900 placeholder:text-gray-500 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary dark:border-gray-600 dark:bg-[#0F0F0F] dark:text-white dark:placeholder:text-gray-400"
                     placeholder="0.00"
                     step="0.01"
                     min="0.01"
@@ -398,7 +398,7 @@ function EditListingModal({ isOpen, onClose, listing, onListingDeleted, onListin
                   type="text"
                   value={formData.location}
                   onChange={e => handleInputChange('location', e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-500 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500 dark:border-gray-600 dark:bg-[#1B2131] dark:text-white dark:placeholder:text-gray-400"
+                  className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-500 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary dark:border-gray-600 dark:bg-[#0F0F0F] dark:text-white dark:placeholder:text-gray-400"
                   placeholder="Enter your location (e.g., Sydney)"
                 />
               </div>
@@ -413,7 +413,7 @@ function EditListingModal({ isOpen, onClose, listing, onListingDeleted, onListin
               <textarea
                 value={formData.note}
                 onChange={e => handleInputChange('note', e.target.value)}
-                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-500 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500 dark:border-gray-600 dark:bg-[#1B2131] dark:text-white dark:placeholder:text-gray-400"
+                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-500 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary dark:border-gray-600 dark:bg-[#0F0F0F] dark:text-white dark:placeholder:text-gray-400"
                 placeholder="Add a note about this card..."
                 rows="4"
               />

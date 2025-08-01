@@ -239,7 +239,7 @@ const Modal = ({
       onClick={handleBackdropClick}
     >
       {/* Desktop margin container */}
-      <div className={`size-full sm:p-4 md:p-6 flex ${position === 'right' ? 'justify-end items-stretch' : 'items-stretch justify-center'}`}>
+      <div className={`size-full sm:p-4 md:p-6 flex ${position === 'right' ? 'justify-end items-stretch' : size === 'contextual' ? 'items-center justify-center' : 'items-stretch justify-center'}`}>
       <div
         ref={modalRef}
         className={`${modalClasses} flex flex-col ${animationClass} modal-container ${size === 'contextual' ? 'modal-contextual' : ''} ${
@@ -275,7 +275,7 @@ const Modal = ({
 
         {/* Modal Content - Scrollable */}
         <div
-          className={`scrollbar-hide flex-1 overflow-y-auto ${noContentPadding ? 'px-6' : 'p-6'} modal-content modal-body`}
+          className={`scrollbar-hide ${size === 'contextual' ? 'shrink-0' : 'flex-1'} overflow-y-auto ${noContentPadding ? 'px-6' : 'p-6'} modal-content modal-body`}
         >
           {children}
         </div>

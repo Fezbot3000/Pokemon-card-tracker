@@ -53,7 +53,7 @@ const ModalButton = ({
 };
 
 ModalButton.propTypes = {
-  variant: PropTypes.oneOf(['primary', 'secondary', 'danger', 'success', 'outline']),
+  variant: PropTypes.oneOf(['primary', 'secondary', 'danger', 'destructive', 'success', 'outline']),
   children: PropTypes.node.isRequired,
   onClick: PropTypes.func,
   disabled: PropTypes.bool,

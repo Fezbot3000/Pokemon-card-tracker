@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import Modal from '../design-system/molecules/Modal';
 import Icon from '../design-system/atoms/Icon';
 import ModalButton from '../design-system/atoms/ModalButton';
+import CustomDropdown from '../design-system/molecules/CustomDropdown';
 
 const MoveCardsModal = ({
   isOpen,
@@ -93,21 +94,18 @@ const MoveCardsModal = ({
           </div>
         ) : (
           <div>
-            <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-              Target Collection <span className="text-red-500">*</span>
-            </label>
-            <select
+            <CustomDropdown
+              label="Target Collection"
+              name="targetCollection"
               value={targetCollection}
-              onChange={e => setTargetCollection(e.target.value)}
-              className="border-gray-200/20 dark:border-gray-700/10 w-full rounded-lg border bg-white px-3 py-2 text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-400"
-            >
-              <option value="">Select a collection...</option>
-              {availableCollections.map(collection => (
-                <option key={collection} value={collection}>
-                  {collection}
-                </option>
-              ))}
-            </select>
+              onSelect={setTargetCollection}
+              required
+              placeholder="Select a collection..."
+              options={availableCollections.map(collection => ({
+                value: collection,
+                label: collection
+              }))}
+            />
           </div>
         )}
       </div>

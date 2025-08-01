@@ -337,6 +337,35 @@ body.modal-open {
   overflow: hidden;
 }
 
+/* ==================== MODAL CONTEXTUAL SIZING ==================== */
+
+/* Contextual modals should be content-based height, not full height */
+.modal-contextual {
+  height: auto !important;
+  max-height: calc(100vh - 2rem) !important;
+  align-self: center !important;
+  min-height: auto !important;
+}
+
+/* On mobile, contextual modals should still be content-based */
+@media (max-width: 640px) {
+  .modal-contextual {
+    height: auto !important;
+    max-height: calc(100vh - 1rem) !important;
+    margin: 0.5rem !important;
+    align-self: center !important;
+    min-height: auto !important;
+    width: calc(100vw - 1rem) !important;
+    max-width: calc(100vw - 1rem) !important;
+  }
+  
+  /* Override any mobile full-screen classes for contextual modals */
+  .modal-contextual.modal-container {
+    position: relative !important;
+    inset: auto !important;
+  }
+}
+
 /* Collection Dropdown */
 .collection-dropdown {
   background-color: white;

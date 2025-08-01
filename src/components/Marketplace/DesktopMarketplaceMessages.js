@@ -208,16 +208,8 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
   const loadCardImages = useCallback(async conversationsData => {
     if (!conversationsData || conversationsData.length === 0) return;
 
-    // Clean up existing blob URLs before loading new ones
-    Object.values(cardImages).forEach(url => {
-      if (url && typeof url === 'string' && url.startsWith('blob:')) {
-        try {
-          URL.revokeObjectURL(url);
-        } catch (error) {
-          logger.warn('Failed to revoke blob URL:', error);
-        }
-      }
-    });
+    // We'll clean up blob URLs when setting the new state
+    // to avoid circular dependency with cardImages in the dependency array
 
     const newCardImages = {};
 
@@ -340,11 +332,24 @@ function DesktopMarketplaceMessages({ currentView, onViewChange }) {
       }
     }
 
-    setCardImages(prevImages => ({
-      ...prevImages,
-      ...newCardImages,
-    }));
-  }, [cardImages]);
+    setCardImages(prevImages => {
+      // Clean up existing blob URLs before setting new ones
+      Object.values(prevImages).forEach(url => {
+        if (url && typeof url === 'string' && url.startsWith('blob:')) {
+          try {
+            URL.revokeObjectURL(url);
+          } catch (error) {
+            logger.warn('Failed to revoke blob URL:', error);
+          }
+        }
+      });
+      
+      return {
+        ...prevImages,
+        ...newCardImages,
+      };
+    });
+  }, []); // Remove cardImages dependency to prevent infinite loop
 
   // Load card images when conversations change
   useEffect(() => {
