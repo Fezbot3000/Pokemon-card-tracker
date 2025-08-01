@@ -3,7 +3,7 @@ import { NavLink } from 'react-router-dom';
 
 function NavigationBar() {
   return (
-    <div className="ios-safe-nav fixed inset-x-0 top-0 z-50 flex w-full justify-center pt-4 sm:pt-6 md:pt-8 lg:pt-12">
+    <div className="fixed inset-x-0 top-0 z-50 flex w-full justify-center pt-4 sm:pt-6 md:pt-8 lg:pt-12">
       <div className="bg-white/10 mx-4 rounded-xl backdrop-blur-sm">
         <div className="flex">
           <NavLink

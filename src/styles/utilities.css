@@ -93,7 +93,7 @@
 
 /* Bottom navigation utilities */
 .bottom-nav {
-  height: 3.5rem; /* Reduced from 4rem (64px) to 3.5rem (56px) */
+  min-height: 4rem; /* Use min-height instead of fixed height for flexibility */
   background-color: var(--color-white);
   border-top: 1px solid var(--color-border);
   z-index: var(--z-bottom-nav);
@@ -321,7 +321,7 @@ header .max-h-60.overflow-y-auto::-webkit-scrollbar {
 /* ==================== MODAL UTILITIES ==================== */
 
 /* Modal state utilities */
-.modal-open .bottom-nav {
+.modal-open .mobile-bottom-nav {
   transform: translateY(100%);
 }
 

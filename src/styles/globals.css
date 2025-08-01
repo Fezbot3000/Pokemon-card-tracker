@@ -2,11 +2,17 @@
  * Global Styles - Pokemon Card Tracker
  * 
  * This file contains:
+ * - CSS Layers definition
  * - Font imports
  * - Tailwind CSS imports
  * - Global resets and base styles
  * - Essential global utilities
  */
+
+/* ==================== CSS LAYERS ARCHITECTURE ==================== */
+
+/* Define cascade layers for predictable specificity hierarchy */
+@layer reset, tokens, base, layout, components, utilities, shame;
 
 /* ==================== FONT IMPORTS ==================== */
 
@@ -130,16 +136,18 @@ p {
 
 /* ==================== GLOBAL UTILITIES ==================== */
 
-/* Modal utilities */
-body.modal-open {
-  overflow: hidden;
-  /* Prevent iOS Safari bounce scrolling */
-  position: fixed;
-  width: 100%;
-  /* Prevent scrolling on touch devices */
-  touch-action: none;
-  /* Additional scroll prevention */
-  overscroll-behavior: none;
+@layer layout {
+  /* Modal utilities - scroll prevention and layout control */
+  body.modal-open {
+    overflow: hidden;
+    /* Prevent iOS Safari bounce scrolling */
+    position: fixed;
+    width: 100%;
+    /* Prevent scrolling on touch devices */
+    touch-action: none;
+    /* Additional scroll prevention */
+    overscroll-behavior: none;
+  }
 }
 
 /* Ensure modal content can still scroll */
@@ -180,36 +188,7 @@ body.modal-open {
   display: none;
 }
 
-/* ==================== PWA SPECIFIC STYLES ==================== */
-/* 
-  PWA Styles Organization (Consolidated):
-  
-  1. PRIMARY PWA STYLES (src/styles/design-system.css):
-     - PWA design tokens (--safe-area-*, --pwa-*, etc.)
-     - Base PWA styles with @media (display-mode: standalone)
-     - PWA-specific classes (.header-pwa, .modal-pwa, etc.)
-     - Cross-platform PWA optimizations
-  
-  2. iOS-SPECIFIC PWA FIXES (src/styles/ios-fixes.css):
-     - iOS Safari specific adjustments
-     - iOS PWA touch optimizations
-     - iOS-specific modal and navigation fixes
-     - Device-specific breakpoint adjustments
-  
-  3. PWA INTEGRATION (this file):
-     - Any additional PWA-specific overrides
-     - App-specific PWA customizations
-  
-  All PWA styles now use design tokens instead of hardcoded values
-  and proper CSS specificity instead of !important declarations.
-*/
-
-@media (display-mode: standalone) {
-  /* PWA detection - add body class for easier targeting */
-  body {
-    /* PWA-specific body modifications can be added here if needed */
-  }
-}
+/* PWA STYLES REMOVED */
 
 /* ==================== RESPONSIVE UTILITIES ==================== */
 

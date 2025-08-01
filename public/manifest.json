@@ -49,7 +49,7 @@
     }
   ],
   "start_url": "./?utm_source=homescreen",
-  "display": "standalone",
+  "display": "browser",
   "theme_color": "#000000",
   "background_color": "#ffffff"
 }

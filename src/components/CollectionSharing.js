@@ -602,7 +602,7 @@ const CollectionSharing = ({ isInModal = false }) => {
         position="right"
         size="lg"
         closeOnClickOutside={false}
-        className="modal-header-ios-safe"
+        className=""
         footer={
           <div className="flex w-full flex-col items-stretch justify-end space-y-2 sm:flex-row sm:items-center sm:space-x-3 sm:space-y-0">
             <Button

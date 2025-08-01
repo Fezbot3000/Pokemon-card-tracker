@@ -448,6 +448,7 @@ Header.propTypes = {
     'marketplace',
     'marketplace-selling',
     'marketplace-messages',
+    'settings',
     'grid',
     'list',
   ]),

@@ -33,6 +33,7 @@ import PurchaseInvoices from './components/PurchaseInvoices/PurchaseInvoices';
 import Marketplace from './components/Marketplace/Marketplace';
 import MarketplaceSelling from './components/Marketplace/MarketplaceSelling';
 import MarketplaceMessages from './components/Marketplace/MarketplaceMessages';
+import Settings from './components/Settings';
 import BottomNavBar from './components/BottomNavBar';
 import TrialStatusBanner from './components/TrialStatusBanner';
 
@@ -153,25 +154,20 @@ function Dashboard() {
 
       {/* Mobile Bottom Navigation - Available across all dashboard routes */}
       {!location.pathname.includes('/pricing') && (
-        <div className="fixed inset-x-0 bottom-0 z-40 lg:hidden">
-          <BottomNavBar
+        <BottomNavBar
             currentView={
               location.pathname.includes('/settings') ? 'settings' : currentView
             }
             onViewChange={view => {
               try {
-                if (view === 'settings') {
-                  navigate('/dashboard/settings');
+                // If we're on settings page, navigate back to dashboard with the desired view
+                if (location.pathname.includes('/settings')) {
+                  navigate('/dashboard', { state: { targetView: view } });
                 } else {
-                  // If we're on settings page, navigate back to dashboard with the desired view
-                  if (location.pathname.includes('/settings')) {
-                    navigate('/dashboard', { state: { targetView: view } });
-                  } else {
-                    // Add a small delay to ensure state updates happen correctly
-                    setTimeout(() => {
-                      setCurrentView(view);
-                    }, 0);
-                  }
+                  // Add a small delay to ensure state updates happen correctly
+                  setTimeout(() => {
+                    setCurrentView(view);
+                  }, 0);
                 }
               } catch (error) {
                 // Fallback: try direct view change
@@ -179,10 +175,9 @@ function Dashboard() {
               }
             }}
             onSettingsClick={() => {
-              navigate('/dashboard/settings');
+              setCurrentView('settings');
             }}
           />
-        </div>
       )}
       
       
@@ -414,11 +409,11 @@ function AppContent({ currentView, setCurrentView }) {
         // Check if there's a target view from navigation state first
         if (location.state?.targetView) {
           setCurrentView(location.state.targetView);
-        } else if (!currentView || currentView === 'settings') {
-          // Only default to cards if we don't have a current view or coming from settings
+        } else if (!currentView) {
+          // Only default to cards if we don't have a current view
           setCurrentView('cards');
         }
-        // If currentView is already set to a valid dashboard view, preserve it
+        // If currentView is already set to a valid dashboard view (including settings), preserve it
       }
     } catch (error) {
       // Fallback: only set to cards if we don't have a current view
@@ -642,7 +637,6 @@ function AppContent({ currentView, setCurrentView }) {
     
     // Mobile layout logic
     const hasHeader = !(currentView === 'settings' || currentView === 'cards');
-    const isPWA = window.matchMedia('(display-mode: standalone)').matches;
     
     let layoutClasses = baseClasses;
     
@@ -652,10 +646,6 @@ function AppContent({ currentView, setCurrentView }) {
       layoutClasses += ' no-header';
     }
     
-    if (isPWA) {
-      layoutClasses += ' pwa-mode';
-    }
-    
     return layoutClasses;
   };
 
@@ -663,10 +653,10 @@ function AppContent({ currentView, setCurrentView }) {
     <div className="dashboard-page min-h-screen bg-gray-50 dark:bg-black">
       
       
-      {/* Hide Header on mobile when in settings or cards view */}
+      {/* Hide Header on mobile when in cards view only */}
       {!(
         isMobile &&
-        (currentView === 'settings' || currentView === 'cards')
+        currentView === 'cards'
       ) && (
         <Header
           className="header"
@@ -954,39 +944,35 @@ function AppContent({ currentView, setCurrentView }) {
         ) : currentView === 'sold-items' ? (
           <SoldItems />
         ) : currentView === 'settings' ? (
-          <div className={`min-h-screen bg-gray-50 dark:bg-black ${isMobile ? 'settings-mobile' : ''}`}>
-            <SettingsModal
-              isOpen={true}
-              isModal={false}
-              onClose={() => setCurrentView('cards')}
-              selectedCollection={selectedCollection}
-              collections={collections}
-              onStartTutorial={startTutorial}
-              onSignOut={logout}
-              onRenameCollection={(oldName, newName) => {
-                collectionManager.renameCollection(oldName, newName, {
-                  collections,
-                  setCollections,
-                  selectedCollection,
-                  setSelectedCollection,
-                  user,
-                });
-              }}
-              onDeleteCollection={(collectionName) => {
-                collectionManager.deleteCollection(collectionName, {
-                  collections,
-                  setCollections,
-                  selectedCollection,
-                  setSelectedCollection,
-                  user,
-                });
-              }}
-              onResetData={() => {
-                // Reset data functionality
-                // TODO: Implement reset data functionality
-              }}
-            />
-          </div>
+          <Settings
+            selectedCollection={selectedCollection}
+            collections={collections}
+            onStartTutorial={startTutorial}
+            onSignOut={logout}
+            onClose={() => setCurrentView('cards')}
+            onRenameCollection={(oldName, newName) => {
+              collectionManager.renameCollection(oldName, newName, {
+                collections,
+                setCollections,
+                selectedCollection,
+                setSelectedCollection,
+                user,
+              });
+            }}
+            onDeleteCollection={(collectionName) => {
+              collectionManager.deleteCollection(collectionName, {
+                collections,
+                setCollections,
+                selectedCollection,
+                setSelectedCollection,
+                user,
+              });
+            }}
+            onResetData={() => {
+              // Reset data functionality
+              // TODO: Implement reset data functionality
+            }}
+          />
         ) : null}
       </main>
 

@@ -442,60 +442,92 @@ html.dark body {
 }
 
 /* Z-index management - Essential styles from z-index-fixes.css */
-/* Mobile-specific z-index management */
-@media (max-width: 768px) {
-  /* Bottom nav should be above everything */
-  .bottom-nav {
-    z-index: var(--z-index-bottom-nav);
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    background-color: white;
-    border-top: 1px solid #e5e7eb;
-    padding: 0.25rem 0; /* Reduced from 0.5rem to 0.25rem */
-  }
+/* Clean Mobile Bottom Navigation - No Tailwind */
+.mobile-bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 3000;
+  background-color: #ffffff;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-around;
+  align-items: stretch;
+  height: auto;
+  padding: 8px 0 12px 0;
+  box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.1);
+}
 
-  .dark .bottom-nav {
-    background-color: #0F0F0F;
-    border-top: 1px solid #374151;
-  }
+.nav-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: #6b7280;
+  cursor: pointer;
+  transition: color 0.2s ease-in-out;
+  padding: 8px 12px;
+  min-height: 60px;
+  flex: 1;
+}
 
-  .bottom-nav-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 0.25rem; /* Reduced from 0.5rem to 0.25rem */
-    color: #6b7280;
-    transition: color 0.2s ease-in-out;
-  }
+.nav-button:hover {
+  color: #374151;
+}
 
-  .bottom-nav-item.active {
-    color: #ef4444;
-  }
+.nav-button.active {
+  color: #ef4444;
+}
 
-  .dark .bottom-nav-item {
-    color: #9ca3af;
-  }
+.nav-icon {
+  font-size: 24px !important;
+  line-height: 1;
+  margin-bottom: 4px;
+}
 
-  .dark .bottom-nav-item.active {
-    color: #ef4444;
-  }
+.nav-label {
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.2;
+  text-align: center;
+}
 
-  /* Settings page should be below the bottom nav but above other content */
-  .settings-mobile-page {
-    z-index: var(--z-index-settings);
-  }
+/* Dark mode */
+.dark .mobile-bottom-nav {
+  background-color: #0F0F0F;
+  border-top: 1px solid #374151;
+}
 
-  /* Header should be above settings */
-  .header,
-  .app-header,
-  .collection-header {
-    z-index: var(--z-index-header);
+.dark .nav-button {
+  color: #9ca3af;
+}
+
+.dark .nav-button:hover {
+  color: #d1d5db;
+}
+
+.dark .nav-button.active {
+  color: #ef4444;
+}
+
+@media (min-width: 640px) {
+  .mobile-bottom-nav {
+    display: none;
   }
+}
+
+/* Z-index management */
+.settings-mobile-page {
+  z-index: var(--z-index-settings);
+}
+
+.header,
+.app-header,
+.collection-header {
+  z-index: var(--z-index-header);
 }
 
 /* Fix for settings icon clickability */

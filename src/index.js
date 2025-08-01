@@ -4,7 +4,7 @@ import ReactDOM from 'react-dom/client';
 import './styles/globals.css'; // Modernized global styles with design tokens
 import './styles/main.css'; // Primary layout and component styles
 import './styles/utilities.css'; // Custom utility classes
-import './styles/ios-fixes.css'; // iOS Safari specific fixes
+// iOS fixes removed
 import { router } from './router';
 import { RouterProvider } from 'react-router-dom';
 import reportWebVitals from './reportWebVitals';

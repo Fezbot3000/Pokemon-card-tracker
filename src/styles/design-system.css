@@ -124,32 +124,7 @@
   --container-lg: 1024px;
   --container-xl: 1280px;
 
-  /* ==================== PWA-SPECIFIC TOKENS ==================== */
-  /* Safe area handling */
-  --safe-area-top: env(safe-area-inset-top, 0px);
-  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
-  --safe-area-left: env(safe-area-inset-left, 0px);
-  --safe-area-right: env(safe-area-inset-right, 0px);
-
-  /* PWA header calculations */
-  --pwa-header-total-mobile: calc(var(--header-height-mobile) + var(--safe-area-top));
-  --pwa-header-total-desktop: calc(var(--header-height-desktop) + var(--safe-area-top));
-
-  /* PWA content padding */
-  --pwa-content-padding-top-mobile: calc(var(--space-4) + var(--safe-area-top));
-  --pwa-content-padding-bottom-mobile: calc(var(--bottom-nav-height) + var(--safe-area-bottom));
-  --pwa-content-padding-desktop: calc(var(--space-4) + var(--safe-area-top));
-
-  /* PWA modal adjustments */
-  --pwa-modal-margin-top: var(--safe-area-top);
-  --pwa-modal-margin-bottom: var(--safe-area-bottom);
-
-  /* PWA checkbox sizes (iOS optimization) */
-  --pwa-checkbox-size: var(--space-5); /* 20px - better touch target for PWA */
-  --pwa-checkbox-min-size: var(--space-5); /* 20px */
-
-  /* PWA touch targets (iOS recommended) */
-  --pwa-touch-target-min: var(--space-11); /* 44px */
+  /* PWA TOKENS REMOVED */
 
   /* Modal styling tokens */
   --modal-border-radius: var(--border-radius-xl);
@@ -216,75 +191,7 @@ html.dark {
   --placeholder-color: var(--color-gray-500);
 }
 
-/* ==================== PWA-SPECIFIC STYLES ==================== */
-
-/* PWA display mode detection and base adjustments */
-@media (display-mode: standalone) {
-  body {
-    /* Apply safe area padding to body */
-    padding-top: var(--safe-area-top);
-    padding-bottom: var(--safe-area-bottom);
-    padding-left: var(--safe-area-left);
-    padding-right: var(--safe-area-right);
-  }
-  
-  /* PWA mode: Modal rules consolidated to ios-fixes.css to prevent conflicts */
-
-  /* PWA header positioning */
-  .header-pwa,
-  header.fixed {
-    top: var(--safe-area-top);
-  }
-
-  /* PWA bottom navigation positioning */
-  .bottom-nav-pwa,
-  .bottom-navigation.fixed {
-    bottom: var(--safe-area-bottom);
-  }
-
-  /* PWA main content adjustments */
-  .main-content-pwa {
-    padding-top: var(--pwa-content-padding-top-mobile);
-    padding-bottom: var(--pwa-content-padding-bottom-mobile);
-  }
-
-  @media (min-width: 640px) {
-    .main-content-pwa {
-      padding-top: var(--pwa-content-padding-desktop);
-      padding-bottom: var(--space-4);
-    }
-  }
-
-  /* PWA modal backdrop adjustments - account for safe areas */
-  .modal-backdrop-pwa {
-    /* Adjust backdrop to not cover safe areas */
-    top: var(--safe-area-top);
-    bottom: var(--safe-area-bottom);
-    left: var(--safe-area-left);
-    right: var(--safe-area-right);
-  }
-  
-  /* PWA modal container adjustments */
-  .modal-pwa,
-  .modal-container-pwa {
-    margin-top: var(--space-4);
-    margin-bottom: var(--space-4);
-    /* Ensure modal doesn't get too close to safe area edges */
-    max-height: calc(100vh - var(--safe-area-top) - var(--safe-area-bottom) - var(--space-8));
-  }
-
-  /* PWA status bar background fill */
-  body::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: var(--safe-area-top);
-    background-color: var(--bg-primary);
-    z-index: 9999;
-  }
-}
+/* PWA STYLES REMOVED */
 
 /* ==================== COMPONENT BASE STYLES ==================== */
 
@@ -432,98 +339,25 @@ html.dark {
      ✅ padding: var(--space-4);
      ❌ padding: 1rem;
   
-  2. PWA-SPECIFIC STYLING GUIDELINES:
-     
-     a) PWA Detection and Targeting:
-        - Use @media (display-mode: standalone) for PWA-only styles
-        - Add body.pwa class for component-level PWA targeting
-        - Example: body.pwa .header { top: var(--safe-area-top); }
-     
-     b) PWA Design Tokens:
-        - Safe areas: var(--safe-area-top), var(--safe-area-bottom)
-        - PWA content padding: var(--pwa-content-padding-top-mobile)
-        - PWA header calculations: var(--pwa-header-total-mobile)
-        - PWA touch targets: var(--pwa-touch-target-min)
-        - PWA checkbox optimization: var(--pwa-checkbox-size)
-     
-     c) PWA Layout Classes:
-        - .header-pwa: PWA-optimized header positioning
-        - .bottom-nav-pwa: PWA-optimized bottom navigation
-        - .modal-pwa: PWA-optimized modal spacing
-        - .main-content-pwa: PWA-optimized main content
-        - .checkbox-pwa: PWA-optimized checkbox sizing
-        - .touch-target-pwa: PWA-optimized touch targets
-     
-     d) PWA Safe Area Handling:
-        - Headers: top: var(--safe-area-top)
-        - Bottom nav: bottom: var(--safe-area-bottom)
-        - Content: padding-top: calc(var(--header-height) + var(--safe-area-top))
-        - Modals: margin-top: var(--pwa-modal-margin-top)
-     
-     e) PWA Performance Optimization:
-        - Use transform instead of position changes when possible
-        - Leverage hardware acceleration for PWA animations
-        - Optimize touch targets for mobile (min 44px)
-  
-  3. RESPONSIVE DESIGN:
+  2. RESPONSIVE DESIGN:
      - Mobile-first approach (design for 320px first)
      - Standard breakpoints: 640px, 768px, 1024px, 1280px
-     - PWA optimizations: Design for touch-first interactions
   
-  4. THEME SUPPORT:
+  3. THEME SUPPORT:
      - Use semantic tokens: var(--bg-primary), var(--text-primary)
      - Avoid direct color references in components
-     - PWA status bar adapts automatically to theme
   
-  5. COMPONENT DEVELOPMENT:
+  4. COMPONENT DEVELOPMENT:
      - Extend base classes: .btn-base, .card-base, .input-base
      - Use consistent spacing: var(--space-*) tokens
-     - PWA considerations: Add touch optimization classes when needed
-  
-  6. PWA LAYOUT PATTERNS:
-     
-     a) PWA Header Pattern:
-        <header class="header-pwa fixed top-0">
-          <!-- Header content -->
-        </header>
-     
-     b) PWA Main Content Pattern:
-        <main class="main-content-pwa">
-          <!-- Page content -->
-        </main>
-     
-     c) PWA Modal Pattern:
-        <div class="modal-pwa">
-          <div class="modal-container">
-            <!-- Modal content -->
-          </div>
-        </div>
-     
-     d) PWA Touch Targets:
-        <button class="btn-base touch-target-pwa">
-          <!-- Button content -->
-        </button>
-  
-  7. PWA DEVELOPMENT WORKFLOW:
-     - Test in standalone mode: Add to homescreen and test
-     - Verify safe area handling on devices with notches
-     - Test touch targets on actual mobile devices
-     - Validate performance with PWA optimization tools
   
   AVOID:
   - ❌ Hardcoded values (use design tokens)
   - ❌ !important declarations (use proper CSS specificity)
   - ❌ Duplicate token definitions across files
-  - ❌ PWA styles scattered across multiple files
-  - ❌ Touch targets smaller than 44px on mobile
-  - ❌ Forgetting safe area handling for PWA layouts
-  - ❌ Inconsistent PWA class naming conventions
   
   BEST PRACTICES:
   - ✅ Use design tokens consistently
-  - ✅ Test PWA functionality on real devices
+  - ✅ Test functionality on real devices
   - ✅ Optimize for touch interactions
-  - ✅ Handle safe areas properly
-  - ✅ Use semantic naming for PWA classes
-  - ✅ Document PWA-specific component variations
 */

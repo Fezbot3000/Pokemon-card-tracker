@@ -50,30 +50,30 @@ const Modal = ({
 
       // Use requestAnimationFrame to delay DOM modifications until after the current frame
       requestAnimationFrame(() => {
-        // Set the top offset for all devices to maintain scroll position
-        document.body.style.top = `-${scrollPosRef.current.y}px`;
+        // TEMPORARILY DISABLED: Set the top offset for all devices to maintain scroll position
+        // document.body.style.top = `-${scrollPosRef.current.y}px`;
         // Add modal-open class which applies position: fixed via CSS
         document.body.classList.add('modal-open');
       });
 
       // Cleanup function
       return () => {
-        // Get the scroll position from the negative top value
-        const scrollY = parseInt(document.body.style.top || '0') * -1;
+        // TEMPORARILY DISABLED: Get the scroll position from the negative top value
+        // const scrollY = parseInt(document.body.style.top || '0') * -1;
         // Remove modal-open class to restore normal scrolling
         document.body.classList.remove('modal-open');
-        // Clear the top style
-        document.body.style.top = '';
-        // Restore scroll position
-        window.scrollTo(0, scrollY || scrollPosRef.current?.y || 0);
+        // TEMPORARILY DISABLED: Clear the top style
+        // document.body.style.top = '';
+        // TEMPORARILY DISABLED: Restore scroll position
+        // window.scrollTo(0, scrollY || scrollPosRef.current?.y || 0);
       };
     } else if (!isOpen) {
       // If modal was just closed, make sure to clean up
-      const scrollY = parseInt(document.body.style.top || '0') * -1;
+      // TEMPORARILY DISABLED: const scrollY = parseInt(document.body.style.top || '0') * -1;
       document.body.classList.remove('modal-open');
-      document.body.style.top = '';
+      // TEMPORARILY DISABLED: document.body.style.top = '';
       if (scrollPosRef.current) {
-        window.scrollTo(0, scrollY || scrollPosRef.current.y || 0);
+        // TEMPORARILY DISABLED: window.scrollTo(0, scrollY || scrollPosRef.current.y || 0);
       }
     }
   }, [isOpen, position, showAsStatic]);
@@ -164,25 +164,13 @@ const Modal = ({
     contextual: 'w-full max-w-md', // Contextual modals - consistent width, auto height
   };
 
-  // iOS device detection
-  const isIOSDevice = () => {
-    return (
-      /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
-    );
-  };
-
-  // Apply iOS-specific classes
-  const iosClasses = isIOSDevice() ? 'modal-footer-ios-fix' : '';
-  const contentClasses = isIOSDevice()
-    ? 'modal-content-with-absolute-footer'
-    : '';
+  // iOS detection removed
 
   // Mobile full width override - only for non-contextual modals
   const shouldApplyMobileOverride =
     window.innerWidth < 640 && size !== 'contextual';
   const mobileFullWidth = shouldApplyMobileOverride
-    ? 'w-screen max-w-none rounded-lg m-0 fixed top-0 left-0 right-0 bottom-0 z-[50000]' // Fixed: PWA and Browser get same positioning
+    ? 'w-screen h-screen max-w-none max-h-none rounded-lg m-0 fixed inset-0 z-[50000]' // Full height mobile modal with inset-0
     : '';
 
 
@@ -193,10 +181,9 @@ const Modal = ({
     ? `bg-black backdrop-blur-sm rounded-xl shadow-2xl border border-gray-800/20 text-white`
     : `bg-white dark:bg-[#0F0F0F] backdrop-blur-sm rounded-xl shadow-2xl border border-gray-200/20 dark:border-gray-700/20`;
 
-  const iosHeaderSafeClass = isIOSDevice() ? 'modal-header-ios-safe' : '';
   const headerClasses = forceDarkMode
-    ? `sticky top-0 z-10 flex items-center justify-between px-6 pt-6 pb-4 border-b-[0.5px] border-gray-700 bg-black backdrop-blur-sm rounded-t-xl ${iosHeaderSafeClass}`
-    : `sticky top-0 z-10 flex items-center justify-between px-6 pt-6 pb-4 border-b-[0.5px] border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0F0F0F] backdrop-blur-sm rounded-t-xl ${iosHeaderSafeClass}`;
+    ? `sticky top-0 z-10 flex items-center justify-between px-6 pt-6 pb-4 border-b-[0.5px] border-gray-700 bg-black backdrop-blur-sm rounded-t-xl`
+    : `sticky top-0 z-10 flex items-center justify-between px-6 pt-6 pb-4 border-b-[0.5px] border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0F0F0F] backdrop-blur-sm rounded-t-xl`;
 
   const titleClasses = forceDarkMode
     ? 'text-xl font-medium text-gray-200'
@@ -248,11 +235,11 @@ const Modal = ({
   // Regular modal with backdrop and positioning
   return createPortal(
     <div 
-      className={`fixed inset-0 flex min-h-screen w-full items-center ${position === 'right' ? 'justify-end' : 'justify-center'} bg-black/40 backdrop-blur-sm ${getModalZIndex()}`}
+      className={`fixed inset-0 size-full flex items-center ${position === 'right' ? 'justify-end' : 'justify-center'} bg-black/40 backdrop-blur-sm ${getModalZIndex()}`}
       onClick={handleBackdropClick}
     >
       {/* Desktop margin container */}
-      <div className={`size-full sm:p-4 md:p-6 flex ${position === 'right' ? 'justify-end items-stretch' : 'items-center justify-center'}`}>
+      <div className={`size-full sm:p-4 md:p-6 flex ${position === 'right' ? 'justify-end items-stretch' : 'items-stretch justify-center'}`}>
       <div
         ref={modalRef}
         className={`${modalClasses} flex flex-col ${animationClass} modal-container ${size === 'contextual' ? 'modal-contextual' : ''} ${
@@ -261,6 +248,7 @@ const Modal = ({
             : mobileFullWidth ||
               (size === 'custom' ? maxWidth : sizeClasses[size] || (size === 'modal-width-70' ? 'w-[70%]' : size === 'modal-width-60' ? 'w-3/5' : 'w-[55%]'))
         } ${className}`}
+
         role="dialog"
         aria-modal="true"
         aria-labelledby={title ? 'modal-title' : undefined}
@@ -287,14 +275,14 @@ const Modal = ({
 
         {/* Modal Content - Scrollable */}
         <div
-          className={`scrollbar-hide flex-1 overflow-y-auto ${noContentPadding ? 'px-6' : 'p-6'} modal-content modal-body ${contentClasses}`}
+          className={`scrollbar-hide flex-1 overflow-y-auto ${noContentPadding ? 'px-6' : 'p-6'} modal-content modal-body`}
         >
           {children}
         </div>
 
         {/* Modal Footer - Sticky, only shown if footer content is provided */}
         {footer && (
-          <div className={`${footerClasses} ${iosClasses}`}>{footer}</div>
+          <div className={footerClasses}>{footer}</div>
         )}
       </div>
       </div>
