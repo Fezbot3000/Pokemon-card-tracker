@@ -12,6 +12,7 @@ const MoveCardsModal = ({
   selectedCards = [],
   collections = [],
   currentCollection,
+  isMoving = false,
 }) => {
   const [targetCollection, setTargetCollection] = useState('');
 
@@ -56,19 +57,20 @@ const MoveCardsModal = ({
       title="Move Cards to Another Collection"
       position="center"
       size="contextual"
-      closeOnClickOutside={true}
+      closeOnClickOutside={!isMoving}
       footer={
         <div className="flex w-full items-center justify-between">
-          <ModalButton variant="secondary" onClick={onClose}>
+          <ModalButton variant="secondary" onClick={onClose} disabled={isMoving}>
             Cancel
           </ModalButton>
           <ModalButton
             variant="primary"
             onClick={handleConfirm}
-            disabled={!targetCollection || availableCollections.length === 0}
-            leftIcon={<Icon name="drive_file_move" />}
+            disabled={!targetCollection || availableCollections.length === 0 || isMoving}
+            leftIcon={isMoving ? <Icon name="sync" className="animate-spin" /> : <Icon name="drive_file_move" />}
+            loading={isMoving}
           >
-            Move
+            {isMoving ? 'Moving...' : 'Move'}
           </ModalButton>
         </div>
       }
@@ -120,6 +122,7 @@ MoveCardsModal.propTypes = {
   selectedCards: PropTypes.array,
   collections: PropTypes.array,
   currentCollection: PropTypes.string,
+  isMoving: PropTypes.bool,
 };
 
 export default MoveCardsModal;

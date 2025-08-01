@@ -25,6 +25,7 @@ import ProfitChangeModal from './components/ProfitChangeModal';
 import useCardData from './contexts/CardContextCompatibility';
 import db from './services/firestore/dbAdapter';
 import { useTutorial } from './contexts/TutorialContext';
+import LoggingService from './services/LoggingService';
 import './styles/globals.css';
 import './styles/utilities.css';
 
@@ -38,7 +39,6 @@ import BottomNavBar from './components/BottomNavBar';
 import TrialStatusBanner from './components/TrialStatusBanner';
 
 import logger from './utils/logger';
-import LoggingService from './services/LoggingService';
 import RestoreListener from './components/RestoreListener';
 import SyncStatusIndicator from './components/SyncStatusIndicator';
 
@@ -935,9 +935,20 @@ function AppContent({ currentView, setCurrentView }) {
         <AddCardModal
           isOpen={showNewCardForm}
           onClose={() => closeNewCardForm()}
-          onSave={(cardData, imageFile) =>
-            addCard(cardData, imageFile)
-          }
+          onSave={async (cardData, imageFile) => {
+            try {
+              await addCard(cardData, imageFile);
+              
+              // Navigate to the target collection after successful add
+              if (cardData.collection && cardData.collection !== selectedCollection) {
+                setSelectedCollection(cardData.collection);
+                localStorage.setItem('selectedCollection', cardData.collection);
+              }
+            } catch (error) {
+              // Let the modal handle the error display
+              throw error;
+            }
+          }}
           collections={Object.keys(collections)}
           onNewCollectionCreated={handleNewCollectionCreation}
           defaultCollection={

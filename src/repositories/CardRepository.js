@@ -1264,7 +1264,6 @@ class CardRepository {
       return () => {}; // Return empty unsubscribe function
     }
 
-    // Helper function to process and sort cards
     const processCards = (snapshot) => {
       const cards = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       

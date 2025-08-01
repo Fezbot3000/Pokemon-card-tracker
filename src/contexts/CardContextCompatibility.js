@@ -120,6 +120,8 @@ const useCardDataCompatible = () => {
     logger.warn('setError called but not available in CardContext');
   });
 
+
+
   // Return exactly the same API as useCardData
   return {
     // Data

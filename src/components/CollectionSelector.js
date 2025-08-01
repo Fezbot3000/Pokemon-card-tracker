@@ -30,7 +30,7 @@ const CollectionSelector = ({
   );
 
   return (
-    <div className="w-full">
+    <div className="w-full min-w-[200px]">
       <div className="mb-1 text-sm font-medium text-gray-500 dark:text-gray-400">
         Collections
       </div>
@@ -38,9 +38,9 @@ const CollectionSelector = ({
         trigger={trigger}
         isOpen={isOpen}
         onOpenChange={setIsOpen}
-        width="full"
+        width="lg"
         title="Select Collection"
-        className="w-full"
+        className="w-full min-w-[200px]"
       >
         {/* All Cards option */}
         <ActionSheetItem

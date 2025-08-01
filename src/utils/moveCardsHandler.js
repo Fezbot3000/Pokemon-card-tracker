@@ -8,6 +8,8 @@
 import db from '../services/firestore/dbAdapter';
 import { toast } from 'react-hot-toast';
 import LoggingService from '../services/LoggingService';
+import { CardRepository } from '../repositories/CardRepository';
+import { getFirebaseAuth } from '../firebase-lazy';
 
 /**
  * Moves cards from one collection to another with proper validation and sync
@@ -153,16 +155,19 @@ export async function moveCards({
           }
         }
 
-        // Sync to Firestore
+        // Sync to Firestore - DIRECT UPDATE to bypass shadowSync issues
         try {
-          const shadowSync = await import('../services/shadowSync').then(
-            module => module.default
-          );
-          await shadowSync.shadowWriteCard(
-            cardId,
-            updatedCard,
-            targetCollection
-          );
+          // Get current user for repository
+          const auth = await getFirebaseAuth();
+          const currentUser = auth.currentUser;
+          
+          if (currentUser) {
+            const repository = new CardRepository(currentUser.uid);
+            await repository.updateCard(updatedCard);
+            LoggingService.debug(`[MoveCardsHandler] Successfully updated card ${cardId} in Firebase directly`);
+          } else {
+            throw new Error('No authenticated user');
+          }
 
           successfulMoves.push({
             id: cardId,
@@ -208,13 +213,36 @@ export async function moveCards({
       toast.error('Failed to save collections. Changes may not persist.');
     }
 
-    // Update parent state
-    setCollections(updatedCollections);
+      // Update parent state
+  setCollections(updatedCollections);
 
-    // Clear selection
-    if (clearSelection) {
-      clearSelection();
+  // FORCE IMMEDIATE CARD DATA REFRESH after move operation
+  // This ensures the cards array reflects the move immediately
+  try {
+    const auth = await getFirebaseAuth();
+    const currentUser = auth.currentUser;
+    
+    if (currentUser) {
+      const repository = new CardRepository(currentUser.uid);
+      const freshCards = await repository.getAllCards();
+      
+      // Trigger a global refresh event that the data hooks can listen to
+      const refreshEvent = new CustomEvent('cardDataRefresh', { 
+        detail: { cards: freshCards, reason: 'move_operation' } 
+      });
+      window.dispatchEvent(refreshEvent);
+      
+      LoggingService.debug('[MoveCardsHandler] Dispatched card data refresh event after move operation');
     }
+  } catch (refreshError) {
+    LoggingService.warn('[MoveCardsHandler] Failed to force refresh cards after move:', refreshError);
+    // Don't fail the move operation if refresh fails
+  }
+
+  // Clear selection
+  if (clearSelection) {
+    clearSelection();
+  }
 
     // Show results
     if (successfulMoves.length > 0) {

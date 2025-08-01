@@ -62,6 +62,23 @@ export function CardProvider({ children }) {
     loadSoldCardIds();
   }, []);
 
+  // Listen for forced refresh events (e.g., after move operations)
+  useEffect(() => {
+    const handleCardDataRefresh = (event) => {
+      const { cards: freshCards, reason } = event.detail;
+      LoggingService.debug(`[CardContext] Handling forced refresh (${reason}):`, freshCards.length, 'cards');
+      setCards(freshCards);
+      setLoading(false);
+      setError(null);
+    };
+
+    window.addEventListener('cardDataRefresh', handleCardDataRefresh);
+    
+    return () => {
+      window.removeEventListener('cardDataRefresh', handleCardDataRefresh);
+    };
+  }, []);
+
   // Load initial data (collections, cards, etc)
   const loadInitialData = useCallback(
     async repo => {
@@ -436,6 +453,18 @@ export function CardProvider({ children }) {
         // Update cards array
         setCards(prev => [...prev, newCard]);
 
+        // FORCE IMMEDIATE REFRESH - fetch fresh data from Firebase
+        const freshCards = await repository.getAllCards();
+        setCards(freshCards);
+
+        // DISPATCH REFRESH EVENT for immediate UI update (same as move operation)
+        const refreshEvent = new CustomEvent('cardDataRefresh', { 
+          detail: { cards: freshCards, reason: 'add_card_context_operation' } 
+        });
+        window.dispatchEvent(refreshEvent);
+        
+        LoggingService.debug('[CardContext] Dispatched card data refresh event after add operation');
+
         // Update collection card count
         const collection = collections.find(
           c => c.id === cardData.collectionId
@@ -731,6 +760,8 @@ export function CardProvider({ children }) {
     },
     [repository]
   );
+
+
 
   // Provide context value
   const contextValue = {

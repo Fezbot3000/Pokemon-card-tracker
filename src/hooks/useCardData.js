@@ -32,6 +32,23 @@ const useCardData = () => {
     fetchExchangeRate();
   }, []);
 
+  // Listen for forced refresh events (e.g., after move operations)
+  useEffect(() => {
+    const handleCardDataRefresh = (event) => {
+      const { cards: freshCards, reason } = event.detail;
+      LoggingService.debug(`[useCardData] Handling forced refresh (${reason}):`, freshCards.length, 'cards');
+      setCards(freshCards);
+      setLoading(false);
+      setError(null);
+    };
+
+    window.addEventListener('cardDataRefresh', handleCardDataRefresh);
+    
+    return () => {
+      window.removeEventListener('cardDataRefresh', handleCardDataRefresh);
+    };
+  }, []);
+
   // Firestore Listener for Real-time Card Updates
   useEffect(() => {
     if (currentUser) {
@@ -204,16 +221,21 @@ const useCardData = () => {
           }
 
           await repository.updateCard(normalizedCard);
+          
+          // FORCE IMMEDIATE REFRESH FROM FIREBASE - bypass broken listeners
+          logger.debug('Refreshing all cards from Firebase after update');
+          const freshCards = await repository.getAllCards();
+          setCards(freshCards);
+        } else {
+          // Fallback for offline mode
+          setCards(prevCards =>
+            prevCards.map(card =>
+              card.id === cardId || card.slabSerial === cardId
+                ? updatedCard
+                : card
+            )
+          );
         }
-
-        // Optimistic UI update (or update after successful Firestore operation)
-        setCards(prevCards =>
-          prevCards.map(card =>
-            card.id === cardId || card.slabSerial === cardId
-              ? updatedCard
-              : card
-          )
-        );
 
         setSelectedCard(prevSelected =>
           prevSelected &&
@@ -306,6 +328,19 @@ const useCardData = () => {
             );
             logger.debug('Card created in Firestore');
 
+            // FORCE IMMEDIATE REFRESH FROM FIREBASE - bypass broken listeners
+            logger.debug('Refreshing all cards from Firebase after add');
+            const freshCards = await repository.getAllCards();
+            setCards(freshCards);
+
+            // DISPATCH REFRESH EVENT for immediate UI update (same as move operation)
+            const refreshEvent = new CustomEvent('cardDataRefresh', { 
+              detail: { cards: freshCards, reason: 'add_card_operation' } 
+            });
+            window.dispatchEvent(refreshEvent);
+            
+            LoggingService.debug('[useCardData] Dispatched card data refresh event after add operation');
+
             // Return the created card to the caller
             return createdCard;
           } catch (storageError) {
@@ -319,6 +354,19 @@ const useCardData = () => {
                 null
               );
               logger.debug('Card created in Firestore without image');
+
+              // FORCE IMMEDIATE REFRESH FROM FIREBASE - bypass broken listeners
+              logger.debug('Refreshing all cards from Firebase after add (no image)');
+              const freshCards = await repository.getAllCards();
+              setCards(freshCards);
+
+              // DISPATCH REFRESH EVENT for immediate UI update (same as move operation)
+              const refreshEvent = new CustomEvent('cardDataRefresh', { 
+                detail: { cards: freshCards, reason: 'add_card_operation_no_image' } 
+              });
+              window.dispatchEvent(refreshEvent);
+              
+              LoggingService.debug('[useCardData] Dispatched card data refresh event after add operation (no image)');
 
               // Return the created card to the caller
               return createdCard;

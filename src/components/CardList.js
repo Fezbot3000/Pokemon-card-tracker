@@ -244,6 +244,7 @@ const CardList = ({
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [cardsToDelete, setCardsToDelete] = useState([]);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isMoving, setIsMoving] = useState(false);
   const [showMoveModal, setShowMoveModal] = useState(false);
   const [selectedCardsToMove, setSelectedCardsToMove] = useState([]);
   const [showCardDetails, setShowCardDetails] = useState(false);
@@ -918,6 +919,8 @@ const CardList = ({
 
   const handleMoveConfirm = async targetCollection => {
     try {
+      setIsMoving(true);
+      
       // Get the cards to move
       const cardsToMove = cards.filter(card =>
         selectedCards.has(card.slabSerial)
@@ -944,6 +947,11 @@ const CardList = ({
         setShowMoveModal(false);
         setSelectedCardsToMove([]);
 
+        // NAVIGATE TO DESTINATION COLLECTION: This was missing!
+        if (onCollectionChange && targetCollection) {
+          onCollectionChange(targetCollection);
+        }
+
         // LoggingService.info('[CardList] Move operation completed successfully');
       } else {
         logger.warn('[CardList] Move operation failed or partially failed');
@@ -953,6 +961,8 @@ const CardList = ({
       logger.error('[CardList] Error in handleMoveConfirm:', error);
       toast.error('Failed to move cards. Please try again.');
       // Don't clear the modal on error so user can retry
+    } finally {
+      setIsMoving(false);
     }
   };
 
@@ -1022,7 +1032,8 @@ const CardList = ({
       </div>
 
       <div className="mb-2 flex justify-end">
-        <CollectionSelector
+        <div className="min-w-[200px]">
+          <CollectionSelector
           selectedCollection={selectedCollection}
           collections={[
             'All Cards',
@@ -1060,6 +1071,7 @@ const CardList = ({
             }
           }}
         />
+        </div>
       </div>
 
       {/* Cards Display */}
@@ -1663,6 +1675,7 @@ const CardList = ({
           );
         })}
         currentCollection={selectedCollection}
+        isMoving={isMoving}
       />
 
       {/* Purchase Invoice Modal */}

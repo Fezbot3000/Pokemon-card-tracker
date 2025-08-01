@@ -6,6 +6,7 @@ import PropTypes from 'prop-types';
 import Modal from '../design-system/molecules/Modal';
 import Button from '../design-system/atoms/Button';
 import ModalButton from '../design-system/atoms/ModalButton';
+import Icon from '../design-system/atoms/Icon';
 import CardDetailsForm from '../design-system/components/CardDetailsForm';
 import { toast } from 'react-hot-toast';
 import PSADetailModal from './PSADetailModal';
@@ -372,7 +373,12 @@ const AddCardModal = ({
       {/* Save button - right aligned */}
       <div className="flex items-center justify-end space-x-3">
         {/* Save button */}
-        <ModalButton variant="primary" onClick={handleSave} disabled={isSaving}>
+        <ModalButton 
+          variant="primary" 
+          onClick={handleSave} 
+          disabled={isSaving}
+          leftIcon={isSaving ? <Icon name="sync" className="animate-spin" /> : null}
+        >
           {isSaving ? 'Saving...' : 'Add Card'}
         </ModalButton>
       </div>
