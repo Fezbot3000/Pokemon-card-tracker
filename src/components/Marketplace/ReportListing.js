@@ -90,7 +90,7 @@ function ReportListing({ listingId, sellerId, onClose }) {
               </label>
               <CustomDropdown
                 value={reason}
-                onSelect={e => setReason(e.target.value)}
+                onSelect={selectedValue => setReason(selectedValue)}
                 placeholder="Select a reason"
                 options={reportReasons}
                 required

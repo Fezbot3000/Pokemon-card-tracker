@@ -474,11 +474,11 @@ const AddCardModal = ({
             <div className="flex items-center gap-2">
               <CustomDropdown
                 value={selectedCollection}
-                onSelect={(e) => {
-                  if (e.target.value === 'new') {
+                onSelect={(selectedValue) => {
+                  if (selectedValue === 'new') {
                     setShowNewCollectionModal(true);
                   } else {
-                    setSelectedCollection(e.target.value);
+                    setSelectedCollection(selectedValue);
                   }
                 }}
                 options={[

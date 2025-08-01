@@ -673,8 +673,8 @@ const CollectionSharing = ({ isInModal = false }) => {
             <CustomDropdown
               name="collectionId"
               value={createForm.collectionId}
-              onSelect={e =>
-                setCreateForm({ ...createForm, collectionId: e.target.value })
+              onSelect={selectedValue =>
+                setCreateForm({ ...createForm, collectionId: selectedValue })
               }
               options={[
                 { value: 'all', label: 'All Collections' },
@@ -692,8 +692,8 @@ const CollectionSharing = ({ isInModal = false }) => {
               label="Expires After"
               name="expiresIn"
               value={createForm.expiresIn}
-              onSelect={e =>
-                setCreateForm({ ...createForm, expiresIn: e.target.value })
+              onSelect={selectedValue =>
+                setCreateForm({ ...createForm, expiresIn: selectedValue })
               }
               options={[
                 { value: 'never', label: 'Never' },

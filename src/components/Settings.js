@@ -132,7 +132,7 @@ const Settings = ({
                 label: `${currency.symbol} ${currency.name} (${currency.code})`,
               }))}
               value={preferredCurrency?.code || ''}
-              onChange={(currencyCode) => {
+              onSelect={(currencyCode) => {
                 const selectedCurrency = availableCurrencies.find(c => c.code === currencyCode);
                 if (selectedCurrency) {
                   updatePreferredCurrency(selectedCurrency);
