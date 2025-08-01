@@ -56,26 +56,13 @@ function Dashboard() {
   const location = useLocation();
   const [currentView, setCurrentView] = useState('cards');
   
-  // Get data loading state to combine with auth loading
+  // Get data loading state to combine with auth loading (only if authenticated)
   const { loading: dataLoading } = useCardData();
 
   // Debug tool will be rendered in AppContent with proper selectedCollection prop
 
-  // Show loading indicator while auth OR data is loading (separated loading states)
-  if (authLoading || dataLoading) {
-    // For auth loading, show minimal neutral loading screen to prevent dashboard content flash
-    if (authLoading) {
-      return (
-        <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-black">
-          <div className="text-center">
-            <div className="mb-4 size-12 animate-spin rounded-full border-b-2 border-blue-600 mx-auto"></div>
-            <div className="text-gray-600 dark:text-gray-400">Loading...</div>
-          </div>
-        </div>
-      );
-    }
-
-    // For data loading (when user is authenticated), show dashboard skeleton
+  // Show loading indicator while auth is loading (priority) OR while data is loading for authenticated users
+  if (authLoading) {
     return (
       <div className="dashboard-page min-h-screen bg-gray-50 dark:bg-black">
         {/* Keep actual Header during loading */}
@@ -181,6 +168,110 @@ function Dashboard() {
   // Redirect to login if not authenticated
   if (!currentUser) {
     return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  // Show loading indicator for data loading (only after auth is confirmed)
+  if (dataLoading) {
+    return (
+      <div className="dashboard-page min-h-screen bg-gray-50 dark:bg-black">
+        {/* Keep actual Header during loading */}
+        <Header
+          className="header"
+          selectedCollection="All Cards"
+          collections={{}}
+          onCollectionChange={() => {}}
+          onSettingsClick={() => {}}
+          currentView="cards"
+          onViewChange={() => {}}
+          onAddCollection={() => {}}
+        />
+
+        <main className={`main-content mobile-dashboard mx-auto max-w-[1920px] ${window.innerWidth <= 768 ? 'no-header' : 'mt-4'}`}>
+          <div className="flex-1 overflow-y-auto">
+            <div className={`pb-20 sm:p-6 ${window.innerWidth <= 768 ? 'px-2 pt-2' : 'p-4'}`}>
+              <div className="w-full px-1 pb-20 sm:px-2">
+              {/* Statistics Summary Skeleton */}
+              <div className="mb-3 w-full rounded-md border border-gray-200 bg-white dark:border-gray-700 dark:bg-[#0F0F0F] sm:mb-4">
+                <div className="rounded-md p-2 sm:p-4 md:p-6">
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-0">
+                    {[
+                      { label: 'CARDS', width: 'w-8' },
+                      { label: 'PAID', width: 'w-16' },
+                      { label: 'VALUE', width: 'w-16' },
+                      { label: 'PROFIT', width: 'w-12' },
+                    ].map((stat) => (
+                      <div
+                        key={stat.label}
+                        className="flex flex-col items-center justify-center border-none p-2 py-3 sm:p-3 sm:py-4 md:p-4 md:py-6"
+                      >
+                        <div className="mb-1 text-xs font-medium uppercase text-gray-500 dark:text-gray-400 sm:mb-2 sm:text-sm">
+                          {stat.label}
+                        </div>
+                        <div
+                          className={`h-6 ${stat.width} animate-pulse rounded bg-gray-200 dark:bg-[#333]`}
+                        ></div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Search toolbar skeleton */}
+              <div className="mb-4">
+                <div className="flex flex-col items-stretch justify-between gap-3 rounded-lg border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-[#0F0F0F] sm:flex-row sm:items-center sm:gap-4 sm:p-4">
+                  <div className="min-w-0 flex-1">
+                    <div className="h-10 w-full animate-pulse rounded-lg bg-gray-200 dark:bg-[#333]"></div>
+                  </div>
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="h-10 w-20 animate-pulse rounded-lg bg-gray-200 dark:bg-[#333]"></div>
+                    <div className="h-10 w-24 animate-pulse rounded-lg bg-gray-200 dark:bg-[#333]"></div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Collection Selector Skeleton */}
+              <div className="mb-2 flex justify-end">
+                <div className="w-48 rounded-lg border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-[#0F0F0F]">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="size-6 animate-pulse rounded bg-gray-200 dark:bg-[#333]"></div>
+                      <div className="h-4 w-20 animate-pulse rounded bg-gray-200 dark:bg-[#333]"></div>
+                    </div>
+                    <div className="size-4 animate-pulse rounded bg-gray-200 dark:bg-[#333]"></div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Card grid skeleton */}
+              <div className="grid grid-cols-2 gap-1 sm:grid-cols-3 sm:gap-2 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7">
+                {Array.from({ length: 14 }, (_, index) => (
+                  <div
+                    key={`loading-skeleton-${index}`}
+                    className="animate-pulse overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-[#0F0F0F]"
+                  >
+                    <div className="aspect-[2.5/3.5] bg-gradient-to-br from-gray-200 to-gray-300 dark:from-[#333] dark:to-[#444]"></div>
+                    <div className="space-y-2 p-2">
+                      <div className="h-3 w-3/4 rounded bg-gray-200 dark:bg-[#333]"></div>
+                      <div className="h-2 w-1/2 rounded bg-gray-200 dark:bg-[#333]"></div>
+                      <div className="h-4 w-2/3 rounded bg-gray-200 dark:bg-[#333]"></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              </div>
+            </div>
+          </div>
+        </main>
+        
+        {/* Add BottomNavBar to data loading state */}
+        <BottomNavBar 
+          currentView="cards"
+          onViewChange={setCurrentView}
+          onSettingsClick={() => setCurrentView('settings')}
+        />
+
+      </div>
+    );
   }
 
   // Render the dashboard content if authenticated
