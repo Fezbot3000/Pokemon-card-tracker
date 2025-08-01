@@ -136,7 +136,12 @@ function Dashboard() {
           </div>
         </main>
         
-        {/* Debug tool available during loading */}
+        {/* Add BottomNavBar to Dashboard loading state */}
+        <BottomNavBar 
+          currentView="cards"
+          onViewChange={setCurrentView}
+          onSettingsClick={() => setCurrentView('settings')}
+        />
 
       </div>
     );
@@ -622,6 +627,13 @@ function AppContent({ currentView, setCurrentView }) {
             </div>
           </div>
         </main>
+        
+        {/* Add BottomNavBar to AppContent loading state */}
+        <BottomNavBar 
+          currentView={currentView}
+          onViewChange={setCurrentView}
+          onSettingsClick={() => setCurrentView('settings')}
+        />
       </div>
     );
   }
