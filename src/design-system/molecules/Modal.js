@@ -170,7 +170,7 @@ const Modal = ({
   const shouldApplyMobileOverride =
     window.innerWidth < 640 && size !== 'contextual';
   const mobileFullWidth = shouldApplyMobileOverride
-    ? 'w-screen h-screen max-w-none max-h-none rounded-lg m-0 fixed inset-0 z-[50000]' // Full height mobile modal with inset-0
+    ? 'w-screen h-screen max-w-none max-h-none rounded-lg ios-modal-radius m-0 fixed inset-0 z-[50000]' // Full height mobile modal with inset-0
     : '';
 
 
@@ -178,8 +178,8 @@ const Modal = ({
 
 
   const modalClasses = forceDarkMode
-    ? `bg-black backdrop-blur-sm rounded-xl shadow-2xl border border-gray-800/20 text-white`
-    : `bg-white dark:bg-[#0F0F0F] backdrop-blur-sm rounded-xl shadow-2xl border border-gray-200/20 dark:border-gray-700/20`;
+    ? `bg-black backdrop-blur-sm rounded-xl ios-modal-radius shadow-2xl border border-gray-800/20 text-white`
+    : `bg-white dark:bg-[#0F0F0F] backdrop-blur-sm rounded-xl ios-modal-radius shadow-2xl border border-gray-200/20 dark:border-gray-700/20`;
 
   const headerClasses = forceDarkMode
     ? `sticky top-0 z-10 flex items-center justify-between px-6 pt-6 pb-4 border-b-[0.5px] border-gray-700 bg-black backdrop-blur-sm rounded-t-xl`

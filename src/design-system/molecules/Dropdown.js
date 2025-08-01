@@ -123,34 +123,15 @@ const Dropdown = ({
               // Skip dividers in bottom sheet
               if (child.type === DropdownDivider) return null;
 
-              // Clone DropdownItem elements with mobile styling
-              if (child.type === DropdownItem) {
-                // Check if this item is selected (has bg-gray-100 or dark:bg-black in its className)
-                const isSelected =
-                  child.props.className &&
-                  (child.props.className.includes('bg-gray-100') ||
-                    child.props.className.includes('dark:bg-black'));
-
-                // Preserve the original children to keep any icons or additional content
-                const originalChildren = child.props.children;
-
+                             // Clone DropdownItem elements with standard styling
+               if (child.type === DropdownItem) {
                 return React.cloneElement(child, {
-                  className: `text-center rounded-lg py-3 ${
-                    isSelected
-                      ? 'bg-gradient-to-r from-[#ef4444] to-[#db2777] text-white font-semibold'
-                      : 'bg-white dark:bg-[#0F0F0F] text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700'
-                  } 
-                    hover:opacity-90 ${child.props.className || ''}`
-                    .replace('bg-gray-100', '')
-                    .replace('dark:bg-black', ''),
                   onClick: () => {
                     if (child.props.onClick) {
                       child.props.onClick();
                     }
                     handleOpenChange(false);
                   },
-                  // Keep the original children to preserve any icons
-                  children: originalChildren,
                 });
               }
 
@@ -160,7 +141,7 @@ const Dropdown = ({
             {/* Cancel Button */}
             <button
               onClick={() => handleOpenChange(false)}
-              className="mt-3 block w-full rounded-lg border border-gray-700 bg-[#0F0F0F] px-4 py-3 text-center text-sm font-semibold text-gray-300 hover:opacity-90"
+              className="mt-3 block w-full rounded-lg border border-gray-700 bg-[#000000] px-4 py-3 text-center text-sm font-semibold text-gray-300 hover:opacity-90"
             >
               Cancel
             </button>

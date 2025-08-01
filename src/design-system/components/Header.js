@@ -216,7 +216,7 @@ const Header = ({
               {/* Mobile navigation - contextual based on current view */}
               <div
                 className={`flex justify-center space-x-1 sm:hidden ${
-                  isSoldSection() || isMarketplaceSection() ? 'w-full' : ''
+                  isSoldSection() || isMarketplaceSection() || currentView === 'settings' || currentView === 'settings-account' || currentView === 'settings-marketplace' || currentView === 'settings-sharing' ? 'w-full' : ''
                 }`}
               >
                 {/* Hide header completely on Cards page */}
@@ -263,6 +263,79 @@ const Header = ({
                             size="sm"
                           />
                           <span>Sold Items</span>
+                        </button>
+                      </>
+                    )}
+
+                    {/* Settings navigation tabs */}
+                    {(currentView === 'settings' || currentView === 'settings-account' || currentView === 'settings-marketplace' || currentView === 'settings-sharing') && (
+                      <>
+                        <button
+                          onClick={() => handleViewChange('settings')}
+                          className={`rounded-md px-2 py-1 text-xs font-medium transition-colors duration-200 ${
+                            currentView === 'settings'
+                              ? 'bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] text-white'
+                              : 'hover:bg-gray-200/50 dark:hover:bg-gray-700/50 text-gray-700 dark:text-gray-300'
+                          }`}
+                        >
+                          <Icon
+                            name="settings"
+                            className="mr-1 hidden xs:inline"
+                            color={currentView === 'settings' ? 'white' : 'default'}
+                            size="sm"
+                          />
+                          <span>General</span>
+                        </button>
+
+                        <button
+                          onClick={() => handleViewChange('settings-account')}
+                          className={`rounded-md px-2 py-1 text-xs font-medium transition-colors duration-200 ${
+                            currentView === 'settings-account'
+                              ? 'bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] text-white'
+                              : 'hover:bg-gray-200/50 dark:hover:bg-gray-700/50 text-gray-700 dark:text-gray-300'
+                          }`}
+                        >
+                          <Icon
+                            name="account_circle"
+                            className="mr-1 hidden xs:inline"
+                            color={currentView === 'settings-account' ? 'white' : 'default'}
+                            size="sm"
+                          />
+                          <span>Account</span>
+                        </button>
+
+                        <button
+                          onClick={() => handleViewChange('settings-marketplace')}
+                          className={`rounded-md px-2 py-1 text-xs font-medium transition-colors duration-200 ${
+                            currentView === 'settings-marketplace'
+                              ? 'bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] text-white'
+                              : 'hover:bg-gray-200/50 dark:hover:bg-gray-700/50 text-gray-700 dark:text-gray-300'
+                          }`}
+                        >
+                          <Icon
+                            name="storefront"
+                            className="mr-1 hidden xs:inline"
+                            color={currentView === 'settings-marketplace' ? 'white' : 'default'}
+                            size="sm"
+                          />
+                          <span>Marketplace</span>
+                        </button>
+
+                        <button
+                          onClick={() => handleViewChange('settings-sharing')}
+                          className={`rounded-md px-2 py-1 text-xs font-medium transition-colors duration-200 ${
+                            currentView === 'settings-sharing'
+                              ? 'bg-gradient-to-r from-[#3b82f6] to-[#1d4ed8] text-white'
+                              : 'hover:bg-gray-200/50 dark:hover:bg-gray-700/50 text-gray-700 dark:text-gray-300'
+                          }`}
+                        >
+                          <Icon
+                            name="share"
+                            className="mr-1 hidden xs:inline"
+                            color={currentView === 'settings-sharing' ? 'white' : 'default'}
+                            size="sm"
+                          />
+                          <span>Sharing</span>
                         </button>
                       </>
                     )}
@@ -404,7 +477,7 @@ const Header = ({
                 <Icon name={theme === 'dark' ? 'light_mode' : 'dark_mode'} />
               </button>
 
-              {onSettingsClick && (
+              {onSettingsClick && !currentView.startsWith('settings') && (
                 <button
                   onClick={onSettingsClick}
                   className="rounded-full p-1 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
@@ -418,8 +491,8 @@ const Header = ({
             </div>
           </div>
 
-          {/* Mobile right side - Hide completely on invoices and marketplace pages for proper centering */}
-          {!isSoldSection() && !isMarketplaceSection() && (
+          {/* Mobile right side - Hide completely on invoices, marketplace, and settings pages for proper centering */}
+          {!isSoldSection() && !isMarketplaceSection() && !currentView.startsWith('settings') && (
             <div className="flex flex-1 items-center justify-end sm:hidden">
               {onSettingsClick && (
                 <button
@@ -449,6 +522,9 @@ Header.propTypes = {
     'marketplace-selling',
     'marketplace-messages',
     'settings',
+    'settings-account',
+    'settings-marketplace',
+    'settings-sharing',
     'grid',
     'list',
   ]),

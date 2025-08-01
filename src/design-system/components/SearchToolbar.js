@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import Icon from '../atoms/Icon';
 import Button from '../atoms/Button';
-import Dropdown, { DropdownItem } from '../molecules/Dropdown';
+import ActionSheet, { ActionSheetItem } from '../molecules/ActionSheet';
 
 
 /**
@@ -157,19 +157,18 @@ const SearchToolbar = ({
           </button>
         </div>
 
-        {/* Sort Dropdown */}
-        <Dropdown
+        {/* Sort ActionSheet */}
+        <ActionSheet
           trigger={sortDropdownTrigger}
           isOpen={isSortDropdownOpen}
           onOpenChange={setIsSortDropdownOpen}
           align="right"
           width="sm"
           title="Sort By"
-          useMobileSheet={true}
-          className="z-50"
+          className="z-[5000]"
         >
           {sortOptions.map(option => (
-            <DropdownItem
+            <ActionSheetItem
               key={option}
               onClick={() => {
                 onSortChange?.(option);
@@ -193,9 +192,9 @@ const SearchToolbar = ({
                   </svg>
                 )}
               </div>
-            </DropdownItem>
+            </ActionSheetItem>
           ))}
-        </Dropdown>
+        </ActionSheet>
 
         {/* Add Card Button */}
         <Button

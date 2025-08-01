@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import Dropdown, {
-  DropdownItem,
-  DropdownDivider,
-} from '../design-system/molecules/Dropdown';
+import ActionSheet, {
+  ActionSheetItem,
+  ActionSheetDivider,
+} from '../design-system/molecules/ActionSheet';
 import Icon from '../design-system/atoms/Icon';
 
 const CollectionSelector = ({
@@ -34,15 +34,16 @@ const CollectionSelector = ({
       <div className="mb-1 text-sm font-medium text-gray-500 dark:text-gray-400">
         Collections
       </div>
-      <Dropdown
+      <ActionSheet
         trigger={trigger}
         isOpen={isOpen}
         onOpenChange={setIsOpen}
         width="full"
+        title="Select Collection"
         className="w-full"
       >
         {/* All Cards option */}
-        <DropdownItem
+        <ActionSheetItem
           icon={<Icon name="style" />}
           onClick={() => {
             onCollectionChange('All Cards');
@@ -53,13 +54,13 @@ const CollectionSelector = ({
           {selectedCollection === 'All Cards' && (
             <Icon name="check" className="ml-auto" />
           )}
-        </DropdownItem>
+        </ActionSheetItem>
 
-        <DropdownDivider />
+        <ActionSheetDivider />
 
         {/* Collections list */}
         {filteredCollections.map(collection => (
-          <DropdownItem
+          <ActionSheetItem
             key={collection}
             icon={<Icon name="folder" />}
             onClick={() => {
@@ -71,13 +72,13 @@ const CollectionSelector = ({
             {selectedCollection === collection && (
               <Icon name="check" className="ml-auto" />
             )}
-          </DropdownItem>
+          </ActionSheetItem>
         ))}
 
-        <DropdownDivider />
+        <ActionSheetDivider />
 
         {/* Add Collection option */}
-        <DropdownItem
+        <ActionSheetItem
           icon={<Icon name="add" />}
           onClick={e => {
             e.stopPropagation();
@@ -87,8 +88,8 @@ const CollectionSelector = ({
           className="text-primary"
         >
           New Collection
-        </DropdownItem>
-      </Dropdown>
+        </ActionSheetItem>
+      </ActionSheet>
     </div>
   );
 };

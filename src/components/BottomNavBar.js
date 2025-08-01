@@ -94,7 +94,7 @@ const BottomNavBar = ({ currentView, onViewChange, onSettingsClick }) => {
       </button>
 
       <button
-        className={`nav-button ${currentView === 'settings' ? 'active' : ''}`}
+        className={`nav-button ${currentView.startsWith('settings') ? 'active' : ''}`}
         onClick={handleSettingsClick}
       >
         <span className="material-icons nav-icon">settings</span>

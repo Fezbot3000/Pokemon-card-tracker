@@ -4,8 +4,10 @@ import { useTheme } from '../design-system/contexts/ThemeContext';
 import { useUserPreferences, availableCurrencies } from '../contexts/UserPreferencesContext';
 import { CustomDropdown, Button, ConfirmDialog } from '../design-system';
 import MarketplaceProfile from './settings/MarketplaceProfile';
+import MarketplaceReviews from './settings/MarketplaceReviews';
 import SubscriptionStatus from './settings/SubscriptionStatus';
 import CollectionManagement from './settings/CollectionManagement';
+import CollectionSharing from './CollectionSharing';
 
 /**
  * Mobile Settings Page Component
@@ -14,6 +16,7 @@ import CollectionManagement from './settings/CollectionManagement';
  * without tabs, matching the pattern of other mobile pages like Marketplace.
  */
 const Settings = ({
+  currentTab = 'general',
   selectedCollection,
   collections,
   onStartTutorial,
@@ -27,8 +30,12 @@ const Settings = ({
   const { preferredCurrency, updatePreferredCurrency } = useUserPreferences();
   const [showResetConfirm, setShowResetConfirm] = useState(false);
 
-  return (
-    <div className="w-full space-y-6">
+  // Render different content based on current tab
+  const renderTabContent = () => {
+    switch (currentTab) {
+      case 'general':
+        return (
+          <div className="w-full space-y-6 px-4 pt-4 pb-24">
       {/* Appearance Section */}
       <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-black">
         <h2 className="mb-3 text-lg font-semibold text-gray-900 dark:text-white">Appearance</h2>
@@ -138,9 +145,6 @@ const Settings = ({
         </div>
       </div>
 
-      {/* Subscription Status */}
-      <SubscriptionStatus />
-
       {/* Collection Management */}
       <CollectionManagement
         collections={collections}
@@ -148,33 +152,90 @@ const Settings = ({
         onRenameCollection={onRenameCollection}
         onDeleteCollection={onDeleteCollection}
       />
+          </div>
+        );
 
-      {/* Marketplace Profile */}
-      <MarketplaceProfile />
+      case 'account':
+        return (
+          <div className="w-full space-y-6 px-4 pt-4 pb-24">
+            {/* Subscription Status */}
+            <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-black">
+              <h2 className="mb-3 text-lg font-semibold text-gray-900 dark:text-white">Subscription</h2>
+              <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">Manage your subscription and billing information.</p>
+              <SubscriptionStatus />
+            </div>
 
-      {/* Account Actions */}
-      <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-black">
-        <h2 className="mb-3 text-lg font-semibold text-gray-900 dark:text-white">Account Actions</h2>
-        
-        <div className="space-y-3">
-          <Button
-            variant="danger"
-            onClick={() => setShowResetConfirm(true)}
-            className="w-full"
-          >
-            Reset All Data
-          </Button>
-          
-          <Button
-            variant="secondary"
-            onClick={onSignOut}
-            className="w-full"
-          >
-            Sign Out
-          </Button>
-        </div>
-      </div>
+            {/* Account Actions */}
+            <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-black">
+              <h2 className="mb-3 text-lg font-semibold text-gray-900 dark:text-white">Account Actions</h2>
+              <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">Sign out of your account or reset your data.</p>
+              <div className="space-y-3">
+                <Button
+                  variant="secondary"
+                  onClick={onSignOut}
+                  className="w-full"
+                >
+                  Sign Out
+                </Button>
+                <Button
+                  variant="danger"
+                  onClick={() => setShowResetConfirm(true)}
+                  className="w-full"
+                >
+                  Reset All Data
+                </Button>
+              </div>
+            </div>
+          </div>
+        );
 
+      case 'marketplace':
+        return (
+          <div className="w-full space-y-6 px-4 pt-4 pb-24">
+            {/* Marketplace Profile */}
+            <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-black">
+              <h2 className="mb-3 text-lg font-semibold text-gray-900 dark:text-white">Marketplace Profile</h2>
+              <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">Manage your marketplace profile and seller information.</p>
+              <MarketplaceProfile />
+            </div>
+
+            {/* My Reviews */}
+            <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-black">
+              <h2 className="mb-3 text-lg font-semibold text-gray-900 dark:text-white">My Reviews</h2>
+              <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">View and manage your marketplace reviews and ratings.</p>
+              <MarketplaceReviews />
+            </div>
+          </div>
+        );
+
+      case 'sharing':
+        return (
+          <div className="w-full space-y-6 px-4 pt-4 pb-24">
+            {/* Collection Sharing */}
+            <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-black">
+              <h2 className="mb-3 text-lg font-semibold text-gray-900 dark:text-white">Collection Sharing</h2>
+              <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">Create shareable links to showcase your collections to others.</p>
+              <CollectionSharing isInModal={true} />
+            </div>
+          </div>
+        );
+
+      default:
+        return (
+          <div className="w-full space-y-6 px-4 pt-4 pb-24">
+            <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-black">
+              <h2 className="mb-3 text-lg font-semibold text-gray-900 dark:text-white">Settings</h2>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Select a tab to view settings.</p>
+            </div>
+          </div>
+        );
+    }
+  };
+
+  return (
+    <>
+      {renderTabContent()}
+      
       {/* Reset Data Confirmation */}
       <ConfirmDialog
         isOpen={showResetConfirm}
@@ -189,11 +250,12 @@ const Settings = ({
           variant: 'danger',
         }}
       />
-    </div>
+    </>
   );
 };
 
 Settings.propTypes = {
+  currentTab: PropTypes.string,
   selectedCollection: PropTypes.string,
   collections: PropTypes.object,
   onStartTutorial: PropTypes.func,

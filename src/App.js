@@ -711,7 +711,7 @@ function AppContent({ currentView, setCurrentView }) {
         {currentView === 'cards' ? (
           <div className="flex-1 overflow-y-auto">
             {/* Main content */}
-            <div className={`pb-20 sm:p-6 ${isMobile ? 'px-4 pt-2' : 'p-4'}`}>
+            <div className={`pb-20 sm:p-6 ${isMobile ? 'px-2 pt-2' : 'p-4'}`}>
               {/* Trial Status Banner - now in correct place */}
               <TrialStatusBanner />
 
@@ -943,36 +943,39 @@ function AppContent({ currentView, setCurrentView }) {
           />
         ) : currentView === 'sold-items' ? (
           <SoldItems />
-        ) : currentView === 'settings' ? (
-          <Settings
-            selectedCollection={selectedCollection}
-            collections={collections}
-            onStartTutorial={startTutorial}
-            onSignOut={logout}
-            onClose={() => setCurrentView('cards')}
-            onRenameCollection={(oldName, newName) => {
-              collectionManager.renameCollection(oldName, newName, {
-                collections,
-                setCollections,
-                selectedCollection,
-                setSelectedCollection,
-                user,
-              });
-            }}
-            onDeleteCollection={(collectionName) => {
-              collectionManager.deleteCollection(collectionName, {
-                collections,
-                setCollections,
-                selectedCollection,
-                setSelectedCollection,
-                user,
-              });
-            }}
-            onResetData={() => {
-              // Reset data functionality
-              // TODO: Implement reset data functionality
-            }}
-          />
+        ) : (currentView === 'settings' || currentView === 'settings-account' || currentView === 'settings-marketplace' || currentView === 'settings-sharing') ? (
+          <div className="pt-16"> {/* Add padding-top to account for fixed header */}
+            <Settings
+              currentTab={currentView === 'settings' ? 'general' : currentView.replace('settings-', '')}
+              selectedCollection={selectedCollection}
+              collections={collections}
+              onStartTutorial={startTutorial}
+              onSignOut={logout}
+              onClose={() => setCurrentView('cards')}
+              onRenameCollection={(oldName, newName) => {
+                collectionManager.renameCollection(oldName, newName, {
+                  collections,
+                  setCollections,
+                  selectedCollection,
+                  setSelectedCollection,
+                  user,
+                });
+              }}
+              onDeleteCollection={(collectionName) => {
+                collectionManager.deleteCollection(collectionName, {
+                  collections,
+                  setCollections,
+                  selectedCollection,
+                  setSelectedCollection,
+                  user,
+                });
+              }}
+              onResetData={() => {
+                // Reset data functionality
+                // TODO: Implement reset data functionality
+              }}
+            />
+          </div>
         ) : null}
       </main>
 

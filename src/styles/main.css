@@ -755,7 +755,7 @@ html.dark body {
     left: 0;
     right: 0;
     height: var(--safe-area-top);
-    background-color: var(--bg-primary);
+    background-color: #000000 !important; /* True black for iOS dynamic island area */
     z-index: var(--z-index-header);
   }
 }
@@ -807,4 +807,40 @@ html.dark body {
   }
 }
 
+/* iOS-specific styles - Universal targeting for iOS devices */
+@media screen and (max-width: 640px) {
+  /* iOS modal border radius */
+  .ios-modal-radius,
+  .modal-container,
+  .modal-container > div,
+  [role="dialog"] {
+    border-radius: 20px !important; /* iOS device corner radius */
+  }
+}
+
+/* iOS PWA and Safari-specific status bar fixes */
+@media (display-mode: standalone) {
+  /* Ensure proper status bar area color in PWA */
+  body {
+    background-color: #000000 !important;
+  }
+  
+  /* Status bar area background */
+  body::before {
+    background-color: #000000 !important;
+    content: '' !important;
+    display: block !important;
+  }
+}
+
+/* Additional iOS Safari targeting */
+@supports (-webkit-touch-callout: none) {
+  body {
+    background-color: #000000 !important;
+  }
+  
+  body::before {
+    background-color: #000000 !important;
+  }
+}
 
