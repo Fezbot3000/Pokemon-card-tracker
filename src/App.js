@@ -390,7 +390,11 @@ function AppContent({ currentView, setCurrentView }) {
     oldProfit: 0,
     newProfit: 0,
   });
-  const [selectedCollection, setSelectedCollection] = useState('All Cards');
+  const [selectedCollection, setSelectedCollection] = useState(() => {
+    // Initialize from localStorage if available, otherwise default to 'All Cards'
+    const saved = localStorage.getItem('selectedCollection');
+    return saved || 'All Cards';
+  });
   const [collections, setCollections] = useState({});
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const { registerAddCardCallback, checkAndStartTutorial, startTutorial } =
@@ -613,18 +617,36 @@ function AppContent({ currentView, setCurrentView }) {
         if (Object.keys(savedCollections).length > 0) {
           setCollections(savedCollections);
 
-          // Always default to 'All Cards' when the app loads, regardless of what's in localStorage
-          setSelectedCollection('All Cards');
-          localStorage.setItem('selectedCollection', 'All Cards');
+          // Validate the initially loaded collection against available collections
+          const currentSelection = selectedCollection; // This comes from localStorage initialization
+          
+          if (currentSelection && 
+              (currentSelection === 'All Cards' || savedCollections[currentSelection])) {
+            // Current selection is valid, keep it
+            logger.debug(`Validated and kept selected collection: ${currentSelection}`);
+            // No need to call setSelectedCollection since it's already set correctly
+          } else {
+            // Current selection is invalid, reset to 'All Cards'
+            setSelectedCollection('All Cards');
+            localStorage.setItem('selectedCollection', 'All Cards');
+            logger.debug(`Invalid collection "${currentSelection}", reset to All Cards`);
+          }
         } else {
           // No collections found in DB at all
-
           const defaultCollections = { 'Default Collection': [] };
           setCollections(defaultCollections);
 
-          // Even with a new default collection, we want to start with All Cards view
-          setSelectedCollection('All Cards');
-          localStorage.setItem('selectedCollection', 'All Cards');
+          // Validate current selection for default collections scenario
+          const currentSelection = selectedCollection;
+          if (currentSelection === 'Default Collection') {
+            // Current selection is correct for this scenario
+            logger.debug('Kept Default Collection selection');
+          } else {
+            // Update to All Cards if not already set correctly
+            setSelectedCollection('All Cards');
+            localStorage.setItem('selectedCollection', 'All Cards');
+            logger.debug('Updated to All Cards for default collections scenario');
+          }
         }
       } catch (error) {
         logger.warn('Error during initialization, using default collections');
@@ -632,7 +654,17 @@ function AppContent({ currentView, setCurrentView }) {
         // Set default collections as fallback
         const defaultCollections = { 'Default Collection': [] };
         setCollections(defaultCollections);
-        setSelectedCollection('Default Collection');
+        
+        // Validate current selection in error scenario
+        const currentSelection = selectedCollection;
+        if (currentSelection === 'Default Collection') {
+          // Current selection is appropriate for error fallback
+          logger.debug('Error fallback: Kept Default Collection selection');
+        } else {
+          setSelectedCollection('Default Collection');
+          localStorage.setItem('selectedCollection', 'Default Collection');
+          logger.debug('Error fallback: Updated to Default Collection');
+        }
       } finally {
         // Loading state is now managed by useCardData hook
       }
