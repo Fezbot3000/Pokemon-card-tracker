@@ -73,6 +73,13 @@
     font-size: 16px !important;
   }
   
+  /* Fix date input width to prevent modal horizontal scrolling */
+  input[type="date"] {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+  
   /* Allow normal touch actions for scrollable content */
   main,
   .scroll-container,
