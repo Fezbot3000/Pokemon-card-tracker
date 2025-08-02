@@ -11,6 +11,7 @@ module.exports = {
     extend: {
       screens: {
         'xs': '475px',
+        'sm': '769px', // Custom breakpoint to match mobile detection at 768px
       },
       colors: {
         // Primary color scale using CSS custom properties

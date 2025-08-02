@@ -197,7 +197,7 @@ p {
   padding-top: var(--header-height-mobile);
 }
 
-@media (min-width: 640px) {
+@media (min-width: 769px) {
   .content-with-header {
     padding-top: var(--header-height-desktop);
   }

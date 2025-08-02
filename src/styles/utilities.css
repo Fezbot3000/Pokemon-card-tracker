@@ -26,7 +26,7 @@
   padding-right: var(--space-4);
 }
 
-@media (min-width: 768px) {
+@media (min-width: 769px) {
   .container-fluid,
   .container {
     padding-left: var(--space-6);
@@ -50,7 +50,7 @@
   padding-bottom: 4rem; /* Reduced from 5rem to 4rem for smaller bottom nav */
 }
 
-@media (min-width: 640px) {
+@media (min-width: 769px) {
   .main-content {
     padding-top: var(--header-height-desktop);
   }
@@ -66,7 +66,7 @@
   padding-bottom: 4rem; /* Reduced from 5rem to 4rem for smaller bottom nav */
 }
 
-@media (min-width: 640px) {
+@media (min-width: 769px) {
   .mobile-dashboard {
     padding-bottom: var(--space-6);
   }
@@ -85,7 +85,7 @@
   background-color: #0F0F0F;
 }
 
-@media (min-width: 640px) {
+@media (min-width: 769px) {
   .header-responsive {
     height: var(--header-height-desktop);
   }

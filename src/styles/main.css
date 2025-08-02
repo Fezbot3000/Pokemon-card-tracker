@@ -348,7 +348,7 @@ body.modal-open {
 }
 
 /* On mobile, contextual modals should still be content-based */
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .modal-contextual {
     height: auto !important;
     max-height: calc(100vh - 1rem) !important;
@@ -542,7 +542,7 @@ html.dark body {
   color: #ef4444;
 }
 
-@media (min-width: 640px) {
+@media (min-width: 769px) {
   .mobile-bottom-nav {
     display: none;
   }
@@ -673,7 +673,7 @@ html.dark body {
   padding-top: var(--header-total-height-mobile);
 }
 
-@media (min-width: 640px) {
+@media (min-width: 769px) {
   .content-with-header {
     padding-top: var(--header-total-height-desktop);
   }
@@ -685,7 +685,7 @@ html.dark body {
   padding-bottom: 4rem; /* Bottom nav - reduced from 5rem to 4rem */
 }
 
-@media (min-width: 640px) {
+@media (min-width: 769px) {
   .main-content {
     padding-top: var(--header-total-height-desktop);
     padding-bottom: 1rem; /* No bottom nav on desktop */
@@ -696,7 +696,7 @@ html.dark body {
   padding-top: var(--header-total-height-mobile);
 }
 
-@media (min-width: 640px) {
+@media (min-width: 769px) {
   .main-content.content-with-header {
     padding-top: var(--header-total-height-desktop);
   }
@@ -707,7 +707,7 @@ html.dark body {
   height: var(--header-total-height-mobile);
 }
 
-@media (min-width: 640px) {
+@media (min-width: 769px) {
   .header-responsive {
     height: var(--header-total-height-desktop);
   }
@@ -752,7 +752,7 @@ html.dark body {
     padding-bottom: calc(var(--bottom-nav-height) + var(--safe-area-bottom));
   }
 
-  @media (min-width: 640px) {
+  @media (min-width: 769px) {
     .main-content {
       padding-top: calc(var(--header-total-height-desktop) + var(--safe-area-top));
       padding-bottom: calc(var(--space-4) + var(--safe-area-bottom));
@@ -795,7 +795,7 @@ html.dark body {
   padding-bottom: var(--bottom-nav-height);
 }
 
-@media (min-width: 640px) {
+@media (min-width: 769px) {
   .main-content.mobile-dashboard {
     padding-top: var(--header-total-height-desktop);
     padding-bottom: var(--space-4);
@@ -803,7 +803,7 @@ html.dark body {
 }
 
 /* Mobile layout variations with proper specificity */
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   /* Homepage (cards view) - no header on mobile */
   body:not(.pwa) .main-content.mobile-dashboard.no-header {
     padding-top: var(--space-0);
