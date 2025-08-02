@@ -555,6 +555,17 @@ const CardDetailsForm = ({
 
   const handleSubmit = e => {
     e.preventDefault();
+    // Prevent form submission on Enter key - this modal should only save via explicit Save button
+    return false;
+  };
+
+  // Handle Enter key in input fields to prevent form submission
+  const handleKeyDown = e => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      // Optional: You could focus the next input field here instead
+      return false;
+    }
   };
 
   // Helper function to map PSA brands to categories
@@ -905,6 +916,7 @@ const CardDetailsForm = ({
                   type="number"
                   value={displayInvestment}
                   onChange={handleInvestmentInputChange}
+                  onKeyDown={handleKeyDown}
                   error={errors.originalInvestmentAmount}
                   placeholder="0"
                 />
@@ -918,6 +930,7 @@ const CardDetailsForm = ({
                   type="number"
                   value={displayCurrentValue}
                   onChange={handleCurrentValueInputChange}
+                  onKeyDown={handleKeyDown}
                   error={errors.originalCurrentValueAmount}
                   placeholder="0"
                 />
@@ -939,6 +952,7 @@ const CardDetailsForm = ({
                 name="player"
                 value={card.player || ''}
                 onChange={handleInputChange}
+                onKeyDown={handleKeyDown}
                 error={errors.player}
               />
             </div>
@@ -1052,6 +1066,7 @@ const CardDetailsForm = ({
                     name="slabSerial"
                     value={card.slabSerial || ''}
                     onChange={handleInputChange}
+                    onKeyDown={handleKeyDown}
                     error={errors.slabSerial}
                     required={false}
                   />
@@ -1074,6 +1089,7 @@ const CardDetailsForm = ({
                       : card.population || ''
                   }
                   onChange={handleInputChange}
+                  onKeyDown={handleKeyDown}
                   error={errors.population}
                 />
               </div>
@@ -1089,6 +1105,7 @@ const CardDetailsForm = ({
                   type="date"
                   value={card.datePurchased || ''}
                   onChange={handleInputChange}
+                  onKeyDown={handleKeyDown}
                   error={errors.datePurchased}
                 />
               </div>
@@ -1101,6 +1118,7 @@ const CardDetailsForm = ({
                   type="number"
                   value={card.quantity ? String(card.quantity) : '1'}
                   onChange={handleInputChange}
+                  onKeyDown={handleKeyDown}
                   error={errors.quantity}
                   min={1}
                 />

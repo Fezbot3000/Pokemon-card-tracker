@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import Icon from '../atoms/Icon';
 import Button from '../atoms/Button';
-import ActionSheet, { ActionSheetItem } from '../molecules/ActionSheet';
+import CustomDropdown from '../molecules/CustomDropdown';
 
 
 /**
@@ -27,7 +27,6 @@ const SearchToolbar = ({
 }) => {
 
   // const isDarkMode = theme === 'dark';
-  const [isSortDropdownOpen, setIsSortDropdownOpen] = React.useState(false);
   const [currentSortDirection, setCurrentSortDirection] =
     React.useState(sortDirection);
 
@@ -48,45 +47,6 @@ const SearchToolbar = ({
       onSortDirectionChange(newDirection);
     }
   };
-
-  // Sort dropdown trigger
-  const sortDropdownTrigger = (
-    <div
-      className="dropdown-trigger inline-flex cursor-pointer items-center justify-center rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none dark:border-gray-700 dark:bg-[#0F0F0F] dark:text-gray-300 dark:hover:bg-[#111]"
-      onClick={() => setIsSortDropdownOpen(!isSortDropdownOpen)}
-      data-component-name="SearchToolbar"
-    >
-      <div className="flex items-center">
-        <Icon
-          name="filter_list"
-          size="sm"
-          className="text-gray-600 dark:text-gray-300"
-        />
-        {/* Arrow Button */}
-        <button
-          type="button"
-          onClick={e => {
-            e.stopPropagation(); // Prevent dropdown opening
-            toggleSortDirection(e);
-          }}
-          className="ml-1 cursor-pointer border-0 bg-transparent p-0"
-        >
-          <Icon
-            name={
-              currentSortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward'
-            }
-            size="sm"
-            className="text-gray-600 dark:text-gray-300"
-          />
-        </button>
-      </div>
-      {/* Screen reader text */}
-      <span className="sr-only">
-        {sortOption} (
-        {currentSortDirection === 'asc' ? 'ascending' : 'descending'})
-      </span>
-    </div>
-  );
 
   const toolbarClass = `search-toolbar w-full bg-white dark:bg-[#0F0F0F] py-3 px-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shadow-sm rounded-md border border-gray-200 dark:border-gray-700 ${className}`;
 
@@ -157,44 +117,44 @@ const SearchToolbar = ({
           </button>
         </div>
 
-        {/* Sort ActionSheet */}
-        <ActionSheet
-          trigger={sortDropdownTrigger}
-          isOpen={isSortDropdownOpen}
-          onOpenChange={setIsSortDropdownOpen}
-          align="right"
-          width="sm"
-          title="Sort By"
-          className="z-[5000]"
-        >
-          {sortOptions.map(option => (
-            <ActionSheetItem
-              key={option}
-              onClick={() => {
-                onSortChange?.(option);
-                setIsSortDropdownOpen(false);
-              }}
-              className={
-                sortOption === option 
-                  ? 'bg-blue-50 text-blue-600 shadow-sm ring-1 ring-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:ring-blue-800' 
-                  : 'hover:shadow-sm'
+        {/* Sort Controls */}
+        <div className="flex items-center gap-1">
+          {/* Sort Dropdown */}
+          <CustomDropdown
+            value={sortOption}
+            options={sortOptions.map(option => ({
+              value: option,
+              label: option
+            }))}
+            onSelect={(selectedValue) => {
+              onSortChange?.(selectedValue);
+            }}
+            placeholder="Sort By"
+            fullWidth={false}
+            className="border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-[#0F0F0F] dark:text-gray-300 dark:hover:bg-[#111] min-w-[140px]"
+            size="md"
+            showSearch={false}
+          />
+          
+          {/* Sort Direction Button */}
+          <button
+            type="button"
+            onClick={toggleSortDirection}
+            className="inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white p-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none dark:border-gray-700 dark:bg-[#0F0F0F] dark:text-gray-300 dark:hover:bg-[#111]"
+            title={`Sort ${currentSortDirection === 'asc' ? 'Ascending' : 'Descending'}`}
+          >
+            <Icon
+              name={
+                currentSortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward'
               }
-            >
-              <div className="flex w-full items-center justify-between">
-                <span className="font-medium">{option}</span>
-                {sortOption === option && (
-                  <svg className="ml-3 size-4 shrink-0 text-blue-600 dark:text-blue-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path
-                      fillRule="evenodd"
-                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                )}
-              </div>
-            </ActionSheetItem>
-          ))}
-        </ActionSheet>
+              size="sm"
+              className="text-gray-600 dark:text-gray-300"
+            />
+            <span className="sr-only">
+              Sort {currentSortDirection === 'asc' ? 'Ascending' : 'Descending'}
+            </span>
+          </button>
+        </div>
 
         {/* Add Card Button */}
         <Button

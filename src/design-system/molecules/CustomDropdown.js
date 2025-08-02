@@ -21,6 +21,7 @@ const CustomDropdown = ({
   error = '',
   name = '',
   id = '',
+  showSearch = true,
   ...props
 }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -177,7 +178,7 @@ const CustomDropdown = ({
       }}
     >
       {/* Search input for large option lists */}
-      {options.length > 5 && (
+      {showSearch && options.length > 5 && (
         <div className="p-2 border-b border-gray-200 dark:border-gray-700">
           <input
             ref={inputRef}
@@ -192,7 +193,7 @@ const CustomDropdown = ({
       )}
       
       {/* Options list */}
-      <div className="max-h-40 overflow-y-auto">
+      <div className="max-h-64 overflow-y-auto">
         {filteredOptions.length === 0 ? (
           <div className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">
             No options found
@@ -306,6 +307,7 @@ CustomDropdown.propTypes = {
   error: PropTypes.string,
   name: PropTypes.string,
   id: PropTypes.string,
+  showSearch: PropTypes.bool,
 };
 
 export default CustomDropdown; 

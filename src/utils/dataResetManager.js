@@ -155,9 +155,15 @@ export const dataResetManager = {
         logger.error('Error resetting local database:', dbError);
       }
 
-      // Clear localStorage items (except auth-related ones)
+      // Clear localStorage items (except auth-related and user preference ones)
       updateProgress('Clearing local storage');
-      const keysToPreserve = ['firebase:authUser', 'firebase:previousAuthUser'];
+      const keysToPreserve = [
+        'firebase:authUser', 
+        'firebase:previousAuthUser',
+        'pokemon_tracker_onboarding_complete', // Preserve tutorial completion
+        'hasShownPremiumWelcome', // Preserve premium welcome flag  
+        'hasShownTrialWelcome' // Preserve trial welcome flag
+      ];
 
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);

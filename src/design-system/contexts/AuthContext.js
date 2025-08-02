@@ -141,15 +141,19 @@ export const AuthProvider = ({ children }) => {
 
         setSubscriptionData(newSubscriptionData);
 
-        // Show a welcome message for the trial
-        setTimeout(() => {
-          toast.success(
-            '🎉 Welcome to your 7-day Premium trial! Enjoy all features!',
-            {
-              duration: 5000,
-            }
-          );
-        }, 1000);
+        // Show a welcome message for the trial (only once)
+        const hasShownTrialWelcome = localStorage.getItem('hasShownTrialWelcome');
+        if (!hasShownTrialWelcome) {
+          localStorage.setItem('hasShownTrialWelcome', 'true');
+          setTimeout(() => {
+            toast.success(
+              '🎉 Welcome to your 7-day Premium trial! Enjoy all features!',
+              {
+                duration: 5000,
+              }
+            );
+          }, 1000);
+        }
       } else {
         // Existing user with subscription data - check current status
         const daysRemaining = calculateDaysRemaining(
@@ -275,8 +279,12 @@ export const AuthProvider = ({ children }) => {
                       }, 1000);
                     }
                   } else {
-                    // Clear the flag if user is no longer premium (downgraded/cancelled)
+                    // Clear the flags if user is no longer premium (downgraded/cancelled)
                     localStorage.removeItem('hasShownPremiumWelcome');
+                    // Also clear trial welcome if user is no longer on trial
+                    if (userData.subscriptionStatus !== 'free_trial') {
+                      localStorage.removeItem('hasShownTrialWelcome');
+                    }
                   }
                 }
               }
@@ -550,8 +558,9 @@ export const AuthProvider = ({ children }) => {
       const auth = await getFirebaseAuth();
       await firebaseSignOut(auth);
 
-      // Clear premium welcome flag so it can be shown again on next upgrade
+      // Clear welcome flags so they can be shown again on next upgrade/sign-in
       localStorage.removeItem('hasShownPremiumWelcome');
+      localStorage.removeItem('hasShownTrialWelcome');
 
       toast.success('Signed out successfully!');
     } catch (err) {

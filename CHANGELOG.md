@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Fixed Issues
+- ✅ Enter key causing issues in add card and card details modals (RESOLVED 02/02/2025)
+  - Root cause: Form submission triggered by Enter key press in modal input fields disrupted collection state management
+  - CardDetailsForm had form element with onSubmit handler that processed Enter keypresses inappropriately
+  - PSA lookup input in AddCardModal also triggered unwanted form behavior on Enter
+  - Solution: Added comprehensive Enter key prevention across all modal input fields
+  - Added handleKeyDown function to prevent form submission on Enter key
+  - Enhanced all FormField components with onKeyDown handlers (Investment, Current Value, Player, Serial Number, Population, Date Purchased, Quantity)
+  - Added intelligent Enter handling to PSA lookup input (triggers search if valid, prevents form submission)
+  - Files changed: `src/design-system/components/CardDetailsForm.js`, `src/components/AddCardModal.js`
+  - Confidence level: 100% - identified exact form submission path and prevented Enter key propagation
+  - Verification: Enter key presses in modal fields no longer disrupt collection display or cause state issues
+- ✅ Tutorial and premium welcome toast showing every sign-in (RESOLVED 02/02/2025)
+  - Root cause: Two separate issues affecting first-time user experience
+  - Tutorial issue: Data reset manager cleared `pokemon_tracker_onboarding_complete` localStorage flag
+  - Premium toast issue: Trial welcome toast lacked localStorage check, showing on every new user sign-in
+  - Solution: Added localStorage preservation for tutorial/welcome flags in data reset manager
+  - Added `hasShownTrialWelcome` localStorage check for trial welcome toast
+  - Added proper cleanup of welcome flags on logout and subscription status changes
+  - Files changed: `src/design-system/contexts/AuthContext.js`, `src/utils/dataResetManager.js`
+  - Confidence level: 95% - identified exact localStorage keys and code paths
+  - Verification: Tutorial and welcome toasts now show only once per user session
+
 - ✅ Hot reloading stopped working (01/31/2025 - RESOLVED 02/01/2025)
   - Investigation file: `investigations/INVESTIGATION_HOT_RELOADING_STOPPED_20250201.md`
   - Root cause: React Scripts 5.0.1 react-error-overlay compatibility bug
