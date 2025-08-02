@@ -28,6 +28,59 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ==================== MOBILE VIEWPORT FIXES ==================== */
+
+@layer base {
+  /* Prevent pinch-to-zoom and other unwanted touch gestures globally */
+  html {
+    touch-action: manipulation;
+    /* Prevent tap highlighting on iOS */
+    -webkit-tap-highlight-color: transparent;
+    /* Prevent text selection highlighting that can interfere with gestures */
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+  
+  /* Allow text selection in content areas */
+  body,
+  input,
+  textarea,
+  select,
+  button,
+  [contenteditable] {
+    -webkit-user-select: text;
+    -khtml-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+  }
+  
+  /* Prevent horizontal scrolling */
+  body {
+    overflow-x: hidden;
+    /* Prevent overscroll bounce on iOS */
+    overscroll-behavior-x: none;
+  }
+  
+  /* Ensure inputs have adequate font size to prevent iOS zoom */
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+  
+  /* Allow normal touch actions for scrollable content */
+  main,
+  .scroll-container,
+  .modal-content {
+    touch-action: auto;
+  }
+}
+
 /* ==================== GLOBAL RESETS ==================== */
 
 html {
