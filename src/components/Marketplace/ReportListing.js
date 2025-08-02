@@ -66,16 +66,10 @@ function ReportListing({ listingId, sellerId, onClose }) {
     <div className="bg-black/50 fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md rounded-lg bg-white dark:bg-gray-900">
         <div className="p-6">
-          <div className="mb-4 flex items-center justify-between">
+          <div className="mb-4">
             <h2 className="text-xl font-bold text-gray-900 dark:text-white">
               Report Listing
             </h2>
-            <button
-              onClick={onClose}
-              className="rounded-lg p-1 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
-            >
-              <span className="material-icons">close</span>
-            </button>
           </div>
 
           <p className="mb-6 text-sm text-gray-600 dark:text-gray-400">

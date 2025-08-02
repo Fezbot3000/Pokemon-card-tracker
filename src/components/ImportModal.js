@@ -120,16 +120,10 @@ const ImportModal = ({
 
   return (
     <div className="modal-content fixed inset-0 z-50 flex flex-col bg-white dark:bg-[#0B0F19]">
-      <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-200 p-4 dark:border-gray-700">
+      <div className="sticky top-0 z-10 border-b border-gray-200 p-4 dark:border-gray-700">
         <h1 className="text-xl font-semibold text-gray-800 dark:text-white">
           Update Card Data
         </h1>
-        <button
-          onClick={onClose}
-          className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-        >
-          <span className="material-icons">close</span>
-        </button>
       </div>
 
       <div

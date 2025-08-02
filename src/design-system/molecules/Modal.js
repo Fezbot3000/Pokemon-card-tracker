@@ -3,6 +3,32 @@ import { createPortal } from 'react-dom';
 import PropTypes from 'prop-types';
 import Icon from '../atoms/Icon';
 
+// Helper function to recursively replace onClose handlers with animated versions
+const replaceOnCloseInChildren = (children, originalOnClose, animatedOnClose) => {
+  return React.Children.map(children, child => {
+    if (!React.isValidElement(child)) {
+      return child;
+    }
+
+    // Check if this element has onClick that matches onClose
+    let newProps = { ...child.props };
+    if (child.props.onClick === originalOnClose) {
+      newProps.onClick = animatedOnClose;
+    }
+
+    // Recursively process children
+    if (child.props.children) {
+      newProps.children = replaceOnCloseInChildren(
+        child.props.children, 
+        originalOnClose, 
+        animatedOnClose
+      );
+    }
+
+    return React.cloneElement(child, newProps);
+  });
+};
+
 /**
  * Modal component
  *
@@ -97,6 +123,17 @@ const Modal = ({
     }, 200); // Match this with the animation duration
   }, [onClose, position, setAnimationClass]);
 
+  // Animated close handler that should be used by all close methods
+  const handleAnimatedClose = useCallback(() => {
+    handleClose();
+  }, [handleClose]);
+
+  // Create a wrapped onClose that always uses animation
+  // This ensures all close methods (buttons, escape, backdrop) use the same animation
+  const animatedOnClose = useCallback(() => {
+    handleAnimatedClose();
+  }, [handleAnimatedClose]);
+
 
 
 
@@ -119,7 +156,7 @@ const Modal = ({
         });
         
         if (isTopmost) {
-          handleClose();
+          handleAnimatedClose();
         }
       }
     };
@@ -128,14 +165,20 @@ const Modal = ({
     return () => {
       document.removeEventListener('keydown', handleEscapeKey);
     };
-  }, [isOpen, handleClose, size]); // Include size dependency
+  }, [isOpen, handleAnimatedClose, size]); // Include size dependency
 
   // Handle backdrop click
   const handleBackdropClick = useCallback((e) => {
-    if (closeOnClickOutside && onClose && e.target === e.currentTarget) {
-      onClose();
+    // Check if click is on backdrop itself OR on margin container that should close modal
+    const isBackdropClick = e.target === e.currentTarget;
+    const isMarginContainerClick = e.target.classList.contains('size-full') && 
+                                  e.target.classList.contains('sm:p-4') &&
+                                  e.target.classList.contains('md:p-6');
+    
+    if (closeOnClickOutside && onClose && (isBackdropClick || isMarginContainerClick)) {
+      handleAnimatedClose();
     }
-  }, [closeOnClickOutside, onClose]);
+  }, [closeOnClickOutside, onClose, handleAnimatedClose]);
 
   // Return null if modal is not open
   if (!isOpen) return null;
@@ -204,19 +247,10 @@ const Modal = ({
         className={`${maxWidth} w-full overflow-hidden rounded-lg bg-white shadow-xl dark:bg-[#0F0F0F]`}
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-gray-200 px-6 pb-4 pt-6 dark:border-gray-800">
+        <div className="border-b border-gray-200 px-6 pb-4 pt-6 dark:border-gray-800">
           <h3 className="text-lg font-medium text-gray-900 dark:text-white">
             {title}
           </h3>
-          {onClose && (
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-500 focus:outline-none dark:hover:text-gray-300"
-              aria-label="Close"
-            >
-              <Icon name="close" size="md" />
-            </button>
-          )}
         </div>
 
         {/* Body */}
@@ -225,7 +259,10 @@ const Modal = ({
         {/* Footer */}
         {footer && (
           <div className="flex items-center justify-between gap-2 border-t border-gray-200 px-6 pb-6 pt-4 dark:border-gray-800">
-            {footer}
+            {React.Children.map(footer, child => {
+              // Recursively replace onClose with animatedOnClose for any child components
+              return replaceOnCloseInChildren(child, onClose, animatedOnClose);
+            })}
           </div>
         )}
       </div>
@@ -239,7 +276,19 @@ const Modal = ({
       onClick={handleBackdropClick}
     >
       {/* Desktop margin container */}
-      <div className={`size-full sm:p-4 md:p-6 flex ${position === 'right' ? 'justify-end items-stretch' : size === 'contextual' ? 'items-center justify-center' : 'items-stretch justify-center'}`}>
+      <div 
+        className={`size-full sm:p-4 md:p-6 flex ${position === 'right' ? 'justify-end items-stretch' : size === 'contextual' ? 'items-center justify-center' : 'items-stretch justify-center'}`}
+        onClick={(e) => {
+          // Only stop propagation if the click is on modal content,
+          // allow clicks on margin container to bubble to backdrop
+          if (e.target === e.currentTarget) {
+            // This is a click on empty margin space - let it bubble to backdrop
+            return;
+          }
+          // This is a click on modal content - stop it from bubbling
+          e.stopPropagation();
+        }}
+      >
       <div
         ref={modalRef}
         className={`${modalClasses} flex flex-col ${animationClass} modal-container ${size === 'contextual' ? 'modal-contextual' : ''} ${
@@ -253,6 +302,7 @@ const Modal = ({
         aria-modal="true"
         aria-labelledby={title ? 'modal-title' : undefined}
         aria-label={ariaLabel}
+        onClick={e => e.stopPropagation()} // Prevent backdrop clicks when clicking on modal content
         {...props}
       >
         {/* Modal Header - Sticky */}
@@ -261,15 +311,6 @@ const Modal = ({
             <h2 id="modal-title" className={titleClasses}>
               {title}
             </h2>
-            {onClose && (
-              <button
-                onClick={handleClose}
-                className="text-gray-400 hover:text-gray-500 focus:outline-none dark:hover:text-gray-300 transition-colors duration-200"
-                aria-label="Close"
-              >
-                <Icon name="close" size="md" />
-              </button>
-            )}
           </div>
         )}
 
@@ -282,7 +323,12 @@ const Modal = ({
 
         {/* Modal Footer - Sticky, only shown if footer content is provided */}
         {footer && (
-          <div className={footerClasses}>{footer}</div>
+          <div className={footerClasses}>
+            {React.Children.map(footer, child => {
+              // Recursively replace onClose with animatedOnClose for any child components
+              return replaceOnCloseInChildren(child, onClose, animatedOnClose);
+            })}
+          </div>
         )}
       </div>
       </div>

@@ -119,16 +119,10 @@ const TutorialModal = () => {
         }}
       >
         {/* Modal Header */}
-        <div className="dark:border-gray-700 flex items-center justify-between border-b border-gray-200 px-6 pb-4 pt-6">
+        <div className="border-b border-gray-200 px-6 pb-4 pt-6 dark:border-gray-700">
           <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
             {content.title}
           </h3>
-          <button
-            onClick={endTutorial}
-            className="text-2xl font-bold text-gray-400 transition-colors hover:text-gray-600 dark:hover:text-gray-300"
-          >
-            ✕
-          </button>
         </div>
 
         {/* Modal Content */}

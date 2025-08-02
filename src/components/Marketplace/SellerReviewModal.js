@@ -102,16 +102,10 @@ const SellerReviewModal = ({
     <div className="bg-black/50 fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-lg bg-white dark:bg-gray-800">
         <div className="p-6">
-          <div className="mb-4 flex items-center justify-between">
+          <div className="mb-4">
             <h2 className="text-xl font-bold text-gray-900 dark:text-white">
               Review Seller
             </h2>
-            <button
-              onClick={handleClose}
-              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-            >
-              <span className="material-icons">close</span>
-            </button>
           </div>
 
           <div className="mb-6">

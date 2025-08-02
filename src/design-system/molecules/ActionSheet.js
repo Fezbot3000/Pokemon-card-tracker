@@ -22,6 +22,8 @@ const ActionSheet = ({
   // Internal state for controlled or uncontrolled usage
   const [internalIsOpen, setInternalIsOpen] = useState(false);
   const [isMobileView, setIsMobileView] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [shouldRender, setShouldRender] = useState(false);
   const dropdownRef = useRef(null);
 
   // Detect mobile view
@@ -47,6 +49,32 @@ const ActionSheet = ({
       onOpenChange(newIsOpen);
     }
   }, [controlled, onOpenChange]);
+
+  // Handle animations for desktop dropdown
+  useEffect(() => {
+    if (actionSheetIsOpen && !isMobileView) {
+      // Opening: render immediately and start enter animation
+      setShouldRender(true);
+      setIsAnimating(true);
+    } else if (!actionSheetIsOpen && !isMobileView && shouldRender) {
+      // Closing: start exit animation
+      setIsAnimating(true);
+      // Will stop rendering after animation completes
+    } else if (isMobileView) {
+      // Mobile uses BottomSheet's own animation logic
+      setShouldRender(false);
+      setIsAnimating(false);
+    }
+  }, [actionSheetIsOpen, isMobileView, shouldRender]);
+
+  // Handle animation completion
+  const handleAnimationEnd = useCallback(() => {
+    if (!actionSheetIsOpen && !isMobileView) {
+      // Animation finished for closing - stop rendering
+      setShouldRender(false);
+    }
+    setIsAnimating(false);
+  }, [actionSheetIsOpen, isMobileView]);
 
   const toggleActionSheet = e => {
     e.stopPropagation();
@@ -95,15 +123,18 @@ const ActionSheet = ({
       </div>
 
       {/* Desktop Dropdown Menu */}
-      {actionSheetIsOpen && !isMobileView && (
+      {shouldRender && !isMobileView && (
         <div
-          className={`absolute z-50 mt-1 ${widthClasses[width]} ${alignClasses[align]} dark:border-gray-700/50 scrollbar-hide rounded-md border border-gray-200 bg-white py-1 shadow-lg dark:bg-[#0F0F0F]`}
+          className={`absolute z-50 mt-1 ${widthClasses[width]} ${alignClasses[align]} dark:border-gray-700/50 scrollbar-hide rounded-md border border-gray-200 bg-white py-1 shadow-lg dark:bg-[#0F0F0F] ${
+            actionSheetIsOpen ? 'animate-actionsheet-enter' : 'animate-actionsheet-exit'
+          }`}
           style={{
             maxHeight: 'none',
             overflowY: 'visible',
             overflowX: 'hidden',
             display: 'block',
           }}
+          onAnimationEnd={handleAnimationEnd}
           {...props}
         >
           {children}
