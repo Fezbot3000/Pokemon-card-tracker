@@ -70,14 +70,14 @@ const Card = ({
               type="button"
               aria-label={isSelected ? 'Deselect card' : 'Select card'}
               tabIndex={0}
-              className={`flex size-4 items-center justify-center rounded-full border-2 bg-white transition-all focus:outline-none dark:bg-[#18181b] ${isSelected ? 'border-purple-500' : 'border-gray-300 dark:border-gray-600'} ${isSelected ? 'ring-2 ring-purple-300' : 'hover:border-purple-400 dark:hover:border-purple-400'} shadow`}
+              className={`flex size-6 items-center justify-center rounded-full border-2 bg-white transition-all focus:outline-none dark:bg-[#18181b] ${isSelected ? 'border-purple-500' : 'border-gray-300 dark:border-gray-600'} ${isSelected ? 'ring-2 ring-purple-300' : 'hover:border-purple-400 dark:hover:border-purple-400'} shadow`}
               onClick={e => {
                 e.stopPropagation();
                 onSelect(!isSelected);
               }}
             >
               <span
-                className={`flex size-3 items-center justify-center rounded-full transition-all ${isSelected ? 'bg-white dark:bg-[#23272F]' : 'bg-transparent'}`}
+                className={`flex size-4 items-center justify-center rounded-full transition-all ${isSelected ? 'bg-white dark:bg-[#23272F]' : 'bg-transparent'}`}
               >
                 {isSelected && (
                   <Icon name="check" className="text-base text-purple-600" />
@@ -110,14 +110,14 @@ const Card = ({
             type="button"
             aria-label={isSelected ? 'Deselect card' : 'Select card'}
             tabIndex={0}
-            className={`flex size-4 items-center justify-center rounded-full border-2 bg-white transition-all focus:outline-none dark:bg-[#18181b] ${isSelected ? 'border-purple-500' : 'border-gray-300 dark:border-gray-600'} ${isSelected ? 'ring-2 ring-purple-300' : 'hover:border-purple-400 dark:hover:border-purple-400'} shadow`}
+            className={`flex size-6 items-center justify-center rounded-full border-2 bg-white transition-all focus:outline-none dark:bg-[#18181b] ${isSelected ? 'border-purple-500' : 'border-gray-300 dark:border-gray-600'} ${isSelected ? 'ring-2 ring-purple-300' : 'hover:border-purple-400 dark:hover:border-purple-400'} shadow`}
             onClick={e => {
               e.stopPropagation();
               onSelect(!isSelected);
             }}
           >
             <span
-              className={`flex size-3 items-center justify-center rounded-full transition-all ${isSelected ? 'bg-white dark:bg-[#23272F]' : 'bg-transparent'}`}
+              className={`flex size-4 items-center justify-center rounded-full transition-all ${isSelected ? 'bg-white dark:bg-[#23272F]' : 'bg-transparent'}`}
             >
               {isSelected && (
                 <Icon name="check" className="text-base text-purple-600" />
