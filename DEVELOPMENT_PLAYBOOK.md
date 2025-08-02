@@ -27,15 +27,21 @@ This playbook provides systematic approaches for common development scenarios. E
 - Archive investigation files after completion
 
 ### **Terminal Command Restrictions**
-- Investigation phases: Use only codebase_search, read_file, grep_search, file_search
-- Implementation phase: Terminal commands allowed only after user approval
+- **PROHIBITED**: AI must NEVER run terminal commands without explicit user permission
+- **Investigation phases**: Use only codebase_search, read_file, grep_search, file_search
+- **Implementation phase**: Terminal commands allowed ONLY after user gives explicit approval
+- **Before ANY terminal command**: Ask user "Can I run the following command: [command]?"
+- **Wait for approval**: Do not proceed until user explicitly says "yes" or "approved"
+- **Emergency exception**: None - even urgent fixes require user approval for terminal commands
 
 ### **Play Execution Protocol**
 - **MANDATORY**: Announce each step before executing it: "Step X: [Action Description]"
 - **MANDATORY**: If prerequisite files don't exist, create them before proceeding
 - **FORBIDDEN**: Skip steps or jump ahead in the sequence
+- **FORBIDDEN**: Run ANY terminal commands without explicit user approval
 - **FORBIDDEN**: Run terminal commands during investigation phases
 - **REQUIRED**: Complete all steps in the exact order specified
+- **REQUIRED**: Request user permission before ANY terminal command execution
 
 ## Framework Overview
 

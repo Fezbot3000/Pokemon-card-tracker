@@ -49,6 +49,24 @@ const CustomDropdown = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Update dropdown position on scroll when open
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleScroll = () => {
+      calculatePosition();
+    };
+
+    // Add scroll listeners for both window and any scrollable parents
+    window.addEventListener('scroll', handleScroll, true);
+    window.addEventListener('resize', handleScroll);
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll, true);
+      window.removeEventListener('resize', handleScroll);
+    };
+  }, [isOpen]);
+
     // Calculate dropdown position  
   const calculatePosition = () => {
     if (!buttonRef.current) return;
@@ -64,8 +82,8 @@ const CustomDropdown = ({
     
     setDropdownPosition({
       position,
-      top: position === 'bottom' ? rect.bottom + window.scrollY : rect.top + window.scrollY - dropdownHeight,
-      left: rect.left + window.scrollX,
+      top: position === 'bottom' ? rect.bottom : rect.top - dropdownHeight,
+      left: rect.left,
       width: rect.width
     });
   };
@@ -169,7 +187,7 @@ const CustomDropdown = ({
   const dropdownContent = (
     <div
       ref={portalRef}
-      className="fixed z-[60000] bg-white dark:bg-[#0F0F0F] border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-48 overflow-hidden"
+      className="fixed z-[60000] bg-white dark:bg-[#0F0F0F] border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg"
       style={{
         top: dropdownPosition.top,
         left: dropdownPosition.left,
@@ -193,7 +211,7 @@ const CustomDropdown = ({
       )}
       
       {/* Options list */}
-      <div className="max-h-64 overflow-y-auto">
+      <div>
         {filteredOptions.length === 0 ? (
           <div className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">
             No options found
