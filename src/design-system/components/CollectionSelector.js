@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import Icon from '../atoms/Icon';
 import Button from '../atoms/Button';
 import Modal from '../molecules/Modal';
-import ActionSheet, { ActionSheetItem, ActionSheetDivider } from '../molecules/ActionSheet';
+import CustomDropdown from '../molecules/CustomDropdown';
 import { toast } from '../utils/notifications';
 import { useSubscription } from '../../hooks/useSubscription';
 
@@ -20,7 +20,6 @@ const CollectionSelector = ({
   onAddCollection,
   className = '',
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
   const [isNewCollectionModalOpen, setIsNewCollectionModalOpen] = useState(false);
   const [newCollectionName, setNewCollectionName] = useState('');
   const { hasFeature } = useSubscription();
@@ -34,73 +33,34 @@ const CollectionSelector = ({
     }
 
     setIsNewCollectionModalOpen(true);
-    setIsOpen(false);
   };
 
-  // Dropdown trigger component - same pattern as filter
-  const trigger = (
-    <div className="flex w-full items-center justify-between rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-[#0F0F0F] dark:text-gray-300 dark:hover:bg-gray-700">
-      <span className="max-w-[200px] truncate font-medium">
-        {selectedCollection}
-      </span>
-      <Icon
-        name={isOpen ? 'expand_less' : 'expand_more'}
-        size="sm"
-      />
-    </div>
-  );
+
 
   return (
     <>
-      <ActionSheet
-        trigger={trigger}
-        isOpen={isOpen}
-        onOpenChange={setIsOpen}
-        width="full"
-        title="Select Collection"
-        className={className}
-      >
-        {/* New Collection option */}
-        <ActionSheetItem
-          icon={<Icon name={hasFeature('MULTIPLE_COLLECTIONS') ? 'add' : 'lock'} size="sm" />}
-          onClick={handleNewCollectionClick}
-          disabled={!hasFeature('MULTIPLE_COLLECTIONS')}
-          className={!hasFeature('MULTIPLE_COLLECTIONS') ? 'cursor-not-allowed opacity-50' : ''}
-        >
-          {hasFeature('MULTIPLE_COLLECTIONS') ? 'New Collection' : 'New Collection (Premium)'}
-        </ActionSheetItem>
-
-        <ActionSheetDivider />
-
-        {/* Collections list */}
-        {collections.map(collection => (
-          <ActionSheetItem
-            key={collection}
-            onClick={() => {
-              onCollectionChange?.(collection);
-              setIsOpen(false);
-            }}
-            className={
-              collection === selectedCollection
-                ? 'bg-blue-50 text-blue-600 shadow-sm ring-1 ring-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:ring-blue-800'
-                : 'hover:shadow-sm'
-            }
-          >
-            <div className="flex w-full items-center justify-between">
-              <span className="font-medium">{collection}</span>
-              {collection === selectedCollection && (
-                <svg className="ml-3 size-4 shrink-0 text-blue-600 dark:text-blue-400" fill="currentColor" viewBox="0 0 20 20">
-                  <path
-                    fillRule="evenodd"
-                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              )}
-            </div>
-          </ActionSheetItem>
-        ))}
-      </ActionSheet>
+      <CustomDropdown
+        value={selectedCollection}
+        options={[
+          { value: 'new', label: hasFeature('MULTIPLE_COLLECTIONS') ? '+ New Collection' : '+ New Collection (Premium)' },
+          ...collections.map(collection => ({
+            value: collection,
+            label: collection
+          }))
+        ]}
+        onSelect={(selectedValue) => {
+          if (selectedValue === 'new') {
+            handleNewCollectionClick();
+          } else {
+            onCollectionChange?.(selectedValue);
+          }
+        }}
+        placeholder="Select Collection"
+        fullWidth={true}
+        className={`${className} border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-[#0F0F0F] dark:text-gray-300 dark:hover:bg-gray-700`}
+        size="md"
+        showSearch={false}
+      />
 
       {/* New Collection Modal */}
       <Modal
