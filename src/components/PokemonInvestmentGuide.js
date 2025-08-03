@@ -70,12 +70,11 @@ const PokemonInvestmentGuide = () => {
     <div className="min-h-screen" style={{ backgroundColor: '#000' }}>
       <Helmet>
         <title>
-          Pokemon Card Investment Guide Australia | ROI Analysis & Market Trends
-          2024
+          Pokemon Cards 1000%+ Returns 2025 | Investment Guide Australia
         </title>
         <meta
           name="description"
-          content="Expert Pokemon card investment strategies for Australian collectors. Learn ROI potential, market trends, PSA grading impact, and which cards to buy for maximum returns in 2024."
+          content="💰 Discover which Pokemon cards made 1000%+ returns! Expert investment guide reveals the best cards to buy in 2025, PSA grading secrets & market predictions."
         />
         <meta
           name="keywords"
@@ -83,11 +82,11 @@ const PokemonInvestmentGuide = () => {
         />
         <meta
           property="og:title"
-          content="Pokemon Card Investment Guide Australia | ROI Analysis & Market Trends 2024"
+          content="Pokemon Cards 1000%+ Returns 2025 | Investment Secrets Revealed"
         />
         <meta
           property="og:description"
-          content="Expert Pokemon card investment strategies for Australian collectors. Learn ROI potential, market trends, and which cards to buy for maximum returns."
+          content="💰 Which Pokemon cards made collectors rich? Discover the investment secrets, market predictions & cards to buy in 2025 for maximum returns!"
         />
         <link
           rel="canonical"
@@ -98,30 +97,68 @@ const PokemonInvestmentGuide = () => {
         <script type="application/ld+json">
           {JSON.stringify({
             '@context': 'https://schema.org',
-            '@type': 'Article',
-            headline:
-              'Pokemon Card Investment Guide Australia | ROI Analysis & Market Trends 2024',
-            description:
-              'Expert Pokemon card investment strategies for Australian collectors',
-            author: {
-              '@type': 'Organization',
-              name: 'Pokemon Card Tracker Australia',
-            },
-            publisher: {
-              '@type': 'Organization',
-              name: 'Pokemon Card Tracker Australia',
-              logo: {
-                '@type': 'ImageObject',
-                url: 'https://www.mycardtracker.com.au/favicon_L-192x192.png',
+            '@graph': [
+              {
+                '@type': 'Article',
+                headline: 'Pokemon Cards 1000%+ Returns 2025 | Investment Guide Australia',
+                description: 'Discover which Pokemon cards made 1000%+ returns! Expert investment guide reveals the best cards to buy in 2025, PSA grading secrets & market predictions.',
+                author: {
+                  '@type': 'Organization',
+                  name: 'MyCardTracker',
+                },
+                publisher: {
+                  '@type': 'Organization',
+                  name: 'MyCardTracker',
+                  logo: {
+                    '@type': 'ImageObject',
+                    url: 'https://www.mycardtracker.com.au/favicon_L-192x192.png',
+                  },
+                },
+                datePublished: '2025-02-03',
+                dateModified: '2025-02-03',
+                mainEntityOfPage: {
+                  '@type': 'WebPage',
+                  '@id': 'https://www.mycardtracker.com.au/pokemon-investment-guide',
+                },
               },
-            },
-            datePublished: '2024-12-20',
-            dateModified: '2024-12-20',
-            mainEntityOfPage: {
-              '@type': 'WebPage',
-              '@id':
-                'https://www.mycardtracker.com.au/pokemon-investment-guide',
-            },
+              {
+                '@type': 'FAQPage',
+                mainEntity: [
+                  {
+                    '@type': 'Question',
+                    name: 'Which Pokemon cards have the best investment returns?',
+                    acceptedAnswer: {
+                      '@type': 'Answer',
+                      text: 'Base Set Charizard, Pikachu Illustrator, and PSA 10 first edition cards have shown the highest returns, with some achieving 1000%+ gains over 5-10 years.'
+                    }
+                  },
+                  {
+                    '@type': 'Question', 
+                    name: 'Should I invest in PSA graded Pokemon cards?',
+                    acceptedAnswer: {
+                      '@type': 'Answer',
+                      text: 'PSA 10 graded cards typically perform better than raw cards, with PSA 10 Charizards commanding 5-10x premiums over lower grades. However, grading costs should be factored into ROI calculations.'
+                    }
+                  },
+                  {
+                    '@type': 'Question',
+                    name: 'What is the Pokemon card market outlook for 2025?',
+                    acceptedAnswer: {
+                      '@type': 'Answer', 
+                      text: 'The market shows continued strength with increasing mainstream adoption. Vintage cards (1998-2003) and high-grade modern cards are expected to maintain premium valuations.'
+                    }
+                  },
+                  {
+                    '@type': 'Question',
+                    name: 'How much should I invest in Pokemon cards?',
+                    acceptedAnswer: {
+                      '@type': 'Answer',
+                      text: 'Like any alternative investment, Pokemon cards should represent a small portion (5-10%) of a diversified portfolio. Start with blue-chip cards like Base Set Charizard before exploring rarer options.'
+                    }
+                  }
+                ]
+              }
+            ]
           })}
         </script>
       </Helmet>
@@ -428,6 +465,58 @@ const PokemonInvestmentGuide = () => {
                 Browse Pokemon Sets
               </Link>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Related Resources Section */}
+      <section className="px-4 py-16 sm:px-6 lg:px-8" style={{ backgroundColor: '#0A0A0A' }}>
+        <div className="mx-auto max-w-7xl">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-white mb-4">
+              Ready to Invest in Pokemon Cards?
+            </h2>
+            <p className="text-gray-400 text-lg max-w-2xl mx-auto">
+              Get accurate pricing data and start building your profitable collection
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <Link 
+              to="/pokemon-sets"
+              className="group bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-blue-500/30 rounded-xl p-8 hover:from-blue-500/30 hover:to-purple-500/30 transition-all duration-300"
+            >
+              <div className="flex items-center mb-4">
+                <span className="text-3xl mr-3">🔥</span>
+                <h3 className="text-xl font-bold text-white group-hover:text-blue-400 transition-colors">
+                  Card Price Checker
+                </h3>
+              </div>
+              <p className="text-gray-300 mb-4">
+                Get instant values for Base Set Charizard, Jungle, Fossil & Team Rocket cards. See what your collection is worth!
+              </p>
+              <span className="text-blue-400 font-semibold group-hover:underline">
+                Check Card Values →
+              </span>
+            </Link>
+
+            <Link 
+              to="/marketplace"
+              className="group bg-gradient-to-br from-orange-500/20 to-red-500/20 border border-orange-500/30 rounded-xl p-8 hover:from-orange-500/30 hover:to-red-500/30 transition-all duration-300"
+            >
+              <div className="flex items-center mb-4">
+                <span className="text-3xl mr-3">🛒</span>
+                <h3 className="text-xl font-bold text-white group-hover:text-orange-400 transition-colors">
+                  Buy Investment Cards
+                </h3>
+              </div>
+              <p className="text-gray-300 mb-4">
+                Find high-grade Pokemon cards with investment potential. PSA 10s, first editions, and rare promos available.
+              </p>
+              <span className="text-orange-400 font-semibold group-hover:underline">
+                Shop Pokemon Cards →
+              </span>
+            </Link>
           </div>
         </div>
       </section>

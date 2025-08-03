@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import NavigationBar from './NavigationBar';
 import Footer from './Footer';
 
@@ -131,6 +132,26 @@ const GradingIntegration = () => {
 
   return (
     <div className="min-h-screen bg-[#1B2131] text-white">
+      <Helmet>
+        <title>Grading Integration | MyCardTracker - PSA, BGS & CGC Card Grading</title>
+        <meta
+          name="description"
+          content="Connect your PSA, BGS, and CGC graded cards with MyCardTracker. Track grading submissions, monitor turnaround times, and manage certified card values."
+        />
+        <meta
+          name="keywords"
+          content="PSA grading integration, BGS card grading, CGC grading, card grading services australia, graded card tracking, PSA submission tracking, card certification"
+        />
+        <meta property="og:title" content="Grading Integration | MyCardTracker - PSA, BGS & CGC Card Grading" />
+        <meta
+          property="og:description"
+          content="Connect your PSA, BGS, and CGC graded cards with MyCardTracker. Track grading submissions and certified card values."
+        />
+        <meta property="og:url" content="https://www.mycardtracker.com.au/grading-integration" />
+        <meta property="og:type" content="website" />
+        <link rel="canonical" href="https://www.mycardtracker.com.au/grading-integration" />
+        <meta name="robots" content="index, follow" />
+      </Helmet>
       <NavigationBar />
 
       {/* Hero Section */}

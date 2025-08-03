@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { Helmet } from 'react-helmet-async';
 import NavigationBar from './NavigationBar';
 import Footer from './Footer';
 
@@ -451,6 +452,26 @@ const HelpCenter = () => {
 
   return (
     <div className="min-h-screen bg-[#1B2131] text-white">
+      <Helmet>
+        <title>Help Center | MyCardTracker - Trading Card Collection Support</title>
+        <meta
+          name="description"
+          content="Get help with MyCardTracker. Find answers to common questions about collection management, marketplace trading, grading integration, and account settings."
+        />
+        <meta
+          name="keywords"
+          content="help center, trading card support, mycardtracker help, collection management help, marketplace support, grading help, card tracking tutorials"
+        />
+        <meta property="og:title" content="Help Center | MyCardTracker - Trading Card Collection Support" />
+        <meta
+          property="og:description"
+          content="Get help with MyCardTracker. Find answers to common questions about collection management, marketplace trading, and more."
+        />
+        <meta property="og:url" content="https://www.mycardtracker.com.au/help-center" />
+        <meta property="og:type" content="website" />
+        <link rel="canonical" href="https://www.mycardtracker.com.au/help-center" />
+        <meta name="robots" content="index, follow" />
+      </Helmet>
       <NavigationBar />
 
       {/* Hero Section */}

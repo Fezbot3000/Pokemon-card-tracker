@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import NavigationBar from './NavigationBar';
 import Footer from './Footer';
 
@@ -20,6 +21,26 @@ const Terms = () => {
 
   return (
     <div className="min-h-screen bg-[#1B2131] text-white">
+      <Helmet>
+        <title>Terms of Service | MyCardTracker - Trading Card Platform Legal</title>
+        <meta
+          name="description"
+          content="Read MyCardTracker's Terms of Service covering acceptable use, user accounts, marketplace rules, and legal obligations for Australian trading card collectors."
+        />
+        <meta
+          name="keywords"
+          content="terms of service, trading card platform legal, mycardtracker terms, marketplace rules, user agreement australia, card collecting terms"
+        />
+        <meta property="og:title" content="Terms of Service | MyCardTracker - Trading Card Platform Legal" />
+        <meta
+          property="og:description"
+          content="Read MyCardTracker's Terms of Service covering acceptable use, user accounts, marketplace rules, and legal obligations."
+        />
+        <meta property="og:url" content="https://www.mycardtracker.com.au/terms" />
+        <meta property="og:type" content="website" />
+        <link rel="canonical" href="https://www.mycardtracker.com.au/terms" />
+        <meta name="robots" content="index, follow" />
+      </Helmet>
       <NavigationBar />
 
       {/* Hero Section */}

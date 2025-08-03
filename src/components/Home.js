@@ -122,31 +122,31 @@ function Home() {
       </Helmet>
       <NavigationBar />
 
-      {/* Modal for enlarged images */}
+      {/* Full Screen Modal for enlarged images */}
       {modalImage && (
         <div
-          className="bg-black/80 fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-sm"
           onClick={closeModal}
         >
-          <div className="relative max-h-[60vh] w-full max-w-4xl">
+          <div className="relative size-full">
             <button
               onClick={closeModal}
-              className="text-white/70 absolute -top-12 right-0 z-10 text-2xl font-bold hover:text-white"
+              className="absolute right-4 top-4 z-10 rounded-full bg-black/50 p-2 text-2xl font-bold text-white/70 transition-colors hover:bg-black/70 hover:text-white sm:right-6 sm:top-6"
             >
               ✕
             </button>
-            <div className="bg-white/10 rounded-2xl p-4 backdrop-blur-sm sm:p-6">
+            <div className="flex size-full flex-col items-center justify-center p-4 sm:p-8">
               <img
                 src={modalImage.src}
                 alt={modalImage.title}
-                className="h-auto max-h-[40vh] w-full rounded-xl object-contain shadow-2xl"
+                className="max-h-[80vh] max-w-full rounded-xl object-contain shadow-2xl"
                 onClick={e => e.stopPropagation()}
               />
-              <div className="mt-4 text-center">
-                <h3 className="mb-2 text-xl font-bold sm:text-2xl">
+              <div className="mt-6 text-center">
+                <h3 className="mb-2 text-2xl font-bold text-white sm:text-3xl">
                   {modalImage.title}
                 </h3>
-                <p className="text-gray-300">{modalImage.description}</p>
+                <p className="text-lg text-gray-300">{modalImage.description}</p>
               </div>
             </div>
           </div>
@@ -249,7 +249,7 @@ function Home() {
                 <button
                   onClick={() =>
                     openModal(
-                      '/screenshots/dashboard.png',
+                      '/screenshots/Dashboard.png',
                       'Desktop Dashboard',
                       'Complete collection overview with advanced analytics and real-time valuations'
                     )
@@ -257,7 +257,7 @@ function Home() {
                   className="w-full cursor-pointer"
                 >
                   <OptimizedImage
-                    src="/screenshots/dashboard.png"
+                    src="/screenshots/Dashboard.png"
                     alt="Desktop Dashboard"
                     className="w-full rounded-xl shadow-2xl transition-transform duration-300 hover:scale-105 sm:rounded-2xl"
                     loading="lazy"
@@ -285,7 +285,7 @@ function Home() {
                 <button
                   onClick={() =>
                     openModal(
-                      '/screenshots/phonemockup.png',
+                      '/screenshots/MobileMockup.png',
                       'Mobile Experience',
                       'Track your collection anywhere with our mobile-optimized interface'
                     )
@@ -293,7 +293,7 @@ function Home() {
                   className="w-full cursor-pointer"
                 >
                   <OptimizedImage
-                    src="/screenshots/phonemockup.png"
+                    src="/screenshots/MobileMockup.png"
                     alt="Mobile App"
                     className="mx-auto w-full max-w-xs rounded-xl shadow-2xl transition-transform duration-300 hover:scale-105 sm:max-w-sm sm:rounded-2xl"
                     loading="lazy"
@@ -380,19 +380,19 @@ function Home() {
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-8 lg:grid-cols-4">
             {[
               {
-                src: '/screenshots/addcards.png',
+                src: '/screenshots/AddCards.png',
                 title: 'Add Items',
                 description:
                   'Easy collection management with bulk import and grading integration',
               },
               {
-                src: '/screenshots/marketplace.png',
+                src: '/screenshots/Marketplace.png',
                 title: 'Marketplace',
                 description:
                   'Buy and sell with verified collectors in a secure environment',
               },
               {
-                src: '/screenshots/invoicepaeg.png',
+                src: '/screenshots/Invoices.png',
                 title: 'Invoices',
                 description:
                   'Professional invoice management and transaction tracking',

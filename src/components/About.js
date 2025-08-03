@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import NavigationBar from './NavigationBar';
 import Footer from './Footer';
 
@@ -129,6 +130,26 @@ const About = () => {
 
   return (
     <div className="min-h-screen bg-[#1B2131] text-white">
+      <Helmet>
+        <title>About Us | MyCardTracker - Australia's Leading Trading Card Platform</title>
+        <meta
+          name="description"
+          content="Learn about MyCardTracker's mission to empower Australian trading card collectors. Meet our team, discover our story, and see how we're transforming card collecting."
+        />
+        <meta
+          name="keywords"
+          content="about mycardtracker, australian trading card company, card collecting platform, trading card team, card collection mission, pokemon card tracker company"
+        />
+        <meta property="og:title" content="About Us | MyCardTracker - Australia's Leading Trading Card Platform" />
+        <meta
+          property="og:description"
+          content="Learn about MyCardTracker's mission to empower Australian trading card collectors. Meet our team and discover our story."
+        />
+        <meta property="og:url" content="https://www.mycardtracker.com.au/about" />
+        <meta property="og:type" content="website" />
+        <link rel="canonical" href="https://www.mycardtracker.com.au/about" />
+        <meta name="robots" content="index, follow" />
+      </Helmet>
       <NavigationBar />
 
       {/* Hero Section */}

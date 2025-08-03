@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { useAuth } from '../design-system';
 
 function ForgotPassword() {
@@ -53,6 +54,26 @@ function ForgotPassword() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-purple-900 via-red-500 to-green-500 px-4 py-12 sm:px-6 lg:px-8">
+      <Helmet>
+        <title>Forgot Password | MyCardTracker - Reset Your Account Password</title>
+        <meta
+          name="description"
+          content="Reset your MyCardTracker password securely. Enter your email to receive password reset instructions and regain access to your trading card collection."
+        />
+        <meta
+          name="keywords"
+          content="forgot password, reset password, mycardtracker login help, account recovery, password recovery"
+        />
+        <meta property="og:title" content="Forgot Password | MyCardTracker - Reset Your Account Password" />
+        <meta
+          property="og:description"
+          content="Reset your MyCardTracker password securely. Enter your email to receive password reset instructions."
+        />
+        <meta property="og:url" content="https://www.mycardtracker.com.au/forgot-password" />
+        <meta property="og:type" content="website" />
+        <link rel="canonical" href="https://www.mycardtracker.com.au/forgot-password" />
+        <meta name="robots" content="index, follow" />
+      </Helmet>
       <div className="absolute top-0 mx-auto w-full max-w-7xl px-4 pt-12 sm:px-6 lg:px-8">
         {/* Navigation */}
         <div className="mb-8 flex justify-center">

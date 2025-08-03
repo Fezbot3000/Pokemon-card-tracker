@@ -266,6 +266,8 @@ const SharedCollection = () => {
         <meta name="twitter:title" content={metaTags.title} />
         <meta name="twitter:description" content={metaTags.description} />
         <meta name="twitter:image" content={metaTags.image} />
+        <link rel="canonical" href={metaTags.url} />
+        <meta name="robots" content="index, follow" />
       </Helmet>
 
       {/* Header */}

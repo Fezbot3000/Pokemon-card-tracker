@@ -2,8 +2,8 @@ import React from 'react';
 
 /**
  * OptimizedImage component with WebP support and fallbacks
- * Automatically serves WebP when supported, PNG as fallback
- * Includes lazy loading and responsive sizing
+ * For screenshots, falls back to simple img tag to avoid broken responsive variants
+ * Includes lazy loading and responsive sizing when variants exist
  */
 const OptimizedImage = ({
   src,
@@ -16,6 +16,22 @@ const OptimizedImage = ({
   sizes,
   ...props
 }) => {
+  // For screenshots, use simple img tag to avoid broken responsive variants
+  if (src.includes('/screenshots/')) {
+    return (
+      <img
+        src={src}
+        alt={alt}
+        className={className}
+        width={width}
+        height={height}
+        loading={loading}
+        decoding={decoding}
+        {...props}
+      />
+    );
+  }
+
   // Generate WebP version path by replacing extension
   const webpSrc = src.replace(/\.(png|jpg|jpeg)$/i, '.webp');
   

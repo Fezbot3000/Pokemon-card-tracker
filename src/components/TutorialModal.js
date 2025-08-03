@@ -3,12 +3,12 @@ import { useTutorial, tutorialSteps } from '../contexts/TutorialContext';
 import LoggingService from '../services/LoggingService';
 
 // Use public asset paths instead of imports
-const dashboardImg = '/screenshots/dashboard.png';
-const addCardImg = '/screenshots/addcards.png';
-const marketplaceImg = '/screenshots/marketplace.png';
-const invoiceImg = '/screenshots/invoicepaeg.png';
+const dashboardImg = '/screenshots/Dashboard.png';
+const addCardImg = '/screenshots/AddCards.png';
+const marketplaceImg = '/screenshots/Marketplace.png';
+const invoiceImg = '/screenshots/Invoices.png';
 const messagingImg = '/screenshots/marketplacemessages.png';
-const mobileImg = '/screenshots/phonemockup.png';
+const mobileImg = '/screenshots/MobileMockup.png';
 
 const TutorialModal = () => {
   const { isTutorialActive, currentStep, nextStep, endTutorial } =

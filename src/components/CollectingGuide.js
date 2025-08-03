@@ -160,6 +160,55 @@ const CollectingGuide = () => {
           rel="canonical"
           href="https://www.mycardtracker.com.au/collecting-guide"
         />
+
+        {/* Structured Data for Collecting Guide */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'HowTo',
+            name: 'How to Collect Pokemon Cards: Complete Beginner Guide',
+            description: 'Step-by-step guide to collecting Pokemon cards, including grading, storage, and identifying valuable cards.',
+            image: 'https://www.mycardtracker.com.au/screenshots/Dashboard.png',
+            estimatedCost: {
+              '@type': 'MonetaryAmount',
+              currency: 'AUD',
+              value: '50'
+            },
+            totalTime: 'PT30M',
+            step: [
+              {
+                '@type': 'HowToStep',
+                name: 'Choose Your Collection Focus',
+                text: 'Decide whether to collect vintage cards (1998-2003), modern cards, or specific Pokemon. Focus helps guide purchasing decisions.',
+                image: 'https://www.mycardtracker.com.au/screenshots/dashboard.png'
+              },
+              {
+                '@type': 'HowToStep', 
+                name: 'Learn Card Conditions and Grading',
+                text: 'Understand the PSA grading scale (1-10) and how condition affects value. Learn to spot centering issues, surface scratches, and edge wear.',
+                image: 'https://www.mycardtracker.com.au/screenshots/dashboard.png'
+              },
+              {
+                '@type': 'HowToStep',
+                name: 'Set Up Proper Storage',
+                text: 'Use penny sleeves, toploaders, and card savers to protect your cards. Store in a cool, dry place away from direct sunlight.',
+                image: 'https://www.mycardtracker.com.au/screenshots/dashboard.png'
+              },
+              {
+                '@type': 'HowToStep',
+                name: 'Research Market Values',
+                text: 'Use PSA auction prices, sold eBay listings, and price tracking tools to understand current market values before buying.',
+                image: 'https://www.mycardtracker.com.au/screenshots/dashboard.png'
+              },
+              {
+                '@type': 'HowToStep',
+                name: 'Start with Key Cards',
+                text: 'Begin with iconic cards like Base Set Charizard, Blastoise, and Venusaur. These maintain value and are good entry points.',
+                image: 'https://www.mycardtracker.com.au/screenshots/dashboard.png'
+              }
+            ]
+          })}
+        </script>
       </Helmet>
       <NavigationBar />
 

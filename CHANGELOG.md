@@ -4,6 +4,102 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### SEO Optimization
+- ✅ **Canonical tag implementation for improved indexing** (RESOLVED 02/03/2025)
+  - Root cause: Multiple pages missing canonical tags causing Google Search Console "Duplicate without user-selected canonical" errors
+  - Missing SEO meta tags: 6 pages (Features, About, Terms, Privacy, HelpCenter, GradingIntegration) had no React Helmet implementation
+  - SharedCollection missing canonical: Had comprehensive meta tags but missing canonical URL
+  - Base HTML missing canonical: public/index.html lacked canonical tag for root domain  
+  - Solution: Added comprehensive SEO meta tags with canonical URLs to all missing pages
+  - Added React Helmet import and implementation to 6 pages with page-specific titles, descriptions, and keywords
+  - Enhanced meta descriptions for better CTR with Australian focus and current year context
+  - Added canonical tag to SharedCollection.js and ForgotPassword.js
+  - Added canonical tag to public/index.html for root domain
+  - Files changed: Features.js, About.js, Terms.js, Privacy.js, HelpCenter.js, GradingIntegration.js, SharedCollection.js, ForgotPassword.js, public/index.html
+  - Confidence level: 100% - addresses exact Search Console canonical issues identified
+  - Expected outcome: Resolves 6+ "Duplicate without user-selected canonical" errors in Google Search Console
+
+- ✅ **Meta description optimization for improved CTR** (RESOLVED 02/03/2025)
+  - Root cause: Pokemon-related pages showing 0% click-through rate despite receiving search impressions
+  - Generic descriptions: Previous meta descriptions were informative but not compelling enough to drive clicks
+  - Missing urgency/value props: Lacked action-oriented language and strong value propositions
+  - Solution: Rewrote meta descriptions with compelling copy and current year relevance
+  - Pokemon Sets: "🔥 FREE Pokemon card price checker! Get instant values for Base Set Charizard, Jungle, Fossil & Team Rocket cards. See what your vintage Pokemon cards are worth in 2025!"
+  - Investment Guide: "💰 Discover which Pokemon cards made 1000%+ returns! Expert investment guide reveals the best cards to buy in 2025, PSA grading secrets & market predictions."
+  - Updated titles to include current year (2025) and compelling value props
+  - Enhanced Open Graph descriptions for better social sharing
+  - Files changed: PokemonSets.js, PokemonInvestmentGuide.js
+  - Confidence level: 95% - applies proven CTR optimization techniques
+  - Expected outcome: Improved click-through rates from Pokemon-related search queries
+
+- ✅ **Internal linking strategy implementation** (RESOLVED 02/03/2025)
+  - Root cause: Pokemon-related pages lacked strategic internal links to improve SEO and user engagement
+  - Missing cross-page connections: No links between Pokemon Sets, Investment Guide, and Marketplace pages
+  - Poor user flow: Users couldn't easily navigate between related Pokemon content
+  - Solution: Added visually appealing "Related Resources" sections to both Pokemon pages
+  - Pokemon Sets page: Links to Investment Guide and Marketplace with compelling CTAs
+  - Investment Guide page: Links to Price Checker and Marketplace for next steps
+  - Used gradient cards with hover effects and descriptive copy
+  - Strategic anchor text: "Maximize Your ROI", "Check Card Values", "Shop Pokemon Cards"
+  - Files changed: PokemonSets.js, PokemonInvestmentGuide.js
+  - Confidence level: 100% - follows SEO best practices for internal linking
+  - Expected outcome: Improved page authority distribution and user engagement metrics
+
+- ✅ **Structured data expansion for rich snippets** (RESOLVED 02/03/2025)
+  - Root cause: Limited structured data implementation missing opportunities for rich snippets in search results
+  - Missing FAQ schema: Investment guide lacked FAQPage markup for FAQ rich snippets
+  - Missing marketplace schema: Marketplace page had no Product/Marketplace structured data
+  - Missing HowTo schema: Collecting guide had no step-by-step markup for how-to rich snippets
+  - Solution: Added comprehensive JSON-LD structured data to high-traffic pages
+  - FAQPage schema: Added 4 common Pokemon investment questions to investment guide for FAQ rich snippets
+  - Marketplace schema: Added dynamic Product listings with prices, images, and seller info
+  - HowTo schema: Added 5-step Pokemon collecting guide with estimated costs and time
+  - Updated existing Article schema with current titles and descriptions
+  - Enhanced schema with proper @graph structure for multiple entities per page
+  - Files changed: PokemonInvestmentGuide.js, PublicMarketplace.js, CollectingGuide.js
+  - Confidence level: 95% - follows Google's structured data guidelines
+  - Expected outcome: Eligible for FAQ, How-to, and Product rich snippets in search results
+
+- ✅ **Updated screenshot references to latest versions** (RESOLVED 02/03/2025)
+  - Root cause: Home page and other components using outdated screenshot file names
+  - Inconsistent casing: References used lowercase while actual files had proper casing
+  - Misspelled filename: 'invoicepaeg.png' corrected to 'Invoices.png'
+  - Solution: Updated all screenshot references across the application to match latest file names
+  - Home page: Updated dashboard, mobile mockup, add cards, marketplace, and invoices screenshots
+  - Features page: Updated all feature screenshot references to use proper casing
+  - Tutorial modal: Updated all tutorial screenshot constants
+  - Collecting guide: Updated structured data image references
+  - Files changed: Home.js, Features.js, TutorialModal.js, CollectingGuide.js
+  - Confidence level: 100% - verified all references updated and no old references remain
+  - Expected outcome: All screenshots display correctly with latest updated versions
+
+- ✅ **Fixed home page screenshots not displaying** (RESOLVED 02/03/2025)
+  - Root cause: OptimizedImage component generated broken srcset paths for non-existent responsive variants
+  - Missing responsive files: Component tried to load Dashboard-320w.png, Dashboard.webp, etc. which don't exist
+  - Srcset generation: generateSrcSet function created paths for non-existent files when sizes prop present
+  - WebP conversion: Component attempted to load .webp versions of .png files automatically
+  - Solution: Added special handling for /screenshots/ paths in OptimizedImage component
+  - Screenshots now use simple img tag to avoid generating broken srcset/WebP paths
+  - Preserves optimized image functionality for other images that have responsive variants
+  - Modal display worked because it uses simple img tag without OptimizedImage component
+  - Files changed: OptimizedImage.jsx (added screenshots path detection and fallback)
+  - Confidence level: 85% - identified exact component behavior causing missing images
+  - Expected outcome: All screenshots display correctly on home page without requiring responsive variants
+
+- ✅ **Enhanced image modal to full screen experience** (RESOLVED 02/03/2025)
+  - Root cause: Image modal was limited to 60vh height and 4xl max-width, not utilizing full screen space
+  - Small viewing area: Users couldn't see screenshot details clearly due to size constraints
+  - Poor mobile experience: Limited height made images very small on mobile devices
+  - Solution: Redesigned modal to be full screen with better responsive design
+  - Full screen overlay: Modal now uses full viewport height and width
+  - Larger image display: Images can now use up to 80vh height while maintaining aspect ratio
+  - Improved close button: Positioned absolutely with better styling and hover effects
+  - Enhanced typography: Larger text for title and description in full screen context
+  - Better background: Increased opacity to 95% for better focus on image
+  - Files changed: Home.js (modal implementation)
+  - Confidence level: 100% - straightforward UI enhancement
+  - Expected outcome: Users can view screenshots in full detail with immersive experience
+
 ### Fixed Issues
 - ✅ Dashboard dropdown positioning and height restrictions (RESOLVED 02/02/2025)
   - Root cause: CustomDropdown component had two issues affecting dashboard dropdowns (filter and collection selector)

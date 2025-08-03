@@ -259,6 +259,49 @@ const PublicMarketplace = () => {
           rel="canonical"
           href="https://www.mycardtracker.com.au/marketplace"
         />
+
+        {/* Structured Data for Marketplace */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'WebPage',
+            name: 'Pokemon Card Marketplace Australia',
+            description: 'Browse Pokemon cards for sale in Australia. Find graded cards, vintage collections, and rare Pokemon cards from trusted sellers.',
+            url: 'https://www.mycardtracker.com.au/marketplace',
+            mainEntity: {
+              '@type': 'Marketplace',
+              name: 'MyCardTracker Marketplace',
+              description: 'Secure marketplace for buying and selling Pokemon trading cards in Australia',
+              areaServed: {
+                '@type': 'Country',
+                name: 'Australia'
+              },
+              acceptedPaymentMethod: [
+                'http://purl.org/goodrelations/v1#PayPal',
+                'http://purl.org/goodrelations/v1#ByBankTransferInAdvance'
+              ],
+              category: 'Trading Cards',
+              itemListElement: listings?.slice(0, 10).map((listing, index) => ({
+                '@type': 'Product',
+                position: index + 1,
+                name: getCardName(listing),
+                description: `${getCardName(listing)} - ${listing.condition || 'Good'} condition`,
+                image: getCardImage(listing) || 'https://www.mycardtracker.com.au/card-images/DefaultCard.png',
+                offers: {
+                  '@type': 'Offer',
+                  price: listing.price || 0,
+                  priceCurrency: 'AUD',
+                  availability: 'https://schema.org/InStock',
+                  seller: {
+                    '@type': 'Person',
+                    name: listing.sellerName || 'Card Seller'
+                  }
+                },
+                category: 'Pokemon Trading Cards'
+              })) || []
+            }
+          })}
+        </script>
       </Helmet>
       <NavigationBar />
 

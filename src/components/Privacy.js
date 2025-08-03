@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import NavigationBar from './NavigationBar';
 import Footer from './Footer';
 
@@ -29,6 +30,26 @@ const Privacy = () => {
 
   return (
     <div className="min-h-screen bg-[#1B2131] text-white">
+      <Helmet>
+        <title>Privacy Policy | MyCardTracker - Data Protection & Privacy Rights</title>
+        <meta
+          name="description"
+          content="MyCardTracker's Privacy Policy explains how we collect, use, and protect your personal data. Learn about your privacy rights and data security measures."
+        />
+        <meta
+          name="keywords"
+          content="privacy policy, data protection australia, personal information security, mycardtracker privacy, trading card data privacy, user data rights"
+        />
+        <meta property="og:title" content="Privacy Policy | MyCardTracker - Data Protection & Privacy Rights" />
+        <meta
+          property="og:description"
+          content="MyCardTracker's Privacy Policy explains how we collect, use, and protect your personal data. Learn about your privacy rights."
+        />
+        <meta property="og:url" content="https://www.mycardtracker.com.au/privacy" />
+        <meta property="og:type" content="website" />
+        <link rel="canonical" href="https://www.mycardtracker.com.au/privacy" />
+        <meta name="robots" content="index, follow" />
+      </Helmet>
       <NavigationBar />
 
       {/* Hero Section */}

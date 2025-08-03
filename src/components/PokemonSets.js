@@ -168,12 +168,11 @@ const PokemonSets = () => {
     <div className="min-h-screen" style={{ backgroundColor: '#000' }}>
       <Helmet>
         <title>
-          Pokemon Card Sets Price Guide Australia | Base Set, Jungle, Fossil
-          Values 2024
+          Pokemon Card Price Checker FREE 2025 | Base Set Charizard Values Australia
         </title>
         <meta
           name="description"
-          content="Complete Pokemon card sets price guide for Australian collectors. Track Base Set Charizard, Jungle, Fossil, and Team Rocket values. Investment potential analysis included."
+          content="🔥 FREE Pokemon card price checker! Get instant values for Base Set Charizard, Jungle, Fossil & Team Rocket cards. See what your vintage Pokemon cards are worth in 2025!"
         />
         <meta
           name="keywords"
@@ -181,11 +180,11 @@ const PokemonSets = () => {
         />
         <meta
           property="og:title"
-          content="Pokemon Card Sets Price Guide Australia | Vintage Card Values & Investment Analysis"
+          content="FREE Pokemon Card Price Checker 2025 | Instant Values Australia"
         />
         <meta
           property="og:description"
-          content="Track Pokemon card set values from Base Set to Team Rocket. Get investment insights and price ranges for vintage Pokemon cards in Australia."
+          content="🔥 Get instant values for your Pokemon cards! Base Set Charizard, Jungle, Fossil & Team Rocket prices updated daily. See what your collection is worth!"
         />
         <link
           rel="canonical"
@@ -465,6 +464,58 @@ const PokemonSets = () => {
                 🔍 Cross-Reference Prices
               </span>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Related Resources Section */}
+      <section className="px-4 py-16 sm:px-6 lg:px-8" style={{ backgroundColor: '#0A0A0A' }}>
+        <div className="mx-auto max-w-7xl">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-white mb-4">
+              Take Your Pokemon Collection Further
+            </h2>
+            <p className="text-gray-400 text-lg max-w-2xl mx-auto">
+              Discover investment strategies and find rare cards to add to your collection
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <Link 
+              to="/pokemon-investment-guide"
+              className="group bg-gradient-to-br from-green-500/20 to-blue-500/20 border border-green-500/30 rounded-xl p-8 hover:from-green-500/30 hover:to-blue-500/30 transition-all duration-300"
+            >
+              <div className="flex items-center mb-4">
+                <span className="text-3xl mr-3">💰</span>
+                <h3 className="text-xl font-bold text-white group-hover:text-green-400 transition-colors">
+                  Investment Guide
+                </h3>
+              </div>
+              <p className="text-gray-300 mb-4">
+                Learn which Pokemon cards made 1000%+ returns and discover the best investment strategies for 2025.
+              </p>
+              <span className="text-green-400 font-semibold group-hover:underline">
+                Maximize Your ROI →
+              </span>
+            </Link>
+
+            <Link 
+              to="/marketplace"
+              className="group bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30 rounded-xl p-8 hover:from-purple-500/30 hover:to-pink-500/30 transition-all duration-300"
+            >
+              <div className="flex items-center mb-4">
+                <span className="text-3xl mr-3">🏪</span>
+                <h3 className="text-xl font-bold text-white group-hover:text-purple-400 transition-colors">
+                  Card Marketplace
+                </h3>
+              </div>
+              <p className="text-gray-300 mb-4">
+                Find rare Pokemon cards from trusted sellers across Australia. Base Set Charizard, PSA 10s and more.
+              </p>
+              <span className="text-purple-400 font-semibold group-hover:underline">
+                Shop Pokemon Cards →
+              </span>
+            </Link>
           </div>
         </div>
       </section>
