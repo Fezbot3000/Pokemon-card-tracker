@@ -18,11 +18,29 @@ const features = [
 ];
 
 const UpgradeModal = ({ isOpen, onClose, daysRemaining }) => {
-  const { user } = useAuth();
+  const { user, subscriptionData } = useAuth();
   const [loading, setLoading] = useState(false);
 
   const handleUpgrade = async () => {
     LoggingService.info('🚀 PRODUCTION DEBUG: Starting upgrade process');
+    
+    // Enhanced protection against rapid clicking and duplicate subscriptions
+    if (loading) {
+      LoggingService.warn('⚠️ PROTECTION: Upgrade already in progress, ignoring click');
+      return;
+    }
+
+    if (!user) {
+      toast.error('Please log in to upgrade');
+      return;
+    }
+
+    // Check if user already has premium subscription
+    if (subscriptionData?.status === 'premium') {
+      toast.error('You already have an active premium subscription');
+      return;
+    }
+
     setLoading(true);
 
     try {

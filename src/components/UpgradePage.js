@@ -15,7 +15,7 @@ import LoggingService from '../services/LoggingService';
  */
 const UpgradePage = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, subscriptionData } = useAuth();
   const { isOnTrial, getTrialDaysRemaining, isPremium } =
     useSubscription();
   const [loading, setLoading] = useState(false);
@@ -53,10 +53,22 @@ const UpgradePage = () => {
   const handleUpgrade = async () => {
     LoggingService.info('🚀 Starting upgrade process from UpgradePage...');
 
+    // Enhanced protection against rapid clicking and duplicate subscriptions
+    if (loading) {
+      LoggingService.warn('⚠️ PROTECTION: Upgrade already in progress, ignoring click');
+      return;
+    }
+
     if (!user) {
       LoggingService.error('❌ No user found - user must be logged in');
       toast.error('Please log in to upgrade');
       navigate('/login');
+      return;
+    }
+
+    // Check if user already has premium subscription
+    if (subscriptionData?.status === 'premium') {
+      toast.error('You already have an active premium subscription');
       return;
     }
 

@@ -403,6 +403,20 @@ exports.createCheckoutSession = functions.https.onCall(async (data, context) => 
       keyType: secretKey.startsWith('sk_live_') ? 'LIVE' : 'TEST'
     });
 
+    // CRITICAL: Check if user already has active subscription
+    const userRef = admin.firestore().doc(`users/${userId}`);
+    const userDoc = await userRef.get();
+    
+    if (userDoc.exists()) {
+      const userData = userDoc.data();
+      
+      // Prevent duplicate subscriptions
+      if (userData.subscriptionStatus === 'premium' && userData.subscriptionId) {
+        console.log('⚠️ User already has active premium subscription, blocking duplicate checkout');
+        throw new HttpsError('already-exists', 'You already have an active premium subscription. Please contact support if you need assistance.');
+      }
+    }
+
     // Validate the price exists first
     console.log('🏷️ Validating price ID...');
     try {
@@ -429,6 +443,37 @@ exports.createCheckoutSession = functions.https.onCall(async (data, context) => 
     
     console.log('🌐 Using base URL for redirects:', baseUrl);
     
+    // CRITICAL: Check for existing Stripe customer to prevent duplicates
+    let existingCustomerId = null;
+    if (userDoc.exists()) {
+      const userData = userDoc.data();
+      existingCustomerId = userData.customerId;
+    }
+    
+    // If no existing customer, search Stripe for customer by email
+    if (!existingCustomerId) {
+      console.log('🔍 Searching for existing Stripe customer by email...');
+      try {
+        const existingCustomers = await stripe.customers.list({
+          email: userEmail,
+          limit: 1
+        });
+        
+        if (existingCustomers.data.length > 0) {
+          existingCustomerId = existingCustomers.data[0].id;
+          console.log(`✅ Found existing Stripe customer: ${existingCustomerId}`);
+          
+          // Update user document with customer ID
+          await userRef.set({
+            customerId: existingCustomerId
+          }, { merge: true });
+        }
+      } catch (customerSearchError) {
+        console.warn('⚠️ Error searching for existing customer:', customerSearchError.message);
+        // Continue without existing customer - will create new one
+      }
+    }
+    
     const sessionConfig = {
       mode: 'subscription',
       payment_method_types: ['card'],
@@ -436,7 +481,8 @@ exports.createCheckoutSession = functions.https.onCall(async (data, context) => 
         price: priceId,
         quantity: 1,
       }],
-      customer_email: userEmail,
+      // Use existing customer if found, otherwise create new with email
+      ...(existingCustomerId ? { customer: existingCustomerId } : { customer_email: userEmail }),
       metadata: {
         userId: userId,
         planType: 'premium'
