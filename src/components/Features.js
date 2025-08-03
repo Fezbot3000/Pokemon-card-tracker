@@ -9,244 +9,252 @@ const Features = () => {
   const features = [
     {
       id: 'collection-management',
-      title: 'Advanced Collection Management',
+      title: 'Collection Management',
       subtitle: 'Organize and track your entire collection',
-      icon: '📦',
+      icon: (
+        <div className="flex size-12 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500/20 to-purple-500/20">
+          <svg className="size-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          </svg>
+        </div>
+      ),
       description:
-        'Add, organize, and track your Pokemon cards with detailed information, condition tracking, and powerful search capabilities.',
+        'Add, organize, and track your Pokemon cards with detailed information, condition tracking, and search capabilities.',
       benefits: [
-        'Easy card addition with search',
+        'Easy card addition',
         'Condition and grade tracking',
         'Collection organization tools',
-        'Advanced filtering options',
+        'Filtering and search options',
         'Card value tracking',
         'Collection statistics',
       ],
       image: '/screenshots/addcards.png',
       details: `
-        Manage your Pokemon card collection with professional tools designed for serious collectors. Add cards quickly, track conditions, and organize your collection efficiently.
+        Manage your Pokemon card collection with tools designed for collectors. Add cards, track conditions, and organize your collection efficiently.
 
         **Key Features:**
-        - Quick card search and addition
+        - Card search and addition
         - Condition grading (1-10 scale)
         - Collection value tracking
-        - Advanced search and filtering
-        - Card statistics and analytics
+        - Search and filtering
+        - Basic statistics
         - Collection organization by sets
-        - Detailed card information
+        - Card information storage
         - Photo documentation
         - Purchase price tracking
       `,
     },
     {
       id: 'marketplace',
-      title: 'Secure Marketplace',
-      subtitle: 'Buy and sell with confidence',
-      icon: '🏪',
+      title: 'Marketplace',
+      subtitle: 'Buy and sell cards',
+      icon: (
+        <div className="flex size-12 items-center justify-center rounded-xl bg-gradient-to-br from-green-500/20 to-emerald-500/20">
+          <svg className="size-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+          </svg>
+        </div>
+      ),
       description:
-        'Connect with verified collectors worldwide in our secure marketplace with built-in protection and escrow services.',
+        'Connect with other collectors to buy and sell cards through our marketplace with integrated messaging.',
       benefits: [
-        'Verified seller profiles',
-        'Secure payment processing',
-        'Buyer protection guarantee',
+        'Create card listings',
+        'Browse available cards',
         'Integrated messaging system',
-        'Shipping tracking',
-        'Dispute resolution service',
+        'Multi-currency display',
+        'Search and filtering',
+        'User profiles',
       ],
       image: '/screenshots/marketplace.png',
       details: `
-        Our marketplace creates a trusted environment for collectors to buy and sell with confidence. Every transaction is protected with our comprehensive security measures.
+        Our marketplace allows collectors to list cards for sale and browse available items from other users.
 
         **Marketplace Features:**
-        - Identity verification for all users
-        - Secure escrow payment system
-        - Comprehensive seller ratings
+        - Create and manage listings
+        - Browse cards from other collectors
         - Integrated chat and messaging
-        - Professional listing tools
-        - Automated shipping integration
-        - Insurance options for high-value items
-        - Global shipping calculator
-        - Multi-currency support
-        - Advanced search and filtering
-        - Price history and market analytics
-        - Auction and fixed-price listings
+        - Multi-currency price display
+        - Search and filtering options
+        - User profiles and seller information
+        - Mark items as sold or pending
+        - Location-based filtering
       `,
     },
     {
       id: 'analytics',
-      title: 'Portfolio Analytics',
-      subtitle: 'Track performance and value trends',
-      icon: '📊',
+      title: 'Collection Statistics',
+      subtitle: 'Track your collection performance',
+      icon: (
+        <div className="flex size-12 items-center justify-center rounded-xl bg-gradient-to-br from-teal-500/20 to-cyan-500/20">
+          <svg className="size-6 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          </svg>
+        </div>
+      ),
       description:
-        "Professional-grade analytics to understand your collection's performance, market trends, and investment potential.",
+        "View basic statistics about your collection's value and track profit/loss on your investments.",
       benefits: [
-        'Real-time value tracking',
-        'ROI calculations',
-        'Market trend analysis',
-        'Performance reports',
-        'Price alerts',
-        'Portfolio diversification insights',
+        'Investment vs value tracking',
+        'Profit/loss calculations',
+        'Collection totals',
+        'Card count statistics',
+        'Sold items tracking',
+        'Basic financial reports',
       ],
       image: '/screenshots/dashboard.png',
       details: `
-        Make informed decisions with comprehensive analytics that track your collection's performance over time. Our advanced algorithms provide insights that help you optimize your collecting strategy.
+        Get insights into your collection with basic statistics and financial tracking.
 
-        **Analytics Features:**
-        - Real-time market value updates
-        - Historical price tracking
-        - ROI and profit/loss calculations
-        - Market trend analysis
-        - Set performance comparisons
-        - Acquisition cost tracking
-        - Price alert notifications
-        - Custom reporting tools
-        - Export capabilities for tax purposes
-        - Portfolio diversification analysis
-        - Predictive market insights
-        - Comparative market analysis
+        **Statistics Features:**
+        - Total investment amount
+        - Current collection value
+        - Profit/loss calculations
+        - Card count by collection
+        - Sold items tracking
+        - Purchase vs sale price comparison
+        - Collection performance overview
+        - Basic export capabilities
       `,
     },
     {
       id: 'cloud-sync',
       title: 'Cloud Backup & Sync',
       subtitle: 'Never lose your data',
-      icon: '☁️',
+      icon: (
+        <div className="flex size-12 items-center justify-center rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20">
+          <svg className="size-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+          </svg>
+        </div>
+      ),
       description:
-        'Automatic cloud synchronization ensures your collection data is always safe, backed up, and accessible from any device.',
+        'Automatic cloud synchronization ensures your collection data is always backed up and accessible from any device.',
       benefits: [
         'Automatic cloud backup',
         'Multi-device synchronization',
-        'Version history',
-        'Offline access',
-        'Data export options',
-        '99.9% uptime guarantee',
+        'Real-time updates',
+        'Data security',
+        'Access from anywhere',
+        'Firebase reliability',
       ],
       image: '/screenshots/dashboard.png',
       details: `
-        Your collection data is precious. Our enterprise-grade cloud infrastructure ensures it's always protected and accessible when you need it.
+        Your collection data is automatically backed up and synchronized across all your devices using Firebase cloud infrastructure.
 
         **Cloud Features:**
         - Real-time synchronization across devices
-        - Automatic incremental backups
-        - 30-day version history
-        - Offline mode with sync when connected
-        - Multiple export formats
-        - Enterprise-grade security
-        - Redundant data centers
-        - 99.9% uptime SLA
-        - GDPR compliant data handling
-      `,
-    },
-    {
-      id: 'mobile-app',
-      title: 'Mobile Application',
-      subtitle: 'Manage on the go',
-      icon: '📱',
-      description:
-        'Full-featured mobile app with barcode scanning, photo capture, and offline capabilities for managing your collection anywhere.',
-      benefits: [
-        'Barcode scanning',
-        'High-quality photo capture',
-        'Offline functionality',
-        'Push notifications',
-        'Touch-optimized interface',
-        'Location-based features',
-      ],
-      image: '/screenshots/phonemockup.png',
-      details: `
-        Our mobile app brings the full power of Collectibles Tracker to your smartphone and tablet. Perfect for card shows, shops, and on-the-go collection management.
-
-        **Mobile Features:**
-        - Advanced barcode and QR code scanning
-        - Professional photo capture with auto-cropping
-        - Offline mode for areas with poor connectivity
-        - Push notifications for important updates
-        - Touch-optimized interface design
-        - GPS location tracking for purchases
-        - Voice notes and dictation
-        - Quick add functionality
-        - Batch photo upload
-        - Mobile-exclusive features
-        - Apple Watch and Android Wear support
-        - Augmented reality card recognition
+        - Automatic data backup
+        - Access from any device with internet
+        - Secure cloud storage
+        - Data integrity protection
+        - Firebase infrastructure reliability
       `,
     },
     {
       id: 'invoicing',
-      title: 'Professional Invoicing',
-      subtitle: 'Streamline your sales',
-      icon: '📄',
+      title: 'Purchase Invoices',
+      subtitle: 'Track your purchases',
+      icon: (
+        <div className="flex size-12 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500/20 to-blue-500/20">
+          <svg className="size-6 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+        </div>
+      ),
       description:
-        'Create professional invoices, track payments, and manage your selling business with integrated accounting features.',
+        'Generate basic invoices for your card purchases to help track your investments and expenses.',
       benefits: [
-        'Custom invoice templates',
-        'Automated payment tracking',
-        'Tax calculation',
-        'Client management',
-        'Payment reminders',
-        'Financial reporting',
+        'PDF invoice generation',
+        'Purchase tracking',
+        'Basic invoice templates',
+        'Buyer information storage',
+        'Invoice management',
+        'Simple record keeping',
       ],
       image: '/screenshots/invoicepaeg.png',
       details: `
-        Transform your collecting hobby into a professional business with our comprehensive invoicing and payment tracking system.
+        Create and manage basic purchase invoices to track your card investments and maintain records.
 
-        **Invoicing Features:**
-        - Professional invoice templates
-        - Automated payment tracking
-        - Multi-currency support
-        - Tax calculation and reporting
-        - Client database management
-        - Payment reminder automation
-        - Financial reporting and analytics
-        - Integration with popular payment processors
-        - Expense tracking
-        - Profit/loss reporting
-        - Export to accounting software
-        - Custom branding options
+        **Invoice Features:**
+        - Generate PDF invoices
+        - Track purchase information
+        - Store buyer/seller details
+        - Basic invoice templates
+        - Invoice history and management
+        - Simple expense tracking
+        - Purchase date recording
+        - Basic totals and calculations
       `,
     },
   ];
 
   const additionalFeatures = [
     {
-      title: 'Advanced Search',
-      description: 'Find any card instantly with powerful search filters',
-      icon: '🔍',
+      title: 'Search & Filtering',
+      description: 'Find cards quickly with search and filter options',
+      icon: (
+        <div className="flex size-12 items-center justify-center rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20">
+          <svg className="size-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </div>
+      ),
     },
     {
-      title: 'Price Tracking',
-      description: 'Monitor market values and price trends over time',
-      icon: '💰',
+      title: 'Photo Storage',
+      description: 'Upload and store photos of your cards',
+      icon: (
+        <div className="flex size-12 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500/20 to-red-500/20">
+          <svg className="size-6 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+        </div>
+      ),
     },
     {
-      title: 'Grading Integration',
-      description: 'Connect with PSA, BGS, and other grading services',
-      icon: '🏆',
+      title: 'Collection Sharing',
+      description: 'Share your collections with other collectors',
+      icon: (
+        <div className="flex size-12 items-center justify-center rounded-xl bg-gradient-to-br from-green-500/20 to-emerald-500/20">
+          <svg className="size-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+          </svg>
+        </div>
+      ),
     },
     {
-      title: 'Insurance Documentation',
-      description: 'Generate reports for insurance and tax purposes',
-      icon: '🛡️',
+      title: 'Data Export',
+      description: 'Export your collection data in various formats',
+      icon: (
+        <div className="flex size-12 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500/20 to-indigo-500/20">
+          <svg className="size-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+        </div>
+      ),
     },
     {
-      title: 'Community Features',
-      description: 'Connect with other collectors and share collections',
-      icon: '👥',
+      title: 'Responsive Design',
+      description: 'Works on desktop, tablet, and mobile devices',
+      icon: (
+        <div className="flex size-12 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500/20 to-blue-500/20">
+          <svg className="size-6 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+          </svg>
+        </div>
+      ),
     },
     {
-      title: 'API Access',
-      description: 'Integrate with other tools and services',
-      icon: '🔌',
-    },
-    {
-      title: 'Custom Reports',
-      description: 'Generate detailed reports for any purpose',
-      icon: '📈',
-    },
-    {
-      title: 'Multi-Language Support',
-      description: 'Available in multiple languages worldwide',
-      icon: '🌍',
+      title: 'Secure Authentication',
+      description: 'Safe login with Firebase authentication',
+      icon: (
+        <div className="flex size-12 items-center justify-center rounded-xl bg-gradient-to-br from-teal-500/20 to-cyan-500/20">
+          <svg className="size-6 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
+        </div>
+      ),
     },
   ];
 
@@ -263,19 +271,19 @@ const Features = () => {
         <div className="relative z-10 mx-auto max-w-4xl text-center">
           <div className="bg-white/10 border-white/20 mb-6 inline-flex items-center rounded-full border px-3 py-1.5 text-xs font-medium backdrop-blur-sm sm:mb-8 sm:px-4 sm:py-2 sm:text-sm">
             <span className="mr-2 size-1.5 rounded-full bg-green-400 sm:size-2"></span>
-            Professional Collection Tools
+            Collection Management Tools
           </div>
 
           <h1 className="mb-4 text-3xl font-bold leading-tight sm:mb-6 sm:text-4xl md:text-5xl lg:text-6xl">
-            Powerful Features
+            Collection Features
             <span className="block bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-              for Serious Collectors
+              for Pokemon Collectors
             </span>
           </h1>
 
           <p className="mx-auto mb-8 max-w-3xl text-base leading-relaxed text-gray-300 sm:mb-12 sm:text-lg md:text-xl lg:text-2xl">
-            Everything you need to manage, track, and grow your collection with
-            professional-grade tools and analytics
+            Essential tools to manage, track, and organize your Pokemon card collection
+            with cloud backup and marketplace features
           </p>
 
           <div className="flex flex-col items-center justify-center gap-4 sm:flex-row sm:gap-6">
@@ -300,27 +308,50 @@ const Features = () => {
         <div className="mx-auto max-w-7xl">
           <div className="mb-12 text-center sm:mb-16">
             <h2 className="mb-4 text-2xl font-bold sm:mb-6 sm:text-3xl md:text-4xl">
-              Core Features
+              Main Features
             </h2>
             <p className="mx-auto max-w-2xl text-base text-gray-300 sm:text-lg">
-              Comprehensive tools designed specifically for collectibles
-              management
+              Essential tools for Pokemon card collection management
             </p>
           </div>
 
           {/* Feature Navigation */}
-          <div className="mb-12 flex flex-wrap justify-center gap-2">
-            {features.map((feature) => (
+          <div className="mb-12 flex flex-wrap justify-center gap-3">
+            {features.map((feature, index) => (
               <button
                 key={feature.id}
-                onClick={() => setActiveFeature(features.indexOf(feature))}
-                className={`rounded-full px-4 py-2 text-sm font-medium transition-all duration-300 ${
-                  activeFeature === features.indexOf(feature)
-                    ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white'
-                    : 'bg-white/10 border-white/20 hover:bg-white/20 border text-gray-300 backdrop-blur-sm'
+                onClick={() => setActiveFeature(index)}
+                className={`flex items-center gap-3 rounded-full px-6 py-3 text-sm font-medium transition-all duration-300 ${
+                  activeFeature === index
+                    ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
+                    : 'bg-white/10 border border-white/20 hover:bg-white/20 text-gray-300 backdrop-blur-sm hover:border-white/30'
                 }`}
               >
-                <span className="mr-2">{feature.icon}</span>
+                <div className={`flex size-6 items-center justify-center rounded-lg ${
+                  activeFeature === index 
+                    ? 'bg-white/20' 
+                    : 'bg-gradient-to-br from-blue-500/20 to-purple-500/20'
+                }`}>
+                  <svg className={`size-4 ${
+                    activeFeature === index ? 'text-white' : 'text-blue-400'
+                  }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    {index === 0 && (
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    )}
+                    {index === 1 && (
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    )}
+                    {index === 2 && (
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    )}
+                    {index === 3 && (
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    )}
+                    {index === 4 && (
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    )}
+                  </svg>
+                </div>
                 {feature.title}
               </button>
             ))}
@@ -330,7 +361,7 @@ const Features = () => {
           <div className="border-white/10 rounded-3xl border bg-gradient-to-br from-white/10 to-white/5 p-8 backdrop-blur-sm">
             <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-2">
               <div>
-                <div className="mb-4 text-4xl">
+                <div className="mb-4 flex justify-center">
                   {features[activeFeature].icon}
                 </div>
                 <h3 className="mb-2 text-3xl font-bold">
@@ -415,7 +446,7 @@ const Features = () => {
               Additional Features
             </h2>
             <p className="mx-auto max-w-2xl text-base text-gray-300 sm:text-lg">
-              Even more tools to enhance your collecting experience
+              More tools to support your collection management
             </p>
           </div>
 
@@ -425,7 +456,7 @@ const Features = () => {
                 key={feature.title || feature.name}
                 className="border-white/10 hover:border-white/20 group rounded-2xl border bg-gradient-to-br from-white/10 to-white/5 p-6 text-center backdrop-blur-sm transition-all duration-300"
               >
-                <div className="mb-4 text-4xl transition-transform duration-300 group-hover:scale-110">
+                <div className="mb-4 transition-transform duration-300 group-hover:scale-110 flex justify-center">
                   {feature.icon}
                 </div>
                 <h3 className="mb-2 text-lg font-bold">{feature.title}</h3>
@@ -442,11 +473,11 @@ const Features = () => {
       <section className="bg-black px-4 py-12 sm:px-6 sm:py-16 md:py-24 lg:px-8">
         <div className="mx-auto max-w-4xl text-center">
           <h2 className="mb-4 text-2xl font-bold sm:mb-6 sm:text-3xl md:text-4xl">
-            Ready to Transform Your Collection?
+            Ready to Organize Your Collection?
           </h2>
           <p className="mx-auto mb-8 max-w-2xl text-base text-gray-300 sm:mb-12 sm:text-lg md:text-xl">
-            Join thousands of collectors who trust Collectibles Tracker to
-            manage their valuable collections.
+            Start managing your Pokemon card collection with our web-based
+            tracking and marketplace tools.
           </p>
 
           <div className="flex flex-col items-center justify-center gap-4 sm:flex-row sm:gap-6">
