@@ -508,6 +508,37 @@ export const extractBestPrice = (product) => {
 };
 
 /**
+ * Generate Price Charting product page URL
+ * @param {Object} product - Product data from Price Charting API
+ * @returns {string|null} URL to the product page on Price Charting
+ */
+export const getPriceChartingUrl = (product) => {
+  if (!product || !product.id) {
+    return null;
+  }
+  
+  // Price Charting URL format: https://www.pricecharting.com/game/[category]/[product-name]
+  // But the most reliable way is to use the product ID in the URL structure
+  const productName = product['product-name'] || product.name || '';
+  
+  if (productName) {
+    // Clean the product name for URL
+    const cleanName = productName
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '') // Remove special characters
+      .replace(/\s+/g, '-') // Replace spaces with hyphens
+      .replace(/-+/g, '-') // Replace multiple hyphens with single
+      .replace(/^-|-$/g, ''); // Remove leading/trailing hyphens
+    
+    // Construct URL with product name and ID for maximum compatibility
+    return `${PRICECHARTING_BASE_URL}/game/${product.category || 'pokemon-cards'}/${cleanName}`;
+  }
+  
+  // Fallback: if we can't construct a clean URL, return a search URL
+  return `${PRICECHARTING_BASE_URL}/search?q=${encodeURIComponent(productName)}`;
+};
+
+/**
  * Clear the Price Charting cache
  */
 export const clearCache = () => {

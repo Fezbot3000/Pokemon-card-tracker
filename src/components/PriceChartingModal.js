@@ -11,7 +11,7 @@ import PropTypes from 'prop-types';
 import { toast } from 'react-hot-toast';
 import Modal from '../design-system/molecules/Modal';
 import ModalButton from '../design-system/atoms/ModalButton';
-import { searchCardPrice, extractBestPrice } from '../services/priceChartingService';
+import { searchCardPrice, extractBestPrice, getPriceChartingUrl } from '../services/priceChartingService';
 import { useUserPreferences } from '../contexts/UserPreferencesContext';
 import LoggingService from '../services/LoggingService';
 
@@ -142,7 +142,7 @@ const PriceChartingModal = ({
       title="Price Charting Search Results"
       size="modal-width-60"
       position="right"
-      closeOnClickOutside={true}
+      closeOnClickOutside={false}
       footer={modalFooter}
     >
       <div className="space-y-6">
@@ -265,6 +265,25 @@ const PriceChartingModal = ({
                       </div>
                     </div>
                     
+                    {/* Price Charting link */}
+                    <div className="mt-3 flex items-center justify-between border-t border-gray-200 pt-3 dark:border-gray-600">
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        Want to see more details and price history?
+                      </div>
+                      <a
+                        href={getPriceChartingUrl(product)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()} // Prevent parent click handler
+                        className="inline-flex items-center gap-1 rounded-md bg-orange-50 px-2 py-1 text-xs font-medium text-orange-700 transition-colors hover:bg-orange-100 dark:bg-orange-900/20 dark:text-orange-300 dark:hover:bg-orange-900/30"
+                      >
+                        <svg className="size-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                        View on Price Charting
+                      </a>
+                    </div>
+                    
                     {isSelected && (
                       <div className="mt-2 rounded bg-blue-100 p-2 text-xs text-blue-800 dark:bg-blue-800/30 dark:text-blue-300">
                         ✓ Selected - Click "Apply Price" to use this data
@@ -279,7 +298,7 @@ const PriceChartingModal = ({
             <div className="rounded-lg bg-gray-50 p-3 dark:bg-gray-800">
               <p className="text-sm text-gray-600 dark:text-gray-300">
                 💡 <strong>Tip:</strong> Results are automatically filtered and ranked based on how well they match your card details. 
-                The "Best Match" result is typically the most accurate.
+                The "Best Match" result is typically the most accurate. Click "View on Price Charting" to see detailed price history and more information.
               </p>
             </div>
           </div>
