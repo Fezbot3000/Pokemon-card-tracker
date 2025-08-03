@@ -541,11 +541,28 @@ exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
     
     // Verify webhook signature
     event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
-    console.log(`Stripe webhook event received: ${event.type}`);
+    console.log(`Stripe webhook event received: ${event.type} with ID: ${event.id}`);
   } catch (err) {
     console.error('Webhook signature verification failed:', err.message);
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
+
+  // IDEMPOTENCY: Check if we've already processed this event
+  const eventRef = admin.firestore().doc(`webhook_events/${event.id}`);
+  const eventDoc = await eventRef.get();
+  
+  if (eventDoc.exists()) {
+    console.log(`Event ${event.id} already processed, skipping to prevent duplicates`);
+    return res.json({ received: true, status: 'already_processed' });
+  }
+  
+  // Mark event as being processed
+  await eventRef.set({
+    eventId: event.id,
+    eventType: event.type,
+    processed: true,
+    processedAt: admin.firestore.FieldValue.serverTimestamp()
+  });
 
   try {
     // Handle the event
@@ -576,8 +593,8 @@ exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
         
         console.log(`Processing subscription creation for customer: ${createdCustomerId}`);
         
-        // Find user by customer ID and update subscription status
-        const createdUsersRef = admin.firestore().collectionGroup('data');
+        // FIXED: Find user by customer ID using correct database path
+        const createdUsersRef = admin.firestore().collection('users');
         const createdUserQuery = await createdUsersRef.where('customerId', '==', createdCustomerId).limit(1).get();
         
         if (!createdUserQuery.empty) {
@@ -591,6 +608,8 @@ exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
           
           await userDoc.ref.update(updateData);
           console.log(`Updated user ${userDoc.id} to premium subscription after creation`);
+        } else {
+          console.error(`No user found with customerId: ${createdCustomerId}`);
         }
         break;
         
@@ -600,8 +619,8 @@ exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
         
         console.log(`Processing subscription update for customer: ${customerId}`);
         
-        // Find user by customer ID and update subscription status
-        const usersRef = admin.firestore().collectionGroup('data');
+        // FIXED: Find user by customer ID using correct database path
+        const usersRef = admin.firestore().collection('users');
         const userQuery = await usersRef.where('customerId', '==', customerId).limit(1).get();
         
         if (!userQuery.empty) {
@@ -614,6 +633,8 @@ exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
           
           await userDoc.ref.update(updateData);
           console.log(`Updated subscription status for user: ${userDoc.id}`);
+        } else {
+          console.error(`No user found with customerId: ${customerId}`);
         }
         break;
         
@@ -623,8 +644,8 @@ exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
         
         console.log(`Processing subscription cancellation for customer: ${deletedCustomerId}`);
         
-        // Find user by customer ID and update to free status
-        const deletedUsersRef = admin.firestore().collectionGroup('data');
+        // FIXED: Find user by customer ID using correct database path
+        const deletedUsersRef = admin.firestore().collection('users');
         const deletedUserQuery = await deletedUsersRef.where('customerId', '==', deletedCustomerId).limit(1).get();
         
         if (!deletedUserQuery.empty) {
@@ -636,6 +657,8 @@ exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
           });
           
           console.log(`Updated user ${userDoc.id} to free plan after subscription cancellation`);
+        } else {
+          console.error(`No user found with customerId: ${deletedCustomerId}`);
         }
         break;
         
@@ -645,14 +668,16 @@ exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
         
         console.log(`Processing payment failure for customer: ${failedCustomerId}`);
         
-        // Find user and potentially update status or send notification
-        const failedUsersRef = admin.firestore().collectionGroup('data');
+        // FIXED: Find user using correct database path
+        const failedUsersRef = admin.firestore().collection('users');
         const failedUserQuery = await failedUsersRef.where('customerId', '==', failedCustomerId).limit(1).get();
         
         if (!failedUserQuery.empty) {
           const userDoc = failedUserQuery.docs[0];
           console.log(`Payment failed for user: ${userDoc.id}`);
           // Could send email notification or update status here
+        } else {
+          console.error(`No user found with customerId: ${failedCustomerId}`);
         }
         break;
         
@@ -666,6 +691,56 @@ exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
     res.status(500).json({ error: 'Webhook processing failed' });
   }
 });
+
+// Cleanup function to prevent webhook_events collection from growing indefinitely
+exports.cleanupWebhookEvents = functions.pubsub.schedule('0 2 * * 0') // Every Sunday at 2 AM
+  .timeZone('America/New_York')
+  .onRun(async (context) => {
+    const db = admin.firestore();
+    
+    // Delete webhook events older than 30 days
+    const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
+    
+    try {
+      const snapshot = await db.collection('webhook_events')
+        .where('processedAt', '<', new Date(thirtyDaysAgo))
+        .get();
+      
+      if (snapshot.empty) {
+        console.log('No old webhook events to clean up');
+        return null;
+      }
+      
+      // Delete in batches
+      const batchSize = 500;
+      let batch = db.batch();
+      let count = 0;
+      let totalDeleted = 0;
+      
+      snapshot.forEach(doc => {
+        batch.delete(doc.ref);
+        count++;
+        totalDeleted++;
+        
+        if (count >= batchSize) {
+          batch.commit();
+          batch = db.batch();
+          count = 0;
+        }
+      });
+      
+      // Commit remaining deletes
+      if (count > 0) {
+        await batch.commit();
+      }
+      
+      console.log(`Cleaned up ${totalDeleted} old webhook events`);
+      return { deleted: totalDeleted };
+    } catch (error) {
+      console.error('Error cleaning up webhook events:', error);
+      return { error: error.message };
+    }
+  });
 
 // Diagnostic function to test environment differences
 exports.testStripeConfig = functions.https.onCall(async (data, context) => {
