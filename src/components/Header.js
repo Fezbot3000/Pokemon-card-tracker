@@ -3,8 +3,8 @@ import { createPortal } from 'react-dom';
 import { useTheme } from '../design-system';
 import db from '../services/firestore/dbAdapter'; // Use the correct db service
 import { useAuth } from '../design-system'; // Import auth context
-import JSZip from 'jszip';
-import CollectionSelector from './CollectionSelector';
+
+
 import { toast } from 'react-hot-toast';
 import { Link, useNavigate } from 'react-router-dom';
 import PropTypes from 'prop-types';

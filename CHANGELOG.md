@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Fixed Issues
+- ✅ Dashboard dropdown positioning and height restrictions (RESOLVED 02/02/2025)
+  - Root cause: CustomDropdown component had two issues affecting dashboard dropdowns (filter and collection selector)
+  - Positioning issue: Dropdown used document-relative positioning with window.scrollY/scrollX causing dropdown to "follow" page scroll instead of staying anchored to trigger element
+  - Height restriction issue: Fixed max-height limits (max-h-48 and max-h-64) forced internal scrolling instead of showing all options
+  - Solution: Updated positioning calculation to use viewport-relative coordinates (rect.bottom/rect.left) instead of document-relative
+  - Removed height restrictions from dropdown container and options list to show all options without internal scrolling
+  - Files changed: `src/design-system/molecules/CustomDropdown.js`
+  - Confidence level: 100% - identified exact positioning calculation and height restriction properties
+  - Verification: Dashboard dropdowns now stay anchored during scroll and display all options without internal scrolling
+- ✅ Legacy component cleanup (RESOLVED 02/02/2025)
+  - Root cause: Multiple legacy/unused components and imports identified during dropdown investigation
+  - Legacy CollectionSelector: ActionSheet-based component in `src/components/CollectionSelector.js` was imported but never used in Header.js
+  - Legacy demo component: `src/design-system/SettingsComponentsLibrary.js` was unused component library demo file
+  - Unused imports: JSZip import in Header.js was not being used in the component
+  - Solution: Deleted unused legacy files and removed unused imports to clean up codebase
+  - Files deleted: `src/components/CollectionSelector.js`, `src/design-system/SettingsComponentsLibrary.js`
+  - Files changed: `src/components/Header.js` (removed unused CollectionSelector and JSZip imports)
+  - Confidence level: 100% - verified no usage through comprehensive search before deletion
+  - Verification: Codebase cleaned up with no regressions, reduced confusion between duplicate components
 - ✅ Enter key causing issues in add card and card details modals (RESOLVED 02/02/2025)
   - Root cause: Form submission triggered by Enter key press in modal input fields disrupted collection state management
   - CardDetailsForm had form element with onSubmit handler that processed Enter keypresses inappropriately
