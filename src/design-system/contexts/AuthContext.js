@@ -262,13 +262,19 @@ export const AuthProvider = ({ children }) => {
                     daysRemaining: daysRemaining,
                   });
 
-                  // Show success message for premium upgrades (only once)
+                  // Show success message for premium upgrades (only once per user)
                   if (userData.subscriptionStatus === 'premium') {
-                    const hasShownPremiumWelcome = localStorage.getItem(
-                      'hasShownPremiumWelcome'
-                    );
-                    if (!hasShownPremiumWelcome) {
-                      localStorage.setItem('hasShownPremiumWelcome', 'true');
+                    const userSpecificKey = `hasShownPremiumWelcome_${user?.uid}`;
+                    const hasShownPremiumWelcome = localStorage.getItem(userSpecificKey);
+                    
+                    // Only show welcome if:
+                    // 1. We haven't shown it for this specific user before
+                    // 2. AND this is an actual status change (previous status wasn't premium)
+                    const previousStatus = localStorage.getItem(`previousSubscriptionStatus_${user?.uid}`);
+                    const isActualUpgrade = previousStatus && previousStatus !== 'premium';
+                    
+                    if (!hasShownPremiumWelcome && (isActualUpgrade || !previousStatus)) {
+                      localStorage.setItem(userSpecificKey, 'true');
                       setTimeout(() => {
                         toast.success(
                           '🎉 Welcome to Premium! All features are now unlocked.',
@@ -278,13 +284,11 @@ export const AuthProvider = ({ children }) => {
                         );
                       }, 1000);
                     }
-                  } else {
-                    // Clear the flags if user is no longer premium (downgraded/cancelled)
-                    localStorage.removeItem('hasShownPremiumWelcome');
-                    // Also clear trial welcome if user is no longer on trial
-                    if (userData.subscriptionStatus !== 'free_trial') {
-                      localStorage.removeItem('hasShownTrialWelcome');
-                    }
+                  }
+                  
+                  // Store current subscription status for future comparison
+                  if (user?.uid) {
+                    localStorage.setItem(`previousSubscriptionStatus_${user.uid}`, userData.subscriptionStatus || 'free');
                   }
                 }
               }

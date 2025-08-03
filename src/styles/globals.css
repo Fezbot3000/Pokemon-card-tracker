@@ -282,6 +282,36 @@ p {
   display: none;
 }
 
+/* Mobile horizontal scroll utilities */
+.mobile-scroll {
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+.mobile-scroll > div {
+  scroll-snap-align: start;
+}
+
+.mobile-scroll > div > * {
+  scroll-snap-align: start;
+}
+
+/* Smooth momentum scrolling for iOS */
+@supports (-webkit-overflow-scrolling: touch) {
+  .mobile-scroll {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Better mobile scroll snap behavior */
+@media (max-width: 640px) {
+  .mobile-scroll {
+    scroll-snap-type: x mandatory;
+    scroll-snap-stop: always;
+  }
+}
+
 /* PWA STYLES REMOVED */
 
 /* ==================== RESPONSIVE UTILITIES ==================== */

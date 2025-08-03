@@ -326,44 +326,81 @@ function Home() {
             </p>
           </div>
 
-          <div className="mb-16 grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-8 lg:grid-cols-3">
+          <div className="mb-16 overflow-x-auto mobile-scroll scrollbar-hide sm:grid sm:grid-cols-2 sm:gap-8 lg:grid-cols-3">
+            <div className="flex gap-4 pb-4 pl-4 pr-8 sm:contents sm:gap-0 sm:pb-0 sm:px-0">
             {[
               {
-                icon: '📊',
+                icon: (
+                  <div className="flex size-12 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500/20 to-purple-500/20">
+                    <svg className="size-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                  </div>
+                ),
                 title: 'Portfolio Tracking',
-                desc: 'Monitor your collection value in real-time',
+                desc: 'Track your collections, purchase prices, and profit/loss on each card',
               },
               {
-                icon: '🏪',
+                icon: (
+                  <div className="flex size-12 items-center justify-center rounded-xl bg-gradient-to-br from-green-500/20 to-emerald-500/20">
+                    <svg className="size-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                  </div>
+                ),
                 title: 'Marketplace',
                 desc: 'Buy and sell with verified collectors',
               },
               {
-                icon: '🔍',
+                icon: (
+                  <div className="flex size-12 items-center justify-center rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20">
+                    <svg className="size-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
+                ),
                 title: 'Price Discovery',
-                desc: 'Get accurate valuations instantly',
+                desc: 'Search PSA codes to find card values from official PSA data',
               },
               {
-                icon: '📱',
+                icon: (
+                  <div className="flex size-12 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500/20 to-blue-500/20">
+                    <svg className="size-6 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                ),
                 title: 'Mobile Ready',
                 desc: 'Access your collection anywhere',
               },
               {
-                icon: '🔒',
-                title: 'Secure Trading',
-                desc: 'Safe transactions with escrow protection',
+                icon: (
+                  <div className="flex size-12 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500/20 to-red-500/20">
+                    <svg className="size-6 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                    </svg>
+                  </div>
+                ),
+                title: 'PSA Integration',
+                desc: 'Integrated PSA search and grading data',
               },
               {
-                icon: '📈',
+                icon: (
+                  <div className="flex size-12 items-center justify-center rounded-xl bg-gradient-to-br from-teal-500/20 to-cyan-500/20">
+                    <svg className="size-6 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                  </div>
+                ),
                 title: 'Investment Analytics',
                 desc: 'Track performance and trends',
               },
             ].map((feature) => (
               <div
                 key={feature.title}
-                className="group rounded-2xl border border-[rgba(255,255,255,0.1)] bg-gradient-to-br from-[rgba(255,255,255,0.1)] to-[rgba(255,255,255,0.05)] p-4 backdrop-blur-sm transition-all duration-300 hover:border-[rgba(255,255,255,0.2)] sm:p-6"
+                className="group w-[calc(100vw-5rem)] max-w-[260px] shrink-0 rounded-2xl border border-[rgba(255,255,255,0.1)] bg-gradient-to-br from-[rgba(255,255,255,0.1)] to-[rgba(255,255,255,0.05)] p-4 backdrop-blur-sm transition-all duration-300 hover:border-[rgba(255,255,255,0.2)] sm:w-auto sm:max-w-none sm:shrink sm:p-6 text-center"
               >
-                <div className="mb-3 text-3xl transition-transform duration-300 group-hover:scale-110 sm:mb-4 sm:text-4xl">
+                <div className="mb-3 transition-transform duration-300 group-hover:scale-110 sm:mb-4 flex justify-center">
                   {feature.icon}
                 </div>
                 <h3 className="mb-2 text-lg font-bold sm:mb-3 sm:text-xl">
@@ -374,6 +411,7 @@ function Home() {
                 </p>
               </div>
             ))}
+            </div>
           </div>
 
           {/* Feature Screenshots Grid */}
@@ -516,7 +554,7 @@ function Home() {
             <div className="mb-4 text-6xl font-bold">
               <span className="text-4xl text-gray-400">$</span>
               <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                12.99
+                9.99
               </span>
             </div>
             <div className="mb-8 text-gray-400">per month</div>
@@ -528,7 +566,7 @@ function Home() {
                     check
                   </span>
                 </span>
-                <span>Unlimited item tracking</span>
+                <span>Multiple collections</span>
               </li>
               <li className="flex items-center gap-3">
                 <span className="flex size-6 items-center justify-center rounded-full bg-green-500/20">
@@ -536,7 +574,7 @@ function Home() {
                     check
                   </span>
                 </span>
-                <span>Grading integration</span>
+                <span>PSA search & integration</span>
               </li>
               <li className="flex items-center gap-3">
                 <span className="flex size-6 items-center justify-center rounded-full bg-green-500/20">
@@ -544,7 +582,7 @@ function Home() {
                     check
                   </span>
                 </span>
-                <span>Marketplace access</span>
+                <span>Marketplace selling</span>
               </li>
               <li className="flex items-center gap-3">
                 <span className="flex size-6 items-center justify-center rounded-full bg-green-500/20">
@@ -552,7 +590,23 @@ function Home() {
                     check
                   </span>
                 </span>
-                <span>Investment analytics</span>
+                <span>Purchase invoicing</span>
+              </li>
+              <li className="flex items-center gap-3">
+                <span className="flex size-6 items-center justify-center rounded-full bg-green-500/20">
+                  <span className="material-icons text-sm text-green-400">
+                    check
+                  </span>
+                </span>
+                <span>Sold items tracking</span>
+              </li>
+              <li className="flex items-center gap-3">
+                <span className="flex size-6 items-center justify-center rounded-full bg-green-500/20">
+                  <span className="material-icons text-sm text-green-400">
+                    check
+                  </span>
+                </span>
+                <span>Collection sharing</span>
               </li>
             </ul>
 

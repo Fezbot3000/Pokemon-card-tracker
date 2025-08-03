@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import NavigationBar from './NavigationBar';
 import Footer from './Footer';
+import Button from '../design-system/atoms/Button';
 
 const Pricing = () => {
   const navigate = useNavigate();
@@ -14,8 +15,8 @@ const Pricing = () => {
       period: 'forever',
       description: 'Perfect for getting started with basic collection tracking',
       features: [
-        'Track up to 100 cards',
-        'Basic collection management',
+        'Single collection tracking',
+        'Basic card management',
         'Mobile app access',
         'Community support',
       ],
@@ -28,12 +29,12 @@ const Pricing = () => {
       period: '7 days',
       description: 'Try all premium features risk-free',
       features: [
-        'Everything in Premium',
-        'Unlimited card tracking',
-        'Advanced analytics',
-        'Priority support',
-        'Export capabilities',
-        'Marketplace access',
+        'Multiple collections',
+        'PSA search & integration',
+        'Marketplace selling',
+        'Purchase invoicing',
+        'Sold items tracking',
+        'Collection sharing',
       ],
       cta: 'Start Free Trial',
       popular: true,
@@ -44,13 +45,13 @@ const Pricing = () => {
       period: 'month',
       description: 'Full access to all features for serious collectors',
       features: [
-        'Unlimited card tracking',
-        'Advanced portfolio analytics',
-        'Price tracking & alerts',
-        'Marketplace trading',
+        'Multiple collections',
+        'PSA search & integration',
+        'Marketplace selling',
+        'Purchase invoicing',
+        'Sold items tracking',
+        'Collection sharing',
         'Priority customer support',
-        'Export & backup tools',
-        'Investment insights',
       ],
       cta: 'Start Premium',
       popular: false,
@@ -175,10 +176,10 @@ const Pricing = () => {
 
                 <button
                   onClick={() => navigate('/login?signup=true')}
-                  className={`w-full rounded-xl px-6 py-3 text-lg font-semibold transition-all duration-300 hover:scale-105 lg:py-4${
+                  className={`w-full rounded-2xl px-6 py-3 text-lg font-semibold transition-all duration-300 hover:scale-105 lg:py-4 ${
                     plan.popular
-                      ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg hover:from-green-600 hover:to-emerald-700 hover:shadow-green-500/25'
-                      : 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg hover:from-blue-600 hover:to-purple-700 hover:shadow-blue-500/25'
+                      ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-2xl hover:from-green-600 hover:to-emerald-700 hover:shadow-green-500/25'
+                      : 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-2xl hover:from-blue-600 hover:to-purple-700 hover:shadow-blue-500/25'
                   }`}
                 >
                   {plan.cta}

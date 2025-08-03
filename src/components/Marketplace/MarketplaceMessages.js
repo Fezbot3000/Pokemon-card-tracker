@@ -710,7 +710,7 @@ function MarketplaceMessages({ currentView, onViewChange }) {
         />
       )}
 
-      <div className="p-4 pb-20 pt-16 sm:p-6 sm:pt-4">
+      <div className="p-4 pb-20 pt-16 sm:p-6 sm:pt-1">
         <MarketplaceNavigation
           currentView={currentView}
           onViewChange={onViewChange}
@@ -804,7 +804,7 @@ function MarketplaceMessages({ currentView, onViewChange }) {
             )}
           </div>
         ) : (
-          <div>
+          <div className="flex min-h-[400px] max-h-[calc(100vh-12rem)] flex-col">
             {/* Chat header */}
             <div className="flex items-center justify-between border-b border-gray-200 bg-white p-2 dark:border-gray-700 dark:bg-[#0F0F0F]">
               <div className="flex items-center">
