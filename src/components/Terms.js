@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import NavigationBar from './NavigationBar';
@@ -6,6 +6,8 @@ import Footer from './Footer';
 
 const Terms = () => {
   const [activeSection, setActiveSection] = useState('overview');
+  const sectionRefs = useRef({});
+  const observerRef = useRef(null);
 
   const sections = [
     { id: 'overview', title: 'Overview', icon: '📋' },
@@ -18,6 +20,57 @@ const Terms = () => {
     { id: 'liability', title: 'Liability', icon: '⚖️' },
     { id: 'contact', title: 'Contact', icon: '📞' },
   ];
+
+  // Scroll to section function
+  const scrollToSection = (sectionId) => {
+    const element = sectionRefs.current[sectionId];
+    if (element) {
+      const headerOffset = 100; // Account for navigation bar and spacing
+      const elementPosition = element.offsetTop;
+      const offsetPosition = elementPosition - headerOffset;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  // Set up intersection observer for scroll spy
+  useEffect(() => {
+    const observerOptions = {
+      root: null,
+      rootMargin: '-100px 0px -70% 0px', // Trigger when section is near top
+      threshold: 0
+    };
+
+    observerRef.current = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          setActiveSection(entry.target.id);
+        }
+      });
+    }, observerOptions);
+
+    // Observe all sections
+    Object.values(sectionRefs.current).forEach((section) => {
+      if (section) {
+        observerRef.current.observe(section);
+      }
+    });
+
+    // Cleanup observer on unmount
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, []);
+
+  // Set section refs
+  const setSectionRef = (id, element) => {
+    sectionRefs.current[id] = element;
+  };
 
   return (
     <div className="min-h-screen bg-[#1B2131] text-white">
@@ -73,13 +126,13 @@ const Terms = () => {
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-4">
             {/* Sidebar Navigation */}
             <div className="lg:col-span-1">
-              <div className="sticky top-8">
+              <div className="sticky top-24 z-10">
                 <h3 className="mb-4 text-lg font-bold">Quick Navigation</h3>
                 <nav className="space-y-2">
                   {sections.map(section => (
                     <button
                       key={section.id}
-                      onClick={() => setActiveSection(section.id)}
+                      onClick={() => scrollToSection(section.id)}
                       className={`flex w-full items-center rounded-xl px-4 py-3 text-left transition-all duration-300 ${
                         activeSection === section.id
                           ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white'
@@ -101,7 +154,7 @@ const Terms = () => {
               <div className="border-white/10 rounded-3xl border bg-gradient-to-br from-white/10 to-white/5 p-8 backdrop-blur-sm">
                 <div className="prose prose-invert max-w-none space-y-8">
                   {/* Overview */}
-                  <section id="overview">
+                  <section id="overview" ref={(el) => setSectionRef('overview', el)}>
                     <h2 className="mb-4 flex items-center text-2xl font-bold">
                       <span className="mr-3">📋</span>Overview
                     </h2>
@@ -115,7 +168,7 @@ const Terms = () => {
                   </section>
 
                   {/* Acceptance */}
-                  <section id="acceptance">
+                  <section id="acceptance" ref={(el) => setSectionRef('acceptance', el)}>
                     <h2 className="mb-4 flex items-center text-2xl font-bold">
                       <span className="mr-3">✅</span>Acceptance of Terms
                     </h2>
@@ -130,7 +183,7 @@ const Terms = () => {
                   </section>
 
                   {/* User Accounts */}
-                  <section id="accounts">
+                  <section id="accounts" ref={(el) => setSectionRef('accounts', el)}>
                     <h2 className="mb-4 flex items-center text-2xl font-bold">
                       <span className="mr-3">👤</span>User Accounts
                     </h2>
@@ -155,7 +208,7 @@ const Terms = () => {
                   </section>
 
                   {/* Acceptable Use */}
-                  <section id="usage">
+                  <section id="usage" ref={(el) => setSectionRef('usage', el)}>
                     <h2 className="mb-4 flex items-center text-2xl font-bold">
                       <span className="mr-3">✔️</span>Acceptable Use
                     </h2>
@@ -175,7 +228,7 @@ const Terms = () => {
                   </section>
 
                   {/* User Content */}
-                  <section id="content">
+                  <section id="content" ref={(el) => setSectionRef('content', el)}>
                     <h2 className="mb-4 flex items-center text-2xl font-bold">
                       <span className="mr-3">📝</span>User Content
                     </h2>
@@ -190,7 +243,7 @@ const Terms = () => {
                   </section>
 
                   {/* Marketplace */}
-                  <section id="marketplace">
+                  <section id="marketplace" ref={(el) => setSectionRef('marketplace', el)}>
                     <h2 className="mb-4 flex items-center text-2xl font-bold">
                       <span className="mr-3">🏪</span>Marketplace Terms
                     </h2>
@@ -204,7 +257,7 @@ const Terms = () => {
                   </section>
 
                   {/* Termination */}
-                  <section id="termination">
+                  <section id="termination" ref={(el) => setSectionRef('termination', el)}>
                     <h2 className="mb-4 flex items-center text-2xl font-bold">
                       <span className="mr-3">🚪</span>Termination
                     </h2>
@@ -219,7 +272,7 @@ const Terms = () => {
                   </section>
 
                   {/* Liability */}
-                  <section id="liability">
+                  <section id="liability" ref={(el) => setSectionRef('liability', el)}>
                     <h2 className="mb-4 flex items-center text-2xl font-bold">
                       <span className="mr-3">⚖️</span>Limitation of Liability
                     </h2>
@@ -233,7 +286,7 @@ const Terms = () => {
                   </section>
 
                   {/* Contact */}
-                  <section id="contact">
+                  <section id="contact" ref={(el) => setSectionRef('contact', el)}>
                     <h2 className="mb-4 flex items-center text-2xl font-bold">
                       <span className="mr-3">📞</span>Contact Information
                     </h2>

@@ -55,13 +55,13 @@
     <link rel="preconnect" href="https://mycardtracker-c8479.firebaseapp.com">
     
     <!-- Preload critical font for faster rendering -->
-    <link rel="preload" href="https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hiA.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hiA.woff2" as="font" type="font/woff2" crossorigin="anonymous">
     
     <!-- Critical CSS optimized for LCP element -->
     <style>
       /* Essential base styles */
       html { 
-        font-family: -apple-system, BlinkMacSystemFont, system-ui, "Segoe UI", Roboto, sans-serif; 
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, system-ui, "Segoe UI", Roboto, sans-serif; 
         line-height: 1.5;
         -webkit-text-size-adjust: 100%;
       }
@@ -112,6 +112,8 @@
       .border-b-2 { border-bottom-width: 2px; }
       .border-blue-600 { border-color: #2563eb; }
     </style>
+    
+    <!-- React DevTools: Install browser extension from https://reactjs.org/link/react-devtools for better development experience -->
     
     <!-- Optimized Google Analytics -->
     <script>

@@ -7,7 +7,7 @@ const Footer = () => {
       <div className="mx-auto max-w-7xl">
         <div className="mb-12 grid grid-cols-1 gap-8 md:grid-cols-4">
           <div className="col-span-1 md:col-span-1">
-            <h3 className="mb-4 text-xl font-bold">MyCardTracker</h3>
+            <h3 className="mb-4 text-xl font-bold text-white">MyCardTracker</h3>
             <p className="mb-6 text-sm text-gray-400">
               Australia's most trusted platform for trading card collection
               management and trading.
@@ -15,7 +15,7 @@ const Footer = () => {
           </div>
 
           <div className="col-span-1">
-            <h4 className="mb-4 font-semibold">Platform</h4>
+            <h4 className="mb-4 font-semibold text-white">Platform</h4>
             <ul className="space-y-2 text-sm text-gray-400">
               <li>
                 <Link
@@ -45,7 +45,7 @@ const Footer = () => {
           </div>
 
           <div className="col-span-1">
-            <h4 className="mb-4 font-semibold">Card Guides</h4>
+            <h4 className="mb-4 font-semibold text-white">Card Guides</h4>
             <ul className="space-y-2 text-sm text-gray-400">
               <li>
                 <Link
@@ -83,7 +83,7 @@ const Footer = () => {
           </div>
 
           <div className="col-span-1">
-            <h4 className="mb-4 font-semibold">Support</h4>
+            <h4 className="mb-4 font-semibold text-white">Support</h4>
             <ul className="space-y-2 text-sm text-gray-400">
               <li>
                 <Link

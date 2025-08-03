@@ -189,9 +189,21 @@ const PublicMarketplace = () => {
         await loadCardImages(listingsData);
       } catch (err) {
         logger.error('Error fetching marketplace listings:', err);
-        setError(
-          'Unable to load marketplace listings. Please try again later.'
-        );
+        
+        // Provide specific error messages for common network issues
+        let errorMessage = 'Unable to load marketplace listings. Please try again later.';
+        
+        if (err.code === 'failed-precondition' || err.message?.includes('offline')) {
+          errorMessage = 'You appear to be offline. Please check your internet connection.';
+        } else if (err.message?.includes('ERR_BLOCKED_BY_CLIENT') || err.message?.includes('net::ERR_BLOCKED_BY_CLIENT')) {
+          errorMessage = 'Network request blocked. Please check if you have ad blockers or firewall restrictions that might be blocking Firebase requests.';
+        } else if (err.code === 'permission-denied') {
+          errorMessage = 'Permission denied. Unable to access marketplace data.';
+        } else if (err.code === 'unavailable') {
+          errorMessage = 'Service temporarily unavailable. Please try again in a moment.';
+        }
+        
+        setError(errorMessage);
       } finally {
         setLoading(false);
       }

@@ -329,8 +329,18 @@ class LoggingService {
       // Monitor page load performance
       window.addEventListener('load', () => {
         const perfData = window.performance.timing;
-        const loadTime = perfData.loadEventEnd - perfData.navigationStart;
-        this.info(`Page load completed in ${loadTime}ms`);
+        // Ensure loadEventEnd is set before calculating load time
+        if (perfData.loadEventEnd && perfData.navigationStart) {
+          const loadTime = perfData.loadEventEnd - perfData.navigationStart;
+          // Only log positive load times to avoid negative values
+          if (loadTime > 0) {
+            this.info(`Page load completed in ${loadTime}ms`);
+          } else {
+            this.debug('Page load timing not available yet');
+          }
+        } else {
+          this.debug('Performance timing data not fully available');
+        }
       });
     }
   }

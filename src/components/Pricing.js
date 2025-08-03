@@ -106,12 +106,12 @@ const Pricing = () => {
         <div className="absolute bottom-1/4 right-1/4 size-96 rounded-full bg-purple-500/5 blur-3xl"></div>
 
         <div className="relative z-10 mx-auto max-w-4xl text-center">
-          <div className="bg-white/10 border-white/20 mb-6 inline-flex items-center rounded-full border px-3 py-1.5 text-xs font-medium backdrop-blur-sm sm:mb-8 sm:px-4 sm:py-2 sm:text-sm">
+          <div className="bg-white/10 border-white/20 mb-6 inline-flex items-center rounded-full border px-3 py-1.5 text-xs font-medium text-white backdrop-blur-sm sm:mb-8 sm:px-4 sm:py-2 sm:text-sm">
             <span className="mr-2 size-1.5 rounded-full bg-green-400 sm:size-2"></span>
             Try Premium Free for 7 Days
           </div>
 
-          <h1 className="mb-4 text-3xl font-bold leading-tight sm:mb-6 sm:text-4xl md:text-5xl lg:text-6xl">
+          <h1 className="mb-4 text-3xl font-bold leading-tight text-white sm:mb-6 sm:text-4xl md:text-5xl lg:text-6xl">
             Choose Your
             <span className="block bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
               Perfect Plan
@@ -128,62 +128,69 @@ const Pricing = () => {
       {/* Pricing Cards */}
       <section className="bg-black px-4 py-12 sm:px-6 sm:py-16 md:py-24 lg:px-8">
         <div className="mx-auto max-w-7xl">
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-3 lg:gap-8">
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-3 lg:gap-8">
             {plans.map((plan) => (
               <div
                 key={plan.name}
-                className={`relative rounded-3xl border bg-gradient-to-br from-white/10 to-white/5 p-6 backdrop-blur-sm transition-all duration-300 hover:scale-105 lg:p-8 ${
+                className={`relative flex h-full flex-col rounded-3xl border backdrop-blur-sm transition-all duration-300 ${
                   plan.popular
-                    ? 'border-green-500/50 shadow-2xl shadow-green-500/10'
-                    : 'border-white/10 hover:border-white/20'
-                }`}
+                    ? 'border-green-500/30 bg-gradient-to-br from-green-500/10 via-emerald-500/5 to-green-500/10 shadow-2xl shadow-green-500/20 hover:border-green-500/50 hover:shadow-green-500/30'
+                    : 'border-white/20 bg-gradient-to-br from-white/10 to-white/5 hover:border-white/30 hover:shadow-xl hover:shadow-white/10'
+                } hover:scale-[1.02]`}
               >
                 {plan.popular && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                    <div className="rounded-full bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-2 text-sm font-semibold text-white">
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
+                    <div className="rounded-full bg-gradient-to-r from-green-500 to-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-lg">
                       Most Popular
                     </div>
                   </div>
                 )}
 
-                <div className="mb-6 text-center lg:mb-8">
-                  <h3 className="mb-2 text-xl font-bold text-white lg:text-2xl">
-                    {plan.name}
-                  </h3>
-                  <div className="mb-2">
-                    <span className="text-3xl font-bold text-white lg:text-4xl">
-                      {plan.price}
-                    </span>
-                    {plan.period && (
-                      <span className="ml-2 text-gray-400">/{plan.period}</span>
-                    )}
-                  </div>
-                  <p className="text-sm text-gray-300 lg:text-base">
-                    {plan.description}
-                  </p>
-                </div>
-
-                <ul className="mb-6 space-y-3 lg:mb-8 lg:space-y-4">
-                  {plan.features.map((feature) => (
-                    <li key={feature} className="flex items-start">
-                      <span className="mr-3 mt-1 text-green-400">✓</span>
-                      <span className="text-sm text-gray-300 lg:text-base">
-                        {feature}
+                <div className="flex h-full flex-col p-8">
+                  {/* Header */}
+                  <div className="mb-8 text-center">
+                    <h3 className="mb-3 text-2xl font-bold text-white">
+                      {plan.name}
+                    </h3>
+                    <div className="mb-4">
+                      <span className="text-4xl font-bold text-white lg:text-5xl">
+                        {plan.price}
                       </span>
-                    </li>
-                  ))}
-                </ul>
+                      {plan.period && (
+                        <span className="ml-2 text-lg text-gray-400">/{plan.period}</span>
+                      )}
+                    </div>
+                    <p className="text-gray-300">
+                      {plan.description}
+                    </p>
+                  </div>
 
-                <button
-                  onClick={() => navigate('/login?signup=true')}
-                  className={`w-full rounded-2xl px-6 py-3 text-lg font-semibold transition-all duration-300 hover:scale-105 lg:py-4 ${
-                    plan.popular
-                      ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-2xl hover:from-green-600 hover:to-emerald-700 hover:shadow-green-500/25'
-                      : 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-2xl hover:from-blue-600 hover:to-purple-700 hover:shadow-blue-500/25'
-                  }`}
-                >
-                  {plan.cta}
-                </button>
+                  {/* Features */}
+                  <ul className="mb-8 flex-1 space-y-4">
+                    {plan.features.map((feature) => (
+                      <li key={feature} className="flex items-start">
+                        <div className="mr-3 mt-0.5 flex size-5 items-center justify-center rounded-full bg-green-500/20">
+                          <span className="text-sm text-green-400">✓</span>
+                        </div>
+                        <span className="text-gray-300">
+                          {feature}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  {/* CTA Button */}
+                  <button
+                    onClick={() => navigate('/login?signup=true')}
+                    className={`w-full rounded-2xl px-6 py-4 text-lg font-semibold transition-all duration-300 hover:scale-[1.02] ${
+                      plan.popular
+                        ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-xl hover:from-green-600 hover:to-emerald-700 hover:shadow-2xl hover:shadow-green-500/25'
+                        : 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-xl hover:from-blue-600 hover:to-purple-700 hover:shadow-2xl hover:shadow-blue-500/25'
+                    }`}
+                  >
+                    {plan.cta}
+                  </button>
+                </div>
               </div>
             ))}
           </div>
