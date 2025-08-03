@@ -11,7 +11,10 @@ import CardDetailsForm from '../design-system/components/CardDetailsForm';
 import { toast } from 'react-hot-toast';
 import PSADetailModal from './PSADetailModal';
 import NewCollectionModal from './NewCollectionModal';
+import CardSearchModal from './CardSearchModal';
+import CardSearchAutocomplete from './CardSearchAutocomplete';
 import { searchByCertNumber, parsePSACardData } from '../services/psaSearch';
+import { searchCardsByName, convertPriceChartingToCardData } from '../services/priceChartingService';
 import { useSubscription } from '../hooks/useSubscription';
 import logger from '../services/LoggingService';
 import CustomDropdown from '../design-system/molecules/CustomDropdown';
@@ -80,6 +83,11 @@ const AddCardModal = ({
   const [isSearching, setIsSearching] = useState(false);
   const [psaDetailModalOpen, setPsaDetailModalOpen] = useState(false);
 
+  // State for card search modal (kept for potential future use)
+  const [cardSearchModalOpen, setCardSearchModalOpen] = useState(false);
+  const [cardSearchResults, setCardSearchResults] = useState([]);
+  const [cardSearchError, setCardSearchError] = useState(null);
+
   // State for form validation and UI feedback
   const [errors, setErrors] = useState({});
   const [saveMessage, setSaveMessage] = useState(null);
@@ -103,6 +111,8 @@ const AddCardModal = ({
       setErrors({});
       setSaveMessage(null);
       setPsaSerial('');
+      setCardSearchResults([]);
+      setCardSearchError(null);
     } else {
       setAnimClass('slide-out-right');
     }
@@ -342,6 +352,37 @@ const AddCardModal = ({
     }
   };
 
+
+
+  // Handle selecting a card from search results
+  const handleSelectCard = (cardResult) => {
+    try {
+      // Convert Price Charting data to form data
+      const cardData = convertPriceChartingToCardData(cardResult);
+      
+      // Update the form with the selected card data
+      const updatedCard = {
+        ...newCard,
+        ...cardData,
+        // Keep existing form data for fields not provided by Price Charting
+        datePurchased: newCard.datePurchased,
+        investmentAUD: newCard.investmentAUD,
+        quantity: newCard.quantity
+      };
+
+      setNewCard(updatedCard);
+      toast.success('Card details applied successfully!');
+      setSaveMessage('Card details applied from Price Charting');
+      
+      // Close the search modal
+      setCardSearchModalOpen(false);
+    } catch (error) {
+      logger.error('Error applying card data:', error);
+      toast.error('Failed to apply card data');
+      setSaveMessage('Failed to apply card data');
+    }
+  };
+
   // Handle applying PSA details to the card
   const handleApplyPsaDetails = updatedCardData => {
     setNewCard(prev => {
@@ -398,6 +439,21 @@ const AddCardModal = ({
         closeOnClickOutside={true}
       >
         <div className="space-y-6">
+          {/* Card Search Section */}
+          <div className="mb-6">
+            <h3 className="mb-3 text-lg font-medium text-gray-900 dark:text-white">
+              Search for Card
+            </h3>
+            <p className="mb-3 text-sm text-gray-500 dark:text-gray-400">
+              Start typing a Pokemon card name to see live search results.
+            </p>
+            <CardSearchAutocomplete
+              onSelectCard={handleSelectCard}
+              placeholder="Type card name (e.g., Charizard, Pikachu)..."
+              className="w-full"
+            />
+          </div>
+
           {/* PSA Certificate Lookup Section */}
           <div className="mb-6">
             <h3 className="mb-3 text-lg font-medium text-gray-900 dark:text-white">
@@ -630,6 +686,19 @@ const AddCardModal = ({
         currentCardData={newCard}
         onApplyDetails={handleApplyPsaDetails}
       />
+
+      {/* Card Search Modal - Hidden but kept for potential future use */}
+      {cardSearchModalOpen && (
+        <CardSearchModal
+          isOpen={cardSearchModalOpen}
+          onClose={() => setCardSearchModalOpen(false)}
+          searchResults={cardSearchResults}
+          isLoading={false}
+          error={cardSearchError}
+          onSelectCard={handleSelectCard}
+          searchQuery=""
+        />
+      )}
 
       {/* New Collection Modal */}
       <NewCollectionModal
