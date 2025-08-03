@@ -4,7 +4,7 @@ import { useAuth } from '../design-system';
 import { Helmet } from 'react-helmet-async';
 import NavigationBar from './NavigationBar';
 import Footer from './Footer';
-import OptimizedImage from './ui/OptimizedImage';
+import OptimizedImage from '../design-system/atoms/OptimizedImage';
 
 function Home() {
   const { currentUser, loading } = useAuth();

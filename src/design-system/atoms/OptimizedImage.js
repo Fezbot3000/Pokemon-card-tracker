@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 
 /**
  * OptimizedImage component with WebP support and fallbacks
@@ -83,4 +84,15 @@ const OptimizedImage = ({
   );
 };
 
-export default OptimizedImage; 
+OptimizedImage.propTypes = {
+  src: PropTypes.string.isRequired,
+  alt: PropTypes.string.isRequired,
+  className: PropTypes.string,
+  width: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  height: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  loading: PropTypes.oneOf(['lazy', 'eager']),
+  decoding: PropTypes.oneOf(['async', 'sync', 'auto']),
+  sizes: PropTypes.string,
+};
+
+export default OptimizedImage;
