@@ -1,8 +1,0 @@
-{
-  "warnings": 491,
-  "errors": 0,
-  "totalProblems": 491,
-  "lastUpdated": "2025-07-09T01:27:51.175Z",
-  "success": true,
-  "rawOutput": "\n> pokemon-card-tracker@0.1.0 lint\n> eslint src/**/*.{js,jsx,ts,tsx} --fix\n\n\nE:\\Websites\\Pokemon-card-tracker\\src\\AppContent.js\n    6:3   warning  'useRef' is defined but never used                                         @typescript-eslint/no-unused-vars\n    7:3   warning  'Fragment' is defined but never used                                       @typescript-eslint/no-unused-vars\n    9:23  warning  'useNavigate' is defined but never used                                    @typescript-eslint/no-unused-vars\n   12:3   warning  'useTheme' is defined but never used                                       @typescript-eslint/no-unused-vars\n   16:3   warning  'Icon' is defined but never used                                           @typescript-eslint/no-unused-vars\n   21:8   warning  'NewCardForm' is defined but never used                                    @typescript-eslint/no-unused-vars\n   40:8   warning  'featureFlags' is defined but never used                                   @typescrip"
-}
