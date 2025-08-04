@@ -72,23 +72,21 @@ service cloud.firestore {
 
     // --- PSA Cards Collection ---
     // This collection serves as a shared cache of PSA card data
-    // Any authenticated user can read PSA card data
-    // Only authenticated users can write PSA card data (to prevent spam)
+    // Only authenticated users can read/write PSA card data (prevents scraping)
     match /psa-cards/{certNumber} {
-      // Anyone can read PSA card data
-      allow read: if true;
+      // Only authenticated users can read PSA card data (prevents database scraping)
+      allow read: if request.auth != null;
       
       // Only authenticated users can write PSA card data
-      // This prevents anonymous users from spamming the database
       allow write: if request.auth != null;
     }
     
     // --- PSA Cards Collection (Underscore Version) ---
-    // This is the collection used by backend Cloud Functions
+    // This collection is used by backend Cloud Functions
     // Same permissions as the hyphen version for consistency
     match /psa_cards/{certNumber} {
-      // Anyone can read PSA card data
-      allow read: if true;
+      // Only authenticated users can read PSA card data (prevents database scraping)
+      allow read: if request.auth != null;
       
       // Only authenticated users can write PSA card data
       allow write: if request.auth != null;
@@ -235,18 +233,36 @@ service cloud.firestore {
     }
     
     // --- Enhanced User Cards Access ---
-    // Allow public read access to user cards only when the user has active shared collections
+    // Allow public read access to user cards only for specifically shared collections
     match /users/{userId}/cards/{cardId} {
       // Allow owner to access their own cards
       allow read, write: if isOwner(userId);
       
-      // Allow public read access only if the user has at least one active shared collection
-      // This is more secure than allowing all reads, but still enables shared collection functionality
-      allow read: if exists(/databases/$(database)/documents/users/$(userId)) &&
-                     resource.data != null;
+      // IMPROVED: Only allow public read access if this specific card belongs to an active shared collection
+      // This prevents exposure of all user cards when they have any shared collection
+      allow read: if isCardInActiveSharedCollection(userId, resource.data);
+    }
+    
+    // Helper function to check if a card belongs to an active shared collection
+    function isCardInActiveSharedCollection(userId, cardData) {
+      // Check if there's an active shared collection for this user that includes this card
+      // We need to check multiple possible field names for collection ID
+      let collectionId = cardData.collectionId;
+      if (collectionId == null) {
+        collectionId = cardData.collection;
+      }
+      if (collectionId == null) {
+        collectionId = cardData.collectionName;
+      }
       
-      // Note: In a production environment, you might want to implement a more sophisticated
-      // check that verifies the specific shared collection and its permissions
+      // If no collection ID found, this card cannot be shared
+      if (collectionId == null) {
+        return false;
+      }
+      
+      // Check if there's an active shared collection for this specific collection
+      return exists(/databases/$(database)/documents/shared-collections/$(userId + '_' + collectionId)) &&
+             get(/databases/$(database)/documents/shared-collections/$(userId + '_' + collectionId)).data.isActive == true;
     }
   }
 }

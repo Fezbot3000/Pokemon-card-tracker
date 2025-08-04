@@ -11,6 +11,7 @@ import {
   Outlet,
   useOutletContext,
 } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import {
   Header,
   useAuth,
@@ -665,6 +666,20 @@ function AppContent({ currentView, setCurrentView }) {
   const location = useLocation();
   const navigate = useNavigate();
 
+  // Generate dynamic title based on current view
+  const getPageTitle = (view) => {
+    const titles = {
+      'cards': 'Dashboard | MyCardTracker',
+      'marketplace': 'Marketplace | MyCardTracker',
+      'marketplace-selling': 'Selling | MyCardTracker',
+      'marketplace-messages': 'Messages | MyCardTracker',
+      'purchase-invoices': 'Invoices | MyCardTracker',
+      'sold-items': 'Sold Items | MyCardTracker',
+      'settings': 'Settings | MyCardTracker'
+    };
+    return titles[view] || 'Dashboard | MyCardTracker';
+  };
+
   // PHASE 2C: PRIMARY - Now using compatibility layer (CardContext underneath)
   const {
     cards,
@@ -778,35 +793,26 @@ function AppContent({ currentView, setCurrentView }) {
     };
   }, []);
 
-  // Update currentView based on location changes
+  // Update currentView based on URL changes - simplified hybrid approach
   useEffect(() => {
     try {
       const path = location.pathname;
-
-      // Extract the view from the path
-      if (path.includes('/purchase-invoices')) {
-        setCurrentView('purchase-invoices');
-      } else if (path.includes('/sold-items')) {
-        setCurrentView('sold-items');
-      } else if (path.includes('/sold')) {
-        setCurrentView('sold');
-      } else if (path.includes('/marketplace')) {
-        setCurrentView('marketplace');
-      } else if (path.includes('/marketplace-selling')) {
-        setCurrentView('marketplace-selling');
-      } else if (path.includes('/marketplace-messages')) {
-        setCurrentView('marketplace-messages');
-      } else if (path.includes('/settings')) {
-        setCurrentView('settings');
+      const pathSegments = path.split('/');
+      const viewFromUrl = pathSegments[pathSegments.length - 1];
+      
+      // Valid dashboard views
+      const validViews = ['cards', 'marketplace', 'marketplace-selling', 'marketplace-messages', 'purchase-invoices', 'sold-items', 'settings'];
+      
+      if (validViews.includes(viewFromUrl)) {
+        setCurrentView(viewFromUrl);
       } else if (path === '/dashboard') {
         // Check if there's a target view from navigation state first
         if (location.state?.targetView) {
           setCurrentView(location.state.targetView);
         } else if (!currentView) {
-          // Only default to cards if we don't have a current view
+          // Default to cards for fresh dashboard loads
           setCurrentView('cards');
         }
-        // If currentView is already set to a valid dashboard view (including settings), preserve it
       }
     } catch (error) {
       // Fallback: only set to cards if we don't have a current view
@@ -994,7 +1000,10 @@ function AppContent({ currentView, setCurrentView }) {
 
   return (
     <div className="dashboard-page min-h-screen bg-gray-50 dark:bg-black">
-      
+      <Helmet>
+        <title>{getPageTitle(currentView)}</title>
+        <meta name="description" content="Manage your trading card collection, track values, and monitor your investments with MyCardTracker." />
+      </Helmet>
       
       {/* Hide Header on mobile when in cards view only */}
       {!(

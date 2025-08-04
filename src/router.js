@@ -225,7 +225,14 @@ export const router = createBrowserRouter(
                 </Suspense>
               ),
             },
-
+            {
+              path: ':view',
+              element: (
+                <Suspense fallback={<LoadingFallback />}>
+                  <DashboardIndex />
+                </Suspense>
+              ),
+            },
           ],
         },
 

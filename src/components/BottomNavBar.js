@@ -1,8 +1,11 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import logger from '../utils/logger';
 
 const BottomNavBar = ({ currentView, onViewChange, onSettingsClick }) => {
+  const navigate = useNavigate();
+
   // Helper function to check if current view is in the sold section
   const isSoldSection = () => {
     return ['sold', 'sold-items', 'purchase-invoices'].includes(currentView);
@@ -27,10 +30,13 @@ const BottomNavBar = ({ currentView, onViewChange, onSettingsClick }) => {
     return false;
   };
 
-  // Safe navigation handler
+  // Safe navigation handler with URL update
   const handleNavigation = targetView => {
     try {
-      // Add a small delay to ensure any ongoing state updates complete
+      // Update URL while preserving performance system
+      navigate(`/dashboard/${targetView}`, { replace: true });
+      
+      // Still use state for instant navigation
       setTimeout(() => {
         if (onViewChange && typeof onViewChange === 'function') {
           onViewChange(targetView);
