@@ -1,9 +1,25 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
 function MarketplaceNavigation({
   currentView = 'marketplace',
   onViewChange = () => {},
 }) {
+  const navigate = useNavigate();
+  
+  // Handle navigation with URL update
+  const handleNavigation = (targetView) => {
+    // Update URL while preserving performance system
+    navigate(`/dashboard/${targetView}`, { replace: true });
+    
+    // Still use state for instant navigation
+    setTimeout(() => {
+      if (onViewChange && typeof onViewChange === 'function') {
+        onViewChange(targetView);
+      }
+    }, 0);
+  };
+  
   // Determine which tab is active
   const isActive = view => {
     return currentView === view;
@@ -12,7 +28,7 @@ function MarketplaceNavigation({
   return (
     <div className="mb-6 hidden sm:flex items-center space-x-6">
       <button
-        onClick={() => onViewChange('marketplace')}
+        onClick={() => handleNavigation('marketplace')}
         className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
           isActive('marketplace')
             ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
@@ -26,7 +42,7 @@ function MarketplaceNavigation({
       </button>
 
       <button
-        onClick={() => onViewChange('marketplace-selling')}
+        onClick={() => handleNavigation('marketplace-selling')}
         className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
           isActive('marketplace-selling')
             ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
@@ -40,7 +56,7 @@ function MarketplaceNavigation({
       </button>
 
       <button
-        onClick={() => onViewChange('marketplace-messages')}
+        onClick={() => handleNavigation('marketplace-messages')}
         className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
           isActive('marketplace-messages')
             ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'

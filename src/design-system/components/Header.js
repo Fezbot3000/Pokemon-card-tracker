@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 // Import design system components
 import Icon from '../atoms/Icon';
@@ -29,6 +29,7 @@ const Header = ({
   const { preferredCurrency, updatePreferredCurrency } = useUserPreferences();
   const [currencyDropdownOpen, setCurrencyDropdownOpen] = useState(false);
   const currencyDropdownRef = useRef(null);
+  const navigate = useNavigate();
   useLocation();
 
   // Helper function to check if current view is in the sold section
@@ -82,6 +83,9 @@ const Header = ({
       if (newView !== currentView) {
         setPreviousView(currentView);
         setIsAnimating(true);
+
+        // Update URL while preserving performance system
+        navigate(`/dashboard/${newView}`, { replace: true });
 
         // Don't scroll to top when switching between marketplace tabs
         const isMarketplaceView = view => 
