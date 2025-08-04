@@ -37,6 +37,7 @@ const replaceOnCloseInChildren = (children, originalOnClose, animatedOnClose) =>
 const Modal = ({
   isOpen,
   onClose,
+  onBeforeClose, // New prop to intercept close attempts
   title,
   children,
   footer,
@@ -131,8 +132,14 @@ const Modal = ({
 
   // Animated close handler that should be used by all close methods
   const handleAnimatedClose = useCallback(() => {
-    handleClose();
-  }, [handleClose]);
+    // If onBeforeClose is provided, call it and let it decide whether to close
+    if (onBeforeClose) {
+      onBeforeClose(() => handleClose());
+    } else {
+      // No interceptor, close normally
+      handleClose();
+    }
+  }, [handleClose, onBeforeClose]);
 
   // Create a wrapped onClose that always uses animation
   // This ensures all close methods (buttons, escape, backdrop) use the same animation
@@ -346,6 +353,7 @@ const Modal = ({
 Modal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   onClose: PropTypes.func,
+  onBeforeClose: PropTypes.func, // Function called before closing to intercept close attempts
   title: PropTypes.node,
   children: PropTypes.node,
   footer: PropTypes.node,

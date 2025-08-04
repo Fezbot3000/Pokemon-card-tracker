@@ -94,6 +94,18 @@ const CardDetailsModal = ({
     onClose();
   };
 
+  // Handle before close to check for unsaved changes
+  const handleBeforeClose = (proceedToClose) => {
+    if (hasUnsavedChanges) {
+      // If there are unsaved changes, call the parent's close handler
+      // which will show the unsaved changes dialog
+      onClose();
+    } else {
+      // No unsaved changes, proceed with normal close
+      proceedToClose();
+    }
+  };
+
   // PriceCharting functionality removed
 
   // Handle window resize to detect mobile/desktop
@@ -592,6 +604,7 @@ const CardDetailsModal = ({
       <Modal
         isOpen={isOpen}
         onClose={handleCloseAttempt}
+        onBeforeClose={handleBeforeClose}
         title={titleWithProfit}
         position="right"
         closeOnClickOutside={true}
