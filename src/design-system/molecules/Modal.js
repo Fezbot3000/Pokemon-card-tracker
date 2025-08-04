@@ -76,30 +76,30 @@ const Modal = ({
 
       // Use requestAnimationFrame to delay DOM modifications until after the current frame
       requestAnimationFrame(() => {
-        // TEMPORARILY DISABLED: Set the top offset for all devices to maintain scroll position
-        // document.body.style.top = `-${scrollPosRef.current.y}px`;
+        // Set the top offset to maintain scroll position when body becomes fixed
+        document.body.style.top = `-${scrollPosRef.current.y}px`;
         // Add modal-open class which applies position: fixed via CSS
         document.body.classList.add('modal-open');
       });
 
       // Cleanup function
       return () => {
-        // TEMPORARILY DISABLED: Get the scroll position from the negative top value
-        // const scrollY = parseInt(document.body.style.top || '0') * -1;
+        // Get the scroll position from the negative top value
+        const scrollY = parseInt(document.body.style.top || '0') * -1;
         // Remove modal-open class to restore normal scrolling
         document.body.classList.remove('modal-open');
-        // TEMPORARILY DISABLED: Clear the top style
-        // document.body.style.top = '';
-        // TEMPORARILY DISABLED: Restore scroll position
-        // window.scrollTo(0, scrollY || scrollPosRef.current?.y || 0);
+        // Clear the top style
+        document.body.style.top = '';
+        // Restore scroll position
+        window.scrollTo(0, scrollY || scrollPosRef.current?.y || 0);
       };
     } else if (!isOpen) {
       // If modal was just closed, make sure to clean up
-      // TEMPORARILY DISABLED: const scrollY = parseInt(document.body.style.top || '0') * -1;
+      const scrollY = parseInt(document.body.style.top || '0') * -1;
       document.body.classList.remove('modal-open');
-      // TEMPORARILY DISABLED: document.body.style.top = '';
+      document.body.style.top = '';
       if (scrollPosRef.current) {
-        // TEMPORARILY DISABLED: window.scrollTo(0, scrollY || scrollPosRef.current.y || 0);
+        window.scrollTo(0, scrollY || scrollPosRef.current.y || 0);
       }
     }
   }, [isOpen, position, showAsStatic]);

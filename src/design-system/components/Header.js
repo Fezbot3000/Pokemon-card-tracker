@@ -87,15 +87,18 @@ const Header = ({
         // Update URL while preserving performance system
         navigate(`/dashboard/${newView}`, { replace: true });
 
-        // Don't scroll to top when switching between marketplace tabs
+        // Don't scroll to top when switching between marketplace tabs or staying on same view
         const isMarketplaceView = view => 
           ['marketplace', 'marketplace-selling', 'marketplace-messages'].includes(view);
         
         const isMarketplaceToMarketplace = 
           isMarketplaceView(currentView) && isMarketplaceView(newView);
+        
+        const isSameView = currentView === newView;
 
-        if (!isMarketplaceToMarketplace) {
-          // Scroll to top of the page when switching tabs (but not between marketplace tabs)
+        // Only scroll to top for actual view changes (not marketplace sub-navigation or same view)
+        if (!isMarketplaceToMarketplace && !isSameView) {
+          // Scroll to top of the page when switching tabs (but not between marketplace tabs or same view)
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 

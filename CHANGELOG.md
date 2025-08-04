@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Navigation & User Experience Improvements
+- ✅ **Dynamic URL and page title management** (RESOLVED 02/04/2025)
+  - Root cause: Tab navigation showed generic "Login | MyCardTracker" title and static `/dashboard` URL regardless of current view
+  - Users unable to bookmark specific sections, browser back/forward not working properly, poor SEO for individual dashboard sections
+  - Navigation system used state-based view switching without updating browser URL or document title
+  - Solution: Implemented hybrid navigation system preserving performance while adding proper URL/title management
+  - **Dynamic page titles**: Title updates based on current view (e.g., "Dashboard | MyCardTracker", "Marketplace | MyCardTracker", "Invoices | MyCardTracker")
+  - **Specific URLs**: URLs now show current section (e.g., `/dashboard/cards`, `/dashboard/marketplace`, `/dashboard/purchase-invoices`)
+  - **All navigation components updated**: Header tabs, marketplace sub-navigation, and mobile bottom navigation all include URL updates
+  - **Performance preserved**: Maintains existing view-caching and instant navigation benefits while adding proper browser integration
+  - **SEO optimization**: Each dashboard section now has distinct URL and title for better search engine indexing
+  - Files changed: src/App.js, src/components/BottomNavBar.js, src/router.js, src/design-system/components/Header.js, src/components/Marketplace/MarketplaceNavigation.js
+  - Confidence level: 100% - tested across all navigation flows, maintains existing performance characteristics
+  - Impact: Dramatically improves user experience with bookmarkable URLs, proper browser history, and professional page titles
+
 ### Security Improvements
 - ✅ **Complete security hardening implementation** (RESOLVED 02/04/2025)
   - Root cause: Security assessment identified 7 vulnerabilities across authentication, authorization, data access, and infrastructure
